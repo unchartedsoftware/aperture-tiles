@@ -8,9 +8,9 @@ points of data.
 
 ## What is this?
 The Aperture-Tiles project aims to simplify understanding and characterization of large data sets.  
-Aperture-Tiles provides a single, consistent tool that can be used to visualize the data at all 
-scales.  This tool can be used whether one needs a broad overview of the entire data set, or a 
-detailed picture of a small section of the data.
+Aperture-Tiles provides a single, consistent tool that can be used to visualize varius types of 
+data at all scales, whether one needs a broad overview of the entire data set, or a detailed 
+picture of a small section of the data.
 
 ## Why?
 Understanding the data one has in large data sets is a challenging process.  We are attempting to 
