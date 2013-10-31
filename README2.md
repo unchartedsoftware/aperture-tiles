@@ -9,11 +9,11 @@ Understanding the data one has in large data sets is a challenging process.  We 
 
 ## The Details
 * [Terminology](../../wiki/Terminology)
-* [Process](Process) - the details of what we are doing, and how
-* [Technology](Technology) - the technical specifics
-* [Examples](Examples)
-* [FAQ](FAQ)
+* [Process](../../wiki/Process) - the details of what we are doing, and how
+* [Technology](../../wiki/Technology) - the technical specifics
+* [Examples](../../wiki/Examples)
+* [FAQ](../../wiki/FAQ)
 
 ## Future plans
-* [Possible Enhancement Ideas](Enhancements)
+* [Possible Enhancement Ideas](../../wiki/Enhancements)
 
