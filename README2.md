@@ -8,7 +8,7 @@ Understanding the data one has in large data sets is a challenging process.  We 
 * It can be applied to any data for which an *aggregation function* can be defined.
 
 ## The Details
-* [Terminology](Terminology)
+* [Terminology](../../wiki/Terminology)
 * [Process](Process) - the details of what we are doing, and how
 * [Technology](Technology) - the technical specifics
 * [Examples](Examples)
