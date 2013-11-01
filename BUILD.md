@@ -53,7 +53,7 @@ strictly necessary, some optional).  Generally, one needs to set up:
  * Aperture-core - Though this project is a piece of Aperture, the tile-service
    and tile-client projects do need the core.  Currently, the best way to get 
    the core is to download it from the Aperture web site -
-   [aperturejs.com](aperturejs.com).  You will need to use the "Download 
+   [aperturejs.com](http://aperturejs.com).  You will need to use the "Download 
    Source" option, and run the maven installation on that, so that the 
    tile-service and tile-client projects' builds can find what they need.
 
