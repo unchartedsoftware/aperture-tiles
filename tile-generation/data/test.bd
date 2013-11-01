@@ -1,0 +1,19 @@
+# spark connection details
+spark.connection.url=local
+spark.connection.home=/home/bigdata/software/spark-0.7.2
+
+# general output properties
+oculus.tileio.type=file
+
+
+oculus.binning.name=testdata
+oculus.binning.source.location=file://data/test.data
+oculus.binning.parsing.separator=,
+
+oculus.binning.parsing.a.index=0
+oculus.binning.parsing.b.index=1
+oculus.binning.projection=EPSG:4326
+oculus.binning.xField=a
+oculus.binning.yField=b
+oculus.binning.levels.0=0
+oculus.binning.levels.1=1

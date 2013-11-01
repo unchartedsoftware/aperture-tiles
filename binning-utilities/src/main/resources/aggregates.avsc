@@ -1,0 +1,21 @@
+{"name" : "tile",
+ "namespace" : "ar.avro",
+ "type" : "record",
+ "fields" : 
+   [
+    {"name": "lowX", "type": "int"},
+    {"name": "lowY", "type": "int"},
+    {"name": "highX", "type": "int"},
+    {"name": "highY", "type": "int"},
+    {"name": "values", "type": {"type": "array", "items":{"type":"array", "items":"ar.avro.recordType"}}},
+    
+    {"name": "default", "type": ["ar.avro.recordType","null"], "default":"null",
+       "doc": "Default value inside the system.  Analogous to an image's background color or null"},
+     
+    {"name": "Z", "type":["int","null"], "default":"0",
+       "doc": "What z-level does this tile lay at?  Z of 0 is the least-precision/most-zoomed-out (following the Tile Map Service spec)"},
+       
+    {"name": "meta", "type":[{"type":"map", "values":"string"}, "null"], "default":"null",
+       "doc": "Pass-through metadata location.  For things like provenance, time stamps, etc."}
+   ]
+}

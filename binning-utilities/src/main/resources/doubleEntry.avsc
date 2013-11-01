@@ -1,0 +1,8 @@
+{
+  "name":"entryType",
+  "namespace":"ar.avro",
+  "type":"record",
+  "fields":[
+    {"name":"value", "type":"double"}
+  ]
+}

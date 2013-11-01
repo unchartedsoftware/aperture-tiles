@@ -1,0 +1,34 @@
+# spark connection details - specify the url of your spark master, connection 
+# user and location of spark home directory
+spark.connection.url=local
+spark.connection.home=/opt/spark-0.7.2
+# used to help distingish spark jobs in the spark or mesos UI, so other users 
+# can see who is running the job
+spark.connection.user=me
+
+# hbase connection details
+hbase.zookeeper.quorum=hadoop-master.oculus.local
+hbase.zookeeper.port=2181
+hbase.master=hadoop-master.oculus.local:60000
+
+# output files to hbase, and give them a prefix, to distinguish them from other 
+# runs
+oculus.tileio.type=hbase
+oculus.binning.prefix=test
+
+# Name of the binning dataset, location of raw input data and the character 
+# values are delimited by
+oculus.binning.name=twitter
+oculus.binning.source.location=hdfs://hadoop-master.oculus.local/DataSets/Twitter/twitter.tsv
+oculus.binning.parsing.separator=,
+
+# Define the fields to parse in the CSV files
+oculus.binning.parsing.id.index=0
+oculus.binning.parsing.id.fieldType=long
+oculus.binning.parsing.time.index=1
+oculus.binning.parsing.time.fieldType=date
+oculus.binning.parsing.time.dateFormat=EEE MMM dd HH:mm:ss zzz yyyy
+oculus.binning.parsing.latitude.index=2
+oculus.binning.parsing.latitude.fieldType=double
+oculus.binning.parsing.longitude.index=3
+oculus.binning.parsing.longitude.fieldType=double

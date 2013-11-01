@@ -1,0 +1,11 @@
+{
+  "name":"recordType",
+  "namespace":"ar.avro",
+  "type":"record",
+  "fields":[
+    {"name":"value",
+     "type": {"type": "array", "items": "ar.avro.entryType" },
+     "doc": "The array of entries in this bin"
+    }
+  ]
+}

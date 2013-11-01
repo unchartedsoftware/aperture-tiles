@@ -1,0 +1,25 @@
+# spark connection details
+spark.connection.url=local
+spark.connection.home=/srv/software/spark-0.7.2
+spark.connection.user=ndk
+
+# general output properties
+oculus.tileio.type=file
+oculus.binning.name=tilesets/julia_-0.8_0.156
+oculus.binning.source.location=file:///datasets/julia_-0.8_0.156
+oculus.binning.separator=\t
+
+oculus.binning.parsing.x.index=0
+oculus.binning.parsing.y.index=1
+oculus.binning.parsing.v.index=2
+oculus.binning.parsing.v.fieldAggregation=min
+
+oculus.binning.projection=EPSG:4326
+oculus.binning.xField=x
+oculus.binning.yField=y
+oculus.binning.valueField=v
+oculus.binning.levels.0=0,1
+oculus.binning.levels.1=2
+oculus.binning.levels.2=3
+oculus.binning.levels.3=4
+oculus.binning.levels.4=5

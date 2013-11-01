@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!-- Note that this file is refreshed by the server every 60seconds, as specified in web.xml -->
+
+<log4j:configuration debug="false">
+
+		<appender name='stdout' class='org.apache.log4j.ConsoleAppender'>
+				<layout class='org.apache.log4j.PatternLayout'>
+						<!-- param name='ConversionPattern' value='%-10r %-5p %-20c{1} %x - %m%n'/ -->
+						<param name="ConversionPattern"   value="[%p] %d{dd MMM yyyy HH:mm:ss} - %C - %m%n"/>
+				</layout>
+		</appender>
+
+		<!-- appender name="General" class="org.apache.log4j.DailyRollingFileAppender">
+				<param name="file" value="xfin.log"/>
+				<param name="append" value="false"/>
+				<param name="encoding" value="UTF-8"/>
+
+				<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+
+				<layout class="org.apache.log4j.PatternLayout">
+						<param name="ConversionPattern"   value="%5p; %d{dd MMM yyyy HH:mm:ss}; %C; %m%n"/>
+				</layout>
+		</appender -->
+
+		<root>
+				<priority value="INFO"/>
+				<appender-ref ref="stdout"/>
+				<!-- appender-ref ref="General"/ -->
+		</root>
+
+</log4j:configuration>

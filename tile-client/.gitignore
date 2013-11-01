@@ -1,0 +1,6 @@
+/target/
+/src/main/resources/*.zip
+.classpath
+.project
+update.sh
+
