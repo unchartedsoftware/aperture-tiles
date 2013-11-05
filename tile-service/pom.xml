@@ -1,150 +1,193 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  
-  <artifactId>tile-service</artifactId>
-  <packaging>war</packaging>
-  <name>Aperture Tiles Web Service</name>
-  <description>A server-side service for sending tiles from tile pyramids to web clients</description>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <artifactId>aperture-tiles</artifactId>
-    <groupId>com.oculusinfo</groupId>
-    <version>0.1.1-SNAPSHOT</version>
-  </parent>
-  
-  <properties>
-    <local.war.outputDir>${project.outputDirectory}</local.war.outputDir>
-  </properties>
+	<artifactId>tile-service</artifactId>
+	<packaging>war</packaging>
+	<name>Aperture Tiles Web Service</name>
+	<description>A server-side service for sending tiles from tile pyramids to web clients</description>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.5</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>1.9.5</version>
-      <scope>test</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>oculus.aperture</groupId>
-      <artifactId>aperture-spi</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>oculus.aperture</groupId>
-      <artifactId>aperture-server-core</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-      <type>jar</type>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
-      <artifactId>geometric-utilities</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
-      <artifactId>binning-utilities</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.5</version>
-      <scope>provided</scope>
-    </dependency>
-    
-    <!-- RESTLET -->
-    <dependency>
-      <groupId>org.restlet.jee</groupId>
-      <artifactId>org.restlet</artifactId>
-      <version>2.1.2</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.restlet.jee</groupId>
-      <artifactId>org.restlet.ext.servlet</artifactId>
-      <version>2.1.2</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.6.1</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.6.1</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jul-to-slf4j</artifactId>
-      <version>1.6.1</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
-    </dependency>
-  </dependencies>
-  
-  <build>
-    <finalName>tile-service</finalName>
-    
-    <plugins>
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-war-plugin</artifactId>
-	<version>2.1.1</version>
-	<configuration>
-	  <outputDirectory>${local.war.outputDir}</outputDirectory>
-	</configuration>
-      </plugin>
-    </plugins>
-  </build>
-  
-  <repositories>
-    <repository>
-      <id>maven-restlet</id>
-      <name>Public online Restlet repository</name>
-      <url>http://maven.restlet.org</url>
-    </repository>
-  </repositories>
-  
-  <profiles>
-    <!-- Development Profile Runs unoptimized (raw) version of JavaScript,
-	 also provides access to test files -->
-    <profile>
-      <id>Development</id>
-      
-      <activation>
-	<property>
-	  <name>!environment</name>
-	</property>
-      </activation>
+	<parent>
+		<artifactId>aperture-tiles</artifactId>
+		<groupId>com.oculusinfo</groupId>
+		<version>0.1.1-SNAPSHOT</version>
+	</parent>
 
-      <build>
-	<plugins>
-	  <plugin>
-	    <groupId>org.apache.maven.plugins</groupId>
-	    <artifactId>maven-war-plugin</artifactId>
-	    <version>2.1.1</version>
-	  </plugin>
-	</plugins>
-      </build>
-    </profile>
-  </profiles>
+	<properties>
+		<local.war.outputDir>${project.outputDirectory}</local.war.outputDir>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.5</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.9.5</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>oculus.aperture</groupId>
+			<artifactId>aperture-spi</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>oculus.aperture</groupId>
+			<artifactId>aperture-server-core</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+
+		<dependency>
+			<groupId>com.oculusinfo</groupId>
+			<artifactId>geometric-utilities</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.oculusinfo</groupId>
+			<artifactId>binning-utilities</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- RESTLET -->
+		<dependency>
+			<groupId>org.restlet.jee</groupId>
+			<artifactId>org.restlet</artifactId>
+			<version>2.1.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restlet.jee</groupId>
+			<artifactId>org.restlet.ext.servlet</artifactId>
+			<version>2.1.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>tile-service</finalName>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.1.1</version>
+				<configuration>
+					<outputDirectory>${local.war.outputDir}</outputDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>maven-restlet</id>
+			<name>Public online Restlet repository</name>
+			<url>http://maven.restlet.org</url>
+		</repository>
+	</repositories>
+
+	<profiles>
+		<!-- Development Profile Runs unoptimized (raw) version of JavaScript, 
+			also provides access to test files -->
+		<profile>
+			<id>Development</id>
+
+			<activation>
+				<property>
+					<name>!environment</name>
+				</property>
+			</activation>
+
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-war-plugin</artifactId>
+						<version>2.1.1</version>
+					</plugin>
+					
+					<plugin>
+						<!-- Jetty For Dev Builds Only -->
+						<groupId>org.mortbay.jetty</groupId>
+						<artifactId>jetty-maven-plugin</artifactId>
+						<version>7.2.0.v20101020</version>
+						<configuration>
+		
+							<reload>manual</reload>
+							
+							<connectors>
+								<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+									<port>9000</port>
+									<maxIdleTime>60000</maxIdleTime>
+								</connector>
+							</connectors>
+		
+							<scanTargetPatterns>
+								<scanTargetPattern>
+									<directory>src/main/resources</directory>
+									<includes>
+										<include>**/*</include>
+									</includes>
+									<excludes>
+										<exclude>**/.svn/**/*</exclude>
+									</excludes>
+								</scanTargetPattern>
+							</scanTargetPatterns>
+		
+							<webAppConfig>
+								<contextPath>/${project.artifactId}</contextPath>
+							</webAppConfig>
+		
+						</configuration>
+		
+						<dependencies>
+							<dependency>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-server</artifactId>
+								<version>7.2.0.v20101020</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
