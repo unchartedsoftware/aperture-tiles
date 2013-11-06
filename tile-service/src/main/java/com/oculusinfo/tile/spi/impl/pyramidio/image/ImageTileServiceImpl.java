@@ -90,7 +90,8 @@ public class ImageTileServiceImpl implements ImageTileService {
 			_uuidToOptionsMap.put(id, options);
 			result.put("layer", layer);
 			result.put("id", id);
-			result.put("tms", hostUrl + "tile/" + id.toString() + '/');
+			result.put("tms", hostUrl + "tile/" + id.toString() + "/");
+			result.put("apertureservice", "/tile/" + id.toString() + "/");
 
 			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 

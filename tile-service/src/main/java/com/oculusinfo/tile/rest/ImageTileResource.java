@@ -106,9 +106,9 @@ public class ImageTileResource extends ApertureServerResource {
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
 			String xAttr = (String) getRequest().getAttributes().get("x");
-			double x = Double.parseDouble(xAttr);
+			int x = Integer.parseInt(xAttr);
 			String yAttr = (String) getRequest().getAttributes().get("y");
-			double y = Double.parseDouble(yAttr);
+			int y = Integer.parseInt(yAttr);
 
 			String ext = (String) getRequest().getAttributes().get("ext");
 			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
