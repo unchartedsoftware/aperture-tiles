@@ -443,7 +443,12 @@ object CSVBinner {
         val master = defaultProperties.getOptionProperty("hbase.master").get
         new HBaseTileIO(quorum, port, master)
       }
-      case _ => new LocalTileIO
+      case _ => {
+        val extension =
+            defaultProperties.getProperty("oculus.tileio.file.extension",
+                                          "avro")
+        new LocalTileIO(extension)
+      }
     }
 
 

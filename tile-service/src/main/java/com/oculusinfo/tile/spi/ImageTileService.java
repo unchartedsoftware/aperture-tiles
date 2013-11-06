@@ -32,6 +32,7 @@ import org.json.JSONObject;
 public interface ImageTileService {
 	
 	public JSONObject getLayer(String hostUrl, JSONObject options);
-	public BufferedImage getTile(UUID id, String layer, int zoomLevel, double x, double y);
+	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y);
+	public JSONObject getTileObject (UUID fromString, String layer, int zoomLevel, double x, double y);
 	
 }

@@ -138,7 +138,7 @@ class MetadataTestSuite extends FunSuite with ShouldMatchers {
   }
 
   test("Local metadata writing") {
-    val io = new LocalTileIO()
+    val io = new LocalTileIO("avro")
     val metaData = new TileMetaData("n", "d", 13, "s", "p", 1, 2,
 				    new Rectangle2D.Double(0, 0, 1, 2),
 				    List((0, "12"), (1, "9")),

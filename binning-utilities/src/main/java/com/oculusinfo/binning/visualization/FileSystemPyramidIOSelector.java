@@ -57,14 +57,17 @@ public class FileSystemPyramidIOSelector extends JPanel implements PyramidIOSele
 
 
     private String              _rootPath;
+    private String              _extension;
     private FileSystemPyramidIO _io;
     private JTextField          _rootPathField;
+    private JTextField          _extensionField;
     private JFileChooser        _fileChooser;
 
 
 
     public FileSystemPyramidIOSelector (JFileChooser chooser) {
         _rootPath = null;
+        _extension = "avro";
         _io = null;
         _fileChooser = chooser;
 
@@ -72,10 +75,17 @@ public class FileSystemPyramidIOSelector extends JPanel implements PyramidIOSele
         rootPathLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         _rootPathField = new JTextField();
         JButton button = new JButton("...");
+
+        JLabel extensionLabel = new JLabel("Tile extension:");
+        extensionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        _extensionField = new JTextField(_extension);
+
         setLayout(new GridBagLayout());
-        add(rootPathLabel,  new GridBagConstraints(0, 0, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        add(_rootPathField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-        add(button,         new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+        add(rootPathLabel,   new GridBagConstraints(0, 0, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        add(_rootPathField,  new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+        add(button,          new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+        add(extensionLabel,  new GridBagConstraints(0, 1, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+        add(_extensionField, new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
         _rootPathField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -106,13 +116,45 @@ public class FileSystemPyramidIOSelector extends JPanel implements PyramidIOSele
                 }
             }
         });
+        _extensionField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void removeUpdate (DocumentEvent event) {
+                setExtension(_extensionField.getText());
+            }
+
+            @Override
+            public void insertUpdate (DocumentEvent event) {
+                setExtension(_extensionField.getText());
+            }
+
+            @Override
+            public void changedUpdate (DocumentEvent event) {
+                setExtension(_extensionField.getText());
+            }
+        });
     }
 
     private void setRootPath (String rootPath) {
         if (!objectsEqual(_rootPath, rootPath)) {
             _rootPath = rootPath;
-            FileSystemPyramidIO oldIO = _io;
-            _io = new FileSystemPyramidIO(_rootPath);
+            updatePyramid();
+        }
+    }
+
+    private void setExtension (String extension) {
+        if (!objectsEqual(_extension, extension)) {
+            _extension = extension;
+            updatePyramid();
+        }
+    }
+
+    private void updatePyramid () {
+        FileSystemPyramidIO oldIO = _io;
+        if (null != _rootPath && null != _extension) {
+            _io = new FileSystemPyramidIO(_rootPath, _extension);
+            firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
+        } else if (null != _io) {
+            _io = null;
             firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
         }
     }

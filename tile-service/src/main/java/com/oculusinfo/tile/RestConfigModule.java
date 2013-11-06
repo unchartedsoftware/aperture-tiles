@@ -44,7 +44,7 @@ public class RestConfigModule extends AbstractModule {
 			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
 				
 		resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(ImageTileResource.class));
-		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}").toInstance(new ResourceDefinition(ImageTileResource.class));
+		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(ImageTileResource.class));
 		resourceBinder.addBinding("/legend").toInstance(new ResourceDefinition(ImageTileLegendResource.class));
 		
 		resourceBinder.addBinding("/jsonTile").toInstance(new ResourceDefinition(JsonTileResource.class));

@@ -27,6 +27,7 @@ package com.oculusinfo.binning.io.impl;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -294,10 +295,56 @@ public class JDBCPyramidIO implements PyramidIO {
 				try {
 					ps.close();
 				} catch (SQLException e) {
-					e.printStackTrace();
+				    throw new IOException(e);
 				}
 			}
 		}
+	}
+
+	@Override
+	public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException {
+        PreparedStatement ps = null;
+        try {
+            if (!tableExists(pyramidId)) {
+                // TODO: Right thing to return when the table doesn't exist?
+                return null;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT ");
+            sb.append(COL_TILE_DATA);
+            sb.append(" FROM ");
+            sb.append(toTableName(pyramidId));
+            sb.append(" WHERE ");
+            sb.append(COL_ZOOM_LVL);
+            sb.append(" = ? AND ");
+            sb.append(COL_TILE_COLUMN);
+            sb.append(" = ? AND ");
+            sb.append(COL_TILE_ROW);
+            sb.append(" = ?");
+
+            ps = _connection.prepareStatement(sb.toString());
+            ps.setInt(1, tile.getLevel());
+            ps.setInt(2, tile.getX());
+            ps.setInt(3, tile.getY());
+
+            ResultSet resultSet = ps.executeQuery();
+            if (resultSet.next()) {
+                byte[] tileBytes = resultSet.getBytes(COL_TILE_DATA);
+                return new ByteArrayInputStream(tileBytes);
+            }
+        } catch (Exception e) {
+            throw new IOException("Error reading tiles.", e);
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    throw new IOException(e);
+                }
+            }
+        }
+        return null;
 	}
 
 	@Override

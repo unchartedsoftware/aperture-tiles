@@ -67,11 +67,6 @@ public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 	}
 
 	@Override
-	public String getFileExtension() {
-		return "tile";
-	}
-
-	@Override
 	public void serialize(TileData<Double> data, TilePyramid tilePyramid,
 			OutputStream output) throws IOException {
 

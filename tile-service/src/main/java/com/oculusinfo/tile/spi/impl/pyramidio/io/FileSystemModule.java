@@ -41,13 +41,13 @@ public class FileSystemModule extends AbstractModule {
 	}
 	
 	@Provides
-	FileSystemPyramidIO provideFileSystemIo(
-			@Named("com.oculusinfo.tile.pyramidio.file.location")String location){
+	FileSystemPyramidIO provideFileSystemIo(@Named("com.oculusinfo.tile.pyramidio.file.location")String location,
+	                                        @Named("com.oculusinfo.tile.pyramidio.file.extension")String extension){
 	    // Make sure our location ends with a slash
         if (!location.endsWith("/") && !location.endsWith("\\"))
             location = location + File.separator;
 
-		return new FileSystemPyramidIO(location);
+		return new FileSystemPyramidIO(location, extension);
 	}
 	
 }

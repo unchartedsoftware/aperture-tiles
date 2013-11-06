@@ -25,12 +25,9 @@
 package com.oculusinfo.tile.rest;
 
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import oculus.aperture.common.rest.ApertureServerResource;
-import com.oculusinfo.tile.spi.ImageTileService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,14 +40,32 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 import com.google.inject.Inject;
+import com.oculusinfo.tile.spi.ImageTileService;
 
 public class ImageTileResource extends ApertureServerResource {
-	
-	private static Map<String, MediaType> MEDIA_TYPES = new HashMap<String, MediaType>();
-	static{
-		MEDIA_TYPES.put("png", MediaType.IMAGE_PNG);  // Should be an easier way to do this...
-		MEDIA_TYPES.put("jpg", MediaType.IMAGE_JPEG);
-		MEDIA_TYPES.put("jpeg", MediaType.IMAGE_JPEG);
+
+	public static enum ResponseType {
+		Image,
+		Tile
+	}
+	public static enum ExtensionType {
+		png(ResponseType.Image, MediaType.IMAGE_PNG),
+		jpg(ResponseType.Image, MediaType.IMAGE_JPEG),
+		jpeg(ResponseType.Image, MediaType.IMAGE_JPEG),
+		json(ResponseType.Tile, MediaType.APPLICATION_JSON);
+
+		private ResponseType _responseType;
+		private MediaType _mediaType;
+		private ExtensionType (ResponseType responseType, MediaType mediaType) {
+			_responseType = responseType;
+			_mediaType = mediaType;
+		}
+		public ResponseType getResponseType () {
+			return _responseType;
+		}
+		public MediaType getMediaType () {
+			return _mediaType;
+		}
 	}
 	
 	private ImageTileService _service;
@@ -87,25 +102,45 @@ public class ImageTileResource extends ApertureServerResource {
 			// No alternate versions supported. But if we did:
 			//String version = (String) getRequest().getAttributes().get("version");
 			String id = (String) getRequest().getAttributes().get("id");
-//			String transform = (String) getRequest().getAttributes().get("transform");
-//			String ramp = (String) getRequest().getAttributes().get("ramp");
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
 			String xAttr = (String) getRequest().getAttributes().get("x");
 			double x = Double.parseDouble(xAttr);
 			String yAttr = (String) getRequest().getAttributes().get("y");
-			int extIdx = yAttr.lastIndexOf('.');
-			double y = Double.parseDouble(yAttr.substring(0, extIdx));
-			String fileExt = yAttr.substring(extIdx+1).toLowerCase();
-			MediaType mediaType = MEDIA_TYPES.get(fileExt);
+			double y = Double.parseDouble(yAttr);
 
-			BufferedImage tile = _service.getTile(UUID.fromString(id), layer, zoomLevel, x, y);
-			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(mediaType, tile);
-			
-			setStatus(Status.SUCCESS_CREATED);
-	
-			return imageRep;
+			String ext = (String) getRequest().getAttributes().get("ext");
+			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
+			if (null == extType) {
+				setStatus(Status.SERVER_ERROR_INTERNAL);
+			} else if (ResponseType.Image.equals(extType.getResponseType())) {
+				BufferedImage tile = _service.getTileImage(UUID.fromString(id), layer, zoomLevel, x, y);
+				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
+
+				setStatus(Status.SUCCESS_CREATED);
+				return imageRep;
+			} else if (ResponseType.Tile.equals(extType.getResponseType())) {
+			    // We return an object including the tile index ("index") and 
+			    // the tile data ("data").
+			    //
+			    // The data should include index information, but it has to be 
+			    // there for tiles with no data too, so we can't count on it.
+			    JSONObject result = new JSONObject();
+			    JSONObject tileIndex = new JSONObject();
+			    tileIndex.put("level", zoomLevel);
+			    tileIndex.put("x", x);
+			    tileIndex.put("y", y);
+			    result.put("index", tileIndex);
+			    result.put("tile", _service.getTileObject(UUID.fromString(id), layer, zoomLevel, x, y));
+
+			    setStatus(Status.SUCCESS_CREATED);
+			    return new JsonRepresentation(result);
+			} else {
+				setStatus(Status.SERVER_ERROR_INTERNAL);
+			}
+
+			return null;
 		} catch (Exception e){
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 					"Unable to interpret requested tile from supplied URL.", e);

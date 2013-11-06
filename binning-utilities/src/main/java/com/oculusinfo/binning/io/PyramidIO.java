@@ -26,6 +26,7 @@ package com.oculusinfo.binning.io;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import com.oculusinfo.binning.TileIndex;
@@ -49,16 +50,16 @@ public interface PyramidIO {
     /**
      * Initialize the system for writing a pyramid
      * 
-     * @param pyramidId An ID of the pyramid to be written; the use of this ID
-     *            is dependent on the I/O type
+     * @param pyramidId The ID of the pyramid to be written; the meaning of this
+     *            ID is dependent on the I/O type
      */
     public void initializeForWrite (String pyramidId) throws IOException;
 
     /**
      * Write a set of tiles out
      * 
-     * @param pyramidId An ID of the pyramid to be written; the use of this ID
-     *            is dependent on the I/O type
+     * @param pyramidId The ID of the pyramid to be written; the meaning of this
+     *            ID is dependent on the I/O type
      * @param serializer A serializer class that defines how the specific data
      *            format will be written
      * @param data The data to be written
@@ -70,27 +71,36 @@ public interface PyramidIO {
     /**
      * Writes out new metadata for this tile set
      * 
-     * @param pyramidId An ID of the pyramid to be written; the use of this ID
+     * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
      *            is dependent on the I/O type
      * @param metaData The metadata to be written
      */
-    public void
-            writeMetaData (String pyramidId, String metaData)
-                                                             throws IOException;
+    public void writeMetaData (String pyramidId, String metaData) throws IOException;
 
     /**
      * Read in a set of tiles
      * 
-     * @param pyramidId An ID of the pyramid to be read; the use of this ID is
-     *            dependent on the I/O type
+     * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
+     *            is dependent on the I/O type
      * @param serializer A serializaer class that defines how the specific data
      *            format will be read
      * @param data The tiles to be read
      * @return A list of tiles
      */
-    public <T> List<TileData<T>>
-            readTiles (String pyramidId, TileSerializer<T> serializer,
-                       Iterable<TileIndex> tiles) throws IOException;
+    public <T> List<TileData<T>> readTiles (String pyramidId, TileSerializer<T> serializer,
+                                            Iterable<TileIndex> tiles) throws IOException;
+
+    /**
+     * Get a stream containing the raw data for one tile.
+     * 
+     * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
+     *            is dependent on the I/O type
+     * @param tile The coordinates of the tile to fetch
+     * @return A data stream streaming the raw data of the indicated tile, or
+     *         null if the indicated tile is not found
+     * @throws IOException
+     */
+    public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException;
 
     /**
      * Gets the metadata for this tile set

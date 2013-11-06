@@ -27,6 +27,7 @@ package com.oculusinfo.binning.io.impl;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -268,6 +269,25 @@ public class HBasePyramidIO implements PyramidIO {
         }
 
         return results;
+    }
+
+    @Override
+    public InputStream getTileStream (String tableName, TileIndex tile) throws IOException {
+        List<String> rowIds = new ArrayList<String>();
+        rowIds.add(rowIdFromTile(tile));
+        
+        List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
+        Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
+
+        if (iData.hasNext()) {
+            Map<HBaseColumn, byte[]> rawResult = iData.next();
+            if (null != rawResult) {
+                byte[] rawData = rawResult.get(TILE_COLUMN);
+                return new ByteArrayInputStream(rawData);
+            }
+        }
+
+        return null;
     }
 
     @Override

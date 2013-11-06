@@ -17,10 +17,10 @@ public class ZipResourceStreamModule extends AbstractModule {
 	}
 	
 	@Provides
-	ResourceStreamReadOnlyPyramidIO provideFileSystemIo(
-			@Named("com.oculusinfo.tile.pyramidio.resource.location")String location){
+	ResourceStreamReadOnlyPyramidIO provideFileSystemIo(@Named("com.oculusinfo.tile.pyramidio.resource.location")String location,
+	                                                    @Named("com.oculusinfo.tile.pyramidio.resource.extension")String extension){
 		
 		URL zipFile = ZipResourceStreamModule.class.getResource(location);
-		return new ResourceStreamReadOnlyPyramidIO( new ZipResourcePyramidStreamSource(zipFile.getFile()) );
+		return new ResourceStreamReadOnlyPyramidIO( new ZipResourcePyramidStreamSource(zipFile.getFile(), extension) );
 	}
 }

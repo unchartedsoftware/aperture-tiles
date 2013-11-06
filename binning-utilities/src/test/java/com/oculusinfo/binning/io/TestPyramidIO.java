@@ -3,6 +3,7 @@ package com.oculusinfo.binning.io;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,6 +75,17 @@ public class TestPyramidIO implements PyramidIO {
             }
         }
         return results;
+    }
+
+    @Override
+    public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException {
+        String key = getTileKey(pyramidId, tile);
+        if (_data.containsKey(key)) {
+            byte[] data = _data.get(key);
+            return new ByteArrayInputStream(data);
+        } else {
+            return null;
+        }
     }
 
     @Override

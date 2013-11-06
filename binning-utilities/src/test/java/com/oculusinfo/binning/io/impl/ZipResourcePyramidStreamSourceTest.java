@@ -1,21 +1,17 @@
 package com.oculusinfo.binning.io.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.stream.ZipResourcePyramidStreamSource;
 
 public class ZipResourcePyramidStreamSourceTest {
@@ -52,14 +48,14 @@ public class ZipResourcePyramidStreamSourceTest {
 		}
 		
 		try {
-			ZipResourcePyramidStreamSource src = new ZipResourcePyramidStreamSource(filename);
+			ZipResourcePyramidStreamSource src = new ZipResourcePyramidStreamSource(filename, "dummy");
 			
 			TileIndex tileDef = new TileIndex(0, 0, 0, 1, 1);
-			InputStream is = src.getTileStream("test", getSerializer(), tileDef);
+			InputStream is = src.getTileStream("test", tileDef);
 			Assert.assertTrue(is!=null);
 
 			tileDef = new TileIndex(2, 3, 3, 1, 1);
-			is = src.getTileStream("test", getSerializer(), tileDef);
+			is = src.getTileStream("test", tileDef);
 			Assert.assertTrue(is!=null);
 			
 			is = src.getMetaDataStream("test");
@@ -75,30 +71,5 @@ public class ZipResourcePyramidStreamSourceTest {
 
 	private File getDummyFile() throws IOException{
 		return File.createTempFile("dummy", null);
-	}
-		
-	private TileSerializer<Double> getSerializer() {
-		
-		return new TileSerializer<Double>() {
-			
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void serialize(TileData<Double> data, TilePyramid tilePyramid,
-					OutputStream ouput) throws IOException {
-			}
-			
-			@Override
-			public String getFileExtension() {
-				return "dummy";
-			}
-			
-			@Override
-			public TileData<Double> deserialize(TileIndex index, InputStream rawData)
-					throws IOException {
-				return null;
-			}
-		};
-		
 	}
 }

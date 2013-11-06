@@ -82,6 +82,8 @@
                 <unparam>true</unparam>
                 <!-- Allow increment and decrement operators -->
                 <plusplus>true</plusplus>
+                <!-- Allow bitwise operators -->
+                <bitwise>true</bitwise>
               </options>
             </configuration>
           </execution>

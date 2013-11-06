@@ -27,15 +27,12 @@ package com.oculusinfo.tile.spi.impl.pyramidio.image;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import com.oculusinfo.tile.spi.ImageTileService;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.ImageRendererFactory;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,6 +45,11 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.tile.spi.AvroJSONConverter;
+import com.oculusinfo.tile.spi.ImageTileService;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.ImageRendererFactory;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer;
 
 /**
  * @author dgray
@@ -103,14 +105,17 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 	}
 
+
+
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
-	public BufferedImage getTile(UUID id, String layer, int zoomLevel, double x, double y) {
+	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y) {
 		PyramidMetaData metadata = getMetadata(layer);
-		
+
+
+		// Get rendering options
 		JSONObject options = _uuidToOptionsMap.get(id);
-		System.out.println("UUID Count for tile of "+layer+": " + _uuidToOptionsMap.size());
 		String rampType = "ware";
 		try {
 			rampType = options.getString("ramp");
@@ -143,16 +148,15 @@ public class ImageTileServiceImpl implements ImageTileService {
 			_logger.info("No current image specified - using default");
 		}
 
-		//y = Math.pow(2, zoomLevel) - 1 - y;
 
 		BufferedImage bi;
-		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
-		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 
+		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
+		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
 		bi = renderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
 				dimension, maximumValue, tileCoordinate, currentImage));
 		
-		if(bi == null){
+		if (bi == null){
 			bi = new BufferedImage(dimension, dimension, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = bi.createGraphics();
 			g.setColor(COLOR_BLANK);
@@ -174,6 +178,20 @@ public class ImageTileServiceImpl implements ImageTileService {
 		return bi;
 	}
 
+	@Override
+	public JSONObject getTileObject(UUID id, String layer, int zoomLevel, double x, double y) {
+		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
+		try {
+    		InputStream tile = _pyramidIo.getTileStream(layer, tileCoordinate);
+    		if (null == tile) return null;
+    		return AvroJSONConverter.convert(tile);
+		} catch (IOException e) {
+		    _logger.warn("Exception getting tile for {}", tileCoordinate, e);
+		} catch (JSONException e) {
+            _logger.warn("Exception getting tile for {}", tileCoordinate, e);
+        }
+		return null;
+	}
 
 	/**
 	 * @param layer
@@ -194,6 +212,4 @@ public class ImageTileServiceImpl implements ImageTileService {
 		}
 		return new PyramidMetaData(metadata);
 	}
-
-
 }

@@ -29,7 +29,8 @@ import java.awt.image.BufferedImage;
 import com.oculusinfo.binning.util.PyramidMetaData;
 
 /**
- * A class to encapsulate rendering of tiles into images
+ * A class to encapsulate rendering of tiles into any format potentially used 
+ * by the client.  Currently supported formats are: images, and JSON objects.
  * 
  * @author dgray, nkronenfeld
  */
@@ -52,4 +53,5 @@ public interface TileDataImageRenderer {
 	 * @return The number of available images
 	 */
 	public int getNumberOfImagesPerTile (PyramidMetaData metadata);
+
 }

@@ -77,7 +77,7 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
                                             Iterable<TileIndex> tiles) throws IOException {
         List<TileData<T>> results = new LinkedList<TileData<T>>();
         for (TileIndex tile: tiles) {
-            InputStream stream = _stream.getTileStream(basePath, serializer, tile);
+            InputStream stream = _stream.getTileStream(basePath, tile);
             //stream will be null if the tile cannot be found
             if(stream==null){
             	_logger.info("no tile data found for " + tile.toString() );
@@ -89,6 +89,11 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
             stream.close();
         }
         return results;
+    }
+
+    @Override
+    public InputStream getTileStream (String basePath, TileIndex tile) throws IOException {
+        return _stream.getTileStream(basePath, tile);
     }
 
     @Override

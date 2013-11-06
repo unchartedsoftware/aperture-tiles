@@ -10,27 +10,28 @@ import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
 
 public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
+
+    private ZipFile      _tileSetArchive;
+    private String       _tileExtension;
+
+
 	
-	private ZipFile _tileSetArchive;
-	
-	public ZipResourcePyramidStreamSource(String zipFilePath){
+	public ZipResourcePyramidStreamSource (String zipFilePath, String tileExtension) {
 		try {
 			_tileSetArchive = new ZipFile(zipFilePath);
+			_tileExtension = tileExtension;
 		} catch (IOException e) {
-        	_logger.warn("Could not create zip file for " + zipFilePath );
-			e.printStackTrace();
+        	_logger.warn("Could not create zip file for " + zipFilePath, e);
 		}
 	}
 	
 	@Override
-	public InputStream getTileStream(String basePath, TileSerializer<?> serializer, TileIndex tile) throws IOException {
-    	String fileExtension = serializer.getFileExtension();
-    	String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + fileExtension, basePath, tile.getLevel(), tile.getX(), tile.getY());
+	public InputStream getTileStream(String basePath, TileIndex tile) throws IOException {
+    	String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _tileExtension, basePath, tile.getLevel(), tile.getX(), tile.getY());
     	ZipArchiveEntry entry = _tileSetArchive.getEntry(tileLocation);
     	return _tileSetArchive.getInputStream(entry);
 	}

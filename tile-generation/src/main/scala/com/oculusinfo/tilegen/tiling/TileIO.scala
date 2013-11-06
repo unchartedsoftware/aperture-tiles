@@ -80,7 +80,10 @@ object TileIO {
                                     Some("2181")),
         argParser.getStringArgument("hbasemaster",
                                     "The master machine for hbase"));
-      case _ => new LocalTileIO
+      case _ => new LocalTileIO(
+      argParser.getStringArgument("tileextension",
+                                  "The extension used for each tile file.  Default is \"avro\"",
+                                   Some("avro")))
     }
   }
 }
@@ -234,9 +237,9 @@ with Serializable {
 /**
  * Read and write tiles from the local file system
  */
-class LocalTileIO extends TileIO {
+class LocalTileIO (extension: String) extends TileIO {
   def getPyramidIO : PyramidIO =
-    new FileSystemPyramidIO("")
+    new FileSystemPyramidIO("", extension)
 }
 
 /**

@@ -29,6 +29,7 @@ import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -143,6 +144,11 @@ public class TextScoreRendererTests {
 			tile.setBin(0, 0, bin);
 
 			return (List) Collections.singletonList(tile);
+		}
+
+		@Override
+		public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException {
+		    return null;
 		}
 
 		@Override

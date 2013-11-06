@@ -51,7 +51,8 @@ object TestSeriesTiling {
     val sc = argParser.getSparkConnector
       .getLocalSparkContext("test time series tiling")
     val binner = new GenericSeriesBinner(source, parser, extractor)
-    binner.doBinning(sc, new LocalTileIO, "TestSeries", "x", "y", "z", "w", 4,
+    binner.doBinning(sc, new LocalTileIO("avro"),
+                     "TestSeries", "x", "y", "z", "w", 4,
                      List(List(0, 1)), Some(1),
                      "Sample time series data",
                      "Sample time series data of an expanding square")

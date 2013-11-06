@@ -22,24 +22,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-require(['fileloader', 'map', 'serverrenderedmaplayer', 'slidercontrol'],
-        function (FileLoader, Map, ServerLayer, SliderControl) {
+require(['fileloader', 'map', 'serverrenderedmaplayer', 'clientrenderedmaplayer', 'slidercontrol'],
+        function (FileLoader, Map, ServerLayer, ClientLayer, SliderControl) {
             "use strict";
 
             var
-            layerFileId = "./data/layers.json",
+            sLayerFileId = "./data/layers.json"
             // Uncomment for geographic data
-            // mapFileId = "./data/geomap.json",
+            ,mapFileId = "./data/geomap.json"
             // Uncomment for non-geographic data
-            mapFileId = "./data/emptymap.json"
+            // ,mapFileId = "./data/emptymap.json"
+            ,cLayerFileId = "./data/renderLayers.json"
             ;
 
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(layerFileId, mapFileId, function (jsonDataMap) {
+            FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
                 var worldMap,
                     slider,
                     mapLayer,
+                    renderLayer,
+                    renderLayerSpecs,
+                    renderLayerSpec,
                     layerIds,
                     layerId,
                     i,
@@ -48,7 +52,7 @@ require(['fileloader', 'map', 'serverrenderedmaplayer', 'slidercontrol'],
                     makeSlideHandler;
 
                 worldMap = new Map("map", jsonDataMap[mapFileId]);
-                mapLayer = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[layerFileId], 2));
+                mapLayer = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId], 2));
                 mapLayer.addToMap(worldMap);
 
                 // Set up to change the base layer opacity
@@ -58,6 +62,14 @@ require(['fileloader', 'map', 'serverrenderedmaplayer', 'slidercontrol'],
 		slider.setOnSlide(function (oldValue, slider) {
 		    worldMap.setOpacity(slider.getValue());
 		});
+
+                // Set up client-rendered layers
+                renderLayerSpecs = jsonDataMap[cLayerFileId];
+                for (i=0; i<renderLayerSpecs.length; ++i) {
+                    renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
+                    renderLayer = new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
+                    renderLayer.addToMap(worldMap);
+                }
 
                 // Set up to change individual layer opacities
                 layerIds = mapLayer.getSubLayerIds();

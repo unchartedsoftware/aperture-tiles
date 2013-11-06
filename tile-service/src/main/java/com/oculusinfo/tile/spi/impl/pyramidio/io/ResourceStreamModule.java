@@ -43,12 +43,13 @@ public class ResourceStreamModule extends AbstractModule {
 	
 	@Provides
 	ResourceStreamReadOnlyPyramidIO provideFileSystemIo(
-			@Named("com.oculusinfo.tile.pyramidio.resource.location")String location){
+			@Named("com.oculusinfo.tile.pyramidio.resource.location")String location,
+			@Named("com.oculusinfo.tile.pyramidio.resource.extension")String extension){
         // Make sure our location ends with a slash
         if (!location.endsWith("/") && !location.endsWith("\\"))
             location = location + File.separator;
 
-        return new ResourceStreamReadOnlyPyramidIO( new ResourcePyramidStreamSource(location) );
+        return new ResourceStreamReadOnlyPyramidIO( new ResourcePyramidStreamSource(location, extension) );
 	}
 	
 }

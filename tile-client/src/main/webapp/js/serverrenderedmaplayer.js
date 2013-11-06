@@ -29,7 +29,7 @@
 /**
  * This modules defines a basic layer class that can be added to maps.
  */
-define(['class', 'datalayer', 'fileloader'], function(Class, DataLayer, FileLoader) {
+define(['class', 'datalayer'], function(Class, DataLayer) {
     "use strict";
 
 

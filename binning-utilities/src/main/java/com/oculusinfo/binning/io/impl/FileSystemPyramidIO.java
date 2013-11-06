@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,18 +41,25 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
 
 public class FileSystemPyramidIO implements PyramidIO {
-	String _rootPath = "";
-	public FileSystemPyramidIO(String rootPath){
+    private String _rootPath;
+    private String _extension;
+
+
+
+	public FileSystemPyramidIO (String rootPath, String extension){
 		_rootPath = rootPath;
+		_extension = extension;
 	}
 
     public Object getRootPath () {
         return _rootPath;
     }
 
-	private File getTileFile (String basePath, TileSerializer<?> serializer, TileIndex tile) {
-    	String fileExtension = serializer.getFileExtension();
-        return new File(String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + fileExtension, _rootPath + basePath, tile.getLevel(), tile.getX(), tile.getY()));
+	private File getTileFile (String basePath, TileIndex tile) {
+        return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+                                              + "/%d/%d/%d." + _extension,
+                                      _rootPath + basePath,
+                                      tile.getLevel(), tile.getX(), tile.getY()));
     }
 
     private File getMetaDataFile (String basePath) {
@@ -66,7 +74,7 @@ public class FileSystemPyramidIO implements PyramidIO {
     public <T> void writeTiles (String basePath, TilePyramid tilePyramid, TileSerializer<T> serializer,
                                 Iterable<TileData<T>> data) throws IOException {
         for (TileData<T> tile: data) {
-            File tileFile = getTileFile(basePath, serializer, tile.getDefinition());
+            File tileFile = getTileFile(basePath, tile.getDefinition());
             File parent = tileFile.getParentFile();
             if (!parent.exists()) parent.mkdirs();
 
@@ -89,7 +97,7 @@ public class FileSystemPyramidIO implements PyramidIO {
                                             Iterable<TileIndex> tiles) throws IOException {
         List<TileData<T>> results = new LinkedList<TileData<T>>();
         for (TileIndex tile: tiles) {
-            File tileFile = getTileFile(basePath, serializer, tile);
+            File tileFile = getTileFile(basePath, tile);
 
             if (tileFile.exists() && tileFile.isFile()) {
                 FileInputStream stream = new FileInputStream(tileFile);
@@ -99,6 +107,17 @@ public class FileSystemPyramidIO implements PyramidIO {
             }
         }
         return results;
+    }
+
+    @Override
+    public InputStream getTileStream (String basePath, TileIndex tile) throws IOException {
+        File tileFile = getTileFile(basePath, tile);
+
+        if (tileFile.exists() && tileFile.isFile()) {
+            return new FileInputStream(tileFile);
+        } else {
+            return null;
+        }
     }
 
     @Override

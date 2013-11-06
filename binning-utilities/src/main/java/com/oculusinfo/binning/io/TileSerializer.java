@@ -36,5 +36,4 @@ import com.oculusinfo.binning.TileData;
 public interface TileSerializer<T> extends Serializable {
     public TileData<T> deserialize (TileIndex index, InputStream rawData) throws IOException;
     public void serialize (TileData<T> data, TilePyramid tilePyramid, OutputStream ouput) throws IOException;
-    public String getFileExtension();
 }
