@@ -67,6 +67,19 @@ define(['class', 'aperture-config-map'], function (Class, Config) {
 	getOpacity: function () {
 	    return this.map.olMap_.baseLayer.opacity;
 	}
+	
+    getExtent: function () {
+        return this.map.olMap_.getExtent();
+    },
+
+    zoomToExtent: function (extent, findClosestZoomLvl) {
+        this.map.olMap_.zoomToExtent(extent, findClosestZoomLvl);
+    },
+
+    on: function (event, callback) {
+        this.map.on(event, callback);
+    }
+	
     });
 
     return Map;

@@ -226,7 +226,18 @@ define(['class', 'datalayer'], function(Class, DataLayer) {
 
             return ids;
         },
+		
+        getSubLayerSpecsById: function () {
+            var that = this;
+            var layerInfoById = {};
 
+            forEachLayer(this, function (layer, layerInfo) {
+                layerInfoById[layer] = this.dataListener.getLayerSpecification(layer);
+            });
+
+            return layerInfoById;
+        },
+		
         /**
          * Get the opacity of a given sub-layer
          */
