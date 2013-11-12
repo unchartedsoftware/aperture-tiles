@@ -22,71 +22,85 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-require(['fileloader', 'map', 'serverrenderedmaplayer', 'clientrenderedmaplayer', 'slidercontrol'],
-        function (FileLoader, Map, ServerLayer, ClientLayer, SliderControl) {
-            "use strict";
+require(['./fileloader',
+         './map',
+         './serverrenderedmaplayer',
+         './client-rendering/TextScoreLayer',
+         './client-rendering/DebugLayer',
+         './ui/SliderControl'],
+        function (FileLoader, Map, ServerLayer, 
+                  ClientLayer, DebugLayer, SliderControl) {
+    "use strict";
+    var sLayerFileId = "./data/layers.json"
+        // Uncomment for geographic data
+        ,mapFileId = "./data/geomap.json"
+        // Uncomment for non-geographic data
+        // ,mapFileId = "./data/emptymap.json"
+        ,cLayerFileId = "./data/renderLayers.json"
+        ;
 
-            var
-            sLayerFileId = "./data/layers.json"
-            // Uncomment for geographic data
-            ,mapFileId = "./data/geomap.json"
-            // Uncomment for non-geographic data
-            // ,mapFileId = "./data/emptymap.json"
-            ,cLayerFileId = "./data/renderLayers.json"
-            ;
+    // Load all our UI configuration data before trying to bring up the ui
+    FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId,
+                            function (jsonDataMap)
+    {
+        // We have all our data now; construct the UI.
+        var worldMap,
+            slider,
+            mapLayer,
+            layerIds,
+            layerId,
+            debugLayer,
+//            renderLayer,
+//            renderLayerSpecs,
+//            renderLayerSpec,
+            i,
+            base,
+            layerSlider,
+            makeSlideHandler;
 
-            // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
-                // We have all our data now; construct the UI.
-                var worldMap,
-                    slider,
-                    mapLayer,
-                    renderLayer,
-                    renderLayerSpecs,
-                    renderLayerSpec,
-                    layerIds,
-                    layerId,
-                    i,
-                    base,
-                    layerSlider,
-                    makeSlideHandler;
+        worldMap = new Map("map", jsonDataMap[mapFileId]);
+        mapLayer = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId], 2));
+        mapLayer.addToMap(worldMap);
 
-                worldMap = new Map("map", jsonDataMap[mapFileId]);
-                mapLayer = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId], 2));
-                mapLayer.addToMap(worldMap);
+        // Set up to change the base layer opacity
+        slider = new SliderControl($("#mapcontrol"), "mapcontrol",
+                                   "Base Layer Opacity", 0.0, 1.0, 100);
+	slider.setValue(worldMap.getOpacity());
+	slider.setOnSlide(function (oldValue, slider) {
+	    worldMap.setOpacity(slider.getValue());
+	});
 
-                // Set up to change the base layer opacity
-                slider = new SliderControl($("#mapcontrol"), "mapcontrol",
-                                           "Base&nbsp;Layer&nbsp;Opacity", 0.0, 1.0, 100);
-		slider.setValue(worldMap.getOpacity());
-		slider.setOnSlide(function (oldValue, slider) {
-		    worldMap.setOpacity(slider.getValue());
-		});
+        // Set up a debug layer
+        debugLayer = new DebugLayer();
+        debugLayer.addToMap(worldMap);
 
-                // Set up client-rendered layers
-                renderLayerSpecs = jsonDataMap[cLayerFileId];
-                for (i=0; i<renderLayerSpecs.length; ++i) {
-                    renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
-                    renderLayer = new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
-                    renderLayer.addToMap(worldMap);
-                }
+        // Set up client-rendered layers
+//        renderLayerSpecs = jsonDataMap[cLayerFileId];
+//        for (i=0; i<renderLayerSpecs.length; ++i) {
+//            renderLayerSpec =
+//                FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
+//            renderLayer =
+//                new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
+//            renderLayer.addToMap(worldMap);
+//        }
 
-                // Set up to change individual layer opacities
-                layerIds = mapLayer.getSubLayerIds();
-                base = $('#layerControls');
-                makeSlideHandler = function (layerId) {
-                    return function (oldValue, slider) {
-                        mapLayer.setSubLayerOpacity(layerId, slider.getValue());
-                    };
-                };
-                for (i=0; i<layerIds.length; ++i) {
-                    layerId = layerIds[i];
-                    layerSlider = $('<div id="layercontrol.'+layerId+'"></div>');
-                    layerSlider.addClass("slider-table");
-                    base.append(layerSlider);
-                    slider = new SliderControl(layerSlider, "layercontrol."+layerId, layerId, 0.0, 1.0, 100);
-                    slider.setValue(mapLayer.getSubLayerOpacity(layerId));
-                    slider.setOnSlide(makeSlideHandler(layerId));
-                }
-            });
-        });
+        // Set up to change individual layer opacities
+        layerIds = mapLayer.getSubLayerIds();
+        base = $('#layerControls');
+        makeSlideHandler = function (layerId) {
+            return function (oldValue, slider) {
+                mapLayer.setSubLayerOpacity(layerId, slider.getValue());
+            };
+        };
+        for (i=0; i<layerIds.length; ++i) {
+            layerId = layerIds[i];
+            layerSlider = $('<div id="layercontrol.'+layerId+'"></div>');
+            layerSlider.addClass("slider-table");
+            base.append(layerSlider);
+            slider = new SliderControl(layerSlider, "layercontrol."+layerId,
+                                       layerId, 0.0, 1.0, 100);
+            slider.setValue(mapLayer.getSubLayerOpacity(layerId));
+            slider.setOnSlide(makeSlideHandler(layerId));
+        }
+    });
+});

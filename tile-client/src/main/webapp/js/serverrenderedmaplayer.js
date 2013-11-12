@@ -26,15 +26,27 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
+
+
 /**
  * This modules defines a basic layer class that can be added to maps.
  */
-define(['class', 'datalayer'], function(Class, DataLayer) {
+define(function (require) {
     "use strict";
 
 
-    var ServerRenderedMapLayer, minRect, computeAggregateInfo, forEachLayer,
-        Y_TILE_FUNC_PASSTHROUGH, Y_TILE_FUNC_ZERO_CLAMP;
+
+    var Class = require('./class'),
+        DataLayer = require('./datalayer'),
+
+        ServerRenderedMapLayer,
+        minRect,
+        computeAggregateInfo,
+        forEachLayer,
+        Y_TILE_FUNC_PASSTHROUGH,
+        Y_TILE_FUNC_ZERO_CLAMP;
+
+
 
     /*
      * Private function to calculate the minimum of two rectangles, defined 

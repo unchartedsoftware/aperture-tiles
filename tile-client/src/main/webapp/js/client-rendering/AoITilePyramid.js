@@ -26,14 +26,19 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
+
+
 /**
  * This module defines a TilePyramid class, the equivalent of AOITilePyramid in
  * binning-utilities.
  */
-define(['class'], function (Class) {
+define(function (require) {
     "use strict";
 
-    var AoITilePyramid;
+
+
+    var Class = require('../class'),
+        AoITilePyramid;
 
     AoITilePyramid = Class.extend({
         init: function (minX, minY, maxX, maxY) {
@@ -57,11 +62,11 @@ define(['class'], function (Class) {
                 bins = 256;
             }
 
-            return {level: level,
-                    x: tileX,
-                    y: tileY,
-                    numXBins: bins,
-                    numYBins: bins};
+            return {level:     level,
+                    xIndex:    tileX,
+                    yIndex:    tileY,
+                    xBinCount: bins,
+                    yBinCount: bins};
         },
 
         rootToBin: function (x, y, tile) {
@@ -71,14 +76,14 @@ define(['class'], function (Class) {
             tileXSize = (this.maxX - this.minX) / pow2;
             tileYSize = (this.maxY - this.minY) / pow2;
 
-            xInTile = x - this.minX - tile.x * tileXSize;
-            yInTile = y - this.minY - tile.y*tileYSize;
+            xInTile = x - this.minX - tile.xIndex * tileXSize;
+            yInTile = y - this.minY - tile.yIndex * tileYSize;
 
-            binX = Math.floor(xInTile * tile.numXBins / tileXSize);
-            binY = Math.floor(yInTile * tile.numYBins / tileYSize);
+            binX = Math.floor(xInTile * tile.xBinCount / tileXSize);
+            binY = Math.floor(yInTile * tile.yBinCount / tileYSize);
 
             return {x: binX,
-                    y: tile.numYBins - 1 - binY};
+                    y: tile.yBinCount - 1 - binY};
         },
 
         getTileBounds: function (tile) {
@@ -88,33 +93,37 @@ define(['class'], function (Class) {
             tileXSize = (this.maxX - this.minX) / pow2;
             tileYSize = (this.maxY - this.minY) / pow2;
 
-            return {minX: this.minX + tileXSize * tile.x,
-                    minY: this.minY + tileYSize * tile.y,
-                    maxX: this.minX + tileXSize * (tile.x + 1),
-                    maxY: this.minY + tileYSize * (tile.y + 1),
-                    centerX: this.minX + tileXSize * (tile.x + 0.5),
-                    centerY: this.minY + tileYSize * (tile.y + 0.5),
+            return {minX: this.minX + tileXSize * tile.xIndex,
+                    minY: this.minY + tileYSize * tile.yIndex,
+                    maxX: this.minX + tileXSize * (tile.xIndex + 1),
+                    maxY: this.minY + tileYSize * (tile.yIndex + 1),
+                    centerX: this.minX + tileXSize * (tile.xIndex + 0.5),
+                    centerY: this.minY + tileYSize * (tile.yIndex + 0.5),
                     width: tileXSize,
                     height: tileYSize};
         },
 
         getBinBounds: function (tile, bin) {
-            var pow2, tileXSize, tileYSize, binXSize, binYSize, adjustedY;
+            var pow2, tileXSize, tileYSize, binXSize, binYSize, adjustedY,
+                left, bottom;
 
             pow2 = 1 << tile.level;
             tileXSize = (this.maxX - this.minX) / pow2;
             tileYSize = (this.maxY - this.minY) / pow2;
-            binXSize = tileXSize / tile.numXBins;
-            binYSize = tileYSize / tile.numYBins;
+            binXSize = tileXSize / tile.xBinCount;
+            binYSize = tileYSize / tile.yBinCount;
 
-            adjustedY = tile.numYBins - 1 - bin.y;
+            adjustedY = tile.yBinCount - 1 - bin.y;
 
-            return {minX: this.minX + tileXSize * tile.x + binXSize * bin.x,
-                    minY: this.minY + tileYSize * tile.y + binYSize * adjustedY,
-                    maxX: this.minX + tileXSize * tile.x + binXSize * (bin.x + 1),
-                    maxY: this.minY + tileYSize * tile.y + binYSize * (adjustedY + 1),
-                    centerX: this.minX + tileXSize * tile.x + binXSize * (bin.x + 0.5),
-                    centerY: this.minY + tileYSize * tile.y + binYSize * (adjustedY + 0.5),
+            left = this.minX + tileXSize * tile.xIndex;
+            bottom = this.minY + tileYSize * tile.yIndex;
+
+            return {minX: left + binXSize * bin.x,
+                    minY: bottom + binYSize * adjustedY,
+                    maxX: left + binXSize * (bin.x + 1),
+                    maxY: bottom + binYSize * (adjustedY + 1),
+                    centerX: left + binXSize * (bin.x + 0.5),
+                    centerY: bottom + binYSize * (adjustedY + 0.5),
                     width: binXSize,
                     height: binYSize};
         }

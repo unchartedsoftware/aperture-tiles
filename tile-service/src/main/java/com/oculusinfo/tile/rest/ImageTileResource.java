@@ -129,8 +129,8 @@ public class ImageTileResource extends ApertureServerResource {
 			    JSONObject result = new JSONObject();
 			    JSONObject tileIndex = new JSONObject();
 			    tileIndex.put("level", zoomLevel);
-			    tileIndex.put("x", x);
-			    tileIndex.put("y", y);
+			    tileIndex.put("xIndex", x);
+			    tileIndex.put("yIndex", y);
 			    result.put("index", tileIndex);
 			    result.put("tile", _service.getTileObject(UUID.fromString(id), layer, zoomLevel, x, y));
 
