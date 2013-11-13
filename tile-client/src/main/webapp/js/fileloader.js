@@ -22,8 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+
+
 /**
- * A module to allow in-line or defered loading of JSON files.
+ * A module with methods to enable pre-loading of sets of JSON files from the
+ * server.  This is essentially the equivalent of a static class in Java -
+ * there are no constructors, only essentially static methods.
  */
 define({
     /**

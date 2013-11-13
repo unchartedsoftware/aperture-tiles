@@ -26,12 +26,19 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
+
+
 /**
  * This modules defines a basic layer class that can be added to maps.
  */
-define(['class'], function (Class) {
+define(function (require) {
     "use strict";
-    var MapLayer;
+
+
+
+    var Class = require('../class'),
+        DataTracker = require('./TileLayerDataTracker'),
+        MapLayer;
 
 
 
@@ -39,65 +46,61 @@ define(['class'], function (Class) {
         init: function (id) {
             this.id = id;
             this.map = null;
-            this.onMapUpdate = null;
-            this.adding = false;
+            this.tracker = new DataTracker();
+            this.position = {x: 'centerX', y: 'centerY'};
         },
 
+        /**
+         * Called when the visuals for this layer are to be created. 
+         * This method <em>must</em> be overridden by implementations.
+         * Without an implementation of this method, any MapLayer would,
+         * of course be useless anyway.
+         *
+         * @param nodeLayer The node layer to which to attach visuals.
+         */
         createLayer: function (nodeLayer) {
-            throw "Undefined createLayer method in map layer;  createLayer must be overridden in leaf class.";
+            throw ("Undefined createLayer method in map layer;  " +
+                   "createLayer must be overridden in leaf class.");
         },
 
+        /**
+         * Called when this layer is removed from the map, and visuals should
+         * be destroyed.  It is not essential that implementations implement
+         * this method, but it exists as a convenience to allow implementations
+         * to do any cleanup they need at this point.
+         *
+         * @param nodeLayer The node layer to which visuals were attached.
+         */
         destroyLayer: function (nodeLayer) {
-            // destroy doesn't have to be rededfined, but we give layers the opportunity.
             return undefined;
         },
 
-        startMapUpdate: function () {
-            if (!this.adding && this.map && this.onMapUpdate) {
-                this.map.map.on('zoom',   this.onMapUpdate);
-                this.map.map.on('panend', this.onMapUpdate);
-                this.onMapUpdate(null);
-            }
-        },
 
-        stopMapUpdate: function () {
-            if (!this.adding && this.map && this.onMapUpdate) {
-                this.map.map.off('zoom',   this.onMapUpdate);
-                this.map.map.off('panend', this.onMapUpdate);
-            }
-        },
 
-        setUpdateFcn: function (onUpdate) {
-            this.stopMapUpdate();
 
-            this.onMapUpdate = onUpdate;
 
-            this.startMapUpdate();
-        },
-                
-                
-        // Add this layer to the given map
+        /**
+         * Add this layer to the given map
+         */
         addToMap: function (map) {
-            this.adding = true;
             this.map = map;
+
 
             // Add our layers
             this._nodeLayer = this.map.map.addLayer(aperture.geo.MapNodeLayer);
-            this._nodeLayer.map('latitude').from('latitude');
+            this.tracker.setNodeLayer(this._nodeLayer);
             this._nodeLayer.map('longitude').from('longitude');
-            this._nodeLayer.map('visible').asValue(true);
+            this._nodeLayer.map('latitude').from('latitude');
+            this._nodeLayer.map('visible').asValue('visible');
 
             this.createLayer(this._nodeLayer);
-            this.adding = false;
-
-            this.startMapUpdate();
         },
 
-        // Remove this layer from its current map
+        /**
+         * Remove this layer from its current map
+         */
         removeFromMap: function () {
             if (this.map) {
-                this.stopMapUpdate();
-
                 this.destroyLayer(this._nodeLayer);
                 this.map.map.remove(this._nodeLayer);
 
@@ -106,7 +109,6 @@ define(['class'], function (Class) {
             }
         }
     });
-
 
     return MapLayer;
 });

@@ -93,7 +93,9 @@ public class ImageTileServiceImpl implements ImageTileService {
 			result.put("tms", hostUrl + "tile/" + id.toString() + "/");
 			result.put("apertureservice", "/tile/" + id.toString() + "/");
 
-			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
+			String rendererType = options.getString("renderer");
+			
+			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(rendererType, _pyramidIo);
 
 			result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
 			System.out.println("UUID Count after "+layer+": " + _uuidToOptionsMap.size());
@@ -114,45 +116,59 @@ public class ImageTileServiceImpl implements ImageTileService {
 	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y) {
 		PyramidMetaData metadata = getMetadata(layer);
 
-
-		// Get rendering options
-		JSONObject options = _uuidToOptionsMap.get(id);
+		// DEFAULTS
 		String rampType = "ware";
-		try {
-			rampType = options.getString("ramp");
-		} catch (JSONException e2) {
-			_logger.warn("No ramp specified for tile request - using default.");
-		}
 		String transform = "linear";
-		try {
-			transform = options.getString("transform");
-		} catch (JSONException e2) {
-			_logger.warn("No transform specified for tile request - using default.");
-		}
-		
+		String rendererType = "default";
 		int rangeMin = 0;
 		int rangeMax = 100;
-		try {
-			JSONArray legendRange = options.getJSONArray("legendRange");
-			rangeMin = legendRange.getInt(0);
-			rangeMax = legendRange.getInt(1);
-		} catch (JSONException e3) {
-			_logger.warn("No ramp specified for tile request - using default.");
+		int currentImage = 0;
+		
+		if(id != null){
+			// Get rendering options
+			JSONObject options = _uuidToOptionsMap.get(id);
+			
+			try {
+				rampType = options.getString("ramp");
+			} catch (JSONException e2) {
+				_logger.info("No ramp specified for tile request - using default.");
+			}
+			
+			try {
+				transform = options.getString("transform");
+			} catch (JSONException e2) {
+				_logger.info("No transform specified for tile request - using default.");
+			}
+			
+			try {
+				rendererType = options.getString("renderer");
+			} catch (JSONException e2) {
+				_logger.info("No renderer specified for tile request - using default.");
+			}
+			
+			try {
+				JSONArray legendRange = options.getJSONArray("legendRange");
+				rangeMin = legendRange.getInt(0);
+				rangeMax = legendRange.getInt(1);
+			} catch (JSONException e3) {
+				_logger.info("No ramp specified for tile request - using default.");
+			}
+	
+			// "currentImage" is the index of an image in a series. e.g. a tile containing a time-series.
+			try {
+				currentImage = options.getInt("currentImage");
+			} catch (JSONException e4) {
+				_logger.info("No current image specified - using default");
+			}
 		}
+
 		int dimension = 256;
 		String maximumValue = metadata.getLevelMaximum(zoomLevel);
-
-		int currentImage = 0;
-		try {
-			currentImage = options.getInt("currentImage");
-		} catch (JSONException e4) {
-			_logger.info("No current image specified - using default");
-		}
 
 
 		BufferedImage bi;
 
-		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
+		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(rendererType, _pyramidIo);
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
 		bi = renderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
 				dimension, maximumValue, tileCoordinate, currentImage));

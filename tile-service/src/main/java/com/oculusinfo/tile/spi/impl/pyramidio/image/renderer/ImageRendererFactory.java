@@ -22,22 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
 import com.oculusinfo.binning.io.PyramidIO;
 
 public class ImageRendererFactory {
-	public static TileDataImageRenderer getRenderer (JSONObject parameterObject, PyramidIO pyramidIo) {
-		String rendererType = "default";
-
-		try {
-			rendererType = parameterObject.getString("renderer");
-		} catch (JSONException e) {
+	public static TileDataImageRenderer getRenderer (String rendererType, PyramidIO pyramidIo) {
+		if(rendererType == null || rendererType.length() == 0){
+			rendererType = "default";
 		}
-
+		
 		rendererType = rendererType.toLowerCase();
 		if ("textscore".equals(rendererType)) {
 			return new TextScoreImageRenderer(pyramidIo);

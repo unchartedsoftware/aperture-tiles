@@ -26,55 +26,48 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
-
-
+/**
+ * This module defines a simple client-rendered layer that displays a 
+ * text score tile in a meaningful way.
+ */
 define(function (require) {
     "use strict";
 
 
 
-    var Class = require('./class'),
-        Config = require('./aperture-config-map'),
-        Map;
+    var MapLayer = require('./MapLayer'),
+        MapServerCoordinator = require('./MapServerCoordinator'),
+
+        ClientRenderedMapLayer;
 
 
 
-    Map = Class.extend({
-        init: function (id, baseLayerSpec) {
-            var mapSpec;
-
-            Config.loadConfiguration(baseLayerSpec);
-
-            // Set up map initialization parameters
-            mapSpec = {
-                id: id,
-                options: {
-                    mapExtents: [ -180.000000, -85.051129, 180.000000, 85.051129 ],
-                    projection: "EPSG:900913",
-                    numZoomLevels: 12,
-                    units: "m",
-                    restricted: false
-                }
-            };
-
-            // Initialize the map
-            this.map = new aperture.geo.Map(mapSpec);
-            this.map.olMap_.baseLayer.setOpacity(1);
-            this.map.all().redraw();
-
-
-            // The projection the map uses
-            this.projection = new OpenLayers.Projection("EPSG:900913");
+    ClientRenderedMapLayer = MapLayer.extend({
+        init: function (id, layerSpec) {
+            this._super(id);
+            this.setPosition('center');
+            this.coordinator = new MapServerCoordinator(this.tracker,
+                                                        layerSpec);
         },
 
-	setOpacity: function (newOpacity) {
-	    this.map.olMap_.baseLayer.setOpacity(newOpacity);
-	},
+        createLayer: function (nodeLayer) {
+            this._labelLayer = this._nodeLayer.addLayer(aperture.LabelLayer);
+            this._labelLayer.map('label-count')
+                .from(function (data, index) {
+                    return this.tracker.getNumValues(index);
+                });
+            this._labelLayer.map('text')
+                .from(function (data, index, subIndex) {
+                    return this.tracker.getValue(index, subIndex);
+                });
+            this._labelLayer.map('offset-y')
+                .from(function (data, index, subIndex) {
+                    return (subIndex-this.tracker.getNumValues(index)/2) * 12;
+                });
 
-	getOpacity: function () {
-	    return this.map.olMap_.baseLayer.opacity;
-	}
+            this.coordinator.setMap(this.map);
+        }
     });
 
-    return Map;
+    return ClientRenderedMapLayer;
 });

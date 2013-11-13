@@ -33,10 +33,11 @@
  * slider, but it does do a little - it sets up the visuals properly within
  * a passed-in control, mostly.
  */
-define(['class'], function (Class) {
+define(function (require) {
     "use strict";
 
-    var SliderControl, onStart, onSlide, onStop;
+    var Class = require('../class'),
+        SliderControl, onStart, onSlide, onStop;
 
 
     // Private methods

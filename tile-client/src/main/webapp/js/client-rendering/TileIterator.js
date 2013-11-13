@@ -26,14 +26,21 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
+
+
 /**
  * This module defines a TileIterator class, the equivalent of TileIterator in
  * binning-utilities.
  */
-define(['class'], function (Class) {
+define(function (require) {
     "use strict";
 
-    var TileIterator;
+
+
+    var Class = require('../class'),
+        TileIterator;
+
+
 
     TileIterator = Class.extend({
         init: function (pyramid, level, minX, minY, maxX, maxY) {
@@ -41,27 +48,27 @@ define(['class'], function (Class) {
             this.level = level;
             this.minTile = pyramid.rootToTile(minX, minY, level);
             this.maxTile = pyramid.rootToTile(maxX, maxY, level);
-            this.curX = this.minTile.x;
-            this.curY = this.minTile.y;
+            this.curX = this.minTile.xIndex;
+            this.curY = this.minTile.yIndex;
         },
 
         hasNext: function () {
-            return (this.curX <= this.maxTile.x &&
-                    this.curY <= this.maxTile.y);
+            return (this.curX <= this.maxTile.xIndex &&
+                    this.curY <= this.maxTile.yIndex);
         },
 
         next: function () {
             var tile = {
-                x: this.curX,
-                y: this.curY,
-                level: this.level,
-                numXBins: 256,
-                numYBins: 256
+                xIndex:    this.curX,
+                yIndex:    this.curY,
+                level:     this.level,
+                xBinCount: 256,
+                yBinCount: 256
             };
 
             this.curX = this.curX + 1;
-            if (this.curX > this.maxTile.x) {
-                this.curX = this.minTile.x;
+            if (this.curX > this.maxTile.xIndex) {
+                this.curX = this.minTile.xIndex;
                 this.curY = this.curY + 1;
             }
 

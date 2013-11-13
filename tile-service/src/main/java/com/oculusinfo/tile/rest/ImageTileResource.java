@@ -109,13 +109,18 @@ public class ImageTileResource extends ApertureServerResource {
 			int x = Integer.parseInt(xAttr);
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
+			
+			UUID uuid = null;
+			if( !"default".equals(id) ){ // Special indicator - no ID.
+				uuid = UUID.fromString(id);
+			}
 
 			String ext = (String) getRequest().getAttributes().get("ext");
 			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
 			if (null == extType) {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			} else if (ResponseType.Image.equals(extType.getResponseType())) {
-				BufferedImage tile = _service.getTileImage(UUID.fromString(id), layer, zoomLevel, x, y);
+				BufferedImage tile = _service.getTileImage(uuid, layer, zoomLevel, x, y);
 				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
 
 				setStatus(Status.SUCCESS_CREATED);
@@ -129,10 +134,10 @@ public class ImageTileResource extends ApertureServerResource {
 			    JSONObject result = new JSONObject();
 			    JSONObject tileIndex = new JSONObject();
 			    tileIndex.put("level", zoomLevel);
-			    tileIndex.put("x", x);
-			    tileIndex.put("y", y);
+			    tileIndex.put("xIndex", x);
+			    tileIndex.put("yIndex", y);
 			    result.put("index", tileIndex);
-			    result.put("tile", _service.getTileObject(UUID.fromString(id), layer, zoomLevel, x, y));
+			    result.put("tile", _service.getTileObject(uuid, layer, zoomLevel, x, y));
 
 			    setStatus(Status.SUCCESS_CREATED);
 			    return new JsonRepresentation(result);

@@ -30,10 +30,11 @@
  * This module defines a basic data layer class that handles communications 
  * with the server about a layer or layers of data.
  */
-define(['class'], function(Class) {
+define(function (require) {
     "use strict";
 
-    var DataLayer;
+    var Class = require('./class'),
+        DataLayer;
 
 
 
