@@ -43,6 +43,7 @@ define(function (require) {
 
 
     TileIterator = Class.extend({
+        ClassName: "TileIterator",
         init: function (pyramid, level, minX, minY, maxX, maxY) {
             this.pyramid = pyramid;
             this.level = level;

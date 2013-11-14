@@ -37,11 +37,12 @@ define(function (require) {
 
     var MapLayer = require('./MapLayer'),
         MapServerCoordinator = require('./MapServerCoordinator'),
-        ClientRenderedMapLayer;
+        TextScoreLayer;
 
 
 
-    ClientRenderedMapLayer = MapLayer.extend({
+    TextScoreLayer = MapLayer.extend({
+        ClassName: "TextScoreLayer",
         init: function (id, layerSpec) {
             this._super(id);
             this.tracker.setPosition('center');
@@ -114,5 +115,5 @@ define(function (require) {
         }
     });
 
-    return ClientRenderedMapLayer;
+    return TextScoreLayer;
 });

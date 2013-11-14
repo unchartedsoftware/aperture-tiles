@@ -96,6 +96,7 @@ define(function (require) {
 
 
     TileLayerDataTracker = Class.extend({
+        ClassName: "TileLayerDataTracker",
         init: function () {
             // An array of tile keys of each tile we've received
             this.tiles = [];

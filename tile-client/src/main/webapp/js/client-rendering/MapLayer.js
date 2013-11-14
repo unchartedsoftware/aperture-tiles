@@ -43,6 +43,7 @@ define(function (require) {
 
 
     MapLayer = Class.extend({
+        ClassName: "MapLayer",
         init: function (id) {
             this.id = id;
             this.map = null;

@@ -47,6 +47,7 @@ define(function (require) {
 
 
     MapServerCoordinator = Class.extend({
+        ClassName: "MapServerCoordinator",
         init: function (tracker, layerSpec) {
             var layerInfoListener, onLayerInfoRetrieved;
 

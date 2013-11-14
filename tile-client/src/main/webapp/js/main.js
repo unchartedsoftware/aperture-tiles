@@ -27,9 +27,10 @@ require(['./fileloader',
          './serverrenderedmaplayer',
          './client-rendering/TextScoreLayer',
          './client-rendering/DebugLayer',
-         './ui/SliderControl'],
+         './ui/SliderControl',
+         './profileclass'],
         function (FileLoader, Map, ServerLayer, 
-                  ClientLayer, DebugLayer, SliderControl) {
+                  ClientLayer, DebugLayer, SliderControl, Class) {
     "use strict";
     var sLayerFileId = "./data/layers.json"
         // Uncomment for geographic data
@@ -104,5 +105,10 @@ require(['./fileloader',
                 new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
             renderLayer.addToMap(worldMap);
         }
+
+
+        setTimeout(function () {
+            console.log(Class.getProfileInfo());
+        }, 10000);
     });
 });

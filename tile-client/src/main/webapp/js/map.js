@@ -40,6 +40,7 @@ define(function (require) {
 
 
     Map = Class.extend({
+        ClassName: "Map",
         init: function (id, baseLayerSpec) {
             var mapSpec;
 

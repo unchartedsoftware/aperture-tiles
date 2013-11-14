@@ -133,6 +133,7 @@ define(function (require) {
 
 
     ServerRenderedMapLayer = Class.extend({
+        ClassName: "ServerRenderedMapLayer",
         init: function (layerSpec) {
             this.unfulfilledRequests = [];
             // The collected map bounds of all our map layers

@@ -75,6 +75,7 @@ define (function (require) {
 
 
     WebMercatorTilePyramid = Class.extend({
+        ClassName: "WebMercatorTilePyramid",
         getProjection: "EPSG:900913",
         getTileScheme: "TMS",
 
