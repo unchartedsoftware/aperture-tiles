@@ -98,7 +98,8 @@ define(function (require) {
     TileLayerDataTracker = Class.extend({
         ClassName: "TileLayerDataTracker",
         init: function () {
-            // An array of tile keys of each tile we've received
+            // An array of tile keys of each tile we've requested (whether or not
+            // we've received them)
             this.tiles = [];
             // All the data we've recieved, put in one object, keyed by 
             // tile key (as defined by the createTileKey method).
@@ -237,11 +238,15 @@ define(function (require) {
 
                 if (defunctTiles[tileKey]) {
                     // Already have the data.
+                    // Make sure not to delete it
                     delete defunctTiles[tileKey];
+                    // And mark it as meaningful
                     usedTiles[usedTiles.length] = tileKey;
                 } else {
                     // New data.  Mark for fetch.
                     neededTiles[neededTiles.length] = tile;
+                    // And mark it as meaningful
+                    usedTiles[usedTiles.length] = tileKey;
                 }
             }
 
@@ -263,11 +268,14 @@ define(function (require) {
             var tileKey = this.createTileKey(tileData.index),
                 binData = this.transformTileToBins(tileData.tile, tileKey);
 
-            this.data[tileKey] = binData;
+            // Ignore data for tiles from previous, now defunct updates.
+            if (-1 !== this.tiles.indexOf(tileKey)) {
+                this.data[tileKey] = binData;
 
-            if (this.nodeLayer) {
-                this.nodeLayer.join(this.mergeData(), "binkey");
-                this.nodeLayer.all().redraw();
+                if (this.nodeLayer) {
+                    this.nodeLayer.join(this.mergeData(), "binkey");
+                    this.nodeLayer.all().redraw();
+                }
             }
         },
         mergeData: function () {
