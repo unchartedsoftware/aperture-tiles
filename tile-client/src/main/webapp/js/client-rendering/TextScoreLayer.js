@@ -37,7 +37,6 @@ define(function (require) {
 
     var MapLayer = require('./MapLayer'),
         MapServerCoordinator = require('./MapServerCoordinator'),
-
         ClientRenderedMapLayer;
 
 
@@ -45,25 +44,42 @@ define(function (require) {
     ClientRenderedMapLayer = MapLayer.extend({
         init: function (id, layerSpec) {
             this._super(id);
-            this.setPosition('center');
+            this.tracker.setPosition('center');
             this.coordinator = new MapServerCoordinator(this.tracker,
                                                         layerSpec);
         },
 
         createLayer: function (nodeLayer) {
-            this._labelLayer = this._nodeLayer.addLayer(aperture.LabelLayer);
-            this._labelLayer.map('label-count')
-                .from(function (data, index) {
-                    return this.tracker.getNumValues(index);
-                });
-            this._labelLayer.map('text')
-                .from(function (data, index, subIndex) {
-                    return this.tracker.getValue(index, subIndex);
-                });
-            this._labelLayer.map('offset-y')
-                .from(function (data, index, subIndex) {
-                    return (subIndex-this.tracker.getNumValues(index)/2) * 12;
-                });
+            var yPosFcn = function (index) {
+                return 16 * (index - (this.bin.value.length - 1.0)/2);
+            };
+            this.labelLayer = this._nodeLayer.addLayer(aperture.LabelLayer);
+            this.labelLayer.map('label-count').from('bin.value.length');
+            this.labelLayer.map('text').from(function (index) {
+                return this.bin.value[index].key;
+            });
+            this.labelLayer.map('offset-y').from(yPosFcn);
+            this.labelLayer.map('text-anchor').from(function (index) {
+                var value = this.bin.value[index].value;
+                if (value >= 0) {
+                    return 'end';
+                }
+                return 'start';
+            });
+            this.labelLayer.map('fill').asValue('#FFF');
+            this.labelLayer.map('font-outline').asValue('#222');
+            this.labelLayer.map('font-outline-width').asValue(3);
+            this.labelLayer.map('visible').asValue(true);
+
+            this.barLayer = this._nodeLayer.addLayer(aperture.BarLayer);
+            this.barLayer.map('orientation').asValue('horizontal');
+            this.barLayer.map('bar-count').from('bin.value.length');
+            this.barLayer.map('x').asValue(0);
+            this.barLayer.map('length').from(function (index) {
+                var value = this.bin.value[index].value;
+                return value / 100.0;
+            });
+            this.barLayer.map('fill').from('#80C0FF');
 
             this.coordinator.setMap(this.map);
         }

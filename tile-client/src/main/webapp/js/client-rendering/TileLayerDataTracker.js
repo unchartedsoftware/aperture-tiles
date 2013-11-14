@@ -259,7 +259,7 @@ define(function (require) {
          * Add tile data as returned from the server
          */
         addTileData: function (tileData) {
-            var tileKey = this.createTileKey(tileData.tileIndex),
+            var tileKey = this.createTileKey(tileData.index),
                 binData = this.transformTileToBins(tileData.tile, tileKey),
                 allData;
 
@@ -326,7 +326,7 @@ define(function (require) {
                             binkey: this.createBinKey(tileKey, bin),
                             longitude: binRect[this.position.x],
                             latitude: binRect[this.position.y],
-                            visibie: true,
+                            visible: true,
                             bin: tileData.values[binNum]
                         };
                         results[results.length] = binData;
