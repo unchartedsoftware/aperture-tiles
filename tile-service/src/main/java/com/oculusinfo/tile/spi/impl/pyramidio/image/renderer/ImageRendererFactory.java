@@ -25,12 +25,19 @@
 
 package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.oculusinfo.binning.io.PyramidIO;
 
 public class ImageRendererFactory {
-	public static TileDataImageRenderer getRenderer (String rendererType, PyramidIO pyramidIo) {
-		if(rendererType == null || rendererType.length() == 0){
-			rendererType = "default";
+	public static TileDataImageRenderer getRenderer (JSONObject parameterObject, PyramidIO pyramidIo) {
+	    String rendererType = "default";
+	    try {
+	        if (null != parameterObject) {
+	            rendererType = parameterObject.getString("renderer");
+	        }
+	    } catch (JSONException e) {
 		}
 		
 		rendererType = rendererType.toLowerCase();

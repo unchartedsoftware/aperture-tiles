@@ -93,9 +93,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 			result.put("tms", hostUrl + "tile/" + id.toString() + "/");
 			result.put("apertureservice", "/tile/" + id.toString() + "/");
 
-			String rendererType = options.getString("renderer");
-			
-			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(rendererType, _pyramidIo);
+			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 
 			result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
 			System.out.println("UUID Count after "+layer+": " + _uuidToOptionsMap.size());
@@ -119,33 +117,27 @@ public class ImageTileServiceImpl implements ImageTileService {
 		// DEFAULTS
 		String rampType = "ware";
 		String transform = "linear";
-		String rendererType = "default";
 		int rangeMin = 0;
 		int rangeMax = 100;
 		int currentImage = 0;
+		JSONObject options = null;
 		
 		if(id != null){
 			// Get rendering options
-			JSONObject options = _uuidToOptionsMap.get(id);
-			
+			options = _uuidToOptionsMap.get(id);
+
 			try {
 				rampType = options.getString("ramp");
 			} catch (JSONException e2) {
 				_logger.info("No ramp specified for tile request - using default.");
 			}
-			
+
 			try {
 				transform = options.getString("transform");
 			} catch (JSONException e2) {
 				_logger.info("No transform specified for tile request - using default.");
 			}
-			
-			try {
-				rendererType = options.getString("renderer");
-			} catch (JSONException e2) {
-				_logger.info("No renderer specified for tile request - using default.");
-			}
-			
+
 			try {
 				JSONArray legendRange = options.getJSONArray("legendRange");
 				rangeMin = legendRange.getInt(0);
@@ -168,7 +160,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 		BufferedImage bi;
 
-		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(rendererType, _pyramidIo);
+		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
 		bi = renderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
 				dimension, maximumValue, tileCoordinate, currentImage));
