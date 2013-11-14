@@ -37,7 +37,7 @@ define(function (require) {
 
 
 
-    var Class = require('../class'),
+    var Class = require('../profileclass'),
         WebPyramid = require('./WebTilePyramid'),
         TileLayerDataTracker,
         getArrayLength,
@@ -261,19 +261,21 @@ define(function (require) {
          */
         addTileData: function (tileData) {
             var tileKey = this.createTileKey(tileData.index),
-                binData = this.transformTileToBins(tileData.tile, tileKey),
-                allData;
+                binData = this.transformTileToBins(tileData.tile, tileKey);
 
             this.data[tileKey] = binData;
 
             if (this.nodeLayer) {
-                allData = [];
-                $.each(this.data, function (index, value) {
-                    $.merge(allData, value);
-                });
-                this.nodeLayer.join(allData, "binkey");
+                this.nodeLayer.join(this.mergeData(), "binkey");
                 this.nodeLayer.all().redraw();
             }
+        },
+        mergeData: function () {
+            var allData = [];
+            $.each(this.data, function (index, value) {
+                $.merge(allData, value);
+            });
+            return allData;
         },
 
         /**
