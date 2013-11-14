@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>tile-generation</artifactId>
-  <name>Influent Spark Tile Generation</name>
+  <name>Aperture Spark Tile Generation</name>
   <description>A Spark-based library to aid in easy tile and tile pyramid generation</description>
 
   <!-- Note that when one changes the parent version (and, hence, the project 
