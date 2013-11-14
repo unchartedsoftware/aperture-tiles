@@ -323,6 +323,7 @@ define(function (require) {
                         binRect = webPyramid.getBinBounds(tileData, bin);
 
                         binData = {
+                            level: tileData.level,
                             binkey: this.createBinKey(tileKey, bin),
                             longitude: binRect[this.position.x],
                             latitude: binRect[this.position.y],

@@ -50,17 +50,42 @@ define(function (require) {
         },
 
         createLayer: function (nodeLayer) {
-            var yPosFcn = function (index) {
-                return 16 * (index - (this.bin.value.length - 1.0)/2);
-            };
+            // Store our coordinator locally so that we can get to metainfo
+            // from within our aperture property functions; within the functions,
+            // <em>this</em> refers to the data, so we need closures to get
+            // information about the real <em>this</em>
+            var coordinatorLocal = this.coordinator,
+                maxSeen = Number.MIN_VALUE,
+                getProportionOfMax = function (value, level) {
+                    var max = maxSeen;
+                    if (level &&
+                        coordinatorLocal &&
+                        coordinatorLocal.layerInfo &&
+                        coordinatorLocal.layerInfo.meta &&
+                        coordinatorLocal.layerInfo.meta.levelMaximums &&
+                        coordinatorLocal.layerInfo.meta.levelMaximums[level] &&
+                        isFinite(coordinatorLocal.layerInfo.meta.levelMaximums[level])) {
+                        max = coordinatorLocal.layerInfo.meta.levelMaximums[level];
+                    } else if (Math.abs(value) > max) {
+                        max = Math.abs(value);
+                    }
+
+                    if (max > maxSeen) {
+                        maxSeen = max;
+                    }
+                    return value / max;
+                };
+
             this.labelLayer = this._nodeLayer.addLayer(aperture.LabelLayer);
             this.labelLayer.map('label-count').from('bin.value.length');
             this.labelLayer.map('text').from(function (index) {
                 return this.bin.value[index].key;
             });
-            this.labelLayer.map('offset-y').from(yPosFcn);
+            this.labelLayer.map('offset-y').from(function (index) {
+                return 16 * (index - (this.bin.value.length - 1.0) / 2);
+            });
             this.labelLayer.map('text-anchor').from(function (index) {
-                var value = this.bin.value[index].value;
+                var value = getProportionOfMax(this.bin.value[index].value, this.level);
                 if (value >= 0) {
                     return 'end';
                 }
@@ -75,9 +100,13 @@ define(function (require) {
             this.barLayer.map('orientation').asValue('horizontal');
             this.barLayer.map('bar-count').from('bin.value.length');
             this.barLayer.map('x').asValue(0);
+            this.barLayer.map('y').from(function (index) {
+                return 16 * (index - (this.bin.value.length - 1.0) / 2);
+            });
+            this.barLayer.map('width').asValue('10');
             this.barLayer.map('length').from(function (index) {
-                var value = this.bin.value[index].value;
-                return value / 100.0;
+                var value = getProportionOfMax(this.bin.value[index].value);
+                return value * 150.0;
             });
             this.barLayer.map('fill').from('#80C0FF');
 
