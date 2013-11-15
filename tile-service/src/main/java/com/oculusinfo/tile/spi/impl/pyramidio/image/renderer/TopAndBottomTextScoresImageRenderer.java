@@ -25,32 +25,42 @@
 
 package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.List;
 
+import com.oculusinfo.binning.io.Pair;
 import com.oculusinfo.binning.io.PyramidIO;
 
-public class ImageRendererFactory {
-	public static TileDataImageRenderer getRenderer (JSONObject parameterObject, PyramidIO pyramidIo) {
-	    String rendererType = "default";
-	    try {
-	        if (null != parameterObject) {
-	            rendererType = parameterObject.getString("renderer");
-	        }
-	    } catch (JSONException e) {
-		}
-		
-		rendererType = rendererType.toLowerCase();
-		if ("toptextscores".equals(rendererType)) {
-			return new TopTextScoresImageRenderer(pyramidIo);
-		} else if ("textscores".equals(rendererType)) {
-			return new TopAndBottomTextScoresImageRenderer(pyramidIo);
-		} else if ("legacy".equals(rendererType)) {
-			return new LegacyDoublesImageRenderer(pyramidIo);
-		} else if ("doubleseries".equals(rendererType)) {
-			return new DoublesSeriesImageRenderer(pyramidIo);
+/**
+ * A server side to render Map<String, Double> (well, technically,
+ * List<Pair<String, Double>>) tiles.
+ * 
+ * This renderer modifies {@link TopTextScoresImageRenderer} to render the top
+ * and bottom few scores, up to 5 of each.
+ * 
+ * @author nkronenfeld
+ */
+public class TopAndBottomTextScoresImageRenderer extends TopTextScoresImageRenderer {
+	public TopAndBottomTextScoresImageRenderer (PyramidIO pyramidIo) {
+		super(pyramidIo);
+	}
+
+	@Override
+	protected int[] getTextsToDraw(List<Pair<String, Double>> cellData) {
+		int n = cellData.size();
+		int t = Math.min(10, n);
+		int[] result = new int[t];
+
+		if (n < 10) {
+			for (int i=0; i<t; ++i) {
+				result[t-1-i] = i;
+			}
 		} else {
-			return new DoublesImageRenderer(pyramidIo);
+			for (int i=0; i<5; ++i) {
+				result[9-i] = i;
+				result[i] = n-1-i;
+			}
 		}
+
+		return result;
 	}
 }
