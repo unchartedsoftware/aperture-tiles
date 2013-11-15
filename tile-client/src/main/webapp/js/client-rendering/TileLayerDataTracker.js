@@ -238,10 +238,13 @@ define(function (require) {
                 if (defunctTiles[tileKey]) {
                     // Already have the data.
                     delete defunctTiles[tileKey];
+                    // And mark it as something we care about.
                     usedTiles[usedTiles.length] = tileKey;
                 } else {
                     // New data.  Mark for fetch.
                     neededTiles[neededTiles.length] = tile;
+                    // And mark it as something we care about.
+                    usedTiles[usedTiles.length] = tileKey;
                 }
             }
 
@@ -261,18 +264,22 @@ define(function (require) {
          */
         addTileData: function (tileData) {
             var tileKey = this.createTileKey(tileData.index),
-                binData = this.transformTileToBins(tileData.tile, tileKey),
-                allData;
+                binData, allData;
 
-            this.data[tileKey] = binData;
+            // Make sure we care about this tile
+            if (-1 !== this.tiles.indexOf(tileKey)) {
+                binData = this.transformTileToBins(tileData.tile, tileKey);
 
-            if (this.nodeLayer) {
-                allData = [];
-                $.each(this.data, function (index, value) {
-                    $.merge(allData, value);
-                });
-                this.nodeLayer.join(allData, "binkey");
-                this.nodeLayer.all().redraw();
+                this.data[tileKey] = binData;
+
+                if (this.nodeLayer) {
+                    allData = [];
+                    $.each(this.data, function (index, value) {
+                        $.merge(allData, value);
+                    });
+                    this.nodeLayer.join(allData, "binkey");
+                    this.nodeLayer.all().redraw();
+                }
             }
         },
 
