@@ -266,10 +266,12 @@ define(function (require) {
          */
         addTileData: function (tileData) {
             var tileKey = this.createTileKey(tileData.index),
-                binData = this.transformTileToBins(tileData.tile, tileKey);
+                binData;
 
             // Ignore data for tiles from previous, now defunct updates.
             if (-1 !== this.tiles.indexOf(tileKey)) {
+                binData = this.transformTileToBins(tileData.tile, tileKey);
+
                 this.data[tileKey] = binData;
 
                 if (this.nodeLayer) {

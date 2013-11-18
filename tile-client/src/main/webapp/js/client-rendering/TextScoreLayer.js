@@ -51,48 +51,47 @@ define(function (require) {
         },
 
         createLayer: function (nodeLayer) {
-            // Store our coordinator locally so that we can get to metainfo
-            // from within our aperture property functions; within the functions,
-            // <em>this</em> refers to the data, so we need closures to get
-            // information about the real <em>this</em>
-            var coordinatorLocal = this.coordinator,
-                maxSeen = Number.MIN_VALUE,
-                getProportionOfMax = function (value, level) {
-                    var max = maxSeen;
-                    if (level &&
-                        coordinatorLocal &&
-                        coordinatorLocal.layerInfo &&
-                        coordinatorLocal.layerInfo.meta &&
-                        coordinatorLocal.layerInfo.meta.levelMaximums &&
-                        coordinatorLocal.layerInfo.meta.levelMaximums[level] &&
-                        isFinite(coordinatorLocal.layerInfo.meta.levelMaximums[level])) {
-                        max = coordinatorLocal.layerInfo.meta.levelMaximums[level];
-                    } else if (Math.abs(value) > max) {
-                        max = Math.abs(value);
-                    }
+            // TODO:
+            //   1 Reverse order
+            //   2 Scale individually by tile, not across tiles
+            var getYFcn, getValueFcn;
 
-                    if (max > maxSeen) {
-                        maxSeen = max;
+            getYFcn = function (index) {
+                var n = this.bin.value.length,
+                    start = (n - 1) / 22.0,
+                    value = start - index / 11.0,
+                    pow2 = 1 << this.level;
+                return value/pow2;
+            };
+            getValueFcn = function (index, data) {
+                var n = data.bin.value.length,
+                    maxValue = 0.0,
+                    i, value;
+                for (i=0; i<n; ++i) {
+                    value = Math.abs(data.bin.value[i].value);
+                    if (value > maxValue) {
+                        maxValue = value;
                     }
-                    return value / max;
-                };
+                }
+                return data.bin.value[index].value / maxValue;
+            };
+                
 
             this.labelLayer = this._nodeLayer.addLayer(aperture.LabelLayer);
             this.labelLayer.map('label-count').from('bin.value.length');
             this.labelLayer.map('text').from(function (index) {
                 return this.bin.value[index].key;
             });
-            this.labelLayer.map('offset-y').from(function (index) {
-                return 16 * (index - (this.bin.value.length - 1.0) / 2);
-            });
+            this.labelLayer.map('y').from(getYFcn);
+            this.labelLayer.map('offset-x').asValue(-10);
             this.labelLayer.map('text-anchor').from(function (index) {
-                var value = getProportionOfMax(this.bin.value[index].value, this.level);
+                var value = getValueFcn(index, this);
                 if (value >= 0) {
                     return 'end';
                 }
                 return 'start';
             });
-            this.labelLayer.map('fill').asValue('#FFF');
+            this.labelLayer.map('fill').asValue('#C0FFC0');
             this.labelLayer.map('font-outline').asValue('#222');
             this.labelLayer.map('font-outline-width').asValue(3);
             this.labelLayer.map('visible').asValue(true);
@@ -100,14 +99,15 @@ define(function (require) {
             this.barLayer = this._nodeLayer.addLayer(aperture.BarLayer);
             this.barLayer.map('orientation').asValue('horizontal');
             this.barLayer.map('bar-count').from('bin.value.length');
-            this.barLayer.map('x').asValue(0);
-            this.barLayer.map('y').from(function (index) {
-                return 16 * (index - (this.bin.value.length - 1.0) / 2);
-            });
+            this.barLayer.map('y').from(getYFcn);
             this.barLayer.map('width').asValue('10');
+            this.barLayer.map('x').from(function (index) {
+                var value = getValueFcn(index, this);
+                return 0.45 * Math.min(value, 0);
+            });
             this.barLayer.map('length').from(function (index) {
-                var value = getProportionOfMax(this.bin.value[index].value);
-                return value * 150.0;
+                var value = getValueFcn(index, this);
+                return 100.0 * Math.abs(value);
             });
             this.barLayer.map('fill').from('#80C0FF');
 

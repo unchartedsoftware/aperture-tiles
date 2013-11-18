@@ -81,7 +81,7 @@ public class TextScoreRendererTests {
 		final TestPanel panel = new TestPanel();
 		frame.getContentPane().add(panel);
 		TestPyramidIO pio = new TestPyramidIO();
-		final TextScoreImageRenderer renderer = new TextScoreImageRenderer(pio);
+		final TopTextScoresImageRenderer renderer = new TopTextScoresImageRenderer(pio);
 		JMenuBar menuBar = new JMenuBar();
 		JMenu menu = new JMenu("actions");
 		menu.add(new JMenuItem(new AbstractAction("reload") {
