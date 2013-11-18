@@ -54,15 +54,12 @@ define(function (require) {
             // TODO:
             //   1 Reverse order
             //   2 Scale individually by tile, not across tiles
-            var getYFcn, getValueFcn;
+            var getYOffsetFcn, getValueFcn;
 
-            getYFcn = function (index) {
-                var n = this.bin.value.length,
-                    start = (n - 1) / 22.0,
-                    value = start - index / 11.0,
-                    pow2 = 1 << this.level;
-                return value/pow2;
+            getYOffsetFcn = function (index) {
+                return 16 * ((this.bin.value.length - 1.0) / 2.0 - index);
             };
+                
             getValueFcn = function (index, data) {
                 var n = data.bin.value.length,
                     maxValue = 0.0,
@@ -82,8 +79,14 @@ define(function (require) {
             this.labelLayer.map('text').from(function (index) {
                 return this.bin.value[index].key;
             });
-            this.labelLayer.map('y').from(getYFcn);
-            this.labelLayer.map('offset-x').asValue(-10);
+            this.labelLayer.map('offset-x').from(function (index) {
+                var value = getValueFcn(index, this);
+                if (value >= 0) {
+                    return -10;
+                }
+                return 10;
+            });
+            this.labelLayer.map('offset-y').from(getYOffsetFcn);
             this.labelLayer.map('text-anchor').from(function (index) {
                 var value = getValueFcn(index, this);
                 if (value >= 0) {
@@ -99,12 +102,12 @@ define(function (require) {
             this.barLayer = this._nodeLayer.addLayer(aperture.BarLayer);
             this.barLayer.map('orientation').asValue('horizontal');
             this.barLayer.map('bar-count').from('bin.value.length');
-            this.barLayer.map('y').from(getYFcn);
             this.barLayer.map('width').asValue('10');
-            this.barLayer.map('x').from(function (index) {
+            this.barLayer.map('offset-x').from(function (index) {
                 var value = getValueFcn(index, this);
-                return 0.45 * Math.min(value, 0);
+                return 100*Math.min(value, 0);
             });
+            this.barLayer.map('offset-y').from(getYOffsetFcn);
             this.barLayer.map('length').from(function (index) {
                 var value = getValueFcn(index, this);
                 return 100.0 * Math.abs(value);
