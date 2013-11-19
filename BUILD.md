@@ -4,16 +4,16 @@
 
 Aperture-Tiles is made up of 6 projects:
 
- * math-utilities - as it sounds, some basic, underlying java utilities to aid 
+ * math-utilities - contains some basic, underlying java utilities to aid 
    in processing data.  Some angle utilities, some linear algebra, and a little 
    statistics.
- * geometric-utilities - some more advanced math for processing geometry - 
+ * geometric-utilities - contains advanced math utitlities for processing geometry - 
    mostly dealing with processing of geographic problems.
- * binning-utilities - the basic substrate of tiling, what a bin is, how to 
-   bin, and basic bin storage classes.
- * tile-generation - A project to generate tile pyramids from raw data
- * tile-service - a web server to serve tiles from tile pyramids to web clients
- * tile-client - a web client to display tiles from tile pyramids
+ * binning-utilities - the basic substrate of tiling, bin data strutures, 
+   bin processing, and basic bin storage classes.
+ * tile-generation - Spark-based tools to generate tile pyramids from raw data
+ * tile-service - a web service to serve tiles from tile pyramids to web clients
+ * tile-client - a simple web client to display tiles from tile pyramids
 
 ### Setup
 
@@ -38,8 +38,7 @@ strictly necessary, some optional).  Generally, one needs to set up:
 
  * HBase - HBase acts much like a database which stores its data in Hadoop.  If
    your tile sets are too many or too big to store on one machine, we have 
-   found HBase to be a good way to store them.  That being said, reducing data 
-   to tile sets shrinks it considerably, so this is not terribly necessary.
+   found HBase to be a good way to store them.
 
  * [Spark](http://spark.incubator.apache.org/) - Spark is "... an open source 
    cluster computing system that aims to make data analytics fast...".  It also 
@@ -62,7 +61,7 @@ Hadoop and/or HBase one has installed.  This is done by setting
 <hadoop-version> and <hbase-version> in the general aperture-tiles project 
 build file, the file pom.xml in this directory.
 
-### Actually building
+### Building the Project
 
 To build all projects, type 'mvn install' in this directory.  This will install 
 .jar files for each project into your local maven repostitory on your build 
