@@ -38,7 +38,8 @@ define(['class'], function (Class) {
         /**
          * Construct a labeled control set.
          *
-         * @param container Div into which this control set will be inserted.
+         * @param container The element into which this control set will be inserted, 
+		 * specified in any way that will satisfy JQuery(...).
          * @param id Unique identifier for this control set
          */
         init: function (container, id) {

@@ -2,6 +2,7 @@
     border-spacing: 15px 2px;
     border-collapse: separate;
     padding: 2px;
+    white-space: nowrap;
 }
 
 .opacity-slider {

@@ -228,7 +228,6 @@ define(['class', 'datalayer'], function(Class, DataLayer) {
         },
 		
         getSubLayerSpecsById: function () {
-            var that = this;
             var layerInfoById = {};
 
             forEachLayer(this, function (layer, layerInfo) {

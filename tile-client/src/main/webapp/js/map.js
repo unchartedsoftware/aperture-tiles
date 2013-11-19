@@ -66,7 +66,7 @@ define(['class', 'aperture-config-map'], function (Class, Config) {
 
 	getOpacity: function () {
 	    return this.map.olMap_.baseLayer.opacity;
-	}
+	},
 	
     getExtent: function () {
         return this.map.olMap_.getExtent();
@@ -76,9 +76,17 @@ define(['class', 'aperture-config-map'], function (Class, Config) {
         this.map.olMap_.zoomToExtent(extent, findClosestZoomLvl);
     },
 
-    on: function (event, callback) {
-        this.map.on(event, callback);
-    }
+    on: function (eventType, callback) {
+        this.map.on(eventType, callback);
+    },
+	
+	off: function(eventType, callback) {
+		this.map.off(eventType, callback);
+	},
+	
+	trigger: function(eventType, event) {
+		this.map.trigger(eventType, event);
+	}
 	
     });
 

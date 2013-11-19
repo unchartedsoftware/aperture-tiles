@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-require(['fileloader', 'map', 'serverrenderedmaplayer', 'clientrenderedmaplayer', 'slidercontrol'],
-        function (FileLoader, Map, ServerLayer, ClientLayer, SliderControl) {
+require(['fileloader', 'map', 'serverrenderedmaplayer', 'clientrenderedmaplayer', 'slidercontrol', 'labeledcontrolset'],
+        function (FileLoader, Map, ServerLayer, ClientLayer, SliderControl, LabeledControlSet) {
             "use strict";
 
             var
@@ -47,21 +47,24 @@ require(['fileloader', 'map', 'serverrenderedmaplayer', 'clientrenderedmaplayer'
                     layerIds,
                     layerId,
                     i,
-                    base,
-                    layerSlider,
-                    makeSlideHandler;
+                    makeSlideHandler,
+                    opcControlSet,
+                    layerSpecsById;
 
                 worldMap = new Map("map", jsonDataMap[mapFileId]);
                 mapLayer = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId], 2));
                 mapLayer.addToMap(worldMap);
 
+                opcControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'opcControlSet');
+
                 // Set up to change the base layer opacity
-                slider = new SliderControl($("#mapcontrol"), "mapcontrol",
-                                           "Base&nbsp;Layer&nbsp;Opacity", 0.0, 1.0, 100);
-		slider.setValue(worldMap.getOpacity());
-		slider.setOnSlide(function (oldValue, slider) {
-		    worldMap.setOpacity(slider.getValue());
-		});
+                layerId = 'Base Layer';
+                slider = new SliderControl(layerId, 0.0, 1.0, 100);
+		        slider.setValue(worldMap.getOpacity());
+		        slider.setOnSlide(function (oldValue, slider) {
+		            worldMap.setOpacity(slider.getValue());
+		        });
+                opcControlSet.addControl(layerId, 'Base Layer', slider.getElement());
 
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
@@ -73,7 +76,7 @@ require(['fileloader', 'map', 'serverrenderedmaplayer', 'clientrenderedmaplayer'
 
                 // Set up to change individual layer opacities
                 layerIds = mapLayer.getSubLayerIds();
-                base = $('#layerControls');
+                layerSpecsById = mapLayer.getSubLayerSpecsById();
                 makeSlideHandler = function (layerId) {
                     return function (oldValue, slider) {
                         mapLayer.setSubLayerOpacity(layerId, slider.getValue());
@@ -81,12 +84,13 @@ require(['fileloader', 'map', 'serverrenderedmaplayer', 'clientrenderedmaplayer'
                 };
                 for (i=0; i<layerIds.length; ++i) {
                     layerId = layerIds[i];
-                    layerSlider = $('<div id="layercontrol.'+layerId+'"></div>');
-                    layerSlider.addClass("slider-table");
-                    base.append(layerSlider);
-                    slider = new SliderControl(layerSlider, "layercontrol."+layerId, layerId, 0.0, 1.0, 100);
+
+                    slider = new SliderControl(layerId, 0.0, 1.0, 100);
                     slider.setValue(mapLayer.getSubLayerOpacity(layerId));
                     slider.setOnSlide(makeSlideHandler(layerId));
+
+                    opcControlSet.addControl(layerId, layerSpecsById[layerId].name,
+                        slider.getElement());
                 }
             });
         });
