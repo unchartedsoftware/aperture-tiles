@@ -45,16 +45,56 @@ define(function (require) {
         ClassName: "TextScoreLayer",
         init: function (id, layerSpec) {
             this._super(id);
+            // Set our base position within each tile
             this.tracker.setPosition('center');
+            // Set hover output to be ignored by default
+            this.tooltipFcn = null;
+            // Start up our server data listener
             this.coordinator = new MapServerCoordinator(this.tracker,
                                                         layerSpec);
         },
 
+        /**
+         * Set a function to call whenever a tooltip can be provided.  The 
+         * function should expect one argument, the text of the tooltip (as 
+         * html).  It will be called with null to clear the tooltip.
+         */
+        setTooltipFcn: function (tooltipFcn) {
+            this.tooltipFcn = tooltipFcn;
+        },
+
+        /**
+         * A method to get the text of a tooltip from a mouse event
+         */
+        getTooltip: function (event) {
+            var index = event.index,
+                data = event.data,
+                n = data.bin.value.length,
+                maxValue = null,
+                minValue = null,
+                i, key, value;
+
+            for (i=0; i<n; ++i) {
+                value = data.bin.value[i].value;
+                if (!maxValue || value > maxValue) {
+                    maxValue = value;
+                }
+                if (!minValue || value < minValue) {
+                    minValue = value;
+                }
+            }
+            key = data.bin.value[index].key;
+            value = data.bin.value[index].value;
+
+            return "Text: "+key+", score: "+value+" from range ["+minValue+", "+maxValue+"]";
+        },
+
+        /**
+         * Create our layer visuals, and attach them to our node layer.
+         */
         createLayer: function (nodeLayer) {
-            // TODO:
-            //   1 Reverse order
-            //   2 Scale individually by tile, not across tiles
-            var getYOffsetFcn, getValueFcn;
+            var that = this,
+                getYOffsetFcn, getValueFcn;
 
             getYOffsetFcn = function (index) {
                 return 16 * ((this.bin.value.length - 1.0) / 2.0 - index);
@@ -72,7 +112,8 @@ define(function (require) {
                 }
                 return data.bin.value[index].value / maxValue;
             };
-                
+
+
 
             this.labelLayer = this._nodeLayer.addLayer(aperture.LabelLayer);
             this.labelLayer.map('label-count').from('bin.value.length');
@@ -98,6 +139,16 @@ define(function (require) {
             this.labelLayer.map('font-outline').asValue('#222');
             this.labelLayer.map('font-outline-width').asValue(3);
             this.labelLayer.map('visible').asValue(true);
+            this.labelLayer.on('mouseover', function (event) {
+                if (that.tooltipFcn) {
+                    that.tooltipFcn(that.getTooltip(event));
+                }
+            });
+            this.labelLayer.on('mouseout', function (event) {
+                if (that.tooltipFcn) {
+                    that.tooltipFcn(null);
+                }
+            });
 
             this.barLayer = this._nodeLayer.addLayer(aperture.BarLayer);
             this.barLayer.map('orientation').asValue('horizontal');
@@ -113,6 +164,17 @@ define(function (require) {
                 return 100.0 * Math.abs(value);
             });
             this.barLayer.map('fill').from('#80C0FF');
+            this.barLayer.on('mouseover', function (event) {
+                if (that.tooltipFcn) {
+                    that.tooltipFcn(that.getTooltip(event));
+                }
+            });
+            this.barLayer.on('mouseout', function (event) {
+                if (that.tooltipFcn) {
+                    that.tooltipFcn(null);
+                }
+            });
+
 
             this.coordinator.setMap(this.map);
         }

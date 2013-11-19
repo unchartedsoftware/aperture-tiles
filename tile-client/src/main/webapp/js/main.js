@@ -57,7 +57,8 @@ require(['./fileloader',
             i,
             base,
             layerSlider,
-            makeSlideHandler;
+            makeSlideHandler,
+            tooltipFcn;
 
         worldMap = new Map("map", jsonDataMap[mapFileId]);
 
@@ -98,11 +99,19 @@ require(['./fileloader',
 
         // Set up client-rendered layers
         renderLayerSpecs = jsonDataMap[cLayerFileId];
+        tooltipFcn = function (text) {
+            if (text) {
+                $('#hoverOutput').html(text);
+            } else {
+                $('#hoverOutput').html('');
+            }
+        };
         for (i=0; i<renderLayerSpecs.length; ++i) {
             renderLayerSpec =
                 FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
             renderLayer =
                 new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
+            renderLayer.setTooltipFcn(tooltipFcn);
             renderLayer.addToMap(worldMap);
         }
 
