@@ -117,6 +117,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 		// DEFAULTS
 		String rampType = "ware";
 		String transform = "linear";
+		String renderer = "default";
 		int rangeMin = 0;
 		int rangeMax = 100;
 		int currentImage = 0;
@@ -152,6 +153,20 @@ public class ImageTileServiceImpl implements ImageTileService {
 			} catch (JSONException e4) {
 				_logger.info("No current image specified - using default");
 			}
+		} else {
+			options = new JSONObject();
+		}
+		
+		try {
+			renderer = options.getString("renderer");
+		} catch (JSONException e2) {
+			_logger.info("No renderer specified for tile request - using metadata.");
+			try {
+				renderer = metadata.getRawData().getString("renderer");
+				options.put("renderer", renderer);
+			} catch (JSONException e) {
+				_logger.info("No renderer specified in metadata - using default.");
+			}
 		}
 
 		int dimension = 256;
@@ -160,9 +175,9 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 		BufferedImage bi;
 
-		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
+		TileDataImageRenderer tileRenderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
-		bi = renderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
+		bi = tileRenderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
 				dimension, maximumValue, tileCoordinate, currentImage));
 		
 		if (bi == null){
