@@ -30,11 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.oculusinfo.tile.spi.impl.IValueTransformer;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.DoublesImageRenderer.ValueTransformerFactory;
-import com.oculusinfo.tile.util.AbstractColorRamp;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +39,10 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.tile.spi.impl.IValueTransformer;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.DoublesImageRenderer.ValueTransformerFactory;
+import com.oculusinfo.tile.util.ColorRamp;
 
 /**
  * A renderer that renders tiles of series of doubles
@@ -73,7 +72,7 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 		try {  // TODO: harden at a finer granularity.
 			bi = new BufferedImage(parameter.outputWidth, parameter.outputWidth, BufferedImage.TYPE_INT_ARGB);
 			
-			AbstractColorRamp ramp = ColorRampFactory.create(parameter.rampType, 255);
+			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 255);
 			double maximumValue;
 			try {
 			    maximumValue = Double.parseDouble(parameter.levelMaximums);

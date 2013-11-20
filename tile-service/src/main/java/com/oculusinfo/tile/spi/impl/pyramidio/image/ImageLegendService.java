@@ -34,11 +34,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.oculusinfo.tile.spi.ImageTileLegendService;
-import com.oculusinfo.tile.spi.impl.IValueTransformer;
-import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
-import com.oculusinfo.tile.util.AbstractColorRamp;
-
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +41,10 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.tile.spi.ImageTileLegendService;
+import com.oculusinfo.tile.spi.impl.IValueTransformer;
+import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
+import com.oculusinfo.tile.util.ColorRamp;
 
 /**
  * A service that generates an image coloured using the specified
@@ -90,7 +89,7 @@ public class ImageLegendService implements ImageTileLegendService {
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = bi.createGraphics();	
 
-		AbstractColorRamp ramp = ColorRampFactory.create(rampType, 255);
+		ColorRamp ramp = ColorRampFactory.create(rampType, 255);
 		
 		IValueTransformer t;
 		

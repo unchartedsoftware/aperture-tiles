@@ -26,7 +26,7 @@ package com.oculusinfo.tile.util;
 
 import java.util.ArrayList;
 
-public abstract class AbstractColorRamp {
+public abstract class AbstractColorRamp implements ColorRamp {
 
 	class FixedPoint {
 		double scale;
