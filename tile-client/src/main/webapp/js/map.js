@@ -67,13 +67,33 @@ define(function (require) {
             this.projection = new OpenLayers.Projection("EPSG:900913");
         },
 
-	setOpacity: function (newOpacity) {
-	    this.map.olMap_.baseLayer.setOpacity(newOpacity);
-	},
+        setOpacity: function (newOpacity) {
+            this.map.olMap_.baseLayer.setOpacity(newOpacity);
+        },
 
-	getOpacity: function () {
-	    return this.map.olMap_.baseLayer.opacity;
-	}
+        getOpacity: function () {
+            return this.map.olMap_.baseLayer.opacity;
+        },
+
+        getExtent: function () {
+            return this.map.olMap_.getExtent();
+        },
+
+        zoomToExtent: function (extent, findClosestZoomLvl) {
+            this.map.olMap_.zoomToExtent(extent, findClosestZoomLvl);
+        },
+
+        on: function (eventType, callback) {
+            this.map.on(eventType, callback);
+        },
+
+        off: function(eventType, callback) {
+            this.map.off(eventType, callback);
+        },
+
+        trigger: function(eventType, event) {
+            this.map.trigger(eventType, event);
+        }
     });
 
     return Map;
