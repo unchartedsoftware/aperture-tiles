@@ -43,7 +43,7 @@ public class ImageRendererFactory {
 		rendererType = rendererType.toLowerCase();
 		if ("toptextscores".equals(rendererType)) {
 			return new TopTextScoresImageRenderer(pyramidIo);
-		} else if ("textscores".equals(rendererType)) {
+		} else if ("textscores".equals(rendererType) || "textscore".equals(rendererType)) {
 			return new TopAndBottomTextScoresImageRenderer(pyramidIo);
 		} else if ("legacy".equals(rendererType)) {
 			return new LegacyDoublesImageRenderer(pyramidIo);
