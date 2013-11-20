@@ -73,15 +73,13 @@ define(function (require) {
         /**
          * Construct a slider control.
          *
-         * @param base The JQuery select item in which the slider should be built
-         * @param label The label to apply to the slider
+         * @param id Unique identifier for this slider
          * @param minimum The minimum value of the slider
          * @param maximum The maximum value of the slider
          * @param steps The number of intervals between legal slider values 
          *              (so the actual total legal number of values is steps+1)
          */
-        init: function (base, id, label, minimum, maximum, steps) {
-            var row, labelCell, sliderCell;
+        init: function (id, minimum, maximum, steps) {
             this.id = id;
             this.sliderId = id+'.slider';
             this.startValue = null;
@@ -93,18 +91,8 @@ define(function (require) {
             this.maximum = maximum;
             this.steps = steps;
 
-            // Set up our UI
-            row = $('<tr></tr>');
-            labelCell = $('<td></td>');
-            sliderCell = $('<td></td>');
-            base.append(row);
-            row.append(labelCell);
-            row.append(sliderCell);
-            labelCell.append(document.createTextNode(label));
-
             this.slider = $('<div id="'+this.sliderId+'"></div>');
             this.slider.addClass("opacity-slider");
-            sliderCell.append(this.slider);
 
             this.slider.slider({
                 range: "min",
@@ -182,6 +170,13 @@ define(function (require) {
         getValue: function () {
             var rawValue = this.slider.slider("value");
             return this.minimum + (rawValue * (this.maximum - this.minimum) / this.steps);
+        },
+
+        /**
+         * Get the this SliderControl's DOM element.
+         */
+        getElement: function () {
+            return this.slider;
         }
     });
 

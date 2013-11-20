@@ -44,7 +44,7 @@
     -->
     <!-- cloudera hadoop 4.2.1 -->
     <hadoop-version>2.0.0-cdh4.2.1</hadoop-version>
-    <hbase-version>0.94.6-cdh4.2.1</hbase-version>
+    <hbase-version>0.94.2-cdh4.2.1</hbase-version>
     <!-- cloudera version 4.2.0
     <hadoop-version>2.0.0-cdh4.2.0</hadoop-version>
     <hbase-version>0.94.2-cdh4.2.0</hbase-version>
