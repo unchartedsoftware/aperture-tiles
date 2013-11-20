@@ -33,9 +33,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
-import com.oculusinfo.tile.util.AbstractColorRamp;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +42,8 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.StringDoublePairArrayAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
+import com.oculusinfo.tile.util.ColorRamp;
 
 /**
  * A server side to render Map<String, Double> (well, technically,
@@ -71,7 +70,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	private void drawScoredText (Graphics2D g, Pair<String, Double> textScore, double offsetFromCenter,
 								 int minX, int maxX, int minY, int maxY,
 								 int rowHeight, int barHeight, int padding,
-								 AbstractColorRamp ramp, double scale) {
+								 ColorRamp ramp, double scale) {
 		int centerX = (minX + maxX) / 2;
 		int centerY = (minY + maxY) / 2;
 		int baseline = (int) Math.round(centerY + offsetFromCenter * rowHeight - padding);
@@ -113,7 +112,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 			int width = parameter.outputWidth;
 			int height = parameter.outputHeight;
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			AbstractColorRamp ramp = ColorRampFactory.create(parameter.rampType, 64);
+			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 64);
 
 			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(parameter.layer, _serializer, Collections.singleton(parameter.tileCoordinate));
 			if (tileDatas.isEmpty()) {

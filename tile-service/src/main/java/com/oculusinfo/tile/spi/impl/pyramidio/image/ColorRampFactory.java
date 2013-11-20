@@ -24,8 +24,9 @@
  */
 package com.oculusinfo.tile.spi.impl.pyramidio.image;
 
-import com.oculusinfo.tile.util.AbstractColorRamp;
 import com.oculusinfo.tile.util.BRColorRamp;
+import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.tile.util.FlatColorRamp;
 import com.oculusinfo.tile.util.GreyColorRamp;
 import com.oculusinfo.tile.util.WareColorRamp;
 
@@ -35,8 +36,8 @@ public class ColorRampFactory { // TODO: refactor into a more comprehensive/cust
 	 * @param opacity (0 = transparent, 255 = opaque)
 	 * @return
 	 */
-	public static AbstractColorRamp create(String rampType, int opacity) {
-		AbstractColorRamp ramp;
+	public static ColorRamp create(String rampType, int opacity) {
+		ColorRamp ramp;
 		String validRampType = rampType == null ? "ware" : rampType;
 		
 		if(validRampType.equalsIgnoreCase("br")){
@@ -56,7 +57,11 @@ public class ColorRampFactory { // TODO: refactor into a more comprehensive/cust
 		}
 		else if (validRampType.equalsIgnoreCase("inv-grey")) {
 			ramp = new GreyColorRamp(opacity, true);
-		} else {
+		}
+		else if (validRampType.equalsIgnoreCase("flat")) {
+			ramp = new FlatColorRamp(opacity, 0x00ff00);
+		}
+		else {
 			ramp = new WareColorRamp(opacity, false);
 		}
 		return ramp;
