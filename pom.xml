@@ -11,7 +11,7 @@
        ID here, one also has to change it in the tile-generation build.sbt
        file - both for the project version and also aperture-tile 
        dependencies. -->
-  <version>0.1.1</version>
+  <version>0.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Aperture-Tiles</name>
