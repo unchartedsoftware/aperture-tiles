@@ -109,14 +109,14 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render(RenderParameter parameter) {
 		BufferedImage bi;
 		try {
-			int width = parameter.outputWidth;
-			int height = parameter.outputHeight;
+			int width = parameter.getOutputWidth();
+			int height = parameter.getOutputHeight();
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 64);
+			ColorRamp ramp = ColorRampFactory.create(parameter.getRampType(), 64);
 
-			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(parameter.layer, _serializer, Collections.singleton(parameter.tileCoordinate));
+			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(parameter.getLayer(), _serializer, Collections.singleton(parameter.getTileCoordinate()));
 			if (tileDatas.isEmpty()) {
-			    _logger.debug("Layer {} is missing tile ().", parameter.layer, parameter.tileCoordinate);
+			    _logger.debug("Layer {} is missing tile ().", parameter.getLayer(), parameter.getTileCoordinate());
 			    return null;
 			}
 			TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
@@ -168,7 +168,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 				}
 			}
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.layer+":"+parameter.tileCoordinate);
+			_logger.debug("Tile is corrupt: " + parameter.getLayer()+":"+parameter.getTileCoordinate());
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}

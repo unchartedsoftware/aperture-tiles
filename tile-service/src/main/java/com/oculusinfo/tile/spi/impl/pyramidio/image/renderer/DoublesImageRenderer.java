@@ -71,21 +71,21 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render(RenderParameter parameter) {
  		BufferedImage bi;
 		try {  // TODO: harden at a finer granularity.
-			bi = new BufferedImage(parameter.outputWidth, parameter.outputWidth, BufferedImage.TYPE_INT_ARGB);
+			bi = new BufferedImage(parameter.getOutputWidth(), parameter.getOutputWidth(), BufferedImage.TYPE_INT_ARGB);
 
-			double maximumValue = Double.parseDouble(parameter.levelMaximums);
+			double maximumValue = Double.parseDouble(parameter.getLevelMaximums());
 			
-			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 255);
-			IValueTransformer t = ValueTransformerFactory.create(parameter.transformId, maximumValue);
-			int[] rgbArray = new int[parameter.outputWidth*parameter.outputWidth];
+			ColorRamp ramp = ColorRampFactory.create(parameter.getRampType(), 255);
+			IValueTransformer t = ValueTransformerFactory.create(parameter.getTransformId(), maximumValue);
+			int[] rgbArray = new int[parameter.getOutputWidth()*parameter.getOutputWidth()];
 			
-			double scaledLevelMaxFreq = t.transform(maximumValue)*parameter.rangeMax/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*parameter.rangeMin/100;
+			double scaledLevelMaxFreq = t.transform(maximumValue)*parameter.getRangeMax()/100;
+			double scaledLevelMinFreq = t.transform(maximumValue)*parameter.getRangeMin()/100;
 			
-			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(parameter.layer, _serializer, Collections.singleton(parameter.tileCoordinate));
+			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(parameter.getLayer(), _serializer, Collections.singleton(parameter.getTileCoordinate()));
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile "+parameter.tileCoordinate+" for layer "+parameter.layer);
+			    _logger.info("Missing tile "+parameter.getTileCoordinate()+" for layer "+parameter.getLayer());
 			    return null;
 			}
 
@@ -93,8 +93,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
 			
-			double xScale = ((double) parameter.outputWidth)/xBins;
-			double yScale = ((double) parameter.outputHeight)/yBins;
+			double xScale = ((double) parameter.getOutputWidth())/xBins;
+			double yScale = ((double) parameter.getOutputHeight())/yBins;
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 					int minX = (int) Math.round(tx*xScale);
@@ -115,17 +115,17 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 					for (int ix = minX; ix < maxX; ++ix) {
 						for (int iy = minY; iy < maxY; ++iy) {
-							int i = iy*parameter.outputWidth + ix;
+							int i = iy*parameter.getOutputWidth() + ix;
 							rgbArray[i] = rgb;
 						}
 					}
 				}
 			}
 			
-			bi.setRGB(0, 0, parameter.outputWidth, parameter.outputWidth, rgbArray, 0, parameter.outputWidth);
+			bi.setRGB(0, 0, parameter.getOutputWidth(), parameter.getOutputWidth(), rgbArray, 0, parameter.getOutputWidth());
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.layer + ":" + parameter.tileCoordinate);
+			_logger.debug("Tile is corrupt: " + parameter.getLayer() + ":" + parameter.getTileCoordinate());
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}
