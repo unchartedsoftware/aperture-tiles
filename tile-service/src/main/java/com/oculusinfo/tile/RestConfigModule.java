@@ -25,13 +25,12 @@
 package com.oculusinfo.tile;
 
 import oculus.aperture.common.rest.ResourceDefinition;
-import com.oculusinfo.tile.rest.JsonTileResource;
-import com.oculusinfo.tile.rest.ImageTileLegendResource;
-import com.oculusinfo.tile.rest.ImageTileResource;
-import com.oculusinfo.tile.rest.PreRenderedTileResource;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import com.oculusinfo.tile.rest.ImageTileLegendResource;
+import com.oculusinfo.tile.rest.ImageTileResource;
+import com.oculusinfo.tile.rest.PreRenderedTileResource;
 
 public class RestConfigModule extends AbstractModule {
 
@@ -46,9 +45,7 @@ public class RestConfigModule extends AbstractModule {
 		resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(ImageTileResource.class));
 		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(ImageTileResource.class));
 		resourceBinder.addBinding("/legend").toInstance(new ResourceDefinition(ImageTileLegendResource.class));
-		
-		resourceBinder.addBinding("/jsonTile").toInstance(new ResourceDefinition(JsonTileResource.class));
-		
+
 		resourceBinder.addBinding("/preRenderedTile/{version}/{layer}/{level}/{x}/{y}").toInstance(new ResourceDefinition(PreRenderedTileResource.class));
 	}
 

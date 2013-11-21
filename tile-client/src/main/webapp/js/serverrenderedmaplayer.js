@@ -133,6 +133,7 @@ define(function (require) {
 
 
     ServerRenderedMapLayer = Class.extend({
+        ClassName: "ServerRenderedMapLayer",
         init: function (layerSpec) {
             this.unfulfilledRequests = [];
             // The collected map bounds of all our map layers
@@ -331,9 +332,9 @@ define(function (require) {
                                     tileSize = this.tileSize;
                                     maxBounds = this.maxExtent;
 
-                                    x = Math.floor((bounds.left - maxBounds.left) /
+                                    x = Math.round((bounds.left - maxBounds.left) /
                                                    (res*tileSize.w));
-                                    y = Math.floor((bounds.bottom - maxBounds.bottom) /
+                                    y = Math.round((bounds.bottom - maxBounds.bottom) /
                                                    (res*tileSize.h));
                                     y = yFunction(y);
                                     z = this.map.getZoom();

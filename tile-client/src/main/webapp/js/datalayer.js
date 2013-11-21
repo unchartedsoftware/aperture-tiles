@@ -39,6 +39,7 @@ define(function (require) {
 
 
     DataLayer = Class.extend({
+        ClassName: "DataLayer",
         init: function (layerSpecs) {
             var i, layer;
 

@@ -1,19 +1,19 @@
 /**
- * Copyright (C) 2013 Oculus Info Inc. 
+ * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,8 +24,9 @@
  */
 package com.oculusinfo.tile.spi.impl.pyramidio.image;
 
-import com.oculusinfo.tile.util.AbstractColorRamp;
 import com.oculusinfo.tile.util.BRColorRamp;
+import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.tile.util.FlatColorRamp;
 import com.oculusinfo.tile.util.GreyColorRamp;
 import com.oculusinfo.tile.util.WareColorRamp;
 
@@ -35,8 +36,8 @@ public class ColorRampFactory { // TODO: refactor into a more comprehensive/cust
 	 * @param opacity (0 = transparent, 255 = opaque)
 	 * @return
 	 */
-	public static AbstractColorRamp create(String rampType, int opacity) {
-		AbstractColorRamp ramp;
+	public static ColorRamp create(String rampType, int opacity) {
+		ColorRamp ramp;
 		String validRampType = rampType == null ? "ware" : rampType;
 		
 		if(validRampType.equalsIgnoreCase("br")){
@@ -56,7 +57,11 @@ public class ColorRampFactory { // TODO: refactor into a more comprehensive/cust
 		}
 		else if (validRampType.equalsIgnoreCase("inv-grey")) {
 			ramp = new GreyColorRamp(opacity, true);
-		} else {
+		}
+		else if (validRampType.equalsIgnoreCase("flat")) {
+			ramp = new FlatColorRamp(opacity, 0x00ff00);
+		}
+		else {
 			ramp = new WareColorRamp(opacity, false);
 		}
 		return ramp;
