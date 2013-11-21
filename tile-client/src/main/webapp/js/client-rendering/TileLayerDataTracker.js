@@ -37,7 +37,7 @@ define(function (require) {
 
 
 
-    var Class = require('../class'),
+    var Class = require('../profileclass'),
         WebPyramid = require('./WebTilePyramid'),
         TileLayerDataTracker,
         getArrayLength,
@@ -96,8 +96,10 @@ define(function (require) {
 
 
     TileLayerDataTracker = Class.extend({
+        ClassName: "TileLayerDataTracker",
         init: function () {
-            // An array of tile keys of each tile we've received
+            // An array of tile keys of each tile we've requested (whether or not
+            // we've received them)
             this.tiles = [];
             // All the data we've recieved, put in one object, keyed by 
             // tile key (as defined by the createTileKey method).
@@ -236,11 +238,15 @@ define(function (require) {
 
                 if (defunctTiles[tileKey]) {
                     // Already have the data.
+                    // Make sure not to delete it
                     delete defunctTiles[tileKey];
+                    // And mark it as meaningful
                     usedTiles[usedTiles.length] = tileKey;
                 } else {
                     // New data.  Mark for fetch.
                     neededTiles[neededTiles.length] = tile;
+                    // And mark it as meaningful
+                    usedTiles[usedTiles.length] = tileKey;
                 }
             }
 
@@ -259,20 +265,27 @@ define(function (require) {
          * Add tile data as returned from the server
          */
         addTileData: function (tileData) {
-            var tileKey = this.createTileKey(tileData.tileIndex),
-                binData = this.transformTileToBins(tileData.tile, tileKey),
-                allData;
+            var tileKey = this.createTileKey(tileData.index),
+                binData;
 
-            this.data[tileKey] = binData;
+            // Ignore data for tiles from previous, now defunct updates.
+            if (-1 !== this.tiles.indexOf(tileKey)) {
+                binData = this.transformTileToBins(tileData.tile, tileKey);
 
-            if (this.nodeLayer) {
-                allData = [];
-                $.each(this.data, function (index, value) {
-                    $.merge(allData, value);
-                });
-                this.nodeLayer.join(allData, "binkey");
-                this.nodeLayer.all().redraw();
+                this.data[tileKey] = binData;
+
+                if (this.nodeLayer) {
+                    this.nodeLayer.join(this.mergeData(), "binkey");
+                    this.nodeLayer.all().redraw();
+                }
             }
+        },
+        mergeData: function () {
+            var allData = [];
+            $.each(this.data, function (index, value) {
+                $.merge(allData, value);
+            });
+            return allData;
         },
 
         /**
@@ -323,10 +336,11 @@ define(function (require) {
                         binRect = webPyramid.getBinBounds(tileData, bin);
 
                         binData = {
+                            level: tileData.level,
                             binkey: this.createBinKey(tileKey, bin),
                             longitude: binRect[this.position.x],
                             latitude: binRect[this.position.y],
-                            visibie: true,
+                            visible: true,
                             bin: tileData.values[binNum]
                         };
                         results[results.length] = binData;

@@ -1,19 +1,19 @@
 /**
- * Copyright (C) 2013 Oculus Info Inc. 
+ * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -93,9 +93,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 			result.put("tms", hostUrl + "tile/" + id.toString() + "/");
 			result.put("apertureservice", "/tile/" + id.toString() + "/");
 
-			String rendererType = options.getString("renderer");
-			
-			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(rendererType, _pyramidIo);
+			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 
 			result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
 			System.out.println("UUID Count after "+layer+": " + _uuidToOptionsMap.size());
@@ -119,33 +117,28 @@ public class ImageTileServiceImpl implements ImageTileService {
 		// DEFAULTS
 		String rampType = "ware";
 		String transform = "linear";
-		String rendererType = "default";
+		String renderer = "default";
 		int rangeMin = 0;
 		int rangeMax = 100;
 		int currentImage = 0;
+		JSONObject options = null;
 		
 		if(id != null){
 			// Get rendering options
-			JSONObject options = _uuidToOptionsMap.get(id);
-			
+			options = _uuidToOptionsMap.get(id);
+
 			try {
 				rampType = options.getString("ramp");
 			} catch (JSONException e2) {
 				_logger.info("No ramp specified for tile request - using default.");
 			}
-			
+
 			try {
 				transform = options.getString("transform");
 			} catch (JSONException e2) {
 				_logger.info("No transform specified for tile request - using default.");
 			}
-			
-			try {
-				rendererType = options.getString("renderer");
-			} catch (JSONException e2) {
-				_logger.info("No renderer specified for tile request - using default.");
-			}
-			
+
 			try {
 				JSONArray legendRange = options.getJSONArray("legendRange");
 				rangeMin = legendRange.getInt(0);
@@ -160,6 +153,20 @@ public class ImageTileServiceImpl implements ImageTileService {
 			} catch (JSONException e4) {
 				_logger.info("No current image specified - using default");
 			}
+		} else {
+			options = new JSONObject();
+		}
+		
+		try {
+			renderer = options.getString("renderer");
+		} catch (JSONException e2) {
+			_logger.info("No renderer specified for tile request - using metadata.");
+			try {
+				renderer = metadata.getRawData().getString("renderer");
+				options.put("renderer", renderer);
+			} catch (JSONException e) {
+				_logger.info("No renderer specified in metadata - using default.");
+			}
 		}
 
 		int dimension = 256;
@@ -168,9 +175,9 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 		BufferedImage bi;
 
-		TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(rendererType, _pyramidIo);
+		TileDataImageRenderer tileRenderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
-		bi = renderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
+		bi = tileRenderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
 				dimension, maximumValue, tileCoordinate, currentImage));
 		
 		if (bi == null){

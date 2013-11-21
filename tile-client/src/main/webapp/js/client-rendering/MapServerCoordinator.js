@@ -47,6 +47,7 @@ define(function (require) {
 
 
     MapServerCoordinator = Class.extend({
+        ClassName: "MapServerCoordinator",
         init: function (tracker, layerSpec) {
             var layerInfoListener, onLayerInfoRetrieved;
 
@@ -88,8 +89,8 @@ define(function (require) {
             this.map = map;
 
             if (this.map) {
-                this.map.map.on('zoom',   this.onMapUpdate);
-                this.map.map.on('panend', this.onMapUpdate);
+                this.map.map.on('zoom',   this.mapUpdateFcn);
+                this.map.map.on('panend', this.mapUpdateFcn);
             }
         },
 

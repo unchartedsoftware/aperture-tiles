@@ -43,6 +43,7 @@ define(function (require) {
 
 
     MapLayer = Class.extend({
+        ClassName: "MapLayer",
         init: function (id) {
             this.id = id;
             this.map = null;
@@ -92,6 +93,9 @@ define(function (require) {
             this._nodeLayer.map('longitude').from('longitude');
             this._nodeLayer.map('latitude').from('latitude');
             this._nodeLayer.map('visible').asValue('visible');
+            // Necessary so that aperture won't place labels and texts wildly willy-nilly
+            this._nodeLayer.map('width').asValue(1);
+            this._nodeLayer.map('height').asValue(1);
 
             this.createLayer(this._nodeLayer);
         },

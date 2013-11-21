@@ -10,10 +10,10 @@
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,17 +25,26 @@
 
 package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.oculusinfo.binning.io.PyramidIO;
 
 public class ImageRendererFactory {
-	public static TileDataImageRenderer getRenderer (String rendererType, PyramidIO pyramidIo) {
-		if(rendererType == null || rendererType.length() == 0){
-			rendererType = "default";
+	public static TileDataImageRenderer getRenderer (JSONObject parameterObject, PyramidIO pyramidIo) {
+	    String rendererType = "default";
+	    try {
+	        if (null != parameterObject) {
+	            rendererType = parameterObject.getString("renderer");
+	        }
+	    } catch (JSONException e) {
 		}
 		
 		rendererType = rendererType.toLowerCase();
-		if ("textscore".equals(rendererType)) {
-			return new TextScoreImageRenderer(pyramidIo);
+		if ("toptextscores".equals(rendererType)) {
+			return new TopTextScoresImageRenderer(pyramidIo);
+		} else if ("textscores".equals(rendererType) || "textscore".equals(rendererType)) {
+			return new TopAndBottomTextScoresImageRenderer(pyramidIo);
 		} else if ("legacy".equals(rendererType)) {
 			return new LegacyDoublesImageRenderer(pyramidIo);
 		} else if ("doubleseries".equals(rendererType)) {

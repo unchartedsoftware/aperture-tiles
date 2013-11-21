@@ -45,6 +45,7 @@ define(function (require) {
                                 20037500,  20037500);
 
     DebugLayer = MapLayer.extend({
+        ClassName: "DebugLayer",
         init: function (id) {
             this._super(id);
             this.tracker.setPosition('center');

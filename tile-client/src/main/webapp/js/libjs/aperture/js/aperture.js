@@ -3753,10 +3753,14 @@ function(namespace) {
 		 *   The number of points in a given bar chart data series.
 		 *   
 		 * @mapping {Number=0} x
-		 *   The horizontal position of the bar.
+		 *   The base horizontal position of the bar.
+         * @mapping {Number=0} offset-x
+         *   An offset from base horizontal position of the bar, in pixels
 
 		 * @mapping {Number=0} y
-		 *   The vertical position of the bar.
+		 *   The base vertical position of the bar.
+         * @mapping {Number=0} offset-y
+         *   An offset from the base vertical position of the bar, in pixels
 
 		 * @mapping {String='vertical'} orientation
 		 *   Sets the orientation of the chart. Vertically oriented charts will have bars that expand along the y-axis,
@@ -3837,12 +3841,15 @@ function(namespace) {
 							width = this.valueFor('width', node.data, 2, index),
 							length = this.valueFor('length', node.data, 0, index),
 							startPt = (startValue * node.width) + (node.position[0]||0),
-							yPoint = (this.valueFor('y', node.data, 0, index) * node.height) + (node.position[1]||0);
+							yPoint = (this.valueFor('y', node.data, 0, index) * node.height) + (node.position[1]||0),
+					        offsetX = this.valueFor('offset-x', node.data, 0, index),
+					        offsetY = this.valueFor('offset-y', node.data, 0, index);
+
 
 						var barSpec = {
 								id : index,
-								x : startPt,
-								y : yPoint,
+								x : startPt + offsetX,
+								y : yPoint + offsetY,
 								size : {
 									width : orientation == 'vertical'?width:length,
 									height : orientation == 'vertical'?length:width
@@ -3947,7 +3954,8 @@ function(namespace) {
 
 	return namespace;
 	
-}(aperture || {}));/**
+}(aperture || {}));
+/**
  * Source: Color.js
  * Copyright (c) 2013 Oculus Info Inc.
  * @fileOverview Aperture Color APIs
@@ -4729,6 +4737,117 @@ function(namespace) {
 	namespace.Format.getNumberFormat = function( precision ) {
 		return new namespace.NumberFormat( precision );
 	};
+	
+	/**
+	 * @private
+	 * @class A Format object that translates numbers to currency
+	 * Strings. Format objects are used by {@link aperture.Scalar Scalars} for formatting
+	 * values, but may be used independently as well.
+	 *
+	 * @extends aperture.Format
+	 *
+	 * @description
+	 * Constructs a number format.
+	 *
+	 * @name aperture.NumberFormat
+	 */
+	namespace.CurrencyFormat = namespace.Format.extend( 'aperture.CurrencyFormat',
+		{
+			/**
+			 * @private
+			 *
+			 * @param {Number} [precision] [prefix] [suffix]
+			 *      The optional precision of the value to format. For numbers this
+			 *      will be a base number to round to, such as 1 or 0.01.
+			 *      
+			 *      The optional prefix is a string value for the currency (i.e. '$')
+			 *      
+			 *      The optional prefix is a string value for the currency (i.e. 'USD')
+			 *
+			 * @returns {aperture.NumberFormat}
+			 *      A new time format object.
+			 */
+			init : function (precision, prefix, suffix) {
+				if (precision) {
+					if (isNaN(precision)) {
+						aperture.log.warn('Invalid precision "' + precision + '" in NumberFormat');
+					} else {
+						this.precision = precision;
+					}
+				}
+				this.prefix = (prefix) ? prefix : '';
+				this.suffix = (suffix) ? suffix : '';
+			},
+
+			/**
+			 * @private
+			 * Formats the specified value.
+			 *
+			 * @param {Number} value
+			 *      The value to format.
+			 *
+			 * @returns {String}
+			 *      The formatted value.
+			 */
+			format : function (value) {
+
+				value = Number(value);
+				
+				var numberSuffix = '';
+				
+				var number = Math.abs(value);
+				
+				if (number >= 1000000000000) {
+					numberSuffix = 'T';
+					number *= 0.000000000001;
+				} else if (number >= 1000000000) {
+					numberSuffix = 'B';
+					number *= 0.000000001;
+				} else if (number >= 1000000) {
+					numberSuffix = 'M';
+					number *= 0.000001;
+				} else if (number >= 1000) {
+					numberSuffix = 'K';
+					number *= 0.001;
+				}
+				
+				if (this.precision) {
+					number = Math.round(number / this.precision) * this.precision;
+				}
+				
+				var sign = (value < 0) ? '-' : '';
+				
+				var s = number.toString();
+				
+				for (var i = s.length-3; i > 0; i -= 3) {
+					s = s.substring(0, i).concat(',').concat(s.substring(i));
+				}
+				
+				return sign + this.prefix + s + numberSuffix + this.suffix;
+			}
+		}
+	);
+
+	/**
+	 * Returns a number format object, suitable for formatting numeric values.
+	 *
+	 * @param {Number} [precision] [prefix] [suffix]
+	 *      The optional precision of the value to format. For numbers this
+	 *      will be a base number to round to, such as 1 or 0.01.
+	 *      
+	 *      The optional prefix is a string value for the currency (i.e. '$')
+	 *      
+	 *      The optional prefix is a string value for the currency (i.e. 'USD')
+	 *
+	 * @returns {aperture.Format}
+	 *      a number format object.
+	 *
+	 * @name aperture.Format.getNumberFormat
+	 * @function
+	 */
+	namespace.Format.getCurrencyFormat = function(precision, prefix, suffix) {
+		return new namespace.CurrencyFormat(precision, prefix, suffix);
+	};
 
 	// create the hash of time orders.
 	// use discrete format functions for speed but don't pollute our closure with them.
@@ -5082,7 +5201,7 @@ function(namespace) {
 		 * @mapping {'middle'|'start'|'end'} text-anchor
 		 *   How the label is aligned with respect to its x position.
 
-		 * @mapping {'middle'|'start'|'end'} text-anchor-y
+		 * @mapping {'middle'|'top'|'bottom'} text-anchor-y
 		 *   How the label is aligned with respect to its y position.
 
 		 * @mapping {'horizontal'|'vertical'| Number} orientation
@@ -5158,6 +5277,8 @@ function(namespace) {
 					var xPoint = (this.valueFor('x', node.data, 0, index) * node.width) + (node.position[0]||0);
 					var yPoint = (this.valueFor('y', node.data, 0, index) * node.height) + (node.position[1]||0);
 					var outlineWidth = outlineColor !== 'none' && this.valueFor('font-outline-width', node.data, 3, index);
+
+					var connect = this.valueFor('connect', node.data, false, index);
 
 					var str = this.valueFor('text', node.data, '', index);
 
@@ -5244,6 +5365,22 @@ function(namespace) {
 						g.apparate(label.back, changeSet.transition);
 					} else {
 						g.update(label.back, attr, changeSet.transition);
+					}
+					
+					if (connect) {
+						var connectX = this.valueFor('connect-x', node.data, 0, index);
+						var connectY = this.valueFor('connect-y', node.data, 0, index);
+						var pathStr = 'M'+(xPoint-offsetX+connectX)+' '+(yPoint-offsetY+connectY)+'L'+xPoint+' '+yPoint;
+						if (!label.path) {
+							label.path = g.path(pathStr);
+						} else {
+							var pathattr = {path:pathStr};
+							g.update(label.path, pathattr, changeSet.transition);
+						}
+					} else {
+						if (label.path) {
+							g.remove(label.path);
+						}
 					}
 					
 					// then the front.
@@ -11628,6 +11765,165 @@ aperture.store = (function() {
 	};
 
 }());/**
+ * Copyright (C) 2013 Oculus Info Inc.
+ * http://www.oculusinfo.com/
+ * 
+ * Released under the MIT License.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+aperture.tooltip = (function(ns) {
+
+	var tooltipExists = false;
+	var tooltipDiv = null;
+	var tooltipInnerDiv = null;
+	var tooltipID = "apertureTooltip";
+	var tooltipTimer = null;
+	var tooltipPending = false;
+	var tooltipVisible = false;
+	
+	var overridingMouseMove = false;
+	var oldMouseMove = null;
+	
+	var assertTooltip = function() {
+		if (!tooltipExists) {
+			tooltipDiv = document.createElement("div");
+			tooltipDiv.style.zIndex = '999999999';
+			tooltipDiv.style.position = 'absolute';
+			tooltipDiv.id = tooltipID;
+			tooltipDiv.style.display = "none";
+			
+			tooltipInnerDiv = document.createElement("div");
+			tooltipInnerDiv.setAttribute("class", "apertureTooltip");
+
+			tooltipDiv.appendChild(tooltipInnerDiv);
+			
+			window.document.body.appendChild(tooltipDiv);
+			tooltipExists = true;
+		}
+	};
+	
+	var positionTooltip = function(posx,posy) {
+		var w = $(window).width();
+		var h = $(window).height();
+		var ew = 'E';
+		var ns = 'S';
+		if (posx<w/2) {
+			tooltipDiv.style.left = (posx-30-2) + "px";
+			tooltipDiv.style.right = '';
+			ew = 'E';
+		} else {
+			tooltipDiv.style.left = '';
+			tooltipDiv.style.right = (w-(posx+30-2)) + "px";
+			ew = 'W';
+		}
+		if (posy>h/2) {
+			tooltipDiv.style.top = "";
+			tooltipDiv.style.bottom = (h-posy+10) + "px";
+			ns = 'N';
+		} else {
+			tooltipDiv.style.top = (posy+10+2) + "px";
+			tooltipDiv.style.bottom = "";
+			ns = 'S';
+		}
+		tooltipInnerDiv.setAttribute("class", "apertureTooltip"+ns+ew);
+	}
+	
+	var setTooltipVisible = function(spec, posx, posy) {
+		positionTooltip(posx, posy);
+		tooltipDiv.style.display = "";
+		tooltipPending = false;
+		tooltipVisible = true;
+	};
+	
+	var getEventXY = function(e) {
+		var posx=0, posy=0;
+		if (e.pageX || e.pageY) 	{
+			posx = e.pageX;
+			posy = e.pageY;
+		} else if (e.clientX || e.clientY) 	{
+			posx = e.clientX + document.body.scrollLeft
+				+ document.documentElement.scrollLeft;
+			posy = e.clientY + document.body.scrollTop
+				+ document.documentElement.scrollTop;
+		}
+		return [posx,posy];
+	};
+	
+	var overrideMouseMove = function(target) {
+		if (!overridingMouseMove) {
+			oldMouseMove = document.onmousemove;
+			document.onmousemove = function(event) {
+				var pos = getEventXY(event);
+				positionTooltip(pos[0], pos[1]);
+				return true;
+			};
+			overridingMouseMove = true;
+		}
+	};
+
+	var cancelMouseMoveOverride = function() {
+		if (overridingMouseMove) {
+			document.onmousemove = oldMouseMove;
+			overridingMouseMove = false;
+		}
+	};
+	
+	var cancelTooltip = function() {
+		if (tooltipPending) {
+			clearTimeout(tooltipTimer);
+			tooltipPending = false;
+		}
+		tooltipDiv.style.display = "none";
+		tooltipVisible = false;
+		cancelMouseMoveOverride();
+	};
+
+	ns.showTooltip = function(spec) {
+		var pos = getEventXY(spec.event.source);
+		
+		assertTooltip();
+		if (tooltipVisible) {
+			if (tooltipInnerDiv.innerHTML==spec.html) {
+				return;
+			}
+		}
+		cancelTooltip();
+		tooltipInnerDiv.innerHTML = spec.html;
+		if (spec.delay) {
+			tooltipPending = true;
+			tooltipTimer = setTimeout(function(){setTooltipVisible(spec, pos[0], pos[1]);}, spec.delay);
+		} else {
+			setTooltipVisible(spec, pos[0], pos[1]);
+		}
+		overrideMouseMove(spec.event.source.target);
+	};
+	
+	ns.hideTooltip = function() {
+		assertTooltip();
+		cancelTooltip();
+	};
+	
+	return ns;
+	
+}(aperture.tooltip || {}));/**
  * Source: map.js
  * Copyright (c) 2013 Oculus Info Inc.
  * @fileOverview Aperture Map APIs
@@ -12770,25 +13066,12 @@ function(ns) {
 		});
 	}
 
-    /**
-     * Call on pan completion
-     */
 	function notifyPan() {
 		this.trigger('panend', {
 			eventType : 'panend',
 			layer : this
 		});
 	}
-
-    /**
-     * Call on any pan or zoom movement
-     */
-    function notifyMove() {
-        this.trigger('move', {
-            eventType : 'move',
-            layer : this
-        });
-    }
 	
 	var MapVizletLayer = aperture.PlotLayer.extend( 'aperture.geo.MapVizletLayer',
 	// documented as Map, since it currently cannot function as a non-vizlet layer.
@@ -12931,7 +13214,6 @@ function(ns) {
 
 			this.olMap_.events.register('zoomend', this, notifyZoom);
 			this.olMap_.events.register('moveend', this, notifyPan);
-            this.olMap_.events.register('move', this, notifyMove);
 			this.olMap_.render(this.canvas_.root());
 		},
 
@@ -13633,12 +13915,47 @@ function(namespace) {
 	 * @param {Number} Width of a bar visual.
 	 * @param {Number} Width of the border around the chart.
 	 */
-	getBarRenderSize = function(orientation, xValue, yValue, w, h, barWidth, borderWidth){
+	getBarRect = function(orientation, w, h, barWidth, borderWidth, seriesId, index, barOffset, footprint, node){
+		var barSeriesData = node.data,
+			xValue = this.valueFor('x', barSeriesData, 0, index),
+			yValue = this.valueFor('y', barSeriesData, 0, index),
+			strokeWidth = this.valueFor('stroke-width', barSeriesData, 1),
+			orientation = this.valueFor('orientation', null, 'vertical'),
+			borderWidth = this.valueFor('border-width', barSeriesData, 1),
+			barLayout = this.valueFor('bar-layout', null, this.DEFAULT_BAR_LAYOUT),
+			canvasY = yValue*h;
+		
 		var localBarWidth=0,localBarHeight=0;
+		var xPoint=0, yPoint=0;
 
 		if (orientation === 'horizontal'){
-			localBarWidth = xValue*w;
 			localBarHeight = barWidth-borderWidth;
+
+			
+			// position
+			yPoint = canvasY + node.position[1];
+			// Account for the bar offset and the height of the
+			// top/bottom borders of the bar.
+			yPoint += barOffset - 0.5*(footprint);
+			if (seriesId > 0 && barLayout !== 'stacked'){
+				yPoint -= 0.5*strokeWidth;
+			}
+			
+			
+			// MAP VALUE
+			var x1 = xValue*w;
+			
+			// map zero
+			var x0 = this.map('x').using()? w*this.map('x').using().map(0) : 0;
+			
+			
+			if (x1 > x0) {
+				xPoint = node.position[0] + x0+ borderWidth;
+				localBarWidth = Math.max(x1-x0, 0);
+			} else {
+				xPoint = node.position[0] + x1- borderWidth;
+				localBarWidth = Math.max(x0-x1, 0);
+			}
 		}
 		else {
 			var canvasY = yValue*h;
@@ -13646,9 +13963,34 @@ function(namespace) {
 			// We subtract the stroke width of the top and bottom borders so that
 			// the bar doesn't blead over the border.
 			localBarWidth = barWidth;
-			localBarHeight = Math.max((h-canvasY) - borderWidth,0);
+			
+			
+			// position
+			xPoint = (xValue*w) + node.position[0];
+			
+			// Adjust the positioning of the bar if there are multiple series
+			// and center the width of the bar wrt the data point.
+			xPoint += barOffset - 0.5*(footprint);
+			if (seriesId > 0 && barLayout !== 'stacked'){
+				xPoint += 0.5*strokeWidth;
+			}
+
+			// MAP VALUE
+			var y1 = Math.max(canvasY - borderWidth, 0);
+			
+			// map zero
+			var y0 = this.map('y').using()? h*this.map('y').using().map(0) : 0;
+			
+			if (y1 < y0) {
+				yPoint = node.position[1] + y1- 0.5*(borderWidth+strokeWidth);
+				localBarHeight = Math.max(y0-y1, 0);
+			} else {
+				yPoint = node.position[1] + y0+ 0.5*(borderWidth+strokeWidth);
+				localBarHeight = Math.max(y1-y0, 0);
+			}
 		}
-		return {'width':localBarWidth, 'height':localBarHeight};
+		
+		return {'x': xPoint, 'y': yPoint, 'width':localBarWidth, 'height':localBarHeight};
 	},
 
 	/**
@@ -13681,44 +14023,6 @@ function(namespace) {
 		}
 
 		return barWidth;
-	},
-
-	getBarPosition = function(seriesId, index, canvasWidth, canvasHeight, barOffset,
-			footprint, node){
-
-		var barSeriesData = node.data,
-			xValue = this.valueFor('x', barSeriesData, 0, index),
-			yValue = this.valueFor('y', barSeriesData, 0, index),
-			strokeWidth = this.valueFor('stroke-width', barSeriesData, 1),
-			orientation = this.valueFor('orientation', null, 'vertical'),
-			borderWidth = this.valueFor('border-width', barSeriesData, 1),
-			barLayout = this.valueFor('bar-layout', null, this.DEFAULT_BAR_LAYOUT),
-			canvasY = yValue*canvasHeight;
-
-		var xPoint=0, yPoint=0;
-
-		if (orientation === 'horizontal'){
-			xPoint = node.position[0] + borderWidth;
-			yPoint = canvasY + node.position[1];
-			// Account for the bar offset and the height of the
-			// top/bottom borders of the bar.
-			yPoint += barOffset - 0.5*(footprint);
-			if (seriesId > 0 && barLayout !== 'stacked'){
-				yPoint -= 0.5*strokeWidth;
-			}
-		}
-		else {
-			xPoint = (xValue*canvasWidth) + node.position[0];
-			yPoint = canvasY + node.position[1] - 0.5*(borderWidth+strokeWidth);
-
-			// Adjust the positioning of the bar if there are multiple series
-			// and center the width of the bar wrt the data point.
-			xPoint += barOffset - 0.5*(footprint);
-			if (seriesId > 0 && barLayout !== 'stacked'){
-				xPoint += 0.5*strokeWidth;
-			}
-		}
-		return {'x': xPoint, 'y': yPoint};
 	};
 
 	/**
@@ -13845,16 +14149,11 @@ function(namespace) {
 				}
 
 				for (index=0; index< numPoints; index++){
-					var xValue = this.valueFor('x', barSeriesData,0,index),
-						yValue = this.valueFor('y', barSeriesData,0,index);
-
-					var renderBarDim = getBarRenderSize.call(this, orientation, xValue,
-							yValue, w, h, masterBarWidth, borderWidth);
+					var renderBarDim = getBarRect.call(this, orientation, w, h, masterBarWidth, borderWidth, 
+							seriesId, index, barOffset, footprint, node);
 	
-					var position = getBarPosition.call(this, seriesId, index, w, h, barOffset,
-							footprint, node),
-						xPoint = position.x,
-						yPoint = position.y;
+					var xPoint = renderBarDim.x,
+						yPoint = renderBarDim.y;
 
 					// If we are dealing with stacked bars, we need to account for the length of the previous
 					// bar for a given bin.
@@ -14087,10 +14386,7 @@ function(namespace) {
 
 	//TODO: Add min-ticklength for other examples.
 	isManagedChild = function( layer ) {
-		switch (layer) {
-		case this.axisArray.x[0]:
-		case this.axisArray.y[0]:
-		case this.titleLayer:
+		if (layer == this.titleLayer || layer.typeOf(namespace.AxisLayer)) {
 			return true;
 		}
 		return false;
@@ -14958,6 +15254,96 @@ function(namespace) {
 //		aperture.log.warn('Clip and origin operations are not supported for the root Raphael canvas.');
 //	}
 
+	// this is here to overcome this problem:
+	// http://stackoverflow.com/questions/7448468/why-cant-i-reliably-capture-a-mouseout-event
+	var MouseOutTracker = aperture.Class.extend( '[private].MouseOutTracker', {
+		
+		// callback for all document move events. only listening when over / tracking something.
+		mouseMoveCallback : function (e) {
+			if (this.trackEvent) {
+				var node = e.target;
+				
+				// climb the hierarchy and look here only for wander outside of our target scope.
+				// outs within our target scope will be handled by the track call below
+				while (node != null) {
+					if (node === this.trackTarget) {
+						return;
+					}
+					node = node.parentNode;
+				}
+				
+				// if made it this far we are outside
+				this.trigger(e);
+				this.untrack();
+			}
+		},
+		
+		// tracks an event
+		track : function (e, client) {
+			var tracking = false;
+			var sourceEvent = e.source;
+			
+			// already tracking?
+			if (this.trackEvent) {
+				tracking = true;
+
+				// switching targets?
+				// browser will fire mouse outs for all child outs (unfortunately) even if currentTarget is the same, so replicate.
+				if (this.trackEvent.source.target !== sourceEvent.target) {
+					this.trigger(sourceEvent);
+				}
+			}
+				
+			this.trackEvent = e;
+			this.trackTarget = sourceEvent.currentTarget;
+			this.client = client;
+			
+			// looking at raphael tells us that this tracks at the document level if not called on a raphael el.
+			// args are the 'element', the callback function, and the context to be 'this' in the callback
+			if (!tracking) {
+				Raphael.el.mousemove.call(this, this.mouseMoveCallback, this);
+			}
+		},
+
+		// stop tracking
+		untrack : function () {
+			if (this.trackEvent) {
+				this.trackEvent = null;
+				this.trackTarget = null;
+				this.client = null;
+				
+				Raphael.el.unmousemove.call(this, this.mouseMoveCallback);
+			}
+		},
+		
+		// trigger mouse out
+		trigger : function(curEvent) {
+			
+			// extend old event with updated properties without changing the original event.
+			var e = util.viewOf(this.trackEvent);
+			
+			e.source = util.viewOf(e.source);
+			
+			//  update with cur position
+			e.source.clientX = curEvent.clientX;
+			e.source.clientY = curEvent.clientY;
+			e.source.screenX = curEvent.screenX;
+			e.source.screenY = curEvent.screenY;
+
+			if (curEvent.pageX != null) {
+				e.source.pageX = curEvent.pageX;
+				e.source.pageY = curEvent.pageY;
+			}
+			
+			if (curEvent.offsetX != null) {
+				e.source.offsetX = curEvent.offsetX;
+				e.source.offsetY = curEvent.offsetY;
+			}
+			
+			this.client.trigger(e.eventType = "mouseout", e);
+		}
+		
+	});
 	
 	// graphics class
 	var cg = namespace.RaphaelGraphics = namespace.VectorGraphics.extend( 'aperture.canvas.RaphaelGraphics',
@@ -15054,8 +15440,14 @@ function(namespace) {
 			},
 
 			remove : function( e ) {
+				// remove self?
 				if (arguments.length === 0) {
+					if (this.mouseOutTracker != null) {
+						this.mouseOutTracker.untrack();
+					}
+					
 					this.container.remove();
+					
 					return this;
 				}
 				
@@ -15162,13 +15554,32 @@ function(namespace) {
 							var data = that.dataFromEvent(e);
 							
 							if (data) {
-								notifier.trigger(eventType, {
+								var theEvent = {
 									data: data.data,
 									node: new aperture.Layer.SingleNodeSet(that.dataObj),
 									index: data.index? data.index.slice() : undefined, // clone
 									eventType: eventType,
 									source : e
-								});
+								};
+
+								// this is here to overcome this problem:
+								// http://stackoverflow.com/questions/7448468/why-cant-i-reliably-capture-a-mouseout-event
+								switch (eventType) {
+								case 'mouseover':
+								case 'mousemove':
+									if (this.mouseOutTracker == null) {
+										this.mouseOutTracker = new MouseOutTracker();
+									}
+									this.mouseOutTracker.track(theEvent, notifier);
+									break;
+									
+								case 'mouseout':
+									if (this.mouseOutTracker != null) {
+										this.mouseOutTracker.untrack();
+									}
+								}
+								
+								notifier.trigger(eventType, theEvent);
 							}
 						}
 					);
@@ -15348,9 +15759,9 @@ function(namespace) {
 				this.animation = {};
 			},
 
-//			remove : function() {
-//				return this.paper.remove();
-//			},
+			remove : function() {
+				return this.paper.remove();
+			},
 
 			graphics : function( parent ) {
 				if (! parent || ! parent.typeOf(namespace.RaphaelGraphics) ) {

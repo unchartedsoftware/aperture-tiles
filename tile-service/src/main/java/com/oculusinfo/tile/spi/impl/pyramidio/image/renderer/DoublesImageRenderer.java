@@ -1,19 +1,19 @@
 /**
- * Copyright (C) 2013 Oculus Info Inc. 
+ * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,12 +29,6 @@ import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.List;
 
-import com.oculusinfo.tile.spi.impl.IValueTransformer;
-import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
-import com.oculusinfo.tile.spi.impl.Log10ValueTransformer;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
-import com.oculusinfo.tile.util.AbstractColorRamp;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +37,11 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.tile.spi.impl.IValueTransformer;
+import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
+import com.oculusinfo.tile.spi.impl.Log10ValueTransformer;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
+import com.oculusinfo.tile.util.ColorRamp;
 
 /**
  * @author  dgray
@@ -76,7 +75,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			double maximumValue = Double.parseDouble(parameter.levelMaximums);
 			
-			AbstractColorRamp ramp = ColorRampFactory.create(parameter.rampType, 255);
+			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 255);
 			IValueTransformer t = ValueTransformerFactory.create(parameter.transformId, maximumValue);
 			int[] rgbArray = new int[parameter.outputWidth*parameter.outputWidth];
 			

@@ -10,7 +10,7 @@
 	<parent>
 		<artifactId>aperture-tiles</artifactId>
 		<groupId>com.oculusinfo</groupId>
-		<version>0.1.1-SNAPSHOT</version>
+		<version>0.1.1</version>
 	</parent>
 
 	<properties>
@@ -155,7 +155,7 @@
 							
 							<connectors>
 								<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-									<port>9000</port>
+									<port>9090</port>
 									<maxIdleTime>60000</maxIdleTime>
 								</connector>
 							</connectors>

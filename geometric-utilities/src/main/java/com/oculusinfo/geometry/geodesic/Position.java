@@ -701,7 +701,7 @@ public class Position implements Serializable {
                 }
             }
     
-            return String.format("%d°%d'%.3f\"%s, %d°%d'%.3f\"%s",
+            return String.format("%d\u00b0%d'%.3f\"%s, %d\u00b0%d'%.3f\"%s",
                                  lonDegrees, lonMinutes, milliLonSeconds/1000.0, lonMarker,
                                  latDegrees, latMinutes, milliLatSeconds/1000.0, latMarker);
         } else {

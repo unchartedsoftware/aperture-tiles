@@ -1,19 +1,19 @@
 /**
  * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
- *
+ * 
  * Released under the MIT License.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ * 
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,9 +28,10 @@ require(['./fileloader',
          './client-rendering/TextScoreLayer',
          './client-rendering/DebugLayer',
          './ui/SliderControl',
-         './labeledcontrolset'],
+         './labeledcontrolset',
+         './profileclass'],
         function (FileLoader, Map, ServerLayer, 
-                  ClientLayer, DebugLayer, SliderControl, LabeledControlSet) {
+                  ClientLayer, DebugLayer, SliderControl, LabeledControlSet, Class) {
             "use strict";
             var sLayerFileId = "./data/layers.json"
                 // Uncomment for geographic data
@@ -55,9 +56,12 @@ require(['./fileloader',
                     i,
                     makeSlideHandler,
                     opcControlSet,
-                    layerSpecsById;
+                    layerSpecsById,
+                    tooltipFcn;
 
                 worldMap = new Map("map", jsonDataMap[mapFileId]);
+
+                // Set up a server-rendered display layer
                 mapLayer = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId], 2));
                 mapLayer.addToMap(worldMap);
 
@@ -72,14 +76,8 @@ require(['./fileloader',
                 });
                 opcControlSet.addControl(layerId, 'Base Layer', slider.getElement());
 
-                // Set up client-rendered layers
-                renderLayerSpecs = jsonDataMap[cLayerFileId];
-                for (i=0; i<renderLayerSpecs.length; ++i) {
-                    renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
-                    renderLayer = new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
-                    renderLayer.addToMap(worldMap);
-                }
 
+                // Set up to change individual server-rendered layer opacities
                 // Set up to change individual layer opacities
                 layerIds = mapLayer.getSubLayerIds();
                 layerSpecsById = mapLayer.getSubLayerSpecsById();
@@ -101,5 +99,32 @@ require(['./fileloader',
 
                     opcControlSet.addControl(layerId, layerName, slider.getElement());
                 }
+
+                // Set up a debug layer
+                // debugLayer = new DebugLayer();
+                // debugLayer.addToMap(worldMap);
+
+                // Set up client-rendered layers
+                renderLayerSpecs = jsonDataMap[cLayerFileId];
+                tooltipFcn = function (text) {
+                    if (text) {
+                        $('#hoverOutput').html(text);
+                    } else {
+                        $('#hoverOutput').html('');
+                    }
+                };
+                for (i=0; i<renderLayerSpecs.length; ++i) {
+                    renderLayerSpec =
+                        FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
+                    renderLayer =
+                        new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
+                    renderLayer.setTooltipFcn(tooltipFcn);
+                    renderLayer.addToMap(worldMap);
+                }
+
+
+                setTimeout(function () {
+                    console.log(Class.getProfileInfo());
+                }, 10000);
             });
         });

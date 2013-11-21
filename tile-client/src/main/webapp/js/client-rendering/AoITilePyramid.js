@@ -41,6 +41,7 @@ define(function (require) {
         AoITilePyramid;
 
     AoITilePyramid = Class.extend({
+        ClassName: "AoITilePyramid",
         init: function (minX, minY, maxX, maxY) {
             this.minX = minX;
             this.minY = minY;

@@ -6,7 +6,7 @@ organization:="com.oculusinfo"
 
 name:="tile-generation"
 
-version:="0.1.1-SNAPSHOT"
+version:="0.1.1"
 
 scalaVersion:="2.9.3"
 
@@ -22,8 +22,8 @@ scalacOptions += "-unchecked"
 
 libraryDependencies ++= Seq(
 	"org.spark-project" % "spark-core_2.9.3" % "0.7.2",
-	"com.oculusinfo" % "geometric-utilities" % "0.1-SNAPSHOT",
-        "com.oculusinfo" % "binning-utilities" % "0.1-SNAPSHOT",
+	"com.oculusinfo" % "geometric-utilities" % "0.1.1",
+        "com.oculusinfo" % "binning-utilities" % "0.1.1",
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test"
 )
 
