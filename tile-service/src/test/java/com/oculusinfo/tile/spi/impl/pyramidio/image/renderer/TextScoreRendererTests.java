@@ -47,6 +47,7 @@ import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.Pair;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
  * Manual, visual test of text score tile rendering.  This is not an automated test.
@@ -89,7 +90,7 @@ public class TextScoreRendererTests {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				RenderParameter param = new RenderParameter("foobar", "br", "", 0, 0, 256, "5", new TileIndex(4, 3, 2, 1, 1), 0);
+				RenderParameter param = new RenderParameter("foobar", new ColorRampParameter("br"), "", 0, 0, 256, "5", new TileIndex(4, 3, 2, 1, 1), 0);
 				panel.setImage(renderer.render(param));
 			}
 		}));

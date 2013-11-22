@@ -70,26 +70,26 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render (RenderParameter parameter) {
  		BufferedImage bi;
 		try {  // TODO: harden at a finer granularity.
-			bi = new BufferedImage(parameter.outputWidth, parameter.outputWidth, BufferedImage.TYPE_INT_ARGB);
+			bi = new BufferedImage(parameter.getOutputWidth(), parameter.getOutputWidth(), BufferedImage.TYPE_INT_ARGB);
 			
-			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 255);
+			ColorRamp ramp = ColorRampFactory.create(parameter.getRampType(), 255);
 			double maximumValue;
 			try {
-			    maximumValue = Double.parseDouble(parameter.levelMaximums);
+			    maximumValue = Double.parseDouble(parameter.getLevelMaximums());
 			} catch (NumberFormatException e) {
-			    _logger.warn("Expected a numeric maximum for level, got {}", parameter.levelMaximums);
+			    _logger.warn("Expected a numeric maximum for level, got {}", parameter.getLevelMaximums());
 			    maximumValue = 1000.0;
 			}
-			IValueTransformer t = ValueTransformerFactory.create(parameter.transformId, maximumValue);
-			int[] rgbArray = new int[parameter.outputWidth*parameter.outputWidth];
+			IValueTransformer t = ValueTransformerFactory.create(parameter.getTransformId(), maximumValue);
+			int[] rgbArray = new int[parameter.getOutputWidth()*parameter.getOutputWidth()];
 			
-			double scaledLevelMaxFreq = t.transform(maximumValue)*parameter.rangeMax/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*parameter.rangeMin/100;
+			double scaledLevelMaxFreq = t.transform(maximumValue)*parameter.getRangeMax()/100;
+			double scaledLevelMinFreq = t.transform(maximumValue)*parameter.getRangeMin()/100;
 			
-			List<TileData<List<Double>>> tileDatas = _pyramidIo.readTiles(parameter.layer, _serializer, Collections.singleton(parameter.tileCoordinate));
+			List<TileData<List<Double>>> tileDatas = _pyramidIo.readTiles(parameter.getLayer(), _serializer, Collections.singleton(parameter.getTileCoordinate()));
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile "+parameter.tileCoordinate+" for layer "+parameter.layer);
+			    _logger.info("Missing tile "+parameter.getTileCoordinate()+" for layer "+parameter.getLayer());
 			    return null;
 			}
 
@@ -97,8 +97,8 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
 			
-			double xScale = ((double) parameter.outputWidth)/xBins;
-			double yScale = ((double) parameter.outputHeight)/yBins;
+			double xScale = ((double) parameter.getOutputWidth())/xBins;
+			double yScale = ((double) parameter.getOutputHeight())/yBins;
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 					int minX = (int) Math.round(tx*xScale);
@@ -108,8 +108,8 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 					List<Double> binCounts = data.getBin(tx, ty);
 					double binCount = 0;
-					if (binCounts != null && binCounts.size() > parameter.currentImage) {
-						binCount= binCounts.get(parameter.currentImage);
+					if (binCounts != null && binCounts.size() > parameter.getCurrentImage()) {
+						binCount= binCounts.get(parameter.getCurrentImage());
 					}
 					double transformedValue = t.transform(binCount);
 					int rgb;
@@ -123,17 +123,17 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 					for (int ix = minX; ix < maxX; ++ix) {
 						for (int iy = minY; iy < maxY; ++iy) {
-							int i = iy*parameter.outputWidth + ix;
+							int i = iy*parameter.getOutputWidth() + ix;
 							rgbArray[i] = rgb;
 						}
 					}
 				}
 			}
 			
-			bi.setRGB(0, 0, parameter.outputWidth, parameter.outputWidth, rgbArray, 0, parameter.outputWidth);
+			bi.setRGB(0, 0, parameter.getOutputWidth(), parameter.getOutputWidth(), rgbArray, 0, parameter.getOutputWidth());
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.layer + ":" + parameter.tileCoordinate);
+			_logger.debug("Tile is corrupt: " + parameter.getLayer() + ":" + parameter.getTileCoordinate());
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}

@@ -24,82 +24,193 @@
  */
 package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
- * TODO: just make this a generic property bag maybe.
+ * A general property bag that guarantees certain methods
+ * will be available. This does not necessarily mean that the property bag
+ * will contain all the properties retrieved in each method.
  * 
  * @author  dgray
+ * @author cregnier
  * 
  */
 public class RenderParameter {
+	
+	private Map<String, Object> data;
+	
 	/**
-	 * 
+	 * Creates a RenderParameter based on the given values. 
 	 */
-	public String layer;
-
-	/**
-	 * 
-	 */
-	public String rampType;
-
-	/**
-	 * 
-	 */
-	public String transformId;
-
-	/**
-	 * 
-	 */
-	public int rangeMin;
-
-	/**
-	 * 
-	 */
-	public int rangeMax;
-
-	/**
-	 * 
-	 */
-	public int outputWidth;
-
-	/**
-	 * 
-	 */
-	public int outputHeight;
-
-	/**
-	 * 
-	 */
-	public String levelMaximums;
-
-	/**
-	 * 
-	 */
-	public TileIndex tileCoordinate;
-
-	/**
-	 * 
-	 */
-	public int currentImage;
-
-
-
-	/**
-	 * 
-	 */
-	public RenderParameter(String layer, String rampType, String transformId,
+	public RenderParameter(String layer, ColorRampParameter rampType, String transformId,
 			int rangeMin, int rangeMax, int dimension, String levelMaximums,
 			TileIndex tileCoordinate, int currentImage) {
-		this.layer = layer;
-		this.rampType = rampType;
-		this.transformId = transformId;
-		this.rangeMin = rangeMin;
-		this.rangeMax = rangeMax;
-		this.outputWidth = dimension;
-		this.outputHeight = dimension;
-		this.levelMaximums = levelMaximums;
-		this.tileCoordinate = tileCoordinate;
-		this.currentImage = currentImage;
+		data = new HashMap<>();
+		setLayer(layer);
+		setRampType(rampType);
+		setTransformId(transformId);
+		setRangeMin(rangeMin);
+		setRangeMax(rangeMax);
+		setOutputWidth(dimension);
+		setOutputHeight(dimension);
+		setLevelMaximums(levelMaximums);
+		setTileCoordinate(tileCoordinate);
+		setCurrentImage(currentImage);
 	}
+
+	public RenderParameter(Map<String, Object> params) {
+		data = new HashMap<String, Object>(params);
+	}
+	
+	public Map<String, Object> getRawData() {
+		return data;
+	}
+	
+	
+	public String getLayer() {
+		return getString("layer");
+	}
+
+
+
+	public void setLayer(String layer) {
+		setString("layer", layer);
+	}
+
+
+
+	public ColorRampParameter getRampType() {
+		return typedGet("rampType", ColorRampParameter.class);
+	}
+
+
+
+	public void setRampType(ColorRampParameter rampType) {
+		data.put("rampType", rampType);
+	}
+
+
+
+	public String getTransformId() {
+		return getString("transformId");
+	}
+
+
+
+	public void setTransformId(String transformId) {
+		setString("transformId", transformId);
+	}
+
+
+
+	public int getRangeMin() {
+		return getInt("rangeMin");
+	}
+
+
+
+	public void setRangeMin(int rangeMin) {
+		setInt("rangeMin", rangeMin);
+	}
+
+
+
+	public int getRangeMax() {
+		return getInt("rangeMax");
+	}
+
+
+
+	public void setRangeMax(int rangeMax) {
+		setInt("rangeMax", rangeMax);
+	}
+
+
+
+	public int getOutputWidth() {
+		return getInt("outputWidth");
+	}
+
+
+
+	public void setOutputWidth(int outputWidth) {
+		setInt("outputWidth", outputWidth);
+	}
+
+
+
+	public int getOutputHeight() {
+		return getInt("outputHeight");
+	}
+
+
+
+	public void setOutputHeight(int outputHeight) {
+		setInt("outputHeight", outputHeight);
+	}
+
+
+
+	public String getLevelMaximums() {
+		return getString("levelMaximums");
+	}
+
+
+
+	public void setLevelMaximums(String levelMaximums) {
+		setString("levelMaximums", levelMaximums);
+	}
+
+
+	public TileIndex getTileCoordinate() {
+		return typedGet("tileCoordinate", TileIndex.class);
+	}
+
+
+
+	public void setTileCoordinate(TileIndex tileCoordinate) {
+		data.put("tileCoordinate", tileCoordinate);
+	}
+
+
+
+	public int getCurrentImage() {
+		return getInt("currentImage");
+	}
+
+
+
+	public void setCurrentImage(int currentImage) {
+		setInt("currentImage", currentImage);
+	}
+
+
+	//-------------------------------------------------------
+	// Helpers
+	//-------------------------------------------------------
+	
+	protected String getString(String key) {
+		return typedGet(key, String.class);
+	}
+	
+	protected void setString(String key, String value) {
+		data.put(key, value);
+	}
+	
+	protected Integer getInt(String key) {
+		return typedGet(key, Integer.class);
+	}
+	
+	protected void setInt(String key, Integer value) {
+		data.put(key, value);
+	}
+	
+	protected <T> T typedGet(String key, Class<T> clazz) {
+		return clazz.cast(data.get(key));
+	}
+	
 }

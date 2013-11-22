@@ -26,43 +26,57 @@ package com.oculusinfo.tile.spi.impl.pyramidio.image;
 
 import com.oculusinfo.tile.util.BRColorRamp;
 import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.tile.util.ColorRampParameter;
 import com.oculusinfo.tile.util.FlatColorRamp;
+import com.oculusinfo.tile.util.SingleGradientColorRamp;
 import com.oculusinfo.tile.util.GreyColorRamp;
 import com.oculusinfo.tile.util.WareColorRamp;
 
 public class ColorRampFactory { // TODO: refactor into a more comprehensive/customizable feature.
+	
 	/**
 	 * @param rampType
 	 * @param opacity (0 = transparent, 255 = opaque)
 	 * @return
 	 */
-	public static ColorRamp create(String rampType, int opacity) {
+	public static ColorRamp create(ColorRampParameter rampType, int opacity) {
 		ColorRamp ramp;
-		String validRampType = rampType == null ? "ware" : rampType;
+		String validRampType = rampType.getName() != null ? rampType.getName() : "ware";
+		
+		rampType.setInt("opacity", opacity);
 		
 		if(validRampType.equalsIgnoreCase("br")){
-			ramp = new BRColorRamp(opacity, false);
+			ramp = new BRColorRamp(rampType);
 		}
 		else if (validRampType.equalsIgnoreCase("ware")) {
-			ramp = new WareColorRamp(opacity, false);
+			ramp = new WareColorRamp(rampType);
 		}
-		else if(validRampType != null && rampType.equalsIgnoreCase("inv-br")){
-			ramp = new BRColorRamp(opacity, true);
+		else if(validRampType.equalsIgnoreCase("inv-br")){
+			//we're forcing the inverse here so lets set it
+			rampType.setString("inverse", "true");
+			ramp = new BRColorRamp(rampType);
 		}
 		else if (validRampType.equalsIgnoreCase("inv-ware")) {
-			ramp = new WareColorRamp(opacity, true);
+			//we're forcing the inverse here so lets set it
+			rampType.setString("inverse", "true");
+			ramp = new WareColorRamp(rampType);
 		}
 		else if (validRampType.equalsIgnoreCase("grey")) {
-			ramp = new GreyColorRamp(opacity, false);
+			ramp = new GreyColorRamp(rampType);
 		}
 		else if (validRampType.equalsIgnoreCase("inv-grey")) {
-			ramp = new GreyColorRamp(opacity, true);
+			//we're forcing the inverse here so lets set it
+			rampType.setString("inverse", "true");
+			ramp = new GreyColorRamp(rampType);
 		}
 		else if (validRampType.equalsIgnoreCase("flat")) {
-			ramp = new FlatColorRamp(opacity, 0x00ff00);
+			ramp = new FlatColorRamp(rampType);
+		}
+		else if (validRampType.equalsIgnoreCase("single-gradient")) {
+			ramp = new SingleGradientColorRamp(rampType);
 		}
 		else {
-			ramp = new WareColorRamp(opacity, false);
+			ramp = new WareColorRamp(rampType);
 		}
 		return ramp;
 	}
