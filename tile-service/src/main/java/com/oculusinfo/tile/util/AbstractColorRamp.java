@@ -160,38 +160,22 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		return start.value;
 	}
 	
-//	public static int smoothWareFixedPoints(List<FixedPoint> reds, List<FixedPoint> blues, 
-//			List<FixedPoint> greens, double scale, int alpha) {
-//		double r = valueFromFixedPoints(reds,scale);
-//		double b = valueFromFixedPoints(blues,scale);
-//		double g = 0;
-//		if(greens.size() > 0){
-//			g = valueFromFixedPoints(greens,scale);
-//		} else {
-//			g = getGreenForRBL(r, b , 0.1+(scale*0.9));
-//		}
-//		r = (int)Math.max(0, Math.min(0xFF,r*0xFF));
-//		g = (int)Math.max(0, Math.min(0xFF,g*0xFF));
-//		b = (int)Math.max(0, Math.min(0xFF,b*0xFF));
-//		return (int)(0x1000000*alpha + 0x10000*r + 0x100*g + b);
-//	}
-
 	public static int smoothBetweenFixedPoints(List<FixedPoint> reds, List<FixedPoint> greens,
 			List<FixedPoint> blues, List<FixedPoint> alphas, double scale) {
-		double r = valueFromFixedPoints(reds,scale);
-		double b = valueFromFixedPoints(blues,scale);
-		double g = 0;
-		double a = valueFromFixedPoints(alphas, scale);
+		int r = (int)(valueFromFixedPoints(reds,scale) * 255);
+		int b = (int)(valueFromFixedPoints(blues,scale) * 255);
+		int g = 0;
+		int a = (int)(valueFromFixedPoints(alphas, scale) * 255);
 		if(greens.size() > 0){
-			g = valueFromFixedPoints(greens,scale);
+			g = (int)(valueFromFixedPoints(greens,scale) * 255);
 		} else {
-			g = getGreenForRBL(r, b , 0.1+(scale*0.9));
+			g = (int)(getGreenForRBL(r, b , 0.1+(scale*0.9)) * 255);
 		}
-		r = (int)Math.max(0, Math.min(0xFF,r*0xFF));
-		g = (int)Math.max(0, Math.min(0xFF,g*0xFF));
-		b = (int)Math.max(0, Math.min(0xFF,b*0xFF));
-		a = (int)Math.max(0, Math.min(0xFF,a*0xFF));
-		return (int)(0x1000000*a + 0x10000*r + 0x100*g + b);
+		r = Math.max(0, Math.min(0xFF, r));
+		g = Math.max(0, Math.min(0xFF, g));
+		b = Math.max(0, Math.min(0xFF, b));
+		a = Math.max(0, Math.min(0xFF, a));
+		return (a << 24) | (r << 16) | (g << 8) | b;
 	}
 
 
