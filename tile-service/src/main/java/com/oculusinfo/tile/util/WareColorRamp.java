@@ -27,8 +27,8 @@ package com.oculusinfo.tile.util;
 
 public class WareColorRamp extends AbstractColorRamp {
 
-	public WareColorRamp(int alpha, boolean invert) {
-		super(alpha, invert);
+	public WareColorRamp(ColorRampParameter params) {
+		super(params);
 	}
 	
 	@Override
@@ -41,6 +41,11 @@ public class WareColorRamp extends AbstractColorRamp {
         blues.add(new FixedPoint(0.25, 0));
         blues.add(new FixedPoint(0.85, 0));
         blues.add(new FixedPoint(1, 1));
+        
+        //try to initialize the ramp points from the params in case there's overrides
+        initRedRampPointsFromParams();
+        initBlueRampPointsFromParams();
+        initGreenRampPointsFromParams();
 	}
 	
 }

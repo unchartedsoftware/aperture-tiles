@@ -28,8 +28,8 @@ package com.oculusinfo.tile.util;
 
 public class BRColorRamp extends AbstractColorRamp {
 
-	public BRColorRamp(int alpha, boolean invert) {
-		super(alpha, invert);
+	public BRColorRamp(ColorRampParameter params) {
+		super(params);
 	}
 	
 	public void initRampPoints() {
@@ -38,5 +38,10 @@ public class BRColorRamp extends AbstractColorRamp {
         blues.add(new FixedPoint(0, 0.5));
         blues.add(new FixedPoint(0.5, 0));
         blues.add(new FixedPoint(1, 1));
+        
+        //try to initialize the ramp points from the params in case there's overrides
+        initRedRampPointsFromParams();
+        initBlueRampPointsFromParams();
+        initGreenRampPointsFromParams();
 	}
 }

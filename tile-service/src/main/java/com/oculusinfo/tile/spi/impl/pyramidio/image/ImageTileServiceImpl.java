@@ -29,8 +29,11 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,6 +53,7 @@ import com.oculusinfo.tile.spi.ImageTileService;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.ImageRendererFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
  * @author dgray
@@ -107,6 +111,56 @@ public class ImageTileServiceImpl implements ImageTileService {
 	}
 
 
+	/**
+	 * Converts a {@link JSONObject} into a {@link Map} of key-value pairs.
+	 * This iterates through the tree and converts all {@link JSONObject}s
+	 * into their equivalent map, and converts {@link JSONArray}s into
+	 * {@link List}s.
+	 * 
+	 * @param o
+	 * @return
+	 * 	Returns a map with the same 
+	 */
+	private Map<String, Object> jsonObjToMap(JSONObject jsonObj) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		Iterator<String> keys = jsonObj.keys();
+		while (keys.hasNext()) {
+			String key = keys.next();
+			Object obj = jsonObj.opt(key);
+			
+			if (obj instanceof JSONObject) {
+				map.put(key, jsonObjToMap((JSONObject)obj));
+			}
+			else if (obj instanceof JSONArray) {
+				map.put(key, jsonArrayToList((JSONArray)obj));
+			}
+			else {
+				map.put(key, obj);
+			}
+		}
+		
+		return map;
+	}
+	
+	private List<Object> jsonArrayToList(JSONArray jsonList) {
+		int numItems = jsonList.length();
+		List<Object> list = new ArrayList<Object>(numItems);
+		for (int i = 0;i < numItems; ++i) {
+			Object obj = jsonList.opt(i);
+			if (obj instanceof JSONObject) {
+				list.add(jsonObjToMap((JSONObject)obj));
+			}
+			else if (obj instanceof JSONArray) {
+				list.add(jsonArrayToList((JSONArray)obj));
+			}
+			else {
+				list.add(obj);
+			}
+		}
+		
+		return list;
+	}
 
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
@@ -115,7 +169,8 @@ public class ImageTileServiceImpl implements ImageTileService {
 		PyramidMetaData metadata = getMetadata(layer);
 
 		// DEFAULTS
-		String rampType = "ware";
+		String rampName = "ware";
+		ColorRampParameter rampParams = null;
 		String transform = "linear";
 		String renderer = "default";
 		int rangeMin = 0;
@@ -128,9 +183,31 @@ public class ImageTileServiceImpl implements ImageTileService {
 			options = _uuidToOptionsMap.get(id);
 
 			try {
-				rampType = options.getString("ramp");
+				Object rampObj = options.get("ramp");
+				
+				if (rampObj instanceof String) {
+					rampName = (String)rampObj;
+					
+				}
+				else if (rampObj instanceof JSONObject) {
+					rampParams = new ColorRampParameter(jsonObjToMap((JSONObject)rampObj));
+					
+					//validate that a name exists
+					if (rampParams.getName() == null) {
+						rampParams.getRawData().put("name", rampName);
+						_logger.info("No ramp name specified for tile request - using default '" + rampName + "'.");
+					}
+				}
+				else {
+					_logger.warn("'ramp' for tile request is invalid - using default name '" + rampName + "'.");
+				}
 			} catch (JSONException e2) {
-				_logger.info("No ramp specified for tile request - using default.");
+				_logger.info("No ramp specified for tile request - using default '" + rampName + "'.");
+			}
+			
+			//make sure the colour ramp parameter has been created
+			if (rampParams == null) {
+				rampParams = new ColorRampParameter(rampName);
 			}
 
 			try {
@@ -144,7 +221,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 				rangeMin = legendRange.getInt(0);
 				rangeMax = legendRange.getInt(1);
 			} catch (JSONException e3) {
-				_logger.info("No ramp specified for tile request - using default.");
+				_logger.info("No range specified for tile request - using default.");
 			}
 	
 			// "currentImage" is the index of an image in a series. e.g. a tile containing a time-series.
@@ -177,7 +254,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 		TileDataImageRenderer tileRenderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
-		bi = tileRenderer.render(new RenderParameter(layer, rampType, transform, rangeMin, rangeMax,
+		bi = tileRenderer.render(new RenderParameter(layer, rampParams, transform, rangeMin, rangeMax,
 				dimension, maximumValue, tileCoordinate, currentImage));
 		
 		if (bi == null){

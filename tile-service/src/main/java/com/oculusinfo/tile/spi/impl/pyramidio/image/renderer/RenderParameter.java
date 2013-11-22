@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
  * A general property bag that guarantees certain methods
@@ -45,7 +46,7 @@ public class RenderParameter {
 	/**
 	 * Creates a RenderParameter based on the given values. 
 	 */
-	public RenderParameter(String layer, String rampType, String transformId,
+	public RenderParameter(String layer, ColorRampParameter rampType, String transformId,
 			int rangeMin, int rangeMax, int dimension, String levelMaximums,
 			TileIndex tileCoordinate, int currentImage) {
 		data = new HashMap<>();
@@ -82,14 +83,14 @@ public class RenderParameter {
 
 
 
-	public String getRampType() {
-		return getString("rampType");
+	public ColorRampParameter getRampType() {
+		return typedGet("rampType", ColorRampParameter.class);
 	}
 
 
 
-	public void setRampType(String rampType) {
-		setString("rampType", rampType);
+	public void setRampType(ColorRampParameter rampType) {
+		data.put("rampType", rampType);
 	}
 
 
