@@ -28,6 +28,7 @@ import com.oculusinfo.tile.util.BRColorRamp;
 import com.oculusinfo.tile.util.ColorRamp;
 import com.oculusinfo.tile.util.ColorRampParameter;
 import com.oculusinfo.tile.util.FlatColorRamp;
+import com.oculusinfo.tile.util.SingleGradientColorRamp;
 import com.oculusinfo.tile.util.GreyColorRamp;
 import com.oculusinfo.tile.util.WareColorRamp;
 
@@ -70,6 +71,9 @@ public class ColorRampFactory { // TODO: refactor into a more comprehensive/cust
 		}
 		else if (validRampType.equalsIgnoreCase("flat")) {
 			ramp = new FlatColorRamp(rampType);
+		}
+		else if (validRampType.equalsIgnoreCase("single-gradient")) {
+			ramp = new SingleGradientColorRamp(rampType);
 		}
 		else {
 			ramp = new WareColorRamp(rampType);

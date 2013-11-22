@@ -46,7 +46,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
     protected List<FixedPoint> reds = new ArrayList<FixedPoint>();
     protected List<FixedPoint> blues = new ArrayList<FixedPoint>();
     protected List<FixedPoint> greens = new ArrayList<FixedPoint>();
-    protected int alpha = 255;
+    protected List<FixedPoint> alphas = new ArrayList<FixedPoint>();
     private boolean isInverted = false;
     
     protected ColorRampParameter rampParams;
@@ -54,9 +54,16 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	
 	public AbstractColorRamp(ColorRampParameter params){
 		rampParams = params;
-		this.alpha = rampParams.getInt("opacity");
+		
 		this.isInverted = Boolean.parseBoolean(rampParams.getString("inverse"));
 		initRampPoints();
+		
+		if (alphas.size() == 0) {
+			//there's no alphas, so initialize them with the single opacity field
+			int alpha = rampParams.getInt("opacity");
+			alphas.add(new FixedPoint(0, alpha));
+			alphas.add(new FixedPoint(1, alpha));
+		}
 	}
 
 	public abstract void initRampPoints();
@@ -104,9 +111,24 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		}
 	}
 	
+	/**
+	 * Can be used by subclasses to pull the alphas ramp points from the {@link ColorRampParameter}
+	 */
+	protected void initAlphasRampPointsFromParams() {
+		if (rampParams.contains("alphas")) {
+			try {
+				alphas = getFixedPointList(rampParams.getList("alphas", Object.class));
+			}
+			catch (Exception e) {
+				logger.error("Problem initializing alphas ramp points", e);
+			}
+		}
+	}
+	
+	
 	public int getRGB(double scale) {
-		return smoothWareFixedPoints(reds, blues, greens, 
-				(this.isInverted ? 1-scale : scale), alpha);
+		return smoothBetweenFixedPoints(reds, greens, blues, alphas,
+				(this.isInverted ? 1-scale : scale));
 	}
 	
 	public static double luminosity(int r, int g, int b) {
@@ -138,11 +160,28 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		return start.value;
 	}
 	
-	public static int smoothWareFixedPoints(List<FixedPoint> reds, List<FixedPoint> blues, 
-			List<FixedPoint> greens, double scale, int alpha) {
+//	public static int smoothWareFixedPoints(List<FixedPoint> reds, List<FixedPoint> blues, 
+//			List<FixedPoint> greens, double scale, int alpha) {
+//		double r = valueFromFixedPoints(reds,scale);
+//		double b = valueFromFixedPoints(blues,scale);
+//		double g = 0;
+//		if(greens.size() > 0){
+//			g = valueFromFixedPoints(greens,scale);
+//		} else {
+//			g = getGreenForRBL(r, b , 0.1+(scale*0.9));
+//		}
+//		r = (int)Math.max(0, Math.min(0xFF,r*0xFF));
+//		g = (int)Math.max(0, Math.min(0xFF,g*0xFF));
+//		b = (int)Math.max(0, Math.min(0xFF,b*0xFF));
+//		return (int)(0x1000000*alpha + 0x10000*r + 0x100*g + b);
+//	}
+
+	public static int smoothBetweenFixedPoints(List<FixedPoint> reds, List<FixedPoint> greens,
+			List<FixedPoint> blues, List<FixedPoint> alphas, double scale) {
 		double r = valueFromFixedPoints(reds,scale);
 		double b = valueFromFixedPoints(blues,scale);
 		double g = 0;
+		double a = valueFromFixedPoints(alphas, scale);
 		if(greens.size() > 0){
 			g = valueFromFixedPoints(greens,scale);
 		} else {
@@ -151,7 +190,8 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		r = (int)Math.max(0, Math.min(0xFF,r*0xFF));
 		g = (int)Math.max(0, Math.min(0xFF,g*0xFF));
 		b = (int)Math.max(0, Math.min(0xFF,b*0xFF));
-		return (int)(0x1000000*alpha + 0x10000*r + 0x100*g + b);
+		a = (int)Math.max(0, Math.min(0xFF,a*0xFF));
+		return (int)(0x1000000*a + 0x10000*r + 0x100*g + b);
 	}
 
 

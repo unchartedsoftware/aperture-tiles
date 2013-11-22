@@ -46,6 +46,7 @@ public class WareColorRamp extends AbstractColorRamp {
         initRedRampPointsFromParams();
         initBlueRampPointsFromParams();
         initGreenRampPointsFromParams();
+        initAlphasRampPointsFromParams();
 	}
 	
 }

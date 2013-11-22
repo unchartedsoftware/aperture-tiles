@@ -43,5 +43,6 @@ public class BRColorRamp extends AbstractColorRamp {
         initRedRampPointsFromParams();
         initBlueRampPointsFromParams();
         initGreenRampPointsFromParams();
+        initAlphasRampPointsFromParams();
 	}
 }
