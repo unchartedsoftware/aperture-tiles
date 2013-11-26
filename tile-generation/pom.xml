@@ -21,6 +21,12 @@
       <groupId>com.oculusinfo</groupId>
       <artifactId>binning-utilities</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>asm</artifactId>
+          <groupId>asm</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.oculusinfo</groupId>
@@ -29,9 +35,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.spark-project</groupId>
+      <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_2.9.3</artifactId>
-      <version>0.7.2</version>
+      <version>0.9.0-incubating-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -104,5 +110,39 @@
       </plugin>
 
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.scala-tools</groupId>
+                    <artifactId>
+                      maven-scala-plugin
+                    </artifactId>
+                    <versionRange>
+                      [2.15.2,)
+                    </versionRange>
+                    <goals>
+                      <goal>compile</goal>
+                      <goal>testCompile</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

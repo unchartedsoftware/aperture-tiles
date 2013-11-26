@@ -27,8 +27,8 @@ package com.oculusinfo.tilegen.spark
 
 
 
-import spark.AccumulableParam
-import spark.AccumulatorParam
+import org.apache.spark.AccumulableParam
+import org.apache.spark.AccumulatorParam
 
 
 class MinMaxAccumulableParam

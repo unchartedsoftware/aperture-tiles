@@ -27,7 +27,7 @@ package com.oculusinfo.tilegen.spark
 
 
 
-import spark.SparkContext
+import org.apache.spark.SparkContext
 
 
 

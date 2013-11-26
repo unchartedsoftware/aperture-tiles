@@ -27,8 +27,8 @@ package com.oculusinfo.tilegen.spark
 
 import java.io.File
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 
 

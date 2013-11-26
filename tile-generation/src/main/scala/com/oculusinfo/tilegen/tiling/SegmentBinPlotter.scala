@@ -30,8 +30,9 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble}
 import java.awt.geom.Point2D
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TilePyramid

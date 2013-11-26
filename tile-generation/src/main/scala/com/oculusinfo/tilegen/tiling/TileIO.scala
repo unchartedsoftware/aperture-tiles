@@ -32,8 +32,9 @@ import java.awt.geom.Rectangle2D
 
 import scala.collection.JavaConversions._
 
-import spark._
-import SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid

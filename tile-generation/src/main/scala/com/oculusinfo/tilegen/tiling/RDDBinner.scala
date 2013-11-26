@@ -27,8 +27,9 @@ package com.oculusinfo.tilegen.tiling
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 
 

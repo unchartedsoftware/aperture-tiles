@@ -30,8 +30,9 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble}
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException

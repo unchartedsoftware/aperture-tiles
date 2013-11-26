@@ -34,8 +34,8 @@ import java.util.Properties
 
 import scala.collection.JavaConverters._
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
