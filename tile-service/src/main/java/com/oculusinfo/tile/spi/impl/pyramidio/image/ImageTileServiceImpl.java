@@ -254,8 +254,22 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 		TileDataImageRenderer tileRenderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
-		bi = tileRenderer.render(new RenderParameter(layer, rampParams, transform, rangeMin, rangeMax,
-				dimension, maximumValue, tileCoordinate, currentImage));
+		
+		RenderParameter renderParam = new RenderParameter(jsonObjToMap(options));
+		renderParam.setObject("rampType", rampParams);
+		renderParam.setString("layer", layer);
+		renderParam.setString("transformId", transform);
+		renderParam.setInt("rangeMin", rangeMin);
+		renderParam.setInt("rangeMax", rangeMax);
+		renderParam.setOutputWidth(dimension);
+		renderParam.setOutputHeight(dimension);
+		renderParam.setString("levelMaximums", maximumValue);
+		renderParam.setInt("currentImage", currentImage);
+		renderParam.setObject("tileCoordinate", tileCoordinate);
+		
+		System.out.println("--- has key: " + renderParam.getRawData().containsKey("xrenderer"));
+
+		bi = tileRenderer.render(renderParam);
 		
 		if (bi == null){
 			bi = new BufferedImage(dimension, dimension, BufferedImage.TYPE_INT_ARGB);

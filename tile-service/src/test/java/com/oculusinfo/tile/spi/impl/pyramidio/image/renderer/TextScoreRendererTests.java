@@ -90,7 +90,13 @@ public class TextScoreRendererTests {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				RenderParameter param = new RenderParameter("foobar", new ColorRampParameter("br"), "", 0, 0, 256, "5", new TileIndex(4, 3, 2, 1, 1), 0);
+				RenderParameter param = new RenderParameter();
+				param.setString("layer", "foobar");
+				param.setObject("rampType", new ColorRampParameter("br"));
+				param.setOutputWidth(256);
+				param.setOutputHeight(256);
+				param.setObject("tileCoordinate", new TileIndex(4, 3, 2, 1, 1));
+
 				panel.setImage(renderer.render(param));
 			}
 		}));

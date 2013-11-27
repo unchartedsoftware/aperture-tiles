@@ -43,6 +43,7 @@ import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
 import com.oculusinfo.tile.spi.impl.Log10ValueTransformer;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
 import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
  * @author  dgray
@@ -74,21 +75,28 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render(RenderParameter parameter) {
  		BufferedImage bi;
 		try {  // TODO: harden at a finer granularity.
-			bi = new BufferedImage(parameter.getOutputWidth(), parameter.getOutputWidth(), BufferedImage.TYPE_INT_ARGB);
+			int outputWidth = parameter.getOutputWidth();
+			int outputHeight = parameter.getOutputHeight();
+			int rangeMax = parameter.getAsInt("rangeMax");
+			int rangeMin = parameter.getAsInt("rangeMin");
+			String transformId = parameter.getString("transformId");
+			String layer = parameter.getString("layer");
 
-			double maximumValue = Double.parseDouble(parameter.getLevelMaximums());
+			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
+
+			double maximumValue = parameter.getAsDouble("levelMaximums");
 			
-			ColorRamp ramp = ColorRampFactory.create(parameter.getRampType(), 255);
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getTransformId(), maximumValue);
-			int[] rgbArray = new int[parameter.getOutputWidth()*parameter.getOutputWidth()];
+			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 255);
+			IValueTransformer t = ValueTransformerFactory.create(transformId, maximumValue);
+			int[] rgbArray = new int[outputWidth*outputHeight];
 			
-			double scaledLevelMaxFreq = t.transform(maximumValue)*parameter.getRangeMax()/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*parameter.getRangeMin()/100;
+			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
+			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
 
 			int coursenessFactor = (int)Math.pow(2, courseness - 1);
 			
 			//get the tile indexes of the requested base tile and possibly the scaling one further up the tree
-			TileIndex baseLevelIndex = parameter.getTileCoordinate();
+			TileIndex baseLevelIndex = parameter.getObject("tileCoordinate", TileIndex.class);
 			TileIndex scaleLevelIndex = null; 
 			
 			List<TileData<Double>> tileDatas = null;
@@ -97,7 +105,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			for (int coursenessLevel = courseness - 1; coursenessLevel >= 0; --coursenessLevel) {
 				scaleLevelIndex = new TileIndex(baseLevelIndex.getLevel() - coursenessLevel, (int)Math.floor(baseLevelIndex.getX() / coursenessFactor), (int)Math.floor(baseLevelIndex.getY() / coursenessFactor));				
 				
-				tileDatas = _pyramidIo.readTiles(parameter.getLayer(), _serializer, Collections.singleton(scaleLevelIndex));
+				tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(scaleLevelIndex));
 				if (tileDatas.size() >= 1) {
 					//we got data for this level so use it
 					break;
@@ -106,7 +114,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			
 			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile "+parameter.getTileCoordinate()+" for layer "+parameter.getLayer());
+			    _logger.info("Missing tile " + parameter.getObject("tileCoordinate", TileIndex.class) + " for layer " + layer);
 			    return null;
 			}
 			
@@ -162,10 +170,10 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 				}
 			}
 			
-			bi.setRGB(0, 0, parameter.getOutputWidth(), parameter.getOutputWidth(), rgbArray, 0, parameter.getOutputWidth());
+			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.getLayer() + ":" + parameter.getTileCoordinate());
+			_logger.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}
