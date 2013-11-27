@@ -267,8 +267,6 @@ public class ImageTileServiceImpl implements ImageTileService {
 		renderParam.setInt("currentImage", currentImage);
 		renderParam.setObject("tileCoordinate", tileCoordinate);
 		
-		System.out.println("--- has key: " + renderParam.getRawData().containsKey("xrenderer"));
-
 		bi = tileRenderer.render(renderParam);
 		
 		if (bi == null){

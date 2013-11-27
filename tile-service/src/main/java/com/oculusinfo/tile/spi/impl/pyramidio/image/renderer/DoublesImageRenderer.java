@@ -56,9 +56,6 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	private PyramidIO _pyramidIo;
 	private TileSerializer<Double> _serializer;
 
-	//FIXME: this should be setup as an input parameter
-	private int courseness = 1;
-
 	public DoublesImageRenderer(PyramidIO pyramidIo) {
 		_pyramidIo = pyramidIo;
 		_serializer = createSerializer();
@@ -81,6 +78,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			int rangeMin = parameter.getAsInt("rangeMin");
 			String transformId = parameter.getString("transformId");
 			String layer = parameter.getString("layer");
+			int coarseness = Math.max(parameter.getAsIntOrElse("coarseness", 1), 1);
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
@@ -93,7 +91,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
 
-			int coursenessFactor = (int)Math.pow(2, courseness - 1);
+			int coursenessFactor = (int)Math.pow(2, coarseness - 1);
 			
 			//get the tile indexes of the requested base tile and possibly the scaling one further up the tree
 			TileIndex baseLevelIndex = parameter.getObject("tileCoordinate", TileIndex.class);
@@ -102,7 +100,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			List<TileData<Double>> tileDatas = null;
 			
 			//need to get the tile data for the level of the base level minus the courseness
-			for (int coursenessLevel = courseness - 1; coursenessLevel >= 0; --coursenessLevel) {
+			for (int coursenessLevel = coarseness - 1; coursenessLevel >= 0; --coursenessLevel) {
 				scaleLevelIndex = new TileIndex(baseLevelIndex.getLevel() - coursenessLevel, (int)Math.floor(baseLevelIndex.getX() / coursenessFactor), (int)Math.floor(baseLevelIndex.getY() / coursenessFactor));				
 				
 				tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(scaleLevelIndex));
