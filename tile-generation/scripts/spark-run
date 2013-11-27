@@ -12,7 +12,7 @@ if [ "a" == "a"$SCALA_HOME ]; then
   exit 1
 fi
 
-export SPARK_CLASSPATH=$SCALA_HOME/libexec/lib/'*'
+# export SPARK_CLASSPATH=$SCALA_HOME/libexec/lib/'*'
 
 function addToSparkClasspath {
   groupId=$1
@@ -36,14 +36,14 @@ function addToSparkClasspath {
 
 # Set up the spark classpath
 # our own jars
-addToSparkClasspath com.oculusinfo math-utilities 0.1-SNAPSHOT
-addToSparkClasspath com.oculusinfo geometric-utilities 0.1-SNAPSHOT
-addToSparkClasspath com.oculusinfo binning-utilities 0.1-SNAPSHOT
-addToSparkClasspath com.oculusinfo tile-generation 0.1-SNAPSHOT
+addToSparkClasspath com.oculusinfo math-utilities 0.1.2-SNAPSHOT
+addToSparkClasspath com.oculusinfo geometric-utilities 0.1.2-SNAPSHOT
+addToSparkClasspath com.oculusinfo binning-utilities 0.1.2-SNAPSHOT
+addToSparkClasspath com.oculusinfo tile-generation 0.1.2-SNAPSHOT
 
 # framework-related jars
-addToSparkClasspath org.apache.hbase hbase 0.94.2-cdh4.2.0
-addToSparkClasspath org.apache.mesos mesos 0.9.0-incubating
+addToSparkClasspath org.apache.hbase hbase 0.94.6-cdh4.4.0
+#addToSparkClasspath org.apache.mesos mesos 0.9.0-incubating
 
 # additional stuff needed to use avro serialization
 addToSparkClasspath org.apache.avro avro 1.7.4
@@ -57,6 +57,6 @@ addToSparkClasspath org.scala-lang scala-compiler 2.9.3
 
 echo Running Spark from $SPARK_HOME
 echo Running SPARK with classpath=$SPARK_CLASSPATH
-export MASTER=local[8]
+export MASTER=spark://hadoop-master.oculus.local:7077
 export SPARK_MEM=4g
-$SPARK_HOME/run $*
+$SPARK_HOME/spark-class $*
