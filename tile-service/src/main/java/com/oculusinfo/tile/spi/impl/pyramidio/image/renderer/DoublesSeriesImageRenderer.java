@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer;
@@ -43,6 +44,7 @@ import com.oculusinfo.tile.spi.impl.IValueTransformer;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.DoublesImageRenderer.ValueTransformerFactory;
 import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
  * A renderer that renders tiles of series of doubles
@@ -70,35 +72,44 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render (RenderParameter parameter) {
  		BufferedImage bi;
 		try {  // TODO: harden at a finer granularity.
-			bi = new BufferedImage(parameter.getOutputWidth(), parameter.getOutputWidth(), BufferedImage.TYPE_INT_ARGB);
+			int outputWidth = parameter.getOutputWidth();
+			int outputHeight = parameter.getOutputHeight();
+			int rangeMax = parameter.getAsInt("rangeMax");
+			int rangeMin = parameter.getAsInt("rangeMin");
+			String transformId = parameter.getString("transformId");
+			String layer = parameter.getString("layer");
+
+			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 			
-			ColorRamp ramp = ColorRampFactory.create(parameter.getRampType(), 255);
+			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 255);
 			double maximumValue;
 			try {
-			    maximumValue = Double.parseDouble(parameter.getLevelMaximums());
+				maximumValue = parameter.getAsDouble("levelMaximums");
 			} catch (NumberFormatException e) {
-			    _logger.warn("Expected a numeric maximum for level, got {}", parameter.getLevelMaximums());
+			    _logger.warn("Expected a numeric maximum for level, got {}", parameter.getString("levelMaximums"));
 			    maximumValue = 1000.0;
 			}
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getTransformId(), maximumValue);
-			int[] rgbArray = new int[parameter.getOutputWidth()*parameter.getOutputWidth()];
+			IValueTransformer t = ValueTransformerFactory.create(transformId, maximumValue);
+			int[] rgbArray = new int[outputWidth*outputHeight];
 			
-			double scaledLevelMaxFreq = t.transform(maximumValue)*parameter.getRangeMax()/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*parameter.getRangeMin()/100;
+			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
+			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
 			
-			List<TileData<List<Double>>> tileDatas = _pyramidIo.readTiles(parameter.getLayer(), _serializer, Collections.singleton(parameter.getTileCoordinate()));
+			List<TileData<List<Double>>> tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(parameter.getObject("tileCoordinate", TileIndex.class)));
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile "+parameter.getTileCoordinate()+" for layer "+parameter.getLayer());
+			    _logger.info("Missing tile " + parameter.getObject("tileCoordinate", TileIndex.class) + " for layer " + layer);
 			    return null;
 			}
 
+			int currentImage = getCurrentImage(parameter);
+			
 			TileData<List<Double>> data = tileDatas.get(0);
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
 			
-			double xScale = ((double) parameter.getOutputWidth())/xBins;
-			double yScale = ((double) parameter.getOutputHeight())/yBins;
+			double xScale = ((double) outputWidth)/xBins;
+			double yScale = ((double) outputHeight)/yBins;
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 					int minX = (int) Math.round(tx*xScale);
@@ -108,8 +119,8 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 					List<Double> binCounts = data.getBin(tx, ty);
 					double binCount = 0;
-					if (binCounts != null && binCounts.size() > parameter.getCurrentImage()) {
-						binCount= binCounts.get(parameter.getCurrentImage());
+					if (binCounts != null && binCounts.size() > currentImage) {
+						binCount= binCounts.get(currentImage);
 					}
 					double transformedValue = t.transform(binCount);
 					int rgb;
@@ -123,23 +134,35 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 					for (int ix = minX; ix < maxX; ++ix) {
 						for (int iy = minY; iy < maxY; ++iy) {
-							int i = iy*parameter.getOutputWidth() + ix;
+							int i = iy*outputWidth + ix;
 							rgbArray[i] = rgb;
 						}
 					}
 				}
 			}
 			
-			bi.setRGB(0, 0, parameter.getOutputWidth(), parameter.getOutputWidth(), rgbArray, 0, parameter.getOutputWidth());
+			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.getLayer() + ":" + parameter.getTileCoordinate());
+			_logger.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}
 		return bi;
 	}
-
+	
+	private int getCurrentImage(RenderParameter param) {
+		int currentImage = 0;
+		try {
+			currentImage = param.getAsInt("currentImage");
+		}
+		catch (Exception e) {
+			_logger.error("Could not retrieve 'currentImage' from layer params.", e);
+		}
+		
+		return currentImage;
+	}
+	
 	@Override
 	public int getNumberOfImagesPerTile(PyramidMetaData metadata) {
 	    int minFrames = Integer.MAX_VALUE;

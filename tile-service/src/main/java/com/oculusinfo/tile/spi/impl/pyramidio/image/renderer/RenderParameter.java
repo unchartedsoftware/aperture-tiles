@@ -27,9 +27,6 @@ package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.tile.util.ColorRampParameter;
-
 /**
  * A general property bag that guarantees certain methods
  * will be available. This does not necessarily mean that the property bag
@@ -43,25 +40,10 @@ public class RenderParameter {
 	
 	private Map<String, Object> data;
 	
-	/**
-	 * Creates a RenderParameter based on the given values. 
-	 */
-	public RenderParameter(String layer, ColorRampParameter rampType, String transformId,
-			int rangeMin, int rangeMax, int dimension, String levelMaximums,
-			TileIndex tileCoordinate, int currentImage) {
-		data = new HashMap<>();
-		setLayer(layer);
-		setRampType(rampType);
-		setTransformId(transformId);
-		setRangeMin(rangeMin);
-		setRangeMax(rangeMax);
-		setOutputWidth(dimension);
-		setOutputHeight(dimension);
-		setLevelMaximums(levelMaximums);
-		setTileCoordinate(tileCoordinate);
-		setCurrentImage(currentImage);
+	public RenderParameter() {
+		data = new HashMap<String, Object>();
 	}
-
+	
 	public RenderParameter(Map<String, Object> params) {
 		data = new HashMap<String, Object>(params);
 	}
@@ -71,66 +53,6 @@ public class RenderParameter {
 	}
 	
 	
-	public String getLayer() {
-		return getString("layer");
-	}
-
-
-
-	public void setLayer(String layer) {
-		setString("layer", layer);
-	}
-
-
-
-	public ColorRampParameter getRampType() {
-		return typedGet("rampType", ColorRampParameter.class);
-	}
-
-
-
-	public void setRampType(ColorRampParameter rampType) {
-		data.put("rampType", rampType);
-	}
-
-
-
-	public String getTransformId() {
-		return getString("transformId");
-	}
-
-
-
-	public void setTransformId(String transformId) {
-		setString("transformId", transformId);
-	}
-
-
-
-	public int getRangeMin() {
-		return getInt("rangeMin");
-	}
-
-
-
-	public void setRangeMin(int rangeMin) {
-		setInt("rangeMin", rangeMin);
-	}
-
-
-
-	public int getRangeMax() {
-		return getInt("rangeMax");
-	}
-
-
-
-	public void setRangeMax(int rangeMax) {
-		setInt("rangeMax", rangeMax);
-	}
-
-
-
 	public int getOutputWidth() {
 		return getInt("outputWidth");
 	}
@@ -154,62 +76,122 @@ public class RenderParameter {
 	}
 
 
-
-	public String getLevelMaximums() {
-		return getString("levelMaximums");
-	}
-
-
-
-	public void setLevelMaximums(String levelMaximums) {
-		setString("levelMaximums", levelMaximums);
-	}
-
-
-	public TileIndex getTileCoordinate() {
-		return typedGet("tileCoordinate", TileIndex.class);
-	}
-
-
-
-	public void setTileCoordinate(TileIndex tileCoordinate) {
-		data.put("tileCoordinate", tileCoordinate);
-	}
-
-
-
-	public int getCurrentImage() {
-		return getInt("currentImage");
-	}
-
-
-
-	public void setCurrentImage(int currentImage) {
-		setInt("currentImage", currentImage);
-	}
-
-
 	//-------------------------------------------------------
 	// Helpers
 	//-------------------------------------------------------
 	
-	protected String getString(String key) {
+	public String getString(String key) {
 		return typedGet(key, String.class);
 	}
 	
-	protected void setString(String key, String value) {
-		data.put(key, value);
+	public String getAsString(String key) {
+		String ret = null;
+		try {
+			ret = typedGet(key, String.class);
+		}
+		catch (ClassCastException e) {
+			Object o = data.get(key);
+			ret = (o != null)? o.toString() : null;
+		}
+		return ret;
 	}
 	
-	protected Integer getInt(String key) {
+	public String getAsStringOrElse(String key, String defVal) {
+		String val = getAsString(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setString(String key, String value) {
+		data.put(key, value);
+	}
+
+	public Integer getInt(String key) {
 		return typedGet(key, Integer.class);
 	}
 	
-	protected void setInt(String key, Integer value) {
+	public Integer getAsInt(String key) {
+		Integer ret = null;
+		try {
+			ret = typedGet(key, Integer.class);
+		}
+		catch (ClassCastException e) {
+			//value wasn't an integer, so see if its a string and we can parse it
+			ret = Integer.parseInt(typedGet(key, String.class));
+		}
+	
+		return ret;
+	}
+	
+	public Integer getAsIntOrElse(String key, Integer defVal) {
+		Integer val = getAsInt(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setInt(String key, Integer value) {
 		data.put(key, value);
 	}
 	
-	protected <T> T typedGet(String key, Class<T> clazz) {
+	public Double getDouble(String key) {
+		return typedGet(key, Double.class);
+	}
+	
+	public Double getAsDouble(String key) {
+		Double ret = null;
+		try {
+			ret = typedGet(key, Double.class);
+		}
+		catch (ClassCastException e) {
+			//value wasn't a double, so see if its a string and we can parse it
+			ret = Double.parseDouble(typedGet(key, String.class));
+		}
+		
+		return ret;
+	}
+	
+	public Double getAsDoubleOrElse(String key, Double defVal) {
+		Double val = getAsDouble(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setDouble(String key, Double value) {
+		data.put(key, value);
+	}
+	
+	public Boolean getBoolean(String key) {
+		return typedGet(key, Boolean.class);
+	}
+	
+	public Boolean getAsBoolean(String key) {
+		Boolean ret = null;
+		try {
+			ret = typedGet(key, Boolean.class);
+		}
+		catch (ClassCastException e) {
+			//value wasn't a double, so see if its a string and we can parse it
+			ret = Boolean.parseBoolean(typedGet(key, String.class));
+		}
+		
+		return ret;
+	}
+	
+	public Boolean getAsBooleanOrElse(String key, Boolean defVal) {
+		Boolean val = getAsBoolean(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setBoolean(String key, Boolean value) {
+		data.put(key, value);
+	}
+
+	public <T> T getObject(String key, Class<T> clazz) {
+		return typedGet(key, clazz);
+	}
+	
+	public void setObject(String key, Object value) {
+		data.put(key, value);
+	}
+	
+	public <T> T typedGet(String key, Class<T> clazz) {
 		return clazz.cast(data.get(key));
 	}
 	
