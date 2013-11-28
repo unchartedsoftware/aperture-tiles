@@ -51,15 +51,17 @@ import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.tile.spi.impl.IValueTransformer;
 import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
 import com.oculusinfo.tile.spi.impl.Log10ValueTransformer;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
-import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.utilities.imageprocessing.GraphicsUtilities;
+import com.oculusinfo.utilities.imageprocessing.StackBlurFilter;
 
 /**
+ * An image renderer that works off of tile grids, but instead of rendering
+ * a heatmap, calculates some statistics and renders them as text.
+ * 
  * @author  dgray
  */
 public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
-	private static final Color COLOR_BLANK = new Color(255,255,255,0);
-	//private static final Font FONT = new Font("Verdana", Font.BOLD, 16);
+	private static final Font FONT = new Font("Verdana", Font.BOLD, 13);
 	
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
 	
@@ -82,17 +84,9 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	@Override
 	public BufferedImage render(RenderParameter parameter) {
  		BufferedImage bi;
-		try {  // TODO: harden at a finer granularity.
-			bi = new BufferedImage(parameter.outputWidth, parameter.outputWidth, BufferedImage.TYPE_INT_ARGB);
-
-			double maximumValue = Double.parseDouble(parameter.levelMaximums);
-			
-			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 50);
-			IValueTransformer t = ValueTransformerFactory.create(parameter.transformId, maximumValue);
-			
-			double scaledLevelMaxFreq = t.transform(maximumValue)*parameter.rangeMax/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*parameter.rangeMin/100;
-			
+		try {
+			bi = GraphicsUtilities.createCompatibleTranslucentImage(parameter.outputWidth, parameter.outputWidth);
+		
 			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(parameter.layer, _serializer, Collections.singleton(parameter.tileCoordinate));
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
@@ -112,13 +106,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 				for(int tx = 0; tx < xBins; tx++){
 
 					double binCount = data.getBin(tx, ty);
-					double transformedValue = t.transform(binCount);
-					
-					// Only including the binCount in the total if it hasn't been
-					// cut out by the range slider (clipped).
-					if (binCount > 0
-							&& transformedValue >= scaledLevelMinFreq
-							&& transformedValue <= scaledLevelMaxFreq) {
+					if (binCount > 0 ){
 						
 						totalNonEmptyBins += 1;
 						
@@ -131,33 +119,14 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			}
 			
 			double coverage = totalNonEmptyBins/(xBins*yBins);
+
+			DecimalFormat decFormat = new DecimalFormat("");
+			String formattedTotal 		= decFormat.format(totalBinCount) + " events   ";
+			decFormat = new DecimalFormat("##.##");
+			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
-			Graphics2D g = bi.createGraphics(); // { Start Graphics2D
-			
-				Font FONT = new Font("Consolas", Font.PLAIN, 14); // TODO: static-fy this when finalized.
-			
-				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-//				double transformedMax = t.transform(maxBinCount);
-//				int rgb;
-//				
-//				rgb = ramp.getRGB(transformedMax);
-//				Color scaledColorOfTotal = new Color(rgb);
-//				
-//				rgb = ramp.getRGB(coverage);
-//				Color scaledColorOfCoverage = new Color(rgb);
-				
-				DecimalFormat decFormat = new DecimalFormat("");
-				String formattedTotal 		= "Total   : " + decFormat.format(totalBinCount);
-				decFormat = new DecimalFormat("##.##");
-				String formattedCoverage 	= "Coverage: " + decFormat.format(coverage * 100) + "%";
-				
-				g.setFont(FONT);
-				Color unscaledColor = Color.yellow.brighter();
-				drawText(g, "Sensor Statistics", 	10, 10, unscaledColor);
-				drawText(g, formattedTotal, 		20, 30, unscaledColor); //scaledColorOfTotal);
-				drawText(g, formattedCoverage, 		20, 50, unscaledColor); //scaledColorOfCoverage);
-			
-			g.dispose(); // } End Graphics2D
+			String text = parameter.layer.substring(0, 11) + ": " + formattedTotal + "  " + formattedCoverage;
+			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
 			_logger.debug("Tile is corrupt: " + parameter.layer + ":" + parameter.tileCoordinate);
@@ -166,15 +135,22 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 		}
 		return bi;
 	}
-
+	
 	/**
-	 * @param g
+	 * Draw a line of text with a glow around it. Uses fast blurring approximation of gaussian.
+	 * TODO: Support calling this multiple times! currently wipes out anything that was there before.
+	 * 
+	 * @param destination
 	 * @param text
-	 * @param yOffset 
-	 * @param xOffset 
+	 * @param xOffset
+	 * @param yOffset
+	 * @param font
 	 * @param textColor
+	 * @param glowColor
 	 */
-	private void drawText(Graphics2D g, String text, int xOffset, int yOffset, Color textColor) {
+	private static void drawTextGlow(BufferedImage destination, String text, int xOffset, int yOffset, Font font, Color textColor, Color glowColor) {
+		Graphics2D g = destination.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		FontMetrics fm = g.getFontMetrics();
 		Rectangle2D bounds = fm.getStringBounds(text, g);
 		FontRenderContext frc = g.getFontRenderContext();
@@ -185,29 +161,22 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 		Shape shape = layout.getOutline(AffineTransform.getTranslateInstance(
 				bounds.getWidth()/2-sw/2 + xOffset, 
 				bounds.getHeight()*0.5+sh/2 + yOffset));
-		g.setStroke(new BasicStroke(2.0f));
-		//g.setColor(Color.black);
-		g.setColor(contrastColor(textColor));
-		g.draw(shape);
-		//g.setColor(Color.white);
+		
+		BufferedImage biText = GraphicsUtilities.createCompatibleImage(destination);
+		Graphics2D gText = biText.createGraphics(); // { gText
+			gText.setFont(g.getFont());
+			gText.setColor(glowColor);
+			gText.setStroke(new BasicStroke(2));
+			gText.draw(shape);
+		gText.dispose(); // } End gText	
+		
+		StackBlurFilter blur = new StackBlurFilter(3, 3);
+		blur.filter(biText, destination);
+		
 		g.setColor(textColor);
 		g.fill(shape);
+		g.dispose();
 	}
-	
-	private Color contrastColor(Color color){
-        int d = 0;
-
-        // Counting the perceptive luminance - human eye favors green color... 
-        double a = 1 - ( 0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue())/255;
-
-        if (a < 0.8)
-            d = 0; // bright colors - black
-        else
-            d = 150; // dark colors - light
-
-        return  new Color(d, d, d);
-    }
-
 
 	/**
 	 * {@inheritDoc}
