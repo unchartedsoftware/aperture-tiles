@@ -32,7 +32,9 @@ import java.net.URLEncoder;
 import javax.imageio.ImageIO;
 
 import oculus.aperture.common.rest.ApertureServerResource;
+
 import com.oculusinfo.tile.spi.ImageTileLegendService;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,7 +66,7 @@ public class ImageTileLegendResource extends ApertureServerResource {
 			JSONObject jsonObj = new JSONObject(jsonData);
 			
 			String transform 	= jsonObj.getString("transform");
-			String rampType		= jsonObj.getString("ramp");
+			String rampName		= jsonObj.getString("ramp");
 			String layer 		= jsonObj.getString("layer");
 			int zoomLevel		= jsonObj.getInt("level");
 			int width = jsonObj.getInt("width");
@@ -74,6 +76,7 @@ public class ImageTileLegendResource extends ApertureServerResource {
 				doAxis = jsonObj.getBoolean("doAxis");
 			}
 			
+			ColorRampParameter rampType = new ColorRampParameter(rampName);
 			return generateEncodedImage(transform, rampType, layer, zoomLevel, width, height, doAxis);
 			
 		} catch (JSONException e) {
@@ -92,9 +95,11 @@ public class ImageTileLegendResource extends ApertureServerResource {
 
 		String outputType = form.getFirstValue("output", "uri");
 		String transform = form.getFirstValue("transform", "linear").trim();
-		String rampType = form.getFirstValue("ramp", "ware").trim();
+		String rampName = form.getFirstValue("ramp", "ware").trim();
 		String layer = form.getFirstValue("layer").trim();
 		String doAxisString = form.getFirstValue("doAxis", "false").trim();
+		
+		ColorRampParameter rampType = new ColorRampParameter(rampName);
 				
 		// get the root node ID from the form
 		int zoomLevel = 0;
@@ -129,7 +134,7 @@ public class ImageTileLegendResource extends ApertureServerResource {
 	 * @param height
 	 * @return
 	 */
-	private ImageOutputRepresentation generateImage(String transform, String rampType, String layer,
+	private ImageOutputRepresentation generateImage(String transform, ColorRampParameter rampType, String layer,
 			int zoomLevel, int width, int height, boolean doAxis) {
 		try {
 			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis);
@@ -152,7 +157,7 @@ public class ImageTileLegendResource extends ApertureServerResource {
 	 * @param height
 	 * @return
 	 */
-	private StringRepresentation generateEncodedImage(String transform, String rampType,
+	private StringRepresentation generateEncodedImage(String transform, ColorRampParameter rampType,
 			String layer, int zoomLevel, int width, int height, boolean doAxis) {
 		try {
 			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis);

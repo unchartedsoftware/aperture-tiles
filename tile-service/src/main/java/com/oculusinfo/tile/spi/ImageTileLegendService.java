@@ -26,8 +26,10 @@ package com.oculusinfo.tile.spi;
 
 import java.awt.image.BufferedImage;
 
+import com.oculusinfo.tile.util.ColorRampParameter;
+
 public interface ImageTileLegendService {
 	
-	public BufferedImage getLegend(String transform, String rampType, String layer, int zoomLevel, int width, int height, boolean doAxis);
+	public BufferedImage getLegend(String transform, ColorRampParameter rampType, String layer, int zoomLevel, int width, int height, boolean doAxis);
 	
 }

@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.Pair;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
@@ -44,6 +45,7 @@ import com.oculusinfo.binning.io.impl.StringDoublePairArrayAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
 import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
  * A server side to render Map<String, Double> (well, technically,
@@ -109,14 +111,16 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render(RenderParameter parameter) {
 		BufferedImage bi;
 		try {
-			int width = parameter.outputWidth;
-			int height = parameter.outputHeight;
+			int width = parameter.getOutputWidth();
+			int height = parameter.getOutputHeight();
+			String layer = parameter.getString("layer");
+			
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			ColorRamp ramp = ColorRampFactory.create(parameter.rampType, 64);
+			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 64);
 
-			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(parameter.layer, _serializer, Collections.singleton(parameter.tileCoordinate));
+			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(parameter.getObject("tileCoordinate", TileIndex.class)));
 			if (tileDatas.isEmpty()) {
-			    _logger.debug("Layer {} is missing tile ().", parameter.layer, parameter.tileCoordinate);
+			    _logger.debug("Layer {} is missing tile ().", layer, parameter.getObject("tileCoordinate", TileIndex.class));
 			    return null;
 			}
 			TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
@@ -168,7 +172,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 				}
 			}
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.layer+":"+parameter.tileCoordinate);
+			_logger.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}

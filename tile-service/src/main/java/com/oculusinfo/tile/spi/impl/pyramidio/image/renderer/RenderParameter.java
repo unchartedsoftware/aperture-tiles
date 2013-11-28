@@ -24,82 +24,175 @@
  */
 package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
-import com.oculusinfo.binning.TileIndex;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * TODO: just make this a generic property bag maybe.
+ * A general property bag that guarantees certain methods
+ * will be available. This does not necessarily mean that the property bag
+ * will contain all the properties retrieved in each method.
  * 
  * @author  dgray
+ * @author cregnier
  * 
  */
 public class RenderParameter {
-	/**
-	 * 
-	 */
-	public String layer;
-
-	/**
-	 * 
-	 */
-	public String rampType;
-
-	/**
-	 * 
-	 */
-	public String transformId;
-
-	/**
-	 * 
-	 */
-	public int rangeMin;
-
-	/**
-	 * 
-	 */
-	public int rangeMax;
-
-	/**
-	 * 
-	 */
-	public int outputWidth;
-
-	/**
-	 * 
-	 */
-	public int outputHeight;
-
-	/**
-	 * 
-	 */
-	public String levelMaximums;
-
-	/**
-	 * 
-	 */
-	public TileIndex tileCoordinate;
-
-	/**
-	 * 
-	 */
-	public int currentImage;
-
-
-
-	/**
-	 * 
-	 */
-	public RenderParameter(String layer, String rampType, String transformId,
-			int rangeMin, int rangeMax, int dimension, String levelMaximums,
-			TileIndex tileCoordinate, int currentImage) {
-		this.layer = layer;
-		this.rampType = rampType;
-		this.transformId = transformId;
-		this.rangeMin = rangeMin;
-		this.rangeMax = rangeMax;
-		this.outputWidth = dimension;
-		this.outputHeight = dimension;
-		this.levelMaximums = levelMaximums;
-		this.tileCoordinate = tileCoordinate;
-		this.currentImage = currentImage;
+	
+	private Map<String, Object> data;
+	
+	public RenderParameter() {
+		data = new HashMap<String, Object>();
 	}
+	
+	public RenderParameter(Map<String, Object> params) {
+		data = new HashMap<String, Object>(params);
+	}
+	
+	public Map<String, Object> getRawData() {
+		return data;
+	}
+	
+	
+	public int getOutputWidth() {
+		return getInt("outputWidth");
+	}
+
+
+
+	public void setOutputWidth(int outputWidth) {
+		setInt("outputWidth", outputWidth);
+	}
+
+
+
+	public int getOutputHeight() {
+		return getInt("outputHeight");
+	}
+
+
+
+	public void setOutputHeight(int outputHeight) {
+		setInt("outputHeight", outputHeight);
+	}
+
+
+	//-------------------------------------------------------
+	// Helpers
+	//-------------------------------------------------------
+	
+	public String getString(String key) {
+		return typedGet(key, String.class);
+	}
+	
+	public String getAsString(String key) {
+		String ret = null;
+		try {
+			ret = typedGet(key, String.class);
+		}
+		catch (ClassCastException e) {
+			Object o = data.get(key);
+			ret = (o != null)? o.toString() : null;
+		}
+		return ret;
+	}
+	
+	public String getAsStringOrElse(String key, String defVal) {
+		String val = getAsString(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setString(String key, String value) {
+		data.put(key, value);
+	}
+
+	public Integer getInt(String key) {
+		return typedGet(key, Integer.class);
+	}
+	
+	public Integer getAsInt(String key) {
+		Integer ret = null;
+		try {
+			ret = typedGet(key, Integer.class);
+		}
+		catch (ClassCastException e) {
+			//value wasn't an integer, so see if its a string and we can parse it
+			ret = Integer.parseInt(typedGet(key, String.class));
+		}
+	
+		return ret;
+	}
+	
+	public Integer getAsIntOrElse(String key, Integer defVal) {
+		Integer val = getAsInt(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setInt(String key, Integer value) {
+		data.put(key, value);
+	}
+	
+	public Double getDouble(String key) {
+		return typedGet(key, Double.class);
+	}
+	
+	public Double getAsDouble(String key) {
+		Double ret = null;
+		try {
+			ret = typedGet(key, Double.class);
+		}
+		catch (ClassCastException e) {
+			//value wasn't a double, so see if its a string and we can parse it
+			ret = Double.parseDouble(typedGet(key, String.class));
+		}
+		
+		return ret;
+	}
+	
+	public Double getAsDoubleOrElse(String key, Double defVal) {
+		Double val = getAsDouble(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setDouble(String key, Double value) {
+		data.put(key, value);
+	}
+	
+	public Boolean getBoolean(String key) {
+		return typedGet(key, Boolean.class);
+	}
+	
+	public Boolean getAsBoolean(String key) {
+		Boolean ret = null;
+		try {
+			ret = typedGet(key, Boolean.class);
+		}
+		catch (ClassCastException e) {
+			//value wasn't a double, so see if its a string and we can parse it
+			ret = Boolean.parseBoolean(typedGet(key, String.class));
+		}
+		
+		return ret;
+	}
+	
+	public Boolean getAsBooleanOrElse(String key, Boolean defVal) {
+		Boolean val = getAsBoolean(key);
+		return (val != null)? val : defVal;
+	}
+	
+	public void setBoolean(String key, Boolean value) {
+		data.put(key, value);
+	}
+
+	public <T> T getObject(String key, Class<T> clazz) {
+		return typedGet(key, clazz);
+	}
+	
+	public void setObject(String key, Object value) {
+		data.put(key, value);
+	}
+	
+	public <T> T typedGet(String key, Class<T> clazz) {
+		return clazz.cast(data.get(key));
+	}
+	
 }

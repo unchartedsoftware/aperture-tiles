@@ -45,6 +45,7 @@ import com.oculusinfo.tile.spi.ImageTileLegendService;
 import com.oculusinfo.tile.spi.impl.IValueTransformer;
 import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
 import com.oculusinfo.tile.util.ColorRamp;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 /**
  * A service that generates an image coloured using the specified
@@ -70,7 +71,7 @@ public class ImageLegendService implements ImageTileLegendService {
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileLegendService#getLegend(int, double, double, int, int)
 	 */
-	public BufferedImage getLegend(String transform, String rampType, String layer, 
+	public BufferedImage getLegend(String transform, ColorRampParameter rampType, String layer, 
 			int zoomLevel, int width, int height, boolean doAxis) {
 
 		//int levelMinFreq = 0;
