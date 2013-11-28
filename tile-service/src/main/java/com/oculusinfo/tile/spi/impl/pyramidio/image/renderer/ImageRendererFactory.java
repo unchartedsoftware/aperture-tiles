@@ -49,6 +49,8 @@ public class ImageRendererFactory {
 			return new LegacyDoublesImageRenderer(pyramidIo);
 		} else if ("doubleseries".equals(rendererType)) {
 			return new DoublesSeriesImageRenderer(pyramidIo);
+		} else if ("doublestatistics".equals(rendererType)){
+			return new DoublesStatisticImageRenderer(pyramidIo);
 		} else {
 			return new DoublesImageRenderer(pyramidIo);
 		}
