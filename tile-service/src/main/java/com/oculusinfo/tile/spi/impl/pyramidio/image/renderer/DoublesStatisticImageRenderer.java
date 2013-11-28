@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.DoubleAvroSerializer;
@@ -61,7 +62,7 @@ import com.oculusinfo.utilities.imageprocessing.StackBlurFilter;
  * @author  dgray
  */
 public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
-	private static final Font FONT = new Font("Verdana", Font.BOLD, 13);
+	private  Font FONT = new Font("Tahoma", Font.PLAIN, 13);
 	
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
 	
@@ -83,14 +84,21 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 */
 	@Override
 	public BufferedImage render(RenderParameter parameter) {
- 		BufferedImage bi;
+ 		BufferedImage bi = null;
+ 		TileIndex tileIndex = null;
+ 		String layer = "?";
+ 		
 		try {
-			bi = GraphicsUtilities.createCompatibleTranslucentImage(parameter.outputWidth, parameter.outputWidth);
+			bi = GraphicsUtilities.createCompatibleTranslucentImage(parameter.getOutputWidth(), parameter.getOutputWidth());
 		
-			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(parameter.layer, _serializer, Collections.singleton(parameter.tileCoordinate));
+			tileIndex = parameter.getObject("tileCoordinate", TileIndex.class);
+			layer = parameter.getAsString("layer");
+			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(layer,
+					_serializer, Collections.singleton(tileIndex));
+			
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile "+parameter.tileCoordinate+" for layer "+parameter.layer);
+			    _logger.info("Missing tile " + tileIndex + " for layer " + layer);
 			    return null;
 			}
 
@@ -125,11 +133,11 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			decFormat = new DecimalFormat("##.##");
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
-			String text = parameter.layer.substring(0, 11) + ": " + formattedTotal + "  " + formattedCoverage;
+			String text = parameter.getAsString("shortName") + ": " + formattedTotal + " " + formattedCoverage;
 			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.layer + ":" + parameter.tileCoordinate);
+			_logger.debug("Tile is corrupt: " + layer + ":" + tileIndex);
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}
@@ -150,6 +158,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 */
 	private static void drawTextGlow(BufferedImage destination, String text, int xOffset, int yOffset, Font font, Color textColor, Color glowColor) {
 		Graphics2D g = destination.createGraphics();
+		g.setFont(font);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		FontMetrics fm = g.getFontMetrics();
 		Rectangle2D bounds = fm.getStringBounds(text, g);
