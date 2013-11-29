@@ -75,7 +75,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	protected void initRedRampPointsFromParams() {
 		if (rampParams.contains("reds")) {
 			try {
-				reds = getFixedPointList(rampParams.getList("reds", Object.class));
+				reds = getFixedPointList(rampParams.getList("reds"));
 			}
 			catch (Exception e) {
 				logger.error("Problem initializing red ramp points", e);
@@ -89,7 +89,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	protected void initBlueRampPointsFromParams() {
 		if (rampParams.contains("blues")) {
 			try {
-				blues = getFixedPointList(rampParams.getList("blues", Object.class));
+				blues = getFixedPointList(rampParams.getList("blues"));
 			}
 			catch (Exception e) {
 				logger.error("Problem initializing blue ramp points", e);
@@ -103,7 +103,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	protected void initGreenRampPointsFromParams() {
 		if (rampParams.contains("greens")) {
 			try {
-				greens = getFixedPointList(rampParams.getList("greens", Object.class));
+				greens = getFixedPointList(rampParams.getList("greens"));
 			}
 			catch (Exception e) {
 				logger.error("Problem initializing green ramp points", e);
@@ -117,7 +117,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	protected void initAlphasRampPointsFromParams() {
 		if (rampParams.contains("alphas")) {
 			try {
-				alphas = getFixedPointList(rampParams.getList("alphas", Object.class));
+				alphas = getFixedPointList(rampParams.getList("alphas"));
 			}
 			catch (Exception e) {
 				logger.error("Problem initializing alphas ramp points", e);

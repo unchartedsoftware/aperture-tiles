@@ -124,9 +124,9 @@ public class ImageTileServiceImpl implements ImageTileService {
 	private Map<String, Object> jsonObjToMap(JSONObject jsonObj) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		
-		Iterator<String> keys = jsonObj.keys();
+		Iterator<?> keys = jsonObj.keys();
 		while (keys.hasNext()) {
-			String key = keys.next();
+			String key = keys.next().toString();
 			Object obj = jsonObj.opt(key);
 			
 			if (obj instanceof JSONObject) {
