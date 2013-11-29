@@ -66,12 +66,12 @@ public class ColorRampParameter {
 		return data.containsKey(key);
 	}
 	
-	public <T> List<? extends T> getList(String key, Class<T> clazz) {
-		List<? extends T> list = null;
+	public List<?> getList(String key) {
+		List<?> list = null;
 		
 		Object o = data.get(key);
 		if (o instanceof List) {
-			list = (List<? extends T>)o;
+			list = (List<?>)o;
 		}
 		
 		return list;
