@@ -171,6 +171,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 		// DEFAULTS
 		String rampName = "ware";
 		ColorRampParameter rampParams = null;
+
 		String transform = "linear";
 		String renderer = "default";
 		int rangeMin = 0;
@@ -211,7 +212,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 			}
 
 			try {
-				transform = options.getString("transform");
+				transform = options.getString("transformId");
 			} catch (JSONException e2) {
 				_logger.info("No transform specified for tile request - using default.");
 			}

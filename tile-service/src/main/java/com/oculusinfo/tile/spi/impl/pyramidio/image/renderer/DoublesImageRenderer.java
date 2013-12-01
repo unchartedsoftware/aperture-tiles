@@ -76,7 +76,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			int outputHeight = parameter.getOutputHeight();
 			int rangeMax = parameter.getAsInt("rangeMax");
 			int rangeMin = parameter.getAsInt("rangeMin");
-			String transformId = parameter.getString("transformId");
+			String transformId = parameter.getAsString("transformId");
 			String layer = parameter.getString("layer");
 			int coarseness = Math.max(parameter.getAsIntOrElse("coarseness", 1), 1);
 
@@ -196,7 +196,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 		 */
 		public static IValueTransformer create(String transform, double levelMaxFreq) {
 			IValueTransformer t;
-			if("log10".equalsIgnoreCase(transform)){ // TODO: make a factory
+			if("log10".equalsIgnoreCase(transform)){ 
 				t = new Log10ValueTransformer(levelMaxFreq);
 			}else{
 				t = new LinearCappedValueTransformer(levelMaxFreq);

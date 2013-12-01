@@ -87,12 +87,14 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
  		BufferedImage bi = null;
  		TileIndex tileIndex = null;
  		String layer = "?";
+ 		Integer lineNumber = 0;
  		
 		try {
 			bi = GraphicsUtilities.createCompatibleTranslucentImage(parameter.getOutputWidth(), parameter.getOutputWidth());
 		
 			tileIndex = parameter.getObject("tileCoordinate", TileIndex.class);
 			layer = parameter.getAsString("layer");
+			lineNumber = parameter.getAsIntOrElse("lineNumber", 0);
 			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(layer,
 					_serializer, Collections.singleton(tileIndex));
 			
@@ -134,7 +136,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
 			String text = parameter.getAsString("shortName") + ": " + formattedTotal + " " + formattedCoverage;
-			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
+			drawTextGlow(bi, text, 5, 10 + (20*lineNumber), FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
 			_logger.debug("Tile is corrupt: " + layer + ":" + tileIndex);
