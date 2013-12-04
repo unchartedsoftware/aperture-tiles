@@ -74,12 +74,15 @@ object JuliaSetGenerator {
                                              "The maximum imaginary value of "
                                              +"the input domain",
                                              Some(1.0))
-      val samples = argParser.getIntArgument("samples",
-                                             "The number of sample points "
-                                             +"to generate in our Julia set. "
-                                             +"There will be some duplication "
-                                             +"- point choice is random",
-                                             Some(10000000))
+      val samples = argParser.getLongArgument("samples",
+                                              "The number of sample points "
+                                              +"to generate in our Julia set. "
+                                              +"There will be some duplication "
+                                              +"- point choice is random.  Also, "
+					      +"note that there can be no more "
+					      +"than about 2g samples per "
+					      +"partition",
+                                              Some(10000000l))
       val partitions = argParser.getIntArgument("partitions",
                                                 "The number of partitions "
                                                 +"into which to break up "
@@ -102,7 +105,7 @@ object JuliaSetGenerator {
       sc.parallelize(Range(0, partitions), partitions).flatMap(p => {
         // Don't actually care about n, it's just there to make sure 
         // the partition exists
-        Range(0, samples/partitions).iterator.map(s => {
+        Range(0, (samples/partitions).toInt).iterator.map(s => {
           // Again, don't care about m, just making sure there are the
           // right number of samples
           val zReal = math.random*(maxR-minR)+minR
