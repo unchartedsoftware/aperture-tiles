@@ -25,11 +25,14 @@
  
 package com.oculusinfo.tilegen.tiling
 
+
+
 import java.awt.geom.Rectangle2D
 
+import scala.collection.Seq
+import scala.collection.Map
 import scala.collection.mutable.{Map => MutableMap}
 import scala.util.parsing.json.JSON
-
 
 
 
@@ -104,8 +107,8 @@ object TileMetaData {
 
 	Some(new TileMetaData(name, description, tileSize, scheme, projection,
 			      minZoom, maxZoom, bounds,
-                              levelMinimums.toList.sortBy(_._1),
-			      levelMaximums.toList.sortBy(_._1)))
+                              levelMinimums.toSeq.sortBy(_._1),
+			      levelMaximums.toSeq.sortBy(_._1)))
       }
     }
   }
@@ -119,8 +122,8 @@ class TileMetaData (val name: String,
 		    val minZoom: Int,
 		    val maxZoom: Int,
 		    val bounds: Rectangle2D,
-		    val levelMins: List[(Int, String)],
-		    val levelMaxes: List[(Int, String)]
+		    val levelMins: Seq[(Int, String)],
+		    val levelMaxes: Seq[(Int, String)]
                   ) {
   def getName: String = name
   def getDescription: String = description
