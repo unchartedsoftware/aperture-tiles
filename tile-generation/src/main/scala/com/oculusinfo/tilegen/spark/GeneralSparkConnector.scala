@@ -35,13 +35,14 @@ class GeneralSparkConnector (master: String,
                              sparkHome: String,
                              user: Option[String])
 extends SparkConnector(
-  List(new MavenReference("com.oculusinfo", "math-utilities", "0.1-SNAPSHOT"),
-       new MavenReference("com.oculusinfo", "geometric-utilities", "0.1-SNAPSHOT"),
-       new MavenReference("com.oculusinfo", "binning-utilities", "0.1-SNAPSHOT"),
-       new MavenReference("com.oculusinfo", "tile-generation", "0.1-SNAPSHOT"),
+  List(new MavenReference("com.oculusinfo", "math-utilities", "0.1.2-SNAPSHOT"),
+       new MavenReference("com.oculusinfo", "geometric-utilities", "0.1.2-SNAPSHOT"),
+       new MavenReference("com.oculusinfo", "binning-utilities", "0.1.2-SNAPSHOT"),
+       new MavenReference("com.oculusinfo", "tile-generation", "0.1.2-SNAPSHOT"),
        // These two are needed for avro serialization
        new MavenReference("org.apache.avro", "avro", "1.7.4"),
-       new MavenReference("org.apache.commons", "commons-compress", "1.4.1")
+       new MavenReference("org.apache.commons", "commons-compress", "1.4.1"),
+       new MavenReference("org.apache.hbase", "hbase", "0.94.6-cdh4.4.0")
      ))
 {
   override def getSparkContext (jobName: String): SparkContext = {
