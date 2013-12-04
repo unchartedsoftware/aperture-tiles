@@ -293,7 +293,12 @@ public class HBasePyramidIO implements PyramidIO {
     @Override
     public String readMetaData (String tableName) throws IOException {
         List<Map<HBaseColumn, byte[]>> rawData = readRows(tableName, Collections.singletonList(META_DATA_INDEX), METADATA_COLUMN);
-        if (null == rawData || rawData.isEmpty() || !rawData.get(0).containsKey(METADATA_COLUMN)) return null;
+
+	if (null == rawData) return null;
+	if (rawData.isEmpty()) return null;
+	if (null == rawData.get(0)) return null;
+        if (!rawData.get(0).containsKey(METADATA_COLUMN)) return null;
+
         return new String(rawData.get(0).get(METADATA_COLUMN));
     }
 }
