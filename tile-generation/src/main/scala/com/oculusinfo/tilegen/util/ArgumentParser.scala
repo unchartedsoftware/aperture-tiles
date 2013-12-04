@@ -143,6 +143,26 @@ class ArgumentParser (args: Array[String]) {
     getArgumentInternal[Int](key, description, "int", _.toInt, default)
 
   /**
+   * Simple function to get a integer-valued argument from the argument list.
+   *
+   * @param key
+   *        The text (case-insensitive) of the key to look for in the argument
+   *        list.  In use, the key should be prefaced by a "-"; as an argument
+   *        to this function, it should not.
+   * @param description
+   *        A description of this argument, for purposes of helping the user to
+   *        use it correctly
+   * @param default The default value.  If None, argument is not specified in
+   *        the argument list, an exception is thrown; if Some, this default
+   *        value will be used if the argument is absent, or if there is an
+   *        error parsing the argument.
+   */
+  def getLongArgument (key: String,
+                       description: String,
+                       default: Option[Long] = None): Long =
+    getArgumentInternal[Long](key, description, "int", _.toLong, default)
+
+  /**
    * Simple function to get a double-valued argument from the argument list.
    *
    * @param key
