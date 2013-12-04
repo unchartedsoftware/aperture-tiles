@@ -49,6 +49,8 @@
     <hadoop-version>2.0.0-cdh4.2.0</hadoop-version>
     <hbase-version>0.94.2-cdh4.2.0</hbase-version>
     -->
+
+    <aperture-version>1.0.2-SNAPSHOT</aperture-version>
   </properties>
 
   <build>
