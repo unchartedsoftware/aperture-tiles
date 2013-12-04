@@ -34,13 +34,13 @@
 		<dependency>
 			<groupId>oculus.aperture</groupId>
 			<artifactId>aperture-spi</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>${aperture-version}</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>oculus.aperture</groupId>
 			<artifactId>aperture-server-core</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>${aperture-version}</version>
 			<type>jar</type>
 		</dependency>
 
