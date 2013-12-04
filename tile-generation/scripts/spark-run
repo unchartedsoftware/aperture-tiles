@@ -18,14 +18,23 @@ function addToSparkClasspath {
   groupId=$1
   artifactId=$2
   version=$3
-  groupDir=`echo $groupId | sed 's|\.|/|g'`
-  repo=$HOME/.m2/repository
-  jardir=$repo/$groupDir/$artifactId/$version
+  groupDir=`echo ${groupId} | sed 's|\.|/|g'`
+  repo=${HOME}/.m2/repository
+  jardir=${repo}/${groupDir}/${artifactId}/${version}
+  jar=${jardir}/${artifactId}-${version}.jar
 
-  if [ "a" == "a"$SPARK_CLASSPATH ]; then
-    export SPARK_CLASSPATH=$jardir/$artifactId-$version.jar
+  # Testing for existence of jar
+  if [ ! -e ${jar} ]
+  then
+      echo Error: Looking for ${jar} - not found
+      exit
+  fi
+
+  # Add the jar to the classpath
+  if [ "a" == "a"${SPARK_CLASSPATH} ]; then
+    export SPARK_CLASSPATH=${jar}
   else
-    export SPARK_CLASSPATH=$SPARK_CLASSPATH:$jardir/$artifactId-$version.jar
+    export SPARK_CLASSPATH=${SPARK_CLASSPATH}:${jar}
   fi
 }
 
