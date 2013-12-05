@@ -113,12 +113,18 @@ class RDDBinner {
     bareData.cache()
 
     levelSets.foreach(levels => {
+      val levelStartTime = System.currentTimeMillis()
       // For each level set, process the bare data into tiles...
       var tiles = processData(bareData, binDesc, tileScheme,
                               consolidationPartitions, levels, bins)
       // ... and write them out.
       tileIO.writeTileSet(tileScheme, writeLocation, tiles, 
                           binDesc, name, description)
+      if (debug) {
+	val levelEndTime = System.currentTimeMillis()
+	println("Finished binning levels ["+levels.mkString(", ")+"] of data set " 
+		+ name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
+      }
     })
 
     if (debug) {
