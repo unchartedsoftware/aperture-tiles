@@ -68,4 +68,4 @@ echo Running Spark from $SPARK_HOME
 echo Running SPARK with classpath=$SPARK_CLASSPATH
 export MASTER=spark://hadoop-master.oculus.local:7077
 export SPARK_MEM=4g
-$SPARK_HOME/spark-class $*
+$SPARK_HOME/run $*
