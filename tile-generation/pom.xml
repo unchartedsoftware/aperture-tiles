@@ -30,19 +30,19 @@
 
     <dependency>
       <groupId>org.spark-project</groupId>
-      <artifactId>spark-core_2.9.3</artifactId>
-      <version>0.7.2</version>
+      <artifactId>spark-core_${scala-version}</artifactId>
+      <version>${spark-version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.9.3</version>
+      <version>${scala-version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.9.3</artifactId>
+      <artifactId>scalatest_${scala-version}</artifactId>
       <version>1.9.1</version>
       <scope>test</scope>
     </dependency>
@@ -51,9 +51,9 @@
 
 
   <build>
-	<sourceDirectory>src/main/scala</sourceDirectory>
-	<testSourceDirectory>src/test/scala</testSourceDirectory>
-	
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+
     <plugins>
       <plugin>
         <groupId>org.scala-tools</groupId>
