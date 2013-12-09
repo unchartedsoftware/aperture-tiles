@@ -35,6 +35,7 @@ import oculus.aperture.common.rest.ApertureServerResource;
 
 import com.oculusinfo.tile.spi.ImageTileLegendService;
 import com.oculusinfo.tile.util.ColorRampParameter;
+import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,7 +67,6 @@ public class ImageTileLegendResource extends ApertureServerResource {
 			JSONObject jsonObj = new JSONObject(jsonData);
 			
 			String transform 	= jsonObj.getString("transform");
-			String rampName		= jsonObj.getString("ramp");
 			String layer 		= jsonObj.getString("layer");
 			int zoomLevel		= jsonObj.getInt("level");
 			int width = jsonObj.getInt("width");
@@ -75,9 +75,14 @@ public class ImageTileLegendResource extends ApertureServerResource {
 			if(jsonObj.has("doAxis")){
 				doAxis = jsonObj.getBoolean("doAxis");
 			}
+			boolean renderHorizontally = false;
+			if(jsonObj.has("orientation")){
+				renderHorizontally = jsonObj.getString("orientation").equalsIgnoreCase("horizontal");
+			}
 			
-			ColorRampParameter rampType = new ColorRampParameter(rampName);
-			return generateEncodedImage(transform, rampType, layer, zoomLevel, width, height, doAxis);
+			ColorRampParameter rampType = new ColorRampParameter(jsonObj.get("ramp"));
+			
+			return generateEncodedImage(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 			
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
@@ -98,6 +103,7 @@ public class ImageTileLegendResource extends ApertureServerResource {
 		String rampName = form.getFirstValue("ramp", "ware").trim();
 		String layer = form.getFirstValue("layer").trim();
 		String doAxisString = form.getFirstValue("doAxis", "false").trim();
+		String orientationString = form.getFirstValue("orientation", "vertical").trim();
 		
 		ColorRampParameter rampType = new ColorRampParameter(rampName);
 				
@@ -106,8 +112,10 @@ public class ImageTileLegendResource extends ApertureServerResource {
 		int width = 50;
 		int height = 100;
 		boolean doAxis = false;
+		boolean renderHorizontally = false;
 		try {
 			doAxis = Boolean.parseBoolean(doAxisString);
+			renderHorizontally = orientationString.equalsIgnoreCase("horizontal");
 			zoomLevel = Integer.parseInt(form.getFirstValue("level").trim());
 			width = Integer.parseInt(form.getFirstValue("width").trim());
 			height = Integer.parseInt(form.getFirstValue("height").trim());
@@ -118,10 +126,10 @@ public class ImageTileLegendResource extends ApertureServerResource {
 		}
 		
 		if(outputType.equalsIgnoreCase("uri")){
-			return generateEncodedImage(transform, rampType, layer, zoomLevel, width, height, doAxis);
+			return generateEncodedImage(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		}
 		else { //(outputType.equalsIgnoreCase("png")){
-			return generateImage(transform, rampType, layer, zoomLevel, width, height, doAxis);
+			return generateImage(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		}
 
 	}
@@ -135,9 +143,9 @@ public class ImageTileLegendResource extends ApertureServerResource {
 	 * @return
 	 */
 	private ImageOutputRepresentation generateImage(String transform, ColorRampParameter rampType, String layer,
-			int zoomLevel, int width, int height, boolean doAxis) {
+			int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
 		try {
-			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis);
+			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
 			
 			setStatus(Status.SUCCESS_CREATED);
@@ -158,9 +166,9 @@ public class ImageTileLegendResource extends ApertureServerResource {
 	 * @return
 	 */
 	private StringRepresentation generateEncodedImage(String transform, ColorRampParameter rampType,
-			String layer, int zoomLevel, int width, int height, boolean doAxis) {
+			String layer, int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
 		try {
-			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis);
+			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(tile, "png", baos);
 			baos.flush();

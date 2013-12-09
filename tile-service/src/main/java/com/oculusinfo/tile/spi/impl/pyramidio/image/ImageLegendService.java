@@ -72,7 +72,7 @@ public class ImageLegendService implements ImageTileLegendService {
 	 * @see com.oculusinfo.tile.spi.TileLegendService#getLegend(int, double, double, int, int)
 	 */
 	public BufferedImage getLegend(String transform, ColorRampParameter rampType, String layer, 
-			int zoomLevel, int width, int height, boolean doAxis) {
+			int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
 
 		//int levelMinFreq = 0;
 		int levelMaxFreq = height;
@@ -107,39 +107,50 @@ public class ImageLegendService implements ImageTileLegendService {
 		int barWidth = width - g.getFontMetrics().stringWidth(Integer.toString((int)levelMaxFreq)) - labelBarSpacer;
 		int barXOffset = width - barWidth + labelBarSpacer;
 		
-		
-		//Override the above.
-		barHeight = height;
-		barYOffset = 0;
-		barXOffset = 0;
+		if (renderHorizontally){
+			for (int i = 0; i < width; i++){
+				double v = ((double)(i+1)/(double)width) * levelMaxFreq;
+				int colorInt = ramp.getRGB(t.transform(v));		
+				g.setColor(new Color(colorInt));
+				g.drawLine(i, 0, i, height);
+			}
+		}
+		else{
+			//Override the above.
+			barHeight = height;
+			barYOffset = 0;
+			barXOffset = 0;
 			
-		for(int i = 0; i <= barHeight; i++){
-			double v = ((double)(i+1)/(double)barHeight) * levelMaxFreq;
-			int colorInt = ramp.getRGB(t.transform(v));		
-			g.setColor(new Color(colorInt));
-			int y = barHeight-i+barYOffset;
-			g.drawLine(barXOffset, y, width, y);
+			for(int i = 0; i <= barHeight; i++){
+				double v = ((double)(i+1)/(double)barHeight) * levelMaxFreq;
+				int colorInt = ramp.getRGB(t.transform(v));		
+				g.setColor(new Color(colorInt));
+				int y = barHeight-i+barYOffset;
+				g.drawLine(barXOffset, y, width, y);
+			}
 		}
 		
 		if(doAxis){
-		
-			// Draw text labels.
-			int textRightEdge = barXOffset - labelBarSpacer;
-			int numInnerLabels = height/fontHeight/4;
-			int labelStep = height/numInnerLabels;
-			MathContext mathContext = new MathContext(2, RoundingMode.DOWN);
-			g.setColor(Color.black);
-			
-			g.drawLine(barXOffset-3, barYOffset, barXOffset-3, barYOffset+barHeight);
-			//g.drawString(Integer.toString(levelMaxFreq), 0, fontHeight);
-			
-			for(int i = 0; i < height+fontHeight; i+=labelStep){
-				BigDecimal value = new BigDecimal(levelMaxFreq - levelMaxFreq * ( (double)i/(double)height ), mathContext );
-				String label = value.toPlainString();
-				int labelWidth = g.getFontMetrics().stringWidth(label);
+			// We currently don't support rendering labels for horizontal legends
+			if (!renderHorizontally){ 
+				// Draw text labels.
+				int textRightEdge = barXOffset - labelBarSpacer;
+				int numInnerLabels = height/fontHeight/4;
+				int labelStep = height/numInnerLabels;
+				MathContext mathContext = new MathContext(2, RoundingMode.DOWN);
+				g.setColor(Color.black);
 				
-				g.drawString(label, textRightEdge - labelWidth, i+(fontHeight) );
-				g.drawLine(barXOffset-6, i+barYOffset, barXOffset-3, i+barYOffset);
+				g.drawLine(barXOffset-3, barYOffset, barXOffset-3, barYOffset+barHeight);
+				//g.drawString(Integer.toString(levelMaxFreq), 0, fontHeight);
+				
+				for(int i = 0; i < height+fontHeight; i+=labelStep){
+					BigDecimal value = new BigDecimal(levelMaxFreq - levelMaxFreq * ( (double)i/(double)height ), mathContext );
+					String label = value.toPlainString();
+					int labelWidth = g.getFontMetrics().stringWidth(label);
+					
+					g.drawString(label, textRightEdge - labelWidth, i+(fontHeight) );
+					g.drawLine(barXOffset-6, i+barYOffset, barXOffset-3, i+barYOffset);
+				}
 			}
 			
 			//g.drawString(Integer.toString(levelMinFreq), 0, height);

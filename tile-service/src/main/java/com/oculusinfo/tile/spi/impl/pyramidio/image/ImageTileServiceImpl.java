@@ -54,6 +54,7 @@ import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.ImageRendererFactor
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer;
 import com.oculusinfo.tile.util.ColorRampParameter;
+import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
 
 /**
  * @author dgray
@@ -110,58 +111,6 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 	}
 
-
-	/**
-	 * Converts a {@link JSONObject} into a {@link Map} of key-value pairs.
-	 * This iterates through the tree and converts all {@link JSONObject}s
-	 * into their equivalent map, and converts {@link JSONArray}s into
-	 * {@link List}s.
-	 * 
-	 * @param o
-	 * @return
-	 * 	Returns a map with the same 
-	 */
-	private Map<String, Object> jsonObjToMap(JSONObject jsonObj) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		
-		Iterator<?> keys = jsonObj.keys();
-		while (keys.hasNext()) {
-			String key = keys.next().toString();
-			Object obj = jsonObj.opt(key);
-			
-			if (obj instanceof JSONObject) {
-				map.put(key, jsonObjToMap((JSONObject)obj));
-			}
-			else if (obj instanceof JSONArray) {
-				map.put(key, jsonArrayToList((JSONArray)obj));
-			}
-			else {
-				map.put(key, obj);
-			}
-		}
-		
-		return map;
-	}
-	
-	private List<Object> jsonArrayToList(JSONArray jsonList) {
-		int numItems = jsonList.length();
-		List<Object> list = new ArrayList<Object>(numItems);
-		for (int i = 0;i < numItems; ++i) {
-			Object obj = jsonList.opt(i);
-			if (obj instanceof JSONObject) {
-				list.add(jsonObjToMap((JSONObject)obj));
-			}
-			else if (obj instanceof JSONArray) {
-				list.add(jsonArrayToList((JSONArray)obj));
-			}
-			else {
-				list.add(obj);
-			}
-		}
-		
-		return list;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
@@ -185,23 +134,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 
 			try {
 				Object rampObj = options.get("ramp");
-				
-				if (rampObj instanceof String) {
-					rampName = (String)rampObj;
-					
-				}
-				else if (rampObj instanceof JSONObject) {
-					rampParams = new ColorRampParameter(jsonObjToMap((JSONObject)rampObj));
-					
-					//validate that a name exists
-					if (rampParams.getName() == null) {
-						rampParams.getRawData().put("name", rampName);
-						_logger.info("No ramp name specified for tile request - using default '" + rampName + "'.");
-					}
-				}
-				else {
-					_logger.warn("'ramp' for tile request is invalid - using default name '" + rampName + "'.");
-				}
+				rampParams = new ColorRampParameter(rampObj);
 			} catch (JSONException e2) {
 				_logger.info("No ramp specified for tile request - using default '" + rampName + "'.");
 			}
@@ -256,7 +189,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 		TileDataImageRenderer tileRenderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
 		
-		RenderParameter renderParam = new RenderParameter(jsonObjToMap(options));
+		RenderParameter renderParam = new RenderParameter(JsonUtilities.jsonObjToMap(options));
 		renderParam.setObject("rampType", rampParams);
 		renderParam.setString("layer", layer);
 		renderParam.setString("transformId", transform);
