@@ -36,17 +36,6 @@ public class ColorRampParameter {
 		}
 	}
 	
-	/*
-	public ColorRampParameter(String name) {
-		data = new HashMap<String, Object>();
-		data.put("name", name);
-	}
-	
-	public ColorRampParameter(Map<String, Object> params) {
-		data = new HashMap<String, Object>(params);
-	}
-	*/
-	
 	public String getName() {
 		return getString("name");
 	}
