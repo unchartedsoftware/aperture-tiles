@@ -55,6 +55,6 @@ extends SparkConnector(
     println("\thome: "+sparkHome)
     println("\tuser: "+ (if (user.isDefined) user.get else "unknown"))
 
-    new SparkContext(master, appName, sparkHome, jarList)
+    new SparkContext(master, appName, sparkHome, jarList, null, null)
   }
 }
