@@ -42,7 +42,7 @@ class MavenReference (groupId: String,
     // we have to do some stupid name-mangling on windows
     val os = System.getProperty("os.name").toLowerCase()
     if (os.contains("windows"))
-      libLocation = libLocation.replace('\\', '/')
+      libLocation = "file:///" + libLocation.replace('\\', '/')
     libLocation
   }
 }
@@ -108,7 +108,7 @@ class SparkConnector (jars: Seq[Object]) {
 
   def getLocalSparkContext (jobName: String): SparkContext = {
     debugConnection("local", jobName)
-    new SparkContext("local", jobName, "/opt/spark-0.7.2", jarList)
+    new SparkContext("local", jobName, "/opt/spark-0.7.2", jarList, null, null)
   }
 }
 

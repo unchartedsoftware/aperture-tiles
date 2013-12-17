@@ -30,6 +30,6 @@ import com.oculusinfo.tile.util.ColorRampParameter;
 
 public interface ImageTileLegendService {
 	
-	public BufferedImage getLegend(String transform, ColorRampParameter rampType, String layer, int zoomLevel, int width, int height, boolean doAxis);
+	public BufferedImage getLegend(String transform, ColorRampParameter rampType, String layer, int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally);
 	
 }

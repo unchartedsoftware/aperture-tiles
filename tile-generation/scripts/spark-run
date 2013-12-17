@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Make sure SPARK_HOME is set
-if [ "a" == "a"$SPARK_HOME ]; then
+if [ "a" == "a""$SPARK_HOME" ]; then
   echo SPARK_HOME not set.  Please set SPARK_HOME environment variable and try again.
   exit 1
 fi
 
 # Make sure SCALA_HOME is set
-if [ "a" == "a"$SCALA_HOME ]; then
+if [ "a" == "a""$SCALA_HOME" ]; then
   echo SCALA_HOME not set.  Please set SCALA_HOME environment variable and try again.
   exit 1
 fi

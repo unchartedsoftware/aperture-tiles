@@ -1,8 +1,13 @@
 package com.oculusinfo.tile.util;
 
+import java.lang.IllegalArgumentException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.json.JSONObject;
+
+import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
 
 /**
  * 
@@ -10,16 +15,25 @@ import java.util.Map;
  *
  */
 public class ColorRampParameter {
-
+	private static String DEFAULT_RAMP_NAME = "ware";
 	private Map<String, Object> data;
 
-	public ColorRampParameter(String name) {
-		data = new HashMap<String, Object>();
-		data.put("name", name);
-	}
-	
-	public ColorRampParameter(Map<String, Object> params) {
-		data = new HashMap<String, Object>(params);
+	public ColorRampParameter(Object rampObject) {
+		if (rampObject instanceof String) {
+			data = new HashMap<String, Object>();
+			data.put("name", (String)rampObject);
+		}
+		else if (rampObject instanceof JSONObject) {
+			data = JsonUtilities.jsonObjToMap((JSONObject)rampObject);
+			
+			// Ensure that a name exists
+			if (data.get("name") == null) {
+				data.put("name", DEFAULT_RAMP_NAME);
+			}
+		}
+		else {
+			throw new IllegalArgumentException("Unsupported type for rampObject parameter.");
+		}
 	}
 	
 	public String getName() {

@@ -47,6 +47,6 @@ extends SparkConnector(jars)
     println("\tJob name: "+appName)
     println("\tHome: "+sparkHome)
 
-    new SparkContext(master, appName, sparkHome, jarList)
+    new SparkContext(master, appName, sparkHome, jarList, null, null)
   }
 }
