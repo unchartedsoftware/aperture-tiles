@@ -40,8 +40,8 @@ import scala.collection.mutable.{Map => MutableMap}
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 
 
@@ -194,9 +194,9 @@ object TileToImageConverter {
       }
 
       // ... and a list of levels
-      val levels = argParser.getIntListArgument("levels",
-                                                "comma-spearated list of levels, with no spaces",
-                                                ',')
+      val levels = argParser.getIntSeqArgument("levels",
+                                               "comma-spearated list of levels, with no spaces",
+                                               ',')
 
 
       val sc = connector.getSparkContext("Convert tile pyramid to images")
@@ -239,7 +239,7 @@ object TileToImageConverter {
                           source: String,
                           destination: String,
                           scale: (Double, JavaDouble, Double) => Int,
-                          levels: List[Int],
+                          levels: Seq[Int],
                           metaData: TileMetaData): Unit = {
     val levelMins = metaData.levelMins.map(p => (p._1 -> p._2.toDouble)).toMap
     val levelMaxes = metaData.levelMaxes.map(p => (p._1 -> p._2.toDouble)).toMap
@@ -262,7 +262,7 @@ object TileToImageConverter {
                           source: String,
                           destination: String,
                           scale: (Double, JavaDouble, Double) => Int,
-                          levels: List[Int],
+                          levels: Seq[Int],
                           metaData: TileMetaData): Unit = {
     val levelMins = metaData.levelMins.map(p =>
       (p._1 -> p._2.drop("list(".size).dropRight(")".size).split(",").map(_.trim.toDouble))
@@ -302,7 +302,7 @@ extends Serializable {
   def convertTiles (sc: SparkContext,
                     baseLocation: String,
                     destinationLocation: String,
-                    levels: List[Int]): Unit = {
+                    levels: Seq[Int]): Unit = {
 
     val tiles = io.readTileSet(sc, serializer, baseLocation, levels)
     val numTiles = tiles.count()

@@ -184,7 +184,7 @@ class ArgumentParser (args: Array[String]) {
 
   /**
    * Simple function to get an argument from the argument list whose value is a
-   * list of integers.  The list must contain no whitespace, and uses the
+   * sequence of integers.  The list must contain no whitespace, and uses the
    * specified separator to separate elements.
    *
    * @param key
@@ -202,13 +202,40 @@ class ArgumentParser (args: Array[String]) {
    *        value will be used if the argument is absent, or if there is an
    *        error parsing the argument.
    */
-  def getIntListArgument (key: String,
-                          description: String,
-                          separator: Char = ',',
-                          default: Option[List[Int]] = None): List[Int] =
-    getArgumentInternal[List[Int]](key, description, "list[int]",
-                        _.split(separator).map(_.toInt).toList,
+  def getIntSeqArgument (key: String,
+                         description: String,
+                         separator: Char = ',',
+                         default: Option[Seq[Int]] = None): Seq[Int] =
+    getArgumentInternal[Seq[Int]](key, description, "seq[int]",
+                        _.split(separator).map(_.toInt).toSeq,
                         default)
+  /**
+   * Simple function to get an argument from the argument list whose value is a
+   * list of strings.  The list uses the specified separator to separate
+   * elements.
+   *
+   * @param key
+   *        The text (case-insensitive) of the key to look for in the argument
+   *        list.  In use, the key should be prefaced by a "-"; as an argument
+   *        to this function, it should not.
+   * @param description
+   *        A description of this argument, for purposes of helping the user to
+   *        use it correctly
+   * @param separator
+   *        A character that should be used by the user to separate elements of
+   *        their value list
+   * @param default The default value.  If None, argument is not specified in
+   *        the argument list, an exception is thrown; if Some, this default
+   *        value will be used if the argument is absent, or if there is an
+   *        error parsing the argument.
+   */
+  def getStringSeqArgument (key: String,
+                            description: String,
+                            separator: Char = ',',
+                            default: Option[Seq[String]] = None): Seq[String] =
+    getArgumentInternal[Seq[String]](key, description, "seq[string]",
+                                     _.split(separator).map(_.toString).toSeq,
+                                     default)
 
 
 

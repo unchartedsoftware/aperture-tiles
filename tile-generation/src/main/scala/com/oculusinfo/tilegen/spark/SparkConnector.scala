@@ -27,8 +27,8 @@ package com.oculusinfo.tilegen.spark
 
 import java.io.File
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 
 
@@ -49,14 +49,34 @@ class MavenReference (groupId: String,
 
 
 object SparkConnector {
-  def getDefaultSparkConnector: SparkConnector = {
+  def getDefaultSparkConnector: SparkConnector =
+    new SparkConnector(getLibrariesFromClasspath)
+
+  def getLibrariesFromClasspath = {
     val allSparkLibs = System.getenv("SPARK_CLASSPATH")
-    val sparkLibs = allSparkLibs.split(":").filter(!_.isEmpty)
-    new SparkConnector(sparkLibs.toList)
+    // we have to do some stupid name-mangling on windows
+    val os = System.getProperty("os.name").toLowerCase()
+    if (os.contains("windows")) {
+      allSparkLibs.split(";").filter(!_.isEmpty).toSeq
+    } else {
+      allSparkLibs.split(":").filter(!_.isEmpty).toSeq
+    }
   }
+
+  def getDefaultLibrariesFromMaven =
+    Seq(new MavenReference("com.oculusinfo", "math-utilities", "0.1.2-SNAPSHOT"),
+        new MavenReference("com.oculusinfo", "geometric-utilities", "0.1.2-SNAPSHOT"),
+        new MavenReference("com.oculusinfo", "binning-utilities", "0.1.2-SNAPSHOT"),
+        new MavenReference("com.oculusinfo", "tile-generation", "0.1.2-SNAPSHOT"),
+        // These two are needed for avro serialization
+        new MavenReference("org.apache.avro", "avro", "1.7.4"),
+        new MavenReference("org.apache.commons", "commons-compress", "1.4.1"),
+        new MavenReference("org.apache.hbase", "hbase", "0.94.6-cdh4.4.0")
+      )
 }
-class SparkConnector (jars: List[Object]) {
-  protected lazy val jarList : List[String] = {
+
+class SparkConnector (jars: Seq[Object]) {
+  protected lazy val jarList : Seq[String] = {
     jars.map(_.toString).map(jar => {
       println("Checking "+jar)
       println("\t"+new File(jar).exists())

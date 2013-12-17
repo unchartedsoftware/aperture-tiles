@@ -64,8 +64,12 @@ addToSparkClasspath org.scala-lang scala-compiler 2.9.3
 
 
 
+export MASTER=spark://172.21.10.128:7077
+# export SPARK_MEM=4g
+
 echo Running Spark from $SPARK_HOME
-echo Running SPARK with classpath=$SPARK_CLASSPATH
-export MASTER=spark://hadoop-master.oculus.local:7077
-export SPARK_MEM=4g
-$SPARK_HOME/run $*
+echo Running Spark on $MASTER
+echo Running Spark with $SPARK_MEM
+echo Running Spark with classpath=$SPARK_CLASSPATH
+
+$SPARK_HOME/spark-class $*

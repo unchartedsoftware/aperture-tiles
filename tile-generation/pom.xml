@@ -21,7 +21,20 @@
       <groupId>com.oculusinfo</groupId>
       <artifactId>binning-utilities</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>asm</artifactId>
+          <groupId>asm</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>${hadoop-core-version}</version>
+    </dependency>
+
     <dependency>
       <groupId>com.oculusinfo</groupId>
       <artifactId>geometric-utilities</artifactId>
@@ -29,7 +42,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.spark-project</groupId>
+      <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala-version}</artifactId>
       <version>${spark-version}</version>
     </dependency>

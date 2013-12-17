@@ -26,7 +26,7 @@
 package com.oculusinfo.tilegen.tiling
 
 
-import spark.SparkContext
+import org.apache.spark.SparkContext
 
 import org.scalatest.FunSuite
 

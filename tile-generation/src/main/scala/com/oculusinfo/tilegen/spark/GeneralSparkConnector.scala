@@ -27,23 +27,15 @@ package com.oculusinfo.tilegen.spark
 
 
 
-import spark.SparkContext
+import org.apache.spark.SparkContext
 
 
 
 class GeneralSparkConnector (master: String,
                              sparkHome: String,
-                             user: Option[String])
-extends SparkConnector(
-  List(new MavenReference("com.oculusinfo", "math-utilities", "0.1.2-SNAPSHOT"),
-       new MavenReference("com.oculusinfo", "geometric-utilities", "0.1.2-SNAPSHOT"),
-       new MavenReference("com.oculusinfo", "binning-utilities", "0.1.2-SNAPSHOT"),
-       new MavenReference("com.oculusinfo", "tile-generation", "0.1.2-SNAPSHOT"),
-       // These two are needed for avro serialization
-       new MavenReference("org.apache.avro", "avro", "1.7.4"),
-       new MavenReference("org.apache.commons", "commons-compress", "1.4.1"),
-       new MavenReference("org.apache.hbase", "hbase", "0.94.6-cdh4.4.0")
-     ))
+                             user: Option[String],
+                             jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven)
+extends SparkConnector(jars)
 {
   override def getSparkContext (jobName: String): SparkContext = {
     debugConnection("property-based", jobName)
@@ -51,9 +43,9 @@ extends SparkConnector(
     val appName = jobName + (if (user.isDefined) "("+user.get+")" else "")
 
     println("Creating spark context")
-    println("\tmaster: "+master)
-    println("\thome: "+sparkHome)
-    println("\tuser: "+ (if (user.isDefined) user.get else "unknown"))
+    println("\tMaster: "+master)
+    println("\tJob name: "+appName)
+    println("\tHome: "+sparkHome)
 
     new SparkContext(master, appName, sparkHome, jarList)
   }

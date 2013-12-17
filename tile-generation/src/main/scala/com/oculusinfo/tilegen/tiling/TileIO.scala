@@ -32,8 +32,9 @@ import java.awt.geom.Rectangle2D
 
 import scala.collection.JavaConversions._
 
-import spark._
-import SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
@@ -100,8 +101,8 @@ trait TileIO extends Serializable {
   def readTileSet[T] (sc: SparkContext,
                       serializer: TileSerializer[T],
 		      baseLocation: String,
-		      levels: List[Int]): RDD[TileData[T]] = {
-    val tileSets: List[RDD[TileIndex]] = levels.map(level => {
+		      levels: Seq[Int]): RDD[TileData[T]] = {
+    val tileSets: Seq[RDD[TileIndex]] = levels.map(level => {
       val range = sc.parallelize(Range(0, 1 << level),
                                  1 << ((level-10) max 0))
       range.cartesian(range).map(p => new TileIndex(level, p._1, p._2))
@@ -319,7 +320,7 @@ object TestTableEquality {
                         serializer: TileSerializer[T],
                         table1: String,
                         table2: String,
-                        levels: List[Int]): Unit = 
+                        levels: Seq[Int]): Unit = 
     compareTables(sc, tileIO, table1, serializer, table2, serializer, levels)
 
   def compareTables[T] (sc: SparkContext,
@@ -328,7 +329,7 @@ object TestTableEquality {
                         serializer1: TileSerializer[T],
                         table2: String,
                         serializer2: TileSerializer[T],
-                        levels: List[Int]): Unit = {
+                        levels: Seq[Int]): Unit = {
     // first check if meta-data is the same
     val metaData1 = tileIO.readMetaData(table1).get
     val metaData2 = tileIO.readMetaData(table2).get

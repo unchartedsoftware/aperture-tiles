@@ -27,8 +27,9 @@ package com.oculusinfo.tilegen.tiling
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 
 
@@ -81,7 +82,7 @@ class RDDBinner {
     consolidationPartitions: Option[Int],
     writeLocation: String,
     tileIO: TileIO,
-    levelSets: List[List[Int]],
+    levelSets: Seq[Seq[Int]],
     bins: Int = 256,
     name: String = "unknown",
     description: String = "unknown") =
@@ -141,7 +142,7 @@ class RDDBinner {
                                                   binDesc: BinDescriptor[PT, BT],
                                                   tileScheme: TilePyramid,
                                                   consolidationPartitions: Option[Int],
-                                                  levels: List[Int],
+                                                  levels: Seq[Int],
                                                   bins: Int): RDD[TileData[BT]] = {
     // We first bin data in each partition into its associated bins
     val partitionBins = data.mapPartitions(iter => {

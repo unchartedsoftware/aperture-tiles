@@ -34,13 +34,14 @@ import java.util.Properties
 
 import scala.collection.JavaConverters._
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 
+import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.spark.MavenReference
 
@@ -225,7 +226,9 @@ class PropertiesWrapper (properties: Properties) extends Serializable {
 
   def getListProperty (property: String): List[String] = {
     val entries = properties.stringPropertyNames.asScala.filter(_.startsWith(property))
-    if (1 == entries.size) {
+    if (0 == entries.size) {
+      List[String]()
+    } else if (1 == entries.size) {
       List(getOptionProperty(entries.head).get)
     } else {
       val maxEntry = entries.map(_.substring(property.length+1).toInt).reduce(_ max _)
@@ -266,7 +269,16 @@ class PropertyBasedSparkConnector (properties: PropertiesWrapper)
 extends GeneralSparkConnector(
   properties.getProperty("spark.connection.url", "local"),
   properties.getProperty("spark.connection.home", "/srv/software/spark-0.7.2"),
-  properties.getOptionProperty("spark.connection.user"))
+  properties.getOptionProperty("spark.connection.user"),
+  {
+    val jars = properties.getListProperty("spark.connection.classpath")
+    if (jars.isEmpty) {
+      SparkConnector.getDefaultLibrariesFromMaven
+    } else {
+      jars
+    }
+  }
+)
 {
 }
 

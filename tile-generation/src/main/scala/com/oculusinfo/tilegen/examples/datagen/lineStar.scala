@@ -27,8 +27,8 @@ package com.oculusinfo.tilegen.examples.datagen
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 import java.awt.geom.Point2D
 

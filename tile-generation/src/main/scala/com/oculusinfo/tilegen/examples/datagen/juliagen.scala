@@ -28,8 +28,8 @@ package com.oculusinfo.tilegen.examples.datagen
 
 import scala.util.control.Breaks
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 // import com.oculusinfo.math.statistics.PoissonDistribution
 

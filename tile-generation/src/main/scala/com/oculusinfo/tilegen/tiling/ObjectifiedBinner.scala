@@ -30,8 +30,9 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble}
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
@@ -113,9 +114,9 @@ extends ObjectifiedBinnerBase[T](source, parser, extractor) {
       }
 
       // Figure out what levels to bin
-      val levels = argParser.getIntListArgument("levels",
-                                                "A list of comma-separated "
-                                                +"levels to bin")
+      val levels = argParser.getIntSeqArgument("levels",
+                                               "A list of comma-separated "
+                                               +"levels to bin")
 
       // And some other utility classes
       val jobName = (name+"bin tiling "+xVar+" vs "+yVar+", levels "
@@ -139,7 +140,7 @@ extends ObjectifiedBinnerBase[T](source, parser, extractor) {
 
       doBinning(sc, tileIO,
                 name, xVar, yVar, resultField, resultFcn,
-                List(levels), consolidationPartitions)
+                Seq(levels), consolidationPartitions)
     } catch {
       case e: MissingArgumentException => {
         println("Binning Argument exception: "+e.getMessage())
@@ -218,7 +219,7 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
                  yVar: String,
                  resultField: String,
                  resultFcn: T => ValueOrException[Double],
-                 levelSets: List[List[Int]],
+                 levelSets: Seq[Seq[Int]],
                  consolidationPartitions: Option[Int]): Unit = {
     // localize all fields so binner doesn't need to be serializable
     val localParser = parser

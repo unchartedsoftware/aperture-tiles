@@ -9,11 +9,15 @@
     necessary)
   </description>
 
+
+
   <parent>
     <artifactId>aperture-tiles</artifactId>
     <groupId>com.oculusinfo</groupId>
     <version>0.1.2-SNAPSHOT</version>
   </parent>
+
+
 
   <dependencies>
     <dependency>
@@ -26,8 +30,14 @@
 
     <dependency>
       <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>${hadoop-core-version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
-      <version>${hadoop-version}</version>
+      <version>${hadoop-common-version}</version>
     </dependency>
  
     <dependency>
@@ -60,18 +70,9 @@
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.7.2</version>
     </dependency>
-
   </dependencies>
 
-  <repositories>
-    <repository>
-      <id>cloudera-public</id>
-      <!-- <url>https://repository.cloudera.com/content/repositories/releases</url> -->
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
-      <releases><enabled>true</enabled></releases>
-      <snapshots><enabled>false</enabled></snapshots>
-    </repository>
-  </repositories>
+
 
   <build>
     <plugins>
