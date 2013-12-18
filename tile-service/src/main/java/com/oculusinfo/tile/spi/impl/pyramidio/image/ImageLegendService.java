@@ -81,7 +81,15 @@ public class ImageLegendService implements ImageTileLegendService {
 		// to know the max frequency.
 		try {
 			JSONObject metadata = getMetadata(layer);
-			levelMaxFreq = metadata.getJSONObject("meta").getJSONObject("levelMaxFreq").getInt(Integer.toString(zoomLevel));
+			JSONObject levelMaximums = metadata.getJSONObject("meta").getJSONObject("levelMaximums");
+			String zoomLevelString = Integer.toString(zoomLevel);
+			Object levelMaximumObject = levelMaximums.get(zoomLevelString);
+			
+			// Verify we have an actual number. The string "[]" is a valid value we should ignore
+			// but not throw an exception for.
+			if (levelMaximumObject instanceof Double || levelMaximumObject instanceof Integer || levelMaximumObject instanceof Long) {
+				levelMaxFreq = levelMaximums.getInt(zoomLevelString);
+			}
 		} catch (Exception e1) {
 			_logger.error("Failed to extract max frequency from metadata for legend.");
 			_logger.debug("Legend exception:", e1);
