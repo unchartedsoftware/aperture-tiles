@@ -251,4 +251,15 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
     	return results;
     }
 
+    // All web mercator tile pyramids are equal
+    @Override
+    public int hashCode () {
+	return 1500450271;
+    }
+
+    @Override
+    public boolean equals (Object that) {
+	if (null == that) return false;
+	return (that instanceof WebMercatorTilePyramid);
+    }
 }
