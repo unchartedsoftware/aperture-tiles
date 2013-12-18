@@ -32,7 +32,9 @@
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.spi.impl.pyramidio.image.ImageTileModule
+      com.oculusinfo.tile.spi.impl.pyramidio.image.ImageTileModule:
+      oculus.aperture.capture.PhantomCaptureModule:
+      oculus.aperture.cms.couchdb.CouchDbModule
     </param-value>
   </context-param>
 

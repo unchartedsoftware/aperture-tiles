@@ -43,6 +43,17 @@
 			<version>${aperture-version}</version>
 			<type>jar</type>
 		</dependency>
+		<dependency>
+			<groupId>oculus.aperture.service</groupId>
+			<artifactId>aperture-capture-phantom</artifactId>
+			<version>${aperture-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>oculus.aperture.service</groupId>
+			<artifactId>aperture-cms</artifactId>
+			<version>${aperture-version}</version>
+			<type>jar</type>
+		</dependency>
 
 		<dependency>
 			<groupId>com.oculusinfo</groupId>
@@ -105,6 +116,32 @@
 		<finalName>tile-service</finalName>
 
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>dependency-maven-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>oculus.aperture.service</groupId>
+									<artifactId>aperture-capture-phantom</artifactId>
+									<version>${aperture-version}</version>
+									<type>exe</type>
+									<outputDirectory>${basedir}/bin/windows</outputDirectory>
+									<destFileName>phantomjs.exe</destFileName>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
