@@ -80,12 +80,13 @@ class Bounds (val level: Int,
   (Double, Double, T) => Seq[((TileIndex, BinIndex), T)] = {
     val ourAreaBounds = getLocalAreaBounds(pyramid, bins)
     val continuedSpreaderFcn = next.map(_.getSpreaderFunctionInternal[T](pyramid, bins))
+    val localLevel = level
   
     (x, y, value) => {
       val optionRest = continuedSpreaderFcn.map(_(x, y, value))
       val rest = if (optionRest.isDefined) optionRest.get else Seq[((TileIndex, BinIndex), T)]()
       if (ourAreaBounds.contains(x, y)) {
-	val tile = pyramid.rootToTile(x, y, level, bins)
+	val tile = pyramid.rootToTile(x, y, localLevel, bins)
 	val bin = pyramid.rootToBin(x, y, tile)
 	((tile, bin), value) +: rest
       } else {
