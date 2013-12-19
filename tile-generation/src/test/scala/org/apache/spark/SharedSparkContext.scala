@@ -16,6 +16,8 @@
  */
 
 package org.apache.spark
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 
 import org.scalatest.Suite
 import org.scalatest.BeforeAndAfterAll
@@ -28,6 +30,9 @@ trait SharedSparkContext extends BeforeAndAfterAll { self: Suite =>
   def sc: SparkContext = _sc
 
   override def beforeAll() {
+    Logger.getLogger("org").setLevel(Level.WARN)
+    Logger.getLogger("akka").setLevel(Level.WARN)
+
     _sc = new SparkContext("local", "test")
     super.beforeAll()
   }
