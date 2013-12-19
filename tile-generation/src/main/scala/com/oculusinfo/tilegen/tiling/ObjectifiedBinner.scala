@@ -219,7 +219,7 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
                  yVar: String,
                  resultField: String,
                  resultFcn: T => ValueOrException[Double],
-                 levelSets: List[List[Int]],
+                 levelSets: Seq[Seq[Int]],
                  consolidationPartitions: Option[Int]): Unit = {
     // localize all fields so binner doesn't need to be serializable
     val localParser = parser

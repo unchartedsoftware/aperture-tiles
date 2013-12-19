@@ -83,7 +83,7 @@ class RDDBinner {
     consolidationPartitions: Option[Int],
     writeLocation: String,
     tileIO: TileIO,
-    levelSets: List[List[Int]],
+    levelSets: Seq[Seq[Int]],
     bins: Int = 256,
     name: String = "unknown",
     description: String = "unknown") =
@@ -158,7 +158,7 @@ class RDDBinner {
   def processDataByLevel[PT: ClassManifest, BT] (data: RDD[(Double, Double, PT)],
 						 binDesc: BinDescriptor[PT, BT],
 						 tileScheme: TilePyramid,
-						 levels: List[Int],
+						 levels: Seq[Int],
 						 bins: Int = 256,
 						 consolidationPartitions: Option[Int] = None):
   RDD[TileData[BT]] = {
