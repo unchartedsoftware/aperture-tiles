@@ -64,11 +64,13 @@ class PropertiesWrapper (properties: Properties) extends Serializable {
 
   def getSeqProperty (property: String): Seq[String] = {
     val entries = properties.stringPropertyNames.asScala.filter(_.startsWith(property))
-    if (1 == entries.size) {
-      Seq(getOptionProperty(entries.head).get)
-    } else {
-      val maxEntry = entries.map(_.substring(property.length+1).toInt).reduce(_ max _)
-      Range(0, maxEntry+1).map(index => getOptionProperty(property+"."+index).get).toSeq
+    entries.size match {
+      case 0 => Seq[String]()
+      case 1 => Seq(getOptionProperty(entries.head).get)
+      case _ => {
+	val maxEntry = entries.map(_.substring(property.length+1).toInt).reduce(_ max _)
+	Range(0, maxEntry+1).map(index => getOptionProperty(property+"."+index).get).toSeq
+      }
     }
   }
 
