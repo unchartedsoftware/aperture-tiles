@@ -32,8 +32,8 @@ package com.oculusinfo.tilegen.binning
 import java.io.InputStream
 import java.io.IOException
 import java.lang.{Iterable => JavaIterable}
-import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
+import java.util.Properties
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
@@ -50,12 +50,13 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.TileSerializer
 import com.oculusinfo.binning.io.impl.DoubleAvroSerializer
 
-import com.oculusinfo.tilegen.util.Rectangle
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
+import com.oculusinfo.tilegen.datasets.Dataset
+import com.oculusinfo.tilegen.datasets.DatasetFactory
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.TileMetaData
+import com.oculusinfo.tilegen.util.Rectangle
 
 
 
@@ -91,42 +92,21 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
    * If we already have a metadata structure, just add those levels to it.
    */
   def initializeForRead (pyramidId: String,
-                         tilePyramid: TilePyramid,
-                         tileSize: Int): Unit = {
+			 tileSize: Int,
+			 dataDescription: Properties): Unit = {
     if (!tables.contains(pyramidId)) {
-      val data = sc.textFile(pyramidId).map(line => {
-        val fields = line.split(',')
-
-        (fields(0).toDouble, fields(1).toDouble, fields(2).toDouble)
-      })
-      initializeForRead(pyramidId, tilePyramid, tileSize, data, new StandardDoubleBinDescriptor)
+      initializeForRead(pyramidId,
+			DatasetFactory.createDataset(dataDescription, tileSize))
     }
   }
 
-  def initializeForRead[BT, PT] (pyramidId: String,
-				 tilePyramid: TilePyramid,
-				 tileSize: Int,
-				 data: RDD[(Double, Double, BT)],
-				 binDesc: BinDescriptor[BT, PT]) {
-    if (!tables.contains(pyramidId)) {
-      data.cache
-      val fullBounds = tilePyramid.getTileBounds(new TileIndex(0, 0, 0, tileSize, tileSize))
-      tables(pyramidId) =
-	new TableData[BT, PT](new TileMetaData(pyramidId,
-                                               "Live static tile level",
-                                               tileSize,
-                                               tilePyramid.getTileScheme(),
-                                               tilePyramid.getProjection(),
-                                               0,
-                                               scala.Int.MaxValue,
-                                               fullBounds,
-                                               MutableList[(Int, String)](),
-                                               MutableList[(Int, String)]()),
-			      tilePyramid,
-			      data,
-			      binDesc)
-    }
-  }
+  private def initializeForRead[BT, PT] (pyramidId: String,
+					 dataset: Dataset[BT, PT]): Unit =
+    tables(pyramidId) =
+      new TableData[BT, PT](dataset.createMetaData(pyramidId),
+			    dataset.getTilePyramid,
+			    dataset.getData(sc, true),
+			    dataset.getBinDescriptor)
 
   /*
    * Convert a set of tiles to testable bounds.

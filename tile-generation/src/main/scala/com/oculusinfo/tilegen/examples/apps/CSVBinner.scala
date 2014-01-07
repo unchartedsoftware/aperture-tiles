@@ -37,9 +37,10 @@ import org.apache.spark.SparkContext._
 
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 
-import com.oculusinfo.tilegen.datasets.CSVDatasetDescriptor
+import com.oculusinfo.tilegen.datasets.Dataset
+import com.oculusinfo.tilegen.datasets.DatasetFactory
 
-import com.oculusinfo.tilegen.tiling.ObjectifiedBinnerBase
+import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
 import com.oculusinfo.tilegen.tiling.ValueOrException
@@ -77,9 +78,14 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *      A user name to stick in the job title so people know who is running the
  *      job
  *
- *  oculus.binning.name
- *      The name of the output data pyramid
+ *
  * 
+ *  oculus.tileio.type
+ *      The way in which tiles are written - either hbase (to write to hbase,
+ *      see hbase. properties above to specify where) or file  to write to the
+ *      local file system
+ *      Default is hbase
+ *
  */
 
 
@@ -138,7 +144,6 @@ object CSVBinner {
       }
     }
 
-
     // Run for each real properties file
     while (argIdx < args.size) {
       val props = new Properties(defProps)
@@ -146,26 +151,54 @@ object CSVBinner {
       props.load(propStream)
       propStream.close()
 
-      val dataset = new CSVDatasetDescriptor(props)
+
+      def processDatasetInternal[BT: ClassManifest, PT] (dataset: Dataset[BT, PT]): Unit = {
+        val name = dataset.getName
+        val description = dataset.getDescription
+        val binDesc = dataset.getBinDescriptor
+
+        // Create binning helper classes
+        val binner = new RDDBinner
+        binner.debug = true
+
+        dataset.getLevels.map(levels => {
+          val tiles = binner.processDataByLevel(dataset.getData(sc, true),
+                                                dataset.getBinDescriptor,
+                                                dataset.getTilePyramid,
+                                                levels,
+                                                dataset.getBins,
+                                                dataset.getConsolidationPartitions)
+
+          tileIO.writeTileSet(dataset.getTilePyramid,
+                              dataset.getName,
+                              tiles,
+                              binDesc,
+                              dataset.getName,
+			      dataset.getDescription)
+        })
+      }
+      def processDataset[BT, PT] (dataset: Dataset[BT, PT]): Unit =
+	processDatasetInternal(dataset)(dataset.binTypeManifest)
+
+      processDataset(DatasetFactory.createDataset(props))
 
 
-      // Create binning helper classes
 
+
+
+/*
       val binner = new ObjectifiedBinnerBase[List[Double]](dataset.source,
-							   dataset.parser,
-							   dataset.extractor)
+                                                           dataset.parser,
+                                                           dataset.extractor)
       binner.debug = true
       binner.execute = true
-      val name = dataset.properties.getProperty("oculus.binning.name", "unknown")
-
-      val pyramidName = if (dataset.prefix.isDefined) dataset.prefix.get+"."+name
-                        else name
       def extractResult (record: List[Double]): ValueOrException[Double] =
         dataset.extractor.getFieldValue(dataset.zVar)(record)
 
       binner.doBinning(sc, tileIO,
                        pyramidName, dataset.xVar, dataset.yVar, dataset.zVar, extractResult,
                        dataset.levels, dataset.consolidationPartitions)
+*/
 
       argIdx = argIdx + 1
     }

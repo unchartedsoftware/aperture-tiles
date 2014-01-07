@@ -27,7 +27,10 @@ package com.oculusinfo.tilegen.binning
 
 
 
+import java.io.File
+import java.io.FileWriter
 import java.lang.{Double => JavaDouble}
+import java.util.Properties
 
 import scala.collection.JavaConverters._
 
@@ -45,38 +48,64 @@ import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 
 class LiveTileTestSuite extends FunSuite with SharedSparkContext {
   test("Simple binning") {
-    val data = sc.parallelize(Range(0, 8)).map(n =>
-      (n.toDouble, (7-n).toDouble, 1.0)
+    // Create our data
+    val dataFile = File.createTempFile("simple-live-tile-test", ".csv")
+    println("Writing data to data file "+dataFile.getAbsolutePath())
+    val writer = new FileWriter(dataFile)
+    Range(0, 8).foreach(n => 
+      writer.write("%f,%f\n".format(n.toDouble, (7-n).toDouble))
     )
+    writer.flush()
+    writer.close()
 
-    val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
-    val pyramidId = "simple test"
-    val pyramidIo = new LiveStaticTilePyramidIO(sc)
-    pyramidIo.initializeForRead(pyramidId, pyramid, 4, data, new StandardDoubleBinDescriptor)
 
-    val tile00 = pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 0, 0, 4, 4)).asJava)
-    assert(tile00.isEmpty)
-    val tile11 = pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 1, 1, 4, 4)).asJava)
-    assert(tile11.isEmpty)
+    // Bin it, making sure to get rid of it when we're done
+    try {
+      val pyramidId = "simple test"
+      val pyramidIo = new LiveStaticTilePyramidIO(sc)
 
-    // Noting that visually, the tiles should look exactly as we enter them here.
-    val tile01: TileData[_] =
-      pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
-    assert(tile01.getDefinition.getXBins() === 4)
-    assert(tile01.getDefinition.getYBins() === 4)
-    assert(tile01.getData.asScala.map(_.toString.toDouble) ==
-	   List[Double](1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0))
-    val tile10: TileData[_] =
-	pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
-    assert(tile10.getDefinition.getXBins() === 4)
-    assert(tile10.getDefinition.getYBins() === 4)
-    assert(tile10.getData.asScala.map(_.toString.toDouble) ==
-	   List[Double](1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0))
+      val readProps = new Properties()
+      readProps.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
+      readProps.setProperty("oculus.binning.projection.minx", "0.0")
+      readProps.setProperty("oculus.binning.projection.maxx", "7.9999")
+      readProps.setProperty("oculus.binning.projection.miny", "0.0")
+      readProps.setProperty("oculus.binning.projection.maxy", "7.9999")
+      readProps.setProperty("oculus.binning.parsing.separator", ",")
+      readProps.setProperty("oculus.binning.parsing.x.index", "0")
+      readProps.setProperty("oculus.binning.parsing.y.index", "1")
+      readProps.setProperty("oculus.binning.xField", "x")
+      readProps.setProperty("oculus.binning.yField", "y")
+      readProps.setProperty("oculus.binning.levels.0", "1")
+
+      pyramidIo.initializeForRead(pyramidId, 4, readProps)
+
+      val tile00 = pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 0, 0, 4, 4)).asJava)
+      assert(tile00.isEmpty)
+      val tile11 = pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 1, 1, 4, 4)).asJava)
+      assert(tile11.isEmpty)
+
+      // Noting that visually, the tiles should look exactly as we enter them here.
+      val tile01: TileData[_] =
+	pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
+      assert(tile01.getDefinition.getXBins() === 4)
+      assert(tile01.getDefinition.getYBins() === 4)
+      assert(tile01.getData.asScala.map(_.toString.toDouble) ==
+	     List[Double](1.0, 0.0, 0.0, 0.0,
+			  0.0, 1.0, 0.0, 0.0,
+			  0.0, 0.0, 1.0, 0.0,
+			  0.0, 0.0, 0.0, 1.0))
+      val tile10: TileData[_] =
+	  pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
+      assert(tile10.getDefinition.getXBins() === 4)
+      assert(tile10.getDefinition.getYBins() === 4)
+      assert(tile10.getData.asScala.map(_.toString.toDouble) ==
+	     List[Double](1.0, 0.0, 0.0, 0.0,
+			  0.0, 1.0, 0.0, 0.0,
+			  0.0, 0.0, 1.0, 0.0,
+			  0.0, 0.0, 0.0, 1.0))
+    } finally {
+      println("Deleting "+dataFile.getAbsolutePath())
+      dataFile.delete()
+    }
   }
 }
