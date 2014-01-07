@@ -3,5 +3,4 @@ target
 .project
 .settings
 tilesets
-datasets
 /*.classpath
