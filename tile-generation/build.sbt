@@ -32,6 +32,7 @@ scalacOptions += "-unchecked"
 
 libraryDependencies ++= Seq(
 	"org.apache.spark" % "spark-core_2.9.3" % "0.9.0-incubating-SNAPSHOT",
+	"org.apache.spark" % "spark-streaming_2.9.3" % "0.9.0-incubating-SNAPSHOT",
 	"com.oculusinfo" % "geometric-utilities" % "0.1.2-SNAPSHOT",
         "com.oculusinfo" % "binning-utilities" % "0.1.2-SNAPSHOT",
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test"
