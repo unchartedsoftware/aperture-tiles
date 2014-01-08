@@ -35,6 +35,8 @@ import scala.collection.mutable.MutableList
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.DStream
 
 
 
@@ -42,6 +44,7 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.TileMetaData
+
 
 
 
@@ -82,7 +85,7 @@ abstract class Dataset[BT: ClassManifest, PT] {
    *              If false, the caching state is unspecified, not necessarily
    *              uncached.
    */
-  def getData (sc: SparkContext, cache: Boolean): RDD[(Double, Double, BT)]
+//  def getData (sc: SparkContext, cache: Boolean): RDD[(Double, Double, BT)]
 
   /**
    * Get a bin descriptor that can be used to bin this data
@@ -109,12 +112,110 @@ abstract class Dataset[BT: ClassManifest, PT] {
   }
 
 
+
+  private var strategy: ProcessingStrategy[BT] = null
+  def initialize (strategy: ProcessingStrategy[BT]): Unit = {
+    this.strategy = strategy
+  }
+
+
+  /**
+   * Completely process this data set in some way.
+   *
+   * Note that these function may be serialized remotely, so any context-stored
+   * parameters must be serializable
+   */
+  def process[OUTPUT] (fcn: (RDD[(Double, Double, BT)]) => OUTPUT,
+		       completionCallback: Option[OUTPUT => Unit]): Unit = {
+    if (null == strategy) {
+      throw new Exception("Attempt to process uninitialized dataset "+getName)
+    } else {
+      strategy.process(fcn, completionCallback)
+    }
+  }
+
+  def transformRDD[OUTPUT_TYPE: ClassManifest]
+  (fcn: (RDD[(Double, Double, BT)]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+    if (null == strategy) {
+      throw new Exception("Attempt to process uninitialized dataset "+getName)
+    } else {
+      strategy.transformRDD[OUTPUT_TYPE](fcn)
+    }
+
+  def transformDStream[OUTPUT_TYPE: ClassManifest]
+  (fcn: (RDD[(Double, Double, BT)]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+    if (null == strategy) {
+      throw new Exception("Attempt to process uninitialized dataset "+getName)
+    } else {
+      strategy.transformDStream[OUTPUT_TYPE](fcn)
+    }
+}
+
+
+abstract class ProcessingStrategy[BT: ClassManifest] {
+  def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
+		       completionCallback: Option[OUTPUT => Unit]): Unit
+
+  def transformRDD[OUTPUT_TYPE: ClassManifest]
+  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
+
+  def transformDStream[OUTPUT_TYPE: ClassManifest]
+  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
+}
+
+abstract class StaticProcessingStrategy[BT: ClassManifest] (sc: SparkContext, cache: Boolean) 
+	 extends ProcessingStrategy[BT] {
+  private val rdd = getData
+
+  protected def getData: RDD[(Double, Double, BT)]
+
+  final def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
+			     completionCallback: Option[OUTPUT => Unit] = None): Unit = {
+    val result = fcn(rdd)
+    completionCallback.map(_(result))
+  }
+
+  final def transformRDD[OUTPUT_TYPE: ClassManifest]
+  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+    fcn(rdd)
+
+  final def transformDStream[OUTPUT_TYPE: ClassManifest]
+  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+    throw new Exception("Attempt to call DStream transform on RDD processor")
+}
+
+abstract class StreamingProcessingStrategy[BT: ClassManifest] (ssc: StreamingContext, cache: Boolean)
+extends ProcessingStrategy[BT] {
+  private val dstream = getData
+
+  protected def getData: DStream[(Double, Double, BT)]
+
+  final def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
+			     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
+    dstream.foreach(rdd => {
+      val result: OUTPUT = fcn(rdd)
+      completionCallback.map(_(result))
+    })
+  }
+
+  final def transformRDD[OUTPUT_TYPE: ClassManifest]
+  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+    throw new Exception("Attempt to call RDD transform on DStream processor")
+
+  final def transformDStream[OUTPUT_TYPE: ClassManifest]
+  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+    dstream.transform(fcn)
 }
 
 
 
 object DatasetFactory {
-  def createDataset (dataDescription: Properties,
-		     tileSize: Int = 256): Dataset[_, _] =
-    return new CSVDataset(dataDescription, tileSize)
+  def createDataset (sc: SparkContext,
+		     dataDescription: Properties,
+		     cache: Boolean,
+		     tileSize: Int = 256): Dataset[_, _] = {
+    val dataset = new CSVDataset(dataDescription, tileSize)
+    dataset.initialize(sc, cache)
+    dataset
+  }
 }

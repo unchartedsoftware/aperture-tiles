@@ -35,6 +35,7 @@ import scala.collection.JavaConverters._
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 
 
@@ -373,35 +374,42 @@ class CSVDataset (rawProperties: Properties,
 
   def getBinDescriptor: BinDescriptor[Double, JavaDouble] = new StandardDoubleBinDescriptor
 
-  def getData (sc: SparkContext, cache: Boolean) = {
-    val source = new CSVDataSource(properties)
-    val parser = new CSVRecordParser(properties)
-    val extractor = new CSVFieldExtractor(properties)
 
-    val localXVar = xVar
-    val localYVar = yVar
-    val localZVar = zVar
+  class CSVStaticProcessingStrategy (sc: SparkContext, cache: Boolean)
+  extends StaticProcessingStrategy[Double](sc, cache) {
+    protected def getData: RDD[(Double, Double, Double)] = {
+      val source = new CSVDataSource(properties)
+      val parser = new CSVRecordParser(properties)
+      val extractor = new CSVFieldExtractor(properties)
 
-    val rawData = source.getData(sc)
-    val data = rawData.mapPartitions(iter =>
-      // Parse the records from the raw data
-      parser.parseRecords(iter, localXVar, localYVar)
-    ).filter(r =>
-      // Filter out unsuccessful parsings
-      r.hasValue
-    ).map(_.get).mapPartitions(iter =>
-      iter.map(t => (extractor.getFieldValue(localXVar)(t),
-                     extractor.getFieldValue(localYVar)(t),
-		     extractor.getFieldValue(localZVar)(t)))
-    ).filter(record =>
-      record._1.hasValue && record._2.hasValue && record._3.hasValue
-    ).map(record =>
-      (record._1.get, record._2.get, record._3.get)
-    )
+      val localXVar = xVar
+      val localYVar = yVar
+      val localZVar = zVar
 
-    if (cache)
-      data.cache
+      val rawData = source.getData(sc)
+      val data = rawData.mapPartitions(iter =>
+	// Parse the records from the raw data
+	parser.parseRecords(iter, localXVar, localYVar)
+      ).filter(r =>
+	// Filter out unsuccessful parsings
+	r.hasValue
+      ).map(_.get).mapPartitions(iter =>
+	iter.map(t => (extractor.getFieldValue(localXVar)(t),
+                       extractor.getFieldValue(localYVar)(t),
+		       extractor.getFieldValue(localZVar)(t)))
+      ).filter(record =>
+	record._1.hasValue && record._2.hasValue && record._3.hasValue
+      ).map(record =>
+	(record._1.get, record._2.get, record._3.get)
+      )
 
-    data
+      if (cache)
+	data.cache
+
+      data
+    }
   }
+
+  def initialize (sc: SparkContext, cache: Boolean): Unit =
+    initialize(new CSVStaticProcessingStrategy(sc, cache))
 }

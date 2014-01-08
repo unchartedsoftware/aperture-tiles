@@ -34,6 +34,7 @@ import scala.collection.JavaConverters._
 
 import org.apache.spark._
 import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 
@@ -151,75 +152,34 @@ object CSVBinner {
       props.load(propStream)
       propStream.close()
 
-
       def processDatasetInternal[BT: ClassManifest, PT] (dataset: Dataset[BT, PT]): Unit = {
-        val name = dataset.getName
-        val description = dataset.getDescription
-        val binDesc = dataset.getBinDescriptor
-
-        // Create binning helper classes
-        val binner = new RDDBinner
-        binner.debug = true
-
-        dataset.getLevels.map(levels => {
-          val tiles = binner.processDataByLevel(dataset.getData(sc, true),
-                                                dataset.getBinDescriptor,
-                                                dataset.getTilePyramid,
-                                                levels,
-                                                dataset.getBins,
-                                                dataset.getConsolidationPartitions)
-
-          tileIO.writeTileSet(dataset.getTilePyramid,
-                              dataset.getName,
-                              tiles,
-                              binDesc,
-                              dataset.getName,
-			      dataset.getDescription)
-        })
+	val binner = new RDDBinner
+	binner.debug = true
+	dataset.getLevels.map(levels => {
+	  val procFcn: RDD[(Double, Double, BT)] => Unit =
+	    rdd => {
+	      val tiles = binner.processDataByLevel(rdd,
+						    dataset.getBinDescriptor,
+						    dataset.getTilePyramid,
+						    levels,
+						    dataset.getBins,
+						    dataset.getConsolidationPartitions)
+              tileIO.writeTileSet(dataset.getTilePyramid,
+				  dataset.getName,
+				  tiles,
+				  dataset.getBinDescriptor,
+				  dataset.getName,
+				  dataset.getDescription)
+	    }
+	  dataset.process(procFcn, None)
+	})
       }
       def processDataset[BT, PT] (dataset: Dataset[BT, PT]): Unit =
 	processDatasetInternal(dataset)(dataset.binTypeManifest)
 
-      processDataset(DatasetFactory.createDataset(props))
-
-
-
-
-
-/*
-      val binner = new ObjectifiedBinnerBase[List[Double]](dataset.source,
-                                                           dataset.parser,
-                                                           dataset.extractor)
-      binner.debug = true
-      binner.execute = true
-      def extractResult (record: List[Double]): ValueOrException[Double] =
-        dataset.extractor.getFieldValue(dataset.zVar)(record)
-
-      binner.doBinning(sc, tileIO,
-                       pyramidName, dataset.xVar, dataset.yVar, dataset.zVar, extractResult,
-                       dataset.levels, dataset.consolidationPartitions)
-*/
+      processDataset(DatasetFactory.createDataset(sc, props, true))
 
       argIdx = argIdx + 1
     }
-  }
-}
-
-
-object TestPropertyParsing {
-  def main (args: Array[String]): Unit = {
-    args.foreach(file => {
-      val stream = new FileInputStream(file)
-      var props = new Properties()
-      props.load(stream)
-      stream.close()
-      
-      println("\n\nRead in "+file)
-      PropertiesWrapper.debugProperties(props)
-      println("\nRaw properties:")
-      props.keySet.asScala.foreach(prop => {
-        println("\t"+prop+": "+props.getProperty(prop.toString()))
-      })
-    })
   }
 }

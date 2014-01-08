@@ -65,12 +65,7 @@ import com.oculusinfo.tilegen.util.Rectangle
  * This class reads and caches a data set for live queries of its tiles
  */
 class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
-  class TableData[BT, PT](val metaData: TileMetaData,
-			  val pyramid: TilePyramid,
-			  val data: RDD[(Double, Double, BT)],
-			  val binDesc: BinDescriptor[BT, PT]) {}
-
-  private val tables = MutableMap[String, TableData[_, _]]()
+  private val datasets = MutableMap[String, Dataset[_, _]]()
 
 
   def initializeForWrite (pyramidId: String): Unit = {
@@ -94,19 +89,10 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
   def initializeForRead (pyramidId: String,
 			 tileSize: Int,
 			 dataDescription: Properties): Unit = {
-    if (!tables.contains(pyramidId)) {
-      initializeForRead(pyramidId,
-			DatasetFactory.createDataset(dataDescription, tileSize))
+    if (!datasets.contains(pyramidId)) {
+      datasets(pyramidId) = DatasetFactory.createDataset(sc, dataDescription, true, tileSize)
     }
   }
-
-  private def initializeForRead[BT, PT] (pyramidId: String,
-					 dataset: Dataset[BT, PT]): Unit =
-    tables(pyramidId) =
-      new TableData[BT, PT](dataset.createMetaData(pyramidId),
-			    dataset.getTilePyramid,
-			    dataset.getData(sc, true),
-			    dataset.getBinDescriptor)
 
   /*
    * Convert a set of tiles to testable bounds.
@@ -153,18 +139,16 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
                      serializer: TileSerializer[PT],
                      javaTiles: JavaIterable[TileIndex]): JavaList[TileData[PT]] = {
     def inner[BT: ClassManifest]: JavaList[TileData[PT]] = {
-      val tiles = javaTiles.asScala
-      if (!tables.contains(pyramidId) || 
+      val tiles: Iterable[TileIndex] = javaTiles.asScala
+
+      if (!datasets.contains(pyramidId) || 
           tiles.isEmpty) {
 	null
       } else {
-	val table = tables(pyramidId).asInstanceOf[TableData[BT, PT]]
-	val metaData= table.metaData
-	val pyramid = table.pyramid
-	val data = table.data
-	val binDesc = table.binDesc
-	val bins = tiles.head.getXBins()
+	val dataset = datasets(pyramidId).asInstanceOf[Dataset[BT, PT]]
 
+	val pyramid = dataset.getTilePyramid
+	val bins = tiles.head.getXBins()
 	val bounds = tilesToBounds(pyramid, tiles)
 
 	val boundsTest = bounds.getSerializableContainmentTest(pyramid, bins)
@@ -173,7 +157,11 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	val binner = new RDDBinner
 	binner.debug = true
 
-	binner.processData(data, binDesc, spreaderFcn, bins).collect.toList.asJava
+	dataset.transformRDD[TileData[PT]](
+	  rdd => {
+	    binner.processData(rdd, dataset.getBinDescriptor, spreaderFcn, bins)
+	  }
+	).collect.toList.asJava
       }
     }
 
@@ -185,6 +173,5 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
   }
 
   def readMetaData (pyramidId: String): String =
-    tables.get(pyramidId).map(_.metaData.toString).getOrElse(null)
-
+    datasets.get(pyramidId).map(_.createMetaData(pyramidId).toString).getOrElse(null)
 }
