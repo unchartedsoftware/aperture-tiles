@@ -27,6 +27,7 @@ package com.oculusinfo.tilegen.tiling
 
 
 import org.apache.spark.SparkContext
+import org.apache.spark.SharedSparkContext
 
 import org.scalatest.FunSuite
 
@@ -35,7 +36,7 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 
 
 
-class SegmentBinPlotterTestSuite extends FunSuite {
+class SegmentBinPlotterTestSuite extends FunSuite with SharedSparkContext {
   val expectedValues: Map[TileIndex, String] =
     Map(
       (new TileIndex(0, 0, 0),
@@ -216,8 +217,6 @@ class SegmentBinPlotterTestSuite extends FunSuite {
     )
 
   test("Line segment binner: point version") {
-    val sc = new SparkContext("local", "test")
-
     val data = sc.parallelize(List(((0.0, 0.0), (1.0, 1.0))
       ,((1.0, 1.0), (3.0, 1.0))
       ,((3.0, 1.0), (4.0, 0.0))

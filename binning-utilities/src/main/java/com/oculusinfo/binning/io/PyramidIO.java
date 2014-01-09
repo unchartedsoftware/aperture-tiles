@@ -28,6 +28,7 @@ package com.oculusinfo.binning.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Properties;
 
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
@@ -76,6 +77,24 @@ public interface PyramidIO {
      * @param metaData The metadata to be written
      */
     public void writeMetaData (String pyramidId, String metaData) throws IOException;
+
+    /**
+	 * Initialize a dataset for reading. This rarely has to do anything, but in
+	 * live tile generation, must describe the dataset pretty completely.
+	 * 
+	 * @param pyramidId
+	 *            The ID of the data set to be read
+	 * @param tileSize
+	 *            The desired number of bins per axis per tile, if known. Some
+	 *            implementations will need this information (if they are
+	 *            generating tiles), and will generate an error if an invalid
+	 *            number is given; others, returning pregenerated tiles, will
+	 *            ignore this number entirely.
+	 * @param dataDescription
+	 *            A description of the pyramid to be read; if tiles are
+	 *            pregenerated, this is likely to be ignored.
+	 */
+    public void initializeForRead (String pyramidId, int tileSize, Properties dataDescription);
 
     /**
      * Read in a set of tiles

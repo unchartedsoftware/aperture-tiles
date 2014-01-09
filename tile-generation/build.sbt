@@ -10,6 +10,16 @@ version:="0.1.2-SNAPSHOT"
 
 scalaVersion:="2.9.3"
 
+
+
+// Testing settings
+// Spark tests can only run one at a time, so we have to set all tests to run that way.
+// Copied from the Spark build file
+// Only allow one test at a time, even across projects, since they run in the same JVM
+concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
+
+
+
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 
 resolvers += "Global Maven Repository" at "http://repo1.maven.org/maven2/"
@@ -22,6 +32,7 @@ scalacOptions += "-unchecked"
 
 libraryDependencies ++= Seq(
 	"org.apache.spark" % "spark-core_2.9.3" % "0.8.0-incubating",
+	"org.apache.spark" % "spark-streaming_2.9.3" % "0.8.0-incubating-SNAPSHOT",
 	"com.oculusinfo" % "geometric-utilities" % "0.1.2-SNAPSHOT",
         "com.oculusinfo" % "binning-utilities" % "0.1.2-SNAPSHOT",
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test"

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
@@ -81,6 +82,12 @@ public class TestPyramidIO implements PyramidIO {
     public void writeMetaData (String pyramidId, String metaData) throws IOException {
         String key = getMetaDataKey(pyramidId);
         _data.put(key, metaData.getBytes());
+    }
+
+    @Override
+    public void initializeForRead(String pyramidId, int tileSize,
+    		Properties dataDescription) {
+    	// Noop
     }
 
     @Override

@@ -64,7 +64,7 @@ addToSparkClasspath org.scala-lang scala-compiler 2.9.3
 
 
 
-export MASTER=spark://172.21.10.128:7077
+export MASTER=local[8]
 # export SPARK_MEM=4g
 
 echo Running Spark from $SPARK_HOME

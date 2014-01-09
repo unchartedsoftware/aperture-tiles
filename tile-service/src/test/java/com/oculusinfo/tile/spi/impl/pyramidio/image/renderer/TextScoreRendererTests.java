@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
@@ -129,6 +130,11 @@ public class TextScoreRendererTests {
 		public void writeMetaData(String pyramidId, String metaData)
 				throws IOException {
 		}
+
+	    @Override
+	    public void initializeForRead(String pyramidId, int tileSize,
+	    		Properties dataDescription) {
+	    }
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		@Override

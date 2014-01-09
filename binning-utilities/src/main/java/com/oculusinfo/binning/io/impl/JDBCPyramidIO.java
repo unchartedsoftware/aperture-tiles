@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
@@ -243,6 +244,12 @@ public class JDBCPyramidIO implements PyramidIO {
 			}
 		}
 	}
+
+    @Override
+    public void initializeForRead(String pyramidId, int tileSize,
+    		Properties dataDescription) {
+    	// Noop
+    }
 
 	@Override
 	public <T> List<TileData<T>> readTiles(String pyramidId,

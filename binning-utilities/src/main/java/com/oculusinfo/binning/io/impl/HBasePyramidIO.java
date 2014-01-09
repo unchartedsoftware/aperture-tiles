@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -239,6 +240,12 @@ public class HBasePyramidIO implements PyramidIO {
         } catch (InterruptedException e) {
             throw new IOException("Error writing metadata to HBase", e);
         }
+    }
+
+    @Override
+    public void initializeForRead(String pyramidId, int tileSize,
+    		Properties dataDescription) {
+    	// Noop
     }
 
     @Override

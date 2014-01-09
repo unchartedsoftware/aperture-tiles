@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,12 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
     @Override
     public void writeMetaData (String basePath, String metaData) throws IOException {
     	throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+    }
+
+    @Override
+    public void initializeForRead(String pyramidId, int tileSize,
+    		Properties dataDescription) {
+    	// Noop
     }
 
     @Override

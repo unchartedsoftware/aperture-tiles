@@ -33,10 +33,6 @@ import javax.imageio.ImageIO;
 
 import oculus.aperture.common.rest.ApertureServerResource;
 
-import com.oculusinfo.tile.spi.ImageTileLegendService;
-import com.oculusinfo.tile.util.ColorRampParameter;
-import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Form;
@@ -50,6 +46,8 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 import com.google.inject.Inject;
+import com.oculusinfo.tile.spi.ImageTileLegendService;
+import com.oculusinfo.tile.util.ColorRampParameter;
 
 public class ImageTileLegendResource extends ApertureServerResource {
 	
