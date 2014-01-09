@@ -338,8 +338,8 @@ class CSVDataset (rawProperties: Properties,
     lvlString.split(',').map(levelRange => {
       val extrema = levelRange.split('-')
 
-      if (0 == extrema.size) List[Int]()
-      if (1 == extrema.size) List[Int](extrema(0).toInt)
+      if (0 == extrema.size) Seq[Int]()
+      if (1 == extrema.size) Seq[Int](extrema(0).toInt)
       else Range(extrema(0).toInt, extrema(1).toInt+1).toSeq
     }).reduce(_ ++ _)
   })
