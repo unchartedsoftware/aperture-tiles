@@ -116,6 +116,15 @@ public class TileCache<T> {
         _cache.get(index).requestTile(callback);
     }
 
+    public void provideTile (TileData<T> tile) {
+        if (null == tile)
+            return;
+
+        TileIndex index = tile.getDefinition();
+        ImageTileCacheEntry<T> entry = _cache.get(index);
+        if (null != entry)
+            entry.setTile(tile);
+    }
 
 
     private class CacheEntryListener implements CacheRequestCallback<T> {
