@@ -56,6 +56,10 @@ public class ImageTileCacheEntry<T> {
 		_requests = new ArrayList<>();
 	}
 
+	/**
+	 * Used to request a tile, of course. The callback will be called once when
+	 * the tile is received (immediately if it is already there)
+	 */
 	public void requestTile (CacheRequestCallback<T> callback) {
 		if (null != _tile) {
 			callback.onTileReceived(_tile);
@@ -65,7 +69,13 @@ public class ImageTileCacheEntry<T> {
 		}
 	}
 
-	public void setTile (TileData<T> tile) {
+	/*
+	 * Notify the anyone who cares that a tile has been received.
+	 * 
+	 * @param tile
+	 *            The requested tile
+	 */
+	void setTile (TileData<T> tile) {
 		_tile = tile;
 		Iterator<CacheRequestCallback<T>> i = _requests.iterator();
 		while (i.hasNext()) {
@@ -76,15 +86,55 @@ public class ImageTileCacheEntry<T> {
 		}
 	}
 
+	/*
+	 * Notify the anyone who cares that a tile has been abandoned.
+	 */
+	void abandonTile () {
+		Iterator<CacheRequestCallback<T>> i = _requests.iterator();
+		while (i.hasNext()) {
+			CacheRequestCallback<T> callback = i.next();
+			callback.onTileAbandoned();
+			i.remove();
+		}
+	}
+
+	/**
+	 * Indicates whether or not the requested tile has yet been received
+	 */
 	public boolean hasBeenRetrieved () {
 		return _retreived;
 	}
 
+	/**
+	 * Indicates the first time at which this request was made
+	 */
+	public long initialRequestTime () {
+	    return _requestTime;
+	}
+
+	/**
+	 * Indicates the age of the request
+	 * 
+	 * @return How long ago the request was first made, in milliseconds
+	 */
 	public long age () {
 		return System.currentTimeMillis()-_requestTime;
 	}
 
+
+
+	/**
+	 * A callback object that allows notifcation of the reception of a tile
+	 */
 	public static interface CacheRequestCallback<T> {
+		/**
+		 * Called when the data for a tile is found
+		 */
 		public void onTileReceived (TileData<T> tile);
+		
+		/**
+		 * Called when the system has given up on listening for a tile
+		 */
+		public void onTileAbandoned ();
 	}
 }
