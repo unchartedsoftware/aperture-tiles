@@ -80,9 +80,10 @@ public class ImageTileCacheEntry<T> {
 		Iterator<CacheRequestCallback<T>> i = _requests.iterator();
 		while (i.hasNext()) {
 			CacheRequestCallback<T> callback = i.next();
-			callback.onTileReceived(_tile);
-			_retreived = true;
-			i.remove();
+			if (callback.onTileReceived(_tile)) {
+			    _retreived = true;
+			    i.remove();
+			}
 		}
 	}
 
@@ -127,10 +128,18 @@ public class ImageTileCacheEntry<T> {
 	 * A callback object that allows notifcation of the reception of a tile
 	 */
 	public static interface CacheRequestCallback<T> {
-		/**
-		 * Called when the data for a tile is found
-		 */
-		public void onTileReceived (TileData<T> tile);
+		                        /**
+         * Called when the data for a tile is found.
+         * 
+         * @param tile The tile data that was requested
+         * @return True if the tile was processed, and can freely be deleted
+         *         from the repository (and this callback won't be called
+         *         again). False if it was not so processed (in which case this
+         *         callback may be called again, if, for instance, the tile is
+         *         recieved a second time) If false, some other callback may
+         *         still process it, in which case it may still be deleted.
+         */
+		public boolean onTileReceived (TileData<T> tile);
 		
 		/**
 		 * Called when the system has given up on listening for a tile

@@ -28,81 +28,168 @@ package com.oculusinfo.tile.spi.impl.pyramidio.image;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.spi.impl.pyramidio.image.ImageTileCacheEntry.CacheRequestCallback;
 
 
 
 public class TileCacheTests {
-    @Test
-    public void testSimpleCacheRemoval () {
-        int n = 5;
-        TileCache<Integer> cache = new TileCache<>(1000, n);
+    private TileIndex[]        _indices;
+    private int                _N;
+    private TileCache<Integer> _cache;
 
-        TileIndex[] indices = new TileIndex[16];
+
+    
+    @Before
+    public void setupIndices () {
+        _indices = new TileIndex[16];
         for (int i=0; i<16; ++i) {
-            indices[i] = new TileIndex(2, (int) Math.floor(i/4.0), i % 4);
+            _indices[i] = new TileIndex(2, (int) Math.floor(i/4.0), i % 4);
         }
-
-        // Test first to make sure when all is properly notified, the oldest
-        // element is removed first.
-
-        // Make our base n requests, and fulfil them
-        for (int i=0; i<n; ++i) {
-            TileData<Integer> data = new TileData<Integer>(indices[i], i);
-
-            cache.getNewRequests(Collections.singletonList(indices[i]));
-            cache.provideTile(data);
-        }
-
-        // Make another request
-        List<TileIndex> newIndices = cache.getNewRequests(Collections.singletonList(indices[n]));
-        // Make sure it was new
-        Assert.assertEquals(1, newIndices.size());
-        Assert.assertEquals(indices[n], newIndices.get(0));
-
-        // Make sure all but our first request is still there
-        for (int i=1; i<n; ++i) {
-            newIndices = cache.getNewRequests(Collections.singletonList(indices[n]));
-            Assert.assertEquals(0, newIndices.size());
-        }
-        // Make sure our first request is gone
-        newIndices = cache.getNewRequests(Collections.singletonList(indices[0]));
-        Assert.assertEquals(1, newIndices.size());
-        Assert.assertEquals(indices[0], newIndices.get(0));
     }
 
-    @Test
-    public void testMissingCacheRemoval () {
-        int n = 5;
-        TileCache<Integer> cache = new TileCache<>(1000, n);
+    @Before
+    public void setupCache () {
+        _N = 5;
+        // quarter-second, 5-object cache - objects past 5 are removed after 1/4
+        // second (or less, if data given), as more data is inserted.
+        _cache = new TileCache<>(250, _N);
+    }
 
-        TileIndex[] indices = new TileIndex[16];
-        for (int i=0; i<16; ++i) {
-            indices[i] = new TileIndex(2, (int) Math.floor(i/4.0), i % 4);
+    @After
+    public void cleanup () {
+        _cache = null;
+        _indices = null;
+    }
+
+
+
+    private void checkRequest (TileIndex index, boolean expectedNewRequest) {
+        List<TileIndex> newRequests = _cache.getNewRequests(Collections.singletonList(index));
+        if (expectedNewRequest) {
+            // Make sure the request was new
+            Assert.assertEquals(1, newRequests.size());
+            Assert.assertEquals(index, newRequests.get(0));
+        } else {
+            // Make sure there was no new request
+            Assert.assertEquals(0, newRequests.size());
         }
+    }
 
-        // Test first to make sure when all is properly notified, the oldest
-        // element is removed first.
+    // Test first to make sure when all is properly notified, in the expected
+    // normal way, the oldest element is removed first.
+    @Test
+    public void testSimpleCacheRemoval () {
+        CacheRequestCallback<Integer> callback = new NoOpCacheRequestCallback();
 
-        // Make our base n requests, and fulfil them
-        for (int i=0; i<n; ++i) {
-            cache.getNewRequests(Collections.singletonList(indices[i]));
+        int i;
+        for (i=0; i<_N; ++i) {
+            TileData<Integer> data = new TileData<Integer>(_indices[i], i);
+
+            // provide and listen to each tile
+            checkRequest(_indices[i], true);
+            _cache.requestTile(_indices[i], callback);
+            _cache.provideTile(data);
         }
 
         // Make another request
-        List<TileIndex> newIndices = cache.getNewRequests(Collections.singletonList(indices[n]));
-        // Make sure it was new
-        Assert.assertEquals(1, newIndices.size());
-        Assert.assertEquals(indices[n], newIndices.get(0));
+        checkRequest(_indices[i], true);
+
+        // Make sure all but our first request is still there
+        for (i=1; i<_N; ++i) {
+            checkRequest(_indices[i], false);
+        }
+
+        // Make sure our first request is gone
+        checkRequest(_indices[0], true);
+    }
+
+    // Make sure requests don't disappear if data hasn't been provided for them
+    @Test
+    public void testMissingCacheRemoval () {
+        CacheRequestCallback<Integer> callback = new NoOpCacheRequestCallback();
+
+        int i;
+        for (i=0; i<_N; ++i) {
+            // listen to each tile
+            checkRequest(_indices[i], true);
+            _cache.requestTile(_indices[i], callback);
+        }
+
+        // Make another request
+        checkRequest(_indices[i], true);
 
         // Make sure all requests so far are still there
-        for (int i=1; i<n+1; ++i) {
-            newIndices = cache.getNewRequests(Collections.singletonList(indices[n]));
-            Assert.assertEquals(0, newIndices.size());
+        for (i=0; i<_N+1; ++i) {
+            checkRequest(_indices[i], false);
+        }
+    }
+
+    // Make sure potential requests don't disappear if they have not yet been 
+    // requested.
+    @Test
+    public void testUnrequestedCacheRemoval () {
+        int i;
+        for (i=0; i<_N; ++i) {
+            TileData<Integer> data = new TileData<Integer>(_indices[i], i);
+
+            // provide and listen to each tile
+            checkRequest(_indices[i], true);
+            _cache.provideTile(data);
+        }
+
+        // Make another request
+        checkRequest(_indices[i], true);
+
+        // Make sure all requests so far are still there
+        for (i=0; i<_N+1; ++i) {
+            checkRequest(_indices[i], false);
+        }
+    }
+
+    // Make sure potential requests don't disappear if they have not yet been 
+    // requested.
+    @Test
+    public void testUnrequestedCacheRemovalTimeout () throws InterruptedException {
+        int i;
+        for (i=0; i<_N; ++i) {
+            TileData<Integer> data = new TileData<Integer>(_indices[i], i);
+
+            // provide and listen to each tile
+            checkRequest(_indices[i], true);
+            _cache.provideTile(data);
+        }
+
+        Thread.sleep(260);
+        // Make another request
+        checkRequest(_indices[i], true);
+
+        // Make sure all requests so far are still there
+        for (i=1; i<_N+1; ++i) {
+            checkRequest(_indices[i], false);
+        }
+        checkRequest(_indices[0], true);
+    }
+
+
+
+    // Simple callback to do nothing, but act as if we've done something.
+    private class NoOpCacheRequestCallback implements CacheRequestCallback<Integer> {
+        @Override
+        public boolean onTileReceived (TileData<Integer> tile) {
+            // Noop, but say we did something.
+            return true;
+        }
+
+        @Override
+        public void onTileAbandoned () {
+            // Noop
         }
     }
 }

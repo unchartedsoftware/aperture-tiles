@@ -55,8 +55,8 @@ public class TileCache<T> {
     private long                                                    _maxTileAge;
     // The cache iteself
     private SynchronizedLRUCache<TileIndex, ImageTileCacheEntry<T>> _cache;
-    // A list of all keys definitely safe to remove.
-    private TreeSet<Pair<Long, TileIndex>>                          _safeToRemove;
+    // A list of all keys which have recieved their data, with the time at which they were first requested.
+    private TreeSet<Pair<TileIndex, Long>>                          _haveData;
     // A list of all keys, in the order in which they were requested.
     private List<TileIndex>                                         _orderedKeys;
     // A listener to attach to all entries
@@ -66,7 +66,7 @@ public class TileCache<T> {
         _maxTileAge = maxAge;
         _cache = new SynchronizedLRUCache<>(maxSize,
                                             new TileCacheRemovalPolicy());
-        _safeToRemove = new TreeSet<>(new EntryAgeComparator());
+        _haveData= new TreeSet<>(new EntryAgeComparator());
         _orderedKeys = new LinkedList<>();
         _entryListener = new CacheEntryListener();
     }
@@ -129,14 +129,14 @@ public class TileCache<T> {
 
     private class CacheEntryListener implements CacheRequestCallback<T> {
         @Override
-        public void onTileReceived (TileData<T> tile) {
+        public boolean onTileReceived (TileData<T> tile) {
             TileIndex index = tile.getDefinition();
             ImageTileCacheEntry<T> entry = _cache.get(index);
             if (null != entry) {
-                _safeToRemove.add(new Pair<Long, TileIndex>(
-                                                            entry.initialRequestTime(),
-                                                            index));
+                _haveData.add(new Pair<TileIndex, Long>(index,
+                                                        entry.initialRequestTime()));
             }
+            return false;
         }
 
         @Override
@@ -166,15 +166,22 @@ public class TileCache<T> {
                     // care; just remove it.
                     return true;
                 } else {
-                    // Not safe to remove the last entry just yet
-                    if (!_safeToRemove.isEmpty()) {
-                        // If there's anything in the safe-to-remove list,
-                        // remove it.
-                        _cache.remove(_safeToRemove.last().getSecond());
-                    } else if (_orderedKeys.size() > 0) {
-                        // If there's nothing provably safe to remove, see if
-                        // there's anything so old we just don't care about its
-                        // safety any more.
+                    // First see if there is anything which has already been
+                    // handled, so can be freely deleted.
+                    for (Pair<TileIndex, Long> hasData: _haveData) {
+                        TileIndex index = hasData.getFirst();
+                        ImageTileCacheEntry<T> entryWithData = _cache.get(index);
+                        if (entryWithData.hasBeenRetrieved()) {
+                            _cache.remove(index);
+                            return false;
+                        }
+                    }
+
+                    // If we get this far, there was nothing already handled.
+                    //
+                    // See if there's anything so old we just don't care about
+                    // its safety any more.
+                    if (_orderedKeys.size() > 0) {
                         TileIndex oldestKey = _orderedKeys.get(0);
                         ImageTileCacheEntry<T> oldestEntry = _cache.get(oldestKey);
                         if (oldestEntry.age() > _maxTileAge) {
@@ -195,12 +202,12 @@ public class TileCache<T> {
 
 
 
-    // Compare two elements in our _safeToRemove list
+    // Compare two elements in our _haveData list.  This puts the older element first.
     private class EntryAgeComparator implements
-                                    Comparator<Pair<Long, TileIndex>> {
+                                    Comparator<Pair<TileIndex, Long>> {
         @Override
-        public int compare (Pair<Long, TileIndex> o1, Pair<Long, TileIndex> o2) {
-            return o1.getFirst().compareTo(o2.getFirst());
+        public int compare (Pair<TileIndex, Long> o1, Pair<TileIndex, Long> o2) {
+            return -o1.getSecond().compareTo(o2.getSecond());
         }
     }
 }
