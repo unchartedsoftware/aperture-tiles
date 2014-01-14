@@ -111,7 +111,7 @@ pre code {
 #header-menu a.overview {
 	padding-left: 20px;
 	padding-right: 20px;
-	background-image: url("img/home.png");
+	background-image: url("../img/home.png");
 	background-repeat: no-repeat;
 	background-position: 50% 1px;
 }
@@ -382,7 +382,7 @@ a:hover.context-info-title {
 	line-height: 15px;
 }
 a.download-link {
-	background-image: url(img/download.png); 
+	background-image: url(../img/download.png); 
 	background-repeat: no-repeat; 
 	background-position: left; 
 	padding: 6px 0px 6px 30px;
