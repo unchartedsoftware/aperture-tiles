@@ -74,19 +74,7 @@
   </properties>
 
 
-
-  <repositories>
-    <repository>
-      <id>cloudera-public</id>
-      <!-- <url>https://repository.cloudera.com/content/repositories/releases</url> -->
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
-      <releases><enabled>true</enabled></releases>
-      <snapshots><enabled>false</enabled></snapshots>
-    </repository>
-  </repositories>
-
-
-
+ 
   <build>
     <plugins>
       <plugin>
