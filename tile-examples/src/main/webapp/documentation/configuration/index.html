@@ -1,5 +1,10 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
+<script type="text/javascript" src="../../css/js/syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+<script type="text/javascript" src="../../css/js/syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+<link href="../../css/js/syntaxhighlighter_3.0.83/styles/shCore.css" rel="stylesheet" type="text/css" />
+<link href="../../css/js/syntaxhighlighter_3.0.83/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
     <title>Documentation | Aperture Tiles</title>
@@ -20,7 +25,7 @@
     <div id="header-menu">
         <a href="../../" class="overview">&nbsp;</a>
         <a href="../../tour/overview/">Tour</a>
-        <a href="../../documentation/source/" class="selected">Documentation</a>
+        <a href="../../documentation/setup/" class="selected">Documentation</a>
         <a href="../../demos/twitter/">Demos</a>
         <a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
 
@@ -34,16 +39,13 @@
             <nav>
                 <ul>
                     <li>
-                        <a href="../source/" class="nav notselected">Source Location</a>
-                    </li>
-                    <li>
                         <a href="../setup/" class="nav notselected">Setup</a>
                     </li>
                     <li>
                         <a href="../generation/" class="nav notselected">Tile Generation</a>
                     </li>
                     <li>
-                        <a href="" class="nav selected">Configuration</a>
+                        <a href="" class="nav selected">Client Configuration</a>
                     </li>
                     <li>
                         <a href="../rendering/" class="nav notselected">Tile Rendering</a>
@@ -57,24 +59,155 @@
 
         <div id="content">
             <div class="content-context">
-                <a href="../../examples/#map-pie.html"><img src="../../img/interaction.png" class="home-image"/>
-                    <br>Picture Description</a>
-                <p>
-                    <a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a>
+                    <ul class="toc right"><li>
+                        <a href="#Aperture-Tile-Server-Config">Aperture Tile Server Configuration</a>
+                        <li><a href="#Aperture-Tile-Client-Config">Aperture Tile Client Configuration</a>
+                        <ul><li><a href="#Configuring-Tile-Sets-for-Display">Configuring Tile Sets for Display</a>
+                        </li><li><a href="#Generate-Tile-Sets">Generate Tile Sets</a>
+                        </li><li><a href="#Server-side-Tile-Rendering-Configuration">Server-side Tile Rendering Configuration</a>
+                            <ul><li><a href="#Renderer-Options">Renderer Options</a></li></ul>
+                    </li><li><a href="#Colour-Ramps-Configuration">Colour Ramps Configuration</a><ul><li>
+                            <a href="#Colour-Ramp-Types">Colour Ramp Types</a></li></ul>
+                    </li></ul>
             </div>
+
             <div class="content-body">
                 <h1>Client Configuration</h1>
+                <a name="Aperture-Tile-Server-Config"></a>
+                <h2>Aperture Tile Server Configuration</h2>
+                In order to serve tile data to a web client, one needs to set a few configuration details in the tile-server:
+                <p><pre>tile-server/src/main/webapp/WEB-INF/web.xml</pre>This file determines how the server locates tiles. Details can be found within the file - look for "Storage type".</p>
+                <p><pre>tile-server/src/main/resources/tile.properties</pre>This file describes where the server will find tile datasets. Details are contained therein - look for the name of the storage module you enabled in web.xml.</p>
 
-                Text
+                <a name="Aperture-Tile-Client-Config"></a>
+                <h2>Aperture Tile Client Configuration</h2>
+                <a name="Configuring-Tile-Sets-for-Display"></a>
+                <h3>Configuring Tile Sets for Display</h3>
+                Once the tile server is configured, the client must be told exactly what layers to display, and how. All client configuration files are in <pre>tile-client/src/main/webapp/data.</pre>
+                <b>geomap.json</b><br>A description of the base layer of a geographical map on which to display data.<p>
+                <b>emptymap.json</b><br>A description of an empty base layer, for use when the tiles don't represent geographic data (coming soon).<p>
+                <b>layers.json</b><br>A description of the layers to display. This contains a JSON array of objects, each of which describes a single layer. Layer properties are as follows:<br>
+                <ul>
+                    <li>Name - the human-readable name of the layer (defaults to the same value as 'Layer')</li>
+                    <li>Layer - the id by which the server knows the layer.</li>
+                    <li>Transform - what transform to apply to the data values when determining color.  Options are:
+                        <ul>
+                            <li>linear - no transformation</li>
+                            <li>log10 - take the logarithm of raw values</li>
+                        </ul>
+                    </li>
+                    <li>Ramp - the color ramp to apply to transformed data values to determine how it is dispayed.  Options are described, where appropriate, as applying from the minimum data value to the maximum.  See below for details.</li>
+                    <li>Type - the type of tile.  Currently only the value "tile", indicating server-rendered tiles, is supported; direct image pyramids and client-rendered should be supported soon.</li>
+                    <li>Opacity - the starting opacity of the layer.  This is a value from 0 (totally transparent) to 1 (totally opaque)</li>
+                    <li>Renderer - the renderer the server should use to render tiles.  This also specifies how the server will read the tiles, as the renderer and serializer are intimately linked.
+                        <ul>
+                            <li>default - render to a heat-map, based on a standard avro double-valued tile</li>
+                            <li>doubleseries - render to a series of heat-maps, based on a standard avro double-series-valued tile</li>
+                            <li>doublestatistics - render tile's total hit and % coverage as text to the tile</li>
+                            <li>textscore - render to an image showing the scored words, with bars based on their score</li>
+                        </ul></li>
+                </ul>
+                <a name="Generate-Tile-Sets"></a>
+                <h3>Generate Tile Sets</h3>
+                There are some example tile sets available on \\kraken\XDATA\Data. See <a href="../generation" target="_blank">Tile generation <a></a> wiki page for details on generating tile sets.
+                <a name="Server-side-Tile-Rendering-Configuration"></a>
+                <h3>Server-side Tile Rendering Configuration</h3>
+                This can be defaulted in the metadata.json file, but easier to set it in the layers.json. The "renderer" parameter will tell the server what to render to the PNG image that is returned as a tile. If the tile set is a grid of bin counts, then the default will be sufficient and renderer need not be specified. Here are two examples where one might specify an alternate renderer:
+                <pre class="brush: js; gutter: false;">
+{
+    "layer": "ndk.twitter.longitude.latitude.link",
+    "type": "tile",
+    "name": "Twitter Statistics",
+    "shortName": "Twitter",          // With this renderer, the a shortName should be specified to display on each tile.
+    "ramp": "ware",                  // The color ramp to use in the tile renderer
+    "opacity": 0.85,                 // The display opacity of the tile layer
+    "renderer": "doublestatistics"   // Render tile's total hit and % coverage as text to the tile.
+},
+{
+    "layer": "ndk.twitter.longitude.latitude.top.hashtags",
+    "type": "tile",
+    "name": "Top-Tags",
+    "renderer": "textscore"          // With this renderer, top keywords will be displayed as a bar chart on each tile.
+}
+</pre>
+                <a name="Renderer-Options"></a>
+                <h4>Renderer Options</h4>
+                This is not really fully developed. the "renderer" parameter is still just a string but until it is made into an object with sub-options, you can just add them as a sibling parameter. Options shown below:
+                <pre class="brush: js; gutter: false;">
+{
+    ...
+    "renderer": "doublestatistics",
+    "lineNumber": 1   // If using two different layers with this renderer,
+                      // you can stop the text from overlapping by specifying
+                      // an indexed-from-zero line number
+    ...
 
-                <h3>Subhead 1</h3>
-                Text
+    "renderer": "doubleseries", // This is the default for heatmap-type layers.
+    // or
+    "renderer": "textscrore",
+    "transformId": "log10",     // How to distribute the color ramp values - linear or log10
+    "ramp": {...}               // See ramp configration details in later section of this page.
+}
+</pre>      <a name="Colour-Ramps-Configuration"></a>
+            <H3>Colour Ramps Configuration</H3>
+                These are configured in the client-side project. The colour ramp data in the data/layers.json file can be specified through the "ramp" field. The ramp field will take either a string name or an object with a 'name' field and relevant customization parameters. The name string picks the type of colour ramp to use.
+                <p>
+                    Some examples:
+                <p>
+                    1. Selects the 'ware' colour ramp with default parameters.
+                <pre class="brush: js; gutter: false;">"ramp": "ware"</pre>
+                2. Selects a flat green colour for all returned data.
+                <pre class="brush: js; gutter: false;">"ramp": {
+    "name": "flat",
+    "color": "green"
+}</pre>
+                3. Selects the ware colour ramp and inverts the colour ramp with overrides for different colour ranges to use. Also displays the various input types that can be accepted.
+                <pre class="brush: js; gutter: false;">"ramp": {
+  "name": "ware",
+  "inverse": "true",
+  "greens": [
+    [ 0, 0.25 ],
+    [ 0.5, 0.5 ],
+    [ 1, 1 ]
+  ],
+  "blues": [
+    [ "0", 0.25 ],
+    [ 0.25, "0" ],
+    [ 0.85, "0" ],
+    [ 1, 1 ]
+  ],
+  "reds": [
+    { "scale":0, "value":"0.25" },
+    { "scale":0.25, "value":0.9 },
+    { "scale":"0.5", "value":0.1 },
+    { "scale":0.75, "value":1 }
+  ],
+  "alphas": [
+    { "0": 0, "1": "0.25" },
+    { "0": 0.25, "1": 0.9 },
+    { "0": "0.5", "1": 0.1 },
+    { "0": 0.75, "1": 1 }
+  ]
 
-                <h3>Subhead 2</h3>
-                Text
+}</pre>
+                4. Selects the single gradient colour ramp with a scale that goes between transparent white and opaque green.
+                <pre class="brush: js; gutter: false;">"ramp": {
+  "name": "single-gradient",
+  "from": 0xffffff,
+  "from-alpha": 0,
+  "to": 0x00ff00,
+}</pre>         <a name="Colour-Ramp-Types"></a>
+                <h4>Colour Ramp Types</h4>
+                <p><strong>'flat'</strong>: Selects a flat single colour.<br />: <strong>'color'</strong> = The rgb colour to use. Can be specified as integer, hex, or by name.</p>
 
-                <h3>Subhead 3</h3>
-                Text
+
+                <p><strong>'single-gradient'</strong>: A ramp between a 'from' colour and a 'to' colour.<br />: <em>'inverse'</em> = reverses the direction of the colour ramp.<br />: <em>'from'</em> = the starting ramp colour. An rgb colour. Can be specified as integer, hex, or by name.<br />: <em>'from-alpha'</em> = An alpha value between 0-255.<br />: <em>'to'</em> = the end ramp colour. An rgb colour. Can be specified as integer, hex, or by name.<br />: <em>'to-alpha'</em> = An alpha value between 0-255.</p>
+
+
+                <p>The remaining types have the following parameters:<br />: <em>'inverse'</em> = reverses the direction of the colour ramp.<br />: <em>'reds'</em> = an array of elements that define the colour ramp. Each element can be an array of 2 numbers, or an object with 'scale', and 'value' keys that map to the relevant numbers.<br />: <em>'greens'</em> = see <em>'reds'</em>.<br />: <em>'blues'</em> = see <em>'reds'</em>.<br />: <em>'alphas'</em> = see <em>'reds'</em>.</p>
+
+
+                <p><strong>'br'</strong>: A blue-green ramp.<br /><strong>'inv-br'</strong>: Inverted blue-green ramp.<br /><strong>'ware'</strong>: A red-yellow-green ramp.<br /><strong>'inv-ware'</strong>: Inverted red-yellow-green ramp.<br /><strong>'grey'</strong>: Full greyscale ramp.<br /><strong>'inv-grey'</strong>: Inverse greyscale ramp.</p>
 
             </div>
         </div>
@@ -82,6 +215,8 @@
 </div>
 </body>
 
-
+<script type="text/javascript">
+    SyntaxHighlighter.all()
+</script>
 
 </html>
