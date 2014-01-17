@@ -74,7 +74,37 @@ class PropertiesWrapper (properties: Properties) extends Serializable {
     }
   }
 
-
+  /**
+   * Gets a map of property names -> values for any properties that start with the given property string.
+   * The names in the map are the remaining property name after the given property base name is cut off,
+   * so the resulting name may still contain sub properties.
+   */
+  def getSeqPropertyMap(property: String): Map[String, String] = {
+    val entries = properties.stringPropertyNames.asScala.filter(_.startsWith(property))
+    entries.size match {
+      case 0 => Map[String, String]()
+      case _ => {
+        entries.map{entry =>
+          val name = entry.substring(property.length + 1)
+          val value = getOptionProperty(entry).get
+          name -> value
+        }.toMap
+      }
+    }
+  }
+  
+  /**
+   * This gets a unique list of all the subproperty names for the given property. Each name is
+   * only the direct subproperty in case there's more sub-subproperties.
+   */
+  def getSeqPropertyNames(property: String): Seq[String] = {
+    val entries = properties.stringPropertyNames.asScala.filter(_.startsWith(property))
+    entries.size match {
+      case 0 => Seq[String]()
+      case _ => entries.map(_.substring(property.length + 1).split("\\.")(0)).toSeq.distinct
+    }
+    
+  }
 
   def getTypedOptionProperty[T] (property: String, conversion: String => T): Option[T] =
     getOptionProperty(property).map(conversion)
