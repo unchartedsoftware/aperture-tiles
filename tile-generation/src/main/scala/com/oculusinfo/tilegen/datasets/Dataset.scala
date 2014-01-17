@@ -56,6 +56,7 @@ import com.oculusinfo.tilegen.tiling.TileMetaData
  */
 abstract class Dataset[BT: ClassManifest, PT] {
   val binTypeManifest = implicitly[ClassManifest[BT]]
+  var _debug = true;
 
 
 
