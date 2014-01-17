@@ -15,6 +15,10 @@ oculus.binning.parsing.v.index=2
 oculus.binning.parsing.v.fieldAggregation=min
 
 oculus.binning.projection=EPSG:4326
+oculus.binning.projection.minx=-2.0
+oculus.binning.projection.maxx=2.0
+oculus.binning.projection.miny=-2.0
+oculus.binning.projection.maxy=2.0
 oculus.binning.xField=x
 oculus.binning.yField=y
 oculus.binning.valueField=v
