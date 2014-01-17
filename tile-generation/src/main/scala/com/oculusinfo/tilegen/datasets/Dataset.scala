@@ -44,6 +44,7 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.TileMetaData
+import com.oculusinfo.tilegen.tiling.BinDescriptor
 
 
 
@@ -216,6 +217,16 @@ object DatasetFactory {
 		     tileSize: Int = 256): Dataset[_, _] = {
     val dataset = new CSVDataset(dataDescription, tileSize)
     dataset.initialize(sc, cache)
+    dataset
+  }
+
+  def createDataset[BT: ClassManifest, PT] (sc: SparkContext,
+             strategy: ProcessingStrategy[BT],
+             binDescriptor: BinDescriptor[BT, PT],
+		     dataDescription: Properties,
+		     tileSize: Int): Dataset[BT, PT] = {
+    val dataset = new BasicDataset(dataDescription, tileSize, binDescriptor)
+    dataset.initialize(strategy)
     dataset
   }
 }
