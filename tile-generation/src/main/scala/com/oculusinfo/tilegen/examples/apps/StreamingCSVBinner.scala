@@ -62,6 +62,12 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
+import java.util.Date
+import org.apache.spark.streaming.Time
+import com.oculusinfo.tilegen.datasets.BasicDataset
+import com.oculusinfo.tilegen.datasets.BasicStreamingDataset
+import com.oculusinfo.tilegen.datasets.StreamingProcessor
+import java.util.Calendar
 
 
 
@@ -291,24 +297,8 @@ class StreamingCSVFieldExtractor (properties: StreamingCSVRecordPropertiesWrappe
 
 
 class WindowedProcessingStrategy(stream: DStream[(Double, Double, Double)], windowDurSec: Int, slideDurSec: Int)
-extends ProcessingStrategy[Double] {
-  private val dstream = stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
-
-  final def process[OUTPUT] (fcn: RDD[(Double, Double, Double)] => OUTPUT,
-			     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
-    dstream.foreach(rdd => {
-      val result: OUTPUT = fcn(rdd)
-      completionCallback.map(_(result))
-    })
-  }
-
-  final def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, Double)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
-    throw new Exception("Attempt to call RDD transform on DStream processor")
-
-  final def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, Double)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
-    dstream.transform(fcn)
+extends StreamingProcessingStrategy[Double] {
+  protected def getData: DStream[(Double, Double, Double)] = stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
 }
 
 class StreamingSourceProcessor(properties: PropertiesWrapper) {
@@ -366,6 +356,14 @@ object StreamingCSVBinner {
     	Some((name, time))
     else
     	None
+  }
+  
+  def dtFormatter = new SimpleDateFormat("yyyDDDHHmm")
+
+  def getTimeString(time: Long, intervalTimeSec: Int): String = {
+    //round the time to the last interval time
+    val previousIntervalTime = (time / (intervalTimeSec * 1000)) * (intervalTimeSec * 1000)
+    dtFormatter.format(new Date(previousIntervalTime))
   }
   
   def main (args: Array[String]): Unit = {
@@ -450,19 +448,19 @@ object StreamingCSVBinner {
         
       
       batchJobs.foreach{job =>
-        def processDatasetInternal[BT: ClassManifest, PT] (dataset: Dataset[BT, PT]): Unit = {
+        def processDatasetInternal[BT: ClassManifest, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT]): Unit = {
 		  val binner = new RDDBinner
 		  binner.debug = true
 		
           //data = dataset.windowData
           //
   		  dataset.getLevels.map(levels => {
-		    val procFcn: (RDD[(Double, Double, BT)]) => Unit =
-  		      (rdd) => {
+		    val procFcn:  Time => RDD[(Double, Double, BT)] => Unit =
+  		      (time: Time) => (rdd: RDD[(Double, Double, BT)]) => {
   		        if (rdd.count > 0) {
   		          val stime = System.currentTimeMillis()
 		          println("processing level: " + levels)
-		          val jobName = job._1 + "." + dataset.getName
+		          val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
 		          val tiles = binner.processDataByLevel(rdd,
 							        dataset.getBinDescriptor,
 							        dataset.getTilePyramid,
@@ -476,16 +474,16 @@ object StreamingCSVBinner {
 					      dataset.getBinDescriptor,
 					      jobName,
 					      dataset.getDescription)
-					 println("All done in " + (System.currentTimeMillis() - stime) + "ms")
+					 println("Processing done in " + (System.currentTimeMillis() - stime) + "ms, " + (System.currentTimeMillis() - time.milliseconds) + "ms since start")
   		        }
   		        else {
   		          println("No data to process")
   		        }
 		      }
-		    dataset.process(procFcn, None)
+		    dataset.processWithTime(procFcn, None)
           })
         }
-        def processDataset[BT, PT] (dataset: Dataset[BT, PT]): Unit =
+        def processDataset[BT, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT]): Unit =
           processDatasetInternal(dataset)(dataset.binTypeManifest)
         
         val stream = streamingStrategy.getStream(source, parser, extractor)
@@ -493,8 +491,7 @@ object StreamingCSVBinner {
         val slideDurTimeSec = job._2
         
         val strategy = new WindowedProcessingStrategy(stream, windowDurTimeSec, slideDurTimeSec)
-        
-        processDataset(DatasetFactory.createDataset(sc, strategy, new StandardDoubleBinDescriptor, props, 256))
+        processDataset(DatasetFactory.createStreamingDataset(sc, strategy, new StandardDoubleBinDescriptor, props, 256))
       }
 
       argIdx = argIdx + 1

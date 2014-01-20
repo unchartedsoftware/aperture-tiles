@@ -18,10 +18,11 @@ import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.Time
 
 
 
-class BasicDataset[BT: ClassManifest, PT] (
+abstract class BasicDatasetBase[BT: ClassManifest, PT] (
     rawProperties: Properties,
 	tileSize: Int,
 	binDescriptor: BinDescriptor[BT, PT])
@@ -83,4 +84,37 @@ extends Dataset[BT, PT] {
   }
 
   def getBinDescriptor: BinDescriptor[BT, PT] = binDescriptor
+}
+
+
+class BasicDataset[BT: ClassManifest, PT] (
+    rawProperties: Properties,
+	tileSize: Int,
+	binDescriptor: BinDescriptor[BT, PT])
+extends BasicDatasetBase[BT, PT](rawProperties, tileSize, binDescriptor) {
+ 
+  type STRAT_TYPE = ProcessingStrategy[BT]
+  protected var strategy: STRAT_TYPE = null
+  
+}
+
+  
+class BasicStreamingDataset[BT: ClassManifest, PT] (
+    rawProperties: Properties,
+	tileSize: Int,
+	binDescriptor: BinDescriptor[BT, PT])
+extends BasicDatasetBase[BT, PT](rawProperties, tileSize, binDescriptor) with StreamingProcessor[BT] {
+ 
+  type STRAT_TYPE = StreamingProcessingStrategy[BT]
+  protected var strategy: STRAT_TYPE = null
+  
+  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, BT)] => OUTPUT,
+		       completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
+    if (null == strategy) {
+      throw new Exception("Attempt to process uninitialized dataset "+getName)
+    } else {
+      strategy.processWithTime(fcn, completionCallback)
+    }
+  }
+
 }

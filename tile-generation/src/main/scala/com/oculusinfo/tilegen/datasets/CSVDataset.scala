@@ -328,6 +328,9 @@ class CSVDataset (rawProperties: Properties,
 		  tileSize: Int) extends Dataset[Double, JavaDouble] {
   def manifest = implicitly[ClassManifest[Double]]
 
+  type STRAT_TYPE = ProcessingStrategy[Double]
+  protected var strategy: STRAT_TYPE = null
+  
   private val properties = new CSVRecordPropertiesWrapper(rawProperties)
 
   private val description = properties.getOptionProperty("oculus.binning.description")
