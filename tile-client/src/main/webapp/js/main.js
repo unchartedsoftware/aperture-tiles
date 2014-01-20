@@ -94,9 +94,9 @@ require(['./fileloader',
                     max: worldMap.mapSpec.options.mapExtents[2],
                     intervalSpec: {
                         type: "fixed",
-                        value: 30,
+                        value: 60,
                         pivot: 0,
-                        allowScaleByZoom: false
+                        allowScaleByZoom: true
                     },
                     unitSpec: {
                         type: 'degrees',
@@ -104,7 +104,8 @@ require(['./fileloader',
                         decimals: 2,
                         allowStepDown: false
                     },
-                    position: 'bottom'
+                    position: 'bottom',
+                    repeat: true
 
                 };
 
@@ -118,9 +119,9 @@ require(['./fileloader',
                     max: worldMap.mapSpec.options.mapExtents[3],
                     intervalSpec: {
                         type: "fixed",
-                        value: 20,
+                        value: 30,
                         pivot: 0,
-                        allowScaleByZoom: false
+                        allowScaleByZoom: true
                     },
                     unitSpec: {
                         type: 'degrees',
@@ -128,7 +129,8 @@ require(['./fileloader',
                         decimals: 2,
                         allowStepDown: false
                     },
-                    position: 'left'
+                    position: 'left',
+                    repeat: false
                 };
 
                 xAxis = new Axis(xAxisSpec);

@@ -95,7 +95,7 @@ define(function (require) {
 
         var temp;
 
-        // must have a aprent id
+        // must have a parent id
         if (spec.parentId === undefined ) {
             return false;
         }
@@ -211,7 +211,9 @@ define(function (require) {
          *                      decimals:   number of decimals  ex. 2
          *                      allowStepDown: if the units can step down if they are below range
          *                                                  ex. true .001M => 1K
-         *                  }
+         *                  },
+         *                  repeat:     whether or not the axis will repeat
+         *                                                  ex. true or false
          *
          */
         init: function (spec) {
@@ -428,10 +430,14 @@ define(function (require) {
                             + AXIS_LABEL_SPACING
                             + axis.label.height();
 
-                // position axis label, round up to next power of 10 to prevent possible label jitter
-                axis.label.css( that.position, -(Math.ceil(labelOffset / 10) * 10) + 'px' );
-                // add margin space for axis, round up to next power of 30 to prevent possible margin jitter
-                axis.marginContainer.css('margin-' + that.position, (Math.ceil(labelOffset / 30) * 30)  + 'px');
+                // round up within range of 20 to spacing jitter
+                labelOffset = (Math.ceil(labelOffset / 20) * 20);
+
+                // position axis label
+                axis.label.css( that.position, -labelOffset + 'px' );
+
+                // add margin space for axis
+                axis.marginContainer.css('margin-' + that.position, labelOffset + 'px');
             }
 
             // set context for inner functions

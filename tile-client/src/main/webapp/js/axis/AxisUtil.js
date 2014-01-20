@@ -148,8 +148,8 @@ define({
     getMarkerRollover: function(axis, value) {
         "use strict";
         var rollover;
-        if (axis.isXAxis) {
-            // if x-axis ensure label value wraps past min/max properly
+        if (axis.repeat) {
+            // if repeat enabled ensure label value wraps past min/max properly
             if (value > axis.max) {
                 rollover = value - axis.max + axis.min;
             } else if (value < axis.min) {
@@ -158,7 +158,7 @@ define({
                 rollover = value;
             }
         } else {
-            // y-axis label is always value as there is no wrap around
+            // non-repeat label is always value as there is no wrap around
             rollover = value;
         }
         return rollover;
@@ -200,11 +200,12 @@ define({
                 minCull = ( ( axis.pixelMin * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
             } else {
                 minCull = ( ( ( mapPixelSpan - axis.pixelMax ) * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
-                if ( minCull < axis.min ) {
-                    // prevent roll-over
-                    minCull = axis.min;
-                }
             }
+            if ( !axis.repeat && minCull < axis.min ) {
+                // prevent roll-over
+                minCull = axis.min;
+            }
+
             minIncrement = pivot;
 
             if (pivot < minCull) {
@@ -231,12 +232,12 @@ define({
                 maxCull = ( ( ( parseInt( axis.axisLength, 10 ) + axis.pixelMin ) * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
             } else {
                 maxCull = ( ( ( parseInt( axis.axisLength, 10 ) + mapPixelSpan - axis.pixelMax ) * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
-                if ( maxCull > axis.max ) {
-                    // prevent roll-over
-                    maxCull = axis.max;
-                }
-            }
 
+            }
+            if ( !axis.repeat && maxCull > axis.max ) {
+                // prevent roll-over
+                maxCull = axis.max;
+            }
             maxIncrement = pivot;
 
             if (pivot > maxCull) {
