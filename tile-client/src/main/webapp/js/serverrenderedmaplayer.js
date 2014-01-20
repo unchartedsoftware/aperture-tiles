@@ -274,6 +274,18 @@ define(function (require) {
             }
         },
 
+
+        /**
+         * Set the visibility of a given sub-layer
+         */
+        setSubLayerVisibility: function (subLayerId, visibility) {
+            var layer = this.mapLayer[subLayerId];
+            if (layer) {
+                layer.olLayer_.setVisibility(visibility);
+            }
+        },
+
+
         /**
          * Update all our openlayers layers on our map.
          */
