@@ -310,9 +310,7 @@ class StreamingSourceProcessor(properties: PropertiesWrapper) {
   def trackTime(strm: DStream[String], fn: (RDD[String] => RDD[(Double, Double, Double)])): DStream[(Double, Double, Double)] = {
     strm.transform{rdd =>
       val stime = System.currentTimeMillis()
-      val r = fn(rdd)
-      println("Finished preprocessing in: " + (System.currentTimeMillis() - stime) + "ms")
-      r
+      fn(rdd)
     }
   }
   
@@ -452,8 +450,7 @@ object StreamingCSVBinner {
 		  val binner = new RDDBinner
 		  binner.debug = true
 		
-          //data = dataset.windowData
-          //
+          //go through each of the level sets and process them 
   		  dataset.getLevels.map(levels => {
 		    val procFcn:  Time => RDD[(Double, Double, BT)] => Unit =
   		      (time: Time) => (rdd: RDD[(Double, Double, BT)]) => {
@@ -467,14 +464,20 @@ object StreamingCSVBinner {
 							        levels,
 							        dataset.getBins,
 							        dataset.getConsolidationPartitions)
-			        println ("Got " + tiles.count + " tiles to write to " + jobName)
-	                  tileIO.writeTileSet(dataset.getTilePyramid,
-					      jobName,
-					      tiles,
-					      dataset.getBinDescriptor,
-					      jobName,
-					      dataset.getDescription)
-					 println("Processing done in " + (System.currentTimeMillis() - stime) + "ms, " + (System.currentTimeMillis() - time.milliseconds) + "ms since start")
+	              tileIO.writeTileSet(dataset.getTilePyramid,
+					  jobName,
+					  tiles,
+					  dataset.getBinDescriptor,
+					  jobName,
+					  dataset.getDescription)
+					  
+			      //grab the final processing time and print out some time stats
+			      val ftime = System.currentTimeMillis()
+  		          val timeInfo = new StringBuilder().append("Levels ").append(levels).append(" for job ").append(jobName).append(" finished\n")
+  		              .append("  Preprocessing: ").append((stime - time.milliseconds)).append("ms\n")
+  		              .append("  Processing: ").append((ftime - stime)).append("ms\n")
+  		              .append("  Total: ").append((ftime - time.milliseconds)).append("ms\n")
+  		          println(timeInfo)
   		        }
   		        else {
   		          println("No data to process")
