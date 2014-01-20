@@ -107,7 +107,7 @@ define(function (require) {
         if (spec.min === undefined || spec.max === undefined) {
             return false;
         }
-        // ensure min is greater than max
+        // ensure max is greater than min
         if (spec.min > spec.max) {
             // swap values
             temp = spec.min;
@@ -144,6 +144,9 @@ define(function (require) {
         }
         if (spec.intervalSpec.value === undefined || spec.intervalSpec.value === 0) {
             spec.intervalSpec.value = 10;
+        }
+        if (spec.intervalSpec.value < 0 ) {
+             spec.intervalSpec.value = Math.abs(spec.intervalSpec.value);
         }
         if (spec.intervalSpec.pivot === undefined) {
             spec.intervalSpec.pivot = 0;
