@@ -1,9 +1,10 @@
 [
     {
-        "layer": "julia_-0.8_0.156.x.y.v",
+        "layer": "ibm-twitter-keyword",
         "type": "tile",
-        "transform": "linear",
+        "transform": "log",
         "ramp": "ware",
-        "opacity": 0.85
+        "opacity": 0.85,
+	    "renderer": "toptextscores"
     }
 ]

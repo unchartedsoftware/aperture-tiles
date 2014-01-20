@@ -29,10 +29,15 @@
 /**
  * This module provides a table-based layout for labeled UI controls (e.g., sliders);
  */
-define(['class'], function (Class) {
+define(function (require) {
     "use strict";
 
-    var LabeledControlSet;
+
+
+    var Class = require('../class'),
+        LabeledControlSet;
+
+
 
     LabeledControlSet = Class.extend({
         /**
@@ -44,7 +49,7 @@ define(['class'], function (Class) {
          */
         init: function (container, id) {
             this.rowsById = {};
-            this.$table = $('<table id="labeled-control-set.' + id + '"></table>');
+            this.$table = $('<table id="' + id + '-labeled-control-set"></table>');
             this.$table.addClass('control-table');
             $(container).append(this.$table);
         },

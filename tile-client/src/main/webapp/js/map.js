@@ -42,12 +42,11 @@ define(function (require) {
     Map = Class.extend({
         ClassName: "Map",
         init: function (id, baseLayerSpec) {
-            var mapSpec;
 
             Config.loadConfiguration(baseLayerSpec);
 
             // Set up map initialization parameters
-            mapSpec = {
+            this.mapSpec = {
                 id: id,
                 options: {
                     mapExtents: [ -180.000000, -85.051129, 180.000000, 85.051129 ],
@@ -59,11 +58,9 @@ define(function (require) {
             };
 
             // Initialize the map
-            this.map = new aperture.geo.Map(mapSpec);
+            this.map = new aperture.geo.Map(this.mapSpec);
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
-
-
             // The projection the map uses
             this.projection = new OpenLayers.Projection("EPSG:900913");
         },
@@ -74,6 +71,10 @@ define(function (require) {
 
         getOpacity: function () {
             return this.map.olMap_.baseLayer.opacity;
+        },
+
+        setVisibility: function (visibility) {
+            this.map.olMap_.baseLayer.setVisibility(visibility);
         },
 
         getExtent: function () {
