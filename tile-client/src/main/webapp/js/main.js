@@ -22,50 +22,142 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
          './client-rendering/TextScoreLayer',
          './client-rendering/DebugLayer',
          './ui/SliderControl',
-         './labeledcontrolset',
+         './ui/CheckboxControl',
+         './ui/LayerControl',
+         './ui/LabeledControlSet',
+         './axis/AxisUtil',
+         './axis/Axis',
          './profileclass'],
+
         function (FileLoader, Map, ServerLayer, 
-                  ClientLayer, DebugLayer, SliderControl, LabeledControlSet, Class) {
+                  ClientLayer, DebugLayer, SliderControl,
+                  CheckboxControl, LayerControl,LabeledControlSet,
+                  AxisUtil, Axis, Class ) {
             "use strict";
+
             var sLayerFileId = "./data/layers.json"
                 // Uncomment for geographic data
                 ,mapFileId = "./data/geomap.json"
                 // Uncomment for non-geographic data
-                // ,mapFileId = "./data/emptymap.json"
-                ,cLayerFileId = "./data/renderLayers.json"
-                ;
+                //,mapFileId = "./data/emptymap.json"
+                ,cLayerFileId = "./data/renderLayers.json";
 
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
                 var worldMap,
                     slider,
-                    mapLayer,
+                    checkbox,
+                    serverLayers,
                     renderLayer,
                     renderLayerSpecs,
                     renderLayerSpec,
                     layerIds,
                     layerId,
                     layerName,
-                    i,
+                    layerControl,
                     makeSlideHandler,
-                    opcControlSet,
+                    makeCheckboxCheckedHandler,
+                    makeCheckboxUncheckedHandler,
+                    i,
+                    layerControlSet,
                     layerSpecsById,
-                    tooltipFcn;
+                    tooltipFcn,
+                    xAxisSpec,
+                    yAxisSpec,
+                    xAxis,
+                    yAxis,
+                    redrawAxes
+                ;
 
+                // create world map from json file under mapFileId
                 worldMap = new Map("map", jsonDataMap[mapFileId]);
 
-                // Set up a server-rendered display layer
-                mapLayer = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId], 2));
-                mapLayer.addToMap(worldMap);
+                // Set up server-rendered display layers
+                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
+                serverLayers.addToMap(worldMap);
 
-                opcControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'opcControlSet');
+                xAxisSpec = {
+
+                    title: "Longitude",
+                    parentId: worldMap.mapSpec.id,
+                    id: "map-x-axis",
+                    olMap: worldMap.map.olMap_,
+                    min: worldMap.mapSpec.options.mapExtents[0],
+                    max: worldMap.mapSpec.options.mapExtents[2],
+                    intervalSpec: {
+                        type: "fixed",
+                        value: 60,
+                        pivot: 0,
+                        allowScaleByZoom: true
+                    },
+                    unitSpec: {
+                        type: 'degrees',
+                        divisor: undefined,
+                        decimals: 2,
+                        allowStepDown: false
+                    },
+                    position: 'bottom',
+                    repeat: true
+
+                };
+
+                yAxisSpec = {
+
+                    title: "Latitude",
+                    parentId: worldMap.mapSpec.id,
+                    id: "map-y-axis",
+                    olMap: worldMap.map.olMap_,
+                    min: worldMap.mapSpec.options.mapExtents[1],
+                    max: worldMap.mapSpec.options.mapExtents[3],
+                    intervalSpec: {
+                        type: "fixed",
+                        value: 30,
+                        pivot: 0,
+                        allowScaleByZoom: true
+                    },
+                    unitSpec: {
+                        type: 'degrees',
+                        divisor: undefined,
+                        decimals: 2,
+                        allowStepDown: false
+                    },
+                    position: 'left',
+                    repeat: false
+                };
+
+                xAxis = new Axis(xAxisSpec);
+                yAxis = new Axis(yAxisSpec);
+
+                redrawAxes = function() {
+                    xAxis.redraw();
+                    yAxis.redraw();
+                };
+
+                worldMap.map.olMap_.events.register('mousemove', worldMap.map.olMap_, function(e) {
+
+                    var xVal = xAxis.getAxisValueForPixel(e.xy.x),
+                        yVal = yAxis.getAxisValueForPixel(e.xy.y);
+
+                    // set map "title" to display mouse coordinates
+                    $('#' + worldMap.mapSpec.id).prop('title', 'x: ' + xVal + ', y: ' + yVal);
+
+                    redrawAxes();
+
+                    return true;
+                });
+
+                worldMap.map.on('panend', redrawAxes);
+                worldMap.map.on('zoom',   redrawAxes);
+
+                layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 
                 // Set up to change the base layer opacity
                 layerId = 'Base Layer';
@@ -74,19 +166,49 @@ require(['./fileloader',
                 slider.setOnSlide(function (oldValue, slider) {
                     worldMap.setOpacity(slider.getValue());
                 });
-                opcControlSet.addControl(layerId, 'Base Layer', slider.getElement());
 
+                checkbox = new CheckboxControl(layerId, true );
+                checkbox.setOnChecked( function() {
+                    worldMap.setVisibility(true);
+                });
 
-                // Set up to change individual server-rendered layer opacities
-                // Set up to change individual layer opacities
-                layerIds = mapLayer.getSubLayerIds();
-                layerSpecsById = mapLayer.getSubLayerSpecsById();
+                checkbox.setOnUnchecked( function() {
+                    worldMap.setVisibility(false);
+                });
+
+                // create layer control for base layer
+                layerControl = new LayerControl(layerId);
+                // add visibility checkbox to layer controls
+                layerControl.addControl(layerId + '-checkbox', checkbox.getElement() );
+                // add slider to layer controls
+                layerControl.addControl(layerId + '-slider', slider.getElement());
+                // add layer controls to control set
+                layerControlSet.addControl(layerId, 'Base Layer', layerControl.getElement());
+
+                // Set up server-rendered layer controls
+                layerIds = serverLayers.getSubLayerIds();
+                layerSpecsById = serverLayers.getSubLayerSpecsById();
+
                 makeSlideHandler = function (layerId) {
                     return function (oldValue, slider) {
-                        mapLayer.setSubLayerOpacity(layerId, slider.getValue());
+                        serverLayers.setSubLayerOpacity(layerId, slider.getValue());
                     };
                 };
+
+                makeCheckboxCheckedHandler = function (layerId) {
+                    return function() {
+                        serverLayers.setSubLayerVisibility(layerId, true);
+                    };
+                };
+
+                makeCheckboxUncheckedHandler = function (layerId) {
+                    return function() {
+                        serverLayers.setSubLayerVisibility(layerId, false);
+                    };
+                };
+
                 for (i=0; i<layerIds.length; ++i) {
+
                     layerId = layerIds[i];
                     layerName = layerSpecsById[layerId].name;
                     if (!layerName) {
@@ -94,10 +216,21 @@ require(['./fileloader',
                     }
 
                     slider = new SliderControl(layerId, 0.0, 1.0, 100);
-                    slider.setValue(mapLayer.getSubLayerOpacity(layerId));
+                    slider.setValue(serverLayers.getSubLayerOpacity(layerId));
                     slider.setOnSlide(makeSlideHandler(layerId));
 
-                    opcControlSet.addControl(layerId, layerName, slider.getElement());
+                    checkbox = new CheckboxControl(layerId, true );
+                    checkbox.setOnChecked(makeCheckboxCheckedHandler(layerId));
+                    checkbox.setOnUnchecked(makeCheckboxUncheckedHandler(layerId));
+
+                    // create layer control for base layer
+                    layerControl = new LayerControl(layerId);
+                    // add visibility checkbox control
+                    layerControl.addControl(layerId + '-checkbox', checkbox.getElement() );
+                    // add slider control
+                    layerControl.addControl(layerId + '-slider', slider.getElement());
+                    // add layer control to control set
+                    layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
 
                 // Set up a debug layer
@@ -113,15 +246,38 @@ require(['./fileloader',
                         $('#hoverOutput').html('');
                     }
                 };
+
                 for (i=0; i<renderLayerSpecs.length; ++i) {
-                    renderLayerSpec =
-                        FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
-                    renderLayer =
-                        new ClientLayer(renderLayerSpec.layer, renderLayerSpec);
+
+                    renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
+                    layerId = renderLayerSpec.layer;
+
+                    renderLayer = new ClientLayer(layerId, renderLayerSpec);
                     renderLayer.setTooltipFcn(tooltipFcn);
                     renderLayer.addToMap(worldMap);
-                }
 
+                    layerName = renderLayerSpec.name;
+                    if (!layerName) {
+                        layerName = layerId;
+                    }
+
+                    slider = new SliderControl(layerId, 0.0, 1.0, 100);
+                    slider.setValue(serverLayers.getSubLayerOpacity(layerId));
+                    slider.setOnSlide(makeSlideHandler(layerId));
+
+                    checkbox = new CheckboxControl(layerId, true );
+                    checkbox.setOnChecked(makeCheckboxCheckedHandler(layerId));
+                    checkbox.setOnUnchecked(makeCheckboxUncheckedHandler(layerId));
+
+                    // create layer control for base layer
+                    layerControl = new LayerControl(layerId);
+                    // add visibility checkbox control
+                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement() );
+                    // add slider control
+                    layerControl.addControl(layerId + '.slider', slider.getElement());
+                    // add layer control to control set
+                    layerControlSet.addControl(layerId, layerName, layerControl.getElement());
+                }
 
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());
