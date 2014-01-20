@@ -44,6 +44,8 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 
+import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
+import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.DataSource
 import com.oculusinfo.tilegen.tiling.FieldExtractor
@@ -76,6 +78,20 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *      The type of projection to use when binning data.  Possible values are:
  *          EPSG:4326 - bin linearly over the whole range of values found (default)
  *          EPSG:900913 - web-mercator projection (used for geographic values only)
+ *
+ *  oculus.binning.projection.autobounds
+ *      Only used if oculus.binning.projection is EPSG:4326, this indicates, if
+ *      true, that the bounds of the axes should be determined automatically.  If
+ *      false (the default), the minx, maxx, miny, and maxy properties of
+ *      oculus.binning.projection are instead used as axis bounds.
+ *
+ *  oculus.binning.projection.minx
+ *  oculus.binning.projection.miny
+ *  oculus.binning.projection.maxx
+ *  oculus.binning.projection.maxy
+ *      Only used if oculus.binning.projection is EPSG:4326 and
+ *      oculus.binning.projection.autobounds is false.  In that case, these four
+ *      Properties are used as the axis bounds in the tile projection.
  * 
  *  oculus.binning.xField
  *      The field to use as the X axis value
@@ -314,11 +330,16 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldEx
     if ("EPSG:900913" == projection) {
       new WebMercatorTilePyramid()
     } else {
-      val minX = properties.getDoubleOptionProperty("oculus.binning.projection.minx").get
-      val maxX = properties.getDoubleOptionProperty("oculus.binning.projection.maxx").get
-      val minY = properties.getDoubleOptionProperty("oculus.binning.projection.miny").get
-      val maxY = properties.getDoubleOptionProperty("oculus.binning.projection.maxy").get
-      new AOITilePyramid(minX, minY, maxX, maxY)
+      val autoBounds = properties.getBooleanProperty("oculus.binning.projection.autobounds", true)
+      if (autoBounds) {
+	new AOITilePyramid(minX, minY, maxX, maxY)
+      } else {
+	val minXp = properties.getDoubleOptionProperty("oculus.binning.projection.minx").get
+	val maxXp = properties.getDoubleOptionProperty("oculus.binning.projection.maxx").get
+	val minYp = properties.getDoubleOptionProperty("oculus.binning.projection.miny").get
+	val maxYp = properties.getDoubleOptionProperty("oculus.binning.projection.maxy").get
+	new AOITilePyramid(minXp, minYp, maxXp, maxYp)
+      }
     }
   }
 }
@@ -368,9 +389,52 @@ class CSVDataset (rawProperties: Properties,
 
   def getLevels = levels
 
+  private def getAxisBounds (): (Double, Double, Double, Double) = {
+    val coordinates = transformRDD(_.map(record => (record._1, record._2)))
+
+    // Figure out our axis bounds
+    val minXAccum = coordinates.context.accumulator(Double.MaxValue)(new DoubleMinAccumulatorParam)
+    val maxXAccum = coordinates.context.accumulator(Double.MinValue)(new DoubleMaxAccumulatorParam)
+    val minYAccum = coordinates.context.accumulator(Double.MaxValue)(new DoubleMinAccumulatorParam)
+    val maxYAccum = coordinates.context.accumulator(Double.MinValue)(new DoubleMaxAccumulatorParam)
+    coordinates.foreach(p => {
+      val (x, y) = p
+      minXAccum += x
+      maxXAccum += x
+      minYAccum += y
+      maxYAccum += y
+    })
+
+    val minX = minXAccum.value
+    val maxX = maxXAccum.value
+    val minY = minYAccum.value
+    val maxY = maxYAccum.value
+
+    // Include a fraction of a bin extra in the bounds, so the max goes on the 
+    // right side of the last tile, rather than forming an extra tile.
+    val maxLevel = levels.map(_.reduce(_ max _)).reduce(_ max _)
+    val epsilon = (1.0/(1 << maxLevel))/(tileSize*tileSize)
+    val adjustedMaxX = maxX+(maxX-minX)*epsilon
+    val adjustedMaxY = maxY+(maxY-minY)*epsilon
+    if (_debug) {
+      println(("\n\n\nGot bounds: %.4f to %.4f (%.4f) x, "+
+	      "%.4f to %.4f (%.4f) y").format(minX, maxX, adjustedMaxX, minY, maxY, adjustedMaxY))
+    }
+
+    (minX, adjustedMaxX, minY, adjustedMaxY)
+  }
+
   def getTilePyramid = {
     val extractor = new CSVFieldExtractor(properties)
-    extractor.getTilePyramid("", 0, 0, "", 0, 0)
+    val autoBounds = properties.getBooleanProperty("oculus.binning.projection.autobounds", true).get
+    val (minX, maxX, minY, maxY) =
+      if (autoBounds) {
+        getAxisBounds()
+      } else {
+        (0.0, 0.0, 0.0, 0.0)
+      }
+
+    extractor.getTilePyramid("", minX, maxX, "", minY, maxY)
   }
 
   override def getBins = tileSize
