@@ -42,7 +42,7 @@ import com.oculusinfo.binning.io.Pair;
 
 
 
-public class TwitterDemoAvroSerialzier
+public class TwitterDemoAvroSerializer
 extends GenericAvroArraySerializer<TwitterDemoRecord> {
     private static final long serialVersionUID = -3141583853288128394L;
 
@@ -56,7 +56,7 @@ extends GenericAvroArraySerializer<TwitterDemoRecord> {
 
 
 
-    public TwitterDemoAvroSerialzier () {
+    public TwitterDemoAvroSerializer () {
         super();
     }
 

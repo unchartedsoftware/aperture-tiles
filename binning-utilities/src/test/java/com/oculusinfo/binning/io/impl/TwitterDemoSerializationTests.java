@@ -44,7 +44,7 @@ import com.oculusinfo.binning.io.Pair;
 public class TwitterDemoSerializationTests {
     @Test
     public void roundTripTest () throws IOException {
-        TwitterDemoAvroSerialzier serializer = new TwitterDemoAvroSerialzier();
+        TwitterDemoAvroSerializer serializer = new TwitterDemoAvroSerializer();
         TwitterDemoRecord recordIn = new TwitterDemoRecord("tag",
                                                            12, Arrays.asList(1, 12, 2, 6, 3, 4),
                                                            15, Arrays.asList(1, 15, 3, 5),
