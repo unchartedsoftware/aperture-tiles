@@ -233,7 +233,7 @@ public class TwitterDemoRecord {
      * Combine two records, summing all counts, and keeping the 10 most recent
      * tweets. Tags must match for records to be combined.
      */
-    public static TwitterDemoRecord add (TwitterDemoRecord... records) {
+    public static TwitterDemoRecord addRecords (TwitterDemoRecord... records) {
         if (null == records || 0 == records.length)
             return null;
 
@@ -287,7 +287,7 @@ public class TwitterDemoRecord {
      * @param that
      * @return
      */
-    public static TwitterDemoRecord min (TwitterDemoRecord... records) {
+    public static TwitterDemoRecord minOfRecords (TwitterDemoRecord... records) {
         if (null == records || 0 == records.length)
             return null;
 
@@ -334,7 +334,7 @@ public class TwitterDemoRecord {
      * @param that
      * @return
      */
-    public static TwitterDemoRecord max (TwitterDemoRecord... records) {
+    public static TwitterDemoRecord maxOfRecords (TwitterDemoRecord... records) {
         int maxCount = Integer.MIN_VALUE;
         int maxPositive = Integer.MIN_VALUE;
         int maxNeutral = Integer.MIN_VALUE;
