@@ -307,20 +307,13 @@ class StreamingSourceProcessor(properties: PropertiesWrapper) {
   private val yVar = properties.getProperty("oculus.binning.yField", "zero")
   private val zVar = properties.getProperty("oculus.binning.valueField", "count")
 
-  def trackTime(strm: DStream[String], fn: (RDD[String] => RDD[(Double, Double, Double)])): DStream[(Double, Double, Double)] = {
-    strm.transform{rdd =>
-      val stime = System.currentTimeMillis()
-      fn(rdd)
-    }
-  }
-  
   def getStream(source: StreamingCSVDataSource, parser: StreamingCSVRecordParser, extractor: StreamingCSVFieldExtractor): DStream[(Double, Double, Double)] = {
     val localXVar = xVar
     val localYVar = yVar
     val localZVar = zVar
 
     val strm = source.getDataStream
-    val data = trackTime(strm, _.mapPartitions(iter =>
+    val data = strm.mapPartitions(iter =>
 	  // Parse the records from the raw data
       parser.parseRecords(iter, localXVar, localYVar)
 	).filter(r =>
@@ -334,7 +327,7 @@ class StreamingSourceProcessor(properties: PropertiesWrapper) {
 	  record._1.hasValue && record._2.hasValue && record._3.hasValue
 	).map(record =>
       (record._1.get, record._2.get, record._3.get)
-    ))
+    )
 
     data.cache
   }
