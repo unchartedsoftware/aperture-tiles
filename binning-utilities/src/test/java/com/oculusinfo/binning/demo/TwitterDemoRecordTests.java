@@ -72,7 +72,7 @@ public class TwitterDemoRecordTests {
                                                                   new Pair<String, Long>("recent 5", 5l),
                                                                   new Pair<String, Long>("recent 4", 4l),
                                                                   new Pair<String, Long>("recent 3", 3l)));
-        Assert.assertEquals(c, TwitterDemoRecord.add(a, b));
+        Assert.assertEquals(c, TwitterDemoRecord.addRecords(a, b));
     }
 
     @Test(expected=IllegalArgumentException.class)
@@ -99,7 +99,7 @@ public class TwitterDemoRecordTests {
                                                                   new Pair<String, Long>("recent 8", 8l),
                                                                   new Pair<String, Long>("recent 7", 7l),
                                                                   new Pair<String, Long>("recent 6", 6l)));
-        TwitterDemoRecord.add(a, b);
+        TwitterDemoRecord.addRecords(a, b);
     }
 
     @Test
@@ -133,7 +133,7 @@ public class TwitterDemoRecordTests {
                                                     18, Arrays.asList(4, 5, 4, 3),
                                                     22, Arrays.asList(5, 6, 5, 4),
                                                     new ArrayList<Pair<String, Long>>());
-        Assert.assertEquals(c, TwitterDemoRecord.min(a, b));
+        Assert.assertEquals(c, TwitterDemoRecord.minOfRecords(a, b));
     }
 
     @Test
@@ -167,6 +167,6 @@ public class TwitterDemoRecordTests {
                                                     22, Arrays.asList(6, 5, 6, 7),
                                                     26, Arrays.asList(7, 6, 7, 8),
                                                     new ArrayList<Pair<String, Long>>());
-        Assert.assertEquals(c, TwitterDemoRecord.max(a, b));
+        Assert.assertEquals(c, TwitterDemoRecord.maxOfRecords(a, b));
     }
 }
