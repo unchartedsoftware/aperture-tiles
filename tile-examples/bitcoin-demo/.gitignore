@@ -3,6 +3,7 @@
 .classpath
 .project
 update.sh
+/src/main/webapp/.idea
 
 /.settings/
 /target
