@@ -1,2 +1,5 @@
 /.settings
 /.project
+tile-examples/demo-website/src/main/webapp/.idea
+tile-examples/demo-website/target
+*.zip

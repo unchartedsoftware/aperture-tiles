@@ -14,13 +14,22 @@
   <version>0.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-
-
   <name>Aperture-Tiles</name>
   <url>http://github.com/oculusinfo/aperture-tiles</url>
   <description>A root project containing all the pieces of the Aperture Tiles system</description>
 
-
+  <repositories>
+	<repository>
+		<id>cloudera-releases</id>
+		<url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
+		<releases>
+			<enabled>true</enabled>
+		</releases>
+		<snapshots>
+			<enabled>false</enabled>
+		</snapshots>
+	</repository>
+  </repositories>
 
   <properties>
     <!-- For cloudera versions, these release numbers can be found at
@@ -72,8 +81,6 @@
     <scala-version>2.9.3</scala-version>
     <spark-version>0.8.0-incubating</spark-version>
   </properties>
-
-
  
   <build>
     <plugins>
@@ -89,8 +96,6 @@
     </plugins>
   </build>
 
-
-
   <modules>
     <module>geometric-utilities</module>
     <module>math-utilities</module>
@@ -99,5 +104,6 @@
     <module>tile-service</module>
     <module>tile-client</module>
     <module>tile-examples</module>
+    <module>tile-client-template</module>
   </modules>
 </project>

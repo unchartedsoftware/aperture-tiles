@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Tour | Aperture Tiles</title>
+    <link rel="stylesheet" type="text/css" href="../../css/all.css">
+    <link rel="stylesheet" type="text/css" href="../../jstests/test.css">
+    <link rel="stylesheet" href="../../prettify/default.css">
+    <link rel="SHORTCUT ICON" href="../../img/aperture-16x16.ico"/>
+    <script src="../../lib/jquery.js"></script>
+    <script src="../../lib/ga.js"></script>
+</head>
+
+<body>
+<div id="header"></div>
+<div id="content-strip">
+    <div id="header-logo">
+        <a href="../../"><img src="../../img/aperture-big.png"></a>
+    </div>
+    <div id="header-menu">
+        <a href="../../" class="overview">&nbsp;</a>
+        <a href="../../tour/overview/" class="selected">Tour</a>
+        <a href="../../documentation/setup/">Documentation</a>
+        <a href="../../demos/">Demos</a>
+        <a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
+	
+			<span id="testlinks">
+				<a href="../../examples/tests.html">Tests</a>
+			</span>
+    </div>
+
+    <div id="all">
+        <div id="submenu">
+            <div class="submenu-item" onclick="window.location.assign('../overview/');">
+                <div class="submenu-item-background">
+                    <div class="submenu-item-number">1</div>
+                </div>
+                <div class="submenu-item-label">Overview</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('');">
+                <div class="submenu-item-background selected">
+                    <div class="submenu-item-number">2</div>
+                </div>
+                <div class="submenu-item-label">Components</div>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="content-context">
+            	<p>
+                	<img src="../../img/twitter-europe.png" class="home-image"/>
+                	Millions of tweets across Europe.
+                </p>
+                <p>
+                    <a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a>
+                </p>
+            </div>
+            <div class="content-body">
+                <h1>Aperture Tiles Components</h1>
+                <p>Aperture Tiles works by using three integrated components.</p>
+
+                <h3>Distributed Tile Generation</h3>
+                <p>The Aperture Tiles generation analytic smoothly processes live streams of data to support 
+                consistently fresh tiles. Cluster computing with Apache Spark is used to compute dynamic tiles 
+                from big data. The tile generation analytic seamlessly transforms live streamed raw data into AVRO 
+                data tile files with metadata descriptor files, summarizing all tile content. AVRO data files allow 
+                for language neutrality and support multiple summaries per bin allowing a flexible and complete analytic. 
+                Finished tiles are stored in HBase to allow efficient scalability.</p>
+
+                <h3>Tile Server</h3>
+                <p>The Aperture Tile server performs necessary tile preparation to ensure a fluid experience for the end user. 
+                The Aperture Tile Server defines a REST API for requesting tiles and rendering properties. The tile server works 
+                by retrieving AVRO data tile files and rendering appropriate PNG files for display in the tile client web app or 
+                external visualization applications. The Aperture Tile Server also has the ability to directly serve JSON tiles 
+                to easily integrate further processing.</p>
+
+                <h3>Tile Client</h3>
+                <p>The Aperture Tile client is a full featured interactive web app which requests tiles from the Aperture-Tile server 
+                and seamlessly renders them for the client. The web app is designed to promote exploratory data analysis by displaying 
+                high level patterns and summary statistics while preserving all fine detail at the appropriate zoom level.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+
+</html>
