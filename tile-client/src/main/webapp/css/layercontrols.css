@@ -1,0 +1,68 @@
+@charset "UTF-8";
+
+.layer-control {
+    width: 50%;
+    padding-bottom: 13px;
+    font-size: 12px;
+}
+
+.settings-link {
+    text-align: right;
+    font-size: 12px;
+}
+
+.toggle {
+    width: 15px;
+    padding: 0 10px 0 0;
+    vertical-align: bottom;
+}
+
+.labels {
+    font-size: 12px;
+    text-align: left;
+}
+
+.slider-label {
+    font-size: 10px;
+    text-align: center;
+    color: #939393;
+    padding-bottom: 3px;
+}
+
+.opacity-slider {
+    padding: 0 10px 2px 0;
+    width: 30%;
+}
+
+.filter-slider {
+    padding: 0 10px 2px 0;
+    width: 70%;
+}
+
+.layerPromotionButton {
+    width:32px;
+    height:32px;
+    border:none;
+    background:transparent url(../images/PromoteButton.png) no-repeat center top;
+    margin-left:10px;
+    position:relative;
+    top:4px;
+}
+
+.layerPromotionButton:hover:enabled {
+    border: none;
+    top: 4px;
+    background: transparent url(../images/PromoteButton.png) no-repeat center top;
+    background-position: 0px -32px;
+}
+
+.layerPromotionButton:active:enabled {
+    border:none;
+    top:5px;
+    background:transparent url(../images/PromoteButton.png) no-repeat center top;
+    background-position:0px -32px;
+}
+
+.layerPromotionButton:focus {
+    outline:none;
+}
