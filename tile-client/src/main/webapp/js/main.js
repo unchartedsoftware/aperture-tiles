@@ -36,8 +36,8 @@ require(['./fileloader',
          './axis/Axis',
          './profileclass'],
 
-        function (FileLoader, Map, ServerLayer, 
-                  ClientLayer, DebugLayer, SliderControl,
+        function (FileLoader, Map, ServerLayer,
+                  TextScoreLayer, DebugLayer, SliderControl,
                   CheckboxControl, LayerControl,LabeledControlSet,
                   AxisUtil, Axis, Class ) {
             "use strict";
