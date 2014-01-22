@@ -26,6 +26,60 @@
 define({
 
     /**
+     * Converts a data value from a linear function to its equivolent gudermannian value
+     * This converts the linear number to the equivolent gudermannian value where the current
+     * linear value is!
+     *
+     * @param value     data value on between axis.min and axis.max
+     * @param axis  axis object
+     */
+    scaleLinearToGudermannian: function(value, axis) {
+        "use strict";
+        var temp,
+            gudermannian = function(y) {
+                // converts a y value from -PI(bottom) to PI(top) into the
+                // mercator projection latitude
+                var sinh = function (arg) {
+                    return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
+                };
+                return Math.atan(sinh(y)) * 57.2957795;
+            };
+
+        // convert value to between -1  and 1
+        temp = ((( value - axis.min ) / (axis.max-axis.min) ) * 2) - 1;
+        // convert to -PI to PI
+        temp = gudermannian( temp * Math.PI );
+        // convert mercator latitude from -85.05 to 85.05 back to data range
+        return ( (((temp / 85.05)+1)/2) * (axis.max - axis.min)) + axis.min;
+    },
+
+    /**
+     * Converts a data value from a gudermannian function to a linear function
+     * This converts the gudermannian number to the equivolent linear value where the current
+     * gudermannian value is!
+     *
+     * @param value data value on between axis.min and axis.max
+     * @param axis  axis object
+     */
+    scaleGudermannianToLinear: function(value, axis) {
+        "use strict";
+        var temp,
+            gudermannianInv = function( latitude ) {
+                // converts a latitude value from -85.05 to 85.05 into
+                // a y value from -PI(bottom) to PI(top)
+                var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
+                    sin = Math.sin(latitude * 0.0174532925 * sign);
+
+                return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
+            };
+        // convert from linear latitude value to mercator projected value
+        // convert y value from -PI to PI to -1 to 1
+        temp = (gudermannianInv( (((( value - axis.min ) / (axis.max-axis.min) ) * 2) - 1)*85.05 ) / Math.PI);
+        // convert value to proper axis data range
+        return ( ((temp+1)/2) * (axis.max - axis.min)) + axis.min;
+    },
+
+    /**
      * Formats axis marker label text
      *
      * @param value         the value of the label
@@ -175,17 +229,24 @@ define({
 
         // generates all increments between min and max using specified interval
         // number and zoom level
-        var increment,
+        var that = this,
+            increment,
             pivot,
-            mapPixelSpan = axis.tileSize*(Math.pow(2,axis.zoom)),
-            that = this;
+            mapPixelSpan = axis.tileSize*(Math.pow(2,axis.zoom));
 
         function getPixelPosition( value ) {
             // given an axis value, get the pixel position on the page
             var pixelPosition;
+
             if (axis.isXAxis) {
                 pixelPosition = Math.round( (( (value - axis.min)*mapPixelSpan )/(axis.max-axis.min) ) - axis.pixelMin );
             } else {
+
+                if (axis.intervalSpec.isMercatorProjected) {
+                    // find the linear value where this current gudermannian value is
+                    value = that.scaleGudermannianToLinear( value, axis);
+                }
+
                 pixelPosition = Math.round( (( (value - axis.min)*mapPixelSpan )/(axis.max-axis.min) ) + axis.pixelMax - mapPixelSpan );
             }
             return pixelPosition;
@@ -204,6 +265,11 @@ define({
             if ( !axis.repeat && minCull < axis.min ) {
                 // prevent roll-over
                 minCull = axis.min;
+            }
+
+            if (!axis.isXAxis && axis.intervalSpec.isMercatorProjected) {
+                // find the gudermannian value where this current linear value is
+                minCull = that.scaleLinearToGudermannian( minCull, axis );
             }
 
             minIncrement = pivot;
@@ -238,6 +304,12 @@ define({
                 // prevent roll-over
                 maxCull = axis.max;
             }
+
+            if (!axis.isXAxis && axis.intervalSpec.isMercatorProjected) {
+                // find the gudermannian value where this current linear value is
+                maxCull = that.scaleLinearToGudermannian( maxCull, axis );
+            }
+
             maxIncrement = pivot;
 
             if (pivot > maxCull) {
@@ -267,10 +339,12 @@ define({
                 // from raw value or else marks are noticeably non-uniform at high zoom levels
                 rawValue = i;
                 roundedValue = i;
+
                 if (i % 1 !== 0) {
                     // round to proper decimal place, toFixed converts to string, so convert back
                     roundedValue = parseFloat( (Math.round(i * 100) / 100).toFixed(axis.unitSpec.decimals) );
                 }
+
                 markers.push({
                     label : that.getMarkerRollover(axis, roundedValue),
                     pixel : getPixelPosition(rawValue)
@@ -290,11 +364,10 @@ define({
             increment = (axis.max-axis.min)*(axis.intervalSpec.value * 0.01);
             pivot = (axis.max-axis.min)* axis.intervalSpec.pivot;
         }
-        // scale increment and pivot if axisified
+        // scale increment if specified
         if ( axis.intervalSpec.allowScaleByZoom ) {
             // scale increment by zoom
             increment = increment/Math.pow(2,Math.max(axis.zoom-1,0));
-            pivot = pivot/Math.pow(2,Math.max(axis.zoom-1,0));
         }
 
         // add all points between minimum visible value and maximum visible value

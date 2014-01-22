@@ -80,9 +80,6 @@ require(['./fileloader',
                 // create world map from json file under mapFileId
                 worldMap = new Map("map", jsonDataMap[mapFileId]);
 
-                // Set up server-rendered display layers
-                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
-                serverLayers.addToMap(worldMap);
 
                 xAxisSpec = {
 
@@ -96,7 +93,8 @@ require(['./fileloader',
                         type: "fixed",
                         value: 60,
                         pivot: 0,
-                        allowScaleByZoom: true
+                        allowScaleByZoom: true,
+                        isMercatorProjected: true
                     },
                     unitSpec: {
                         type: 'degrees',
@@ -121,7 +119,8 @@ require(['./fileloader',
                         type: "fixed",
                         value: 30,
                         pivot: 0,
-                        allowScaleByZoom: true
+                        allowScaleByZoom: true,
+                        isMercatorProjected: true
                     },
                     unitSpec: {
                         type: 'degrees',
@@ -141,6 +140,7 @@ require(['./fileloader',
                     yAxis.redraw();
                 };
 
+
                 worldMap.map.olMap_.events.register('mousemove', worldMap.map.olMap_, function(e) {
 
                     var xVal = xAxis.getAxisValueForPixel(e.xy.x),
@@ -156,6 +156,9 @@ require(['./fileloader',
 
                 worldMap.map.on('panend', redrawAxes);
                 worldMap.map.on('zoom',   redrawAxes);
+
+
+
 
                 layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 
@@ -184,6 +187,11 @@ require(['./fileloader',
                 layerControl.addControl(layerId + '-slider', slider.getElement());
                 // add layer controls to control set
                 layerControlSet.addControl(layerId, 'Base Layer', layerControl.getElement());
+
+
+                // Set up server-rendered display layers
+                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
+                serverLayers.addToMap(worldMap);
 
                 // Set up server-rendered layer controls
                 layerIds = serverLayers.getSubLayerIds();
@@ -216,7 +224,7 @@ require(['./fileloader',
                     }
 
                     slider = new SliderControl(layerId, 0.0, 1.0, 100);
-                    slider.setValue(serverLayers.getSubLayerOpacity(layerId));
+                    slider.setValue(1);
                     slider.setOnSlide(makeSlideHandler(layerId));
 
                     checkbox = new CheckboxControl(layerId, true );
@@ -232,6 +240,7 @@ require(['./fileloader',
                     // add layer control to control set
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
+
 
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
@@ -252,7 +261,7 @@ require(['./fileloader',
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
-                    renderLayer = new ClientLayer(layerId, renderLayerSpec);
+                    renderLayer = new TextScoreLayer(layerId, renderLayerSpec);
                     renderLayer.setTooltipFcn(tooltipFcn);
                     renderLayer.addToMap(worldMap);
 
@@ -261,26 +270,32 @@ require(['./fileloader',
                         layerName = layerId;
                     }
 
+                    /*
                     slider = new SliderControl(layerId, 0.0, 1.0, 100);
-                    slider.setValue(serverLayers.getSubLayerOpacity(layerId));
+                    slider.setValue(1);
                     slider.setOnSlide(makeSlideHandler(layerId));
 
                     checkbox = new CheckboxControl(layerId, true );
                     checkbox.setOnChecked(makeCheckboxCheckedHandler(layerId));
                     checkbox.setOnUnchecked(makeCheckboxUncheckedHandler(layerId));
+                     */
 
                     // create layer control for base layer
                     layerControl = new LayerControl(layerId);
                     // add visibility checkbox control
+                    /*
                     layerControl.addControl(layerId + '.checkbox', checkbox.getElement() );
                     // add slider control
                     layerControl.addControl(layerId + '.slider', slider.getElement());
+                    */
                     // add layer control to control set
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
 
+                /*
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());
                 }, 10000);
+                */
             });
         });

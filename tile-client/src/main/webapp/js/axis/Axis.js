@@ -136,7 +136,8 @@ define(function (require) {
                 type: "percentage",
                 value: 10,
                 pivot: 0,
-                allowScaleByZoom: true
+                allowScaleByZoom: true,
+                isMercatorProjected: false
             };
         }
         if (spec.intervalSpec.type === undefined) {
@@ -154,6 +155,10 @@ define(function (require) {
         if (spec.intervalSpec.allowScaleByZoom === undefined) {
             spec.intervalSpec.allowScaleByZoom = true;
         }
+        if (spec.intervalSpec.isMercatorProjected === undefined) {
+            spec.intervalSpec.isMercatorProjected = false;
+        }
+
         // set default unit spec if none supplied
         if (spec.unitSpec === undefined) {
             spec.unitSpec = {
@@ -201,6 +206,8 @@ define(function (require) {
          *                                                      ex. 0
          *                      allowScaleByZoom: if the axis should be scaled by the zoom factor
          *                                                      ex. false
+         *                      isMercatorProjected: whether or not to project value by mercator projection
+         *                                                      ex. true
          *                  },
          *                  intervals:  number of ticks between min and max value at zoom level 1
          *                                                      ex. 6
@@ -486,6 +493,11 @@ define(function (require) {
                 else {
                     tickValue = (this.axisLength - pixelLocation - this.pixelMax + mapPixelSpan);
                     value = ((tickValue * ((this.max-this.min))) / mapPixelSpan) + this.min;
+                }
+
+                if (!this.isXAxis && this.intervalSpec.isMercatorProjected) {
+                    // find the gudermannian value where this current linear value is
+                    value = AxisUtil.scaleLinearToGudermannian( value, this );
                 }
 
                 // return axis value, rollover if necessary
