@@ -19,5 +19,6 @@
 	<modules>
     	<module>demo-website</module>
     	<module>bitcoin-demo</module>
+    	<module>twitter-demo</module>
     </modules>
 </project>
