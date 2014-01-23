@@ -36,14 +36,12 @@ import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
 
-import org.apache.spark.SharedSparkContext
-
 import com.oculusinfo.binning.demo.TwitterDemoRecord
 import com.oculusinfo.binning.io.Pair
 
 
 
-class TwitterDemoTestSuite extends FunSuite with SharedSparkContext {
+class TwitterDemoTestSuite extends FunSuite {
   def jIntList (entries: Int*): JavaList[JavaInt] =
     entries.toList.map(new JavaInt(_)).asJava
 
