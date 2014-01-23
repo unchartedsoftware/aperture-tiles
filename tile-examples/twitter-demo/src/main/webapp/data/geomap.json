@@ -5,7 +5,7 @@
             "type": "styled",
             "style": [
                 { "stylers": [ { "invert_lightness": true },
-                                 { "saturation": 50 },
+                                 { "saturation": -100 },
                                  { "visibility": "simplified" } ] },
                 { "featureType": "landscape.natural.landcover",
                   "stylers": [ { "visibility": "off" } ] },
@@ -20,10 +20,9 @@
                 { "featureType": "administrative.country",
                   "elementType": "geometry",
                   "stylers": [ { "visibility": "on" },
-                               { "lightness": 56 } ] },
+                               { "lightness": -56 } ] },
                 { "elementType": "labels",
-                  "stylers": [ { "lightness": 74 },
-			       { "gamma": 1.5 },
+                  "stylers": [ { "lightness": -46 },
 			       { "visibility": "on" } ] }
             ]
         }
