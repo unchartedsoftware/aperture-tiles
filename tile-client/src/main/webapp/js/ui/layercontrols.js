@@ -7,67 +7,65 @@
 define(['class'], function (Class) {
     "use strict";
 
-    var LayerControls, controlsMap;
+    var LayerControls, controlsMap, $root, $layerControlsListRoot, $tileOutlineButton,
+        addLayer,
+        OPACITY_RESOLUTION, FILTER_RESOLUTION;
 
-    LayerControls = Class.extend({
-        ClassName: "LayerControls",
+    // constant initialization
+    OPACITY_RESOLUTION = 100.0;
+    FILTER_RESOLUTION = 100.0;
 
-        init: function () {
-            controlsMap = {};
-        },
+    addLayer = function (id, name, hasFilter, $parentElement) {
+        var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
+            $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $layerControlsRoot,
+            className;
 
-        /**
-         *
-         * @param id
-         * @param name
-         */
-        addLayerControls: function (id, name) {
-            var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
-                $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $controlSetRoot;
+        $layerControlsRoot = $('<div id="layer-controls-' + id + '"></div>');
 
-            $controlSetRoot = $('<div id="' + id + '"></div>');
+        $settings = $('<a href="">settings</a>');
+        $layerControlsRoot.append($('<table style="width:100%"></table>')
+            .append($('<tr></tr>')
+                .append($('<td class="labels"></td>')
+                    .append($('<span>' + name + '</span>')))
+                .append($('<td class="settings-link"></td>')
+                    .append($settings))));
 
-            $settings = $('<a href="">settings</a>');
-            $controlSetRoot.append($('<table style="width:100%"></table>')
-                    .append($('<tr></tr>')
-                        .append($('<td class="labels"></td>')
-                            .append($('<span>' + name + '</span>')))
-                        .append($('<td class="settings-link"></td>')
-                            .append($settings))));
+        // Table for checkbox + sliders
+        $sliderTable = $('<table style="width:100%"></table>');
+        $layerControlsRoot.append($sliderTable);
 
-            // Table for checkbox + sliders
-            $sliderTable = $('<table style="width:100%"></table>');
-            $controlSetRoot.append($sliderTable);
+        // Add a table row
+        $sliderTableRow = $('<tr></tr>');
+        $sliderTable.append($sliderTableRow);
 
-            // Add a table row
-            $sliderTableRow = $('<tr></tr>');
-            $sliderTable.append($sliderTableRow);
+        // Add check box to the row
+        $enabledCheckbox = $('<input type="checkbox" checked="checked"></td>');
+        $sliderTableRow.append($('<td class="toggle">').append($enabledCheckbox));
 
-            // Add check box to the row
-            $enabledCheckbox = $('<input type="checkbox" checked="checked"></td>');
-            $sliderTableRow.append($('<td class="toggle">').append($enabledCheckbox));
+        // Add sub-table to hold sliders
+        $subTable = $('<table style="width:100%"></table>');
+        $sliderTableRow.append($('<td></td>').append($subTable));
 
-            // Add sub-table to hold sliders
-            $subTable = $('<table style="width:100%"></table>');
-            $sliderTableRow.append($('<td></td>').append($subTable));
+        $subTableRow = $('<tr></tr>');
+        $subTable.append($subTableRow);
 
-            $subTableRow = $('<tr></tr>');
-            $subTable.append($subTableRow);
+        // Add the opacity slider
+        className = hasFilter ? "opacity-slider" : "base-opacity-slider";
+        $cell = $('<td class="' + className + '"></td>');
+        $subTableRow.append($cell);
 
-            // Add the opacity slider
-            $cell = $('<td class="opacity-slider"></td>');
-            $subTableRow.append($cell);
+        $cell.append($('<div class="slider-label">Opacity</div>'));
+        $opacitySlider = $('<div id="' + "opacity_slider_" + name + '"></div>').slider({
+            range: "min",
+            min: 0,
+            max: OPACITY_RESOLUTION,
+            value: OPACITY_RESOLUTION
+        });
+        $cell.append($opacitySlider);
 
-            $cell.append($('<div class="slider-label">Opacity</div>'));
-            $opacitySlider = $('<div id="' + "opacity_slider_" + name + '"></div>').slider({
-                range: "min",
-                min: 0,
-                max: 100,
-                value: 10
-            });
-            $cell.append($opacitySlider);
 
-            // Add the filter slider
+        // Add the filter slider
+        if (hasFilter) {
             $cell = $('<td class="filter-slider"></td>');
             $subTableRow.append($cell);
 
@@ -75,30 +73,75 @@ define(['class'], function (Class) {
             $filterSlider = ($('<div id="' + "filter_slider_" + name + '"></div>').slider({
                 range: true,
                 min: 0,
-                max: 100,
-                values: [10, 90]
+                max: FILTER_RESOLUTION,
+                values: [0, FILTER_RESOLUTION]
             }));
             // Disable the background for the range slider
             $(".ui-slider-range", $filterSlider).css({"background": "none"});
 
             $cell.append($filterSlider);
+        } else {
+            $filterSlider = null;
+        }
 
-            // Add the promotion button
-            $cell = $('<td></td>');
-            $subTableRow.append($cell);
-            $promotionButton = $('<button class="layerPromotionButton" title="pop layer to top"></button>');
-            $cell.append($promotionButton);
+        // Add the promotion button
+        $cell = $('<td></td>');
+        $subTableRow.append($cell);
+        $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
+        $cell.append($promotionButton);
 
-            $('#layer-controls').append($controlSetRoot);
+        $parentElement.append($layerControlsRoot);
 
-            controlsMap[id] = {
-                controlSetRoot: $controlSetRoot,
-                filterSlider: $filterSlider,
-                opacitySlider: $opacitySlider,
-                enabledCheckbox: $enabledCheckbox,
-                promotionButton: $promotionButton,
-                settingsLink: $settings
-            };
+        controlsMap[id] = {
+            controlSetRoot: $layerControlsRoot,
+            filterSlider: $filterSlider,
+            opacitySlider: $opacitySlider,
+            enabledCheckbox: $enabledCheckbox,
+            promotionButton: $promotionButton,
+            settingsLink: $settings
+        };
+    };
+
+    LayerControls = Class.extend({
+        ClassName: "LayerControls",
+
+        /**
+         * Initializes the layer controls.
+         *
+         * @param mapLayer
+         *      The map layer the layer controls reflect and modify.
+         */
+        init: function (mapLayer) {
+            controlsMap = {};
+
+            $root = $('#layer-controls');
+
+            // Add the title
+            $root.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
+
+            // Add the layer control list area
+            $layerControlsListRoot = $('<div id="layer-control-list"></div>');
+            $root.append($layerControlsListRoot);
+
+            // Add the base layer slider
+            addLayer("base", "Base Layer", false, $root);
+
+            // Add the outline toggle button
+            $tileOutlineButton = $('<button class="tile-outline-button">Toggle Tile Outline</button>');
+            $root.append($tileOutlineButton);
+        },
+
+        /**
+         * Adds a set of layer controls to the panel.
+         *
+         * @param id
+         *      The id of the layer the control is bound to.
+         *
+         * @param name
+         *      The name to display.
+         */
+        addLayerControls: function (id, name) {
+            addLayer(id, name, true, $layerControlsListRoot);
         },
 
         /**
@@ -119,6 +162,11 @@ define(['class'], function (Class) {
             controlsMap[id].enabledCheckbox.click(handler);
         },
 
+        /**
+         *
+         * @param id
+         * @param handler
+         */
         setSettingsHandler: function (id, handler) {
             controlsMap[id].settings.click(handler);
         },
@@ -167,7 +215,7 @@ define(['class'], function (Class) {
          * @param id
          */
         getOpacity: function (id) {
-            return controlsMap[id].opacitySlider.slider("option", "value");
+            return controlsMap[id].opacitySlider.slider("option", "value") / OPACITY_RESOLUTION;
         },
 
         /**
@@ -176,7 +224,9 @@ define(['class'], function (Class) {
          * @param opacity
          */
         setOpacity: function (id, opacity) {
-            controlsMap[id].opacitySlider.slider("option", "value", opacity);
+            if (!isNaN(opacity)) {
+                controlsMap[id].opacitySlider.slider("option", "value", opacity * OPACITY_RESOLUTION);
+            }
         },
 
         /**
@@ -184,7 +234,8 @@ define(['class'], function (Class) {
          * @param id
          */
         getFilterRange: function (id) {
-            return controlsMap[id].filterSlider.slider("option", "values");
+            var result = controlsMap[id].filterSlider.slider("option", "values");
+            return [result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION];
         },
 
         /**
@@ -193,7 +244,7 @@ define(['class'], function (Class) {
          * @param range
          */
         setFilterRange: function (id, range) {
-            controlsMap[id].filterSlider.slider("option", "values", range);
+            controlsMap[id].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
         },
 
         /**

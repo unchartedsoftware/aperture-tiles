@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+.title {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
 .layer-control {
     width: 50%;
     padding-bottom: 13px;
@@ -34,35 +39,45 @@
     width: 30%;
 }
 
+.base-opacity-slider {
+    padding: 0 10px 2px 0;
+    width: 100%;
+}
+
 .filter-slider {
     padding: 0 10px 2px 0;
     width: 70%;
 }
 
-.layerPromotionButton {
+.layer-promotion-button {
     width:32px;
     height:32px;
     border:none;
-    background:transparent url(../images/PromoteButton.png) no-repeat center top;
+    background: transparent url(../images/PromoteButton.png) no-repeat center top;
     margin-left:10px;
     position:relative;
     top:4px;
 }
 
-.layerPromotionButton:hover:enabled {
+.layer-promotion-button:hover:enabled {
     border: none;
     top: 4px;
     background: transparent url(../images/PromoteButton.png) no-repeat center top;
     background-position: 0px -32px;
 }
 
-.layerPromotionButton:active:enabled {
+.layer-promotion-button:active:enabled {
     border:none;
     top:5px;
     background:transparent url(../images/PromoteButton.png) no-repeat center top;
     background-position:0px -32px;
 }
 
-.layerPromotionButton:focus {
+.layer-promotion-button:focus {
     outline:none;
+}
+
+.tile-outline-button {
+    position:relative;
+    margin-top:20px;
 }
