@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>twitter-demo</artifactId>
 	<packaging>war</packaging>
-	<name>Aperture-Tiles Web Client Template</name>
+	<name>Twitter Demo</name>
 	<url>http://github.com/oculusinfo/aperture-tiles</url>
 	<description>Copy this maven project as a starting template for a basic tile client.</description>
 

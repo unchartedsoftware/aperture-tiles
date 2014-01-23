@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>demo-website</artifactId>
 	<packaging>war</packaging>
-	<name>Aperture-Tiles Examples Website</name>
+	<name>Aperture-Tiles Documentation</name>
 	<url>http://github.com/oculusinfo/aperture-tiles</url>
 	<description>Project documentation website and example tile applications.</description>
 
