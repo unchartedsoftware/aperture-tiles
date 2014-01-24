@@ -2,27 +2,36 @@
  * Created by Chris Bethune on 16/01/14.
  */
 
-/*global $, define */
+/*global $, define, console */
 
 define(['class'], function (Class) {
     "use strict";
 
-    var LayerControls, controlsMap, $root, $layerControlsListRoot, $tileOutlineButton,
-        addLayer,
-        OPACITY_RESOLUTION, FILTER_RESOLUTION;
+    var LayerControls, addLayer, OPACITY_RESOLUTION, FILTER_RESOLUTION;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
     FILTER_RESOLUTION = 100.0;
 
-    addLayer = function (id, name, hasFilter, $parentElement) {
+    /**
+     * Adds a new set of layer controls to the panel.
+     *
+     * @param layerState
+     *      The layer state model the controls are bound to.
+     *
+     * @param $parentElement
+     *      The parent element in the document tree to add the controls to.
+     */
+    addLayer = function (layerState, $parentElement, controlsMap) {
         var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
             $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $layerControlsRoot,
-            className;
+            className, hasFilter, name, filterRange, id;
 
-        $layerControlsRoot = $('<div id="layer-controls-' + id + '"></div>');
+        $layerControlsRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
         $settings = $('<a href="">settings</a>');
+        name = layerState.getName();
+        name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
         $layerControlsRoot.append($('<table style="width:100%"></table>')
             .append($('<tr></tr>')
                 .append($('<td class="labels"></td>')
@@ -42,6 +51,12 @@ define(['class'], function (Class) {
         $enabledCheckbox = $('<input type="checkbox" checked="checked"></td>');
         $sliderTableRow.append($('<td class="toggle">').append($enabledCheckbox));
 
+        // Initialize the button from the model and register event handler.
+        $enabledCheckbox.prop("checked", layerState.isEnabled());
+        $enabledCheckbox.click(function () {
+            layerState.setEnabled($enabledCheckbox.prop("checked"));
+        });
+
         // Add sub-table to hold sliders
         $subTable = $('<table style="width:100%"></table>');
         $sliderTableRow.append($('<td></td>').append($subTable));
@@ -50,6 +65,8 @@ define(['class'], function (Class) {
         $subTable.append($subTableRow);
 
         // Add the opacity slider
+        filterRange = layerState.getFilterRange();
+        hasFilter = filterRange[0] >= 0 && filterRange[1] >= 0;
         className = hasFilter ? "opacity-slider" : "base-opacity-slider";
         $cell = $('<td class="' + className + '"></td>');
         $subTableRow.append($cell);
@@ -59,10 +76,12 @@ define(['class'], function (Class) {
             range: "min",
             min: 0,
             max: OPACITY_RESOLUTION,
-            value: OPACITY_RESOLUTION
+            value: layerState.getOpacity() * OPACITY_RESOLUTION,
+            slide: function () {
+                layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
+            }
         });
         $cell.append($opacitySlider);
-
 
         // Add the filter slider
         if (hasFilter) {
@@ -74,10 +93,17 @@ define(['class'], function (Class) {
                 range: true,
                 min: 0,
                 max: FILTER_RESOLUTION,
-                values: [0, FILTER_RESOLUTION]
+                values: [filterRange[0] * FILTER_RESOLUTION, filterRange[1] * FILTER_RESOLUTION],
+                change: function () {
+                    var result = $filterSlider.slider("option", "values");
+                    layerState.setFilterRange([result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
+                }
             }));
             // Disable the background for the range slider
             $(".ui-slider-range", $filterSlider).css({"background": "none"});
+
+            // Set the ramp image
+            $(".ui-slider-range", $filterSlider).css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
 
             $cell.append($filterSlider);
         } else {
@@ -92,6 +118,7 @@ define(['class'], function (Class) {
 
         $parentElement.append($layerControlsRoot);
 
+        id = layerState.getId();
         controlsMap[id] = {
             controlSetRoot: $layerControlsRoot,
             filterSlider: $filterSlider,
@@ -111,157 +138,51 @@ define(['class'], function (Class) {
          * @param mapLayer
          *      The map layer the layer controls reflect and modify.
          */
-        init: function (mapLayer) {
-            controlsMap = {};
+        init: function (layerStateMap) {
+            // "Private" vars
+            this.controlsMap = {};
+            this.$root = null;
+            this.$layerControlsListRoot = null;
+            this.$tileOutlineButton = null;;
 
-            $root = $('#layer-controls');
+            var layerState, makeLayerStateObserver;
 
-            // Add the title
-            $root.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
+                // Add the title
+            this.$root = $('#layer-controls');
+            this.$root.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
 
             // Add the layer control list area
-            $layerControlsListRoot = $('<div id="layer-control-list"></div>');
-            $root.append($layerControlsListRoot);
+            this.$layerControlsListRoot = $('<div id="layer-control-list"></div>');
+            this.$root.append(this.$layerControlsListRoot);
 
-            // Add the base layer slider
-            addLayer("base", "Base Layer", false, $root);
+            // Creates a layer state observer, which will update the control panel in response to model changes.
+            makeLayerStateObserver = function (layerState, controlsMap) {
+                return function (fieldName) {
+                    if (fieldName === "enabled") {
+                        controlsMap[layerState.getId()].enabledCheckbox.prop("checked", layerState.isEnabled());
+                    } else if (fieldName === "opacity") {
+                        controlsMap[layerState.getId()].opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
+                    } else if (fieldName === "filterRange") {
+                        var range = layerState.getFilterRange();
+                        controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
+                    } else if (fieldName === "rampImageUrl") {
+                        $(".ui-slider-range", controlsMap[layerState.getId()].filterSlider).css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+                    }
+                }
+            };
+
+            // Add the layers
+            for (layerState in layerStateMap) {
+                if (layerStateMap.hasOwnProperty(layerState)) {
+                    addLayer(layerStateMap[layerState], this.$layerControlsListRoot, this.controlsMap);
+                    layerStateMap[layerState].addCallback(makeLayerStateObserver(layerStateMap[layerState], this.controlsMap));
+                }
+            }
 
             // Add the outline toggle button
-            $tileOutlineButton = $('<button class="tile-outline-button">Toggle Tile Outline</button>');
-            $root.append($tileOutlineButton);
-        },
+            this.$tileOutlineButton = $('<button class="tile-outline-button">Toggle Tile Outline</button>');
+            this.$root.append(this.$tileOutlineButton);
 
-        /**
-         * Adds a set of layer controls to the panel.
-         *
-         * @param id
-         *      The id of the layer the control is bound to.
-         *
-         * @param name
-         *      The name to display.
-         */
-        addLayerControls: function (id, name) {
-            addLayer(id, name, true, $layerControlsListRoot);
-        },
-
-        /**
-         *
-         * @param id
-         */
-        removeLayerControls: function (id) {
-            controlsMap[id].controlSetRoot.remove();
-            delete controlsMap[id];
-        },
-
-        /**
-         *
-         * @param id
-         * @param handler
-         */
-        setEnableHandler: function (id, handler) {
-            controlsMap[id].enabledCheckbox.click(handler);
-        },
-
-        /**
-         *
-         * @param id
-         * @param handler
-         */
-        setSettingsHandler: function (id, handler) {
-            controlsMap[id].settings.click(handler);
-        },
-
-        /**
-         *
-         * @param id
-         * @param change
-         * @param slide
-         */
-        setOpacityHandlers: function (id, change, slide) {
-            controlsMap[id].opacitySlider.on("sliderchange", change);
-            controlsMap[id].opacitySlider.on("slide", slide);
-        },
-
-        /**
-         *
-         * @param id
-         * @param change
-         * @param slide
-         */
-        setFilterHandlers: function (id, change, slide) {
-            controlsMap[id].filterSlider.on("sliderchange", change);
-            controlsMap[id].filterSlider.on("slide", slide);
-        },
-
-        /**
-         *
-         * @param id
-         */
-        isEnabled: function (id) {
-            return controlsMap[id].enabledCheckbox.prop("checked");
-        },
-
-        /**
-         *
-         * @param id
-         * @param enabled
-         */
-        setEnabled: function (id, enabled) {
-            controlsMap[id].enabledCheckbox.prop("checked", enabled);
-        },
-
-        /**
-         *
-         * @param id
-         */
-        getOpacity: function (id) {
-            return controlsMap[id].opacitySlider.slider("option", "value") / OPACITY_RESOLUTION;
-        },
-
-        /**
-         *
-         * @param id
-         * @param opacity
-         */
-        setOpacity: function (id, opacity) {
-            if (!isNaN(opacity)) {
-                controlsMap[id].opacitySlider.slider("option", "value", opacity * OPACITY_RESOLUTION);
-            }
-        },
-
-        /**
-         *
-         * @param id
-         */
-        getFilterRange: function (id) {
-            var result = controlsMap[id].filterSlider.slider("option", "values");
-            return [result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION];
-        },
-
-        /**
-         *
-         * @param id
-         * @param range
-         */
-        setFilterRange: function (id, range) {
-            controlsMap[id].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
-        },
-
-        /**
-         *
-         * @param id
-         */
-        getFilterColorRamp: function (id) {
-            return $(".ui-slider-range", controlsMap[id].filterSlider).css("background");
-        },
-
-        /**
-         *
-         * @param id
-         * @param imageUrl
-         */
-        setFilterRangeImage: function (id, imageUrl) {
-            $(".ui-slider-range", controlsMap[id].filterSlider).css({'background': 'url(' + imageUrl + ')', 'background-size': '100%'});
         }
     });
 
