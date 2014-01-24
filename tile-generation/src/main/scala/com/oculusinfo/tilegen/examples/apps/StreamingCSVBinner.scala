@@ -183,8 +183,8 @@ class StreamingCSVRecordParser (properties: StreamingCSVRecordPropertiesWrapper)
     // A quick couple of inline functions to make our lives easier
     // Split a string (but do so efficiently if the separator is a single character)
     def splitString (input: String, separator: String): Array[String] =
-      if (1 == separator.length) input.split(separator.charAt(0))
-      else input.split(separator)
+      if (1 == separator.length) input.split(separator.charAt(0)).map(_.trim)
+      else input.split(separator).map(_.trim)
 
     def getFieldType (field: String, suffix: String = "fieldType"): String = {
       properties.getProperty("oculus.binning.parsing."+field+"."+suffix,
