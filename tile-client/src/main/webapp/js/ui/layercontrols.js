@@ -143,7 +143,7 @@ define(['class'], function (Class) {
             this.controlsMap = {};
             this.$root = null;
             this.$layerControlsListRoot = null;
-            this.$tileOutlineButton = null;;
+            this.$tileOutlineButton = null;
 
             var layerState, makeLayerStateObserver;
 
@@ -168,7 +168,7 @@ define(['class'], function (Class) {
                     } else if (fieldName === "rampImageUrl") {
                         $(".ui-slider-range", controlsMap[layerState.getId()].filterSlider).css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
                     }
-                }
+                };
             };
 
             // Add the layers
