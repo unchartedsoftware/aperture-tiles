@@ -25,6 +25,7 @@ package com.oculusinfo.binning.demo;
 
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +35,7 @@ import com.oculusinfo.binning.io.Pair;
 
 
 
-public class TwitterDemoRecord {
+public class TwitterDemoRecord implements Serializable {
     private String                   _tag;
     private int                      _count;
     private List<Integer>            _countBins;

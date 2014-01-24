@@ -64,8 +64,13 @@ class TwitterDemoRecordLine (val createdAt: Date,
                              val confidence: Double) {}
 
 object TwitterDemoRecordParser {
-  val stopWordList: Set[String] = {
-    val resource = getClass().getResource("../stop-word.json")
+}
+
+class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
+  private val emptyBins = Range(0, timeBins).map(n => new JavaInt(0)).toList.asJava
+
+  def getStopWordList: Set[String] = {
+    val resource = getClass().getResource("/com/oculusinfo/tilegen/datasets/stop-word.json")
     val source = scala.io.Source.fromURL(resource)
     val text = source.mkString
     val json = JSON.parseFull(text)
@@ -74,10 +79,6 @@ object TwitterDemoRecordParser {
       case _ => Set[String]()
     }
   }
-}
-
-class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
-  private val emptyBins = Range(0, timeBins).map(n => new JavaInt(0)).toList.asJava
 
   private def getBin (time: Long): Int = {
     println((endTime-startTime))
@@ -126,18 +127,20 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
   }
 
 
-  def getRecordsByTag (line: String): Seq[TwitterDemoRecord] =
+  def getRecordsByTag (line: String):
+  Seq[(Double, Double, Map[String, TwitterDemoRecord])] =
     getRecords(recordLine => recordLine.tags)(line)
 
-  def getRecordsByWord (line: String): Seq[TwitterDemoRecord] =
+  def getRecordsByWord (line: String, stopWordList: Set[String]):
+  Seq[(Double, Double, Map[String, TwitterDemoRecord])] =
     getRecords(recordLine => {
       recordLine.text.split("\\W").map(_.toLowerCase).toSet
 	.filter(!_.isEmpty)
-	.filter(!TwitterDemoRecordParser.stopWordList.contains(_))
+	.filter(!stopWordList.contains(_))
     })(line)
 
   private def getRecords (wordFcn: TwitterDemoRecordLine => Iterable[String])
-			 (line: String): Seq[TwitterDemoRecord] = {
+			 (line: String): Seq[(Double, Double, Map[String, TwitterDemoRecord])] = {
     val recordLine = parseLine(line)
     val time = recordLine.createdAt.getTime()
     val bin = getBin(time)
@@ -155,10 +158,12 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
 
     val textTime = new Pair[String, JavaLong](recordLine.text, time)
     val textTimeList = List[Pair[String, JavaLong]](textTime).asJava
-    wordFcn(recordLine).map(tag => 
-      new TwitterDemoRecord(tag, 1, full,
-			    posCount, posBins, neutCount, neutBins, negCount, negBins,
-			    textTimeList)
-    ).toSeq
+    Seq((recordLine.longitude, recordLine.latitude,
+	 wordFcn(recordLine).map(tag => {
+	   (tag, new TwitterDemoRecord(tag, 1, full,
+				       posCount, posBins, neutCount,
+				       neutBins, negCount, negBins,
+				       textTimeList))
+	 }).toMap))
   }
 }

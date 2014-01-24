@@ -131,47 +131,65 @@ class TwitterDemoParserTestSuite extends FunSuite {
     val recordParser = new TwitterDemoRecordParser(startDate.getTimeInMillis(),
 						   endDate.getTimeInMillis(),
 						   3)
-    val records1 = recordParser.getRecordsByTag("Wed Jan 01 12:00:00 +0000 2014\tuid\tuname\ttid\tTweet Text\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0")
-    assert(3 === records1.size)
-    for (i <- 0 to 2) {
-      assert(1 === records1(i).getCount())
-      assert(1 === records1(i).getPositiveCount())
-      assert(0 === records1(i).getNeutralCount())
-      assert(0 === records1(i).getNegativeCount())
-      assert(List(1, 0, 0) === records1(i).getCountBins().asScala.toList)
-      assert(List(1, 0, 0) === records1(i).getPositiveCountBins().asScala.toList)
-      assert(List(0, 0, 0) === records1(i).getNeutralCountBins().asScala.toList)
-      assert(List(0, 0, 0) === records1(i).getNegativeCountBins().asScala.toList)
-      assert(1 === records1(i).getRecentTweets().size())
-      assert("Tweet Text" === records1(i).getRecentTweets().get(0).getFirst())
-    }
-    assert(List("abc", "def", "ghi") === records1.map(_.getTag()).toList)
+    val records1 = recordParser.getRecordsByTag("Wed Jan 01 12:00:00 +0000 2014\tuid\tuname\ttid\tTweet Text\t#abc#def#ghi#\t2.0\t1.0\tCanada\tToronto\tcity\tPositive\t50.0")
+    assert(1 === records1.size)
+    records1.foreach(records => {
+      assert(1.0 === records._1)
+      assert(2.0 === records._2)
+      assert(3 === records._3.size)
+      assert(List("abc", "def", "ghi") === records._3.map(_._1).toList.sorted)
+      assert(List("abc", "def", "ghi") === records._3.map(_._2.getTag()).toList.sorted)
+      records._3.map(_._2).foreach(record => {
+	assert(1 === record.getCount())
+	assert(1 === record.getPositiveCount())
+	assert(0 === record.getNeutralCount())
+	assert(0 === record.getNegativeCount())
+	assert(List(1, 0, 0) === record.getCountBins().asScala.toList)
+	assert(List(1, 0, 0) === record.getPositiveCountBins().asScala.toList)
+	assert(List(0, 0, 0) === record.getNeutralCountBins().asScala.toList)
+	assert(List(0, 0, 0) === record.getNegativeCountBins().asScala.toList)
+	assert(1 === record.getRecentTweets().size())
+	assert("Tweet Text" === record.getRecentTweets().get(0).getFirst())
+      })
+    })
 
 
     val records2 = recordParser.getRecordsByTag("Wed Jan 02 12:00:00 +0000 2014\tuid\tuname\ttid\tTweet Text\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0")
-    assert(List("abc", "def", "ghi") === records2.map(_.getTag()).toList)
-    for (i <- 0 to 2) {
-      assert(List(0, 1, 0) === records2(i).getCountBins().asScala.toList)
-      assert(List(0, 1, 0) === records2(i).getPositiveCountBins().asScala.toList)
-      assert(List(0, 0, 0) === records2(i).getNeutralCountBins().asScala.toList)
-      assert(List(0, 0, 0) === records2(i).getNegativeCountBins().asScala.toList)
-    }
+    assert(1 === records2.size)
+    records2.foreach(records => {
+      assert(List("abc", "def", "ghi") === records._3.map(_._1).toList.sorted)
+      assert(List("abc", "def", "ghi") === records._3.map(_._2.getTag()).toList.sorted)
+      records._3.map(_._2).foreach(record => {
+	assert(List(0, 1, 0) === record.getCountBins().asScala.toList)
+	assert(List(0, 1, 0) === record.getPositiveCountBins().asScala.toList)
+	assert(List(0, 0, 0) === record.getNeutralCountBins().asScala.toList)
+	assert(List(0, 0, 0) === record.getNegativeCountBins().asScala.toList)
+      })
+    })
 
 
     val records3 = recordParser.getRecordsByTag("Wed Jan 03 12:00:00 +0000 2014\tuid\tuname\ttid\tTweet Text\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0")
-    assert(List("abc", "def", "ghi") === records3.map(_.getTag()).toList)
-    for (i <- 0 to 2) {
-      assert(List(0, 0, 1) === records3(i).getCountBins().asScala.toList)
-      assert(List(0, 0, 1) === records3(i).getPositiveCountBins().asScala.toList)
-      assert(List(0, 0, 0) === records3(i).getNeutralCountBins().asScala.toList)
-      assert(List(0, 0, 0) === records3(i).getNegativeCountBins().asScala.toList)
-    }
+    assert(1 === records3.size)
+    records3.foreach(records => {
+      assert(List("abc", "def", "ghi") === records._3.map(_._1).toList.sorted)
+      assert(List("abc", "def", "ghi") === records._3.map(_._2.getTag()).toList.sorted)
+      records._3.map(_._2).foreach(record => {
+	assert(List(0, 0, 1) === record.getCountBins().asScala.toList)
+	assert(List(0, 0, 1) === record.getPositiveCountBins().asScala.toList)
+	assert(List(0, 0, 0) === record.getNeutralCountBins().asScala.toList)
+	assert(List(0, 0, 0) === record.getNegativeCountBins().asScala.toList)
+      })
+    })
   }
 
 
   test("Word parsing") {
     val recordParser = new TwitterDemoRecordParser(Long.MinValue, Long.MaxValue-1, 1)
-    val records = recordParser.getRecordsByWord("Wed Jan 02 12:00:00 +0000 2014\tuid\tuname\ttid\tHad we known about Moliere, \"Parts of places possible\" might never have seen the light of day,\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0")
-    assert(List("day", "light", "moliere", "seen") === records.map(_.getTag()).toList.sorted)
+    val records = recordParser.getRecordsByWord("Wed Jan 02 12:00:00 +0000 2014\tuid\tuname\ttid\tHad we known about Moliere, \"Parts of places possible\" might never have seen the light of day,\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0", recordParser.getStopWordList)
+    assert(1 === records.size)
+    records.foreach(record => {
+      assert(List("day", "light", "moliere", "seen") === record._3.map(_._1).toList.sorted)
+      assert(List("day", "light", "moliere", "seen") === record._3.map(_._2.getTag()).toList.sorted)
+    })
   }
 }

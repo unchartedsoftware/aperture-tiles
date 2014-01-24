@@ -47,6 +47,9 @@ class ArgumentParser (args: Array[String]) {
   val argDescriptionsMap = MutableMap[String, (String, String)]()
 
 
+  def debug: Unit =
+    argsMap.foreach(pair => println("key: "+pair._1+", value: "+pair._2))
+
 
   def usage: Unit = {
     argDescriptionsMap.keySet.toList.sorted.foreach(key => {
