@@ -81,8 +81,6 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
   }
 
   private def getBin (time: Long): Int = {
-    println((endTime-startTime))
-    println((endTime-startTime+1L))
     math.max(0, math.min(timeBins+1, ((timeBins * (time-startTime)) / (endTime-startTime+1L)).toInt))
   }
 
