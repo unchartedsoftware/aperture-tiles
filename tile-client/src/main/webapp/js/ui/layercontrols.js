@@ -21,6 +21,9 @@ define(['class'], function (Class) {
      *
      * @param $parentElement
      *      The parent element in the document tree to add the controls to.
+     *
+     * @param controlsMap
+     *      Maps layers to the sets of controls associated with them.
      */
     addLayer = function (layerState, $parentElement, controlsMap) {
         var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
@@ -135,7 +138,7 @@ define(['class'], function (Class) {
         /**
          * Initializes the layer controls.
          *
-         * @param mapLayer
+         * @param layerStateMap
          *      The map layer the layer controls reflect and modify.
          */
         init: function (layerStateMap) {
