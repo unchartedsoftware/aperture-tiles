@@ -142,7 +142,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 			}
 
 			try {
-				transform = options.getString("transformId");
+				transform = options.getString("transform");
 			} catch (JSONException e2) {
 				_logger.info("No transform specified for tile request - using default.");
 			}
