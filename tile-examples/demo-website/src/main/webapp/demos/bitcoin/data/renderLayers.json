@@ -1,7 +1,0 @@
-[
-    {
-        "layer": "twitter.longitude.latitude.top.hashtags",
-        "transform": "linear",
-        "opacity": 0.85
-    }
-]

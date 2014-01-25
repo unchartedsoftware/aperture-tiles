@@ -15,7 +15,7 @@
 <div id="header"></div>
 <div id="content-strip">
     <div id="header-logo">
-        <a href="../../"><img src="../../img/aperture-big.png"></a>
+        <a href="../../"><img src="../../img/aperture-tiles-big.png"></a>
     </div>
     <div id="header-menu">
         <a href="../../" class="overview">&nbsp;</a>
@@ -48,7 +48,7 @@
         <div id="content">
             <div class="content-context">
                 <img src="../../img/twitter-europe.png" class="home-image"/>
-                    Tweets across Eruope</a>
+                    Millions of Tweets across Europe</a>
                 <p>
                     <a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a>
             </div>
@@ -66,11 +66,19 @@
 				to quickly generate data for tiles and defining reproducible data flows which can regenerate tiles 
 				from live data, reducing tile staleness.</p>
                 
+                <h2>Tile-based Visual Analytics for Interactive Visualization</h2>
+                <p>The aggregation stage projects and bins data into a predefined grid, such as the Tiling Map Service 
+                standard with a (z,x,y) coordinate system where z identifies the zoom level, and x,y identifies a specific 
+                tile on the plot for the given z. The summarization stage applies one or more summary statistics or other 
+                analytics to the data in each tile region storing the result in a data store. The rendering stage maps the 
+                summary to a visual representation, and renders it to an image tile at request time.</p>
+                <p>
+                
                 <h2>A Flexible Data Flow</h2>
-				<p>Aperture-Tiles implements a unique data flow which breaks the visualization process into three distinct components: 
+				<p>Aperture-Tiles implements a data flow which breaks the visualization process into three distinct components: 
 				tile generation, tile server, and tile client. This flexible framework makes Aperture-Tiles compatible with both native 
 				and external data analysis and presentation features.</p>
-				<img src="../../img/arch-overview.png" alt="Aperture Tiles Architectural Overview" />
+				<img class="bordered" src="../../img/arch-overview.png" alt="Aperture Tiles Architectural Overview" />
             </div>
     	</div>
 	</div>

@@ -56,6 +56,9 @@ a:focus {
 img {
 	border-style: none;
 }
+img.bordered {
+	border: 1px solid #8f8170;
+}
 pre.code {
 	overflow: auto;
 	font-size: 14px;
