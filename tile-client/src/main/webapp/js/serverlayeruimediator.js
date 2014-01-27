@@ -42,12 +42,14 @@ define(['class', 'layerstate'], function (Class, LayerState) {
          * Populates the layerStateMap with LayerState objects based on the current set of map layers,
          * and registers callbacks to update the map layer in response to state changes.
          *
-         * @param {object} layerStateMap - The map of LayerState objects to populate and register callbacks against.
+         * @param layerStateMap - The map of LayerState objects to populate and register callbacks against.
          *
-         * @param {object} mapLayer - The ServerRenderedMapLayer that the layerStateMap will be populated from, and
+         * @param mapLayer - The ServerRenderedMapLayer that the layerStateMap will be populated from, and
          * subsequently be modified by.
+         *
+         * @param worldMap - The base world map layer.
          */
-        init: function (layerStateMap, mapLayer) {
+        init: function (layerStateMap, mapLayer, worldMap) {
             var layerState, layerIds, layerSpecsById, layerSpec, makeLayerStateCallback, layerId, layerName, i;
 
             this.layerStateMap = layerStateMap;
@@ -92,8 +94,28 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 layerState.addCallback(makeLayerStateCallback(mapLayer, layerState));
 
                 // Add the layer to the layer statemap.
-                this.layerStateMap.layerId = layerState;
+                this.layerStateMap[layerState.getId()] = layerState;
             }
+
+            // Create a layer state object for the base map.
+            layerState = new LayerState("Base Layer");
+            layerState.setName("Base Layer");
+            layerState.setEnabled(worldMap.isEnabled());
+            layerState.setOpacity(worldMap.getOpacity());
+            layerState.setRampFunction(null);
+            layerState.setRampType(null);
+
+            // Register a callback to handle layer state change events.
+            layerState.addCallback(function (fieldName) {
+                if (fieldName === "opacity") {
+                    worldMap.setOpacity(layerState.getOpacity());
+                } else if (fieldName === "enabled") {
+                    worldMap.setEnabled(layerState.isEnabled());
+                }
+            });
+
+            // Add the layer to the layer statemap.
+            this.layerStateMap[layerState.getId()] = layerState;
         }
     });
     return ServerLayerUiMediator;
