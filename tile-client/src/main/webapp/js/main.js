@@ -26,7 +26,8 @@
 require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
-         './client-rendering/TextScoreLayer',
+         './client-rendering/TextScoreRenderer',
+         './client-rendering/TextScoreRendererOther',
          './client-rendering/DebugLayer',
          './ui/SliderControl',
          './ui/CheckboxControl',
@@ -34,12 +35,15 @@ require(['./fileloader',
          './ui/LabeledControlSet',
          './axis/AxisUtil',
          './axis/Axis',
+         './view-controller/Carousel',
+         './DataManager',
          './profileclass'],
 
         function (FileLoader, Map, ServerLayer,
-                  TextScoreLayer, DebugLayer, SliderControl,
+                  TextScoreRenderer, TextScoreRendererOther,
+                  DebugLayer, SliderControl,
                   CheckboxControl, LayerControl,LabeledControlSet,
-                  AxisUtil, Axis, Class ) {
+                  AxisUtil, Axis, Carousel, DataManager, Class ) {
             "use strict";
 
             var sLayerFileId = "./data/layers.json"
@@ -55,25 +59,28 @@ require(['./fileloader',
                 var worldMap,
                     slider,
                     checkbox,
-                    serverLayers,
-                    renderLayer,
+                    //serverLayers,
                     renderLayerSpecs,
                     renderLayerSpec,
-                    layerIds,
+                    //layerIds,
                     layerId,
                     layerName,
                     layerControl,
-                    makeSlideHandler,
-                    makeCheckboxCheckedHandler,
-                    makeCheckboxUncheckedHandler,
+                    //makeSlideHandler,
+                    //makeCheckboxCheckedHandler,
+                    //makeCheckboxUncheckedHandler,
                     i,
                     layerControlSet,
-                    layerSpecsById,
+                    //layerSpecsById,
                     tooltipFcn,
                     xAxisSpec,
                     yAxisSpec,
                     xAxis,
                     yAxis,
+                    carousel,
+                    carouselSpec,
+                    tileScoreRenderer,
+                    tileScoreRendererOther,
                     redrawAxes
                 ;
 
@@ -157,9 +164,6 @@ require(['./fileloader',
                 worldMap.map.on('panend', redrawAxes);
                 worldMap.map.on('zoom',   redrawAxes);
 
-
-
-
                 layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 
                 // Set up to change the base layer opacity
@@ -188,7 +192,7 @@ require(['./fileloader',
                 // add layer controls to control set
                 layerControlSet.addControl(layerId, 'Base Layer', layerControl.getElement());
 
-
+                /*
                 // Set up server-rendered display layers
                 serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
                 serverLayers.addToMap(worldMap);
@@ -240,7 +244,7 @@ require(['./fileloader',
                     // add layer control to control set
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
-
+                */
 
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
@@ -248,6 +252,7 @@ require(['./fileloader',
 
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
+
                 tooltipFcn = function (text) {
                     if (text) {
                         $('#hoverOutput').html(text);
@@ -256,14 +261,25 @@ require(['./fileloader',
                     }
                 };
 
+
+                carouselSpec = {
+                    map: worldMap.map
+                };
+
+
+
                 for (i=0; i<renderLayerSpecs.length; ++i) {
 
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
-                    renderLayer = new TextScoreLayer(layerId, renderLayerSpec);
-                    renderLayer.setTooltipFcn(tooltipFcn);
-                    renderLayer.addToMap(worldMap);
+                    tileScoreRenderer = new TextScoreRenderer();
+                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+
+
+                    tileScoreRendererOther = new TextScoreRendererOther();
+                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -292,6 +308,11 @@ require(['./fileloader',
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
 
+                carousel = new Carousel(carouselSpec);
+
+                carousel.addView( 'blue', renderLayerSpec, tileScoreRenderer );
+                carousel.addView( 'red', renderLayerSpec, tileScoreRendererOther );
+                carousel.attachToMap( worldMap.map );
                 /*
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());
