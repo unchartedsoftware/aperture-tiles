@@ -25,6 +25,10 @@
 
 /*global OpenLayers*/
 
+/**
+ * This module defines a Carousel class which inherits from a ViewController and provides a user
+ * interface and event handler for switching between views for individual tiles
+ */
 define(function (require) {
     "use strict";
 
@@ -42,32 +46,19 @@ define(function (require) {
 
 
     Carousel = ViewController.extend({
+
         /**
          * Construct a carousel
-         * @param spec Carousel specification object:
          */
-
-
-        init: function () {
-            this._super();
-            this.leftButton = null;
-            this.rightButton = null;
-            this.indexButtons = [];
-            this.previousMouse = {};
-        },
-
-        attachToMap: function( map ){
+        init: function (spec) {
 
             var that = this;
 
-            if (this.map) {
-                return; // can only attach a single map to carousel
-            }
+            // call base class ViewController constructor
+            this._super(spec);
+            this.previousMouse = {};
 
-            // call base function
-            this._super(map);
-
-            // add ui elements
+            // add mouse move and zoom callbacks
             this.map.olMap_.events.register('mousemove', this.map.olMap_, function(event) {
                 var tilekey = that.mapMouseToTileKey(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
@@ -75,56 +66,27 @@ define(function (require) {
                 that.previousMouse.y = event.xy.y;
             });
 
-
             this.map.olMap_.events.register('zoomend', this.map.olMap_, function(event) {
                 var tilekey = that.mapMouseToTileKey(that.previousMouse.x, that.previousMouse.y);
                 that.updateSelectedTile(tilekey);
             });
 
-            this.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
-            this.nodeLayer.map('longitude').from('longitude');
-            this.nodeLayer.map('latitude').from('latitude');
-
-            // if views already added, re-create ui for new map node layer
-            if (this.views.length > 0) {
-                this.createUI();
-            }
+            // create the carousel UI
+            this.createUI();
         },
 
-        addView: function( id, layerSpec, clientRenderer ) {
-            this._super( id, layerSpec, clientRenderer );
 
-            // if map is attached, recreate the ui layers
-            if (this.map) {
-                this.removeUI();
-                this.createUI();
-            }
-
-        },
-
-        removeUI: function() {
-
-            var i;
-            if (this.map) {
-                if (this.leftButton) {
-                    this.leftButton.remove();
-                    this.leftButton = null;
-                }
-                if (this.rightButton) {
-                    this.rightButton.remove();
-                    this.rightButton = null;
-                }
-                for (i = 0; i < this.indexButtons.length; i++) {
-                    this.indexButtons[i].remove();
-                }
-                this.indexButtons = [];
-            }
-        },
-
+        /**
+         * Construct the user interface aperture.iconlayers
+         */
         createUI: function() {
 
             var positionFactor = (this.views.length - 1) / 2,
                 i, j;
+
+            this.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
+            this.nodeLayer.map('longitude').from('longitude');
+            this.nodeLayer.map('latitude').from('latitude');
 
             // tile outline layer
             this.createTileOutlineLayer();
@@ -138,6 +100,10 @@ define(function (require) {
             }
         },
 
+
+        /**
+         * Construct aperture.iconlayers for the left/right view panning buttons
+         */
         createViewSelectionLayer: function(position) {
 
             var that = this,
@@ -195,6 +161,10 @@ define(function (require) {
             return viewSelectionLayer;
         },
 
+
+        /**
+         * Construct aperture.iconlayers for the index dots representing each view
+         */
         createViewIndexLayer: function(index, spacingFactor) {
 
             var that = this,
@@ -257,6 +227,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Construct aperture.iconlayers for the tile outline during mouse hover
+         */
         createTileOutlineLayer: function() {
 
             var icon = "./img/tileoutline.png",
@@ -278,6 +251,11 @@ define(function (require) {
         },
 
 
+        /**
+         * Maps a mouse position in the mouse viewport to a tile identification key
+         * @param mx mouse x position in the map viewport
+         * @param my mouse y position in the map viewport
+        */
         mapMouseToTileKey: function(mx, my) {
 
             var TILESIZE = 256,
@@ -309,6 +287,10 @@ define(function (require) {
         },
 
 
+        /**
+         * Updates selected tile nodeLayer data and redraws UI
+         * @param tilekey tile identification key
+         */
         updateSelectedTile: function(tilekey) {
 
            var parsedValues = tilekey.split(','),
@@ -322,14 +304,20 @@ define(function (require) {
                 position = webPyramid.getTileBounds(tile);
 
            this.selectedTileInfo = {
+                type: 'carousel-interface',
                 longitude: position.centerX,
                 latitude: position.centerY,
                 visible: true,
                 tilekey : tilekey
             };
-            this.nodeLayer.all(this.selectedTileInfo).redraw();
+            this.nodeLayer.all(this.selectedTileInfo).where('type','carousel-interface').redraw();
         },
 
+
+        /**
+         * Maps a tilekey to its current view index. If none is specified, use default
+         * @param tilekey tile identification key
+         */
         getTileViewIndex: function(tilekey) {
             // given a tile key "level + "," + xIndex + "," + yIndex"
             // return the view index

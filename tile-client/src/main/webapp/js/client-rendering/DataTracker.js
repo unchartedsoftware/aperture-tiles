@@ -26,7 +26,10 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
-
+/**
+ * This module defines a DataTracker class which manages all tile data from a
+ * single dataset.
+ */
 define(function (require) {
     "use strict";
 
@@ -59,10 +62,12 @@ define(function (require) {
     webPyramid = new WebPyramid();
 
 
-
     DataTracker = Class.extend({
         ClassName: "DataTracker",
 
+        /**
+         * Construct a DataTracker
+         */
         init: function (layerInfo) {
 
             // All the data we've received, put in one object, keyed by
@@ -82,7 +87,7 @@ define(function (require) {
         /**
          * Create a universal unique key for a given tile
          *
-         * @param tilekeys Array of tile keys to merge into node data
+         * @param tilekeys Array of tile identification keys to merge into node data
          */
         getTileNodeData: function (tilekeys) {
             var allData = [];
@@ -119,10 +124,11 @@ define(function (require) {
             return tileKey + ":" + bin.x + "," + bin.y;
         },
 
+
         /**
          * Increment reference count for specific tile data
          *
-         * @param tilekey tilekey for data
+         * @param tilekey tile identification key for data
          */
         addReference: function(tilekey) {
 
@@ -130,7 +136,7 @@ define(function (require) {
                 this.referenceCount[tilekey] = 0;
             }
 
-            // fresh requests get pushed onto the back of queue
+            // ensure fresh requests cause tile to be pushed onto the back of queue
             if (this.memoryQueue.indexOf(tilekey) !== -1) {
                 this.memoryQueue.splice(this.memoryQueue.indexOf(tilekey), 1);
             }
@@ -144,7 +150,7 @@ define(function (require) {
          * Decrement reference count for specific tile data, if reference count hits 0,
          * call memory management function
          *
-         * @param tilekey tilekey for data
+         * @param tilekey tile identification key for data
          */
         removeReference: function(tilekey) {
 
@@ -155,10 +161,11 @@ define(function (require) {
 
         },
 
+
         /**
          * Returns current reference count of a tile
          *
-         * @param tilekey tilekey for data
+         * @param tilekey tile identification key for data
          */
         getReferenceCount: function(tilekey) {
             if (this.referenceCount[tilekey] === undefined) {
@@ -167,9 +174,11 @@ define(function (require) {
             return this.referenceCount[tilekey];
         },
 
+
         /**
          * Manages how defunct tile data is de-allocated, once max number
-         * is reached, de-allocates tiles that were used longest ago
+         * of in memory tiles is reached, de-allocates tiles that were
+         * used longest ago. Current max tile count is 100
          */
         memoryManagement: function() {
 
@@ -179,7 +188,8 @@ define(function (require) {
 
             while (this.memoryQueue.length > MAX_NUMBER_OF_ENTRIES) {
                 // while over limit of tiles in memory,
-                // iterate from last used tile to most recent and remove them
+                // iterate from last used tile to most recent and remove them if
+                // reference counts are 0
                 tilekey = this.memoryQueue[i];
                 if (this.getReferenceCount(tilekey) === 0) {
                     delete this.data[tilekey];
@@ -192,10 +202,11 @@ define(function (require) {
 
         },
 
+
         /**
          * Requests tile data. If tile is not in memory, send GET request to server and
-         * set individual callback function on receive. If at least one tile is in server
-         * callback function is called once.
+         * set individual callback function on receive. If at least one tile is in memory
+         * callback function is called  a single time.
          *
          * @param tilekey tilekey for data
          */
@@ -211,7 +222,9 @@ define(function (require) {
                 }
             }
 
-            // at least one tile is alreayd in memory, call callback function
+            // at least one tile is already in memory, call callback function,
+            // this is only called once here because it is too be used to redraw the
+            // tile data
             if (dataInMemory) {
                 callback();
             }
@@ -220,9 +233,11 @@ define(function (require) {
 
         /**
          * If data is not in memory, flag tilekey as 'loading', request data from server and return false.
-         * AIf data is flagged as 'loading', add callback to callback array and return false.
+         * If data is flagged as 'loading', add callback to callback array and return false.
          * If data is already in memory, returns true.
          *
+         * @param tilekey tile identification key
+         * @param callback callback function called upon tile received
          * The data for each tile comes across from the server as follows:
          * {
          *   tileIndex: {

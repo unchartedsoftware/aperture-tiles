@@ -25,6 +25,11 @@
 
 /*global OpenLayers*/
 
+/**
+ * This module defines a ViewController class which provides delegation between multiple client renderers
+ * and their respective data sources. Each view is composed of a renderer and DataTracker. Each view has
+ * a TileTracker which delegates tile requests from the view and its DataTracker.
+ */
 define(function (require) {
     "use strict";
 
@@ -40,55 +45,55 @@ define(function (require) {
     ViewController = Class.extend({
 
         /**
-         * Constructor
+         * Construct a ViewController
          */
-        init: function () {
+        init: function (spec) {
 
-            this.map = null;
-            this.views = [];
+            var that = this,
+                i;
+
+            function attachMap(map) {
+
+                // add map and zoom/pan event handlers
+                that.map = map;
+                that.map.olMap_.events.register('zoomend', that.map.olMap_, $.proxy(that.onMapUpdate, that) );
+                that.map.on('panend', $.proxy(that.onMapUpdate, that));
+            }
+
+            function addView(viewspec) {
+
+                // construct and add view
+                var view = {
+                    id: viewspec.id,
+                    tileTracker: new TileTracker(viewspec.dataTracker),     // tracks the tiles used at given moment
+                    renderer: viewspec.renderer,                            // renderer for the view
+                    nodeLayer: that.map.addLayer(aperture.geo.MapNodeLayer) // aperture.NodeLayer for renderering
+                };
+
+                view.nodeLayer.map('longitude').from('longitude');
+                view.nodeLayer.map('latitude').from('latitude');
+                // Necessary so that aperture won't place labels and texts willy-nilly
+                view.nodeLayer.map('width').asValue(1);
+                view.nodeLayer.map('height').asValue(1);
+                // create the renderer layer off of the shared view layer
+                view.renderer.createLayer(view.nodeLayer);
+
+                that.views.push(view);
+            }
+
             this.defaultViewIndex = 0;  // if not specified, this is the default view of a tile
-            this.tileViewMap = {}; // maps a tile key to its view index
-        },
+            this.tileViewMap = {};      // maps a tile key to its view index
 
-        /**
-         * Attach view controller to a map
-         */
-        attachToMap: function(map) {
+            attachMap(spec.map);
 
-            var i;
-
-            if (this.map) {
-                return; // can only attach a single map to view controller
+            this.views = [];
+            for (i = 0; i < spec.views.length; i++) {
+                addView(spec.views[i]);
             }
 
-            // set map
-            this.map = map;
-
-            this.map.olMap_.events.register('zoomend', this.map.olMap_, $.proxy(this.onMapUpdate, this) );
-            this.map.on('panend', $.proxy(this.onMapUpdate, this));
-
-            for (i = 0; i < this.views.length; i++) {
-                this.createViewNodeLayer(this.views[i]);
-            }
-
-            this.onMapUpdate();
+            this.onMapUpdate(); // trigger callback to draw first frame
         },
 
-        /**
-         * Add view to view controller
-         */
-        addView: function(id, dataSet, clientRenderer) {
-
-            var view = {
-                id: id,
-                tileTracker: new TileTracker(dataSet),
-                renderer: clientRenderer
-            };
-
-            this.createViewNodeLayer(view);
-
-            this.views.push(view);
-        },
 
         /**
          * If attached to a map, create node layer for view rendering
@@ -108,8 +113,10 @@ define(function (require) {
             }
         },
 
+
         /**
-         * Returns view index for specified tile key
+         * Returns the view index for specified tile key
+         * @param tilekey tile identification key
          */
         getTileViewIndex: function(tilekey) {
             // given a tile key "level + "," + xIndex + "," + yIndex"
@@ -126,6 +133,8 @@ define(function (require) {
 
         /**
          * Tile change callback function
+         * @param tilekey tile identification key
+         * @param newViewIndex  the new index to set the tilekey to
          */
         onTileViewChange: function(tilekey, newViewIndex) {
 
@@ -144,7 +153,8 @@ define(function (require) {
         },
 
         /**
-         * Map update callback
+         * Map update callback, this function is called when the map view state is updating. Requests
+         * and draws any new tiles
          */
         onMapUpdate: function() {
 
@@ -181,6 +191,11 @@ define(function (require) {
             }
         },
 
+
+        /**
+         * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
+         * the layers
+         */
         onReceiveTile: function() {
 
             var that = this,

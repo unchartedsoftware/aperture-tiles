@@ -29,8 +29,9 @@
 
 
 /**
- * This module collects a single layer's worth of tile data sent from the 
- * server, and keeps track of what a layer needs to know to display it.
+ * This module defines a TileTracker class which delegates tile requests between a
+ * ViewController's individual views and a DataTracker. Maintains a collection of
+ * relevant tiles for each view.
  */
 define(function (require) {
     "use strict";
@@ -45,13 +46,24 @@ define(function (require) {
     TileTracker = Class.extend({
         ClassName: "TileTracker",
 
-        init: function (dataSet) {
+        /**
+         * Construct a TileTracker
+         */
+        init: function (dataTracker) {
 
-            this.dataSet = dataSet;
+            this.dataTracker = dataTracker;
             this.tiles = [];
         },
 
 
+        /**
+         * Given a list of tiles, determines which are already tracked, which need to be
+         * requested from the DataTracker, and which need to be released from the DataTracker. Calls
+         * callback function once for each tile received from the server, and once if there is at least
+         * one tile already in memory
+         * @param visibleTiles an array of all visible tiles that will need to be displayed
+         * @param callback tile receive callback function
+         */
         filterAndRequestTiles: function(visibleTiles, callback) {
 
             var usedTiles = [],
@@ -72,20 +84,17 @@ define(function (require) {
             // Go through, seeing what we need.
             for (i=0; i<visibleTiles.length; ++i) {
                 tile = visibleTiles[i];
-                tileKey = this.dataSet.createTileKey(tile);
+                tileKey = this.dataTracker.createTileKey(tile);
 
                 if (defunctTiles[tileKey]) {
-                    // Already have the data.
-                    // Make sure not to delete it
+                    // Already have the data, remove from defunct list
                     delete defunctTiles[tileKey];
-                    // And mark it as meaningful
-                    usedTiles.push(tileKey);
                 } else {
                     // New data.  Mark for fetch.
                     neededTiles.push(tileKey);
-                    // And mark it as meaningful
-                    usedTiles.push(tileKey);
                 }
+                // And mark tile it as meaningful
+                usedTiles.push(tileKey);
             }
 
             // Update our internal lists
@@ -93,14 +102,22 @@ define(function (require) {
             // Remove all old defunct tiles references
             for (tileKey in defunctTiles) {
                 if (defunctTiles.hasOwnProperty(tileKey)) {
-                    this.dataSet.removeReference(tileKey);
+                    this.dataTracker.removeReference(tileKey);
                 }
             }
-
-            this.dataSet.requestTiles(neededTiles, callback);
+            // Request needed tiles from dataTracker
+            this.dataTracker.requestTiles(neededTiles, callback);
         },
 
 
+        /**
+         * Given another TileTracker and tilekey, swaps the tiles. This function ensures that
+         * if the DataTracker is shared between trackers, the data will not be de-allocated
+         * from memory during the swap.
+         * @param newTracker the tracker to gain ownership of the tile
+         * @param tilekey the tile indentification key
+         * @param callback the callback function after the swap is complete
+         */
         swapTileWith: function(newTracker, tilekey, callback) {
 
             // this function does extra reference count incrementing and decrementing
@@ -112,32 +129,40 @@ define(function (require) {
             }
 
             // prematurely increment reference in case other tracker shares data
-            newTracker.dataSet.addReference(tilekey);
+            newTracker.dataTracker.addReference(tilekey);
             // release tile, this decrements reference. If data is shared, the data
             // reference count is set to 1, preventing unnecessary de-allocation
             //this.releaseTile(tilekey);
             this.tiles.splice(this.tiles.indexOf(tilekey), 1);
-            this.dataSet.removeReference(tilekey);
+            this.dataTracker.removeReference(tilekey);
 
             // request tile, incrementing reference count again to 2
             newTracker.requestTile(tilekey, callback);
 
             // remove premature reference, resulting in proper count of 1
-            newTracker.dataSet.removeReference(tilekey);
+            newTracker.dataTracker.removeReference(tilekey);
         },
 
 
+        /**
+         * Request a tile from the dataTracker
+         * @param tilekey the tile indentification key
+         * @param callback the callback function after the tile is received
+         */
         requestTile: function(tilekey, callback) {
             if (this.tiles.indexOf(tilekey) === -1) {
                 this.tiles.push(tilekey);
             }
-            this.dataSet.requestTiles([tilekey], callback);
+            this.dataTracker.requestTiles([tilekey], callback);
         },
 
 
+        /**
+         * Returns the data format of the tiles required by an aperture.nodelayer
+         */
         getNodeData: function () {
             // request needed tiles
-            return this.dataSet.getTileNodeData(this.tiles);
+            return this.dataTracker.getTileNodeData(this.tiles);
         }
 
     });

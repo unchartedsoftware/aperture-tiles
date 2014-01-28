@@ -81,7 +81,7 @@ require(['./fileloader',
                     tileScoreRenderer,
                     tileScoreRendererOther,
                     redrawAxes,
-                    dataSet
+                    dataTracker
                 ;
 
                 // create world map from json file under mapFileId
@@ -293,7 +293,7 @@ require(['./fileloader',
                     layerControl = new LayerControl(layerId);
                     // add visibility checkbox control
                     /*
-                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement() );
+                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement());
                     // add slider control
                     layerControl.addControl(layerId + '.slider', slider.getElement());
                     */
@@ -303,11 +303,23 @@ require(['./fileloader',
 
                 LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
 
-                    dataSet = new DataTracker(layerInfo);
-                    carousel = new Carousel();
-                    carousel.addView( 'blue', dataSet, tileScoreRenderer );
-                    carousel.addView( 'red', dataSet, tileScoreRendererOther );
-                    carousel.attachToMap( worldMap.map );
+                    dataTracker = new DataTracker(layerInfo);
+                    carousel = new Carousel( {
+                        map: worldMap.map,
+                        views: [
+                            {
+                                id: "red",
+                                dataTracker: dataTracker,
+                                renderer: tileScoreRenderer
+                            },
+                            {
+                                id: "blue",
+                                dataTracker: dataTracker,
+                                renderer: tileScoreRendererOther
+                            }
+                        ]});
+                    carousel.dummy = 0; // to shut jslint up
+
                 });
 
 
