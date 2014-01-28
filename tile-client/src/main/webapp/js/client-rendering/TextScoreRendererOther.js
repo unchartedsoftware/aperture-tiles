@@ -93,8 +93,6 @@ define(function (require) {
             var that = this,
                 getYOffsetFcn, getLabelYOffsetFcn, getValueFcn;
 
-            console.log("TextScoreLayer::createLayer()");
-
             getYOffsetFcn = function (index) {
                 return 16 * ((this.bin.value.length - 1.0) / 2.0 - index);
             };

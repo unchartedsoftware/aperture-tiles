@@ -34,11 +34,12 @@ define( function (require) {
     var DataLayer = require('./datalayer'),
         layerInfoStatus = {},
         layerInfoCache = {},
-        layerInfoCallbacks = {};
+        layerInfoCallbacks = {}
+        ;
 
     return {
 
-        getDataInfo: function(layerSpec, callback) {
+        getLayerInfo: function(layerSpec, callback) {
 
             var layerInfoListener;
 
@@ -54,7 +55,7 @@ define( function (require) {
 
                 // send info request
                 layerInfoListener = new DataLayer([layerSpec]);
-                layerInfoListener.setRetrievedCallback($.proxy(this.layerInfoCallback, this));
+                layerInfoListener.setRetrievedCallback($.proxy(this.layerInfoReceivedCallback, this));
                 setTimeout( $.proxy(layerInfoListener.retrieveLayerInfo, layerInfoListener), 0);
                 return;
             }
@@ -69,14 +70,16 @@ define( function (require) {
             }
         },
 
-        layerInfoCallback: function (dataLayer, layerInfo) {
+        layerInfoReceivedCallback: function (dataLayer, layerInfo) {
 
             var i;
             layerInfoCache[layerInfo.layer].info = layerInfo;
+            layerInfoStatus[layerInfo.layer] = "loaded";
             for (i =0; i <layerInfoCallbacks[layerInfo.layer].length; i++ ) {
                 layerInfoCallbacks[layerInfo.layer][i](layerInfo);
             }
-            layerInfoStatus[layerInfo.layer] = "loaded";
+            layerInfoCallbacks[layerInfo.layer] = [];
+
         }
     };
 

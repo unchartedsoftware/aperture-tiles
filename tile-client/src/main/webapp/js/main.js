@@ -28,7 +28,6 @@ require(['./fileloader',
          './serverrenderedmaplayer',
          './client-rendering/TextScoreRenderer',
          './client-rendering/TextScoreRendererOther',
-         './client-rendering/DebugLayer',
          './ui/SliderControl',
          './ui/CheckboxControl',
          './ui/LayerControl',
@@ -36,14 +35,15 @@ require(['./fileloader',
          './axis/AxisUtil',
          './axis/Axis',
          './view-controller/Carousel',
-         './DataManager',
+         './LayerInfoLoader',
+         './client-rendering/DataTracker',
          './profileclass'],
 
         function (FileLoader, Map, ServerLayer,
                   TextScoreRenderer, TextScoreRendererOther,
-                  DebugLayer, SliderControl,
+                  SliderControl,
                   CheckboxControl, LayerControl,LabeledControlSet,
-                  AxisUtil, Axis, Carousel, DataManager, Class ) {
+                  AxisUtil, Axis, Carousel, LayerInfoLoader, DataTracker, Class ) {
             "use strict";
 
             var sLayerFileId = "./data/layers.json"
@@ -78,10 +78,10 @@ require(['./fileloader',
                     xAxis,
                     yAxis,
                     carousel,
-                    carouselSpec,
                     tileScoreRenderer,
                     tileScoreRendererOther,
-                    redrawAxes
+                    redrawAxes,
+                    dataSet
                 ;
 
                 // create world map from json file under mapFileId
@@ -162,7 +162,7 @@ require(['./fileloader',
                 });
 
                 worldMap.map.on('panend', redrawAxes);
-                worldMap.map.on('zoom',   redrawAxes);
+                worldMap.map.on('zoomend', redrawAxes);
 
                 layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 
@@ -261,13 +261,6 @@ require(['./fileloader',
                     }
                 };
 
-
-                carouselSpec = {
-                    map: worldMap.map
-                };
-
-
-
                 for (i=0; i<renderLayerSpecs.length; ++i) {
 
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
@@ -308,11 +301,16 @@ require(['./fileloader',
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
 
-                carousel = new Carousel(carouselSpec);
+                LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
 
-                carousel.addView( 'blue', renderLayerSpec, tileScoreRenderer );
-                carousel.addView( 'red', renderLayerSpec, tileScoreRendererOther );
-                carousel.attachToMap( worldMap.map );
+                    dataSet = new DataTracker(layerInfo);
+                    carousel = new Carousel();
+                    carousel.addView( 'blue', dataSet, tileScoreRenderer );
+                    carousel.addView( 'red', dataSet, tileScoreRendererOther );
+                    carousel.attachToMap( worldMap.map );
+                });
+
+
                 /*
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());

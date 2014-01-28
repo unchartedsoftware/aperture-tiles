@@ -53,6 +53,7 @@ define(function (require) {
             this.leftButton = null;
             this.rightButton = null;
             this.indexButtons = [];
+            this.previousMouse = {};
         },
 
         attachToMap: function( map ){
@@ -70,6 +71,14 @@ define(function (require) {
             this.map.olMap_.events.register('mousemove', this.map.olMap_, function(event) {
                 var tilekey = that.mapMouseToTileKey(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
+                that.previousMouse.x = event.xy.x;
+                that.previousMouse.y = event.xy.y;
+            });
+
+
+            this.map.olMap_.events.register('zoomend', this.map.olMap_, function(event) {
+                var tilekey = that.mapMouseToTileKey(that.previousMouse.x, that.previousMouse.y);
+                that.updateSelectedTile(tilekey);
             });
 
             this.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
@@ -82,10 +91,21 @@ define(function (require) {
             }
         },
 
+        addView: function( id, layerSpec, clientRenderer ) {
+            this._super( id, layerSpec, clientRenderer );
+
+            // if map is attached, recreate the ui layers
+            if (this.map) {
+                this.removeUI();
+                this.createUI();
+            }
+
+        },
+
         removeUI: function() {
 
+            var i;
             if (this.map) {
-                var i;
                 if (this.leftButton) {
                     this.leftButton.remove();
                     this.leftButton = null;
@@ -98,16 +118,6 @@ define(function (require) {
                     this.indexButtons[i].remove();
                 }
                 this.indexButtons = [];
-            }
-        },
-
-        addView: function( id, layerSpec, clientRenderer ) {
-            this._super( id, layerSpec, clientRenderer );
-
-            // if map is attached, recreate the ui layers
-            if (this.map) {
-                this.removeUI();
-                this.createUI();
             }
         },
 
@@ -124,7 +134,7 @@ define(function (require) {
             // index dots
             this.indexButtons = [];
             for (i=0, j=-positionFactor; j<=positionFactor; i++, j++) {
-                this.indexButtons.push( this.createViewIndexLayer(i, j) );
+                this.indexButtons.push( this.createViewIndexLayer(i, j));
             }
         },
 
@@ -160,15 +170,21 @@ define(function (require) {
                 hover.clear();
             });
 
-            viewSelectionLayer.on('click', function(event) {
+            viewSelectionLayer.on('mouseup', function(event) {
 
                 var tilekey = event.data.tilekey,
+                    button = event.source.button,
                     mod = function (m, n) {
                         return ((m % n) + n) % n;
                     },
                     inc = (position === 'left') ? -1 : 1,
                     oldIndex = that.getTileViewIndex(tilekey),
                     newIndex = mod(oldIndex + inc, that.views.length);
+
+                if (button !== 0) {
+                    // not left click, abort
+                    return;
+                }
 
                 that.onTileViewChange(tilekey, newIndex);
 
@@ -224,7 +240,13 @@ define(function (require) {
             viewIndexLayer.on('click', function(event) {
 
                 var tilekey = event.data.tilekey,
+                    button = event.source.button,
                     oldIndex = that.getTileViewIndex(tilekey);
+
+                if (button !== 0) {
+                    // not left click, abort
+                    return;
+                }
 
                 that.onTileViewChange(tilekey, index);
                 that.indexButtons[oldIndex].all().redraw();
@@ -251,6 +273,8 @@ define(function (require) {
             outlineLayer.map('y').asValue(0);
 
             outlineLayer.map('url').asValue(icon);
+
+            return outlineLayer;
         },
 
 
@@ -283,6 +307,7 @@ define(function (require) {
 
             return zoom + "," + Math.floor(pixel.x / TILESIZE) + "," + Math.floor(pixel.y / TILESIZE);
         },
+
 
         updateSelectedTile: function(tilekey) {
 

@@ -33,41 +33,30 @@ define(function (require) {
     var Class = require('../class'),
         AoIPyramid = require('../client-rendering/AoITilePyramid'),
         TileIterator = require('../client-rendering/TileIterator'),
-        TileDataTracker = require('../client-rendering/TileDataTracker'),
+        TileTracker = require('../client-rendering/TileTracker'),
         ViewController;
 
 
-
     ViewController = Class.extend({
+
         /**
-         * Construct a carousel
-         * @param spec Carousel specification object:
+         * Constructor
          */
         init: function () {
 
-            this.map = null; // TODO: MAKE PRIVATE!
+            this.map = null;
             this.views = [];
             this.defaultViewIndex = 0;  // if not specified, this is the default view of a tile
             this.tileViewMap = {}; // maps a tile key to its view index
         },
 
-
-        addView: function( id, layerSpec, clientRenderer ) {
-
-            var view = {
-                id: id,
-                layerSpec: layerSpec,
-                renderer: clientRenderer
-            };
-
-            this.createViewNodeLayer(view);
-
-            this.views.push( view );
-        },
-
-        attachToMap: function( map ) {
+        /**
+         * Attach view controller to a map
+         */
+        attachToMap: function(map) {
 
             var i;
+
             if (this.map) {
                 return; // can only attach a single map to view controller
             }
@@ -75,16 +64,53 @@ define(function (require) {
             // set map
             this.map = map;
 
-            // add map listeners
-            this.map.on('zoom',   $.proxy(this.onMapUpdate, this));
+            this.map.olMap_.events.register('zoomend', this.map.olMap_, $.proxy(this.onMapUpdate, this) );
             this.map.on('panend', $.proxy(this.onMapUpdate, this));
 
             for (i = 0; i < this.views.length; i++) {
                 this.createViewNodeLayer(this.views[i]);
             }
+
+            this.onMapUpdate();
         },
 
+        /**
+         * Add view to view controller
+         */
+        addView: function(id, dataSet, clientRenderer) {
 
+            var view = {
+                id: id,
+                tileTracker: new TileTracker(dataSet),
+                renderer: clientRenderer
+            };
+
+            this.createViewNodeLayer(view);
+
+            this.views.push(view);
+        },
+
+        /**
+         * If attached to a map, create node layer for view rendering
+         */
+        createViewNodeLayer: function(view) {
+
+            if (this.map) {
+                // create node layer off of map
+                view.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
+                view.nodeLayer.map('longitude').from('longitude');
+                view.nodeLayer.map('latitude').from('latitude');
+                // Necessary so that aperture won't place labels and texts willy-nilly
+                view.nodeLayer.map('width').asValue(1);
+                view.nodeLayer.map('height').asValue(1);
+                // create the renderer layer off of the shared view layer
+                view.renderer.createLayer(view.nodeLayer);
+            }
+        },
+
+        /**
+         * Returns view index for specified tile key
+         */
         getTileViewIndex: function(tilekey) {
             // given a tile key "level + "," + xIndex + "," + yIndex"
             // return the view index
@@ -98,59 +124,31 @@ define(function (require) {
         },
 
 
-        createViewNodeLayer: function(view) {
-
-            if (this.map) {
-                // add the data tracker
-                view.dataTracker = new TileDataTracker( view.layerSpec, $.proxy(this.onMapUpdate, this) );
-                // create node layer off of map
-                view.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
-                view.nodeLayer.map('longitude').from('longitude');
-                view.nodeLayer.map('latitude').from('latitude');
-                //this.nodeLayer.map('visible').asValue('visible');
-                // Necessary so that aperture won't place labels and texts willy-nilly
-                view.nodeLayer.map('width').asValue(1);
-                view.nodeLayer.map('height').asValue(1);
-                // create the renderer layer off of the shared view layer
-                view.renderer.createLayer(view.nodeLayer);
-            }
-        },
-
+        /**
+         * Tile change callback function
+         */
         onTileViewChange: function(tilekey, newViewIndex) {
 
-            var oldViewIndex = this.getTileViewIndex(tilekey),  // old view index for tile
-                oldTracker = this.views[oldViewIndex].dataTracker,
-                newTracker = this.views[newViewIndex].dataTracker,
-                parsedValues = tilekey.split(','),
-                level =  parseInt(parsedValues[0], 10),
-                xIndex = parseInt(parsedValues[1], 10),
-                yIndex = parseInt(parsedValues[2], 10);
-
-            // remove tile from old tracker
-            oldTracker.untrackTile(tilekey);
+            var that = this,
+                oldViewIndex = this.getTileViewIndex(tilekey),  // old view index for tile
+                oldTracker = this.views[oldViewIndex].tileTracker,
+                newTracker = this.views[newViewIndex].tileTracker;
 
             this.tileViewMap[tilekey] = newViewIndex;
 
-            // add tile to new tracker
-            newTracker.trackTile(tilekey);
-
-            // send request
-            aperture.io.rest(
-                (newTracker.layerInfo.apertureservice+'1.0.0/'+
-                 newTracker.layerInfo.layer+'/'+
-                 level+'/'+          // level
-                 xIndex+'/'+         // xIndex
-                 yIndex+'.json'),    // yIndex
-                 'GET',
-                 // Update will go to our tile tracker.
-                 $.proxy(this.onReceiveTile, this)
-            );
+            oldTracker.swapTileWith(newTracker, tilekey, function() {
+                that.views[oldViewIndex].nodeLayer.all(that.views[oldViewIndex].tileTracker.getNodeData());
+                that.views[newViewIndex].nodeLayer.all(that.views[newViewIndex].tileTracker.getNodeData());
+                that.map.all().redraw();
+            });
         },
 
-
+        /**
+         * Map update callback
+         */
         onMapUpdate: function() {
 
-            var i, j,
+            var i,
                 tiles,
                 level = this.map.getZoom(),
                 bounds = this.map.olMap_.getExtent(),
@@ -171,54 +169,28 @@ define(function (require) {
 
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
-                viewIndex = this.getTileViewIndex(tiles[i].level+','
-                                                 +tiles[i].xIndex+','
-                                                 +tiles[i].yIndex);
+                viewIndex = this.getTileViewIndex(tiles[i].level+','+
+                                                  tiles[i].xIndex+','+
+                                                  tiles[i].yIndex);
                 tilesByView[viewIndex].push(tiles[i]);
             }
 
-
             for (i=0; i<this.views.length; ++i) {
-
                 // find which tiles we need for each view from respective
-                tilesByView[i] = this.views[i].dataTracker.filterTiles(tilesByView[i]);
-
-                // send request to respective coordinator
-                for (j=0; j<tilesByView[i].length; ++j) {
-                    // Data unknown; request it.
-                    aperture.io.rest(
-                        (this.views[i].dataTracker.layerInfo.apertureservice+'1.0.0/'+
-                         this.views[i].dataTracker.layerInfo.layer+'/'+
-                         tilesByView[i][j].level+'/'+
-                         tilesByView[i][j].xIndex+'/'+
-                         tilesByView[i][j].yIndex+'.json'),
-                        'GET',
-                        // Update will go to our tile tracker
-                        $.proxy(this.onReceiveTile, this)
-                    );
-                }
+                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], $.proxy(this.onReceiveTile, this));
             }
-
-
         },
 
-        onReceiveTile: function(tileData) {
+        onReceiveTile: function() {
 
-            var i,
-                viewIndex = this.getTileViewIndex(tileData.index.level + ','
-                                                + tileData.index.xIndex + ','
-                                                + tileData.index.yIndex);
+            var that = this,
+                i;
 
-            // get updated data
-            this.views[viewIndex].dataTracker.addTileData(tileData);
-
-            for (i=0; i< this.views.length; i++ ) {
-                this.views[i].nodeLayer.join(this.views[i].dataTracker.getNodeData(), "binkey");
-                this.views[i].nodeLayer.all().redraw();
-                console.log("redraw");
+            for (i=0; i< that.views.length; i++ ) {
+                that.views[i].nodeLayer.all(that.views[i].tileTracker.getNodeData());
             }
+            that.map.all().redraw();
         }
-
 
      });
 

@@ -81,7 +81,7 @@ define (function (require) {
                 var sinh = function (arg) {
                     return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
                 };
-                return Math.atan(sinh(y)) * 57.2957795;
+                return Math.atan(sinh(y)) * RADIANS_TO_DEGREES;
             };
         return gudermannian( (value / 85.05) * Math.PI );
     };
@@ -91,7 +91,7 @@ define (function (require) {
                 // converts a latitude value from -85.05 to 85.05 into
                 // a y value from -PI(bottom) to PI(top)
                 var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
-                    sin = Math.sin(latitude * 0.0174532925 * sign);
+                    sin = Math.sin(latitude * DEGREES_TO_RADIANS * sign);
 
                 return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
             };
