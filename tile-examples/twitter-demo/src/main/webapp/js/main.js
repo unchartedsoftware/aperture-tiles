@@ -26,26 +26,31 @@
 require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
-		 './client-rendering/TextScoreRenderer',
+         './client-rendering/TextScoreRenderer',
+         './client-rendering/TextScoreRendererOther',
          './ui/SliderControl',
          './ui/CheckboxControl',
          './ui/LayerControl',
          './ui/LabeledControlSet',
          './axis/AxisUtil',
          './axis/Axis',
+         './view-controller/Carousel',
+         './LayerInfoLoader',
+         './client-rendering/DataTracker',
          './profileclass'],
 
         function (FileLoader, Map, ServerLayer,
-                  TextScoreRenderer, SliderControl,
+                  TextScoreRenderer, TextScoreRendererOther,
+                  SliderControl,
                   CheckboxControl, LayerControl,LabeledControlSet,
-                  AxisUtil, Axis, Class ) {
+                  AxisUtil, Axis, Carousel, LayerInfoLoader, DataTracker, Class ) {
             "use strict";
 
             var sLayerFileId = "./data/layers.json"
                 // Uncomment for geographic data
-                //,mapFileId = "./data/geomap.json"
+                ,mapFileId = "./data/geomap.json"
                 // Uncomment for non-geographic data
-                ,mapFileId = "./data/emptymap.json"
+                //,mapFileId = "./data/emptymap.json"
                 ,cLayerFileId = "./data/renderLayers.json";
 
             // Load all our UI configuration data before trying to bring up the ui
@@ -55,7 +60,6 @@ require(['./fileloader',
                     slider,
                     checkbox,
                     serverLayers,
-                    renderLayer,
                     renderLayerSpecs,
                     renderLayerSpec,
                     layerIds,
@@ -73,7 +77,11 @@ require(['./fileloader',
                     yAxisSpec,
                     xAxis,
                     yAxis,
-                    redrawAxes
+                    carousel,
+                    tileScoreRenderer,
+                    tileScoreRendererOther,
+                    redrawAxes,
+                    dataTracker
                 ;
 
                 // create world map from json file under mapFileId
@@ -82,7 +90,7 @@ require(['./fileloader',
 
                 xAxisSpec = {
 
-                    title: "Time",
+                    title: "Longitude",
                     parentId: worldMap.mapSpec.id,
                     id: "map-x-axis",
                     olMap: worldMap.map.olMap_,
@@ -93,10 +101,12 @@ require(['./fileloader',
                         value: 60,
                         pivot: 0,
                         allowScaleByZoom: true,
-                        isMercatorProjected: false
+                        isMercatorProjected: true
                     },
                     unitSpec: {
-                        type: 'time',
+                        type: 'degrees',
+                        divisor: undefined,
+                        decimals: 2,
                         allowStepDown: false
                     },
                     position: 'bottom',
@@ -106,7 +116,7 @@ require(['./fileloader',
 
                 yAxisSpec = {
 
-                    title: "Amount (BTC)",
+                    title: "Latitude",
                     parentId: worldMap.mapSpec.id,
                     id: "map-y-axis",
                     olMap: worldMap.map.olMap_,
@@ -117,10 +127,11 @@ require(['./fileloader',
                         value: 30,
                         pivot: 0,
                         allowScaleByZoom: true,
-                        isMercatorProjected: false
+                        isMercatorProjected: true
                     },
                     unitSpec: {
-                        type: 'decimal',
+                        type: 'degrees',
+                        divisor: undefined,
                         decimals: 2,
                         allowStepDown: false
                     },
@@ -151,10 +162,7 @@ require(['./fileloader',
                 });
 
                 worldMap.map.on('panend', redrawAxes);
-                worldMap.map.on('zoom',   redrawAxes);
-
-
-
+                worldMap.map.on('zoomend', redrawAxes);
 
                 layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 
@@ -183,7 +191,6 @@ require(['./fileloader',
                 layerControl.addControl(layerId + '-slider', slider.getElement());
                 // add layer controls to control set
                 layerControlSet.addControl(layerId, 'Base Layer', layerControl.getElement());
-
 
                 // Set up server-rendered display layers
                 serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
@@ -237,13 +244,13 @@ require(['./fileloader',
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
 
-
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
                 // debugLayer.addToMap(worldMap);
 
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
+
                 tooltipFcn = function (text) {
                     if (text) {
                         $('#hoverOutput').html(text);
@@ -257,9 +264,13 @@ require(['./fileloader',
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
-                    renderLayer = new TextScoreLayer(layerId, renderLayerSpec);
-                    renderLayer.setTooltipFcn(tooltipFcn);
-                    renderLayer.addToMap(worldMap);
+                    tileScoreRenderer = new TextScoreRenderer();
+                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+
+
+                    tileScoreRendererOther = new TextScoreRendererOther();
+                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -280,13 +291,35 @@ require(['./fileloader',
                     layerControl = new LayerControl(layerId);
                     // add visibility checkbox control
                     /*
-                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement() );
+                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement());
                     // add slider control
                     layerControl.addControl(layerId + '.slider', slider.getElement());
                     */
                     // add layer control to control set
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
+
+                LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
+
+                    dataTracker = new DataTracker(layerInfo);
+                    carousel = new Carousel( {
+                        map: worldMap.map,
+                        views: [
+                            {
+                                id: "red",
+                                dataTracker: dataTracker,
+                                renderer: tileScoreRenderer
+                            },
+                            {
+                                id: "blue",
+                                dataTracker: dataTracker,
+                                renderer: tileScoreRendererOther
+                            }
+                        ]});
+                    carousel.dummy = 0; // to shut jslint up
+
+                });
+
 
                 /*
                 setTimeout(function () {

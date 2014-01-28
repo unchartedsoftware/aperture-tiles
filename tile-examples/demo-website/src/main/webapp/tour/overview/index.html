@@ -56,15 +56,16 @@
                 <h1>Aperture Tiles Overview</h1>
 
                 <p>Aperture-Tiles provides a single, consistent tool which effectively leverages tiling to 
-                visualize data at any scale. Effectively using a tiling approach has multiple advantages. Many 
-                good JavaScript libraries exist for interacting with tiled images. Tiling can provide effective 
-                data compression and efficient distribution for extreme scale data. Due to the increasing exposure 
-                of apps such as Google Maps, tile interactions have become familiar and widespread.
+                visualize data at any scale. Effectively using a tiling approach has multiple advantages such as visualizing
+                and computing analytics at multiple resolutions. Many good JavaScript libraries exist for interacting with 
+                tiled images. Tiling can provide effective data compression and efficient distribution for extreme scale data. 
+                Due to the increasing exposure of apps such as Google Maps, tile interactions have become familiar and widespread.
 				However, a conventional tiling approach is currently limited by two critical restraints. Tiles can 
-				take a long time to generate and data values can become baked into tiles, resulting in stale tiles 
+				take a long time to generate and data values are baked into rendered tiles, resulting in stale tiles 
 				representing dynamic data. Aperture-Tiles addresses these drawbacks by using distributed computation 
 				to quickly generate data for tiles and defining reproducible data flows which can regenerate tiles 
-				from live data, reducing tile staleness.</p>
+				from live data, reducing tile staleness. Separation of tile data from rendering supports agile development and 
+				creation of interactive tiles using web-based client side rendering such as <a href="http://aperturejs.com/">ApertureJS</a>.</p>
                 
                 <h2>Tile-based Visual Analytics for Interactive Visualization</h2>
                 <p>The aggregation stage projects and bins data into a predefined grid, such as the Tiling Map Service 
