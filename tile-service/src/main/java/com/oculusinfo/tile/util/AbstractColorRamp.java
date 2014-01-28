@@ -31,6 +31,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
+
 public abstract class AbstractColorRamp implements ColorRamp {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractColorRamp.class);
@@ -184,24 +186,6 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	//---------------------------------------------
 	
 	/**
-	 * Converts an object into a number.
-	 * @return
-	 * 	If the object is already a number then it just casts it.
-	 * 	If the object is a string, then it parses it as a double.
-	 * 	Otherwise the number returned is 0. 
-	 */
-	protected static Number getNumber(Object o) {
-		Number val = 0;
-		if (o instanceof Number) {
-			val = (Number)o;
-		}
-		else if (o instanceof String) {
-			val = Double.valueOf((String)o);
-		}
-		return val;
-	}
-	
-	/**
 	 * Converts a list of items into a {@link FixedPoint}.
 	 * Uses the first element in the list as the scale, and the second element
 	 * as the value.
@@ -220,12 +204,12 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		int numItems = list.size();
 		if (numItems >= 1) {
 			//the scale should be the first item
-			scale = getNumber(list.get(0)).doubleValue();
+			scale = JsonUtilities.getNumber(list.get(0)).doubleValue();
 		}
 		
 		if (numItems >= 2) {
 			//the value should be the second item
-			value = getNumber(list.get(1)).doubleValue();
+			value = JsonUtilities.getNumber(list.get(1)).doubleValue();
 		}
 
 		return new FixedPoint(scale, value);
@@ -247,16 +231,16 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		double value = 0;
 
 		if (map.containsKey("scale")) {
-			scale = getNumber(map.get("scale")).doubleValue();
+			scale = JsonUtilities.getNumber(map.get("scale")).doubleValue();
 		}
 		else if (map.containsKey("value")) {
-			value = getNumber(map.get("value")).doubleValue();
+			value = JsonUtilities.getNumber(map.get("value")).doubleValue();
 		}
 		else if (map.containsKey("0")) {
-			scale = getNumber(map.get("0")).doubleValue();
+			scale = JsonUtilities.getNumber(map.get("0")).doubleValue();
 		}
 		else if (map.containsKey("1")) {
-			value = getNumber(map.get("1")).doubleValue();
+			value = JsonUtilities.getNumber(map.get("1")).doubleValue();
 		}
 		
 		return new FixedPoint(scale, value);

@@ -74,7 +74,13 @@ public class JsonUtilities {
 		return map;
 	}
 	
-	private static List<Object> jsonArrayToList(JSONArray jsonList) {
+	/**
+	 * Converts a {@link JSONArray} into a {@link List} of values.
+	 * @param jsonList
+	 * @return
+	 * 	Returns a list of values
+	 */
+	public static List<Object> jsonArrayToList(JSONArray jsonList) {
 		int numItems = jsonList.length();
 		List<Object> list = new ArrayList<Object>(numItems);
 		for (int i = 0; i < numItems; i++) {
@@ -92,4 +98,24 @@ public class JsonUtilities {
 		
 		return list;
 	}
+	
+	/**
+	 * Converts an object into a number.
+	 * @return
+	 * 	If the object is already a number then it just casts it.
+	 * 	If the object is a string, then it parses it as a double.
+	 * 	Otherwise the number returned is 0. 
+	 */
+	public static Number getNumber(Object o) {
+		Number val = 0;
+		if (o instanceof Number) {
+			val = (Number)o;
+		}
+		else if (o instanceof String) {
+			val = Double.valueOf((String)o);
+		}
+		return val;
+	}
+
+	
 }

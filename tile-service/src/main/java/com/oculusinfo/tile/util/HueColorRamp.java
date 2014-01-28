@@ -27,6 +27,8 @@ package com.oculusinfo.tile.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
+
 /**
  * Generates colours based on the hue value between 'fromVal' and 'toVal'.
  * This ramp expects the following parameters to exist in {@link ColorRampParameter}
@@ -52,14 +54,14 @@ public class HueColorRamp implements ColorRamp {
 	
 	public HueColorRamp(ColorRampParameter params) {
 		try {
-			fromVal = clamp(getNumber(params.getString("from")).doubleValue(), 0, 1);
+			fromVal = clamp(JsonUtilities.getNumber(params.getString("from")).doubleValue(), 0, 1);
 		}
 		catch (Exception e) {
 			logger.error("Hue ramp's 'from' value is invalid. Should be 0 -> 1", e);
 			fromVal = 0;
 		}
 		try {
-			toVal = clamp(getNumber(params.getString("to")).doubleValue(), 0, 1);
+			toVal = clamp(JsonUtilities.getNumber(params.getString("to")).doubleValue(), 0, 1);
 		}
 		catch (Exception e) {
 			logger.error("Hue ramp's 'to' value is invalid. Should be 0 -> 1", e);
@@ -68,24 +70,6 @@ public class HueColorRamp implements ColorRamp {
 	
 	}
 	
-	/**
-	 * Converts an object into a number.
-	 * @return
-	 * 	If the object is already a number then it just casts it.
-	 * 	If the object is a string, then it parses it as a double.
-	 * 	Otherwise the number returned is 0. 
-	 */
-	protected static Number getNumber(Object o) {
-		Number val = 0;
-		if (o instanceof Number) {
-			val = (Number)o;
-		}
-		else if (o instanceof String) {
-			val = Double.valueOf((String)o);
-		}
-		return val;
-	}
-
 	@Override
 	public int getRGB(double scale) {
 		return hslToRGB((toVal - fromVal) * scale + fromVal, 1.0, 0.5);
