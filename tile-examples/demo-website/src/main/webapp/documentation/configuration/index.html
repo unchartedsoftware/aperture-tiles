@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Documentation | Aperture Tiles</title>
+    <link rel="stylesheet" type="text/css" href="../../css/all.css">
+    <link rel="stylesheet" type="text/css" href="../../jstests/test.css">
+    <link rel="stylesheet" href="../../prettify/default.css">
+    <link rel="SHORTCUT ICON" href="../../img/aperture-16x16.ico"/>
+    <script src="../../lib/jquery.js"></script>
+    <script src="../../lib/ga.js"></script>
+    <script type="text/javascript" src="../../css/js/syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../css/js/syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<link href="../../css/js/syntaxhighlighter_3.0.83/styles/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="../../css/js/syntaxhighlighter_3.0.83/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<div id="header"></div>
+<div id="content-strip">
+    <div id="header-logo">
+        <a href="../../"><img src="../../img/aperture-tiles-big.png"></a>
+    </div>
+    <div id="header-menu">
+        <a href="../../" class="overview">&nbsp;</a>
+        <a href="../../tour/overview/">Tour</a>
+        <a href="../../documentation/setup/" class="selected">Documentation</a>
+        <a href="../../demos/">Demos</a>
+        <a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
+
+			<span id="testlinks">
+				<a href="../../examples/tests.html">Tests</a>
+			</span>
+    </div>
+
+    <div id="all">
+    	<div id="submenu">
+            <div class="submenu-item" onclick="window.location.assign('../setup/');">
+                <div class="submenu-item-background">
+                    <div class="submenu-item-number">1</div>
+                </div>
+                <div class="submenu-item-label">Installation</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('../generation/');">
+                <div class="submenu-item-background">
+                    <div class="submenu-item-number">2</div>
+                </div>
+                <div class="submenu-item-label">Generation</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('');">
+                <div class="submenu-item-background selected">
+                    <div class="submenu-item-number">3</div>
+                </div>
+                <div class="submenu-item-label">Configure</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('../rendering/');">
+                <div class="submenu-item-background ">
+                    <div class="submenu-item-number">4</div>
+                </div>
+                <div class="submenu-item-label">Rendering</div>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="content-context">
+                    <ul class="toc right"><li>
+                        <a href="#Aperture-Tile-Server-Config">Aperture Tile Server Configuration</a>
+                        <li><a href="#Aperture-Tile-Client-Config">Aperture Tile Client Configuration</a>
+                        <ul><li><a href="#Configuring-Tile-Sets-for-Display">Configuring Tile Sets for Display</a>
+                        </li><li><a href="#Server-side-Tile-Rendering-Configuration">Server-side Tile Rendering Configuration</a>
+                            <ul><li><a href="#Renderer-Options">Renderer Options</a></li></ul>
+                    </li><li><a href="#color-Ramps-Configuration">color Ramps Configuration</a><ul><li>
+                            <a href="#color-Ramp-Types">color Ramp Types</a></li></ul>
+                    </li></ul>
+            </div>
+
+            <div class="content-body">
+                <h1>Configuration</h1>
+                <a name="Aperture-Tile-Server-Config"></a>
+                <h2>Aperture Tile Server Configuration</h2>
+                In order to serve tile data to a web client, one needs to set a few configuration details in the tile-server:
+                <p><pre>tile-server/src/main/webapp/WEB-INF/web.xml</pre>This file determines how the server locates tiles. Details can be found within the file - look for "Storage type".</p>
+                <p><pre>tile-server/src/main/resources/tile.properties</pre>This file describes where the server will find tile datasets. Details are contained therein - look for the name of the storage module you enabled in web.xml.</p>
+
+                <a name="Aperture-Tile-Client-Config"></a>
+                <h2>Aperture Tile Client Configuration</h2>
+                <a name="Configuring-Tile-Sets-for-Display"></a>
+                <h3>Configuring Tile Sets for Display</h3>
+                Once the tile server is configured, the client must be told exactly what layers to display, and how. All client configuration files are in <pre>tile-client/src/main/webapp/data.</pre>
+                <b>geomap.json</b><br>A description of the base layer of a geographical map on which to display data.<p>
+                <b>emptymap.json</b><br>A description of an empty base layer, for use when the tiles don't represent geographic data (coming soon).<p>
+                <b>layers.json</b><br>A description of the layers to display. This contains a JSON array of objects, each of which describes a single layer. Layer properties are as follows:<br>
+                <ul>
+                    <li>Name - the human-readable name of the layer (defaults to the same value as 'Layer')</li>
+                    <li>Layer - the id by which the server knows the layer.</li>
+                    <li>Transform - what transform to apply to the data values when determining color.  Options are:
+                        <ul>
+                            <li>linear - no transformation</li>
+                            <li>log10 - take the logarithm of raw values</li>
+                        </ul>
+                    </li>
+                    <li>Ramp - the color ramp to apply to transformed data values to determine how it is dispayed.  Options are described, where appropriate, as applying from the minimum data value to the maximum.  See below for details.</li>
+                    <li>Type - the type of tile.  Currently only the value "tile", indicating server-rendered tiles, is supported; direct image pyramids and client-rendered should be supported soon.</li>
+                    <li>Opacity - the starting opacity of the layer.  This is a value from 0 (totally transparent) to 1 (totally opaque)</li>
+                    <li>Renderer - the renderer the server should use to render tiles.  This also specifies how the server will read the tiles, as the renderer and serializer are intimately linked.
+                        <ul>
+                            <li>default - render to a heat-map, based on a standard avro double-valued tile</li>
+                            <li>doubleseries - render to a series of heat-maps, based on a standard avro double-series-valued tile</li>
+                            <li>doublestatistics - render tile's total hit and % coverage as text to the tile</li>
+                            <li>textscore - render to an image showing the scored words, with bars based on their score</li>
+                        </ul></li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script type="text/javascript">
+    SyntaxHighlighter.all()
+</script>
+
+</html>
