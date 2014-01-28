@@ -37,8 +37,8 @@
 define(function (require) {
     "use strict";
     var MapLayer = require('./MapLayer'),
-        TileIterator = require('./TileIterator'),
-        AoIPyramid = require('./AoITilePyramid'),
+        TileIterator = require('../client-rendering/TileIterator'),
+        AoIPyramid = require('../client-rendering/AoITilePyramid'),
         mapPyramid, DebugLayer;
 
     mapPyramid = new AoIPyramid(-20037500, -20037500,

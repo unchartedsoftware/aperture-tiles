@@ -266,7 +266,7 @@ define(function (require) {
 
             var axis = {},
                 markers = [],
-                that;
+                that = this;
 
             /**
              * Creates and returns the axis label element with proper CSS
@@ -445,10 +445,10 @@ define(function (require) {
 
                 // add margin space for axis
                 axis.marginContainer.css('margin-' + that.position, labelOffset + 'px');
-            }
 
-            // set context for inner functions
-            that = this;
+                // div container may change size, this updates properties accordingly
+                that.olMap.updateSize();
+            }
 
             if (this.good) {
                 // update mutable spec attributes

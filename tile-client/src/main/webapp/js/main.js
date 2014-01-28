@@ -26,20 +26,24 @@
 require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
-         './client-rendering/TextScoreLayer',
-         './client-rendering/DebugLayer',
+         './client-rendering/TextScoreRenderer',
+         './client-rendering/TextScoreRendererOther',
          './ui/SliderControl',
          './ui/CheckboxControl',
          './ui/LayerControl',
          './ui/LabeledControlSet',
          './axis/AxisUtil',
          './axis/Axis',
+         './view-controller/Carousel',
+         './LayerInfoLoader',
+         './client-rendering/DataTracker',
          './profileclass'],
 
         function (FileLoader, Map, ServerLayer,
-                  TextScoreLayer, DebugLayer, SliderControl,
+                  TextScoreRenderer, TextScoreRendererOther,
+                  SliderControl,
                   CheckboxControl, LayerControl,LabeledControlSet,
-                  AxisUtil, Axis, Class ) {
+                  AxisUtil, Axis, Carousel, LayerInfoLoader, DataTracker, Class ) {
             "use strict";
 
             var sLayerFileId = "./data/layers.json"
@@ -55,26 +59,29 @@ require(['./fileloader',
                 var worldMap,
                     slider,
                     checkbox,
-                    serverLayers,
-                    renderLayer,
+                    //serverLayers,
                     renderLayerSpecs,
                     renderLayerSpec,
-                    layerIds,
+                    //layerIds,
                     layerId,
                     layerName,
                     layerControl,
-                    makeSlideHandler,
-                    makeCheckboxCheckedHandler,
-                    makeCheckboxUncheckedHandler,
+                    //makeSlideHandler,
+                    //makeCheckboxCheckedHandler,
+                    //makeCheckboxUncheckedHandler,
                     i,
                     layerControlSet,
-                    layerSpecsById,
+                    //layerSpecsById,
                     tooltipFcn,
                     xAxisSpec,
                     yAxisSpec,
                     xAxis,
                     yAxis,
-                    redrawAxes
+                    carousel,
+                    tileScoreRenderer,
+                    tileScoreRendererOther,
+                    redrawAxes,
+                    dataTracker
                 ;
 
                 // create world map from json file under mapFileId
@@ -155,10 +162,7 @@ require(['./fileloader',
                 });
 
                 worldMap.map.on('panend', redrawAxes);
-                worldMap.map.on('zoom',   redrawAxes);
-
-
-
+                worldMap.map.on('zoomend', redrawAxes);
 
                 layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 
@@ -188,7 +192,7 @@ require(['./fileloader',
                 // add layer controls to control set
                 layerControlSet.addControl(layerId, 'Base Layer', layerControl.getElement());
 
-
+                /*
                 // Set up server-rendered display layers
                 serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
                 serverLayers.addToMap(worldMap);
@@ -240,7 +244,7 @@ require(['./fileloader',
                     // add layer control to control set
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
-
+                */
 
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
@@ -248,6 +252,7 @@ require(['./fileloader',
 
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
+
                 tooltipFcn = function (text) {
                     if (text) {
                         $('#hoverOutput').html(text);
@@ -261,9 +266,13 @@ require(['./fileloader',
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
-                    renderLayer = new TextScoreLayer(layerId, renderLayerSpec);
-                    renderLayer.setTooltipFcn(tooltipFcn);
-                    renderLayer.addToMap(worldMap);
+                    tileScoreRenderer = new TextScoreRenderer();
+                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+
+
+                    tileScoreRendererOther = new TextScoreRendererOther();
+                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -284,13 +293,35 @@ require(['./fileloader',
                     layerControl = new LayerControl(layerId);
                     // add visibility checkbox control
                     /*
-                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement() );
+                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement());
                     // add slider control
                     layerControl.addControl(layerId + '.slider', slider.getElement());
                     */
                     // add layer control to control set
                     layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
+
+                LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
+
+                    dataTracker = new DataTracker(layerInfo);
+                    carousel = new Carousel( {
+                        map: worldMap.map,
+                        views: [
+                            {
+                                id: "red",
+                                dataTracker: dataTracker,
+                                renderer: tileScoreRenderer
+                            },
+                            {
+                                id: "blue",
+                                dataTracker: dataTracker,
+                                renderer: tileScoreRendererOther
+                            }
+                        ]});
+                    carousel.dummy = 0; // to shut jslint up
+
+                });
+
 
                 /*
                 setTimeout(function () {

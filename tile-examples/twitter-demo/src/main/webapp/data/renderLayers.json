@@ -1,2 +1,7 @@
 [
+	{
+        "layer": "ibm-twitter-keyword",
+        "transform": "linear",
+        "opacity": 0.85
+    }	
 ]

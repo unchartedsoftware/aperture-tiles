@@ -35,23 +35,18 @@ define(function (require) {
 
 
 
-    var MapLayer = require('./MapLayer'),
-        MapServerCoordinator = require('./MapServerCoordinator'),
-        TextScoreLayer;
+    var Class = require('../class'),
+        TextScoreRendererOther;
 
 
 
-    TextScoreLayer = MapLayer.extend({
-        ClassName: "TextScoreLayer",
-        init: function (id, layerSpec) {
-            this._super(id);
-            // Set our base position within each tile
-            this.tracker.setPosition('center');
-            // Set hover output to be ignored by default
+    TextScoreRendererOther = Class.extend({
+        ClassName: "TextScoreRendererOther",
+
+        init: function() {
+
             this.tooltipFcn = null;
-            // Start up our server data listener
-            this.coordinator = new MapServerCoordinator(this.tracker,
-                                                        layerSpec);
+
         },
 
         /**
@@ -62,6 +57,7 @@ define(function (require) {
         setTooltipFcn: function (tooltipFcn) {
             this.tooltipFcn = tooltipFcn;
         },
+
 
         /**
          * A method to get the text of a tooltip from a mouse event
@@ -89,15 +85,20 @@ define(function (require) {
             return "Text: "+key+", score: "+value+" from range ["+minValue+", "+maxValue+"]";
         },
 
+
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
         createLayer: function (nodeLayer) {
             var that = this,
-                getYOffsetFcn, getValueFcn;
+                getYOffsetFcn, getLabelYOffsetFcn, getValueFcn;
 
             getYOffsetFcn = function (index) {
                 return 16 * ((this.bin.value.length - 1.0) / 2.0 - index);
+            };
+
+            getLabelYOffsetFcn = function (index) {
+                return 16 * ((this.bin.value.length - 1.0) / 2.0 - index) + 5;
             };
                 
             getValueFcn = function (index, data) {
@@ -113,9 +114,7 @@ define(function (require) {
                 return data.bin.value[index].value / maxValue;
             };
 
-
-
-            this.labelLayer = this._nodeLayer.addLayer(aperture.LabelLayer);
+            this.labelLayer = nodeLayer.addLayer(aperture.LabelLayer);
             this.labelLayer.map('label-count').from('bin.value.length');
             this.labelLayer.map('text').from(function (index) {
                 return this.bin.value[index].key;
@@ -127,7 +126,7 @@ define(function (require) {
                 }
                 return 10;
             });
-            this.labelLayer.map('offset-y').from(getYOffsetFcn);
+            this.labelLayer.map('offset-y').from(getLabelYOffsetFcn);
             this.labelLayer.map('text-anchor').from(function (index) {
                 var value = getValueFcn(index, this);
                 if (value >= 0) {
@@ -138,7 +137,6 @@ define(function (require) {
             this.labelLayer.map('fill').asValue('#C0FFC0');
             this.labelLayer.map('font-outline').asValue('#222');
             this.labelLayer.map('font-outline-width').asValue(3);
-            this.labelLayer.map('visible').asValue(true);
             this.labelLayer.on('mouseover', function (event) {
                 if (that.tooltipFcn) {
                     that.tooltipFcn(that.getTooltip(event));
@@ -150,7 +148,7 @@ define(function (require) {
                 }
             });
 
-            this.barLayer = this._nodeLayer.addLayer(aperture.BarLayer);
+            this.barLayer = nodeLayer.addLayer(aperture.BarLayer);
             this.barLayer.map('orientation').asValue('horizontal');
             this.barLayer.map('bar-count').from('bin.value.length');
             this.barLayer.map('width').asValue('10');
@@ -163,7 +161,7 @@ define(function (require) {
                 var value = getValueFcn(index, this);
                 return 100.0 * Math.abs(value);
             });
-            this.barLayer.map('fill').from('#80C0FF');
+            this.barLayer.map('fill').asValue('#FF80BF');
             this.barLayer.on('mouseover', function (event) {
                 if (that.tooltipFcn) {
                     that.tooltipFcn(that.getTooltip(event));
@@ -174,11 +172,8 @@ define(function (require) {
                     that.tooltipFcn(null);
                 }
             });
-
-
-            this.coordinator.setMap(this.map);
         }
     });
 
-    return TextScoreLayer;
+    return TextScoreRendererOther;
 });

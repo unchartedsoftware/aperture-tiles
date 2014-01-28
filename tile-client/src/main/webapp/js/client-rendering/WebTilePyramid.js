@@ -44,7 +44,9 @@ define (function (require) {
         DEGREES_TO_RADIANS       = PI / 180.0,
         // Factor for changing radians to degrees
         RADIANS_TO_DEGREES       = 180.0 / PI,
-        rootToTileMercator, sinh, tileToLon, tileToLat;
+        rootToTileMercator, sinh, tileToLon, tileToLat,
+        scaleLinearToGudermannian,
+        scaleGudermannianToLinear;
 
 
 
@@ -71,8 +73,30 @@ define (function (require) {
             n    = -PI + (2.0 * PI * y) / pow2;
         return Math.atan(sinh(n)) * RADIANS_TO_DEGREES;
     };
-            
 
+    scaleLinearToGudermannian = function(value) {
+        var gudermannian = function(y) {
+                // converts a y value from -PI(bottom) to PI(top) into the
+                // mercator projection latitude
+                var sinh = function (arg) {
+                    return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
+                };
+                return Math.atan(sinh(y)) * RADIANS_TO_DEGREES;
+            };
+        return gudermannian( (value / 85.05) * Math.PI );
+    };
+
+    scaleGudermannianToLinear = function(value) {
+        var gudermannianInv = function( latitude ) {
+                // converts a latitude value from -85.05 to 85.05 into
+                // a y value from -PI(bottom) to PI(top)
+                var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
+                    sin = Math.sin(latitude * DEGREES_TO_RADIANS * sign);
+
+                return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
+            };
+        return (gudermannianInv( value ) / Math.PI) * 85.05;
+    };
 
     WebMercatorTilePyramid = Class.extend({
         ClassName: "WebMercatorTilePyramid",
@@ -140,7 +164,13 @@ define (function (require) {
                 north = tileToLat(tile.yIndex+1, level),
                 south = tileToLat(tile.yIndex, level),
                 east  = tileToLon(tile.xIndex+1, level),
-                west  = tileToLon(tile.xIndex, level);
+                west  = tileToLon(tile.xIndex, level),
+                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
+                // coordinates  back into their equivalent linear counterparts. Interpolate these,
+                // then convert back to the equivalent gudermannian coordinate.
+                linNorth = scaleGudermannianToLinear(north),
+                linSouth = scaleGudermannianToLinear(south),
+                gudCentreY = scaleLinearToGudermannian( (linNorth+linSouth)/2.0 );
 
             return {
                 minX:    west,
@@ -148,7 +178,7 @@ define (function (require) {
                 maxX:    east,
                 maxY:    north,
                 centerX: (east+west)/2.0,
-                centerY: (north+south)/2.0,
+                centerY: gudCentreY,
                 width:   (east-west),
                 height:  (north-south)
             };
@@ -163,7 +193,13 @@ define (function (require) {
                 north   = tileToLat(baseY + binYInc, level),
                 south   = tileToLat(baseY, level),
                 east    = tileToLon(baseX + binXInc, level),
-                west    = tileToLon(baseX, level);
+                west    = tileToLon(baseX, level),
+                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
+                // coordinates  back into their equivalent linear counterparts. Interpolate these,
+                // then convert back to the equivalent gudermannian coordinate.
+                linNorth = scaleGudermannianToLinear(north),
+                linSouth = scaleGudermannianToLinear(south),
+                gudCentreY = scaleLinearToGudermannian( (linNorth+linSouth)/2.0 );
 
             return {
                 minX:    west,
@@ -171,7 +207,7 @@ define (function (require) {
                 maxX:    east,
                 maxY:    north,
                 centerX: (east+west)/2.0,
-                centerY: (north+south)/2.0,
+                centerY: gudCentreY,
                 width:   (east-west),
                 height:  (north-south)
             };
