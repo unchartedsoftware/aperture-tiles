@@ -51,6 +51,7 @@ import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.ImageRendererFactor
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer;
 import com.oculusinfo.tile.util.ColorRampParameter;
+import com.oculusinfo.tile.util.TransformParameter;
 import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
 
 /**
@@ -117,8 +118,8 @@ public class ImageTileServiceImpl implements ImageTileService {
 		// DEFAULTS
 		String rampName = "ware";
 		ColorRampParameter rampParams = null;
+		TransformParameter transformParams = null;
 
-		String transform = "linear";
 		String renderer = "default";
 		int rangeMin = 0;
 		int rangeMax = 100;
@@ -140,11 +141,28 @@ public class ImageTileServiceImpl implements ImageTileService {
 			if (rampParams == null) {
 				rampParams = new ColorRampParameter(rampName);
 			}
-
+			
+			//NOTE: this is only still around for backwards compatibility and should be removed after a while.
+			//If set, and no 'transform' object is found, then it will be used as the default transform.
+			Object transformId = null;
 			try {
-				transform = options.getString("transformId");
+				transformId = options.get("transformId");
+				if (transformId != null) {
+					_logger.info("'transformId' has been deprecated. Please supply a transform object instead.");
+				}
 			} catch (JSONException e2) {
-				_logger.info("No transform specified for tile request - using default.");
+				transformId = null;
+			}
+			
+			try {
+				Object transformObj = options.get("transform");
+				transformParams = new TransformParameter(transformObj);
+			} catch (JSONException e2) {
+				if (transformId == null) {
+					transformId = "linear";
+					_logger.info("No transform specified for tile request - using default.");
+				}
+				transformParams = new TransformParameter(transformId);
 			}
 
 			try {
@@ -178,6 +196,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 		}
 
 		int dimension = 256;
+		String minimumValue = "0";  //FIXME: need to get the minimum from the metadata
 		String maximumValue = metadata.getLevelMaximum(zoomLevel);
 
 
@@ -189,11 +208,12 @@ public class ImageTileServiceImpl implements ImageTileService {
 		RenderParameter renderParam = new RenderParameter(JsonUtilities.jsonObjToMap(options));
 		renderParam.setObject("rampType", rampParams);
 		renderParam.setString("layer", layer);
-		renderParam.setString("transformId", transform);
+		renderParam.setObject("transform", transformParams);
 		renderParam.setInt("rangeMin", rangeMin);
 		renderParam.setInt("rangeMax", rangeMax);
 		renderParam.setOutputWidth(dimension);
 		renderParam.setOutputHeight(dimension);
+		renderParam.setString("levelMinimums", minimumValue);
 		renderParam.setString("levelMaximums", maximumValue);
 		renderParam.setInt("currentImage", currentImage);
 		renderParam.setObject("tileCoordinate", tileCoordinate);

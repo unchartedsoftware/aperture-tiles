@@ -49,9 +49,6 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
-import com.oculusinfo.tile.spi.impl.IValueTransformer;
-import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
-import com.oculusinfo.tile.spi.impl.Log10ValueTransformer;
 import com.oculusinfo.utilities.imageprocessing.GraphicsUtilities;
 import com.oculusinfo.utilities.imageprocessing.StackBlurFilter;
 
@@ -198,20 +195,4 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 		return 1;
 	}
 
-	static class ValueTransformerFactory {
-		/**
-		 * @param transform
-		 * @param levelMaxFreq
-		 * @return
-		 */
-		public static IValueTransformer create(String transform, double levelMaxFreq) {
-			IValueTransformer t;
-			if("log10".equalsIgnoreCase(transform)){ // TODO: make a factory
-				t = new Log10ValueTransformer(levelMaxFreq);
-			}else{
-				t = new LinearCappedValueTransformer(levelMaxFreq);
-			}
-			return t;
-		}
-	}
 }

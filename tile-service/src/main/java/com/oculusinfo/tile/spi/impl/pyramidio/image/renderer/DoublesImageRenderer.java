@@ -39,11 +39,11 @@ import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.tile.spi.impl.IValueTransformer;
-import com.oculusinfo.tile.spi.impl.LinearCappedValueTransformer;
-import com.oculusinfo.tile.spi.impl.Log10ValueTransformer;
+import com.oculusinfo.tile.spi.impl.ValueTransformerFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
 import com.oculusinfo.tile.util.ColorRamp;
 import com.oculusinfo.tile.util.ColorRampParameter;
+import com.oculusinfo.tile.util.TransformParameter;
 
 /**
  * @author  dgray
@@ -76,16 +76,16 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			int outputHeight = parameter.getOutputHeight();
 			int rangeMax = parameter.getAsInt("rangeMax");
 			int rangeMin = parameter.getAsInt("rangeMin");
-			String transformId = parameter.getAsString("transformId");
 			String layer = parameter.getString("layer");
 			int coarseness = Math.max(parameter.getAsIntOrElse("coarseness", 1), 1);
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
+			double minimumValue = parameter.getAsDouble("levelMinimums");
 			double maximumValue = parameter.getAsDouble("levelMaximums");
 			
 			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 255);
-			IValueTransformer t = ValueTransformerFactory.create(transformId, maximumValue);
+			IValueTransformer t = ValueTransformerFactory.create(parameter.getObject("transform", TransformParameter.class), minimumValue, maximumValue);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -188,20 +188,4 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 		return 1;
 	}
 
-	static class ValueTransformerFactory {
-		/**
-		 * @param transform
-		 * @param levelMaxFreq
-		 * @return
-		 */
-		public static IValueTransformer create(String transform, double levelMaxFreq) {
-			IValueTransformer t;
-			if("log10".equalsIgnoreCase(transform)){ 
-				t = new Log10ValueTransformer(levelMaxFreq);
-			}else{
-				t = new LinearCappedValueTransformer(levelMaxFreq);
-			}
-			return t;
-		}
-	}
 }
