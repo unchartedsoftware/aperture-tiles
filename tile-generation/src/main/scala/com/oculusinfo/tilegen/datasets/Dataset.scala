@@ -110,10 +110,10 @@ abstract class Dataset[BT: ClassManifest, PT] {
   }
 
 
-  type STRAT_TYPE <: ProcessingStrategy[BT]
+  type STRATEGY_TYPE <: ProcessingStrategy[BT]
 
-  protected var strategy: STRAT_TYPE
-  def initialize (strategy: STRAT_TYPE): Unit = {
+  protected var strategy: STRATEGY_TYPE
+  def initialize (strategy: STRATEGY_TYPE): Unit = {
     this.strategy = strategy
   }
   
@@ -229,26 +229,6 @@ object DatasetFactory {
 		     tileSize: Int = 256): Dataset[_, _] = {
     val dataset = new CSVDataset(dataDescription, tileSize)
     dataset.initialize(sc, cache)
-    dataset
-  }
-
-  def createDataset[BT: ClassManifest, PT] (sc: SparkContext,
-             strategy: ProcessingStrategy[BT],
-             binDescriptor: BinDescriptor[BT, PT],
-		     dataDescription: Properties,
-		     tileSize: Int): Dataset[BT, PT] = {
-    val dataset = new BasicDataset(dataDescription, tileSize, binDescriptor)
-    dataset.initialize(strategy)
-    dataset
-  }
-
-  def createStreamingDataset[BT: ClassManifest, PT] (sc: SparkContext,
-             strategy: StreamingProcessingStrategy[BT],
-             binDescriptor: BinDescriptor[BT, PT],
-		     dataDescription: Properties,
-		     tileSize: Int): Dataset[BT, PT] with StreamingProcessor[BT] = {
-    val dataset = new BasicStreamingDataset(dataDescription, tileSize, binDescriptor)
-    dataset.initialize(strategy)
     dataset
   }
 }

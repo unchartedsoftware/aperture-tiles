@@ -64,10 +64,13 @@ import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import java.util.Date
 import org.apache.spark.streaming.Time
-import com.oculusinfo.tilegen.datasets.BasicDataset
-import com.oculusinfo.tilegen.datasets.BasicStreamingDataset
 import com.oculusinfo.tilegen.datasets.StreamingProcessor
 import java.util.Calendar
+import com.oculusinfo.tilegen.datasets.StreamingCSVDataset
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
+import com.oculusinfo.tilegen.datasets.CSVRecordParser
+import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
+import com.oculusinfo.tilegen.tiling.TileIO
 
 
 
@@ -125,18 +128,6 @@ import java.util.Calendar
  * 
  */
 
-class StreamingCSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrapper(properties) {
-  val fields =
-    properties.stringPropertyNames.asScala.toSeq
-      .filter(_.startsWith("oculus.binning.parsing."))
-      .filter(_.endsWith(".index")).map(property => 
-      property.substring("oculus.binning.parsing.".length, property.length-".index".length)
-    )
-  val fieldIndices =
-      Range(0, fields.size).map(n => (fields(n) -> n)).toMap
-}
-
-
 /**
  * A simple data source for binning of generic CSV data based on a
  * property-style configuration file
@@ -160,157 +151,26 @@ class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingConte
 }
 
 /**
- * A simple parser that splits a record according to a given separator
+ * A streaming strategy that takes a given preparsed dstream and then windows it
+ * up over the given window and slide durations.
  */
-class StreamingCSVRecordParser (properties: StreamingCSVRecordPropertiesWrapper) extends RecordParser[List[Double]] {
-    
-  def parseRecords (raw: Iterator[String], variables: String*): Iterator[ValueOrException[List[Double]]] = {
-    // Get some simple parsing info we'll need
-    val separator = properties.getProperty("oculus.binning.parsing.separator", "\t")
-
-
-    val dateFormats = properties.fields.filter(field =>
-      "date" == properties.getProperty("oculus.binning.parsing."+field+".fieldType", "")
-    ).map(field => 
-        (field ->
-         new SimpleDateFormat(properties.getProperty("oculus.binning.parsing."+field+".dateFormat",
-                                                     "yyMMddHHmm")))
-    ).toMap
-
-
-
-
-    // A quick couple of inline functions to make our lives easier
-    // Split a string (but do so efficiently if the separator is a single character)
-    def splitString (input: String, separator: String): Array[String] =
-      if (1 == separator.length) input.split(separator.charAt(0)).map(_.trim)
-      else input.split(separator).map(_.trim)
-
-    def getFieldType (field: String, suffix: String = "fieldType"): String = {
-      properties.getProperty("oculus.binning.parsing."+field+"."+suffix,
-                             if ("constant" == field || "zero" == field) "constant"
-                             else "")
-    }
-
-    // Convert a string to a double value according to field semantics
-    def parseValue (value: String, field: String, parseType: String): Double = {
-      if ("int" == parseType) {
-        value.toInt.toDouble
-      } else if ("long" == parseType) {
-        value.toLong.toDouble
-      } else if ("date" == parseType) {
-        dateFormats(field).parse(value).getTime()
-      } else if ("propertyMap" == parseType) {
-        val property = properties.getOptionProperty("oculus.binning.parsing."+field+".property").get
-        val propType = getFieldType(field, "propertyType")
-        val propSep = properties.getOptionProperty("oculus.binning.parsing."+field+".propertySeparator").get
-        val valueSep = properties.getOptionProperty("oculus.binning.parsing."+field+".propertyValueSeparator").get
-
-        val kvPairs = splitString(value, propSep)
-        val propPairs = kvPairs.map(splitString(_, valueSep))
-
-        val propValue = propPairs.filter(kv => property.trim == kv(0).trim).map(kv =>
-          if (kv.size>1) kv(1) else ""
-        ).takeRight(1)(0)
-        parseValue(propValue, field, propType)
-      } else {
-        value.toDouble
-      }
-    }
-
-
-
-
-    raw.map(s => {
-      val columns = splitString(s, separator)
-      try {
-        new ValueOrException(Some(properties.fields.toList.map(field => {
-
-
-          val fieldIndex = properties.getIntOptionProperty("oculus.binning.parsing."+field+".index").get
-          val fieldType = getFieldType(field)
-          var value = if ("constant" == fieldType || "zero" == fieldType) 0.0
-                      else parseValue(columns(fieldIndex.toInt), field, fieldType)
-          val fieldScaling = properties.getProperty("oculus.binning.parsing."+field+".fieldScaling", "")
-          if ("log" == fieldScaling) {
-              val base = properties.getDoubleProperty("oculus.binning.parsing."+field+".fieldBase", math.exp(1.0))
-              value = math.log(value)/math.log(base)
-            }
-          value
-        })), None)
-      } catch {
-        case e: Exception => new ValueOrException(None, Some(e))
-      }
-    })
-  }
-}
-
-
-
-class StreamingCSVFieldExtractor (properties: StreamingCSVRecordPropertiesWrapper) extends FieldExtractor[List[Double]] {
-  def getValidFieldList: List[String] = List()
-  def isValidField (field: String): Boolean = true
-  def isConstantField (field: String): Boolean = {
-    val getFieldType = (field: String) => properties.getProperty("oculus.binning.parsing."+field+".fieldType",
-                                                                 if ("constant" == field || "zero" == field) "constant"
-                                                                 else "")
-
-    val fieldType = getFieldType(field)
-    ("constant" == fieldType || "zero" == fieldType)
-  }
-
-  def getFieldValue (field: String)(record: List[Double]) : ValueOrException[Double] =
-    if ("count" == field) new ValueOrException(Some(1.0), None)
-    else if ("zero" == field) new ValueOrException(Some(0.0), None)
-    else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
-
-  override def aggregateValues (valueField: String)(a: Double, b: Double): Double = {
-    val fieldAggregation = properties.getProperty("oculus.binning.parsing."+valueField+".fieldAggregation", "add")
-    if ("log" == fieldAggregation) {
-      val base = properties.getDoubleProperty("oculus.binning.parsing."+valueField+".fieldBase", math.exp(1.0))
-      math.log(math.pow(base, a) + math.pow(base, b))/math.log(base)
-    } else if ("min" == fieldAggregation) {
-      a min b
-    } else if ("max" == fieldAggregation) {
-      a max b
-    } else {
-      a + b
-    }
-  }
-
-  override def getTilePyramid (xField: String, minX: Double, maxX: Double,
-			       yField: String, minY: Double, maxY: Double): TilePyramid = {
-    val projection = properties.getProperty("oculus.binning.projection", "EPSG:4326")
-    if ("EPSG:900913" == projection) {
-      new WebMercatorTilePyramid()
-    } else {
-      val minX = properties.getDoubleOptionProperty("oculus.binning.projection.minx").get
-      val maxX = properties.getDoubleOptionProperty("oculus.binning.projection.maxx").get
-      val minY = properties.getDoubleOptionProperty("oculus.binning.projection.miny").get
-      val maxY = properties.getDoubleOptionProperty("oculus.binning.projection.maxy").get
-      new AOITilePyramid(minX, minY, maxX, maxY)
-    }
-  }
-}
-
-
-
-
 class WindowedProcessingStrategy(stream: DStream[(Double, Double, Double)], windowDurSec: Int, slideDurSec: Int)
 extends StreamingProcessingStrategy[Double] {
   protected def getData: DStream[(Double, Double, Double)] = stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
 }
 
-class StreamingSourceProcessor(properties: PropertiesWrapper) {
 
-  private val xVar = properties.getOptionProperty("oculus.binning.xField").get
-  private val yVar = properties.getProperty("oculus.binning.yField", "zero")
-  private val zVar = properties.getProperty("oculus.binning.valueField", "count")
+object StreamingCSVBinner {
 
-  def getStream(source: StreamingCSVDataSource, parser: StreamingCSVRecordParser, extractor: StreamingCSVFieldExtractor): DStream[(Double, Double, Double)] = {
-    val localXVar = xVar
-    val localYVar = yVar
-    val localZVar = zVar
+  /**
+   * Preparsing function that changes a stream of csv files into the required
+   * DStream[(Double, Double, Double)]. All data is cached at the end so that
+   * any windowed operations after will start from here.
+   */
+  def getParsedStream(properties: PropertiesWrapper, source: StreamingCSVDataSource, parser: CSVRecordParser, extractor: CSVFieldExtractor): DStream[(Double, Double, Double)] = {
+    val localXVar = properties.getOptionProperty("oculus.binning.xField").get
+    val localYVar = properties.getProperty("oculus.binning.yField", "zero")
+    val localZVar = properties.getProperty("oculus.binning.valueField", "count")
 
     val strm = source.getDataStream
     val data = strm.mapPartitions(iter =>
@@ -332,9 +192,6 @@ class StreamingSourceProcessor(properties: PropertiesWrapper) {
     data.cache
   }
 
-}
-
-object StreamingCSVBinner {
   
   def getBatchJob(batchName: String, props: Map[String, String]) = {
     val nameProp = props.get("name")
@@ -349,13 +206,109 @@ object StreamingCSVBinner {
     	None
   }
   
-  def dtFormatter = new SimpleDateFormat("yyyDDDHHmm")
+  def dtFormatter = new SimpleDateFormat("yyyyDDDHHmm")
 
   def getTimeString(time: Long, intervalTimeSec: Int): String = {
     //round the time to the last interval time
     val previousIntervalTime = (time / (intervalTimeSec * 1000)) * (intervalTimeSec * 1000)
     dtFormatter.format(new Date(previousIntervalTime))
   }
+  
+  /**
+   * Selects between an HBaseTileIO and LocalTileIO depending on 'oculus.tileio.type'
+   */
+  def getTileIO(properties: PropertiesWrapper): TileIO = {
+    properties.getProperty("oculus.tileio.type", "hbase") match {
+      case "hbase" => {
+        val quorum = properties.getOptionProperty("hbase.zookeeper.quorum").get
+        val port = properties.getProperty("hbase.zookeeper.port", "2181")
+        val master = properties.getOptionProperty("hbase.master").get
+        new HBaseTileIO(quorum, port, master)
+      }
+      case _ => {
+        val extension =
+            properties.getProperty("oculus.tileio.file.extension",
+                                          "avro")
+        new LocalTileIO(extension)
+      }
+    }
+  }
+
+  /**
+   * Returns a sequence of (name: String, time: Int) jobs. 
+   */
+  def getBatchJobs(properties: PropertiesWrapper): Seq[(String, Int)] = {
+    val batchJobs = {
+      val basePropName = "oculus.binning.source.batches"
+      val batchJobNames = properties.getSeqPropertyNames(basePropName)
+	  
+	  var jobs = batchJobNames.flatMap(batchName => {
+	    val pathName = basePropName + "." + batchName
+	    getBatchJob(batchName, properties.getSeqPropertyMap(pathName))
+	  })
+    
+      //make sure there's at least one basic job
+	  if (jobs.isEmpty) {
+	    jobs :+ ("", 1)
+	  }
+	  else {
+        jobs
+	  }
+    }
+
+    //print out the list of batch jobs 
+    println("Jobs:")
+    batchJobs.foreach{job =>
+      println("  " + job._1 + ": every " + job._2 + " seconds")
+    }
+    
+    batchJobs
+  }
+  
+  /**
+   * The actual processing function for the streaming dataset. This bins up the data and then writes it out.
+   */
+  def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT], job: (String, Int), tileIO: TileIO): Unit = {
+	val binner = new RDDBinner
+	binner.debug = true
+	
+    //go through each of the level sets and process them 
+	dataset.getLevels.map(levels => {
+	  val procFcn:  Time => RDD[(Double, Double, BT)] => Unit =
+	    (time: Time) => (rdd: RDD[(Double, Double, BT)]) => {
+	    if (rdd.count > 0) {
+	      val stime = System.currentTimeMillis()
+	      println("processing level: " + levels)
+	      val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
+	      val tiles = binner.processDataByLevel(rdd,
+			        	    dataset.getBinDescriptor,
+						    dataset.getTilePyramid,
+						    levels,
+						    dataset.getBins,
+						    dataset.getConsolidationPartitions)
+          tileIO.writeTileSet(dataset.getTilePyramid,
+			  jobName,
+			  tiles,
+			  dataset.getBinDescriptor,
+			  jobName,
+			  dataset.getDescription)
+				  
+		  //grab the final processing time and print out some time stats
+		  val ftime = System.currentTimeMillis()
+	      val timeInfo = new StringBuilder().append("Levels ").append(levels).append(" for job ").append(jobName).append(" finished\n")
+	          .append("  Preprocessing: ").append((stime - time.milliseconds)).append("ms\n")
+	          .append("  Processing: ").append((ftime - stime)).append("ms\n")
+	          .append("  Total: ").append((ftime - time.milliseconds)).append("ms\n")
+	      println(timeInfo)
+	    }
+	    else {
+	      println("No data to process")
+  		}
+	  }
+      dataset.processWithTime(procFcn, None)
+    })
+  }
+  
   
   def main (args: Array[String]): Unit = {
 	  Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
@@ -386,42 +339,9 @@ object StreamingCSVBinner {
     val batchDuration = defaultProperties.getIntProperty("oculus.binning.source.pollTime", 60)
     val ssc = new StreamingContext(sc, Seconds(batchDuration))
 
-    val tileIO = defaultProperties.getProperty("oculus.tileio.type", "hbase") match {
-      case "hbase" => {
-        val quorum = defaultProperties.getOptionProperty("hbase.zookeeper.quorum").get
-        val port = defaultProperties.getProperty("hbase.zookeeper.port", "2181")
-        val master = defaultProperties.getOptionProperty("hbase.master").get
-        new HBaseTileIO(quorum, port, master)
-      }
-      case _ => {
-        val extension =
-            defaultProperties.getProperty("oculus.tileio.file.extension",
-                                          "avro")
-        new LocalTileIO(extension)
-      }
-    }
+    val tileIO = getTileIO(defaultProperties)
 
-    val batchJobs = {
-      val basePropName = "oculus.binning.source.batches"
-	  val batchJobNames = defaultProperties.getSeqPropertyNames(basePropName)
-	  
-	  var jobs = batchJobNames.flatMap(batchName => {
-	    val pathName = basePropName + "." + batchName
-	    getBatchJob(batchName, defaultProperties.getSeqPropertyMap(pathName))
-	  })
-    
-      //make sure there's at least one basic job
-	  if (jobs.isEmpty) {
-	    jobs :+ ("", 1)
-	  }
-	  else
-        jobs
-    }
-
-    println("Jobs:")
-    batchJobs.foreach{job =>
-      println("  " + job._1 + ": every " + job._2 + " seconds")
-    }
+    val batchJobs = getBatchJobs(defaultProperties)
     
     // Run for each real properties file
     while (argIdx < args.size) {
@@ -430,64 +350,30 @@ object StreamingCSVBinner {
       props.load(propStream)
       propStream.close()
       
-      val properties = new StreamingCSVRecordPropertiesWrapper(props)
+      val properties = new CSVRecordPropertiesWrapper(props)
       val source = new StreamingCSVDataSource(properties, ssc)
-      val parser = new StreamingCSVRecordParser(properties)
-      val extractor = new StreamingCSVFieldExtractor(properties)
+      val parser = new CSVRecordParser(properties)
+      val extractor = new CSVFieldExtractor(properties)
 
-      val streamingStrategy = new StreamingSourceProcessor(properties)
+      //preparse the stream before we start to process the actual data
+      val parsedStream = getParsedStream(properties, source, parser, extractor)
         
-      
+      //loop through each batch job, setup each streaming window, and process it
       batchJobs.foreach{job =>
-        def processDatasetInternal[BT: ClassManifest, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT]): Unit = {
-		  val binner = new RDDBinner
-		  binner.debug = true
-		
-          //go through each of the level sets and process them 
-  		  dataset.getLevels.map(levels => {
-		    val procFcn:  Time => RDD[(Double, Double, BT)] => Unit =
-  		      (time: Time) => (rdd: RDD[(Double, Double, BT)]) => {
-  		        if (rdd.count > 0) {
-  		          val stime = System.currentTimeMillis()
-		          println("processing level: " + levels)
-		          val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
-		          val tiles = binner.processDataByLevel(rdd,
-							        dataset.getBinDescriptor,
-							        dataset.getTilePyramid,
-							        levels,
-							        dataset.getBins,
-							        dataset.getConsolidationPartitions)
-	              tileIO.writeTileSet(dataset.getTilePyramid,
-					  jobName,
-					  tiles,
-					  dataset.getBinDescriptor,
-					  jobName,
-					  dataset.getDescription)
-					  
-			      //grab the final processing time and print out some time stats
-			      val ftime = System.currentTimeMillis()
-  		          val timeInfo = new StringBuilder().append("Levels ").append(levels).append(" for job ").append(jobName).append(" finished\n")
-  		              .append("  Preprocessing: ").append((stime - time.milliseconds)).append("ms\n")
-  		              .append("  Processing: ").append((ftime - stime)).append("ms\n")
-  		              .append("  Total: ").append((ftime - time.milliseconds)).append("ms\n")
-  		          println(timeInfo)
-  		        }
-  		        else {
-  		          println("No data to process")
-  		        }
-		      }
-		    dataset.processWithTime(procFcn, None)
-          })
-        }
-        def processDataset[BT, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT]): Unit =
-          processDatasetInternal(dataset)(dataset.binTypeManifest)
+        def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT]): Unit =
+          processDataset(dataset, job, tileIO)(dataset.binTypeManifest)
         
-        val stream = streamingStrategy.getStream(source, parser, extractor)
+        //grab the actual preparsed dstream  
         val windowDurTimeSec = job._2
         val slideDurTimeSec = job._2
         
-        val strategy = new WindowedProcessingStrategy(stream, windowDurTimeSec, slideDurTimeSec)
-        processDataset(DatasetFactory.createStreamingDataset(sc, strategy, new StandardDoubleBinDescriptor, props, 256))
+        //create a the windowed strategy for the job
+        val strategy = new WindowedProcessingStrategy(parsedStream, windowDurTimeSec, slideDurTimeSec)
+        
+        val dataset = new StreamingCSVDataset(props, 256)
+        dataset.initialize(strategy)
+
+        processDatasetGeneric(dataset)
       }
 
       argIdx = argIdx + 1
