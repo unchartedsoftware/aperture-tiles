@@ -29,6 +29,12 @@
 /**
  * Populates the LayerState model based on the contents of a ServerRenderedMapLayer, and makes the appropriate
  * modifications to it as the LayerState model changes.
+ *
+ * TODO:
+ * 1) Read filter range from server
+ * 2) Write filter, ramp function and ramp type back to server in response to layer state model changes
+ * 3) Generate filter ramp image URL using the /legend rest request (see ImageTileLegendService.java in tile-service)
+ *
  */
 define(['class', 'layerstate'], function (Class, LayerState) {
     "use strict";
@@ -40,9 +46,9 @@ define(['class', 'layerstate'], function (Class, LayerState) {
 
         /**
          * Populates the layerStateMap with LayerState objects based on the current set of map layers,
-         * and registers callbacks to update the map layer in response to state changes.
+         * and registers listeners to update the map layer in response to state changes.
          *
-         * @param layerStateMap - The map of LayerState objects to populate and register callbacks against.
+         * @param layerStateMap - The map of LayerState objects to populate and register listeners against.
          *
          * @param mapLayer - The ServerRenderedMapLayer that the layerStateMap will be populated from, and
          * subsequently be modified by.
@@ -65,10 +71,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                         mapLayer.setSubLayerOpacity(layerState.getId(), layerState.getOpacity());
                     } else if (fieldName === "enabled") {
                         mapLayer.setSubLayerEnabled(layerState.getId(), layerState.isEnabled());
-                    } else if (fieldName === "rampType") {
-//                        mapLayer.setSubLayerRamp(layerState.getId(), layerState.getRampType());
-                        console.log("blah");
-                    }
+                    } // TODO: Add handlers for other changes (filter value, ramp type, ramp function)
                 };
             };
 
@@ -87,11 +90,12 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 layerState.setName(layerName);
                 layerState.setEnabled(true);
                 layerState.setOpacity(layerSpec.opacity);
-                layerState.setRampFunction(layerSpec.transform);
+                layerState.setRampFunction(layerSpec.transformid);
                 layerState.setRampType(layerSpec.ramp);
+                // TODO: Retrieve filter range from map layer
 
                 // Register a callback to handle layer state change events.
-                layerState.addCallback(makeLayerStateCallback(mapLayer, layerState));
+                layerState.addListener(makeLayerStateCallback(mapLayer, layerState));
 
                 // Add the layer to the layer statemap.
                 this.layerStateMap[layerState.getId()] = layerState;
@@ -106,7 +110,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
             layerState.setRampType(null);
 
             // Register a callback to handle layer state change events.
-            layerState.addCallback(function (fieldName) {
+            layerState.addListener(function (fieldName) {
                 if (fieldName === "opacity") {
                     worldMap.setOpacity(layerState.getOpacity());
                 } else if (fieldName === "enabled") {

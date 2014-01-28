@@ -37,12 +37,12 @@ define(['class'], function (Class) {
 
     /**
      * @param {string} fieldName - Name of the modified field.
-     * @param {Array} callbacks - Array of {valueChange} callbacks to execute.
+     * @param {Array} listeners - Array of {valueChange} listeners to execute.
      */
-    notify = function (fieldName, callbacks) {
+    notify = function (fieldName, listeners) {
         var i;
-        for (i = 0; i < callbacks.length; i += 1) {
-            callbacks[i](fieldName);
+        for (i = 0; i < listeners.length; i += 1) {
+            listeners[i](fieldName);
         }
     };
 
@@ -51,13 +51,29 @@ define(['class'], function (Class) {
 
         /**
          * Valid ramp type strings.
+         *
+         * TODO:  Figure out a way to make this a static that could be accessed publicly.
          */
-        RAMP_TYPES: {WARE: "ware", INV_WARE: "inv-ware", BR: "br", INV_BR: "inv-br", GREY: "grey", INV_GREY: "inv-grey", FLAT: "flat", SINGLE_GRADIENT: "single-gradient"},
+        RAMP_TYPES: {
+            WARE: { id: "ware", name: "Ware"},
+            INV_WARE: {id: "inv-ware", name: "Inverse Ware"},
+            BR: {id: "br", name: "Blue/Red"},
+            INV_BR: {id: "inv-br", name: "Inverse Blue/Red"},
+            GREY: {id: "grey", name: "Grey"},
+            INV_GREY: {id: "inv-grey", name: "Inverse Grey"},
+            FLAT: {id: "flat", name: "Flat"},
+            SINGLE_GRADIENT: {id: "single-gradient", name: "Single Gradient"}
+        },
 
         /**
          * Valid ramp function strings.
+         *
+         * TODO:  Figure out a way to make this a static that could be accessed publicly.
          */
-        RAMP_FUNCTIONS: {LINEAR: "linear", LOG10: "log10"},
+        RAMP_FUNCTIONS: {
+            LINEAR: {id: "linear", name: "Linear"},
+            LOG10: {id: "log10", name: "Log 10"}
+        },
 
         /**
          * Initializes a LayerState object with default values.
@@ -73,35 +89,35 @@ define(['class'], function (Class) {
             this.rampType = "ware";
             this.rampFunction = "linear";
             this.rampImageUrl = "";
-            this.callbacks = [];
+            this.listeners = [];
         },
 
 
         /**
-         * Callback used when a layer state value has been modified.
+         * Listener used when a layer state value has been modified.
          * @callback valueChange
          * @param {string} - the name of the modified field.
          */
 
         /**
-         * Registers a callback that will be executed whenever a layer state value
+         * Registers a listener that will be executed whenever a layer state value
          * is modified.
          *
-         * @param {valueChange} callback - The callback to register.
+         * @param {valueChange} listener - The listener to register.
          */
-        addCallback: function (callback) {
-            this.callbacks.push(callback);
+        addListener: function (listener) {
+            this.listeners.push(listener);
         },
 
         /**
          * Removes a callback if it exists.
          *
-         * @param {valueChange} callback - The callback to remove.
+         * @param {valueChange} listener - The callback to remove.
          */
-        removeCallback: function (callback) {
-            var index = this.callbacks.indexOf(callback);
+        removeListener: function (listener) {
+            var index = this.listeners.indexOf(listener);
             if (index > -1) {
-                this.callbacks = this.callbacks.splice(index, 1);
+                this.listeners = this.listeners.splice(index, 1);
             }
         },
 
@@ -127,7 +143,7 @@ define(['class'], function (Class) {
         setName: function (name) {
             if (this.name !== name) {
                 this.name = name;
-                notify("name", this.callbacks);
+                notify("name", this.listeners);
             }
         },
 
@@ -144,7 +160,7 @@ define(['class'], function (Class) {
         setEnabled: function (enabled) {
             if (this.enabled !== enabled) {
                 this.enabled = enabled;
-                notify("enabled", this.callbacks);
+                notify("enabled", this.listeners);
             }
         },
 
@@ -163,7 +179,7 @@ define(['class'], function (Class) {
         setOpacity: function (opacity) {
             if (this.opacity !== opacity) {
                 this.opacity = opacity;
-                notify("opacity", this.callbacks);
+                notify("opacity", this.listeners);
             }
         },
 
@@ -182,7 +198,7 @@ define(['class'], function (Class) {
         setFilterRange: function (filterRange) {
             if (this.filterRange[0] !== filterRange[0] && this.filterRange[1] !== filterRange[1]) {
                 this.filterRange = filterRange;
-                notify("filterRange", this.callbacks);
+                notify("filterRange", this.listeners);
             }
         },
 
@@ -201,7 +217,7 @@ define(['class'], function (Class) {
         setRampType: function (rampType) {
             if (this.rampType !== rampType) {
                 this.rampType = rampType;
-                notify("rampType", this.callbacks);
+                notify("rampType", this.listeners);
             }
         },
 
@@ -218,7 +234,7 @@ define(['class'], function (Class) {
         setRampFunction: function (rampFunction) {
             if (this.rampFunction !== rampFunction) {
                 this.rampFunction = rampFunction;
-                notify("rampFunction", this.callbacks);
+                notify("rampFunction", this.listeners);
             }
         },
 
@@ -236,7 +252,7 @@ define(['class'], function (Class) {
         setRampImageUrl: function (url) {
             if (this.rampImageUrl !== url) {
                 this.rampImageUrl = url;
-                notify("rampImageUrl", this.callbacks);
+                notify("rampImageUrl", this.listeners);
             }
         }
     });

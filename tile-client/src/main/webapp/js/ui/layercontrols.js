@@ -28,16 +28,58 @@
 /**
  * Implements a panel that creates a set of controls to change the visual settings
  * of each layer in the system.  The panel works with a map of LayerState objects that
- * are populated externally.
+ * are populated externally.  The control set consists of a check box to control overall
+ * visibility, a slider to control opacity, a range slider to set a value filter, buttons
+ * to control layer ordering, and a linked settings panel that allows for ramp parameters
+ * to be adjusted.  Note that setting a ramp type or function to null will result in the
+ * filter control being hidden.
+ *
+ * This class follows the Separable Model pattern used by Swing widgets in Java, where
+ * the controller and view are collapsed into a single class.
+ *
+ * TODO:
+ *
+ * 1) This class provides buttons for ordering layers, but does not yet implement the backing
+ * functionality.
+ * 2) This class provides a button for toggling tile outline visiblity, but doesn't yet supply
+ * a means to register a handler.
  */
 define(['class'], function (Class) {
     "use strict";
 
-    var LayerControls, addLayer, OPACITY_RESOLUTION, FILTER_RESOLUTION;
+    var LayerControls, addLayer, showLayerSettings, OPACITY_RESOLUTION, FILTER_RESOLUTION, replaceChildren;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
     FILTER_RESOLUTION = 100.0;
+
+    /**
+     * Replaces node's children and returns the replaced for storage.
+     *
+     * @param {Object} $parent - The node to remove the children from.
+     *
+     * @param {Object} children - The children to replace.  Null will result
+     * in children being removed only.
+     *
+     * @returns {Array} - The removed children.
+     */
+    replaceChildren = function ($parent, children) {
+        var i, removed;
+
+        // Remove existing children.
+        removed = $parent.children();
+        for (i = 0; i < removed.length; i += 1) {
+            removed.eq(i).detach();
+        }
+
+        // Add in new children.
+        if (children !== null) {
+            for (i = 0; i < children.length; i += 1) {
+                children.eq(i).appendTo($parent);
+            }
+        }
+        return removed;
+    };
 
     /**
      * Adds a new set of layer controls to the panel.
@@ -46,28 +88,34 @@ define(['class'], function (Class) {
      *
      * @param $parentElement - The parent element in the document tree to add the controls to.
      *
+     * @param $root - The root control element.
+     *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (layerState, $parentElement, controlsMap) {
+    addLayer = function (layerState, $parentElement, $root, controlsMap) {
         var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
-            $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $layerControlsRoot,
+            $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $layerControlSetRoot,
             className, hasFilter, name, filterRange, id;
 
-        $layerControlsRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
+        $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
-        $settings = $('<a href="">settings</a>');
+        $settings = $('<a>settings</a>');
+        $settings.click(function () {
+            showLayerSettings($root, layerState);
+        });
+
         name = layerState.getName();
         name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
-        $layerControlsRoot.append($('<table style="width:100%"></table>')
+        $layerControlSetRoot.append($('<table style="width:100%"></table>')
             .append($('<tr></tr>')
-                .append($('<td class="labels"></td>')
+                .append($('<td class="layer_labels"></td>')
                     .append($('<span>' + name + '</span>')))
                 .append($('<td class="settings-link"></td>')
                     .append($settings))));
 
         // Table for checkbox + sliders
         $sliderTable = $('<table style="width:100%"></table>');
-        $layerControlsRoot.append($sliderTable);
+        $layerControlSetRoot.append($sliderTable);
 
         // Add a table row
         $sliderTableRow = $('<tr></tr>');
@@ -142,11 +190,11 @@ define(['class'], function (Class) {
         $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
         $cell.append($promotionButton);
 
-        $parentElement.append($layerControlsRoot);
+        $parentElement.append($layerControlSetRoot);
 
         id = layerState.getId();
         controlsMap[id] = {
-            controlSetRoot: $layerControlsRoot,
+            controlSetRoot: $layerControlSetRoot,
             filterSlider: $filterSlider,
             opacitySlider: $opacitySlider,
             enabledCheckbox: $enabledCheckbox,
@@ -154,6 +202,72 @@ define(['class'], function (Class) {
             settingsLink: $settings
         };
     };
+
+    /**
+     * Displays a settings panel for a layer.
+     *
+     * @param {object} $parent - The parent node to attach the layer panel to.
+     *
+     * @param {object} layerState - The layer state model the panel will read from and update.
+     */
+    showLayerSettings = function ($parent, layerState) {
+        var rampType, rampFunction, $settingsControls, $settingsTitleBar, name, $rampTypes, $rampFunctions, id, oldChildren, $back;
+
+        // Save the main layer controls hierarchy
+        oldChildren = replaceChildren($parent, null);
+
+        $settingsControls = $('<div class="settings-controls"></div>');
+
+        $settingsTitleBar = $('<div class="settings-title-bar"></div>');
+        $settingsControls.append($settingsTitleBar);
+
+        $settingsTitleBar.append($('<span class="settings-title">' + layerState.getName() + ' Layer Settings</span>'));
+
+        $back = $('<span class="settings-back-link"> back </span>');
+        $settingsTitleBar.append($back);
+        $back.click(function () {
+            replaceChildren($parent, oldChildren);
+        });
+
+        // Add the ramp types radio buttons
+        $rampTypes = $('<div id="ramp-types" class="settings-ramp-types"/>');
+        $settingsControls.append($rampTypes);
+        $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
+        for (rampType in layerState.RAMP_TYPES) {
+            if (layerState.RAMP_TYPES.hasOwnProperty(rampType)) {
+                name = layerState.RAMP_TYPES[rampType].name;
+                id = layerState.RAMP_TYPES[rampType].id;
+                $rampTypes.append($('<div><input class="settings-values" type="radio" name="ramp-types" value="' + id + '">' + name + '</input></div>'));
+            }
+        }
+
+        // Add the ramp function radio buttons
+        $rampFunctions = $('<div id="ramp-functions" class="settings-ramp-functions"/>');
+        $settingsControls.append($rampFunctions);
+        $rampFunctions.append($('<span class="settings-ramp-title">Color Scale</span>'));
+        for (rampFunction in layerState.RAMP_FUNCTIONS) {
+            if (layerState.RAMP_FUNCTIONS.hasOwnProperty(rampFunction)) {
+                name = layerState.RAMP_FUNCTIONS[rampFunction].name;
+                id = layerState.RAMP_FUNCTIONS[rampFunction].id;
+                $rampFunctions.append($('<div><input class="settings-values" type="radio" name="ramp-functions" value="' + id + '">' + name + '</input></div>'));
+            }
+        }
+        $parent.append($settingsControls);
+
+        // Set initial value based on layer state model
+        $('input[name="ramp-types"][value="' + layerState.getRampType() + '"]').prop('checked', true);
+        $('input[name="ramp-functions"][value="' + layerState.getRampFunction() + '"]').prop('checked', true);
+
+        // Update model on button changes
+        $('input[name="ramp-types"]').change(function () {
+            layerState.setRampType($('input[name="ramp-types"]:checked').val());
+        });
+
+        $('input[name="ramp-functions"]').change(function () {
+            layerState.setRampFunction($('input[name="ramp-types"]:checked').val());
+        });
+    };
+
 
     LayerControls = Class.extend({
         ClassName: "LayerControls",
@@ -170,16 +284,21 @@ define(['class'], function (Class) {
             this.$root = null;
             this.$layerControlsListRoot = null;
             this.$tileOutlineButton = null;
+            this.$layerControlsRoot = null;
 
             var layerState, makeLayerStateObserver;
 
-                // Add the title
+            // Add the title
             this.$root = $('#layer-controls');
-            this.$root.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
+
+            this.$layerControlsRoot = $('<div id="layer-controls-root"></div>');
+            this.$root.append(this.$layerControlsRoot);
+
+            this.$layerControlsRoot.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
 
             // Add the layer control list area
             this.$layerControlsListRoot = $('<div id="layer-control-list"></div>');
-            this.$root.append(this.$layerControlsListRoot);
+            this.$layerControlsRoot.append(this.$layerControlsListRoot);
 
             // Creates a layer state observer, which will update the control panel in response to model changes.
             makeLayerStateObserver = function (layerState, controlsMap) {
@@ -200,14 +319,15 @@ define(['class'], function (Class) {
             // Add the layers
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
-                    addLayer(layerStateMap[layerState], this.$layerControlsListRoot, this.controlsMap);
-                    layerStateMap[layerState].addCallback(makeLayerStateObserver(layerStateMap[layerState], this.controlsMap));
+                    addLayer(layerStateMap[layerState], this.$layerControlsListRoot, this.$root, this.controlsMap);
+                    layerStateMap[layerState].addListener(makeLayerStateObserver(layerStateMap[layerState], this.controlsMap));
                 }
             }
 
             // Add the outline toggle button
             this.$tileOutlineButton = $('<button class="tile-outline-button">Toggle Tile Outline</button>');
-            this.$root.append(this.$tileOutlineButton);
+            this.$layerControlsRoot.append(this.$tileOutlineButton);
+            // TODO: Add a handler here that would call into externally registered callbacks.
 
         }
     });
