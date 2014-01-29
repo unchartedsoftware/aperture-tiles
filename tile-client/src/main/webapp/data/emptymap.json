@@ -3,12 +3,12 @@
     }},
     { "AxisConfig": {
         "title": "Time",
-        "id": "map-x-axis",
-        "min": 1232668800000,
+        "id": "time-x-axis",
+        "min": 1230940800000,
         "max": 1362873600000,
         "intervalSpec": {
             "type": "percentage",
-            "value": 12.5,
+            "value": 20,
             "pivot": 0,
             "allowScaleByZoom": true,
             "isMercatorProjected": false
@@ -19,11 +19,20 @@
             "allowStepDown": false
         },
         "position": "bottom",
-        "repeat": true
+        "repeat": false,
+		"markerLabelRotation": -45,
+		"majorMarkerLength": 10,
+		"majorMarkerWidth": 1,
+		"majorMarkerColour": "#7E7E7E",
+		"markerLabelColour": "#7E7E7E",
+		"axisLabelColour": "#7E7E7E",
+		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+		"markerLabelFontSize": "0.75em",
+		"axisLabelFontSize": "0.95em"	
     }},
     { "AxisConfig": {
         "title": "Amount (BTC)",
-        "id": "map-y-axis",
+        "id": "amount-y-axis",
         "min": 0,
         "max": 500000,
         "intervalSpec": {
@@ -39,6 +48,14 @@
             "allowStepDown": false
         },
         "position": "left",
-        "repeat": false
+        "repeat": false,		
+		"majorMarkerLength": 10,
+		"majorMarkerWidth": 1,
+		"majorMarkerColour": "#7E7E7E",
+		"markerLabelColour": "#7E7E7E",
+		"axisLabelColour": "#7E7E7E",
+		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+		"markerLabelFontSize": "0.75em",
+		"axisLabelFontSize": "0.95em"	
     }}
 ]

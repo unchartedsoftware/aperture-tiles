@@ -72,7 +72,15 @@
             "allowStepDown": false
         },
         "position": "bottom",
-        "repeat": true
+        "repeat": true,
+		"majorMarkerLength": 10,
+		"majorMarkerWidth": 1,
+		"majorMarkerColour": "#7E7E7E",
+		"markerLabelColour": "#7E7E7E",
+		"axisLabelColour": "#7E7E7E",
+		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+		"markerLabelFontSize": "0.75em",
+		"axisLabelFontSize": "0.95em"
     }},
     { "AxisConfig": {
         "title": "Latitude",
@@ -92,7 +100,15 @@
             "allowStepDown": false
         },
         "position": "left",
-        "repeat": false
+        "repeat": false,
+		"majorMarkerLength": 10,
+		"majorMarkerWidth": 1,
+		"majorMarkerColour": "#7E7E7E",
+		"markerLabelColour": "#7E7E7E",
+		"axisLabelColour": "#7E7E7E",
+		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+		"markerLabelFontSize": "0.75em",
+		"axisLabelFontSize": "0.95em"
     }}
 ]
 

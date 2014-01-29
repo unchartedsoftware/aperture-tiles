@@ -91,7 +91,7 @@ define(function (require) {
     /** Private function
      * Check spec object for all parameters, if any are missing, fill with defaults
      */
-     checkInputSpec = function(spec) {
+    checkInputSpec = function(spec) {
 
         var temp;
 
@@ -181,6 +181,32 @@ define(function (require) {
             spec.unitSpec.allowStepDown = true;
         }
 
+        // set default formatting
+        if (spec.majorMarkerLength === undefined) {
+            spec.majorMarkerLength = 10;
+        }
+        if (spec.majorMarkerWidth === undefined) {
+            spec.majorMarkerWidth = 1;
+        }
+        if (spec.majorMarkerColour === undefined) {
+            spec.majorMarkerColour = "#7E7E7E";
+        }
+        if (spec.markerLabelColour === undefined) {
+            spec.markerLabelColour = "#7E7E7E";
+        }
+        if (spec.axisLabelColour === undefined) {
+            spec.axisLabelColour = "#7E7E7E";
+        }
+        if (spec.fontFamily === undefined) {
+            spec.fontFamily = "Tahoma, Verdana, Segoe, sans-serif";
+        }
+        if (spec.markerLabelFontSize === undefined) {
+            spec.markerLabelFontSize = "0.75em";
+        }
+        if (spec.axisLabelFontSize === undefined) {
+            spec.axisLabelFontSize = "0.95em";
+        }
+
         return true;
     };
 
@@ -244,6 +270,23 @@ define(function (require) {
             this.widthOrHeight = this.isXAxis ? "width" : "height";
             this.tileSize = this.isXAxis ? spec.olMap.getTileSize().w : spec.olMap.getTileSize().h;
 
+            this.majorMarkerLength = spec.majorMarkerLength;
+            this.majorMarkerWidth = spec.majorMarkerWidth;
+
+            this.majorMarkerColour = spec.majorMarkerColour;
+            this.markerLabelColour = spec.markerLabelColour;
+            this.axisLabelColour = spec.axisLabelColour;
+
+            this.fontFamily = spec.fontFamily;
+
+            this.markerLabelFontSize = spec.markerLabelFontSize;
+            this.axisLabelFontSize = spec.axisLabelFontSize;
+
+            this.markerLabelRotation = spec.markerLabelRotation;
+
+            this.maxLabelLength = 0;
+
+            /*
             this.majorMarkerLength = 10;
             this.majorMarkerWidth = 1;
 
@@ -255,7 +298,7 @@ define(function (require) {
 
             this.markerLabelFontSize = "0.75em";
             this.axisLabelFontSize = "0.95em";
-
+            */
             this.maxLabelLength = 0;
 
             this.olMap.events.register('mousemove', this.olMap, function(event) {
@@ -302,7 +345,7 @@ define(function (require) {
                     }
                 }
 
-                return $('<div id="' + that.id + '-label"'
+                return $('<div class="' + that.id + '-label"'
                     + 'style="position:absolute;'
                     + 'font-family: ' + that.fontFamily + ';'
                     + 'font-size:' + that.axisLabelFontSize + ';'
@@ -334,7 +377,7 @@ define(function (require) {
                 axis.container = $("#"+ that.id);
                 if (axis.container.length === 0) {
                     // if container does not exist, make it
-                    axis.container = $('<div id="' + that.id + '"></div>');
+                    axis.container = $('<div class="axis container" id="' + that.id + '"></div>');
                 } else {
                     // if the axis exists, clear it out, we need to redraw the markers
                     axis.container.empty();
@@ -355,11 +398,21 @@ define(function (require) {
              */
             function createMarkerLabel(marker) {
 
-                return $('<div id="' + that.id + '-marker-label"'
+                var rotation = "";
+                if (that.markerLabelRotation !== undefined) {
+                    rotation = '-webkit-transform: rotate(' + that.markerLabelRotation + 'deg);'
+                            + '-moz-transform: rotate(' + that.markerLabelRotation + 'deg);'
+                            + '-ms-transform: rotate(' + that.markerLabelRotation + 'deg);'
+                            + '-o-transform: rotate(' + that.markerLabelRotation + 'deg);'
+                            + 'transform: rotate(' + that.markerLabelRotation + 'deg);';
+                }
+
+                return $('<div class="' + that.id + '-marker-label"'
                        + 'style="position:absolute;'
                        + 'font-family: ' + that.fontFamily + ';'
                        + 'font-size:' + that.markerLabelFontSize + ';'
                        + 'color:' + that.markerLabelColour + ';'
+                       + rotation
                        + '">' + AxisUtil.formatText( marker.label, that.unitSpec ) + '</div>');
             }
 
@@ -379,7 +432,7 @@ define(function (require) {
                     positionDir = 'bottom';
                 }
 
-                return $('<div id="' + that.id + 'major-marker"'
+                return $('<div class="' + that.id + 'major-marker"'
                     + 'style="position:absolute;'
                     + 'color:' + that.majorMarkerColour + ';'
                     + that.position + ":" + (-that.majorMarkerLength) + "px;"
