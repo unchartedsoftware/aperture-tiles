@@ -65,52 +65,128 @@
         <div id="content">
             <div class="content-context">
                     <ul class="toc right"><li>
-                        <a href="#Aperture-Tile-Server-Config">Aperture Tile Server Configuration</a>
-                        <li><a href="#Aperture-Tile-Client-Config">Aperture Tile Client Configuration</a>
-                        <ul><li><a href="#Configuring-Tile-Sets-for-Display">Configuring Tile Sets for Display</a>
-                        </li><li><a href="#Server-side-Tile-Rendering-Configuration">Server-side Tile Rendering Configuration</a>
-                            <ul><li><a href="#Renderer-Options">Renderer Options</a></li></ul>
-                    </li><li><a href="#color-Ramps-Configuration">color Ramps Configuration</a><ul><li>
-                            <a href="#color-Ramp-Types">color Ramp Types</a></li></ul>
+                        <a href="#template-setup">Template Setup</a>
+                        <li> <a href="#server-config">Server Configuration</a></li>
+                        <ul><li><a href="#webxml">web.xml</a></li></ul>
+                        <ul><li><a href="#tileproperties">tile.properties</a></li></ul>
+                        <li><a href="#clientconfig">Client Configuration</a>
+                            <ul><li><a href="#layer">Layer</a></li></ul>
+                            <ul><li><a href="#type">Type</a></li></ul>
+                            <ul><li><a href="#transform">Transform</a></li></ul>
+                            <ul><li><a href="#ramp">Ramp</a></li>
+                                <ul><li><a href="#linear">Linear</a></li></ul>
+                                <ul><li><a href="#grad">Single Gradient</a></li></ul>
+                                <ul><li><a href="#def">Default</a></li></ul></ul>
+                            <ul><li><a href="#opacity">Opacity</a></li></ul>
+                            <ul><li><a href="#renderer">Renderer</a></li></ul>
+                            <ul><li><a href="#multiple">Multiple Layers</a></li></ul>
                     </li></ul>
             </div>
 
             <div class="content-body">
                 <h1>Configuration</h1>
-                <a name="Aperture-Tile-Server-Config"></a>
-                <h2>Aperture Tile Server Configuration</h2>
-                In order to serve tile data to a web client, one needs to set a few configuration details in the tile-server:
-                <p><pre>tile-server/src/main/webapp/WEB-INF/web.xml</pre>This file determines how the server locates tiles. Details can be found within the file - look for "Storage type".</p>
-                <p><pre>tile-server/src/main/resources/tile.properties</pre>This file describes where the server will find tile datasets. Details are contained therein - look for the name of the storage module you enabled in web.xml.</p>
+                <a name="template-setup"></a>
+                <h2>Template Setup</h2>
+                <p> To begin setting up Aperture Tiles copy the directory <i>aperture-tiles/tile-client-template</i> and paste it into <i>aperture-tiles/tile-examples</i>.
 
-                <a name="Aperture-Tile-Client-Config"></a>
-                <h2>Aperture Tile Client Configuration</h2>
-                <a name="Configuring-Tile-Sets-for-Display"></a>
-                <h3>Configuring Tile Sets for Display</h3>
-                Once the tile server is configured, the client must be told exactly what layers to display, and how. All client configuration files are in <pre>tile-client/src/main/webapp/data.</pre>
-                <b>geomap.json</b><br>A description of the base layer of a geographical map on which to display data.<p>
-                <b>emptymap.json</b><br>A description of an empty base layer, for use when the tiles don't represent geographic data (coming soon).<p>
-                <b>layers.json</b><br>A description of the layers to display. This contains a JSON array of objects, each of which describes a single layer. Layer properties are as follows:<br>
+                <p> For Aperture Tiles and Maven to recognize the new project the relevant POM files must be updated.
+
+                <p> First, the new project's name must be formalized. Navigate to <i>new-project-name/</i> and open <b>POM.xml</b>. Edit the <artifactId> tag content located on line 4 from "tile-client-template" to "new-project-name" and edit the <name> tag content located on line 6 from "Aperture-Tiles Web Client Template" to "new-project-name".
+
+                <p> Next, the parent directory's POM must be updated to recognize the new project. Navigate to <i>aperture-tiles/tile-examples</i> and open <b>POM.xml</b>. Navigate to line 20 and add in the line: <pre class="code">&ltmodule&gtnew-project-name&lt/module&gt</pre> Now Aperture Tiles will recognize the new project.
+
+
+
+                <a name="server-config"></a>
+                <h2>Server Configuration</h2>
+
+                <p>Now that the new template is copied the tile server must become pointed to the desired tiles. If tiles have not yet been generated, refer to the tile generation documentation.
+
+                <p>To configure the tile-server two files need to be updated.
+                    <a name="webxml"></a>
+                <h3>Web.xml</h3><p>Navigate to <i>new-project-name\src\main\webapp\WEB-INF</i> and open the file <b>web.xml</b>. Lines 17-30 in this file are used to tell Aperture Tiles which storage module is being used to hold the tiles. Uncomment the relevant lines based on how the tiles are stored and ensure that all other lines from 17-30 are commented out. Aperture Tiles currently supports tiles stored as File System Based, Jar files, Zip files, and in HBase or a SQLite database.
+                    <a name="tileproperties"></a>
+                <h3>Tile.properties</h3><p>Next, navigate to <i>new-project-name\src\main\resources</i> and open the file <b>tile.properties</b>. This file is responsible for pointing the server to the exact location of the tiles. Lines 10-70 provide detailed instructions regarding how to configure each storage module. Uncomment the relevant lines so that the location information matches the module type chosen in web.xml and set the required location parameters appropriately. <p>It is important to note that the information in tile.properties should point to the location of the tiles, not to the actual tile set. For example if the full address of the tiles are: <i>main/datasets/mytiles.avro</i> then tile.properties should point to <i>main/datasets/</i>. The tile client configurations in the next section will point to the specific tiles.
+
+                <p>Before exiting tile.properties ensure that all other lines between lines 10-70 are commented out.
+                <a name="clientconfig"></a>
+                <h2>Client Configuration</h2>
+
+                <p>Now that the template is copied and the server is pointed to the tiles it is time to configure the tile client to properly display the tiles.
+
+                <p>To configure how exactly your layer is displayed navigate to <i>new-project-name/src/main/webapp/data</i> and open <b>layers.json</b>. This file will contain 6 editable fields to customize how the tiles are shown. The options are: layer, type, transform, ramp, opacity, renderer. A detailed description of each parameter is found below.
+                    <a name="layer"></a>
+                <h3>Layer</h3> The layer field is used to point to specific tiles which are displayed on the map. For example if tiles are stored in <i>main/datasets/mytiles.avro</i> the layers field should be set to "mytiles.avro". If a database is being used then layer should be set to the desired tile set in your database.
+                <a name="type"></a>
+                <h3>Type</h3> Currently "tile" is the only option supported. Direct image pyramids and client rendered will be supported in a future release.
+                <a name="transform"></a>
+                <h3>Transform</h3> The transform option allows the user to apply transformations to the data values when determining color. Currently the options are "linear" which does not perform a transformation, and "log10" which will take logarithms of raw values.
+                <a name="ramp"></a>
+                <h3>Ramp</h3> The ramp option is used to determine what color scale is applied to the data points. Currently the ramp supports 3 options: linear, single-gradient, and default color scales.
+                <a name="linear"></a>
+                <h4>Linear Ramp</h4>The linear option shows all of the data points with a constant color and can be configured by setting:
+                <pre class="code">"ramp": {
+    "name": "flat",
+    "color": "green"
+},</pre>
+                <a name="grad"></a>
+                <h4>Single Gradient Ramp</h4><p>The single-gradient option will draw the color of each data point as a gradient between two colors. The value where the gradient begins and ends can be manually altered by setting the from-alpha and to-alpha fields. The from-alpha and to-alpha can each take any value between 0-255.
+
+                <p>A sample implementation is shown below:
+
+                <pre class="code">"ramp": {
+    "name": "single-gradient",
+    "from": 0xffffff,
+    "from-alpha": 0,
+    "to": 0x00ff00,
+    "to-alpha": 100
+},</pre>
+                <a name="def"></a>
+                <h4>Default Color Scales</h4><p>The default color scales will edit the color of each data point based on its concentration using a predefined color scale. The current options are:
                 <ul>
-                    <li>Name - the human-readable name of the layer (defaults to the same value as 'Layer')</li>
-                    <li>Layer - the id by which the server knows the layer.</li>
-                    <li>Transform - what transform to apply to the data values when determining color.  Options are:
-                        <ul>
-                            <li>linear - no transformation</li>
-                            <li>log10 - take the logarithm of raw values</li>
-                        </ul>
-                    </li>
-                    <li>Ramp - the color ramp to apply to transformed data values to determine how it is dispayed.  Options are described, where appropriate, as applying from the minimum data value to the maximum.  See below for details.</li>
-                    <li>Type - the type of tile.  Currently only the value "tile", indicating server-rendered tiles, is supported; direct image pyramids and client-rendered should be supported soon.</li>
-                    <li>Opacity - the starting opacity of the layer.  This is a value from 0 (totally transparent) to 1 (totally opaque)</li>
-                    <li>Renderer - the renderer the server should use to render tiles.  This also specifies how the server will read the tiles, as the renderer and serializer are intimately linked.
-                        <ul>
-                            <li>default - render to a heat-map, based on a standard avro double-valued tile</li>
-                            <li>doubleseries - render to a series of heat-maps, based on a standard avro double-series-valued tile</li>
-                            <li>doublestatistics - render tile's total hit and % coverage as text to the tile</li>
-                            <li>textscore - render to an image showing the scored words, with bars based on their score</li>
-                        </ul></li>
-                </ul>
+                    <li>'br': A blue-green ramp.</li>
+                    <li>'inv-br': Inverted blue-green ramp.</li>
+                    <li>'ware': A red-yellow-green ramp.</li>
+                    <li>'inv-ware': Inverted red-yellow-green ramp.</li>
+                    <li>'grey': Full greyscale ramp.</li>
+                    <li>'inv-grey': Inverse greyscale ramp.</li>
+                    </ul>
+
+                These options can be set directly by:
+
+                <pre class="code">ramp": "ware",</pre>
+                <a name="opacity"></a>
+                <h3>Opacity</h3> This setting is used to edit the starting opacity of the later. This can be set to any decimal value ranging from 0 (totally transparent) to 1 (totally opaque).
+                <a name="renderer"></a>
+                <h3>Renderer</h3>  This option defines which renderer the server should use to render and read tiles. The current renderer options are:
+
+                <ul>
+                    <li>'default': Renders to a heat-map, based on a standard avro double-valued tile</li>
+                    <li>'doubleseries': Renders to a series of heat-maps, based on a standard avro double-series-valued tile</li>
+                    <li>'doublestatistics': Renders tile's total hit and % coverage as text to the tile</li>
+                    <li>'textscore': Renders to an image showing the scored words, with bars based on their score</li>
+</ul>
+                <a name="multiple"></a>
+                <h3>Multiple Layers</h3><p>Maps with multiple layers can be created by copying multiple layer description objects and pasting them below the current layer configurations and separating each layer with a comma. An example is shown below.
+                <pre class="code">[
+    {
+    "layer": "my-layer1",
+    "type": "tile",
+    "transform": "linear",
+    "ramp": "ware",
+    "opacity": 0.85,
+    "renderer": "toptextscores"
+    },
+    {
+    "layer": "my-layer2",
+    "type": "tile",
+    "transform": "linear",
+    "ramp": "ware",
+    "opacity": 0.85,
+    "renderer": "toptextscores"
+    }
+]</pre>
+
 
             </div>
         </div>
