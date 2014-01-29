@@ -4,11 +4,11 @@
     { "AxisConfig": {
         "title": "Time",
         "id": "map-x-axis",
-        "min": 1232668800000,
+        "min": 1230940800000,
         "max": 1362873600000,
         "intervalSpec": {
             "type": "percentage",
-            "value": 12.5,
+            "value": 20,
             "pivot": 0,
             "allowScaleByZoom": true,
             "isMercatorProjected": false
@@ -19,7 +19,7 @@
             "allowStepDown": false
         },
         "position": "bottom",
-        "repeat": true
+        "repeat": false
     }},
     { "AxisConfig": {
         "title": "Amount (BTC)",

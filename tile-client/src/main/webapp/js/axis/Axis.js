@@ -256,6 +256,8 @@ define(function (require) {
             this.markerLabelFontSize = "0.75em";
             this.axisLabelFontSize = "0.95em";
 
+            this.maxLabelLength = 0;
+
             this.olMap.events.register('mousemove', this.olMap, function(event) {
                 that.redraw();
             });
@@ -397,7 +399,6 @@ define(function (require) {
                     markerLabel,
                     labelLength,
                     labelOffset,
-                    maxLabelLength = 0,
                     markerLabelCSS = {},
                     i;
 
@@ -439,19 +440,20 @@ define(function (require) {
                     // get marker label css
                     markerLabel.css(markerLabelCSS);
                     // find max label length to position axis title label
-                    if (maxLabelLength < labelLength) {
-                        maxLabelLength = labelLength;
+                    if (that.maxLabelLength < labelLength) {
+                        that.maxLabelLength = labelLength;
                     }
                 }
 
-                labelOffset = maxLabelLength
+                labelOffset = that.maxLabelLength + 20 // for some reason the spacing is a bit off on the
                             + MARKER_LABEL_SPACING
                             + that.majorMarkerLength
                             + AXIS_LABEL_SPACING
                             + axis.label.height();
 
-                // round up within range of 20 to spacing jitter
-                labelOffset = (Math.ceil(labelOffset / 20) * 20);
+                if (that.isXAxis) {
+                    labelOffset += 20;
+                }
 
                 // position axis label
                 axis.label.css( that.position, -labelOffset + 'px' );
