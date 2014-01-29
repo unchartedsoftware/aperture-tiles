@@ -225,7 +225,8 @@ define(function (require) {
          */
         init: function (spec) {
 
-            var key;
+            var that = this,
+                key;
 
             // check input spec, fill in any missing values
             this.good = checkInputSpec(spec);
@@ -254,6 +255,18 @@ define(function (require) {
 
             this.markerLabelFontSize = "0.75em";
             this.axisLabelFontSize = "0.95em";
+
+            this.olMap.events.register('mousemove', this.olMap, function(event) {
+                that.redraw();
+            });
+
+            this.olMap.events.register('panend', this.olMap, function(event) {
+                that.redraw();
+            });
+
+            this.olMap.events.register('zoomend', this.olMap, function(event) {
+                that.redraw();
+            });
 
             this.redraw();
         },

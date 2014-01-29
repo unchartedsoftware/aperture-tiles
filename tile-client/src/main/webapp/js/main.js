@@ -73,10 +73,10 @@ require(['./fileloader',
                     layerControlSet,
                     //layerSpecsById,
                     tooltipFcn,
-                    xAxisSpec,
-                    yAxisSpec,
-                    xAxis,
-                    yAxis,
+                    axisSpecs,
+                    mapSpecs,
+                    axisSpec,
+                    axes = [],
                     carousel,
                     tileScoreRenderer,
                     tileScoreRendererOther,
@@ -84,85 +84,27 @@ require(['./fileloader',
                     dataTracker
                 ;
 
-                // create world map from json file under mapFileId
-                worldMap = new Map("map", jsonDataMap[mapFileId]);
-
-
-                xAxisSpec = {
-
-                    title: "Longitude",
-                    parentId: worldMap.mapSpec.id,
-                    id: "map-x-axis",
-                    olMap: worldMap.map.olMap_,
-                    min: worldMap.mapSpec.options.mapExtents[0],
-                    max: worldMap.mapSpec.options.mapExtents[2],
-                    intervalSpec: {
-                        type: "fixed",
-                        value: 60,
-                        pivot: 0,
-                        allowScaleByZoom: true,
-                        isMercatorProjected: true
-                    },
-                    unitSpec: {
-                        type: 'degrees',
-                        divisor: undefined,
-                        decimals: 2,
-                        allowStepDown: false
-                    },
-                    position: 'bottom',
-                    repeat: true
-
-                };
-
-                yAxisSpec = {
-
-                    title: "Latitude",
-                    parentId: worldMap.mapSpec.id,
-                    id: "map-y-axis",
-                    olMap: worldMap.map.olMap_,
-                    min: worldMap.mapSpec.options.mapExtents[1],
-                    max: worldMap.mapSpec.options.mapExtents[3],
-                    intervalSpec: {
-                        type: "fixed",
-                        value: 30,
-                        pivot: 0,
-                        allowScaleByZoom: true,
-                        isMercatorProjected: true
-                    },
-                    unitSpec: {
-                        type: 'degrees',
-                        divisor: undefined,
-                        decimals: 2,
-                        allowStepDown: false
-                    },
-                    position: 'left',
-                    repeat: false
-                };
-
-                xAxis = new Axis(xAxisSpec);
-                yAxis = new Axis(yAxisSpec);
-
-                redrawAxes = function() {
-                    xAxis.redraw();
-                    yAxis.redraw();
-                };
-
-
-                worldMap.map.olMap_.events.register('mousemove', worldMap.map.olMap_, function(e) {
-
-                    var xVal = xAxis.getAxisValueForPixel(e.xy.x),
-                        yVal = yAxis.getAxisValueForPixel(e.xy.y);
-
-                    // set map "title" to display mouse coordinates
-                    $('#' + worldMap.mapSpec.id).prop('title', 'x: ' + xVal + ', y: ' + yVal);
-
-                    redrawAxes();
-
-                    return true;
+                // separate axis config and map config objects
+                mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
+                    // skip any axis config objects
+                    return !("AxisConfig" in element)
                 });
 
-                worldMap.map.on('panend', redrawAxes);
-                worldMap.map.on('zoomend', redrawAxes);
+                axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
+                    // skip any axis config objects
+                    return ("AxisConfig" in element)
+                });
+
+                // create world map from json file under mapFileId
+                worldMap = new Map("map", mapSpecs);
+
+                // create axes
+                for (i=0; i<axisSpecs.length; ++i) {
+                    axisSpec = axisSpecs[i].AxisConfig;
+                    axisSpec.parentId = worldMap.mapSpec.id;
+                    axisSpec.olMap = worldMap.map.olMap_;
+                    axes.push( new Axis(axisSpec));
+                }
 
                 layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 
