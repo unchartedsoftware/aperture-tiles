@@ -42,6 +42,8 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.demo.TwitterDemoRecord
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.TestPyramidIO
+import com.oculusinfo.tilegen.tiling.TestTileIO
 
 
 
@@ -375,5 +377,61 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
 	     === record111.map(_.getNegativeCountBins().get(n)))
     )
   }
-}
 
+
+  test("Metadata serialization") {
+    import Sentiment._
+    val specs = List(( 5, 0, "a", "this is the first tweet      #abc #bcd"),
+		     ( 9, 0, "b", "this is the second tweet     #bcd #cde"),
+		     (10, 0, "c", "this is the third tweet      #cde #def"),
+		     ( 8, 0, "d", "this is the fourth tweet     #def #efg"),
+		     ( 5, 0, "e", "this is the fifth tweet      #efg #fgh"),
+		     ( 3, 0, "a", "this is the sixth tweet      #fgh #ghi"),
+		     ( 4, 0, "b", "this is the seventh tweet    #ghi #hij"),
+		     ( 5, 0, "c", "this is the eighth tweet     #hij #ijk"),
+		     ( 7, 0, "d", "this is the ninth tweet      #ijk #jkl"),
+		     ( 8, 0, "e", "this is the tenth tweet      #jkl #klm"),
+		     ( 2, 0, "a", "this is the eleventh tweet   #klm #lmn"),
+		     ( 1, 0, "b", "this is the twelvth tweet    #lmn #mno"),
+		     ( 1, 0, "c", "this is the thirteenth tweet #mno #nop"),
+		     (10, 0, "d", "this is the fourteenth tweet #nop #opq"),
+		     ( 6, 0, "e", "this is the fifteenth tweet  #opq #pqr"))
+
+    val localData = specs.flatMap(spec => {
+      val ll = Range(0, spec._1).map(n => createRecord(0+spec._2, spec._3, spec._4,
+						       -45.0, -90.0, positive, 50.0))
+      val ul = Range(0, spec._1).map(n => createRecord(1+spec._2, spec._3, spec._4,
+						       45.0, -90.0, positive, 50.0))
+      val lr = Range(0, spec._1).map(n => createRecord(2+spec._2, spec._3, spec._4,
+						       -45.0, 90.0, positive, 50.0))
+      // Create the upper left quadrant with a different number of records
+      val ur = Range(0, (11-spec._1)).map(n => createRecord(3+spec._2, spec._3, spec._4,
+							    45.0, 90.0, positive, 50.0))
+      ll union lr union ul  union ur
+    })
+    val localStartTime = startTime
+    val localEndTime = endTime
+    val localBins = bins
+    val data = sc.parallelize(localData).mapPartitions(i => {
+      val parser = new TwitterDemoRecordParser(localStartTime, localEndTime, localBins)
+      i.flatMap(line => parser.getRecordsByTag(line))
+    })
+
+    val tilePyramid = new WebMercatorTilePyramid
+    val binner = new RDDBinner
+    val binDesc = new TwitterDemoBinDescriptor
+    val tio = new TestTileIO
+
+    Range(0, 4).map(level => {
+      val tiles = binner.processDataByLevel(data, binDesc, tilePyramid, List(level), bins=1)
+
+      tio.writeTileSet(tilePyramid, "abc", tiles, binDesc)
+    })
+
+    val mdo = tio.readMetaData("abc")
+    assert(mdo.isDefined)
+    val md = mdo.get
+    assert(List(0, 1, 2, 3) == md.levelMins.map(_._1).toList)
+    assert(List(0, 1, 2, 3) == md.levelMaxes.map(_._1).toList)
+  }
+}

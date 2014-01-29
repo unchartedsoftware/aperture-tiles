@@ -153,13 +153,13 @@ class TileMetaData (val name: String,
      + "        \"levelMinimums\": {\n"
      + levelMins.map{
       case (level: Int, min: String) => 
-	"            \""+level+"\": \""+min+"\""
+	"            \""+level+"\": \""+min.replace("\"", "\\\"")+"\""
     }.mkString("", ",\n", "\n")
      + "        },\n"
      + "        \"levelMaximums\": {\n"
      + levelMaxes.map{
       case (level: Int, max: String) =>
-	"            \""+level+"\": \""+max+"\""
+	"            \""+level+"\": \""+max.replace("\"", "\\\"")+"\""
     }.mkString("", ",\n", "\n")
      + "        }\n"
      + "    }\n"
