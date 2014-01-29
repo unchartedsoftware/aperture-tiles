@@ -393,12 +393,6 @@ abstract class FieldExtractor[T: ClassManifest] extends Serializable {
    */
   def getFieldValue (field: String)(record: T): ValueOrException[Double]
 
-  /**
-   * Aggregate bin values.  Default aggregation function is simple addition
-   */
-  def aggregateValues (valueField: String)(a: Double, b: Double): Double = a + b
-
-
 
   /**
    * Get the pyramidding scheme to be used with the given X and Y axis.

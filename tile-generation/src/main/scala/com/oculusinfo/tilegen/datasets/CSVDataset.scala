@@ -47,6 +47,9 @@ import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.streaming.Time
+import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
+import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
+import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
 
 
 
@@ -303,20 +306,6 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldEx
     else if ("zero" == field) new ValueOrException(Some(0.0), None)
     else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
 
-  override def aggregateValues (valueField: String)(a: Double, b: Double): Double = {
-    val fieldAggregation = properties.getProperty("oculus.binning.parsing."+valueField+".fieldAggregation", "add")
-    if ("log" == fieldAggregation) {
-      val base = properties.getDoubleProperty("oculus.binning.parsing."+valueField+".fieldBase", math.exp(1.0))
-      math.log(math.pow(base, a) + math.pow(base, b))/math.log(base)
-    } else if ("min" == fieldAggregation) {
-      a min b
-    } else if ("max" == fieldAggregation) {
-      a max b
-    } else {
-      a + b
-    }
-  }
-
   override def getTilePyramid (xField: String, minX: Double, maxX: Double,
 			       yField: String, minY: Double, maxY: Double): TilePyramid = {
     val projection = properties.getProperty("oculus.binning.projection", "EPSG:4326")
@@ -429,7 +418,19 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 
   override def getBins = tileSize
 
-  def getBinDescriptor: BinDescriptor[Double, JavaDouble] = new StandardDoubleBinDescriptor
+  def getBinDescriptor: BinDescriptor[Double, JavaDouble] = {
+    val fieldAggregation = properties.getProperty("oculus.binning.parsing." + zVar + ".fieldAggregation", "add")
+    if ("log" == fieldAggregation) {
+      val base = properties.getDoubleProperty("oculus.binning.parsing." + zVar + ".fieldBase", math.exp(1.0))
+      new LogDoubleBinDescriptor(base)
+    }
+    else if ("min" == fieldAggregation)
+      new MinimumDoubleBinDescriptor
+    else if ("max" == fieldAggregation)
+      new MaximumDoubleBinDescriptor
+    else
+      new StandardDoubleBinDescriptor
+  }
 
 
   class CSVStaticProcessingStrategy (sc: SparkContext, cache: Boolean)

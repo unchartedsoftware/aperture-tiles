@@ -104,6 +104,10 @@ class MaximumDoubleBinDescriptor extends StandardDoubleBinDescriptor {
   override def aggregateBins (a: Double, b: Double): Double = a max b
 }
 
+class LogDoubleBinDescriptor(logBase: Double = math.exp(1.0)) extends StandardDoubleBinDescriptor {
+  override def aggregateBins (a: Double, b: Double): Double = math.log(math.pow(logBase, a) + math.pow(logBase, b))/math.log(logBase)
+}
+
 class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaList[JavaDouble]] {
   private val _emptyList = new ArrayList[JavaDouble]()
 
