@@ -301,14 +301,16 @@ public class TwitterDemoRecord implements Serializable {
         List<Integer> minNeutralBins = new ArrayList<>();
         List<Integer> minNegativeBins = new ArrayList<>();
         for (TwitterDemoRecord record: records) {
-            minCount = Math.min(minCount, record._count);
-            minPositive = Math.min(minPositive, record._positive);
-            minNeutral = Math.min(minNeutral, record._neutral);
-            minNegative = Math.min(minNegative, record._negative);
-            minInPlace(minCountBins, record._countBins);
-            minInPlace(minPositiveBins, record._positiveBins);
-            minInPlace(minNeutralBins, record._neutralBins);
-            minInPlace(minNegativeBins, record._negativeBins);
+	    if (null != record) {
+		minCount = Math.min(minCount, record._count);
+		minPositive = Math.min(minPositive, record._positive);
+		minNeutral = Math.min(minNeutral, record._neutral);
+		minNegative = Math.min(minNegative, record._negative);
+		minInPlace(minCountBins, record._countBins);
+		minInPlace(minPositiveBins, record._positiveBins);
+		minInPlace(minNeutralBins, record._neutralBins);
+		minInPlace(minNegativeBins, record._negativeBins);
+	    }
         }
         return new TwitterDemoRecord(null,
                                      minCount, minCountBins,
