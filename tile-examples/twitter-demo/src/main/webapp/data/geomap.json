@@ -53,6 +53,46 @@
                   "stylers": [ { "visibility": "on" } ] }
             ]
         }
+    }},
+    { "AxisConfig": {
+        "title": "Longitude",
+        "id": "map-x-axis",
+        "min": -180,
+        "max": 180,
+        "intervalSpec": {
+            "type": "fixed",
+            "value": 60,
+            "pivot": 0,
+            "allowScaleByZoom": true,
+            "isMercatorProjected": true
+        },
+        "unitSpec": {
+            "type": "degrees",
+            "decimals": 2,
+            "allowStepDown": false
+        },
+        "position": "bottom",
+        "repeat": true
+    }},
+    { "AxisConfig": {
+        "title": "Latitude",
+        "id": "map-y-axis",
+        "min": -85.051129,
+        "max": 85.051129,
+        "intervalSpec": {
+            "type": "fixed",
+            "value": 30,
+            "pivot": 0,
+            "allowScaleByZoom": true,
+            "isMercatorProjected": true
+        },
+        "unitSpec": {
+            "type": "degrees",
+            "decimals": 2,
+            "allowStepDown": false
+        },
+        "position": "left",
+        "repeat": false
     }}
 ]
 
