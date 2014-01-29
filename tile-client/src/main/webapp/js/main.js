@@ -80,19 +80,19 @@ require(['./fileloader',
                     carousel,
                     tileScoreRenderer,
                     tileScoreRendererOther,
-                    redrawAxes,
                     dataTracker
                 ;
 
                 // separate axis config and map config objects
                 mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
                     // skip any axis config objects
-                    return !("AxisConfig" in element)
+
+                    return !(element.hasOwnProperty("AxisConfig"));
                 });
 
                 axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
                     // skip any axis config objects
-                    return ("AxisConfig" in element)
+                    return (element.hasOwnProperty("AxisConfig"));
                 });
 
                 // create world map from json file under mapFileId
