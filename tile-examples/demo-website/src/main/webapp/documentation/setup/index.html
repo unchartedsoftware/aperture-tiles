@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Documentation | Aperture Tiles</title>
+    <link rel="stylesheet" type="text/css" href="../../css/all.css">
+    <link rel="stylesheet" type="text/css" href="../../jstests/test.css">
+    <link rel="stylesheet" href="../../prettify/default.css">
+    <link rel="SHORTCUT ICON" href="../../img/aperture-16x16.ico"/>
+    <script src="../../lib/jquery.js"></script>
+    <script src="../../lib/ga.js"></script>
+</head>
+
+<body>
+<div id="header"></div>
+<div id="content-strip">
+    <div id="header-logo">
+        <a href="../../"><img src="../../img/aperture-tiles-big.png"></a>
+    </div>
+    <div id="header-menu">
+        <a href="../../" class="overview">&nbsp;</a>
+        <a href="../../tour/overview/">Tour</a>
+        <a href="../../documentation/setup/" class="selected">Documentation</a>
+        <a href="../../demos/">Demos</a>
+        <a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
+	
+			<span id="testlinks">
+				<a href="../../examples/tests.html">Tests</a>
+			</span>
+    </div>
+
+    <div id="all">
+        <div id="submenu">
+            <div class="submenu-item" onclick="window.location.assign('');">
+                <div class="submenu-item-background selected">
+                    <div class="submenu-item-number">1</div>
+                </div>
+                <div class="submenu-item-label">Installation</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('../generation/');">
+                <div class="submenu-item-background">
+                    <div class="submenu-item-number">2</div>
+                </div>
+                <div class="submenu-item-label">Generation</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('../configuration/');">
+                <div class="submenu-item-background">
+                    <div class="submenu-item-number">3</div>
+                </div>
+                <div class="submenu-item-label">Configure</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('../rendering/');">
+                <div class="submenu-item-background">
+                    <div class="submenu-item-number">4</div>
+                </div>
+                <div class="submenu-item-label">Rendering</div>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="content-context">
+                <img src="../../img/architecture.png" class="home-image"/>
+                <p>
+                    <a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a>
+            </div>
+            <div class="content-body">
+                <h1>Installation and Compilation</h1>
+
+				<p>The Aperture Tiles source code can be download from <a href="https://github.com/oculusinfo/aperture-tiles">github</a>. 
+				Aperture Tiles is made up of eight sub-projects:</p>
+				
+				<ul>
+					<li><strong>math-utilities</strong> - contains some basic, underlying java utilities to aid in processing data. Some angle utilities, some linear algebra, and a little statistics.</li>
+					<li><strong>geometric-utilities</strong> - contains advanced math utitlities for processing geometry - mostly dealing with processing of geographic problems.</li>
+					<li><strong>binning-utilities</strong> - the basic substrate of tiling, bin data structures, bin processing, and basic bin storage classes.</li>
+					<li><strong>tile-generation</strong> - Spark-based tools to generate tile pyramids from raw data</li>
+					<li><strong>tile-service</strong> - a web service to serve tiles from tile pyramids to web clients</li>
+					<li><strong>tile-client</strong> - a simple web client to display tiles from tile pyramids</li>
+					<li><strong>tile-client-template</strong> - a starter template that makes it easier to create a tile-client and server application</li>
+					<li><strong>tile-examples</strong> - the Aperture Tiles documentation website and example applications</li>
+				</ul>
+				
+				<p>All aperture-tiles projects build with <a href="http://maven.apache.org/">Apache Maven</a>. We build with Maven 3.1.0, but other versions may work.</p>
+				
+				<h3>Setup</h3>
+				<p>The tile-generation project in particular has a few prerequisites (some strictly necessary, some optional). 
+				Generally, one needs to set up:</p>
+				<ul>
+					<li><strong>Hadoop/HDFS</strong> (optional) - see hadoop project for installation instructions. 
+					There are several flavors of Hadoop to choose from: <a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>, 
+					<a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a>, <a href="http://www.mapr.com/products/apache-hadoop">MapR</a>, 
+					<a href="http://hortonworks.com/">HortonWorks</a>, and probably a host of others. If you want to run large tiling jobs, you'll 
+					want a cluster of machines set up with Hadoop and Spark on which to run them. If you're running small jobs, or are willing to 
+					take a long time to do them, you can run Spark on a single node and just read to and write from the file system, in which case 
+					you don't need this step - but it makes things a lot easier, and lets you do a lot more.</li>
+					<li><strong>HBase</strong> (optional) - <a href="http://hbase.apache.org/">Apache HBase</a> acts much like a database which stores its data in Hadoop. 
+					If your tile sets are too many or too big to store on one machine, we recommend using HBase to store them.</li>
+					<li><strong>Spark</strong> - <a href="http://spark.incubator.apache.org/">Apache Spark</a> is "... an open source cluster computing system that aims to make data analytics fast...". 
+					It also makes them very easy to develop and generalize. When you set up Spark, you have to tell it the version of Hadoop with which it will be working. See Spark build instructions for how to do this.</li>
+					<li><strong>Aperture-core</strong> - Though this project is a piece of Aperture, the tile-service and tile-client projects do need the core. 
+					Currently, the best way to get the core is to download it from the Aperture web site - <a href="http://aperturejs.com/">aperturejs.com</a>. You will need to use 
+					the "Download Source" option, and run the maven installation on that, so that the tile-service and tile-client projects' builds 
+					can find what they need.</li>
+					<li><strong>Web Server</strong> - the Tile Server is built using <a href="http://restlet.org/">Restlet</a> and requires a servlet compatible web server. 
+					We recommend deploying to <a href="http://tomcat.apache.org/">Apache Tomcat</a> or <a href="http://www.eclipse.org/jetty/">Jetty</a>.</li>
+				</ul>
+                <p>Finally, one has tell the tile-generation to build relative to the version of Hadoop and/or HBase one has installed. 
+                This is done by setting and in the general aperture-tiles project build file, the file pom.xml.</p>
+
+                <h3>Building the Project</h3>
+                <p>To build all projects, type 'mvn install' in this directory. This will install .jar files for each project into your 
+                local maven repostitory on your build machine.</p>
+                <p>In actually running tiling jobs, the default run scripts in the tile-generation project expect to find the jars in 
+                your maven repository. Modifying them to look for the jars elsewhere if you don't want them there isn't hard, but 
+                you're on your own for that part. But if you want to go through all that, just use 'mvn package' instead.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+
+</html>

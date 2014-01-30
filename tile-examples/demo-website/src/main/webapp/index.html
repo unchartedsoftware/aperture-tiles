@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<title>Aperture Tiles</title>
+	<link rel="stylesheet" type="text/css" href="css/all.css">
+	<link rel="stylesheet" type="text/css" href="jstests/test.css">
+	<link rel="stylesheet" href="prettify/default.css">
+	<link rel="SHORTCUT ICON" href="img/aperture-16x16.ico"/>
+	<script src="lib/jquery.js"></script>
+	<script src="lib/ga.js"></script>
+</head>
+
+<body>
+	<div id="header"></div>
+	<div id="content-strip">
+		<div id="header-logo">
+			<img src="img/aperture-tiles-big.png"/>
+		</div>
+		<div id="header-menu">
+			<a href="" class="selected overview">&nbsp;</a>
+			<a href="tour/overview/">Tour</a>
+            <a href="documentation/setup/">Documentation</a>
+			<a href="demos/">Demos</a>
+			<a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">download</a>
+	
+			<span id="testlinks">
+				<a href="examples/tests.html">Tests</a>
+			</span>
+		</div>
+	
+		<div id="all">
+		<div id="content">
+		<div class="content-context">
+		<a href="/twitter-demo"><img src="img/twit-cap.png" class="home-image" alt="Twitter Aperture Tile Demo" /></a>
+		<div class="references-title">References</div>
+		Published Papers:
+		<p><a href="http://www.oculusinfo.com/assets/pdfs/papers/Submitted_Oculus_Big_Data_Twitter_Plots_09Sep2013_rev2.pdf" target="_blank">
+		<em>Tile Based Visual Analytics for Twitter Big Data Exploratory Analysis.</em> Cheng, D. et al, IEEE Big Data Conference, 2013
+		</a></p>
+        <p><a href="http://www.oculusinfo.com/assets/pdfs/papers/Submitted_Oculus_Big_Data_Scatter_Plot_EDA_9Aug2013_Final_dist.pdf" target="_blank">
+        <em>Interactive Data Exploration with "Big Data Tukey Plots".</em> Schretlen, P. et al, IEEE VisWeek, 2013
+        </a></p>
+		<p>Technical Overview Documentation: <a href="https://github.com/oculusinfo/aperture-tiles/releases/download/0.1.0/distributed-tiling-overview.pdf" target="_blank">PDF</a>
+		<a href="/bitcoin-demo"><img src="img/bitcoin-time-by-amount.png" class="home-image" alt="Bitcoin Aperture Tile Demo" /></a>
+		<p><a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a></p>
+		</div>
+		<div class="content-body">
+			<h1>Aperture Tiles <span class="tagline">tile-based visual analytics for big data</span></h1>
+            <p>New tools for exploring, characterizing and analyzing 'big data' are required to suggest
+            initial hypotheses for testing. The widespread adoption of web-based maps provides a familiar set 
+            of interactions for exploring abstract large data spaces. Building on these techniques, Aperture Tiles 
+            provides browser-based interactive visual analytics that scale to billions or more points of data.</p>
+			
+			<h3>Web Tile Rendering for Big Data Visual Analytics</h3>
+			<p>Aperture tiles provides tools for web-based interactive big data visual analytics that uses tile-based 
+			rendering similar to geographic maps and interaction paradigms. Tile-based geographic maps provide a 
+			solid framework to construct large scale visualization that feature continuous data along two dimensions, 
+			use of layering and legends, axes and scales. Web delivery of maps using tiled rendering has benefit 
+			from years of work. With widespread use, map interactions have become familiar and make exploration of 
+			an abstract large data space easy, even enjoyable. Using similar techniques, Aperture Tiles provides 
+			interactive data exploration with continuous zooming on hundreds of millions of points.</p>
+			
+			<p>Tile-based visual analytics divides the data into evenly sized hierarchical tiles, and then 
+			calculates and overlays a tile-bounded analytic, for example, the top five twitter hashtags for the region. These 
+			analytics serve as "aggregated markers". As the user zooms into the map, the aggregation markers shown become 
+			increasingly localized to their bounded region.</p>	
+
+			<h3>Extensible and Open Source</h3>
+			<p>The Aperture Tiles services and API are designed to be extensible, allowing a
+			broad community to leverage and extend capabilities in creative ways. The extensible AVRO tile format allows 
+			generation of tiles by third parties, which can be served using the Aperture Tiles server.  Aperture Tiles leverages 
+			open standards such as <a href="http://en.wikipedia.org/wiki/Tile_Map_Service">Tile Map Services (TMS)</a> 
+			that are widely supported by web mapping clients and servers.</p> 
+			
+			<p>Aperture Tile generation service builds on the <a href="http://spark.incubator.apache.org/">Apache Spark</a> 
+			and <a href="http://hadoop.apache.org/">Hadoop</a> cluster computing systems providing the ability to scale up to 
+			billions or more data points. Tile sets involving millions of tiles are efficiently handled using 
+			<a href="http://hive.apache.org/">Apache Hive</a> for distributed data storage.</p>
+			
+			<p>Aperture Tiles is under ongoing development and is 
+			freely available for download under <a href="http://www.opensource.org/licenses/MIT" target="_blank">The MIT License</a> (MIT)
+			open source licensing. Unlike GNU General Public License (GPL), MIT freely
+			permits distribution of derivative work under proprietary license, without
+			requiring the release of source code.</p>
+		</div>
+	</div>
+	</div>
+	</div>
+</body>
+
+
+
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Interactive Map Demo</title>
+    
+    <link rel="stylesheet" href="css/map.css" />
+    <link rel="stylesheet" href="css/slider.css" />
+    <link rel="stylesheet" href="css/layercontrols.css" />
+    <link rel="stylesheet"
+          href="js/libjs/jquery-ui/1.10.3/themes/custom-theme/jquery-ui-1.10.3.custom.css" />
+          
+    <!--  provide any css overrides in main.css -->
+	<link rel="stylesheet" href="css/main.css" /> 
+
+    <!-- JQuery includes -->
+    <script src="js/libjs/jquery/jquery-1.10.2.dev.js"></script>
+    <script src="js/libjs/jquery-ui/1.10.3/ui/jquery-ui.js"></script>
+    <!-- For resize messages on non-windows -->
+    <script src="js/libjs/jquery/jquery.ba-resize.min.js"></script>
+    <!-- For pretty formatting of numbers
+    <script src="js/libjs/jquery-number-format/jquery.number.min.js"></script>
+
+    <!-- Aperture includes -->
+    <script src="js/libjs/aperture/js-dependencies/proj4js.js"></script>
+    <script src="js/libjs/aperture/js-dependencies/OpenLayers.debug.js"></script>
+    <script src="js/libjs/aperture/js-dependencies/raphael.js"></script>
+    <script src="js/libjs/aperture/js/aperture.js"></script>
+    <!-- <script src="js/aperture-config-map.js"></script> -->
+
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+
+    <!-- Require starts off our own project module heirarchy -->
+    <script src="js/libjs/require.js" data-main="js/main.js"></script>
+  </head>
+  <body>
+    <div id="map" style="width: 1000px; height: 600px;"> </div>
+    <div id="controls-container">
+        <div id="layer-controls" class="layer-control"></div>
+    </div>
+    <p id="hoverOutput">  </p>
+    <br>
+  </body>
+</html>

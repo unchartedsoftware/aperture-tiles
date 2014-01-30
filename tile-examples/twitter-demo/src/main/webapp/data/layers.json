@@ -1,0 +1,10 @@
+[
+    {
+        "layer": "ndk.twitter.longitude.latitude",
+        "type": "tile",
+        "transformid": "linear",
+        "ramp": "ware",
+        "opacity": 0.85,
+        "renderer": "default"
+    }
+]

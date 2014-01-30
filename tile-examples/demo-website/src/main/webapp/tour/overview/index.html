@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Tour | Aperture Tiles</title>
+    <link rel="stylesheet" type="text/css" href="../../css/all.css">
+    <link rel="stylesheet" type="text/css" href="../../jstests/test.css">
+    <link rel="stylesheet" href="../../prettify/default.css">
+    <link rel="SHORTCUT ICON" href="../../img/aperture-16x16.ico"/>
+    <script src="../../lib/jquery.js"></script>
+    <script src="../../lib/ga.js"></script>
+</head>
+
+<body>
+<div id="header"></div>
+<div id="content-strip">
+    <div id="header-logo">
+        <a href="../../"><img src="../../img/aperture-tiles-big.png"></a>
+    </div>
+    <div id="header-menu">
+        <a href="../../" class="overview">&nbsp;</a>
+        <a href="" class="selected">Tour</a>
+        <a href="../../documentation/setup/">Documentation</a>
+        <a href="../../demos/">Demos</a>
+        <a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
+	
+			<span id="testlinks">
+				<a href="../../examples/tests.html">Tests</a>
+			</span>
+    </div>
+
+    <div id="all">
+        <div id="submenu">
+            <div class="submenu-item" onclick="window.location.assign('');">
+                <div class="submenu-item-background selected">
+                    <div class="submenu-item-number">1</div>
+                </div>
+                <div class="submenu-item-label">Overview</div>
+            </div>
+            <div class="submenu-item" onclick="window.location.assign('../components/');">
+                <div class="submenu-item-background">
+                    <div class="submenu-item-number">2</div>
+                </div>
+                <div class="submenu-item-label">Components</div>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="content-context">
+                <img src="../../img/twitter-europe.png" class="home-image"/>
+                    Millions of Tweets across Europe</a>
+                <p>
+                    <a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a>
+            </div>
+            <div class="content-body">
+                <h1>Aperture Tiles Overview</h1>
+
+                <p>Aperture-Tiles provides a single, consistent tool which effectively leverages tiling to 
+                visualize data at any scale. Effectively using a tiling approach has multiple advantages such as visualizing
+                and computing analytics at multiple resolutions. Many good JavaScript libraries exist for interacting with 
+                tiled images. Tiling can provide effective data compression and efficient distribution for extreme scale data. 
+                Due to the increasing exposure of apps such as Google Maps, tile interactions have become familiar and widespread.
+				However, a conventional tiling approach is currently limited by two critical restraints. Tiles can 
+				take a long time to generate and data values are baked into rendered tiles, resulting in stale tiles 
+				representing dynamic data. Aperture-Tiles addresses these drawbacks by using distributed computation 
+				to quickly generate data for tiles and defining reproducible data flows which can regenerate tiles 
+				from live data, reducing tile staleness. Separation of tile data from rendering supports agile development and 
+				creation of interactive tiles using web-based client side rendering such as <a href="http://aperturejs.com/">ApertureJS</a>.</p>
+                
+                <h2>Tile-based Visual Analytics for Interactive Visualization</h2>
+                <p>The aggregation stage projects and bins data into a predefined grid, such as the Tiling Map Service 
+                standard with a (z,x,y) coordinate system where z identifies the zoom level, and x,y identifies a specific 
+                tile on the plot for the given z. The summarization stage applies one or more summary statistics or other 
+                analytics to the data in each tile region storing the result in a data store. The rendering stage maps the 
+                summary to a visual representation, and renders it to an image tile at request time.</p>
+                <p>
+                
+                <h2>A Flexible Data Flow</h2>
+				<p>Aperture-Tiles implements a data flow which breaks the visualization process into three distinct components: 
+				tile generation, tile server, and tile client. This flexible framework makes Aperture-Tiles compatible with both native 
+				and external data analysis and presentation features.</p>
+				<img class="bordered" src="../../img/arch-overview.png" alt="Aperture Tiles Architectural Overview" />
+            </div>
+    	</div>
+	</div>
+</body>
+
+
+
+</html>

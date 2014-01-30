@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -79,6 +79,14 @@ define(function (require) {
 
         getExtent: function () {
             return this.map.olMap_.getExtent();
+        },
+
+        isEnabled: function () {
+            return this.map.olMap_.baseLayer.getVisibility();
+        },
+
+        setEnabled: function (enabled) {
+            this.map.olMap_.baseLayer.setVisibility(enabled);
         },
 
         zoomToExtent: function (extent, findClosestZoomLvl) {

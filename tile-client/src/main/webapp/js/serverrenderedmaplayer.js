@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -285,6 +285,33 @@ define(function (require) {
             }
         },
 
+
+        /**
+         * Sets the visiblity of a sub layer.
+         *
+         * @param {string} subLayerId - The ID of the sublayer to modify.
+         * @param {boolean} enabled - TRUE if the sub layer should be enabled, false otherwise.
+         */
+        setSubLayerEnabled: function (subLayerId, enabled) {
+            var layer = this.mapLayer[subLayerId];
+            if (layer) {
+                layer.olLayer_.setVisibility(enabled);
+            }
+        },
+
+        /**
+         * @param {string} subLayerId - The sub layer ID.
+         * @returns {boolean} - TRUE if the sublayer is enabled, false otherwise.
+         */
+        getSubLayerEnabled: function (subLayerId) {
+            var layer = this.mapLayer[subLayerId], enabled;
+            enabled = false;
+
+            if (layer) {
+                enabled = layer.olLayer_.setVisibility(enabled);
+            }
+            return enabled;
+        },
 
         /**
          * Update all our openlayers layers on our map.

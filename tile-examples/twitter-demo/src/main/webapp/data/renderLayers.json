@@ -1,0 +1,7 @@
+[
+	{
+        "layer": "ndk.twitter.longitude.latitude.top.hashtags",
+        "transformid": "linear",
+        "opacity": 0.85
+    }	
+]

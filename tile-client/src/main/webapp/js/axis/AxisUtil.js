@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -281,7 +281,7 @@ define({
                 }
             } else {
                 // cull below pivot
-                while (minIncrement-increment > minCull) {
+                while (minIncrement-increment >= minCull) {
                     minIncrement -= increment;
                 }
             }
@@ -319,7 +319,7 @@ define({
                 }
             } else {
                 // cull above pivot
-                while (maxIncrement+increment < maxCull) {
+                while (maxIncrement+increment <= maxCull) {
                     maxIncrement += increment;
                 }
             }
@@ -362,7 +362,7 @@ define({
         } else {
             // use percentage
             increment = (axis.max-axis.min)*(axis.intervalSpec.value * 0.01);
-            pivot = (axis.max-axis.min)* axis.intervalSpec.pivot;
+            pivot = (axis.max-axis.min)*(axis.intervalSpec.pivot*0.01) + axis.min;
         }
         // scale increment if specified
         if ( axis.intervalSpec.allowScaleByZoom ) {

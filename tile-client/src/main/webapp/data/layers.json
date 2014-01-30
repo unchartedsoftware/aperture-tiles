@@ -2,9 +2,9 @@
     {
         "layer": "ibm-twitter-keyword",
         "type": "tile",
-        "transform": "log",
+        "transformid": "linear",
         "ramp": "ware",
         "opacity": 0.85,
-	    "renderer": "toptextscores"
+        "renderer": "toptextscores"
     }
 ]
