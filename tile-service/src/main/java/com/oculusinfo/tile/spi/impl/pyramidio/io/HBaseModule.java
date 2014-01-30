@@ -24,8 +24,7 @@
  */
 package com.oculusinfo.tile.spi.impl.pyramidio.io;
 
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
+import java.io.IOException;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -51,7 +50,7 @@ public class HBaseModule extends AbstractModule {
 			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperQuorum")String zookeeperQuorum,
 			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperPort")String zookeeperPort,
 			@Named("com.oculusinfo.tile.pyramidio.hbase.hbaseMaster")String hbaseMaster) 
-					throws MasterNotRunningException, ZooKeeperConnectionException{
+					throws IOException {
 
 		return new HBasePyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster);
 	}
