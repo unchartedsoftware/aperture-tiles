@@ -25,7 +25,7 @@
 define(function () {
     "use strict";
 
-    var Config;
+    var Config, i;
 
     Config = {
         loaded: false,
@@ -38,7 +38,7 @@ define(function () {
                 // between them somehow.
                 if ("object" === typeof baseLayerSpec) {
                 	if (Array.isArray(baseLayerSpec)) {
-                    	for (var i=0; i < baseLayerSpec.length; i++) {
+                    	for (i=0; i < baseLayerSpec.length; i++) {
                     		if (baseLayerSpec[i].hasOwnProperty("Google")) {
                     			// pick the first google base layer specified
                     			baseLayer = baseLayerSpec[i];

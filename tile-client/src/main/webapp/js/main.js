@@ -46,12 +46,9 @@ require(['./fileloader',
                   AxisUtil, Axis, Carousel, LayerInfoLoader, DataTracker, Class ) {
             "use strict";
 
-            var sLayerFileId = "./data/layers.json"
-                // Uncomment for geographic data
-                ,mapFileId = "./data/geomap.json"
-                // Uncomment for non-geographic data
-                //,mapFileId = "./data/emptymap.json"
-                ,cLayerFileId = "./data/renderLayers.json";
+            var sLayerFileId = "./data/layers.json",
+                mapFileId = "./data/map.json",
+                cLayerFileId = "./data/renderLayers.json";
 
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {

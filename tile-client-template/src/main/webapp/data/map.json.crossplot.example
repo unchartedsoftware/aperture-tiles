@@ -1,6 +1,6 @@
 [
 	{ "_comment" : [
-		"This json configuration file specifies properties of a geo-graphical map tile-based application",
+		"This json configuration file specifies properties of a cross-plot tile-based application",
 		"The AxisConfig keys configure the x and y axis of the map:",
 		"       title:      axis label text                     ex. Longitude",
 		"       id:         axis identifier                     ex. map-x-axis or map-y-axis",
