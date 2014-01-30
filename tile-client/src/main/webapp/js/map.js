@@ -81,6 +81,14 @@ define(function (require) {
             return this.map.olMap_.getExtent();
         },
 
+        isEnabled: function () {
+            return this.map.olMap_.baseLayer.getVisibility();
+        },
+
+        setEnabled: function (enabled) {
+            this.map.olMap_.baseLayer.setVisibility(enabled);
+        },
+
         zoomToExtent: function (extent, findClosestZoomLvl) {
             this.map.olMap_.zoomToExtent(extent, findClosestZoomLvl);
         },

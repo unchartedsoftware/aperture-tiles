@@ -142,13 +142,13 @@ public class ImageTileServiceImpl implements ImageTileService {
 			}
 
 			try {
-				transform = options.getString("transform");
+				transform = options.getString("transformid");
 			} catch (JSONException e2) {
 				_logger.info("No transform specified for tile request - using default.");
 			}
 
 			try {
-				JSONArray legendRange = options.getJSONArray("legendRange");
+				JSONArray legendRange = options.getJSONArray("legendrange");
 				rangeMin = legendRange.getInt(0);
 				rangeMax = legendRange.getInt(1);
 			} catch (JSONException e3) {

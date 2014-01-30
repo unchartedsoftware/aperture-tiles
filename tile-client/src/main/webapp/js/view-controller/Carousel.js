@@ -107,7 +107,7 @@ define(function (require) {
         createViewSelectionLayer: function(position) {
 
             var that = this,
-                icon = (position === 'left') ? "./img/chevron_L.png" : "./img/chevron_R.png",
+                icon = (position === 'left') ? "./images/chevron_L.png" : "./images/chevron_R.png",
                 x = (position === 'left') ? -0.22 : 0.22,
                 y = 0,
                 hover = new aperture.Set('tilekey'), // separate tiles by tile key for hovering
@@ -168,8 +168,8 @@ define(function (require) {
         createViewIndexLayer: function(index, spacingFactor) {
 
             var that = this,
-                selectIcon = "./img/no_select.png",
-                noSelectIcon = "./img/select.png",
+                selectIcon = "./images/no_select.png",
+                noSelectIcon = "./images/select.png",
                 spacing = 0.04,
                 hover = new aperture.Set('tilekey'), // separate tiles by bin key for hovering
                 viewIndexLayer;
@@ -232,7 +232,7 @@ define(function (require) {
          */
         createTileOutlineLayer: function() {
 
-            var icon = "./img/tileoutline.png",
+            var icon = "./images/tileoutline.png",
                 outlineLayer;
 
             outlineLayer = this.nodeLayer.addLayer(aperture.IconLayer);

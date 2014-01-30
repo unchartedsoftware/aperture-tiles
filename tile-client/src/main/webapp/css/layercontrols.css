@@ -1,0 +1,143 @@
+@charset "UTF-8";
+
+body {
+    font: 16px Are
+}
+
+.title {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.layer-control {
+    width: 50%;
+    padding-bottom: 13px;
+    font-size: 12px;
+}
+
+.settings-link {
+    text-align: right;
+    font-size: 12px;
+    color: #366097;
+}
+
+.settings-link:hover {
+    text-align: right;
+    font-size: 12px;
+    text-decoration: underline;
+    color: #366097;
+}
+
+.toggle {
+    width: 15px;
+    padding: 0 10px 0 0;
+    vertical-align: bottom;
+}
+
+.layer-labels {
+    font-size: 12px;
+    text-align: left;
+}
+
+.slider-label {
+    font-size: 10px;
+    text-align: center;
+    color: #939393;
+    padding-bottom: 3px;
+}
+
+.opacity-slider {
+    padding: 0 10px 2px 0;
+    width: 30%;
+}
+
+.base-opacity-slider {
+    padding: 0 10px 2px 0;
+    width: 100%;
+}
+
+.filter-slider {
+    padding: 0 10px 2px 0;
+    width: 70%;
+}
+
+.layer-promotion-button {
+    width:32px;
+    height:32px;
+    border:none;
+    background: transparent url(../images/PromoteButton.png) no-repeat center top;
+    margin-left:10px;
+    position:relative;
+    top:4px;
+
+}
+.layer-promotion-button:hover:enabled {
+    border: none;
+    top: 4px;
+    background: transparent url(../images/PromoteButton.png) no-repeat center top;
+    background-position: 0px -32px;
+}
+
+.layer-promotion-button:active:enabled {
+    border:none;
+    top:5px;
+    background:transparent url(../images/PromoteButton.png) no-repeat center top;
+    background-position:0px -32px;
+}
+
+.layer-promotion-button:focus {
+    outline:none;
+}
+
+.tile-outline-button {
+    position:relative;
+    margin-top:20px;
+}
+
+
+
+.settings-controls {
+   width:100%;
+}
+
+.settings-title-bar {
+    margin-bottom:10px;
+    margin-top:10px;
+}
+
+.settings-title {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.settings-values {
+    font-size: 12px;
+    margin: 2px 2px 2px 2px;
+}
+
+.settings-ramp-title {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.settings-ramp-types {
+    float:left;
+}
+
+.settings-ramp-functions {
+    float:left;
+    margin-left:20px;
+}
+
+.settings-back-link {
+    color: #366097;
+    font-size: 12px;
+    margin-left: 30px;
+}
+
+.settings-back-link:hover {
+    text-decoration: underline;
+    color: #366097;
+    font-size: 12px;
+    margin-left: 30px;
+}
