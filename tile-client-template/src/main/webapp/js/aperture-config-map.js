@@ -37,8 +37,14 @@ define(function () {
                 // they do, just use the first.  Later we might let them switch 
                 // between them somehow.
                 if ("object" === typeof baseLayerSpec) {
-                    if (Array.isArray(baseLayerSpec)) {
-                        baseLayer = baseLayerSpec[0];
+                	if (Array.isArray(baseLayerSpec)) {
+                    	for (var i=0; i < baseLayerSpec.length; i++) {
+                    		if (baseLayerSpec[i].hasOwnProperty("Google")) {
+                    			// pick the first google base layer specified
+                    			baseLayer = baseLayerSpec[i];
+                    			break;
+                    		}
+                    	}
                     } else {
                         baseLayer = baseLayerSpec;
                     }
