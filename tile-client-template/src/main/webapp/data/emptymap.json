@@ -1,7 +1,6 @@
-[	
+[
 	{ "_comment" : [
 		"This json configuration file specifies properties of a geo-graphical map tile-based application",
-		"The Google key value specifies base layer map options",
 		"The AxisConfig keys configure the x and y axis of the map:",
 		"       title:      axis label text                     ex. Longitude",
 		"       id:         axis identifier                     ex. map-x-axis or map-y-axis",
@@ -43,80 +42,28 @@
 		"       axisLabelFontSize:   the font size of the axis label",
 		"                                                       ex. 0.95em"
     ]},
-    { "Google":  {
-        "options": {
-            "name": "Google Black",
-            "type": "styled",
-            "style": [
-                { "stylers": [ { "invert_lightness": true },
-                                 { "saturation": -100 },
-                                 { "visibility": "simplified" } ] },
-                { "featureType": "landscape.natural.landcover",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "road",
-                  "stylers": [ { "visibility": "on" } ] },
-                { "featureType": "landscape.man_made",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "transit",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "poi",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "administrative.country",
-                  "elementType": "geometry",
-                  "stylers": [ { "visibility": "on" },
-                               { "lightness": -56 } ] },
-                { "elementType": "labels",
-                  "stylers": [ { "lightness": -46 },
-			       { "visibility": "on" } ] }
-            ]
-        }
-    }},
-    { "Google": {
-        "options": {
-            "name": "Google Gray",
-            "type": "styled",
-            "style": [
-                { "stylers": [ { "invert_lightness": false },
-                               { "saturation": 0 },
-                               { "visibility": "simplified" } ] },
-                { "featureType": "landscape.natural.landcover",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "road",
-                  "stylers": [ { "visibility": "on" } ] },
-                { "featureType": "landscape.man_made",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "transit",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "poi",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "administrative.country",
-                  "elementType": "geometry",
-                  "stylers": [ { "visibility": "on" },
-                               { "lightness": -56 } ] },
-                { "elementType": "labels",
-                  "stylers": [ { "visibility": "on" } ] }
-            ]
-        }
+    {"blank": {
     }},
     { "AxisConfig": {
-        "title": "Longitude",
-        "id": "map-x-axis",
-        "min": -180,
-        "max": 180,
+        "title": "Time",
+        "id": "time-x-axis",
+        "min": 1230940800000,
+        "max": 1362873600000,
         "intervalSpec": {
-            "type": "fixed",
-            "value": 60,
+            "type": "percentage",
+            "value": 20,
             "pivot": 0,
             "allowScaleByZoom": true,
-            "isMercatorProjected": true
+            "isMercatorProjected": false
         },
         "unitSpec": {
-            "type": "degrees",
+            "type": "time",
             "decimals": 2,
             "allowStepDown": false
         },
         "position": "bottom",
-        "repeat": true,
+        "repeat": false,
+		"markerLabelRotation": -45,
 		"majorMarkerLength": 10,
 		"majorMarkerWidth": 1,
 		"majorMarkerColour": "#7E7E7E",
@@ -124,27 +71,27 @@
 		"axisLabelColour": "#7E7E7E",
 		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
 		"markerLabelFontSize": "0.75em",
-		"axisLabelFontSize": "0.95em"
+		"axisLabelFontSize": "0.95em"	
     }},
     { "AxisConfig": {
-        "title": "Latitude",
-        "id": "map-y-axis",
-        "min": -85.051129,
-        "max": 85.051129,
+        "title": "Amount",
+        "id": "amount-y-axis",
+        "min": 0,
+        "max": 500000,
         "intervalSpec": {
             "type": "fixed",
-            "value": 30,
+            "value": 100000,
             "pivot": 0,
             "allowScaleByZoom": true,
-            "isMercatorProjected": true
+            "isMercatorProjected": false
         },
         "unitSpec": {
-            "type": "degrees",
+            "type": "decimal",
             "decimals": 2,
             "allowStepDown": false
         },
         "position": "left",
-        "repeat": false,
+        "repeat": false,		
 		"majorMarkerLength": 10,
 		"majorMarkerWidth": 1,
 		"majorMarkerColour": "#7E7E7E",
@@ -152,7 +99,6 @@
 		"axisLabelColour": "#7E7E7E",
 		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
 		"markerLabelFontSize": "0.75em",
-		"axisLabelFontSize": "0.95em"
+		"axisLabelFontSize": "0.95em"	
     }}
 ]
-
