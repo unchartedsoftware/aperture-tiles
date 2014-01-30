@@ -28,14 +28,13 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import java.io.IOException;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
@@ -164,10 +163,8 @@ public class HBasePyramidIOSelector extends JPanel implements PyramidIOSelector 
             HBasePyramidIO oldIO = _io;
             try {
                 _io = new HBasePyramidIO(_zookeeperQuorum, _zookeeperPort, _hbaseMaster);
-            } catch (MasterNotRunningException e) {
-                _io = null;
-            } catch (ZooKeeperConnectionException e) {
-                _io = null;
+	    } catch (IOException e) {
+		_io = null;
             }
             if (null != _io || null != oldIO) {
                 firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
