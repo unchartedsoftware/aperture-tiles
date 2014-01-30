@@ -25,6 +25,7 @@
 
 require(['./fileloader',
          './map',
+         './serverrenderedmaplayer',
          './client-rendering/TextScoreRenderer',
          './client-rendering/TextScoreRendererOther',
          './ui/SliderControl',
@@ -38,7 +39,7 @@ require(['./fileloader',
          './client-rendering/DataTracker'
         ],
 
-        function (FileLoader, Map,
+        function (FileLoader, Map, ServerLayer,
                   TextScoreRenderer, TextScoreRendererOther,
                   SliderControl,
                   CheckboxControl, LayerControl,LabeledControlSet,
@@ -58,6 +59,7 @@ require(['./fileloader',
                 var worldMap,
                     slider,
                     checkbox,
+                    serverLayers,
                     renderLayerSpecs,
                     renderLayerSpec,
                     layerIds,
@@ -132,7 +134,7 @@ require(['./fileloader',
                 // add layer controls to control set
                 layerControlSet.addControl(layerId, 'Base Layer', layerControl.getElement());
 
-                /*
+ 
                 // Set up server-rendered display layers
                 serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
                 serverLayers.addToMap(worldMap);
@@ -188,7 +190,6 @@ require(['./fileloader',
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
                 // debugLayer.addToMap(worldMap);
-                */
 
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
