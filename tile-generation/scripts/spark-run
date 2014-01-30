@@ -51,8 +51,10 @@ addToSparkClasspath com.oculusinfo binning-utilities 0.1.2-SNAPSHOT
 addToSparkClasspath com.oculusinfo tile-generation 0.1.2-SNAPSHOT
 
 # framework-related jars
-addToSparkClasspath org.apache.hbase hbase 0.94.6-cdh4.4.0
-#addToSparkClasspath org.apache.mesos mesos 0.9.0-incubating
+addToSparkClasspath org.apache.hbase hbase-client 0.95.2-cdh5.0.0-beta-1
+addToSparkClasspath org.apache.hbase hbase-protocol 0.95.2-cdh5.0.0-beta-1
+addToSparkClasspath org.apache.hbase hbase-common 0.95.2-cdh5.0.0-beta-1
+addToSparkClasspath org.cloudera.htrace htrace-core 2.01
 
 # additional stuff needed to use avro serialization
 addToSparkClasspath org.apache.avro avro 1.7.4
@@ -64,7 +66,7 @@ addToSparkClasspath org.scala-lang scala-compiler 2.9.3
 
 
 
-export MASTER=local[8]
+# export MASTER=local[8]
 # export SPARK_MEM=4g
 
 echo Running Spark from $SPARK_HOME
