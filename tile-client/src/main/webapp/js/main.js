@@ -65,16 +65,15 @@ require(['./fileloader',
                     axes = [],
                     mapLayerState,
                     renderLayerSpecs,
+                    renderLayerSpec,
                     tooltipFcn,
                     i,
-                    renderLayerSpec,
                     layerId,
+                    layerName,
                     tileScoreRenderer,
                     tileScoreRendererOther,
-                    layerName,
                     dataTracker,
-                    carousel
-                    ;
+                    carousel;
 
                 // Create world map from json file under mapFileId
                 mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {

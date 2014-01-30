@@ -28,10 +28,8 @@ require(['./fileloader',
          './serverrenderedmaplayer',
          './client-rendering/TextScoreRenderer',
          './client-rendering/TextScoreRendererOther',
-         './ui/SliderControl',
-         './ui/CheckboxControl',
-         './ui/LayerControl',
-         './ui/LabeledControlSet',
+         './ui/layercontrols',
+         './serverlayeruimediator',
          './axis/AxisUtil',
          './axis/Axis',
          './view-controller/Carousel',
@@ -39,11 +37,18 @@ require(['./fileloader',
          './client-rendering/DataTracker'
         ],
 
-        function (FileLoader, Map, ServerLayer,
-                  TextScoreRenderer, TextScoreRendererOther,
-                  SliderControl,
-                  CheckboxControl, LayerControl,LabeledControlSet,
-                  AxisUtil, Axis, Carousel, LayerInfoLoader, DataTracker ) {
+        function (FileLoader, 
+        		  Map, 
+        		  ServerLayer,
+                  TextScoreRenderer, 
+                  TextScoreRendererOther,
+                  LayerControls,
+                  ServerLayerUiMediator,
+                  AxisUtil, 
+                  Axis, 
+                  Carousel, 
+                  LayerInfoLoader, 
+                  DataTracker ) {
             "use strict";
 
             var sLayerFileId = "./data/layers.json",
@@ -54,33 +59,24 @@ require(['./fileloader',
             FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
                 var worldMap,
-                    slider,
-                    checkbox,
                     serverLayers,
-                    renderLayerSpecs,
-                    renderLayerSpec,
-                    layerIds,
-                    layerId,
-                    layerName,
-                    layerControl,
-                    makeSlideHandler,
-                    makeCheckboxCheckedHandler,
-                    makeCheckboxUncheckedHandler,
-                    i,
-                    layerControlSet,
-                    layerSpecsById,
-                    tooltipFcn,
                     axisSpecs,
                     mapSpecs,
                     axisSpec,
                     axes = [],
-                    carousel,
+                    mapLayerState,
+                    renderLayerSpecs,
+                    renderLayerSpec,
+                    tooltipFcn,
+                    i,
+                    layerId,
+                    layerName,
                     tileScoreRenderer,
                     tileScoreRendererOther,
-                    dataTracker
-                ;
+                    dataTracker,
+                    carousel;
 
-                // separate axis config and map config objects
+                // Create world map from json file under mapFileId
                 mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
                     // skip any axis config objects
 
@@ -103,90 +99,11 @@ require(['./fileloader',
                     axes.push( new Axis(axisSpec));
                 }
 
-                layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
-
-                // Set up to change the base layer opacity
-                layerId = 'Base Layer';
-                slider = new SliderControl(layerId, 0.0, 1.0, 100);
-                slider.setValue(worldMap.getOpacity());
-                slider.setOnSlide(function (oldValue, slider) {
-                    worldMap.setOpacity(slider.getValue());
-                });
-
-                checkbox = new CheckboxControl(layerId, true );
-                checkbox.setOnChecked( function() {
-                    worldMap.setVisibility(true);
-                });
-
-                checkbox.setOnUnchecked( function() {
-                    worldMap.setVisibility(false);
-                });
-
-                // create layer control for base layer
-                layerControl = new LayerControl(layerId);
-                // add visibility checkbox to layer controls
-                layerControl.addControl(layerId + '-checkbox', checkbox.getElement() );
-                // add slider to layer controls
-                layerControl.addControl(layerId + '-slider', slider.getElement());
-                // add layer controls to control set
-                layerControlSet.addControl(layerId, 'Base Layer', layerControl.getElement());
-
- 
-                // Set up server-rendered display layers
-                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
-                serverLayers.addToMap(worldMap);
-
-                // Set up server-rendered layer controls
-                layerIds = serverLayers.getSubLayerIds();
-                layerSpecsById = serverLayers.getSubLayerSpecsById();
-
-                makeSlideHandler = function (layerId) {
-                    return function (oldValue, slider) {
-                        serverLayers.setSubLayerOpacity(layerId, slider.getValue());
-                    };
-                };
-
-                makeCheckboxCheckedHandler = function (layerId) {
-                    return function() {
-                        serverLayers.setSubLayerVisibility(layerId, true);
-                    };
-                };
-
-                makeCheckboxUncheckedHandler = function (layerId) {
-                    return function() {
-                        serverLayers.setSubLayerVisibility(layerId, false);
-                    };
-                };
-
-                for (i=0; i<layerIds.length; ++i) {
-
-                    layerId = layerIds[i];
-                    layerName = layerSpecsById[layerId].name;
-                    if (!layerName) {
-                        layerName = layerId;
-                    }
-
-                    slider = new SliderControl(layerId, 0.0, 1.0, 100);
-                    slider.setValue(1);
-                    slider.setOnSlide(makeSlideHandler(layerId));
-
-                    checkbox = new CheckboxControl(layerId, true );
-                    checkbox.setOnChecked(makeCheckboxCheckedHandler(layerId));
-                    checkbox.setOnUnchecked(makeCheckboxUncheckedHandler(layerId));
-
-                    // create layer control for base layer
-                    layerControl = new LayerControl(layerId);
-                    // add visibility checkbox control
-                    layerControl.addControl(layerId + '-checkbox', checkbox.getElement() );
-                    // add slider control
-                    layerControl.addControl(layerId + '-slider', slider.getElement());
-                    // add layer control to control set
-                    layerControlSet.addControl(layerId, layerName, layerControl.getElement());
-                }
-
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
                 // debugLayer.addToMap(worldMap);
+
+
 
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
@@ -200,47 +117,22 @@ require(['./fileloader',
                 };
 
                 for (i=0; i<renderLayerSpecs.length; ++i) {
-
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
                     tileScoreRenderer = new TextScoreRenderer();
                     tileScoreRenderer.setTooltipFcn(tooltipFcn);
 
-
                     tileScoreRendererOther = new TextScoreRendererOther();
                     tileScoreRenderer.setTooltipFcn(tooltipFcn);
-
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
                         layerName = layerId;
                     }
-
-                    /*
-                    slider = new SliderControl(layerId, 0.0, 1.0, 100);
-                    slider.setValue(1);
-                    slider.setOnSlide(makeSlideHandler(layerId));
-
-                    checkbox = new CheckboxControl(layerId, true );
-                    checkbox.setOnChecked(makeCheckboxCheckedHandler(layerId));
-                    checkbox.setOnUnchecked(makeCheckboxUncheckedHandler(layerId));
-                     */
-
-                    // create layer control for base layer
-                    layerControl = new LayerControl(layerId);
-                    // add visibility checkbox control
-                    /*
-                    layerControl.addControl(layerId + '.checkbox', checkbox.getElement());
-                    // add slider control
-                    layerControl.addControl(layerId + '.slider', slider.getElement());
-                    */
-                    // add layer control to control set
-                    layerControlSet.addControl(layerId, layerName, layerControl.getElement());
                 }
 
                 LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
-
                     dataTracker = new DataTracker(layerInfo);
                     carousel = new Carousel( {
                         map: worldMap.map,
@@ -257,8 +149,22 @@ require(['./fileloader',
                             }
                         ]});
                     carousel.dummy = 0; // to shut jslint up
-
                 });
+
+
+
+                // Set up server-rendered display layers
+                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
+                serverLayers.addToMap(worldMap);
+
+                // Populate the map layer state object with server layer data, and enable
+                // listeners that will push state changes into the layers.
+                mapLayerState = {};
+                new ServerLayerUiMediator().initialize(mapLayerState, serverLayers, worldMap);
+
+                // Bind layer controls to the state model.
+                new LayerControls().initialize(mapLayerState);
+                
 
 
                 /*
