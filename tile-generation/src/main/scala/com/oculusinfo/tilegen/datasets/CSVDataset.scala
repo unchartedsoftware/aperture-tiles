@@ -30,20 +30,13 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Double => JavaDouble}
 import java.text.SimpleDateFormat
 import java.util.Properties
-
 import scala.collection.JavaConverters._
-
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-
-
-
-
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.tiling.BinDescriptor
@@ -53,6 +46,10 @@ import com.oculusinfo.tilegen.tiling.RecordParser
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import org.apache.spark.streaming.Time
+import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
+import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
+import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
 
 
 
@@ -181,7 +178,6 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
 /*
  * Simple class to add standard field interpretation to a properties wrapper
  */
-private [datasets]
 class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrapper(properties) {
   val fields =
     properties.stringPropertyNames.asScala.toSeq
@@ -310,20 +306,6 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldEx
     else if ("zero" == field) new ValueOrException(Some(0.0), None)
     else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
 
-  override def aggregateValues (valueField: String)(a: Double, b: Double): Double = {
-    val fieldAggregation = properties.getProperty("oculus.binning.parsing."+valueField+".fieldAggregation", "add")
-    if ("log" == fieldAggregation) {
-      val base = properties.getDoubleProperty("oculus.binning.parsing."+valueField+".fieldBase", math.exp(1.0))
-      math.log(math.pow(base, a) + math.pow(base, b))/math.log(base)
-    } else if ("min" == fieldAggregation) {
-      a min b
-    } else if ("max" == fieldAggregation) {
-      a max b
-    } else {
-      a + b
-    }
-  }
-
   override def getTilePyramid (xField: String, minX: Double, maxX: Double,
 			       yField: String, minY: Double, maxY: Double): TilePyramid = {
     val projection = properties.getProperty("oculus.binning.projection", "EPSG:4326")
@@ -345,7 +327,7 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldEx
 }
 
 
-class CSVDataset (rawProperties: Properties,
+abstract class CSVDatasetBase (rawProperties: Properties,
 		  tileSize: Int) extends Dataset[Double, JavaDouble] {
   def manifest = implicitly[ClassManifest[Double]]
 
@@ -436,7 +418,19 @@ class CSVDataset (rawProperties: Properties,
 
   override def getBins = tileSize
 
-  def getBinDescriptor: BinDescriptor[Double, JavaDouble] = new StandardDoubleBinDescriptor
+  def getBinDescriptor: BinDescriptor[Double, JavaDouble] = {
+    val fieldAggregation = properties.getProperty("oculus.binning.parsing." + zVar + ".fieldAggregation", "add")
+    if ("log" == fieldAggregation) {
+      val base = properties.getDoubleProperty("oculus.binning.parsing." + zVar + ".fieldBase", math.exp(1.0))
+      new LogDoubleBinDescriptor(base)
+    }
+    else if ("min" == fieldAggregation)
+      new MinimumDoubleBinDescriptor
+    else if ("max" == fieldAggregation)
+      new MaximumDoubleBinDescriptor
+    else
+      new StandardDoubleBinDescriptor
+  }
 
 
   class CSVStaticProcessingStrategy (sc: SparkContext, cache: Boolean)
@@ -474,6 +468,62 @@ class CSVDataset (rawProperties: Properties,
     }
   }
 
+}
+
+/**
+ * Handles basic RDD's using a ProcessingStrategy. 
+ */
+class CSVDataset (
+    rawProperties: Properties,
+    tileSize: Int)
+extends CSVDatasetBase(rawProperties, tileSize) {
+
+  type STRATEGY_TYPE = ProcessingStrategy[Double]
+  protected var strategy: STRATEGY_TYPE = null
+  
   def initialize (sc: SparkContext, cache: Boolean): Unit =
     initialize(new CSVStaticProcessingStrategy(sc, cache))
+  
+}
+
+
+object StreamingCSVDataset {
+
+  /**
+   * Helper function to set autobounds to true for streaming datasets, since
+   * it doesn't make sense to use it if the data is being streamed in.
+   */
+  def removeAutoBounds(rawProperties: Properties) : Properties = {
+    rawProperties.setProperty("oculus.binning.projection.autobounds", "false")
+    rawProperties
+  }
+  
+}
+
+/**
+ * The streaming version of the CSVDataset. This will use a StreamingProcessingStrategy
+ * that works on a DStream
+ * 
+ * NOTE: StreamingCSVDataset requires the user to call initialize with a
+ * strategy. This is because a default strategy cannot be easily constructed
+ * for the case where the stream is windowed. In this case the stream must be
+ * preparsed and then a new strategy created for each window.  
+ */
+class StreamingCSVDataset (
+    rawProperties: Properties, 
+	tileSize: Int)
+extends CSVDatasetBase(StreamingCSVDataset.removeAutoBounds(rawProperties), tileSize) with StreamingProcessor[Double]  {
+ 
+  type STRATEGY_TYPE = StreamingProcessingStrategy[Double]
+  protected var strategy: STRATEGY_TYPE = null
+  
+  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, Double)] => OUTPUT, 
+		       completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
+    if (null == strategy) {
+      throw new Exception("Attempt to process uninitialized dataset "+getName)
+    } else {
+      strategy.processWithTime(fcn, completionCallback)
+    }
+  }
+
 }

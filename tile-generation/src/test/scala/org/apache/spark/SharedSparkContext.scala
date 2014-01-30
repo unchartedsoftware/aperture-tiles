@@ -33,7 +33,7 @@ trait SharedSparkContext extends BeforeAndAfterAll { self: Suite =>
     Logger.getLogger("org").setLevel(Level.WARN)
     Logger.getLogger("akka").setLevel(Level.WARN)
 
-    _sc = new SparkContext("local", "test")
+    _sc = new SparkContext("local", "test", null, null, null, null)
     super.beforeAll()
   }
 
