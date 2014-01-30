@@ -5,7 +5,6 @@
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
     <title>Documentation | Aperture Tiles</title>
     <link rel="stylesheet" type="text/css" href="../../css/all.css">
-    <link rel="stylesheet" type="text/css" href="../../jstests/test.css">
     <link rel="stylesheet" href="../../prettify/default.css">
     <link rel="SHORTCUT ICON" href="../../img/aperture-16x16.ico"/>
     <script src="../../lib/jquery.js"></script>
@@ -85,50 +84,80 @@
 
             <div class="content-body">
                 <h1>Configuration</h1>
+        		<p>The fastest method to get started with Aperture Tiles is to start with the tile-client template. 
+        		This template contains a tile server and a tile client. We also recommend looking at the source code 
+        		for the <a href="../../demos">tile examples</a>.</p>
                 <a name="template-setup"></a>
                 <h2>Template Setup</h2>
-                <p> To begin setting up Aperture Tiles copy the directory <i>aperture-tiles/tile-client-template</i> and paste it into <i>aperture-tiles/tile-examples</i>.
+                <p> To begin setting up an Aperture Tiles application create a copy of <em>aperture-tiles/tile-client-template</em>.  
+                For the purpose of this documentation we will assume it has been renamed to <em>new-tile-project</em>.
 
-                <p> For Aperture Tiles and Maven to recognize the new project the relevant POM files must be updated.
-
-                <p> First, the new project's name must be formalized. Navigate to <i>new-project-name/</i> and open <b>POM.xml</b>. Edit the <artifactId> tag content located on line 4 from "tile-client-template" to "new-project-name" and edit the <name> tag content located on line 6 from "Aperture-Tiles Web Client Template" to "new-project-name".
-
-                <p> Next, the parent directory's POM must be updated to recognize the new project. Navigate to <i>aperture-tiles/tile-examples</i> and open <b>POM.xml</b>. Navigate to line 20 and add in the line: <pre class="code">&ltmodule&gtnew-project-name&lt/module&gt</pre> Now Aperture Tiles will recognize the new project.
-
-
-
+                <p>We suggested updating the maven pom from the template defaults. Edit the file <em>new-tile-project/</em><strong>pom.xml</strong>.</p>
+                
+                <p>Edit the &lt;artifactId&gt; tag content located on line 4 from "tile-client-template" to "new-tile-project" 
+                and edit the &lt;name&gt; tag content located on line 6 from "Aperture-Tiles Web Client Template" to an appropriate project 
+                descriptions. For example:
+                
+<pre class="code">&lt;artifactId&gt;new-tile-project&lt;/artifactId&gt;
+&lt;name&gt;New Tile Project&lt;/name&gt;</pre>
+               
                 <a name="server-config"></a>
                 <h2>Server Configuration</h2>
 
-                <p>Now that the new template is copied the tile server must become pointed to the desired tiles. If tiles have not yet been generated, refer to the tile generation documentation.
+                <p>Now that the new template is copied the embedded tile server must configured to retrieve the desired tiles. 
+                If tiles have not yet been generated, refer to the <a href="../generation">tile generation documentation</a>.
 
-                <p>To configure the tile-server two files need to be updated.
-                    <a name="webxml"></a>
-                <h3>Web.xml</h3><p>Navigate to <i>new-project-name\src\main\webapp\WEB-INF</i> and open the file <b>web.xml</b>. Lines 17-30 in this file are used to tell Aperture Tiles which storage module is being used to hold the tiles. Uncomment the relevant lines based on how the tiles are stored and ensure that all other lines from 17-30 are commented out. Aperture Tiles currently supports tiles stored as File System Based, Jar files, Zip files, and in HBase or a SQLite database.
-                    <a name="tileproperties"></a>
-                <h3>Tile.properties</h3><p>Next, navigate to <i>new-project-name\src\main\resources</i> and open the file <b>tile.properties</b>. This file is responsible for pointing the server to the exact location of the tiles. Lines 10-70 provide detailed instructions regarding how to configure each storage module. Uncomment the relevant lines so that the location information matches the module type chosen in web.xml and set the required location parameters appropriately. <p>It is important to note that the information in tile.properties should point to the location of the tiles, not to the actual tile set. For example if the full address of the tiles are: <i>main/datasets/mytiles.avro</i> then tile.properties should point to <i>main/datasets/</i>. The tile client configurations in the next section will point to the specific tiles.
+                <p>To configure the tile-server two configuration files need to be edited.
+                    
+                <a name="webxml"></a>
+                <h3>Web.xml</h3>
+                <p>Edit the file <em>new-project-name/src/main/webapp/WEB-INF/</em><strong>web.xml</strong>. 
+                Lines 17-30 in this file are used to tell Aperture Tiles which storage module is being used to hold the tiles. 
+                Uncomment the relevant lines based on how the tiles are stored and ensure that all other lines from 17-30 are 
+                commented out. Aperture Tiles currently supports tiles stored as File System Based, Jar files, Zip files, and 
+                in HBase or a SQLite database.</p>
+                
+                <a name="tileproperties"></a>
+                <h3>Tile.properties</h3>
+                <p>Next, edit the file <em>new-project-name/src/main/resources/</em><strong>tile.properties</strong>. 
+                This file is responsible for pointing the server to the exact location of the tiles. Lines 10-70 provide 
+                detailed instructions regarding how to configure each storage module. Uncomment the relevant lines so that 
+                the location information matches the module type chosen in web.xml and set the required location parameters 
+                appropriately.</p>
+                 
+                <p>It is important to note that the information in tile.properties should point to the location 
+                of the tiles, not to the actual tile set. For example if the full address of the tiles are: 
+                <em>main/datasets/mytiles.avro</em> then tile.properties should point to <i>main/datasets/</i>. 
+                The tile client configurations in the next section will point to the specific tiles.</p>
 
-                <p>Before exiting tile.properties ensure that all other lines between lines 10-70 are commented out.
+                <p>Before exiting tile.properties ensure that all other lines between lines 10-70 are commented out.</p>
+                
                 <a name="clientconfig"></a>
                 <h2>Client Configuration</h2>
 
-                <p>Now that the template is copied and the server is pointed to the tiles it is time to configure the tile client to properly display the tiles.
+                <p>Now that the server is pointed to the tiles it is time to configure the tile client to properly display the tiles.
 
                 <p>To configure how exactly your layer is displayed navigate to <i>new-project-name/src/main/webapp/data</i> and open <b>layers.json</b>. This file will contain 6 editable fields to customize how the tiles are shown. The options are: layer, type, transform, ramp, opacity, renderer. A detailed description of each parameter is found below.
-                    <a name="layer"></a>
+                
+                <a name="layer"></a>
                 <h3>Layer</h3> The layer field is used to point to specific tiles which are displayed on the map. For example if tiles are stored in <i>main/datasets/mytiles.avro</i> the layers field should be set to "mytiles.avro". If a database is being used then layer should be set to the desired tile set in your database.
+                
                 <a name="type"></a>
                 <h3>Type</h3> Currently "tile" is the only option supported. Direct image pyramids and client rendered will be supported in a future release.
+                
                 <a name="transform"></a>
                 <h3>Transform</h3> The transform option allows the user to apply transformations to the data values when determining color. Currently the options are "linear" which does not perform a transformation, and "log10" which will take logarithms of raw values.
+                
                 <a name="ramp"></a>
                 <h3>Ramp</h3> The ramp option is used to determine what color scale is applied to the data points. Currently the ramp supports 3 options: linear, single-gradient, and default color scales.
+                
                 <a name="linear"></a>
                 <h4>Linear Ramp</h4>The linear option shows all of the data points with a constant color and can be configured by setting:
                 <pre class="code">"ramp": {
     "name": "flat",
     "color": "green"
 },</pre>
+                
                 <a name="grad"></a>
                 <h4>Single Gradient Ramp</h4><p>The single-gradient option will draw the color of each data point as a gradient between two colors. The value where the gradient begins and ends can be manually altered by setting the from-alpha and to-alpha fields. The from-alpha and to-alpha can each take any value between 0-255.
 
@@ -142,7 +171,9 @@
     "to-alpha": 100
 },</pre>
                 <a name="def"></a>
-                <h4>Default Color Scales</h4><p>The default color scales will edit the color of each data point based on its concentration using a predefined color scale. The current options are:
+                
+                <h4>Default Color Scales</h4>
+                <p>The default color scales will edit the color of each data point based on its concentration using a predefined color scale. The current options are:
                 <ul>
                     <li>'br': A blue-green ramp.</li>
                     <li>'inv-br': Inverted blue-green ramp.</li>
@@ -154,18 +185,23 @@
 
                 These options can be set directly by:
 
-                <pre class="code">ramp": "ware",</pre>
+                <pre class="code">ramp": "ware"</pre>
+                
                 <a name="opacity"></a>
-                <h3>Opacity</h3> This setting is used to edit the starting opacity of the later. This can be set to any decimal value ranging from 0 (totally transparent) to 1 (totally opaque).
+                <h3>Opacity</h3> 
+                <p>This setting is used to edit the starting opacity of the later. This can be set to any decimal value ranging from 0 (totally transparent) to 1 (totally opaque).</p>
+                
                 <a name="renderer"></a>
-                <h3>Renderer</h3>  This option defines which renderer the server should use to render and read tiles. The current renderer options are:
+                <h3>Renderer</h3>
+                <p>This option defines which renderer the server should use to render and read tiles. The current renderer options are:</p>
 
                 <ul>
                     <li>'default': Renders to a heat-map, based on a standard avro double-valued tile</li>
                     <li>'doubleseries': Renders to a series of heat-maps, based on a standard avro double-series-valued tile</li>
                     <li>'doublestatistics': Renders tile's total hit and % coverage as text to the tile</li>
                     <li>'textscore': Renders to an image showing the scored words, with bars based on their score</li>
-</ul>
+				</ul>
+                
                 <a name="multiple"></a>
                 <h3>Multiple Layers</h3><p>Maps with multiple layers can be created by copying multiple layer description objects and pasting them below the current layer configurations and separating each layer with a comma. An example is shown below.
                 <pre class="code">[
@@ -186,7 +222,6 @@
     "renderer": "toptextscores"
     }
 ]</pre>
-
 
             </div>
         </div>
