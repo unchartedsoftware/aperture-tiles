@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -30,7 +30,7 @@ var aperture = (function(aperture){
 
 /**
  * Source: base.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Defines the Aperture namespace and base functions.
  */
 
@@ -126,7 +126,7 @@ var findFieldChainValue = function( chain, indexes ) {
 
 /**
  * Source: util.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Defines utility functions for Aperture.
  */
 
@@ -694,7 +694,7 @@ aperture.util = (function(ns) {
 
 /**
  * Source: Class.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Simple JavaScript Inheritance
  */
 
@@ -1026,7 +1026,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: config.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview APIs for interacting with Configurations
  */
 
@@ -1091,7 +1091,7 @@ aperture.config = (function() {
 }());
 /**
  * Source: log.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Logging API implementation
  */
 
@@ -1465,7 +1465,7 @@ aperture.log = (function() {
 }());
 /**
  * Source: Canvas.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview The base canvas classes.
  */
 
@@ -2048,7 +2048,7 @@ function(namespace) {
 
 /**
  * Source: Animation.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Animation APIs
  */
 
@@ -2134,7 +2134,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Layer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Abstract Layer Class Implementation
  */
 
@@ -3515,7 +3515,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Class.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Implements the ability to wrap any root layer as a vizlet.
  *
  */
@@ -3705,7 +3705,7 @@ function(namespace) {
 }(aperture.vizlet || {}));
 /**
  * Source: BarLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Bar Layer
  */
 aperture = (
@@ -3957,7 +3957,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Color.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Color APIs
  */
 
@@ -4586,7 +4586,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Format.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Formats values.
  */
 
@@ -5008,7 +5008,7 @@ function(namespace) {
 
 /**
  * Source: IconLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Icon Layer Implementation
  */
 
@@ -5152,7 +5152,7 @@ function(namespace) {
 
 /**
  * Source: LabelLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Text Layer
  */
 
@@ -5405,7 +5405,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: LinkLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Link Layer Implementation
  */
 
@@ -5614,7 +5614,7 @@ function(namespace) {
 
 /**
  * Source: MapKey.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Map Keys for mapping from one space (e.g. data) into another (e.g. visual)
  */
 
@@ -5870,7 +5870,7 @@ function(namespace) {
 
 /**
  * Source: Mapping.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Mappings are used to define supply pipelines for visual
  * properties of layers.
  */
@@ -6184,7 +6184,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: NodeLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Node Layer
  */
 
@@ -6278,7 +6278,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: NodeSet.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Node Sets refer to sets or subsets of layer nodes.
  */
 
@@ -7037,7 +7037,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: RadialLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview The Radial Layer Implementation
  */
 
@@ -7656,7 +7656,7 @@ function(namespace) {
 
 /**
  * Source: Range.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview The Range implementation
  */
 
@@ -9165,7 +9165,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: SankeyPathLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Link Layer Implementation
  */
 
@@ -9500,7 +9500,7 @@ function(namespace) {
 
 }(aperture || {}));/**
  * Source: Set.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview The Set implementation
  */
 
@@ -9815,7 +9815,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Animation.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Animation APIs
  */
 
@@ -9901,7 +9901,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: filter.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Filter API Implementations
  */
 
@@ -9987,7 +9987,7 @@ aperture.filter = (function(namespace) {
 }(aperture.filter || {}));
 /**
  * Source: io.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview APIs for client / server interaction.
  */
 
@@ -10162,7 +10162,7 @@ aperture.io = (function() {
 }());
 /**
  * Source: palette.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Defines the palette functions for Aperture.
  */
 
@@ -10532,7 +10532,7 @@ aperture.palette = (function(ns) {
 
 /**
  * Source: AjaxAppender.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Logging AJAX Appender Implementation
  */
 
@@ -10638,7 +10638,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: AlertBoxAppender.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Logging Alert Box Appender Implementation
  */
 
@@ -10686,7 +10686,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: BufferingAppender.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Logging Buffering Appender Implementation
  */
 
@@ -10759,7 +10759,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: ConsoleAppender.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Logging Console Appender Implementation
  */
 
@@ -10890,7 +10890,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: DOMAppender.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Logging DOM Appender Implementation
  */
 
@@ -10954,7 +10954,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: capture.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Capture Service API
  */
 
@@ -11231,7 +11231,7 @@ aperture.capture = (function() {
 }());
 /**
  * Source: layout.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Layout API Implementations
  */
 
@@ -11526,7 +11526,7 @@ aperture.layout = (function(namespace) {
 	
 }(aperture.layout || {}));/**
  * Source: pubsub.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Publish / Subscribe (PubSub) API implementation
  */
 
@@ -11610,7 +11610,7 @@ aperture.pubsub = (function() {
 }());
 /**
  * Source: store.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Content Service API
  */
 
@@ -11765,7 +11765,7 @@ aperture.store = (function() {
 	};
 
 }());/**
- * Copyright (C) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -11925,7 +11925,7 @@ aperture.tooltip = (function(ns) {
 	
 }(aperture.tooltip || {}));/**
  * Source: map.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Map APIs
  */
 
@@ -13309,7 +13309,7 @@ function(ns) {
 }(aperture.geo || {}));
 /**
  * Source: AxisLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Axis Layer
  */
 
@@ -13883,7 +13883,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: BarSeriesLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Bar Chart Layer
  */
 
@@ -14199,7 +14199,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: ChartLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Chart Layer
  */
 
@@ -14811,7 +14811,7 @@ function(namespace) {
 
 }(aperture.chart || {}));/**
  * Source: LineSeriesLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture LineSeriesLayer Layer
  */
 
@@ -15082,7 +15082,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: RuleLayer.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview Aperture Rule Layer
  */
 
@@ -15228,7 +15228,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: Raphael.js
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * @fileOverview A Raphael canvas implementation.
  */
 

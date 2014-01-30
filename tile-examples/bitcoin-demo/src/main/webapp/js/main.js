@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -41,12 +41,9 @@ require(['./fileloader',
                   AxisUtil, Axis, Class ) {
             "use strict";
 
-            var sLayerFileId = "./data/layers.json"
-                // Uncomment for geographic data
-                //,mapFileId = "./data/geomap.json"
-                // Uncomment for non-geographic data
-                ,mapFileId = "./data/emptymap.json"
-                ,cLayerFileId = "./data/renderLayers.json";
+            var sLayerFileId = "./data/layers.json",
+            	mapFileId = "./data/map.json",
+            	cLayerFileId = "./data/renderLayers.json";
 
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
@@ -69,92 +66,34 @@ require(['./fileloader',
                     layerControlSet,
                     layerSpecsById,
                     tooltipFcn,
-                    xAxisSpec,
-                    yAxisSpec,
-                    xAxis,
-                    yAxis,
-                    redrawAxes
+                    axisSpecs,
+                    mapSpecs,
+                    axisSpec,
+                    axes = []
                 ;
 
-                // create world map from json file under mapFileId
-                worldMap = new Map("map", jsonDataMap[mapFileId]);
+                // separate axis config and map config objects
+                mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
+                    // skip any axis config objects
 
-
-                xAxisSpec = {
-
-                    title: "Time",
-                    parentId: worldMap.mapSpec.id,
-                    id: "map-x-axis",
-                    olMap: worldMap.map.olMap_,
-                    min: worldMap.mapSpec.options.mapExtents[0],
-                    max: worldMap.mapSpec.options.mapExtents[2],
-                    intervalSpec: {
-                        type: "fixed",
-                        value: 60,
-                        pivot: 0,
-                        allowScaleByZoom: true,
-                        isMercatorProjected: false
-                    },
-                    unitSpec: {
-                        type: 'time',
-                        allowStepDown: false
-                    },
-                    position: 'bottom',
-                    repeat: true
-
-                };
-
-                yAxisSpec = {
-
-                    title: "Amount (BTC)",
-                    parentId: worldMap.mapSpec.id,
-                    id: "map-y-axis",
-                    olMap: worldMap.map.olMap_,
-                    min: worldMap.mapSpec.options.mapExtents[1],
-                    max: worldMap.mapSpec.options.mapExtents[3],
-                    intervalSpec: {
-                        type: "fixed",
-                        value: 30,
-                        pivot: 0,
-                        allowScaleByZoom: true,
-                        isMercatorProjected: false
-                    },
-                    unitSpec: {
-                        type: 'decimal',
-                        decimals: 2,
-                        allowStepDown: false
-                    },
-                    position: 'left',
-                    repeat: false
-                };
-
-                xAxis = new Axis(xAxisSpec);
-                yAxis = new Axis(yAxisSpec);
-
-                redrawAxes = function() {
-                    xAxis.redraw();
-                    yAxis.redraw();
-                };
-
-
-                worldMap.map.olMap_.events.register('mousemove', worldMap.map.olMap_, function(e) {
-
-                    var xVal = xAxis.getAxisValueForPixel(e.xy.x),
-                        yVal = yAxis.getAxisValueForPixel(e.xy.y);
-
-                    // set map "title" to display mouse coordinates
-                    $('#' + worldMap.mapSpec.id).prop('title', 'x: ' + xVal + ', y: ' + yVal);
-
-                    redrawAxes();
-
-                    return true;
+                    return !(element.hasOwnProperty("AxisConfig"));
                 });
 
-                worldMap.map.on('panend', redrawAxes);
-                worldMap.map.on('zoom',   redrawAxes);
+                axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
+                    // skip any axis config objects
+                    return (element.hasOwnProperty("AxisConfig"));
+                });
 
+                // create world map from json file under mapFileId
+                worldMap = new Map("map", mapSpecs);
 
-
+                // create axes
+                for (i=0; i<axisSpecs.length; ++i) {
+                    axisSpec = axisSpecs[i].AxisConfig;
+                    axisSpec.parentId = worldMap.mapSpec.id;
+                    axisSpec.olMap = worldMap.map.olMap_;
+                    axes.push( new Axis(axisSpec));
+                }
 
                 layerControlSet = new LabeledControlSet($('#layers-opacity-sliders'), 'layerControlSet');
 

@@ -5,7 +5,7 @@
             "type": "styled",
             "style": [
                 { "stylers": [ { "invert_lightness": true },
-                                 { "saturation": 50 },
+                                 { "saturation": -100 },
                                  { "visibility": "simplified" } ] },
                 { "featureType": "landscape.natural.landcover",
                   "stylers": [ { "visibility": "off" } ] },
@@ -20,10 +20,9 @@
                 { "featureType": "administrative.country",
                   "elementType": "geometry",
                   "stylers": [ { "visibility": "on" },
-                               { "lightness": 56 } ] },
+                               { "lightness": -56 } ] },
                 { "elementType": "labels",
-                  "stylers": [ { "lightness": 74 },
-			       { "gamma": 1.5 },
+                  "stylers": [ { "lightness": -46 },
 			       { "visibility": "on" } ] }
             ]
         }
@@ -54,6 +53,62 @@
                   "stylers": [ { "visibility": "on" } ] }
             ]
         }
+    }},
+    { "AxisConfig": {
+        "title": "Longitude",
+        "id": "map-x-axis",
+        "min": -180,
+        "max": 180,
+        "intervalSpec": {
+            "type": "fixed",
+            "value": 60,
+            "pivot": 0,
+            "allowScaleByZoom": true,
+            "isMercatorProjected": true
+        },
+        "unitSpec": {
+            "type": "degrees",
+            "decimals": 2,
+            "allowStepDown": false
+        },
+        "position": "bottom",
+        "repeat": true,
+		"majorMarkerLength": 10,
+		"majorMarkerWidth": 1,
+		"majorMarkerColour": "#7E7E7E",
+		"markerLabelColour": "#7E7E7E",
+		"axisLabelColour": "#7E7E7E",
+		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+		"markerLabelFontSize": "0.75em",
+		"axisLabelFontSize": "0.95em"
+    }},
+    { "AxisConfig": {
+        "title": "Latitude",
+        "id": "map-y-axis",
+        "min": -85.051129,
+        "max": 85.051129,
+        "intervalSpec": {
+            "type": "fixed",
+            "value": 30,
+            "pivot": 0,
+            "allowScaleByZoom": true,
+            "isMercatorProjected": true
+        },
+        "unitSpec": {
+            "type": "degrees",
+            "decimals": 2,
+            "allowStepDown": false
+        },
+        "position": "left",
+        "repeat": false,
+		"majorMarkerLength": 10,
+		"majorMarkerWidth": 1,
+		"majorMarkerColour": "#7E7E7E",
+		"markerLabelColour": "#7E7E7E",
+		"axisLabelColour": "#7E7E7E",
+		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+		"markerLabelFontSize": "0.75em",
+		"axisLabelFontSize": "0.95em"
     }}
 ]
 

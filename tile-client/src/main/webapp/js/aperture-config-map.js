@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -25,7 +25,7 @@
 define(function () {
     "use strict";
 
-    var Config;
+    var Config, i;
 
     Config = {
         loaded: false,
@@ -37,8 +37,15 @@ define(function () {
                 // they do, just use the first.  Later we might let them switch 
                 // between them somehow.
                 if ("object" === typeof baseLayerSpec) {
+                	
                     if (Array.isArray(baseLayerSpec)) {
-                        baseLayer = baseLayerSpec[0];
+                    	for (i=0; i < baseLayerSpec.length; i++) {
+                    		if (baseLayerSpec[i].hasOwnProperty("Google")) {
+                    			// pick the first google base layer specified
+                    			baseLayer = baseLayerSpec[i];
+                    			break;
+                    		}
+                    	}
                     } else {
                         baseLayer = baseLayerSpec;
                     }

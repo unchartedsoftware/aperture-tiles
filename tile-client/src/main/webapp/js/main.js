@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -50,23 +50,19 @@ require(['./fileloader',
                   ) {
             "use strict";
 
-            var sLayerFileId = "./data/layers.json"
-                // Uncomment for geographic data
-                ,mapFileId = "./data/geomap.json"
-                // Uncomment for non-geographic data
-                //,mapFileId = "./data/emptymap.json"
-                ,cLayerFileId = "./data/renderLayers.json";
+            var sLayerFileId = "./data/layers.json",
+                mapFileId = "./data/map.json",
+                cLayerFileId = "./data/renderLayers.json";
 
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
                 var worldMap,
                     serverLayers,
-                    xAxisSpec,
-                    yAxisSpec,
-                    xAxis,
-                    yAxis,
-                    redrawAxes,
+                    axisSpecs,
+                    mapSpecs,
+                    axisSpec,
+                    axes = [],
                     mapLayerState,
                     renderLayerSpecs,
                     tooltipFcn,
@@ -81,86 +77,27 @@ require(['./fileloader',
                     ;
 
                 // Create world map from json file under mapFileId
-                worldMap = new Map("map", jsonDataMap[mapFileId]);
+                mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
+                    // skip any axis config objects
 
-
-                // Set up axes
-                // TODO: Move this to a config file, probably to geomap.json
-                // TODO: Make a non-geographic version of this, probably in emptymap.json
-                xAxisSpec = {
-                    title: "Longitude",
-                    parentId: worldMap.mapSpec.id,
-                    id: "map-x-axis",
-                    olMap: worldMap.map.olMap_,
-                    min: worldMap.mapSpec.options.mapExtents[0],
-                    max: worldMap.mapSpec.options.mapExtents[2],
-                    intervalSpec: {
-                        type: "fixed",
-                        value: 60,
-                        pivot: 0,
-                        allowScaleByZoom: true,
-                        isMercatorProjected: true
-                    },
-                    unitSpec: {
-                        type: 'degrees',
-                        divisor: undefined,
-                        decimals: 2,
-                        allowStepDown: false
-                    },
-                    position: 'bottom',
-                    repeat: true
-                };
-
-                yAxisSpec = {
-                    title: "Latitude",
-                    parentId: worldMap.mapSpec.id,
-                    id: "map-y-axis",
-                    olMap: worldMap.map.olMap_,
-                    min: worldMap.mapSpec.options.mapExtents[1],
-                    max: worldMap.mapSpec.options.mapExtents[3],
-                    intervalSpec: {
-                        type: "fixed",
-                        value: 30,
-                        pivot: 0,
-                        allowScaleByZoom: true,
-                        isMercatorProjected: true
-                    },
-                    unitSpec: {
-                        type: 'degrees',
-                        divisor: undefined,
-                        decimals: 2,
-                        allowStepDown: false
-                    },
-                    position: 'left',
-                    repeat: false
-                };
-
-                xAxis = new Axis(xAxisSpec);
-                yAxis = new Axis(yAxisSpec);
-
-                redrawAxes = function() {
-                    xAxis.redraw();
-                    yAxis.redraw();
-                };
-
-                // Make sure, when the map moves, the axes redraw
-                // (A) on any mouse move?
-                worldMap.map.olMap_.events.register('mousemove', worldMap.map.olMap_, function(e) {
-                    var xVal = xAxis.getAxisValueForPixel(e.xy.x),
-                        yVal = yAxis.getAxisValueForPixel(e.xy.y);
-
-                    // set map "title" to display mouse coordinates
-                    $('#' + worldMap.mapSpec.id).prop('title', 'x: ' + xVal + ', y: ' + yVal);
-
-                    redrawAxes();
-
-                    return true;
+                    return !(element.hasOwnProperty("AxisConfig"));
                 });
 
-                // (B) Only when finished mouse moves?
-                worldMap.map.on('panend', redrawAxes);
-                worldMap.map.on('zoomend', redrawAxes);
-                // TODO: Are (A) and (B) complementary or redundant?
+                axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
+                    // skip any axis config objects
+                    return (element.hasOwnProperty("AxisConfig"));
+                });
+
+                // create world map from json file under mapFileId
+                worldMap = new Map("map", mapSpecs);
+
+                // create axes
+                for (i=0; i<axisSpecs.length; ++i) {
+                    axisSpec = axisSpecs[i].AxisConfig;
+                    axisSpec.parentId = worldMap.mapSpec.id;
+                    axisSpec.olMap = worldMap.map.olMap_;
+                    axes.push( new Axis(axisSpec));
+                }
 
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
