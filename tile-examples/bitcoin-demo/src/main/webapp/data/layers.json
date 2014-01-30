@@ -2,7 +2,7 @@
     {
         "layer": "1.bitcoin.time.amount",
         "type": "tile",
-        "transform": "log10",
+        "transformid": "log10",
         "ramp": "ware",
         "opacity": 0.85
     }

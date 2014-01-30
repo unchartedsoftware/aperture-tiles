@@ -1,7 +1,7 @@
 [
 	{
-        "layer": "ibm-twitter-keyword",
-        "transform": "linear",
+        "layer": "ndk.twitter.longitude.latitude.top.hashtags",
+        "transformid": "linear",
         "opacity": 0.85
     }	
 ]
