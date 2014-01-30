@@ -503,6 +503,11 @@ object StreamingCSVDataset {
 /**
  * The streaming version of the CSVDataset. This will use a StreamingProcessingStrategy
  * that works on a DStream
+ * 
+ * NOTE: StreamingCSVDataset requires the user to call initialize with a
+ * strategy. This is because a default strategy cannot be easily constructed
+ * for the case where the stream is windowed. In this case the stream must be
+ * preparsed and then a new strategy created for each window.  
  */
 class StreamingCSVDataset (
     rawProperties: Properties, 

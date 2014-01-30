@@ -309,6 +309,9 @@ object StreamingCSVBinner {
     })
   }
   
+  def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT], tileIO: TileIO, job: (String, Int)): Unit =
+    processDataset(dataset, job, tileIO)(dataset.binTypeManifest)
+  
   
   def main (args: Array[String]): Unit = {
 	  Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
@@ -360,9 +363,6 @@ object StreamingCSVBinner {
         
       //loop through each batch job, setup each streaming window, and process it
       batchJobs.foreach{job =>
-        def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT]): Unit =
-          processDataset(dataset, job, tileIO)(dataset.binTypeManifest)
-        
         //grab the actual preparsed dstream  
         val windowDurTimeSec = job._2
         val slideDurTimeSec = job._2
@@ -373,7 +373,7 @@ object StreamingCSVBinner {
         val dataset = new StreamingCSVDataset(props, 256)
         dataset.initialize(strategy)
 
-        processDatasetGeneric(dataset)
+        processDatasetGeneric(dataset, tileIO, job)
       }
 
       argIdx = argIdx + 1

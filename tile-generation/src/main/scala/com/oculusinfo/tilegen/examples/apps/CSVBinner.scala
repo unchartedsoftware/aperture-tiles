@@ -154,6 +154,14 @@ object CSVBinner {
 	})
   }
   
+  /**
+   * This function is simply for pulling out the generic params from the DatasetFactory,
+   * so that they can be used as params for other types.
+   */
+  def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit =
+    processDataset(dataset, tileIO)(dataset.binTypeManifest)
+
+  
   def main (args: Array[String]): Unit = {
     if (args.size<1) {
       println("Usage:")
@@ -185,10 +193,7 @@ object CSVBinner {
       props.load(propStream)
       propStream.close()
 
-      def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT]): Unit =
-	    processDataset(dataset, tileIO)(dataset.binTypeManifest)
-
-      processDatasetGeneric(DatasetFactory.createDataset(sc, props, true))
+      processDatasetGeneric(DatasetFactory.createDataset(sc, props, true), tileIO)
 
       argIdx = argIdx + 1
     }
