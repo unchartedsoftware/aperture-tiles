@@ -69,7 +69,8 @@
 				</div>
 				<div class="content-body">
 					<h1>Installation and Compilation</h1>
-					<p>The Aperture Tiles source code can be download from 
+					<p>
+						The Aperture Tiles source code can be download from 
 						<a href="https://github.com/oculusinfo/aperture-tiles">github</a>.
 						Aperture Tiles is made up of eight sub-projects:
 					</p>
@@ -107,9 +108,12 @@
 					</p>
 
 					<h3>Setup</h3>
-					<p>The tile-generation project in has a few prerequisites (some strictly necessary, 
+					<p>
+						The tile-generation project in has a few prerequisites (some strictly necessary, 
 						some optional). The components required will be dependent on the size of the
-						data being processed:</p>
+						data being processed:
+					</p>
+					
 					<ul>
 						<li><strong>Hadoop/HDFS</strong> (optional) - see relevent hadoop
 							project for installation instructions. There are several flavors
@@ -153,30 +157,41 @@
 					</ul>		
 
 					<h3>Building the Project</h3>
-					<p>Prior to building the project edit the &lt;properties&gt; sections of the 
+					<p>
+						Prior to building the project edit the &lt;properties&gt; sections of the 
 						<em>aperture-tiles/<strong>pom.xml</strong></em> build file to specify the version of Hadoop 
 						and/or HBase one has installed. See comments in the file for valid settings 
 						for various versions. If you plan to run Spark in standalone mode and not utilize 
 						either, then it is safe to leave the default setting. For example to specify
-						the Hadoop / HBase version is cloudera 4.4.0:</p>
+						the Hadoop / HBase version is cloudera 4.4.0:
+					</p>
+					
 					<pre class="brush: xml; gutter: false;">&lt;!-- cloudera version 4.4.0 --&gt;
 &lt;hadoop-common-version&gt;2.0.0-cdh4.4.0&lt;/hadoop-common-version&gt;
 &lt;hadoop-core-version&gt;2.0.0-mr1-cdh4.4.0&lt;/hadoop-core-version&gt;
 &lt;hbase-version&gt;0.94.6-cdh4.4.0&lt;/hbase-version&gt;</pre>
-					<p>To build all projects, execute 'mvn install' at a command prompt in the root
+					
+					<p>
+						To build all projects, execute 'mvn install' at a command prompt in the root
 						project directory <em>aperture-tiles</em>. This will compile all the compoents
 						and install .jar files for each project into your local maven repostitory on 
-						your build machine.</p>
-					<p>In actually running tiling jobs, the default run scripts in
+						your build machine.
+					</p>
+					<p>
+						In actually running tiling jobs, the default run scripts in
 						the tile-generation project expect to find the jars in your maven
 						repository. Modifying them to look for the jars elsewhere if you
 						don't want them there isn't hard, but you're on your own for that
 						part. But if you want to go through all that, just use 'mvn
-						package' instead.</p>
-					<p>See the <a href="../generation">tile generation</a> or 
-					<a href="../configuration">configuration</a> documentation for specifics on generating 
-					tile sets from raw data and configuring a tile server and client to create a tile-based 
-					visual analytic application.</p>
+						package' instead.
+					</p>
+					
+					<p>
+						See the <a href="../generation">tile generation</a> or 
+						<a href="../configuration">configuration</a> documentation for specifics on generating 
+						tile sets from raw data and configuring a tile server and client to create a tile-based 
+						visual analytic application.
+					</p>
 				</div>
 			</div>
 		</div>
