@@ -30,20 +30,17 @@ package com.oculusinfo.tilegen.datasets
 
 
 import java.util.Properties
-
 import scala.collection.mutable.MutableList
-
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.DStream
-
-
-
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.TileMetaData
+import com.oculusinfo.tilegen.tiling.BinDescriptor
+import org.apache.spark.streaming.Time
 
 
 
@@ -113,13 +110,14 @@ abstract class Dataset[BT: ClassManifest, PT] {
   }
 
 
+  type STRATEGY_TYPE <: ProcessingStrategy[BT]
 
-  private var strategy: ProcessingStrategy[BT] = null
-  def initialize (strategy: ProcessingStrategy[BT]): Unit = {
+  protected var strategy: STRATEGY_TYPE
+  def initialize (strategy: STRATEGY_TYPE): Unit = {
     this.strategy = strategy
   }
-
-
+  
+  
   /**
    * Completely process this data set in some way.
    *
@@ -152,6 +150,10 @@ abstract class Dataset[BT: ClassManifest, PT] {
     }
 }
 
+trait StreamingProcessor[BT] {
+  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, BT)] => OUTPUT,
+		       completionCallback: Option[Time => OUTPUT => Unit]): Unit
+}
 
 abstract class ProcessingStrategy[BT: ClassManifest] {
   def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
@@ -185,20 +187,30 @@ abstract class StaticProcessingStrategy[BT: ClassManifest] (sc: SparkContext, ca
     throw new Exception("Attempt to call DStream transform on RDD processor")
 }
 
-abstract class StreamingProcessingStrategy[BT: ClassManifest] (ssc: StreamingContext, cache: Boolean)
+abstract class StreamingProcessingStrategy[BT: ClassManifest]
 extends ProcessingStrategy[BT] {
   private val dstream = getData
 
   protected def getData: DStream[(Double, Double, BT)]
 
-  final def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
-			     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
-    dstream.foreach(rdd => {
-      val result: OUTPUT = fcn(rdd)
-      completionCallback.map(_(result))
-    })
+  private final def internalProcess[OUTPUT] (rdd: RDD[(Double, Double, BT)], fcn: RDD[(Double, Double, BT)] => OUTPUT,
+			     completionCallback: Option[OUTPUT => Unit] = None): Unit = {
+    val result = fcn(rdd)
+    completionCallback.map(_(result))
   }
 
+  def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
+			     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
+    dstream.foreach(internalProcess(_, fcn, completionCallback))
+  }
+
+  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, BT)] => OUTPUT,
+		       completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
+    dstream.foreach{(rdd, time) =>
+      internalProcess(rdd, fcn(time), completionCallback.map(_(time)))
+    }
+  }
+  
   final def transformRDD[OUTPUT_TYPE: ClassManifest]
   (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
     throw new Exception("Attempt to call RDD transform on DStream processor")

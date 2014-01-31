@@ -49,7 +49,7 @@
 						<contextPath>/${project.artifactId}</contextPath>
 						<baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
 							Use the development (source) code
-							<resourcesAsCSV>src/main/webapp,${project.build.directory}/${project.build.finalName}</resourcesAsCSV>
+							<resourcesAsCSV>src/main/webapp,../../tile-client/src/main/webapp,${project.build.directory}/${project.build.finalName}</resourcesAsCSV>
 						</baseResource>
 					</webAppConfig>	
 				</configuration>
