@@ -29,25 +29,21 @@ package com.oculusinfo.tilegen.examples.apps
 
 import java.io.FileInputStream
 import java.util.Properties
-
 import scala.collection.JavaConverters._
-
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
-
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
 import com.oculusinfo.tilegen.tiling.ValueOrException
-
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.binning.io.PyramidIO
+import com.oculusinfo.tilegen.tiling.TileIO
 
 
 
@@ -118,6 +114,54 @@ extends GeneralSparkConnector(
 
 
 object CSVBinner {
+  def getTileIO(properties: PropertiesWrapper): TileIO = {
+    properties.getProperty("oculus.tileio.type", "hbase") match {
+      case "hbase" => {
+        val quorum = properties.getOptionProperty("hbase.zookeeper.quorum").get
+        val port = properties.getProperty("hbase.zookeeper.port", "2181")
+        val master = properties.getOptionProperty("hbase.master").get
+        new HBaseTileIO(quorum, port, master)
+      }
+      case _ => {
+        val extension =
+            properties.getProperty("oculus.tileio.file.extension",
+                                          "avro")
+        new LocalTileIO(extension)
+      }
+    }
+  }
+  
+  def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit = {
+  	val binner = new RDDBinner
+	binner.debug = true
+	dataset.getLevels.map(levels => {
+	  val procFcn: RDD[(Double, Double, BT)] => Unit =
+	    rdd => {
+	      val tiles = binner.processDataByLevel(rdd,
+						    dataset.getBinDescriptor,
+						    dataset.getTilePyramid,
+						    levels,
+						    dataset.getBins,
+						    dataset.getConsolidationPartitions)
+              tileIO.writeTileSet(dataset.getTilePyramid,
+				  dataset.getName,
+				  tiles,
+				  dataset.getBinDescriptor,
+				  dataset.getName,
+				  dataset.getDescription)
+	    }
+	  dataset.process(procFcn, None)
+	})
+  }
+  
+  /**
+   * This function is simply for pulling out the generic params from the DatasetFactory,
+   * so that they can be used as params for other types.
+   */
+  def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit =
+    processDataset(dataset, tileIO)(dataset.binTypeManifest)
+
+  
   def main (args: Array[String]): Unit = {
     if (args.size<1) {
       println("Usage:")
@@ -140,20 +184,7 @@ object CSVBinner {
 
     val connector = new PropertyBasedSparkConnector(defaultProperties)
     val sc = connector.getSparkContext("Pyramid Binning")
-    val tileIO = defaultProperties.getProperty("oculus.tileio.type", "hbase") match {
-      case "hbase" => {
-        val quorum = defaultProperties.getOptionProperty("hbase.zookeeper.quorum").get
-        val port = defaultProperties.getProperty("hbase.zookeeper.port", "2181")
-        val master = defaultProperties.getOptionProperty("hbase.master").get
-        new HBaseTileIO(quorum, port, master)
-      }
-      case _ => {
-        val extension =
-            defaultProperties.getProperty("oculus.tileio.file.extension",
-                                          "avro")
-        new LocalTileIO(extension)
-      }
-    }
+    val tileIO = getTileIO(defaultProperties)
 
     // Run for each real properties file
     while (argIdx < args.size) {
@@ -162,32 +193,7 @@ object CSVBinner {
       props.load(propStream)
       propStream.close()
 
-      def processDatasetInternal[BT: ClassManifest, PT] (dataset: Dataset[BT, PT]): Unit = {
-	val binner = new RDDBinner
-	binner.debug = true
-	dataset.getLevels.map(levels => {
-	  val procFcn: RDD[(Double, Double, BT)] => Unit =
-	    rdd => {
-	      val tiles = binner.processDataByLevel(rdd,
-						    dataset.getBinDescriptor,
-						    dataset.getTilePyramid,
-						    levels,
-						    dataset.getBins,
-						    dataset.getConsolidationPartitions)
-              tileIO.writeTileSet(dataset.getTilePyramid,
-				  dataset.getName,
-				  tiles,
-				  dataset.getBinDescriptor,
-				  dataset.getName,
-				  dataset.getDescription)
-	    }
-	  dataset.process(procFcn, None)
-	})
-      }
-      def processDataset[BT, PT] (dataset: Dataset[BT, PT]): Unit =
-	processDatasetInternal(dataset)(dataset.binTypeManifest)
-
-      processDataset(DatasetFactory.createDataset(sc, props, true))
+      processDatasetGeneric(DatasetFactory.createDataset(sc, props, true), tileIO)
 
       argIdx = argIdx + 1
     }

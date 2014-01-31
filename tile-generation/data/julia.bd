@@ -9,6 +9,18 @@ oculus.binning.name=tilesets/julia_-0.8_0.156
 oculus.binning.source.location=file:///datasets/julia_-0.8_0.156
 oculus.binning.separator=\t
 
+# Sets spark streaming to poll events every 60 seconds
+# Uncomment this to turn on live streaming data from 'oculus.binning.source.location'
+#oculus.binning.source.pollTime=60
+
+
+# The first streaming batch job that updates every minute, and uses the name 'mins'
+oculus.binning.source.batches.mins.time=60
+# The second streaming batch job that updates every 5 mintues, and overrides the
+# default name 'every5mins' with 'mins_5' instead
+oculus.binning.source.batches.every5mins.time=300
+oculus.binning.source.batches.every5mins.name=mins_5
+
 oculus.binning.parsing.x.index=0
 oculus.binning.parsing.y.index=1
 oculus.binning.parsing.v.index=2
