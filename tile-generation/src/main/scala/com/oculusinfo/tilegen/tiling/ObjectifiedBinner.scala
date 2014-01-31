@@ -238,8 +238,6 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
     val startTime = System.currentTimeMillis()
 
     var rawData = source.getData(sc)
-    if (source.getIdealPartitions.isDefined)
-      rawData = rawData.coalesce(source.getIdealPartitions.get)
 
 
     val data = rawData.mapPartitions(iter => 
@@ -340,7 +338,11 @@ trait DataSource {
    * but normally shouldn't be touched.
    */
   def getData (sc: SparkContext): RDD[String] =
-    getDataFiles.map(sc.textFile(_)).reduce(_ union _)
+    if (getIdealPartitions.isDefined) {
+      getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
+    } else {
+      getDataFiles.map(sc.textFile(_)).reduce(_ union _)
+    }
 }
 
 
