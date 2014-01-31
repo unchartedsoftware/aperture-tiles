@@ -25,14 +25,22 @@
 package com.oculusinfo.tile.spi.impl;
 
 public class LinearCappedValueTransformer implements IValueTransformer {
-	private double _max = 0;
+	private final double _min;
+	private final double _max;
 	
-	public LinearCappedValueTransformer(double cap){
-		_max = cap;
+	public LinearCappedValueTransformer(double maxCap){
+		_min = Math.min(0, maxCap);
+		_max = Math.max(0, maxCap);
+		
+	}
+	
+	public LinearCappedValueTransformer(double minCap, double maxCap){
+		_min = Math.min(minCap, maxCap);
+		_max = Math.max(minCap, maxCap);
 	}
 	
 	@Override
 	public double transform(double value) {
-		return Math.min(value,_max)/_max;
+		return Math.max(Math.min(value, _max), _min) / (_max - _min);
 	}
 }

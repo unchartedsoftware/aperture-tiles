@@ -41,8 +41,8 @@ import com.oculusinfo.binning.io.TileSerializer;
 import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.tile.spi.impl.IValueTransformer;
+import com.oculusinfo.tile.spi.impl.ValueTransformerFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.DoublesImageRenderer.ValueTransformerFactory;
 import com.oculusinfo.tile.util.ColorRamp;
 import com.oculusinfo.tile.util.ColorRampParameter;
 
@@ -76,12 +76,20 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			int outputHeight = parameter.getOutputHeight();
 			int rangeMax = parameter.getAsInt("rangeMax");
 			int rangeMin = parameter.getAsInt("rangeMin");
-			String transformId = parameter.getString("transformId");
 			String layer = parameter.getString("layer");
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 			
 			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 255);
+			
+			double minimumValue;
+			try {
+				minimumValue = parameter.getAsDouble("levelMinimums");
+			} catch (NumberFormatException e) {
+			    _logger.warn("Expected a numeric minimum for level, got {}", parameter.getString("levelMinimums"));
+			    minimumValue = 0.0;
+			}
+			
 			double maximumValue;
 			try {
 				maximumValue = parameter.getAsDouble("levelMaximums");
@@ -89,7 +97,7 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			    _logger.warn("Expected a numeric maximum for level, got {}", parameter.getString("levelMaximums"));
 			    maximumValue = 1000.0;
 			}
-			IValueTransformer t = ValueTransformerFactory.create(transformId, maximumValue);
+			IValueTransformer t = ValueTransformerFactory.create(parameter.getObject("transform", Object.class), minimumValue, maximumValue);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
