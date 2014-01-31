@@ -1,6 +1,6 @@
 [
     {
-        "layer": "1.bitcoin.time.amount",
+        "layer": "bitcoin.source.amount",
         "type": "tile",
         "transformid": "log10",
         "ramp": "ware",
