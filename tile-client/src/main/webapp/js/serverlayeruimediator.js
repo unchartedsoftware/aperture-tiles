@@ -90,7 +90,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 layerState.setName(layerName);
                 layerState.setEnabled(true);
                 layerState.setOpacity(layerSpec.opacity);
-                layerState.setRampFunction(layerSpec.transformid);
+                layerState.setRampFunction(layerSpec.transform);
                 layerState.setRampType(layerSpec.ramp);
                 // TODO: Retrieve filter range from map layer
 
