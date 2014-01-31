@@ -71,7 +71,7 @@ public class ImageLegendService implements ImageTileLegendService {
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileLegendService#getLegend(int, double, double, int, int)
 	 */
-	public BufferedImage getLegend(String transform, ColorRampParameter rampType, String layer, 
+	public BufferedImage getLegend(Object transform, ColorRampParameter rampType, String layer, 
 			int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
 
 		//int levelMinFreq = 0;

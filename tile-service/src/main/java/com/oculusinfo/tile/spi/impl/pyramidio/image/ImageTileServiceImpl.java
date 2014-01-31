@@ -47,11 +47,11 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.tile.spi.AvroJSONConverter;
 import com.oculusinfo.tile.spi.ImageTileService;
+import com.oculusinfo.tile.spi.impl.ValueTransformerFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.ImageRendererFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer;
 import com.oculusinfo.tile.util.ColorRampParameter;
-import com.oculusinfo.tile.util.TransformParameter;
 import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
 
 /**
@@ -118,7 +118,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 		// DEFAULTS
 		String rampName = "ware";
 		ColorRampParameter rampParams = null;
-		TransformParameter transformParams = null;
+		Object transformParams = null;
 
 		String renderer = "default";
 		int rangeMin = 0;
@@ -142,27 +142,11 @@ public class ImageTileServiceImpl implements ImageTileService {
 				rampParams = new ColorRampParameter(rampName);
 			}
 			
-			//NOTE: this is only still around for backwards compatibility and should be removed after a while.
-			//If set, and no 'transform' object is found, then it will be used as the default transform.
-			Object transformId = null;
 			try {
-				transformId = options.get("transformId");
-				if (transformId != null) {
-					_logger.info("'transformId' has been deprecated. Please supply a transform object instead.");
-				}
+				transformParams = options.get("transform");
 			} catch (JSONException e2) {
-				transformId = null;
-			}
-			
-			try {
-				Object transformObj = options.get("transform");
-				transformParams = new TransformParameter(transformObj);
-			} catch (JSONException e2) {
-				if (transformId == null) {
-					transformId = "linear";
-					_logger.info("No transform specified for tile request - using default.");
-				}
-				transformParams = new TransformParameter(transformId);
+				_logger.info("No transform specified for tile request - using default.");
+				transformParams = ValueTransformerFactory.DEFAULT_TRANSFORM_NAME;
 			}
 
 			try {

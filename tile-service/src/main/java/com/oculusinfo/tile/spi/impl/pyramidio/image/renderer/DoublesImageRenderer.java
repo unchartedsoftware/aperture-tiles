@@ -43,7 +43,6 @@ import com.oculusinfo.tile.spi.impl.ValueTransformerFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.ColorRampFactory;
 import com.oculusinfo.tile.util.ColorRamp;
 import com.oculusinfo.tile.util.ColorRampParameter;
-import com.oculusinfo.tile.util.TransformParameter;
 
 /**
  * @author  dgray
@@ -85,7 +84,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			double maximumValue = parameter.getAsDouble("levelMaximums");
 			
 			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 255);
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getObject("transform", TransformParameter.class), minimumValue, maximumValue);
+			IValueTransformer t = ValueTransformerFactory.create(parameter.getObject("transform", Object.class), minimumValue, maximumValue);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;

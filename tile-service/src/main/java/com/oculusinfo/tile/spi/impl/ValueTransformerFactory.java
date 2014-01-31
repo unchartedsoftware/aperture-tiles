@@ -24,19 +24,63 @@
  */
 package com.oculusinfo.tile.spi.impl;
 
-import com.oculusinfo.tile.util.TransformParameter;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.oculusinfo.utilities.jsonprocessing.JsonUtilities;
+
+/**
+ * A factory for creating {@link IValueTransformer} objects.
+ * 
+ * @author cregnier
+ *
+ */
 public class ValueTransformerFactory {
 
-	public static IValueTransformer create(TransformParameter transform, double levelMin, double levelMax) {
+	private static final Logger logger = LoggerFactory.getLogger(ValueTransformerFactory.class);
+	
+	/**
+	 * The default transform type.
+	 */
+	public static final String DEFAULT_TRANSFORM_NAME = "linear";
+	
+	/**
+	 * Creates a new {@link IValueTransformer} based on the parameters in tranformParams.
+	 *  
+	 * @param transformParams
+	 * 	This object can be a couple of different types.
+	 *  <br><br>String: Treats the transformParams as just a simple name. For example: "log10", or "linear"
+	 *  <br><br>{@link JSONObject}: Treats the transformParams as a group of parameters to supply data to
+	 *  the selected value transformer. The 'name' parameter is required or else
+	 *  {@link #DEFAULT_TRANSFORM_NAME} will be used.
+	 *  <br><br>{@link JSONArray}: Treats the transformParams as a single element String or JSONObject.
+	 *  <br><br>Anything else: Treats the transformParams as the default type. 
+	 * @param levelMin
+	 * 	The minimum value seen in the level data.
+	 * @param levelMax
+	 * 	The maximum value seen in the level data.
+	 * @return
+	 * 	Returns the new {@link IValueTransformer}
+	 */
+	public static IValueTransformer create(Object transformParams, double levelMin, double levelMax) {
 		IValueTransformer t;
-		String name = transform.getName();
+		
+		String name = JsonUtilities.getName(transformParams);
+		if (name == null) {
+			logger.warn("layers.transform name was invalid. Using default.");
+			name = DEFAULT_TRANSFORM_NAME;
+		}
+		
+		//if the transformParams is a JSONObject then cast it, else use an empty one (null object pattern)
+		JSONObject transform = (transformParams instanceof JSONObject)? (JSONObject)transformParams : new JSONObject();
 		
 		if(name.equalsIgnoreCase("log10")){ 
 			t = new Log10ValueTransformer(levelMax);
 		}else if (name.equalsIgnoreCase("minmax")) {
-			double min = transform.getDoubleOrElse("min", levelMin);
-			double max = transform.getDoubleOrElse("max", levelMax);
+			double min = JsonUtilities.getDoubleOrElse(transform, "min", levelMin);
+			double max = JsonUtilities.getDoubleOrElse(transform, "max", levelMax);
 			t = new LinearCappedValueTransformer(min, max);
 		}else { //if 'linear'
 			t = new LinearCappedValueTransformer(levelMin, levelMax);

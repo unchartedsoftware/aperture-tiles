@@ -47,6 +47,7 @@ import org.restlet.resource.ResourceException;
 
 import com.google.inject.Inject;
 import com.oculusinfo.tile.spi.ImageTileLegendService;
+import com.oculusinfo.tile.spi.impl.ValueTransformerFactory;
 import com.oculusinfo.tile.util.ColorRampParameter;
 
 public class ImageTileLegendResource extends ApertureServerResource {
@@ -64,7 +65,7 @@ public class ImageTileLegendResource extends ApertureServerResource {
 		try {
 			JSONObject jsonObj = new JSONObject(jsonData);
 			
-			String transform 	= jsonObj.getString("transform");
+			Object transform 	= jsonObj.has("transform")? jsonObj.get("transform") : ValueTransformerFactory.DEFAULT_TRANSFORM_NAME;
 			String layer 		= jsonObj.getString("layer");
 			int zoomLevel		= jsonObj.getInt("level");
 			int width = jsonObj.getInt("width");
@@ -163,7 +164,7 @@ public class ImageTileLegendResource extends ApertureServerResource {
 	 * @param height
 	 * @return
 	 */
-	private StringRepresentation generateEncodedImage(String transform, ColorRampParameter rampType,
+	private StringRepresentation generateEncodedImage(Object transform, ColorRampParameter rampType,
 			String layer, int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
 		try {
 			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
