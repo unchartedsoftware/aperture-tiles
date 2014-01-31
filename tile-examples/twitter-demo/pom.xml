@@ -8,7 +8,7 @@
 	<description>Copy this maven project as a starting template for a basic tile client.</description>
 
 	<parent>
-		<artifactId>aperture-tiles</artifactId>
+		<artifactId>tile-examples</artifactId>
 		<groupId>com.oculusinfo</groupId>
 		<version>0.1.2-SNAPSHOT</version>
 	</parent>
