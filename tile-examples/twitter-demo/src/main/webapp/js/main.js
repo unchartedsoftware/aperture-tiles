@@ -27,6 +27,7 @@ require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
          './client-rendering/TextScoreRenderer',
+         './client-rendering/TopTextSentimentBars',
          './client-rendering/TextScoreRendererOther',
          './ui/layercontrols',
          './serverlayeruimediator',
@@ -40,7 +41,8 @@ require(['./fileloader',
         function (FileLoader, 
         		  Map, 
         		  ServerLayer,
-                  TextScoreRenderer, 
+                  TextScoreRenderer,
+                  TopTextSentimentBars,
                   TextScoreRendererOther,
                   LayerControls,
                   ServerLayerUiMediator,
@@ -71,8 +73,8 @@ require(['./fileloader',
                     i,
                     layerId,
                     layerName,
-                    tileScoreRenderer,
-                    tileScoreRendererOther,
+                    topTextSentimentBars,
+                    topTextSentimentBars2,
                     dataTracker,
                     carousel;
 
@@ -120,11 +122,8 @@ require(['./fileloader',
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
-                    tileScoreRenderer = new TextScoreRenderer();
-                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
-
-                    tileScoreRendererOther = new TextScoreRendererOther();
-                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+                    topTextSentimentBars = new TopTextSentimentBars('#FF00FF', 'red');
+                    topTextSentimentBars2 = new TopTextSentimentBars('#00FFFF', 'blue');
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -138,14 +137,12 @@ require(['./fileloader',
                         map: worldMap.map,
                         views: [
                             {
-                                id: "red",
                                 dataTracker: dataTracker,
-                                renderer: tileScoreRenderer
+                                renderer: topTextSentimentBars
                             },
                             {
-                                id: "blue",
                                 dataTracker: dataTracker,
-                                renderer: tileScoreRendererOther
+                                renderer: topTextSentimentBars2
                             }
                         ]});
                     carousel.dummy = 0; // to shut jslint up

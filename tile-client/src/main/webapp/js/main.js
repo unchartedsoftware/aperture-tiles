@@ -78,7 +78,6 @@ require(['./fileloader',
                 // Create world map from json file under mapFileId
                 mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
                     // skip any axis config objects
-
                     return !(element.hasOwnProperty("AxisConfig"));
                 });
 

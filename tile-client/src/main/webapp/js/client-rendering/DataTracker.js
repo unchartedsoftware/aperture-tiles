@@ -91,12 +91,11 @@ define(function (require) {
          */
         getTileNodeData: function (tilekeys) {
             var allData = [];
-            $.each(this.data, function (index, value) {
+            $.each(this.data, function (element, value) {
                 // assemble only requested tiles
-                if (tilekeys.indexOf(index) !== -1) {
+                if (tilekeys.indexOf(element) !== -1) {
                     $.merge(allData, value);
                 }
-
             });
             return allData;
         },
@@ -187,6 +186,7 @@ define(function (require) {
                 MAX_NUMBER_OF_ENTRIES = 100;
 
             while (this.memoryQueue.length > MAX_NUMBER_OF_ENTRIES) {
+
                 // while over limit of tiles in memory,
                 // iterate from last used tile to most recent and remove them if
                 // reference counts are 0
@@ -205,28 +205,17 @@ define(function (require) {
 
         /**
          * Requests tile data. If tile is not in memory, send GET request to server and
-         * set individual callback function on receive. If at least one tile is in memory
-         * callback function is called  a single time.
+         * set individual callback function on receive. Callback is not called if tile
+         * is already in memory
          *
-         * @param tilekey tilekey for data
+         * @param requestedTiles array of requested tilekeys
+         * @param callback callback function
          */
         requestTiles: function(requestedTiles, callback) {
-
-            var i,
-                dataInMemory = false;
-
+            var i;
             // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
-                if (this.getData(requestedTiles[i], callback)) {
-                    dataInMemory = true;
-                }
-            }
-
-            // at least one tile is already in memory, call callback function,
-            // this is only called once here because it is too be used to redraw the
-            // tile data
-            if (dataInMemory) {
-                callback();
+                this.getData(requestedTiles[i], callback);
             }
         },
 
@@ -305,7 +294,7 @@ define(function (require) {
 
         /**
          * Called when a tile is received from server, flags tilekey as 'loaded' and
-         * calls every callback function is repsective array
+         * calls every callback function is respective array
          *
          * @param tileData received tile data from server
          */

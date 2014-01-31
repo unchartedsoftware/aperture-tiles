@@ -34,14 +34,14 @@ define(function (require) {
 
 
 
-    var WebPyramid = require('../client-rendering/WebTilePyramid'),
+    var //WebPyramid = require('../client-rendering/WebTilePyramid'),
         ViewController = require('./ViewController'),
-        webPyramid,
+        //webPyramid,
         Carousel;
 
 
 
-    webPyramid = new WebPyramid();
+    //webPyramid = new WebPyramid();
 
 
 
@@ -57,6 +57,7 @@ define(function (require) {
             // call base class ViewController constructor
             this._super(spec);
             this.previousMouse = {};
+            this.selectedTileInfo = {};
 
             // add mouse move and zoom callbacks
             this.map.olMap_.events.register('mousemove', this.map.olMap_, function(event) {
@@ -84,12 +85,8 @@ define(function (require) {
             var positionFactor = (this.views.length - 1) / 2,
                 i, j;
 
-            this.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
-            this.nodeLayer.map('longitude').from('longitude');
-            this.nodeLayer.map('latitude').from('latitude');
-
             // tile outline layer
-            this.createTileOutlineLayer();
+            this.outline = this.createTileOutlineLayer();
             // left and right view buttons
             this.leftButton = this.createViewSelectionLayer('left');
             this.rightButton = this.createViewSelectionLayer('right');
@@ -113,7 +110,7 @@ define(function (require) {
                 hover = new aperture.Set('tilekey'), // separate tiles by tile key for hovering
                 viewSelectionLayer;
 
-            viewSelectionLayer = this.nodeLayer.addLayer(aperture.IconLayer);
+            viewSelectionLayer = this.mapNodeLayer.addLayer(aperture.IconLayer);
 
             viewSelectionLayer.map('width').asValue(15).filter(hover.scale(1.2));
             viewSelectionLayer.map('height').asValue(42).filter(hover.scale(1.5));
@@ -153,9 +150,12 @@ define(function (require) {
                 }
 
                 that.onTileViewChange(tilekey, newIndex);
+                //that.indexButtons[oldIndex].all().redraw();
+                //that.indexButtons[newIndex].all().redraw();
+            });
 
-                that.indexButtons[oldIndex].all().redraw();
-                that.indexButtons[newIndex].all().redraw();
+            viewSelectionLayer.map('visible').from( function() {
+                return this.tilekey === that.selectedTileInfo.tilekey;
             });
 
             return viewSelectionLayer;
@@ -174,7 +174,7 @@ define(function (require) {
                 hover = new aperture.Set('tilekey'), // separate tiles by bin key for hovering
                 viewIndexLayer;
 
-            viewIndexLayer = this.nodeLayer.addLayer(aperture.IconLayer);
+            viewIndexLayer = this.mapNodeLayer.addLayer(aperture.IconLayer);
 
             viewIndexLayer.map('width').asValue(12).filter(hover.scale(1.4));
             viewIndexLayer.map('height').asValue(12).filter(hover.scale(1.4));
@@ -207,11 +207,11 @@ define(function (require) {
                 hover.clear();
             });
 
-            viewIndexLayer.on('click', function(event) {
+            viewIndexLayer.on('mouseup', function(event) {
 
                 var tilekey = event.data.tilekey,
-                    button = event.source.button,
-                    oldIndex = that.getTileViewIndex(tilekey);
+                    button = event.source.button; //,
+                    //oldIndex = that.getTileViewIndex(tilekey);
 
                 if (button !== 0) {
                     // not left click, abort
@@ -219,8 +219,12 @@ define(function (require) {
                 }
 
                 that.onTileViewChange(tilekey, index);
-                that.indexButtons[oldIndex].all().redraw();
-                that.indexButtons[index].all().redraw();
+                //that.indexButtons[oldIndex].all().redraw();
+                //that.indexButtons[index].all().redraw();
+            });
+
+            viewIndexLayer.map('visible').from( function() {
+                return this.tilekey === that.selectedTileInfo.tilekey;
             });
 
             return viewIndexLayer;
@@ -232,10 +236,11 @@ define(function (require) {
          */
         createTileOutlineLayer: function() {
 
-            var icon = "./images/tileoutline.png",
+            var that = this,
+                icon = "./images/tileoutline.png",
                 outlineLayer;
 
-            outlineLayer = this.nodeLayer.addLayer(aperture.IconLayer);
+            outlineLayer = this.mapNodeLayer.addLayer(aperture.IconLayer);
 
             outlineLayer.map('width').asValue(256);
             outlineLayer.map('height').asValue(256);
@@ -246,6 +251,10 @@ define(function (require) {
             outlineLayer.map('y').asValue(0);
 
             outlineLayer.map('url').asValue(icon);
+
+            outlineLayer.map('visible').from( function() {
+                return this.tilekey === that.selectedTileInfo.tilekey;
+            });
 
             return outlineLayer;
         },
@@ -293,24 +302,22 @@ define(function (require) {
          */
         updateSelectedTile: function(tilekey) {
 
-           var parsedValues = tilekey.split(','),
-               tile = {
-                    level:  parseInt(parsedValues[0], 10),
-                    xIndex: parseInt(parsedValues[1], 10),
-                    yIndex: parseInt(parsedValues[2], 10),
-                    xBinCount: 1,
-                    yBinCount: 1
-                },
-                position = webPyramid.getTileBounds(tile);
+           var i;
 
            this.selectedTileInfo = {
-                type: 'carousel-interface',
-                longitude: position.centerX,
-                latitude: position.centerY,
-                visible: true,
+                previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
             };
-            this.nodeLayer.all(this.selectedTileInfo).where('type','carousel-interface').redraw();
+
+            if (this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey) {
+                // only redraw if a new tile is highlighted
+                this.outline.all().redraw();
+                this.leftButton.all().redraw();
+                this.rightButton.all().redraw();
+                for (i=0; i<this.indexButtons.length; i++) {
+                    this.indexButtons[i].all().redraw();
+                }
+            }
         },
 
 
@@ -329,7 +336,6 @@ define(function (require) {
             }
             return viewIndex;
         }
-
 
      });
 

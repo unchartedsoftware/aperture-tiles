@@ -49,18 +49,18 @@ define(function (require) {
         /**
          * Construct a TileTracker
          */
-        init: function (dataTracker) {
+        init: function (dataTracker, id) {
 
             this.dataTracker = dataTracker;
             this.tiles = [];
+            this.id = id;
         },
 
 
         /**
          * Given a list of tiles, determines which are already tracked, which need to be
-         * requested from the DataTracker, and which need to be released from the DataTracker. Calls
-         * callback function once for each tile received from the server, and once if there is at least
-         * one tile already in memory
+         * requested from the DataTracker, and which need to be released from the DataTracker.
+         * If a tile is already in memory, the callback function is ignored
          * @param visibleTiles an array of all visible tiles that will need to be displayed
          * @param callback tile receive callback function
          */
@@ -115,7 +115,7 @@ define(function (require) {
          * if the DataTracker is shared between trackers, the data will not be de-allocated
          * from memory during the swap.
          * @param newTracker the tracker to gain ownership of the tile
-         * @param tilekey the tile indentification key
+         * @param tilekey the tile identification key
          * @param callback the callback function after the swap is complete
          */
         swapTileWith: function(newTracker, tilekey, callback) {
@@ -146,7 +146,7 @@ define(function (require) {
 
         /**
          * Request a tile from the dataTracker
-         * @param tilekey the tile indentification key
+         * @param tilekey the tile identification key
          * @param callback the callback function after the tile is received
          */
         requestTile: function(tilekey, callback) {
@@ -158,11 +158,16 @@ define(function (require) {
 
 
         /**
-         * Returns the data format of the tiles required by an aperture.nodelayer
+         * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
          */
         getNodeData: function () {
             // request needed tiles
-            return this.dataTracker.getTileNodeData(this.tiles);
+            var data = this.dataTracker.getTileNodeData(this.tiles),
+                i;
+            for (i=0; i<data.length; i++ ) {
+                data[i].renderer = this.id; // stamp tile with renderer id
+            }
+            return data;
         }
 
     });
