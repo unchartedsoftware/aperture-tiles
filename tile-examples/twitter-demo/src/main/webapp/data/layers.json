@@ -1,8 +1,8 @@
 [
     {
-        "layer": "ndk.twitter.longitude.latitude",
+        "layer": "twitter.2014-01-02.longitude.latitude",
         "type": "tile",
-        "transform": "linear",
+        "transform": "log10",
         "ramp": "ware",
         "opacity": 0.85,
         "renderer": "default"

@@ -21,7 +21,7 @@
       <!-- To read tiles from HBase -->
       com.oculusinfo.tile.spi.impl.pyramidio.io.HBaseModule:
       <!-- To read tiles from the file system -->
-      <!-- com.oculusinfo.tile.spi.impl.pyramidio.io.FileSystemModule:-->
+      <!-- com.oculusinfo.tile.spi.impl.pyramidio.io.FileSystemModule: -->
       <!-- To read tiles from a .jar file -->
       <!-- com.oculusinfo.tile.spi.impl.pyramidio.io.ResourceStreamModule: -->
       <!-- To read tiles from a .zip file -->

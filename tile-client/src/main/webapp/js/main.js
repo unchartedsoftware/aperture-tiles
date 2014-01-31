@@ -49,7 +49,7 @@ require(['./fileloader',
                   DataTracker
                   ) {
             "use strict";
-
+            
             var sLayerFileId = "./data/layers.json",
                 mapFileId = "./data/map.json",
                 cLayerFileId = "./data/renderLayers.json";
