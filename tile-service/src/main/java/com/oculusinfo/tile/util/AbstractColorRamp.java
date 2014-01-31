@@ -171,7 +171,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		if(greens.size() > 0){
 			g = (int)(valueFromFixedPoints(greens,scale) * 255);
 		} else {
-			g = (int)(getGreenForRBL(r, b , 0.1+(scale*0.9)) * 255);
+			g = (int)(getGreenForRBL(r/255.0, b/255.0 , 0.1+(scale*0.9)) * 255);
 		}
 		r = Math.max(0, Math.min(0xFF, r));
 		g = Math.max(0, Math.min(0xFF, g));
