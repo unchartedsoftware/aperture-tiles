@@ -71,6 +71,9 @@ import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
  *  oculus.binning.source.location
  *      The path to the data file or files to be binned
  * 
+ *  oculus.binning.source.partitions
+ *      The number of partitions into which to break up each source file
+ * 
  *  oculus.binning.projection
  *      The type of projection to use when binning data.  Possible values are:
  *          EPSG:4326 - bin linearly over the whole range of values found (default)

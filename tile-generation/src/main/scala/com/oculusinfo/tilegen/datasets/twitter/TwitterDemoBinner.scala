@@ -57,6 +57,7 @@ object TwitterDemoBinner {
     val pyramidId = argParser.getStringArgument("id", "An ID by which to identify the finished pyramid.")
     val pyramidName = argParser.getStringArgument("name", "A name with which to label the finished pyramid").replace("_", " ")
     val pyramidDescription = argParser.getStringArgument("description", "A description with which to present the finished pyramid").replace("_", " ")
+    val partitions = argParser.getIntArgument("partitions", "The number of partitions into which to read the raw data", Some(0))
 
     val binner = new RDDBinner
     binner.debug = true
@@ -64,7 +65,12 @@ object TwitterDemoBinner {
     val tilePyramid = new WebMercatorTilePyramid
     val tileIO = TileIO.fromArguments(argParser)
 
-    val data = sc.textFile(source).mapPartitions(i => {
+    val rawData = if (0 == partitions) {
+      sc.textFile(source)
+    } else {
+      sc.textFile(source, partitions)
+    }
+    val data = rawData.mapPartitions(i => {
       val recordParser = new TwitterDemoRecordParser(startTime.getTime(), endTime.getTime, bins)
       i.flatMap(line => {
 	try {
