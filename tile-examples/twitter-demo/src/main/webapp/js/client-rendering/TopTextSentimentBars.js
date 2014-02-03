@@ -35,20 +35,26 @@ define(function (require) {
 
 
 
-    var Class = require('../class'),
+    var ClientRenderer = require('./ClientRenderer'),
         TopTextSentimentBars;
 
 
 
-    TopTextSentimentBars = Class.extend({
+    TopTextSentimentBars = ClientRenderer.extend({
         ClassName: "TopTextSentimentBars",
 
-        init: function(colour, id) {
+        init: function(id) {
 
-            this.colour = colour;
-            this.tooltipFcn = null;
-            this.id = id;
+            this._super(id);
+            this.valueCount = 5;
+            this.ySpacing = 30;
             this.hoverInfo = {
+                tag : '',
+                binkey : '',
+                index : -1
+            };
+
+            this.clickInfo = {
                 tag : '',
                 binkey : '',
                 index : -1
@@ -56,22 +62,30 @@ define(function (require) {
 
         },
 
-
+/*
         getCount: function(data) {
             if (data.bin.value.length === undefined) {
                 return 0;
             }
             return (data.bin.value.length > 5) ? 5 : data.bin.value.length;
         },
+*/
+
+        onUnselect: function() {
+            this.clickInfo.tag = '';
+            this.clickInfo.binkey = '';
+            this.clickInfo.index = -1;
+            this.plotLayer.all().redraw();
+        },
 
 
         getExclusiveCountPercentage: function(data, index, type) {
 
             var attrib = type + 'ByTime';
-            if (data.bin.value[this.hoverInfo.index][type] === 0) {
+            if (data.bin.value[this.clickInfo.index][type] === 0) {
                 return 0;
             }
-            return data.bin.value[this.hoverInfo.index][attrib][index] / data.bin.value[this.hoverInfo.index][type];
+            return data.bin.value[this.clickInfo.index][attrib][index] / data.bin.value[this.clickInfo.index][type];
         },
 
 
@@ -96,13 +110,21 @@ define(function (require) {
             return data.bin.value[index].count/sum;
         },
 
-
+/*
         getYOffset: function(data, index) {
             return -30 * (((this.getCount(data) - 1) / 2) - index);
         },
+*/
 
+        onClick: function(event) {
+            this.clickInfo.tag = event.data.bin.value[event.index[0]].tag;
+            this.clickInfo.binkey = event.data.binkey;
+            this.clickInfo.index = event.index[0];
+            this.plotLayer.all().redraw();
+            return true;
+        },
 
-        hoverOnEvent: function(event) {
+        onHover: function(event) {
             this.hoverInfo.tag = event.data.bin.value[event.index[0]].tag;
             this.hoverInfo.binkey = event.data.binkey;
             this.hoverInfo.index = event.index[0];
@@ -126,11 +148,12 @@ define(function (require) {
 
             var that = this;
 
-            this.plotLayer = nodeLayer.addLayer(aperture.PlotLayer);
+            this.plotLayer = nodeLayer; //.addLayer(aperture.PlotLayer);
+/*
             this.plotLayer.map('visible').from(function() {
                 return that.id === this.renderer;
             });
-
+*/
             this.createBars();
             this.createLabels();
             this.createDetailsOnDemand();
@@ -149,7 +172,7 @@ define(function (require) {
 
                 bar.map('visible').from( function() {
                     return (that.id === this.renderer) &&
-                        (that.hoverInfo.tag === '' || that.hoverInfo.binkey === this.binkey);
+                        (that.clickInfo.tag === '' || that.clickInfo.binkey === this.binkey);
                 });
 
                 // this doesnt work
@@ -161,19 +184,26 @@ define(function (require) {
                 */
 
                 bar.map('fill').from( function(index) {
-                    if (that.hoverInfo.tag === this.bin.value[index].tag) {
+                    if ((that.hoverInfo.tag === this.bin.value[index].tag && that.hoverInfo.binkey === this.binkey) ||
+                        (that.clickInfo.tag === this.bin.value[index].tag && that.clickInfo.binkey === this.binkey)) {
                         return selectedColour;
                     }
                     return defaultColour;
                 });
 
+                bar.on('click', function(event) {
+                    return that.onClick(event);
+                });
+
+
                 bar.on('mousemove', function(event) {
-                    return that.hoverOnEvent(event);
+                    return that.onHover(event);
                 });
 
                 bar.on('mouseout', function() {
                     that.hoverOffEvent();
                 });
+
 
                 bar.map('orientation').asValue('horizontal');
                 bar.map('bar-count').from(function() {
@@ -230,27 +260,35 @@ define(function (require) {
             });
 
             this.labelLayer.map('fill').from( function(index) {
-                if (that.hoverInfo.tag === '') {
+                if (that.clickInfo.tag === '' && that.hoverInfo.tag === '') {
                     return '#FFFFFF';
-                } else if (that.hoverInfo.tag !== this.bin.value[index].tag) {
+                } else if (that.hoverInfo.tag !== '' &&
+                    that.hoverInfo.tag === this.bin.value[index].tag &&
+                    that.hoverInfo.binkey === this.binkey ) {
+                    return '#FFFFFF';
+                } else if (that.clickInfo.tag !== '' &&
+                           that.clickInfo.tag !== this.bin.value[index].tag) {
                     return '#666666';
                 }
                 return '#FFFFFF';
             });
 
+            this.labelLayer.on('click', function(event) {
+                return that.onClick(event);
+            });
+
             this.labelLayer.on('mousemove', function(event) {
-                return that.hoverOnEvent(event);
+                return that.onHover(event);
             });
 
             this.labelLayer.on('mouseout', function() {
                 that.hoverOffEvent();
             });
-
-
-            this.labelLayer.on('click', function(event) {
-                console.log("click");
+/*
+            this.labelLayer.on('mouseout', function() {
+                that.hoverOffEvent();
             });
-
+*/
 
             this.labelLayer.map('label-count').from(function() {
                 return that.getCount(this);
@@ -284,7 +322,7 @@ define(function (require) {
                 background = that.plotLayer.addLayer(aperture.BarLayer);
 
             background.map('visible').from( function() {
-                return (that.id === this.renderer) && (that.hoverInfo.binkey === this.binkey);
+                return (that.id === this.renderer) && (that.clickInfo.binkey === this.binkey);
             });
 
             background.map('fill').asValue('#222222');
@@ -302,7 +340,7 @@ define(function (require) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
 
                 bar.map('visible').from( function() {
-                    return (that.id === this.renderer) && (that.hoverInfo.binkey === this.binkey);
+                    return (that.id === this.renderer) && (that.clickInfo.binkey === this.binkey);
                 });
 
                 bar.map('fill').asValue(colour);

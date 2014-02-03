@@ -35,27 +35,28 @@ define(function (require) {
 
 
 
-    var Class = require('../class'),
+    var ClientRenderer = require('./ClientRenderer'),
         HashTagsByTime;
 
 
-    HashTagsByTime = Class.extend({
+    HashTagsByTime = ClientRenderer.extend({
         ClassName: "HashTagsByTime",
 
-        init: function(colour, id) {
+        init: function(id) {
 
-            this.colour = colour;
-            this.id = id;
-
+            this._super(id);
+            this.valueCount = 10;
+            this.ySpacing = 18;
         },
 
+        /*
         getCount: function(data) {
             if (data.bin.value.length === undefined) {
                 return 0;
             }
             return (data.bin.value.length > 10) ? 10 : data.bin.value.length;
         },
-
+*/
 
         getTotalCountPercentage: function(data, index) {
             var tagIndex = Math.floor(index / 24);
@@ -67,11 +68,11 @@ define(function (require) {
             return data.bin.value[tagIndex].countByTime[index % 24] / data.bin.value[tagIndex].count;
         },
 
-
+/*
         getYOffset: function(data, index) {
-            return -20 * (((this.getCount(data) - 1) / 2) - index);
+            return -18 * (((this.getCount(data) - 1) / 2) - index);
         },
-
+*/
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
@@ -79,11 +80,12 @@ define(function (require) {
 
             var that = this;
 
-            this.plotLayer = nodeLayer.addLayer(aperture.PlotLayer);
+            this.plotLayer = nodeLayer; //.addLayer(aperture.PlotLayer);
+            /*
             this.plotLayer.map('visible').from(function() {
                 return that.id === this.renderer;
             });
-
+*/
             this.createBars();
             this.createLabels();
 
@@ -92,9 +94,28 @@ define(function (require) {
         createBars: function() {
 
             var that = this,
-                BAR_LENGTH = 40;
+                BAR_LENGTH = 10;
 
-            this.bars = that.plotLayer.addLayer(aperture.BarLayer);
+            function getMaxPercentage(data, index) {
+                var i,
+                    percent,
+                    tagIndex = Math.floor(index/24),
+                    maxPercent = 0,
+                    count = data.bin.value[tagIndex].count;
+                if (count === 0) {
+                    return 0;
+                }
+                for(i=0; i<24; i++) {
+                    // get maximum percent
+                    percent = data.bin.value[tagIndex].countByTime[i] / count;
+                    if (percent > maxPercent) {
+                        maxPercent = percent;
+                    }
+                }
+                return maxPercent;
+            }
+
+            this.bars = this.plotLayer.addLayer(aperture.BarLayer);
 
             this.bars.map('visible').from( function() {
                 return that.id === this.renderer;
@@ -105,20 +126,40 @@ define(function (require) {
             this.bars.map('bar-count').from( function() {
                 return 24 * that.getCount(this);
             });
-            this.bars.map('width').asValue(6);
-            //this.bars.map('stroke').asValue("#000000");
-            //this.bars.map('stroke-width').asValue(2);
+            this.bars.map('width').asValue(4);
             this.bars.map('offset-y').from(function(index) {
-                return -(that.getTotalCountPercentage(this, index) * BAR_LENGTH) +
+
+                var temp = that.getTotalCountPercentage(this, index);
+                if (temp < 0.001) {
+                    return -(0.25 * BAR_LENGTH) +
+                        that.getYOffset(this, Math.floor(index/24));
+                }
+
+                var maxPercent = getMaxPercentage(this, index);
+
+                if (maxPercent === 0) {
+                    return 0;
+                }
+
+                return -((that.getTotalCountPercentage(this, index) / maxPercent) * BAR_LENGTH) +
                        that.getYOffset(this, Math.floor(index/24));
             });
 
             this.bars.map('offset-x').from(function (index) {
-                return -112 + ((index % 24) * 7);
+                return -90 + ((index % 24) * 5);
             });
 
             this.bars.map('length').from(function (index) {
-                return that.getTotalCountPercentage(this, index) * BAR_LENGTH;
+
+                var temp = that.getTotalCountPercentage(this, index);
+                if (temp < 0.001) {
+                        return (0.25 * BAR_LENGTH);
+                }
+                var maxPercent = getMaxPercentage(this, index);
+                if (maxPercent === 0) {
+                    return 0;
+                }
+                return (that.getTotalCountPercentage(this, index) / maxPercent) * BAR_LENGTH;
             });
 
         },
@@ -141,8 +182,8 @@ define(function (require) {
 
             this.labelLayer.map('text').from(function (index) {
                 var str = "#" + this.bin.value[index].tag;
-                if (str.length > 12) {
-                    str = str.substr(0,12) + "...";
+                if (str.length > 7) {
+                    str = str.substr(0,7) + "...";
                 }
                 return str;
             });
@@ -150,11 +191,11 @@ define(function (require) {
             this.labelLayer.map('font-size').asValue(12);
 
             this.labelLayer.map('offset-y').from(function (index) {
-                return that.getYOffset(this, index);
+                return that.getYOffset(this, index) - 5;
             });
 
-            this.labelLayer.map('offset-x').asValue(80);
-            this.labelLayer.map('text-anchor').asValue('middle');
+            this.labelLayer.map('offset-x').asValue(40);
+            this.labelLayer.map('text-anchor').asValue('start');
             this.labelLayer.map('font-outline').asValue('#000000');
             this.labelLayer.map('font-outline-width').asValue(3);
         }

@@ -80,14 +80,15 @@ define(function (require) {
                 positionFactor = (this.views.length - 1) / 2,
                 i, j;
 
-            this.plotLayer = this.mapNodeLayer.addLayer(aperture.PlotLayer);
+            this.plotLayer = this.mapNodeLayer; //.addLayer(aperture.PlotLayer);
+
             /*
             this.plotLayer.map('visible').from( function() {
                 return (this.tilekey === that.selectedTileInfo.tilekey);
             });
-            */
+*/
             // tile outline layer
-            this.outline = this.createTileOutlineLayer();
+            //this.outline = this.createTileOutlineLayer();
             // left and right view buttons
             this.leftButton = this.createViewSelectionLayer('left');
             this.rightButton = this.createViewSelectionLayer('right');
@@ -130,14 +131,13 @@ define(function (require) {
                 hover.add(event.data.tilekey);
             });
 
-            viewSelectionLayer.on('mouseout', function(event) {
+            viewSelectionLayer.on('mouseout', function() {
                 hover.clear();
             });
 
             viewSelectionLayer.on('mouseup', function(event) {
 
                 var tilekey = event.data.tilekey,
-                    button = event.source.button,
                     mod = function (m, n) {
                         return ((m % n) + n) % n;
                     },
@@ -145,7 +145,7 @@ define(function (require) {
                     oldIndex = that.getTileViewIndex(tilekey),
                     newIndex = mod(oldIndex + inc, that.views.length);
 
-                if (button !== 0) {
+                if (event.source.button !== 0) {
                     // not left click, abort
                     return;
                 }
@@ -184,7 +184,7 @@ define(function (require) {
                 return spacingFactor*spacing/Math.pow(2, that.map.getZoom()-1);
             });
             viewIndexLayer.map('y').from(function(){
-                return 0.20/Math.pow(2, that.map.getZoom()-1);
+                return 0.2/Math.pow(2, that.map.getZoom()-1);
             });
 
             viewIndexLayer.map('url').from(function() {
@@ -202,21 +202,16 @@ define(function (require) {
                 hover.add(event.data.tilekey);
             });
 
-            viewIndexLayer.on('mouseout', function(event) {
+            viewIndexLayer.on('mouseout', function() {
                 hover.clear();
             });
 
             viewIndexLayer.on('mouseup', function(event) {
-
-                var tilekey = event.data.tilekey,
-                    button = event.source.button;
-
-                if (button !== 0) {
+                if (event.source.button !== 0) {
                     // not left click, abort
                     return;
                 }
-
-                that.onTileViewChange(tilekey, index);
+                that.onTileViewChange(event.data.tilekey, index);
             });
 
             viewIndexLayer.map('visible').from( function() {
@@ -305,10 +300,18 @@ define(function (require) {
                 tilekey : tilekey
             };
 
-            console.log(this.selectedTileInfo.tilekey);
+            //console.log(this.selectedTileInfo.tilekey);
 
-            this.plotLayer.all().redraw();
-            if (this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey) {
+
+            //this.outline.all().redraw();
+            this.leftButton.all().redraw();
+            this.rightButton.all().redraw();
+            for (i=0; i<this.indexButtons.length; i++) {
+                this.indexButtons[i].all().redraw();
+            }
+            //this.plotLayer.all().redraw();
+
+            //if (this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey) {
                 // only redraw if a new tile is highlighted
                 //this.plotLayer.all().redraw();
                 /*
@@ -319,7 +322,7 @@ define(function (require) {
                     this.indexButtons[i].all().redraw();
                 }
                 */
-            }
+            //}
 
         },
 

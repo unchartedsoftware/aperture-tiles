@@ -57,6 +57,7 @@ define(function (require) {
 
                 // add map and zoom/pan event handlers
                 that.map = map;
+
                 // call update on drag end / zoom end / pan end
                 that.map.olMap_.events.register('moveend', that.map.olMap_, $.proxy(that.onMapUpdate, that));
 
@@ -93,6 +94,14 @@ define(function (require) {
             for (i = 0; i < spec.views.length; i++) {
                 addView(spec.views[i]);
             }
+
+            this.map.olMap_.events.register('click', this.map.olMap_, function() {
+                var i;
+                for (i=0; i<that.views.length; ++i) {
+                    that.views[i].renderer.onUnselect();
+                }
+            });
+
             // trigger callback to draw first frame
             this.onMapUpdate();
         },
@@ -113,6 +122,7 @@ define(function (require) {
             }
             return viewIndex;
         },
+
 
         /**
          * Tile change callback function
@@ -191,7 +201,6 @@ define(function (require) {
             for (i=0; i< this.views.length; i++ ) {
                 $.merge(data, this.views[i].tileTracker.getNodeData());
             }
-
 
             var test = {};
             if ( data.length > 0 ) {

@@ -122,8 +122,8 @@ require(['./fileloader',
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
-                    topTextSentimentBars = new TopTextSentimentBars('#FF00FF', 'red');
-                    hashTagsByTime = new HashTagsByTime('#00FFFF', 'blue');
+                    topTextSentimentBars = new TopTextSentimentBars('red');
+                    hashTagsByTime = new HashTagsByTime('blue');
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -138,11 +138,11 @@ require(['./fileloader',
                         views: [
                             {
                                 dataTracker: dataTracker,
-                                renderer: hashTagsByTime
+                                renderer: topTextSentimentBars
                             },
                             {
                                 dataTracker: dataTracker,
-                                renderer: topTextSentimentBars
+                                renderer: hashTagsByTime
                             }
                         ]});
                     carousel.dummy = 0; // to shut jslint up
