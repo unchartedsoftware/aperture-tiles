@@ -80,12 +80,11 @@ define(function (require) {
                 i, j;
 
             this.plotLayer = this.mapNodeLayer; //.addLayer(aperture.PlotLayer);
-
             /*
             this.plotLayer.map('visible').from( function() {
                 return (this.tilekey === that.selectedTileInfo.tilekey);
             });
-*/
+            */
             // tile outline layer
             //this.outline = this.createTileOutlineLayer();
             // left and right view buttons
@@ -118,7 +117,7 @@ define(function (require) {
             viewSelectionLayer.map('anchor-x').asValue(0.5);
             viewSelectionLayer.map('anchor-y').asValue(0.5);
             viewSelectionLayer.map('url').asValue(icon);
-
+            viewSelectionLayer.map('icon-count').asValue(1);
             viewSelectionLayer.map('x').from(function(){
                 return x/Math.pow(2, that.map.getZoom()-1);
             });
@@ -178,7 +177,7 @@ define(function (require) {
             viewIndexLayer.map('height').asValue(12).filter(hover.scale(1.4));
             viewIndexLayer.map('anchor-x').asValue(0.5);
             viewIndexLayer.map('anchor-y').asValue(0.5);
-
+            viewIndexLayer.map('icon-count').asValue(1);
             viewIndexLayer.map('x').from(function() {
                 return spacingFactor*spacing/Math.pow(2, that.map.getZoom()-1);
             });
@@ -239,6 +238,8 @@ define(function (require) {
 
             outlineLayer.map('x').asValue(0);
             outlineLayer.map('y').asValue(0);
+
+            outlineLayer.map('icon-count').asValue(1);
 
             outlineLayer.map('url').asValue(icon);
 

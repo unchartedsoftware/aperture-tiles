@@ -117,21 +117,12 @@ define(function (require) {
             });
             this.bars.map('width').asValue(4);
             this.bars.map('offset-y').from(function(index) {
-
-                var temp = that.getTotalCountPercentage(this, index);
-                if (temp < 0.001) {
-                    return -(0.25 * BAR_LENGTH) +
-                        that.getYOffset(this, Math.floor(index/24));
-                }
-
-                var maxPercent = getMaxPercentage(this, index);
-
-                if (maxPercent === 0) {
+                var maxPercentage = getMaxPercentage(this, index);
+                if (maxPercentage === 0) {
                     return 0;
                 }
-
-                return -((that.getTotalCountPercentage(this, index) / maxPercent) * BAR_LENGTH) +
-                       that.getYOffset(this, Math.floor(index/24));
+                return -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
+                    that.getYOffset(this, Math.floor(index/24));
             });
 
             this.bars.map('offset-x').from(function (index) {
@@ -139,17 +130,13 @@ define(function (require) {
             });
 
             this.bars.map('length').from(function (index) {
-
-                var temp = that.getTotalCountPercentage(this, index);
-                if (temp < 0.001) {
-                        return (0.25 * BAR_LENGTH);
-                }
-                var maxPercent = getMaxPercentage(this, index);
-                if (maxPercent === 0) {
+                var maxPercentage = getMaxPercentage(this, index);
+                if (maxPercentage === 0) {
                     return 0;
                 }
-                return (that.getTotalCountPercentage(this, index) / maxPercent) * BAR_LENGTH;
+                return (that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH;
             });
+
 
         },
 
