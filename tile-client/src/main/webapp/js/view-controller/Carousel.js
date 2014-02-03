@@ -76,8 +76,7 @@ define(function (require) {
          */
         createUI: function() {
 
-            var that = this,
-                positionFactor = (this.views.length - 1) / 2,
+            var positionFactor = (this.views.length - 1) / 2,
                 i, j;
 
             this.plotLayer = this.mapNodeLayer; //.addLayer(aperture.PlotLayer);
