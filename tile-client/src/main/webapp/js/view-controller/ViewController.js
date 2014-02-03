@@ -138,6 +138,10 @@ define(function (require) {
             // map tile to new view
             this.tileViewMap[tilekey] = newViewIndex;
 
+            // un-select elements from this view
+            // TODO: have this only unselect if selected elements are in the respective tile
+            this.views[oldViewIndex].renderer.onUnselect();
+
             // swap tile data, this function prevents data de-allocation if they share same data source
             oldTracker.swapTileWith(newTracker, tilekey, $.proxy(this.redrawViews, this));
 
@@ -202,11 +206,12 @@ define(function (require) {
                 $.merge(data, this.views[i].tileTracker.getNodeData());
             }
 
+            /*
             var test = {};
             if ( data.length > 0 ) {
                 test = data[0];
             }
-
+            */
             this.mapNodeLayer.all(data).redraw();
         }
 

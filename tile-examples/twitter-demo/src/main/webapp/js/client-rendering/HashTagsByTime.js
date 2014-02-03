@@ -49,14 +49,6 @@ define(function (require) {
             this.ySpacing = 18;
         },
 
-        /*
-        getCount: function(data) {
-            if (data.bin.value.length === undefined) {
-                return 0;
-            }
-            return (data.bin.value.length > 10) ? 10 : data.bin.value.length;
-        },
-*/
 
         getTotalCountPercentage: function(data, index) {
             var tagIndex = Math.floor(index / 24);
@@ -68,11 +60,7 @@ define(function (require) {
             return data.bin.value[tagIndex].countByTime[index % 24] / data.bin.value[tagIndex].count;
         },
 
-/*
-        getYOffset: function(data, index) {
-            return -18 * (((this.getCount(data) - 1) / 2) - index);
-        },
-*/
+
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
@@ -90,6 +78,7 @@ define(function (require) {
             this.createLabels();
 
         },
+
 
         createBars: function() {
 
