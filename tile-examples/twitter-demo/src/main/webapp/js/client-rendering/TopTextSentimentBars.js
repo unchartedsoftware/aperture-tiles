@@ -63,14 +63,6 @@ define(function (require) {
 
         },
 
-/*
-        getCount: function(data) {
-            if (data.bin.value.length === undefined) {
-                return 0;
-            }
-            return (data.bin.value.length > 5) ? 5 : data.bin.value.length;
-        },
-*/
 
         onUnselect: function() {
             this.clickInfo.tag = '';
@@ -111,11 +103,6 @@ define(function (require) {
             return data.bin.value[index].count/sum;
         },
 
-/*
-        getYOffset: function(data, index) {
-            return -30 * (((this.getCount(data) - 1) / 2) - index);
-        },
-*/
 
         onClick: function(event) {
             this.clickInfo.tag = event.data.bin.value[event.index[0]].tag;
@@ -125,20 +112,30 @@ define(function (require) {
             return true;
         },
 
+
         onHover: function(event) {
             this.hoverInfo.tag = event.data.bin.value[event.index[0]].tag;
             this.hoverInfo.binkey = event.data.binkey;
             this.hoverInfo.index = event.index[0];
-            this.plotLayer.all().redraw();
+            if (this.clickInfo.tag !== '') {
+                this.tagLabel.all().redraw();
+            }
+            this.negativeBar.all().redraw();
+            this.positiveBar.all().redraw();
+
             return true;
         },
 
 
-        hoverOffEvent: function() {
+        hoverOffEvent: function(event) {
             this.hoverInfo.tag = '';
             this.hoverInfo.binkey = '';
             this.hoverInfo.index = -1;
-            this.plotLayer.all().redraw();
+            if (this.clickInfo.tag !== '') {
+                this.tagLabel.all().redraw();
+            }
+            this.negativeBar.all().redraw();
+            this.positiveBar.all().redraw();
         },
 
 
@@ -158,7 +155,6 @@ define(function (require) {
             this.createBars();
             this.createLabels();
             this.createDetailsOnDemand();
-
         },
 
 
@@ -201,8 +197,8 @@ define(function (require) {
                     return that.onHover(event);
                 });
 
-                bar.on('mouseout', function() {
-                    that.hoverOffEvent();
+                bar.on('mouseout', function(event) {
+                    that.hoverOffEvent(event);
                 });
 
 
@@ -216,7 +212,6 @@ define(function (require) {
                 bar.map('offset-y').from(function(index) {
                     return that.getYOffset(this, index) + 15;
                 });
-                bar.toFront();
                 return bar;
             }
 
@@ -254,13 +249,13 @@ define(function (require) {
 
             var that = this;
 
-            this.labelLayer = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.tagLabel = this.plotLayer.addLayer(aperture.LabelLayer);
 
-            this.labelLayer.map('visible').from(function() {
-                return that.id === this.renderer;
+            this.tagLabel.map('visible').from(function() {
+                return (that.id === this.renderer);
             });
 
-            this.labelLayer.map('fill').from( function(index) {
+            this.tagLabel.map('fill').from( function(index) {
                 if (that.clickInfo.tag === '' && that.hoverInfo.tag === '') {
                     return '#FFFFFF';
                 } else if (that.hoverInfo.tag !== '' &&
@@ -274,16 +269,16 @@ define(function (require) {
                 return '#FFFFFF';
             });
 
-            this.labelLayer.on('click', function(event) {
+            this.tagLabel.on('click', function(event) {
                 return that.onClick(event);
             });
 
-            this.labelLayer.on('mousemove', function(event) {
+            this.tagLabel.on('mousemove', function(event) {
                 return that.onHover(event);
             });
 
-            this.labelLayer.on('mouseout', function() {
-                that.hoverOffEvent();
+            this.tagLabel.on('mouseout', function(event) {
+                that.hoverOffEvent(event);
             });
 /*
             this.labelLayer.on('mouseout', function() {
@@ -291,11 +286,11 @@ define(function (require) {
             });
 */
 
-            this.labelLayer.map('label-count').from(function() {
+            this.tagLabel.map('label-count').from(function() {
                 return that.getCount(this);
             });
 
-            this.labelLayer.map('text').from(function (index) {
+            this.tagLabel.map('text').from(function (index) {
                 var str = "#" + this.bin.value[index].tag;
                 if (str.length > 12) {
                     str = str.substr(0,12) + "...";
@@ -303,16 +298,16 @@ define(function (require) {
                 return str;
             });
 
-            this.labelLayer.map('font-size').from(function (index) {
+            this.tagLabel.map('font-size').from(function (index) {
                 var size = (that.getTotalCountPercentage(this, index) * 60) + 10;
                 return size > 30 ? 30 : size;
             });
-            this.labelLayer.map('offset-y').from(function (index) {
+            this.tagLabel.map('offset-y').from(function (index) {
                 return that.getYOffset(this, index) + 5;
             });
-            this.labelLayer.map('text-anchor').asValue('middle');
-            this.labelLayer.map('font-outline').asValue('#000000');
-            this.labelLayer.map('font-outline-width').asValue(3);
+            this.tagLabel.map('text-anchor').asValue('middle');
+            this.tagLabel.map('font-outline').asValue('#000000');
+            this.tagLabel.map('font-outline-width').asValue(3);
         },
 
 
@@ -320,6 +315,7 @@ define(function (require) {
 
             var that = this,
                 BAR_LENGTH = 50;
+
 
             function getMaxPercentage(data, type) {
                 var i,
@@ -338,6 +334,7 @@ define(function (require) {
                 }
                 return maxPercent;
             }
+
 
             function getMaxPercentageBoth(data) {
                 var maxPositive = getMaxPercentage(data, 'positive'),
@@ -361,7 +358,6 @@ define(function (require) {
                 bar.map('offset-x').from( function(index) {
                     return DETAILS_POSITION + 16 + index*10;
                 });
-
                 return bar;
             }
 
@@ -372,14 +368,13 @@ define(function (require) {
                 });
                 label.map('fill').asValue('#FFFFFF');
                 label.map('label-count').asValue(1);
-
                 label.map('text-anchor').asValue('start');
                 label.map('font-outline').asValue('#000000');
                 label.map('font-outline-width').asValue(3);
                 return label;
             }
 
-            this.detailsBackground = that.plotLayer.addLayer(aperture.BarLayer);
+            this.detailsBackground = this.plotLayer.addLayer(aperture.BarLayer);
             this.detailsBackground.map('visible').from( function() {
                 return (that.id === this.renderer) && (that.clickInfo.binkey === this.binkey);
             });
@@ -397,8 +392,8 @@ define(function (require) {
             this.titleLabel = labelTemplate();
             this.titleLabel.map('text').from(function () {
                 var str = "#" + that.clickInfo.tag;
-                if (str.length > 18) {
-                    str = str.substr(0,18) + "...";
+                if (str.length > 16) {
+                    str = str.substr(0,16) + "...";
                 }
                 return str;
             });
@@ -461,33 +456,32 @@ define(function (require) {
             this.recentLabel.map('offset-x').asValue(DETAILS_POSITION + 14);
 
 
-
-
-
-
             // negative bar
             this.detailsNegativeBar = barTemplate('#D33CFF');
             this.detailsNegativeBar.map('offset-y').asValue(20);
             this.detailsNegativeBar.map('length').from(function (index) {
-                if (getMaxPercentageBoth(this) === 0) {
+                var maxPercentage = getMaxPercentageBoth(this)
+                if (maxPercentage === 0) {
                     return 0;
                 }
-                return (that.getExclusiveCountPercentage(this, index, 'negative') / getMaxPercentageBoth(this)) * BAR_LENGTH;
+                return (that.getExclusiveCountPercentage(this, index, 'negative') / maxPercentage) * BAR_LENGTH;
             });
 
             // positive bar
             this.detailsPositiveBar = barTemplate('#09CFFF');
             this.detailsPositiveBar.map('offset-y').from(function (index) {
-                if (getMaxPercentageBoth(this) === 0) {
+                var maxPercentage = getMaxPercentageBoth(this)
+                if (maxPercentage === 0) {
                     return 0;
                 }
-                return 20-((that.getExclusiveCountPercentage(this, index, 'positive') / getMaxPercentageBoth(this)) * BAR_LENGTH);
+                return 20-((that.getExclusiveCountPercentage(this, index, 'positive') / maxPercentage) * BAR_LENGTH);
             });
             this.detailsPositiveBar.map('length').from(function (index) {
-                if (getMaxPercentageBoth(this) === 0) {
+                var maxPercentage = getMaxPercentageBoth(this)
+                if (maxPercentage === 0) {
                     return 0;
                 }
-                return (that.getExclusiveCountPercentage(this, index, 'positive') / getMaxPercentageBoth(this)) * BAR_LENGTH;
+                return (that.getExclusiveCountPercentage(this, index, 'positive') / maxPercentage) * BAR_LENGTH;
             });
 
         }
