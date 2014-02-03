@@ -308,6 +308,10 @@ define(function (require) {
             this.dataStatus[tilekey] = "loaded"; // flag as loaded
 
             if (this.data[tilekey].length > 0) {
+                if (this.dataCallbacks[tilekey] === undefined) {
+                    console.log('ERROR: Received random tile from server... ');
+                    return;
+                }
                 for (i =0; i <this.dataCallbacks[tilekey].length; i++ ) {
                     this.dataCallbacks[tilekey][i](this.data[tilekey]);
                 }

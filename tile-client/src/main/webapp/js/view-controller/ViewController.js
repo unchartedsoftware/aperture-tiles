@@ -57,8 +57,8 @@ define(function (require) {
 
                 // add map and zoom/pan event handlers
                 that.map = map;
-                that.map.olMap_.events.register('zoomend', that.map.olMap_, $.proxy(that.onMapUpdate, that));
-                that.map.on('panend', $.proxy(that.onMapUpdate, that));
+                // call update on drag end / zoom end / pan end
+                that.map.olMap_.events.register('moveend', that.map.olMap_, $.proxy(that.onMapUpdate, that));
 
                 that.mapNodeLayer = that.map.addLayer(aperture.geo.MapNodeLayer);
                 that.mapNodeLayer.map('longitude').from('longitude');
@@ -69,31 +69,32 @@ define(function (require) {
             }
 
             function addView(viewspec) {
-
                 // construct and add view
                 var view = {
+                    // view id, used to map tile to view via getTileViewIndex()
                     id: viewspec.renderer.id,
-                    tileTracker: new TileTracker(viewspec.dataTracker, viewspec.renderer.id),     // tracks the tiles used at given moment
-                    renderer: viewspec.renderer                            // renderer for the view
+                    // tracks the active tiles used per view at given moment
+                    tileTracker: new TileTracker(viewspec.dataTracker, viewspec.renderer.id),
+                    // render layer for the view
+                    renderer: viewspec.renderer
                 };
-
-                // create the renderer layer off of the shared view layer
+                // create the render layer
                 view.renderer.createLayer(that.mapNodeLayer);
-
                 that.views.push(view);
             }
 
+            // initialize attributes
             this.defaultViewIndex = 0;  // if not specified, this is the default view of a tile
             this.tileViewMap = {};      // maps a tile key to its view index
-
-            attachMap(spec.map);
-
             this.views = [];
+            // attach map
+            attachMap(spec.map);
+            // add views
             for (i = 0; i < spec.views.length; i++) {
                 addView(spec.views[i]);
             }
-
-            this.onMapUpdate(); // trigger callback to draw first frame
+            // trigger callback to draw first frame
+            this.onMapUpdate();
         },
 
 
@@ -190,9 +191,14 @@ define(function (require) {
             for (i=0; i< this.views.length; i++ ) {
                 $.merge(data, this.views[i].tileTracker.getNodeData());
             }
-            //console.log(data);
-            this.mapNodeLayer.all(data);
-            this.mapNodeLayer.all().redraw();
+
+
+            var test = {};
+            if ( data.length > 0 ) {
+                test = data[0];
+            }
+
+            this.mapNodeLayer.all(data).redraw();
         }
 
      });

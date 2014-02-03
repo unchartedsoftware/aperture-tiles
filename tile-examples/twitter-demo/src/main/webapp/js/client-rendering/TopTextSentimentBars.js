@@ -48,190 +48,296 @@ define(function (require) {
             this.colour = colour;
             this.tooltipFcn = null;
             this.id = id;
-
-        },
-
-        /**
-         * Set a function to call whenever a tooltip can be provided.  The 
-         * function should expect one argument, the text of the tooltip (as 
-         * html).  It will be called with null to clear the tooltip.
-         */
-        setTooltipFcn: function (tooltipFcn) {
-            this.tooltipFcn = tooltipFcn;
-        },
-
-
-        /**
-         * A method to get the text of a tooltip from a mouse event
-         */
-        getTooltip: function (event) {
-            var index = event.index,
-                data = event.data,
-                n = data.bin.value.length,
-                maxValue = null,
-                minValue = null,
-                i, key, value;
-
-            for (i=0; i<n; ++i) {
-                value = data.bin.value[i].value;
-                if (!maxValue || value > maxValue) {
-                    maxValue = value;
-                }
-                if (!minValue || value < minValue) {
-                    minValue = value;
-                }
-            }
-            key = data.bin.value[index].key;
-            value = data.bin.value[index].value;
-
-            return "Text: "+key+", score: "+value+" from range ["+minValue+", "+maxValue+"]";
-        },
-
-
-        createBars: function(nodeLayer) {
-
-            var that = this,
-                BAR_LENGTH = 100;
-
-            function getNegativeCountPercentage(data, index) {
-                return data.bin.value[index].negative / data.bin.value[index].count;
-            }
-
-            function getPositiveCountPercentage(data, index) {
-                return data.bin.value[index].positive / data.bin.value[index].count;
-            }
-
-            function getNeutralCountPercentage(data, index) {
-                return data.bin.value[index].neutral / data.bin.value[index].count;
-            }
-
-            function barTemplate() {
-                var bar = nodeLayer.addLayer(aperture.BarLayer);
-                bar.map('visible').from(function() {
-                    return that.id === this.renderer;
-                });
-                bar.map('orientation').asValue('horizontal');
-                bar.map('bar-count').from(getCount);
-                bar.map('width').asValue('10');
-                bar.map('stroke').asValue("#000000");
-                bar.map('stroke-width').asValue(2);
-                bar.map('offset-y').from(getYOffset);
-                bar.toFront();
-                return bar;
-            }
-
-            function getCount() {
-                return (this.bin.value.length > 5) ? 5 : this.bin.value.length;
+            this.hoverInfo = {
+                tag : '',
+                binkey : '',
+                index : -1
             };
 
-            function getYOffset(index) {
-                return -30 * (($.proxy(getCount, this)() - 1.0) / 2.0 - index) + 15;
-            };
-
-            // negative bar
-            this.negativeBar = barTemplate();
-            this.negativeBar.map('offset-x').from(function (index) {
-                return -(getNeutralCountPercentage(this,index) * BAR_LENGTH)/2 +
-                    -(getNegativeCountPercentage(this,index) * BAR_LENGTH);
-            });
-            this.negativeBar.map('length').from(function (index) {
-                return getNegativeCountPercentage(this,index) * BAR_LENGTH;
-            });
-            this.negativeBar.map('fill').asValue('#333333');
-
-            // neutral bar
-            this.neutralBar = barTemplate();
-            this.neutralBar.map('offset-x').from(function (index) {
-                return -(getNeutralCountPercentage(this,index) * BAR_LENGTH)/2;
-            });
-            this.neutralBar.map('length').from(function (index) {
-                return getNeutralCountPercentage(this,index) * BAR_LENGTH;
-            });
-            this.neutralBar.map('fill').asValue('#666666');
-
-            // positive bar
-            this.positiveBar = barTemplate();
-            this.positiveBar.map('offset-x').from(function (index) {
-                return (getNeutralCountPercentage(this,index) * BAR_LENGTH)/2;
-            });
-            this.positiveBar.map('length').from(function (index) {
-                return getPositiveCountPercentage(this,index) * BAR_LENGTH;
-            });
-            this.positiveBar.map('fill').asValue('#FFFFFF');
         },
+
+
+        getCount: function(data) {
+            if (data.bin.value.length === undefined) {
+                return 0;
+            }
+            return (data.bin.value.length > 5) ? 5 : data.bin.value.length;
+        },
+
+
+        getExclusiveCountPercentage: function(data, index, type) {
+
+            var attrib = type + 'ByTime';
+            if (data.bin.value[this.hoverInfo.index][type] === 0) {
+                return 0;
+            }
+            return data.bin.value[this.hoverInfo.index][attrib][index] / data.bin.value[this.hoverInfo.index][type];
+        },
+
+
+        getCountPercentage: function(data, index, type) {
+            if (data.bin.value[index].count === 0) {
+                return 0;
+            }
+            return data.bin.value[index][type] / data.bin.value[index].count;
+        },
+
+
+        getTotalCountPercentage: function(data, index) {
+            var i,
+                sum = 0,
+                n = this.getCount(data);
+            for (i=0; i<n; i++) {
+                sum += data.bin.value[i].count;
+            }
+            if (sum === 0) {
+                return 0;
+            }
+            return data.bin.value[index].count/sum;
+        },
+
+
+        getYOffset: function(data, index) {
+            return -30 * (((this.getCount(data) - 1) / 2) - index);
+        },
+
+
+        hoverOnEvent: function(event) {
+            this.hoverInfo.tag = event.data.bin.value[event.index[0]].tag;
+            this.hoverInfo.binkey = event.data.binkey;
+            this.hoverInfo.index = event.index[0];
+            this.plotLayer.all().redraw();
+            return true;
+        },
+
+
+        hoverOffEvent: function() {
+            this.hoverInfo.tag = '';
+            this.hoverInfo.binkey = '';
+            this.hoverInfo.index = -1;
+            this.plotLayer.all().redraw();
+        },
+
 
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
         createLayer: function (nodeLayer) {
 
+            var that = this;
+
+            this.plotLayer = nodeLayer.addLayer(aperture.PlotLayer);
+            this.plotLayer.map('visible').from(function() {
+                return that.id === this.renderer;
+            });
+
+            this.createBars();
+            this.createLabels();
+            this.createDetailsOnDemand();
+
+        },
+
+
+        createBars: function() {
+
             var that = this,
-                hover = new aperture.Set(); //'bin.value[].tag');
+                BAR_LENGTH = 100;
 
-            console.log("creating layer " + this.id);
+            function barTemplate( defaultColour, selectedColour ) {
 
-            this.createBars(nodeLayer);
+                var bar = that.plotLayer.addLayer(aperture.BarLayer);
 
-            function getYOffset(index) {
-                return -30 * (($.proxy(getCount, this)() - 1.0) / 2.0 - index) + 5;
-            };
+                bar.map('visible').from( function() {
+                    return (that.id === this.renderer) &&
+                        (that.hoverInfo.tag === '' || that.hoverInfo.binkey === this.binkey);
+                });
 
-            function getCountPercentage(data, index) {
-                var i,
-                    sum = 0,
-                    n = $.proxy(getCount, data)();
-                for (i=0; i<n; i++) {
-                    sum += data.bin.value[i].count;
-                }
+                // this doesnt work
+                /*
+                bar.map('bar-visible').from( function(index) {
+                    return (that.id === this.renderer) &&
+                           (hoverInfo.tag === '' || hoverInfo.index === index);
+                });
+                */
 
-                return data.bin.value[index].count/sum;
+                bar.map('fill').from( function(index) {
+                    if (that.hoverInfo.tag === this.bin.value[index].tag) {
+                        return selectedColour;
+                    }
+                    return defaultColour;
+                });
+
+                bar.on('mousemove', function(event) {
+                    return that.hoverOnEvent(event);
+                });
+
+                bar.on('mouseout', function() {
+                    that.hoverOffEvent();
+                });
+
+                bar.map('orientation').asValue('horizontal');
+                bar.map('bar-count').from(function() {
+                    return that.getCount(this);
+                });
+                bar.map('width').asValue(10);
+                bar.map('stroke').asValue("#000000");
+                bar.map('stroke-width').asValue(2);
+                bar.map('offset-y').from(function(index) {
+                    return that.getYOffset(this, index) + 15;
+                });
+                bar.toFront();
+                return bar;
             }
 
-            function getCount() {
-                return (this.bin.value.length > 5) ? 5 : this.bin.value.length;
-            };
+            // negative bar
+            this.negativeBar = barTemplate('#777777', '#D33CFF');
+            this.negativeBar.map('offset-x').from(function (index) {
+                return -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
+                    -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
+            });
+            this.negativeBar.map('length').from(function (index) {
+                return that.getCountPercentage(this, index, 'negative') * BAR_LENGTH;
+            });
 
-            this.labelLayer = nodeLayer.addLayer(aperture.LabelLayer);
+            // neutral bar
+            this.neutralBar = barTemplate('#222222', '#222222' );
+            this.neutralBar.map('offset-x').from(function (index) {
+                return -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
+            });
+            this.neutralBar.map('length').from(function (index) {
+                return that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH;
+            });
+
+            // positive bar
+            this.positiveBar = barTemplate('#FFFFFF', '#09CFFF');
+            this.positiveBar.map('offset-x').from(function (index) {
+                return (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
+            });
+            this.positiveBar.map('length').from(function (index) {
+                return that.getCountPercentage(this, index, 'positive') * BAR_LENGTH;
+            });
+        },
+
+
+        createLabels: function () {
+
+            var that = this;
+
+            this.labelLayer = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.labelLayer.map('visible').from(function() {
                 return that.id === this.renderer;
             });
 
-            this.labelLayer.map('fill').asValue(this.colour); //filter( hover.constant( aperture.palette.color('selected') ) );
+            this.labelLayer.map('fill').from( function(index) {
+                if (that.hoverInfo.tag === '') {
+                    return '#FFFFFF';
+                } else if (that.hoverInfo.tag !== this.bin.value[index].tag) {
+                    return '#666666';
+                }
+                return '#FFFFFF';
+            });
 
-            this.labelLayer.on('click', function(event) {
-                console.log("click");
-                hover.add(event.data.bin.value[event.index].tag);
+            this.labelLayer.on('mousemove', function(event) {
+                return that.hoverOnEvent(event);
+            });
+
+            this.labelLayer.on('mouseout', function() {
+                that.hoverOffEvent();
             });
 
 
-            this.labelLayer.map('label-count').from(getCount);
+            this.labelLayer.on('click', function(event) {
+                console.log("click");
+            });
+
+
+            this.labelLayer.map('label-count').from(function() {
+                return that.getCount(this);
+            });
 
             this.labelLayer.map('text').from(function (index) {
-
                 var str = "#" + this.bin.value[index].tag;
                 if (str.length > 12) {
                     str = str.substr(0,12) + "...";
                 }
                 return str;
-                //var long = parseFloat( (Math.round(this.longitude * 100) / 100).toFixed(2)),
-                //    lat = parseFloat( (Math.round(this.latitude * 100) / 100).toFixed(2));
-                //return long+ " " + lat;
             });
 
             this.labelLayer.map('font-size').from(function (index) {
-                var size = (getCountPercentage(this,index) * 60) + 10;
+                var size = (that.getTotalCountPercentage(this, index) * 60) + 10;
                 return size > 30 ? 30 : size;
             });
-            this.labelLayer.map('offset-y').from(getYOffset);
+            this.labelLayer.map('offset-y').from(function (index) {
+                return that.getYOffset(this, index) + 5;
+            });
             this.labelLayer.map('text-anchor').asValue('middle');
-            //this.labelLayer.map('fill').asValue('#FFFFFF');
             this.labelLayer.map('font-outline').asValue('#000000');
             this.labelLayer.map('font-outline-width').asValue(3);
+        },
 
-            this.labelLayer.toFront();
+
+        createDetailsOnDemand: function() {
+
+            var that = this,
+                BAR_LENGTH = 80,
+                background = that.plotLayer.addLayer(aperture.BarLayer);
+
+            background.map('visible').from( function() {
+                return (that.id === this.renderer) && (that.hoverInfo.binkey === this.binkey);
+            });
+
+            background.map('fill').asValue('#222222');
+            background.map('orientation').asValue('horizontal');
+            background.map('bar-count').asValue(1);
+            background.map('width').asValue('512');
+            background.map('length').asValue('256');
+            background.map('stroke').asValue("#000000");
+            background.map('stroke-width').asValue(2);
+            background.map('offset-y').asValue(-128);
+            background.map('offset-x').asValue(-384);
+
+            function barTemplate( colour ) {
+
+                var bar = that.plotLayer.addLayer(aperture.BarLayer);
+
+                bar.map('visible').from( function() {
+                    return (that.id === this.renderer) && (that.hoverInfo.binkey === this.binkey);
+                });
+
+                bar.map('fill').asValue(colour);
+                bar.map('orientation').asValue('vertical');
+                bar.map('bar-count').asValue(24);
+                bar.map('width').asValue(10);
+                bar.map('stroke').asValue("#000000");
+                bar.map('stroke-width').asValue(2);
+
+                bar.map('offset-x').from( function(index) {
+                    return 0; //-384 + 16 + index*10;
+                });
+
+                return bar;
+            }
+
+            // negative bar
+            this.detailsNegativeBar = barTemplate('#D33CFF');
+            this.detailsNegativeBar.map('offset-y').asValue(-128);
+            this.detailsNegativeBar.map('length').from(function (index) {
+                return that.getExclusiveCountPercentage(this, index, 'negative') * BAR_LENGTH;
+            });
+
+            // positive bar
+            this.detailsPositiveBar = barTemplate('#09CFFF');
+            this.detailsPositiveBar.map('offset-y').from(function (index) {
+                return -128 -(that.getExclusiveCountPercentage(this, index, 'positive') * BAR_LENGTH);
+            });
+            this.detailsPositiveBar.map('length').from(function (index) {
+                return that.getExclusiveCountPercentage(this, index, 'positive') * BAR_LENGTH;
+            });
 
         }
+
+
     });
 
     return TopTextSentimentBars;

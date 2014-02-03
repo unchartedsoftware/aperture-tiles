@@ -120,26 +120,23 @@ define(function (require) {
          */
         swapTileWith: function(newTracker, tilekey, callback) {
 
-            // this function does extra reference count incrementing and decrementing
             // in order to prevent data de-allocation between releasing this trackers tile
-            // and requesting the other trackers tile
+            // and requesting the other trackers tile, this function adds an artificial
+            // reference count increment/decrement
             if (this.tiles.indexOf(tilekey) === -1) {
-                // does not have requested tile, return
+                // this tracker does not have requested tile, this function should not
+                // have been called, return
                 return;
             }
-
             // prematurely increment reference in case other tracker shares data
             newTracker.dataTracker.addReference(tilekey);
             // release tile, this decrements reference. If data is shared, the data
-            // reference count is set to 1, preventing unnecessary de-allocation
-            //this.releaseTile(tilekey);
+            // reference count now set to 1, preventing unnecessary de-allocation
             this.tiles.splice(this.tiles.indexOf(tilekey), 1);
             this.dataTracker.removeReference(tilekey);
-
-            // request tile, incrementing reference count again to 2
+            // request tile, incrementing reference count again, value is now 2
             newTracker.requestTile(tilekey, callback);
-
-            // remove premature reference, resulting in proper count of 1
+            // remove extra reference, resulting in proper count of 1
             newTracker.dataTracker.removeReference(tilekey);
         },
 
@@ -165,7 +162,7 @@ define(function (require) {
             var data = this.dataTracker.getTileNodeData(this.tiles),
                 i;
             for (i=0; i<data.length; i++ ) {
-                data[i].renderer = this.id; // stamp tile with renderer id
+                data[i].renderer = this.id; // stamp tile data with renderer id
             }
             return data;
         }

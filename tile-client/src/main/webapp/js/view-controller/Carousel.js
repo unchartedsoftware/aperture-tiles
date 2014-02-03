@@ -34,14 +34,8 @@ define(function (require) {
 
 
 
-    var //WebPyramid = require('../client-rendering/WebTilePyramid'),
-        ViewController = require('./ViewController'),
-        //webPyramid,
+    var ViewController = require('./ViewController'),
         Carousel;
-
-
-
-    //webPyramid = new WebPyramid();
 
 
 
@@ -67,7 +61,7 @@ define(function (require) {
                 that.previousMouse.y = event.xy.y;
             });
 
-            this.map.olMap_.events.register('zoomend', this.map.olMap_, function(event) {
+            this.map.olMap_.events.register('zoomend', this.map.olMap_, function() {
                 var tilekey = that.mapMouseToTileKey(that.previousMouse.x, that.previousMouse.y);
                 that.updateSelectedTile(tilekey);
             });
@@ -82,9 +76,16 @@ define(function (require) {
          */
         createUI: function() {
 
-            var positionFactor = (this.views.length - 1) / 2,
+            var that = this,
+                positionFactor = (this.views.length - 1) / 2,
                 i, j;
 
+            this.plotLayer = this.mapNodeLayer.addLayer(aperture.PlotLayer);
+            /*
+            this.plotLayer.map('visible').from( function() {
+                return (this.tilekey === that.selectedTileInfo.tilekey);
+            });
+            */
             // tile outline layer
             this.outline = this.createTileOutlineLayer();
             // left and right view buttons
@@ -110,7 +111,7 @@ define(function (require) {
                 hover = new aperture.Set('tilekey'), // separate tiles by tile key for hovering
                 viewSelectionLayer;
 
-            viewSelectionLayer = this.mapNodeLayer.addLayer(aperture.IconLayer);
+            viewSelectionLayer = this.plotLayer.addLayer(aperture.IconLayer);
 
             viewSelectionLayer.map('width').asValue(15).filter(hover.scale(1.2));
             viewSelectionLayer.map('height').asValue(42).filter(hover.scale(1.5));
@@ -150,12 +151,10 @@ define(function (require) {
                 }
 
                 that.onTileViewChange(tilekey, newIndex);
-                //that.indexButtons[oldIndex].all().redraw();
-                //that.indexButtons[newIndex].all().redraw();
             });
 
             viewSelectionLayer.map('visible').from( function() {
-                return this.tilekey === that.selectedTileInfo.tilekey;
+                return (this.tilekey === that.selectedTileInfo.tilekey);
             });
 
             return viewSelectionLayer;
@@ -174,7 +173,7 @@ define(function (require) {
                 hover = new aperture.Set('tilekey'), // separate tiles by bin key for hovering
                 viewIndexLayer;
 
-            viewIndexLayer = this.mapNodeLayer.addLayer(aperture.IconLayer);
+            viewIndexLayer = this.plotLayer.addLayer(aperture.IconLayer);
 
             viewIndexLayer.map('width').asValue(12).filter(hover.scale(1.4));
             viewIndexLayer.map('height').asValue(12).filter(hover.scale(1.4));
@@ -210,8 +209,7 @@ define(function (require) {
             viewIndexLayer.on('mouseup', function(event) {
 
                 var tilekey = event.data.tilekey,
-                    button = event.source.button; //,
-                    //oldIndex = that.getTileViewIndex(tilekey);
+                    button = event.source.button;
 
                 if (button !== 0) {
                     // not left click, abort
@@ -219,12 +217,10 @@ define(function (require) {
                 }
 
                 that.onTileViewChange(tilekey, index);
-                //that.indexButtons[oldIndex].all().redraw();
-                //that.indexButtons[index].all().redraw();
             });
 
             viewIndexLayer.map('visible').from( function() {
-                return this.tilekey === that.selectedTileInfo.tilekey;
+                return (this.tilekey === that.selectedTileInfo.tilekey);
             });
 
             return viewIndexLayer;
@@ -240,7 +236,7 @@ define(function (require) {
                 icon = "./images/tileoutline.png",
                 outlineLayer;
 
-            outlineLayer = this.mapNodeLayer.addLayer(aperture.IconLayer);
+            outlineLayer = this.plotLayer.addLayer(aperture.IconLayer);
 
             outlineLayer.map('width').asValue(256);
             outlineLayer.map('height').asValue(256);
@@ -253,7 +249,7 @@ define(function (require) {
             outlineLayer.map('url').asValue(icon);
 
             outlineLayer.map('visible').from( function() {
-                return this.tilekey === that.selectedTileInfo.tilekey;
+                return (this.tilekey === that.selectedTileInfo.tilekey);
             });
 
             return outlineLayer;
@@ -309,15 +305,22 @@ define(function (require) {
                 tilekey : tilekey
             };
 
+            console.log(this.selectedTileInfo.tilekey);
+
+            this.plotLayer.all().redraw();
             if (this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey) {
                 // only redraw if a new tile is highlighted
+                //this.plotLayer.all().redraw();
+                /*
                 this.outline.all().redraw();
                 this.leftButton.all().redraw();
                 this.rightButton.all().redraw();
                 for (i=0; i<this.indexButtons.length; i++) {
                     this.indexButtons[i].all().redraw();
                 }
+                */
             }
+
         },
 
 

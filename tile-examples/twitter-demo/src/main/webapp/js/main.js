@@ -28,7 +28,7 @@ require(['./fileloader',
          './serverrenderedmaplayer',
          './client-rendering/TextScoreRenderer',
          './client-rendering/TopTextSentimentBars',
-         './client-rendering/TextScoreRendererOther',
+         './client-rendering/HashTagsByTime',
          './ui/layercontrols',
          './serverlayeruimediator',
          './axis/AxisUtil',
@@ -43,7 +43,7 @@ require(['./fileloader',
         		  ServerLayer,
                   TextScoreRenderer,
                   TopTextSentimentBars,
-                  TextScoreRendererOther,
+                  HashTagsByTime,
                   LayerControls,
                   ServerLayerUiMediator,
                   AxisUtil, 
@@ -74,7 +74,7 @@ require(['./fileloader',
                     layerId,
                     layerName,
                     topTextSentimentBars,
-                    topTextSentimentBars2,
+                    hashTagsByTime,
                     dataTracker,
                     carousel;
 
@@ -123,7 +123,7 @@ require(['./fileloader',
                     layerId = renderLayerSpec.layer;
 
                     topTextSentimentBars = new TopTextSentimentBars('#FF00FF', 'red');
-                    topTextSentimentBars2 = new TopTextSentimentBars('#00FFFF', 'blue');
+                    hashTagsByTime = new HashTagsByTime('#00FFFF', 'blue');
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -138,11 +138,11 @@ require(['./fileloader',
                         views: [
                             {
                                 dataTracker: dataTracker,
-                                renderer: topTextSentimentBars
+                                renderer: hashTagsByTime
                             },
                             {
                                 dataTracker: dataTracker,
-                                renderer: topTextSentimentBars2
+                                renderer: topTextSentimentBars
                             }
                         ]});
                     carousel.dummy = 0; // to shut jslint up
