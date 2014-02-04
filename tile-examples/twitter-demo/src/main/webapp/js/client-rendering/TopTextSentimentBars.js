@@ -282,11 +282,6 @@ define(function (require) {
             this.tagLabel.on('mouseout', function(event) {
                 that.onHoverOff(event);
             });
-/*
-            this.labelLayer.on('mouseout', function() {
-                that.onHoverOff();
-            });
-*/
 
             this.tagLabel.map('label-count').from(function() {
                 return that.getCount(this);
@@ -320,7 +315,10 @@ define(function (require) {
                 LARGE_FONT_SIZE = 24,
                 MID_FONT_SIZE = 16,
                 BAR_CENTRE_LINE = 30,
-                BAR_LENGTH = 50;
+                BAR_LENGTH = 50,
+                HISTOGRAM_AXIS = BAR_CENTRE_LINE + BAR_LENGTH + SPACING + 12,
+                MOST_RECENT = HISTOGRAM_AXIS + 30,
+                MOST_RECENT_SPACING = 55;
 
 
             function getMaxPercentage(data, type) {
@@ -411,7 +409,7 @@ define(function (require) {
             this.detailsBackground.map('fill').asValue('#222222');
             this.detailsBackground.map('orientation').asValue('horizontal');
             this.detailsBackground.map('bar-count').asValue(1);
-            this.detailsBackground.map('width').asValue('440');
+            this.detailsBackground.map('width').asValue('450');
             this.detailsBackground.map('length').asValue('256');
             this.detailsBackground.map('stroke').asValue("#000000");
             this.detailsBackground.map('stroke-width').asValue(2);
@@ -473,13 +471,19 @@ define(function (require) {
             this.negativeLabel.map('offset-y').asValue(BAR_CENTRE_LINE + BAR_LENGTH + SPACING);
             this.negativeLabel.map('offset-x').asValue(DETAILS_POSITION + 28);
 
+
+
+
+
+
+
             this.recentLabel = labelTemplate();
             this.recentLabel.map('visible').from(function() {
                 return (that.id === this.renderer) && (that.clickInfo.tilekey === this.tilekey);
             });
             this.recentLabel.map('font-size').asValue(20);
             this.recentLabel.map('text').asValue('Most Recent');
-            this.recentLabel.map('offset-y').asValue(120);
+            this.recentLabel.map('offset-y').asValue(MOST_RECENT);
             this.recentLabel.map('offset-x').asValue(DETAILS_POSITION + 14);
 
 
@@ -499,7 +503,7 @@ define(function (require) {
 
             this.recentTweetsLabel.map('font-size').asValue(10);
             this.recentTweetsLabel.map('text').from( function(index) {
-                var CHAR_PER_LINE = 40,
+                var CHAR_PER_LINE = 35,
                     MAX_NUM_LINES = 3,
                     str = this.bin.value[that.clickInfo.index].recent[index].tweet.split(" "),
                     formatted = '',
@@ -527,10 +531,12 @@ define(function (require) {
 
             });
             this.recentTweetsLabel.map('offset-y').from( function(index) {
-                return 165 + (index * 55);
+                return MOST_RECENT + 45 + (index * MOST_RECENT_SPACING);
             });
             this.recentTweetsLabel.map('offset-x').asValue(DETAILS_POSITION + 28);
             this.recentTweetsLabel.map('width').asValue(200);
+
+            this.line1 = lineTemplate('#000000', BAR_CENTRE_LINE);
 
             // negative bar
             this.detailsNegativeBar = barTemplate('#D33CFF');
@@ -560,11 +566,67 @@ define(function (require) {
                 return (that.getExclusiveCountPercentage(this, index, 'positive') / maxPercentage) * BAR_LENGTH;
             });
 
-            this.line1 = lineTemplate('#000000', BAR_CENTRE_LINE);
 
-            this.line2 = lineTemplate('#FFFFFF', 140);
-            this.line3 = lineTemplate('#FFFFFF', 195);
-            this.line4 = lineTemplate('#FFFFFF', 250);
+            this.line2 = lineTemplate('#FFFFFF', MOST_RECENT + 20);
+            this.line3 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING);
+            this.line4 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING*2);
+
+
+
+
+
+
+
+
+
+            this.timeAxisLabel = that.plotLayer.addLayer(aperture.LabelLayer);
+            this.timeAxisLabel.map('visible').from(function() {
+                return (that.id === this.renderer) && (that.clickInfo.tilekey === this.tilekey);
+            });
+            this.timeAxisLabel.map('fill').asValue('#FFFFFF');
+            this.timeAxisLabel.map('text').from( function(index) {
+                switch (index) {
+                    case 1:
+                        return "6am";
+                    case 2:
+                        return "12am";
+                    case 3:
+                        return "6pm";
+                    default:
+                        return "12pm";
+                }
+            });
+            this.timeAxisLabel.map('label-count').asValue(5);
+            this.timeAxisLabel.map('text-anchor').asValue('middle');
+            this.timeAxisLabel.map('font-outline').asValue('#000000');
+            this.timeAxisLabel.map('font-outline-width').asValue(3);
+            this.timeAxisLabel.map('offset-y').asValue(HISTOGRAM_AXIS + 10);
+            this.timeAxisLabel.map('offset-x').from( function(index) {
+                return DETAILS_POSITION + 28 + 50*index;
+            });
+
+
+
+            this.timeAxisTicks = that.plotLayer.addLayer(aperture.BarLayer);
+            this.timeAxisTicks.map('visible').from(function() {
+                return (that.id === this.renderer) && (that.clickInfo.tilekey === this.tilekey);
+            });
+            this.timeAxisTicks.map('orientation').asValue('vertical');
+            this.timeAxisTicks.map('fill').asValue('#FFFFFF');
+            this.timeAxisTicks.map('length').asValue(6);
+            this.timeAxisTicks.map('width').asValue(3);
+            this.timeAxisTicks.map('bar-count').asValue(5);
+            this.timeAxisTicks.map('stroke').asValue("#000000");
+            this.timeAxisTicks.map('stroke-width').asValue(1);
+            this.timeAxisTicks.map('offset-y').asValue(HISTOGRAM_AXIS);
+            this.timeAxisTicks.map('offset-x').from( function(index) {
+                return DETAILS_POSITION + 24 + 51.5*index;
+            });
+
+
+
+
+
         }
 
 
