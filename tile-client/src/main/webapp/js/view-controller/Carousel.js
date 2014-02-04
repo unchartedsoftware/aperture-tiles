@@ -105,7 +105,7 @@ define(function (require) {
 
             var that = this,
                 icon = (position === 'left') ? "./images/chevron_L.png" : "./images/chevron_R.png",
-                x = (position === 'left') ? -0.22 : 0.22,
+                x = (position === 'left') ? 0.03 : 0.44, // -0.22 : 0.22,
                 y = 0,
                 hover = new aperture.Set('tilekey'), // separate tiles by tile key for hovering
                 viewSelectionLayer;
@@ -180,7 +180,8 @@ define(function (require) {
             viewIndexLayer.map('anchor-y').asValue(0.5);
             viewIndexLayer.map('icon-count').asValue(1);
             viewIndexLayer.map('x').from(function() {
-                return spacingFactor*spacing/Math.pow(2, that.map.getZoom()-1);
+                var zoomFactor = Math.pow(2, that.map.getZoom()-1);
+                return (0.25/zoomFactor) + (spacingFactor*spacing/zoomFactor);
             });
             viewIndexLayer.map('y').from(function(){
                 return 0.2/Math.pow(2, that.map.getZoom()-1);

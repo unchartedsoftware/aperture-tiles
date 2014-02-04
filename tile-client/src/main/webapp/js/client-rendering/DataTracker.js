@@ -80,7 +80,7 @@ define(function (require) {
             this.memoryQueue = [];
             // The relative position within each bin at which visuals will 
             // be drawn
-            this.position = {x: 'centerX', y: 'centerY'};
+            this.position = {x: 'minX', y: 'centerY'}; //{x: 'centerX', y: 'centerY'};
         },
 
 

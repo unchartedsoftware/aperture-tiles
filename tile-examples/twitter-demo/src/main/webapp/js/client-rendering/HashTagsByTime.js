@@ -176,18 +176,18 @@ define(function (require) {
             this.bars.map('bar-count').from( function() {
                 return 24 * that.getCount(this);
             });
-            this.bars.map('width').asValue(4);
+            this.bars.map('width').asValue(3);
             this.bars.map('offset-y').from(function(index) {
                 var maxPercentage = getMaxPercentage(this, index);
                 if (maxPercentage === 0) {
                     return 0;
                 }
                 return -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
-                    that.getYOffset(this, Math.floor(index/24));
+                       that.getYOffset(this, Math.floor(index/24));
             });
 
             this.bars.map('offset-x').from(function (index) {
-                return -90 + ((index % 24) * 5);
+                return that.X_CENTRE_OFFSET - 90 + ((index % 24) * 4);
             });
 
             this.bars.map('length').from(function (index) {
@@ -236,8 +236,8 @@ define(function (require) {
 
             this.tagLabels.map('text').from(function (index) {
                 var str = "#" + this.bin.value[index].tag;
-                if (str.length > 7) {
-                    str = str.substr(0,7) + "...";
+                if (str.length > 9) {
+                    str = str.substr(0,9) + "...";
                 }
                 return str;
             });
@@ -248,10 +248,10 @@ define(function (require) {
                 return that.getYOffset(this, index) - 5;
             });
 
-            this.tagLabels.map('offset-x').asValue(40);
+            this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 16);
             this.tagLabels.map('text-anchor').asValue('start');
-            this.tagLabels.map('font-outline').asValue('#000000');
-            this.tagLabels.map('font-outline-width').asValue(3);
+            //this.tagLabels.map('font-outline').asValue('#000000');
+            //this.tagLabels.map('font-outline-width').asValue(3);
 
             this.tagLabels.on('mousemove', function(event) {
                 return that.onHover(event, event.index[0]);

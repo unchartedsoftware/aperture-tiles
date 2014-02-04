@@ -36,7 +36,6 @@ define(function (require) {
 
 
     var ClientRenderer = require('./ClientRenderer'),
-        DETAILS_POSITION = 128,
         TopTextSentimentBars;
 
 
@@ -201,7 +200,7 @@ define(function (require) {
             // negative bar
             this.negativeBar = barTemplate('#777777', this.NEGATIVE_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
-                return -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
+                return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
             });
             this.negativeBar.map('length').from(function (index) {
@@ -211,7 +210,7 @@ define(function (require) {
             // neutral bar
             this.neutralBar = barTemplate('#222222', this.NEUTRAL_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
-                return -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
+                return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
             this.neutralBar.map('length').from(function (index) {
                 return that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH;
@@ -220,7 +219,7 @@ define(function (require) {
             // positive bar
             this.positiveBar = barTemplate('#FFFFFF', this.POSITIVE_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
-                return (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
+                return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
             this.positiveBar.map('length').from(function (index) {
                 return that.getCountPercentage(this, index, 'positive') * BAR_LENGTH;
@@ -294,6 +293,7 @@ define(function (require) {
             this.tagLabel.map('offset-y').from(function (index) {
                 return that.getYOffset(this, index) + 5;
             });
+            this.tagLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
             this.tagLabel.map('text-anchor').asValue('middle');
             this.tagLabel.map('font-outline').asValue('#000000');
             this.tagLabel.map('font-outline-width').asValue(3);
@@ -303,6 +303,7 @@ define(function (require) {
         createDetailsOnDemand: function() {
 
             var that = this,
+                DETAILS_OFFSET = that.X_CENTRE_OFFSET + this.TILE_SIZE/ 2,
                 V_SPACING = 10,
                 H_SPACING = 14,
                 BAR_CENTRE_LINE = 30,
@@ -378,7 +379,7 @@ define(function (require) {
                 bar.map('stroke').asValue("#000000");
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-x').from( function(index) {
-                    return DETAILS_POSITION + 20 + index*9;
+                    return DETAILS_OFFSET + 20 + index*9;
                 });
                 return bar;
             }
@@ -396,7 +397,7 @@ define(function (require) {
                 line.map('font-size').asValue(12);
                 line.map('text').asValue('..........................................................................');
                 line.map('offset-y').asValue(yOffset-5);
-                line.map('offset-x').asValue(DETAILS_POSITION*2);
+                line.map('offset-x').asValue(DETAILS_OFFSET+that.TILE_SIZE/2);
                 return line;
             }
 
@@ -423,7 +424,7 @@ define(function (require) {
             this.detailsBackground.map('stroke').asValue("#000000");
             this.detailsBackground.map('stroke-width').asValue(2);
             this.detailsBackground.map('offset-y').asValue(-128);
-            this.detailsBackground.map('offset-x').asValue(DETAILS_POSITION);
+            this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET);
 
             // TITLE LABELS
             this.titleLabels = labelTemplate();
@@ -453,7 +454,7 @@ define(function (require) {
                         return MOST_RECENT;
                 }
             });
-            this.titleLabels.map('offset-x').asValue(DETAILS_POSITION + H_SPACING);
+            this.titleLabels.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING);
 
 
             // TRANSLATE LABEL
@@ -464,7 +465,7 @@ define(function (require) {
             this.translateLabel.map('font-size').asValue(16);
             this.translateLabel.map('text').asValue('translate');
             this.translateLabel.map('offset-y').asValue(-85);
-            this.translateLabel.map('offset-x').asValue(DETAILS_POSITION + 28);
+            this.translateLabel.map('offset-x').asValue(DETAILS_OFFSET + 28);
 
 
             this.positiveLabel = labelTemplate();
@@ -473,7 +474,7 @@ define(function (require) {
             this.positiveLabel.map('font-size').asValue(16);
             this.positiveLabel.map('text').asValue('positive tweets');
             this.positiveLabel.map('offset-y').asValue(BAR_CENTRE_LINE - BAR_LENGTH - V_SPACING - 2);
-            this.positiveLabel.map('offset-x').asValue(DETAILS_POSITION + H_SPACING*2);
+            this.positiveLabel.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING*2);
 
             this.negativeLabel = labelTemplate();
             this.negativeLabel.map('visible').from(function(){return isVisible(this)});
@@ -481,8 +482,9 @@ define(function (require) {
             this.negativeLabel.map('font-size').asValue(16);
             this.negativeLabel.map('text').asValue('negative tweets');
             this.negativeLabel.map('offset-y').asValue(BAR_CENTRE_LINE + BAR_LENGTH + V_SPACING);
-            this.negativeLabel.map('offset-x').asValue(DETAILS_POSITION + H_SPACING*2);
+            this.negativeLabel.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING*2);
 
+            this.line1 = lineTemplate('#000000', BAR_CENTRE_LINE);
 
             // negative bar
             this.detailsNegativeBar = barTemplate('#D33CFF');
@@ -524,7 +526,7 @@ define(function (require) {
             this.timeAxisLabel.map('font-outline-width').asValue(3);
             this.timeAxisLabel.map('offset-y').asValue(HISTOGRAM_AXIS + 10);
             this.timeAxisLabel.map('offset-x').from(function(index) {
-                return DETAILS_POSITION + H_SPACING*2 + 50*index;
+                return DETAILS_OFFSET + H_SPACING*2 + 50*index;
             });
 
 
@@ -539,7 +541,7 @@ define(function (require) {
             this.timeAxisTicks.map('stroke-width').asValue(1);
             this.timeAxisTicks.map('offset-y').asValue(HISTOGRAM_AXIS);
             this.timeAxisTicks.map('offset-x').from( function(index) {
-                return DETAILS_POSITION + 24 + 51.5*index;
+                return DETAILS_OFFSET + 24 + 51.5*index;
             });
 
 
@@ -561,10 +563,10 @@ define(function (require) {
             this.recentTweetsLabel.map('offset-y').from( function(index) {
                 return MOST_RECENT + 45 + (index * MOST_RECENT_SPACING);
             });
-            this.recentTweetsLabel.map('offset-x').asValue(DETAILS_POSITION + H_SPACING*2);
+            this.recentTweetsLabel.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING*2);
             this.recentTweetsLabel.map('width').asValue(200);
 
-            this.line1 = lineTemplate('#000000', BAR_CENTRE_LINE);
+
             this.line2 = lineTemplate('#FFFFFF', MOST_RECENT + 20);
             this.line3 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING);
             this.line4 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING*2);
