@@ -49,7 +49,9 @@ define(function (require) {
         },
 
         getCount: function(data) {
-            if (data.bin.value.length === undefined) {
+            if (data.bin.value.length === undefined ||
+                data.bin.value.length === 0 ||
+                isNaN(data.bin.value.length)) {
                 return 0;
             }
             return (data.bin.value.length > this.valueCount) ? this.valueCount : data.bin.value.length;

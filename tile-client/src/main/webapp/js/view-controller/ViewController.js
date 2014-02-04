@@ -206,12 +206,12 @@ define(function (require) {
                 $.merge(data, this.views[i].tileTracker.getNodeData());
             }
 
-            /*
+
             var test = {};
             if ( data.length > 0 ) {
                 test = data[0];
             }
-            */
+
             this.mapNodeLayer.all(data).redraw();
         }
 

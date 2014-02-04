@@ -309,7 +309,7 @@ define(function (require) {
 
             if (this.data[tilekey].length > 0) {
                 if (this.dataCallbacks[tilekey] === undefined) {
-                    console.log('ERROR: Received random tile from server... ');
+                    console.log('ERROR: Received tile out of sync from server... ');
                     return;
                 }
                 for (i =0; i <this.dataCallbacks[tilekey].length; i++ ) {

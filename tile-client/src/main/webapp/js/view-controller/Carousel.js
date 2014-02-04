@@ -95,6 +95,7 @@ define(function (require) {
             for (i=0, j=-positionFactor; j<=positionFactor; i++, j++) {
                 this.indexButtons.push( this.createViewIndexLayer(i, j));
             }
+
         },
 
 
@@ -298,10 +299,8 @@ define(function (require) {
            this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
-            };
-
+           };
             //console.log(this.selectedTileInfo.tilekey);
-
 
             //this.outline.all().redraw();
             this.leftButton.all().redraw();
