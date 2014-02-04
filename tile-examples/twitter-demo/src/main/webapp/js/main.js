@@ -69,7 +69,6 @@ require(['./fileloader',
                     mapLayerState,
                     renderLayerSpecs,
                     renderLayerSpec,
-                    tooltipFcn,
                     i,
                     layerId,
                     layerName,
@@ -110,13 +109,6 @@ require(['./fileloader',
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
 
-                tooltipFcn = function (text) {
-                    if (text) {
-                        $('#hoverOutput').html(text);
-                    } else {
-                        $('#hoverOutput').html('');
-                    }
-                };
 
                 for (i=0; i<renderLayerSpecs.length; ++i) {
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);

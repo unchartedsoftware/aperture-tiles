@@ -93,9 +93,8 @@ define(function (require) {
             // index dots
             this.indexButtons = [];
             for (i=0, j=-positionFactor; j<=positionFactor; i++, j++) {
-                this.indexButtons.push( this.createViewIndexLayer(i, j));
+                this.indexButtons.push(this.createViewIndexLayer(i, j));
             }
-
         },
 
 
@@ -126,7 +125,7 @@ define(function (require) {
                 return y/Math.pow(2, that.map.getZoom()-1);
             });
 
-            viewSelectionLayer.on('mouseover', function(event) {
+            viewSelectionLayer.on('mousemove', function(event) {
                 hover.add(event.data.tilekey);
             });
 
@@ -152,6 +151,7 @@ define(function (require) {
                 that.onTileViewChange(tilekey, newIndex);
             });
 
+
             viewSelectionLayer.map('visible').from( function() {
                 return (this.tilekey === that.selectedTileInfo.tilekey);
             });
@@ -163,11 +163,11 @@ define(function (require) {
         /**
          * Construct aperture.iconlayers for the index dots representing each view
          */
-        createViewIndexLayer: function(index, spacingFactor) {
+        createViewIndexLayer: function(viewIndex, spacingFactor) {
 
             var that = this,
-                selectIcon = "./images/no_select.png",
-                noSelectIcon = "./images/select.png",
+                noSelectIcon = "./images/no_select.png",
+                selectIcon = "./images/select.png",
                 spacing = 0.04,
                 hover = new aperture.Set('tilekey'), // separate tiles by bin key for hovering
                 viewIndexLayer;
@@ -187,17 +187,18 @@ define(function (require) {
             });
 
             viewIndexLayer.map('url').from(function() {
-                var id = that.getTileViewIndex( this.tilekey),
+                var id = that.getTileViewIndex(this.tilekey),
                     url;
-                if ( id !== index ) {
-                    url = selectIcon;
-                } else {
+                if ( id !== viewIndex ) {
                     url = noSelectIcon;
+                } else {
+                    url = selectIcon;
                 }
                 return url;
             });
 
-            viewIndexLayer.on('mouseover', function(event) {
+
+            viewIndexLayer.on('mousemove', function(event) {
                 hover.add(event.data.tilekey);
             });
 
@@ -205,12 +206,13 @@ define(function (require) {
                 hover.clear();
             });
 
+
             viewIndexLayer.on('mouseup', function(event) {
                 if (event.source.button !== 0) {
                     // not left click, abort
                     return;
                 }
-                that.onTileViewChange(event.data.tilekey, index);
+                that.onTileViewChange(event.data.tilekey, viewIndex);
             });
 
             viewIndexLayer.map('visible').from( function() {
@@ -302,12 +304,14 @@ define(function (require) {
            };
             //console.log(this.selectedTileInfo.tilekey);
 
+
             //this.outline.all().redraw();
             this.leftButton.all().redraw();
             this.rightButton.all().redraw();
             for (i=0; i<this.indexButtons.length; i++) {
                 this.indexButtons[i].all().redraw();
             }
+
             //this.plotLayer.all().redraw();
 
             //if (this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey) {
