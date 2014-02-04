@@ -47,13 +47,6 @@
 					</div>
 					<div class="submenu-item-label">Configure</div>
 				</div>
-				<div class="submenu-item"
-					onclick="window.location.assign('../rendering/');">
-					<div class="submenu-item-background ">
-						<div class="submenu-item-number">4</div>
-					</div>
-					<div class="submenu-item-label">Rendering</div>
-				</div>
 			</div>
 
 			<div id="content">
@@ -69,7 +62,7 @@
 								<li><a href="#examples">Examples</a></li>
 							</ul>
 						</li>
-					</ul>
+						</ul>
 				</div>
 
 				<div class="content-body">
@@ -77,18 +70,16 @@
 					<p>
 						Aperture Tiles provides a framework for computing tile-based analytics using the 
 						Apache Spark engine for large-scale data processing.  Built-in support is provided
-						for computing aggregation of: frequency counts, summation, min/max ranges, time series,
+						for computing aggregation of numeric data using: summation, min and max ranges, time series,
 						and top keywords.  Aperture Tiles provides support for custom tile-based analytics 
 						through our <em>RDDBinner</em> and <em>ObjectifiedBinner</em> API. Compatible tile sets 
-						can also be created using any tool provided they adhere to our AVRO schema (TODO document). 
-						
-						See the binning-utilities/src/main/java/com/oculusinfo/binning/demo 
+						can also be created using any tool provided they adhere to our AVRO schema (documentation coming soon). 
 					</p>
 					
 					<a name="requirements"></a>
 					<h2>Requirements</h2>
 					<p>
-						Spark version 0.7.2 or greater (version 0.8.0 recommended); Scala version 2.9.3 <br/>
+						Spark version 0.7.2 or greater (version 0.8.1 recommended); Scala version 2.9.3 <br/>
 						Optional: HBASE; Hadoop (multiple possible versions) 
 					</p>
 						
@@ -102,8 +93,8 @@
 					</p>
 					
 					<p>
-						If you are building your own tiles, a spark-run is included
-						script that simplifies running spark jobs, making sure all the
+						If you are building your own tiles, a spark-run script is included
+						that simplifies running spark jobs, making sure all the
 						necessary libraries are included and setting various parameters. 
 						The script is located at <em>aperture-tiles/tile-generation/scripts/<strong>spark-run</strong></em>.
 						To use this script you must set the following environment variables:
@@ -140,7 +131,7 @@ addToSparkClasspath org.apache.hbase hbase 0.94.6-cdh4.4.0</pre>
 						instance) - the simplest way to process your data is to use the
 						CSVBinner tool. If your data is in other formats or you wish to aggregate
 						your data using analytics not provided by Aperture Tiles see the 
-						Tile examples source code (TODO what package?). 
+						tile examples source code. 
 					</p>
 					
 					<p>
@@ -161,7 +152,7 @@ addToSparkClasspath org.apache.hbase hbase 0.94.6-cdh4.4.0</pre>
 					
 					<p>
 						To execute the tiling job using the spark-run script passing
-						in the base and and tiling property files, use a command similar
+						in the base and tiling property files, use a command similar
 						to:
 					</p>
 					
@@ -197,7 +188,7 @@ oculus.tileio.type
    Default is file</pre>
         
 					<p>
-						If <strong>oculus.tileio.type</strong> is hbase specify the hbase connection configuration properties:
+						If <strong>oculus.tileio.type</strong> is set to "hbase" specify the hbase connection configuration properties:
 					</p>
 					
 					<pre class="code">hbase.zookeeper.quorum
