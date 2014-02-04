@@ -39,13 +39,40 @@ define(function (require) {
         ClientRenderer;
 
 
+
     ClientRenderer = Class.extend({
         ClassName: "ClientRenderer",
 
         init: function(id) {
 
             this.id = id;
+            this.POSITIVE_COLOUR = '#09CFFF';
+            this.NEGATIVE_COLOUR = '#D33CFF';
+            this.NEUTRAL_COLOUR = '#222222';
+            this.TILE_SIZE = 254;
+            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;
+            this.Y_CENTRE_OFFSET = 0;
+        },
 
+         rgbToHex : function(r, g, b) {
+             function componentToHex(c) {
+                 var hex = c.toString(16);
+                 return hex.length == 1 ? "0" + hex : hex;
+             }
+             return "#" + componentToHex( Math.floor(r)) + componentToHex( Math.floor(g)) + componentToHex( Math.floor(b));
+        },
+
+         hexToRgb: function(hex) {
+             var bigint;
+             if (hex[0] === '#') {
+                 hex = hex.substr(1,6);
+             }
+             bigint = parseInt(hex, 16);
+             return {
+                 r: (bigint >> 16) & 255,
+                 g: (bigint >> 8) & 255,
+                 b: bigint & 255
+             };
         },
 
         getCount: function(data) {
