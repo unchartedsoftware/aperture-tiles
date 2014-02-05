@@ -247,7 +247,8 @@ class LocalFileInputDStream(
   def filesToRDD(files: Seq[File]): RDD[String] = {
     def getFileRDD(file: File): RDD[String] = {
       val source = scala.io.Source.fromFile(file)
-      val rdd = context.sparkContext.makeRDD(source.getLines.toArray, 4)
+      val lines = source.getLines.toArray
+      val rdd = context.sparkContext.makeRDD(lines)
       source.close()
       rdd
     }
