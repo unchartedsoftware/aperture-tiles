@@ -204,7 +204,7 @@ define(function (require) {
             this.titleLabels.map('text').from(function(index) {
                 switch (index) {
                     case 0:
-                        var str = "#" + that.mouseState.clickState.binData.tag;
+                        var str = that.mouseState.clickState.binData.tag;
                         if (str.length > 16) {
                             str = str.substr(0,16) + "...";
                         }
