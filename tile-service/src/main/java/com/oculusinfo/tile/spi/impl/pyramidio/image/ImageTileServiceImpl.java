@@ -47,6 +47,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.tile.spi.AvroJSONConverter;
 import com.oculusinfo.tile.spi.ImageTileService;
+import com.oculusinfo.tile.spi.impl.ValueTransformerFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.ImageRendererFactory;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter;
 import com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer;
@@ -117,8 +118,8 @@ public class ImageTileServiceImpl implements ImageTileService {
 		// DEFAULTS
 		String rampName = "ware";
 		ColorRampParameter rampParams = null;
+		Object transformParams = null;
 
-		String transform = "linear";
 		String renderer = "default";
 		int rangeMin = 0;
 		int rangeMax = 100;
@@ -140,11 +141,12 @@ public class ImageTileServiceImpl implements ImageTileService {
 			if (rampParams == null) {
 				rampParams = new ColorRampParameter(rampName);
 			}
-
+			
 			try {
-				transform = options.getString("transformid");
+				transformParams = options.get("transform");
 			} catch (JSONException e2) {
 				_logger.info("No transform specified for tile request - using default.");
+				transformParams = ValueTransformerFactory.DEFAULT_TRANSFORM_NAME;
 			}
 
 			try {
@@ -178,6 +180,7 @@ public class ImageTileServiceImpl implements ImageTileService {
 		}
 
 		int dimension = 256;
+		String minimumValue = "0";  //FIXME: need to get the minimum from the metadata
 		String maximumValue = metadata.getLevelMaximum(zoomLevel);
 
 
@@ -189,11 +192,12 @@ public class ImageTileServiceImpl implements ImageTileService {
 		RenderParameter renderParam = new RenderParameter(JsonUtilities.jsonObjToMap(options));
 		renderParam.setObject("rampType", rampParams);
 		renderParam.setString("layer", layer);
-		renderParam.setString("transformId", transform);
+		renderParam.setObject("transform", transformParams);
 		renderParam.setInt("rangeMin", rangeMin);
 		renderParam.setInt("rangeMax", rangeMax);
 		renderParam.setOutputWidth(dimension);
 		renderParam.setOutputHeight(dimension);
+		renderParam.setString("levelMinimums", minimumValue);
 		renderParam.setString("levelMaximums", maximumValue);
 		renderParam.setInt("currentImage", currentImage);
 		renderParam.setObject("tileCoordinate", tileCoordinate);

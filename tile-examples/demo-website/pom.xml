@@ -8,7 +8,7 @@
 	<description>Project documentation website and example tile applications.</description>
 
 	<parent>
-		<artifactId>aperture-tiles</artifactId>
+		<artifactId>tile-examples</artifactId>
 		<groupId>com.oculusinfo</groupId>
 		<version>0.1.2-SNAPSHOT</version>
 	</parent>

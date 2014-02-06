@@ -51,13 +51,6 @@
 					</div>
 					<div class="submenu-item-label">Configure</div>
 				</div>
-				<div class="submenu-item"
-					onclick="window.location.assign('../rendering/');">
-					<div class="submenu-item-background">
-						<div class="submenu-item-number">4</div>
-					</div>
-					<div class="submenu-item-label">Rendering</div>
-				</div>
 			</div>
 
 			<div id="content">
@@ -109,7 +102,7 @@
 
 					<h3>Setup</h3>
 					<p>
-						The tile-generation project in has a few prerequisites (some strictly necessary, 
+						The tile-generation project has a few prerequisites (some strictly necessary, 
 						some optional). The components required will be dependent on the size of the
 						data being processed:
 					</p>
@@ -138,10 +131,10 @@
 							<a href="http://spark.incubator.apache.org/">Apache Spark</a> is
 							"... an open source cluster computing system that aims to make
 							data analytics fast...". It also makes them very easy to develop
-							and generalize. When you set up Spark, you have to tell it the
+							and generalize. When you set up Spark, you have to configure the
 							version of Hadoop with which it will be working. See Spark build
 							instructions for how to do this. Aperture Tiles will work with versions
-							of Spark 0.7.2 or great.  We recommend using version 0.8.0.</li>
+							of Spark 0.7.2 or greater.  We recommend using version 0.8.1.</li>
 						<li><strong>ApertureJS</strong> - To build the tile-service and tile-client 
 							projects Aperture must be installed in your maven repository.
 							Aperture can be download from
@@ -149,7 +142,7 @@
 							to use the "Download Source" option, and run the maven
 							installation (mvn install) to add the necessary jars to your maven
 							respository.</li>
-						<li><strong>Web Server</strong> - the Tile server is built
+						<li><strong>Web Server</strong> - the Tile Server and client are built
 							using the <a href="http://restlet.org/">Restlet</a> web framework
 							and requires a servlet compatible web server. We recommend deploying to 
 							<a href="http://tomcat.apache.org/">Apache Tomcat</a> or 
@@ -173,7 +166,7 @@
 					
 					<p>
 						To build all projects, execute 'mvn install' at a command prompt in the root
-						project directory <em>aperture-tiles</em>. This will compile all the compoents
+						project directory <em>aperture-tiles</em>. This will compile all the components
 						and install .jar files for each project into your local maven repostitory on 
 						your build machine.
 					</p>

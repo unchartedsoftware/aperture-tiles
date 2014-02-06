@@ -154,8 +154,9 @@ require(['./fileloader',
                 // Bind layer controls to the state model.
                 new LayerControls().initialize(mapLayerState);
                 
-
-
+                // Zoom to the area of the world with the data.
+                worldMap.map.zoomTo( 40, -95, 4 );
+                
                 /*
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());

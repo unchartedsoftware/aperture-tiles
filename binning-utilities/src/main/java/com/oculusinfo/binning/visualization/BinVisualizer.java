@@ -423,6 +423,7 @@ public class BinVisualizer extends JFrame {
         _xField.removeAllItems();
         _yField.removeAllItems();
 
+        if (null == level) return;
         int pow2 = 1 << level;
         for (int i=0; i<pow2; ++i) {
             _xField.addItem(i);

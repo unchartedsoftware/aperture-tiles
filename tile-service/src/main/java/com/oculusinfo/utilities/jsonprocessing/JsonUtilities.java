@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -74,7 +75,13 @@ public class JsonUtilities {
 		return map;
 	}
 	
-	private static List<Object> jsonArrayToList(JSONArray jsonList) {
+	/**
+	 * Converts a {@link JSONArray} into a {@link List} of values.
+	 * @param jsonList
+	 * @return
+	 * 	Returns a list of values
+	 */
+	public static List<Object> jsonArrayToList(JSONArray jsonList) {
 		int numItems = jsonList.length();
 		List<Object> list = new ArrayList<Object>(numItems);
 		for (int i = 0; i < numItems; i++) {
@@ -91,5 +98,105 @@ public class JsonUtilities {
 		}
 		
 		return list;
+	}
+	
+	/**
+	 * Converts an object into a number.
+	 * @return
+	 * 	If the object is already a number then it just casts it.
+	 * 	If the object is a string, then it parses it as a double.
+	 * 	Otherwise the number returned is 0. 
+	 */
+	public static Number getNumber(Object o) {
+		Number val = 0;
+		if (o instanceof Number) {
+			val = (Number)o;
+		}
+		else if (o instanceof String) {
+			val = Double.valueOf((String)o);
+		}
+		else if (o instanceof JSONArray) {
+			//if the object is an array, then assume it only has one element that is the value
+			JSONArray arr = (JSONArray)o;
+			if (arr.length() == 1) {
+				try {
+					val = getNumber(arr.get(0));
+				}
+				catch (JSONException e) {
+					val = 0;
+				}
+			}
+		}
+		return val;
+	}
+
+	
+	/**
+	 * Gets a name to use from an object.
+	 * If the object is a String, then it will treat the string as the name.
+	 * If the object is a {@link JSONObject}, then the name must be a parameter within the object.
+	 * If the object is a {@link JSONArray}, then there can only be a single element, which should
+	 * contain the name.
+	 *  
+	 * @param params
+	 * @return
+	 * 	Returns the name for the object, or null if none can be found.
+	 */
+	public static String getName(Object params) {
+		String name = null;
+		
+		if (params instanceof String) {
+			name = (String)params;
+		}
+		else if (params instanceof JSONObject) {
+			JSONObject transformObj = (JSONObject)params;
+			try {
+				name = (transformObj.has("name"))? transformObj.getString("name") : null;
+			}
+			catch (JSONException e) {
+				name = null;
+			}
+		}
+		else if (params instanceof JSONArray) {
+			//if the transform params is an array, then it should only have one parameter.
+			JSONArray vals = (JSONArray)params;
+			if (vals.length() == 1) {
+				try {
+					name = getName(vals.get(0));
+				}
+				catch (JSONException e) {
+					name = null;
+				}
+			}
+			else {
+				name = null;
+			}
+		}
+		
+		return name;
+	}
+
+	/**
+	 * Simple getter for a {@link JSONObject} that handles exception handling, and
+	 * returns a default value in case there are any problems.
+	 * 
+	 * @param obj
+	 * 	The {@link JSONObject} to query
+	 * @param keyName
+	 * 	The String name to query from the json object.
+	 * @param defaultVal
+	 * 	The default value to use if there are any problems.
+	 * @return
+	 * 	Returns the double value for the key name, or the default value.
+	 */
+	public static double getDoubleOrElse(JSONObject obj, String keyName, double defaultVal) {
+		double val;
+		try {
+			val = (obj.has(keyName))? obj.getDouble(keyName) : defaultVal;
+		}
+		catch (JSONException e) {
+			val = defaultVal;
+		}
+		return val;
 	}
 }

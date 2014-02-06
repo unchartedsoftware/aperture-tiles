@@ -52,13 +52,6 @@
 					</div>
 					<div class="submenu-item-label">Configure</div>
 				</div>
-				<div class="submenu-item"
-					onclick="window.location.assign('../rendering/');">
-					<div class="submenu-item-background ">
-						<div class="submenu-item-number">4</div>
-					</div>
-					<div class="submenu-item-label">Rendering</div>
-				</div>
 			</div>
 
 			<div id="content">
@@ -81,12 +74,12 @@
 								<li><a href="#configmap">Map Configuration</a></li>
 							</ul>
 							<ul>
-								<li><a href="#layers">Layers</a>
+								<li><a href="#layers">Server-side Tile Rendering Configuration</a>
 									<ul>
 										<li><a href="#layer">Layer</a></li>
 										<li><a href="#type">Type</a></li>
 										<li><a href="#transform">Transform</a></li>
-										<li><a href="#ramp">Ramp</a></li>
+										<li><a href="#ramp">Color Ramp</a></li>
 										<li><a href="#opacity">Opacity</a></li>
 										<li><a href="#renderer">Renderer</a></li>
 										<li><a href="#multiple">Multiple Layers</a></li>
@@ -157,7 +150,7 @@
 					<h3>Tile.properties</h3>
 					<p>
 						Next, edit the file <em>new-project-name/src/main/resources/</em><strong>tile.properties</strong>.
-						This file is responsible for pointing the server to the exact
+						This file is responsible for pointing the server to the
 						location of the tiles. Lines 10-70 provide detailed instructions
 						regarding how to configure each storage module. Uncomment the
 						relevant lines so that the location information matches the module
@@ -166,17 +159,12 @@
 					</p>
 
 					<p>
-						It is important to note that the information in tile.properties
-						should point to the location of the tiles, not to the actual tile
-						set. For example if the full address of the tiles are: <em>main/datasets/mytiles.avro</em>
-						then tile.properties should point to <i>main/datasets/</i>. The
-						tile client configurations in the next section will point to the
-						specific tiles.
-					</p>
-
-					<p>
-						Before exiting tile.properties ensure that all other lines
-						between lines 10-70 are commented out.
+						It is important to note that the information in <em>tile.properties</em>
+						should point to the root location of the tiles, not to the actual tile
+						set. For example if the full address of the tile set is: <em>/data/tiles/twitter.lat.lon</em>
+						then tile.properties should point to <em>/data/tiles/</em> The
+						tile client configuration in the next section will point to the
+						specific tile sets using the layers configuration file.
 					</p>	
 
 					<a name="clientconfig"></a>
@@ -191,37 +179,47 @@
 					<h3>Aperture Configuration</h3>
 					
 					<p>
-						
+						The Tile Client uses ApertureJS services and client side visualization library.  
+						To communicate with the Tile Server, the Tile Client must specify the Aperture
+						services endpoints.  This configuration is specified in 
+						<em>new-pjroject-name/src/main/webapp/js/<strong>aperture-config-map.js</strong></em>.
+						Edit the 'aperture.io' setting specifying the 'restEndpoint' to use the correct  
+						url for the <em>new-tile-project</em>.  For example:
 					</p>
 					
-					<a name="configmap"></a>
-					<h3>Map Configuration</h3>
+					<pre class="brush: js; gutter: false;">/*
+* The endpoint locations for Aperture services accessed through the io interface
+*/
+'aperture.io' : {
+    'rpcEndpoint' : '%host%/aperture/rpc',
+    'restEndpoint' : '%host%/new-tile-project/rest'
+},</pre>
 					
+					<a name="layers"></a>
+					<h3>Server-side Tile Rendering Configuration</h3>
 					<p>
-						
+						The Tile Client allows configuration of multiple layers of tiles that can 
+						be overlaid in the plot or map viewer. These are defined in 
+						<em>new-project-name/src/main/webapp/data/<strong>layers.json</strong></em>.
+						This file will contain 6 editable fields to customize how the tiles are shown. 
+						The options are: layer, type, transform, ramp, opacity, renderer. A detailed
+						description of each parameter is found below. 
 					</p>
 					
-					<p>
-						To configure how exactly your layer is displayed navigate to <i>new-project-name/src/main/webapp/data</i>
-						and open <b>layers.json</b>. This file will contain 6 editable
-						fields to customize how the tiles are shown. The options are:
-						layer, type, transform, ramp, opacity, renderer. A detailed
-						description of each parameter is found below. <a name="layer"></a>
-					</p>
-					
+					<a name="layer"></a>
 					<h3>Layer</h3>
 					<p>
 						The layer field is used to point to specific tiles which are
-						displayed on the map. For example if tiles are stored in <em>main/datasets/mytiles.avro</em>
-						the layers field should be set to "mytiles.avro". If a database is
-						being used then layer should be set to the desired tile set in your
-						database. <a name="type"></a>
+						displayed on the map. For example if tiles are stored in <em>/data/tiles/twitter.lat.lon</em>
+						the layers field should be set to "twitter.lat.lon". If HBase is
+						being used then layer should be set to the table name in HBase that contains
+						the tileset. 
 					</p>
 					
+					<a name="type"></a>
 					<h3>Type</h3>
 					<p>
-						Currently "tile" is the only option supported. Direct image
-						pyramids and client rendered will be supported in a future release.
+						Currently "tile" is the only option supported.
 					</p>
 
 					<a name="transform"></a>
@@ -230,16 +228,18 @@
 						The transform option allows the user to apply transformations to
 						the data values when determining color. Currently the options are
 						"linear" which does not perform a transformation, and "log10" which
-						will take logarithms of raw values. <a name="ramp"></a>
+						will take logarithms of raw values prior to applying a color ramp.
 					</p>
 					
-					<h3>Ramp</h3>
+					<a name="ramp"></a>
+					<h3>Color Ramp</h3>
 					<p>
 						The ramp option is used to determine what color scale is applied to
 						the data points. Currently the ramp supports 3 options: linear,
-						single-gradient, and default color scales. <a name="linear"></a>
+						single-gradient, and default color scales. 
 					</p>
 					
+					<a name="linear"></a>
 					<h4>Linear Ramp</h4>
 					<p>
 						The linear option shows all of the data points with a constant
@@ -297,8 +297,8 @@
 					<a name="opacity"></a>
 					<h3>Opacity</h3>
 					<p>
-						This setting is used to edit the starting opacity of the
-						later. This can be set to any decimal value ranging from 0
+						This setting is used to set the opacity of the rendered tile layer.
+						This can be set to any decimal value ranging from 0
 						(totally transparent) to 1 (totally opaque).
 					</p>
 
@@ -306,7 +306,8 @@
 					<h3>Renderer</h3>
 					<p>
 						This option defines which renderer the server should use to
-						render and read tiles. The current renderer options are:
+						render tiles. The renderer will be dependent on the type of 
+						tile data.  The current renderer options are:
 					</p>
 
 					<ul>
@@ -316,16 +317,15 @@
 							on a standard avro double-series-valued tile</li>
 						<li>'doublestatistics': Renders tile's total hit and %
 							coverage as text to the tile</li>
-						<li>'textscore': Renders to an image showing the scored
+						<li>'textscore': Renders to an image showing scored
 							words, with bars based on their score</li>
 					</ul>
 
 					<a name="multiple"></a>
 					<h3>Multiple Layers</h3>
 					<p>
-						Maps with multiple layers can be created by copying multiple
-						layer description objects and pasting them below the current layer
-						configurations and separating each layer with a comma. An example
+						Maps with multiple layers can be created by specifying multiple
+						layer descriptions in <em>layers.json</em>. An example
 						is shown below.
 					</p>	
 					
@@ -333,7 +333,7 @@
     {
     "layer": "my-layer1",
     "type": "tile",
-    "transformId": "linear",
+    "transform": "linear",
     "ramp": "ware",
     "opacity": 0.85,
     "renderer": "default"
@@ -341,13 +341,18 @@
     {
     "layer": "my-layer2",
     "type": "tile",
-    "transformId": "linear",
+    "transform": "linear",
     "ramp": "ware",
     "opacity": 0.85,
     "renderer": "textscore"
     }
 ]</pre>
 
+					<a name="layers"></a>
+					<h3>Client-side Tile Rendering Configuration</h3>
+					<p>
+						Comming Soon.
+					</p>
 				</div>
 			</div>
 		</div>

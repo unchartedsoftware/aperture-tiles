@@ -41,8 +41,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -81,7 +79,7 @@ public class HBasePyramidIO implements PyramidIO {
     private HBaseAdmin          _admin;
 
     public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
-    throws MasterNotRunningException, ZooKeeperConnectionException {
+	throws IOException {
         _config = HBaseConfiguration.create();
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);

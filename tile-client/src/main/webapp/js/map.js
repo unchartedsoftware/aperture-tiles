@@ -32,7 +32,6 @@ define(function (require) {
     "use strict";
 
 
-
     var Class = require('./class'),
         Config = require('./aperture-config-map'),
         Map;
