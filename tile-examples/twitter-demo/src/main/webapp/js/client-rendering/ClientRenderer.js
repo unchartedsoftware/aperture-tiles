@@ -50,7 +50,7 @@ define(function (require) {
             this.POSITIVE_COLOUR = '#09CFFF';
             this.NEGATIVE_COLOUR = '#D33CFF';
             this.NEUTRAL_COLOUR = '#222222';
-            this.TILE_SIZE = 254;
+            this.TILE_SIZE = 256;
             this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;
             this.Y_CENTRE_OFFSET = 0;
         },

@@ -86,7 +86,7 @@ define(function (require) {
             });
             */
             // tile outline layer
-            //this.outline = this.createTileOutlineLayer();
+            this.outline = this.createTileOutlineLayer();
             // left and right view buttons
             this.leftButton = this.createViewSelectionLayer('left');
             this.rightButton = this.createViewSelectionLayer('right');
@@ -240,6 +240,51 @@ define(function (require) {
                 icon = "./images/tileoutline.png",
                 outlineLayer;
 
+            outlineLayer = this.plotLayer.addLayer(aperture.BarLayer);
+            outlineLayer.map('fill').asValue('#FFFFFF');
+            outlineLayer.map('opacity').asValue(0.5);
+            outlineLayer.map('orientation').asValue('vertical');
+            outlineLayer.map('bar-count').asValue(4);
+            outlineLayer.map('length').from(function(index) {
+                switch(index){
+                    case 0: return 256;
+                    case 1: return 1;
+                    case 2: return 256;
+                    default: return 1;
+                }
+            });
+            outlineLayer.map('width').from(function(index) {
+                switch(index){
+                    case 0: return 1;
+                    case 1: return 256;
+                    case 2: return 1;
+                    default: return 256;
+                }
+            });
+            outlineLayer.map('offset-x').from( function(index) {
+                switch(index){
+                    case 0: return 0;
+                    case 1: return 0;
+                    case 2: return 256;
+                    default: return 0;
+                }
+            });
+            outlineLayer.map('offset-y').from( function(index) {
+                switch(index){
+                    case 0: return -128;
+                    case 1: return 128;
+                    case 2: return -128;
+                    default: return -128;
+                }
+            });
+
+            outlineLayer.map('visible').from( function() {
+                return (this.tilekey === that.selectedTileInfo.tilekey);
+            });
+
+            return outlineLayer;
+
+/*
             outlineLayer = this.plotLayer.addLayer(aperture.IconLayer);
 
             outlineLayer.map('width').asValue(256);
@@ -257,7 +302,7 @@ define(function (require) {
             outlineLayer.map('visible').from( function() {
                 return (this.tilekey === that.selectedTileInfo.tilekey);
             });
-
+*/
             return outlineLayer;
         },
 
@@ -304,35 +349,20 @@ define(function (require) {
          */
         updateSelectedTile: function(tilekey) {
 
-           var i;
+            var i;
 
-           this.selectedTileInfo = {
+            this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
-           };
+            };
 
-            //this.outline.all().redraw();
+
+            this.outline.all().redraw();
             this.leftButton.all().redraw();
             this.rightButton.all().redraw();
             for (i=0; i<this.indexButtons.length; i++) {
                 this.indexButtons[i].all().redraw();
             }
-
-
-            //this.plotLayer.all().redraw();
-
-            //if (this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey) {
-                // only redraw if a new tile is highlighted
-                //this.plotLayer.all().redraw();
-                /*
-                this.outline.all().redraw();
-                this.leftButton.all().redraw();
-                this.rightButton.all().redraw();
-                for (i=0; i<this.indexButtons.length; i++) {
-                    this.indexButtons[i].all().redraw();
-                }
-                */
-            //}
 
         },
 
