@@ -235,26 +235,27 @@ define(function (require) {
         createTileOutlineLayer: function() {
 
             var that = this,
+                OUTLINE_THICKNESS = 2,
                 outlineLayer;
 
             outlineLayer = this.plotLayer.addLayer(aperture.BarLayer);
             outlineLayer.map('fill').asValue('#FFFFFF');
-            outlineLayer.map('opacity').asValue(0.5);
+            //outlineLayer.map('opacity').asValue(0.8);
             outlineLayer.map('orientation').asValue('vertical');
             outlineLayer.map('bar-count').asValue(4);
             outlineLayer.map('length').from(function(index) {
                 switch(index){
                     case 0: return 256;
-                    case 1: return 1;
+                    case 1: return OUTLINE_THICKNESS;
                     case 2: return 256;
-                    default: return 1;
+                    default: return OUTLINE_THICKNESS;
                 }
             });
             outlineLayer.map('width').from(function(index) {
                 switch(index){
-                    case 0: return 1;
+                    case 0: return OUTLINE_THICKNESS;
                     case 1: return 256;
-                    case 2: return 1;
+                    case 2: return OUTLINE_THICKNESS;
                     default: return 256;
                 }
             });
@@ -262,14 +263,14 @@ define(function (require) {
                 switch(index){
                     case 0: return 0;
                     case 1: return 0;
-                    case 2: return 256;
+                    case 2: return 256 - (OUTLINE_THICKNESS-1);
                     default: return 0;
                 }
             });
             outlineLayer.map('offset-y').from( function(index) {
                 switch(index){
                     case 0: return -128;
-                    case 1: return 128;
+                    case 1: return 128 - (OUTLINE_THICKNESS-1);
                     case 2: return -128;
                     default: return -128;
                 }
