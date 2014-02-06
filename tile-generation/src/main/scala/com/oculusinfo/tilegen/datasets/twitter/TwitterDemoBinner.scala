@@ -58,6 +58,7 @@ object TwitterDemoBinner {
     val pyramidName = argParser.getStringArgument("name", "A name with which to label the finished pyramid").replace("_", " ")
     val pyramidDescription = argParser.getStringArgument("description", "A description with which to present the finished pyramid").replace("_", " ")
     val partitions = argParser.getIntArgument("partitions", "The number of partitions into which to read the raw data", Some(0))
+    val useWords = argParser.getBooleanArgument("words", "If true, pull out all non-trival words from tweet text; if false, just pull out tags.", Some(false))
 
     val binner = new RDDBinner
     binner.debug = true
@@ -74,7 +75,11 @@ object TwitterDemoBinner {
       val recordParser = new TwitterDemoRecordParser(startTime.getTime(), endTime.getTime, bins)
       i.flatMap(line => {
 	try {
-	  recordParser.getRecordsByWord(line, stopWordList)
+          if (useWords) {
+	    recordParser.getRecordsByWord(line, stopWordList)
+          } else {
+            recordParser.getRecordsByTag(line)
+          }
 	} catch {
 	    // Just ignore bad records, there aren't many
 	    case _ => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()

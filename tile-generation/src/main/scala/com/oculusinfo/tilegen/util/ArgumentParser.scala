@@ -183,7 +183,44 @@ class ArgumentParser (args: Array[String]) {
   def getDoubleArgument (key: String,
                          description: String,
                          default: Option[Double] = None): Double =
-    getArgumentInternal[Double](key, description, "dobule", _.toDouble, default)
+    getArgumentInternal[Double](key, description, "double", _.toDouble, default)
+
+  /**
+   * Simple function to get a boolean-valued argument from the argument list.  
+   *  Values of "yes", "true", shortened forms thereof, or any non-zero integer
+   * will be treated as true; all other values will be interpretted as false.
+   * 
+   * @param key
+   *        The text (case-insensitive) of the key to look for in the argument
+   *        list.  In use, the key should be prefaced by a "-"; as an argument
+   *        to this function, it should not.
+   * @param description
+   *        A description of this argument, for purposes of helping the user to
+   *        use it correctly
+   * @param default The default value.  If None, argument is not specified in
+   *        the argument list, an exception is thrown; if Some, this default
+   *        value will be used if the argument is absent, or if there is an
+   *        error parsing the argument.
+   */
+  def getBooleanArgument (key: String,
+                          description: String,
+                          default: Option[Boolean] = None): Boolean =
+    getArgumentInternal[Boolean](key, description, "boolean",
+                                 s =>
+      {
+        val sLower = s.toLowerCase.trim
+        if (sLower == "true".substring(0, sLower.length min "true".length)) {
+          true
+        } else if (sLower == "yes".substring(0, sLower.length min "yes".length)) {
+          true
+        } else if (sLower.map(c => '-' == c || ('0' <= c && c <= '9')).reduce(_ && _)) {
+           0 != sLower.toInt
+        } else {
+          false
+        }
+      },
+                                 default)
+
 
   /**
    * Simple function to get an argument from the argument list whose value is a
