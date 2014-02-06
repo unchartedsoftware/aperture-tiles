@@ -26,6 +26,10 @@ resolvers += "Global Maven Repository" at "http://repo1.maven.org/maven2/"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
+// Needed for older akka libraries; I'm not sure how maven finds it, but SBT 
+// seems to need it explicitly specified
+resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases"
+
 scalacOptions += "-deprecation"
 
 scalacOptions += "-unchecked"
