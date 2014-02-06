@@ -48,34 +48,23 @@ define(function (require) {
             this._super(id);
             this.valueCount = 5;
             this.ySpacing = 30;
-            this.hoverInfo = {
-                tag : '',
-                tilekey : '',
-                index : -1
-            };
-
-            this.clickInfo = {
-                tag : '',
-                tilekey : '',
-                index : -1
-            };
         },
 
         onUnselect: function() {
-            this.clickInfo.tag = '';
-            this.clickInfo.tilekey = '';
-            this.clickInfo.index = -1;
+            this.clearMouseClickState();
             this.plotLayer.all().redraw();
         },
 
 
         getExclusiveCountPercentage: function(data, index, type) {
 
-            var attrib = type + 'ByTime';
-            if (data.bin.value[this.clickInfo.index][type] === 0) {
+            var attrib = type + 'ByTime',
+                tagIndex = this.mouseState.clickState.binData.index,
+                count = data.bin.value[tagIndex].count;
+            if (count === 0) {
                 return 0;
             }
-            return data.bin.value[this.clickInfo.index][attrib][index] / data.bin.value[this.clickInfo.index][type];
+            return data.bin.value[tagIndex][attrib][index] / count;
         },
 
 
@@ -101,33 +90,34 @@ define(function (require) {
         },
 
 
+        redrawLayers: function(data) {
+            this.negativeBar.all().where(data).redraw();
+            this.positiveBar.all().where(data).redraw();
+            this.tagLabel.all().where(data).redraw();
+        },
+
+
         onClick: function(event) {
-            this.clickInfo.tag = event.data.bin.value[event.index[0]].tag;
-            this.clickInfo.tilekey = event.data.tilekey;
-            this.clickInfo.index = event.index[0];
+            this.setMouseClickState(event.data.tilekey, {
+                tag : event.data.bin.value[event.index[0]].tag,
+                index :  event.index[0]
+            });
             this.plotLayer.all().redraw();
-            return true;
         },
 
 
         onHover: function(event) {
-            this.hoverInfo.tag = event.data.bin.value[event.index[0]].tag;
-            this.hoverInfo.tilekey = event.data.tilekey;
-            this.hoverInfo.index = event.index[0];
-            this.negativeBar.all().where(event.data).redraw();
-            this.positiveBar.all().where(event.data).redraw();
-            this.tagLabel.all().where(event.data).redraw();
-            return true;
+            this.setMouseHoverState(event.data.tilekey, {
+                tag : event.data.bin.value[event.index[0]].tag,
+                index :  event.index[0]
+            });
+            this.redrawLayers(event.data);
         },
 
 
         onHoverOff: function(event) {
-            this.hoverInfo.tag = '';
-            this.hoverInfo.tilekey = '';
-            this.hoverInfo.index = -1;
-            this.negativeBar.all().where(event.data).redraw();
-            this.positiveBar.all().where(event.data).redraw();
-            this.tagLabel.all().where(event.data).redraw();
+            this.clearMouseHoverState();
+            this.redrawLayers(event.data);
         },
 
 
@@ -161,23 +151,31 @@ define(function (require) {
 
                 bar.map('visible').from( function() {
                     return (that.id === this.renderer) &&
-                        (that.clickInfo.tag === '' || that.clickInfo.tilekey === this.tilekey);
+                        (that.mouseState.clickState.tilekey === '' ||
+                         that.mouseState.clickState.tilekey === this.tilekey);
                 });
 
                 bar.map('fill').from( function(index) {
-                    if ((that.hoverInfo.tag === this.bin.value[index].tag && that.hoverInfo.tilekey === this.tilekey) ||
-                        (that.clickInfo.tag === this.bin.value[index].tag && that.clickInfo.tilekey === this.tilekey)) {
+                    if (
+                        (that.mouseState.hoverState.binData.tag !== undefined &&
+                            that.mouseState.hoverState.binData.tag === this.bin.value[index].tag &&
+                                that.mouseState.hoverState.tilekey === this.tilekey) ||
+                        (that.mouseState.clickState.binData.tag !== undefined &&
+                            that.mouseState.clickState.binData.tag === this.bin.value[index].tag &&
+                                that.mouseState.clickState.tilekey === this.tilekey)) {
+
                         return selectedColour;
                     }
                     return defaultColour;
                 });
 
                 bar.on('click', function(event) {
-                    return that.onClick(event);
+                    that.onClick(event);
+                    return true; // swallow event
                 });
 
                 bar.on('mousemove', function(event) {
-                    return that.onHover(event);
+                    that.onHover(event);
                 });
 
                 bar.on('mouseout', function(event) {
@@ -234,40 +232,36 @@ define(function (require) {
             this.tagLabel = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabel.map('visible').from(function() {
-                var clickedKey = that.clickInfo.tilekey.split(','),
-                    clickedX = parseInt(clickedKey[1]),
-                    clickedY = parseInt(clickedKey[2]),
-                    thisKey = this.tilekey.split(','),
+
+                var thisKey = this.tilekey.split(','),
                     thisKeyX = parseInt(thisKey[1]),
                     thisKeyY = parseInt(thisKey[2]);
 
-                return that.id === this.renderer &&
-                    // hack to prevent other labels from rendering on detailsOnDemand
-                    (that.clickInfo.tag === '' || thisKeyX !== clickedX+1 ||
-                    (thisKeyY !== clickedY && thisKeyY !== clickedY-1));
-
+                return that.id === this.renderer && that.isNotBehindDoD(this.tilekey);
             });
 
             this.tagLabel.map('fill').from( function(index) {
-                if (that.clickInfo.tag === '' && that.hoverInfo.tag === '') {
+                if (that.mouseState.clickState.tilekey === '' && that.mouseState.hoverState.tilekey === '') {
                     return '#FFFFFF';
-                } else if (that.hoverInfo.tag !== '' &&
-                    that.hoverInfo.tag === this.bin.value[index].tag &&
-                    that.hoverInfo.tilekey === this.tilekey ) {
+                } else if (that.mouseState.hoverState.binData.tag !== undefined &&
+                           that.mouseState.hoverState.binData.tag === this.bin.value[index].tag &&
+                           that.mouseState.hoverState.tilekey === this.tilekey ) {
                     return '#FFFFFF';
-                } else if (that.clickInfo.tag !== '' &&
-                           that.clickInfo.tag !== this.bin.value[index].tag) {
+                } else if (that.mouseState.clickState.binData.tag !== undefined &&
+                           that.mouseState.clickState.binData.tag !== this.bin.value[index].tag) {
                     return '#666666';
                 }
                 return '#FFFFFF';
             });
 
             this.tagLabel.on('click', function(event) {
-                return that.onClick(event);
+                that.onClick(event);
+                return true; // swallow event
             });
 
             this.tagLabel.on('mousemove', function(event) {
-                return that.onHover(event);
+                that.onHover(event);
+                return true;
             });
 
             this.tagLabel.on('mouseout', function(event) {
@@ -313,20 +307,21 @@ define(function (require) {
                 MOST_RECENT_SPACING = 55;
 
             function isVisible(data) {
-                return (that.id === data.renderer) && (that.clickInfo.tilekey === data.tilekey);
+                return (that.id === data.renderer) && (that.mouseState.clickState.tilekey === data.tilekey);
             }
 
             function getMaxPercentage(data, type) {
                 var i,
                     percent,
                     maxPercent = 0,
-                    count = data.bin.value[that.clickInfo.index][type];
+                    tagIndex = that.mouseState.clickState.binData.index,
+                    count = data.bin.value[tagIndex].count;
                 if (count === 0) {
                     return 0;
                 }
-                for(i=0; i<24; i++) {
+                for (i=0; i<24; i++) {
                     // get maximum percent
-                    percent = data.bin.value[that.clickInfo.index][type + 'ByTime'][i] / count;
+                    percent = data.bin.value[tagIndex][type + 'ByTime'][i] / count;
                     if (percent > maxPercent) {
                         maxPercent = percent;
                     }
@@ -350,7 +345,7 @@ define(function (require) {
                     i,
                     lineCount = 0;
 
-                for(i=0; i<strArray.length; i++) {
+                for (i=0; i<strArray.length; i++) {
 
                     while (strArray[i].length+1 > spaceLeft) {
                         if (lineCount === MAX_NUM_LINES-1) {
@@ -432,7 +427,7 @@ define(function (require) {
             this.titleLabels.map('text').from(function(index) {
                 switch (index) {
                     case 0:
-                        var str = "#" + that.clickInfo.tag;
+                        var str = "#" + that.mouseState.clickState.binData.tag;
                         if (str.length > 16) {
                             str = str.substr(0,16) + "...";
                         }
@@ -548,7 +543,7 @@ define(function (require) {
             this.recentTweetsLabel = labelTemplate();
             this.recentTweetsLabel.map('visible').from(function(){return isVisible(this)});
             this.recentTweetsLabel.map('label-count').from( function() {
-                var length = this.bin.value[that.clickInfo.index].recent.length;
+                var length = this.bin.value[that.mouseState.clickState.binData.index].recent.length;
                 if (length === undefined ||
                     length === 0 ||
                     isNaN(length)) {
@@ -558,7 +553,7 @@ define(function (require) {
             });
             this.recentTweetsLabel.map('font-size').asValue(10);
             this.recentTweetsLabel.map('text').from( function(index) {
-                return formatText(this.bin.value[that.clickInfo.index].recent[index].tweet);
+                return formatText(this.bin.value[that.mouseState.clickState.binData.index].recent[index].tweet);
             });
             this.recentTweetsLabel.map('offset-y').from( function(index) {
                 return MOST_RECENT + 45 + (index * MOST_RECENT_SPACING);

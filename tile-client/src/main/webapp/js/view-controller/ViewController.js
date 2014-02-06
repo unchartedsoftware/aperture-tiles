@@ -81,6 +81,8 @@ define(function (require) {
                 };
                 // create the render layer
                 view.renderer.createLayer(that.mapNodeLayer);
+                // attach the shared mouse state so that renderers can act in unison
+                view.renderer.attachMouseState(that.mouseState);
                 that.views.push(view);
             }
 
@@ -88,6 +90,24 @@ define(function (require) {
             this.defaultViewIndex = 0;  // if not specified, this is the default view of a tile
             this.tileViewMap = {};      // maps a tile key to its view index
             this.views = [];
+
+            this.mouseState = {
+                hoverState : {
+                    binData : {},
+                    tilekey : '',
+                    level : -1,
+                    xIndex : -1,
+                    yIndex : -1
+                },
+                clickState : {
+                    binData : {},
+                    tilekey : '',
+                    level : -1,
+                    xIndex : -1,
+                    yIndex : -1
+                }
+            };
+
             // attach map
             attachMap(spec.map);
             // add views
@@ -96,6 +116,13 @@ define(function (require) {
             }
 
             this.map.olMap_.events.register('click', this.map.olMap_, function() {
+                var i;
+                for (i=0; i<that.views.length; ++i) {
+                    that.views[i].renderer.onUnselect();
+                }
+            });
+
+            this.map.olMap_.events.register('zoomend', this.map.olMap_, function() {
                 var i;
                 for (i=0; i<that.views.length; ++i) {
                     that.views[i].renderer.onUnselect();
@@ -139,15 +166,16 @@ define(function (require) {
             this.tileViewMap[tilekey] = newViewIndex;
 
             // un-select elements from this view
-            // TODO: have this only unselect if selected elements are in the respective tile
-            this.views[oldViewIndex].renderer.onUnselect();
+            if (tilekey === this.mouseState.clickState.tilekey) {
+                this.views[oldViewIndex].renderer.onUnselect();
+            }
 
             // swap tile data, this function prevents data de-allocation if they share same data source
-            oldTracker.swapTileWith(newTracker, tilekey, $.proxy(this.redrawViews, this));
+            oldTracker.swapTileWith(newTracker, tilekey, $.proxy(this.updateAndRedrawViews, this));
 
             // always redraw immediately in case tile is already in memory (to draw new tile), or if
             // it isn't in memory (draw empty tile)
-            this.redrawViews();
+            this.updateAndRedrawViews();
         },
 
 
@@ -186,12 +214,12 @@ define(function (require) {
 
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], $.proxy(this.redrawViews, this));
+                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], $.proxy(this.updateAndRedrawViews, this));
             }
 
             // always redraw immediately in case tiles are already in memory, or need to be drawn
             // as empty
-            this.redrawViews();
+            this.updateAndRedrawViews();
         },
 
 
@@ -199,7 +227,7 @@ define(function (require) {
          * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
          * the layers
          */
-        redrawViews: function() {
+        updateAndRedrawViews: function() {
             var i,
                 data = [];
             for (i=0; i< this.views.length; i++ ) {
@@ -207,13 +235,24 @@ define(function (require) {
             }
 
             /*
-            var test = {};
+            var test = [];
             if ( data.length > 0 ) {
-                test = data[0];
+                test[0] = data[0];
+                if ( data.length > 1 ) {
+                    test[1] = data[1];
+                }
             }
             */
 
             this.mapNodeLayer.all(data).redraw();
+        },
+
+
+        redrawViews: function() {
+            var i;
+            for (i=0; i< this.views.length; i++ ) {
+                this.views[i].renderer.redrawLayers();
+            }
         }
 
      });

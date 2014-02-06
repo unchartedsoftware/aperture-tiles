@@ -46,6 +46,7 @@ define(function (require) {
         init: function(id) {
 
             this.id = id;
+            this.mouseState = {};
             this.POSITIVE_COLOUR = '#09CFFF';
             this.NEGATIVE_COLOUR = '#D33CFF';
             this.NEUTRAL_COLOUR = '#222222';
@@ -54,6 +55,7 @@ define(function (require) {
             this.Y_CENTRE_OFFSET = 0;
         },
 
+
          rgbToHex : function(r, g, b) {
              function componentToHex(c) {
                  var hex = c.toString(16);
@@ -61,6 +63,7 @@ define(function (require) {
              }
              return "#" + componentToHex( Math.floor(r)) + componentToHex( Math.floor(g)) + componentToHex( Math.floor(b));
         },
+
 
          hexToRgb: function(hex) {
              var bigint;
@@ -74,6 +77,7 @@ define(function (require) {
                  b: bigint & 255
              };
         },
+
 
         getCount: function(data) {
             if (data.bin.value.length === undefined ||
@@ -90,14 +94,80 @@ define(function (require) {
         },
 
 
+        attachMouseState: function(mouseState) {
+            this.mouseState = mouseState;
+        },
+
+
+        setMouseHoverState: function(tilekey, binData) {
+            var splitKey = tilekey.split(',');
+            this.mouseState.hoverState.binData = binData;
+            this.mouseState.hoverState.tilekey = tilekey;
+            this.mouseState.hoverState.level = parseInt(splitKey[0]);
+            this.mouseState.hoverState.xIndex = parseInt(splitKey[1]);
+            this.mouseState.hoverState.yIndex = parseInt(splitKey[2]);
+        },
+
+        setMouseClickState: function(tilekey, binData) {
+            var splitKey = tilekey.split(',');
+            this.mouseState.clickState.binData = binData;
+            this.mouseState.clickState.tilekey = tilekey;
+            this.mouseState.clickState.level = parseInt(splitKey[0]);
+            this.mouseState.clickState.xIndex = parseInt(splitKey[1]);
+            this.mouseState.clickState.yIndex = parseInt(splitKey[2]);
+        },
+
+        clearMouseState: function() {
+            this.clearMouseClickState();
+            this.clearMouseHoverState();
+        },
+
+
+        clearMouseClickState: function() {
+            this.mouseState.clickState = {
+                binData : {},
+                tilekey : '',
+                level : -1,
+                xIndex : -1,
+                yIndex : -1
+            };
+        },
+
+
+        clearMouseHoverState: function() {
+            this.mouseState.hoverState = {
+                binData : {},
+                tilekey : '',
+                level : -1,
+                xIndex : -1,
+                yIndex : -1
+            };
+        },
+
+
+        isNotBehindDoD: function (tilekey) {
+
+            var parsedKey = tilekey.split(','),
+                thisKeyX = parseInt(parsedKey[1]),
+                thisKeyY = parseInt(parsedKey[2]);
+
+            return (this.mouseState.clickState.tilekey === '' || // nothing clicked, or
+                // not under details on demand window
+                    this.mouseState.clickState.xIndex+1 !== thisKeyX ||
+                   (this.mouseState.clickState.yIndex !== thisKeyY &&
+                    this.mouseState.clickState.yIndex-1 !==  thisKeyY));
+        },
+
         onUnselect: function() {
         },
 
 
         createLayer: function (nodeLayer) {
+        },
+
+
+        redrawLayers: function() {
         }
-
-
 
     });
 

@@ -133,6 +133,10 @@ define(function (require) {
                 hover.clear();
             });
 
+            viewSelectionLayer.on('click', function(event) {
+                return true; // swallow event
+            });
+
             viewSelectionLayer.on('mouseup', function(event) {
 
                 var tilekey = event.data.tilekey,
@@ -207,6 +211,9 @@ define(function (require) {
                 hover.clear();
             });
 
+            viewIndexLayer.on('click', function(event) {
+                return true; // swallow event
+            });
 
             viewIndexLayer.on('mouseup', function(event) {
                 if (event.source.button !== 0) {
@@ -303,8 +310,6 @@ define(function (require) {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
            };
-            //console.log(this.selectedTileInfo.tilekey);
-
 
             //this.outline.all().redraw();
             this.leftButton.all().redraw();
@@ -312,6 +317,7 @@ define(function (require) {
             for (i=0; i<this.indexButtons.length; i++) {
                 this.indexButtons[i].all().redraw();
             }
+
 
             //this.plotLayer.all().redraw();
 

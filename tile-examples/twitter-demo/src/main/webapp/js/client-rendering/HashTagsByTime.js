@@ -43,15 +43,9 @@ define(function (require) {
         ClassName: "HashTagsByTime",
 
         init: function(id) {
-
             this._super(id);
             this.valueCount = 10;
             this.ySpacing = 18;
-            this.hoverInfo = {
-                tag : '',
-                tilekey : '',
-                index : -1
-            };
         },
 
 
@@ -65,23 +59,24 @@ define(function (require) {
             return data.bin.value[tagIndex].countByTime[index % 24] / data.bin.value[tagIndex].count;
         },
 
+        redrawLayers: function(data) {
+            this.tagLabels.all().where(data).redraw();
+            this.bars.all().where(data).redraw();
+        },
+
 
         onHover: function(event, index) {
-            this.hoverInfo.tag = event.data.bin.value[index].tag;
-            this.hoverInfo.tilekey = event.data.tilekey;
-            this.hoverInfo.index = index;
-            this.tagLabels.all().where(event.data).redraw();
-            this.bars.all().where(event.data).redraw();
-            return true;
+            this.setMouseHoverState(event.data.tilekey, {
+                tag : event.data.bin.value[index].tag,
+                index : index
+            });
+            this.redrawLayers(event.data);
         },
 
 
         onHoverOff: function(event) {
-            this.hoverInfo.tag = '';
-            this.hoverInfo.tilekey = '';
-            this.hoverInfo.index = -1;
-            this.tagLabels.all().where(event.data).redraw();
-            this.bars.all().where(event.data).redraw();
+            this.clearMouseHoverState();
+            this.redrawLayers(event.data);
         },
 
 
@@ -155,15 +150,17 @@ define(function (require) {
             this.bars = this.plotLayer.addLayer(aperture.BarLayer);
 
             this.bars.map('visible').from( function() {
-                return that.id === this.renderer;
+                return that.id === this.renderer && that.isNotBehindDoD(this.tilekey);
             });
 
             this.bars.map('fill').from( function(index) {
                 var tagIndex = Math.floor(index/24),
                     positiveCount,
                     negativeCount;
-
-                if (that.hoverInfo.index === tagIndex){
+                if (that.mouseState.hoverState.binData.tag !== undefined &&
+                    that.mouseState.hoverState.binData.tag === this.bin.value[tagIndex].tag ||
+                    that.mouseState.clickState.binData.tag !== undefined &&
+                    that.mouseState.clickState.binData.tag === this.bin.value[tagIndex].tag){
                     // get counts
                     positiveCount = this.bin.value[tagIndex].positiveByTime[index % 24];
                     negativeCount = this.bin.value[tagIndex].negativeByTime[index % 24];
@@ -199,7 +196,7 @@ define(function (require) {
             });
 
             this.bars.on('mousemove', function(event) {
-                return that.onHover(event, Math.floor(event.index[0]/24));
+                that.onHover(event, Math.floor(event.index[0]/24));
             });
 
             this.bars.on('mouseout', function(event) {
@@ -215,14 +212,17 @@ define(function (require) {
             this.tagLabels = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabels.map('visible').from(function() {
-                return that.id === this.renderer;
+                return that.id === this.renderer && that.isNotBehindDoD(this.tilekey);
             });
 
             this.tagLabels.map('fill').from( function(index) {
                 var positiveCount,
                     negativeCount;
 
-                if (that.hoverInfo.index === index){
+                if (that.mouseState.hoverState.binData.tag !== undefined &&
+                    that.mouseState.hoverState.binData.tag === this.bin.value[index].tag ||
+                    that.mouseState.clickState.binData.tag !== undefined &&
+                    that.mouseState.clickState.binData.tag === this.bin.value[index].tag){
                     positiveCount = this.bin.value[index].positive;
                     negativeCount = this.bin.value[index].negative;
                     return that.blendSentimentColours(positiveCount, negativeCount);
@@ -254,7 +254,8 @@ define(function (require) {
             //this.tagLabels.map('font-outline-width').asValue(3);
 
             this.tagLabels.on('mousemove', function(event) {
-                return that.onHover(event, event.index[0]);
+                that.onHover(event, event.index[0]);
+                return true;
             });
 
             this.tagLabels.on('mouseout', function(event) {
