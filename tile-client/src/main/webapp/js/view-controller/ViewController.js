@@ -235,7 +235,7 @@ define(function (require) {
             }
 
             this.mapNodeLayer.all(data).redraw();
-        },
+        }
 
 
      });
