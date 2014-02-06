@@ -255,7 +255,7 @@ define(function (require) {
             });
 
             this.tagLabels.map('text').from(function (index) {
-                var str = "#" + this.bin.value[index].tag;
+                var str = this.bin.value[index].tag;
                 if (str.length > 9) {
                     str = str.substr(0,9) + "...";
                 }
