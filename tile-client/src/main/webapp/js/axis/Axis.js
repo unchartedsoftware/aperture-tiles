@@ -286,26 +286,7 @@ define(function (require) {
 
             this.maxLabelLength = 0;
 
-            /*
-            this.majorMarkerLength = 10;
-            this.majorMarkerWidth = 1;
-
-            this.majorMarkerColour = "#7E7E7E";
-            this.markerLabelColour = "#7E7E7E";
-            this.axisLabelColour = "#7E7E7E";
-
-            this.fontFamily = "Tahoma, Verdana, Segoe, sans-serif";
-
-            this.markerLabelFontSize = "0.75em";
-            this.axisLabelFontSize = "0.95em";
-            */
-            this.maxLabelLength = 0;
-
             this.olMap.events.register('mousemove', this.olMap, function(event) {
-                that.redraw();
-            });
-
-            this.olMap.events.register('panend', this.olMap, function(event) {
                 that.redraw();
             });
 
