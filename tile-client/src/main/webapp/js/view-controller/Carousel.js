@@ -79,12 +79,10 @@ define(function (require) {
             var positionFactor = (this.views.length - 1) / 2,
                 i, j;
 
-            this.plotLayer = this.mapNodeLayer; //.addLayer(aperture.PlotLayer);
-            /*
-            this.plotLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
-            });
-            */
+            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
+            // TODO: currently doesnt not render correctly if on its on PlotLayer...
+            this.plotLayer = this.mapNodeLayer;
+
             // tile outline layer
             this.outline = this.createTileOutlineLayer();
             // left and right view buttons
@@ -237,7 +235,6 @@ define(function (require) {
         createTileOutlineLayer: function() {
 
             var that = this,
-                icon = "./images/tileoutline.png",
                 outlineLayer;
 
             outlineLayer = this.plotLayer.addLayer(aperture.BarLayer);
@@ -282,27 +279,6 @@ define(function (require) {
                 return (this.tilekey === that.selectedTileInfo.tilekey);
             });
 
-            return outlineLayer;
-
-/*
-            outlineLayer = this.plotLayer.addLayer(aperture.IconLayer);
-
-            outlineLayer.map('width').asValue(256);
-            outlineLayer.map('height').asValue(256);
-            outlineLayer.map('anchor-x').asValue(0.5);
-            outlineLayer.map('anchor-y').asValue(0.5);
-
-            outlineLayer.map('x').asValue(0);
-            outlineLayer.map('y').asValue(0);
-
-            outlineLayer.map('icon-count').asValue(1);
-
-            outlineLayer.map('url').asValue(icon);
-
-            outlineLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
-            });
-*/
             return outlineLayer;
         },
 
@@ -349,13 +325,23 @@ define(function (require) {
          */
         updateSelectedTile: function(tilekey) {
 
-            var i;
+            var i,
+                parsedKey = tilekey.split(','),
+                thisKeyX = parseInt(parsedKey[1], 10),
+                thisKeyY = parseInt(parsedKey[2], 10);
+
+            // hack to prevent carousel from overlapping DoD
+            if (this.mouseState.clickState.tilekey !== '' &&
+                this.mouseState.clickState.xIndex+1 === thisKeyX &&
+                (this.mouseState.clickState.yIndex === thisKeyY ||
+                    this.mouseState.clickState.yIndex-1 ===  thisKeyY)) {
+                return;
+            }
 
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
             };
-
 
             this.outline.all().redraw();
             this.leftButton.all().redraw();

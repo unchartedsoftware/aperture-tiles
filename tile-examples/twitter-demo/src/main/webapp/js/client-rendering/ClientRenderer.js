@@ -44,12 +44,8 @@ define(function (require) {
         ClassName: "ClientRenderer",
 
         init: function(id) {
-
             this.id = id;
             this.mouseState = {};
-            this.POSITIVE_COLOUR = '#09CFFF';
-            this.NEGATIVE_COLOUR = '#D33CFF';
-            this.NEUTRAL_COLOUR = '#222222';
             this.TILE_SIZE = 256;
             this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;
             this.Y_CENTRE_OFFSET = 0;
@@ -108,6 +104,7 @@ define(function (require) {
             this.mouseState.hoverState.yIndex = parseInt(splitKey[2]);
         },
 
+
         setMouseClickState: function(tilekey, binData) {
             var splitKey = tilekey.split(',');
             this.mouseState.clickState.binData = binData;
@@ -145,19 +142,6 @@ define(function (require) {
         },
 
 
-        isNotBehindDoD: function (tilekey) {
-
-            var parsedKey = tilekey.split(','),
-                thisKeyX = parseInt(parsedKey[1]),
-                thisKeyY = parseInt(parsedKey[2]);
-
-            return (this.mouseState.clickState.tilekey === '' || // nothing clicked, or
-                // not under details on demand window
-                    this.mouseState.clickState.xIndex+1 !== thisKeyX ||
-                   (this.mouseState.clickState.yIndex !== thisKeyY &&
-                    this.mouseState.clickState.yIndex-1 !==  thisKeyY));
-        },
-
         onUnselect: function() {
         },
 
@@ -168,6 +152,7 @@ define(function (require) {
 
         redrawLayers: function() {
         }
+
 
     });
 

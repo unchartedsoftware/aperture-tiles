@@ -79,10 +79,10 @@ define(function (require) {
                     // render layer for the view
                     renderer: viewspec.renderer
                 };
-                // create the render layer
-                view.renderer.createLayer(that.mapNodeLayer);
                 // attach the shared mouse state so that renderers can act in unison
                 view.renderer.attachMouseState(that.mouseState);
+                // create the render layer
+                view.renderer.createLayer(that.mapNodeLayer);
                 that.views.push(view);
             }
 
@@ -234,26 +234,9 @@ define(function (require) {
                 $.merge(data, this.views[i].tileTracker.getNodeData());
             }
 
-            /*
-            var test = [];
-            if ( data.length > 0 ) {
-                test[0] = data[0];
-                if ( data.length > 1 ) {
-                    test[1] = data[1];
-                }
-            }
-            */
-
             this.mapNodeLayer.all(data).redraw();
         },
 
-
-        redrawViews: function() {
-            var i;
-            for (i=0; i< this.views.length; i++ ) {
-                this.views[i].renderer.redrawLayers();
-            }
-        }
 
      });
 

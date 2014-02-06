@@ -35,11 +35,12 @@ define(function (require) {
 
 
 
-    var ClientRenderer = require('./ClientRenderer'),
+    var TwitterTagRenderer = require('./TwitterTagRenderer'),
+        DetailsOnDemand = require('./DetailsOnDemand'),
         HashTagsByTime;
 
 
-    HashTagsByTime = ClientRenderer.extend({
+    HashTagsByTime = TwitterTagRenderer.extend({
         ClassName: "HashTagsByTime",
 
         init: function(id) {
@@ -59,9 +60,25 @@ define(function (require) {
             return data.bin.value[tagIndex].countByTime[index % 24] / data.bin.value[tagIndex].count;
         },
 
+
         redrawLayers: function(data) {
             this.tagLabels.all().where(data).redraw();
             this.bars.all().where(data).redraw();
+        },
+
+
+        onUnselect: function() {
+            this.clearMouseClickState();
+            this.plotLayer.all().redraw();
+        },
+
+
+        onClick: function(event, index) {
+            this.setMouseClickState(event.data.tilekey, {
+                tag : event.data.bin.value[index].tag,
+                index :  index
+            });
+            this.plotLayer.all().redraw();
         },
 
 
@@ -107,19 +124,16 @@ define(function (require) {
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
-        createLayer: function (nodeLayer) {
+        createLayer: function (mapNodeLayer) {
 
-            var that = this;
-
-            this.plotLayer = nodeLayer; //.addLayer(aperture.PlotLayer);
-            /*
-            this.plotLayer.map('visible').from(function() {
-                return that.id === this.renderer;
-            });
-*/
+            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
+            // TODO: currently doesnt not render correctly if on its on PlotLayer...
+            this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
-
+            this.detailsOnDemand = new DetailsOnDemand(this.id);
+            this.detailsOnDemand.attachMouseState(this.mouseState);
+            this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
 
@@ -157,14 +171,14 @@ define(function (require) {
                 var tagIndex = Math.floor(index/24),
                     positiveCount,
                     negativeCount;
-                if (that.mouseState.hoverState.binData.tag !== undefined &&
-                    that.mouseState.hoverState.binData.tag === this.bin.value[tagIndex].tag ||
-                    that.mouseState.clickState.binData.tag !== undefined &&
-                    that.mouseState.clickState.binData.tag === this.bin.value[tagIndex].tag){
+                if (that.matchingTagIsSelected(this.bin.value[tagIndex].tag)){
                     // get counts
                     positiveCount = this.bin.value[tagIndex].positiveByTime[index % 24];
                     negativeCount = this.bin.value[tagIndex].negativeByTime[index % 24];
                     return that.blendSentimentColours(positiveCount, negativeCount);
+                }
+                if (that.shouldBeGreyedOut(this.bin.value[tagIndex].tag, this.tilekey)) {
+                    return '#666666';
                 }
                 return "#FFFFFF";
             });
@@ -195,6 +209,11 @@ define(function (require) {
                 return (that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH;
             });
 
+            this.bars.on('click', function(event) {
+                that.onClick(event, Math.floor(event.index[0]/24));
+                return true; // swallow event
+            });
+
             this.bars.on('mousemove', function(event) {
                 that.onHover(event, Math.floor(event.index[0]/24));
             });
@@ -219,15 +238,16 @@ define(function (require) {
                 var positiveCount,
                     negativeCount;
 
-                if (that.mouseState.hoverState.binData.tag !== undefined &&
-                    that.mouseState.hoverState.binData.tag === this.bin.value[index].tag ||
-                    that.mouseState.clickState.binData.tag !== undefined &&
-                    that.mouseState.clickState.binData.tag === this.bin.value[index].tag){
+                if (that.matchingTagIsSelected(this.bin.value[index].tag)){
                     positiveCount = this.bin.value[index].positive;
                     negativeCount = this.bin.value[index].negative;
                     return that.blendSentimentColours(positiveCount, negativeCount);
                 }
-                return '#FFFFFF'
+
+                if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
+                    return '#666666';
+                }
+                return '#FFFFFF';
             });
 
             this.tagLabels.map('label-count').from(function() {
@@ -250,12 +270,17 @@ define(function (require) {
 
             this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 16);
             this.tagLabels.map('text-anchor').asValue('start');
-            //this.tagLabels.map('font-outline').asValue('#000000');
-            //this.tagLabels.map('font-outline-width').asValue(3);
+            this.tagLabels.map('font-outline').asValue('#000000');
+            this.tagLabels.map('font-outline-width').asValue(3);
+
+            this.tagLabels.on('click', function(event) {
+                that.onClick(event, event.index[0]);
+                return true; // swallow event
+            });
 
             this.tagLabels.on('mousemove', function(event) {
                 that.onHover(event, event.index[0]);
-                return true;
+                return true;  // swallow event, for some reason mousemove on labels needs to swallow this or else it processes a mouseout
             });
 
             this.tagLabels.on('mouseout', function(event) {
@@ -263,8 +288,6 @@ define(function (require) {
             });
 
         }
-
-
 
 
     });
