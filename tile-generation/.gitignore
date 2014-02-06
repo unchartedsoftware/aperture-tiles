@@ -4,3 +4,4 @@ target
 .settings
 tilesets
 /*.classpath
+/datasets/

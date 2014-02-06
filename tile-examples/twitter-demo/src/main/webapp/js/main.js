@@ -27,7 +27,8 @@ require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
          './client-rendering/TextScoreRenderer',
-         './client-rendering/TextScoreRendererOther',
+         './client-rendering/TopTextSentimentBars',
+         './client-rendering/HashTagsByTime',
          './ui/layercontrols',
          './serverlayeruimediator',
          './axis/AxisUtil',
@@ -40,8 +41,9 @@ require(['./fileloader',
         function (FileLoader, 
         		  Map, 
         		  ServerLayer,
-                  TextScoreRenderer, 
-                  TextScoreRendererOther,
+                  TextScoreRenderer,
+                  TopTextSentimentBars,
+                  HashTagsByTime,
                   LayerControls,
                   ServerLayerUiMediator,
                   AxisUtil, 
@@ -67,12 +69,11 @@ require(['./fileloader',
                     mapLayerState,
                     renderLayerSpecs,
                     renderLayerSpec,
-                    tooltipFcn,
                     i,
                     layerId,
                     layerName,
-                    tileScoreRenderer,
-                    tileScoreRendererOther,
+                    topTextSentimentBars,
+                    hashTagsByTime,
                     dataTracker,
                     carousel;
 
@@ -108,23 +109,13 @@ require(['./fileloader',
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
 
-                tooltipFcn = function (text) {
-                    if (text) {
-                        $('#hoverOutput').html(text);
-                    } else {
-                        $('#hoverOutput').html('');
-                    }
-                };
 
                 for (i=0; i<renderLayerSpecs.length; ++i) {
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
 
-                    tileScoreRenderer = new TextScoreRenderer();
-                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
-
-                    tileScoreRendererOther = new TextScoreRendererOther();
-                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
+                    topTextSentimentBars = new TopTextSentimentBars('red');
+                    hashTagsByTime = new HashTagsByTime('blue');
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -138,14 +129,12 @@ require(['./fileloader',
                         map: worldMap.map,
                         views: [
                             {
-                                id: "red",
                                 dataTracker: dataTracker,
-                                renderer: tileScoreRenderer
+                                renderer: topTextSentimentBars
                             },
                             {
-                                id: "blue",
                                 dataTracker: dataTracker,
-                                renderer: tileScoreRendererOther
+                                renderer: hashTagsByTime
                             }
                         ]});
                     carousel.dummy = 0; // to shut jslint up

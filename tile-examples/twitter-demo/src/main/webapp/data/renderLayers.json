@@ -1,7 +1,7 @@
 [
 	{
-        "layer": "twitter.2014-01-02",
+        "layer": "twitter.2014-01-02.words",
         "transform": "linear",
         "opacity": 0.85
-    }	
+    }
 ]

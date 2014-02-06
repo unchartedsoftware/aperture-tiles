@@ -42,6 +42,7 @@ define(function (require) {
         ViewController;
 
 
+
     ViewController = Class.extend({
 
         /**
@@ -56,61 +57,80 @@ define(function (require) {
 
                 // add map and zoom/pan event handlers
                 that.map = map;
-                that.map.olMap_.events.register('zoomend', that.map.olMap_, $.proxy(that.onMapUpdate, that) );
-                that.map.on('panend', $.proxy(that.onMapUpdate, that));
+
+                // call update on drag end / zoom end / pan end
+                that.map.olMap_.events.register('moveend', that.map.olMap_, $.proxy(that.onMapUpdate, that));
+
+                that.mapNodeLayer = that.map.addLayer(aperture.geo.MapNodeLayer);
+                that.mapNodeLayer.map('longitude').from('longitude');
+                that.mapNodeLayer.map('latitude').from('latitude');
+                // Necessary so that aperture won't place labels and texts willy-nilly
+                that.mapNodeLayer.map('width').asValue(1);
+                that.mapNodeLayer.map('height').asValue(1);
             }
 
             function addView(viewspec) {
-
                 // construct and add view
                 var view = {
-                    id: viewspec.id,
-                    tileTracker: new TileTracker(viewspec.dataTracker),     // tracks the tiles used at given moment
-                    renderer: viewspec.renderer,                            // renderer for the view
-                    nodeLayer: that.map.addLayer(aperture.geo.MapNodeLayer) // aperture.NodeLayer for renderering
+                    // view id, used to map tile to view via getTileViewIndex()
+                    id: viewspec.renderer.id,
+                    // tracks the active tiles used per view at given moment
+                    tileTracker: new TileTracker(viewspec.dataTracker, viewspec.renderer.id),
+                    // render layer for the view
+                    renderer: viewspec.renderer
                 };
-
-                view.nodeLayer.map('longitude').from('longitude');
-                view.nodeLayer.map('latitude').from('latitude');
-                // Necessary so that aperture won't place labels and texts willy-nilly
-                view.nodeLayer.map('width').asValue(1);
-                view.nodeLayer.map('height').asValue(1);
-                // create the renderer layer off of the shared view layer
-                view.renderer.createLayer(view.nodeLayer);
-
+                // attach the shared mouse state so that renderers can act in unison
+                view.renderer.attachMouseState(that.mouseState);
+                // create the render layer
+                view.renderer.createLayer(that.mapNodeLayer);
                 that.views.push(view);
             }
 
+            // initialize attributes
             this.defaultViewIndex = 0;  // if not specified, this is the default view of a tile
             this.tileViewMap = {};      // maps a tile key to its view index
-
-            attachMap(spec.map);
-
             this.views = [];
+
+            this.mouseState = {
+                hoverState : {
+                    binData : {},
+                    tilekey : '',
+                    level : -1,
+                    xIndex : -1,
+                    yIndex : -1
+                },
+                clickState : {
+                    binData : {},
+                    tilekey : '',
+                    level : -1,
+                    xIndex : -1,
+                    yIndex : -1
+                }
+            };
+
+            // attach map
+            attachMap(spec.map);
+            // add views
             for (i = 0; i < spec.views.length; i++) {
                 addView(spec.views[i]);
             }
 
-            this.onMapUpdate(); // trigger callback to draw first frame
-        },
+            this.map.olMap_.events.register('click', this.map.olMap_, function() {
+                var i;
+                for (i=0; i<that.views.length; ++i) {
+                    that.views[i].renderer.onUnselect();
+                }
+            });
 
+            this.map.olMap_.events.register('zoomend', this.map.olMap_, function() {
+                var i;
+                for (i=0; i<that.views.length; ++i) {
+                    that.views[i].renderer.onUnselect();
+                }
+            });
 
-        /**
-         * If attached to a map, create node layer for view rendering
-         */
-        createViewNodeLayer: function(view) {
-
-            if (this.map) {
-                // create node layer off of map
-                view.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
-                view.nodeLayer.map('longitude').from('longitude');
-                view.nodeLayer.map('latitude').from('latitude');
-                // Necessary so that aperture won't place labels and texts willy-nilly
-                view.nodeLayer.map('width').asValue(1);
-                view.nodeLayer.map('height').asValue(1);
-                // create the renderer layer off of the shared view layer
-                view.renderer.createLayer(view.nodeLayer);
-            }
+            // trigger callback to draw first frame
+            this.onMapUpdate();
         },
 
 
@@ -138,19 +158,26 @@ define(function (require) {
          */
         onTileViewChange: function(tilekey, newViewIndex) {
 
-            var that = this,
-                oldViewIndex = this.getTileViewIndex(tilekey),  // old view index for tile
+            var oldViewIndex = this.getTileViewIndex(tilekey),  // old view index for tile
                 oldTracker = this.views[oldViewIndex].tileTracker,
                 newTracker = this.views[newViewIndex].tileTracker;
 
+            // map tile to new view
             this.tileViewMap[tilekey] = newViewIndex;
 
-            oldTracker.swapTileWith(newTracker, tilekey, function() {
-                that.views[oldViewIndex].nodeLayer.all(that.views[oldViewIndex].tileTracker.getNodeData());
-                that.views[newViewIndex].nodeLayer.all(that.views[newViewIndex].tileTracker.getNodeData());
-                that.map.all().redraw();
-            });
+            // un-select elements from this view
+            if (tilekey === this.mouseState.clickState.tilekey) {
+                this.views[oldViewIndex].renderer.onUnselect();
+            }
+
+            // swap tile data, this function prevents data de-allocation if they share same data source
+            oldTracker.swapTileWith(newTracker, tilekey, $.proxy(this.updateAndRedrawViews, this));
+
+            // always redraw immediately in case tile is already in memory (to draw new tile), or if
+            // it isn't in memory (draw empty tile)
+            this.updateAndRedrawViews();
         },
+
 
         /**
          * Map update callback, this function is called when the map view state is updating. Requests
@@ -187,8 +214,12 @@ define(function (require) {
 
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], $.proxy(this.onReceiveTile, this));
+                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], $.proxy(this.updateAndRedrawViews, this));
             }
+
+            // always redraw immediately in case tiles are already in memory, or need to be drawn
+            // as empty
+            this.updateAndRedrawViews();
         },
 
 
@@ -196,16 +227,16 @@ define(function (require) {
          * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
          * the layers
          */
-        onReceiveTile: function() {
-
-            var that = this,
-                i;
-
-            for (i=0; i< that.views.length; i++ ) {
-                that.views[i].nodeLayer.all(that.views[i].tileTracker.getNodeData());
+        updateAndRedrawViews: function() {
+            var i,
+                data = [];
+            for (i=0; i< this.views.length; i++ ) {
+                $.merge(data, this.views[i].tileTracker.getNodeData());
             }
-            that.map.all().redraw();
+
+            this.mapNodeLayer.all(data).redraw();
         }
+
 
      });
 
