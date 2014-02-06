@@ -184,7 +184,7 @@ class TwitterDemoParserTestSuite extends FunSuite {
 
   test("Word parsing") {
     val recordParser = new TwitterDemoRecordParser(Long.MinValue, Long.MaxValue-1, 1)
-    val records = recordParser.getRecordsByWord("Wed Jan 02 12:00:00 +0000 2014\tuid\tuname\ttid\tHad we known about Moliere, \"Parts of places possible\" might never have seen the light of day four quatre cuatro, 123 456 1 2 3 4 5 6 1.2 1,000 1E-4 you're abc123\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0", recordParser.getStopWordList)
+    val records = recordParser.getRecordsByWord("Wed Jan 02 12:00:00 +0000 2014\tuid\tuname\ttid\tHad we known about Moliere, \"Parts of places possible\" might never have seen the light of day four quatre cuatro, 123 456 1 2 3 4 5 6 1.2 1,000 1E-4 you're abc123 http https &amp; &lt; &gt;\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0", recordParser.getStopWordList)
     assert(1 === records.size)
     records.foreach(record => {
       assert(List("abc123", "day", "light", "moliere", "seen") === record._3.map(_._1).toList.sorted)
