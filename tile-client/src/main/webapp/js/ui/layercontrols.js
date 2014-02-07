@@ -230,7 +230,7 @@ define(function (require) {
 
         $settingsTitleBar.append($('<span class="settings-title">' + layerState.getName() + ' Layer Settings</span>'));
 
-        $back = $('<span class="settings-back-link"> back </span>');
+        $back = $('<span class="settings-back-link">back</span>');
         $settingsTitleBar.append($back);
         $back.click(function () {
             replaceChildren($parent, oldChildren);
