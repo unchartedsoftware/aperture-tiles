@@ -117,7 +117,7 @@ define(function (require) {
         createLayer: function (mapNodeLayer) {
 
             // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently doesnt not render correctly if on its on PlotLayer...
+            // TODO: currently does not render correctly if on its own PlotLayer...
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
@@ -132,27 +132,24 @@ define(function (require) {
             var that = this,
                 BAR_LENGTH = 100;
 
-            function barTemplate( defaultColour, selectedColour ) {
+            function barTemplate( defaultColour, greyedColour, selectedColour ) {
 
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
 
                 bar.map('visible').from( function() {
-                    return (that.id === this.renderer) &&
-                        (that.mouseState.clickState.tilekey === '' ||
-                         that.mouseState.clickState.tilekey === this.tilekey);
+                    return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey);
                 });
 
                 bar.map('fill').from( function(index) {
-                    if (
-                        (that.mouseState.hoverState.binData.tag !== undefined &&
-                            that.mouseState.hoverState.binData.tag === this.bin.value[index].tag &&
-                                that.mouseState.hoverState.tilekey === this.tilekey) ||
-                        (that.mouseState.clickState.binData.tag !== undefined &&
-                            that.mouseState.clickState.binData.tag === this.bin.value[index].tag &&
-                                that.mouseState.clickState.tilekey === this.tilekey)) {
 
+                    if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
                         return selectedColour;
                     }
+
+                    if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
+                        return greyedColour;
+                    }
+
                     return defaultColour;
                 });
 
@@ -183,7 +180,7 @@ define(function (require) {
             }
 
             // negative bar
-            this.negativeBar = barTemplate('#777777', this.NEGATIVE_COLOUR);
+            this.negativeBar = barTemplate('#777777', '#222222', this.NEGATIVE_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -193,7 +190,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('#222222', this.NEUTRAL_COLOUR );
+            this.neutralBar = barTemplate('#222222', '#000000', this.NEUTRAL_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -202,7 +199,7 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('#FFFFFF', this.POSITIVE_COLOUR);
+            this.positiveBar = barTemplate('#FFFFFF', '#666666', this.POSITIVE_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
