@@ -64,6 +64,17 @@ define(function (require) {
                     this.mouseState.clickState.yIndex-1 !==  thisKeyY));
         },
 
+        isHoveredOrClicked: function (tag, tilekey) {
+            var clickTilekey = this.mouseState.clickState.tilekey,
+                clickTag = this.mouseState.clickState.binData.tag,
+                hoverTilekey = this.mouseState.hoverState.tilekey,
+                hoverTag = this.mouseState.hoverState.binData.tag;
+
+            return ((hoverTag !== undefined && hoverTag === tag && hoverTilekey === tilekey) ||
+                (clickTag !== undefined && clickTag === tag && clickTilekey === tilekey));
+
+        },
+
 
         shouldBeGreyedOut: function (tag, tilekey) {
             if ( // nothing is hovered or clicked on

@@ -235,16 +235,6 @@ define(function (require) {
             });
 
             this.tagLabels.map('fill').from( function(index) {
-                /*
-                var positiveCount,
-                    negativeCount;
-
-                if (that.matchingTagIsSelected(this.bin.value[index].tag)){
-                    positiveCount = this.bin.value[index].positive;
-                    negativeCount = this.bin.value[index].negative;
-                    return that.blendSentimentColours(positiveCount, negativeCount);
-                }
-                */
 
                 if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
                     return '#666666';
@@ -264,7 +254,12 @@ define(function (require) {
                 return str;
             });
 
-            this.tagLabels.map('font-size').asValue(12);
+            this.tagLabels.map('font-size').from( function(index) {
+                if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
+                    return 16;
+                }
+                return 12;
+            });
 
             this.tagLabels.map('offset-y').from(function (index) {
                 return that.getYOffset(this, index) - 5;

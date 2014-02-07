@@ -132,32 +132,24 @@ define(function (require) {
             var that = this,
                 BAR_LENGTH = 100;
 
-            function barTemplate( defaultColour, selectedColour ) {
+            function barTemplate( defaultColour, greyedColour, selectedColour ) {
 
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
 
                 bar.map('visible').from( function() {
-                    return (that.id === this.renderer) &&
-                          (that.mouseState.clickState.tilekey === '' ||
-                            that.mouseState.clickState.tilekey === this.tilekey);
+                    return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey);
                 });
 
                 bar.map('fill').from( function(index) {
 
-                    var clickTilekey = that.mouseState.clickState.tilekey,
-                        clickTag = that.mouseState.clickState.binData.tag,
-                        hoverTilekey = that.mouseState.hoverState.tilekey,
-                        hoverTag = that.mouseState.hoverState.binData.tag;
-
-                    if ((hoverTag !== undefined &&
-                            hoverTag === this.bin.value[index].tag &&
-                                hoverTilekey === this.tilekey) ||
-                        (clickTag !== undefined &&
-                            clickTag === this.bin.value[index].tag &&
-                                clickTilekey === this.tilekey)) {
-
+                    if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
                         return selectedColour;
                     }
+
+                    if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
+                        return greyedColour;
+                    }
+
                     return defaultColour;
                 });
 
@@ -188,7 +180,7 @@ define(function (require) {
             }
 
             // negative bar
-            this.negativeBar = barTemplate('#777777', this.NEGATIVE_COLOUR);
+            this.negativeBar = barTemplate('#777777', '#222222', this.NEGATIVE_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -198,7 +190,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('#222222', this.NEUTRAL_COLOUR );
+            this.neutralBar = barTemplate('#222222', '#000000', this.NEUTRAL_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -207,7 +199,7 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('#FFFFFF', this.POSITIVE_COLOUR);
+            this.positiveBar = barTemplate('#FFFFFF', '#666666', this.POSITIVE_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
