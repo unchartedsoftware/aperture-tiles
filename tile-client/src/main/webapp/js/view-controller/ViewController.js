@@ -240,7 +240,7 @@ define(function (require) {
             /////////////////////////////////////////////
             // TEMPORARY BANDAGE FIX //
             if (permData.length > 40) {
-                console.log("clear");
+                // clear array in case it gets too big, null and redraw node data
                 permData = [];
                 this.mapNodeLayer.all([]).redraw();
             }
