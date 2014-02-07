@@ -235,6 +235,7 @@ define(function (require) {
             });
 
             this.tagLabels.map('fill').from( function(index) {
+                /*
                 var positiveCount,
                     negativeCount;
 
@@ -243,6 +244,7 @@ define(function (require) {
                     negativeCount = this.bin.value[index].negative;
                     return that.blendSentimentColours(positiveCount, negativeCount);
                 }
+                */
 
                 if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
                     return '#666666';

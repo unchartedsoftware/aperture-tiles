@@ -39,6 +39,7 @@ define(function (require) {
         AoIPyramid = require('../client-rendering/AoITilePyramid'),
         TileIterator = require('../client-rendering/TileIterator'),
         TileTracker = require('../client-rendering/TileTracker'),
+        permData = [],   // TEMPORARY BANDAGE FIX //
         ViewController;
 
 
@@ -127,6 +128,7 @@ define(function (require) {
                 for (i=0; i<that.views.length; ++i) {
                     that.views[i].renderer.onUnselect();
                 }
+                permData = [];
             });
 
             // trigger callback to draw first frame
@@ -230,11 +232,26 @@ define(function (require) {
         updateAndRedrawViews: function() {
             var i,
                 data = [];
+
             for (i=0; i< this.views.length; i++ ) {
                 $.merge(data, this.views[i].tileTracker.getNodeData());
             }
 
-            this.mapNodeLayer.all(data).redraw();
+            /////////////////////////////////////////////
+            // TEMPORARY BANDAGE FIX //
+            if (permData.length > 40) {
+                console.log("clear");
+                permData = [];
+                this.mapNodeLayer.all([]).redraw();
+            }
+            for (i=0; i<data.length; i++) {
+                if(permData.indexOf(data[i]) === -1) {
+                    permData.push(data[i]);
+                }
+            }
+            //////////////////////////////////////////////
+
+            this.mapNodeLayer.all(permData).redraw();
         }
 
 
