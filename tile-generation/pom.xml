@@ -96,6 +96,19 @@
         </executions>
       </plugin>
 
+      <!-- We need to create a test jar too, not just a source jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- Disable surefire plugin - using scalatest instead -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

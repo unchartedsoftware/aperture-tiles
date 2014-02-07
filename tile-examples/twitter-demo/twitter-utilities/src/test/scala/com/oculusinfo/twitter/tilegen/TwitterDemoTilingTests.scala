@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
  
-package com.oculusinfo.tilegen.datasets.twitter
+package com.oculusinfo.twitter.tilegen
 
 
 
@@ -39,11 +39,12 @@ import org.scalatest.FunSuite
 import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.demo.TwitterDemoRecord
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.TestPyramidIO
 import com.oculusinfo.tilegen.tiling.TestTileIO
+
+import com.oculusinfo.twitter.binning.TwitterDemoRecord
 
 
 

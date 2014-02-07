@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
  
-package com.oculusinfo.tilegen.datasets.twitter
+package com.oculusinfo.twitter.tilegen
 
 
 
@@ -36,8 +36,9 @@ import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
 
-import com.oculusinfo.binning.demo.TwitterDemoRecord
 import com.oculusinfo.binning.io.Pair
+
+import com.oculusinfo.twitter.binning.TwitterDemoRecord
 
 
 

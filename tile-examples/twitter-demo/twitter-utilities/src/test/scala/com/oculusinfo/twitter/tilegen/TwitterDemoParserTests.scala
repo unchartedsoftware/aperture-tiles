@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
  
-package com.oculusinfo.tilegen.datasets.twitter
+package com.oculusinfo.twitter.tilegen
 
 
 

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.twitter.binning;
 
 
 
@@ -36,7 +36,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.demo.TwitterDemoRecord;
 import com.oculusinfo.binning.io.GenericAvroArraySerializer;
 import com.oculusinfo.binning.io.Pair;
 

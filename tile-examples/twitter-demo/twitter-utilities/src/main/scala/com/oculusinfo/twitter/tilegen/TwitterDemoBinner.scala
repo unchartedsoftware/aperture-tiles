@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
  
-package com.oculusinfo.tilegen.datasets.twitter
+package com.oculusinfo.twitter.tilegen
 
 
 
@@ -32,10 +32,11 @@ import java.util.Date
 
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 
-import com.oculusinfo.binning.demo.TwitterDemoRecord
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.TileIO
+
+import com.oculusinfo.twitter.binning.TwitterDemoRecord
 
 
 

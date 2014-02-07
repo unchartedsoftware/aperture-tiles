@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.demo;
+package com.oculusinfo.twitter.binning;
 
 import java.util.ArrayList;
 import java.util.Arrays;

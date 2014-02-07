@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
  
-package com.oculusinfo.tilegen.datasets.twitter
+package com.oculusinfo.twitter.tilegen
 
 
 
@@ -33,12 +33,12 @@ import java.util.ArrayList
 
 import scala.collection.JavaConverters._
 
-import com.oculusinfo.binning.demo.TwitterDemoRecord
 import com.oculusinfo.binning.io.TileSerializer
-import com.oculusinfo.binning.io.impl.TwitterDemoAvroSerializer
 
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 
+import com.oculusinfo.twitter.binning.TwitterDemoRecord
+import com.oculusinfo.twitter.binning.TwitterDemoAvroSerializer
 
 
 class TwitterDemoBinDescriptor

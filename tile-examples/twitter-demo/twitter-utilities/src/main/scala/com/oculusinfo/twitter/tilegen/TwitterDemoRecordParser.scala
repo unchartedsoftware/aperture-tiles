@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
  
-package com.oculusinfo.tilegen.datasets.twitter
+package com.oculusinfo.twitter.tilegen
 
 
 
@@ -38,8 +38,9 @@ import java.util.{List => JavaList}
 import scala.collection.JavaConverters._
 import scala.util.parsing.json.JSON
 
-import com.oculusinfo.binning.demo.TwitterDemoRecord
 import com.oculusinfo.binning.io.Pair
+
+import com.oculusinfo.twitter.binning.TwitterDemoRecord
 
 
 
@@ -48,7 +49,7 @@ object Sentiment extends Enumeration("negative", "neutral", "positive") {
   val negative, neutral, positive = Value
 }
 
-private[twitter]
+private[tilegen]
 class TwitterDemoRecordLine (val createdAt: Date,
                              val userId: String,
                              val userName: String,
@@ -109,7 +110,7 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
   private def splitTags (tagsList: String): Array[String] =
     tagsList.split("#").filter(!_.isEmpty)
 
-  private[twitter]
+  private[tilegen]
   def parseLine (line: String): TwitterDemoRecordLine = {
     val fields = line.split("\t")
     new TwitterDemoRecordLine(dateParser.parse(fields(0)),

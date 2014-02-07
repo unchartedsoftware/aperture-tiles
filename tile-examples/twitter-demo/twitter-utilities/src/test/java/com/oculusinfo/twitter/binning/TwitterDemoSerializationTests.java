@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.twitter.binning;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,9 +37,10 @@ import org.junit.Test;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.demo.TwitterDemoRecord;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.io.Pair;
+
+
 
 public class TwitterDemoSerializationTests {
     @Test
