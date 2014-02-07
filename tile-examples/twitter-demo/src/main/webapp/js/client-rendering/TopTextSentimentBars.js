@@ -117,7 +117,7 @@ define(function (require) {
         createLayer: function (mapNodeLayer) {
 
             // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently doesnt not render correctly if on its on PlotLayer...
+            // TODO: currently does not render correctly if on its own PlotLayer...
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
@@ -138,18 +138,23 @@ define(function (require) {
 
                 bar.map('visible').from( function() {
                     return (that.id === this.renderer) &&
-                        (that.mouseState.clickState.tilekey === '' ||
-                         that.mouseState.clickState.tilekey === this.tilekey);
+                          (that.mouseState.clickState.tilekey === '' ||
+                            that.mouseState.clickState.tilekey === this.tilekey);
                 });
 
                 bar.map('fill').from( function(index) {
-                    if (
-                        (that.mouseState.hoverState.binData.tag !== undefined &&
-                            that.mouseState.hoverState.binData.tag === this.bin.value[index].tag &&
-                                that.mouseState.hoverState.tilekey === this.tilekey) ||
-                        (that.mouseState.clickState.binData.tag !== undefined &&
-                            that.mouseState.clickState.binData.tag === this.bin.value[index].tag &&
-                                that.mouseState.clickState.tilekey === this.tilekey)) {
+
+                    var clickTilekey = that.mouseState.clickState.tilekey,
+                        clickTag = that.mouseState.clickState.binData.tag,
+                        hoverTilekey = that.mouseState.hoverState.tilekey,
+                        hoverTag = that.mouseState.hoverState.binData.tag;
+
+                    if ((hoverTag !== undefined &&
+                            hoverTag === this.bin.value[index].tag &&
+                                hoverTilekey === this.tilekey) ||
+                        (clickTag !== undefined &&
+                            clickTag === this.bin.value[index].tag &&
+                                clickTilekey === this.tilekey)) {
 
                         return selectedColour;
                     }

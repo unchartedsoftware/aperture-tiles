@@ -75,14 +75,15 @@ define(function (require) {
         createDetailsOnDemand: function() {
 
             var that = this,
-                DETAILS_OFFSET = that.X_CENTRE_OFFSET + this.TILE_SIZE/ 2,
+                DETAILS_OFFSET_X = that.X_CENTRE_OFFSET + this.TILE_SIZE/ 2,
+                DETAILS_OFFSET_Y = -this.TILE_SIZE/2,
                 V_SPACING = 10,
                 H_SPACING = 14,
-                BAR_CENTRE_LINE = 30,
+                BAR_CENTRE_LINE = DETAILS_OFFSET_Y + 158, //30,
                 BAR_LENGTH = 50,
                 HISTOGRAM_AXIS = BAR_CENTRE_LINE + BAR_LENGTH + V_SPACING + 12,
-                MOST_RECENT = HISTOGRAM_AXIS + 36,
-                MOST_RECENT_SPACING = 55;
+                MOST_RECENT = this.TILE_SIZE/2 + 24, //HISTOGRAM_AXIS + 50, //36,
+                MOST_RECENT_SPACING = 50;
 
             function isVisible(data) {
                 return (that.id === data.renderer) && (that.mouseState.clickState.tilekey === data.tilekey);
@@ -151,7 +152,7 @@ define(function (require) {
                 bar.map('stroke').asValue("#000000");
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-x').from( function(index) {
-                    return DETAILS_OFFSET + 20 + index*9;
+                    return DETAILS_OFFSET_X + 20 + index*9;
                 });
                 return bar;
             }
@@ -169,7 +170,7 @@ define(function (require) {
                 line.map('font-size').asValue(12);
                 line.map('text').asValue('..........................................................................');
                 line.map('offset-y').asValue(yOffset-5);
-                line.map('offset-x').asValue(DETAILS_OFFSET+that.TILE_SIZE/2);
+                line.map('offset-x').asValue(DETAILS_OFFSET_X+that.TILE_SIZE/2);
                 return line;
             }
 
@@ -188,15 +189,14 @@ define(function (require) {
             // BACKGROUND FOR DETAILS
             this.detailsBackground = this.plotLayer.addLayer(aperture.BarLayer);
             this.detailsBackground.map('visible').from(function(){return isVisible(this)});
-            this.detailsBackground.map('fill').asValue('#222222');
+            this.detailsBackground.map('opacity').asValue(0.4);
+            this.detailsBackground.map('fill').asValue('#000000');
             this.detailsBackground.map('orientation').asValue('horizontal');
             this.detailsBackground.map('bar-count').asValue(1);
-            this.detailsBackground.map('width').asValue('450');
-            this.detailsBackground.map('length').asValue('256');
-            this.detailsBackground.map('stroke').asValue("#000000");
-            this.detailsBackground.map('stroke-width').asValue(2);
-            this.detailsBackground.map('offset-y').asValue(-128);
-            this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET);
+            this.detailsBackground.map('width').asValue(this.TILE_SIZE*2 - 2);
+            this.detailsBackground.map('length').asValue(this.TILE_SIZE - 2);
+            this.detailsBackground.map('offset-y').asValue(DETAILS_OFFSET_Y + 1);
+            this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET_X + 1);
 
             // TITLE LABELS
             this.titleLabels = labelTemplate();
@@ -219,14 +219,14 @@ define(function (require) {
             this.titleLabels.map('offset-y').from(function(index) {
                 switch(index) {
                     case 0:
-                        return -105;
+                        return DETAILS_OFFSET_Y + 24;
                     case 1:
-                        return -60;
+                        return DETAILS_OFFSET_Y + 72;
                     default:
                         return MOST_RECENT;
                 }
             });
-            this.titleLabels.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING);
+            this.titleLabels.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING);
 
 
             // TRANSLATE LABEL
@@ -236,8 +236,8 @@ define(function (require) {
             this.translateLabel.map('fill').asValue('#999999');
             this.translateLabel.map('font-size').asValue(16);
             this.translateLabel.map('text').asValue('translate');
-            this.translateLabel.map('offset-y').asValue(-85);
-            this.translateLabel.map('offset-x').asValue(DETAILS_OFFSET + 28);
+            this.translateLabel.map('offset-y').asValue(DETAILS_OFFSET_Y + 48);
+            this.translateLabel.map('offset-x').asValue(DETAILS_OFFSET_X + 28);
 
 
             this.positiveLabel = labelTemplate();
@@ -246,7 +246,7 @@ define(function (require) {
             this.positiveLabel.map('font-size').asValue(16);
             this.positiveLabel.map('text').asValue('positive tweets');
             this.positiveLabel.map('offset-y').asValue(BAR_CENTRE_LINE - BAR_LENGTH - V_SPACING - 2);
-            this.positiveLabel.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING*2);
+            this.positiveLabel.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING*2);
 
             this.negativeLabel = labelTemplate();
             this.negativeLabel.map('visible').from(function(){return isVisible(this)});
@@ -254,7 +254,7 @@ define(function (require) {
             this.negativeLabel.map('font-size').asValue(16);
             this.negativeLabel.map('text').asValue('negative tweets');
             this.negativeLabel.map('offset-y').asValue(BAR_CENTRE_LINE + BAR_LENGTH + V_SPACING);
-            this.negativeLabel.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING*2);
+            this.negativeLabel.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING*2);
 
             this.line1 = lineTemplate('#000000', BAR_CENTRE_LINE);
 
@@ -298,7 +298,7 @@ define(function (require) {
             this.timeAxisLabel.map('font-outline-width').asValue(3);
             this.timeAxisLabel.map('offset-y').asValue(HISTOGRAM_AXIS + 10);
             this.timeAxisLabel.map('offset-x').from(function(index) {
-                return DETAILS_OFFSET + H_SPACING*2 + 50*index;
+                return DETAILS_OFFSET_X + H_SPACING*2 + 50*index;
             });
 
 
@@ -313,7 +313,7 @@ define(function (require) {
             this.timeAxisTicks.map('stroke-width').asValue(1);
             this.timeAxisTicks.map('offset-y').asValue(HISTOGRAM_AXIS);
             this.timeAxisTicks.map('offset-x').from( function(index) {
-                return DETAILS_OFFSET + 24 + 51.5*index;
+                return DETAILS_OFFSET_X + 24 + 51.5*index;
             });
 
 
@@ -326,7 +326,7 @@ define(function (require) {
                     isNaN(length)) {
                     return 0;
                 }
-                return (length > 3) ? 3 : length;
+                return (length > 4) ? 4 : length;
             });
             this.recentTweetsLabel.map('font-size').asValue(10);
             this.recentTweetsLabel.map('text').from( function(index) {
@@ -335,12 +335,13 @@ define(function (require) {
             this.recentTweetsLabel.map('offset-y').from( function(index) {
                 return MOST_RECENT + 45 + (index * MOST_RECENT_SPACING);
             });
-            this.recentTweetsLabel.map('offset-x').asValue(DETAILS_OFFSET + H_SPACING*2);
+            this.recentTweetsLabel.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING*2);
             this.recentTweetsLabel.map('width').asValue(200);
 
             this.line2 = lineTemplate('#FFFFFF', MOST_RECENT + 20);
             this.line3 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING);
             this.line4 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING*2);
+            this.line4 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING*3);
         }
 
 

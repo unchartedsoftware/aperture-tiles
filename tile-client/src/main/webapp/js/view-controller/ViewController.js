@@ -39,7 +39,7 @@ define(function (require) {
         AoIPyramid = require('../client-rendering/AoITilePyramid'),
         TileIterator = require('../client-rendering/TileIterator'),
         TileTracker = require('../client-rendering/TileTracker'),
-        permData = [],   // TEMPORARY BANDAGE FIX //
+        permData = [],  // TEMPORARY BAND AID FIX /
         ViewController;
 
 
@@ -59,8 +59,26 @@ define(function (require) {
                 // add map and zoom/pan event handlers
                 that.map = map;
 
-                // call update on drag end / zoom end / pan end
-                that.map.olMap_.events.register('moveend', that.map.olMap_, $.proxy(that.onMapUpdate, that));
+                function unselectFromClientLayers() {
+                    // call unselect function of client layers when clicking on map
+                    var i;
+                    for (i=0; i<that.views.length; ++i) {
+                        that.views[i].renderer.onUnselect();
+                    }
+                }
+
+                // mouse event handlers
+                that.map.olMap_.events.register('click', that.map.olMap_, unselectFromClientLayers);
+
+                that.map.olMap_.events.register('zoomend', that.map.olMap_, function() {
+                    unselectFromClientLayers();
+                    permData = [];  // reset temporary fix on zoom
+                    that.onMapUpdate();
+                });
+
+                that.map.on('panend', function() {
+                    that.onMapUpdate();
+                });
 
                 that.mapNodeLayer = that.map.addLayer(aperture.geo.MapNodeLayer);
                 that.mapNodeLayer.map('longitude').from('longitude');
@@ -115,21 +133,6 @@ define(function (require) {
             for (i = 0; i < spec.views.length; i++) {
                 addView(spec.views[i]);
             }
-
-            this.map.olMap_.events.register('click', this.map.olMap_, function() {
-                var i;
-                for (i=0; i<that.views.length; ++i) {
-                    that.views[i].renderer.onUnselect();
-                }
-            });
-
-            this.map.olMap_.events.register('zoomend', this.map.olMap_, function() {
-                var i;
-                for (i=0; i<that.views.length; ++i) {
-                    that.views[i].renderer.onUnselect();
-                }
-                permData = [];
-            });
 
             // trigger callback to draw first frame
             this.onMapUpdate();
@@ -238,7 +241,7 @@ define(function (require) {
             }
 
             /////////////////////////////////////////////
-            // TEMPORARY BANDAGE FIX //
+            // TEMPORARY BAND AID FIX //
             if (permData.length > 40) {
                 // clear array in case it gets too big, null and redraw node data
                 permData = [];

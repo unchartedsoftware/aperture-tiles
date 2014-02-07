@@ -127,7 +127,7 @@ define(function (require) {
         createLayer: function (mapNodeLayer) {
 
             // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently doesnt not render correctly if on its on PlotLayer...
+            // TODO: currently does not render correctly if on its own PlotLayer...
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();

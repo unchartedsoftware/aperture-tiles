@@ -80,7 +80,7 @@ define(function (require) {
                 i, j;
 
             // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently doesnt not render correctly if on its on PlotLayer...
+            // TODO: currently does not render correctly if on its own PlotLayer...
             this.plotLayer = this.mapNodeLayer;
 
             // tile outline layer
@@ -103,7 +103,7 @@ define(function (require) {
 
             var that = this,
                 icon = (position === 'left') ? "./images/chevron_L.png" : "./images/chevron_R.png",
-                x = (position === 'left') ? 0.03 : 0.44, // -0.22 : 0.22,
+                x = (position === 'left') ? 0.03 : 0.47, // -0.22 : 0.22,
                 y = 0,
                 hover = new aperture.Set('tilekey'), // separate tiles by tile key for hovering
                 viewSelectionLayer;
@@ -235,7 +235,7 @@ define(function (require) {
         createTileOutlineLayer: function() {
 
             var that = this,
-                OUTLINE_THICKNESS = 2,
+                OUTLINE_THICKNESS = 1,
                 outlineLayer;
 
             outlineLayer = this.plotLayer.addLayer(aperture.BarLayer);
