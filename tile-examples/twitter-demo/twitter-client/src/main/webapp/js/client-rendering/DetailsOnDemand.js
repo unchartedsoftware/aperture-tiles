@@ -189,7 +189,7 @@ define(function (require) {
             // BACKGROUND FOR DETAILS
             this.detailsBackground = this.plotLayer.addLayer(aperture.BarLayer);
             this.detailsBackground.map('visible').from(function(){return isVisible(this)});
-            this.detailsBackground.map('opacity').asValue(0.4);
+            //this.detailsBackground.map('opacity').asValue(0.4);
             this.detailsBackground.map('fill').asValue('#000000');
             this.detailsBackground.map('orientation').asValue('horizontal');
             this.detailsBackground.map('bar-count').asValue(1);
@@ -231,6 +231,7 @@ define(function (require) {
 
             // TRANSLATE LABEL
             // TODO: IMPLEMENT FUNCTIONALITY WITH GOOGLE TRANSLATE API
+            /*
             this.translateLabel = labelTemplate();
             this.translateLabel.map('visible').from(function(){return isVisible(this)});
             this.translateLabel.map('fill').asValue('#999999');
@@ -238,7 +239,7 @@ define(function (require) {
             this.translateLabel.map('text').asValue('translate');
             this.translateLabel.map('offset-y').asValue(DETAILS_OFFSET_Y + 48);
             this.translateLabel.map('offset-x').asValue(DETAILS_OFFSET_X + 28);
-
+            */
 
             this.positiveLabel = labelTemplate();
             this.positiveLabel.map('visible').from(function(){return isVisible(this)});
@@ -256,7 +257,7 @@ define(function (require) {
             this.negativeLabel.map('offset-y').asValue(BAR_CENTRE_LINE + BAR_LENGTH + V_SPACING);
             this.negativeLabel.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING*2);
 
-            this.line1 = lineTemplate('#000000', BAR_CENTRE_LINE);
+            this.line1 = lineTemplate('#FFFFFF', BAR_CENTRE_LINE);
 
             // negative bar
             this.detailsNegativeBar = barTemplate('#D33CFF');

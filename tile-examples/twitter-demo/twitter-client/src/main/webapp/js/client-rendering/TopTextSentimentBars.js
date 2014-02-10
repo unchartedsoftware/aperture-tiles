@@ -130,7 +130,8 @@ define(function (require) {
         createBars: function() {
 
             var that = this,
-                BAR_LENGTH = 100;
+                BAR_LENGTH = 100,
+                BAR_WIDTH = 6;
 
             function barTemplate( defaultColour, greyedColour, selectedColour ) {
 
@@ -170,11 +171,11 @@ define(function (require) {
                 bar.map('bar-count').from(function() {
                     return that.getCount(this);
                 });
-                bar.map('width').asValue(10);
+                bar.map('width').asValue(BAR_WIDTH);
                 bar.map('stroke').asValue("#000000");
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-y').from(function(index) {
-                    return that.getYOffset(this, index) + 15;
+                    return that.getYOffset(this, index) + 16;
                 });
                 return bar;
             }

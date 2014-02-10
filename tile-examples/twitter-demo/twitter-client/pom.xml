@@ -53,12 +53,12 @@
 	<version>7.2.0.v20101020</version>
 	<configuration>
 	  <webAppConfig>
-	    <contextPath>/${project.artifactId}</contextPath>
+	    <contextPath>/twitter-demo</contextPath>
 	    <baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
 	      Use the development (source) code
 	      <resourcesAsCSV>
                 src/main/webapp,
-                ../../tile-client/src/main/webapp,
+                ../../../tile-client/src/main/webapp,
                 ${project.build.directory}/${project.build.finalName}
               </resourcesAsCSV>
 	    </baseResource>

@@ -57,7 +57,9 @@ define(function (require) {
                  var hex = c.toString(16);
                  return hex.length == 1 ? "0" + hex : hex;
              }
-             return "#" + componentToHex( Math.floor(r)) + componentToHex( Math.floor(g)) + componentToHex( Math.floor(b));
+             return "#" + componentToHex( Math.floor(r)) +
+                          componentToHex( Math.floor(g)) +
+                          componentToHex( Math.floor(b));
         },
 
 
@@ -113,6 +115,7 @@ define(function (require) {
             this.mouseState.clickState.xIndex = parseInt(splitKey[1]);
             this.mouseState.clickState.yIndex = parseInt(splitKey[2]);
         },
+
 
         clearMouseState: function() {
             this.clearMouseClickState();
