@@ -1,6 +1,6 @@
 [
 	{
-        "layer": "twitter.2014-01-02.words",
+        "layer": "twitter.2014-01-02.words.censored",
         "transform": "linear",
         "opacity": 0.85
     }
