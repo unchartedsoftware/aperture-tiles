@@ -1,7 +1,2 @@
-/.settings/
-/*.project
-/*.classpath
-/target/
 /bin/
-/src/main/resources/*.zip
 
