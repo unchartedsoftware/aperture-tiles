@@ -122,7 +122,7 @@ extends ObjectifiedBinnerBase[T](source, parser, extractor) {
       val jobName = (name+"bin tiling "+xVar+" vs "+yVar+", levels "
                      +levels.mkString(",")+" ("+whoami+")")
 
-      val sc = argParser.getSparkConnector.getSparkContext(jobName)
+      val sc = argParser.getSparkConnector().getSparkContext(jobName)
       val tileIO = TileIO.fromArguments(argParser)
 
       if (!extractor.isValidField(xVar) || !extractor.isValidField(yVar)) {

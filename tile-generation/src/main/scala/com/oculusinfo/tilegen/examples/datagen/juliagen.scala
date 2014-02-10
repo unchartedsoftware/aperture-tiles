@@ -48,7 +48,7 @@ object JuliaSetGenerator {
     val argParser = new ArgumentParser(args)
     try {
       val jobName = "Julia Set Generation"
-      val sc = argParser.getSparkConnector.getSparkContext(jobName)
+      val sc = argParser.getSparkConnector().getSparkContext(jobName)
 
       val cReal = argParser.getDoubleArgument("real",
                                               "The real portion of the "

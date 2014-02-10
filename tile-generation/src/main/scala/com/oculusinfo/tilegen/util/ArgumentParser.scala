@@ -283,7 +283,7 @@ class ArgumentParser (args: Array[String]) {
   // Complex argument functions
   // These functions standardize some arguments across applications
   //
-  def getSparkConnector: SparkConnector = 
+  def getSparkConnector (jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven): SparkConnector = 
     new GeneralSparkConnector(
       getStringArgument("spark",
                         "Spark master location (default is \"local\")",
@@ -293,5 +293,6 @@ class ArgumentParser (args: Array[String]) {
                         Some(System.getenv("SPARK_HOME"))),
       Some(getStringArgument("user",
                              "spark user name (defaults to login name)",
-                             Some(System.getProperty("user.name")))))
+                             Some(System.getProperty("user.name")))),
+      jars)
 }

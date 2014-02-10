@@ -295,7 +295,7 @@ object TestTableEquality {
   def main (args: Array[String]): Unit = {
     val argParser = new ArgumentParser(args)
     val tileIO = TileIO.fromArguments(argParser)
-    val sc = argParser.getSparkConnector.getSparkContext("Testing table equality")
+    val sc = argParser.getSparkConnector().getSparkContext("Testing table equality")
 
     val serializerType = args(1)
     val table1: String = args(2)

@@ -32,9 +32,11 @@ import java.util.Date
 
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 
-import com.oculusinfo.tilegen.util.ArgumentParser
+import com.oculusinfo.tilegen.spark.MavenReference
+import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.util.ArgumentParser
 
 import com.oculusinfo.twitter.binning.TwitterDemoRecord
 
@@ -45,7 +47,10 @@ object TwitterDemoBinner {
     val argParser = new ArgumentParser(args)
     argParser.debug
 
-    val sc = argParser.getSparkConnector.getSparkContext("Twitter demo data tiling")
+    val jars = 
+      Seq(new MavenReference("com.oculusinfo", "twitter-utilities", "0.1.2-SNAPSHOT")
+      ) union SparkConnector.getDefaultLibrariesFromMaven
+    val sc = argParser.getSparkConnector(jars).getSparkContext("Twitter demo data tiling")
     val source = argParser.getStringArgument("source", "The source location at which to find twitter data")
     val dateParser = new SimpleDateFormat("yyyy/MM/dd.HH:mm:ss.zzzz")
     val startTime = dateParser.parse(argParser.getStringArgument("start", "The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.zzzz"))

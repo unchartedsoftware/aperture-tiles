@@ -56,7 +56,6 @@ import com.oculusinfo.binning.io.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer
 
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
 
@@ -99,7 +98,7 @@ object TileToTextConverter {
         }
 
       // ... spark connection details ...
-      val connector = argParser.getSparkConnector
+      val connector = argParser.getSparkConnector()
 
       val level = argParser.getIntArgument("level", "The level of tile to display")
       val x = argParser.getIntArgument("x", "The x index of the tile to display")
@@ -174,7 +173,7 @@ object TileToImageConverter {
         }
 
       // ... spark connection details ...
-      val connector = argParser.getSparkConnector
+      val connector = argParser.getSparkConnector()
 
       // ... a scale to apply to bin values ...
       val scale = argParser.getStringArgument(
