@@ -171,9 +171,13 @@ define(['class'], function (Class) {
          * from [0.0 - 1.0], representing a fraction of the total data range.
          */
         setFilterRange: function (filterRange) {
-            if (this.filterRange[0] !== filterRange[0] && this.filterRange[1] !== filterRange[1]) {
-                this.filterRange = filterRange;
-                notify("filterRange", this.listeners);
+        	if (filterRange) {
+        		if (this.filterRange[0] !== filterRange[0] && this.filterRange[1] !== filterRange[1]) {
+        			this.filterRange = filterRange;
+        			notify("filterRange", this.listeners);
+        		}
+            } else {
+            	this.filterRange = null;
             }
         },
 

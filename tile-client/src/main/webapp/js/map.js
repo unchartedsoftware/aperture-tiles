@@ -70,8 +70,7 @@ define(function (require) {
 				var ASPECT_RATIO = 10/6,
 					leftOffset = $('#' + that.mapSpec.id).offset().left || 0,
 					rightOffset = $('#' + that.mapSpec.id).offset().right || 0,
-					bufferSpace = (leftOffset > rightOffset) ? leftOffset*2 : rightOffset* 2,
-					i;
+					bufferSpace = (leftOffset > rightOffset) ? leftOffset*2 : rightOffset* 2;
 
 				$('#' + that.mapSpec.id).width( $(window).width() - bufferSpace );
 				$('#' + that.mapSpec.id).height( ($(window).width() - bufferSpace) / ASPECT_RATIO );
