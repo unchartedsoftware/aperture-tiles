@@ -31,7 +31,7 @@
  * modifications to it as the LayerState model changes.
  *
  * TODO:
- * 1) Read filter range from server
+ * 1) Read filter range, ramp function, ramp type, from server when it changes
  * 2) Write filter, ramp function and ramp type back to server in response to layer state model changes
  * 3) Generate filter ramp image URL using the /legend rest request (see ImageTileLegendService.java in tile-service)
  *
@@ -85,14 +85,16 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                     layerName = layerId;
                 }
 
-                // Create a layer state object.
+                // Create a layer state object.  Values are initialized to those provided
+                // by the layer specs, which are defined in the layers.json file, or are
+                // defaulted to appropriate starting values.
                 layerState = new LayerState(layerId);
                 layerState.setName(layerName);
                 layerState.setEnabled(true);
                 layerState.setOpacity(layerSpec.opacity);
                 layerState.setRampFunction(layerSpec.transform);
                 layerState.setRampType(layerSpec.ramp);
-                // TODO: Retrieve filter range from map layer
+                layerState.setFilterRange([0.0, 1.0]);
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener(makeLayerStateCallback(mapLayer, layerState));
@@ -108,6 +110,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
             layerState.setOpacity(worldMap.getOpacity());
             layerState.setRampFunction(null);
             layerState.setRampType(null);
+            layerState.setFilterRange(null);
 
             // Register a callback to handle layer state change events.
             layerState.addListener(function (fieldName) {

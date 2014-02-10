@@ -1,11 +1,11 @@
 @charset "UTF-8";
 
 #controls-container {
-	padding: 10px;
+    padding: 10px;
 }
 
 #layer-controls {
-    font: 16px Are
+    font: 16px Arial;
 }
 
 .title {
@@ -114,8 +114,8 @@
     font-weight: bold;
 }
 
-.settings-values {
-    font-size: 12px;
+.settings-values label {
+    font: 12px Arial;
     margin: 2px 2px 2px 2px;
 }
 

@@ -1,3 +1,6 @@
-/.settings
-/.project
-tile-examples/demo-website/.idea
+.classpath
+.idea
+.project
+.settings
+target
+update.sh
