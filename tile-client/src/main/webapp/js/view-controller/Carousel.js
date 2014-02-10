@@ -34,14 +34,8 @@ define(function (require) {
 
 
 
-    var WebPyramid = require('../client-rendering/WebTilePyramid'),
-        ViewController = require('./ViewController'),
-        webPyramid,
+    var ViewController = require('./ViewController'),
         Carousel;
-
-
-
-    webPyramid = new WebPyramid();
 
 
 
@@ -57,6 +51,7 @@ define(function (require) {
             // call base class ViewController constructor
             this._super(spec);
             this.previousMouse = {};
+            this.selectedTileInfo = {};
 
             // add mouse move and zoom callbacks
             this.map.olMap_.events.register('mousemove', this.map.olMap_, function(event) {
@@ -66,7 +61,7 @@ define(function (require) {
                 that.previousMouse.y = event.xy.y;
             });
 
-            this.map.olMap_.events.register('zoomend', this.map.olMap_, function(event) {
+            this.map.olMap_.events.register('zoomend', this.map.olMap_, function() {
                 var tilekey = that.mapMouseToTileKey(that.previousMouse.x, that.previousMouse.y);
                 that.updateSelectedTile(tilekey);
             });
@@ -84,19 +79,19 @@ define(function (require) {
             var positionFactor = (this.views.length - 1) / 2,
                 i, j;
 
-            this.nodeLayer = this.map.addLayer(aperture.geo.MapNodeLayer);
-            this.nodeLayer.map('longitude').from('longitude');
-            this.nodeLayer.map('latitude').from('latitude');
+            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
+            // TODO: currently does not render correctly if on its own PlotLayer...
+            this.plotLayer = this.mapNodeLayer;
 
             // tile outline layer
-            this.createTileOutlineLayer();
+            this.outline = this.createTileOutlineLayer();
             // left and right view buttons
             this.leftButton = this.createViewSelectionLayer('left');
             this.rightButton = this.createViewSelectionLayer('right');
             // index dots
             this.indexButtons = [];
             for (i=0, j=-positionFactor; j<=positionFactor; i++, j++) {
-                this.indexButtons.push( this.createViewIndexLayer(i, j));
+                this.indexButtons.push(this.createViewIndexLayer(i, j));
             }
         },
 
@@ -108,19 +103,19 @@ define(function (require) {
 
             var that = this,
                 icon = (position === 'left') ? "./images/chevron_L.png" : "./images/chevron_R.png",
-                x = (position === 'left') ? -0.22 : 0.22,
+                x = (position === 'left') ? 0.03 : 0.47, // -0.22 : 0.22,
                 y = 0,
                 hover = new aperture.Set('tilekey'), // separate tiles by tile key for hovering
                 viewSelectionLayer;
 
-            viewSelectionLayer = this.nodeLayer.addLayer(aperture.IconLayer);
+            viewSelectionLayer = this.plotLayer.addLayer(aperture.IconLayer);
 
             viewSelectionLayer.map('width').asValue(15).filter(hover.scale(1.2));
             viewSelectionLayer.map('height').asValue(42).filter(hover.scale(1.5));
             viewSelectionLayer.map('anchor-x').asValue(0.5);
             viewSelectionLayer.map('anchor-y').asValue(0.5);
             viewSelectionLayer.map('url').asValue(icon);
-
+            viewSelectionLayer.map('icon-count').asValue(1);
             viewSelectionLayer.map('x').from(function(){
                 return x/Math.pow(2, that.map.getZoom()-1);
             });
@@ -128,18 +123,21 @@ define(function (require) {
                 return y/Math.pow(2, that.map.getZoom()-1);
             });
 
-            viewSelectionLayer.on('mouseover', function(event) {
+            viewSelectionLayer.on('mousemove', function(event) {
                 hover.add(event.data.tilekey);
             });
 
-            viewSelectionLayer.on('mouseout', function(event) {
+            viewSelectionLayer.on('mouseout', function() {
                 hover.clear();
+            });
+
+            viewSelectionLayer.on('click', function(event) {
+                return true; // swallow event
             });
 
             viewSelectionLayer.on('mouseup', function(event) {
 
                 var tilekey = event.data.tilekey,
-                    button = event.source.button,
                     mod = function (m, n) {
                         return ((m % n) + n) % n;
                     },
@@ -147,15 +145,17 @@ define(function (require) {
                     oldIndex = that.getTileViewIndex(tilekey),
                     newIndex = mod(oldIndex + inc, that.views.length);
 
-                if (button !== 0) {
+                if (event.source.button !== 0) {
                     // not left click, abort
                     return;
                 }
 
                 that.onTileViewChange(tilekey, newIndex);
+            });
 
-                that.indexButtons[oldIndex].all().redraw();
-                that.indexButtons[newIndex].all().redraw();
+
+            viewSelectionLayer.map('visible').from( function() {
+                return (this.tilekey === that.selectedTileInfo.tilekey);
             });
 
             return viewSelectionLayer;
@@ -165,62 +165,64 @@ define(function (require) {
         /**
          * Construct aperture.iconlayers for the index dots representing each view
          */
-        createViewIndexLayer: function(index, spacingFactor) {
+        createViewIndexLayer: function(viewIndex, spacingFactor) {
 
             var that = this,
-                selectIcon = "./images/no_select.png",
-                noSelectIcon = "./images/select.png",
+                noSelectIcon = "./images/no_select.png",
+                selectIcon = "./images/select.png",
                 spacing = 0.04,
                 hover = new aperture.Set('tilekey'), // separate tiles by bin key for hovering
                 viewIndexLayer;
 
-            viewIndexLayer = this.nodeLayer.addLayer(aperture.IconLayer);
+            viewIndexLayer = this.plotLayer.addLayer(aperture.IconLayer);
 
             viewIndexLayer.map('width').asValue(12).filter(hover.scale(1.4));
             viewIndexLayer.map('height').asValue(12).filter(hover.scale(1.4));
             viewIndexLayer.map('anchor-x').asValue(0.5);
             viewIndexLayer.map('anchor-y').asValue(0.5);
-
+            viewIndexLayer.map('icon-count').asValue(1);
             viewIndexLayer.map('x').from(function() {
-                return spacingFactor*spacing/Math.pow(2, that.map.getZoom()-1);
+                var zoomFactor = Math.pow(2, that.map.getZoom()-1);
+                return (0.25/zoomFactor) + (spacingFactor*spacing/zoomFactor);
             });
             viewIndexLayer.map('y').from(function(){
-                return 0.20/Math.pow(2, that.map.getZoom()-1);
+                return 0.2/Math.pow(2, that.map.getZoom()-1);
             });
 
             viewIndexLayer.map('url').from(function() {
-                var id = that.getTileViewIndex( this.tilekey),
+                var id = that.getTileViewIndex(this.tilekey),
                     url;
-                if ( id !== index ) {
-                    url = selectIcon;
-                } else {
+                if ( id !== viewIndex ) {
                     url = noSelectIcon;
+                } else {
+                    url = selectIcon;
                 }
                 return url;
             });
 
-            viewIndexLayer.on('mouseover', function(event) {
+
+            viewIndexLayer.on('mousemove', function(event) {
                 hover.add(event.data.tilekey);
             });
 
-            viewIndexLayer.on('mouseout', function(event) {
+            viewIndexLayer.on('mouseout', function() {
                 hover.clear();
             });
 
             viewIndexLayer.on('click', function(event) {
+                return true; // swallow event
+            });
 
-                var tilekey = event.data.tilekey,
-                    button = event.source.button,
-                    oldIndex = that.getTileViewIndex(tilekey);
-
-                if (button !== 0) {
+            viewIndexLayer.on('mouseup', function(event) {
+                if (event.source.button !== 0) {
                     // not left click, abort
                     return;
                 }
+                that.onTileViewChange(event.data.tilekey, viewIndex);
+            });
 
-                that.onTileViewChange(tilekey, index);
-                that.indexButtons[oldIndex].all().redraw();
-                that.indexButtons[index].all().redraw();
+            viewIndexLayer.map('visible').from( function() {
+                return (this.tilekey === that.selectedTileInfo.tilekey);
             });
 
             return viewIndexLayer;
@@ -232,20 +234,51 @@ define(function (require) {
          */
         createTileOutlineLayer: function() {
 
-            var icon = "./images/tileoutline.png",
+            var that = this,
+                OUTLINE_THICKNESS = 1,
                 outlineLayer;
 
-            outlineLayer = this.nodeLayer.addLayer(aperture.IconLayer);
+            outlineLayer = this.plotLayer.addLayer(aperture.BarLayer);
+            outlineLayer.map('fill').asValue('#FFFFFF');
+            //outlineLayer.map('opacity').asValue(0.8);
+            outlineLayer.map('orientation').asValue('vertical');
+            outlineLayer.map('bar-count').asValue(4);
+            outlineLayer.map('length').from(function(index) {
+                switch(index){
+                    case 0: return 256;
+                    case 1: return OUTLINE_THICKNESS;
+                    case 2: return 256;
+                    default: return OUTLINE_THICKNESS;
+                }
+            });
+            outlineLayer.map('width').from(function(index) {
+                switch(index){
+                    case 0: return OUTLINE_THICKNESS;
+                    case 1: return 256;
+                    case 2: return OUTLINE_THICKNESS;
+                    default: return 256;
+                }
+            });
+            outlineLayer.map('offset-x').from( function(index) {
+                switch(index){
+                    case 0: return 0;
+                    case 1: return 0;
+                    case 2: return 256 - (OUTLINE_THICKNESS-1);
+                    default: return 0;
+                }
+            });
+            outlineLayer.map('offset-y').from( function(index) {
+                switch(index){
+                    case 0: return -128;
+                    case 1: return 128 - (OUTLINE_THICKNESS-1);
+                    case 2: return -128;
+                    default: return -128;
+                }
+            });
 
-            outlineLayer.map('width').asValue(256);
-            outlineLayer.map('height').asValue(256);
-            outlineLayer.map('anchor-x').asValue(0.5);
-            outlineLayer.map('anchor-y').asValue(0.5);
-
-            outlineLayer.map('x').asValue(0);
-            outlineLayer.map('y').asValue(0);
-
-            outlineLayer.map('url').asValue(icon);
+            outlineLayer.map('visible').from( function() {
+                return (this.tilekey === that.selectedTileInfo.tilekey);
+            });
 
             return outlineLayer;
         },
@@ -293,24 +326,31 @@ define(function (require) {
          */
         updateSelectedTile: function(tilekey) {
 
-           var parsedValues = tilekey.split(','),
-               tile = {
-                    level:  parseInt(parsedValues[0], 10),
-                    xIndex: parseInt(parsedValues[1], 10),
-                    yIndex: parseInt(parsedValues[2], 10),
-                    xBinCount: 1,
-                    yBinCount: 1
-                },
-                position = webPyramid.getTileBounds(tile);
+            var i,
+                parsedKey = tilekey.split(','),
+                thisKeyX = parseInt(parsedKey[1], 10),
+                thisKeyY = parseInt(parsedKey[2], 10);
 
-           this.selectedTileInfo = {
-                type: 'carousel-interface',
-                longitude: position.centerX,
-                latitude: position.centerY,
-                visible: true,
+            // hack to prevent carousel from overlapping DoD
+            if (this.mouseState.clickState.tilekey !== '' &&
+                this.mouseState.clickState.xIndex+1 === thisKeyX &&
+                (this.mouseState.clickState.yIndex === thisKeyY ||
+                    this.mouseState.clickState.yIndex-1 ===  thisKeyY)) {
+                return;
+            }
+
+            this.selectedTileInfo = {
+                previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
             };
-            this.nodeLayer.all(this.selectedTileInfo).where('type','carousel-interface').redraw();
+
+            this.outline.all().redraw();
+            this.leftButton.all().redraw();
+            this.rightButton.all().redraw();
+            for (i=0; i<this.indexButtons.length; i++) {
+                this.indexButtons[i].all().redraw();
+            }
+
         },
 
 
@@ -329,7 +369,6 @@ define(function (require) {
             }
             return viewIndex;
         }
-
 
      });
 

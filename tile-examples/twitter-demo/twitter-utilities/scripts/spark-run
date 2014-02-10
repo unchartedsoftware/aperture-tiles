@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Make sure SPARK_HOME is set
+if [ "a" == "a""$SPARK_HOME" ]; then
+  echo SPARK_HOME not set.  Please set SPARK_HOME environment variable and try again.
+  exit 1
+fi
+
+# Make sure SCALA_HOME is set
+if [ "a" == "a""$SCALA_HOME" ]; then
+  echo SCALA_HOME not set.  Please set SCALA_HOME environment variable and try again.
+  exit 1
+fi
+
+# export SPARK_CLASSPATH=$SCALA_HOME/libexec/lib/'*'
+
+function addToSparkClasspath {
+  groupId=$1
+  artifactId=$2
+  version=$3
+  groupDir=`echo ${groupId} | sed 's|\.|/|g'`
+  repo=${HOME}/.m2/repository
+  jardir=${repo}/${groupDir}/${artifactId}/${version}
+  jar=${jardir}/${artifactId}-${version}.jar
+
+  # Testing for existence of jar
+  if [ ! -e ${jar} ]
+  then
+      echo Error: Looking for ${jar} - not found
+      exit
+  fi
+
+  # Add the jar to the classpath
+  if [ "a" == "a"${SPARK_CLASSPATH} ]; then
+    export SPARK_CLASSPATH=${jar}
+  else
+    export SPARK_CLASSPATH=${SPARK_CLASSPATH}:${jar}
+  fi
+}
+
+
+
+
+
+
+# Set up the spark classpath
+
+# Twitter-specific jars
+addToSparkClasspath com.oculusinfo twitter-utilities 0.1.2-SNAPSHOT
+
+# other oculus binning jars
+addToSparkClasspath com.oculusinfo math-utilities 0.1.2-SNAPSHOT
+addToSparkClasspath com.oculusinfo geometric-utilities 0.1.2-SNAPSHOT
+addToSparkClasspath com.oculusinfo binning-utilities 0.1.2-SNAPSHOT
+addToSparkClasspath com.oculusinfo tile-generation 0.1.2-SNAPSHOT
+
+# framework-related jars
+addToSparkClasspath org.apache.hbase hbase-client 0.95.2-cdh5.0.0-beta-1
+addToSparkClasspath org.apache.hbase hbase-protocol 0.95.2-cdh5.0.0-beta-1
+addToSparkClasspath org.apache.hbase hbase-common 0.95.2-cdh5.0.0-beta-1
+addToSparkClasspath org.cloudera.htrace htrace-core 2.01
+
+# additional stuff needed to use avro serialization
+addToSparkClasspath org.apache.avro avro 1.7.4
+addToSparkClasspath org.apache.commons commons-compress 1.4.1
+
+# and just to make sure, scala itself
+addToSparkClasspath org.scala-lang scala-library 2.9.3
+addToSparkClasspath org.scala-lang scala-compiler 2.9.3
+
+
+
+# export MASTER=local[8]
+# export SPARK_MEM=4g
+
+echo Running Spark from $SPARK_HOME
+echo Running Spark on $MASTER
+echo Running Spark with $SPARK_MEM
+echo Running Spark with classpath=$SPARK_CLASSPATH
+
+$SPARK_HOME/spark-class $*

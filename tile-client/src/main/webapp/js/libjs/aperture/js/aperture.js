@@ -2258,9 +2258,11 @@ function(namespace) {
 		if (prev == null) {
 			node.layer.nodes_ = node;
 			node.prev = null;
+			node.next = null;
 		} else {
 			prev.next = node;
 			node.prev = prev;
+			node.next = null;
 		}
 	}
 
@@ -2278,7 +2280,7 @@ function(namespace) {
 		
 		if (c.next) {
 			c.next.prev = c.prev;
-		} 
+		}
 	}
 	
 	/**
@@ -2380,7 +2382,6 @@ function(namespace) {
 					
 				}, this);
 
-				
 				// whatever is left is trash. these are already removed from our locally linked list.
 				for (i = existing.next; i != null; i = i.next) {
 					rmvs.push(i.node);

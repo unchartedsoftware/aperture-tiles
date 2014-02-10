@@ -45,7 +45,7 @@ object TilePrinter {
   def main (args: Array[String]) = {
     val argParser = new ArgumentParser(args)
 
-    val sc = argParser.getSparkConnector.getSparkContext("Tile Edges Test")
+    val sc = argParser.getSparkConnector().getSparkContext("Tile Edges Test")
 
     val baseLocation = 
       argParser.getStringArgument("loc",

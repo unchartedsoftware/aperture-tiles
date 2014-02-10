@@ -107,7 +107,7 @@ object LineStarSampleGenerator {
       "The lowest level at which a line will display as continuous, with no breaks.",
       Option(10))
 
-    val sc = argParser.getSparkConnector.getSparkContext("Create sample data for live tile demonstration")
+    val sc = argParser.getSparkConnector().getSparkContext("Create sample data for live tile demonstration")
 
     val linesPerSide = 256 << topLevel
     val linePartitions = if (bottomLevel < 6) 1 else (1 << (bottomLevel-6))
