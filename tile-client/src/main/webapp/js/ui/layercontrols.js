@@ -106,10 +106,12 @@ define(function (require) {
 
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
-        $settings = $('<a>settings</a>');
-        $settings.click(function () {
-            showLayerSettings($root, layerState);
-        });
+        if (layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
+            $settings = $('<a>settings</a>');
+            $settings.click(function () {
+                showLayerSettings($root, layerState);
+            });
+        }
 
         name = layerState.getName();
         name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
@@ -147,7 +149,7 @@ define(function (require) {
 
         // Add the opacity slider
         filterRange = layerState.getFilterRange();
-        hasFilter = filterRange[0] >= 0 && filterRange[1] >= 0;
+        hasFilter = filterRange !== null && filterRange[0] >= 0 && filterRange[1] >= 0;
         className = hasFilter ? "opacity-slider" : "base-opacity-slider";
         $cell = $('<td class="' + className + '"></td>');
         $subTableRow.append($cell);
