@@ -73,7 +73,7 @@ require(['./fileloader',
                 });
 
                 axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
-                    // skip any axis config objects
+                    // skip any non-axis config objects
                     return (element.hasOwnProperty("AxisConfig"));
                 });
 

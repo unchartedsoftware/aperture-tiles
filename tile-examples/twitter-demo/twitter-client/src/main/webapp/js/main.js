@@ -80,12 +80,11 @@ require(['./fileloader',
                 // Create world map from json file under mapFileId
                 mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
                     // skip any axis config objects
-
                     return !(element.hasOwnProperty("AxisConfig"));
                 });
 
                 axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
-                    // skip any axis config objects
+                    // skip any non-axis config objects
                     return (element.hasOwnProperty("AxisConfig"));
                 });
 
@@ -104,11 +103,8 @@ require(['./fileloader',
                 // debugLayer = new DebugLayer();
                 // debugLayer.addToMap(worldMap);
 
-
-
                 // Set up client-rendered layers
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
-
 
                 for (i=0; i<renderLayerSpecs.length; ++i) {
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
@@ -139,8 +135,6 @@ require(['./fileloader',
                         ]});
                     carousel.dummy = 0; // to shut jslint up
                 });
-
-
 
                 // Set up server-rendered display layers
                 serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
