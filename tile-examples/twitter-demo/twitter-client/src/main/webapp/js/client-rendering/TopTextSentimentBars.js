@@ -48,7 +48,7 @@ define(function (require) {
 
             this._super(id);
             this.valueCount = 5;
-            this.ySpacing = 30;
+            this.ySpacing = 32;
         },
 
 
@@ -96,10 +96,11 @@ define(function (require) {
         },
 
 
-        onHover: function(event) {
+        onHover: function(event, id) {
             this.setMouseHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
-                index :  event.index[0]
+                index :  event.index[0],
+                id : id
             });
             this.redrawLayers(event.data);
         },
@@ -131,9 +132,9 @@ define(function (require) {
 
             var that = this,
                 BAR_LENGTH = 100,
-                BAR_WIDTH = 6;
+                BAR_WIDTH = 8;
 
-            function barTemplate( defaultColour, greyedColour, selectedColour ) {
+            function barTemplate( sentiment, defaultColour, greyedColour, normalColour, selectedColour ) {
 
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
 
@@ -144,7 +145,12 @@ define(function (require) {
                 bar.map('fill').from( function(index) {
 
                     if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                        return selectedColour;
+                        if ( that.mouseState.hoverState.binData.id !== undefined &&
+                             that.mouseState.hoverState.binData.id === sentiment &&
+                             that.mouseState.hoverState.binData.index === index) {
+                            return selectedColour;
+                        }
+                        return normalColour;
                     }
 
                     if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
@@ -160,11 +166,13 @@ define(function (require) {
                 });
 
                 bar.on('mousemove', function(event) {
-                    that.onHover(event);
+                    that.onHover(event, sentiment);
+                    //that.countLabels.all().where(event.data).redraw();
                 });
 
                 bar.on('mouseout', function(event) {
                     that.onHoverOff(event);
+                    //that.countLabels.all().where(event.data).redraw();
                 });
 
                 bar.map('orientation').asValue('horizontal');
@@ -181,7 +189,7 @@ define(function (require) {
             }
 
             // negative bar
-            this.negativeBar = barTemplate('#777777', '#222222', this.NEGATIVE_COLOUR);
+            this.negativeBar = barTemplate('negative', '#777777', '#222222', this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -191,7 +199,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('#222222', '#000000', this.NEUTRAL_COLOUR );
+            this.neutralBar = barTemplate('neutral', '#222222', '#000000', this.NEUTRAL_COLOUR, this.NEUTRAL_SELECTED_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -200,13 +208,63 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('#FFFFFF', '#666666', this.POSITIVE_COLOUR);
+            this.positiveBar = barTemplate('positive', '#FFFFFF', '#666666', this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
             this.positiveBar.map('length').from(function (index) {
                 return that.getCountPercentage(this, index, 'positive') * BAR_LENGTH;
             });
+
+            /*
+            // count labels
+            this.countLabels = that.plotLayer.addLayer(aperture.LabelLayer);
+            this.countLabels.map('font-outline-width').asValue(3);
+            this.countLabels.map('font-size').asValue(12);
+            this.countLabels.map('visible').from(function(){
+                return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey) &&
+                        that.mouseState.hoverState.tilekey === this.tilekey &&
+                        that.mouseState.hoverState.binData.id !== undefined;
+            });
+            this.countLabels.map('fill').from( function() {
+                if (that.mouseState.hoverState.binData.id !== undefined) {
+                    if (that.mouseState.hoverState.binData.id === 'positive') {
+                        return that.POSITIVE_COLOUR;
+                    } else if (that.mouseState.hoverState.binData.id === 'negative') {
+                        return that.NEGATIVE_COLOUR;
+                    } else {
+                        return '#666666'
+                    }
+                }
+                return '#FFFFFF';
+            });
+            this.countLabels.map('text').from(function() {
+
+                var tagIndex;
+                if (that.mouseState.hoverState.binData.id !== undefined &&
+                    that.mouseState.hoverState.binData.index !== undefined) {
+                    tagIndex = that.mouseState.hoverState.binData.index;
+                    return "" + this.bin.value[tagIndex][that.mouseState.hoverState.binData.id];
+                }
+                return "";
+            });
+            this.countLabels.map('label-count').asValue(1);
+            this.countLabels.map('text-anchor').asValue('middle');
+            this.countLabels.map('font-outline').asValue('#000000');
+            this.countLabels.map('font-outline-width').asValue(3);
+            this.countLabels.map('offset-y').from( function() {
+                return that.getYOffset(this, that.mouseState.hoverState.binData.index)+ 24;
+            });
+            this.countLabels.map('offset-x').from( function() {
+                switch(that.mouseState.hoverState.binData.id) {
+                    case 'positive': return that.X_CENTRE_OFFSET + 80;
+                    case 'negative': return that.X_CENTRE_OFFSET - 80;
+                    default: return that.X_CENTRE_OFFSET;
+                }
+            });
+            */
+
+
         },
 
 
@@ -247,7 +305,7 @@ define(function (require) {
             });
 
             this.tagLabel.map('text').from(function (index) {
-                var str = this.bin.value[index].tag;
+                var str = that.filterText(this.bin.value[index].tag);
                 if (str.length > 12) {
                     str = str.substr(0,12) + "...";
                 }
@@ -256,7 +314,12 @@ define(function (require) {
 
             this.tagLabel.map('font-size').from(function (index) {
                 var size = (that.getTotalCountPercentage(this, index) * 60) + 10;
-                return size > 30 ? 30 : size;
+                size = size > 30 ? 30 : size;
+                if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
+                    return size + 5;
+                }
+                return size;
+
             });
             this.tagLabel.map('offset-y').from(function (index) {
                 return that.getYOffset(this, index) + 5;

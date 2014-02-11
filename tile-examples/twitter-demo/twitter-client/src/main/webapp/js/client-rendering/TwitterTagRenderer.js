@@ -46,8 +46,11 @@ define(function (require) {
         init: function(id) {
             this._super(id);
             this.POSITIVE_COLOUR = '#09CFFF';
+            this.POSITIVE_SELECTED_COLOUR  = '#069CCC';
             this.NEGATIVE_COLOUR = '#D33CFF';
+            this.NEGATIVE_SELECTED_COLOUR = '#A009CC';
             this.NEUTRAL_COLOUR = '#222222';
+            this.NEUTRAL_SELECTED_COLOUR = '#000000';
         },
 
 
@@ -64,15 +67,26 @@ define(function (require) {
                     this.mouseState.clickState.yIndex-1 !==  thisKeyY));
         },
 
-        isHoveredOrClicked: function (tag, tilekey) {
-            var clickTilekey = this.mouseState.clickState.tilekey,
-                clickTag = this.mouseState.clickState.binData.tag,
-                hoverTilekey = this.mouseState.hoverState.tilekey,
+
+        isHovered: function (tag, tilekey) {
+            var hoverTilekey = this.mouseState.hoverState.tilekey,
                 hoverTag = this.mouseState.hoverState.binData.tag;
 
-            return ((hoverTag !== undefined && hoverTag === tag && hoverTilekey === tilekey) ||
-                (clickTag !== undefined && clickTag === tag && clickTilekey === tilekey));
+            return hoverTag !== undefined && hoverTag === tag && hoverTilekey === tilekey;
 
+        },
+
+
+        isClicked: function (tag, tilekey) {
+            var clickTilekey = this.mouseState.clickState.tilekey,
+                clickTag = this.mouseState.clickState.binData.tag;
+
+            return clickTag !== undefined && clickTag === tag && clickTilekey === tilekey;
+
+        },
+
+        isHoveredOrClicked: function (tag, tilekey) {
+            return this.isHovered(tag, tilekey) || this.isClicked(tag, tilekey);
         },
 
 
@@ -97,8 +111,42 @@ define(function (require) {
                     this.mouseState.hoverState.binData.tag === tag ||
                     this.mouseState.clickState.binData.tag !== undefined &&
                     this.mouseState.clickState.binData.tag === tag)
-        }
+        },
 
+
+        filterText: function (text) {
+            var splitStr = text.split(' '),
+                i, j, k, index,
+                filterWords = ['shit', 'fuck', 'nigg'],
+                replacement,
+                filteredStr = '';
+
+            // for each word
+            for (i=0; i< splitStr.length; i++) {
+                // for each filter word
+                for (j=0; j<filterWords.length; j++) {
+
+                    do {
+                        index = splitStr[i].toLowerCase().indexOf(filterWords[j]);
+                        if ( index !== -1) {
+                            // if it exists, replace inner letters with '*'
+                            replacement = splitStr[i].substr(0, index+1);
+                            for (k=index+1; k<filterWords[j].length-1; k++) {
+                                replacement += '*';
+                            }
+                            replacement += splitStr[i].substr(index+filterWords[j].length-1, splitStr[i].length-1);
+                            splitStr[i] = replacement;
+                        }
+                    // make sure every instance is censored
+                    } while ( index !== -1);
+                }
+                filteredStr += splitStr[i];
+                if ( i+1 < splitStr.length ) {
+                    filteredStr += ' ';
+                }
+            }
+            return filteredStr;
+        }
     });
 
     return TwitterTagRenderer;
