@@ -130,24 +130,26 @@ require(['./fileloader',
                     }
                 }
 
-                LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
-                    dataTracker = new DataTracker(layerInfo);
-                    carousel = new Carousel( {
-                        map: worldMap.map,
-                        views: [
-                            {
-                                id: "red",
-                                dataTracker: dataTracker,
-                                renderer: tileScoreRenderer
-                            },
-                            {
-                                id: "blue",
-                                dataTracker: dataTracker,
-                                renderer: tileScoreRendererOther
-                            }
-                        ]});
-                    carousel.dummy = 0; // to shut jslint up
-                });
+                if (renderLayerSpec !== undefined) {
+                    LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
+                        dataTracker = new DataTracker(layerInfo);
+                        carousel = new Carousel( {
+                            map: worldMap.map,
+                            views: [
+                                {
+                                    id: "red",
+                                    dataTracker: dataTracker,
+                                    renderer: tileScoreRenderer
+                                },
+                                {
+                                    id: "blue",
+                                    dataTracker: dataTracker,
+                                    renderer: tileScoreRendererOther
+                                }
+                            ]});
+                        carousel.dummy = 0; // to shut jslint up
+                    });
+                }
 
 
 

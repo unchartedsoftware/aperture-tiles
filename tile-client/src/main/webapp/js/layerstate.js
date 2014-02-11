@@ -34,7 +34,7 @@
 define(['class'], function (Class) {
     "use strict";
 
-    var LayerState, notify;
+    var LayerState, notify, arraysEqual;
 
     /**
      * @param {string} fieldName - Name of the modified field.
@@ -45,6 +45,32 @@ define(['class'], function (Class) {
         for (i = 0; i < listeners.length; i += 1) {
             listeners[i](fieldName);
         }
+    };
+
+    /**
+     * Compares arrays for equality.
+     *
+     * @param {Array} a - First array under comparison
+     * @param {Array} b - Second array under comparison
+     * @returns {boolean} true if they are equal, false otherwise.
+     */
+    arraysEqual = function (a, b) {
+        var i;
+        if (a === b) {
+            return true;
+        }
+        if (a === null || b === null) {
+            return false;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+        for (i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
     };
 
     LayerState = Class.extend({
@@ -171,7 +197,7 @@ define(['class'], function (Class) {
          * from [0.0 - 1.0], representing a fraction of the total data range.
          */
         setFilterRange: function (filterRange) {
-            if (this.filterRange[0] !== filterRange[0] && this.filterRange[1] !== filterRange[1]) {
+            if (!arraysEqual(this.filterRange, filterRange)) {
                 this.filterRange = filterRange;
                 notify("filterRange", this.listeners);
             }

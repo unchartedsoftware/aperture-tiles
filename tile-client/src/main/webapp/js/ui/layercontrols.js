@@ -282,7 +282,7 @@ define(function (require) {
         });
 
         $('input[name="ramp-functions"]').change(function () {
-            layerState.setRampFunction($('input[name="ramp-types"]:checked').val());
+            layerState.setRampFunction($('input[name="ramp-functions"]:checked').val());
         });
     };
 

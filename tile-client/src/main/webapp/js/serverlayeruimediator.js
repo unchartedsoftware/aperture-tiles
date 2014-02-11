@@ -60,22 +60,28 @@ define(['class', 'layerstate'], function (Class, LayerState) {
 
             this.layerStateMap = layerStateMap;
             this.mapLayer = mapLayer;
-
             layerIds = mapLayer.getSubLayerIds();
+
             layerSpecsById = mapLayer.getSubLayerSpecsById();
 
             // A callback to modify map / visual state in response to layer changes.
             makeLayerStateCallback = function (mapLayer, layerState) {
+                // Create layer state objects from the layer specs provided by the server rendered map layer.
                 return function (fieldName) {
                     if (fieldName === "opacity") {
                         mapLayer.setSubLayerOpacity(layerState.getId(), layerState.getOpacity());
                     } else if (fieldName === "enabled") {
                         mapLayer.setSubLayerEnabled(layerState.getId(), layerState.isEnabled());
-                    } // TODO: Add handlers for other changes (filter value, ramp type, ramp function)
+                    } else if (fieldName === "rampType") {
+                        mapLayer.setSubLayerRampType(layerState.getId(), layerState.getRampType());
+                    } else if (fieldName === "rampFunction") {
+                        mapLayer.setSubLayerRampFunction(layerState.getId(), layerState.getRampFunction());
+                    } else if (fieldName === "filterRange") {
+                        mapLayer.setSubLayerFilterRange(layerState.getId(), layerState.getFilterRange(), 0);
+                    }
                 };
             };
 
-            // Create layer state objects from the layer specs provided by the server rendered map layer.
             for (i = 0; i < layerIds.length; i += 1) {
                 // Get the layer spec using the layer ID
                 layerId = layerIds[i];

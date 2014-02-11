@@ -314,6 +314,74 @@ define(function (require) {
         },
 
         /**
+         * Updates the ramp type associated with the layer.  Results in a POST
+         * to the server.
+         *
+         * @param {string} subLayerId - The ID of layer
+         * @param {string} rampType - The new ramp type for the layer.
+         */
+        setSubLayerRampType: function (subLayerId, rampType) {
+            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            layerSpec.ramp = rampType;
+            this.dataListener.retrieveLayerInfo();
+        },
+
+        /**
+         * @param {string} subLayerId - The ID of the sub layer to query.
+         * @returns {string} ramp - The type of the ramp applied to the layer.
+         */
+        getSubLayerRampType: function (subLayerId) {
+            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            return layerSpec.ramp;
+        },
+
+        /**
+         * Updates the ramp function associated with the layer.  Results in a POST
+         * to the server.
+         *
+         * @param {string} subLayerId - The ID of the sub layer to update.
+         * @param {string} rampFunction - The new new ramp function.
+         */
+        setSubLayerRampFunction: function (subLayerId, rampFunction) {
+            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            layerSpec.transform = rampFunction;
+            this.dataListener.retrieveLayerInfo();
+        },
+
+        /**
+         * @param {string} subLayerId - The ID of the sub layer to query.
+         * @returns {string}  The ramp function for the layer.
+         */
+        getSubLayerRampFunction: function (subLayerId) {
+            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            return layerSpec.transform;
+        },
+
+        /**
+         * Updates the filter range for the layer.  Results in a POST to the server.
+         *
+         * @param {string} subLayerId - The ID of the sub layer to update.
+         * @param {Array} filterRange - A two element array with values in the range [0.0, 1.0],
+         * where the first element is the min range, and the second is the max range.
+         */
+        setSubLayerFilterRange: function (subLayerId, filterRange) {
+            var layerSpec;
+            layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            layerSpec.legendrange = [filterRange[0] * 100, filterRange[1] * 100];
+            this.dataListener.retrieveLayerInfo();
+        },
+
+        /**
+         * @param {string} subLayerId - The ID of the sub layer to update.
+         * @returns {Array} filterRange - A two element array with values in the range [0.0, 1.0],
+         * where the first element is the min range, and the second is the max range.
+         */
+        getSubLayerFilterRange: function (subLayerId) {
+            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            return layerSpec.legendrange;
+        },
+
+        /**
          * Update all our openlayers layers on our map.
          */
         updateLayers: function () {
@@ -322,11 +390,9 @@ define(function (require) {
             }
 
             forEachLayer(this, function (layer, layerInfo) {
-                var layerSpec = this.dataListener.getLayerSpecification(layer)
-                    ,olBounds
-                    ,yFunction
-                    ;
-
+                var layerSpec = this.dataListener.getLayerSpecification(layer),
+                    olBounds,
+                    yFunction;
                 if (!layerInfo) {
                     // No info; remove layer for now
                     if (this.mapLayer[layer]) {
@@ -348,7 +414,8 @@ define(function (require) {
 
                     // Remove any old version of this layer
                     if (this.mapLayer[layer]) {
-                        this.map.map.remove(this.mapLayer[layer]);
+                        //this.map.map.removeLayer(this.mapLayer[layer]);
+                        this.mapLayer[layer].remove();
                         this.mapLayer[layer] = null;
                     }
 
