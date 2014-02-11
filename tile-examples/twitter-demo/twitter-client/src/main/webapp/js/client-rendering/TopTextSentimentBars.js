@@ -157,11 +157,8 @@ define(function (require) {
                 });
 
                 bar.on('click', function(event) {
-                    return true; // swallow event
-                });
-
-                bar.on('mouseup', function(event) {
                     that.onClick(event);
+                    return true; // swallow event
                 });
 
                 bar.on('mousemove', function(event) {
@@ -228,7 +225,10 @@ define(function (require) {
             this.summaryLabel.map('visible').from(function(){
                 return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey) &&
                     that.mouseState.hoverState.tilekey === this.tilekey &&
-                    that.mouseState.hoverState.userData.id !== undefined;
+                    ( that.mouseState.hoverState.userData.id === 'topTextSentimentBarsPositive' ||
+                        that.mouseState.hoverState.userData.id === 'topTextSentimentBarsNeutral' ||
+                        that.mouseState.hoverState.userData.id === 'topTextSentimentBarsNegative' ||
+                        that.mouseState.hoverState.userData.id === 'topTextSentimentBarsAll');
             });
             this.summaryLabel.map('fill').from( function(index) {
                 var id = that.mouseState.hoverState.userData.id;
@@ -288,11 +288,8 @@ define(function (require) {
             });
 
             this.tagLabel.on('click', function(event) {
-                return true; // swallow event
-            });
-
-            this.tagLabel.on('mouseup', function(event) {
                 that.onClick(event);
+                return true; // swallow event
             });
 
             this.tagLabel.on('mousemove', function(event) {

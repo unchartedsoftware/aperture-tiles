@@ -132,12 +132,7 @@ define(function (require) {
             });
 
             viewSelectionLayer.on('click', function(event) {
-                return true; // swallow event
-            });
-
-            viewSelectionLayer.on('mouseup', function(event) {
-
-                var tilekey = event.data.tilekey,
+				var tilekey = event.data.tilekey,
                     mod = function (m, n) {
                         return ((m % n) + n) % n;
                     },
@@ -151,8 +146,8 @@ define(function (require) {
                 }
 
                 that.onTileViewChange(tilekey, newIndex);
+                return true; // swallow event
             });
-
 
             viewSelectionLayer.map('visible').from( function() {
                 return (this.tilekey === that.selectedTileInfo.tilekey);
@@ -210,15 +205,12 @@ define(function (require) {
             });
 
             viewIndexLayer.on('click', function(event) {
-                return true; // swallow event
-            });
-
-            viewIndexLayer.on('mouseup', function(event) {
-                if (event.source.button !== 0) {
+				if (event.source.button !== 0) {
                     // not left click, abort
-                    return;
+                    return true;
                 }
                 that.onTileViewChange(event.data.tilekey, viewIndex);
+                return true; // swallow event
             });
 
             viewIndexLayer.map('visible').from( function() {

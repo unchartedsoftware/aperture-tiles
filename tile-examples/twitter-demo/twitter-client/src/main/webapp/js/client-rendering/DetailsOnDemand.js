@@ -171,6 +171,7 @@ define(function (require) {
 
             function barTemplate( defaultColour, selectedColour ) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
+                bar.on('click', function() { return true; }); //swallow event
                 bar.map('visible').from(function(){return isVisible(this)});
                 bar.map('fill').from( function(index) {
                     if ( that.mouseState.hoverState.userData !== undefined &&
@@ -195,6 +196,7 @@ define(function (require) {
 
             function lineTemplate( colour, yOffset ) {
                 var line = that.plotLayer.addLayer(aperture.LabelLayer);
+                line.on('click', function() { return true; }); //swallow event
                 line.map('visible').from(function(){return isVisible(this)});
                 line.map('fill').asValue(colour);
                 line.map('label-count').asValue(1);
@@ -211,6 +213,7 @@ define(function (require) {
 
             function labelTemplate() {
                 var label = that.plotLayer.addLayer(aperture.LabelLayer);
+                label.on('click', function() { return true; }); //swallow event
                 label.map('visible').from(function(){return isVisible(this)});
                 label.map('fill').asValue('#FFFFFF');
                 label.map('label-count').asValue(1);
@@ -230,6 +233,7 @@ define(function (require) {
             this.detailsBackground.map('length').asValue(this.TILE_SIZE - 2);
             this.detailsBackground.map('offset-y').asValue(DETAILS_OFFSET_Y + 1);
             this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET_X + 1);
+            this.detailsBackground.on('click', function() { return true; }); //swallow event
 
             // TITLE LABELS
             this.titleLabels = labelTemplate();
@@ -365,6 +369,7 @@ define(function (require) {
 
             // HOVER COUNT LABELS
             this.countLabels = that.plotLayer.addLayer(aperture.LabelLayer);
+            this.countLabels.on('click', function() { return true; }); //swallow event
             this.countLabels.map('font-outline-width').asValue(3);
             this.countLabels.map('font-size').asValue(12);
             this.countLabels.map('visible').from(function(){
@@ -425,6 +430,7 @@ define(function (require) {
 
             // TIME AXIS LABEL
             this.timeAxisLabel = that.plotLayer.addLayer(aperture.LabelLayer);
+            this.timeAxisLabel.on('click', function() { return true; }); //swallow event
             this.timeAxisLabel.map('visible').from(function(){return isVisible(this)});
             this.timeAxisLabel.map('fill').asValue('#FFFFFF');
             this.timeAxisLabel.map('text').from(function(index) {

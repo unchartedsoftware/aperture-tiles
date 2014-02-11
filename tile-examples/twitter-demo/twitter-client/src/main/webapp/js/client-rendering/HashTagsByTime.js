@@ -200,11 +200,8 @@ define(function (require) {
             });
 
             this.bars.on('click', function(event) {
-                return true; // swallow event
-            });
-
-            this.bars.on('mouseup', function(event) {
                 that.onClick(event, Math.floor(event.index[0]/24));
+                return true; // swallow event
             });
 
             this.bars.on('mousemove', function(event) {
@@ -301,11 +298,8 @@ define(function (require) {
             this.tagLabels.map('font-outline-width').asValue(3);
 
             this.tagLabels.on('click', function(event) {
-                return true; // swallow event
-            });
-
-            this.tagLabels.on('mouseup', function(event) {
                 that.onClick(event, event.index[0]);
+                return true; // swallow event
             });
 
             this.tagLabels.on('mousemove', function(event) {
