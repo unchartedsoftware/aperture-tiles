@@ -157,8 +157,11 @@ define(function (require) {
                 });
 
                 bar.on('click', function(event) {
-                    that.onClick(event);
                     return true; // swallow event
+                });
+
+                bar.on('mouseup', function(event) {
+                    that.onClick(event);
                 });
 
                 bar.on('mousemove', function(event) {
@@ -285,8 +288,11 @@ define(function (require) {
             });
 
             this.tagLabel.on('click', function(event) {
-                that.onClick(event);
                 return true; // swallow event
+            });
+
+            this.tagLabel.on('mouseup', function(event) {
+                that.onClick(event);
             });
 
             this.tagLabel.on('mousemove', function(event) {

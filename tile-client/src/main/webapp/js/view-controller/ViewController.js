@@ -214,8 +214,7 @@ define(function (require) {
          */
         updateAndRedrawViews: function() {
             var i,
-                data = [],
-				newData = [];
+                data = [];
 
             for (i=0; i< this.views.length; i++ ) {
                 $.merge(data, this.views[i].tileTracker.getNodeData());
@@ -231,7 +230,6 @@ define(function (require) {
             for (i=0; i<data.length; i++) {
                 if(permData.indexOf(data[i]) === -1) {
                     permData.push(data[i]);
-					newData.push(data[i]);
                 }
             }
             //////////////////////////////////////////////
