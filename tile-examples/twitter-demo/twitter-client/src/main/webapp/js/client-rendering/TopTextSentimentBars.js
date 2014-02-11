@@ -52,12 +52,6 @@ define(function (require) {
         },
 
 
-        onUnselect: function() {
-            this.clearMouseClickState();
-            this.plotLayer.all().redraw();
-        },
-
-
         getCountPercentage: function(data, index, type) {
             if (data.bin.value[index].count === 0) {
                 return 0;
@@ -89,7 +83,7 @@ define(function (require) {
 
 
         onClick: function(event) {
-            this.setMouseClickState(event.data.tilekey, {
+            this.mouseState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index :  event.index[0]
             });
@@ -98,7 +92,7 @@ define(function (require) {
 
 
         onHover: function(event, id) {
-            this.setMouseHoverState(event.data.tilekey, {
+            this.mouseState.setHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index :  event.index[0],
                 id : id
@@ -108,7 +102,7 @@ define(function (require) {
 
 
         onHoverOff: function(event) {
-            this.clearMouseHoverState();
+            this.mouseState.clearHoverState();
             this.redrawLayers(event.data);
         },
 

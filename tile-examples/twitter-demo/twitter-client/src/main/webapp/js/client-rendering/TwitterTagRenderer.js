@@ -147,70 +147,9 @@ define(function (require) {
                     filteredStr += ' ';
                 }
             }
-
-            function decode(utftext) {
-                var string = "",
-                    c = 0,
-                    c2 = 0,
-                    c3 = 0,
-                    i =0;
-
-                while ( i < utftext.length ) {
-                    c = utftext.charCodeAt(i);
-                    if (c < 128) {
-                        string += String.fromCharCode(c);
-                        i++;
-                    }
-                    else if((c > 191) && (c < 224)) {
-                        c2 = utftext.charCodeAt(i+1);
-                        string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
-                        i += 2;
-                    }
-                    else {
-                        c2 = utftext.charCodeAt(i+1);
-                        c3 = utftext.charCodeAt(i+2);
-                        string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-                        i += 3;
-                    }
-                }
-                return string;
-            }
-
             return filteredStr;
-
-        },
-
-
-        createCountSummaries: function( vsibility) {
-
-            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
-            this.summaryLabel.map('font-outline').asValue('#000000');
-            this.summaryLabel.map('font-outline-width').asValue(3);
-            this.summaryLabel.map('label-count').asValue(3);
-            this.summaryLabel.map('font-size').asValue(12);
-            this.summaryLabel.map('visible').from(function(){return isVisible(this)});
-            this.summaryLabel.map('fill').from( function(index) {
-                switch(index) {
-                    case 0: return that.POSITIVE_COLOUR;
-                    case 1: return '#999999';
-                    default: return that.NEGATIVE_COLOUR;
-                }
-            });
-            this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.clickState.userData.index;
-                switch(index) {
-                    case 0: return "+ "+this.bin.value[tagIndex].positive;
-                    case 1: return ""+this.bin.value[tagIndex].neutral;
-                    default: return "- "+this.bin.value[tagIndex].negative;
-                }
-            });
-            this.summaryLabel.map('offset-y').from(function(index) {
-                return DETAILS_OFFSET_Y + (that.VERTICAL_BUFFER-4) + (14) * index;
-            });
-            this.summaryLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE - that.HORIZONTAL_BUFFER);
-            this.summaryLabel.map('text-anchor').asValue('end');
-
         }
+
     });
 
     return TwitterTagRenderer;

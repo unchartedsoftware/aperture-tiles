@@ -61,17 +61,15 @@ define(function (require) {
 
 
         onHover: function(event, id) {
-            this.setMouseHoverState(event.data.tilekey, {
+            this.mouseState.setHoverState(event.data.tilekey, {
                 index :  event.index[0],
                 id: id
             });
-            this.redrawLayers(event.data);
         },
 
 
         onHoverOff: function(event) {
-            this.clearMouseHoverState();
-            this.redrawLayers(event.data);
+            this.mouseState.clearHoverState();
         },
 
 

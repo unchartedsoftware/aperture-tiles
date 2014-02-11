@@ -52,11 +52,9 @@ define(function (require) {
 
         getTotalCountPercentage: function(data, index) {
             var tagIndex = Math.floor(index / 24);
-
             if (data.bin.value[tagIndex].count === 0) {
                 return 0;
             }
-
             return data.bin.value[tagIndex].countByTime[index % 24] / data.bin.value[tagIndex].count;
         },
 
@@ -68,14 +66,8 @@ define(function (require) {
         },
 
 
-        onUnselect: function() {
-            this.clearMouseClickState();
-            this.plotLayer.all().redraw();
-        },
-
-
         onClick: function(event, index) {
-            this.setMouseClickState(event.data.tilekey, {
+            this.mouseState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[index].tag,
                 index : index
             });
@@ -84,7 +76,7 @@ define(function (require) {
 
 
         onHover: function(event, index, id) {
-            this.setMouseHoverState(event.data.tilekey, {
+            this.mouseState.setHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[index].tag,
                 index : index,
                 id : id
@@ -94,7 +86,7 @@ define(function (require) {
 
 
         onHoverOff: function(event) {
-            this.clearMouseHoverState();
+            this.mouseState.clearHoverState();
             this.redrawLayers(event.data);
         },
 
@@ -154,7 +146,7 @@ define(function (require) {
                 if (count === 0) {
                     return 0;
                 }
-                for(i=0; i<24; i++) {
+                for (i=0; i<24; i++) {
                     // get maximum percent
                     percent = data.bin.value[tagIndex].countByTime[i] / count;
                     if (percent > maxPercent) {
@@ -165,11 +157,11 @@ define(function (require) {
             }
 
             this.bars = this.plotLayer.addLayer(aperture.BarLayer);
-
+            this.bars.map('orientation').asValue('vertical');
+            this.bars.map('width').asValue(3);
             this.bars.map('visible').from( function() {
                 return that.id === this.renderer && that.isNotBehindDoD(this.tilekey);
             });
-
             this.bars.map('fill').from( function(index) {
                 var tagIndex = Math.floor(index/24),
                     positiveCount,
@@ -185,12 +177,9 @@ define(function (require) {
                 }
                 return "#FFFFFF";
             });
-
-            this.bars.map('orientation').asValue('vertical');
             this.bars.map('bar-count').from( function() {
                 return 24 * that.getCount(this);
             });
-            this.bars.map('width').asValue(3);
             this.bars.map('offset-y').from(function(index) {
                 var maxPercentage = getMaxPercentage(this, index);
                 if (maxPercentage === 0) {
@@ -199,11 +188,9 @@ define(function (require) {
                 return -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
                        that.getYOffset(this, Math.floor(index/24));
             });
-
             this.bars.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET - 90 + ((index % 24) * 4);
             });
-
             this.bars.map('length').from(function (index) {
                 var maxPercentage = getMaxPercentage(this, index);
                 if (maxPercentage === 0) {
@@ -258,7 +245,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('offset-y').from(function(index) {
-                return -that.TILE_SIZE/2 + (that.VERTICAL_BUFFER-4) + (14) * index;
+                return (-that.TILE_SIZE/2) + (that.VERTICAL_BUFFER-4) + (14 * index);
             });
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
@@ -276,7 +263,6 @@ define(function (require) {
             });
 
             this.tagLabels.map('fill').from( function(index) {
-
                 if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
                     return '#666666';
                 }

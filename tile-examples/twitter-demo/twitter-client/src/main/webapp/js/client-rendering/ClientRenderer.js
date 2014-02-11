@@ -97,58 +97,6 @@ define(function (require) {
         },
 
 
-        setMouseHoverState: function(tilekey, userData) {
-            var splitKey = tilekey.split(',');
-            this.mouseState.hoverState.userData = userData;
-            this.mouseState.hoverState.tilekey = tilekey;
-            this.mouseState.hoverState.level = parseInt(splitKey[0]);
-            this.mouseState.hoverState.xIndex = parseInt(splitKey[1]);
-            this.mouseState.hoverState.yIndex = parseInt(splitKey[2]);
-        },
-
-
-        setMouseClickState: function(tilekey, userData) {
-            var splitKey = tilekey.split(',');
-            this.mouseState.clickState.userData = userData;
-            this.mouseState.clickState.tilekey = tilekey;
-            this.mouseState.clickState.level = parseInt(splitKey[0]);
-            this.mouseState.clickState.xIndex = parseInt(splitKey[1]);
-            this.mouseState.clickState.yIndex = parseInt(splitKey[2]);
-        },
-
-
-        clearMouseState: function() {
-            this.clearMouseClickState();
-            this.clearMouseHoverState();
-        },
-
-
-        clearMouseClickState: function() {
-            this.mouseState.clickState = {
-                userData : {},
-                tilekey : '',
-                level : -1,
-                xIndex : -1,
-                yIndex : -1
-            };
-        },
-
-
-        clearMouseHoverState: function() {
-            this.mouseState.hoverState = {
-                userData : {},
-                tilekey : '',
-                level : -1,
-                xIndex : -1,
-                yIndex : -1
-            };
-        },
-
-
-        onUnselect: function() {
-        },
-
-
         createLayer: function (nodeLayer) {
         },
 
