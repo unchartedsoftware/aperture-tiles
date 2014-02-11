@@ -134,7 +134,7 @@ define(function (require) {
 
             var that = this,
                 BAR_LENGTH = 100,
-                BAR_WIDTH = 8;
+                BAR_WIDTH = 6;
 
             function barTemplate( sentiment, defaultColour, greyedColour, normalColour, selectedColour ) {
 

@@ -164,7 +164,9 @@ require(['./fileloader',
                 new LayerControls().initialize(mapLayerState);
                 
 
-
+                // Trigger the initial resize event to resize everything
+                $(window).resize();
+                
                 /*
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());

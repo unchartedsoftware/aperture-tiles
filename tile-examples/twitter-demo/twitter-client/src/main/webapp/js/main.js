@@ -151,6 +151,9 @@ require(['./fileloader',
                 // Zoom to the area of the world with the data.
                 worldMap.map.zoomTo( 40, -95, 4 );
                 
+                // Trigger the initial resize event to resize everything
+                $(window).resize();
+                
                 /*
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());
