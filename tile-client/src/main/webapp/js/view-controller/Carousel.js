@@ -326,8 +326,7 @@ define(function (require) {
          */
         updateSelectedTile: function(tilekey) {
 
-            var i,
-                parsedKey = tilekey.split(','),
+            var parsedKey = tilekey.split(','),
                 thisKeyX = parseInt(parsedKey[1], 10),
                 thisKeyY = parseInt(parsedKey[2], 10);
 
@@ -335,7 +334,7 @@ define(function (require) {
             if (this.mouseState.clickState.tilekey !== '' &&
                 this.mouseState.clickState.xIndex+1 === thisKeyX &&
                 (this.mouseState.clickState.yIndex === thisKeyY ||
-                    this.mouseState.clickState.yIndex-1 ===  thisKeyY)) {
+                 this.mouseState.clickState.yIndex-1 ===  thisKeyY)) {
                 return;
             }
 
@@ -343,16 +342,26 @@ define(function (require) {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
             };
-
-            this.outline.all().redraw();
+			
+			this.redrawUI();
+        },
+		
+		
+		/**
+		 *	Redraws the carousel specific layers
+		 */
+		redrawUI: function() {
+			
+			var i;
+			
+			this.outline.all().redraw();
             this.leftButton.all().redraw();
             this.rightButton.all().redraw();
             for (i=0; i<this.indexButtons.length; i++) {
                 this.indexButtons[i].all().redraw();
             }
-
-        },
-
+			
+		},
 
         /**
          * Maps a tilekey to its current view index. If none is specified, use default
@@ -362,7 +371,7 @@ define(function (require) {
             // given a tile key "level + "," + xIndex + "," + yIndex"
             // return the view index
             var viewIndex;
-            if ( this.tileViewMap[tilekey] === undefined ) {
+            if (this.tileViewMap[tilekey] === undefined) {
                 viewIndex = this.defaultViewIndex ;
             } else {
                 viewIndex = this.tileViewMap[tilekey];

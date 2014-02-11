@@ -126,8 +126,8 @@ define(function (require) {
                 return (maxPositive > maxNegative) ? maxPositive : maxNegative;
             }
 
-            function formatText(str, charsPerLine) {
-                var CHAR_PER_LINE = charsPerLine || 35,
+            function formatText(str, charPerLine) {
+                var CHAR_PER_LINE = charPerLine || 35,
                     MAX_NUM_LINES = 3,
                     strArray = str.split(" "),
                     formatted = '',
@@ -138,15 +138,26 @@ define(function (require) {
                 for (i=0; i<strArray.length; i++) {
 
                     while (strArray[i].length > spaceLeft) {
+
+                        // if past maximum amount of lines, truncate
                         if (lineCount === MAX_NUM_LINES-1) {
+                            // strip space if is als character of string
+                            if (formatted[formatted.length-1] === ' ') {
+                                formatted = formatted.substring(0, formatted.length - 1);
+                            }
                             return formatted += strArray[i].substr(0, spaceLeft-3) + "..."
                         }
-                        formatted += strArray[i].substr(0, spaceLeft);
-                        strArray[i] = strArray[i].substr(spaceLeft);
-                        if (spaceLeft > 0) {
-                            formatted += "-\n";
-                        } else {
+
+                        if (strArray[i].length < CHAR_PER_LINE) {
+                            // can fit in next line, put new line
                             formatted += "\n";
+                        } else {
+                            // cannot fit in next line, hyphenate word
+                            formatted += strArray[i].substr(0, spaceLeft);
+                            strArray[i] = strArray[i].substr(spaceLeft);
+                            if (spaceLeft > 0) {
+                                formatted += "-\n";
+                            }
                         }
                         spaceLeft = CHAR_PER_LINE;
                         lineCount++;
@@ -473,7 +484,7 @@ define(function (require) {
                 if (that.mouseState.hoverState.userData !== undefined &&
                     that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
                     that.mouseState.hoverState.userData.index === index) {
-                    return filteredText
+                    return formatText(filteredText, 70);
                 }
                 return formatText(filteredText);
             });
