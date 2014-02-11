@@ -46,7 +46,6 @@ function addToSparkClasspath {
 # Set up the spark classpath
 # our own jars
 addToSparkClasspath com.oculusinfo math-utilities 0.1.2-SNAPSHOT
-addToSparkClasspath com.oculusinfo geometric-utilities 0.1.2-SNAPSHOT
 addToSparkClasspath com.oculusinfo binning-utilities 0.1.2-SNAPSHOT
 addToSparkClasspath com.oculusinfo tile-generation 0.1.2-SNAPSHOT
 

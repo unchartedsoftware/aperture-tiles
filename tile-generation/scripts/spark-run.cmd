@@ -17,7 +17,6 @@ rem Start it empty
 set SPARK_CLASSPATH=
 
 call:addToSparkClasspath com.oculusinfo math-utilities 0.1.2-SNAPSHOT "%SPARK_CLASSPATH%" SPARK_CLASSPATH
-call:addToSparkClasspath com.oculusinfo geometric-utilities 0.1.2-SNAPSHOT "%SPARK_CLASSPATH%" SPARK_CLASSPATH
 call:addToSparkClasspath com.oculusinfo binning-utilities 0.1.2-SNAPSHOT "%SPARK_CLASSPATH%" SPARK_CLASSPATH
 call:addToSparkClasspath com.oculusinfo tile-generation 0.1.2-SNAPSHOT "%SPARK_CLASSPATH%" SPARK_CLASSPATH
 call:addToSparkClasspath org.apache.hadoop. hadoop-common 2.0.0-cdh4.4.0 "%SPARK_CLASSPATH%" SPARK_CLASSPATH
