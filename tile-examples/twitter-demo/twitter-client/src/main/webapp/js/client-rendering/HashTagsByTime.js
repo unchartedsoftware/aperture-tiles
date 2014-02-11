@@ -256,7 +256,7 @@ define(function (require) {
 
             this.tagLabels.map('font-size').from( function(index) {
                 if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                    return 16;
+                    return 14;
                 }
                 return 12;
             });

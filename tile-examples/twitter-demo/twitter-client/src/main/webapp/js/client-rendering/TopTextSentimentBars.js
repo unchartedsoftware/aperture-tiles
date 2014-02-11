@@ -48,7 +48,7 @@ define(function (require) {
 
             this._super(id);
             this.valueCount = 5;
-            this.ySpacing = 32;
+            this.ySpacing = 36;
         },
 
 
@@ -167,12 +167,12 @@ define(function (require) {
 
                 bar.on('mousemove', function(event) {
                     that.onHover(event, sentiment);
-                    //that.countLabels.all().where(event.data).redraw();
+                    that.countLabels.all().where(event.data).redraw();
                 });
 
                 bar.on('mouseout', function(event) {
                     that.onHoverOff(event);
-                    //that.countLabels.all().where(event.data).redraw();
+                    that.countLabels.all().where(event.data).redraw();
                 });
 
                 bar.map('orientation').asValue('horizontal');
@@ -183,7 +183,7 @@ define(function (require) {
                 bar.map('stroke').asValue("#000000");
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-y').from(function(index) {
-                    return that.getYOffset(this, index) + 16;
+                    return that.getYOffset(this, index) + 6;
                 });
                 return bar;
             }
@@ -216,7 +216,7 @@ define(function (require) {
                 return that.getCountPercentage(this, index, 'positive') * BAR_LENGTH;
             });
 
-            /*
+
             // count labels
             this.countLabels = that.plotLayer.addLayer(aperture.LabelLayer);
             this.countLabels.map('font-outline-width').asValue(3);
@@ -233,36 +233,34 @@ define(function (require) {
                     } else if (that.mouseState.hoverState.binData.id === 'negative') {
                         return that.NEGATIVE_COLOUR;
                     } else {
-                        return '#666666'
+                        return '#999999'
                     }
                 }
                 return '#FFFFFF';
             });
             this.countLabels.map('text').from(function() {
 
-                var tagIndex;
-                if (that.mouseState.hoverState.binData.id !== undefined &&
-                    that.mouseState.hoverState.binData.index !== undefined) {
-                    tagIndex = that.mouseState.hoverState.binData.index;
-                    return "" + this.bin.value[tagIndex][that.mouseState.hoverState.binData.id];
+                var tagIndex = that.mouseState.hoverState.binData.index,
+                    id = that.mouseState.hoverState.binData.id,
+                    prepend = '';
+                if (id !== undefined && tagIndex !== undefined) {
+
+                    if (id === 'positive') {
+                        prepend = '+ ';
+                    } else if (id === 'negative') {
+                        prepend = '- ';
+                    }
+                    return prepend + this.bin.value[tagIndex][that.mouseState.hoverState.binData.id];
                 }
                 return "";
             });
             this.countLabels.map('label-count').asValue(1);
-            this.countLabels.map('text-anchor').asValue('middle');
+            this.countLabels.map('text-anchor').asValue('end');
             this.countLabels.map('font-outline').asValue('#000000');
             this.countLabels.map('font-outline-width').asValue(3);
-            this.countLabels.map('offset-y').from( function() {
-                return that.getYOffset(this, that.mouseState.hoverState.binData.index)+ 24;
-            });
-            this.countLabels.map('offset-x').from( function() {
-                switch(that.mouseState.hoverState.binData.id) {
-                    case 'positive': return that.X_CENTRE_OFFSET + 80;
-                    case 'negative': return that.X_CENTRE_OFFSET - 80;
-                    default: return that.X_CENTRE_OFFSET;
-                }
-            });
-            */
+            this.countLabels.map('offset-y').asValue(-this.TILE_SIZE/2 + this.VERTICAL_BUFFER - 4);
+            this.countLabels.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
+
 
 
         },
@@ -293,7 +291,7 @@ define(function (require) {
 
             this.tagLabel.on('mousemove', function(event) {
                 that.onHover(event);
-                return true; // swallow event, for some reason mousemove on labels needs to swallow this or else it processes a mouseout
+                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
             });
 
             this.tagLabel.on('mouseout', function(event) {
@@ -313,19 +311,22 @@ define(function (require) {
             });
 
             this.tagLabel.map('font-size').from(function (index) {
-                var size = (that.getTotalCountPercentage(this, index) * 60) + 10;
-                size = size > 30 ? 30 : size;
+                var MAX_FONT_SIZE = 28,
+                    FONT_SCALE_FACTOR = 60,
+                    size = (that.getTotalCountPercentage(this, index) * FONT_SCALE_FACTOR) + 10;
+                    size = (size > MAX_FONT_SIZE) ? MAX_FONT_SIZE : size;
                 if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                    return size + 5;
+                    return size + 2;
                 }
                 return size;
 
             });
             this.tagLabel.map('offset-y').from(function (index) {
-                return that.getYOffset(this, index) + 5;
+                return that.getYOffset(this, index) + 10;
             });
             this.tagLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
             this.tagLabel.map('text-anchor').asValue('middle');
+            this.tagLabel.map('text-anchor-y').asValue('start');
             this.tagLabel.map('font-outline').asValue('#000000');
             this.tagLabel.map('font-outline-width').asValue(3);
         }
