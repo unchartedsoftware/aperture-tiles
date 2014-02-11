@@ -97,9 +97,9 @@ define(function (require) {
         },
 
 
-        setMouseHoverState: function(tilekey, binData) {
+        setMouseHoverState: function(tilekey, userData) {
             var splitKey = tilekey.split(',');
-            this.mouseState.hoverState.binData = binData;
+            this.mouseState.hoverState.userData = userData;
             this.mouseState.hoverState.tilekey = tilekey;
             this.mouseState.hoverState.level = parseInt(splitKey[0]);
             this.mouseState.hoverState.xIndex = parseInt(splitKey[1]);
@@ -107,9 +107,9 @@ define(function (require) {
         },
 
 
-        setMouseClickState: function(tilekey, binData) {
+        setMouseClickState: function(tilekey, userData) {
             var splitKey = tilekey.split(',');
-            this.mouseState.clickState.binData = binData;
+            this.mouseState.clickState.userData = userData;
             this.mouseState.clickState.tilekey = tilekey;
             this.mouseState.clickState.level = parseInt(splitKey[0]);
             this.mouseState.clickState.xIndex = parseInt(splitKey[1]);
@@ -125,7 +125,7 @@ define(function (require) {
 
         clearMouseClickState: function() {
             this.mouseState.clickState = {
-                binData : {},
+                userData : {},
                 tilekey : '',
                 level : -1,
                 xIndex : -1,
@@ -136,7 +136,7 @@ define(function (require) {
 
         clearMouseHoverState: function() {
             this.mouseState.hoverState = {
-                binData : {},
+                userData : {},
                 tilekey : '',
                 level : -1,
                 xIndex : -1,

@@ -51,7 +51,7 @@ define(function (require) {
         getExclusiveCountPercentage: function(data, index, type) {
 
             var attrib = type + 'ByTime',
-                tagIndex = this.mouseState.clickState.binData.index,
+                tagIndex = this.mouseState.clickState.userData.index,
                 count = data.bin.value[tagIndex].count;
             if (count === 0) {
                 return 0;
@@ -107,7 +107,7 @@ define(function (require) {
                 var i,
                     percent,
                     maxPercent = 0,
-                    tagIndex = that.mouseState.clickState.binData.index,
+                    tagIndex = that.mouseState.clickState.userData.index,
                     count = data.bin.value[tagIndex].count;
                 if (count === 0) {
                     return 0;
@@ -164,10 +164,10 @@ define(function (require) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
                 bar.map('visible').from(function(){return isVisible(this)});
                 bar.map('fill').from( function(index) {
-                    if ( that.mouseState.hoverState.binData !== undefined &&
-                        (that.mouseState.hoverState.binData.id === 'positiveByTime' ||
-                         that.mouseState.hoverState.binData.id === 'negativeByTime') &&
-                         that.mouseState.hoverState.binData.index === index) {
+                    if ( that.mouseState.hoverState.userData !== undefined &&
+                        (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                         that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative') &&
+                         that.mouseState.hoverState.userData.index === index) {
                         return selectedColour;
                     }
                     return defaultColour;
@@ -228,7 +228,7 @@ define(function (require) {
             this.titleLabels.map('text').from(function(index) {
                 switch (index) {
                     case 0:
-                        var str = that.filterText(that.mouseState.clickState.binData.tag);
+                        var str = that.filterText(that.mouseState.clickState.userData.tag);
                         if (str.length > 15) {
                             str = str.substr(0,15) + "...";
                         }
@@ -273,12 +273,12 @@ define(function (require) {
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
                     case 0: return that.POSITIVE_COLOUR;
-                    case 1: return '#999999';
+                    case 1: return '#FFFFFF';
                     default: return that.NEGATIVE_COLOUR;
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.clickState.binData.index;
+                var tagIndex = that.mouseState.clickState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;
@@ -321,7 +321,7 @@ define(function (require) {
                 return (that.getExclusiveCountPercentage(this, index, 'negative') / maxPercentage) * BAR_LENGTH;
             });
             this.detailsNegativeBar.on('mousemove', function(event) {
-                that.onHover(event, 'negativeByTime');
+                that.onHover(event, 'detailsOnDemandNegative');
                 that.detailsNegativeBar.all().where(event.data).redraw();
                 that.countLabels.all().redraw();
             });
@@ -344,7 +344,7 @@ define(function (require) {
                 return (that.getExclusiveCountPercentage(this, index, 'positive') / maxPercentage) * BAR_LENGTH;
             });
             this.detailsPositiveBar.on('mousemove', function(event) {
-                that.onHover(event, 'positiveByTime');
+                that.onHover(event, 'detailsOnDemandPositive');
                 that.detailsPositiveBar.all().where(event.data).redraw();
                 that.countLabels.all().redraw();
             });
@@ -360,9 +360,9 @@ define(function (require) {
             this.countLabels.map('font-size').asValue(12);
             this.countLabels.map('visible').from(function(){
                 return isVisible(this) &&
-                     that.mouseState.hoverState.binData.id !== undefined &&
-                    (that.mouseState.hoverState.binData.id === 'positiveByTime' ||
-                     that.mouseState.hoverState.binData.id === 'negativeByTime') &&
+                     that.mouseState.hoverState.userData.id !== undefined &&
+                    (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                     that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative') &&
                      that.mouseState.hoverState.tilekey === this.tilekey;
             });
 
@@ -376,12 +376,12 @@ define(function (require) {
                            "negative:\n" +
                            "total: "
                 } else {
-                    if (that.mouseState.hoverState.binData.index !== undefined) {
-                        tagIndex = that.mouseState.clickState.binData.index;
-                        timeIndex = that.mouseState.hoverState.binData.index;
-                        if (that.mouseState.hoverState.binData.id !== undefined &&
-                           (that.mouseState.hoverState.binData.id === 'positiveByTime' ||
-                            that.mouseState.hoverState.binData.id === 'negativeByTime')) {
+                    if (that.mouseState.hoverState.userData.index !== undefined) {
+                        tagIndex = that.mouseState.clickState.userData.index;
+                        timeIndex = that.mouseState.hoverState.userData.index;
+                        if (that.mouseState.hoverState.userData.id !== undefined &&
+                           (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                            that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative')) {
                             positive =  this.bin.value[tagIndex].positiveByTime[timeIndex];
                             neutral =  this.bin.value[tagIndex].neutralByTime[timeIndex];
                             negative =  this.bin.value[tagIndex].negativeByTime[timeIndex];
@@ -398,18 +398,18 @@ define(function (require) {
             this.countLabels.map('font-outline').asValue('#000000');
             this.countLabels.map('font-outline-width').asValue(3);
             this.countLabels.map('offset-y').from( function() {
-                if (that.mouseState.hoverState.binData.id !== undefined &&
-                    that.mouseState.hoverState.binData.id === 'positiveByTime') {
+                if (that.mouseState.hoverState.userData.id !== undefined &&
+                    that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive') {
                     return BAR_CENTRE_LINE - 30;
                 }
                 return BAR_CENTRE_LINE + 30;
             });
             this.countLabels.map('offset-x').from( function(index) {
-                if (that.mouseState.hoverState.binData !== undefined) {
+                if (that.mouseState.hoverState.userData !== undefined) {
                     if (index === 1) {
-                        return DETAILS_OFFSET_X + that.mouseState.hoverState.binData.index*BAR_WIDTH + 94;
+                        return DETAILS_OFFSET_X + that.mouseState.hoverState.userData.index*BAR_WIDTH + 94;
                     }
-                    return DETAILS_OFFSET_X + that.mouseState.hoverState.binData.index*BAR_WIDTH + 40;
+                    return DETAILS_OFFSET_X + that.mouseState.hoverState.userData.index*BAR_WIDTH + 40;
                 }
 
             });
@@ -452,16 +452,16 @@ define(function (require) {
             this.recentTweetsLabel = labelTemplate();
             this.recentTweetsLabel.map('visible').from(function(){return isVisible(this)});
             this.recentTweetsLabel.map('label-count').from( function() {
-                var length = this.bin.value[that.mouseState.clickState.binData.index].recent.length;
+                var length = this.bin.value[that.mouseState.clickState.userData.index].recent.length;
                 if (length === undefined || length === 0 || isNaN(length)) {
                     return 0;
                 }
                 return (length > 4) ? 4 : length;
             });
             this.recentTweetsLabel.map('fill').from( function(index) {
-                if (that.mouseState.hoverState.binData !== undefined &&
-                    that.mouseState.hoverState.binData.id === 'recent' &&
-                    that.mouseState.hoverState.binData.index === index) {
+                if (that.mouseState.hoverState.userData !== undefined &&
+                    that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.mouseState.hoverState.userData.index === index) {
                     return '#F5F56F';
                 } else {
                     return '#FFFFFF';
@@ -469,12 +469,12 @@ define(function (require) {
             });
             this.recentTweetsLabel.map('font-size').asValue(10);
             this.recentTweetsLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.clickState.binData.index,
+                var tagIndex = that.mouseState.clickState.userData.index,
                     filteredText = that.filterText(this.bin.value[tagIndex].recent[index].tweet);
 
-                if (that.mouseState.hoverState.binData !== undefined &&
-                    that.mouseState.hoverState.binData.id === 'recent' &&
-                    that.mouseState.hoverState.binData.index === index) {
+                if (that.mouseState.hoverState.userData !== undefined &&
+                    that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.mouseState.hoverState.userData.index === index) {
                     return filteredText
                 }
                 return formatText(filteredText);
@@ -486,7 +486,7 @@ define(function (require) {
             this.recentTweetsLabel.map('width').asValue(200);
             this.recentTweetsLabel.map('text-anchor').asValue('middle');
             this.recentTweetsLabel.on('mousemove', function(event) {
-                that.onHover(event, 'recent');
+                that.onHover(event, 'detailsOnDemandRecent');
                 that.recentTweetsLabel.all().where(event.data).redraw();
                 return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
             });

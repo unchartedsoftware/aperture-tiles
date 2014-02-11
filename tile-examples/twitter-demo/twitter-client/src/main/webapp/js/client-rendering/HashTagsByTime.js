@@ -64,6 +64,7 @@ define(function (require) {
         redrawLayers: function(data) {
             this.tagLabels.all().where(data).redraw();
             this.bars.all().where(data).redraw();
+            this.summaryLabel.all().where(data).redraw();
         },
 
 
@@ -76,16 +77,17 @@ define(function (require) {
         onClick: function(event, index) {
             this.setMouseClickState(event.data.tilekey, {
                 tag : event.data.bin.value[index].tag,
-                index :  index
+                index : index
             });
             this.plotLayer.all().redraw();
         },
 
 
-        onHover: function(event, index) {
+        onHover: function(event, index, id) {
             this.setMouseHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[index].tag,
-                index : index
+                index : index,
+                id : id
             });
             this.redrawLayers(event.data);
         },
@@ -131,6 +133,7 @@ define(function (require) {
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
+            this.createCountSummaries();
             this.detailsOnDemand = new DetailsOnDemand(this.id);
             this.detailsOnDemand.attachMouseState(this.mouseState);
             this.detailsOnDemand.createLayer(this.plotLayer);
@@ -215,7 +218,7 @@ define(function (require) {
             });
 
             this.bars.on('mousemove', function(event) {
-                that.onHover(event, Math.floor(event.index[0]/24));
+                that.onHover(event, Math.floor(event.index[0]/24), 'hashTagsByTimeCountSummary');
             });
 
             this.bars.on('mouseout', function(event) {
@@ -223,6 +226,44 @@ define(function (require) {
             });
 
         },
+
+
+        createCountSummaries: function () {
+
+            var that = this;
+
+            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.summaryLabel.map('label-count').asValue(3);
+            this.summaryLabel.map('font-size').asValue(12);
+            this.summaryLabel.map('font-outline').asValue('#000000');
+            this.summaryLabel.map('font-outline-width').asValue(3);
+            this.summaryLabel.map('visible').from(function(){
+                return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey) &&
+                    that.mouseState.hoverState.tilekey === this.tilekey &&
+                    that.mouseState.hoverState.userData.id === 'hashTagsByTimeCountSummary';
+            });
+            this.summaryLabel.map('fill').from( function(index) {
+                switch(index) {
+                    case 0: return that.POSITIVE_COLOUR;
+                    case 1: return '#FFFFFF';
+                    default: return that.NEGATIVE_COLOUR;
+                }
+            });
+            this.summaryLabel.map('text').from( function(index) {
+                var tagIndex = that.mouseState.hoverState.userData.index;
+                switch(index) {
+                    case 0: return "+ "+this.bin.value[tagIndex].positive;
+                    case 1: return ""+this.bin.value[tagIndex].neutral;
+                    default: return "- "+this.bin.value[tagIndex].negative;
+                }
+            });
+            this.summaryLabel.map('offset-y').from(function(index) {
+                return -that.TILE_SIZE/2 + (that.VERTICAL_BUFFER-4) + (14) * index;
+            });
+            this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
+            this.summaryLabel.map('text-anchor').asValue('end');
+        },
+
 
         createLabels: function () {
 
@@ -276,7 +317,7 @@ define(function (require) {
             });
 
             this.tagLabels.on('mousemove', function(event) {
-                that.onHover(event, event.index[0]);
+                that.onHover(event, event.index[0], 'hashTagsByTimeCountSummary');
                 return true;  // swallow event, for some reason mousemove on labels needs to swallow this or else it processes a mouseout
             });
 
