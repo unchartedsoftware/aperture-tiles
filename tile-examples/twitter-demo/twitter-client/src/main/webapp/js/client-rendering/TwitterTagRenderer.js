@@ -72,7 +72,7 @@ define(function (require) {
 
         isHovered: function (tag, tilekey) {
             var hoverTilekey = this.mouseState.hoverState.tilekey,
-                hoverTag = this.mouseState.hoverState.binData.tag;
+                hoverTag = this.mouseState.hoverState.userData.tag;
 
             return hoverTag !== undefined && hoverTag === tag && hoverTilekey === tilekey;
 
@@ -81,7 +81,7 @@ define(function (require) {
 
         isClicked: function (tag, tilekey) {
             var clickTilekey = this.mouseState.clickState.tilekey,
-                clickTag = this.mouseState.clickState.binData.tag;
+                clickTag = this.mouseState.clickState.userData.tag;
 
             return clickTag !== undefined && clickTag === tag && clickTilekey === tilekey;
 
@@ -96,12 +96,12 @@ define(function (require) {
             if ( // nothing is hovered or clicked on
                  (this.mouseState.clickState.tilekey === '' && this.mouseState.hoverState.tilekey === '') ||
                  // current tag is hovered on
-                 (this.mouseState.hoverState.binData.tag !== undefined &&
-                  this.mouseState.hoverState.binData.tag === tag &&
+                 (this.mouseState.hoverState.userData.tag !== undefined &&
+                  this.mouseState.hoverState.userData.tag === tag &&
                   this.mouseState.hoverState.tilekey === tilekey )) {
                 return false
-            } else if (this.mouseState.clickState.binData.tag !== undefined &&
-                this.mouseState.clickState.binData.tag !== tag) {
+            } else if (this.mouseState.clickState.userData.tag !== undefined &&
+                this.mouseState.clickState.userData.tag !== tag) {
                 return true;
             }
             return false;
@@ -109,10 +109,10 @@ define(function (require) {
 
 
         matchingTagIsSelected: function (tag) {
-            return (this.mouseState.hoverState.binData.tag !== undefined &&
-                    this.mouseState.hoverState.binData.tag === tag ||
-                    this.mouseState.clickState.binData.tag !== undefined &&
-                    this.mouseState.clickState.binData.tag === tag)
+            return (this.mouseState.hoverState.userData.tag !== undefined &&
+                    this.mouseState.hoverState.userData.tag === tag ||
+                    this.mouseState.clickState.userData.tag !== undefined &&
+                    this.mouseState.clickState.userData.tag === tag)
         },
 
 
@@ -177,6 +177,38 @@ define(function (require) {
             }
 
             return filteredStr;
+
+        },
+
+
+        createCountSummaries: function( vsibility) {
+
+            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.summaryLabel.map('font-outline').asValue('#000000');
+            this.summaryLabel.map('font-outline-width').asValue(3);
+            this.summaryLabel.map('label-count').asValue(3);
+            this.summaryLabel.map('font-size').asValue(12);
+            this.summaryLabel.map('visible').from(function(){return isVisible(this)});
+            this.summaryLabel.map('fill').from( function(index) {
+                switch(index) {
+                    case 0: return that.POSITIVE_COLOUR;
+                    case 1: return '#999999';
+                    default: return that.NEGATIVE_COLOUR;
+                }
+            });
+            this.summaryLabel.map('text').from( function(index) {
+                var tagIndex = that.mouseState.clickState.userData.index;
+                switch(index) {
+                    case 0: return "+ "+this.bin.value[tagIndex].positive;
+                    case 1: return ""+this.bin.value[tagIndex].neutral;
+                    default: return "- "+this.bin.value[tagIndex].negative;
+                }
+            });
+            this.summaryLabel.map('offset-y').from(function(index) {
+                return DETAILS_OFFSET_Y + (that.VERTICAL_BUFFER-4) + (14) * index;
+            });
+            this.summaryLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE - that.HORIZONTAL_BUFFER);
+            this.summaryLabel.map('text-anchor').asValue('end');
 
         }
     });

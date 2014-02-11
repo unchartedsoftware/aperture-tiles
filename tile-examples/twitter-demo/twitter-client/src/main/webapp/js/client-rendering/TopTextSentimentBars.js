@@ -84,6 +84,7 @@ define(function (require) {
             this.negativeBar.all().where(data).redraw();
             this.positiveBar.all().where(data).redraw();
             this.tagLabel.all().where(data).redraw();
+            this.summaryLabel.all().where(data).redraw();
         },
 
 
@@ -122,6 +123,7 @@ define(function (require) {
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
+            this.createCountSummaries();
             this.detailsOnDemand = new DetailsOnDemand(this.id);
             this.detailsOnDemand.attachMouseState(this.mouseState);
             this.detailsOnDemand.createLayer(this.plotLayer);
@@ -145,9 +147,9 @@ define(function (require) {
                 bar.map('fill').from( function(index) {
 
                     if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                        if ( that.mouseState.hoverState.binData.id !== undefined &&
-                             that.mouseState.hoverState.binData.id === sentiment &&
-                             that.mouseState.hoverState.binData.index === index) {
+                        if ( that.mouseState.hoverState.userData.id !== undefined &&
+                             that.mouseState.hoverState.userData.id === sentiment &&
+                             that.mouseState.hoverState.userData.index === index) {
                             return selectedColour;
                         }
                         return normalColour;
@@ -167,12 +169,10 @@ define(function (require) {
 
                 bar.on('mousemove', function(event) {
                     that.onHover(event, sentiment);
-                    that.countLabels.all().where(event.data).redraw();
                 });
 
                 bar.on('mouseout', function(event) {
                     that.onHoverOff(event);
-                    that.countLabels.all().where(event.data).redraw();
                 });
 
                 bar.map('orientation').asValue('horizontal');
@@ -189,7 +189,7 @@ define(function (require) {
             }
 
             // negative bar
-            this.negativeBar = barTemplate('negative', '#777777', '#222222', this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
+            this.negativeBar = barTemplate('topTextSentimentBarsNegative', '#777777', '#222222', this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -199,7 +199,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('neutral', '#222222', '#000000', this.NEUTRAL_COLOUR, this.NEUTRAL_SELECTED_COLOUR );
+            this.neutralBar = barTemplate('topTextSentimentBarsNeutral', '#222222', '#000000', this.NEUTRAL_COLOUR, this.NEUTRAL_SELECTED_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -208,7 +208,7 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('positive', '#FFFFFF', '#666666', this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
+            this.positiveBar = barTemplate('topTextSentimentBarsPositive', '#FFFFFF', '#666666', this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -216,53 +216,59 @@ define(function (require) {
                 return that.getCountPercentage(this, index, 'positive') * BAR_LENGTH;
             });
 
+        },
 
-            // count labels
-            this.countLabels = that.plotLayer.addLayer(aperture.LabelLayer);
-            this.countLabels.map('font-outline-width').asValue(3);
-            this.countLabels.map('font-size').asValue(12);
-            this.countLabels.map('visible').from(function(){
+
+        createCountSummaries: function () {
+
+            var that = this;
+
+            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.summaryLabel.map('label-count').asValue(3);
+            this.summaryLabel.map('font-size').asValue(12);
+            this.summaryLabel.map('font-outline').asValue('#000000');
+            this.summaryLabel.map('font-outline-width').asValue(3);
+            this.summaryLabel.map('visible').from(function(){
                 return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey) &&
-                        that.mouseState.hoverState.tilekey === this.tilekey &&
-                        that.mouseState.hoverState.binData.id !== undefined;
+                    that.mouseState.hoverState.tilekey === this.tilekey &&
+                    that.mouseState.hoverState.userData.id !== undefined;
             });
-            this.countLabels.map('fill').from( function() {
-                if (that.mouseState.hoverState.binData.id !== undefined) {
-                    if (that.mouseState.hoverState.binData.id === 'positive') {
-                        return that.POSITIVE_COLOUR;
-                    } else if (that.mouseState.hoverState.binData.id === 'negative') {
-                        return that.NEGATIVE_COLOUR;
-                    } else {
-                        return '#999999'
-                    }
+            this.summaryLabel.map('fill').from( function(index) {
+                var id = that.mouseState.hoverState.userData.id;
+                switch(index) {
+                    case 0:
+                        if (id === 'topTextSentimentBarsPositive' || id === 'topTextSentimentBarsAll') {
+                            return that.POSITIVE_COLOUR
+                        } else {
+                            return '#999999';
+                        }
+                    case 1:
+                        if (id === 'topTextSentimentBarsNeutral' || id === 'topTextSentimentBarsAll') {
+                            return '#FFFFFF';
+                        } else {
+                            return '#999999';
+                        }
+                    default:
+                        if (id === 'topTextSentimentBarsNegative' || id === 'topTextSentimentBarsAll') {
+                            return that.NEGATIVE_COLOUR;
+                        } else {
+                            return '#999999';
+                        }
                 }
-                return '#FFFFFF';
             });
-            this.countLabels.map('text').from(function() {
-
-                var tagIndex = that.mouseState.hoverState.binData.index,
-                    id = that.mouseState.hoverState.binData.id,
-                    prepend = '';
-                if (id !== undefined && tagIndex !== undefined) {
-
-                    if (id === 'positive') {
-                        prepend = '+ ';
-                    } else if (id === 'negative') {
-                        prepend = '- ';
-                    }
-                    return prepend + this.bin.value[tagIndex][that.mouseState.hoverState.binData.id];
+            this.summaryLabel.map('text').from( function(index) {
+                var tagIndex = that.mouseState.hoverState.userData.index;
+                switch(index) {
+                    case 0: return "+ "+this.bin.value[tagIndex].positive;
+                    case 1: return ""+this.bin.value[tagIndex].neutral;
+                    default: return "- "+this.bin.value[tagIndex].negative;
                 }
-                return "";
             });
-            this.countLabels.map('label-count').asValue(1);
-            this.countLabels.map('text-anchor').asValue('end');
-            this.countLabels.map('font-outline').asValue('#000000');
-            this.countLabels.map('font-outline-width').asValue(3);
-            this.countLabels.map('offset-y').asValue(-this.TILE_SIZE/2 + this.VERTICAL_BUFFER - 4);
-            this.countLabels.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
-
-
-
+            this.summaryLabel.map('offset-y').from(function(index) {
+                return -that.TILE_SIZE/2 + (that.VERTICAL_BUFFER-4) + (14) * index;
+            });
+            this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
+            this.summaryLabel.map('text-anchor').asValue('end');
         },
 
 
@@ -290,7 +296,7 @@ define(function (require) {
             });
 
             this.tagLabel.on('mousemove', function(event) {
-                that.onHover(event);
+                that.onHover(event, 'topTextSentimentBarsAll');
                 return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
             });
 

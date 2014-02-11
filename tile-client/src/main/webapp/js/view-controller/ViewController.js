@@ -112,14 +112,14 @@ define(function (require) {
 
             this.mouseState = {
                 hoverState : {
-                    binData : {},
+                    userData : {},
                     tilekey : '',
                     level : -1,
                     xIndex : -1,
                     yIndex : -1
                 },
                 clickState : {
-                    binData : {},
+                    userData : {},
                     tilekey : '',
                     level : -1,
                     xIndex : -1,
