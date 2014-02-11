@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -31,13 +31,11 @@ import java.util.Map;
 
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.io.GenericAvroArraySerializer;
-import com.oculusinfo.binning.io.Pair;
+import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import com.oculusinfo.binning.util.Pair;
 
-public class StringDoublePairArrayAvroSerializer
-    extends GenericAvroArraySerializer<Pair<String, Double>>
-{
-    private static final long serialVersionUID = -4688654654297779433L;
+public class StringIntPairArrayAvroSerializer extends GenericAvroArraySerializer<Pair<String, Integer>> {
+    private static final long serialVersionUID = -7434035385516239828L;
 
 
 
@@ -51,13 +49,13 @@ public class StringDoublePairArrayAvroSerializer
 
 
 
-    public StringDoublePairArrayAvroSerializer() {
+    public StringIntPairArrayAvroSerializer() {
         super();
     }
 
     @Override
     protected String getEntrySchemaFile () {
-        return "stringDoublePairEntry.avsc";
+        return "stringIntPairEntry.avsc";
     }
 
     @Override
@@ -66,13 +64,12 @@ public class StringDoublePairArrayAvroSerializer
     }
 
     @Override
-    protected Pair<String, Double> getEntryValue (GenericRecord entry) {
-        return new Pair<String, Double>(entry.get("key").toString(), (Double) entry.get("value"));
+    protected Pair<String, Integer> getEntryValue (GenericRecord entry) {
+        return new Pair<String, Integer>(entry.get("key").toString(), (Integer) entry.get("value"));
     }
-
     @Override
     protected void setEntryValue (GenericRecord avroEntry,
-                                  Pair<String, Double> rawEntry) throws IOException {
+                                  Pair<String, Integer> rawEntry) throws IOException {
         avroEntry.put("key", rawEntry.getFirst());
         avroEntry.put("value", rawEntry.getSecond());
     }

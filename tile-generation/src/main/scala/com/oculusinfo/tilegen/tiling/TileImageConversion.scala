@@ -51,10 +51,10 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.binning.io.TileSerializer
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer
-import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer
+import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException

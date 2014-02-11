@@ -33,7 +33,7 @@ import java.util.ArrayList
 
 import scala.collection.JavaConverters._
 
-import com.oculusinfo.binning.io.TileSerializer
+import com.oculusinfo.binning.io.serialization.TileSerializer
 
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 

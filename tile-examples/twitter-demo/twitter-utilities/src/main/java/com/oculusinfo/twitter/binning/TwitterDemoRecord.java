@@ -31,7 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.oculusinfo.binning.io.Pair;
+import com.oculusinfo.binning.util.Pair;
 
 
 

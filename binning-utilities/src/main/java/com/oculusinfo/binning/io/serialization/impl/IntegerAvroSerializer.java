@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -32,7 +32,7 @@ import java.util.Map;
 
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.io.GenericAvroSerializer;
+import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
 
 public class IntegerAvroSerializer extends GenericAvroSerializer<Integer> {
     private static final long serialVersionUID = 3241009200123502169L;

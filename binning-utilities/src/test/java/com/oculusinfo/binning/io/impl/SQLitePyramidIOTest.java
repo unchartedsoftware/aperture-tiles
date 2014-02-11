@@ -41,10 +41,10 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.Pair;
 import com.oculusinfo.binning.io.impl.JDBCPyramidIO;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
-import com.oculusinfo.binning.io.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 /**
  * test SQLite implementation

@@ -28,8 +28,8 @@ import java.util.List;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
-import com.oculusinfo.binning.io.TileSerializer;
-import com.oculusinfo.binning.io.impl.StringArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer;
 
 
 public class StringArrayAvroModule extends AbstractModule {

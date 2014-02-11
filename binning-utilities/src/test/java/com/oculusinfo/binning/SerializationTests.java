@@ -38,15 +38,15 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.Pair;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer;
-import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer;
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer;
-import com.oculusinfo.binning.io.impl.StringArrayAvroSerializer;
-import com.oculusinfo.binning.io.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
+import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 public class SerializationTests {
 	//@Test

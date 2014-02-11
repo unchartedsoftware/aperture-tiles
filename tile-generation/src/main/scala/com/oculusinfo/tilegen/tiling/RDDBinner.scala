@@ -50,7 +50,7 @@ import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.binning.io.TileSerializer
+import com.oculusinfo.binning.io.serialization.TileSerializer
 
 
 

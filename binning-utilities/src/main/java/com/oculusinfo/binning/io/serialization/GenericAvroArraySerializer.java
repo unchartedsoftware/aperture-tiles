@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.binning.io.serialization;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.io.AvroSchemaComposer;
+
 
 abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerializer<List<T>> {
     private static final long serialVersionUID = 6426634603381096097L;

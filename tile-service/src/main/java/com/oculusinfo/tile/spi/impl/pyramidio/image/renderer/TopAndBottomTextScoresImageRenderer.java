@@ -27,8 +27,8 @@ package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
 import java.util.List;
 
-import com.oculusinfo.binning.io.Pair;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.util.Pair;
 
 /**
  * A server side to render Map<String, Double> (well, technically,

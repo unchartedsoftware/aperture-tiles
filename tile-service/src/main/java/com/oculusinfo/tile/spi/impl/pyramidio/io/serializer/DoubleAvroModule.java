@@ -26,8 +26,8 @@ package com.oculusinfo.tile.spi.impl.pyramidio.io.serializer;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
-import com.oculusinfo.binning.io.TileSerializer;
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 
 
 public class DoubleAvroModule extends AbstractModule {

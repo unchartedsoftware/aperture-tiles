@@ -22,19 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.binning.io.serialization.impl;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.io.GenericAvroSerializer;
+import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
 
-public class DoubleAvroSerializer extends GenericAvroSerializer<Double> {
-    private static final long serialVersionUID = -5281584318452537893L;
+public class DoubleArrayAvroSerializer extends GenericAvroArraySerializer<Double> {
+    private static final long serialVersionUID = -5878944840179404265L;
 
 
 
@@ -42,19 +41,14 @@ public class DoubleAvroSerializer extends GenericAvroSerializer<Double> {
     static {
         Map<String,String> map = new HashMap<String, String>();
         map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "double");
+        map.put("data-type", "double array");
         META = Collections.unmodifiableMap(map);
     }
 
 
 
-    public DoubleAvroSerializer () {
+    public DoubleArrayAvroSerializer () {
         super();
-    }
-
-    @Override
-    protected String getRecordSchemaFile () {
-        return "doubleData.avsc";
     }
 
     @Override
@@ -63,13 +57,16 @@ public class DoubleAvroSerializer extends GenericAvroSerializer<Double> {
     }
 
     @Override
-    protected Double getValue (GenericRecord bin) {
-        return (Double) bin.get("value");
+    protected String getEntrySchemaFile() {
+    	return "doubleEntry.avsc";
+    }
+    @Override
+    protected Double getEntryValue(GenericRecord entry) {
+    	return (Double) entry.get(0);
     }
 
     @Override
-    protected void setValue (GenericRecord bin, Double value) throws IOException {
-        if (null == value) throw new IOException("Null value for bin");
-        bin.put("value", value);
+    protected void setEntryValue(GenericRecord avroEntry, Double rawEntry) {
+    	avroEntry.put("value", rawEntry);
     }
 }

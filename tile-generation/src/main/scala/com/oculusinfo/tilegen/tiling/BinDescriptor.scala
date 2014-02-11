@@ -37,12 +37,12 @@ import java.util.{Map => JavaMap}
 import java.util.ArrayList
 
 
-import com.oculusinfo.binning.io.Pair
-import com.oculusinfo.binning.io.TileSerializer
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer
-import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer
-import com.oculusinfo.binning.io.impl.StringDoublePairArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
+import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
+import com.oculusinfo.binning.util.Pair
 
 
 
