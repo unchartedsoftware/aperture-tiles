@@ -38,7 +38,7 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.io.Pair;
+import com.oculusinfo.binning.util.Pair;
 
 
 

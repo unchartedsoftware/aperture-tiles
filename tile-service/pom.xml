@@ -57,12 +57,6 @@
 
     <dependency>
       <groupId>com.oculusinfo</groupId>
-      <artifactId>geometric-utilities</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
       <artifactId>binning-utilities</artifactId>
       <version>${project.version}</version>
     </dependency>

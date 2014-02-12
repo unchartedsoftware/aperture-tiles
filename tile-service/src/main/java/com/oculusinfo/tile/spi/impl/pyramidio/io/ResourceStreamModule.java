@@ -31,7 +31,7 @@ import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
-import com.oculusinfo.binning.io.impl.stream.ResourcePyramidStreamSource;
+import com.oculusinfo.binning.io.impl.ResourcePyramidStreamSource;
 
 
 public class ResourceStreamModule extends AbstractModule {

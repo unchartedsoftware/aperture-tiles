@@ -29,7 +29,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.io.Pair;
+import com.oculusinfo.binning.util.Pair;
 
 public class TwitterDemoRecordTests {
     @Test

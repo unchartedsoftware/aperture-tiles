@@ -65,7 +65,6 @@ object SparkConnector {
 
   def getDefaultLibrariesFromMaven =
     Seq(new MavenReference("com.oculusinfo", "math-utilities", "0.1.2-SNAPSHOT"),
-        new MavenReference("com.oculusinfo", "geometric-utilities", "0.1.2-SNAPSHOT"),
         new MavenReference("com.oculusinfo", "binning-utilities", "0.1.2-SNAPSHOT"),
         new MavenReference("com.oculusinfo", "tile-generation", "0.1.2-SNAPSHOT"),
         // These two are needed for avro serialization

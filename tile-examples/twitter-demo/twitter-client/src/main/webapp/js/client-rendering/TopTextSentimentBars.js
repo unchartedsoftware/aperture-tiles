@@ -48,13 +48,7 @@ define(function (require) {
 
             this._super(id);
             this.valueCount = 5;
-            this.ySpacing = 30;
-        },
-
-
-        onUnselect: function() {
-            this.clearMouseClickState();
-            this.plotLayer.all().redraw();
+            this.ySpacing = 36;
         },
 
 
@@ -84,11 +78,12 @@ define(function (require) {
             this.negativeBar.all().where(data).redraw();
             this.positiveBar.all().where(data).redraw();
             this.tagLabel.all().where(data).redraw();
+            this.summaryLabel.all().where(data).redraw();
         },
 
 
         onClick: function(event) {
-            this.setMouseClickState(event.data.tilekey, {
+            this.mouseState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index :  event.index[0]
             });
@@ -96,17 +91,18 @@ define(function (require) {
         },
 
 
-        onHover: function(event) {
-            this.setMouseHoverState(event.data.tilekey, {
+        onHover: function(event, id) {
+            this.mouseState.setHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
-                index :  event.index[0]
+                index :  event.index[0],
+                id : id
             });
             this.redrawLayers(event.data);
         },
 
 
         onHoverOff: function(event) {
-            this.clearMouseHoverState();
+            this.mouseState.clearHoverState();
             this.redrawLayers(event.data);
         },
 
@@ -121,6 +117,7 @@ define(function (require) {
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
+            this.createCountSummaries();
             this.detailsOnDemand = new DetailsOnDemand(this.id);
             this.detailsOnDemand.attachMouseState(this.mouseState);
             this.detailsOnDemand.createLayer(this.plotLayer);
@@ -133,7 +130,7 @@ define(function (require) {
                 BAR_LENGTH = 100,
                 BAR_WIDTH = 6;
 
-            function barTemplate( defaultColour, greyedColour, selectedColour ) {
+            function barTemplate( sentiment, defaultColour, greyedColour, normalColour, selectedColour ) {
 
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
 
@@ -144,7 +141,12 @@ define(function (require) {
                 bar.map('fill').from( function(index) {
 
                     if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                        return selectedColour;
+                        if ( that.mouseState.hoverState.userData.id !== undefined &&
+                             that.mouseState.hoverState.userData.id === sentiment &&
+                             that.mouseState.hoverState.userData.index === index) {
+                            return selectedColour;
+                        }
+                        return normalColour;
                     }
 
                     if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
@@ -160,7 +162,7 @@ define(function (require) {
                 });
 
                 bar.on('mousemove', function(event) {
-                    that.onHover(event);
+                    that.onHover(event, sentiment);
                 });
 
                 bar.on('mouseout', function(event) {
@@ -175,13 +177,13 @@ define(function (require) {
                 bar.map('stroke').asValue("#000000");
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-y').from(function(index) {
-                    return that.getYOffset(this, index) + 16;
+                    return that.getYOffset(this, index) + 6;
                 });
                 return bar;
             }
 
             // negative bar
-            this.negativeBar = barTemplate('#777777', '#222222', this.NEGATIVE_COLOUR);
+            this.negativeBar = barTemplate('topTextSentimentBarsNegative', '#777777', '#222222', this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -191,7 +193,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('#222222', '#000000', this.NEUTRAL_COLOUR );
+            this.neutralBar = barTemplate('topTextSentimentBarsNeutral', '#222222', '#000000', this.NEUTRAL_COLOUR, this.NEUTRAL_SELECTED_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -200,13 +202,70 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('#FFFFFF', '#666666', this.POSITIVE_COLOUR);
+            this.positiveBar = barTemplate('topTextSentimentBarsPositive', '#FFFFFF', '#666666', this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
             this.positiveBar.map('length').from(function (index) {
                 return that.getCountPercentage(this, index, 'positive') * BAR_LENGTH;
             });
+
+        },
+
+
+        createCountSummaries: function () {
+
+            var that = this;
+
+            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.summaryLabel.map('label-count').asValue(3);
+            this.summaryLabel.map('font-size').asValue(12);
+            this.summaryLabel.map('font-outline').asValue('#000000');
+            this.summaryLabel.map('font-outline-width').asValue(3);
+            this.summaryLabel.map('visible').from(function(){
+                return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey) &&
+                    that.mouseState.hoverState.tilekey === this.tilekey &&
+                    ( that.mouseState.hoverState.userData.id === 'topTextSentimentBarsPositive' ||
+                        that.mouseState.hoverState.userData.id === 'topTextSentimentBarsNeutral' ||
+                        that.mouseState.hoverState.userData.id === 'topTextSentimentBarsNegative' ||
+                        that.mouseState.hoverState.userData.id === 'topTextSentimentBarsAll');
+            });
+            this.summaryLabel.map('fill').from( function(index) {
+                var id = that.mouseState.hoverState.userData.id;
+                switch(index) {
+                    case 0:
+                        if (id === 'topTextSentimentBarsPositive' || id === 'topTextSentimentBarsAll') {
+                            return that.POSITIVE_COLOUR
+                        } else {
+                            return '#999999';
+                        }
+                    case 1:
+                        if (id === 'topTextSentimentBarsNeutral' || id === 'topTextSentimentBarsAll') {
+                            return '#FFFFFF';
+                        } else {
+                            return '#999999';
+                        }
+                    default:
+                        if (id === 'topTextSentimentBarsNegative' || id === 'topTextSentimentBarsAll') {
+                            return that.NEGATIVE_COLOUR;
+                        } else {
+                            return '#999999';
+                        }
+                }
+            });
+            this.summaryLabel.map('text').from( function(index) {
+                var tagIndex = that.mouseState.hoverState.userData.index;
+                switch(index) {
+                    case 0: return "+ "+this.bin.value[tagIndex].positive;
+                    case 1: return ""+this.bin.value[tagIndex].neutral;
+                    default: return "- "+this.bin.value[tagIndex].negative;
+                }
+            });
+            this.summaryLabel.map('offset-y').from(function(index) {
+                return -that.TILE_SIZE/2 + (that.VERTICAL_BUFFER-4) + (14) * index;
+            });
+            this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
+            this.summaryLabel.map('text-anchor').asValue('end');
         },
 
 
@@ -234,8 +293,8 @@ define(function (require) {
             });
 
             this.tagLabel.on('mousemove', function(event) {
-                that.onHover(event);
-                return true; // swallow event, for some reason mousemove on labels needs to swallow this or else it processes a mouseout
+                that.onHover(event, 'topTextSentimentBarsAll');
+                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
             });
 
             this.tagLabel.on('mouseout', function(event) {
@@ -247,7 +306,7 @@ define(function (require) {
             });
 
             this.tagLabel.map('text').from(function (index) {
-                var str = this.bin.value[index].tag;
+                var str = that.filterText(this.bin.value[index].tag);
                 if (str.length > 12) {
                     str = str.substr(0,12) + "...";
                 }
@@ -255,14 +314,22 @@ define(function (require) {
             });
 
             this.tagLabel.map('font-size').from(function (index) {
-                var size = (that.getTotalCountPercentage(this, index) * 60) + 10;
-                return size > 30 ? 30 : size;
+                var MAX_FONT_SIZE = 28,
+                    FONT_SCALE_FACTOR = 60,
+                    size = (that.getTotalCountPercentage(this, index) * FONT_SCALE_FACTOR) + 10;
+                    size = (size > MAX_FONT_SIZE) ? MAX_FONT_SIZE : size;
+                if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
+                    return size + 2;
+                }
+                return size;
+
             });
             this.tagLabel.map('offset-y').from(function (index) {
-                return that.getYOffset(this, index) + 5;
+                return that.getYOffset(this, index) + 10;
             });
             this.tagLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
             this.tagLabel.map('text-anchor').asValue('middle');
+            this.tagLabel.map('text-anchor-y').asValue('start');
             this.tagLabel.map('font-outline').asValue('#000000');
             this.tagLabel.map('font-outline-width').asValue(3);
         }

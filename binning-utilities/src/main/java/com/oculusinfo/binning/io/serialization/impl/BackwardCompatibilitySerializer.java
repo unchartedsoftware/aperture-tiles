@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,7 @@ import com.google.common.primitives.Doubles;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.io.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 

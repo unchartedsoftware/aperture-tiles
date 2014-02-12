@@ -39,6 +39,7 @@ define(function (require) {
         AoIPyramid = require('../client-rendering/AoITilePyramid'),
         TileIterator = require('../client-rendering/TileIterator'),
         TileTracker = require('../client-rendering/TileTracker'),
+		MouseState = require('./MouseState'),
         permData = [],  // TEMPORARY BAND AID FIX /
         ViewController;
 
@@ -59,19 +60,14 @@ define(function (require) {
                 // add map and zoom/pan event handlers
                 that.map = map;
 
-                function unselectFromClientLayers() {
-                    // call unselect function of client layers when clicking on map
-                    var i;
-                    for (i=0; i<that.views.length; ++i) {
-                        that.views[i].renderer.onUnselect();
-                    }
-                }
-
                 // mouse event handlers
-                that.map.olMap_.events.register('click', that.map.olMap_, unselectFromClientLayers);
+                that.map.olMap_.events.register('click', that.map.olMap_, function() {
+					that.mouseState.clearClickState();
+					that.mapNodeLayer.all().redraw();
+				});
 
                 that.map.olMap_.events.register('zoomend', that.map.olMap_, function() {
-                    unselectFromClientLayers();
+                    that.mouseState.clearClickState();
                     permData = [];  // reset temporary fix on zoom
                     that.onMapUpdate();
                 });
@@ -109,23 +105,7 @@ define(function (require) {
             this.defaultViewIndex = 0;  // if not specified, this is the default view of a tile
             this.tileViewMap = {};      // maps a tile key to its view index
             this.views = [];
-
-            this.mouseState = {
-                hoverState : {
-                    binData : {},
-                    tilekey : '',
-                    level : -1,
-                    xIndex : -1,
-                    yIndex : -1
-                },
-                clickState : {
-                    binData : {},
-                    tilekey : '',
-                    level : -1,
-                    xIndex : -1,
-                    yIndex : -1
-                }
-            };
+			this.mouseState = new MouseState();
 
             // attach map
             attachMap(spec.map);
@@ -172,7 +152,7 @@ define(function (require) {
 
             // un-select elements from this view
             if (tilekey === this.mouseState.clickState.tilekey) {
-                this.views[oldViewIndex].renderer.onUnselect();
+				this.mouseState.clearClickState();
             }
 
             // swap tile data, this function prevents data de-allocation if they share same data source
@@ -253,7 +233,6 @@ define(function (require) {
                 }
             }
             //////////////////////////////////////////////
-
             this.mapNodeLayer.all(permData).redraw();
         }
 

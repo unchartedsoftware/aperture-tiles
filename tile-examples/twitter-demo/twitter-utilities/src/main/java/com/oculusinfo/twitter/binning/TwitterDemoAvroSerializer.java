@@ -36,8 +36,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.io.GenericAvroArraySerializer;
-import com.oculusinfo.binning.io.Pair;
+import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import com.oculusinfo.binning.util.Pair;
 
 
 

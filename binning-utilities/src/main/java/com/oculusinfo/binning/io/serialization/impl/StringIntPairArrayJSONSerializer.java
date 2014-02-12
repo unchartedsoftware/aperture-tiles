@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.binning.io.serialization.impl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -32,8 +32,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.io.GenericJSONSerializer;
-import com.oculusinfo.binning.io.Pair;
+import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>>{
     private static final long serialVersionUID = -6779123604244971240L;

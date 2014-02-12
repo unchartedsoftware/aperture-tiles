@@ -51,12 +51,25 @@ define(function (require) {
         getExclusiveCountPercentage: function(data, index, type) {
 
             var attrib = type + 'ByTime',
-                tagIndex = this.mouseState.clickState.binData.index,
+                tagIndex = this.mouseState.clickState.userData.index,
                 count = data.bin.value[tagIndex].count;
             if (count === 0) {
                 return 0;
             }
             return data.bin.value[tagIndex][attrib][index] / count;
+        },
+
+
+        onHover: function(event, id) {
+            this.mouseState.setHoverState(event.data.tilekey, {
+                index :  event.index[0],
+                id: id
+            });
+        },
+
+
+        onHoverOff: function(event) {
+            this.mouseState.clearHoverState();
         },
 
 
@@ -77,12 +90,11 @@ define(function (require) {
             var that = this,
                 DETAILS_OFFSET_X = that.X_CENTRE_OFFSET + this.TILE_SIZE/ 2,
                 DETAILS_OFFSET_Y = -this.TILE_SIZE/2,
-                V_SPACING = 10,
-                H_SPACING = 14,
-                BAR_CENTRE_LINE = DETAILS_OFFSET_Y + 158, //30,
+                BAR_CENTRE_LINE = DETAILS_OFFSET_Y + 158,
                 BAR_LENGTH = 50,
-                HISTOGRAM_AXIS = BAR_CENTRE_LINE + BAR_LENGTH + V_SPACING + 12,
-                MOST_RECENT = this.TILE_SIZE/2 + 24, //HISTOGRAM_AXIS + 50, //36,
+                BAR_WIDTH = 9,
+                HISTOGRAM_AXIS = BAR_CENTRE_LINE + BAR_LENGTH + this.VERTICAL_BUFFER,
+                MOST_RECENT = this.TILE_SIZE/2 + 24,
                 MOST_RECENT_SPACING = 50;
 
             function isVisible(data) {
@@ -93,7 +105,7 @@ define(function (require) {
                 var i,
                     percent,
                     maxPercent = 0,
-                    tagIndex = that.mouseState.clickState.binData.index,
+                    tagIndex = that.mouseState.clickState.userData.index,
                     count = data.bin.value[tagIndex].count;
                 if (count === 0) {
                     return 0;
@@ -114,8 +126,8 @@ define(function (require) {
                 return (maxPositive > maxNegative) ? maxPositive : maxNegative;
             }
 
-            function formatText(str) {
-                var CHAR_PER_LINE = 35,
+            function formatText(str, charPerLine) {
+                var CHAR_PER_LINE = charPerLine || 35,
                     MAX_NUM_LINES = 3,
                     strArray = str.split(" "),
                     formatted = '',
@@ -125,12 +137,28 @@ define(function (require) {
 
                 for (i=0; i<strArray.length; i++) {
 
-                    while (strArray[i].length+1 > spaceLeft) {
+                    while (strArray[i].length > spaceLeft) {
+
+                        // if past maximum amount of lines, truncate
                         if (lineCount === MAX_NUM_LINES-1) {
+                            // strip space if is als character of string
+                            if (formatted[formatted.length-1] === ' ') {
+                                formatted = formatted.substring(0, formatted.length - 1);
+                            }
                             return formatted += strArray[i].substr(0, spaceLeft-3) + "..."
                         }
-                        formatted += strArray[i].substr(0, spaceLeft-1) + "-\n";
-                        strArray[i] = strArray[i].substr(spaceLeft-1, strArray[i].length-1);
+
+                        if (strArray[i].length < CHAR_PER_LINE) {
+                            // can fit in next line, put new line
+                            formatted += "\n";
+                        } else {
+                            // cannot fit in next line, hyphenate word
+                            formatted += strArray[i].substr(0, spaceLeft);
+                            strArray[i] = strArray[i].substr(spaceLeft);
+                            if (spaceLeft > 0) {
+                                formatted += "-\n";
+                            }
+                        }
                         spaceLeft = CHAR_PER_LINE;
                         lineCount++;
                     }
@@ -141,26 +169,34 @@ define(function (require) {
             }
 
 
-            function barTemplate( colour ) {
-
+            function barTemplate( defaultColour, selectedColour ) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
+                bar.on('click', function() { return true; }); //swallow event
                 bar.map('visible').from(function(){return isVisible(this)});
-                bar.map('fill').asValue(colour);
+                bar.map('fill').from( function(index) {
+                    if ( that.mouseState.hoverState.userData !== undefined &&
+                        (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                         that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative') &&
+                         that.mouseState.hoverState.userData.index === index) {
+                        return selectedColour;
+                    }
+                    return defaultColour;
+                });
                 bar.map('orientation').asValue('vertical');
                 bar.map('bar-count').asValue(24)
-                bar.map('width').asValue(9);
+                bar.map('width').asValue(BAR_WIDTH);
                 bar.map('stroke').asValue("#000000");
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-x').from( function(index) {
-                    return DETAILS_OFFSET_X + 20 + index*9;
+                    return DETAILS_OFFSET_X + 20 + index*BAR_WIDTH;
                 });
                 return bar;
             }
 
 
             function lineTemplate( colour, yOffset ) {
-
                 var line = that.plotLayer.addLayer(aperture.LabelLayer);
+                line.on('click', function() { return true; }); //swallow event
                 line.map('visible').from(function(){return isVisible(this)});
                 line.map('fill').asValue(colour);
                 line.map('label-count').asValue(1);
@@ -177,6 +213,7 @@ define(function (require) {
 
             function labelTemplate() {
                 var label = that.plotLayer.addLayer(aperture.LabelLayer);
+                label.on('click', function() { return true; }); //swallow event
                 label.map('visible').from(function(){return isVisible(this)});
                 label.map('fill').asValue('#FFFFFF');
                 label.map('label-count').asValue(1);
@@ -189,14 +226,14 @@ define(function (require) {
             // BACKGROUND FOR DETAILS
             this.detailsBackground = this.plotLayer.addLayer(aperture.BarLayer);
             this.detailsBackground.map('visible').from(function(){return isVisible(this)});
-            //this.detailsBackground.map('opacity').asValue(0.4);
-            this.detailsBackground.map('fill').asValue('#000000');
+            this.detailsBackground.map('fill').asValue('#111111');
             this.detailsBackground.map('orientation').asValue('horizontal');
             this.detailsBackground.map('bar-count').asValue(1);
             this.detailsBackground.map('width').asValue(this.TILE_SIZE*2 - 2);
             this.detailsBackground.map('length').asValue(this.TILE_SIZE - 2);
             this.detailsBackground.map('offset-y').asValue(DETAILS_OFFSET_Y + 1);
             this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET_X + 1);
+            this.detailsBackground.on('click', function() { return true; }); //swallow event
 
             // TITLE LABELS
             this.titleLabels = labelTemplate();
@@ -204,9 +241,9 @@ define(function (require) {
             this.titleLabels.map('text').from(function(index) {
                 switch (index) {
                     case 0:
-                        var str = that.mouseState.clickState.binData.tag;
-                        if (str.length > 16) {
-                            str = str.substr(0,16) + "...";
+                        var str = that.filterText(that.mouseState.clickState.userData.tag);
+                        if (str.length > 15) {
+                            str = str.substr(0,15) + "...";
                         }
                         return str;
                     case 1:
@@ -219,14 +256,14 @@ define(function (require) {
             this.titleLabels.map('offset-y').from(function(index) {
                 switch(index) {
                     case 0:
-                        return DETAILS_OFFSET_Y + 24;
+                        return DETAILS_OFFSET_Y + that.VERTICAL_BUFFER;
                     case 1:
-                        return DETAILS_OFFSET_Y + 72;
+                        return DETAILS_OFFSET_Y + that.VERTICAL_BUFFER*3;
                     default:
                         return MOST_RECENT;
                 }
             });
-            this.titleLabels.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING);
+            this.titleLabels.map('offset-x').asValue(DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER);
 
 
             // TRANSLATE LABEL
@@ -241,48 +278,159 @@ define(function (require) {
             this.translateLabel.map('offset-x').asValue(DETAILS_OFFSET_X + 28);
             */
 
+            // COUNT SUMMARY LABELS
+            this.summaryLabel = labelTemplate();
+            this.summaryLabel.map('label-count').asValue(3);
+            this.summaryLabel.map('font-size').asValue(12);
+            this.summaryLabel.map('visible').from(function(){return isVisible(this)});
+            this.summaryLabel.map('fill').from( function(index) {
+                switch(index) {
+                    case 0: return that.POSITIVE_COLOUR;
+                    case 1: return '#FFFFFF';
+                    default: return that.NEGATIVE_COLOUR;
+                }
+            });
+            this.summaryLabel.map('text').from( function(index) {
+                var tagIndex = that.mouseState.clickState.userData.index;
+                switch(index) {
+                    case 0: return "+ "+this.bin.value[tagIndex].positive;
+                    case 1: return ""+this.bin.value[tagIndex].neutral;
+                    default: return "- "+this.bin.value[tagIndex].negative;
+                }
+            });
+            this.summaryLabel.map('offset-y').from(function(index) {
+                return DETAILS_OFFSET_Y + (that.VERTICAL_BUFFER-4) + (14) * index;
+            });
+            this.summaryLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE - that.HORIZONTAL_BUFFER);
+            this.summaryLabel.map('text-anchor').asValue('end');
+
+            // POSITIVE TITLE LABEL
             this.positiveLabel = labelTemplate();
             this.positiveLabel.map('visible').from(function(){return isVisible(this)});
-            this.positiveLabel.map('fill').asValue('#09CFFF');
+            this.positiveLabel.map('fill').asValue(this.POSITIVE_COLOUR);
             this.positiveLabel.map('font-size').asValue(16);
             this.positiveLabel.map('text').asValue('positive tweets');
-            this.positiveLabel.map('offset-y').asValue(BAR_CENTRE_LINE - BAR_LENGTH - V_SPACING - 2);
-            this.positiveLabel.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING*2);
+            this.positiveLabel.map('offset-y').asValue(BAR_CENTRE_LINE - BAR_LENGTH - 12);
+            this.positiveLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2);
 
+            // NEGATIVE TITLE LABEL
             this.negativeLabel = labelTemplate();
             this.negativeLabel.map('visible').from(function(){return isVisible(this)});
-            this.negativeLabel.map('fill').asValue('#D33CFF');
+            this.negativeLabel.map('fill').asValue(this.NEGATIVE_COLOUR);
             this.negativeLabel.map('font-size').asValue(16);
             this.negativeLabel.map('text').asValue('negative tweets');
-            this.negativeLabel.map('offset-y').asValue(BAR_CENTRE_LINE + BAR_LENGTH + V_SPACING);
-            this.negativeLabel.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING*2);
+            this.negativeLabel.map('offset-y').asValue(BAR_CENTRE_LINE + BAR_LENGTH + 10);
+            this.negativeLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2);
 
+            // AXIS CENTRE LINE
             this.line1 = lineTemplate('#FFFFFF', BAR_CENTRE_LINE);
 
-            // negative bar
-            this.detailsNegativeBar = barTemplate('#D33CFF');
-            this.detailsNegativeBar.map('offset-y').asValue(BAR_CENTRE_LINE);
+            // NEGATIVE BAR
+            this.detailsNegativeBar = barTemplate(this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
+            this.detailsNegativeBar.map('offset-y').asValue(BAR_CENTRE_LINE+1);
             this.detailsNegativeBar.map('length').from(function (index) {
                 var maxPercentage = getMaxPercentageBoth(this);
                 if (maxPercentage === 0) { return 0; }
                 return (that.getExclusiveCountPercentage(this, index, 'negative') / maxPercentage) * BAR_LENGTH;
             });
+            this.detailsNegativeBar.on('mousemove', function(event) {
+                that.onHover(event, 'detailsOnDemandNegative');
+                that.detailsNegativeBar.all().where(event.data).redraw();
+                that.countLabels.all().redraw();
+            });
+            this.detailsNegativeBar.on('mouseout', function(event) {
+                that.onHoverOff(event);
+                that.detailsNegativeBar.all().where(event.data).redraw();
+                that.countLabels.all().redraw();
+            });
 
-            // positive bar
-            this.detailsPositiveBar = barTemplate('#09CFFF');
+            // POSITIVE BAR
+            this.detailsPositiveBar = barTemplate(this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
             this.detailsPositiveBar.map('offset-y').from(function (index) {
                 var maxPercentage = getMaxPercentageBoth(this);
                 if (maxPercentage === 0) { return 0; }
-                return BAR_CENTRE_LINE-((that.getExclusiveCountPercentage(this, index, 'positive') / maxPercentage) * BAR_LENGTH);
+                return BAR_CENTRE_LINE-((that.getExclusiveCountPercentage(this, index, 'positive') / maxPercentage) * BAR_LENGTH)-2;
             });
             this.detailsPositiveBar.map('length').from(function (index) {
                 var maxPercentage = getMaxPercentageBoth(this);
                 if (maxPercentage === 0) { return 0; }
                 return (that.getExclusiveCountPercentage(this, index, 'positive') / maxPercentage) * BAR_LENGTH;
             });
+            this.detailsPositiveBar.on('mousemove', function(event) {
+                that.onHover(event, 'detailsOnDemandPositive');
+                that.detailsPositiveBar.all().where(event.data).redraw();
+                that.countLabels.all().redraw();
+            });
+            this.detailsPositiveBar.on('mouseout', function(event) {
+                that.onHoverOff(event);
+                that.detailsPositiveBar.all().where(event.data).redraw();
+                that.countLabels.all().redraw();
+            });
 
+            // HOVER COUNT LABELS
+            this.countLabels = that.plotLayer.addLayer(aperture.LabelLayer);
+            this.countLabels.on('click', function() { return true; }); //swallow event
+            this.countLabels.map('font-outline-width').asValue(3);
+            this.countLabels.map('font-size').asValue(12);
+            this.countLabels.map('visible').from(function(){
+                return isVisible(this) &&
+                     that.mouseState.hoverState.userData.id !== undefined &&
+                    (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                     that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative') &&
+                     that.mouseState.hoverState.tilekey === this.tilekey;
+            });
 
+            this.countLabels.map('fill').asValue('#FFFFFF');
+            this.countLabels.map('text').from(function(index) {
+
+                var tagIndex, timeIndex, positive, neutral, negative;
+                if (index === 0) {
+                    return "positive:\n" +
+                           "neutral:\n" +
+                           "negative:\n" +
+                           "total: "
+                } else {
+                    if (that.mouseState.hoverState.userData.index !== undefined) {
+                        tagIndex = that.mouseState.clickState.userData.index;
+                        timeIndex = that.mouseState.hoverState.userData.index;
+                        if (that.mouseState.hoverState.userData.id !== undefined &&
+                           (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                            that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative')) {
+                            positive =  this.bin.value[tagIndex].positiveByTime[timeIndex];
+                            neutral =  this.bin.value[tagIndex].neutralByTime[timeIndex];
+                            negative =  this.bin.value[tagIndex].negativeByTime[timeIndex];
+                            return positive + "\n" +
+                                   neutral + "\n" +
+                                   negative + "\n" +
+                                   (positive + neutral + negative);
+                        }
+                    }
+                }
+            });
+            this.countLabels.map('label-count').asValue(2);
+            this.countLabels.map('text-anchor').asValue('start');
+            this.countLabels.map('font-outline').asValue('#000000');
+            this.countLabels.map('font-outline-width').asValue(3);
+            this.countLabels.map('offset-y').from( function() {
+                if (that.mouseState.hoverState.userData.id !== undefined &&
+                    that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive') {
+                    return BAR_CENTRE_LINE - 30;
+                }
+                return BAR_CENTRE_LINE + 30;
+            });
+            this.countLabels.map('offset-x').from( function(index) {
+                if (that.mouseState.hoverState.userData !== undefined) {
+                    if (index === 1) {
+                        return DETAILS_OFFSET_X + that.mouseState.hoverState.userData.index*BAR_WIDTH + 94;
+                    }
+                    return DETAILS_OFFSET_X + that.mouseState.hoverState.userData.index*BAR_WIDTH + 40;
+                }
+
+            });
+
+            // TIME AXIS LABEL
             this.timeAxisLabel = that.plotLayer.addLayer(aperture.LabelLayer);
+            this.timeAxisLabel.on('click', function() { return true; }); //swallow event
             this.timeAxisLabel.map('visible').from(function(){return isVisible(this)});
             this.timeAxisLabel.map('fill').asValue('#FFFFFF');
             this.timeAxisLabel.map('text').from(function(index) {
@@ -299,10 +447,8 @@ define(function (require) {
             this.timeAxisLabel.map('font-outline-width').asValue(3);
             this.timeAxisLabel.map('offset-y').asValue(HISTOGRAM_AXIS + 10);
             this.timeAxisLabel.map('offset-x').from(function(index) {
-                return DETAILS_OFFSET_X + H_SPACING*2 + 50*index;
+                return DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2 + 50*index;
             });
-
-
             this.timeAxisTicks = that.plotLayer.addLayer(aperture.BarLayer);
             this.timeAxisTicks.map('visible').from(function(){return isVisible(this)});
             this.timeAxisTicks.map('orientation').asValue('vertical');
@@ -317,28 +463,54 @@ define(function (require) {
                 return DETAILS_OFFSET_X + 24 + 51.5*index;
             });
 
-
+            // MOST RECENT TWEETS LABELS
             this.recentTweetsLabel = labelTemplate();
             this.recentTweetsLabel.map('visible').from(function(){return isVisible(this)});
             this.recentTweetsLabel.map('label-count').from( function() {
-                var length = this.bin.value[that.mouseState.clickState.binData.index].recent.length;
-                if (length === undefined ||
-                    length === 0 ||
-                    isNaN(length)) {
+                var length = this.bin.value[that.mouseState.clickState.userData.index].recent.length;
+                if (length === undefined || length === 0 || isNaN(length)) {
                     return 0;
                 }
                 return (length > 4) ? 4 : length;
             });
+            this.recentTweetsLabel.map('fill').from( function(index) {
+                if (that.mouseState.hoverState.userData !== undefined &&
+                    that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.mouseState.hoverState.userData.index === index) {
+                    return '#F5F56F';
+                } else {
+                    return '#FFFFFF';
+                }
+            });
             this.recentTweetsLabel.map('font-size').asValue(10);
             this.recentTweetsLabel.map('text').from( function(index) {
-                return formatText(this.bin.value[that.mouseState.clickState.binData.index].recent[index].tweet);
+                var tagIndex = that.mouseState.clickState.userData.index,
+                    filteredText = that.filterText(this.bin.value[tagIndex].recent[index].tweet);
+
+                if (that.mouseState.hoverState.userData !== undefined &&
+                    that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.mouseState.hoverState.userData.index === index) {
+                    return formatText(filteredText, 70);
+                }
+                return formatText(filteredText);
             });
             this.recentTweetsLabel.map('offset-y').from( function(index) {
                 return MOST_RECENT + 45 + (index * MOST_RECENT_SPACING);
             });
-            this.recentTweetsLabel.map('offset-x').asValue(DETAILS_OFFSET_X + H_SPACING*2);
+            this.recentTweetsLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE/2);
             this.recentTweetsLabel.map('width').asValue(200);
+            this.recentTweetsLabel.map('text-anchor').asValue('middle');
+            this.recentTweetsLabel.on('mousemove', function(event) {
+                that.onHover(event, 'detailsOnDemandRecent');
+                that.recentTweetsLabel.all().where(event.data).redraw();
+                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+            });
+            this.recentTweetsLabel.on('mouseout', function(event) {
+                that.onHoverOff(event);
+                that.recentTweetsLabel.all().where(event.data).redraw();
+            });
 
+            // MOST RECENT TWEETS LINES
             this.line2 = lineTemplate('#FFFFFF', MOST_RECENT + 20);
             this.line3 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING);
             this.line4 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING*2);

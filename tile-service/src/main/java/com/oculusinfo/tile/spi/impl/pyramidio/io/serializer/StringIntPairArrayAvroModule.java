@@ -28,9 +28,9 @@ import java.util.List;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
-import com.oculusinfo.binning.io.Pair;
-import com.oculusinfo.binning.io.impl.StringIntPairArrayAvroSerializer;
-import com.oculusinfo.binning.io.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 
 public class StringIntPairArrayAvroModule extends AbstractModule {

@@ -82,7 +82,7 @@ require(['./fileloader',
                 });
 
                 axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
-                    // skip any axis config objects
+                    // skip any non-axis config objects
                     return (element.hasOwnProperty("AxisConfig"));
                 });
 
@@ -164,7 +164,9 @@ require(['./fileloader',
                 new LayerControls().initialize(mapLayerState);
                 
 
-
+                // Trigger the initial resize event to resize everything
+                $(window).resize();
+                
                 /*
                 setTimeout(function () {
                     console.log(Class.getProfileInfo());

@@ -36,7 +36,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.impl.stream.ZipResourcePyramidStreamSource;
+import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 
 public class ZipResourcePyramidStreamSourceTest {
 

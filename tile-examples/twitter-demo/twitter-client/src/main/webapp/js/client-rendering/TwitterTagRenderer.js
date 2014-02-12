@@ -46,8 +46,13 @@ define(function (require) {
         init: function(id) {
             this._super(id);
             this.POSITIVE_COLOUR = '#09CFFF';
+            this.POSITIVE_SELECTED_COLOUR  = '#069CCC';
             this.NEGATIVE_COLOUR = '#D33CFF';
+            this.NEGATIVE_SELECTED_COLOUR = '#A009CC';
             this.NEUTRAL_COLOUR = '#222222';
+            this.NEUTRAL_SELECTED_COLOUR = '#000000';
+            this.HORIZONTAL_BUFFER = 14;
+            this.VERTICAL_BUFFER = 24;
         },
 
 
@@ -64,15 +69,26 @@ define(function (require) {
                     this.mouseState.clickState.yIndex-1 !==  thisKeyY));
         },
 
-        isHoveredOrClicked: function (tag, tilekey) {
+
+        isHovered: function (tag, tilekey) {
+            var hoverTilekey = this.mouseState.hoverState.tilekey,
+                hoverTag = this.mouseState.hoverState.userData.tag;
+
+            return hoverTag !== undefined && hoverTag === tag && hoverTilekey === tilekey;
+
+        },
+
+
+        isClicked: function (tag, tilekey) {
             var clickTilekey = this.mouseState.clickState.tilekey,
-                clickTag = this.mouseState.clickState.binData.tag,
-                hoverTilekey = this.mouseState.hoverState.tilekey,
-                hoverTag = this.mouseState.hoverState.binData.tag;
+                clickTag = this.mouseState.clickState.userData.tag;
 
-            return ((hoverTag !== undefined && hoverTag === tag && hoverTilekey === tilekey) ||
-                (clickTag !== undefined && clickTag === tag && clickTilekey === tilekey));
+            return clickTag !== undefined && clickTag === tag && clickTilekey === tilekey;
 
+        },
+
+        isHoveredOrClicked: function (tag, tilekey) {
+            return this.isHovered(tag, tilekey) || this.isClicked(tag, tilekey);
         },
 
 
@@ -80,12 +96,12 @@ define(function (require) {
             if ( // nothing is hovered or clicked on
                  (this.mouseState.clickState.tilekey === '' && this.mouseState.hoverState.tilekey === '') ||
                  // current tag is hovered on
-                 (this.mouseState.hoverState.binData.tag !== undefined &&
-                  this.mouseState.hoverState.binData.tag === tag &&
+                 (this.mouseState.hoverState.userData.tag !== undefined &&
+                  this.mouseState.hoverState.userData.tag === tag &&
                   this.mouseState.hoverState.tilekey === tilekey )) {
                 return false
-            } else if (this.mouseState.clickState.binData.tag !== undefined &&
-                this.mouseState.clickState.binData.tag !== tag) {
+            } else if (this.mouseState.clickState.userData.tag !== undefined &&
+                this.mouseState.clickState.userData.tag !== tag) {
                 return true;
             }
             return false;
@@ -93,10 +109,61 @@ define(function (require) {
 
 
         matchingTagIsSelected: function (tag) {
-            return (this.mouseState.hoverState.binData.tag !== undefined &&
-                    this.mouseState.hoverState.binData.tag === tag ||
-                    this.mouseState.clickState.binData.tag !== undefined &&
-                    this.mouseState.clickState.binData.tag === tag)
+            return (this.mouseState.hoverState.userData.tag !== undefined &&
+                    this.mouseState.hoverState.userData.tag === tag ||
+                    this.mouseState.clickState.userData.tag !== undefined &&
+                    this.mouseState.clickState.userData.tag === tag)
+        },
+
+
+        filterText: function (text) {
+            var splitStr = text.split(' '),
+                i, j, k, index,
+                filterWords = ['shit', 'fuck', 'nigg'],
+                replacement,
+                filteredStr = '';
+
+            function decodeUTF8(s) {
+                for(var a, b, i = -1, l = (s = s.split("")).length, o = String.fromCharCode, c = "charCodeAt"; ++i < l;
+                ((a = s[i][c](0)) & 0x80) && (s[i] = (a & 0xfc) == 0xc0 && ((b = s[i + 1][c](0)) & 0xc0) == 0x80 ? o(((a & 0x03) << 6) + (b & 0x3f)) : o(128), s[++i] = "")
+                );
+                return s.join("");
+            }
+
+            function decodeHTML(s){
+                var str, temp= document.createElement('p');
+                temp.innerHTML= s;
+                str= temp.textContent || temp.innerText;
+                temp=null;
+                return str;
+            }
+
+            // for each word
+            for (i=0; i< splitStr.length; i++) {
+                // for each filter word
+                for (j=0; j<filterWords.length; j++) {
+
+                    do {
+                        index = splitStr[i].toLowerCase().indexOf(filterWords[j]);
+                        if ( index !== -1) {
+                            // if it exists, replace inner letters with '*'
+                            replacement = splitStr[i].substr(0, index+1);
+                            for (k=index+1; k<filterWords[j].length-1; k++) {
+                                replacement += '*';
+                            }
+                            replacement += splitStr[i].substr(index+filterWords[j].length-1, splitStr[i].length-1);
+                            splitStr[i] = replacement;
+                        }
+                    // make sure every instance is censored
+                    } while ( index !== -1);
+                }
+                filteredStr += splitStr[i];
+                if ( i+1 < splitStr.length ) {
+                    filteredStr += ' ';
+                }
+            }
+
+            return decodeUTF8(decodeHTML(filteredStr)); //.replace( new RegExp("[^\\u0000-\\u00FF]","g") , "?");
         }
 
     });

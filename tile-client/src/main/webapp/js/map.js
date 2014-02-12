@@ -42,6 +42,8 @@ define(function (require) {
         ClassName: "Map",
         init: function (id, baseLayerSpec) {
 
+			var that = this;
+		
             Config.loadConfiguration(baseLayerSpec);
 
             // Set up map initialization parameters
@@ -62,6 +64,21 @@ define(function (require) {
             this.map.all().redraw();
             // The projection the map uses
             this.projection = new OpenLayers.Projection("EPSG:900913");
+			
+			// Set resize map callback
+			$(window).resize( function() {
+				var ASPECT_RATIO = 10/6,
+					leftOffset = $('#' + that.mapSpec.id).offset().left || 0,
+					rightOffset = $('#' + that.mapSpec.id).offset().right || 0,
+					bufferSpace = (leftOffset > rightOffset) ? leftOffset*2 : rightOffset* 2;
+
+				$('#' + that.mapSpec.id).width( $(window).width() - bufferSpace );
+				$('#' + that.mapSpec.id).height( ($(window).width() - bufferSpace) / ASPECT_RATIO );
+				that.map.olMap_.updateSize();
+			});
+			
+			// Trigger the initial resize event to resize everything
+            $(window).resize();			
         },
 
         setOpacity: function (newOpacity) {

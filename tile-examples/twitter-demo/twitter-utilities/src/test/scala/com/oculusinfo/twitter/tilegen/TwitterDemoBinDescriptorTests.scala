@@ -36,7 +36,7 @@ import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
 
-import com.oculusinfo.binning.io.Pair
+import com.oculusinfo.binning.util.Pair
 
 import com.oculusinfo.twitter.binning.TwitterDemoRecord
 

@@ -25,8 +25,8 @@
 package com.oculusinfo.tile.spi.impl.pyramidio.image.renderer;
 
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
 
 public class LegacyDoublesImageRenderer extends DoublesImageRenderer {
 

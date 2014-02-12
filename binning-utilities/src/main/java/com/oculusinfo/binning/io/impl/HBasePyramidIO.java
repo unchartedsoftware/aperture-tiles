@@ -48,11 +48,11 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Row;
 
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class HBasePyramidIO implements PyramidIO {
     private static final String META_DATA_INDEX      = "metadata";
