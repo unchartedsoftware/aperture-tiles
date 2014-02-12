@@ -24,16 +24,14 @@
  */
 
 /* JSLint global declarations: these objects don't need to be declared. */
-/*global define, console*/
+/*global define, console, $, aperture*/
 
 /**
  * Populates the LayerState model based on the contents of a ServerRenderedMapLayer, and makes the appropriate
  * modifications to it as the LayerState model changes.
  *
  * TODO:
- * 1) Read filter range, ramp function, ramp type, from server when it changes
- * 2) Write filter, ramp function and ramp type back to server in response to layer state model changes
- * 3) Generate filter ramp image URL using the /legend rest request (see ImageTileLegendService.java in tile-service)
+ * Generate filter ramp image URL using the /legend rest request (see ImageTileLegendService.java in tile-service)
  *
  */
 define(['class', 'layerstate'], function (Class, LayerState) {
@@ -65,7 +63,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
             layerSpecsById = mapLayer.getSubLayerSpecsById();
 
             // A callback to modify map / visual state in response to layer changes.
-            makeLayerStateCallback = function (mapLayer, layerState) {
+            makeLayerStateCallback = function (mapLayer, layerState, self) {
                 // Create layer state objects from the layer specs provided by the server rendered map layer.
                 return function (fieldName) {
                     if (fieldName === "opacity") {
@@ -74,8 +72,10 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                         mapLayer.setSubLayerEnabled(layerState.getId(), layerState.isEnabled());
                     } else if (fieldName === "rampType") {
                         mapLayer.setSubLayerRampType(layerState.getId(), layerState.getRampType());
+                        self.setupRampImage(layerState);
                     } else if (fieldName === "rampFunction") {
                         mapLayer.setSubLayerRampFunction(layerState.getId(), layerState.getRampFunction());
+                        self.setupRampImage(layerState);
                     } else if (fieldName === "filterRange") {
                         mapLayer.setSubLayerFilterRange(layerState.getId(), layerState.getFilterRange(), 0);
                     }
@@ -103,7 +103,11 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 layerState.setFilterRange([0.0, 1.0]);
 
                 // Register a callback to handle layer state change events.
-                layerState.addListener(makeLayerStateCallback(mapLayer, layerState));
+                layerState.addListener(makeLayerStateCallback(mapLayer, layerState, this));
+
+                // Initiate ramp image computation.  This is done asynchronously by the
+                // server.
+                this.setupRampImage(layerState);
 
                 // Add the layer to the layer statemap.
                 this.layerStateMap[layerState.getId()] = layerState;
@@ -129,6 +133,27 @@ define(['class', 'layerstate'], function (Class, LayerState) {
 
             // Add the layer to the layer statemap.
             this.layerStateMap[layerState.getId()] = layerState;
+        },
+
+        /**
+         * Asynchronously updates colour ramp image.
+         *
+         * @param {Object} layerState - The layer state object that contains
+         * the parameters to use when generating the image.
+         */
+        setupRampImage: function (layerState) {
+            var legendData = {
+                transform: layerState.getRampFunction(),
+                layer: layerState.getId(),
+                level: 0,
+                width: 64,
+                height: 1,
+                orientation: "horizontal",
+                ramp: layerState.getRampType()
+            };
+            aperture.io.rest('/legend', 'POST', function (legendString, status) {
+                layerState.setRampImageUrl(legendString);
+            }, {postData: legendData, contentType: 'application/json'});
         }
     });
     return ServerLayerUiMediator;
