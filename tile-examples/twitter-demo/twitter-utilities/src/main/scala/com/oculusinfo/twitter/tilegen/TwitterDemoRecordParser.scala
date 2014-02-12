@@ -73,7 +73,7 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
   def getStopWordList: Set[String] = {
     val stops = List("stop-word-en", "stop-word-fr", "stop-word-sp", "stop-word-tech")
     stops.map(stop => {
-      val resource = getClass().getResource("/com/oculusinfo/tilegen/datasets/"+stop+".json")
+      val resource = getClass().getResource("/com/oculusinfo/twitter/tilegen/"+stop+".json")
       val source = scala.io.Source.fromURL(resource)
       val text = source.mkString
       val json = JSON.parseFull(text)
