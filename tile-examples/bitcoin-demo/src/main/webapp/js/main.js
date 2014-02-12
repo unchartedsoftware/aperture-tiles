@@ -27,17 +27,13 @@ require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
 		 './ui/layercontrols',
-         './serverlayeruimediator',
-         './axis/AxisUtil',
-         './axis/Axis'],
+         './serverlayeruimediator'],
 
         function (FileLoader, 
         		  Map, 
         		  ServerLayer,
                   LayerControls,
-                  ServerLayerUiMediator,
-                  AxisUtil, 
-                  Axis
+                  ServerLayerUiMediator
                   ) {
             "use strict";
 
@@ -50,40 +46,15 @@ require(['./fileloader',
                 // We have all our data now; construct the UI.
                 var worldMap,
                     serverLayers,
-                    axisSpecs,
-                    mapSpecs,
-                    axisSpec,
-                    axes = [],
                     mapLayerState,
                     renderLayerSpecs,
                     renderLayerSpec,
-                    i,
                     layerId,
                     layerName
 					;
 
-                // Create world map from json file under mapFileId
-                mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
-                    // skip any axis config objects
-
-                    return !(element.hasOwnProperty("AxisConfig"));
-                });
-
-                axisSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
-                    // skip any non-axis config objects
-                    return (element.hasOwnProperty("AxisConfig"));
-                });
-
-                // create world map from json file under mapFileId
-                worldMap = new Map("map", mapSpecs);
-
-                // create axes
-                for (i=0; i<axisSpecs.length; ++i) {
-                    axisSpec = axisSpecs[i].AxisConfig;
-                    axisSpec.parentId = worldMap.mapSpec.id;
-                    axisSpec.olMap = worldMap.map.olMap_;
-                    axes.push( new Axis(axisSpec));
-                }
+                // Create world map and axes from json file under mapFileId
+                worldMap = new Map("map", jsonDataMap[mapFileId]);
 
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();

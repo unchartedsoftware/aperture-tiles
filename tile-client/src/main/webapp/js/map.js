@@ -33,6 +33,7 @@ define(function (require) {
 
 
     var Class = require('./class'),
+		Axis =  require('./axis/Axis'),
         Config = require('./aperture-config-map'),
         Map;
 
@@ -40,11 +41,26 @@ define(function (require) {
 
     Map = Class.extend({
         ClassName: "Map",
-        init: function (id, baseLayerSpec) {
+        init: function (id, spec) {
 
-			var that = this;
+			var that = this,
+				mapSpecs,
+				axisSpecs,
+				axisSpec,
+				i;
 		
-            Config.loadConfiguration(baseLayerSpec);
+			// isolate map and axis specifications from json objects
+			mapSpecs = $.grep(spec, function( element ) {
+				// skip any axis config objects
+				return !(element.hasOwnProperty("AxisConfig"));
+			});
+
+			axisSpecs = $.grep(spec, function( element ) {
+				// skip any non-axis config objects
+				return (element.hasOwnProperty("AxisConfig"));
+			});
+
+            Config.loadConfiguration(mapSpecs);
 
             // Set up map initialization parameters
             this.mapSpec = {
@@ -65,18 +81,46 @@ define(function (require) {
             // The projection the map uses
             this.projection = new OpenLayers.Projection("EPSG:900913");
 			
+			
+			// Create axes
+			this.axes = [];						
+			for (i=0; i<axisSpecs.length; ++i) {
+				axisSpec = axisSpecs[i].AxisConfig;
+				axisSpec.parentId = this.mapSpec.id;
+				axisSpec.olMap = this.map.olMap_;
+				this.axes.push(new Axis(axisSpec));
+			}
+			
 			// Set resize map callback
 			$(window).resize( function() {
-				var ASPECT_RATIO = 10/6,
-					leftOffset = $('#' + that.mapSpec.id).offset().left || 0,
-					rightOffset = $('#' + that.mapSpec.id).offset().right || 0,
-					bufferSpace = (leftOffset > rightOffset) ? leftOffset*2 : rightOffset* 2;
+				var ASPECT_RATIO = 1.61803398875, // golden ratio... ooooo
+					$map = $('#' + that.mapSpec.id),
+					$mapContainer = $map.parent(),
+					offset = $map.offset(),
+					leftOffset = offset.left || 0,
+					topOffset = offset.top || 0,
+					vertical_buffer = parseInt($mapContainer.css("marginBottom"), 10) + topOffset + 24,
+					horizontal_buffer = parseInt($mapContainer.css("marginRight"), 10) + leftOffset,			
+					width = $(window).width(),
+					height = $(window).height(),				
+					newHeight,
+					newWidth;
 
-				$('#' + that.mapSpec.id).width( $(window).width() - bufferSpace );
-				$('#' + that.mapSpec.id).height( ($(window).width() - bufferSpace) / ASPECT_RATIO );
+				if ((width-horizontal_buffer / ASPECT_RATIO) < height) {
+					// window height supports width
+					newWidth = width - horizontal_buffer;
+					newHeight = (width - horizontal_buffer) / ASPECT_RATIO;
+				} else {
+					// windows height does not support width
+					newWidth = (height - vertical_buffer) * ASPECT_RATIO;
+					newHeight = height - vertical_buffer;
+				}
+					
+				$map.width(newWidth);
+				$map.height(newHeight);
 				that.map.olMap_.updateSize();
 			});
-			
+												
 			// Trigger the initial resize event to resize everything
             $(window).resize();			
         },
