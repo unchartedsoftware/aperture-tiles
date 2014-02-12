@@ -26,7 +26,6 @@
 require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
-		 './client-rendering/TextScoreRenderer',
 		 './ui/layercontrols',
          './serverlayeruimediator',
          './axis/AxisUtil',
@@ -35,7 +34,6 @@ require(['./fileloader',
         function (FileLoader, 
         		  Map, 
         		  ServerLayer,
-                  TextScoreRenderer, 
                   LayerControls,
                   ServerLayerUiMediator,
                   AxisUtil, 
@@ -59,11 +57,10 @@ require(['./fileloader',
                     mapLayerState,
                     renderLayerSpecs,
                     renderLayerSpec,
-                    tooltipFcn,
                     i,
                     layerId,
                     layerName
-                ;
+					;
 
                 // Create world map from json file under mapFileId
                 mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
@@ -91,15 +88,6 @@ require(['./fileloader',
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
                 // debugLayer.addToMap(worldMap);
-
-
-                tooltipFcn = function (text) {
-                    if (text) {
-                        $('#hoverOutput').html(text);
-                    } else {
-                        $('#hoverOutput').html('');
-                   }
-                };
 
 				// Set up server-rendered display layers
                 serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));

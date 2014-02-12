@@ -88,17 +88,17 @@ define(function (require) {
         createDetailsOnDemand: function() {
 
             var that = this,
-                DETAILS_OFFSET_X = that.X_CENTRE_OFFSET + this.TILE_SIZE/ 2,
+                DETAILS_OFFSET_X = that.X_CENTRE_OFFSET + this.TILE_SIZE/2,
                 DETAILS_OFFSET_Y = -this.TILE_SIZE/2,
-                BAR_CENTRE_LINE = DETAILS_OFFSET_Y + 158,
+                BAR_CENTRE_LINE = DETAILS_OFFSET_Y + this.TILE_SIZE/2 + 30,
                 BAR_LENGTH = 50,
                 BAR_WIDTH = 9,
                 HISTOGRAM_AXIS = BAR_CENTRE_LINE + BAR_LENGTH + this.VERTICAL_BUFFER,
-                MOST_RECENT = this.TILE_SIZE/2 + 24,
+                MOST_RECENT = DETAILS_OFFSET_Y + this.TILE_SIZE + this.VERTICAL_BUFFER,
                 MOST_RECENT_SPACING = 50;
 
             function isVisible(data) {
-                return (that.id === data.renderer) && (that.mouseState.clickState.tilekey === data.tilekey);
+                return that.isSelectedView(data) && (that.mouseState.clickState.tilekey === data.tilekey);
             }
 
             function getMaxPercentage(data, type) {
@@ -185,7 +185,7 @@ define(function (require) {
                 bar.map('orientation').asValue('vertical');
                 bar.map('bar-count').asValue(24)
                 bar.map('width').asValue(BAR_WIDTH);
-                bar.map('stroke').asValue("#000000");
+                bar.map('stroke').asValue(that.BLACK_COLOUR);
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-x').from( function(index) {
                     return DETAILS_OFFSET_X + 20 + index*BAR_WIDTH;
@@ -215,10 +215,10 @@ define(function (require) {
                 var label = that.plotLayer.addLayer(aperture.LabelLayer);
                 label.on('click', function() { return true; }); //swallow event
                 label.map('visible').from(function(){return isVisible(this)});
-                label.map('fill').asValue('#FFFFFF');
+                label.map('fill').asValue(that.WHITE_COLOUR);
                 label.map('label-count').asValue(1);
                 label.map('text-anchor').asValue('start');
-                label.map('font-outline').asValue('#000000');
+                label.map('font-outline').asValue(that.BLACK_COLOUR);
                 label.map('font-outline-width').asValue(3);
                 return label;
             }
@@ -286,7 +286,7 @@ define(function (require) {
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
                     case 0: return that.POSITIVE_COLOUR;
-                    case 1: return '#FFFFFF';
+                    case 1: return that.WHITE_COLOUR;
                     default: return that.NEGATIVE_COLOUR;
                 }
             });
@@ -380,7 +380,7 @@ define(function (require) {
                      that.mouseState.hoverState.tilekey === this.tilekey;
             });
 
-            this.countLabels.map('fill').asValue('#FFFFFF');
+            this.countLabels.map('fill').asValue(this.WHITE_COLOUR);
             this.countLabels.map('text').from(function(index) {
 
                 var tagIndex, timeIndex, positive, neutral, negative;
@@ -409,7 +409,7 @@ define(function (require) {
             });
             this.countLabels.map('label-count').asValue(2);
             this.countLabels.map('text-anchor').asValue('start');
-            this.countLabels.map('font-outline').asValue('#000000');
+            this.countLabels.map('font-outline').asValue(this.BLACK_COLOUR);
             this.countLabels.map('font-outline-width').asValue(3);
             this.countLabels.map('offset-y').from( function() {
                 if (that.mouseState.hoverState.userData.id !== undefined &&
@@ -432,7 +432,7 @@ define(function (require) {
             this.timeAxisLabel = that.plotLayer.addLayer(aperture.LabelLayer);
             this.timeAxisLabel.on('click', function() { return true; }); //swallow event
             this.timeAxisLabel.map('visible').from(function(){return isVisible(this)});
-            this.timeAxisLabel.map('fill').asValue('#FFFFFF');
+            this.timeAxisLabel.map('fill').asValue(this.WHITE_COLOUR);
             this.timeAxisLabel.map('text').from(function(index) {
                 switch (index) {
                     case 1: return "6am";
@@ -443,7 +443,7 @@ define(function (require) {
             });
             this.timeAxisLabel.map('label-count').asValue(5);
             this.timeAxisLabel.map('text-anchor').asValue('middle');
-            this.timeAxisLabel.map('font-outline').asValue('#000000');
+            this.timeAxisLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.timeAxisLabel.map('font-outline-width').asValue(3);
             this.timeAxisLabel.map('offset-y').asValue(HISTOGRAM_AXIS + 10);
             this.timeAxisLabel.map('offset-x').from(function(index) {
@@ -452,11 +452,11 @@ define(function (require) {
             this.timeAxisTicks = that.plotLayer.addLayer(aperture.BarLayer);
             this.timeAxisTicks.map('visible').from(function(){return isVisible(this)});
             this.timeAxisTicks.map('orientation').asValue('vertical');
-            this.timeAxisTicks.map('fill').asValue('#FFFFFF');
+            this.timeAxisTicks.map('fill').asValue(this.WHITE_COLOUR);
             this.timeAxisTicks.map('length').asValue(6);
             this.timeAxisTicks.map('width').asValue(3);
             this.timeAxisTicks.map('bar-count').asValue(5);
-            this.timeAxisTicks.map('stroke').asValue("#000000");
+            this.timeAxisTicks.map('stroke').asValue(this.BLACK_COLOUR);
             this.timeAxisTicks.map('stroke-width').asValue(1);
             this.timeAxisTicks.map('offset-y').asValue(HISTOGRAM_AXIS);
             this.timeAxisTicks.map('offset-x').from( function(index) {
@@ -477,9 +477,9 @@ define(function (require) {
                 if (that.mouseState.hoverState.userData !== undefined &&
                     that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
                     that.mouseState.hoverState.userData.index === index) {
-                    return '#F5F56F';
+                    return that.YELLOW_COLOUR;
                 } else {
-                    return '#FFFFFF';
+                    return that.WHITE_COLOUR;
                 }
             });
             this.recentTweetsLabel.map('font-size').asValue(10);
@@ -511,10 +511,10 @@ define(function (require) {
             });
 
             // MOST RECENT TWEETS LINES
-            this.line2 = lineTemplate('#FFFFFF', MOST_RECENT + 20);
-            this.line3 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING);
-            this.line4 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING*2);
-            this.line4 = lineTemplate('#FFFFFF', MOST_RECENT + 20 + MOST_RECENT_SPACING*3);
+            this.line2 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20);
+            this.line3 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20 + MOST_RECENT_SPACING);
+            this.line4 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20 + MOST_RECENT_SPACING*2);
+            this.line4 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20 + MOST_RECENT_SPACING*3);
         }
 
 

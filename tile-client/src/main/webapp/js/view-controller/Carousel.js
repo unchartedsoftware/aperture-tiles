@@ -318,18 +318,6 @@ define(function (require) {
          */
         updateSelectedTile: function(tilekey) {
 
-            var parsedKey = tilekey.split(','),
-                thisKeyX = parseInt(parsedKey[1], 10),
-                thisKeyY = parseInt(parsedKey[2], 10);
-
-            // hack to prevent carousel from overlapping DoD
-            if (this.mouseState.clickState.tilekey !== '' &&
-                this.mouseState.clickState.xIndex+1 === thisKeyX &&
-                (this.mouseState.clickState.yIndex === thisKeyY ||
-                 this.mouseState.clickState.yIndex-1 ===  thisKeyY)) {
-                return;
-            }
-
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey

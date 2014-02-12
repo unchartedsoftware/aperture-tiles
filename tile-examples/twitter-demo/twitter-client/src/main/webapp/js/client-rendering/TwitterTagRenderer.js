@@ -27,8 +27,8 @@
 /*global OpenLayers */
 
 /**
- * This module defines a simple client-rendered layer that displays a 
- * text score tile in a meaningful way.
+ * This module defines a intermediary class for the twitter demo, contains
+ * common functionality shared across each of the render layers
  */
 define(function (require) {
     "use strict";
@@ -43,91 +43,143 @@ define(function (require) {
     TwitterTagRenderer = ClientRenderer.extend({
         ClassName: "TwitterTagRenderer",
 
+        /**
+         * Constructs a twitter tag render layer object
+         * @param id the id string for the render layer
+         */
         init: function(id) {
             this._super(id);
+            this.Y_SPACING = 10;
+            this.VALUE_COUNT = 10;
+            this.TILE_SIZE = 256;
+            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;  // x offest required to centre on tile
+            this.Y_CENTRE_OFFSET = 0;
             this.POSITIVE_COLOUR = '#09CFFF';
             this.POSITIVE_SELECTED_COLOUR  = '#069CCC';
             this.NEGATIVE_COLOUR = '#D33CFF';
             this.NEGATIVE_SELECTED_COLOUR = '#A009CC';
             this.NEUTRAL_COLOUR = '#222222';
             this.NEUTRAL_SELECTED_COLOUR = '#000000';
+            this.BLACK_COLOUR = '#000000';
+            this.WHITE_COLOUR = '#FFFFFF';
+            this.LIGHT_GREY_COLOUR = '#999999';
+            this.YELLOW_COLOUR = '#F5F56F';
             this.HORIZONTAL_BUFFER = 14;
             this.VERTICAL_BUFFER = 24;
+
+            this.FILTER_WORDS = [/s+h+i+t+/, /f+u+c+k+/, /n+i+g+g+/];
         },
 
 
-        isNotBehindDoD: function (tilekey) {
-
-            var parsedKey = tilekey.split(','),
-                thisKeyX = parseInt(parsedKey[1], 10),
-                thisKeyY = parseInt(parsedKey[2], 10);
-
-            return (this.mouseState.clickState.tilekey === '' || // nothing clicked, or
-                // not under details on demand window
-                    this.mouseState.clickState.xIndex+1 !== thisKeyX ||
-                   (this.mouseState.clickState.yIndex !== thisKeyY &&
-                    this.mouseState.clickState.yIndex-1 !==  thisKeyY));
+        /**
+         * Returns the number of values in the bin, capped by the VALUE_COUNT constant
+         * @param data the aperturejs node data object
+         */
+        getCount: function(data) {
+            if (data.bin.value.length === undefined ||
+                data.bin.value.length === 0 ||
+                isNaN(data.bin.value.length)) {
+                return 0;
+            }
+            return (data.bin.value.length > this.VALUE_COUNT) ? this.VALUE_COUNT : data.bin.value.length;
         },
 
 
+        /**
+         * Returns a y offset for a given index
+         * @param data the aperturejs node data object
+         * @param index the layer element index
+         */
+        getYOffset: function(data, index) {
+            return -this.Y_SPACING * (((this.getCount(data) - 1) / 2) - index);
+        },
+
+
+        /**
+         * Returns true if the current tag in the respective tile is hovered over
+         * @param tag the twitter data tag string
+         * @param tilekey the tilekey of the respective tile
+         */
         isHovered: function (tag, tilekey) {
             var hoverTilekey = this.mouseState.hoverState.tilekey,
                 hoverTag = this.mouseState.hoverState.userData.tag;
 
-            return hoverTag !== undefined && hoverTag === tag && hoverTilekey === tilekey;
+            return hoverTag === tag && hoverTilekey === tilekey;
 
         },
 
 
+        /**
+         * Returns true if the current tag in the respective tile is clicked
+         * @param tag the twitter data tag string
+         * @param tilekey the tilekey of the respective tile
+         */
         isClicked: function (tag, tilekey) {
             var clickTilekey = this.mouseState.clickState.tilekey,
                 clickTag = this.mouseState.clickState.userData.tag;
 
-            return clickTag !== undefined && clickTag === tag && clickTilekey === tilekey;
+            return clickTag === tag && clickTilekey === tilekey;
 
         },
 
+
+        /**
+         * Returns true if the current tag in the respective tile is hovered on or clicked
+         * @param tag the twitter data tag string
+         * @param tilekey the tilekey of the respective tile
+         */
         isHoveredOrClicked: function (tag, tilekey) {
             return this.isHovered(tag, tilekey) || this.isClicked(tag, tilekey);
         },
 
 
+        /**
+         * Returns true if the criteria for whether the element should be greyed out is satisfied
+         * @param tag the twitter data tag string
+         * @param tilekey the tilekey of the respective tile
+         */
         shouldBeGreyedOut: function (tag, tilekey) {
+
+            var hoverTilekey = this.mouseState.hoverState.tilekey,
+                hoverTag = this.mouseState.hoverState.userData.tag,
+                clickTilekey = this.mouseState.clickState.tilekey,
+                clickTag = this.mouseState.clickState.userData.tag;
+
             if ( // nothing is hovered or clicked on
-                 (this.mouseState.clickState.tilekey === '' && this.mouseState.hoverState.tilekey === '') ||
+                 (clickTilekey === '' && hoverTilekey === '') ||
                  // current tag is hovered on
-                 (this.mouseState.hoverState.userData.tag !== undefined &&
-                  this.mouseState.hoverState.userData.tag === tag &&
-                  this.mouseState.hoverState.tilekey === tilekey )) {
+                 (hoverTag === tag && hoverTilekey === tilekey )) {
                 return false
-            } else if (this.mouseState.clickState.userData.tag !== undefined &&
-                this.mouseState.clickState.userData.tag !== tag) {
+            } else if (clickTag !== undefined && clickTag !== tag) {
                 return true;
             }
             return false;
         },
 
 
+        /**
+         * Returns true if the current tag is hovered over or clicked anywhere
+         * @param tag the twitter data tag string
+         */
         matchingTagIsSelected: function (tag) {
-            return (this.mouseState.hoverState.userData.tag !== undefined &&
-                    this.mouseState.hoverState.userData.tag === tag ||
-                    this.mouseState.clickState.userData.tag !== undefined &&
+            return (this.mouseState.hoverState.userData.tag === tag ||
                     this.mouseState.clickState.userData.tag === tag)
         },
 
 
+        /**
+         * Filters any word in the filtered words list, replacing all inner letters with *
+         * @param text the text to be filtered
+         */
         filterText: function (text) {
             var splitStr = text.split(' '),
                 i, j, k, index,
-                filterWords = ['shit', 'fuck', 'nigg'],
                 replacement,
                 filteredStr = '';
 
-            function decodeUTF8(s) {
-                for(var a, b, i = -1, l = (s = s.split("")).length, o = String.fromCharCode, c = "charCodeAt"; ++i < l;
-                ((a = s[i][c](0)) & 0x80) && (s[i] = (a & 0xfc) == 0xc0 && ((b = s[i + 1][c](0)) & 0xc0) == 0x80 ? o(((a & 0x03) << 6) + (b & 0x3f)) : o(128), s[++i] = "")
-                );
-                return s.join("");
+            String.prototype.regexIndexOf = function(regex) {
+                var indexOf = this.substring(0).search(regex);
+                return (indexOf >= 0) ? (indexOf + (0)) : indexOf;
             }
 
             function decodeHTML(s){
@@ -141,17 +193,17 @@ define(function (require) {
             // for each word
             for (i=0; i< splitStr.length; i++) {
                 // for each filter word
-                for (j=0; j<filterWords.length; j++) {
+                for (j=0; j<this.FILTER_WORDS.length; j++) {
 
                     do {
-                        index = splitStr[i].toLowerCase().indexOf(filterWords[j]);
+                        index = splitStr[i].toLowerCase().regexIndexOf(this.FILTER_WORDS[j]);
                         if ( index !== -1) {
                             // if it exists, replace inner letters with '*'
                             replacement = splitStr[i].substr(0, index+1);
-                            for (k=index+1; k<filterWords[j].length-1; k++) {
+                            for (k=index+1; k<splitStr[i].length-1; k++) {
                                 replacement += '*';
                             }
-                            replacement += splitStr[i].substr(index+filterWords[j].length-1, splitStr[i].length-1);
+                            replacement += splitStr[i].substr(index+splitStr[i].length-1, splitStr[i].length-1);
                             splitStr[i] = replacement;
                         }
                     // make sure every instance is censored
@@ -163,7 +215,7 @@ define(function (require) {
                 }
             }
 
-            return decodeUTF8(decodeHTML(filteredStr)); //.replace( new RegExp("[^\\u0000-\\u00FF]","g") , "?");
+            return decodeHTML(filteredStr);
         }
 
     });
