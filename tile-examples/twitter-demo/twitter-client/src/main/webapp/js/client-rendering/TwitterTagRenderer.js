@@ -123,13 +123,6 @@ define(function (require) {
                 replacement,
                 filteredStr = '';
 
-            function decodeUTF8(s) {
-                for(var a, b, i = -1, l = (s = s.split("")).length, o = String.fromCharCode, c = "charCodeAt"; ++i < l;
-                ((a = s[i][c](0)) & 0x80) && (s[i] = (a & 0xfc) == 0xc0 && ((b = s[i + 1][c](0)) & 0xc0) == 0x80 ? o(((a & 0x03) << 6) + (b & 0x3f)) : o(128), s[++i] = "")
-                );
-                return s.join("");
-            }
-
             function decodeHTML(s){
                 var str, temp= document.createElement('p');
                 temp.innerHTML= s;
@@ -163,7 +156,7 @@ define(function (require) {
                 }
             }
 
-            return decodeUTF8(decodeHTML(filteredStr)); //.replace( new RegExp("[^\\u0000-\\u00FF]","g") , "?");
+            return decodeHTML(filteredStr);
         }
 
     });
