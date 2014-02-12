@@ -45,8 +45,8 @@ define(function (require) {
 
         init: function(id) {
             this._super(id);
-            this.valueCount = 10;
-            this.ySpacing = 18;
+            this.VALUE_COUNT = 10;
+            this.Y_SPACING = 18;
         },
 
 
@@ -71,6 +71,9 @@ define(function (require) {
                 tag : event.data.bin.value[index].tag,
                 index : index
             });
+            // send this node to the front
+            this.plotLayer.all().where(event.data).toFront();
+            // redraw all nodes
             this.plotLayer.all().redraw();
         },
 
@@ -160,7 +163,7 @@ define(function (require) {
             this.bars.map('orientation').asValue('vertical');
             this.bars.map('width').asValue(3);
             this.bars.map('visible').from( function() {
-                return that.id === this.renderer && that.isNotBehindDoD(this.tilekey);
+                return that.isSelectedView(this);
             });
             this.bars.map('fill').from( function(index) {
                 var tagIndex = Math.floor(index/24),
@@ -222,17 +225,17 @@ define(function (require) {
             this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
             this.summaryLabel.map('label-count').asValue(3);
             this.summaryLabel.map('font-size').asValue(12);
-            this.summaryLabel.map('font-outline').asValue('#000000');
+            this.summaryLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.summaryLabel.map('font-outline-width').asValue(3);
             this.summaryLabel.map('visible').from(function(){
-                return (that.id === this.renderer) && that.isNotBehindDoD(this.tilekey) &&
+                return that.isSelectedView(this) &&
                     that.mouseState.hoverState.tilekey === this.tilekey &&
                     that.mouseState.hoverState.userData.id === 'hashTagsByTimeCountSummary';
             });
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
                     case 0: return that.POSITIVE_COLOUR;
-                    case 1: return '#FFFFFF';
+                    case 1: return that.WHITE_COLOUR;
                     default: return that.NEGATIVE_COLOUR;
                 }
             });
@@ -259,14 +262,14 @@ define(function (require) {
             this.tagLabels = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabels.map('visible').from(function() {
-                return that.id === this.renderer && that.isNotBehindDoD(this.tilekey);
+                return that.isSelectedView(this);
             });
 
             this.tagLabels.map('fill').from( function(index) {
                 if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
                     return '#666666';
                 }
-                return '#FFFFFF';
+                return that.WHITE_COLOUR;
             });
 
             this.tagLabels.map('label-count').from(function() {
@@ -294,7 +297,7 @@ define(function (require) {
 
             this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 16);
             this.tagLabels.map('text-anchor').asValue('start');
-            this.tagLabels.map('font-outline').asValue('#000000');
+            this.tagLabels.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabels.map('font-outline-width').asValue(3);
 
             this.tagLabels.on('click', function(event) {
