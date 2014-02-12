@@ -36,6 +36,10 @@ import com.oculusinfo.binning.util.Pair;
 
 
 public class TwitterDemoRecord implements Serializable {
+    private static final long serialVersionUID = -101377072168164645L;
+
+
+
     private String                   _tag;
     private int                      _count;
     private List<Integer>            _countBins;
