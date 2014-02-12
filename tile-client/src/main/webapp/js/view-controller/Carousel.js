@@ -318,10 +318,6 @@ define(function (require) {
          */
         updateSelectedTile: function(tilekey) {
 
-            var parsedKey = tilekey.split(','),
-                thisKeyX = parseInt(parsedKey[1], 10),
-                thisKeyY = parseInt(parsedKey[2], 10);
-
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey

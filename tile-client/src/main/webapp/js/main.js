@@ -26,8 +26,6 @@
 require(['./fileloader',
          './map',
          './serverrenderedmaplayer',
-         './client-rendering/TextScoreRenderer',
-         './client-rendering/TextScoreRendererOther',
          './ui/layercontrols',
          './serverlayeruimediator',
          './axis/AxisUtil',
@@ -38,8 +36,6 @@ require(['./fileloader',
         function (FileLoader,
                   Map,
                   ServerLayer,
-                  TextScoreRenderer,
-                  TextScoreRendererOther,
                   LayerControls,
                   ServerLayerUiMediator,
                   AxisUtil,
@@ -64,16 +60,11 @@ require(['./fileloader',
                     axisSpec,
                     axes = [],
                     mapLayerState,
-                    renderLayerSpecs,
-                    renderLayerSpec,
-                    tooltipFcn,
-                    i,
-                    layerId,
-                    layerName,
-                    tileScoreRenderer,
-                    tileScoreRendererOther,
-                    dataTracker,
-                    carousel;
+                    i;
+                    //layerId,
+                    //layerName,
+                    //dataTracker,
+                    //carousel;
 
                 // Create world map from json file under mapFileId
                 mapSpecs = $.grep(jsonDataMap[mapFileId], function( element ) {
@@ -104,25 +95,13 @@ require(['./fileloader',
 
 
                 // Set up client-rendered layers
+				/*
                 renderLayerSpecs = jsonDataMap[cLayerFileId];
 
-                tooltipFcn = function (text) {
-                    if (text) {
-                        $('#hoverOutput').html(text);
-                    } else {
-                        $('#hoverOutput').html('');
-                    }
-                };
-
+				
                 for (i=0; i<renderLayerSpecs.length; ++i) {
                     renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
                     layerId = renderLayerSpec.layer;
-
-                    tileScoreRenderer = new TextScoreRenderer();
-                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
-
-                    tileScoreRendererOther = new TextScoreRendererOther();
-                    tileScoreRenderer.setTooltipFcn(tooltipFcn);
 
                     layerName = renderLayerSpec.name;
                     if (!layerName) {
@@ -130,6 +109,7 @@ require(['./fileloader',
                     }
                 }
 
+				
                 LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
                     dataTracker = new DataTracker(layerInfo);
                     carousel = new Carousel( {
@@ -148,6 +128,7 @@ require(['./fileloader',
                         ]});
                     carousel.dummy = 0; // to shut jslint up
                 });
+				*/
 
 
 

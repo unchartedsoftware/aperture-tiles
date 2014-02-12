@@ -79,6 +79,7 @@ define(function (require) {
          * @param nodeLayer the aperturejs.geo.mapnodelayer
          */
         createLayer: function (nodeLayer) {
+			console.log('Warning createLayer function in client renderer has not been overloaded');
         },
 
 
@@ -114,7 +115,7 @@ define(function (require) {
          rgbToHex : function(r, g, b) {
              function componentToHex(c) {
                  var hex = c.toString(16);
-                 return hex.length == 1 ? "0" + hex : hex;
+                 return (hex.length === 1) ? "0" + hex : hex;
              }
              return "#" + componentToHex( Math.floor(r)) +
                           componentToHex( Math.floor(g)) +
