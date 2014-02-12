@@ -19,20 +19,20 @@
 	   must be set in tile.properties to match the storage module 
 	   chosen. -->
       <!-- To read tiles from HBase -->
-      com.oculusinfo.tile.spi.impl.pyramidio.io.HBaseModule:
+      com.oculusinfo.tile.io.HBaseModule:
       <!-- To read tiles from the file system -->
-      <!-- com.oculusinfo.tile.spi.impl.pyramidio.io.FileSystemModule: -->
+      <!-- com.oculusinfo.tile.io.FileSystemModule: -->
       <!-- To read tiles from a .jar file -->
-      <!-- com.oculusinfo.tile.spi.impl.pyramidio.io.ResourceStreamModule: -->
+      <!-- com.oculusinfo.tile.io.ResourceStreamModule: -->
       <!-- To read tiles from a .zip file -->
-      <!-- com.oculusinfo.tile.spi.impl.pyramidio.io.ZipResourceStreamModule: -->
+      <!-- com.oculusinfo.tile.io.ZipResourceStreamModule: -->
       <!-- To read tiles from a SQLite database -->
-      <!-- com.oculusinfo.tile.spi.impl.pyramidio.io.SQLiteModule: -->
+      <!-- com.oculusinfo.tile.io.SQLiteModule: -->
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
-      com.oculusinfo.tile.RestConfigModule:
+      com.oculusinfo.tile.rest.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.spi.impl.pyramidio.image.ImageTileModule
+      com.oculusinfo.tile.rest.TileModule
     </param-value>
   </context-param>
 
