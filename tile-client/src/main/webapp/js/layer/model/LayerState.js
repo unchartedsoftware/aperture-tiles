@@ -31,10 +31,11 @@
  * Captures the visual state of a layer in the system, and provides a notification
  * mechanism to allow external code to react to changes to it.
  */
-define(['class'], function (Class) {
+define(function (require) {
     "use strict";
 
-    var LayerState, notify;
+    var Class = require('../../class'),
+        LayerState, notify;
 
     /**
      * @param {string} fieldName - Name of the modified field.

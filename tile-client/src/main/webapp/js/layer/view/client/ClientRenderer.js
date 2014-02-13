@@ -27,15 +27,15 @@
 /*global OpenLayers */
 
 /**
- * This module defines the base class for a client render layer. Must be inherited from
- * for any functionality.
+ * This module defines the base class for a client render layer. Must be 
+ * inherited from for any functionality.
  */
 define(function (require) {
     "use strict";
 
 
 
-    var Class = require('../class'),
+    var Class = require('../../../class'),
         ClientRenderer;
 
 

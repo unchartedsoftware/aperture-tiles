@@ -26,7 +26,7 @@
 /*global OpenLayers*/
 
 /**
- * This module defines a Carousel class which inherits from a ViewController and provides a user
+ * This module defines a CarouselLayer class which inherits from a ViewController and provides a user
  * interface and event handler for switching between views for individual tiles
  */
 define(function (require) {
@@ -35,11 +35,11 @@ define(function (require) {
 
 
     var ViewController = require('./ViewController'),
-        Carousel;
+        CarouselLayer;
 
 
 
-    Carousel = ViewController.extend({
+    CarouselLayer = ViewController.extend({
 
         /**
          * Construct a carousel
@@ -361,5 +361,5 @@ define(function (require) {
 
      });
 
-    return Carousel;
+    return CarouselLayer;
 });

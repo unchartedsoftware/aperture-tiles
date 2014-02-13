@@ -35,12 +35,12 @@ define(function (require) {
 
 
 
-    var Class = require('../class'),
-        AoIPyramid = require('../client-rendering/AoITilePyramid'),
-        TileIterator = require('../client-rendering/TileIterator'),
-        TileTracker = require('../client-rendering/TileTracker'),
-		MouseState = require('./MouseState'),
-        permData = [],  // TEMPORARY BAND AID FIX /
+    var Class        = require('../../../class'),
+        AoIPyramid   = require('../../../binning/AoITilePyramid'),
+        TileIterator = require('../../../binning/TileIterator'),
+        TileTracker  = require('./data/TileTracker'),
+        MouseState   = require('./MouseState'),
+        permData     = [],  // TEMPORARY BAND AID FIX /
         ViewController;
 
 

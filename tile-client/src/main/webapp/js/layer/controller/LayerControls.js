@@ -47,8 +47,8 @@
 define(function (require) {
     "use strict";
 
-    var Class = require('../class'),
-        LayerState = require('../layerstate'),
+    var Class = require('../../class'),
+        LayerState = require('../model/LayerState'),
         LayerControls,
         addLayer,
         showLayerSettings,

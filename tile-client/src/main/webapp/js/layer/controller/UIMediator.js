@@ -36,10 +36,12 @@
  * 3) Generate filter ramp image URL using the /legend rest request (see ImageTileLegendService.java in tile-service)
  *
  */
-define(['class', 'layerstate'], function (Class, LayerState) {
+define(function (require) {
     "use strict";
 
-    var ServerLayerUiMediator;
+    var Class = require('../../class'),
+        LayerState = require('../model/LayerState'),
+        ServerLayerUiMediator;
 
     ServerLayerUiMediator = Class.extend({
         ClassName: "ServerLayerUiMediator",

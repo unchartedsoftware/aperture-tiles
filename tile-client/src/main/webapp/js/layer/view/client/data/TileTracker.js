@@ -38,7 +38,7 @@ define(function (require) {
 
 
 
-    var Class = require('../profileclass'),
+    var Class = require('../../../../class'),
         TileTracker;
 
 

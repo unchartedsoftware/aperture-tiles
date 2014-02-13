@@ -31,7 +31,7 @@
 define( function (require) {
     "use strict";
 
-    var DataLayer = require('./datalayer'),
+    var DataLayer = require('../../../DataLayer'),
         layerInfoStatus = {},
         layerInfoCache = {},
         layerInfoCallbacks = {}

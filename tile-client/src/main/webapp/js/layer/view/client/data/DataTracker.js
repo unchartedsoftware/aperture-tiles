@@ -33,8 +33,8 @@
 define(function (require) {
     "use strict";
 
-    var Class = require('../class'),
-        WebPyramid = require('./WebTilePyramid'),
+    var Class = require('../../../../class'),
+        WebPyramid = require('../../../../binning/WebTilePyramid'),
         webPyramid,
         getArrayLength,
         DataTracker;

@@ -23,14 +23,14 @@
  * SOFTWARE.
  */
 
-require(['./fileloader',
-         './map',
-         './serverrenderedmaplayer',
-         './ui/layercontrols',
-         './serverlayeruimediator',
-         './view-controller/Carousel',
-         './LayerInfoLoader',
-         './client-rendering/DataTracker'],
+require(['./FileLoader',
+         './map/Map',
+         './layer/view/server/ServerLayer',
+         './layer/controller/LayerControls',
+         './layer/controller/UIMediator',
+         './layer/view/client/CarouselLayer',
+         './layer/view/client/data/LayerInfoLoader',
+         './layer/view/client/data/DataTracker'],
         function (FileLoader,
                   Map,
                   ServerLayer,
@@ -41,7 +41,10 @@ require(['./fileloader',
                   DataTracker
                   ) {
             "use strict";
-            
+
+            // Note that, for the purposes of these id's, "." is webapps, where
+            // main.js (this file) runs, and not webapps/js, where this file 
+            // actually is
             var sLayerFileId = "./data/layers.json",
                 mapFileId = "./data/map.json",
                 cLayerFileId = "./data/renderLayers.json";

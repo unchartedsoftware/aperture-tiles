@@ -33,7 +33,7 @@
 define(function (require) {
     "use strict";
 
-    var Class = require('./class'),
+    var Class = require('../class'),
         DataLayer;
 
 

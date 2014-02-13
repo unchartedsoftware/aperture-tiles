@@ -36,8 +36,8 @@ define(function (require) {
 
 
 
-    var Class = require('./class'),
-        DataLayer = require('./datalayer'),
+    var Class = require('../../../class'),
+        DataLayer = require('../../DataLayer'),
 
         ServerRenderedMapLayer,
         minRect,

@@ -34,7 +34,7 @@ define(function (require) {
 
 
 
-    var Class = require('../class'),
+    var Class = require('../../../class'),
         MouseState;
 
 
