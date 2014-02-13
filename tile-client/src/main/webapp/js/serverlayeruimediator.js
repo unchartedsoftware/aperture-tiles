@@ -51,10 +51,12 @@ define(['class', 'layerstate'], function (Class, LayerState) {
          * @param mapLayer - The ServerRenderedMapLayer that the layerStateMap will be populated from, and
          * subsequently be modified by.
          *
-         * @param worldMap - The base world map layer.
+         * @param worldMapLayer - The base world map layer.
+         *
          */
-        initialize: function (layerStateMap, mapLayer, worldMap) {
-            var layerState, layerIds, layerSpecsById, layerSpec, makeLayerStateCallback, layerId, layerName, i;
+        initialize: function (layerStateMap, mapLayer, worldMapLayer) {
+            var layerState, layerIds, layerSpecsById, layerSpec, makeLayerStateCallback,
+                layerId, layerName, i, makeMapZoomCallback;
 
             this.layerStateMap = layerStateMap;
             this.mapLayer = mapLayer;
@@ -72,15 +74,22 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                         mapLayer.setSubLayerEnabled(layerState.getId(), layerState.isEnabled());
                     } else if (fieldName === "rampType") {
                         mapLayer.setSubLayerRampType(layerState.getId(), layerState.getRampType());
-                        self.setupRampImage(layerState);
+                        self.setupRampImage(layerState, worldMapLayer.map.getZoom());
                     } else if (fieldName === "rampFunction") {
                         mapLayer.setSubLayerRampFunction(layerState.getId(), layerState.getRampFunction());
-                        self.setupRampImage(layerState);
+                        self.setupRampImage(layerState, worldMapLayer.map.getZoom());
                     } else if (fieldName === "filterRange") {
                         mapLayer.setSubLayerFilterRange(layerState.getId(), layerState.getFilterRange(), 0);
                     }
                 };
             };
+
+            // Make a callback to regen the ramp image on map zoom changes
+            makeMapZoomCallback = function (layerState, map, self) {
+                return function () {
+                    self.setupRampImage(layerState, worldMapLayer.map.getZoom());
+                }
+            }
 
             for (i = 0; i < layerIds.length; i += 1) {
                 // Get the layer spec using the layer ID
@@ -107,17 +116,20 @@ define(['class', 'layerstate'], function (Class, LayerState) {
 
                 // Initiate ramp image computation.  This is done asynchronously by the
                 // server.
-                this.setupRampImage(layerState);
+                this.setupRampImage(layerState, 0);
 
                 // Add the layer to the layer statemap.
                 this.layerStateMap[layerState.getId()] = layerState;
+
+                // Handle map zoom events - can require a re-gen of the filter image.
+                worldMapLayer.map.on("zoom", makeMapZoomCallback(layerState, worldMapLayer.map, this));
             }
 
             // Create a layer state object for the base map.
             layerState = new LayerState("Base Layer");
             layerState.setName("Base Layer");
-            layerState.setEnabled(worldMap.isEnabled());
-            layerState.setOpacity(worldMap.getOpacity());
+            layerState.setEnabled(worldMapLayer.isEnabled());
+            layerState.setOpacity(worldMapLayer.getOpacity());
             layerState.setRampFunction(null);
             layerState.setRampType(null);
             layerState.setFilterRange(null);
@@ -125,9 +137,9 @@ define(['class', 'layerstate'], function (Class, LayerState) {
             // Register a callback to handle layer state change events.
             layerState.addListener(function (fieldName) {
                 if (fieldName === "opacity") {
-                    worldMap.setOpacity(layerState.getOpacity());
+                    worldMapLayer.setOpacity(layerState.getOpacity());
                 } else if (fieldName === "enabled") {
-                    worldMap.setEnabled(layerState.isEnabled());
+                    worldMapLayer.setEnabled(layerState.isEnabled());
                 }
             });
 
@@ -141,11 +153,11 @@ define(['class', 'layerstate'], function (Class, LayerState) {
          * @param {Object} layerState - The layer state object that contains
          * the parameters to use when generating the image.
          */
-        setupRampImage: function (layerState) {
+        setupRampImage: function (layerState, level) {
             var legendData = {
                 transform: layerState.getRampFunction(),
                 layer: layerState.getId(),
-                level: 0,
+                level: level,
                 width: 64,
                 height: 1,
                 orientation: "horizontal",
