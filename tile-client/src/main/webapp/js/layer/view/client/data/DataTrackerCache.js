@@ -28,8 +28,9 @@
 
 
 /**
- * This module allows the client to send arrays of layer specs along with a callback function to be
- * executing upon constructing all requested data trackers.
+ * This module allows the client to pass an array of layer specifications along with a callback function. Upon
+ * cosntruction of all required data trackers, the callback function is executed with the array of trackers as 
+ * the argument. 
  */
 define( function (require) {
     "use strict";
@@ -44,6 +45,12 @@ define( function (require) {
 		
 	return {
 
+		/**
+		 * Given an array of layer specification JSON objects, upon loading all layer info objects from server, 
+		 * executes callback function, passing array of data trackers as argument
+		 * @param layerSpecs	array of layer specification JSON objects
+		 * @param callback		the callback function called after all data trackers are loaded in memory
+		 */
         get: function(layerSpecs, callback) {
 
 			var layer,
@@ -106,7 +113,7 @@ define( function (require) {
         layerInfoReceivedCallback: function (dataLayer, layerInfo) {
 		
 			var layer = layerInfo.layer,
-				i; //, index;
+				i;
 			
 			// flag as loaded
             layerStatus[layer] = "loaded";
