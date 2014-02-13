@@ -172,7 +172,8 @@ define(function (require) {
             $subTableRow.append($cell);
 
             $cell.append($('<div class="slider-label">Filter</div>'));
-            $filterSlider = ($('<div id="' + "filter_slider_" + name + '"></div>').slider({
+            $filterSlider = $('<div id="' + "filter_slider_" + name + '"></div>');
+            $filterSlider.slider({
                 range: true,
                 min: 0,
                 max: FILTER_RESOLUTION,
@@ -181,12 +182,12 @@ define(function (require) {
                     var result = $filterSlider.slider("option", "values");
                     layerState.setFilterRange([result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
                 }
-            }));
+            });
             // Disable the background for the range slider
             $(".ui-slider-range", $filterSlider).css({"background": "none"});
 
             // Set the ramp image
-            $(".ui-slider-range", $filterSlider).css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+            $filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
 
             $cell.append($filterSlider);
         } else {
@@ -329,7 +330,7 @@ define(function (require) {
                         var range = layerState.getFilterRange();
                         controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
                     } else if (fieldName === "rampImageUrl") {
-                        $(".ui-slider-range", controlsMap[layerState.getId()].filterSlider).css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+                        controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
                     }
                 };
             };
