@@ -32,8 +32,8 @@ define(function (require) {
     "use strict";
 
 
-    var Class = require('./class'),
-		Axis =  require('./axis/Axis'),
+    var Class = require('../class'),
+		Axis =  require('./Axis'),
         Config = require('./aperture-config-map'),
         Map;
 

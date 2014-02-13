@@ -35,7 +35,7 @@ define(function (require) {
 
 
 
-    var ClientRenderer = require('./ClientRenderer'),
+    var ClientRenderer = require('../ClientRenderer'),
         TwitterTagRenderer;
 
 

@@ -36,15 +36,16 @@
  */
 define(function (require) {
     "use strict";
-    var // MapLayer  = require('../MapLayer'),
-        TileIterator = require('../../../../binning/TileIterator'),
-        AoIPyramid   = require('../../../../binning/AoITilePyramid'),
-        mapPyramid, DebugLayer;
+    var // MapLayer    = require('../MapLayer'),
+        ClientRenderer = require('../ClientRenderer'),
+        TileIterator   = require('../../../../binning/TileIterator'),
+        AoIPyramid     = require('../../../../binning/AoITilePyramid'),
+        mapPyramid, DebugRenderer;
 
     mapPyramid = new AoIPyramid(-20037500, -20037500,
                                 20037500,  20037500);
 
-    DebugLayer = MapLayer.extend({
+    DebugRenderer = ClientRenderer.extend({
         ClassName: "DebugLayer",
         init: function (id) {
             this._super(id);
@@ -134,5 +135,5 @@ define(function (require) {
         }
     });
 
-    return DebugLayer;
+    return DebugRenderer;
 });

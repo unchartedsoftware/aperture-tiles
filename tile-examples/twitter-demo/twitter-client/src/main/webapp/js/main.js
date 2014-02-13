@@ -23,21 +23,21 @@
  * SOFTWARE.
  */
 
-require(['./fileloader',
-         './map',
-         './serverrenderedmaplayer',
-         './client-rendering/TopTextSentimentBars',
-         './client-rendering/HashTagsByTime',
-         './ui/layercontrols',
-         './serverlayeruimediator',
-         './view-controller/Carousel',
-         './LayerInfoLoader',
-         './client-rendering/DataTracker'
+require(['./FileLoader',
+         './map/Map',
+         './layer/view/server/ServerLayer',
+         './layer/view/client/impl/TopTextSentimentBars',
+         './layer/view/client/impl/HashTagsByTime',
+         './layer/controller/LayerControls',
+         './layer/controller/UIMediator',
+         './layer/view/client/CarouselLayer',
+         './layer/view/client/data/LayerInfoLoader',
+         './layer/view/client/data/DataTracker'
         ],
 
         function (FileLoader, 
-        		  Map, 
-        		  ServerLayer,
+        	  Map, 
+        	  ServerLayer,
                   TopTextSentimentBars,
                   HashTagsByTime,
                   LayerControls,

@@ -23,15 +23,15 @@
  * SOFTWARE.
  */
 
-require(['./fileloader',
-         './map',
-         './serverrenderedmaplayer',
-		 './ui/layercontrols',
-         './serverlayeruimediator'],
+require(['./FileLoader',
+         './map/Map',
+         './layer/view/server/ServerLayer',
+	 './layer/controller/LayerControls',
+         './layer/controller/UIMediator'],
 
         function (FileLoader, 
-        		  Map, 
-        		  ServerLayer,
+        	  Map, 
+        	  ServerLayer,
                   LayerControls,
                   ServerLayerUiMediator
                   ) {
