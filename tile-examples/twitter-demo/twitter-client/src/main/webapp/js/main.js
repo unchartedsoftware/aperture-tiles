@@ -31,8 +31,7 @@ require(['./fileloader',
          './ui/layercontrols',
          './serverlayeruimediator',
          './view-controller/Carousel',
-         './LayerInfoLoader',
-         './client-rendering/DataTracker'
+         './client-rendering/DataTrackerCache',
         ],
 
         function (FileLoader, 
@@ -43,72 +42,53 @@ require(['./fileloader',
                   LayerControls,
                   ServerLayerUiMediator,
                   Carousel, 
-                  LayerInfoLoader, 
-                  DataTracker ) {
+                  DataTrackerCache) {
             "use strict";
 
-            var sLayerFileId = "./data/layers.json",
-            	mapFileId = "./data/map.json",
-            	cLayerFileId = "./data/renderLayers.json";
+            var serverLayerFile = "./data/layers.json",
+            	mapFile = "./data/map.json",
+            	clientLayerFile = "./data/renderLayers.json",
+                majorCitiesFile = "./data/majorCities.json";
 
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
+            FileLoader.loadJSONData(mapFile, serverLayerFile, clientLayerFile, majorCitiesFile, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
                 var worldMap,
                     serverLayers,
                     mapLayerState,
-                    renderLayerSpecs,
-                    renderLayerSpec,
-                    i,
-                    layerId,
-                    layerName,
+                    majorCitiesDropDown,
                     topTextSentimentBars,
-                    hashTagsByTime,
-                    dataTracker,
-                    carousel;
+                    hashTagsByTime;
 
-                // Create world map and axes from json file under mapFileId
-                worldMap = new Map("map", jsonDataMap[mapFileId]);
+                // Create world map and axes from json file under mapFile
+                worldMap = new Map("map", jsonDataMap[mapFile]);
 
                 // Set up a debug layer
                 // debugLayer = new DebugLayer();
                 // debugLayer.addToMap(worldMap);
 
-                // Set up client-rendered layers
-                renderLayerSpecs = jsonDataMap[cLayerFileId];
+                // Set up client-renderers
+                topTextSentimentBars = new TopTextSentimentBars();
+                hashTagsByTime = new HashTagsByTime();
 
-                for (i=0; i<renderLayerSpecs.length; ++i) {
-                    renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
-                    layerId = renderLayerSpec.layer;
-
-                    topTextSentimentBars = new TopTextSentimentBars('red');
-                    hashTagsByTime = new HashTagsByTime('blue');
-
-                    layerName = renderLayerSpec.name;
-                    if (!layerName) {
-                        layerName = layerId;
-                    }
-                }
-
-                LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
-                    dataTracker = new DataTracker(layerInfo);
-                    carousel = new Carousel( {
+                // Get required data trackers, upon receiving, create carousel view controller
+                DataTrackerCache.get(jsonDataMap[clientLayerFile], function(dataTrackers) {
+                    new Carousel( {
                         map: worldMap.map,
                         views: [
                             {
-                                dataTracker: dataTracker,
+                                dataTracker: dataTrackers[0],
                                 renderer: topTextSentimentBars
                             },
                             {
-                                dataTracker: dataTracker,
+                                dataTracker: dataTrackers[0],
                                 renderer: hashTagsByTime
                             }
                         ]});
-                    carousel.dummy = 0; // to shut jslint up
                 });
 
                 // Set up server-rendered display layers
-                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
+                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[serverLayerFile] ));
                 serverLayers.addToMap(worldMap);
 
                 // Populate the map layer state object with server layer data, and enable
@@ -118,17 +98,25 @@ require(['./fileloader',
 
                 // Bind layer controls to the state model.
                 new LayerControls().initialize(mapLayerState);
-                
+
+                // Add major cities entries to zoom select box
+                majorCitiesDropDown = $("#select-city-zoom");
+                $.each(jsonDataMap[majorCitiesFile], function(key) {
+                    majorCitiesDropDown.append(
+                        $('<option></option>').val(key).html(this.text)
+                    );
+                });
+                // Set city zoom callback function
+                majorCitiesDropDown.change( function() {
+                    var majorCitiesMap = jsonDataMap[majorCitiesFile];
+                    worldMap.map.zoomTo( majorCitiesMap[this.value].lat,
+                                         majorCitiesMap[this.value].long, 8);
+                });
+
                 // Zoom to the area of the world with the data.
                 worldMap.map.zoomTo( 40, -95, 4 );
                 
                 // Trigger the initial resize event to resize everything
                 $(window).resize();
-                
-                /*
-                setTimeout(function () {
-                    console.log(Class.getProfileInfo());
-                }, 10000);
-                */
             });
         });
