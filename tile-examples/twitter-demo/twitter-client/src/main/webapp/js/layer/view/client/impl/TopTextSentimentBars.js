@@ -44,9 +44,8 @@ define(function (require) {
     TopTextSentimentBars = TwitterTagRenderer.extend({
         ClassName: "TopTextSentimentBars",
 
-        init: function(id) {
-
-            this._super(id);
+        init: function() {
+            this._super("top-text-sentiment");
             this.VALUE_COUNT = 5;
             this.Y_SPACING = 36;
         },

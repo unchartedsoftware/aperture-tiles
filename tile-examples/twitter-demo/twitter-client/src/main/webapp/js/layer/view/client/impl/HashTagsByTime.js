@@ -43,8 +43,8 @@ define(function (require) {
     HashTagsByTime = TwitterTagRenderer.extend({
         ClassName: "HashTagsByTime",
 
-        init: function(id) {
-            this._super(id);
+        init: function() {
+            this._super("hash-tag-by-time");
             this.VALUE_COUNT = 10;
             this.Y_SPACING = 18;
         },
