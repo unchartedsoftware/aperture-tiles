@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -39,8 +39,8 @@ define( function (require) {
 		/**
 		 * Given a layer JSON specification object and a map, this function will pull data information from the server and load
 		 * required layer and renderer class modules using require.js. Once everything is ready, constructs individual layers.
-		 * @param layerJSON	 	layer specification JSON object
-		 * @param map			map object
+		 * @param layerJSON	 	layer specification JSON object loaded from layers.json
+		 * @param map			map object from map.js
 		 */
 		createLayers: function(layerJSON, map) {
 			var i = 0;
