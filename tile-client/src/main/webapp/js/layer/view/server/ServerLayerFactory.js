@@ -27,53 +27,43 @@
 /*global OpenLayers */
 
 
-
 /**
- * A simple test layer to test the client side of client rendering.
- *
- * This layer simply puts the tile coordinates and another string in 
- * the middle of each tile.
+ * This module when given a server layer json object, will load the required classes and build
+ * the layer
  */
-define(function (require) {
+define( function (require) {
     "use strict";
+
+	var ServerLayer = require('./ServerLayer'),
+        LayerControls = require('../../controller/LayerControls'),
+		ServerLayerUiMediator = require('../../controller/UIMediator');
+		
+	return {
+
+		/**
+		 * Given a layer JSON specification object and a map, will create server rendered tile layer
+		 * @param layerJSON	 	layer specification JSON object
+		 * @param map			map object
+		 */
+		createLayers: function(layerJSON, map) {
+
+			// Set up server-rendered display layers
+			var serverLayers = new ServerLayer(layerJSON),
+				mapLayerState = {};
+				
+			// Attach to map
+			serverLayers.addToMap(map);
+
+			// Populate the map layer state object with server layer data, and enable
+			// listeners that will push state changes into the layers.
+			new ServerLayerUiMediator().initialize(mapLayerState, serverLayers, map);
+
+			// Bind layer controls to the state model.
+			new LayerControls().initialize(mapLayerState);
+
+		}
+
+    };	
 	
-	
-	
-    var ClientRenderer = require('../ClientRenderer'),
-        DebugRenderer;
 
-		
-		
-    DebugRenderer = ClientRenderer.extend({
-        ClassName: "DebugLayer",
-		
-        init: function () {
-            this._super('debug');
-        },		
-		
-		
-        createLayer: function(nodeLayer) {
-
-			var that = this;
-		
-            this.labelLayer = nodeLayer.addLayer(aperture.LabelLayer);			
-			this.labelLayer.map('label-count').asValue(1);
-			this.labelLayer.map('text').from(function() {
-                return this.tilekey;
-            });
-			this.labelLayer.map('offset-x').asValue(10);
-			this.labelLayer.map('offset-y').asValue(118);
-			this.labelLayer.map('text-anchor').asValue('start');
-            this.labelLayer.map('fill').asValue('#FFFFFF');
-            this.labelLayer.map('font-outline').asValue('#000000');
-            this.labelLayer.map('font-outline-width').asValue(3);
-            this.labelLayer.map('visible').from(function(){
-                return that.isSelectedView(this);
-			});
-
-        }
-
-    });
-
-    return DebugRenderer;
 });

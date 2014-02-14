@@ -168,6 +168,14 @@ define(function (require) {
                 return formatted;
             }
 
+            function getRecentTweetsCount(data) {
+                var length = data.bin.value[that.mouseState.clickState.userData.index].recent.length;
+                if (length === undefined || length === 0 || isNaN(length)) {
+                    return 0;
+                }
+                return (length > 4) ? 4 : length;
+            }
+
 
             function barTemplate( defaultColour, selectedColour ) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
@@ -467,11 +475,7 @@ define(function (require) {
             this.recentTweetsLabel = labelTemplate();
             this.recentTweetsLabel.map('visible').from(function(){return isVisible(this)});
             this.recentTweetsLabel.map('label-count').from( function() {
-                var length = this.bin.value[that.mouseState.clickState.userData.index].recent.length;
-                if (length === undefined || length === 0 || isNaN(length)) {
-                    return 0;
-                }
-                return (length > 4) ? 4 : length;
+                return getRecentTweetsCount(this);
             });
             this.recentTweetsLabel.map('fill').from( function(index) {
                 if (that.mouseState.hoverState.userData !== undefined &&
@@ -511,10 +515,13 @@ define(function (require) {
             });
 
             // MOST RECENT TWEETS LINES
-            this.line2 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20);
-            this.line3 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20 + MOST_RECENT_SPACING);
-            this.line4 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20 + MOST_RECENT_SPACING*2);
-            this.line4 = lineTemplate(this.WHITE_COLOUR, MOST_RECENT + 20 + MOST_RECENT_SPACING*3);
+            this.recentTweetsLines =  lineTemplate(this.WHITE_COLOUR, 0);
+            this.recentTweetsLines.map('label-count').from( function() {
+                return getRecentTweetsCount(this);
+            });
+            this.recentTweetsLines.map('offset-y').from( function(index) {
+                return MOST_RECENT + 15 + MOST_RECENT_SPACING*index;
+            });
         }
 
 

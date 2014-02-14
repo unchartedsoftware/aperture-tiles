@@ -39,7 +39,6 @@ define(function (require) {
         getArrayLength,
         DataTracker;
 
-
     /*
      * Get the length of this array property, if it is an array property.
      * If not, return false;
@@ -259,7 +258,7 @@ define(function (require) {
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10);
 
-            if (this.data[tilekey] === undefined) {
+            if (this.dataStatus[tilekey] === undefined) {
 
                 // flag tile as loading, add callback to list
                 this.dataStatus[tilekey] = "loading";
@@ -280,6 +279,7 @@ define(function (require) {
 
             } else {
 
+				
                 this.addReference(tilekey);
                 if (this.dataStatus[tilekey] === "loaded") {
                     return true;

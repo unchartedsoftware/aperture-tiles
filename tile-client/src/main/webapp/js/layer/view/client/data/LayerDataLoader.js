@@ -28,22 +28,20 @@
 
 
 /**
- * This module allows the client to pass an array of layer specifications along with a callback function. Upon
- * cosntruction of all required data trackers, the callback function is executed with the array of trackers as 
- * the argument. 
+ * This module allows the client to pass an array of layer requirements along with a callback function. Upon
+ * loading all required data trackers, the callback function is executed
  */
 define( function (require) {
     "use strict";
 
-    var DataLayer = require('../../../DataLayer'),
-        DataTracker = require('./DataTracker'),
-        layerStatus = {},
-        layerCache = {},
+    var DataTracker = require('./DataTracker'),
+        requestStatus = {},
+        requestCache = {},
 		pendingRequests = []
         ;
-		
-		
+			
 	return {
+	
 
 		/**
 		 * Given an array of layer specification JSON objects, upon loading all layer info objects from server, 
@@ -51,99 +49,96 @@ define( function (require) {
 		 * @param layerSpecs	array of layer specification JSON objects
 		 * @param callback		the callback function called after all data trackers are loaded in memory
 		 */
-        get: function(layerSpecs, callback) {
+        get: function(args, callback) {
 
-			var layer,
-				spec,
-				layerInfoListener,
+			var arg,
 				pendingIndex,
 				i;
 
 			// add to pending requests
 			pendingRequests.push( { 
 				callback : callback,
-				layers : [],
-				trackers : []
+				ids: [],
+				data: {}
 			});
 			
 			// the index of this request
 			pendingIndex = pendingRequests.length-1;
 			
-			for (i=0; i<layerSpecs.length; i++) {
+			for (i=0; i<args.length; i++) {
            
-				spec = layerSpecs[i];
-				layer = spec.layer;
+				arg = args[i];
 		   		
 				// prevent duplicate layer requests
-				if (pendingRequests[pendingIndex].layers.indexOf(layer) === -1) {
+				if (pendingRequests[pendingIndex].ids.indexOf(arg.id) === -1) {
 					
 					// add layer to pending request, once these are all received, call callback function
-					pendingRequests[pendingIndex].layers.push(layer);
+					pendingRequests[pendingIndex].ids.push(arg.id);
 					   
-					if (layerStatus[layer] === undefined) {
+					if (requestStatus[arg.id] === undefined) {
 						// layer has not been requested, set its status to loading, and create cache entry
-						layerStatus[layer] = "loading";
-						layerCache[layer] = {
-						   spec : spec
+						requestStatus[arg.id] = "loading";
+						requestCache[arg.id] = {
+							type : arg.type,
+						    spec : arg.spec
 						};
 
-						// send info request to server
-						layerInfoListener = new DataLayer([spec]);
-						layerInfoListener.setRetrievedCallback($.proxy(this.layerInfoReceivedCallback, this));
-						setTimeout( $.proxy(layerInfoListener.retrieveLayerInfo, layerInfoListener), 0);
-						return;
-					}
-
-					if (layerStatus[layer] === "loading") {
+						arg.func(arg.spec, this.createRequireCallback(arg.id));
+						
+					/* } else if (requestStatus[arg.id] === "loading") {
 						// layer has already been requested, and is still waiting on server 
-						return;
-					}
-
-					if (layerStatus[layer] === "loaded") {
+					*/
+					} else if (requestStatus[arg.id] === "loaded") {
 						// layer info is held in cache
-						this.processPendingRequest(pendingIndex, layer);		
-						return;
+						this.processPendingRequest(pendingIndex, arg.id);							
 					}
+				}			
+			}
+        },
+
+		
+		createRequireCallback: function(id) {
+			
+			var that = this;
+			
+			return function (data) {
+
+				var i;								
+				// flag as loaded
+				requestStatus[id] = "loaded";
+				if (requestCache[id].type === "data-tracker") {
+					// create data tracker object
+					requestCache[id].data = new DataTracker(data.layerInfos[id]);
+				} else {
+					// store raw data
+					requestCache[id].data = data;
 				}
 				
-			}
-        },
-
-		
-        layerInfoReceivedCallback: function (dataLayer, layerInfo) {
-		
-			var layer = layerInfo.layer,
-				i;
+				// find all pending requests that require this layer info
+				for (i=pendingRequests.length-1; i>=0; i--) {
+				
+					that.processPendingRequest(i, id);		
+				}
+			};
 			
-			// flag as loaded
-            layerStatus[layer] = "loaded";
-			// create data tracker object
-			layerCache[layer].info = layerInfo;
-			layerCache[layer].tracker = new DataTracker(layerInfo);
-			
-			// find all pending requests that require this layer info
-			for (i=pendingRequests.length-1; i>=0; i--) {
-			
-				this.processPendingRequest(i, layer);		
-			}
-        },
+		},
 		
 		
-		processPendingRequest: function(requestIndex, layer) {
+		processPendingRequest: function(requestIndex, id) {
 		
 			var pendingRequest = pendingRequests[requestIndex],
-				index = pendingRequest.layers.indexOf(layer);
+				index = pendingRequest.ids.indexOf(id);
 			
 			// is this request is waiting on this layer?	
 			if (index !== -1) {					
 				// remove layer from pending list
-				pendingRequest.layers.splice(index, 1);
+				pendingRequest.ids.splice(index, 1);
 				// store data tracker with request
-				pendingRequest.trackers.push(layerCache[layer].tracker);
+				pendingRequest.data[id] = requestCache[id].data;
 				// if no more layers pending, call callback function
-				if (pendingRequest.layers.length === 0) {
+				if (pendingRequest.ids.length === 0) {
 					// call callback function
-					pendingRequest.callback(pendingRequest.trackers);
+					pendingRequest.callback(pendingRequest.data);
 					// remove this pending request
 					pendingRequests.splice(requestIndex, 1);				
 				}
@@ -153,5 +148,4 @@ define( function (require) {
 		
     };	
 	
-
 });

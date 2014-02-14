@@ -52,7 +52,7 @@ define(function (require) {
             this.Y_SPACING = 10;
             this.VALUE_COUNT = 10;
             this.TILE_SIZE = 256;
-            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;  // x offest required to centre on tile
+            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;  // x offset required to centre on tile
             this.Y_CENTRE_OFFSET = 0;
             this.POSITIVE_COLOUR = '#09CFFF';
             this.POSITIVE_SELECTED_COLOUR  = '#069CCC';

@@ -1,9 +1,12 @@
-[
-    {
-        "layer": "bitcoin.source.amount",
-        "type": "tile",
-        "transform": "log10",
-        "ramp": "ware",
-        "opacity": 0.85
-    }
-]
+{
+    "ServerLayers": [
+		{
+			"layer": "bitcoin.source.amount",
+			"type": "tile",
+			"transform": "log10",
+			"ramp": "ware",
+			"opacity": 0.85
+		}
+	],
+	"ClientLayers": []
+}
