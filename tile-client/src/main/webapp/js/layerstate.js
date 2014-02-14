@@ -83,7 +83,7 @@ define(['class'], function (Class) {
          */
         init: function (id) {
             this.id = id;
-            this.zOrder = 0;
+            this.zIndex = 0;
             this.name = id;
             this.enabled = false;
             this.opacity = 1.0;
@@ -130,14 +130,23 @@ define(['class'], function (Class) {
             return this.id;
         },
 
-        getZOrder: function () {
-            return this.zOrder;
+        /**
+         * @returns {number} - The Z index of the layer.  Layers are drawn starting at 0, going from lowest
+         * to highest.
+         */
+        getZIndex: function () {
+            return this.zIndex;
         },
 
-        setZOrder: function (zOrder) {
-            if (this.zOrder !== zOrder) {
-                this.zOrder = zOrder;
-                notify("zOrder", this.listeners);
+
+        /**
+         * @param {number} - The Z index of the layer.  Layers are drawn starting at 0, going from lowest
+         * to highest.
+         */
+        setZIndex: function (zIndex) {
+            if (this.zIndex !== zIndex) {
+                this.zIndex = zIndex;
+                notify("zIndex", this.listeners);
             }
         },
 

@@ -29,10 +29,6 @@
 /**
  * Populates the LayerState model based on the contents of a ServerRenderedMapLayer, and makes the appropriate
  * modifications to it as the LayerState model changes.
- *
- * TODO:
- * Generate filter ramp image URL using the /legend rest request (see ImageTileLegendService.java in tile-service)
- *
  */
 define(['class', 'layerstate'], function (Class, LayerState) {
     "use strict";
@@ -80,8 +76,8 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                         self.setupRampImage(layerState, worldMapLayer.map.getZoom());
                     } else if (fieldName === "filterRange") {
                         mapLayer.setSubLayerFilterRange(layerState.getId(), layerState.getFilterRange(), 0);
-                    } else if (fieldName === "zOrder") {
-                        mapLayer.promoteSubLayer(layerState.getId());
+                    } else if (fieldName === "zIndex") {
+                        mapLayer.setSubLayerZIndex(layerState.getId(), layerState.getZIndex());
                     }
                 };
             };
@@ -93,7 +89,9 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 };
             };
 
-            for (i = 0; i < layerIds.length; i += 1) {
+            // Iterate over the list in reverse - the underlying map system will order the layers
+            //
+            for (i = 0; i < layerIds.length; i++) {
                 // Get the layer spec using the layer ID
                 layerId = layerIds[i];
                 layerSpec = layerSpecsById[layerId];
@@ -112,7 +110,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 layerState.setRampFunction(layerSpec.transform);
                 layerState.setRampType(layerSpec.ramp);
                 layerState.setFilterRange([0.0, 1.0]);
-                layerState.setZOrder(i);
+                layerState.setZIndex(i);
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener(makeLayerStateCallback(mapLayer, layerState, this));
@@ -136,7 +134,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
             layerState.setRampFunction(null);
             layerState.setRampType(null);
             layerState.setFilterRange(null);
-            layerState.setZOrder(i);
+            layerState.setZIndex(-1);
 
             // Register a callback to handle layer state change events.
             layerState.addListener(function (fieldName) {

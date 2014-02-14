@@ -196,19 +196,21 @@ define(function (require) {
         }
 
         // Add the promotion button
-        $cell = $('<td></td>');
-        $subTableRow.append($cell);
-        $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
-        $promotionButton.click(function () {
-            var nextLayerState, otherZ;
-            if (index > 0) {
-                nextLayerState = sortedLayers[index - 1];
-                otherZ = nextLayerState.getZOrder();
-                nextLayerState.setZOrder(layerState.getZOrder());
-                layerState.setZOrder(otherZ);
-            }
-        });
-        $cell.append($promotionButton);
+        if (layerState.getZIndex() !== null && layerState.getZIndex() >= 0) {
+            $cell = $('<td></td>');
+            $subTableRow.append($cell);
+            $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
+            $promotionButton.click(function () {
+                var nextLayerState, otherZ;
+                if (index > 0) {
+                    nextLayerState = sortedLayers[index - 1];
+                    otherZ = nextLayerState.getZIndex();
+                    nextLayerState.setZIndex(layerState.getZIndex());
+                    layerState.setZIndex(otherZ);
+                }
+            });
+            $cell.append($promotionButton);
+        }
 
         $parentElement.append($layerControlSetRoot);
 
@@ -298,13 +300,7 @@ define(function (require) {
     };
 
     /**
-     *
-     * @param layerState
-     * @param controlsMap
-     * @param layerStateMap
-     * @param $layersControlListRoot
-     * @param $root
-     * @returns {Function}
+     * Creates an observer to handle layer state changes, and update the controls based on them.
      */
     makeLayerStateObserver = function (layerState, controlsMap, layerStateMap, $layersControlListRoot, $root) {
         return function (fieldName) {
@@ -317,18 +313,20 @@ define(function (require) {
                 controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
             } else if (fieldName === "rampImageUrl") {
                 controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
-            } else if (fieldName === "zOrder") {
+            } else if (fieldName === "zIndex") {
                 replaceLayers(sortLayers(layerStateMap), $layersControlListRoot, $root, controlsMap);
             }
         };
     };
 
     /**
+     * Replace the existing layer controls with new ones derived from the set of LayerState objects.  All the
+     * new control references will be stored in the controlsMap for later access.
      *
-     * @param layerStateMap
-     * @param $layerControlsListRoot
-     * @param $root
-     * @param controlsMap
+     * @param {object} layerStateMap - A hash map of LayerState objects.
+     * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
+     * @param {object} $root  - The root JQuery node of the entire layer control set.
+     * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
     replaceLayers = function (layerStateMap, $layerControlsListRoot, $root, controlsMap) {
         var i, key, sortedLayerStateList;
@@ -347,9 +345,11 @@ define(function (require) {
     };
 
     /**
+     * Converts the layer state map into an array and then sorts it based layer
+     * z indices.
      *
-     * @param layerStateMap
-     * @returns {Array}
+     * @param layerStateMap - An object-based hash map of LayerState objects.
+     * @returns {Array} - An array of LayerState objects sorted highest to lowest by z index.
      */
     sortLayers = function (layerStateMap) {
         var sortedList, layerState;
@@ -361,7 +361,7 @@ define(function (require) {
             }
         }
         sortedList.sort(function (a, b) {
-            return a.zOrder - b.zOrder;
+            return b.zOrder - a.zOrder;
         });
         return sortedList;
     };

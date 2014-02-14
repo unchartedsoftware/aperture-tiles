@@ -381,9 +381,22 @@ define(function (require) {
             return layerSpec.legendrange;
         },
 
-        promoteSubLayer: function (subLayerId, zOrder) {
+        /**
+         * @param {string} subLayerId - The ID of the sublayer to update.
+         * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
+         */
+        setSubLayerZIndex: function (subLayerId, zIndex) {
             var olLayer = this.mapLayer[subLayerId].olLayer_;
-            this.map.map.olMap_.setLayerIndex(olLayer, 0);
+            this.map.map.olMap_.setLayerIndex(olLayer, zIndex);
+        },
+
+        /**
+         * @param {string} subLayerId - The ID of the sublayer to query.
+         * @returns {number} - The z-order value of the layer, where 0 is front.
+         */
+        getSubLayerZIndex: function (subLayerId) {
+            var olLayer = this.mapLayer[subLayerId].olLayer_;
+            return this.map.map.olMap_.getLayerIndex(olLayer);
         },
 
         /**
