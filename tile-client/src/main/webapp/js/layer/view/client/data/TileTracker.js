@@ -120,6 +120,7 @@ define(function (require) {
          */
         swapTileWith: function(newTracker, tilekey, callback) {
 
+			var i;
             // in order to prevent data de-allocation between releasing this trackers tile
             // and requesting the other trackers tile, this function adds an artificial
             // reference count increment/decrement
@@ -138,6 +139,14 @@ define(function (require) {
             newTracker.requestTile(tilekey, callback);
             // remove extra reference, resulting in proper count of 1
             newTracker.dataTracker.removeReference(tilekey);
+			
+			// remove renderer id from visibility map
+			for (i=0; i<this.dataTracker.data[tilekey].length; i++) {
+				if (this.dataTracker.data[tilekey][i].renderer !== undefined) {
+					delete this.dataTracker.data[tilekey][i].renderer[this.id];
+				}
+			}			
+			
         },
 
 
@@ -162,7 +171,10 @@ define(function (require) {
             var data = this.dataTracker.getTileNodeData(this.tiles),
                 i;
             for (i=0; i<data.length; i++ ) {
-                data[i].renderer = this.id; // stamp tile data with renderer id
+				if (data[i].renderer === undefined) {
+					data[i].renderer = {};
+				}
+                data[i].renderer[this.id] = true; // stamp tile data with renderer id
             }
             return data;
         }

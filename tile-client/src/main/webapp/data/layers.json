@@ -1,10 +1,4 @@
-[
-    {
-        "layer": "ibm-twitter-keyword",
-        "type": "tile",
-        "transform": "linear",
-        "ramp": "ware",
-        "opacity": 0.85,
-        "renderer": "toptextscores"
-    }
-]
+{
+    "ServerLayers": [],
+	"ClientLayers": []
+}

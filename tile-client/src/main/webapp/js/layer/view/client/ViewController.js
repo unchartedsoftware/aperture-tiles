@@ -41,6 +41,7 @@ define(function (require) {
         TileTracker  = require('./data/TileTracker'),
         MouseState   = require('./MouseState'),
         permData     = [],  // TEMPORARY BAND AID FIX /
+		mapNodeLayer,
         ViewController;
 
 
@@ -75,8 +76,12 @@ define(function (require) {
                 that.map.on('panend', function() {
                     that.onMapUpdate();
                 });
+				
+				if (mapNodeLayer === undefined) {
+					mapNodeLayer = that.map.addLayer(aperture.geo.MapNodeLayer);
+				}
 
-                that.mapNodeLayer = that.map.addLayer(aperture.geo.MapNodeLayer);
+                that.mapNodeLayer = mapNodeLayer;
                 that.mapNodeLayer.map('longitude').from('longitude');
                 that.mapNodeLayer.map('latitude').from('latitude');
                 // Necessary so that aperture won't place labels and texts willy-nilly
@@ -232,7 +237,8 @@ define(function (require) {
                     permData.push(data[i]);
                 }
             }
-            //////////////////////////////////////////////
+            /////////////////////////////////////////////
+			
             this.mapNodeLayer.all(permData).redraw();
         }
 

@@ -25,107 +25,32 @@
 
 require(['./FileLoader',
          './map/Map',
-         './layer/view/server/ServerLayer',
-         './layer/controller/LayerControls',
-         './layer/controller/UIMediator',
-         './layer/view/client/CarouselLayer',
-         './layer/view/client/data/LayerInfoLoader',
-         './layer/view/client/data/DataTracker'],
-        function (FileLoader,
-                  Map,
-                  ServerLayer,
-                  LayerControls,
-                  ServerLayerUiMediator,
-                  Carousel,
-                  LayerInfoLoader,
-                  DataTracker
-                  ) {
+         './layer/view/server/ServerLayerFactory',
+         './layer/view/client/ClientLayerFactory'
+        ],
+
+        function (FileLoader, 
+        	      Map,
+                  ServerLayerFactory,
+                  ClientLayerFactory) {
             "use strict";
 
-            // Note that, for the purposes of these id's, "." is webapps, where
-            // main.js (this file) runs, and not webapps/js, where this file 
-            // actually is
-            var sLayerFileId = "./data/layers.json",
-                mapFileId = "./data/map.json",
-                cLayerFileId = "./data/renderLayers.json";
+            var mapFile = "./data/map.json",
+                layersFile = "./data/layers.json";
 
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFileId, sLayerFileId, cLayerFileId, function (jsonDataMap) {
+            FileLoader.loadJSONData(mapFile, layersFile, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
-                var worldMap,
-                    serverLayers,
-                    mapLayerState
-                    //i,
-                    //layerId,
-                    //layerName,
-                    //dataTracker,
-                    //carousel;
-					;
-                // Create world map and axes from json file under mapFileId
-                worldMap = new Map("map", jsonDataMap[mapFileId]);
+                var worldMap;
 
-                // Set up a debug layer
-                // debugLayer = new DebugLayer();
-                // debugLayer.addToMap(worldMap);
+                // Create world map and axes from json file under mapFile
+                worldMap = new Map("map", jsonDataMap[mapFile]);
 
-                // Set up client-rendered layers
-				/*
-                renderLayerSpecs = jsonDataMap[cLayerFileId];
-
-				
-                for (i=0; i<renderLayerSpecs.length; ++i) {
-                    renderLayerSpec = FileLoader.downcaseObjectKeys(renderLayerSpecs[i]);
-                    layerId = renderLayerSpec.layer;
-
-                    layerName = renderLayerSpec.name;
-                    if (!layerName) {
-                        layerName = layerId;
-                    }
-                }
-
-				
-                LayerInfoLoader.getLayerInfo( renderLayerSpec, function( layerInfo ) {
-                    dataTracker = new DataTracker(layerInfo);
-                    carousel = new Carousel( {
-                        map: worldMap.map,
-                        views: [
-                            {
-                                id: "red",
-                                dataTracker: dataTracker,
-                                renderer: tileScoreRenderer
-                            },
-                            {
-                                id: "blue",
-                                dataTracker: dataTracker,
-                                renderer: tileScoreRendererOther
-                            }
-                        ]});
-                    carousel.dummy = 0; // to shut jslint up
-                });
-				*/
-
-
-
-                // Set up server-rendered display layers
-                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[sLayerFileId] ));
-                serverLayers.addToMap(worldMap);
-
-                // Populate the map layer state object with server layer data, and enable
-                // listeners that will push state changes into the layers.
-                mapLayerState = {};
-                new ServerLayerUiMediator().initialize(mapLayerState, serverLayers, worldMap);
-
-                // Bind layer controls to the state model.
-                new LayerControls().initialize(mapLayerState);
-                
+                // Create client and server layers
+                ClientLayerFactory.createLayers(jsonDataMap[layersFile].ClientLayers, worldMap);
+                ServerLayerFactory.createLayers(jsonDataMap[layersFile].ServerLayers, worldMap);
 
                 // Trigger the initial resize event to resize everything
                 $(window).resize();
-                
-                /*
-                setTimeout(function () {
-                    console.log(Class.getProfileInfo());
-                }, 10000);
-                */
             });
         });

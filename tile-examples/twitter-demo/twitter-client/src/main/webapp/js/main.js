@@ -25,79 +25,33 @@
 
 require(['./FileLoader',
          './map/Map',
-         './layer/view/server/ServerLayer',
-         './layer/view/client/impl/TopTextSentimentBars',
-         './layer/view/client/impl/HashTagsByTime',
-         './layer/controller/LayerControls',
-         './layer/controller/UIMediator',
-         './layer/view/client/CarouselLayer',
-         './layer/view/client/data/DataTrackerCache',
+         './layer/view/server/ServerLayerFactory',
+         './layer/view/client/ClientLayerFactory'
         ],
 
         function (FileLoader, 
-        	  Map, 
-        	  ServerLayer,
-                  TopTextSentimentBars,
-                  HashTagsByTime,
-                  LayerControls,
-                  ServerLayerUiMediator,
-                  Carousel, 
-                  DataTrackerCache) {
+        	      Map,
+                  ServerLayerFactory,
+                  ClientLayerFactory) {
             "use strict";
 
-            var serverLayerFile = "./data/layers.json",
-            	mapFile = "./data/map.json",
-            	clientLayerFile = "./data/renderLayers.json",
-                majorCitiesFile = "./data/majorCities.json";
+            var mapFile = "./data/map.json",
+                majorCitiesFile = "./data/majorCities.json",
+                layersFile = "./data/layers.json";
+
 
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFile, serverLayerFile, clientLayerFile, majorCitiesFile, function (jsonDataMap) {
+            FileLoader.loadJSONData(mapFile, layersFile, majorCitiesFile, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
                 var worldMap,
-                    serverLayers,
-                    mapLayerState,
-                    majorCitiesDropDown,
-                    topTextSentimentBars,
-                    hashTagsByTime;
+                    majorCitiesDropDown;
 
                 // Create world map and axes from json file under mapFile
                 worldMap = new Map("map", jsonDataMap[mapFile]);
 
-                // Set up a debug layer
-                // debugLayer = new DebugLayer();
-                // debugLayer.addToMap(worldMap);
-
-                // Set up client-renderers
-                topTextSentimentBars = new TopTextSentimentBars();
-                hashTagsByTime = new HashTagsByTime();
-
-                // Get required data trackers, upon receiving, create carousel view controller
-                DataTrackerCache.get(jsonDataMap[clientLayerFile], function(dataTrackers) {
-                    new Carousel( {
-                        map: worldMap.map,
-                        views: [
-                            {
-                                dataTracker: dataTrackers[0],
-                                renderer: topTextSentimentBars
-                            },
-                            {
-                                dataTracker: dataTrackers[0],
-                                renderer: hashTagsByTime
-                            }
-                        ]});
-                });
-
-                // Set up server-rendered display layers
-                serverLayers = new ServerLayer(FileLoader.downcaseObjectKeys(jsonDataMap[serverLayerFile] ));
-                serverLayers.addToMap(worldMap);
-
-                // Populate the map layer state object with server layer data, and enable
-                // listeners that will push state changes into the layers.
-                mapLayerState = {};
-                new ServerLayerUiMediator().initialize(mapLayerState, serverLayers, worldMap);
-
-                // Bind layer controls to the state model.
-                new LayerControls().initialize(mapLayerState);
+                // Create client and server layers
+                ClientLayerFactory.createLayers(jsonDataMap[layersFile].ClientLayers, worldMap);
+                ServerLayerFactory.createLayers(jsonDataMap[layersFile].ServerLayers, worldMap);
 
                 // Add major cities entries to zoom select box
                 majorCitiesDropDown = $("#select-city-zoom");

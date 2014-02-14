@@ -36,6 +36,7 @@ define(function (require) {
 
 
     var Class = require('../../../class'),
+		idIncrement = 0,
         ClientRenderer;
 
 
@@ -48,7 +49,9 @@ define(function (require) {
          * @param id the id string for the render layer
          */
         init: function(id) {
-            this.id = id;
+			// ensure each render layer has a unique id for view controller to maintain visibility correctly
+			id = id || "renderer-id";
+            this.id = id + "-" + idIncrement++;
             this.mouseState = null;
         },
 
@@ -59,7 +62,7 @@ define(function (require) {
          * @param data aperturejs node data object
          */
         isSelectedView: function(data) {
-            return this.id === data.renderer;
+            return data.renderer[this.id] === true;
         },
 
 
