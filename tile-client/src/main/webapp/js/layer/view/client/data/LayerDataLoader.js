@@ -23,13 +23,10 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
 
 /**
  * This module allows the client to pass an array of layer requirements along with a callback function. Upon
- * loading all required data trackers, the callback function is executed
+ * loading all requirements, the callback function is executed
  */
 define( function (require) {
     "use strict";
@@ -44,10 +41,21 @@ define( function (require) {
 	
 
 		/**
-		 * Given an array of layer specification JSON objects, upon loading all layer info objects from server, 
+		 * Given an array of arguments, of layer specification JSON objects, upon loading all layer info objects from server, 
 		 * executes callback function, passing array of data trackers as argument
-		 * @param layerSpecs	array of layer specification JSON objects
-		 * @param callback		the callback function called after all data trackers are loaded in memory
+		 *
+		 * Ensures that only 1 instance of all requested objects is ever loaded, even among different individual calls.
+		 *
+		 * @param args		array of arguments, each of the form:
+		 *					arg = {
+		 *						type : 	// the type of data to be loaded, this may be used to treat return values individual, ex "data-tracker"
+		 *						id : 	// map key of argument
+		 *						func : 	// the async loading function of the form func(arg.spec, callback), 
+		 *								// takes attribute below (spec) as first argument, second argument is a function called after func completes
+		 *								
+		 *						spec : 	// the spec object that will be passed to the async func
+		 *					}		
+		 * @param callback		the callback function called after all requirements are in memory, passed a map of all loaded data
 		 */
         get: function(args, callback) {
 
@@ -69,24 +77,24 @@ define( function (require) {
            
 				arg = args[i];
 		   		
-				// prevent duplicate layer requests
+				// prevent duplicate arg requests in single call
 				if (pendingRequests[pendingIndex].ids.indexOf(arg.id) === -1) {
 					
-					// add layer to pending request, once these are all received, call callback function
+					// add arg to pending request array, once these are all received, call callback function
 					pendingRequests[pendingIndex].ids.push(arg.id);
 					   
 					if (requestStatus[arg.id] === undefined) {
-						// layer has not been requested, set its status to loading, and create cache entry
+						// arg has not been requested before, set its status to loading, and create cache entry
 						requestStatus[arg.id] = "loading";
 						requestCache[arg.id] = {
 							type : arg.type,
 						    spec : arg.spec
 						};
 
-						arg.func(arg.spec, this.createRequireCallback(arg.id));
-						
-					/* } else if (requestStatus[arg.id] === "loading") {
-						// layer has already been requested, and is still waiting on server 
+						arg.func(arg.spec, this.createRequireCallback(arg.id));						
+					/* 
+					} else if (requestStatus[arg.id] === "loading") {
+						// arg has already been requested, and is currently pending, do nothing
 					*/
 					} else if (requestStatus[arg.id] === "loaded") {
 						// layer info is held in cache
@@ -114,7 +122,7 @@ define( function (require) {
 					requestCache[id].data = data;
 				}
 				
-				// find all pending requests that require this layer info
+				// find all pending requests that require this arg
 				for (i=pendingRequests.length-1; i>=0; i--) {
 				
 					that.processPendingRequest(i, id);		
@@ -129,13 +137,13 @@ define( function (require) {
 			var pendingRequest = pendingRequests[requestIndex],
 				index = pendingRequest.ids.indexOf(id);
 			
-			// is this request is waiting on this layer?	
+			// is this request is waiting on this arg?	
 			if (index !== -1) {					
-				// remove layer from pending list
+				// remove arg from pending list
 				pendingRequest.ids.splice(index, 1);
 				// store data tracker with request
 				pendingRequest.data[id] = requestCache[id].data;
-				// if no more layers pending, call callback function
+				// if no more args pending, call callback function
 				if (pendingRequest.ids.length === 0) {
 					// call callback function
 					pendingRequest.callback(pendingRequest.data);

@@ -55,8 +55,7 @@ define(function (require) {
 				this.id = id;	// don't increment id, used for nested renderers
 			} else {
 				this.id = id + "-" + idIncrement++;
-			}
-            
+			}        
             this.mouseState = null;
         },
 

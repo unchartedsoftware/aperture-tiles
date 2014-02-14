@@ -23,13 +23,10 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
-
+ 
 /**
- * This module when given a client layer json object, will load the required classes and build
- * the layer
+ * This module when given a client layer json object contains all layer data, will load the required classes and build
+ * the layers
  */
 define( function (require) {
     "use strict";
@@ -38,11 +35,10 @@ define( function (require) {
 		DataLayer = require('../../DataLayer');	
 		
 	return {
-
 	
 		/**
-		 * Given a layer JSON specification object and a map, will pull data information from the server and loaded
-		 * required layer and renderer classes into memory. Once everything is loaded, constructs individual layers.
+		 * Given a layer JSON specification object and a map, this function will pull data information from the server and load
+		 * required layer and renderer class modules using require.js. Once everything is ready, constructs individual layers.
 		 * @param layerJSON	 	layer specification JSON object
 		 * @param map			map object
 		 */
@@ -50,20 +46,21 @@ define( function (require) {
 			var i = 0;
 			for (i=0; i<layerJSON.length; i++) {   
 				this.createLayer(layerJSON[i], map);
-			}
-			
+			}		
 		},
 	
 
 		createLayer: function(layerJSON, map) {
 
-			var requirements = [],		
+			var requirements = [],	// this is an array of requirement spec objects. Each entry is used to load the individual requirements	
 				i;
 	
+			// load module func
 			function loadModule(arg, callback) {
 				require([arg], callback);
 			}
-				
+			
+			// get layer info from server func	
 			function getLayerInfoFromServer(arg, callback) {
 				var layerInfoListener = new DataLayer([arg]);
 				layerInfoListener.setRetrievedCallback(callback);
@@ -74,7 +71,7 @@ define( function (require) {
 			requirements.push({
 				type : "view-controller",
 				id : layerJSON.type,
-				spec : layerJSON.type,
+				spec : "./" + layerJSON.type,
 				func : loadModule				
 				});	
 				
@@ -85,7 +82,7 @@ define( function (require) {
 				requirements.push({
 					type : "renderer",
 					id : layerJSON.views[i].renderer,
-					spec : layerJSON.views[i].renderer,
+					spec : "./impl/" + layerJSON.views[i].renderer,
 					func : loadModule
 					});
 				// get data tracker from server
@@ -97,7 +94,9 @@ define( function (require) {
 					});				
 			}
 			
-			LayerDataLoader.get( requirements, function(layerDataMap) {
+			// send load request to layer data loader, once all requirements are in memory, the
+			// following callback function will execute.
+			LayerDataLoader.get(requirements, function(layerDataMap) {
 			
 				// once everything is in memory, construct layer
 				var spec =  {
@@ -106,14 +105,15 @@ define( function (require) {
 					}, 
 					i;
 			
+				// add views to layer spec object
 				for (i=0; i<layerJSON.views.length; i++) {
-					// add view to spec
 					spec.views.push({
 						renderer: new layerDataMap[layerJSON.views[i].renderer](),
 						dataTracker: layerDataMap[layerJSON.views[i].layer]
 					});
 				}
 				
+				// instantiate layer object
 				return new layerDataMap[layerJSON.type](spec);
 			});	
 

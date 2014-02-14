@@ -66,7 +66,6 @@ define(function (require) {
             this.YELLOW_COLOUR = '#F5F56F';
             this.HORIZONTAL_BUFFER = 14;
             this.VERTICAL_BUFFER = 24;
-
             this.FILTER_WORDS = [/s+h+i+t+/, /f+u+c+k+/, /n+i+g+g+/];
         },
 
