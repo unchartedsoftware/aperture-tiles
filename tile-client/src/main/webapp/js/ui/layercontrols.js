@@ -36,9 +36,6 @@
  *
  * This class follows the Separable Model pattern used by Swing widgets in Java, where
  * the controller and view are collapsed into a single class.
- *
- * TODO: This class provides a button for toggling tile outline visiblity, but doesn't yet supply
- * a means to register a handler.
  */
 define(function (require) {
     "use strict";
@@ -361,7 +358,7 @@ define(function (require) {
             }
         }
         sortedList.sort(function (a, b) {
-            return b.zOrder - a.zOrder;
+            return b.zIndex - a.zIndex;
         });
         return sortedList;
     };
@@ -410,11 +407,6 @@ define(function (require) {
                     ));
                 }
             }
-
-            // Add the outline toggle button
-            this.$tileOutlineButton = $('<button class="tile-outline-button">Toggle Tile Outline</button>');
-            this.$layerControlsRoot.append(this.$tileOutlineButton);
-            // TODO: Add a handler here that would call into externally registered callbacks.
         }
     });
 
