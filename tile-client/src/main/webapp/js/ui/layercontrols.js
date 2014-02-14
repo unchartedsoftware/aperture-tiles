@@ -37,11 +37,7 @@
  * This class follows the Separable Model pattern used by Swing widgets in Java, where
  * the controller and view are collapsed into a single class.
  *
- * TODO:
- *
- * 1) This class provides buttons for ordering layers, but does not yet implement the backing
- * functionality.
- * 2) This class provides a button for toggling tile outline visiblity, but doesn't yet supply
+ * TODO: This class provides a button for toggling tile outline visiblity, but doesn't yet supply
  * a means to register a handler.
  */
 define(function (require) {
@@ -54,7 +50,10 @@ define(function (require) {
         showLayerSettings,
         OPACITY_RESOLUTION,
         FILTER_RESOLUTION,
-        replaceChildren;
+        replaceChildren,
+        makeLayerStateObserver,
+        replaceLayers,
+        sortLayers;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
@@ -99,10 +98,12 @@ define(function (require) {
      *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (layerState, $parentElement, $root, controlsMap) {
+    addLayer = function (sortedLayers, index, $parentElement, $root, controlsMap) {
         var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
             $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $layerControlSetRoot,
-            className, hasFilter, name, filterRange, id;
+            className, hasFilter, name, filterRange, id, layerState;
+
+        layerState = sortedLayers[index];
 
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
@@ -198,6 +199,15 @@ define(function (require) {
         $cell = $('<td></td>');
         $subTableRow.append($cell);
         $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
+        $promotionButton.click(function () {
+            var nextLayerState, otherZ;
+            if (index > 0) {
+                nextLayerState = sortedLayers[index - 1];
+                otherZ = nextLayerState.getZOrder();
+                nextLayerState.setZOrder(layerState.getZOrder());
+                layerState.setZOrder(otherZ);
+            }
+        });
         $cell.append($promotionButton);
 
         $parentElement.append($layerControlSetRoot);
@@ -287,6 +297,74 @@ define(function (require) {
         });
     };
 
+    /**
+     *
+     * @param layerState
+     * @param controlsMap
+     * @param layerStateMap
+     * @param $layersControlListRoot
+     * @param $root
+     * @returns {Function}
+     */
+    makeLayerStateObserver = function (layerState, controlsMap, layerStateMap, $layersControlListRoot, $root) {
+        return function (fieldName) {
+            if (fieldName === "enabled") {
+                controlsMap[layerState.getId()].enabledCheckbox.prop("checked", layerState.isEnabled());
+            } else if (fieldName === "opacity") {
+                controlsMap[layerState.getId()].opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
+            } else if (fieldName === "filterRange") {
+                var range = layerState.getFilterRange();
+                controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
+            } else if (fieldName === "rampImageUrl") {
+                controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+            } else if (fieldName === "zOrder") {
+                replaceLayers(sortLayers(layerStateMap), $layersControlListRoot, $root, controlsMap);
+            }
+        };
+    };
+
+    /**
+     *
+     * @param layerStateMap
+     * @param $layerControlsListRoot
+     * @param $root
+     * @param controlsMap
+     */
+    replaceLayers = function (layerStateMap, $layerControlsListRoot, $root, controlsMap) {
+        var i, key, sortedLayerStateList;
+        sortedLayerStateList = sortLayers(layerStateMap);
+        $layerControlsListRoot.empty();
+        // Clear out the controls map
+        for (key in controlsMap) {
+            if (controlsMap.hasOwnProperty(key)) {
+                delete controlsMap[key];
+            }
+        }
+        // Add layers - this will update the controls list.
+        for (i = 0; i < sortedLayerStateList.length; i += 1) {
+            addLayer(sortedLayerStateList, i, $layerControlsListRoot, $root, controlsMap, sortedLayerStateList);
+        }
+    };
+
+    /**
+     *
+     * @param layerStateMap
+     * @returns {Array}
+     */
+    sortLayers = function (layerStateMap) {
+        var sortedList, layerState;
+        // Sort the layers
+        sortedList = [];
+        for (layerState in layerStateMap) {
+            if (layerStateMap.hasOwnProperty(layerState)) {
+                sortedList.push(layerStateMap[layerState]);
+            }
+        }
+        sortedList.sort(function (a, b) {
+            return a.zOrder - b.zOrder;
+        });
+        return sortedList;
+    };
 
     LayerControls = Class.extend({
         ClassName: "LayerControls",
@@ -298,14 +376,14 @@ define(function (require) {
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
         initialize: function (layerStateMap) {
+            var layerState;
+
             // "Private" vars
             this.controlsMap = {};
             this.$root = null;
             this.$layerControlsListRoot = null;
             this.$tileOutlineButton = null;
             this.$layerControlsRoot = null;
-
-            var layerState, makeLayerStateObserver;
 
             // Add the title
             this.$root = $('#layer-controls');
@@ -319,27 +397,17 @@ define(function (require) {
             this.$layerControlsListRoot = $('<div id="layer-control-list"></div>');
             this.$layerControlsRoot.append(this.$layerControlsListRoot);
 
-            // Creates a layer state observer, which will update the control panel in response to model changes.
-            makeLayerStateObserver = function (layerState, controlsMap) {
-                return function (fieldName) {
-                    if (fieldName === "enabled") {
-                        controlsMap[layerState.getId()].enabledCheckbox.prop("checked", layerState.isEnabled());
-                    } else if (fieldName === "opacity") {
-                        controlsMap[layerState.getId()].opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
-                    } else if (fieldName === "filterRange") {
-                        var range = layerState.getFilterRange();
-                        controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
-                    } else if (fieldName === "rampImageUrl") {
-                        controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
-                    }
-                };
-            };
-
-            // Add the layers
+            // Add layers visuals and register listeners against the model
+            replaceLayers(layerStateMap, this.$layerControlsListRoot, this.$root, this.controlsMap);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
-                    addLayer(layerStateMap[layerState], this.$layerControlsListRoot, this.$root, this.controlsMap);
-                    layerStateMap[layerState].addListener(makeLayerStateObserver(layerStateMap[layerState], this.controlsMap));
+                    layerStateMap[layerState].addListener(makeLayerStateObserver(
+                        layerStateMap[layerState],
+                        this.controlsMap,
+                        layerStateMap,
+                        this.$layerControlsListRoot,
+                        this.$root
+                    ));
                 }
             }
 

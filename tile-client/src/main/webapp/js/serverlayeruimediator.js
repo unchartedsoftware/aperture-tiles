@@ -80,6 +80,8 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                         self.setupRampImage(layerState, worldMapLayer.map.getZoom());
                     } else if (fieldName === "filterRange") {
                         mapLayer.setSubLayerFilterRange(layerState.getId(), layerState.getFilterRange(), 0);
+                    } else if (fieldName === "zOrder") {
+                        mapLayer.promoteSubLayer(layerState.getId());
                     }
                 };
             };
@@ -88,8 +90,8 @@ define(['class', 'layerstate'], function (Class, LayerState) {
             makeMapZoomCallback = function (layerState, map, self) {
                 return function () {
                     self.setupRampImage(layerState, worldMapLayer.map.getZoom());
-                }
-            }
+                };
+            };
 
             for (i = 0; i < layerIds.length; i += 1) {
                 // Get the layer spec using the layer ID
@@ -110,6 +112,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 layerState.setRampFunction(layerSpec.transform);
                 layerState.setRampType(layerSpec.ramp);
                 layerState.setFilterRange([0.0, 1.0]);
+                layerState.setZOrder(i);
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener(makeLayerStateCallback(mapLayer, layerState, this));
@@ -133,6 +136,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
             layerState.setRampFunction(null);
             layerState.setRampType(null);
             layerState.setFilterRange(null);
+            layerState.setZOrder(i);
 
             // Register a callback to handle layer state change events.
             layerState.addListener(function (fieldName) {
@@ -158,7 +162,7 @@ define(['class', 'layerstate'], function (Class, LayerState) {
                 transform: layerState.getRampFunction(),
                 layer: layerState.getId(),
                 level: level,
-                width: 64,
+                width: 128,
                 height: 1,
                 orientation: "horizontal",
                 ramp: layerState.getRampType()

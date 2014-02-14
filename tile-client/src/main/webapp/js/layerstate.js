@@ -83,6 +83,7 @@ define(['class'], function (Class) {
          */
         init: function (id) {
             this.id = id;
+            this.zOrder = 0;
             this.name = id;
             this.enabled = false;
             this.opacity = 1.0;
@@ -127,6 +128,17 @@ define(['class'], function (Class) {
          */
         getId: function () {
             return this.id;
+        },
+
+        getZOrder: function () {
+            return this.zOrder;
+        },
+
+        setZOrder: function (zOrder) {
+            if (this.zOrder !== zOrder) {
+                this.zOrder = zOrder;
+                notify("zOrder", this.listeners);
+            }
         },
 
         /**

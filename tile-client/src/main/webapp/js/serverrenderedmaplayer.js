@@ -381,6 +381,11 @@ define(function (require) {
             return layerSpec.legendrange;
         },
 
+        promoteSubLayer: function (subLayerId, zOrder) {
+            var olLayer = this.mapLayer[subLayerId].olLayer_;
+            this.map.map.olMap_.setLayerIndex(olLayer, 0);
+        },
+
         /**
          * Update all our openlayers layers on our map.
          */
