@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -222,7 +222,7 @@ define(function (require) {
 
 
         /**
-         * Construct aperture.iconlayers for the tile outline during mouse hover
+         * Construct aperture.barLayers for the tile outline during mouse hover
          */
         createTileOutlineLayer: function() {
 
@@ -232,7 +232,6 @@ define(function (require) {
 
             outlineLayer = this.plotLayer.addLayer(aperture.BarLayer);
             outlineLayer.map('fill').asValue('#FFFFFF');
-            //outlineLayer.map('opacity').asValue(0.8);
             outlineLayer.map('orientation').asValue('vertical');
             outlineLayer.map('bar-count').asValue(4);
             outlineLayer.map('length').from(function(index) {
@@ -314,7 +313,7 @@ define(function (require) {
 
         /**
          * Updates selected tile nodeLayer data and redraws UI
-         * @param tilekey tile identification key
+         * @param tilekey tile identification key of the form: "level,x,y"
          */
         updateSelectedTile: function(tilekey) {
 
@@ -345,7 +344,7 @@ define(function (require) {
 
         /**
          * Maps a tilekey to its current view index. If none is specified, use default
-         * @param tilekey tile identification key
+         * @param tilekey tile identification key of the form: "level,x,y"
          */
         getTileViewIndex: function(tilekey) {
             // given a tile key "level + "," + xIndex + "," + yIndex"

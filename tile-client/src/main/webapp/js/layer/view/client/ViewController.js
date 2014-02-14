@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -27,8 +27,13 @@
 
 /**
  * This module defines a ViewController class which provides delegation between multiple client renderers
- * and their respective data sources. Each view is composed of a renderer and DataTracker. Each view has
+ * and their respective data sources. Each view is composed of a ClientRenderer and DataTracker. Each view has
  * a TileTracker which delegates tile requests from the view and its DataTracker.
+ *
+ * Each DataTracker manages a unique set of data. Upon tile requests, if data ofr the tile is not held in memory, it is pulled from the server.
+ * Each TileTracker manages the set of tiles that a currently visible within a particular view.
+ * Each ClientRenderer is responsible for drawing only the elements currently visible within a specific view.
+ *
  */
 define(function (require) {
     "use strict";
@@ -40,8 +45,9 @@ define(function (require) {
         TileIterator = require('../../../binning/TileIterator'),
         TileTracker  = require('./data/TileTracker'),
         MouseState   = require('./MouseState'),
-        permData     = [],  // TEMPORARY BAND AID FIX /
-		mapNodeLayer,
+        permData     = [],  // temporary aperture.js bug workaround //
+		mapNodeLayer = {},
+		mouseState = new MouseState(),	// global mouse state
         ViewController;
 
 
@@ -50,6 +56,15 @@ define(function (require) {
 
         /**
          * Construct a ViewController
+		 * @param spec The ViewController specification object of the form:
+		 *				{
+		 *					map : 	aperture.js map
+		 *					views : array of views of the form:
+		 *							[{
+		 *								dataTracker : 	the DataTracker from which to pull the tile data
+		 *								renderer : 		the ClientRenderer to draw the view data
+		 *							}]
+		 *
          */
         init: function (spec) {
 
@@ -63,25 +78,29 @@ define(function (require) {
 
                 // mouse event handlers
                 that.map.olMap_.events.register('click', that.map.olMap_, function() {
+					// if click event has not been swallowed yet, clear mouse state and redraw
 					that.mouseState.clearClickState();
 					that.mapNodeLayer.all().redraw();
 				});
 
                 that.map.olMap_.events.register('zoomend', that.map.olMap_, function() {
+					// clear click mouse state on zoom and call map update function
                     that.mouseState.clearClickState();
                     permData = [];  // reset temporary fix on zoom
                     that.onMapUpdate();
                 });
 
                 that.map.on('panend', function() {
+					// cal map update on pan end
                     that.onMapUpdate();
                 });
 				
-				if (mapNodeLayer === undefined) {
-					mapNodeLayer = that.map.addLayer(aperture.geo.MapNodeLayer);
+				// ensure only one mapNodeLayer is made for each unique map
+				if (mapNodeLayer[that.map.uid] === undefined) {
+					mapNodeLayer[that.map.uid] = that.map.addLayer(aperture.geo.MapNodeLayer);
 				}
 
-                that.mapNodeLayer = mapNodeLayer;
+                that.mapNodeLayer = mapNodeLayer[that.map.uid];
                 that.mapNodeLayer.map('longitude').from('longitude');
                 that.mapNodeLayer.map('latitude').from('latitude');
                 // Necessary so that aperture won't place labels and texts willy-nilly
@@ -107,10 +126,10 @@ define(function (require) {
             }
 
             // initialize attributes
-            this.defaultViewIndex = 0;  // if not specified, this is the default view of a tile
-            this.tileViewMap = {};      // maps a tile key to its view index
-            this.views = [];
-			this.mouseState = new MouseState();
+            this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
+            this.tileViewMap = {};      	// maps a tile key to its view index
+            this.views = [];				// array of all views
+			this.mouseState = mouseState; 	// mouse state to be shared by all views
 
             // attach map
             attachMap(spec.map);
@@ -125,8 +144,8 @@ define(function (require) {
 
 
         /**
-         * Returns the view index for specified tile key
-         * @param tilekey tile identification key
+         * Returns the view index for the specified tile key
+         * @param tilekey 		tile identification key of the form: "level,x,y"
          */
         getTileViewIndex: function(tilekey) {
             // given a tile key "level + "," + xIndex + "," + yIndex"
@@ -143,7 +162,7 @@ define(function (require) {
 
         /**
          * Tile change callback function
-         * @param tilekey tile identification key
+         * @param tilekey 		tile identification key of the form: "level,x,y"
          * @param newViewIndex  the new index to set the tilekey to
          */
         onTileViewChange: function(tilekey, newViewIndex) {
@@ -226,7 +245,7 @@ define(function (require) {
             }
 
             /////////////////////////////////////////////
-            // TEMPORARY BAND AID FIX //
+            // temporary aperture.js bug workaround //
             if (permData.length > 40) {
                 // clear array in case it gets too big, null and redraw node data
                 permData = [];

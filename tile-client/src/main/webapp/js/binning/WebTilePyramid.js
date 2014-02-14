@@ -41,12 +41,12 @@ define (function (require) {
         WebMercatorTilePyramid,
         PI                       = Math.PI,
         EPSG_900913_SCALE_FACTOR = 20037508.342789244,
-        DEGREES_TO_RADIANS       = PI / 180.0,
-        // Factor for changing radians to degrees
-        RADIANS_TO_DEGREES       = 180.0 / PI,
+		EPSG_900913_LATITUDE	 = 85.05,
+        DEGREES_TO_RADIANS       = PI / 180.0,	// Factor for changing degrees to radians      
+        RADIANS_TO_DEGREES       = 180.0 / PI,	// Factor for changing radians to degrees
         rootToTileMercator, sinh, tileToLon, tileToLat,
-        scaleLinearToGudermannian,
-        scaleGudermannianToLinear;
+        linearToGudermannian,
+        gudermannianToLinear;
 
 
 
@@ -74,7 +74,7 @@ define (function (require) {
         return Math.atan(sinh(n)) * RADIANS_TO_DEGREES;
     };
 
-    scaleLinearToGudermannian = function(value) {
+    linearToGudermannian = function(value) {
         var gudermannian = function(y) {
                 // converts a y value from -PI(bottom) to PI(top) into the
                 // mercator projection latitude
@@ -83,19 +83,19 @@ define (function (require) {
                 };
                 return Math.atan(sinh(y)) * RADIANS_TO_DEGREES;
             };
-        return gudermannian( (value / 85.05) * Math.PI );
+        return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );
     };
 
-    scaleGudermannianToLinear = function(value) {
+    gudermannianToLinear = function(value) {
         var gudermannianInv = function( latitude ) {
-                // converts a latitude value from -85.05 to 85.05 into
+                // converts a latitude value from -EPSG_900913_LATITUDE to EPSG_900913_LATITUDE into
                 // a y value from -PI(bottom) to PI(top)
                 var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
                     sin = Math.sin(latitude * DEGREES_TO_RADIANS * sign);
 
                 return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
             };
-        return (gudermannianInv( value ) / Math.PI) * 85.05;
+        return (gudermannianInv( value ) / Math.PI) * EPSG_900913_LATITUDE;
     };
 
     WebMercatorTilePyramid = Class.extend({
@@ -167,10 +167,10 @@ define (function (require) {
                 west  = tileToLon(tile.xIndex, level),
                 // as mercator latitude cannot be linearly interpolated, convert the gudermannian
                 // coordinates  back into their equivalent linear counterparts. Interpolate these,
-                // then convert back to the equivalent gudermannian coordinate.
-                linNorth = scaleGudermannianToLinear(north),
-                linSouth = scaleGudermannianToLinear(south),
-                gudCentreY = scaleLinearToGudermannian( (linNorth+linSouth)/2.0 );
+                // then convert to the equivalent gudermannian coordinate.
+                linNorth = gudermannianToLinear(north),
+                linSouth = gudermannianToLinear(south),
+                gudCentreY = linearToGudermannian( (linNorth+linSouth)/2.0 );
 
             return {
                 minX:    west,
@@ -196,10 +196,10 @@ define (function (require) {
                 west    = tileToLon(baseX, level),
                 // as mercator latitude cannot be linearly interpolated, convert the gudermannian
                 // coordinates  back into their equivalent linear counterparts. Interpolate these,
-                // then convert back to the equivalent gudermannian coordinate.
-                linNorth = scaleGudermannianToLinear(north),
-                linSouth = scaleGudermannianToLinear(south),
-                gudCentreY = scaleLinearToGudermannian( (linNorth+linSouth)/2.0 );
+                // then convert to the equivalent gudermannian coordinate.
+                linNorth = gudermannianToLinear(north),
+                linSouth = gudermannianToLinear(south),
+                gudCentreY = linearToGudermannian( (linNorth+linSouth)/2.0 );
 
             return {
                 minX:    west,
