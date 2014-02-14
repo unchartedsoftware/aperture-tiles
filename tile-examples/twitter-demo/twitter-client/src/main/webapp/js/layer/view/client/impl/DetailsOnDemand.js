@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
