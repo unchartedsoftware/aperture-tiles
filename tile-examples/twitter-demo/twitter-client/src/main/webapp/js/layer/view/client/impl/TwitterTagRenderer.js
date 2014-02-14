@@ -47,8 +47,8 @@ define(function (require) {
          * Constructs a twitter tag render layer object
          * @param id the id string for the render layer
          */
-        init: function(id) {
-            this._super(id);
+        init: function(id, avoidIncrement) {
+            this._super(id, avoidIncrement);
             this.Y_SPACING = 10;
             this.VALUE_COUNT = 10;
             this.TILE_SIZE = 256;

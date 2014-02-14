@@ -44,7 +44,7 @@ define(function (require) {
         ClassName: "DetailsOnDemand",
 
         init: function(id) {
-            this._super(id);
+            this._super(id, true);
         },
 
 

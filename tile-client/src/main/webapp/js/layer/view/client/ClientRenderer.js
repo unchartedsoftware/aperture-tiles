@@ -48,10 +48,15 @@ define(function (require) {
          * Constructs a client render layer object
          * @param id the id string for the render layer
          */
-        init: function(id) {
+        init: function(id, avoidIncrement) {
 			// ensure each render layer has a unique id for view controller to maintain visibility correctly
 			id = id || "renderer-id";
-            this.id = id + "-" + idIncrement++;
+			if (avoidIncrement) {
+				this.id = id;	// don't increment id, used for nested renderers
+			} else {
+				this.id = id + "-" + idIncrement++;
+			}
+            
             this.mouseState = null;
         },
 
