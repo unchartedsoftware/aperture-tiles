@@ -29,7 +29,9 @@ import java.io.Serializable;
 
 
 /**
- * A simple immtable representation of a bin in a tile.
+ * A simple immutable index of a bin within some tile. There is no knowledge, in
+ * this index, of which tile it is that contains the bin - the same bin index
+ * could, if needed, be used in multiple tiles.
  * 
  * @author Nathan Kronenfeld
  */
@@ -42,7 +44,7 @@ public class BinIndex implements Serializable, Comparable<BinIndex> {
     private int _y;
 
     /**
-     * Create a bin representation
+     * Create a bin index
      * 
      * @param x
      *            The x coordinate of the bin within its tile, 0 indicating the
@@ -72,15 +74,21 @@ public class BinIndex implements Serializable, Comparable<BinIndex> {
 
 
 
+    /**
+     * {@inheritDoc}
+     * 
+     * This bin is less than that bin if it is above that bin or directly left
+     * from it.
+     */
     @Override
-    public int compareTo (BinIndex b) {
-        if (_x < b._x)
+    public int compareTo (BinIndex that) {
+        if (_y < that._y)
             return -1;
-        if (_x > b._x)
+        if (_y > that._y)
             return 1;
-        if (_y < b._y)
+        if (_x < that._x)
             return -1;
-        if (_y > b._y)
+        if (_x > that._x)
             return 1;
         return 0;
     }
@@ -110,6 +118,10 @@ public class BinIndex implements Serializable, Comparable<BinIndex> {
         return String.format("[%d, %d]", _x, _y);
     }
 
+    /**
+     * Converts from a string to a bin index. This takes in strings of exactly
+     * the form output by {@link #toString()} - i.e., formatted with "[%d, %d]"
+     */
     public static BinIndex fromString (String string) {
         try {
             int a = string.indexOf('[')+1;

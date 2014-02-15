@@ -24,11 +24,14 @@
  */
 package com.oculusinfo.binning;
 
+
+
 /**
  * An immutable container class containing both a tile and a bin, for use as a
  * return value by methods that need to return both.
  * 
- * This class represents a specific bin within a specific tile
+ * This class represents a specific bin within a specific tile, as opposed to
+ * BinIndex, which represents a specific bin, but in any tile.
  * 
  * @author nkronenfeld
  */
@@ -43,14 +46,14 @@ public class TileAndBinIndices {
 
 
     /**
-     * Get the tile in which this particular bin resides
+     * Get the tile containing the bin specifically represented by this object.
      */
     public TileIndex getTile () {
         return _tile;
     }
 
     /**
-     * Get the specific bin in the tile represented by this object.
+     * Get the specific bin represented by this object.
      */
     public BinIndex getBin () {
         return _bin;
