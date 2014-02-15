@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2014 Oculus Info Inc. 
+/* * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -26,8 +25,11 @@ package com.oculusinfo.binning;
 
 import java.io.Serializable;
 
+
+
 /**
- * Simple immutable tile index representation
+ * Simple immutable tile index representation, assuming a tile tree with double
+ * the number of tiles in each dimension each level.
  * 
  * @author nkronenfeld
  */
@@ -41,7 +43,7 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
     private int               _yBins;
 
     /**
-     * Create a tile index representation
+     * Create a tile index representation.  The number of bins per axis is defaulted to 256.
      * 
      * @param level
      *            The level of the tile
@@ -68,9 +70,9 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
      * @param y
      *            The y coordinate of the tile
      * @param xBins
-     *            the number of bins in this tile in the x direction
+     *            the number of bins in this tile along the x axis
      * @param yBins
-     *            the number of bins in this tile in the y direction
+     *            the number of bins in this tile along the y axis
      */
     public TileIndex (int level, int x, int y, int xBins, int yBins) {
         _level = level;
@@ -87,9 +89,9 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
      * @param base
      *            The base tile representation being copied
      * @param xBins
-     *            The new number of bins to use in the x direction
+     *            The new number of bins to use along the x axis
      * @param yBins
-     *            The new number of bins to use in the y direction
+     *            The new number of bins to use along the y axis
      */
     public TileIndex (TileIndex base, int xBins, int yBins) {
         _level = base.getLevel();
@@ -100,35 +102,35 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
     }
 
     /**
-     * Get the tile level
+     * Get the tile level (or zoom level)
      */
     public int getLevel () {
         return _level;
     }
 
     /**
-     * Get the x coordinate of the tile
+     * Get the x index of the tile
      */
     public int getX () {
         return _x;
     }
 
     /**
-     * Get the y coordinate of the tile
+     * Get the y index of the tile
      */
     public int getY () {
         return _y;
     }
 
     /**
-     * Get the number of bins this tile should have in the x direction
+     * Get the number of bins this tile should have along the x axis
      */
     public int getXBins () {
         return _xBins;
     }
 
     /**
-     * Get the number of bins this tile should have in the y direction
+     * Get the number of bins this tile should have along the y axis
      */
     public int getYBins () {
         return _yBins;
@@ -172,7 +174,7 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
      *         coordinates [0 to getXBins(), 0 to getYBins()])
      */
     public static TileAndBinIndices universalBinIndexToTileBinIndex (TileIndex sampleTile,
-                                                              BinIndex bin) {
+                                                                     BinIndex bin) {
         // Tiles go from lower left to upper right
         // Bins go from upper left to lower right
         int level = sampleTile.getLevel();
@@ -192,6 +194,12 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
         return new TileAndBinIndices(tile, tileBin);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * This tile is less than that tile if it is below that tile or directly
+     * left from it.
+     */
     @Override
     public int compareTo (TileIndex t) {
         if (_level < t._level)
@@ -199,14 +207,14 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
         if (_level > t._level)
             return 1;
 
-        if (_x < t._x)
-            return -1;
-        if (_x > t._x)
-            return 1;
-
         if (_y < t._y)
             return -1;
         if (_y > t._y)
+            return 1;
+
+        if (_x < t._x)
+            return -1;
+        if (_x > t._x)
             return 1;
 
         return 0;
@@ -249,6 +257,10 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
                              _yBins, _level);
     }
 
+    /**
+     * Converts from a string to a tile index. This takes in strings of exactly
+     * the form output by {@link #toString()} - i.e., formatted with "[%d / %d, %d / %d, lvl %d]"
+     */
     public static TileIndex fromString (String string) {
         try {
             int a = string.indexOf('[') + 1;

@@ -36,9 +36,16 @@ import java.util.Comparator;
  * This class uses a Z-order curve (Morton curve) to sort points so that at
  * every level, points in the same tile will be grouped together.
  * 
- * Direct comparison code is taken from 
- *     http://en.wikipedia.org/wiki/Z-order_curve
+ * Direct comparison code is taken from
+ * http://en.wikipedia.org/wiki/Z-order_curve
+ * 
  * Key-generation code is taken from one of Chris Bethune's projects.
+ * 
+ * This class acts as a comparator, but does not implement the comparator
+ * interface, because it can handle both raw points and indices (and we can't
+ * simultaneously implement Comparator<Point> and Comparator<TileIndex>); if
+ * comparator implementation is needed, though - say, for instance, for sorting
+ * - it can provide one.
  * 
  * @author nkronenfeld
  */
@@ -63,7 +70,7 @@ public class PyramidComparator implements Serializable {
      * Comparing points at level 20 has a granularity of 1M in each dimension in
      * tiles alone
      * 
-     * This means, with 1T of partitions - way more than hadoop or spark can
+     * This means, with 1E12 partitions - way more than hadoop or spark can
      * handle - we would have roughly 1 tile/partition. So this should be
      * fine-grained enough for anything we might care about.
      */
@@ -79,8 +86,8 @@ public class PyramidComparator implements Serializable {
 
 
     /**
-     * Create a comparator that compares raw values at the default level (or
-     * indices at any level)
+     * Create a comparator that compares raw values at the default level (
+     * {@link #DEFAULT_COMPARISON_LEVEL} (or indices at any level)
      * 
      * @param pyramid They pyramid scheme with which raw values are converted to
      *            tile values
@@ -221,15 +228,16 @@ public class PyramidComparator implements Serializable {
     }
 
     /**
-     * Retrieve a comparator that can be used to compare raw points generically.
+     * Retrieve a implementation of Comparator that can be used to compare raw
+     * points generically.
      */
     public Comparator<Point> getRawCoordinateComparator () {
         return _rawComparator;
     }
 
     /**
-     * Retreive a comparator that can be used to compare tile indices
-     * generically.
+     * Retreive an implementation of Comparator that can be used to compare tile
+     * indices generically.
      */
     public Comparator<TileIndex> getTileIndexComparator () {
         return _indexComparator;

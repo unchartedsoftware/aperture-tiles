@@ -39,9 +39,11 @@ import com.oculusinfo.binning.TileIndex;
  * 
  * It also contains the tile index describing the position of the tile.
  * 
+ * This object is not necessarily immutable.
+ * 
  * @author nkronenfeld
  * 
- * @param <T> The type of data stored in this tile.
+ * @param <T> The type of data stored in the bins of this tile.
  */
 public class TileData<T> implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -54,11 +56,11 @@ public class TileData<T> implements Serializable {
 
 
     /**
-     * Construct a set of tile data for a particular tile. All entries are
+     * Construct a tile data object for a particular tile. All entries are
      * initialized to null.
      * 
-     * @param definition The description of the tile whose data is to be
-     *            collected by this object.
+     * @param definition The index of the tile whose data is to be collected by
+     *            this object.
      */
     public TileData (TileIndex definition) {
         this(definition, (T) null);
@@ -68,7 +70,7 @@ public class TileData<T> implements Serializable {
      * Construct a set of tile data for a particular tile. All entries are
      * initialized to the given default value.
      * 
-     * @param definition The description of the tile whose data is to be
+     * @param definition The index of the tile whose data is to be
      *            collected by this object.
      * @param defaultValue The default value of each bin
      */
@@ -86,7 +88,7 @@ public class TileData<T> implements Serializable {
     /**
      * Construct a set of tile data for a particular tile, with preset data.
      * 
-     * @param definition The description of the tile whose data is to be
+     * @param definition The index of the tile whose data is to be
      *            represented by this object.
      * @param tileData The data for this tile
      */
@@ -104,7 +106,7 @@ public class TileData<T> implements Serializable {
     }
 
     /**
-     * Get the tile index defining which tile this data represents
+     * Get the tile index defining which tile is associated with this data
      * 
      * @return
      */
@@ -127,7 +129,7 @@ public class TileData<T> implements Serializable {
      * Get the value of a particular bin in this tile.
      * 
      * @param x The x coordinate of the bin to be changed.
-     * @param y The y ocordinate of the bin to be changed.
+     * @param y The y coordinate of the bin to be changed.
      * @return The value of the bin in question.
      */
     public T getBin (int x, int y) {

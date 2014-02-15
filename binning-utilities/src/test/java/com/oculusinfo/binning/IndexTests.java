@@ -84,6 +84,11 @@ public class IndexTests {
         Assert.assertTrue(0 == t0.compareTo(t1));
         Assert.assertTrue(0 == t1.compareTo(t0));
 
+        t0 = new TileIndex(5, 12, 34);
+        t1 = new TileIndex(5, 11, 35);
+        Assert.assertTrue(-1 == t0.compareTo(t1));
+        Assert.assertTrue(1 == t1.compareTo(t0));
+
         List<TileIndex> tiles = new ArrayList<TileIndex>();
         tiles.add(new TileIndex(4, 0, 0));
         tiles.add(new TileIndex(4, 0, 1));

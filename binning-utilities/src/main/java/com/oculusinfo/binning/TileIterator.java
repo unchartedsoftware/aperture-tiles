@@ -29,18 +29,20 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
 
+
+
 /**
- * An iterator over all tiles that intersect a given area
+ * An iterator over all tiles on a single level that overlap a given area
  * 
  * @author Jesse McGeachie
  */
 public class TileIterator implements Iterator<TileIndex> {
-    private TilePyramid _binner;
+    private TilePyramid _pyramid;
+
     // Desired tile level
     private int        _level;
 
-    // We just store stuff internally as bins - but not maxed out at number of
-    // bins per tile, but rather infinite.
+
     private int        _minTileX;
     private int        _minTileY;
     private int        _maxTileX;
@@ -50,16 +52,18 @@ public class TileIterator implements Iterator<TileIndex> {
     private int        _curTileY;
 
     /**
+     * Create an iterator over a particular area for a particular level, given a
+     * projection.
      * 
-     * @param binner
-     *            The bin pyramid describing the bins to use
+     * @param pyramid The bin pyramid (projection) describing how to translate
+     *            raw coordinates to bin indices
      * @param level
      *            The tile level to check
      * @param area
      *            The area covered by this iterator
      */
-    public TileIterator (TilePyramid binner, int level, Rectangle2D area) {
-        _binner = binner;
+    public TileIterator (TilePyramid pyramid, int level, Rectangle2D area) {
+        _pyramid = pyramid;
         _level = level;
 
         Point llCoords = getTileCoordinates(area.getMinX(), area.getMinY());
@@ -77,7 +81,7 @@ public class TileIterator implements Iterator<TileIndex> {
 
     private Point getTileCoordinates (double x, double y) {
         Point2D point = new Point2D.Double(x, y);
-        TileIndex tile = _binner.rootToTile(point, _level);
+        TileIndex tile = _pyramid.rootToTile(point, _level);
         return new Point(tile.getX(), tile.getY());
     }
 
