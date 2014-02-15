@@ -36,13 +36,6 @@
  *
  * This class follows the Separable Model pattern used by Swing widgets in Java, where
  * the controller and view are collapsed into a single class.
- *
- * TODO:
- *
- * 1) This class provides buttons for ordering layers, but does not yet implement the backing
- * functionality.
- * 2) This class provides a button for toggling tile outline visiblity, but doesn't yet supply
- * a means to register a handler.
  */
 define(function (require) {
     "use strict";
@@ -54,7 +47,10 @@ define(function (require) {
         showLayerSettings,
         OPACITY_RESOLUTION,
         FILTER_RESOLUTION,
-        replaceChildren;
+        replaceChildren,
+        makeLayerStateObserver,
+        replaceLayers,
+        sortLayers;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
@@ -99,10 +95,12 @@ define(function (require) {
      *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (layerState, $parentElement, $root, controlsMap) {
+    addLayer = function (sortedLayers, index, $parentElement, $root, controlsMap) {
         var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
             $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $layerControlSetRoot,
-            className, hasFilter, name, filterRange, id;
+            className, hasFilter, name, filterRange, id, layerState;
+
+        layerState = sortedLayers[index];
 
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
@@ -172,7 +170,8 @@ define(function (require) {
             $subTableRow.append($cell);
 
             $cell.append($('<div class="slider-label">Filter</div>'));
-            $filterSlider = ($('<div id="' + "filter_slider_" + name + '"></div>').slider({
+            $filterSlider = $('<div id="' + "filter_slider_" + name + '"></div>');
+            $filterSlider.slider({
                 range: true,
                 min: 0,
                 max: FILTER_RESOLUTION,
@@ -181,12 +180,12 @@ define(function (require) {
                     var result = $filterSlider.slider("option", "values");
                     layerState.setFilterRange([result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
                 }
-            }));
+            });
             // Disable the background for the range slider
             $(".ui-slider-range", $filterSlider).css({"background": "none"});
 
             // Set the ramp image
-            $(".ui-slider-range", $filterSlider).css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+            $filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
 
             $cell.append($filterSlider);
         } else {
@@ -194,10 +193,21 @@ define(function (require) {
         }
 
         // Add the promotion button
-        $cell = $('<td></td>');
-        $subTableRow.append($cell);
-        $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
-        $cell.append($promotionButton);
+        if (layerState.getZIndex() !== null && layerState.getZIndex() >= 0) {
+            $cell = $('<td></td>');
+            $subTableRow.append($cell);
+            $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
+            $promotionButton.click(function () {
+                var nextLayerState, otherZ;
+                if (index > 0) {
+                    nextLayerState = sortedLayers[index - 1];
+                    otherZ = nextLayerState.getZIndex();
+                    nextLayerState.setZIndex(layerState.getZIndex());
+                    layerState.setZIndex(otherZ);
+                }
+            });
+            $cell.append($promotionButton);
+        }
 
         $parentElement.append($layerControlSetRoot);
 
@@ -282,10 +292,76 @@ define(function (require) {
         });
 
         $('input[name="ramp-functions"]').change(function () {
-            layerState.setRampFunction($('input[name="ramp-types"]:checked').val());
+            layerState.setRampFunction($('input[name="ramp-functions"]:checked').val());
         });
     };
 
+    /**
+     * Creates an observer to handle layer state changes, and update the controls based on them.
+     */
+    makeLayerStateObserver = function (layerState, controlsMap, layerStateMap, $layersControlListRoot, $root) {
+        return function (fieldName) {
+            if (fieldName === "enabled") {
+                controlsMap[layerState.getId()].enabledCheckbox.prop("checked", layerState.isEnabled());
+            } else if (fieldName === "opacity") {
+                controlsMap[layerState.getId()].opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
+            } else if (fieldName === "filterRange") {
+                var range = layerState.getFilterRange();
+                controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
+            } else if (fieldName === "rampImageUrl") {
+                controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+            } else if (fieldName === "zIndex") {
+                replaceLayers(sortLayers(layerStateMap), $layersControlListRoot, $root, controlsMap);
+            }
+        };
+    };
+
+    /**
+     * Replace the existing layer controls with new ones derived from the set of LayerState objects.  All the
+     * new control references will be stored in the controlsMap for later access.
+     *
+     * @param {object} layerStateMap - A hash map of LayerState objects.
+     * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
+     * @param {object} $root  - The root JQuery node of the entire layer control set.
+     * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
+     */
+    replaceLayers = function (layerStateMap, $layerControlsListRoot, $root, controlsMap) {
+        var i, key, sortedLayerStateList;
+        sortedLayerStateList = sortLayers(layerStateMap);
+        $layerControlsListRoot.empty();
+        // Clear out the controls map
+        for (key in controlsMap) {
+            if (controlsMap.hasOwnProperty(key)) {
+                delete controlsMap[key];
+            }
+        }
+        // Add layers - this will update the controls list.
+        for (i = 0; i < sortedLayerStateList.length; i += 1) {
+            addLayer(sortedLayerStateList, i, $layerControlsListRoot, $root, controlsMap, sortedLayerStateList);
+        }
+    };
+
+    /**
+     * Converts the layer state map into an array and then sorts it based layer
+     * z indices.
+     *
+     * @param layerStateMap - An object-based hash map of LayerState objects.
+     * @returns {Array} - An array of LayerState objects sorted highest to lowest by z index.
+     */
+    sortLayers = function (layerStateMap) {
+        var sortedList, layerState;
+        // Sort the layers
+        sortedList = [];
+        for (layerState in layerStateMap) {
+            if (layerStateMap.hasOwnProperty(layerState)) {
+                sortedList.push(layerStateMap[layerState]);
+            }
+        }
+        sortedList.sort(function (a, b) {
+            return b.zIndex - a.zIndex;
+        });
+        return sortedList;
+    };
 
     LayerControls = Class.extend({
         ClassName: "LayerControls",
@@ -297,14 +373,14 @@ define(function (require) {
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
         initialize: function (layerStateMap) {
+            var layerState;
+
             // "Private" vars
             this.controlsMap = {};
             this.$root = null;
             this.$layerControlsListRoot = null;
             this.$tileOutlineButton = null;
             this.$layerControlsRoot = null;
-
-            var layerState, makeLayerStateObserver;
 
             // Add the title
             this.$root = $('#layer-controls');
@@ -318,34 +394,19 @@ define(function (require) {
             this.$layerControlsListRoot = $('<div id="layer-control-list"></div>');
             this.$layerControlsRoot.append(this.$layerControlsListRoot);
 
-            // Creates a layer state observer, which will update the control panel in response to model changes.
-            makeLayerStateObserver = function (layerState, controlsMap) {
-                return function (fieldName) {
-                    if (fieldName === "enabled") {
-                        controlsMap[layerState.getId()].enabledCheckbox.prop("checked", layerState.isEnabled());
-                    } else if (fieldName === "opacity") {
-                        controlsMap[layerState.getId()].opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
-                    } else if (fieldName === "filterRange") {
-                        var range = layerState.getFilterRange();
-                        controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
-                    } else if (fieldName === "rampImageUrl") {
-                        $(".ui-slider-range", controlsMap[layerState.getId()].filterSlider).css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
-                    }
-                };
-            };
-
-            // Add the layers
+            // Add layers visuals and register listeners against the model
+            replaceLayers(layerStateMap, this.$layerControlsListRoot, this.$root, this.controlsMap);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
-                    addLayer(layerStateMap[layerState], this.$layerControlsListRoot, this.$root, this.controlsMap);
-                    layerStateMap[layerState].addListener(makeLayerStateObserver(layerStateMap[layerState], this.controlsMap));
+                    layerStateMap[layerState].addListener(makeLayerStateObserver(
+                        layerStateMap[layerState],
+                        this.controlsMap,
+                        layerStateMap,
+                        this.$layerControlsListRoot,
+                        this.$root
+                    ));
                 }
             }
-
-            // Add the outline toggle button
-            this.$tileOutlineButton = $('<button class="tile-outline-button">Toggle Tile Outline</button>');
-            this.$layerControlsRoot.append(this.$tileOutlineButton);
-            // TODO: Add a handler here that would call into externally registered callbacks.
         }
     });
 
