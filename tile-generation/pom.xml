@@ -4,7 +4,9 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>tile-generation</artifactId>
   <name>Aperture Spark Tile Generation</name>
-  <description>A Spark-based library to aid in easy tile and tile pyramid generation</description>
+  <description>
+    A Spark-based library to aid in easy tile and tile pyramid generation
+  </description>
 
   <!-- Note that when one changes the parent version (and, hence, the project 
        version) here, one must also change it in build.sbt (both project and 
@@ -13,7 +15,7 @@
   <parent>
     <artifactId>aperture-tiles</artifactId>
     <groupId>com.oculusinfo</groupId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.2</version>
   </parent>
 
   <dependencies>
@@ -90,6 +92,30 @@
         </executions>
       </plugin>
 
+      <!-- Plugin to produce a source jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals> <goal>jar</goal> </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Plugin to produce a javadoc jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals> <goal>jar</goal> </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- We need to create a test jar too, not just a source jar -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -112,13 +138,16 @@
           <skipTests>true</skipTests>
         </configuration>
       </plugin>
+
       <!-- Enable scalatest plugin -->
       <plugin>
         <groupId>org.scalatest</groupId>
         <artifactId>scalatest-maven-plugin</artifactId>
         <version>1.0-M2</version>
         <configuration>
-          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+          <reportsDirectory>
+            ${project.build.directory}/surefire-reports
+          </reportsDirectory>
           <junitxml>.</junitxml>
           <filereports>WDF TestSuite.txt</filereports>
         </configuration>
