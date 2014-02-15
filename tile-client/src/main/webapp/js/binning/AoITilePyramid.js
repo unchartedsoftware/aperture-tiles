@@ -40,6 +40,8 @@ define(function (require) {
     var Class = require('../class'),
         AoITilePyramid;
 
+		
+		
     AoITilePyramid = Class.extend({
         ClassName: "AoITilePyramid",
         init: function (minX, minY, maxX, maxY) {

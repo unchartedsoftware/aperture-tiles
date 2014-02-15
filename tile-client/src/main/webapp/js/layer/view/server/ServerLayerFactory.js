@@ -23,13 +23,10 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
 
 /**
  * This module when given a server layer json object, will load the required classes and build
- * the layer
+ * the layers
  */
 define( function (require) {
     "use strict";
@@ -41,7 +38,7 @@ define( function (require) {
 	return {
 
 		/**
-		 * Given a layer JSON specification object and a map, will create server rendered tile layer
+		 * Given a layer JSON specification object and a map, will create server rendered tile layers
 		 * @param layerJSON	 	layer specification JSON object
 		 * @param map			map object
 		 */

@@ -39,7 +39,6 @@ require(['./FileLoader',
                 majorCitiesFile = "./data/majorCities.json",
                 layersFile = "./data/layers.json";
 
-
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFile, layersFile, majorCitiesFile, function (jsonDataMap) {
                 // We have all our data now; construct the UI.

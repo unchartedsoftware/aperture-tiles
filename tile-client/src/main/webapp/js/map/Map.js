@@ -32,15 +32,17 @@ define(function (require) {
     "use strict";
 
 
+	
     var Class = require('../class'),
 		Axis =  require('./Axis'),
-        Config = require('./aperture-config-map'),
+        MapConfig = require('./aperture-config-map'),
         Map;
 
 
 
     Map = Class.extend({
         ClassName: "Map",
+		
         init: function (id, spec) {
 
 			var that = this,
@@ -60,41 +62,35 @@ define(function (require) {
 				return (element.hasOwnProperty("AxisConfig"));
 			});
 
-            Config.loadConfiguration(mapSpecs);
+			// load map configuration from file
+            MapConfig.loadConfiguration(mapSpecs);
 
-            // Set up map initialization parameters
-            this.mapSpec = {
-                id: id,
-                options: {
-                    mapExtents: [ -180.000000, -85.051129, 180.000000, 85.051129 ],
-                    projection: "EPSG:900913",
-                    numZoomLevels: 12,
-                    units: "m",
-                    restricted: false
-                }
-            };
+            // Map div id
+			this.id = id;
 
             // Initialize the map
-            this.map = new aperture.geo.Map(this.mapSpec);
+            this.map = new aperture.geo.Map({ 
+				id: this.id,
+				options: {
+					numZoomLevels: 13
+					}
+				});
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
-            // The projection the map uses
-            this.projection = new OpenLayers.Projection("EPSG:900913");
-			
-			
+
 			// Create axes
 			this.axes = [];						
 			for (i=0; i<axisSpecs.length; ++i) {
 				axisSpec = axisSpecs[i].AxisConfig;
-				axisSpec.parentId = this.mapSpec.id;
+				axisSpec.parentId = this.id;
 				axisSpec.olMap = this.map.olMap_;
 				this.axes.push(new Axis(axisSpec));
 			}
 			
 			// Set resize map callback
 			$(window).resize( function() {
-				var ASPECT_RATIO = 1.61803398875, // golden ratio... ooooo
-					$map = $('#' + that.mapSpec.id),
+				var ASPECT_RATIO = 1.61803398875, // golden ratio
+					$map = $('#' + that.id),
 					$mapContainer = $map.parent(),
 					offset = $map.offset(),
 					leftOffset = offset.left || 0,
