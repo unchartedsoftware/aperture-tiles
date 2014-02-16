@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -64,9 +64,9 @@ object SparkConnector {
   }
 
   def getDefaultLibrariesFromMaven =
-    Seq(new MavenReference("com.oculusinfo", "math-utilities", "0.1.2-SNAPSHOT"),
-        new MavenReference("com.oculusinfo", "binning-utilities", "0.1.2-SNAPSHOT"),
-        new MavenReference("com.oculusinfo", "tile-generation", "0.1.2-SNAPSHOT"),
+    Seq(new MavenReference("com.oculusinfo", "math-utilities", "0.2"),
+        new MavenReference("com.oculusinfo", "binning-utilities", "0.2"),
+        new MavenReference("com.oculusinfo", "tile-generation", "0.2"),
         // These two are needed for avro serialization
         new MavenReference("org.apache.avro", "avro", "1.7.4"),
         new MavenReference("org.apache.commons", "commons-compress", "1.4.1"),

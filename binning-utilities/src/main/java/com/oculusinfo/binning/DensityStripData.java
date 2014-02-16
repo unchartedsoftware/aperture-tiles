@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -29,7 +29,8 @@ package com.oculusinfo.binning;
  * A tile for use in density strips. Density strips are intended for tiling
  * one-dimensional data, but in a way that the standard two-dimensional
  * visualizations that display two-dimensional tiles can use. To do this, they
- * make an equivalency class of each column in the tile - so if a value is set for one point, it is set for the whole column.
+ * make an equivalency class of each column in the tile - so if a value is set
+ * for one point, it is set for the whole column.
  * 
  * @author nkronenfeld
  */

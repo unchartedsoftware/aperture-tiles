@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
@@ -33,7 +33,7 @@ import java.util.Collection;
 
 
 /**
- * This interface represents a method of determining and using pyramidded tiles
+ * This interface represents a method of determining and using pyramided tiles
  * on a 2-D coordinate system.
  * 
  * There are four coordinate systems involved:

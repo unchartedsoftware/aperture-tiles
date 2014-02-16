@@ -1,10 +1,27 @@
-[
-    {
-        "layer": "twitter.2014-01-02.longitude.latitude",
-        "type": "tile",
-        "transform": "log10",
-        "ramp": "ware",
-        "opacity": 0.85,
-        "renderer": "default"
-    }
-]
+{
+    "ServerLayers": [
+		{
+			"layer": "twitter.2014-01-02.longitude.latitude",
+			"type": "tile",
+			"transform": "log10",
+			"ramp": "ware",
+			"opacity": 0.85,
+			"renderer": "default"
+		}
+	],
+	"ClientLayers": [
+		{
+			"type": "CarouselLayer",
+			"views": [
+				{
+					"renderer": "TopTextSentimentBars",
+					"layer": "twitter.2014-01-02.words.censored"
+				},
+				{
+					"renderer": "HashTagsByTime",
+					"layer": "twitter.2014-01-02.words.censored"
+				}
+				]
+		}
+    ]
+}
