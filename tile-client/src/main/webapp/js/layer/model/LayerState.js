@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -35,7 +35,9 @@ define(function (require) {
     "use strict";
 
     var Class = require('../../class'),
-        LayerState, notify;
+        LayerState,
+        notify,
+        arraysEqual;
 
     /**
      * @param {string} fieldName - Name of the modified field.
@@ -48,6 +50,32 @@ define(function (require) {
         }
     };
 
+    /**
+     * Compares arrays for equality.
+     *
+     * @param {Array} a - First array under comparison
+     * @param {Array} b - Second array under comparison
+     * @returns {boolean} true if they are equal, false otherwise.
+     */
+    arraysEqual = function (a, b) {
+        var i;
+        if (a === b) {
+            return true;
+        }
+        if (a === null || b === null) {
+            return false;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+        for (i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     LayerState = Class.extend({
         ClassName: "LayerState",
 
@@ -58,6 +86,7 @@ define(function (require) {
          */
         init: function (id) {
             this.id = id;
+            this.zIndex = 0;
             this.name = id;
             this.enabled = false;
             this.opacity = 1.0;
@@ -102,6 +131,26 @@ define(function (require) {
          */
         getId: function () {
             return this.id;
+        },
+
+        /**
+         * @returns {number} - The Z index of the layer.  Layers are drawn starting at 0, going from lowest
+         * to highest.
+         */
+        getZIndex: function () {
+            return this.zIndex;
+        },
+
+
+        /**
+         * @param {number} - The Z index of the layer.  Layers are drawn starting at 0, going from lowest
+         * to highest.
+         */
+        setZIndex: function (zIndex) {
+            if (this.zIndex !== zIndex) {
+                this.zIndex = zIndex;
+                notify("zIndex", this.listeners);
+            }
         },
 
         /**
@@ -172,13 +221,9 @@ define(function (require) {
          * from [0.0 - 1.0], representing a fraction of the total data range.
          */
         setFilterRange: function (filterRange) {
-        	if (filterRange) {
-        		if (this.filterRange[0] !== filterRange[0] && this.filterRange[1] !== filterRange[1]) {
-        			this.filterRange = filterRange;
-        			notify("filterRange", this.listeners);
-        		}
-            } else {
-            	this.filterRange = null;
+            if (!arraysEqual(this.filterRange, filterRange)) {
+                this.filterRange = filterRange;
+                notify("filterRange", this.listeners);
             }
         },
 

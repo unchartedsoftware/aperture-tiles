@@ -24,17 +24,11 @@
  */
 
 /* JSLint global declarations: these objects don't need to be declared. */
-/*global define, console*/
+/*global define, console, $, aperture*/
 
 /**
  * Populates the LayerState model based on the contents of a ServerRenderedMapLayer, and makes the appropriate
  * modifications to it as the LayerState model changes.
- *
- * TODO:
- * 1) Read filter range, ramp function, ramp type, from server when it changes
- * 2) Write filter, ramp function and ramp type back to server in response to layer state model changes
- * 3) Generate filter ramp image URL using the /legend rest request (see ImageTileLegendService.java in tile-service)
- *
  */
 define(function (require) {
     "use strict";
@@ -55,30 +49,51 @@ define(function (require) {
          * @param mapLayer - The ServerRenderedMapLayer that the layerStateMap will be populated from, and
          * subsequently be modified by.
          *
-         * @param worldMap - The base world map layer.
+         * @param worldMapLayer - The base world map layer.
+         *
          */
-        initialize: function (layerStateMap, mapLayer, worldMap) {
-            var layerState, layerIds, layerSpecsById, layerSpec, makeLayerStateCallback, layerId, layerName, i;
+        initialize: function (layerStateMap, mapLayer, worldMapLayer) {
+            var layerState, layerIds, layerSpecsById, layerSpec, makeLayerStateCallback,
+                layerId, layerName, i, makeMapZoomCallback;
 
             this.layerStateMap = layerStateMap;
             this.mapLayer = mapLayer;
-
             layerIds = mapLayer.getSubLayerIds();
+
             layerSpecsById = mapLayer.getSubLayerSpecsById();
 
             // A callback to modify map / visual state in response to layer changes.
-            makeLayerStateCallback = function (mapLayer, layerState) {
+            makeLayerStateCallback = function (mapLayer, layerState, self) {
+                // Create layer state objects from the layer specs provided by the server rendered map layer.
                 return function (fieldName) {
                     if (fieldName === "opacity") {
                         mapLayer.setSubLayerOpacity(layerState.getId(), layerState.getOpacity());
                     } else if (fieldName === "enabled") {
                         mapLayer.setSubLayerEnabled(layerState.getId(), layerState.isEnabled());
-                    } // TODO: Add handlers for other changes (filter value, ramp type, ramp function)
+                    } else if (fieldName === "rampType") {
+                        mapLayer.setSubLayerRampType(layerState.getId(), layerState.getRampType());
+                        self.setupRampImage(layerState, worldMapLayer.map.getZoom());
+                    } else if (fieldName === "rampFunction") {
+                        mapLayer.setSubLayerRampFunction(layerState.getId(), layerState.getRampFunction());
+                        self.setupRampImage(layerState, worldMapLayer.map.getZoom());
+                    } else if (fieldName === "filterRange") {
+                        mapLayer.setSubLayerFilterRange(layerState.getId(), layerState.getFilterRange(), 0);
+                    } else if (fieldName === "zIndex") {
+                        mapLayer.setSubLayerZIndex(layerState.getId(), layerState.getZIndex());
+                    }
                 };
             };
 
-            // Create layer state objects from the layer specs provided by the server rendered map layer.
-            for (i = 0; i < layerIds.length; i += 1) {
+            // Make a callback to regen the ramp image on map zoom changes
+            makeMapZoomCallback = function (layerState, map, self) {
+                return function () {
+                    self.setupRampImage(layerState, worldMapLayer.map.getZoom());
+                };
+            };
+
+            // Iterate over the list in reverse - the underlying map system will order the layers
+            //
+            for (i = 0; i < layerIds.length; i++) {
                 // Get the layer spec using the layer ID
                 layerId = layerIds[i];
                 layerSpec = layerSpecsById[layerId];
@@ -97,34 +112,64 @@ define(function (require) {
                 layerState.setRampFunction(layerSpec.transform);
                 layerState.setRampType(layerSpec.ramp);
                 layerState.setFilterRange([0.0, 1.0]);
+                layerState.setZIndex(i);
 
                 // Register a callback to handle layer state change events.
-                layerState.addListener(makeLayerStateCallback(mapLayer, layerState));
+                layerState.addListener(makeLayerStateCallback(mapLayer, layerState, this));
+
+                // Initiate ramp image computation.  This is done asynchronously by the
+                // server.
+                this.setupRampImage(layerState, 0);
 
                 // Add the layer to the layer statemap.
                 this.layerStateMap[layerState.getId()] = layerState;
+
+                // Handle map zoom events - can require a re-gen of the filter image.
+                worldMapLayer.map.on("zoom", makeMapZoomCallback(layerState, worldMapLayer.map, this));
             }
 
             // Create a layer state object for the base map.
             layerState = new LayerState("Base Layer");
             layerState.setName("Base Layer");
-            layerState.setEnabled(worldMap.isEnabled());
-            layerState.setOpacity(worldMap.getOpacity());
+            layerState.setEnabled(worldMapLayer.isEnabled());
+            layerState.setOpacity(worldMapLayer.getOpacity());
             layerState.setRampFunction(null);
             layerState.setRampType(null);
             layerState.setFilterRange(null);
+            layerState.setZIndex(-1);
 
             // Register a callback to handle layer state change events.
             layerState.addListener(function (fieldName) {
                 if (fieldName === "opacity") {
-                    worldMap.setOpacity(layerState.getOpacity());
+                    worldMapLayer.setOpacity(layerState.getOpacity());
                 } else if (fieldName === "enabled") {
-                    worldMap.setEnabled(layerState.isEnabled());
+                    worldMapLayer.setEnabled(layerState.isEnabled());
                 }
             });
 
             // Add the layer to the layer statemap.
             this.layerStateMap[layerState.getId()] = layerState;
+        },
+
+        /**
+         * Asynchronously updates colour ramp image.
+         *
+         * @param {Object} layerState - The layer state object that contains
+         * the parameters to use when generating the image.
+         */
+        setupRampImage: function (layerState, level) {
+            var legendData = {
+                transform: layerState.getRampFunction(),
+                layer: layerState.getId(),
+                level: level,
+                width: 128,
+                height: 1,
+                orientation: "horizontal",
+                ramp: layerState.getRampType()
+            };
+            aperture.io.rest('/legend', 'POST', function (legendString, status) {
+                layerState.setRampImageUrl(legendString);
+            }, {postData: legendData, contentType: 'application/json'});
         }
     });
     return ServerLayerUiMediator;
