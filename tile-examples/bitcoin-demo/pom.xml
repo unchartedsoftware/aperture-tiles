@@ -10,7 +10,7 @@
   <parent>
     <artifactId>tile-examples</artifactId>
     <groupId>com.oculusinfo</groupId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
 
   <dependencies>

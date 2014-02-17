@@ -45,9 +45,9 @@ function addToSparkClasspath {
 
 # Set up the spark classpath
 # our own jars
-addToSparkClasspath com.oculusinfo math-utilities 0.2
-addToSparkClasspath com.oculusinfo binning-utilities 0.2
-addToSparkClasspath com.oculusinfo tile-generation 0.2
+addToSparkClasspath com.oculusinfo math-utilities 0.3-SNAPSHOT
+addToSparkClasspath com.oculusinfo binning-utilities 0.3-SNAPSHOT
+addToSparkClasspath com.oculusinfo tile-generation 0.3-SNAPSHOT
 
 # framework-related jars
 addToSparkClasspath org.apache.hbase hbase-client 0.95.2-cdh5.0.0-beta-1
