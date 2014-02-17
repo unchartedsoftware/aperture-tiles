@@ -1,2 +1,6 @@
-/.settings
-/.project
+.classpath
+.idea
+.project
+.settings
+target
+update.sh

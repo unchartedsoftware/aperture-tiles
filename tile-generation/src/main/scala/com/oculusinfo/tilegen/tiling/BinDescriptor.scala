@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -37,12 +37,12 @@ import java.util.{Map => JavaMap}
 import java.util.ArrayList
 
 
-import com.oculusinfo.binning.io.Pair
-import com.oculusinfo.binning.io.TileSerializer
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer
-import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer
-import com.oculusinfo.binning.io.impl.StringDoublePairArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
+import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
+import com.oculusinfo.binning.util.Pair
 
 
 
@@ -102,6 +102,10 @@ class MinimumDoubleBinDescriptor extends StandardDoubleBinDescriptor {
 
 class MaximumDoubleBinDescriptor extends StandardDoubleBinDescriptor {
   override def aggregateBins (a: Double, b: Double): Double = a max b
+}
+
+class LogDoubleBinDescriptor(logBase: Double = math.exp(1.0)) extends StandardDoubleBinDescriptor {
+  override def aggregateBins (a: Double, b: Double): Double = math.log(math.pow(logBase, a) + math.pow(logBase, b))/math.log(logBase)
 }
 
 class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaList[JavaDouble]] {

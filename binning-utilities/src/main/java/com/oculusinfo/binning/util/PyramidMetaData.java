@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. http://www.oculusinfo.com/
+/*
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
  * 
@@ -46,7 +46,7 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 
 /**
  * This is a wrapper around a JSON object containing a layer's metadata. It is
- * intended to encapsulate and simplify access to the metadata.
+ * intended to encapsulate, properly type, and simplify access to the metadata.
  * 
  * @author nkronenfeld
  */

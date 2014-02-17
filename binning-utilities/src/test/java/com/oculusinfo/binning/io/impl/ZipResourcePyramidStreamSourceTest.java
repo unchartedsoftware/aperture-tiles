@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -36,7 +36,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.impl.stream.ZipResourcePyramidStreamSource;
+import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 
 public class ZipResourcePyramidStreamSourceTest {
 

@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Demos | Aperture Tiles</title>
+    <link rel="stylesheet" type="text/css" href="../css/all.css">
+    <link rel="stylesheet" type="text/css" href="../jstests/test.css">
+    <link rel="stylesheet" href="../prettify/default.css">
+    <link rel="SHORTCUT ICON" href="../img/aperture-16x16.ico"/>
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/ga.js"></script>
+</head>
+
+<body>
+<div id="header"></div>
+<div id="content-strip">
+    <div id="header-logo">
+        <a href="../"><img src="../img/aperture-tiles-big.png"></a>
+    </div>
+    <div id="header-menu">
+        <a href="../" class="overview">&nbsp;</a>
+        <a href="../tour/overview/">Tour</a>
+        <a href="../documentation/setup/">Documentation</a>
+        <a href="../demos/" class="selected">Demos</a>
+        <a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
+
+			<span id="testlinks">
+				<a href="../examples/tests.html">Tests</a>
+			</span>
+    </div>
+
+    <div id="all">
+        <div id="content">
+        	<h1>Aperture Tile Demonstrations</h1>
+        	<p>The following demos illustrate the utility of tile based visual analytics and the possibilities of create
+        	 interactive visualization for big data. All source code for the demos is provided in the tile-examples directory 
+        	 of the project.</p>  
+            
+            <div class="content-context">
+                <a href="/twitter-demo">
+                	<img src="../img/twit-cap.png" alt="Twitter Aperture Tile Demo" class="home-image"/>
+                   	Twitter heatmap with top hashtags and sentiment analysis aggregate markers
+                </a>
+            </div>
+            
+            <div class="content-body">
+            	<div class="case">
+                	<h2>Tile-based Analytics of Twitter Messages</h2>
+					<p>This Aperture tile demo shows map oriented tile applications using multiple layers of tile data and 
+					the use of tile carousels to flip through multiple per tile analytics.  The application shows a heatmap layer
+					of twitter messages by location on a <a href="https://maps.google.com">Google Maps</a> base layer. An 
+					"aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region.  These aggregate markers
+					summarize and provide interactive visualizations that support analysis and integrate with advanced analytics. Client
+					side rendering of tile data uses the <a href="http://aperturejs.com/">ApertureJS visualization framework library</a>.</p>
+					<p>This demo illustrates:</p>
+					<ul>
+						<li>Seamless zoom and pan interaction on maps</li>
+						<li>Interactive HTML5 tiles</li>
+						<li>Multiple aggregation summaries at tile-level with tile carousels</li>
+						<li>Server and client side rendering of tile visualizations</li>
+						<li>Integration with advanced analytics incorporated in generated tile data</li>
+					</ul>
+				</div>
+            </div>
+            
+            <div class="content-context">
+                <a href="/bitcoin-demo">
+                	<img src="../img/bitcoin-time-by-amount.png" alt="Bitcoin Aperture Tile Demo" class="home-image"/>
+                	Bitcoin exploratory data analysis cross-plot of time vs. amount
+                </a>
+                <p>
+                    <a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a>
+                </p>
+            </div>
+            
+            <div class="content-body">
+            	<div class="case">
+                	<h2>Big Data Plots of Bitcoin for Exploratory Data Analysis</h2>
+					<p>This demo illustrates exploratory data analysis using cross-plots of dimensions of interest of large data for 
+					the purpose of characterizing and understanding its underlying distribution, data quality and gaps in values. 
+					<a href="http://en.wikipedia.org/wiki/John_Tukey">John Tukey</a> emphasized examining the data before applying a 
+					specific model and attempting to harness its information. In this spirit, we have create a demo analyzing the 
+					well known digital currency <a href="http://bitcoin.org/">Bitcoin</a>. Using Aperture tiles a zoom and pan cross plot of 
+					time by bitcoin transaction amount was created. A heat map is applied to the data points to summarize frequency distribution.
+					The plot makes apparent interesting structural properties of the data such as the "grinding down" of bitcoins through
+					micro-transfers of pools of bitcoins.</p>
+					<p>This demo illustrates:</p>
+					<ul>
+						<li>Seamless zoom and pan interaction on cross-plots</li>
+						<li>Use of Aperture tiles for exploratory data analysis by plotting <em>all the data</em></li>
+					</ul>
+				</div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+
+</html>

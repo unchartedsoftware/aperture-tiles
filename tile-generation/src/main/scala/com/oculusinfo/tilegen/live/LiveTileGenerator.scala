@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -27,8 +27,9 @@ package com.oculusinfo.tilegen.live
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import java.awt.geom.Point2D
 

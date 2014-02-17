@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -38,8 +38,8 @@ import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
-import com.oculusinfo.binning.io.impl.IntegerAvroSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer;
 
 //@Ignore
 public class HBaseAvroPyramidIOTest {

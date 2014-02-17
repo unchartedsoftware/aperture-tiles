@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -45,7 +45,7 @@ object TilePrinter {
   def main (args: Array[String]) = {
     val argParser = new ArgumentParser(args)
 
-    val sc = argParser.getSparkConnector.getSparkContext("Tile Edges Test")
+    val sc = argParser.getSparkConnector().getSparkContext("Tile Edges Test")
 
     val baseLocation = 
       argParser.getStringArgument("loc",

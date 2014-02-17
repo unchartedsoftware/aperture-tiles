@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -48,7 +48,7 @@ object TestSeriesTiling {
     val extractor = new TestSeriesFieldExtractor
 
     val argParser = new ArgumentParser(args)
-    val sc = argParser.getSparkConnector
+    val sc = argParser.getSparkConnector()
       .getLocalSparkContext("test time series tiling")
     val binner = new GenericSeriesBinner(source, parser, extractor)
     binner.doBinning(sc, new LocalTileIO("avro"),

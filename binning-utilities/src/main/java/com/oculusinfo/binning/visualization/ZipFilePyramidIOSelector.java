@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -42,8 +42,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
-import com.oculusinfo.binning.io.impl.stream.PyramidStreamSource;
-import com.oculusinfo.binning.io.impl.stream.ZipResourcePyramidStreamSource;
+import com.oculusinfo.binning.io.impl.PyramidStreamSource;
+import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 
 
 

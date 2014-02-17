@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -46,6 +46,9 @@ class ArgumentParser (args: Array[String]) {
     (p(0).toLowerCase() -> p(1))).toMap
   val argDescriptionsMap = MutableMap[String, (String, String)]()
 
+
+  def debug: Unit =
+    argsMap.foreach(pair => println("key: "+pair._1+", value: "+pair._2))
 
 
   def usage: Unit = {
@@ -143,6 +146,26 @@ class ArgumentParser (args: Array[String]) {
     getArgumentInternal[Int](key, description, "int", _.toInt, default)
 
   /**
+   * Simple function to get a integer-valued argument from the argument list.
+   *
+   * @param key
+   *        The text (case-insensitive) of the key to look for in the argument
+   *        list.  In use, the key should be prefaced by a "-"; as an argument
+   *        to this function, it should not.
+   * @param description
+   *        A description of this argument, for purposes of helping the user to
+   *        use it correctly
+   * @param default The default value.  If None, argument is not specified in
+   *        the argument list, an exception is thrown; if Some, this default
+   *        value will be used if the argument is absent, or if there is an
+   *        error parsing the argument.
+   */
+  def getLongArgument (key: String,
+                       description: String,
+                       default: Option[Long] = None): Long =
+    getArgumentInternal[Long](key, description, "int", _.toLong, default)
+
+  /**
    * Simple function to get a double-valued argument from the argument list.
    *
    * @param key
@@ -160,11 +183,48 @@ class ArgumentParser (args: Array[String]) {
   def getDoubleArgument (key: String,
                          description: String,
                          default: Option[Double] = None): Double =
-    getArgumentInternal[Double](key, description, "dobule", _.toDouble, default)
+    getArgumentInternal[Double](key, description, "double", _.toDouble, default)
+
+  /**
+   * Simple function to get a boolean-valued argument from the argument list.  
+   *  Values of "yes", "true", shortened forms thereof, or any non-zero integer
+   * will be treated as true; all other values will be interpretted as false.
+   * 
+   * @param key
+   *        The text (case-insensitive) of the key to look for in the argument
+   *        list.  In use, the key should be prefaced by a "-"; as an argument
+   *        to this function, it should not.
+   * @param description
+   *        A description of this argument, for purposes of helping the user to
+   *        use it correctly
+   * @param default The default value.  If None, argument is not specified in
+   *        the argument list, an exception is thrown; if Some, this default
+   *        value will be used if the argument is absent, or if there is an
+   *        error parsing the argument.
+   */
+  def getBooleanArgument (key: String,
+                          description: String,
+                          default: Option[Boolean] = None): Boolean =
+    getArgumentInternal[Boolean](key, description, "boolean",
+                                 s =>
+      {
+        val sLower = s.toLowerCase.trim
+        if (sLower == "true".substring(0, sLower.length min "true".length)) {
+          true
+        } else if (sLower == "yes".substring(0, sLower.length min "yes".length)) {
+          true
+        } else if (sLower.map(c => '-' == c || ('0' <= c && c <= '9')).reduce(_ && _)) {
+           0 != sLower.toInt
+        } else {
+          false
+        }
+      },
+                                 default)
+
 
   /**
    * Simple function to get an argument from the argument list whose value is a
-   * list of integers.  The list must contain no whitespace, and uses the
+   * sequence of integers.  The list must contain no whitespace, and uses the
    * specified separator to separate elements.
    *
    * @param key
@@ -182,13 +242,40 @@ class ArgumentParser (args: Array[String]) {
    *        value will be used if the argument is absent, or if there is an
    *        error parsing the argument.
    */
-  def getIntListArgument (key: String,
-                          description: String,
-                          separator: Char = ',',
-                          default: Option[List[Int]] = None): List[Int] =
-    getArgumentInternal[List[Int]](key, description, "list[int]",
-                        _.split(separator).map(_.toInt).toList,
+  def getIntSeqArgument (key: String,
+                         description: String,
+                         separator: Char = ',',
+                         default: Option[Seq[Int]] = None): Seq[Int] =
+    getArgumentInternal[Seq[Int]](key, description, "seq[int]",
+                        _.split(separator).map(_.toInt).toSeq,
                         default)
+  /**
+   * Simple function to get an argument from the argument list whose value is a
+   * list of strings.  The list uses the specified separator to separate
+   * elements.
+   *
+   * @param key
+   *        The text (case-insensitive) of the key to look for in the argument
+   *        list.  In use, the key should be prefaced by a "-"; as an argument
+   *        to this function, it should not.
+   * @param description
+   *        A description of this argument, for purposes of helping the user to
+   *        use it correctly
+   * @param separator
+   *        A character that should be used by the user to separate elements of
+   *        their value list
+   * @param default The default value.  If None, argument is not specified in
+   *        the argument list, an exception is thrown; if Some, this default
+   *        value will be used if the argument is absent, or if there is an
+   *        error parsing the argument.
+   */
+  def getStringSeqArgument (key: String,
+                            description: String,
+                            separator: Char = ',',
+                            default: Option[Seq[String]] = None): Seq[String] =
+    getArgumentInternal[Seq[String]](key, description, "seq[string]",
+                                     _.split(separator).map(_.toString).toSeq,
+                                     default)
 
 
 
@@ -196,7 +283,7 @@ class ArgumentParser (args: Array[String]) {
   // Complex argument functions
   // These functions standardize some arguments across applications
   //
-  def getSparkConnector: SparkConnector = 
+  def getSparkConnector (jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven): SparkConnector = 
     new GeneralSparkConnector(
       getStringArgument("spark",
                         "Spark master location (default is \"local\")",
@@ -206,5 +293,6 @@ class ArgumentParser (args: Array[String]) {
                         Some(System.getenv("SPARK_HOME"))),
       Some(getStringArgument("user",
                              "spark user name (defaults to login name)",
-                             Some(System.getProperty("user.name")))))
+                             Some(System.getProperty("user.name")))),
+      jars)
 }

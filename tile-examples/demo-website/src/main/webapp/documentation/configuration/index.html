@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Documentation | Aperture Tiles</title>
+<link rel="stylesheet" type="text/css" href="../../css/all.css">
+<link rel="stylesheet" href="../../prettify/default.css">
+<link rel="SHORTCUT ICON" href="../../img/aperture-16x16.ico" />
+<script src="../../lib/jquery.js"></script>
+<script src="../../lib/ga.js"></script>
+<script type="text/javascript" src="../../css/js/syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+<script type="text/javascript" src="../../css/js/syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+<script type="text/javascript" src="../../css/js/syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+<link href="../../css/js/syntaxhighlighter_3.0.83/styles/shCore.css" rel="stylesheet" type="text/css" />
+<link href="../../css/js/syntaxhighlighter_3.0.83/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+	<div id="header"></div>
+	<div id="content-strip">
+		<div id="header-logo">
+			<a href="../../"><img src="../../img/aperture-tiles-big.png"></a>
+		</div>
+		<div id="header-menu">
+			<a href="../../" class="overview">&nbsp;</a> 
+			<a href="../../tour/overview/">Tour</a> 
+			<a href="../../documentation/setup/" class="selected">Documentation</a>
+			<a href="../../demos/">Demos</a> 
+			<a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
+		</div>
+
+		<div id="all">
+			<div id="submenu">
+				<div class="submenu-item"
+					onclick="window.location.assign('../setup/');">
+					<div class="submenu-item-background">
+						<div class="submenu-item-number">1</div>
+					</div>
+					<div class="submenu-item-label">Installation</div>
+				</div>
+				<div class="submenu-item"
+					onclick="window.location.assign('../generation/');">
+					<div class="submenu-item-background">
+						<div class="submenu-item-number">2</div>
+					</div>
+					<div class="submenu-item-label">Generation</div>
+				</div>
+				<div class="submenu-item" onclick="window.location.assign('');">
+					<div class="submenu-item-background selected">
+						<div class="submenu-item-number">3</div>
+					</div>
+					<div class="submenu-item-label">Configure</div>
+				</div>
+			</div>
+
+			<div id="content">
+				<div class="content-context">
+					<ul class="toc right">
+						<li><a href="#template-setup">Template Setup</a>
+						<li><a href="#server-config">Server Configuration</a>
+							<ul>
+								<li><a href="#webxml">web.xml</a></li>
+							</ul>
+							<ul>
+								<li><a href="#tileproperties">tile.properties</a></li>
+							</ul>
+						</li>
+						<li><a href="#clientconfig">Client Configuration</a>
+							<ul>
+								<li><a href="#configaperture">Aperture Configuration</a></li>
+							</ul>
+							<ul>
+								<li><a href="#configmap">Map Configuration</a></li>
+							</ul>
+							<ul>
+								<li><a href="#layers">Server-side Tile Rendering Configuration</a>
+									<ul>
+										<li><a href="#layer">Layer</a></li>
+										<li><a href="#type">Type</a></li>
+										<li><a href="#transform">Transform</a></li>
+										<li><a href="#ramp">Color Ramp</a></li>
+										<li><a href="#opacity">Opacity</a></li>
+										<li><a href="#renderer">Renderer</a></li>
+										<li><a href="#multiple">Multiple Layers</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+
+				<div class="content-body">
+					<h1>Configuration</h1>
+					<p>
+						The fastest method to get started with Aperture Tiles is to start
+						with the tile-client template. This template contains a tile
+						server and a tile client. We also recommend looking at the source
+						code for the <a href="../../demos">tile examples</a>.
+					</p>
+					
+					<a name="template-setup"></a>
+					<h2>Template Setup</h2>
+					<p>
+						To begin setting up an Aperture Tiles application create a copy of
+						<em>aperture-tiles/tile-client-template</em>. For the purpose of
+						this documentation we will assume it has been renamed to <em>new-tile-project</em>.
+					</p>
+					
+					<p>
+						We suggested updating the maven pom from the template defaults.
+						Edit the file <em>new-tile-project/</em><strong>pom.xml</strong>.
+					</p>
+
+					<p>Edit the &lt;artifactId&gt; tag content located on line 4
+						from "tile-client-template" to "new-tile-project" and edit the
+						&lt;name&gt; tag content located on line 6 from "Aperture-Tiles
+						Web Client Template" to an appropriate project descriptions. For
+						example:
+					<pre class="brush: xml; gutter: false;">&lt;artifactId&gt;new-tile-project&lt;/artifactId&gt;
+&lt;name&gt;New Tile Project&lt;/name&gt;</pre>
+
+					<a name="server-config"></a>
+					<h2>Server Configuration</h2>
+					<p>
+						Now that the new template is copied the embedded tile server must
+						configured to retrieve the desired tiles. If tiles have not yet
+						been generated, refer to the 
+						<a href="../generation">tile generation documentation</a>.
+					</p>
+					
+					<p>
+						To configure the tile-server two configuration files need to be
+						edited.
+					</p>
+					
+					<a name="webxml"></a>
+					<h3>Web.xml</h3>
+					<p>
+						Edit the file <em>new-project-name/src/main/webapp/WEB-INF/</em><strong>web.xml</strong>.
+						Lines 17-30 in this file are used to tell Aperture Tiles which
+						storage module is being used to hold the tiles. Uncomment the
+						relevant lines based on how the tiles are stored and ensure that
+						all other lines from 17-30 are commented out. Aperture Tiles
+						currently supports tiles stored as File System Based, Jar files,
+						Zip files, and in HBase or a SQLite database.
+					</p>
+
+					<a name="tileproperties"></a>
+					<h3>Tile.properties</h3>
+					<p>
+						Next, edit the file <em>new-project-name/src/main/resources/</em><strong>tile.properties</strong>.
+						This file is responsible for pointing the server to the
+						location of the tiles. Lines 10-70 provide detailed instructions
+						regarding how to configure each storage module. Uncomment the
+						relevant lines so that the location information matches the module
+						type chosen in web.xml and set the required location parameters
+						appropriately.
+					</p>
+
+					<p>
+						It is important to note that the information in <em>tile.properties</em>
+						should point to the root location of the tiles, not to the actual tile
+						set. For example if the full address of the tile set is: <em>/data/tiles/twitter.lat.lon</em>
+						then tile.properties should point to <em>/data/tiles/</em> The
+						tile client configuration in the next section will point to the
+						specific tile sets using the layers configuration file.
+					</p>	
+
+					<a name="clientconfig"></a>
+					<h2>Client Configuration</h2>
+
+					<p>
+						Now that the server is pointed to the tiles it is time to
+						configure the tile client to properly display the tiles.
+					</p>
+					
+					<a name="configaperture"></a>
+					<h3>Aperture Configuration</h3>
+					
+					<p>
+						The Tile Client uses ApertureJS services and client side visualization library.  
+						To communicate with the Tile Server, the Tile Client must specify the Aperture
+						services endpoints.  This configuration is specified in 
+						<em>new-pjroject-name/src/main/webapp/js/<strong>aperture-config-map.js</strong></em>.
+						Edit the 'aperture.io' setting specifying the 'restEndpoint' to use the correct  
+						url for the <em>new-tile-project</em>.  For example:
+					</p>
+					
+					<pre class="brush: js; gutter: false;">/*
+* The endpoint locations for Aperture services accessed through the io interface
+*/
+'aperture.io' : {
+    'rpcEndpoint' : '%host%/aperture/rpc',
+    'restEndpoint' : '%host%/new-tile-project/rest'
+},</pre>
+					
+					<a name="layers"></a>
+					<h3>Server-side Tile Rendering Configuration</h3>
+					<p>
+						The Tile Client allows configuration of multiple layers of tiles that can 
+						be overlaid in the plot or map viewer. These are defined in 
+						<em>new-project-name/src/main/webapp/data/<strong>layers.json</strong></em>.
+						This file will contain 6 editable fields to customize how the tiles are shown. 
+						The options are: layer, type, transform, ramp, opacity, renderer. A detailed
+						description of each parameter is found below. 
+					</p>
+					
+					<a name="layer"></a>
+					<h3>Layer</h3>
+					<p>
+						The layer field is used to point to specific tiles which are
+						displayed on the map. For example if tiles are stored in <em>/data/tiles/twitter.lat.lon</em>
+						the layers field should be set to "twitter.lat.lon". If HBase is
+						being used then layer should be set to the table name in HBase that contains
+						the tileset. 
+					</p>
+					
+					<a name="type"></a>
+					<h3>Type</h3>
+					<p>
+						Currently "tile" is the only option supported.
+					</p>
+
+					<a name="transform"></a>
+					<h3>Transform</h3>
+					<p>
+						The transform option allows the user to apply transformations to
+						the data values when determining color. Currently the options are
+						"linear" which does not perform a transformation, and "log10" which
+						will take logarithms of raw values prior to applying a color ramp.
+					</p>
+					
+					<a name="ramp"></a>
+					<h3>Color Ramp</h3>
+					<p>
+						The ramp option is used to determine what color scale is applied to
+						the data points. Currently the ramp supports 3 options: linear,
+						single-gradient, and default color scales. 
+					</p>
+					
+					<a name="linear"></a>
+					<h4>Linear Ramp</h4>
+					<p>
+						The linear option shows all of the data points with a constant
+						color and can be configured by setting:
+					</p>
+					
+					<pre class="brush: js; gutter: false;">"ramp": {
+    "name": "flat",
+    "color": "green"
+},</pre>
+
+					<a name="grad"></a>
+					<h4>Single Gradient Ramp</h4>
+					<p>
+						The single-gradient option will draw the color of each data
+						point as a gradient between two colors. The value where the
+						gradient begins and ends can be manually altered by setting the
+						from-alpha and to-alpha fields. The from-alpha and to-alpha can
+						each take any value between 0-255.
+					</p>
+					<p>
+						A sample implementation is shown below:
+					</p>
+					
+					<pre class="brush: js; gutter: false;">"ramp": {
+    "name": "single-gradient",
+    "from": 0xffffff,
+    "from-alpha": 0,
+    "to": 0x00ff00,
+    "to-alpha": 100
+},</pre>
+					<a name="def"></a>
+					<h4>Default Color Scales</h4>
+					<p>
+						The default color scales will edit the color of each data
+						point based on its concentration using a predefined color scale.
+						The current options are:
+					</p>
+					
+					<ul>
+						<li>'br': A blue-green ramp.</li>
+						<li>'inv-br': Inverted blue-green ramp.</li>
+						<li>'ware': A red-yellow-green ramp.</li>
+						<li>'inv-ware': Inverted red-yellow-green ramp.</li>
+						<li>'grey': Full greyscale ramp.</li>
+						<li>'inv-grey': Inverse greyscale ramp.</li>
+					</ul>
+
+					<p>
+						These options can be set directly by:
+					</p>
+
+					<pre class="brush: js; gutter: false;">"ramp": "ware"</pre>
+
+					<a name="opacity"></a>
+					<h3>Opacity</h3>
+					<p>
+						This setting is used to set the opacity of the rendered tile layer.
+						This can be set to any decimal value ranging from 0
+						(totally transparent) to 1 (totally opaque).
+					</p>
+
+					<a name="renderer"></a>
+					<h3>Renderer</h3>
+					<p>
+						This option defines which renderer the server should use to
+						render tiles. The renderer will be dependent on the type of 
+						tile data.  The current renderer options are:
+					</p>
+
+					<ul>
+						<li>'default': Renders to a heat-map, based on a standard
+							avro double-valued tile</li>
+						<li>'doubleseries': Renders to a series of heat-maps, based
+							on a standard avro double-series-valued tile</li>
+						<li>'doublestatistics': Renders tile's total hit and %
+							coverage as text to the tile</li>
+						<li>'textscore': Renders to an image showing scored
+							words, with bars based on their score</li>
+					</ul>
+
+					<a name="multiple"></a>
+					<h3>Multiple Layers</h3>
+					<p>
+						Maps with multiple layers can be created by specifying multiple
+						layer descriptions in <em>layers.json</em>. An example
+						is shown below.
+					</p>	
+					
+					<pre class="brush: js; gutter: false">[
+    {
+       "layer": "my-layer1",
+       "type": "tile",
+       "transform": "linear",
+       "ramp": "ware",
+       "opacity": 0.85,
+       "renderer": "default"
+    },
+    {
+       "layer": "my-layer2",
+       "type": "tile",
+       "transform": "linear",
+       "ramp": "ware",
+       "opacity": 0.85,
+       "renderer": "textscore"
+    }
+]</pre>
+
+					<a name="layers"></a>
+					<h3>Client-side Tile Rendering Configuration</h3>
+					<p>
+						Comming Soon.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+<script type="text/javascript">
+    SyntaxHighlighter.all()
+</script>
+
+</html>

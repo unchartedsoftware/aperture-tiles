@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -251,4 +251,15 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
     	return results;
     }
 
+    // All web mercator tile pyramids are equal
+    @Override
+    public int hashCode () {
+	return 1500450271;
+    }
+
+    @Override
+    public boolean equals (Object that) {
+	if (null == that) return false;
+	return (that instanceof WebMercatorTilePyramid);
+    }
 }

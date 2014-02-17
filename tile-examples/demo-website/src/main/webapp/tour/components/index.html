@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Tour | Aperture Tiles</title>
+<link rel="stylesheet" type="text/css" href="../../css/all.css">
+<link rel="stylesheet" type="text/css" href="../../jstests/test.css">
+<link rel="stylesheet" href="../../prettify/default.css">
+<link rel="SHORTCUT ICON" href="../../img/aperture-16x16.ico" />
+<script src="../../lib/jquery.js"></script>
+<script src="../../lib/ga.js"></script>
+</head>
+
+<body>
+	<div id="header"></div>
+	<div id="content-strip">
+		<div id="header-logo">
+			<a href="../../"><img src="../../img/aperture-tiles-big.png"></a>
+		</div>
+		<div id="header-menu">
+			<a href="../../" class="overview">&nbsp;</a> 
+			<a href="../../tour/overview/" class="selected">Tour</a> 
+			<a href="../../documentation/setup/">Documentation</a> 
+			<a href="../../demos/">Demos</a> 
+			<a href="https://github.com/oculusinfo/aperture-tiles" target="_blank">Download</a>
+		</div>
+
+		<div id="all">
+			<div id="submenu">
+				<div class="submenu-item"
+					onclick="window.location.assign('../overview/');">
+					<div class="submenu-item-background">
+						<div class="submenu-item-number">1</div>
+					</div>
+					<div class="submenu-item-label">Overview</div>
+				</div>
+				<div class="submenu-item" onclick="window.location.assign('');">
+					<div class="submenu-item-background selected">
+						<div class="submenu-item-number">2</div>
+					</div>
+					<div class="submenu-item-label">Components</div>
+				</div>
+			</div>
+
+			<div id="content">
+				<div class="content-context">
+					<p>
+						<img src="../../img/aggregation-marker.png" class="home-image" />
+						Interactive aggregation markers provide per tile analytics.
+					</p>
+					<p>
+						<a href="http://www.oculusinfo.com">&#169;2013 Oculus Info Inc.</a>
+					</p>
+				</div>
+				<div class="content-body">
+					<h1>Aperture Tiles Components</h1>
+					<p>
+						Aperture-Tiles implements a data flow which breaks the
+						visualization process into three distinct components: tile
+						generation, tile server, and tile client. This flexible framework
+						allows third parties to leverage or replace the pieces of Aperture Tiles 
+						as they see fit.  For example, using Aperture Tiles AVRO tile data format
+						third parties can produce their own tile data using their own analytics. 
+						Using the Tile Server standards based 
+						<a href="http://en.wikipedia.org/wiki/Tile_Map_Service">Tile Map Services</a> 
+						third party tile clients can integrate Aperture Tiles.  
+					</p>
+					<img class="bordered" src="../../img/arch-overview.png"
+						alt="Aperture Tiles Architectural Overview" />
+						
+					<h2>Distributed Tile Generation</h2>
+					<p>
+						The Aperture Tiles generation analytic leverages cluster
+						computing with <a href="http://spark.incubator.apache.org/">Apache Spark</a>
+						to compute tiles from big data rapidly. The tile generation analytic 
+						transforms raw data into AVRO data tile files with metadata
+						descriptor files, summarizing all tile content. AVRO data files
+						allow for language neutrality and support multiple summaries per
+						bin allowing a flexible and extensible analytic. Finished tiles are
+						stored in HBase to allow efficient scalability to billions of tiles.
+					</p>
+
+					<h2>Tile Server</h2>
+					<p>
+						The Aperture Tile server provides services to serve rendered tiles
+						or raw tile data. The Aperture Tile Server defines a REST API for 
+						requesting tiles and rendering properties. The tile server works by 
+						retrieving AVRO data tile files and rendering PNG images 
+						for display in the tile client or external visualization 
+						applications. The Aperture Tile Server also has the ability to 
+						directly serve raw tile data via JSON supporting data services or 
+						rich client side rendering capabilities.
+					</p>
+
+					<h2>Tile Client</h2>
+					<p>
+						The Aperture Tile client is a full featured interactive web
+						application for displaying layered tiles with zoom, pan and filtering
+						interactions. Example client side rendering is provided to demonstrate
+						some of the possibilities of using aggregation marker visualization 
+						techniques. The web application is designed to promote exploratory data analysis 
+						by displaying high level patterns and summary statistics while preserving 
+						all fine detail at the appropriate zoom level.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+
+
+</html>
