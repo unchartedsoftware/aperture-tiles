@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -33,12 +33,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class FileSystemPyramidIO implements PyramidIO {
     private String _rootPath;
@@ -89,6 +90,12 @@ public class FileSystemPyramidIO implements PyramidIO {
         FileOutputStream stream = new FileOutputStream(getMetaDataFile(basePath));
         stream.write(metaData.getBytes());
         stream.close();
+    }
+
+    @Override
+    public void initializeForRead(String pyramidId, int tileSize,
+    		Properties dataDescription) {
+    	// Noop
     }
 
     @Override

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -36,12 +36,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 /**
  * JDBC-based implementation of PyramidIO.
@@ -243,6 +244,12 @@ public class JDBCPyramidIO implements PyramidIO {
 			}
 		}
 	}
+
+    @Override
+    public void initializeForRead(String pyramidId, int tileSize,
+    		Properties dataDescription) {
+    	// Noop
+    }
 
 	@Override
 	public <T> List<TileData<T>> readTiles(String pyramidId,

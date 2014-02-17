@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -35,13 +35,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -49,11 +48,11 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Row;
 
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class HBasePyramidIO implements PyramidIO {
     private static final String META_DATA_INDEX      = "metadata";
@@ -80,7 +79,7 @@ public class HBasePyramidIO implements PyramidIO {
     private HBaseAdmin          _admin;
 
     public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
-    throws MasterNotRunningException, ZooKeeperConnectionException {
+	throws IOException {
         _config = HBaseConfiguration.create();
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
@@ -242,6 +241,12 @@ public class HBasePyramidIO implements PyramidIO {
     }
 
     @Override
+    public void initializeForRead(String pyramidId, int tileSize,
+    		Properties dataDescription) {
+    	// Noop
+    }
+
+    @Override
     public <T> List<TileData<T>> readTiles (String tableName,
                                             TileSerializer<T> serializer,
                                             Iterable<TileIndex> tiles) throws IOException {
@@ -293,7 +298,12 @@ public class HBasePyramidIO implements PyramidIO {
     @Override
     public String readMetaData (String tableName) throws IOException {
         List<Map<HBaseColumn, byte[]>> rawData = readRows(tableName, Collections.singletonList(META_DATA_INDEX), METADATA_COLUMN);
-        if (null == rawData || rawData.isEmpty() || !rawData.get(0).containsKey(METADATA_COLUMN)) return null;
+
+	if (null == rawData) return null;
+	if (rawData.isEmpty()) return null;
+	if (null == rawData.get(0)) return null;
+        if (!rawData.get(0).containsKey(METADATA_COLUMN)) return null;
+
         return new String(rawData.get(0).get(METADATA_COLUMN));
     }
 }

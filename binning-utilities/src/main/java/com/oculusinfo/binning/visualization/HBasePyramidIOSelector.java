@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -27,15 +27,16 @@ package com.oculusinfo.binning.visualization;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 
+import java.io.IOException;
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
@@ -60,9 +61,10 @@ public class HBasePyramidIOSelector extends JPanel implements PyramidIOSelector 
     private String _zookeeperPort;
     private String _hbaseMaster;
 
-    private JTextField _zookeeperQuorumField;
-    private JTextField _zookeeperPortField;
-    private JTextField _hbaseMasterField;
+    private JTextField        _zookeeperQuorumField;
+    private JTextField        _zookeeperPortField;
+    private JTextField        _hbaseMasterField;
+    private JButton           _connect;
 
 
 
@@ -128,34 +130,40 @@ public class HBasePyramidIOSelector extends JPanel implements PyramidIOSelector 
                 setHBaseMaster(_hbaseMasterField.getText());
             }
         });
+        _connect = new JButton(new AbstractAction("Connect") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void actionPerformed (ActionEvent event) {
+                updateIO();
+            }
+        });
 
         setLayout(new GridBagLayout());
         add(zookeeperQuorumLabel,  new GridBagConstraints(0, 0, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        add(_zookeeperQuorumField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+        add(_zookeeperQuorumField, new GridBagConstraints(1, 0, 2, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
         add(zookeeperPortLabel,    new GridBagConstraints(0, 1, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        add(_zookeeperPortField,   new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+        add(_zookeeperPortField,   new GridBagConstraints(1, 1, 2, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
         add(hbaseMasterLabel,      new GridBagConstraints(0, 2, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        add(_hbaseMasterField,     new GridBagConstraints(1, 2, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+        add(_hbaseMasterField,     new GridBagConstraints(1, 2, 2, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+        add(_connect,              new GridBagConstraints(2, 3, 1, 1, 0.0, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
     }
 
     private void setZookeeperQuorum (String text) {
         if (!objectsEqual(_zookeeperQuorum, text)) {
             _zookeeperQuorum = text;
-            updateIO();
         }
     }
 
     private void setZookeeperPort (String text) {
         if (!objectsEqual(_zookeeperPort, text)) {
             _zookeeperPort = text;
-            updateIO();
         }
     }
 
     private void setHBaseMaster (String text) {
         if (!objectsEqual(_hbaseMaster, text)) {
             _hbaseMaster = text;
-            updateIO();
         }
     }
 
@@ -164,10 +172,8 @@ public class HBasePyramidIOSelector extends JPanel implements PyramidIOSelector 
             HBasePyramidIO oldIO = _io;
             try {
                 _io = new HBasePyramidIO(_zookeeperQuorum, _zookeeperPort, _hbaseMaster);
-            } catch (MasterNotRunningException e) {
-                _io = null;
-            } catch (ZooKeeperConnectionException e) {
-                _io = null;
+	    } catch (IOException e) {
+		_io = null;
             }
             if (null != _io || null != oldIO) {
                 firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);

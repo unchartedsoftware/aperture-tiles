@@ -6,9 +6,19 @@ organization:="com.oculusinfo"
 
 name:="tile-generation"
 
-version:="0.1.1"
+version:="0.2"
 
 scalaVersion:="2.9.3"
+
+
+
+// Testing settings
+// Spark tests can only run one at a time, so we have to set all tests to run that way.
+// Copied from the Spark build file
+// Only allow one test at a time, even across projects, since they run in the same JVM
+concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
+
+
 
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 
@@ -16,14 +26,18 @@ resolvers += "Global Maven Repository" at "http://repo1.maven.org/maven2/"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
+// Needed for older akka libraries; I'm not sure how maven finds it, but SBT 
+// seems to need it explicitly specified
+resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases"
+
 scalacOptions += "-deprecation"
 
 scalacOptions += "-unchecked"
 
 libraryDependencies ++= Seq(
-	"org.spark-project" % "spark-core_2.9.3" % "0.7.2",
-	"com.oculusinfo" % "geometric-utilities" % "0.1.1",
-        "com.oculusinfo" % "binning-utilities" % "0.1.1",
+	"org.apache.spark" % "spark-core_2.9.3" % "0.8.0-incubating",
+	"org.apache.spark" % "spark-streaming_2.9.3" % "0.8.0-incubating",
+        "com.oculusinfo" % "binning-utilities" % "0.1.2-SNAPSHOT",
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test"
 )
 

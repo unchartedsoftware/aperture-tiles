@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -29,13 +29,16 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
 
+
+
 /**
- * An iterator over all bins that cover a given area
+ * An iterator over all (tile, bin) pairs on a single level that overlap a given
+ * area
  * 
  * @author Nathan Kronenfeld
  */
 public class BinIterator implements Iterator<TileAndBinIndices> {
-    private TilePyramid _binner;
+    private TilePyramid _pyramid;
     // Desired tile level
     private int        _level;
     // Desired number of horizontal bins per tile 
@@ -53,17 +56,19 @@ public class BinIterator implements Iterator<TileAndBinIndices> {
     private int        _curBinX;
     private int        _curBinY;
 
+    
+
     /**
+     * Create an iterator over a particular area for a particular level, given a
+     * projection.
      * 
-     * @param binner
-     *            The bin pyramid describing the bins to use
-     * @param level
-     *            The tile level to check
-     * @param area
-     *            The area covered by this iterator
+     * @param pyramid The bin pyramid (projection) describing how to translate
+     *            raw coordinates to bin indices
+     * @param level The tile level to check
+     * @param area The area covered by this iterator
      */
-    public BinIterator (TilePyramid binner, int level, Rectangle2D area) {
-        _binner = binner;
+    public BinIterator (TilePyramid pyramid, int level, Rectangle2D area) {
+        _pyramid = pyramid;
         _level = level;
         _numXBins = 256;
         _numYBins = 256;
@@ -83,11 +88,11 @@ public class BinIterator implements Iterator<TileAndBinIndices> {
 
     private Point getBinCoordinates (double x, double y) {
         Point2D point = new Point2D.Double(x, y);
-        TileIndex tile = _binner.rootToTile(point, _level);
+        TileIndex tile = _pyramid.rootToTile(point, _level);
         if (tile.getXBins() != _numXBins && tile.getYBins() != _numYBins) {
             tile = new TileIndex(tile.getLevel(), tile.getX(), tile.getY(), _numXBins, _numYBins);
         }
-        BinIndex bin = _binner.rootToBin(point, tile);
+        BinIndex bin = _pyramid.rootToBin(point, tile);
         return new Point(tile.getX()*tile.getXBins()+bin.getX(),
                          tile.getY()*tile.getYBins()+(tile.getYBins()-1-bin.getY()));
     }

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -30,8 +30,9 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble}
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
@@ -113,15 +114,15 @@ extends ObjectifiedBinnerBase[T](source, parser, extractor) {
       }
 
       // Figure out what levels to bin
-      val levels = argParser.getIntListArgument("levels",
-                                                "A list of comma-separated "
-                                                +"levels to bin")
+      val levels = argParser.getIntSeqArgument("levels",
+                                               "A list of comma-separated "
+                                               +"levels to bin")
 
       // And some other utility classes
       val jobName = (name+"bin tiling "+xVar+" vs "+yVar+", levels "
                      +levels.mkString(",")+" ("+whoami+")")
 
-      val sc = argParser.getSparkConnector.getSparkContext(jobName)
+      val sc = argParser.getSparkConnector().getSparkContext(jobName)
       val tileIO = TileIO.fromArguments(argParser)
 
       if (!extractor.isValidField(xVar) || !extractor.isValidField(yVar)) {
@@ -139,7 +140,7 @@ extends ObjectifiedBinnerBase[T](source, parser, extractor) {
 
       doBinning(sc, tileIO,
                 name, xVar, yVar, resultField, resultFcn,
-                List(levels), consolidationPartitions)
+                Seq(levels), consolidationPartitions)
     } catch {
       case e: MissingArgumentException => {
         println("Binning Argument exception: "+e.getMessage())
@@ -218,7 +219,7 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
                  yVar: String,
                  resultField: String,
                  resultFcn: T => ValueOrException[Double],
-                 levelSets: List[List[Int]],
+                 levelSets: Seq[Seq[Int]],
                  consolidationPartitions: Option[Int]): Unit = {
     // localize all fields so binner doesn't need to be serializable
     val localParser = parser
@@ -237,8 +238,6 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
     val startTime = System.currentTimeMillis()
 
     var rawData = source.getData(sc)
-    if (source.getIdealPartitions.isDefined)
-      rawData = rawData.coalesce(source.getIdealPartitions.get)
 
 
     val data = rawData.mapPartitions(iter => 
@@ -339,7 +338,11 @@ trait DataSource {
    * but normally shouldn't be touched.
    */
   def getData (sc: SparkContext): RDD[String] =
-    getDataFiles.map(sc.textFile(_)).reduce(_ union _)
+    if (getIdealPartitions.isDefined) {
+      getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
+    } else {
+      getDataFiles.map(sc.textFile(_)).reduce(_ union _)
+    }
 }
 
 
@@ -391,12 +394,6 @@ abstract class FieldExtractor[T: ClassManifest] extends Serializable {
    * results of this are undefined if isValidField(field) is false.
    */
   def getFieldValue (field: String)(record: T): ValueOrException[Double]
-
-  /**
-   * Aggregate bin values.  Default aggregation function is simple addition
-   */
-  def aggregateValues (valueField: String)(a: Double, b: Double): Double = a + b
-
 
 
   /**

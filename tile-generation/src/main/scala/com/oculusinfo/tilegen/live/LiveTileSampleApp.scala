@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -27,8 +27,8 @@ package com.oculusinfo.tilegen.live
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 import java.awt.image.BufferedImage
 import java.io.File
@@ -52,7 +52,7 @@ object LiveTileSampleApp {
     val argParser = new ArgumentParser(args)
 
     try {
-      val sc = argParser.getSparkConnector.getSparkContext("tile generator")
+      val sc = argParser.getSparkConnector().getSparkContext("tile generator")
       val dataFile = argParser.getStringArgument("s", "The source data file to read")
       val data = sc.textFile(dataFile).map(s => {
         val fields = s.split('\t')

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -27,8 +27,8 @@ package com.oculusinfo.tilegen.examples.datagen
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 import java.awt.geom.Point2D
 
@@ -107,7 +107,7 @@ object LineStarSampleGenerator {
       "The lowest level at which a line will display as continuous, with no breaks.",
       Option(10))
 
-    val sc = argParser.getSparkConnector.getSparkContext("Create sample data for live tile demonstration")
+    val sc = argParser.getSparkConnector().getSparkContext("Create sample data for live tile demonstration")
 
     val linesPerSide = 256 << topLevel
     val linePartitions = if (bottomLevel < 6) 1 else (1 << (bottomLevel-6))

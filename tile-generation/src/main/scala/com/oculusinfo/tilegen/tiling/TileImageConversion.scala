@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -40,8 +40,8 @@ import scala.collection.mutable.{Map => MutableMap}
 
 
 
-import spark._
-import spark.SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
 
 
 
@@ -51,12 +51,11 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.binning.io.TileSerializer
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer
-import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer
+import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
 
@@ -99,7 +98,7 @@ object TileToTextConverter {
         }
 
       // ... spark connection details ...
-      val connector = argParser.getSparkConnector
+      val connector = argParser.getSparkConnector()
 
       val level = argParser.getIntArgument("level", "The level of tile to display")
       val x = argParser.getIntArgument("x", "The x index of the tile to display")
@@ -174,7 +173,7 @@ object TileToImageConverter {
         }
 
       // ... spark connection details ...
-      val connector = argParser.getSparkConnector
+      val connector = argParser.getSparkConnector()
 
       // ... a scale to apply to bin values ...
       val scale = argParser.getStringArgument(
@@ -194,9 +193,9 @@ object TileToImageConverter {
       }
 
       // ... and a list of levels
-      val levels = argParser.getIntListArgument("levels",
-                                                "comma-spearated list of levels, with no spaces",
-                                                ',')
+      val levels = argParser.getIntSeqArgument("levels",
+                                               "comma-spearated list of levels, with no spaces",
+                                               ',')
 
 
       val sc = connector.getSparkContext("Convert tile pyramid to images")
@@ -239,7 +238,7 @@ object TileToImageConverter {
                           source: String,
                           destination: String,
                           scale: (Double, JavaDouble, Double) => Int,
-                          levels: List[Int],
+                          levels: Seq[Int],
                           metaData: TileMetaData): Unit = {
     val levelMins = metaData.levelMins.map(p => (p._1 -> p._2.toDouble)).toMap
     val levelMaxes = metaData.levelMaxes.map(p => (p._1 -> p._2.toDouble)).toMap
@@ -262,7 +261,7 @@ object TileToImageConverter {
                           source: String,
                           destination: String,
                           scale: (Double, JavaDouble, Double) => Int,
-                          levels: List[Int],
+                          levels: Seq[Int],
                           metaData: TileMetaData): Unit = {
     val levelMins = metaData.levelMins.map(p =>
       (p._1 -> p._2.drop("list(".size).dropRight(")".size).split(",").map(_.trim.toDouble))
@@ -302,7 +301,7 @@ extends Serializable {
   def convertTiles (sc: SparkContext,
                     baseLocation: String,
                     destinationLocation: String,
-                    levels: List[Int]): Unit = {
+                    levels: Seq[Int]): Unit = {
 
     val tiles = io.readTileSet(sc, serializer, baseLocation, levels)
     val numTiles = tiles.count()

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -69,9 +69,9 @@ import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TileSerializer;
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer;
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 
 
@@ -423,6 +423,7 @@ public class BinVisualizer extends JFrame {
         _xField.removeAllItems();
         _yField.removeAllItems();
 
+        if (null == level) return;
         int pow2 = 1 << level;
         for (int i=0; i<pow2; ++i) {
             _xField.addItem(i);

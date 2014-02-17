@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -32,21 +32,22 @@ import java.awt.geom.Rectangle2D
 
 import scala.collection.JavaConversions._
 
-import spark._
-import SparkContext._
+import org.apache.spark._
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.binning.io.TileSerializer
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
 import com.oculusinfo.binning.io.impl.HBasePyramidIO
-import com.oculusinfo.binning.io.impl.DoubleAvroSerializer
-import com.oculusinfo.binning.io.impl.DoubleArrayAvroSerializer
-import com.oculusinfo.binning.io.impl.StringArrayAvroSerializer
-import com.oculusinfo.binning.io.impl.StringIntPairArrayAvroSerializer
-import com.oculusinfo.binning.io.impl.BackwardCompatibilitySerializer
+import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 
@@ -100,8 +101,8 @@ trait TileIO extends Serializable {
   def readTileSet[T] (sc: SparkContext,
                       serializer: TileSerializer[T],
 		      baseLocation: String,
-		      levels: List[Int]): RDD[TileData[T]] = {
-    val tileSets: List[RDD[TileIndex]] = levels.map(level => {
+		      levels: Seq[Int]): RDD[TileData[T]] = {
+    val tileSets: Seq[RDD[TileIndex]] = levels.map(level => {
       val range = sc.parallelize(Range(0, 1 << level),
                                  1 << ((level-10) max 0))
       range.cartesian(range).map(p => new TileIndex(level, p._1, p._2))
@@ -294,7 +295,7 @@ object TestTableEquality {
   def main (args: Array[String]): Unit = {
     val argParser = new ArgumentParser(args)
     val tileIO = TileIO.fromArguments(argParser)
-    val sc = argParser.getSparkConnector.getSparkContext("Testing table equality")
+    val sc = argParser.getSparkConnector().getSparkContext("Testing table equality")
 
     val serializerType = args(1)
     val table1: String = args(2)
@@ -319,7 +320,7 @@ object TestTableEquality {
                         serializer: TileSerializer[T],
                         table1: String,
                         table2: String,
-                        levels: List[Int]): Unit = 
+                        levels: Seq[Int]): Unit = 
     compareTables(sc, tileIO, table1, serializer, table2, serializer, levels)
 
   def compareTables[T] (sc: SparkContext,
@@ -328,7 +329,7 @@ object TestTableEquality {
                         serializer1: TileSerializer[T],
                         table2: String,
                         serializer2: TileSerializer[T],
-                        levels: List[Int]): Unit = {
+                        levels: Seq[Int]): Unit = {
     // first check if meta-data is the same
     val metaData1 = tileIO.readMetaData(table1).get
     val metaData2 = tileIO.readMetaData(table2).get

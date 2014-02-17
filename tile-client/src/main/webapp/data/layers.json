@@ -1,9 +1,4 @@
-[
-    {
-        "layer": "julia_-0.8_0.156.x.y.v",
-        "type": "tile",
-        "transform": "linear",
-        "ramp": "ware",
-        "opacity": 0.85
-    }
-]
+{
+    "ServerLayers": [],
+	"ClientLayers": []
+}

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. 
+/*
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -162,4 +162,27 @@ public class AOITilePyramid implements TilePyramid, Serializable {
         return null;
     }
 
+
+
+    @Override
+    public int hashCode () {
+	return (int) Math.round(_minX * 49980419 + _maxX * 54907427 +
+				_minY * 62059399 + _maxY * 67432721);
+    }
+
+    @Override
+    public boolean equals (Object other) {
+	if (this == other) return true;
+	if (null == other) return false;
+	if (!(other instanceof AOITilePyramid)) return false;
+
+	AOITilePyramid that = (AOITilePyramid) other;
+	double epsilon = 1E-12;
+	if (Math.abs(this._minX - that._minX) > epsilon) return false;
+	if (Math.abs(this._maxX - that._maxX) > epsilon) return false;
+	if (Math.abs(this._minY - that._minY) > epsilon) return false;
+	if (Math.abs(this._maxY - that._maxY) > epsilon) return false;
+
+	return true;
+    }
 }
