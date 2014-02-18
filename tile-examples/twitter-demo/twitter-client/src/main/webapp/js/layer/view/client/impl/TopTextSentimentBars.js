@@ -289,9 +289,9 @@ define(function (require) {
                 return that.WHITE_COLOUR;
             });
 
-            this.tagLabel.on('click', function(event) {
+            this.tagLabel.on('mouseup', function(event) {
                 that.onClick(event);
-                return true; // swallow event
+                //return true; // swallow event
             });
 
             this.tagLabel.on('mousemove', function(event) {

@@ -300,9 +300,9 @@ define(function (require) {
             this.tagLabels.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabels.map('font-outline-width').asValue(3);
 
-            this.tagLabels.on('click', function(event) {
+            this.tagLabels.on('mouseup', function(event) {
                 that.onClick(event, event.index[0]);
-                return true; // swallow event
+                //return true; // swallow event
             });
 
             this.tagLabels.on('mousemove', function(event) {
