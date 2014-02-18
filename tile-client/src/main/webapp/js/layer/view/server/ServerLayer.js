@@ -473,6 +473,9 @@ define(function (require) {
                         }
                     );
 
+					// manually set z index of this layer to 0, so it is behind
+					this.map.map.olMap_.setLayerIndex( this.mapLayer[layer].olLayer_, 0 );
+
                     // Apparently we can't set opacity through options, so we 
                     // hand-set it now
                     if (layerSpec && layerSpec.Opacity) {
