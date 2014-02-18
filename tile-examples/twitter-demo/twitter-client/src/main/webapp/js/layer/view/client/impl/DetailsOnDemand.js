@@ -203,19 +203,18 @@ define(function (require) {
 
 
             function lineTemplate( colour, yOffset ) {
-                var line = that.plotLayer.addLayer(aperture.LabelLayer);
-                line.on('click', function() { return true; }); //swallow event
-                line.map('visible').from(function(){return isVisible(this)});
-                line.map('fill').asValue(colour);
-                line.map('label-count').asValue(1);
-                line.map('text-anchor').asValue('middle');
-                line.map('text-anchor-y').asValue('middle');
-                line.map('font-outline-width').asValue(0);
-                line.map('font-size').asValue(12);
-                line.map('text').asValue('..........................................................................');
-                line.map('offset-y').asValue(yOffset-5);
-                line.map('offset-x').asValue(DETAILS_OFFSET_X+that.TILE_SIZE/2);
-                return line;
+
+                var bar = that.plotLayer.addLayer(aperture.BarLayer);
+                bar.on('click', function() { return true; }); //swallow event
+                bar.map('visible').from(function(){return isVisible(this)});
+                bar.map('fill').asValue('#666666');
+                bar.map('orientation').asValue('horizontal');
+                bar.map('bar-count').asValue(24)
+                bar.map('length').asValue(that.TILE_SIZE - that.HORIZONTAL_BUFFER*2);
+                bar.map('width').asValue(1);
+                bar.map('offset-x').asValue(DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
+                bar.map('offset-y').asValue(yOffset-1);
+                return bar;
             }
 
 
@@ -515,12 +514,12 @@ define(function (require) {
             });
 
             // MOST RECENT TWEETS LINES
-            this.recentTweetsLines =  lineTemplate(this.WHITE_COLOUR, 0);
-            this.recentTweetsLines.map('label-count').from( function() {
+            this.recentTweetsLines = lineTemplate(this.WHITE_COLOUR, 0);
+            this.recentTweetsLines.map('bar-count').from( function() {
                 return getRecentTweetsCount(this);
             });
             this.recentTweetsLines.map('offset-y').from( function(index) {
-                return MOST_RECENT + 15 + MOST_RECENT_SPACING*index;
+                return MOST_RECENT + 20 + MOST_RECENT_SPACING*index;
             });
         }
 
