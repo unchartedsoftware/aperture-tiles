@@ -66,8 +66,8 @@ define(function () {
                      * The endpoint locations for Aperture services accessed through the io interface
                      */
                     'aperture.io' : {
-                        'rpcEndpoint' : '%host%/aperture/rpc',
-                        'restEndpoint' : '%host%/bitcoin-demo/rest'
+                        'rpcEndpoint' : '/aperture/rpc',
+                        'restEndpoint' : '/bitcoin-demo/rest'
                     },
 
                     /*
