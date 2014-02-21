@@ -40,10 +40,7 @@ class MavenReference (groupId: String,
       + groupId.split("\\.").mkString("/") + "/" + artifactId + "/"
       + version + "/" + artifactId + "-" + version + ".jar")
     // we have to do some stupid name-mangling on windows
-    val os = System.getProperty("os.name").toLowerCase()
-    if (os.contains("windows"))
-      libLocation = "file:///" + libLocation.replace('\\', '/')
-    libLocation
+    return (new File(libLocation)).toURI().toString()
   }
 }
 
