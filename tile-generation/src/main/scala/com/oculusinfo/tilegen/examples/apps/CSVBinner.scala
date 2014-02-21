@@ -187,7 +187,9 @@ object CSVBinner {
     val tileIO = getTileIO(defaultProperties)
 
     // Run for each real properties file
+    val startTime = System.currentTimeMillis()
     while (argIdx < args.size) {
+      val fileStartTime = System.currentTimeMillis()
       val props = new Properties(defProps)
       val propStream = new FileInputStream(args(argIdx))
       props.load(propStream)
@@ -195,7 +197,12 @@ object CSVBinner {
 
       processDatasetGeneric(DatasetFactory.createDataset(sc, props, true), tileIO)
 
+      val fileEndTime = System.currentTimeMillis()
+      println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
+
       argIdx = argIdx + 1
     }
+    val endTime = System.currentTimeMillis()
+    println("Finished binning all sets in "+((endTime-startTime)/60000.0)+" minutes")
   }
 }
