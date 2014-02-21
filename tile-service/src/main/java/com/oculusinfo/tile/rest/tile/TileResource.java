@@ -38,7 +38,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
-
 import com.google.inject.Inject;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 
@@ -82,9 +81,10 @@ public class TileResource extends ApertureServerResource {
 		try {
 			JSONObject jsonObj = new JSONObject(jsonData);
 			
-			String host = getRequest().getResourceRef().toString();
+			String host = getRequest().getResourceRef().getPath();
+			
 			host = host.substring(0, host.lastIndexOf("layer"));
-
+			
 			JSONObject layerInfo = _service.getLayer(host, jsonObj);
 			
 			return new JsonRepresentation(layerInfo);

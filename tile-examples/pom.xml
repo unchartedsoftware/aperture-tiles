@@ -14,11 +14,11 @@
     <groupId>com.oculusinfo</groupId>
     <version>0.3-SNAPSHOT</version>
   </parent>
-
-  
+	
   <modules>
-    <module>demo-website</module>
-    <module>bitcoin-demo</module>
-    <module>twitter-demo</module>
+	<module>demo-website</module>
+	<module>bitcoin-demo</module>
+	<module>twitter-demo</module>
+	<module>twitter-heatmap</module>
   </modules>
 </project>
