@@ -70,11 +70,8 @@ define(function (require) {
 
             // Initialize the map
             this.map = new aperture.geo.Map({ 
-				id: this.id,
-				options: {
-					numZoomLevels: 13
-					}
-				});
+				id: this.id
+            });
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
 

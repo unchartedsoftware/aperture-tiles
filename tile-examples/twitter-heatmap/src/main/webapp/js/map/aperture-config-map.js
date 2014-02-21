@@ -84,7 +84,7 @@ define(function () {
                                 'projection': 'EPSG:900913',
                                 'displayProjection': 'EPSG:4326',
                                 'units': 'm',
-                                'numZoomLevels': 19,
+                                'numZoomLevels': 9,
                                 'maxExtent': [
                                         -20037500,
                                         -20037500,
