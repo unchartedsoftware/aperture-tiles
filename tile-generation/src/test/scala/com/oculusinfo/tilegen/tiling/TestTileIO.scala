@@ -89,8 +89,8 @@ class TestPyramidIO extends PyramidIO with Serializable {
 		    serializer: TileSerializer[T], 
 		    tiles: JavaIterable[TileIndex]): JavaList[TileData[T]] = {
     tiles.asScala.map(index => {
-      datas(pyramidId).get(index).getOrElse(null)
-    }).toList.asInstanceOf[List[TileData[T]]].asJava
+                        datas.get(pyramidId).map(_.get(index).getOrElse(null)).getOrElse(null)
+                      }).toList.asInstanceOf[List[TileData[T]]].asJava
   }
 
   def getTileStream (pyramidId: String, tile: TileIndex): InputStream = {
