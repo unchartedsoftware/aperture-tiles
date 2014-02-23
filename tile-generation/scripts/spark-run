@@ -53,6 +53,7 @@ addToSparkClasspath com.oculusinfo tile-generation 0.3-SNAPSHOT
 addToSparkClasspath org.apache.hbase hbase-client 0.95.2-cdh5.0.0-beta-1
 addToSparkClasspath org.apache.hbase hbase-protocol 0.95.2-cdh5.0.0-beta-1
 addToSparkClasspath org.apache.hbase hbase-common 0.95.2-cdh5.0.0-beta-1
+addToSparkClasspath org.apache.hbase hbase-server 0.95.2-cdh5.0.0-beta-1
 addToSparkClasspath org.cloudera.htrace htrace-core 2.01
 
 # additional stuff needed to use avro serialization

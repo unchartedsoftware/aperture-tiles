@@ -255,8 +255,8 @@ class LocalTileIO (extension: String) extends TileIO {
 class HBaseTileIO (zookeeperQuorum: String,
                    zookeeperPort: String,
                    hbaseMaster: String) extends TileIO {
-  def getPyramidIO : PyramidIO =
-    new HBasePyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
+	def getPyramidIO : PyramidIO =
+		new HBasePyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
 
 	override def writeTileSet[PT, BT] (pyramider: TilePyramid,
 	                                   baseLocation: String,
@@ -264,6 +264,9 @@ class HBaseTileIO (zookeeperQuorum: String,
 	                                   binDesc: BinDescriptor[PT, BT],
 	                                   name: String = "unknown",
 	                                   description: String = "unknown"): Unit = {
+		// Do any needed initialization
+		getPyramidIO.initializeForWrite(baseLocation)
+
 		val rowIdFromTile: TileIndex => String = index => {
 			val level = index.getLevel()
 			val digits = (math.floor(math.log10(1 << level))+1).toInt;
@@ -273,12 +276,12 @@ class HBaseTileIO (zookeeperQuorum: String,
 		val TILE_QUALIFIER = Array[Byte]()
 
 		// Set up some accumulators to figure out needed metadata
-    val minMaxAccumulable = new LevelMinMaxAccumulableParam[BT](binDesc.min,
-                                                                binDesc.defaultMin,
-                                                                binDesc.max,
-                                                                binDesc.defaultMax)
-    val minMaxAccum = data.context.accumulable(minMaxAccumulable.zero(Map()))(minMaxAccumulable)
-    val tileCount = data.context.accumulator(0)
+		val minMaxAccumulable = new LevelMinMaxAccumulableParam[BT](binDesc.min,
+		                                                            binDesc.defaultMin,
+		                                                            binDesc.max,
+		                                                            binDesc.defaultMax)
+		val minMaxAccum = data.context.accumulable(minMaxAccumulable.zero(Map()))(minMaxAccumulable)
+		val tileCount = data.context.accumulator(0)
 
 		// Turn each tile into a table row
 		val HBaseTiles = data.map(tile =>
@@ -287,7 +290,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 				val level = index.getLevel()
 
 				// Update accumulators
-        tileCount += 1
+				tileCount += 1
 				for (x <- 0 until index.getXBins())
 					for (y <- 0 until index.getYBins())
 						minMaxAccum += (level -> tile.getBin(x, y))
@@ -341,21 +344,21 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 		HBaseTiles.saveAsHadoopDataset(jobConfig)
 
-		// Now that we've written tiles  (therefore actually run our data mapping), 
+		// Now that we've written tiles  (therefore actually run our data mapping),
 		// our accumulators should be set, and we can update our metadata
-    val oldMetaData = readMetaData(baseLocation)
+		val oldMetaData = readMetaData(baseLocation)
 
-    println("Calculating metadata")
-    println("Input tiles: "+tileCount)
+		println("Calculating metadata")
+		println("Input tiles: "+tileCount)
 
-    val sampleTile = data.first.getDefinition()
-    val tileSize = sampleTile.getXBins()
+		val sampleTile = data.first.getDefinition()
+		val tileSize = sampleTile.getXBins()
 
-    val scheme = pyramider.getTileScheme()
-    val projection = pyramider.getProjection()
-    val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
+		val scheme = pyramider.getTileScheme()
+		val projection = pyramider.getProjection()
+		val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
 
-    val minMax = minMaxAccum.value
+		val minMax = minMaxAccum.value
 
 		var metaData = oldMetaData match {
 			case None => {
@@ -373,7 +376,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 				newMetaData
 			}
 		}
-    writeMetaData(baseLocation, metaData)
+		writeMetaData(baseLocation, metaData)
 	}
 }
 
