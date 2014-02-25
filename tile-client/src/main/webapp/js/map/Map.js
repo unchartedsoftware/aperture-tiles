@@ -35,7 +35,6 @@ define(function (require) {
 	
     var Class = require('../class'),
 		Axis =  require('./Axis'),
-        MapConfig = require('./aperture-config-map'),
         Map;
 
 
@@ -46,24 +45,34 @@ define(function (require) {
         init: function (id, spec) {
 
 			var that = this,
+				apertureConfig,
 				mapSpecs,
 				axisSpecs,
-				axisSpec,
-				i;
+				axisSpec;
 		
-			// isolate map and axis specifications from json objects
-			mapSpecs = $.grep(spec, function( element ) {
-				// skip any axis config objects
-				return !(element.hasOwnProperty("AxisConfig"));
-			});
+			apertureConfig = spec.ApertureConfig;
+			mapSpecs = spec.MapConfig;
+			axisSpecs = spec.AxisConfig;
+			
+			// configure aperture
+            aperture.config.provide({
+            	/*
+                 * Set aperture log configuration
+                 */
+                'aperture.log' : apertureConfig['aperture.log'],
+                
+                /*
+                 * The endpoint locations for Aperture services accessed through the io interface
+                 */
+                'aperture.io' : apertureConfig['aperture.io'],
 
-			axisSpecs = $.grep(spec, function( element ) {
-				// skip any non-axis config objects
-				return (element.hasOwnProperty("AxisConfig"));
-			});
-
-			// load map configuration from file
-            MapConfig.loadConfiguration(mapSpecs);
+                /*
+                 * Set the map configuration
+                 */
+                'aperture.map' : {
+                    'defaultMapConfig' : mapSpecs
+                }
+            });
 
             // Map div id
 			this.id = id;
@@ -76,13 +85,19 @@ define(function (require) {
             this.map.all().redraw();
 
 			// Create axes
-			this.axes = [];						
-			for (i=0; i<axisSpecs.length; ++i) {
-				axisSpec = axisSpecs[i].AxisConfig;
-				axisSpec.parentId = this.id;
-				axisSpec.olMap = this.map.olMap_;
-				this.axes.push(new Axis(axisSpec));
-			}
+			this.axes = [];	
+		
+			// create x axis
+			axisSpec = axisSpecs.XAxisConfig;
+			axisSpec.parentId = this.id;
+			axisSpec.olMap = this.map.olMap_;
+			this.axes.push(new Axis(axisSpec));
+			
+			// create y axis
+			axisSpec = axisSpecs.YAxisConfig;
+			axisSpec.parentId = this.id;
+			axisSpec.olMap = this.map.olMap_;
+			this.axes.push(new Axis(axisSpec));
 			
 			// Set resize map callback
 			$(window).resize( function() {
