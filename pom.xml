@@ -89,7 +89,7 @@
     <hbase-version>0.94.2-cdh4.2.0</hbase-version>
     -->
 
-    <aperture-version>1.0.3</aperture-version>
+    <aperture-version>1.0.4</aperture-version>
     <scala-version>2.9.3</scala-version>
     <spark-version>0.8.1-incubating</spark-version>
   </properties>
