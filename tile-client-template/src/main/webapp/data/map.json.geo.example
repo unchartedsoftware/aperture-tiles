@@ -1,8 +1,13 @@
-[	
-	{ "_comment" : [
+{	
+	"_comment" : [
 		"This json configuration file specifies properties of a geo-graphical map tile-based application",
-		"The Google key value specifies base layer map options",
+		"The ApertureConfig key specifies ApertureJS configuration options such as logging and REST endpoints:",
+		"       aperture.log:  see ApertureJS documentation for details on configuring logging",
+		"       aperture.io:",
+		"          restEndpoint  specify the rest endpoint for your application",
+		"The MapConfig key specifies configuration of map layer control and base layer properties",
 		"The AxisConfig keys configure the x and y axis of the map:",
+		"  XAxisConfig and YAxisConfig specify the corresponding axis configuration:",
 		"       title:      axis label text                     ex. Longitude",
 		"       id:         axis identifier                     ex. map-x-axis or map-y-axis",
 		"       min:        minimum axis value",
@@ -42,117 +47,119 @@
 		"                                                       ex. 0.75em",
 		"       axisLabelFontSize:   the font size of the axis label",
 		"                                                       ex. 0.95em"
-    ]},
-    { "Google":  {
-        "options": {
-            "name": "Google Black",
-            "type": "styled",
-            "style": [
-                { "stylers": [ { "invert_lightness": true },
-                                 { "saturation": -100 },
-                                 { "visibility": "simplified" } ] },
-                { "featureType": "landscape.natural.landcover",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "road",
-                  "stylers": [ { "visibility": "on" } ] },
-                { "featureType": "landscape.man_made",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "transit",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "poi",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "administrative.country",
-                  "elementType": "geometry",
-                  "stylers": [ { "visibility": "on" },
-                               { "lightness": -56 } ] },
-                { "elementType": "labels",
-                  "stylers": [ { "lightness": -46 },
-			       { "visibility": "on" } ] }
+    ],
+    "ApertureConfig" : {
+    	"aperture.log" : {
+			"level" : "info",
+        	"appenders" : {
+        		"consoleAppender" : {"level": "info"}
+        	}
+    	},
+    	"aperture.io" : {
+    		"rpcEndpoint" : "/aperture/rpc",
+        	"restEndpoint" : "/tile-client-template/rest"
+    	}
+    },
+    "MapConfig" : {
+    	"options" : {
+    		"numZoomLevels" : 19,
+    		"projection" : "EPSG:900913",
+            "displayProjection" : "EPSG:4326",
+            "units" : "m",
+            "maxExtent" : [
+            	-20037500,
+                -20037500,
+                 20037500,
+                 20037500
             ]
+        },
+        "baseLayer" : {
+        	"Google" : {
+        		"options" : {
+            		"name" : "Google Black",
+            		"type" : "styled",
+            		"style" : [
+                		{ "stylers" : [ { "invert_lightness" : true },
+                                 		{ "saturation" : -100 },
+                                 		{ "visibility" : "simplified" } ] },
+                		{ "featureType" : "landscape.natural.landcover",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "road",
+                  	  	  "stylers" : [ { "visibility" : "on" } ] },
+                		{ "featureType" : "landscape.man_made",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "transit",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "poi",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "administrative.country",
+                  	  	  "elementType" : "geometry",
+                  	  	  "stylers" : [ { "visibility" : "on" },
+                               			{ "lightness" : -56 } ] },
+                		{ "elementType": "labels",
+                  	  	  "stylers": [ 	{ "lightness" : -46 },
+			       						{ "visibility" : "on" } ] }
+            		]
+            	}
+            }
         }
-    }},
-    { "Google": {
-        "options": {
-            "name": "Google Gray",
-            "type": "styled",
-            "style": [
-                { "stylers": [ { "invert_lightness": false },
-                               { "saturation": 0 },
-                               { "visibility": "simplified" } ] },
-                { "featureType": "landscape.natural.landcover",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "road",
-                  "stylers": [ { "visibility": "on" } ] },
-                { "featureType": "landscape.man_made",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "transit",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "poi",
-                  "stylers": [ { "visibility": "off" } ] },
-                { "featureType": "administrative.country",
-                  "elementType": "geometry",
-                  "stylers": [ { "visibility": "on" },
-                               { "lightness": -56 } ] },
-                { "elementType": "labels",
-                  "stylers": [ { "visibility": "on" } ] }
-            ]
-        }
-    }},
-    { "AxisConfig": {
-        "title": "Longitude",
-        "id": "map-x-axis",
-        "min": -180,
-        "max": 180,
-        "intervalSpec": {
-            "type": "fixed",
-            "value": 60,
-            "pivot": 0,
-            "allowScaleByZoom": true,
-            "isMercatorProjected": true
-        },
-        "unitSpec": {
-            "type": "degrees",
-            "decimals": 2,
-            "allowStepDown": false
-        },
-        "position": "bottom",
-        "repeat": true,
-		"majorMarkerLength": 10,
-		"majorMarkerWidth": 1,
-		"majorMarkerColour": "#7E7E7E",
-		"markerLabelColour": "#7E7E7E",
-		"axisLabelColour": "#7E7E7E",
-		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
-		"markerLabelFontSize": "0.75em",
-		"axisLabelFontSize": "0.95em"
-    }},
-    { "AxisConfig": {
-        "title": "Latitude",
-        "id": "map-y-axis",
-        "min": -85.051129,
-        "max": 85.051129,
-        "intervalSpec": {
-            "type": "fixed",
-            "value": 30,
-            "pivot": 0,
-            "allowScaleByZoom": true,
-            "isMercatorProjected": true
-        },
-        "unitSpec": {
-            "type": "degrees",
-            "decimals": 2,
-            "allowStepDown": false
-        },
-        "position": "left",
-        "repeat": false,
-		"majorMarkerLength": 10,
-		"majorMarkerWidth": 1,
-		"majorMarkerColour": "#7E7E7E",
-		"markerLabelColour": "#7E7E7E",
-		"axisLabelColour": "#7E7E7E",
-		"fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
-		"markerLabelFontSize": "0.75em",
-		"axisLabelFontSize": "0.95em"
-    }}
-]
-
+    },
+    "AxisConfig" : {
+    	"XAxisConfig" : {
+        	"title" : "Longitude",
+        	"id" : "map-x-axis",
+        	"min" : -180,
+        	"max" : 180,
+        	"intervalSpec" : {
+            	"type" : "fixed",
+            	"value" : 60,
+            	"pivot" : 0,
+            	"allowScaleByZoom" : true,
+            	"isMercatorProjected" : true
+        	},
+        	"unitSpec" : {
+            	"type" : "degrees",
+            	"decimals" : 2,
+            	"allowStepDown" : false
+        	},
+        	"position" : "bottom",
+        	"repeat" : true,
+			"majorMarkerLength" : 10,
+			"majorMarkerWidth" : 1,
+			"majorMarkerColour" : "#7E7E7E",
+			"markerLabelColour" : "#7E7E7E",
+			"axisLabelColour" : "#7E7E7E",
+			"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			"markerLabelFontSize" : "0.75em",
+			"axisLabelFontSize" : "0.95em"
+    	},
+    	"YAxisConfig" : {
+        	"title" : "Latitude",
+        	"id" : "map-y-axis",
+        	"min" : -85.051129,
+        	"max" : 85.051129,
+        	"intervalSpec" : {
+            	"type" : "fixed",
+            	"value" : 30,
+            	"pivot" : 0,
+            	"allowScaleByZoom" : true,
+            	"isMercatorProjected" : true
+        	},
+        	"unitSpec" : {
+            	"type" : "degrees",
+            	"decimals" : 2,
+            	"allowStepDown" : false
+        	},
+        	"position" : "left",
+        	"repeat" : false,
+			"majorMarkerLength" : 10,
+			"majorMarkerWidth" : 1,
+			"majorMarkerColour" : "#7E7E7E",
+			"markerLabelColour" : "#7E7E7E",
+			"axisLabelColour" : "#7E7E7E",
+			"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			"markerLabelFontSize" : "0.75em",
+			"axisLabelFontSize" : "0.95em"
+    	}
+    }
+}

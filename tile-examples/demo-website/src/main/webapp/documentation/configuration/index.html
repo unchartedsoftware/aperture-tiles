@@ -179,26 +179,31 @@
 						The Tile Client uses ApertureJS services and client side visualization library.  
 						To communicate with the Tile Server, the Tile Client must specify the Aperture
 						services endpoints.  This configuration is specified in 
-						<em>new-pjroject-name/src/main/webapp/js/<strong>aperture-config-map.js</strong></em>.
+						<em>new-project-name/src/main/webapp/data/<strong>map.json</strong></em>.
 						Edit the 'aperture.io' setting specifying the 'restEndpoint' to use the correct  
 						url for the <em>new-tile-project</em>.  For example:
 					</p>
 					
-					<pre class="brush: js; gutter: false;">/*
-* The endpoint locations for Aperture services accessed through the io interface
-*/
-'aperture.io' : {
-    'rpcEndpoint' : '%host%/aperture/rpc',
-    'restEndpoint' : '%host%/new-tile-project/rest'
+					<pre class="brush: js; gutter: false;">"aperture.io" : {
+    "rpcEndpoint" : "%host%/aperture/rpc",
+    "restEndpoint" : "%host%/new-tile-project/rest"
 },</pre>
-					
+					<p>
+						Additional configuration allow customizing properties such as the x and y axis, 
+						max zoom levels allowed, and base layer properties.  The tile-client-template provides
+						example settings for tile-based maps and cross plots.  See documentation in <em>map.json</em> 
+						for further details.
+					</p>
 					<a name="layers"></a>
 					<h3>Server-side Tile Rendering Configuration</h3>
 					<p>
 						The Tile Client allows configuration of multiple layers of tiles that can 
 						be overlaid in the plot or map viewer. These are defined in 
 						<em>new-project-name/src/main/webapp/data/<strong>layers.json</strong></em>.
-						This file will contain 6 editable fields to customize how the tiles are shown. 
+						This configuration file allows specifying serverside and clientside layers.  The former 
+						renders tiles on the server rendering each as image files that are returned to the client.
+						The later returns json data for each tile that a tile client can then render directly.
+						Each server layer contains six editable fields to customize how the tiles are rendered. 
 						The options are: layer, type, transform, ramp, opacity, renderer. A detailed
 						description of each parameter is found below. 
 					</p>
@@ -326,24 +331,26 @@
 						is shown below.
 					</p>	
 					
-					<pre class="brush: js; gutter: false">[
-    {
-       "layer": "my-layer1",
-       "type": "tile",
-       "transform": "linear",
-       "ramp": "ware",
-       "opacity": 0.85,
-       "renderer": "default"
-    },
-    {
-       "layer": "my-layer2",
-       "type": "tile",
-       "transform": "linear",
-       "ramp": "ware",
-       "opacity": 0.85,
-       "renderer": "textscore"
-    }
-]</pre>
+					<pre class="brush: js; gutter: false">{
+	"ServerLayers": [
+		{
+            "layer": "my-layer1",
+            "type": "tile",
+            "transform": "linear",
+            "ramp": "ware",
+            "opacity": 0.85,
+            "renderer": "default"
+        },
+        {
+            "layer": "my-layer2",
+            "type": "tile",
+            "transform": "linear",
+            "ramp": "ware",
+            "opacity": 0.85,
+            "renderer": "textscore"
+        }
+    ]
+}</pre>
 
 					<a name="layers"></a>
 					<h3>Client-side Tile Rendering Configuration</h3>
