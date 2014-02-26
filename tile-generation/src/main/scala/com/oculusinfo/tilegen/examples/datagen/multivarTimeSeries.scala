@@ -32,6 +32,8 @@ import java.util.Date
 import scala.collection.immutable.NumericRange
 import org.apache.velocity.runtime.directive.Foreach
 import scala.util.Random
+import java.io.File
+import java.io.PrintWriter
 
 object MultivarTimeSeries {
 	// Source variable names
@@ -72,28 +74,12 @@ object MultivarTimeSeries {
   }
 
   /**
-   * Generates a time series where each timestamp has a corresponding set of variable values generated
-   * using perlin noise.
-   */
-  private def generateVarData(timePeriod: NumericRange[Long], variables: Seq[String], h: Double, octaves: Int, lacunarity: Double) = {
-		val results = List(variables.mkString("# time,", ",", ""))
-		val timeRange = timePeriod.end - timePeriod.start
-		val offsets = Array.fill(variables.length)(Random.nextDouble);
-		val varData = timePeriod map { timeStamp =>
-		  val noiseVals = for (i <- 0 until variables.length) yield {
-		    Multifractal.fBm( ((timeStamp.toDouble - timePeriod.start) / timeRange) + 0.1, offsets(i), 0.0, h, octaves, lacunarity) 
-		  }
-		  noiseVals.mkString(timeStamp + ",", ",", "")
-		}
-		results ++ varData
-  }
-  
-  /**
    * Spark job main
    */
   def main(args: Array[String]): Unit = {    
     val argParser = new ArgumentParser(args)
     try {
+      argParser.debug
       
     	val fileName = argParser.getStringArgument("output", "Name for generated output files", Some("multivar_data"))
 
@@ -101,7 +87,7 @@ object MultivarTimeSeries {
       val partitions = argParser.getIntArgument("partitions", "Number of partitions to split the data into when generating", Some(4))
   
       val numVariables = argParser.getIntArgument("variables", "Number of variables for each timestamp", Some(10))
-      val variables = generateNames(numVariables, varNames)
+      val variables = generateNames(numVariables, varNames)      
 
       val octaves = argParser.getIntArgument("octaves", "Number of frequences to use in random signal", Some(6))
       val h = argParser.getDoubleArgument("h", "Noise increment value", Some(0.1))
@@ -116,14 +102,37 @@ object MultivarTimeSeries {
       val jobName = "Multi-variable Timeseries Generator"
       val sc = argParser.getSparkConnector().getSparkContext(jobName)
     	
-      val parallelCollection = sc.parallelize(computePartitionRanges(partitions, timeRange))
+      // Create the RDD for spark to operate on.
+      val parallelCollection = sc.parallelize(computePartitionRanges(partitions, timeRange), partitions)
+      
+		  /**
+		   * Generates a time series where each timestamp has a corresponding set of variable values generated
+		   * using perlin noise.
+		   */
+		  val generateVarData = (timeStamp: Long, timeRange: NumericRange[Long], numVars: Int, h: Double, octaves: Int, lacunarity: Double) => {
+				val offsets = Array.fill(numVars)(Random.nextDouble);
+				val noiseVals = for (i <- 0 until numVars) yield {
+					Multifractal.fBm(((timeStamp.toDouble - timeRange.start) / (timeRange.end - timeRange.start)) + 0.1, offsets(i), 0.0, h, octaves, lacunarity) 
+				}
+				noiseVals.mkString(timeStamp + ",", ",", "")		
+		  }
       
       // Run spark parallel job against each time range and save the result to a text file
-      parallelCollection flatMap { generateVarData(_, variables, h, octaves, lacunarity) } saveAsTextFile(fileName)         
+      parallelCollection mapPartitions { timeRangeIter =>
+        val timeRange = timeRangeIter.next()
+        timeRange.iterator map (time => generateVarData(time, timeRange, variables.length, h, octaves, lacunarity))         
+      } saveAsTextFile(fileName)
+      
+      // Dump the var names out since they can't be included in the data file itself
+      val pw = new PrintWriter(fileName + File.separator + "var_names.csv")
+      variables foreach (vars => pw.write(vars mkString ",")) ; pw.close()
+      
       sc.stop()
+      
     } catch {
       case e: MissingArgumentException => {
         println("Argument exception: " + e.getMessage())
+        argParser.usage
       }
     }
   }

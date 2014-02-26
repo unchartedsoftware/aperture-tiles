@@ -63,7 +63,7 @@ object Multifractal {
   }
   
   /**
-   * Generates a multifractal based on perlin noise.  H represent the noise increment, lacuarity is the gap between
+   * Generates a multifractal based on perlin noise.  H represent the noise increment, lacunarity is the gap between
    * frequencies and octaves is the number of frequencies.  Based on C code from Texture and Modeling - A Procedural 
    * Approach 3rd. Ed. 
    */
