@@ -57,22 +57,24 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 public class HBasePyramidIO implements PyramidIO {
     private static final String META_DATA_INDEX      = "metadata";
 
-    private static class HBaseColumn {
+    public static class HBaseColumn {
         byte[] family;
         byte[] qualifier;
         HBaseColumn (byte[] family, byte[] qualifier) {
             this.family = family;
             this.qualifier = qualifier;
         }
+	    public byte[] getFamily () {return family;}
+	    public byte[] getQualifier () {return qualifier;}
     }
 
 
 
     private static final byte[]      EMPTY_BYTES          = new byte[0];
     private static final byte[]      TILE_FAMILY_NAME     = "tileData".getBytes();
-    private static final HBaseColumn TILE_COLUMN          = new HBaseColumn(TILE_FAMILY_NAME, EMPTY_BYTES);
+    public static final HBaseColumn  TILE_COLUMN          = new HBaseColumn(TILE_FAMILY_NAME, EMPTY_BYTES);
     private static final byte[]      METADATA_FAMILY_NAME = "metaData".getBytes();
-    private static final HBaseColumn METADATA_COLUMN      = new HBaseColumn(METADATA_FAMILY_NAME, EMPTY_BYTES);
+    public static final HBaseColumn  METADATA_COLUMN      = new HBaseColumn(METADATA_FAMILY_NAME, EMPTY_BYTES);
 
 
     private Configuration       _config;
@@ -89,13 +91,32 @@ public class HBasePyramidIO implements PyramidIO {
 
 
 
-    private String rowIdFromTile (TileIndex tile) {
+	/**
+	 * Determine the row ID we use in HBase for a given tile index
+	 */
+	public static String rowIdFromTileIndex (TileIndex tile) {
         // Use the minimum possible number of digits for the tile key
         int digits = (int) Math.floor(Math.log10(1 << tile.getLevel()))+1;
         return String.format("%02d,%0"+digits+"d,%0"+digits+"d",
                              tile.getLevel(), tile.getX(), tile.getY());
     }
 
+	/**
+	 * Determine tile index given a row id
+	 */
+	public static TileIndex tileIndexFromRowId (String rowId) {
+		String[] fields = rowId.split(",");
+		return new TileIndex(Integer.parseInt(fields[0]),
+		                     Integer.parseInt(fields[1]),
+		                     Integer.parseInt(fields[2]));
+	}
+
+	/**
+	 * Get the configuration used to connect to HBase.
+	 */
+	public Configuration getConfiguration () {
+		return _config;
+	}
 
 
     /*
@@ -217,7 +238,7 @@ public class HBasePyramidIO implements PyramidIO {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             serializer.serialize(tile, tilePyramid, baos);
 
-            rows.add(addToPut(null, rowIdFromTile(tile.getDefinition()),
+            rows.add(addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
                               TILE_COLUMN, baos.toByteArray()));
         }
         try {
@@ -252,7 +273,7 @@ public class HBasePyramidIO implements PyramidIO {
                                             Iterable<TileIndex> tiles) throws IOException {
         List<String> rowIds = new ArrayList<String>();
         for (TileIndex tile: tiles) {
-            rowIds.add(rowIdFromTile(tile));
+            rowIds.add(rowIdFromTileIndex(tile));
         }
         
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
@@ -263,8 +284,8 @@ public class HBasePyramidIO implements PyramidIO {
         Iterator<TileIndex> indexIterator = tiles.iterator();
 
         while (iData.hasNext()) {
-            Map<HBaseColumn, byte[]> rawResult = iData.next();
-            TileIndex index = indexIterator.next();
+	        Map<HBaseColumn, byte[]> rawResult = iData.next();
+	        TileIndex index = indexIterator.next();
             if (null != rawResult) {
                 byte[] rawData = rawResult.get(TILE_COLUMN);
                 ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
@@ -279,7 +300,7 @@ public class HBasePyramidIO implements PyramidIO {
     @Override
     public InputStream getTileStream (String tableName, TileIndex tile) throws IOException {
         List<String> rowIds = new ArrayList<String>();
-        rowIds.add(rowIdFromTile(tile));
+        rowIds.add(rowIdFromTileIndex(tile));
         
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
         Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();

@@ -71,7 +71,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
     }
 
     @Override
-    public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
+	    public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
 
     	DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>();
     	DataFileStream<GenericRecord> dataFileReader = new DataFileStream<GenericRecord>(stream, reader);
@@ -79,7 +79,10 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
         try {
         	
         	GenericRecord r = dataFileReader.next();
-        	
+
+            int level = (Integer) r.get("level");
+            int xIndex = (Integer) r.get("xIndex");
+            int yIndex = (Integer) r.get("yIndex");
             int xBins = (Integer) r.get("xBinCount");
             int yBins = (Integer) r.get("yBinCount");
                     
@@ -94,7 +97,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
                 data.add(getValue(bin));
                 if (i >= xBins*yBins) break;
             }
-            TileIndex newTileIndex = new TileIndex(index.getLevel(), index.getX(), index.getY(), xBins, yBins);
+            TileIndex newTileIndex = new TileIndex(level, xIndex, yIndex, xBins, yBins);
             TileData<T> newTile = new TileData<T>(newTileIndex, data);
             return newTile;
         } finally {

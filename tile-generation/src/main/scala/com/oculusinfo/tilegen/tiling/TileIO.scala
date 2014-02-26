@@ -27,18 +27,9 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
 
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.awt.geom.Rectangle2D
 
 import scala.collection.JavaConversions._
-
-import org.apache.hadoop.hbase.HBaseConfiguration
-import org.apache.hadoop.hbase.client.Put
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapred.TableOutputFormat
-import org.apache.hadoop.hbase.mapred.TableOutputFormat._
-import org.apache.hadoop.mapred.JobConf
 
 import org.apache.spark._
 import org.apache.spark.SparkContext._
@@ -49,7 +40,6 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
-import com.oculusinfo.binning.io.impl.HBasePyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
@@ -144,13 +134,13 @@ trait TileIO extends Serializable {
 		// Do any needed initialization
 		getPyramidIO.initializeForWrite(baseLocation)
 
-		val baseMinMaxes = Map[Int, (Double, Double)]()
-		// To store min and max bin values
+		// Set up some accumulators to figure out needed metadata
 		val minMaxAccumulable = new LevelMinMaxAccumulableParam[BT](binDesc.min,
 		                                                            binDesc.defaultMin,
 		                                                            binDesc.max,
 		                                                            binDesc.defaultMax)
 		val minMaxAccum = data.context.accumulable(minMaxAccumulable.zero(Map()))(minMaxAccumulable)
+		// And this is just for reporting, because it's basically free and easy
 		val tileCount = data.context.accumulator(0)
 
 		println("Writing tile set from")
@@ -260,142 +250,17 @@ class LocalTileIO (extension: String) extends TileIO {
 		new FileSystemPyramidIO("", extension)
 }
 
-/**
- * Read and write tiles from HBase
- */
-class HBaseTileIO (zookeeperQuorum: String,
-                   zookeeperPort: String,
-                   hbaseMaster: String) extends TileIO {
-	def getPyramidIO : PyramidIO =
-		new HBasePyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
-
-	override def writeTileSet[PT, BT] (pyramider: TilePyramid,
-	                                   baseLocation: String,
-	                                   data: RDD[TileData[BT]],
-	                                   binDesc: BinDescriptor[PT, BT],
-	                                   name: String = "unknown",
-	                                   description: String = "unknown"): Unit = {
-		// Do any needed initialization
-		getPyramidIO.initializeForWrite(baseLocation)
-
-		val rowIdFromTile: TileIndex => String = index => {
-			val level = index.getLevel()
-			val digits = (math.floor(math.log10(1 << level))+1).toInt;
-			("%02d,%0"+digits+"d,%0"+digits+"d").format(level, index.getX(), index.getY())
-		}
-		val TILE_FAMILY = "tileData".getBytes()
-		val TILE_QUALIFIER = Array[Byte]()
-
-		// Set up some accumulators to figure out needed metadata
-		val minMaxAccumulable = new LevelMinMaxAccumulableParam[BT](binDesc.min,
-		                                                            binDesc.defaultMin,
-		                                                            binDesc.max,
-		                                                            binDesc.defaultMax)
-		val minMaxAccum = data.context.accumulable(minMaxAccumulable.zero(Map()))(minMaxAccumulable)
-		val tileCount = data.context.accumulator(0)
-
-		// Turn each tile into a table row
-		val HBaseTiles = data.map(tile =>
-			{
-				val index = tile.getDefinition()
-				val level = index.getLevel()
-
-				// Update accumulators
-				tileCount += 1
-				for (x <- 0 until index.getXBins())
-					for (y <- 0 until index.getYBins())
-						minMaxAccum += (level -> tile.getBin(x, y))
-
-				// Create a put that will write this tile
-				val baos = new ByteArrayOutputStream()
-				binDesc.getSerializer.serialize(tile, pyramider, baos);
-				baos.close
-				baos.flush
-
-				val put = new Put(rowIdFromTile(index).getBytes())
-				put.add(TILE_FAMILY, TILE_QUALIFIER, baos.toByteArray())
-
-				(new ImmutableBytesWritable, put)
-			}
-		)
-
-		val conf = HBaseConfiguration.create();
-		conf.set("hbase.rootdir", "hdfs://hadoop-s1.oculus.local:8020/hbase")
-		conf.setInt("hbase.client.write.buffer", 2097152)
-		conf.setInt("hbase.client.pause", 100)
-		conf.setInt("hbase.client.retries.number", 35)
-		conf.setInt("hbase.client.scanner.caching", 100)
-		conf.setInt("hbase.client.keyvalue.maxsize", 10485760)
-		conf.setInt("hbase.rpc.timeout", 60000)
-		conf.setBoolean("hbase.snapshot.enabled", true)
-		conf.set("hbase.security.authentication", "simple")
-		conf.setInt("zookeeper.session.timeout", 60000)
-		conf.set("zookeeper.znode.parent", "/hbase")
-		conf.set("zookeeper.znode.rootserver", "root-region-server")
-		conf.set("hbase.zookeeper.quorum", "hadoop-s1.oculus.local")
-		conf.setInt("hbase.zookeeper.property.clientPort", 2181)
-		conf.set("hbase.rootdir", "hdfs://hadoop-s1.oculus.local:8020/hbase")
-		conf.setInt("hbase.client.write.buffer", 2097152)
-		conf.setInt("hbase.client.pause", 100)
-		conf.setInt("hbase.client.retries.number", 35)
-		conf.setInt("hbase.client.scanner.caching", 100)
-		conf.setInt("hbase.client.keyvalue.maxsize", 10485760)
-		conf.setInt("hbase.rpc.timeout", 60000)
-		conf.setBoolean("hbase.snapshot.enabled", true)
-		conf.set("hbase.security.authentication", "simple")
-		conf.setInt("zookeeper.session.timeout", 60000)
-		conf.set("zookeeper.znode.parent", "/hbase")
-		conf.set("zookeeper.znode.rootserver", "root-region-server")
-		conf.set("hbase.zookeeper.quorum", "hadoop-s1.oculus.local")
-		conf.setInt("hbase.zookeeper.property.clientPort", 2181)
-
-		val jobConfig = new JobConf(conf, this.getClass)
-		jobConfig.setOutputFormat(classOf[TableOutputFormat])
-		jobConfig.set(TableOutputFormat.OUTPUT_TABLE, baseLocation)
-
-		HBaseTiles.saveAsHadoopDataset(jobConfig)
-
-		// Now that we've written tiles  (therefore actually run our data mapping),
-		// our accumulators should be set, and we can update our metadata
-		val oldMetaData = readMetaData(baseLocation)
-
-		println("Calculating metadata")
-		println("Input tiles: "+tileCount)
-
-		val sampleTile = data.first.getDefinition()
-		val tileSize = sampleTile.getXBins()
-
-		val scheme = pyramider.getTileScheme()
-		val projection = pyramider.getProjection()
-		val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
-
-		val minMax = minMaxAccum.value
-
-		var metaData = oldMetaData match {
-			case None => {
-				new TileMetaData(name, description, tileSize, scheme, projection,
-				                 minMax.keys.min, minMax.keys.max,
-				                 bounds,
-				                 minMax.map(p => (p._1, p._2._1.toString)).toList.sortBy(_._1),
-				                 minMax.map(p => (p._1, p._2._2.toString)).toList.sortBy(_._1))
-			}
-			case Some(metaData) => {
-				var newMetaData = metaData
-				minMax.foreach(mm =>
-					newMetaData = newMetaData.addLevel(mm._1, mm._2._1.toString, mm._2._2.toString)
-				)
-				newMetaData
-			}
-		}
-		writeMetaData(baseLocation, metaData)
-	}
-}
 
 
 
 
 
 object TileSerializerChooser {
+	def fromArguments (argParser: ArgumentParser): TileSerializer[_] =
+		getSerializer(argParser.getStringArgument("serializer",
+		                                          "The type of tile serializer to use",
+		                                          Some("avro-double")))
+
 	def getSerializer (serializerType: String): TileSerializer[_] =
 		serializerType match {
 			case "legacy" => new BackwardCompatibilitySerializer()
