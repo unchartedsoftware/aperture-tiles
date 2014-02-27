@@ -80,6 +80,7 @@ define(function (require) {
             // The relative position within each bin at which visuals will 
             // be drawn
             this.position = {x: 'minX', y: 'centerY'}; //{x: 'centerX', y: 'centerY'};
+            this.isMercatorProjected = true;        // set default to mercator projected
         },
 
 
@@ -375,6 +376,24 @@ define(function (require) {
 
 
         /**
+         * Returns the bin rectangle based on tiledata and bin x/y. Will mercator project
+         * if isMercatorProjected is set to true
+         *
+         * @param tileData The data associated with this tile.
+         * @param bin      The bin x and y values
+         */
+        getBinRect: function(tileData, bin) {
+            var binRect;
+            if (this.isMercatorProjected) {
+                binRect = webPyramid.getBinBoundsMercator(tileData, bin);
+            } else {
+                binRect = webPyramid.getBinBounds(tileData, bin);
+            }
+            return binRect;
+        },
+
+
+        /**
          * Transforms a tile's worth of data into a series of bins of data
          *
          * This can be overridden; most of the result is use-specific - There are,
@@ -419,8 +438,8 @@ define(function (require) {
                     for (x=0; x<tileData.xBinCount; ++x) {
                         bin =  {x: x, y: y};
 
-                        binRect = webPyramid.getBinBounds(tileData, bin);
-
+                        binRect = this.getBinRect(tileData, bin);
+                        
                         binData = {
                             level: tileData.level,
                             binkey: this.createBinKey(tileKey, bin),
@@ -519,7 +538,7 @@ define(function (require) {
                     xBinCount: tileData.xBinCount,
                     yBinCount: tileData.yBinCount
                 };
-            return this.webPyramid.getBinBounds(tile, bin);
+            return binRect = this.getBinRect(tileData, bin);
         }
     });
 
