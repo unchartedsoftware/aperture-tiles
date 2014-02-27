@@ -420,8 +420,12 @@ define(function (require) {
                 } else {
                     // The bounds of the full OpenLayers map, used to determine 
                     // tile coordinates
+                    // Note: these values are not set to full 20037508.342789244 as 
+                    // it produces extra tiles around intended border. This rounded 
+                    // down value results in the intended tile bounds ending at the
+                    // border of the map
                     olBounds = new OpenLayers.Bounds(-20037500, -20037500,
-                                                     20037500, 20037500);
+                                                      20037500, 20037500);
 
                     // Adjust y function if we're displaying a density strip
                     if (layerSpec.isDensityStrip) {
@@ -473,7 +477,11 @@ define(function (require) {
                         }
                     );
 
-					// manually set z index of this layer to 0, so it is behind
+					// manually set z index of this layer to 0, so it is behind client layers
+                    // Note: this does not seem to actually affect the zindex value in the DOM
+                    // but does prevent them from overlapping client layers. In the future it 
+                    // may be worth implementing a more sophisticated system to allow proper 
+                    // client-server inclusive ordering
 					this.map.map.olMap_.setLayerIndex( this.mapLayer[layer].olLayer_, 0 );
 
                     // Apparently we can't set opacity through options, so we 
