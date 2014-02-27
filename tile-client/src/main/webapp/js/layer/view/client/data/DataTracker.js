@@ -538,7 +538,7 @@ define(function (require) {
                     xBinCount: tileData.xBinCount,
                     yBinCount: tileData.yBinCount
                 };
-            return binRect = this.getBinRect(tileData, bin);
+            return this.getBinRect(tile, bin);
         }
     });
 
