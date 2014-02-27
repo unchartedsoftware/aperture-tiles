@@ -83,9 +83,11 @@ object MultivarTimeSeries {
       
     	val fileName = argParser.getStringArgument("output", "Name for generated output files", Some("multivar_data"))
 
-    	val numPoints = argParser.getIntArgument("timestamps", "Number of timestamps to generate", Some(1000))
+      val numPoints = argParser.getLongArgument("timestamps", "Number of timestamps to generate", Some(1000))
       val partitions = argParser.getIntArgument("partitions", "Number of partitions to split the data into when generating", Some(4))
   
+      val numDays = argParser.getIntArgument("days", "Number of days in the time period", Some(90))
+      
       val numVariables = argParser.getIntArgument("variables", "Number of variables for each timestamp", Some(10))
       val variables = generateNames(numVariables, varNames)      
 
@@ -95,10 +97,10 @@ object MultivarTimeSeries {
       
       val startTime = new Date().getTime()
       val cal = new GregorianCalendar()
-      cal.add(Calendar.DAY_OF_MONTH, 30)
+      cal.add(Calendar.DAY_OF_MONTH, numDays)
       val endTime = cal.getTime().getTime()
       val timeRange = (startTime to endTime by (endTime - startTime) / numPoints)
-
+     
       val jobName = "Multi-variable Timeseries Generator"
       val sc = argParser.getSparkConnector().getSparkContext(jobName)
     	
@@ -116,16 +118,15 @@ object MultivarTimeSeries {
 				}
 				noiseVals.mkString(timeStamp + ",", ",", "")		
 		  }
-      
-      // Run spark parallel job against each time range and save the result to a text file
+
+		  // Run spark parallel job against each time range and save the result to a text file
       parallelCollection mapPartitions { timeRangeIter =>
         val timeRange = timeRangeIter.next()
         timeRange.iterator map (time => generateVarData(time, timeRange, variables.length, h, octaves, lacunarity))         
       } saveAsTextFile(fileName)
       
       // Dump the var names out since they can't be included in the data file itself
-      val pw = new PrintWriter(fileName + File.separator + "var_names.csv")
-      variables foreach (vars => pw.write(vars mkString ",")) ; pw.close()
+      sc.parallelize(variables).saveAsTextFile(fileName + File.separator + "varnames")      
       
       sc.stop()
       
