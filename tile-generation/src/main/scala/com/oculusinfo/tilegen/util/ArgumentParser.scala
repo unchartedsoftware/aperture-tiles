@@ -44,7 +44,7 @@ extends Exception(message, cause)
 class ArgumentParser (args: Array[String]) {
   val argsMap = args.sliding(2).filter(_(0).startsWith("-")).map(p =>
     (p(0).toLowerCase() -> p(1))).toMap
-  val argDescriptionsMap = MutableMap[String, (String, String)]()
+  val argDescriptionsMap = MutableMap[String, (String, String, Option[_], Boolean, Boolean)]()
 
 
   def debug: Unit =
@@ -52,11 +52,23 @@ class ArgumentParser (args: Array[String]) {
 
 
   def usage: Unit = {
-    argDescriptionsMap.keySet.toList.sorted.foreach(key => {
-      val (argType, description) = argDescriptionsMap(key)
-      println(key+"\t["+argType+"]")
-      println(prefixDescLines(description, "\t"))
-    })
+	  argDescriptionsMap.keySet.toList.sorted.foreach(key =>
+		  {
+			  val (argType, description, value, defaulted, error) = argDescriptionsMap(key)
+
+			  if (error) {
+				  println(key+"\t["+argType+"] NOT FOUND")
+				  println(prefixDescLines(description, "\t"))
+			  } else {
+				  val defaultedString = if (defaulted) {
+					  "[default]"
+				  } else {
+					  ""
+				  }
+				  println(key+"\t["+argType+"] ("+value.get+defaultedString+")")
+			  }
+		  }
+	  )
   }
 
 
@@ -69,32 +81,42 @@ class ArgumentParser (args: Array[String]) {
                                       argType: String,
                                       conversion: String => T,
                                       default: Option[T]): T = {
-    argDescriptionsMap += key -> (argType, description)
-    val valOpt = argsMap.get("-"+key.toLowerCase())
-    if (valOpt.isEmpty) {
-      if (default.isEmpty) {
-        val message = "Missing argument -"+key+"\n"+prefixDescLines(description, "\t")
-        throw new MissingArgumentException(message)
-      }
-      default.get
-    } else {
-      try {
-        conversion(valOpt.get)
-      } catch {
-        case e: Exception => {
-          println("Bad argument -"+key+": got "+valOpt.get+", expected a "+argType)
-          if (default.isEmpty) {
-            val message = ("Bad argument value for -"+key+" - got "+valOpt.get
-                           +", expected a "+argType+"\n"
-                           +prefixDescLines(description, "\t"))
-            throw new MissingArgumentException(message)
-          } else {
-            println("\tAssuming default value of "+default.get)
-            default.get
-          }
-        }
-      }
-    }
+	  var result: Option[T] = None
+	  var defaulted = false
+	  try {
+		  val valOpt = argsMap.get("-"+key.toLowerCase())
+		  if (valOpt.isEmpty) {
+			  if (default.isEmpty) {
+				  val message = "Missing argument -"+key+"\n"+prefixDescLines(description, "\t")
+				  throw new MissingArgumentException(message)
+			  }
+			  result = Some(default.get)
+		  } else {
+			  try {
+				  result = Some(conversion(valOpt.get))
+			  } catch {
+				  case e: Exception => {
+					  if (default.isEmpty) {
+						  val message = ("Bad argument value for -"+key+" - got "+valOpt.get
+							                 +", expected a "+argType+"\n"
+							                 +prefixDescLines(description, "\t"))
+						  throw new MissingArgumentException(message)
+					  } else {
+						  result = default
+						  defaulted = true
+					  }
+				  }
+			  }
+		  }
+
+		  argDescriptionsMap += key -> (argType, description, result, defaulted, false)
+		  result.get
+	  } catch {
+		  case e: Exception => {
+			  argDescriptionsMap += key -> (argType, description, None, false, true)
+			  throw e
+		  }
+	  }
   }
 
 

@@ -70,6 +70,7 @@ object SparkConnector {
         new MavenReference("org.apache.hbase", "hbase-client", "0.95.2-cdh5.0.0-beta-1"),
         new MavenReference("org.apache.hbase", "hbase-protocol", "0.95.2-cdh5.0.0-beta-1"),
         new MavenReference("org.apache.hbase", "hbase-common", "0.95.2-cdh5.0.0-beta-1"),
+        new MavenReference("org.apache.hbase", "hbase-server", "0.95.2-cdh5.0.0-beta-1"),
         new MavenReference("org.cloudera.htrace", "htrace-core", "2.01")
       )
 }
