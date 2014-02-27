@@ -80,8 +80,16 @@ public class LegendServiceImpl implements LegendService {
 		// For now, commented out. Don't need metadata unless we're rendering labels and need
 		// to know the max frequency.
 		try {
-			JSONObject metadata = getMetadata(layer);
-			JSONObject levelMaximums = metadata.getJSONObject("meta").getJSONObject("levelMaximums");
+			JSONObject metadata = getMetadata(layer).getJSONObject("meta");
+			JSONObject levelMaximums;
+			
+			if (metadata.has("levelMaximums")) {
+				levelMaximums = metadata.getJSONObject("levelMaximums");
+			}
+			else {
+				// backward compatibility with older tile format
+				levelMaximums = metadata.getJSONObject("levelMaxFreq");
+			}
 			String zoomLevelString = Integer.toString(zoomLevel);
 			Object levelMaximumObject = levelMaximums.get(zoomLevelString);
 			
