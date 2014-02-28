@@ -36,10 +36,6 @@ import java.io.File
 import java.io.PrintWriter
 
 object MultivarTimeSeries {
-	// Source variable names
-	private val varNames = Array("Alpha", "Bravo", "Charlie", "Delta", "Echo", "Hotel", "Foxtrot", "Golf",
-			"Hotel", "India", "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo",
-			"Sierra", "Tango", "Uniform", "Victor", "Whiskey", "X-ray", "Yankee", "Zulu")
  
   /**
    * Breaks the input time range up into sub-ranges and returns them as a list.  If the step in the time range is
@@ -89,8 +85,7 @@ object MultivarTimeSeries {
       val numDays = argParser.getIntArgument("days", "Number of days in the time period", Some(90))
       
       val numVariables = argParser.getIntArgument("variables", "Number of variables for each timestamp", Some(10))
-      val variables = generateNames(numVariables, varNames)      
-
+ 
       val octaves = argParser.getIntArgument("octaves", "Number of frequences to use in random signal", Some(6))
       val h = argParser.getDoubleArgument("h", "Noise increment value", Some(0.1))
       val lacunarity = argParser.getDoubleArgument("lacunarity", "Gap between frequences in random signal", Some(2.0))
@@ -109,24 +104,22 @@ object MultivarTimeSeries {
       
 		  /**
 		   * Generates a time series where each timestamp has a corresponding set of variable values generated
-		   * using perlin noise.
+		   * using perlin noise.  The min is computed and added to the entire dataset to ensure positive values.
 		   */
 		  val generateVarData = (timeStamp: Long, timeRange: NumericRange[Long], numVars: Int, h: Double, octaves: Int, lacunarity: Double) => {
 				val offsets = Array.fill(numVars)(Random.nextDouble);
 				val noiseVals = for (i <- 0 until numVars) yield {
 					Multifractal.fBm(((timeStamp.toDouble - timeRange.start) / (timeRange.end - timeRange.start)) + 0.1, offsets(i), 0.0, h, octaves, lacunarity) 
-				}
-				noiseVals.mkString(timeStamp + ",", ",", "")		
+				} 
+				val result = noiseVals map (_ + -noiseVals.foldLeft(noiseVals.head)(Math.min(_,_)))
+				result.mkString(timeStamp + ",", ",", "")		
 		  }
 
 		  // Run spark parallel job against each time range and save the result to a text file
       parallelCollection mapPartitions { timeRangeIter =>
         val timeRange = timeRangeIter.next()
-        timeRange.iterator map (time => generateVarData(time, timeRange, variables.length, h, octaves, lacunarity))         
+        timeRange.iterator map (time => generateVarData(time, timeRange, numVariables, h, octaves, lacunarity))         
       } saveAsTextFile(fileName)
-      
-      // Dump the var names out since they can't be included in the data file itself
-      sc.parallelize(variables).saveAsTextFile(fileName + File.separator + "varnames")      
       
       sc.stop()
       
