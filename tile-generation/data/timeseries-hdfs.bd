@@ -12,7 +12,7 @@ hbase.master=hadoop-s1.oculus.local:60000
 oculus.tileio.type=hbase
 oculus.binning.prefix=test
 oculus.binning.name=timeseries
-oculus.binning.source.location=hdfs://hadoop-s1.oculus.local/xdata/data/timeseries_5E8_300
+oculus.binning.source.location=hdfs://hadoop-s1.oculus.local/xdata/data/timeseries/timeseries_5E8_300
 
 oculus.binning.parsing.separator=,
 oculus.binning.parsing.x.index=0
@@ -20,7 +20,7 @@ oculus.binning.parsing.v.index=1
 
 oculus.binning.xField=x
 oculus.binning.valueField=v
-oculus.binning.levels.0=0,1
+oculus.binning.levels.0=1
 oculus.binning.levels.1=2
 oculus.binning.levels.2=3
 oculus.binning.levels.3=4

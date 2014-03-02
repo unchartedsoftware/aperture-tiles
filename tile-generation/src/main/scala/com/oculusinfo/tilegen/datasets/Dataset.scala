@@ -74,6 +74,8 @@ abstract class Dataset[BT: ClassManifest, PT] {
   def getBins: Int = 256
 
   def getConsolidationPartitions: Option[Int] = None
+  
+  def isDensityStrip: Boolean = false
 
   /**
    * Gets the data associated with this dataset, in a form that is ready for binning

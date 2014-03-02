@@ -270,8 +270,7 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
     val table = pyramidName+"."+xVar+"."+yVar+(if ("count".equals(resultField)) "" else "."+resultField)
 
     binner.debug = debug
-    if (localExtractor.isConstantField(yVar)) binner.densityStrip = true
-
+   
     if (execute) {
       println("Running binner")
       val getSearchRecords = (iter: Iterator[T]) => {
