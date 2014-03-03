@@ -329,6 +329,9 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldEx
   }
 }
 
+object CSVDatasetBase {  
+  val ZERO_STR = "zero"
+}
 
 abstract class CSVDatasetBase (rawProperties: Properties,
 		  tileSize: Int) extends Dataset[Double, JavaDouble] {
@@ -338,7 +341,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 
   private val description = properties.getOptionProperty("oculus.binning.description")
   private val xVar = properties.getOptionProperty("oculus.binning.xField").get
-  private val yVar = properties.getProperty("oculus.binning.yField", "zero")
+  private val yVar = properties.getProperty("oculus.binning.yField", CSVDatasetBase.ZERO_STR)
   private val zVar = properties.getProperty("oculus.binning.valueField", "count")
   private val levels = properties.getSeqProperty("oculus.binning.levels").map(lvlString => {
     lvlString.split(',').map(levelRange => {
@@ -434,6 +437,8 @@ abstract class CSVDatasetBase (rawProperties: Properties,
     else
       new StandardDoubleBinDescriptor
   }
+  
+  override def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
 
 
   class CSVStaticProcessingStrategy (sc: SparkContext, cache: Boolean)

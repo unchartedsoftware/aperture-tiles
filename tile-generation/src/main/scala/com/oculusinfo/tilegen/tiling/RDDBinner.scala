@@ -62,9 +62,8 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
  * @param tileScheme the type of tile pyramid this binner can bin.
  */
 class RDDBinner {
-  var debug: Boolean = false
-  var densityStrip: Boolean = false
-
+  var debug: Boolean = true
+  
 
   /**
    * Fully process a dataset of input records into output tiles written out
@@ -160,7 +159,8 @@ class RDDBinner {
 						 tileScheme: TilePyramid,
 						 levels: Seq[Int],
 						 bins: Int = 256,
-						 consolidationPartitions: Option[Int] = None):
+						 consolidationPartitions: Option[Int] = None,
+						 isDensityStrip: Boolean = false):
   RDD[TileData[BT]] = {
     val mapOverLevels: (Double, Double, PT) => TraversableOnce[((TileIndex, BinIndex), PT)] =
       (x, y, value) => {
@@ -170,7 +170,7 @@ class RDDBinner {
 	  ((tile, bin), value)
 	})
       }
-    processData(data, binDesc, mapOverLevels, bins, consolidationPartitions)
+    processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip)
   }
 
 
@@ -195,7 +195,8 @@ class RDDBinner {
                                           binDesc: BinDescriptor[PT, BT],
 					  datumToTiles: (Double, Double, PT) => TraversableOnce[((TileIndex, BinIndex), PT)],
 					  bins: Int = 256,
-                                          consolidationPartitions: Option[Int] = None):
+                                          consolidationPartitions: Option[Int] = None,
+                                          isDensityStrip: Boolean = false):
   RDD[TileData[BT]] = {
     // We first bin data in each partition into its associated bins
     val partitionBins = data.mapPartitions(iter => {
@@ -219,16 +220,17 @@ class RDDBinner {
     })
 
     // Now, combine by-partition bins into global bins, and turn them into tiles.
-    consolidate(partitionBins, binDesc, consolidationPartitions)
+    consolidate(partitionBins, binDesc, consolidationPartitions, isDensityStrip)
   }
 
 
 
   private def consolidate[PT: ClassManifest, BT] (data: RDD[((TileIndex, BinIndex), PT)],
                                                   binDesc: BinDescriptor[PT, BT],
-                                                  consolidationPartitions: Option[Int]):
+                                                  consolidationPartitions: Option[Int],
+                                                  isDensityStrip: Boolean):
   RDD[TileData[BT]] = {
-    val densityStripLocal = densityStrip
+    val densityStripLocal = isDensityStrip
     val reduced = data.reduceByKey(binDesc.aggregateBins(_, _),
                                    getNumSplits(consolidationPartitions, data)).map(p =>
       (p._1._1, (p._1._2, p._2))
