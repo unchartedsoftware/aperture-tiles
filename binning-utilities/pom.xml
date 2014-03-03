@@ -42,6 +42,15 @@
 
 
   <dependencies>
+
+
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>tile-generation</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
@@ -90,7 +99,21 @@
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.7.2</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.esotericsoftware.kryo</groupId>
+        <artifactId>kryo</artifactId>
+        <version>2.22</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_${scala-version}</artifactId>
+      <version>${spark-version}</version>
+    </dependency>
+
   </dependencies>
+
 
 
   <build>

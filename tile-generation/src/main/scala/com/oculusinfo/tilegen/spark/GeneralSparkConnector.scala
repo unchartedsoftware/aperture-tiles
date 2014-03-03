@@ -25,11 +25,8 @@
  
 package com.oculusinfo.tilegen.spark
 
-
-
 import org.apache.spark.SparkContext
-
-
+import com.esotericsoftware.minlog.Log
 
 class GeneralSparkConnector (master: String,
                              sparkHome: String,
@@ -42,10 +39,17 @@ extends SparkConnector(jars)
 
     val appName = jobName + (if (user.isDefined) "("+user.get+")" else "")
 
+    System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    //System.setProperty("spark.kryo.registrator", "com.oculusinfo.tilegen.spark.SparkRegistrator")
+    System.setProperty("spark.kryo.registrator", "com.oculusinfo.binning.SparkKryoRegistrator")
+
+
     println("Creating spark context")
     println("\tMaster: "+master)
     println("\tJob name: "+appName)
     println("\tHome: "+sparkHome)
+
+    //Log.TRACE();
 
     new SparkContext(master, appName, sparkHome, jarList, null, null)
   }

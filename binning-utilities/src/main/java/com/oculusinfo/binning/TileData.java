@@ -54,7 +54,9 @@ public class TileData<T> implements Serializable {
     private ArrayList<T>      _data;
 
 
-
+    private TileData() {
+        
+    }
     /**
      * Construct a tile data object for a particular tile. All entries are
      * initialized to null.
