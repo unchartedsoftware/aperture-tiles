@@ -77,7 +77,7 @@ extends BinDescriptor[Map[String, TwitterDemoRecord], JavaList[TwitterDemoRecord
     List(max).asJava
   }
 
-  def defaultBinValue: JavaList[TwitterDemoRecord] = new ArrayList()
+  def defaultBinValue: Map[String, TwitterDemoRecord] = Map[String, TwitterDemoRecord]()
 
   def convert (value: Map[String, TwitterDemoRecord]): JavaList[TwitterDemoRecord] =
     value.values.toList.sortBy(-_.getCount()).slice(0, 10).asJava
