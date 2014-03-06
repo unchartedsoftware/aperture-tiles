@@ -55,7 +55,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 
 
 /**
- * This class is the bassis of all (or, at least, nearly all) of the
+ * This class is the basis of all (or, at least, nearly all) of the
  * other binning classes.  This takes an RDD of data and transforms it
  * into a pyramid of tiles.
  *
@@ -244,10 +244,11 @@ class RDDBinner {
         val yLimit = index.getYBins()
         val tile = if (densityStripLocal) new DensityStripData[BT](index)
                    else new TileData[BT](index)
+	    val defaultBinValue = binDesc.convert(binDesc.defaultBinValue)
 
         for (x <- 0 until xLimit) {
           for (y <- 0 until yLimit) {
-            tile.setBin(x, y, binDesc.defaultBinValue)
+            tile.setBin(x, y, defaultBinValue)
           }
         }
 

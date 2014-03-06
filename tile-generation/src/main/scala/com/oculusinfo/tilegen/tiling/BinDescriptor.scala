@@ -69,8 +69,9 @@ trait BinDescriptor[PT, BT] extends Serializable {
    * find the maximum bin value.
    */
   def defaultMax: BT
-  /** Return the default value to be used in unoccupied bins */
-  def defaultBinValue: BT
+
+  /** Return the default value to be used in unoccupied bins, before conversion */
+  def defaultBinValue: PT
 
   /** Convert the processing value to a binning value */
   def convert (value: PT): BT
@@ -86,7 +87,7 @@ class StandardDoubleBinDescriptor extends BinDescriptor[Double, JavaDouble] {
   def defaultMin: JavaDouble = JavaDouble.MAX_VALUE
   def max (a: JavaDouble, b: JavaDouble): JavaDouble = JavaMath.max(a, b)
   def defaultMax: JavaDouble = JavaDouble.MIN_VALUE
-  def defaultBinValue: JavaDouble = javaZero
+  def defaultBinValue: Double = 0.0
   def convert (value: Double): JavaDouble = new JavaDouble(value)
   def getSerializer: TileSerializer[JavaDouble] = new DoubleAvroSerializer()
 }
@@ -143,7 +144,7 @@ class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaLi
   }
   def defaultMin: JavaList[JavaDouble] = _emptyList
   def defaultMax: JavaList[JavaDouble] = _emptyList
-  def defaultBinValue: JavaList[JavaDouble] = _emptyList
+  def defaultBinValue: Seq[Double] = Seq[Double]()
   def convert (value: Seq[Double]): JavaList[JavaDouble] =
     value.map(v => new JavaDouble(v)).toList.asJava
   def getSerializer: TileSerializer[JavaList[JavaDouble]] = new DoubleArrayAvroSerializer()
@@ -184,7 +185,7 @@ class StringScoreBinDescriptor extends BinDescriptor[Map[String, Double],
 
   def defaultMin: JavaList[Pair[String, JavaDouble]] = _emptyList
   def defaultMax: JavaList[Pair[String, JavaDouble]] = _emptyList
-  def defaultBinValue: JavaList[Pair[String, JavaDouble]] = _emptyList
+  def defaultBinValue: Map[String, Double] = Map[String, Double]()
   def convert (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] =
     value
       .mapValues(d => new JavaDouble(d))

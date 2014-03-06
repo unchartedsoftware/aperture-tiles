@@ -194,10 +194,11 @@ class GenericSeriesBinner[T: ClassManifest] (source: DataSource,
         val xLimit = index.getXBins()
         val yLimit = index.getYBins()
         val tile = new TileData[JavaList[JavaDouble]](index)
+	    val defaultBinValue = binDesc.convert(binDesc.defaultBinValue)
 
         for (x <- 0 until xLimit) {
           for (y <- 0 until yLimit) {
-            tile.setBin(x, y, binDesc.defaultBinValue)
+            tile.setBin(x, y, defaultBinValue)
           }
         }
 
