@@ -49,7 +49,7 @@ class PoissonTestSuite extends FunSuite {
 
   test("Standard Double Bin Descriptor") {
     val bd = new StandardDoubleBinDescriptor
-    assert(0.0 == bd.defaultBinValue.doubleValue)
+    assert(0.0 == bd.defaultBinValue)
     assert(1.0 == bd.min(new JavaDouble(1.0),
                          new JavaDouble(2.0)).doubleValue)
     assert(2.0 == bd.max(new JavaDouble(1.0),
@@ -61,7 +61,7 @@ class PoissonTestSuite extends FunSuite {
 
   test("Minimum Double Bin Descriptor") {
     val bd = new MinimumDoubleBinDescriptor
-    assert(0.0 == bd.defaultBinValue.doubleValue)
+    assert(0.0 == bd.defaultBinValue)
     assert(1.0 == bd.min(new JavaDouble(1.0),
                          new JavaDouble(2.0)).doubleValue)
     assert(2.0 == bd.max(new JavaDouble(1.0),
@@ -73,7 +73,7 @@ class PoissonTestSuite extends FunSuite {
 
   test("Maximum Double Bin Descriptor") {
     val bd = new MaximumDoubleBinDescriptor
-    assert(0.0 == bd.defaultBinValue.doubleValue)
+    assert(0.0 == bd.defaultBinValue)
     assert(1.0 == bd.min(new JavaDouble(1.0),
                          new JavaDouble(2.0)).doubleValue)
     assert(2.0 == bd.max(new JavaDouble(1.0),

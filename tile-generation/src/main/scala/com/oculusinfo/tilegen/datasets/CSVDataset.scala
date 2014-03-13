@@ -409,12 +409,14 @@ abstract class CSVDatasetBase (rawProperties: Properties,
     (minX, adjustedMaxX, minY, adjustedMaxY)
   }
 
+  private lazy val axisBounds = getAxisBounds()
+
   def getTilePyramid = {
     val extractor = new CSVFieldExtractor(properties)
     val autoBounds = properties.getBooleanProperty("oculus.binning.projection.autobounds", true).get
     val (minX, maxX, minY, maxY) =
       if (autoBounds) {
-        getAxisBounds()
+	    axisBounds
       } else {
         (0.0, 0.0, 0.0, 0.0)
       }
