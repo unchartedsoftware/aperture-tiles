@@ -29,8 +29,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 
 
@@ -39,8 +42,8 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 
 
 
-    public GenericAvroArraySerializer () {
-		super();
+    public GenericAvroArraySerializer (CodecFactory compressionCodec, TypeDescriptor elementTypeDescription) {
+		super(compressionCodec, new TypeDescriptor(List.class, elementTypeDescription));
 	}
 
 	abstract protected String getEntrySchemaFile ();

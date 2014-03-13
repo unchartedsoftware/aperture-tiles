@@ -45,13 +45,17 @@ import org.apache.avro.io.DatumWriter;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
     private static final long serialVersionUID = 5775555328063499845L;
 
 
-
-    protected GenericAvroSerializer () {
+    private CodecFactory _compressionCodec;
+    private TypeDescriptor _typeDescription;
+    protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
+        _compressionCodec = compressionCodec;
+        _typeDescription = typeDescription;
     }
 
     abstract protected String getRecordSchemaFile ();
@@ -71,7 +75,12 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
     }
 
     @Override
-	    public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
+    public TypeDescriptor getBinTypeDescription () {
+        return _typeDescription;
+    }
+
+    @Override
+	public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
 
     	DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>();
     	DataFileStream<GenericRecord> dataFileReader = new DataFileStream<GenericRecord>(stream, reader);
@@ -134,7 +143,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
         DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
-			dataFileWriter.setCodec(CodecFactory.bzip2Codec());
+			dataFileWriter.setCodec(_compressionCodec);
 			dataFileWriter.create(tileSchema, stream);
 			dataFileWriter.append(tileRecord);
 			dataFileWriter.close();

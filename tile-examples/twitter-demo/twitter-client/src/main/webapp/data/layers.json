@@ -1,27 +1,50 @@
 {
     "ServerLayers": [
+	{
+	    "layer": "twitter.2014-01-02.longitude.latitude",
+	    "type": "tile",
+	    "transform": "log10",
+	    "ramp": "ware",
+	    "opacity": 0.85,
+            "pyramidio": {
+                "type": "hbase",
+                "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                "hbase.zookeeper.port": "2181",
+                "hbase.master": "hadoop-s1.oculus.local:60000"
+            }
+	}
+    ],
+    "ClientLayers": [
+	{
+	    "type": "CarouselLayer",
+	    "views": [
 		{
-			"layer": "twitter.2014-01-02.longitude.latitude",
-			"type": "tile",
-			"transform": "log10",
-			"ramp": "ware",
-			"opacity": 0.85,
-			"renderer": "default"
-		}
-	],
-	"ClientLayers": [
+		    "renderer": "TopTextSentimentBars",
+		    "layer": "twitter.2014-01-02.words.censored",
+                    "pyramidio": {
+                        "type": "hbase",
+                        "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                        "hbase.zookeeper.port": "2181",
+                        "hbase.master": "hadoop-s1.oculus.local:60000"
+                    },
+                    "serializer": {
+                        "type": "[twitterdemorecord]-a"
+                    }
+		},
 		{
-			"type": "CarouselLayer",
-			"views": [
-				{
-					"renderer": "TopTextSentimentBars",
-					"layer": "twitter.2014-01-02.words.censored"
-				},
-				{
-					"renderer": "HashTagsByTime",
-					"layer": "twitter.2014-01-02.words.censored"
-				}
-				]
+		    "renderer": "HashTagsByTime",
+		    "layer": "twitter.2014-01-02.words.censored",
+                    "pyramidio": {
+                        "type": "hbase",
+                        "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                        "hbase.zookeeper.port": "2181",
+                        "hbase.master": "hadoop-s1.oculus.local:60000"
+                    },
+                    "serializer": {
+                        "type": "[twitterdemorecord]-a"
+                    }
 		}
+	    ]
+	}
     ]
 }

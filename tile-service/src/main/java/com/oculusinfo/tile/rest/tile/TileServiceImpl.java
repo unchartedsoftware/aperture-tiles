@@ -29,12 +29,13 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -44,14 +45,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
-import com.oculusinfo.tile.util.AvroJSONConverter;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
-import com.oculusinfo.tile.rendering.ImageRendererFactory;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.tile.rendering.RenderParameterFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
-import com.oculusinfo.tile.util.JsonUtilities;
+import com.oculusinfo.tile.util.AvroJSONConverter;
 
 /**
  * @author dgray
@@ -59,48 +60,76 @@ import com.oculusinfo.tile.util.JsonUtilities;
  */
 @Singleton
 public class TileServiceImpl implements TileService {
-
+    private static final Logger _logger = LoggerFactory.getLogger(TileServiceImpl.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
-	
-	private Map<String, JSONObject> _metadataCache = 
-			Collections.synchronizedMap(new HashMap<String, JSONObject>());
-	
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
 
-	private Map<UUID, JSONObject> _uuidToOptionsMap = Collections.synchronizedMap(new HashMap<UUID, JSONObject>());
-	private boolean _debug = false;
 	
-	@Inject
-	private PyramidIO _pyramidIo;
+    private Map<String, JSONObject> _metadataCache;
+    private Map<UUID, JSONObject>   _uuidToOptionsMap;
+    private Map<String, UUID>       _latestIDMap;
 
-	TileServiceImpl () {
+    @Inject
+    private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+    @Inject
+    private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
+    @Inject
+    private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
+
+    public TileServiceImpl () {
+	    _metadataCache = Collections.synchronizedMap(new HashMap<String, JSONObject>());
+	    _uuidToOptionsMap = Collections.synchronizedMap(new HashMap<UUID, JSONObject>());
+	    _latestIDMap = Collections.synchronizedMap(new HashMap<String, UUID>());
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+     * Returns an uninitialized render parameter factory
+     */
+    private RenderParameterFactory getParameterFactory () throws ConfigurationException {
+        return new RenderParameterFactory(_pyramidIOFactoryProvider,
+                                          _serializationFactoryProvider,
+                                          _rendererFactoryProvider, null,
+                                          new ArrayList<String>());
+    }
+
+    public JSONObject getLayerOptions (String layer) {
+        if (!_latestIDMap.containsKey(layer)) return null;
+        return _uuidToOptionsMap.get(_latestIDMap.get(layer));
+    }
+
+    /* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getLayer(String)
 	 */
 	public JSONObject getLayer(String hostUrl, JSONObject options) {
 		try {
-			String layer = options.getString("layer");
-			PyramidMetaData metadata = getMetadata(layer);
-			JSONObject result = new JSONObject();
-		
-			String[] names = JSONObject.getNames(metadata.getRawData());
-			result = new JSONObject(metadata.getRawData(), names);
 			
 			UUID id = UUID.randomUUID();
+            String layer = options.getString("layer");
 			_uuidToOptionsMap.put(id, options);
-			result.put("layer", layer);
+			_latestIDMap.put(layer, id);
+
+			// Determine the pyramidIO, so we can get the metaData
+			RenderParameterFactory factory = getParameterFactory();
+            factory.readConfiguration(options);
+            PyramidIO pyramidIO = factory.getNewGood(PyramidIO.class);
+            PyramidMetaData metadata = getMetadata(layer, pyramidIO);
+
+            // Construct our return object
+            String[] names = JSONObject.getNames(metadata.getRawData());
+            JSONObject result = new JSONObject(metadata.getRawData(), names);
+
+            result.put("layer", layer);
 			result.put("id", id);
 			result.put("tms", hostUrl + "tile/" + id.toString() + "/");
 			result.put("apertureservice", "/tile/" + id.toString() + "/");
 
-			TileDataImageRenderer renderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
-
+            TileDataImageRenderer renderer = factory.getNewGood(TileDataImageRenderer.class);
 			result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
+
 			System.out.println("UUID Count after "+layer+": " + _uuidToOptionsMap.size());
 			return result;
-			
+		} catch (ConfigurationException e) {
+            _logger.warn("Configuration exception trying to apply layer parameters to json object.", e);
+            return new JSONObject();
 		} catch (JSONException e) {
 			_logger.warn("Failed to apply layer parameters to json object.", e);
 			return new JSONObject();
@@ -112,99 +141,59 @@ public class TileServiceImpl implements TileService {
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
 	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y) {
-		PyramidMetaData metadata = getMetadata(layer);
-
-		// DEFAULTS
-		String rampName = "ware";
-		ColorRampParameter rampParams = null;
-		Object transformParams = null;
-
-		String renderer = "default";
-		int rangeMin = 0;
-		int rangeMax = 100;
-		int currentImage = 0;
+		int width = 256;
+		int height = 256;
 		JSONObject options = null;
-		
-		if(id != null){
-			// Get rendering options
-			options = _uuidToOptionsMap.get(id);
+        BufferedImage bi = null;
 
-			try {
-				Object rampObj = options.get("ramp");
-				rampParams = new ColorRampParameter(rampObj);
-			} catch (JSONException e2) {
-				_logger.info("No ramp specified for tile request - using default '" + rampName + "'.");
-			}
-			
-			//make sure the colour ramp parameter has been created
-			if (rampParams == null) {
-				rampParams = new ColorRampParameter(rampName);
-			}
-			
-			try {
-				transformParams = options.get("transform");
-			} catch (JSONException e2) {
-				_logger.info("No transform specified for tile request - using default.");
-				transformParams = ValueTransformerFactory.DEFAULT_TRANSFORM_NAME;
-			}
-
-			try {
-				JSONArray legendRange = options.getJSONArray("legendrange");
-				rangeMin = legendRange.getInt(0);
-				rangeMax = legendRange.getInt(1);
-			} catch (JSONException e3) {
-				_logger.info("No range specified for tile request - using default.");
-			}
-	
-			// "currentImage" is the index of an image in a series. e.g. a tile containing a time-series.
-			try {
-				currentImage = options.getInt("currentImage");
-			} catch (JSONException e4) {
-				_logger.info("No current image specified - using default");
-			}
-		} else {
-			options = new JSONObject();
-		}
-		
-		try {
-			renderer = options.getString("renderer");
-		} catch (JSONException e2) {
-			_logger.info("No renderer specified for tile request - using metadata.");
-			try {
-				renderer = metadata.getRawData().getString("renderer");
-				options.put("renderer", renderer);
-			} catch (JSONException e) {
-				_logger.info("No renderer specified in metadata - using default.");
-			}
-		}
-
-		int dimension = 256;
-		String minimumValue = "0";  //FIXME: need to get the minimum from the metadata
-		String maximumValue = metadata.getLevelMaximum(zoomLevel);
+        try {
+    		RenderParameterFactory factory = getParameterFactory();
+    
+    		if (id != null){
+    			// Get rendering options
+    			options = _uuidToOptionsMap.get(id);
+    			factory.readConfiguration(options);
+    		} else {
+    		    factory.readConfiguration(new JSONObject());
+    		}
+    
+    		RenderParameter parameters = factory.getNewGood(RenderParameter.class);
+    		PyramidIO pyramidIO = factory.getNewGood(PyramidIO.class);
+    
+    		// Fix up legend range if necessary
+    		List<?> legendRange = parameters.getObject(RenderParameterFactory.LEGEND_RANGE.getName(), List.class);
+    		if (null == legendRange || legendRange.size() < 2) {
+    		    parameters.setInt("rangeMin", 0);
+    		    parameters.setInt("rangeMax", 100);
+    		} else {
+                parameters.setInt("rangeMin", (Integer) legendRange.get(0));
+                parameters.setInt("rangeMax", (Integer) legendRange.get(1));
+    		}
+    
+    		// Record image dimensions in case of error. 
+    		width = parameters.getOutputWidth();
+    		height = parameters.getOutputHeight();
+    
+            // Fix up level minimums and maximums according to the current level
+    		PyramidMetaData metadata = getMetadata(parameters.getAsString(RenderParameterFactory.LAYER_NAME.getName()), pyramidIO);
+    		parameters.setString(RenderParameterFactory.LEVEL_MINIMUMS.getName(),
+    		                     metadata.getLevelMinimum(zoomLevel));
+            parameters.setString(RenderParameterFactory.LEVEL_MAXIMUMS.getName(),
+                                 metadata.getLevelMaximum(zoomLevel));
+    
+            // Finally, set up the tile coordinate
+            parameters.setObject(RenderParameterFactory.TILE_COORDINATE.getName(), new TileIndex(zoomLevel, (int)x, (int)y));
 
 
-		BufferedImage bi;
+		    TileDataImageRenderer tileRenderer = factory.getNewGood(TileDataImageRenderer.class);
 
-		TileDataImageRenderer tileRenderer = ImageRendererFactory.getRenderer(options, _pyramidIo);
-		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
-		
-		RenderParameter renderParam = new RenderParameter(JsonUtilities.jsonObjToMap(options));
-		renderParam.setObject("rampType", rampParams);
-		renderParam.setString("layer", layer);
-		renderParam.setObject("transform", transformParams);
-		renderParam.setInt("rangeMin", rangeMin);
-		renderParam.setInt("rangeMax", rangeMax);
-		renderParam.setOutputWidth(dimension);
-		renderParam.setOutputHeight(dimension);
-		renderParam.setString("levelMinimums", minimumValue);
-		renderParam.setString("levelMaximums", maximumValue);
-		renderParam.setInt("currentImage", currentImage);
-		renderParam.setObject("tileCoordinate", tileCoordinate);
-		
-		bi = tileRenderer.render(renderParam);
-		
+		    bi = tileRenderer.render(parameters);
+        } catch (ConfigurationException e) {
+            _logger.info("No renderer specified for tile request.");
+        }
+
 		if (bi == null){
-			bi = new BufferedImage(dimension, dimension, BufferedImage.TYPE_INT_ARGB);
+            bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = bi.createGraphics();
 			g.setColor(COLOR_BLANK);
 			g.fillRect(0, 0, 256, 256);
@@ -212,16 +201,7 @@ public class TileServiceImpl implements TileService {
 			//g.drawLine(1, 1, 254, 254);
 			g.dispose();
 		}
-		
-		if(_debug){
-			Graphics2D g = bi.createGraphics();
-			g.setColor(Color.white);
-			g.fillRect(12, 3, 100, 15);
-			g.setColor(Color.black);
-			g.drawString("x = " + x + ", y = " + y, 15, 15);
-			g.dispose();
-		}
-		
+
 		return bi;
 	}
 
@@ -229,12 +209,22 @@ public class TileServiceImpl implements TileService {
 	public JSONObject getTileObject(UUID id, String layer, int zoomLevel, double x, double y) {
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
 		try {
-    		InputStream tile = _pyramidIo.getTileStream(layer, tileCoordinate);
+            RenderParameterFactory factory = getParameterFactory();
+            if (id != null){
+                // Get rendering options
+                factory.readConfiguration(_uuidToOptionsMap.get(id));
+            } else {
+                factory.readConfiguration(new JSONObject());
+            }
+		    PyramidIO pyramidIO = factory.getNewGood(PyramidIO.class);
+    		InputStream tile = pyramidIO.getTileStream(layer, tileCoordinate);
     		if (null == tile) return null;
     		return AvroJSONConverter.convert(tile);
 		} catch (IOException e) {
 		    _logger.warn("Exception getting tile for {}", tileCoordinate, e);
 		} catch (JSONException e) {
+            _logger.warn("Exception getting tile for {}", tileCoordinate, e);
+        } catch (ConfigurationException e) {
             _logger.warn("Exception getting tile for {}", tileCoordinate, e);
         }
 		return null;
@@ -245,18 +235,20 @@ public class TileServiceImpl implements TileService {
 	 * @param pyramidIo 
 	 * @return
 	 */
-	private PyramidMetaData getMetadata(String layer) {
-		JSONObject metadata = _metadataCache.get(layer);
-		if(metadata == null){
-			try {
-				String s = _pyramidIo.readMetaData(layer);
+	private PyramidMetaData getMetadata (String layer, PyramidIO pyramidIO) {
+        try {
+            JSONObject metadata = _metadataCache.get(layer);
+            if (metadata == null){
+				String s = pyramidIO.readMetaData(layer);
 				metadata = new JSONObject(s);
 				_metadataCache.put(layer, metadata);
-			} catch (Exception e) {
-				_logger.error("Metadata file for layer '" + layer + "' is missing or corrupt.");
-				_logger.debug("Metadata error: ", e);
-			}
-		}
-		return new PyramidMetaData(metadata);
+            }
+            return new PyramidMetaData(metadata);
+		} catch (JSONException e) {
+		    _logger.error("Metadata file for layer is missing or corrupt: "+layer, e);
+        } catch (IOException e) {
+            _logger.error("Couldn't read metadata: "+layer, e);
+        }
+        return new PyramidMetaData(new JSONObject());
 	}
 }

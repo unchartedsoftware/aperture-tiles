@@ -34,6 +34,7 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.avro.file.CodecFactory;
 import org.junit.Test;
 
 import com.oculusinfo.binning.impl.AOITilePyramid;
@@ -116,7 +117,7 @@ public class SerializationTests {
             }
         }
         PyramidIO io = new TestPyramidIO();
-        TileSerializer<Double> serializer = new DoubleAvroSerializer();
+        TileSerializer<Double> serializer = new DoubleAvroSerializer(CodecFactory.nullCodec());
         WebMercatorTilePyramid tilePyramid = new WebMercatorTilePyramid();
         io.writeTiles(".", tilePyramid, serializer, Collections.singleton(tile));
 
@@ -140,7 +141,7 @@ public class SerializationTests {
             }
         }
         PyramidIO io = new TestPyramidIO();
-        TileSerializer<List<Double>> serializer = new DoubleArrayAvroSerializer();
+        TileSerializer<List<Double>> serializer = new DoubleArrayAvroSerializer(CodecFactory.nullCodec());
         WebMercatorTilePyramid tilePyramid = new WebMercatorTilePyramid();
         io.writeTiles(".", tilePyramid, serializer, Collections.singleton(tile));
 
@@ -167,7 +168,7 @@ public class SerializationTests {
             }
         }
         PyramidIO io = new TestPyramidIO();
-        TileSerializer<List<String>> serializer = new StringArrayAvroSerializer();
+        TileSerializer<List<String>> serializer = new StringArrayAvroSerializer(CodecFactory.nullCodec());
         WebMercatorTilePyramid tilePyramid = new WebMercatorTilePyramid();
         io.writeTiles(".", tilePyramid, serializer, Collections.singleton(tile));
 

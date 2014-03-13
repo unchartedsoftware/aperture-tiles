@@ -33,6 +33,8 @@ import java.util.ArrayList
 
 import scala.collection.JavaConverters._
 
+import org.apache.avro.file.CodecFactory
+
 import com.oculusinfo.binning.io.serialization.TileSerializer
 
 import com.oculusinfo.tilegen.tiling.BinDescriptor
@@ -77,10 +79,10 @@ extends BinDescriptor[Map[String, TwitterDemoRecord], JavaList[TwitterDemoRecord
     List(max).asJava
   }
 
-  def defaultBinValue: JavaList[TwitterDemoRecord] = new ArrayList()
+  def defaultBinValue: Map[String, TwitterDemoRecord] = Map[String, TwitterDemoRecord]()
 
   def convert (value: Map[String, TwitterDemoRecord]): JavaList[TwitterDemoRecord] =
     value.values.toList.sortBy(-_.getCount()).slice(0, 10).asJava
 
-  def getSerializer: TileSerializer[JavaList[TwitterDemoRecord]] = new TwitterDemoAvroSerializer
+  def getSerializer: TileSerializer[JavaList[TwitterDemoRecord]] = new TwitterDemoAvroSerializer(CodecFactory.bzip2Codec())
 }

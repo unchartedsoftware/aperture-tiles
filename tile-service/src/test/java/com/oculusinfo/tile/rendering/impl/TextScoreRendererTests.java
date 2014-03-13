@@ -42,14 +42,18 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import org.apache.avro.file.CodecFactory;
+
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.tile.rendering.RenderParameter;
 import com.oculusinfo.tile.rendering.color.ColorRampParameter;
+import com.oculusinfo.tile.rendering.color.impl.WareColorRamp;
 
 /**
  * Manual, visual test of text score tile rendering.  This is not an automated test.
@@ -84,7 +88,9 @@ public class TextScoreRendererTests {
 		final TestPanel panel = new TestPanel();
 		frame.getContentPane().add(panel);
 		TestPyramidIO pio = new TestPyramidIO();
-		final TopTextScoresImageRenderer renderer = new TopTextScoresImageRenderer(pio);
+        final TopTextScoresImageRenderer renderer = new TopTextScoresImageRenderer(pio,
+                                                                                   new StringDoublePairArrayAvroSerializer(CodecFactory.nullCodec()),
+                                                                                   new WareColorRamp(false, 255));
 		JMenuBar menuBar = new JMenuBar();
 		JMenu menu = new JMenu("actions");
 		menu.add(new JMenuItem(new AbstractAction("reload") {

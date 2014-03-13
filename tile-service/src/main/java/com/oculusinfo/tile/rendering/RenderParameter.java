@@ -54,25 +54,25 @@ public class RenderParameter {
 	
 	
 	public int getOutputWidth() {
-		return getInt("outputWidth");
+		return getInt(RenderParameterFactory.OUTPUT_WIDTH.getName());
 	}
 
 
 
 	public void setOutputWidth(int outputWidth) {
-		setInt("outputWidth", outputWidth);
+		setInt(RenderParameterFactory.OUTPUT_WIDTH.getName(), outputWidth);
 	}
 
 
 
 	public int getOutputHeight() {
-		return getInt("outputHeight");
+		return getInt(RenderParameterFactory.OUTPUT_HEIGHT.getName());
 	}
 
 
 
 	public void setOutputHeight(int outputHeight) {
-		setInt("outputHeight", outputHeight);
+		setInt(RenderParameterFactory.OUTPUT_HEIGHT.getName(), outputHeight);
 	}
 
 

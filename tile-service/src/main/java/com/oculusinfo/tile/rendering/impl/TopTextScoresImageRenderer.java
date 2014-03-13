@@ -40,14 +40,12 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.tile.rendering.RenderParameter;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 
 /**
  * A server side to render Map<String, Double> (well, technically,
@@ -62,13 +60,30 @@ import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
 
+	// Best we can do here :-(
+	@SuppressWarnings({"unchecked", "rawtypes"})
+    public static Class<List<Pair<String, Double>>> getRuntimeBinClass () {
+	    return (Class)List.class;
+	}
+    public static TypeDescriptor getRuntimeTypeDescriptor () {
+        return new TypeDescriptor(List.class,
+                                  new TypeDescriptor(Pair.class,
+                                                     new TypeDescriptor(String.class),
+                                                     new TypeDescriptor(Double.class)));
+    }
 
 
-	private PyramidIO _pyramidIo;
-	private TileSerializer<List<Pair<String, Double>>> _serializer;
-	public TopTextScoresImageRenderer (PyramidIO pyramidIo) {
+
+    private PyramidIO                                  _pyramidIo;
+    private TileSerializer<List<Pair<String, Double>>> _serializer;
+    private ColorRamp                                  _colorRamp;
+
+    public TopTextScoresImageRenderer (PyramidIO pyramidIo,
+                                       TileSerializer<List<Pair<String, Double>>> serializer,
+                                       ColorRamp colorRamp) {
 		_pyramidIo = pyramidIo;
-		_serializer = new StringDoublePairArrayAvroSerializer();
+		_serializer = serializer;
+		_colorRamp = colorRamp;
 	}
 
 	private void drawScoredText (Graphics2D g, Pair<String, Double> textScore, double offsetFromCenter,
@@ -118,7 +133,6 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 			String layer = parameter.getString("layer");
 			
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 64);
 
 			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(parameter.getObject("tileCoordinate", TileIndex.class)));
 			if (tileDatas.isEmpty()) {
@@ -168,7 +182,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 						for (int i=0; i<n; ++i) {
 							double offset = (2*i + 1 - n) / 2.0;
 							drawScoredText(g, cellData.get(toDraw[i]), offset,
-									       xMin, xMax, yMin, yMax, rowHeight, barHeight, padding, ramp, scaleVal);
+									       xMin, xMax, yMin, yMax, rowHeight, barHeight, padding, _colorRamp, scaleVal);
 						}
 					}
 				}

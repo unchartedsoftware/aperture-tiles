@@ -55,5 +55,6 @@ public interface TileService {
 	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y);
 
 	public JSONObject getTileObject (UUID fromString, String layer, int zoomLevel, double x, double y);
-	
+
+	public JSONObject getLayerOptions (String layer);
 }

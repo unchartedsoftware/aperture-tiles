@@ -33,6 +33,7 @@ import java.io.Serializable;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 
 
@@ -51,8 +52,35 @@ import com.oculusinfo.binning.TileData;
  *            knows how to handle.
  */
 public interface TileSerializer<T> extends Serializable {
+    /**
+     * Get a description of the type of data read from and written to bins in
+     * tiles by this serializer, in a format comparable, even accounting for
+     * generics, with other sources.
+     * 
+     * @return A fully exploded version of the bin type associated with this
+     *         serializer, accounting for all generics.
+     */
+    public TypeDescriptor getBinTypeDescription ();
+
+    /**
+     * Read a tile
+     * 
+     * @param index The tile to read
+     * @param rawData A stream containing the tile data
+     * @return The tile
+     * @throws IOException
+     */
     public TileData<T> deserialize (TileIndex index, InputStream rawData) throws IOException;
 
+    /**
+     * Write a tile
+     * 
+     * @param data The tile to write
+     * @param tilePyramid The tile pyramid describing the pyramid scheme in
+     *            which this tile falls
+     * @param ouput A raw output stream to which to write the tile
+     * @throws IOException
+     */
     public void serialize (TileData<T> data, TilePyramid tilePyramid,
                            OutputStream ouput) throws IOException;
 }

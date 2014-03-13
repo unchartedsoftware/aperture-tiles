@@ -47,12 +47,13 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.tile.rendering.RenderParameterFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.util.GraphicsUtilities;
 import com.oculusinfo.tile.rendering.filter.StackBlurFilter;
+import com.oculusinfo.tile.util.GraphicsUtilities;
 
 /**
  * An image renderer that works off of tile grids, but instead of rendering
@@ -61,21 +62,28 @@ import com.oculusinfo.tile.rendering.filter.StackBlurFilter;
  * @author  dgray
  */
 public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
-	private  Font FONT = new Font("Tahoma", Font.PLAIN, 13);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DoublesStatisticImageRenderer.class);
+    private static final Font   FONT   = new Font("Tahoma", Font.PLAIN, 13);
+
+
+
+    public static Class<Double> getRuntimeBinClass () {
+        return Double.class;
+    }
+    public static TypeDescriptor getRuntimeTypeDescriptor () {
+        return new TypeDescriptor(Double.class);
+    }
 	
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
-	
-	private PyramidIO _pyramidIo;
+
+
+    private PyramidIO _pyramidIo;
 	private TileSerializer<Double> _serializer;
 
 
-	public DoublesStatisticImageRenderer(PyramidIO pyramidIo) {
+
+	public DoublesStatisticImageRenderer(PyramidIO pyramidIo, TileSerializer<Double> serializer) {
 		_pyramidIo = pyramidIo;
-		_serializer = createSerializer();
-	}
-	
-	protected TileSerializer<Double> createSerializer() {
-		return new DoubleAvroSerializer();
+		_serializer = serializer;
 	}
 
 	/* (non-Javadoc)
@@ -91,15 +99,15 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 		try {
 			bi = GraphicsUtilities.createCompatibleTranslucentImage(parameter.getOutputWidth(), parameter.getOutputWidth());
 		
-			tileIndex = parameter.getObject("tileCoordinate", TileIndex.class);
-			layer = parameter.getAsString("layer");
-			lineNumber = parameter.getAsIntOrElse("lineNumber", 0);
+			tileIndex = parameter.getObject(RenderParameterFactory.TILE_COORDINATE.getName(), TileIndex.class);
+			layer = parameter.getAsString(RenderParameterFactory.LAYER_NAME.getName());
+			lineNumber = parameter.getAsInt(RenderParameterFactory.LINE_NUMBER.getName());
 			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(layer,
 					_serializer, Collections.singleton(tileIndex));
 			
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile " + tileIndex + " for layer " + layer);
+			    LOGGER.info("Missing tile " + tileIndex + " for layer " + layer);
 			    return null;
 			}
 
@@ -138,8 +146,8 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			drawTextGlow(bi, text, 5, 10 + (20*lineNumber), FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + layer + ":" + tileIndex);
-			_logger.debug("Tile error: ", e);
+			LOGGER.debug("Tile is corrupt: " + layer + ":" + tileIndex);
+			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}
 		return bi;

@@ -30,6 +30,7 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.avro.file.CodecFactory;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
@@ -72,7 +73,7 @@ public class HBaseAvroPyramidIOTest {
 	public void writeReadAvroRoundTripTest () {
 	    PyramidIO io = new TestPyramidIO();
 	    TilePyramid pyramid = new AOITilePyramid(0, 256, 0, 256);
-	    TileSerializer<Integer> serializer = new IntegerAvroSerializer();
+	    TileSerializer<Integer> serializer = new IntegerAvroSerializer(CodecFactory.nullCodec());
 
 		ArrayList<TileData<Integer>> writeTiles = new ArrayList<TileData<Integer>>();
 

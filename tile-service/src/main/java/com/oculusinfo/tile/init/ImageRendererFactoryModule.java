@@ -10,10 +10,10 @@
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- *
+
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,21 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.impl;
+package com.oculusinfo.tile.init;
 
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.tile.init.providers.StandardImageRendererFactoryProvider;
+import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
-public class LegacyDoublesImageRenderer extends DoublesImageRenderer {
+public class ImageRendererFactoryModule extends AbstractModule {
 
-	public LegacyDoublesImageRenderer(PyramidIO pyramidIo) {
-		super(pyramidIo);
-		// TODO Auto-generated constructor stub
-	}
-
-	@Override
-	protected TileSerializer<Double> createSerializer() {
-		return new BackwardCompatibilitySerializer();
-	}
+    @Override
+    protected void configure() {
+        bind(new TypeLiteral<FactoryProvider<TileDataImageRenderer>>() {}).toInstance(new StandardImageRendererFactoryProvider());
+    }
 }

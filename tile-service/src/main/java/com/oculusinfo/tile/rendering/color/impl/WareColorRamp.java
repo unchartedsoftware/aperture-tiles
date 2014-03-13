@@ -24,31 +24,20 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import com.oculusinfo.tile.rendering.color.FixedPoint;
 
 
 public class WareColorRamp extends AbstractColorRamp {
 
-	public WareColorRamp(ColorRampParameter params) {
-		super(params);
+	public WareColorRamp (boolean inverted, int opacity) {
+	    super(inverted,
+	          Arrays.asList(new FixedPoint(0, 0.25), new FixedPoint(0.25, 0.9), new FixedPoint(0.5, 0.1), new FixedPoint(0.75, 1)),
+	          new ArrayList<FixedPoint>(),
+	          Arrays.asList(new FixedPoint(0, 0.25), new FixedPoint(0.25, 0), new FixedPoint(0.85, 0), new FixedPoint(1, 1)),
+	          null,
+	          opacity);
 	}
-	
-	@Override
-	public void initRampPoints() {
-        reds.add(new FixedPoint(0, 0.25));
-        reds.add(new FixedPoint(0.25, 0.9));
-        reds.add(new FixedPoint(0.5, 0.1));
-        reds.add(new FixedPoint(0.75, 1));
-        blues.add(new FixedPoint(0, 0.25));
-        blues.add(new FixedPoint(0.25, 0));
-        blues.add(new FixedPoint(0.85, 0));
-        blues.add(new FixedPoint(1, 1));
-        
-        //try to initialize the ramp points from the params in case there's overrides
-        initRedRampPointsFromParams();
-        initBlueRampPointsFromParams();
-        initGreenRampPointsFromParams();
-        initAlphasRampPointsFromParams();
-	}
-	
 }

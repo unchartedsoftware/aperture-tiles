@@ -25,9 +25,9 @@
 package com.oculusinfo.tile.rendering.color.impl;
 
 import java.awt.Color;
-import java.lang.reflect.Field;
+import java.util.Arrays;
 
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
+import com.oculusinfo.tile.rendering.color.FixedPoint;
 
 /**
  * Ramps between a 'from' colour and a 'to' colour.
@@ -40,80 +40,12 @@ import com.oculusinfo.tile.rendering.color.ColorRampParameter;
  */
 public class SingleGradientColorRamp extends AbstractColorRamp {
 
-	public SingleGradientColorRamp(ColorRampParameter params) {
-		super(params);
+	public SingleGradientColorRamp (Color from, Color to) {
+	    super(false,
+              Arrays.asList(new FixedPoint(0.0, from.getRed()/255.0),   new FixedPoint(1.0, to.getRed()/255.0)),
+              Arrays.asList(new FixedPoint(0.0, from.getGreen()/255.0), new FixedPoint(1.0, to.getGreen()/255.0)),
+              Arrays.asList(new FixedPoint(0.0, from.getBlue()/255.0),  new FixedPoint(1.0, to.getBlue()/255.0)),
+              Arrays.asList(new FixedPoint(0.0, from.getAlpha()/255.0), new FixedPoint(1.0, to.getAlpha()/255.0)),
+	          255);
 	}
-	
-	@Override
-	public void initRampPoints() {
-		
-		Color fromCol = getColorFromParams("from");
-		Color toCol = getColorFromParams("to");
-		
-		reds.add(new FixedPoint(0, (double)fromCol.getRed() / 255));
-		reds.add(new FixedPoint(1, (double)toCol.getRed() / 255));
-		greens.add(new FixedPoint(0, (double)fromCol.getGreen() / 255));
-		greens.add(new FixedPoint(1, (double)toCol.getGreen() / 255));
-		blues.add(new FixedPoint(0, (double)fromCol.getBlue() / 255));
-		blues.add(new FixedPoint(1, (double)toCol.getBlue() / 255));
-		alphas.add(new FixedPoint(0, (double)fromCol.getAlpha() / 255));
-		alphas.add(new FixedPoint(1, (double)toCol.getAlpha() / 255));
-	}
-
-	private Color getColorFromParams(String key) {
-		Color col = Color.white;	//initialize to full white
-		int alpha = 0xff;
-		
-		Object o = rampParams.get(key);
-		if (o instanceof String) {
-			String str = (String)o;
-			
-			//check if the string is a field in Color
-			try {
-				Field field = Color.class.getField(str.trim().toLowerCase());
-				col = (Color)field.get(null);
-			}
-			catch (Exception e) {
-				//colour wasn't a colour name, so check if we can decode it as a value
-				try {
-					col = Color.decode(str);
-				}
-				catch (NumberFormatException e2) {
-					col = Color.white;
-				}
-			}
-			
-		}
-		else if (o instanceof Number) {
-			col = new Color(((Number)o).intValue());
-		}
-		
-		//grab the alpha value if it exists
-		o = rampParams.get(key + "-alpha");
-		if (o instanceof String) {
-			String str = (String)o;
-			try {
-				//try to parse the number as base 10
-				alpha = Integer.parseInt(str, 10);
-			}
-			catch (NumberFormatException e1) {
-				//not base 10, so try to parse as hex
-				try {
-					alpha = Integer.parseInt(str, 16);
-				}
-				catch (NumberFormatException e2) {
-					//don't know what it is, so just assume full alpha
-					alpha = 0xff;
-				}
-			}
-		}
-		else if (o instanceof Number) {
-			alpha = ((Number)o).intValue();
-		}
-
-		//return the colour with the alpha
-		return new Color(col.getRed(), col.getGreen(), col.getBlue(), alpha);
-	}
-	
-
 }

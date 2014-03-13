@@ -28,6 +28,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import javax.imageio.ImageIO;
 
@@ -46,8 +49,11 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 import com.google.inject.Inject;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.tile.rendering.color.ColorRamp;
+import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 
 public class LegendResource extends ApertureServerResource {
@@ -78,16 +84,21 @@ public class LegendResource extends ApertureServerResource {
 			if(jsonObj.has("orientation")){
 				renderHorizontally = jsonObj.getString("orientation").equalsIgnoreCase("horizontal");
 			}
-			
-			ColorRampParameter rampType = new ColorRampParameter(jsonObj.get("ramp"));
-			
-			return generateEncodedImage(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
-			
+
+			ColorRamp colorRamp = null;
+			try {
+			    ColorRampFactory factory = new ColorRampFactory(null, Collections.singletonList("ramp"));
+			    factory.readConfiguration(jsonObj);
+			    colorRamp = factory.getNewGood(ColorRamp.class);
+			} catch (ConfigurationException e) {
+			    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Unable to create legend - bad color ramp configuration");
+			}
+
+			return generateEncodedImage(transform, colorRamp, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 					"Unable to create JSON object from supplied options string", e);
 		}
-
 	}
 	
 	@Get
@@ -99,12 +110,28 @@ public class LegendResource extends ApertureServerResource {
 
 		String outputType = form.getFirstValue("output", "uri");
 		String transform = form.getFirstValue("transform", "linear").trim();
-		String rampName = form.getFirstValue("ramp", "ware").trim();
 		String layer = form.getFirstValue("layer").trim();
 		String doAxisString = form.getFirstValue("doAxis", "false").trim();
 		String orientationString = form.getFirstValue("orientation", "vertical").trim();
-		
-		ColorRampParameter rampType = new ColorRampParameter(rampName);
+
+		ColorRamp ramp = null;
+		try {
+    		JSONObject rampConfig = new JSONObject();
+            for (ConfigurationProperty<?> property: Arrays.asList(ColorRampFactory.RAMP_TYPE,
+                                                                  ColorRampFactory.INVERTED,
+                                                                  ColorRampFactory.OPACITY,
+                                                                  ColorRampFactory.COLOR1,
+                                                                  ColorRampFactory.ALPHA1,
+                                                                  ColorRampFactory.COLOR2,
+                                                                  ColorRampFactory.ALPHA2)) {
+                String value = form.getFirstValue(property.getName(), true);
+                if (null != value) rampConfig.put(property.getName(), value);
+    		}
+            ColorRampFactory factory = new ColorRampFactory(null, new ArrayList<String>());
+            ramp = factory.getNewGood(ColorRamp.class);
+		} catch (ConfigurationException|JSONException e) {
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Unable to generate legend image - bad color ramp configuration.", e);
+        }
 				
 		// get the root node ID from the form
 		int zoomLevel = 0;
@@ -125,10 +152,10 @@ public class LegendResource extends ApertureServerResource {
 		}
 		
 		if(outputType.equalsIgnoreCase("uri")){
-			return generateEncodedImage(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			return generateEncodedImage(transform, ramp, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		}
 		else { //(outputType.equalsIgnoreCase("png")){
-			return generateImage(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			return generateImage(transform, ramp, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		}
 
 	}
@@ -141,10 +168,15 @@ public class LegendResource extends ApertureServerResource {
 	 * @param height
 	 * @return
 	 */
-	private ImageOutputRepresentation generateImage(String transform, ColorRampParameter rampType, String layer,
-			int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
+    private ImageOutputRepresentation generateImage (String transform,
+                                                     ColorRamp ramp,
+                                                     String layer,
+                                                     int zoomLevel, int width,
+                                                     int height,
+                                                     boolean doAxis,
+                                                     boolean renderHorizontally) {
 		try {
-			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			BufferedImage tile = _service.getLegend(transform, ramp, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
 			
 			setStatus(Status.SUCCESS_CREATED);
@@ -164,10 +196,16 @@ public class LegendResource extends ApertureServerResource {
 	 * @param height
 	 * @return
 	 */
-	private StringRepresentation generateEncodedImage(Object transform, ColorRampParameter rampType,
-			String layer, int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
+    private StringRepresentation generateEncodedImage (Object transform,
+                                                       ColorRamp ramp,
+                                                       String layer,
+                                                       int zoomLevel,
+                                                       int width,
+                                                       int height,
+                                                       boolean doAxis,
+                                                       boolean renderHorizontally) {
 		try {
-			BufferedImage tile = _service.getLegend(transform, rampType, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			BufferedImage tile = _service.getLegend(transform, ramp, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(tile, "png", baos);
 			baos.flush();

@@ -30,6 +30,7 @@ import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,11 +42,12 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.LinearCappedValueTransformer;
-import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
+import com.oculusinfo.tile.rest.tile.TileService;
 
 /**
  * A service that generates an image coloured using the specified
@@ -58,20 +60,24 @@ import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 public class LegendServiceImpl implements LegendService {
 	
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
-	
-	private PyramidIO _pyramidIo;
-	private Map<String, JSONObject> _metadataCache = 
-			Collections.synchronizedMap(new HashMap<String, JSONObject>());
-	
+
 	@Inject
-	LegendServiceImpl (PyramidIO pyramidIo) {
-		_pyramidIo = pyramidIo;	
+    private FactoryProvider<PyramidIO> _pyramidIOProvider;
+	@Inject
+	private TileService _tileService;
+
+	private Map<String, JSONObject>    _metadataCache;
+
+
+	
+	LegendServiceImpl () {
+        _metadataCache = Collections.synchronizedMap(new HashMap<String, JSONObject>());
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.oculusinfo.tile.spi.TileLegendService#getLegend(int, double, double, int, int)
+	 * @see LegendService#getLegend(Object, ColorRampParameter, String, int, int, int, boolean, boolean)
 	 */
-	public BufferedImage getLegend(Object transform, ColorRampParameter rampType, String layer, 
+	public BufferedImage getLegend (Object transform, ColorRamp colorRamp, String layer, 
 			int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
 
 		//int levelMinFreq = 0;
@@ -80,7 +86,7 @@ public class LegendServiceImpl implements LegendService {
 		// For now, commented out. Don't need metadata unless we're rendering labels and need
 		// to know the max frequency.
 		try {
-			JSONObject metadata = getMetadata(layer).getJSONObject("meta");
+			JSONObject metadata = getMetadata(_tileService.getLayerOptions(layer), layer).getJSONObject("meta");
 			JSONObject levelMaximums;
 			
 			if (metadata.has("levelMaximums")) {
@@ -106,8 +112,6 @@ public class LegendServiceImpl implements LegendService {
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = bi.createGraphics();	
 
-		ColorRamp ramp = ColorRampFactory.create(rampType, 255);
-		
 		IValueTransformer t;
 		
 		//if("log10".equalsIgnoreCase(transform)){
@@ -126,7 +130,7 @@ public class LegendServiceImpl implements LegendService {
 		if (renderHorizontally){
 			for (int i = 0; i < width; i++){
 				double v = ((double)(i+1)/(double)width) * levelMaxFreq;
-				int colorInt = ramp.getRGB(t.transform(v));		
+				int colorInt = colorRamp.getRGB(t.transform(v));		
 				g.setColor(new Color(colorInt));
 				g.drawLine(i, 0, i, height);
 			}
@@ -139,7 +143,7 @@ public class LegendServiceImpl implements LegendService {
 			
 			for(int i = 0; i <= barHeight; i++){
 				double v = ((double)(i+1)/(double)barHeight) * levelMaxFreq;
-				int colorInt = ramp.getRGB(t.transform(v));		
+				int colorInt = colorRamp.getRGB(t.transform(v));		
 				g.setColor(new Color(colorInt));
 				int y = barHeight-i+barYOffset;
 				g.drawLine(barXOffset, y, width, y);
@@ -182,11 +186,14 @@ public class LegendServiceImpl implements LegendService {
 	 * @param pyramidIo 
 	 * @return
 	 */
-	private JSONObject getMetadata(String layer) {
+	private JSONObject getMetadata (JSONObject options, String layer) {
 		JSONObject metadata = _metadataCache.get(layer);
-		if(metadata == null){
+		if (metadata == null){
 			try {
-				String s = _pyramidIo.readMetaData(layer);
+			    ConfigurableFactory<PyramidIO> factory = _pyramidIOProvider.createFactory(new ArrayList<String>());
+			    factory.readConfiguration(options);
+			    PyramidIO pyramidIO = factory.getNewGood(PyramidIO.class);
+				String s = pyramidIO.readMetaData(layer);
 				metadata = new JSONObject(s);
 				_metadataCache.put(layer, metadata);
 			} catch (Exception e) {
@@ -196,5 +203,4 @@ public class LegendServiceImpl implements LegendService {
 		}
 		return metadata;
 	}
-
 }
