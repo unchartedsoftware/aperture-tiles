@@ -316,5 +316,9 @@ class ArgumentParser (args: Array[String]) {
       Some(getStringArgument("user",
                              "spark user name (defaults to login name)",
                              Some(System.getProperty("user.name")))),
-      jars)
+      jars,
+      Some(getStringArgument("kryo",
+                             "kryo registrator full class name (defaults to None, using java serialization)",
+                             None)
+      ))
 }
