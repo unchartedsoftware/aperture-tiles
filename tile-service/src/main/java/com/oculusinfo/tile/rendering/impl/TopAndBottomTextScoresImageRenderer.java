@@ -27,10 +27,7 @@ package com.oculusinfo.tile.rendering.impl;
 
 import java.util.List;
 
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.tile.rendering.color.ColorRamp;
 
 /**
  * A server side to render Map<String, Double> (well, technically,
@@ -42,12 +39,6 @@ import com.oculusinfo.tile.rendering.color.ColorRamp;
  * @author nkronenfeld
  */
 public class TopAndBottomTextScoresImageRenderer extends TopTextScoresImageRenderer {
-    public TopAndBottomTextScoresImageRenderer (PyramidIO pyramidIo,
-                                                TileSerializer<List<Pair<String, Double>>> serializer,
-                                                ColorRamp colorRamp) {
-        super(pyramidIo, serializer, colorRamp);
-	}
-
 	@Override
 	protected int[] getTextsToDraw(List<Pair<String, Double>> cellData) {
 		int n = cellData.size();

@@ -189,6 +189,23 @@ abstract public class ConfigurableFactory<T> {
     }
 
     /**
+     * Sets the value of a property directly.
+     * <em>This should be used very sparingly</em> - the general intention is
+     * that properties are read from a configuration file. This method is so
+     * that factorys can create "derived" property values, and is essentially an
+     * end-run around the normal rules.
+     */
+    protected <PT> void setPropertyValue (ConfigurationProperty<PT> property, PT value) {
+        PropertyValue<PT> valueObj = getPropertyValueObject(property);
+        if (null == valueObj) {
+            valueObj = new PropertyValue<PT>();
+            putPropertyValueObject(property, valueObj);
+        }
+        valueObj._value = value;
+        valueObj._default = false;
+    }
+
+    /**
      * Add a child factory, to be used by this factory.
      * 
      * @param child The child to add.

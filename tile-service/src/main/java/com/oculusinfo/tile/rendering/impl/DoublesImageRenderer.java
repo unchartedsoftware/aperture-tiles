@@ -38,7 +38,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.RenderParameterFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
@@ -57,41 +57,39 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
     public static TypeDescriptor getRuntimeTypeDescriptor () {
         return new TypeDescriptor(Double.class);
     }
-	
-	
-
-    private PyramidIO              _pyramidIo;
-    private TileSerializer<Double> _serializer;
-    private ColorRamp              _colorRamp;
 
 
 
-	public DoublesImageRenderer(PyramidIO pyramidIo, TileSerializer<Double> serializer, ColorRamp colorRamp) {
-		_pyramidIo = pyramidIo;
-		_serializer = serializer;
-		_colorRamp = colorRamp;
-	}
+    private double parseExtremum (RenderParameterFactory parameter, StringProperty property, String propName, String layer, double def) {
+        String rawValue = parameter.getPropertyValue(property);
+        try {
+            return Double.parseDouble(rawValue);
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
+            return def;
+        }
+    }
 
-	/* (non-Javadoc)
+    /* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
 	 */
 	@Override
-	public BufferedImage render (RenderParameter parameter) {
+	public BufferedImage render (RenderParameterFactory parameter) {
  		BufferedImage bi;
-		try {  // TODO: harden at a finer granularity.
-			int outputWidth = parameter.getOutputWidth();
-			int outputHeight = parameter.getOutputHeight();
-			int rangeMax = parameter.getAsInt("rangeMax");
-			int rangeMin = parameter.getAsInt("rangeMin");
-			String layer = parameter.getString(RenderParameterFactory.LAYER_NAME.getName());
-			int coarseness = Math.max(parameter.getAsIntOrElse("coarseness", 1), 1);
+        String layer = parameter.getPropertyValue(RenderParameterFactory.LAYER_NAME);
+        TileIndex index = parameter.getPropertyValue(RenderParameterFactory.TILE_COORDINATE);
+		try {
+		    int outputWidth = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
+		    int outputHeight = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
+            int rangeMax = parameter.getPropertyValue(RenderParameterFactory.RANGE_MAX);
+            int rangeMin = parameter.getPropertyValue(RenderParameterFactory.RANGE_MIN);
+            int coarseness = parameter.getPropertyValue(RenderParameterFactory.COARSENESS);
+            double minimumValue = parseExtremum(parameter, RenderParameterFactory.LEVEL_MINIMUMS, "minimum", layer, 0.0);
+            double maximumValue = parseExtremum(parameter, RenderParameterFactory.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
-
-			double minimumValue = parameter.getAsDouble(RenderParameterFactory.LEVEL_MINIMUMS.getName());
-			double maximumValue = parameter.getAsDouble(RenderParameterFactory.LEVEL_MAXIMUMS.getName());
 			
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getObject(RenderParameterFactory.TRANSFORM.getName(), Object.class), minimumValue, maximumValue);
+			IValueTransformer t = ValueTransformerFactory.create(parameter.getPropertyValue(RenderParameterFactory.TRANSFORM), minimumValue, maximumValue);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -99,17 +97,20 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
 
-			//get the tile indexes of the requested base tile and possibly the scaling one further up the tree
-			TileIndex baseLevelIndex = parameter.getObject("tileCoordinate", TileIndex.class);
-			TileIndex scaleLevelIndex = null; 
-			
+			PyramidIO pyramidIO = parameter.getNewGood(PyramidIO.class);
+			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(parameter.getNewGood(TileSerializer.class),
+			                                                                           getRuntimeBinClass(),
+			                                                                           getRuntimeTypeDescriptor());
+
 			List<TileData<Double>> tileDatas = null;
-			
-			//need to get the tile data for the level of the base level minus the courseness
+
+            // Get the coarseness-scaled true tile index
+            TileIndex scaleLevelIndex = null; 
+			// need to get the tile data for the level of the base level minus the courseness
 			for (int coursenessLevel = coarseness - 1; coursenessLevel >= 0; --coursenessLevel) {
-				scaleLevelIndex = new TileIndex(baseLevelIndex.getLevel() - coursenessLevel, (int)Math.floor(baseLevelIndex.getX() / coarsenessFactor), (int)Math.floor(baseLevelIndex.getY() / coarsenessFactor));				
+				scaleLevelIndex = new TileIndex(index.getLevel() - coursenessLevel, (int)Math.floor(index.getX() / coarsenessFactor), (int)Math.floor(index.getY() / coarsenessFactor));				
 				
-				tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(scaleLevelIndex));
+				tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(scaleLevelIndex));
 				if (tileDatas.size() >= 1) {
 					//we got data for this level so use it
 					break;
@@ -118,7 +119,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			
 			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    LOGGER.info("Missing tile " + parameter.getObject("tileCoordinate", TileIndex.class) + " for layer " + layer);
+			    LOGGER.info("Missing tile " + index + " for layer " + layer);
 			    return null;
 			}
 			
@@ -128,23 +129,24 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			
 			//calculate the tile tree multiplier to go between tiles at each level.
 			//this is also the number of x/y tiles in the base level for every tile in the scaled level
-			int tileTreeMultiplier = (int)Math.pow(2, baseLevelIndex.getLevel() - scaleLevelIndex.getLevel());
+			int tileTreeMultiplier = (int)Math.pow(2, index.getLevel() - scaleLevelIndex.getLevel());
 			
 			int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier; 
 
 			//the y tiles are backwards, so we need to shift the order around by reversing the counting direction
-			int yTileIndex = ((tileTreeMultiplier - 1) - (baseLevelIndex.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
+			int yTileIndex = ((tileTreeMultiplier - 1) - (index.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
 			
 			//figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
-			int xBinStart = (int)Math.floor(xBins * (((double)(baseLevelIndex.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
-			int xBinEnd = (int)Math.floor(xBins * (((double)(baseLevelIndex.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
+			int xBinStart = (int)Math.floor(xBins * (((double)(index.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
+			int xBinEnd = (int)Math.floor(xBins * (((double)(index.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
 			int yBinStart = ((int)Math.floor(yBins * (((double)(yTileIndex) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
 			int yBinEnd = ((int)Math.floor(yBins * (((double)(yTileIndex + 1) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
-			
+
 			int numBinsWide = xBinEnd - xBinStart;
 			int numBinsHigh = yBinEnd - yBinStart;
 			double xScale = ((double) bi.getWidth())/numBinsWide;
 			double yScale = ((double) bi.getHeight())/numBinsHigh;
+			ColorRamp colorRamp = parameter.getNewGood(ColorRamp.class);
 			for(int ty = 0; ty < numBinsHigh; ty++){
 				for(int tx = 0; tx < numBinsWide; tx++){
 					//calculate the scaled dimensions of this 'pixel' within the image
@@ -159,7 +161,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 					if (binCount > 0
 							&& transformedValue >= scaledLevelMinFreq
 							&& transformedValue <= scaledLevelMaxFreq) {
-						rgb = _colorRamp.getRGB(transformedValue);
+						rgb = colorRamp.getRGB(transformedValue);
 					} else {
 						rgb = COLOR_BLANK.getRGB();
 					}
@@ -177,7 +179,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 					
 		} catch (Exception e) {
-		    LOGGER.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
+		    LOGGER.debug("Tile is corrupt: " + layer + ":" + index);
 		    LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}

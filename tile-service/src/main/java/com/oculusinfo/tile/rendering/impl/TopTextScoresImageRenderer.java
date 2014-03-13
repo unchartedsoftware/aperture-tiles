@@ -43,7 +43,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.tile.rendering.RenderParameterFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 
@@ -73,18 +73,6 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
     }
 
 
-
-    private PyramidIO                                  _pyramidIo;
-    private TileSerializer<List<Pair<String, Double>>> _serializer;
-    private ColorRamp                                  _colorRamp;
-
-    public TopTextScoresImageRenderer (PyramidIO pyramidIo,
-                                       TileSerializer<List<Pair<String, Double>>> serializer,
-                                       ColorRamp colorRamp) {
-		_pyramidIo = pyramidIo;
-		_serializer = serializer;
-		_colorRamp = colorRamp;
-	}
 
 	private void drawScoredText (Graphics2D g, Pair<String, Double> textScore, double offsetFromCenter,
 								 int minX, int maxX, int minY, int maxY,
@@ -125,18 +113,23 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BufferedImage render(RenderParameter parameter) {
+	public BufferedImage render(RenderParameterFactory parameter) {
 		BufferedImage bi;
-		try {
-			int width = parameter.getOutputWidth();
-			int height = parameter.getOutputHeight();
-			String layer = parameter.getString("layer");
-			
+        String layer = parameter.getPropertyValue(RenderParameterFactory.LAYER_NAME);
+        TileIndex index = parameter.getPropertyValue(RenderParameterFactory.TILE_COORDINATE);
+	try {
+			int width = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
+			int height = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
+			PyramidIO pyramidIO = parameter.getNewGood(PyramidIO.class);
+			TileSerializer<List<Pair<String, Double>>> serializer = SerializationTypeChecker.checkBinClass(parameter.getNewGood(TileSerializer.class),
+			                                                                                               getRuntimeBinClass(),
+			                                                                                               getRuntimeTypeDescriptor());
+
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(parameter.getObject("tileCoordinate", TileIndex.class)));
+			List<TileData<List<Pair<String, Double>>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
 			if (tileDatas.isEmpty()) {
-			    _logger.debug("Layer {} is missing tile ().", layer, parameter.getObject("tileCoordinate", TileIndex.class));
+			    _logger.debug("Layer {} is missing tile ().", layer, index);
 			    return null;
 			}
 			TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
@@ -151,6 +144,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 			int rowHeight = 16;
 			int barHeight = 3;
 			int padding = 2;
+			ColorRamp colorRamp = parameter.getNewGood(ColorRamp.class);
 
 			for (int x=0; x<xBins; ++x) {
 				for (int y=0; y<yBins; ++y) {
@@ -182,13 +176,13 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 						for (int i=0; i<n; ++i) {
 							double offset = (2*i + 1 - n) / 2.0;
 							drawScoredText(g, cellData.get(toDraw[i]), offset,
-									       xMin, xMax, yMin, yMax, rowHeight, barHeight, padding, _colorRamp, scaleVal);
+									       xMin, xMax, yMin, yMax, rowHeight, barHeight, padding, colorRamp, scaleVal);
 						}
 					}
 				}
 			}
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
+			_logger.debug("Tile is corrupt: " + layer + ":" + index);
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}

@@ -49,7 +49,6 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.tile.rendering.RenderParameter;
 import com.oculusinfo.tile.rendering.RenderParameterFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.filter.StackBlurFilter;
@@ -76,34 +75,33 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	
 
 
-    private PyramidIO _pyramidIo;
-	private TileSerializer<Double> _serializer;
-
-
-
-	public DoublesStatisticImageRenderer(PyramidIO pyramidIo, TileSerializer<Double> serializer) {
-		_pyramidIo = pyramidIo;
-		_serializer = serializer;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
 	 */
 	@Override
-	public BufferedImage render(RenderParameter parameter) {
+	public BufferedImage render(RenderParameterFactory parameter) {
  		BufferedImage bi = null;
  		TileIndex tileIndex = null;
  		String layer = "?";
- 		Integer lineNumber = 0;
+ 		int lineNumber = 0;
  		
 		try {
-			bi = GraphicsUtilities.createCompatibleTranslucentImage(parameter.getOutputWidth(), parameter.getOutputWidth());
+            tileIndex = parameter.getPropertyValue(RenderParameterFactory.TILE_COORDINATE);
+            layer = parameter.getPropertyValue(RenderParameterFactory.LAYER_NAME);
+            String shortName = parameter.getPropertyValue(RenderParameterFactory.SHORT_NAME);
+		    int width = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
+		    int height = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
+		    lineNumber = parameter.getPropertyValue(RenderParameterFactory.LINE_NUMBER);
+		    PyramidIO pyramidIO = parameter.getNewGood(PyramidIO.class);
+		    TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(parameter.getNewGood(TileSerializer.class),
+		                                                                               getRuntimeBinClass(),
+		                                                                               getRuntimeTypeDescriptor());
+
+		    bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
 		
-			tileIndex = parameter.getObject(RenderParameterFactory.TILE_COORDINATE.getName(), TileIndex.class);
-			layer = parameter.getAsString(RenderParameterFactory.LAYER_NAME.getName());
-			lineNumber = parameter.getAsInt(RenderParameterFactory.LINE_NUMBER.getName());
-			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(layer,
-					_serializer, Collections.singleton(tileIndex));
+            List<TileData<Double>> tileDatas = pyramidIO.readTiles(layer,
+                                                                   serializer,
+                                                                   Collections.singleton(tileIndex));
 			
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
@@ -142,7 +140,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			decFormat = new DecimalFormat("##.##");
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
-			String text = parameter.getAsString("shortName") + ": " + formattedTotal + " " + formattedCoverage;
+			String text = shortName + ": " + formattedTotal + " " + formattedCoverage;
 			drawTextGlow(bi, text, 5, 10 + (20*lineNumber), FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {

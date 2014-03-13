@@ -32,7 +32,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,7 +48,6 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
-import com.oculusinfo.tile.rendering.RenderParameter;
 import com.oculusinfo.tile.rendering.RenderParameterFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.util.AvroJSONConverter;
@@ -157,37 +155,21 @@ public class TileServiceImpl implements TileService {
     		    factory.readConfiguration(new JSONObject());
     		}
     
-    		RenderParameter parameters = factory.getNewGood(RenderParameter.class);
     		PyramidIO pyramidIO = factory.getNewGood(PyramidIO.class);
     
-    		// Fix up legend range if necessary
-    		List<?> legendRange = parameters.getObject(RenderParameterFactory.LEGEND_RANGE.getName(), List.class);
-    		if (null == legendRange || legendRange.size() < 2) {
-    		    parameters.setInt("rangeMin", 0);
-    		    parameters.setInt("rangeMax", 100);
-    		} else {
-                parameters.setInt("rangeMin", (Integer) legendRange.get(0));
-                parameters.setInt("rangeMax", (Integer) legendRange.get(1));
-    		}
     
     		// Record image dimensions in case of error. 
-    		width = parameters.getOutputWidth();
-    		height = parameters.getOutputHeight();
-    
-            // Fix up level minimums and maximums according to the current level
-    		PyramidMetaData metadata = getMetadata(parameters.getAsString(RenderParameterFactory.LAYER_NAME.getName()), pyramidIO);
-    		parameters.setString(RenderParameterFactory.LEVEL_MINIMUMS.getName(),
-    		                     metadata.getLevelMinimum(zoomLevel));
-            parameters.setString(RenderParameterFactory.LEVEL_MAXIMUMS.getName(),
-                                 metadata.getLevelMaximum(zoomLevel));
-    
-            // Finally, set up the tile coordinate
-            parameters.setObject(RenderParameterFactory.TILE_COORDINATE.getName(), new TileIndex(zoomLevel, (int)x, (int)y));
+            width = factory.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
+            height = factory.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
 
+            PyramidMetaData metadata = getMetadata(factory.getPropertyValue(RenderParameterFactory.LAYER_NAME), pyramidIO);
+            factory.setLevelProperties(new TileIndex(zoomLevel, (int)x, (int)y),
+                                       metadata.getLevelMinimum(zoomLevel),
+                                       metadata.getLevelMaximum(zoomLevel));
 
 		    TileDataImageRenderer tileRenderer = factory.getNewGood(TileDataImageRenderer.class);
 
-		    bi = tileRenderer.render(parameters);
+		    bi = tileRenderer.render(factory);
         } catch (ConfigurationException e) {
             _logger.info("No renderer specified for tile request.");
         }
