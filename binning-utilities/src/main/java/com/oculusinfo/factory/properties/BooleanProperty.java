@@ -21,18 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.factory;
+package com.oculusinfo.factory.properties;
 
 import org.json.JSONException;
 
-public class DoubleProperty implements ConfigurationProperty<Double> {
-    private String _name;
-    private String _description;
-    private double    _defaultValue;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.JSONNode;
+
+public class BooleanProperty implements ConfigurationProperty<Boolean> {
+    private String  _name;
+    private String  _description;
+    private boolean _defaultValue;
 
 
 
-    public DoubleProperty (String name, String description, double defaultValue) {
+    public BooleanProperty (String name, String description, boolean defaultValue) {
         _name = name;
         _description = description;
         _defaultValue = defaultValue;
@@ -49,41 +53,41 @@ public class DoubleProperty implements ConfigurationProperty<Double> {
     }
 
     @Override
-    public Class<Double> getType () {
-        return Double.class;
+    public Class<Boolean> getType () {
+        return Boolean.class;
     }
 
     @Override
-    public Double[] getPossibleValues () {
+    public Boolean[] getPossibleValues () {
         return null;
     }
 
     @Override
-    public Double getDefaultValue () {
+    public Boolean getDefaultValue () {
         return _defaultValue;
     }
 
     @Override
-    public String encode (Double value) {
+    public String encode (Boolean value) {
         return value.toString();
     }
 
     @Override
-    public Double unencode (String value) throws ConfigurationException {
+    public Boolean unencode (String value) throws ConfigurationException {
         try {
-            return Double.parseDouble(value);
+            return Boolean.valueOf(value);
         } catch (NumberFormatException e) {
-            throw new ConfigurationException("Unparsable double value "+value, e);
+            throw new ConfigurationException("Unparsable boolean value "+value, e);
         }
     }
 
     @Override
-    public void encodeJSON (JSONNode propertyNode, Double value) throws JSONException {
-        propertyNode.setAsDouble(value.doubleValue());
+    public void encodeJSON (JSONNode propertyNode, Boolean value) throws JSONException {
+        propertyNode.setAsBoolean(value.booleanValue());
     }
 
     @Override
-    public Double unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return propertyNode.getAsDouble();
+    public Boolean unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+        return propertyNode.getAsBoolean();
     }
 }

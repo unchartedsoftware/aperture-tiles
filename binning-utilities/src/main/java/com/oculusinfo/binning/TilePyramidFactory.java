@@ -30,8 +30,8 @@ import java.util.List;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.DoubleProperty;
-import com.oculusinfo.factory.StringProperty;
+import com.oculusinfo.factory.properties.DoubleProperty;
+import com.oculusinfo.factory.properties.StringProperty;
 
 
 

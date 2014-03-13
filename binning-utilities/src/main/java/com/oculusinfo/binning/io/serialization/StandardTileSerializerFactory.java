@@ -38,9 +38,9 @@ import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSer
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.EnumProperty;
-import com.oculusinfo.factory.IntegerProperty;
-import com.oculusinfo.factory.StringProperty;
+import com.oculusinfo.factory.properties.EnumProperty;
+import com.oculusinfo.factory.properties.IntegerProperty;
+import com.oculusinfo.factory.properties.StringProperty;
 
 
 

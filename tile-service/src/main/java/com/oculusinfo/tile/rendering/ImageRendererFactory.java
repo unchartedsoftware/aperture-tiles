@@ -36,7 +36,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.StringProperty;
+import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 import com.oculusinfo.tile.rendering.impl.DoublesImageRenderer;

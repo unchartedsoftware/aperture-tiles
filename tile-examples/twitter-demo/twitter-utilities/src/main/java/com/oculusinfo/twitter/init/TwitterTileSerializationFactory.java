@@ -30,7 +30,7 @@ import org.apache.avro.file.CodecFactory;
 import com.oculusinfo.binning.io.serialization.StandardTileSerializerFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.StringProperty;
+import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.twitter.binning.TwitterDemoAvroSerializer;
 
 public class TwitterTileSerializationFactory extends StandardTileSerializerFactory {

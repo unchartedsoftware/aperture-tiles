@@ -34,10 +34,10 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationProperty;
-import com.oculusinfo.factory.IntegerProperty;
-import com.oculusinfo.factory.ListProperty;
-import com.oculusinfo.factory.StringProperty;
-import com.oculusinfo.factory.TileIndexProperty;
+import com.oculusinfo.factory.properties.IntegerProperty;
+import com.oculusinfo.factory.properties.ListProperty;
+import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.properties.TileIndexProperty;
 import com.oculusinfo.tile.init.FactoryProvider;
 
 

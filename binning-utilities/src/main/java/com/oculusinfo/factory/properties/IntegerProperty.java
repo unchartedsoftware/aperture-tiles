@@ -21,30 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.factory;
+package com.oculusinfo.factory.properties;
 
 import org.json.JSONException;
 
-public class StringProperty implements ConfigurationProperty<String> {
-    private String   _name;
-    private String   _description;
-    private String   _defaultValue;
-    private String[] _possibleValues;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.JSONNode;
+
+public class IntegerProperty implements ConfigurationProperty<Integer> {
+    private String _name;
+    private String _description;
+    private int    _defaultValue;
 
 
 
-    public StringProperty (String name, String description, String defaultValue) {
+    public IntegerProperty (String name, String description, int defaultValue) {
         _name = name;
         _description = description;
         _defaultValue = defaultValue;
-        _possibleValues = null;
-    }
-
-    public StringProperty (String name, String description, String defaultValue, String[] possibleValues) {
-        _name = name;
-        _description = description;
-        _defaultValue = defaultValue;
-        _possibleValues = possibleValues;
     }
 
     @Override
@@ -58,37 +53,41 @@ public class StringProperty implements ConfigurationProperty<String> {
     }
 
     @Override
-    public Class<String> getType () {
-        return String.class;
+    public Class<Integer> getType () {
+        return Integer.class;
     }
 
     @Override
-    public String[] getPossibleValues () {
-        return _possibleValues;
+    public Integer[] getPossibleValues () {
+        return null;
     }
 
     @Override
-    public String getDefaultValue () {
+    public Integer getDefaultValue () {
         return _defaultValue;
     }
 
     @Override
-    public String encode (String value) {
-        return value;
+    public String encode (Integer value) {
+        return value.toString();
     }
 
     @Override
-    public String unencode (String value) throws ConfigurationException {
-        return value;
+    public Integer unencode (String value) throws ConfigurationException {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new ConfigurationException("Unparsable int value "+value, e);
+        }
     }
 
     @Override
-    public void encodeJSON (JSONNode propertyNode, String value) throws JSONException {
-        propertyNode.setAsString(encode(value));
+    public void encodeJSON (JSONNode propertyNode, Integer value) throws JSONException {
+        propertyNode.setAsInt(value.intValue());
     }
 
     @Override
-    public String unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return unencode(propertyNode.getAsString());
+    public Integer unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+        return propertyNode.getAsInt();
     }
 }

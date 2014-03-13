@@ -28,11 +28,11 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import com.oculusinfo.factory.BooleanProperty;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.DoubleProperty;
-import com.oculusinfo.factory.IntegerProperty;
-import com.oculusinfo.factory.StringProperty;
+import com.oculusinfo.factory.properties.BooleanProperty;
+import com.oculusinfo.factory.properties.DoubleProperty;
+import com.oculusinfo.factory.properties.IntegerProperty;
+import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.impl.BRColorRamp;
 import com.oculusinfo.tile.rendering.color.impl.FlatColorRamp;
 import com.oculusinfo.tile.rendering.color.impl.GreyColorRamp;

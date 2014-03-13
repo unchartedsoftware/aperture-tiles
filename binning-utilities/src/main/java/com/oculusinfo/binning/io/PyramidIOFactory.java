@@ -37,7 +37,7 @@ import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
 import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.StringProperty;
+import com.oculusinfo.factory.properties.StringProperty;
 
 
 

@@ -21,18 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.factory;
+package com.oculusinfo.factory.properties;
 
 import org.json.JSONException;
 
-public class IntegerProperty implements ConfigurationProperty<Integer> {
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.JSONNode;
+
+public class DoubleProperty implements ConfigurationProperty<Double> {
     private String _name;
     private String _description;
-    private int    _defaultValue;
+    private double    _defaultValue;
 
 
 
-    public IntegerProperty (String name, String description, int defaultValue) {
+    public DoubleProperty (String name, String description, double defaultValue) {
         _name = name;
         _description = description;
         _defaultValue = defaultValue;
@@ -49,41 +53,41 @@ public class IntegerProperty implements ConfigurationProperty<Integer> {
     }
 
     @Override
-    public Class<Integer> getType () {
-        return Integer.class;
+    public Class<Double> getType () {
+        return Double.class;
     }
 
     @Override
-    public Integer[] getPossibleValues () {
+    public Double[] getPossibleValues () {
         return null;
     }
 
     @Override
-    public Integer getDefaultValue () {
+    public Double getDefaultValue () {
         return _defaultValue;
     }
 
     @Override
-    public String encode (Integer value) {
+    public String encode (Double value) {
         return value.toString();
     }
 
     @Override
-    public Integer unencode (String value) throws ConfigurationException {
+    public Double unencode (String value) throws ConfigurationException {
         try {
-            return Integer.parseInt(value);
+            return Double.parseDouble(value);
         } catch (NumberFormatException e) {
-            throw new ConfigurationException("Unparsable int value "+value, e);
+            throw new ConfigurationException("Unparsable double value "+value, e);
         }
     }
 
     @Override
-    public void encodeJSON (JSONNode propertyNode, Integer value) throws JSONException {
-        propertyNode.setAsInt(value.intValue());
+    public void encodeJSON (JSONNode propertyNode, Double value) throws JSONException {
+        propertyNode.setAsDouble(value.doubleValue());
     }
 
     @Override
-    public Integer unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return propertyNode.getAsInt();
+    public Double unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+        return propertyNode.getAsDouble();
     }
 }

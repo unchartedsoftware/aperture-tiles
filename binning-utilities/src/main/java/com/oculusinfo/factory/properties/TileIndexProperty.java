@@ -21,12 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.factory;
+package com.oculusinfo.factory.properties;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.JSONNode;
 
 public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
     private String    _name;
