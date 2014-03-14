@@ -105,8 +105,9 @@ extends GeneralSparkConnector(
     } else {
       jars
     }
-  }
-)
+  },
+  properties.getOptionProperty("kryo.serialization.registrator")
+  )
 {
 }
 

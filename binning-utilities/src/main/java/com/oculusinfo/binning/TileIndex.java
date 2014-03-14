@@ -42,6 +42,10 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
     private int               _xBins;
     private int               _yBins;
 
+
+    private TileIndex() {
+        
+    }
     /**
      * Create a tile index representation.  The number of bins per axis is defaulted to 256.
      * 

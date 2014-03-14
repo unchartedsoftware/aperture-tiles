@@ -25,16 +25,13 @@
  
 package com.oculusinfo.tilegen.spark
 
-
-
 import org.apache.spark.SparkContext
-
-
 
 class GeneralSparkConnector (master: String,
                              sparkHome: String,
                              user: Option[String],
-                             jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven)
+                             jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven,
+                             kryoRegistrator: Option[String])
 extends SparkConnector(jars)
 {
   override def getSparkContext (jobName: String): SparkContext = {
@@ -46,6 +43,16 @@ extends SparkConnector(jars)
     println("\tMaster: "+master)
     println("\tJob name: "+appName)
     println("\tHome: "+sparkHome)
+
+    if (kryoRegistrator != None) {
+      // inform spark that we are using kryo serialization instead of java serialization
+      System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      // set the kryo registrator to point to the base tile registrator 
+      System.setProperty("spark.kryo.registrator", kryoRegistrator.get)
+      println("\tKryo Serialization Enabled, registrator: "+kryoRegistrator.get)
+    } else {
+      println("\tJava Serialization Enabled")
+    }   
 
     new SparkContext(master, appName, sparkHome, jarList, null, null)
   }

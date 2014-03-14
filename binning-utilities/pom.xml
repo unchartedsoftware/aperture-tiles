@@ -42,6 +42,7 @@
 
 
   <dependencies>
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
@@ -90,7 +91,9 @@
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.7.2</version>
     </dependency>
+
   </dependencies>
+
 
 
   <build>
