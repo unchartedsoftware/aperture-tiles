@@ -47,8 +47,10 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.filter.StackBlurFilter;
@@ -74,9 +76,16 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
     }
 	
 
+    /* (non-Javadoc)
+     * @see TileDataImageRenderer#getLevelExtrema(LayerConfiguration)
+     */
+    @Override
+    public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+        return new Pair<Double, Double>(0.0, 0.0);
+    }
 
 	/* (non-Javadoc)
-	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
+	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
 	public BufferedImage render(LayerConfiguration config) {

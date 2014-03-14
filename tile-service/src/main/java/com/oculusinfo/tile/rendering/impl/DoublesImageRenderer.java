@@ -36,14 +36,15 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 
 /**
  * @author  dgray
@@ -71,7 +72,18 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
     }
 
     /* (non-Javadoc)
-	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
+     * @see TileDataImageRenderer#getLevelExtrema()
+     */
+    @Override
+    public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+        String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
+        double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
+        return new Pair<Double, Double>(minimumValue,  maximumValue);
+    }
+
+    /* (non-Javadoc)
+     * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
 	public BufferedImage render (LayerConfiguration config) {
@@ -84,12 +96,11 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
             int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
             int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
-            double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
-            double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
+            double maximumValue = getLevelExtrema(config).getSecond();
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
-			
-			IValueTransformer t = ValueTransformerFactory.create(config.getPropertyValue(LayerConfiguration.TRANSFORM), minimumValue, maximumValue);
+
+			IValueTransformer t = config.produce(IValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;

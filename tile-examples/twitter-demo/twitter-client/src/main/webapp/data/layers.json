@@ -3,7 +3,9 @@
 	{
 	    "layer": "twitter.2014-01-02.longitude.latitude",
 	    "type": "tile",
-	    "transform": "log10",
+	    "transform": {
+                "name": "log10"
+            },
 	    "ramp": "ware",
 	    "opacity": 0.85,
             "pyramidio": {

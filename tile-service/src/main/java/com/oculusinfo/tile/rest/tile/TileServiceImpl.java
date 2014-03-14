@@ -89,11 +89,6 @@ public class TileServiceImpl implements TileService {
                                       new ArrayList<String>());
     }
 
-    public JSONObject getLayerOptions (String layer) {
-        if (!_latestIDMap.containsKey(layer)) return null;
-        return _uuidToOptionsMap.get(_latestIDMap.get(layer));
-    }
-
     /* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getLayer(String)
 	 */
@@ -135,37 +130,45 @@ public class TileServiceImpl implements TileService {
 
 	}
 
+	@Override
+	public LayerConfiguration getLevelSpecificConfiguration (UUID id, String layer, TileIndex tile) throws ConfigurationException {
+        LayerConfiguration config = getLayerConfiguration();
+
+        if (null == id) {
+            id = _latestIDMap.get(layer);
+        }
+
+        if (id != null){
+            // Get rendering options
+            JSONObject options = _uuidToOptionsMap.get(id);
+            config.readConfiguration(options);
+        } else {
+            config.readConfiguration(new JSONObject());
+        }
+
+        PyramidIO pyramidIO = config.produce(PyramidIO.class);
+
+        PyramidMetaData metadata = getMetadata(config.getPropertyValue(LayerConfiguration.LAYER_NAME), pyramidIO);
+        config.setLevelProperties(tile,
+                                  metadata.getLevelMinimum(tile.getLevel()),
+                                  metadata.getLevelMaximum(tile.getLevel()));
+        return config;
+	}
+
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
 	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y) {
 		int width = 256;
 		int height = 256;
-		JSONObject options = null;
         BufferedImage bi = null;
 
         try {
-    		LayerConfiguration config = getLayerConfiguration();
-    
-    		if (id != null){
-    			// Get rendering options
-    			options = _uuidToOptionsMap.get(id);
-    			config.readConfiguration(options);
-    		} else {
-    		    config.readConfiguration(new JSONObject());
-    		}
-    
-    		PyramidIO pyramidIO = config.produce(PyramidIO.class);
-    
+            LayerConfiguration config = getLevelSpecificConfiguration(id, layer, new TileIndex(zoomLevel, (int) x, (int) y));
     
     		// Record image dimensions in case of error. 
             width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
             height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-
-            PyramidMetaData metadata = getMetadata(config.getPropertyValue(LayerConfiguration.LAYER_NAME), pyramidIO);
-            config.setLevelProperties(new TileIndex(zoomLevel, (int)x, (int)y),
-                                       metadata.getLevelMinimum(zoomLevel),
-                                       metadata.getLevelMaximum(zoomLevel));
 
 		    TileDataImageRenderer tileRenderer = config.produce(TileDataImageRenderer.class);
 

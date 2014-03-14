@@ -37,13 +37,14 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 
 /**
  * A renderer that renders tiles of series of doubles
@@ -76,7 +77,29 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
     public DoublesSeriesImageRenderer () {
 	}
 
-	@Override
+    @Override
+    public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+        double minimumValue;
+        String rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MINIMUMS);
+        try {
+            minimumValue = Double.parseDouble(rawValue);
+        } catch (NumberFormatException e) {
+            _logger.warn("Expected a numeric minimum for level, got {}", rawValue);
+            minimumValue = 0.0;
+        }
+        
+        double maximumValue;
+        rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MAXIMUMS);
+        try {
+            maximumValue = Double.parseDouble(rawValue);
+        } catch (NumberFormatException e) {
+            _logger.warn("Expected a numeric maximum for level, got {}", rawValue);
+            maximumValue = 1000.0;
+        }
+        return new Pair<Double, Double>(minimumValue, maximumValue);
+    }
+
+    @Override
 	public BufferedImage render (LayerConfiguration config) {
  		BufferedImage bi;
         String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
@@ -89,25 +112,9 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-			double minimumValue;
-            String rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MINIMUMS);
-			try {
-			    minimumValue = Double.parseDouble(rawValue);
-			} catch (NumberFormatException e) {
-			    _logger.warn("Expected a numeric minimum for level, got {}", rawValue);
-			    minimumValue = 0.0;
-			}
-			
-			double maximumValue;
-			rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MAXIMUMS);
-			try {
-			    maximumValue = Double.parseDouble(rawValue);
-			} catch (NumberFormatException e) {
-			    _logger.warn("Expected a numeric maximum for level, got {}", rawValue);
-			    maximumValue = 1000.0;
-			}
-			IValueTransformer t = ValueTransformerFactory.create(config.getPropertyValue(LayerConfiguration.TRANSFORM), minimumValue, maximumValue);
+			IValueTransformer t = config.produce(IValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
+			double maximumValue = getLevelExtrema(config).getSecond();
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;

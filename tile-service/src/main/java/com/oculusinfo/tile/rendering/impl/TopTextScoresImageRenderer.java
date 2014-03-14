@@ -43,6 +43,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
@@ -108,7 +109,12 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 			g.drawString(text, centerX-padding-textWidth, textBaseline);
 		}
 	}
-			
+
+	@Override
+	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+	    return new Pair<Double, Double>(0.0, 0.0);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

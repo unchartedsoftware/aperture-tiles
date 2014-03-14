@@ -26,7 +26,9 @@ package com.oculusinfo.tile.rendering;
 
 import java.awt.image.BufferedImage;
 
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.factory.ConfigurationException;
 
 /**
  * A class to encapsulate rendering of tiles into any format potentially used 
@@ -54,4 +56,9 @@ public interface TileDataImageRenderer {
 	 */
 	public int getNumberOfImagesPerTile (PyramidMetaData metadata);
 
+	/**
+	 * From configuration information, collect metadata and figure out level extrema as needed and possible.
+	 * @throws ConfigurationException 
+	 */
+    public abstract Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException;
 }

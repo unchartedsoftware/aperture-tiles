@@ -247,7 +247,7 @@ abstract public class ConfigurableFactory<T> {
             return goodsType.cast(create());
         } else {
             for (ConfigurableFactory<?> child: _children) {
-                GT result = child.produce(goodsType);
+                GT result = child.produce(name, goodsType);
                 if (null != result) return result;
             }
         }

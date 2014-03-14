@@ -27,20 +27,21 @@ package com.oculusinfo.tile.rendering.transformations;
 public class LinearCappedValueTransformer implements IValueTransformer {
 	private final double _min;
 	private final double _max;
+	private final double _layerMax;
 	
-	public LinearCappedValueTransformer(double maxCap){
-		_min = Math.min(0, maxCap);
-		_max = Math.max(0, maxCap);
-		
-	}
-	
-	public LinearCappedValueTransformer(double minCap, double maxCap){
+	public LinearCappedValueTransformer (double minCap, double maxCap, double layerMax) {
 		_min = Math.min(minCap, maxCap);
 		_max = Math.max(minCap, maxCap);
+		_layerMax = layerMax;
 	}
 	
 	@Override
 	public double transform(double value) {
 		return Math.max(Math.min(value, _max), _min) / (_max - _min);
+	}
+
+	@Override
+	public double getMaximumValue () {
+	    return _layerMax;
 	}
 }

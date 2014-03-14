@@ -30,10 +30,13 @@ import java.util.List;
 import java.util.Properties;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
@@ -42,6 +45,7 @@ import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.properties.TileIndexProperty;
 import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 
 
 
@@ -55,6 +59,8 @@ import com.oculusinfo.tile.init.FactoryProvider;
  * @author nkronenfeld
  */
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
+
     public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
                                                                                    "The ID of the layer; exact format depends on how the layer is stored.",
                                                                                    null);
@@ -104,6 +110,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 
 
+    private ValueTransformerFactory _transformFactory;
+
     public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
                                FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
                                FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
@@ -136,6 +144,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         addProperty(LEVEL_MINIMUMS);
         addProperty(LEVEL_MAXIMUMS);
 
+        _transformFactory = new ValueTransformerFactory(this, Collections.singletonList("transform"));
+        addChildFactory(_transformFactory);
         addChildFactory(rendererFactoryProvider.createFactory(this, Collections.singletonList("renderer")));
         addChildFactory(pyramidIOFactoryProvider.createFactory(this, Collections.singletonList("pyramidio")));
         addChildFactory(serializationFactoryProvider.createFactory(this, Collections.singletonList("serializer")));
@@ -178,8 +188,16 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         setPropertyValue(TILE_COORDINATE, tileIndex);
         setPropertyValue(LEVEL_MAXIMUMS, levelMaximum);
         setPropertyValue(LEVEL_MINIMUMS, levelMinimum);
+
+        try {
+            TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
+            Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
+            _transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+        } catch (ConfigurationException e) {
+            LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
+        }
     }
-    
+
     /**
      * Just make this public - we use the factory directly for rendering
      * properties, since there are bunches of small properties which don't

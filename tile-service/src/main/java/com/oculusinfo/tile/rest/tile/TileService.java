@@ -29,6 +29,10 @@ import java.util.UUID;
 
 import org.json.JSONObject;
 
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+
 public interface TileService {
 	
 	/**
@@ -56,5 +60,5 @@ public interface TileService {
 
 	public JSONObject getTileObject (UUID fromString, String layer, int zoomLevel, double x, double y);
 
-	public JSONObject getLayerOptions (String layer);
+	public LayerConfiguration getLevelSpecificConfiguration (UUID id, String layer, TileIndex tile) throws ConfigurationException;
 }
