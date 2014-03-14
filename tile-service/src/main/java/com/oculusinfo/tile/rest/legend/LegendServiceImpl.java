@@ -192,7 +192,7 @@ public class LegendServiceImpl implements LegendService {
 			try {
 			    ConfigurableFactory<PyramidIO> factory = _pyramidIOProvider.createFactory(new ArrayList<String>());
 			    factory.readConfiguration(options);
-			    PyramidIO pyramidIO = factory.getNewGood(PyramidIO.class);
+			    PyramidIO pyramidIO = factory.produce(PyramidIO.class);
 				String s = pyramidIO.readMetaData(layer);
 				metadata = new JSONObject(s);
 				_metadataCache.put(layer, metadata);

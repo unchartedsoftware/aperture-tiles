@@ -42,7 +42,7 @@ public interface TileDataImageRenderer {
 	 * @param parameter
 	 * @return
 	 */
-	public abstract BufferedImage render (RenderParameterFactory parameter);
+	public abstract BufferedImage render (LayerConfiguration config);
 
 	/**
 	 * Determine how many images are available to be rendered given a set of

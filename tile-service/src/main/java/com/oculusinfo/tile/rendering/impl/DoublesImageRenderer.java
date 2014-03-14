@@ -39,7 +39,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.tile.rendering.RenderParameterFactory;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
@@ -60,7 +60,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 
 
-    private double parseExtremum (RenderParameterFactory parameter, StringProperty property, String propName, String layer, double def) {
+    private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
         String rawValue = parameter.getPropertyValue(property);
         try {
             return Double.parseDouble(rawValue);
@@ -74,22 +74,22 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
 	 */
 	@Override
-	public BufferedImage render (RenderParameterFactory parameter) {
+	public BufferedImage render (LayerConfiguration config) {
  		BufferedImage bi;
-        String layer = parameter.getPropertyValue(RenderParameterFactory.LAYER_NAME);
-        TileIndex index = parameter.getPropertyValue(RenderParameterFactory.TILE_COORDINATE);
+        String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
-		    int outputWidth = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
-		    int outputHeight = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
-            int rangeMax = parameter.getPropertyValue(RenderParameterFactory.RANGE_MAX);
-            int rangeMin = parameter.getPropertyValue(RenderParameterFactory.RANGE_MIN);
-            int coarseness = parameter.getPropertyValue(RenderParameterFactory.COARSENESS);
-            double minimumValue = parseExtremum(parameter, RenderParameterFactory.LEVEL_MINIMUMS, "minimum", layer, 0.0);
-            double maximumValue = parseExtremum(parameter, RenderParameterFactory.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
+		    int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+		    int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+            int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
+            int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
+            int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
+            double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
+            double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 			
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getPropertyValue(RenderParameterFactory.TRANSFORM), minimumValue, maximumValue);
+			IValueTransformer t = ValueTransformerFactory.create(config.getPropertyValue(LayerConfiguration.TRANSFORM), minimumValue, maximumValue);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -97,8 +97,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
 
-			PyramidIO pyramidIO = parameter.getNewGood(PyramidIO.class);
-			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(parameter.getNewGood(TileSerializer.class),
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
 			                                                                           getRuntimeBinClass(),
 			                                                                           getRuntimeTypeDescriptor());
 
@@ -108,7 +108,9 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
             TileIndex scaleLevelIndex = null; 
 			// need to get the tile data for the level of the base level minus the courseness
 			for (int coursenessLevel = coarseness - 1; coursenessLevel >= 0; --coursenessLevel) {
-				scaleLevelIndex = new TileIndex(index.getLevel() - coursenessLevel, (int)Math.floor(index.getX() / coarsenessFactor), (int)Math.floor(index.getY() / coarsenessFactor));				
+				scaleLevelIndex = new TileIndex(index.getLevel() - coursenessLevel,
+				                                (int)Math.floor(index.getX() / coarsenessFactor),
+				                                (int)Math.floor(index.getY() / coarsenessFactor));				
 				
 				tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(scaleLevelIndex));
 				if (tileDatas.size() >= 1) {
@@ -146,7 +148,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			int numBinsHigh = yBinEnd - yBinStart;
 			double xScale = ((double) bi.getWidth())/numBinsWide;
 			double yScale = ((double) bi.getHeight())/numBinsHigh;
-			ColorRamp colorRamp = parameter.getNewGood(ColorRamp.class);
+			ColorRamp colorRamp = config.produce(ColorRamp.class);
 			for(int ty = 0; ty < numBinsHigh; ty++){
 				for(int tx = 0; tx < numBinsWide; tx++){
 					//calculate the scaled dimensions of this 'pixel' within the image

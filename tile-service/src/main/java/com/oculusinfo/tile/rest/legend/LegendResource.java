@@ -89,7 +89,7 @@ public class LegendResource extends ApertureServerResource {
 			try {
 			    ColorRampFactory factory = new ColorRampFactory(null, Collections.singletonList("ramp"));
 			    factory.readConfiguration(jsonObj);
-			    colorRamp = factory.getNewGood(ColorRamp.class);
+			    colorRamp = factory.produce(ColorRamp.class);
 			} catch (ConfigurationException e) {
 			    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Unable to create legend - bad color ramp configuration");
 			}
@@ -128,7 +128,7 @@ public class LegendResource extends ApertureServerResource {
                 if (null != value) rampConfig.put(property.getName(), value);
     		}
             ColorRampFactory factory = new ColorRampFactory(null, new ArrayList<String>());
-            ramp = factory.getNewGood(ColorRamp.class);
+            ramp = factory.produce(ColorRamp.class);
 		} catch (ConfigurationException|JSONException e) {
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Unable to generate legend image - bad color ramp configuration.", e);
         }

@@ -54,7 +54,7 @@ import com.oculusinfo.tile.init.FactoryProvider;
  * 
  * @author nkronenfeld
  */
-public class RenderParameterFactory extends ConfigurableFactory<RenderParameterFactory> {
+public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
     public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
                                                                                    "The ID of the layer; exact format depends on how the layer is stored.",
                                                                                    null);
@@ -84,12 +84,12 @@ public class RenderParameterFactory extends ConfigurableFactory<RenderParameterF
     public static final IntegerProperty       OUTPUT_HEIGHT   = new IntegerProperty("outputHeight",
                                                                                     "For use by the server only",
                                                                                     256);
-    public static final IntegerProperty       RANGE_MIN = new IntegerProperty("rangeMin",
-                                                                              "For server use only - derived property",
-                                                                              0);
-    public static final IntegerProperty       RANGE_MAX = new IntegerProperty("rangeMax",
-                                                                              "For server use only - derived property",
-                                                                              100);
+    public static final IntegerProperty       RANGE_MIN       = new IntegerProperty("rangeMin",
+                                                                                    "For server use only - derived property",
+                                                                                    0);
+    public static final IntegerProperty       RANGE_MAX       = new IntegerProperty("rangeMax",
+                                                                                    "For server use only - derived property",
+                                                                                    100);
 
     // Per-tile properties
     public static final TileIndexProperty     TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
@@ -104,21 +104,21 @@ public class RenderParameterFactory extends ConfigurableFactory<RenderParameterF
 
 
 
-    public RenderParameterFactory (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
-                                   FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-                                   FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-                                   ConfigurableFactory<?> parent,
-                                   List<String> path) {
+    public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
+                               FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+                               ConfigurableFactory<?> parent,
+                               List<String> path) {
         this(pyramidIOFactoryProvider, serializationFactoryProvider,
              rendererFactoryProvider, null, parent, path);
     }
 
-    public RenderParameterFactory (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
-                                   FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-                                   FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-                                   String name, ConfigurableFactory<?> parent,
-                                   List<String> path) {
-        super(name, RenderParameterFactory.class, parent, path);
+    public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
+                               FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+                               String name, ConfigurableFactory<?> parent,
+                               List<String> path) {
+        super(name, LayerConfiguration.class, parent, path);
 
         addProperty(LAYER_NAME);
         addProperty(SHORT_NAME);
@@ -129,12 +129,12 @@ public class RenderParameterFactory extends ConfigurableFactory<RenderParameterF
         addProperty(OUTPUT_HEIGHT);
         addProperty(LINE_NUMBER);
         addProperty(COARSENESS);
+        addProperty(RANGE_MIN);
+        addProperty(RANGE_MAX);
 
         addProperty(TILE_COORDINATE);
         addProperty(LEVEL_MINIMUMS);
         addProperty(LEVEL_MAXIMUMS);
-        addProperty(RANGE_MIN);
-        addProperty(RANGE_MAX);
 
         addChildFactory(rendererFactoryProvider.createFactory(this, Collections.singletonList("renderer")));
         addChildFactory(pyramidIOFactoryProvider.createFactory(this, Collections.singletonList("pyramidio")));
@@ -142,7 +142,7 @@ public class RenderParameterFactory extends ConfigurableFactory<RenderParameterF
     }
 
     @Override
-    protected RenderParameterFactory create () {
+    protected LayerConfiguration create () {
         return this;
     }
 
@@ -161,7 +161,7 @@ public class RenderParameterFactory extends ConfigurableFactory<RenderParameterF
     }
 
     private void calculateDerivedProperties () {
-        List<Integer> legendRange = getPropertyValue(RenderParameterFactory.LEGEND_RANGE);
+        List<Integer> legendRange = getPropertyValue(LayerConfiguration.LEGEND_RANGE);
         if (null != legendRange && !legendRange.isEmpty()) {
             setPropertyValue(RANGE_MIN,  legendRange.get(0));
             setPropertyValue(RANGE_MAX,  legendRange.get(1));

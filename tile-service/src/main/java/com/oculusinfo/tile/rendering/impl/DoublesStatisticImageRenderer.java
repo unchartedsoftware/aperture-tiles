@@ -49,7 +49,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.tile.rendering.RenderParameterFactory;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.filter.StackBlurFilter;
 import com.oculusinfo.tile.util.GraphicsUtilities;
@@ -79,21 +79,21 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
 	 */
 	@Override
-	public BufferedImage render(RenderParameterFactory parameter) {
+	public BufferedImage render(LayerConfiguration config) {
  		BufferedImage bi = null;
  		TileIndex tileIndex = null;
  		String layer = "?";
  		int lineNumber = 0;
  		
 		try {
-            tileIndex = parameter.getPropertyValue(RenderParameterFactory.TILE_COORDINATE);
-            layer = parameter.getPropertyValue(RenderParameterFactory.LAYER_NAME);
-            String shortName = parameter.getPropertyValue(RenderParameterFactory.SHORT_NAME);
-		    int width = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
-		    int height = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
-		    lineNumber = parameter.getPropertyValue(RenderParameterFactory.LINE_NUMBER);
-		    PyramidIO pyramidIO = parameter.getNewGood(PyramidIO.class);
-		    TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(parameter.getNewGood(TileSerializer.class),
+            tileIndex = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+            layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+            String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
+		    int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+		    int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+		    lineNumber = config.getPropertyValue(LayerConfiguration.LINE_NUMBER);
+		    PyramidIO pyramidIO = config.produce(PyramidIO.class);
+		    TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
 		                                                                               getRuntimeBinClass(),
 		                                                                               getRuntimeTypeDescriptor());
 
@@ -163,7 +163,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 * @param textColor
 	 * @param glowColor
 	 */
-	private static void drawTextGlow(BufferedImage destination, String text, int xOffset, int yOffset, Font font, Color textColor, Color glowColor) {
+	private static void drawTextGlow (BufferedImage destination, String text, int xOffset, int yOffset, Font font, Color textColor, Color glowColor) {
 		Graphics2D g = destination.createGraphics();
 		g.setFont(font);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

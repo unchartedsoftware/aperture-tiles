@@ -43,7 +43,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.tile.rendering.RenderParameterFactory;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 
@@ -113,27 +113,27 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BufferedImage render(RenderParameterFactory parameter) {
-		BufferedImage bi;
-        String layer = parameter.getPropertyValue(RenderParameterFactory.LAYER_NAME);
-        TileIndex index = parameter.getPropertyValue(RenderParameterFactory.TILE_COORDINATE);
-	try {
-			int width = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
-			int height = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
-			PyramidIO pyramidIO = parameter.getNewGood(PyramidIO.class);
-			TileSerializer<List<Pair<String, Double>>> serializer = SerializationTypeChecker.checkBinClass(parameter.getNewGood(TileSerializer.class),
-			                                                                                               getRuntimeBinClass(),
-			                                                                                               getRuntimeTypeDescriptor());
+	public BufferedImage render(LayerConfiguration config) {
+	    BufferedImage bi;
+	    String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+	    TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+	    try {
+	        int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+	        int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+	        PyramidIO pyramidIO = config.produce(PyramidIO.class);
+	        TileSerializer<List<Pair<String, Double>>> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+	                                                                                                       getRuntimeBinClass(),
+	                                                                                                       getRuntimeTypeDescriptor());
 
-			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+	        bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-			List<TileData<List<Pair<String, Double>>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
-			if (tileDatas.isEmpty()) {
-			    _logger.debug("Layer {} is missing tile ().", layer, index);
-			    return null;
-			}
-			TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
-			int xBins = data.getDefinition().getXBins();
+	        List<TileData<List<Pair<String, Double>>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
+	        if (tileDatas.isEmpty()) {
+	            _logger.debug("Layer {} is missing tile ().", layer, index);
+	            return null;
+	        }
+	        TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
+	        int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
 
 			Graphics2D g = bi.createGraphics();
@@ -144,7 +144,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 			int rowHeight = 16;
 			int barHeight = 3;
 			int padding = 2;
-			ColorRamp colorRamp = parameter.getNewGood(ColorRamp.class);
+			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
 			for (int x=0; x<xBins; ++x) {
 				for (int y=0; y<yBins; ++y) {

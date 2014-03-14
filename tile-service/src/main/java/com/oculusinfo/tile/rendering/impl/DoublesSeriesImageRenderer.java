@@ -39,7 +39,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.tile.rendering.RenderParameterFactory;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
@@ -77,20 +77,20 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 	}
 
 	@Override
-	public BufferedImage render (RenderParameterFactory parameter) {
+	public BufferedImage render (LayerConfiguration config) {
  		BufferedImage bi;
-        String layer = parameter.getPropertyValue(RenderParameterFactory.LAYER_NAME);
-        TileIndex index = parameter.getPropertyValue(RenderParameterFactory.TILE_COORDINATE);
+        String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {  // TODO: harden at a finer granularity.
-			int outputWidth = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_WIDTH);
-			int outputHeight = parameter.getPropertyValue(RenderParameterFactory.OUTPUT_HEIGHT);
-			int rangeMax = parameter.getPropertyValue(RenderParameterFactory.RANGE_MAX);
-			int rangeMin = parameter.getPropertyValue(RenderParameterFactory.RANGE_MIN);
+			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
+			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
 			double minimumValue;
-            String rawValue = parameter.getPropertyValue(RenderParameterFactory.LEVEL_MINIMUMS);
+            String rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MINIMUMS);
 			try {
 			    minimumValue = Double.parseDouble(rawValue);
 			} catch (NumberFormatException e) {
@@ -99,21 +99,21 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			}
 			
 			double maximumValue;
-			rawValue = parameter.getPropertyValue(RenderParameterFactory.LEVEL_MAXIMUMS);
+			rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MAXIMUMS);
 			try {
 			    maximumValue = Double.parseDouble(rawValue);
 			} catch (NumberFormatException e) {
 			    _logger.warn("Expected a numeric maximum for level, got {}", rawValue);
 			    maximumValue = 1000.0;
 			}
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getPropertyValue(RenderParameterFactory.TRANSFORM), minimumValue, maximumValue);
+			IValueTransformer t = ValueTransformerFactory.create(config.getPropertyValue(LayerConfiguration.TRANSFORM), minimumValue, maximumValue);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
 
-			PyramidIO pyramidIO = parameter.getNewGood(PyramidIO.class);
-			TileSerializer<List<Double>> serializer = SerializationTypeChecker.checkBinClass(parameter.getNewGood(TileSerializer.class),
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<List<Double>> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
 			                                                                                 getRuntimeBinClass(),
 			                                                                                 getRuntimeTypeDescriptor());
 			List<TileData<List<Double>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
@@ -124,7 +124,7 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			}
 
 			// Default to 0 if the default of -1 is given
-			int currentImage = Math.max(0, parameter.getPropertyValue(RenderParameterFactory.CURRENT_IMAGE));
+			int currentImage = Math.max(0, config.getPropertyValue(LayerConfiguration.CURRENT_IMAGE));
 			
 			TileData<List<Double>> data = tileDatas.get(0);
 			int xBins = data.getDefinition().getXBins();
@@ -133,7 +133,7 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			double xScale = ((double) outputWidth)/xBins;
 			double yScale = ((double) outputHeight)/yBins;
 
-			ColorRamp colorRamp = parameter.getNewGood(ColorRamp.class);
+			ColorRamp colorRamp = config.produce(ColorRamp.class);
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 					int minX = (int) Math.round(tx*xScale);

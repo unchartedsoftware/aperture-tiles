@@ -71,7 +71,6 @@ abstract public class ConfigurableFactory<T> {
     private List<ConfigurableFactory<?>>                    _children;
     private boolean                                         _configured;
     private String                                          _propertyPrefix;
-    private T                                               _singleton;
 
 
 
@@ -116,7 +115,6 @@ abstract public class ConfigurableFactory<T> {
         _properties = new HashMap<>();
         _children = new ArrayList<>();
         _configured = false;
-        _singleton = null;
         _propertyPrefix = null;
     }
 
@@ -223,53 +221,12 @@ abstract public class ConfigurableFactory<T> {
     /**
      * Get one of the goods managed by this factory.
      * 
-     * This version always returns the same instance given the same type of
-     * goods.
-     * 
-     * @param goodsType The type of goods desired.
-     */
-    public <GT> GT getSingletonGood (Class<GT> goodsType) throws ConfigurationException {
-        return getSingletonGood(null, goodsType);
-    }
-
-    /**
-     * Get one of the goods managed by this factory.
-     * 
-     * This version always returns the same instance given the same type of
-     * goods.
-     * 
-     * @param name The name of the factory from which to obtain the needed
-     *            goods. Null indicates that the factory name doesn't matter.
-     * @param goodsType The type of goods desired.
-     */
-    public <GT> GT getSingletonGood (String name, Class<GT> goodsType) throws ConfigurationException {
-        if (!_configured) {
-            throw new ConfigurationException("Attempt to get value from uninitialized factory");
-        }
-
-        if ((null == name || name.equals(_name)) && goodsType.equals(_factoryType)) {
-            if (null == _singleton) {
-                _singleton = create();
-            }
-            return goodsType.cast(_singleton);
-        } else {
-            for (ConfigurableFactory<?> child: _children) {
-                GT result = child.getSingletonGood(goodsType);
-                if (null != result) return result;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get one of the goods managed by this factory.
-     * 
      * This version returns a new instance each time it is called.
      * 
      * @param goodsType The type of goods desired.
      */
-    public <GT> GT getNewGood (Class<GT> goodsType) throws ConfigurationException {
-        return getNewGood(null, goodsType);
+    public <GT> GT produce (Class<GT> goodsType) throws ConfigurationException {
+        return produce(null, goodsType);
     }
 
     /**
@@ -281,7 +238,7 @@ abstract public class ConfigurableFactory<T> {
      *            goods. Null indicates that the factory name doesn't matter.
      * @param goodsType The type of goods desired.
      */
-    public <GT> GT getNewGood (String name, Class<GT> goodsType) throws ConfigurationException {
+    public <GT> GT produce (String name, Class<GT> goodsType) throws ConfigurationException {
         if (!_configured) {
             throw new ConfigurationException("Attempt to get value from uninitialized factory");
         }
@@ -290,7 +247,7 @@ abstract public class ConfigurableFactory<T> {
             return goodsType.cast(create());
         } else {
             for (ConfigurableFactory<?> child: _children) {
-                GT result = child.getNewGood(goodsType);
+                GT result = child.produce(goodsType);
                 if (null != result) return result;
             }
         }
@@ -323,7 +280,6 @@ abstract public class ConfigurableFactory<T> {
             child.readConfiguration(properties);
         }
 
-        _singleton = create();
         _configured = true;
     }
 
@@ -368,7 +324,7 @@ abstract public class ConfigurableFactory<T> {
         int index = 0;
         while (properties.containsKey(baseKey+"."+index)) {
             entryPropertyNames.add(baseKey+"."+index);
-            ++index;
+           ++index;
         }
         if (0 == index) {
             if (properties.containsKey(baseKey)) {
@@ -417,7 +373,6 @@ abstract public class ConfigurableFactory<T> {
                 child.readConfiguration(rootNode);
             }
 
-            _singleton = create();
             _configured = true;
         } catch (JSONException e) {
             throw new ConfigurationException("Error configuring factory "+this.getClass().getName(), e);
