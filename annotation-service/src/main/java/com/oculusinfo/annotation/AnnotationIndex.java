@@ -49,7 +49,7 @@ public class AnnotationIndex implements Serializable {
     									 0x0000FFFF0000FFFFL,
     									 0x00000000FFFFFFFFL};
 
-    private static final long SHIFTS[] = {1, 2, 4, 8, 16};
+    private static final long SHIFTS[] = { 1, 2, 4, 8, 16 };
        
     public static final long MAX_UNIT = Integer.MAX_VALUE;
     
@@ -164,41 +164,6 @@ public class AnnotationIndex implements Serializable {
         y = (y | (y << SHIFTS[0])) & BITS[0];
 
         return x | (y << 1);
-
-
-    	/*
-    	final int MAX_DEPTH = 8;
-    	
-    	double xMin = _bounds[0];
-    	double yMin = _bounds[1];
-    	double xMax = _bounds[2];
-    	double yMax = _bounds[3];
-    	double xRange = xMax - xMin;
-    	double yRange = yMax - yMin;
-    	
-    	_index = 0;
-    	int currentDepth = 0;
-    	while (currentDepth < MAX_DEPTH) {
-    		
-    		final double xMid = xMin+ (xRange / 2.0);
-        	final double yMid = yMin+ (yRange / 2.0);
-
-        	_index = _index << 2;
-        	
-    		if (_xCoord > xMid ) {
-    			xMin = xMid;
-    			_index = _index | 2;
-    		}
-    		
-    		if (_yCoord > yMid ) {
-    			yMin = yMid;
-    			_index = _index | 1;
-    		}
-    		currentDepth++;
-    		xRange /= 2.0;
-    		yRange /= 2.0;
-    	}
-    	*/
 
     }
     

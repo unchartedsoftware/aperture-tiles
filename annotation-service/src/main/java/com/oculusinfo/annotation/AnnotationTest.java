@@ -82,13 +82,150 @@ public class AnnotationTest{
 		return annotations;
 	}
 	
+	
+	public static boolean divideBBTest( AnnotationBB bb, int depth, boolean verbose ) {
+	
+		/*
+		 * Annotation a bounding boxes represent the double x and y coordinates of the arbitrary input
+		 * ranges and coordinates as long values, each axis 0 - 2^31
+		 * 
+		 * Bounding boxes should be able to break into 4 quadrants seamlessly, with no floating point
+		 * conversion errors.
+		 * 
+		 * This test function randomly traverses down to the base resolution
+		 */
+		
+		if (depth == 31) {
+			System.out.println( "Success: all indexes are continuous along span of 0 to " + AnnotationIndex.MAX_UNIT * AnnotationIndex.MAX_UNIT);			
+			return true;
+		}
+		
+		AnnotationBB ne = bb.getNE();
+		AnnotationBB se = bb.getSE();
+		AnnotationBB sw = bb.getSW();
+		AnnotationBB nw = bb.getNW();
+
+		if (verbose) {
+			System.out.println("Check quadtree range generation, depth: " + depth);
+			System.out.println( "\tbb: \t" + bb.getRange().get(0).getIndex() + " - " + bb.getRange().get(1).getIndex() );
+			System.out.println( "\t\tsw: " + sw.getRange().get(0).getIndex() + " - " + sw.getRange().get(1).getIndex() );			
+			System.out.println( "\t\tse: " + se.getRange().get(0).getIndex() + " - " + se.getRange().get(1).getIndex() );			
+			System.out.println( "\t\tnw: " + nw.getRange().get(0).getIndex() + " - " + nw.getRange().get(1).getIndex() );
+			System.out.println( "\t\tne: " + ne.getRange().get(0).getIndex() + " - " + ne.getRange().get(1).getIndex() + "\n" );
+		}
+		
+		
+		if ( sw.getRange().get(1).getIndex()+1 != se.getRange().get(0).getIndex() &&
+			 se.getRange().get(1).getIndex()+1 != nw.getRange().get(0).getIndex() &&
+			 nw.getRange().get(1).getIndex()+1 != ne.getRange().get(0).getIndex() ) {			
+			System.out.println( "Error: Indexes are not continuous along span of 0 to " + AnnotationIndex.MAX_UNIT);
+			return false;
+		}
+		
+		int rand = (int)(Math.random() * 4.0);
+		switch (rand) {
+			case 0: return divideBBTest( sw, depth+1, verbose );
+			case 1: return divideBBTest( se, depth+1, verbose );
+			case 2: return divideBBTest( nw, depth+1, verbose );
+			default: return divideBBTest( ne, depth+1, verbose );
+		}
+		
+	}
+	
+	
+	public static boolean quadTreeTest( List<AnnotationData> annotations, boolean verbose ) {
+		
+		AnnotationIndex p0 = generateIndex();
+		AnnotationIndex p1 = generateIndex();				
+		double xMax = Math.max( p0.getX(), p1.getX() );
+		double xMin = Math.min( p0.getX(), p1.getX() );
+		double yMax = Math.max( p0.getY(), p1.getY() );		
+		double yMin = Math.min( p0.getY(), p1.getY() );	
+		double [] bounds = { xMin, yMin, xMax, yMax };	
+		AnnotationBB testBB = new AnnotationBB( bounds, BOUNDS );
+		
+		if (verbose) {
+			System.out.println( "\tBounding box: bottom left: " + xMin + ", " + yMin +
+										  ", top right: " + xMax + ", " + yMax );
+		}
+		
+		List<AnnotationData> manualEntries = new ArrayList<AnnotationData>();
+		for ( AnnotationData annotation : annotations ) {
+			
+			boolean bbTest = false;
+			boolean manTest = false;
+			if ( testBB.contains( annotation.getIndex() ) ) {
+				bbTest = true;	
+			}
+			
+			double x = annotation.getIndex().getX();
+			double y = annotation.getIndex().getY();
+			
+			if ( x > xMin && x < xMax &&
+				 y > yMin && y < yMax ) {
+				manTest = true;
+				manualEntries.add( annotation );
+			}
+			
+			if ( bbTest != manTest ) {
+				System.out.println("Error: bounding box containment function failed");
+				System.out.println("x: " + x + ", y: " + y);
+				System.out.println( "\tBounding box: bottom left: " + xMin + ", " + yMin +
+						  ", top right: " + xMax + ", " + yMax );
+				return false;
+			}
+		}
+		
+		if (verbose) {
+			System.out.println( "\tManual box check returns " + manualEntries.size() + " results");
+			print( manualEntries );
+		}
+		
+		AnnotationBB fullBB = new AnnotationBB( BOUNDS );
+		AnnotationQuadTree tree =  new AnnotationQuadTree( fullBB );
+		
+		List<AnnotationIndex> results = tree.getIndexRanges(testBB);
+
+		if (verbose) {
+
+			System.out.println("\tQuadtree returned " + results.size()/2 + " ranges");
+			for (int i=0; i<results.size(); i+=2) {
+				System.out.println("\t\tRange " + i/2 + " from: " + results.get(i).getIndex() + ", to: " + results.get(i+1).getIndex() );
+			}
+		}
+		
+		// make sure all manual entries fit within given ranges
+		for ( AnnotationData annotation : manualEntries ) {
+			//
+			boolean inside = false;
+			long index = annotation.getIndex().getIndex();
+			for (int i=0; i<results.size(); i+=2) {
+				
+				long start = results.get(i).getIndex();
+				long stop = results.get(i+1).getIndex();
+				if (index >= start && index <= stop) {
+					inside = true;
+					break;
+				}
+			}
+			if (!inside) {
+				System.out.println("Error: annotation " + index + " inside bounding box was not found in quad tree index range!");
+				return false;
+			}					
+		}
+		
+		System.out.println("Success: all annotations found inside ranges return from quadtree");		
+		return true;
+	}
+	
+	
 	public static void main(String [] args)
 	{
 		long startTime;
 		long endTime;
 		
 		String TABLE_NAME = "AnnotationTable";
-		int NUM_ENTRIES = 100;
+		int NUM_ENTRIES = 1000;
 		
 		HBaseAnnotationIO hbaseIO;
 		try {
@@ -123,8 +260,9 @@ public class AnnotationTest{
 			hbaseIO.writeAnnotations(TABLE_NAME, annotations);	
 			endTime = System.currentTimeMillis();
 			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
-			*/
+			
 			print( annotations );
+			*/
 			
 			// build bounding box from 2 random points
 			// bounding box corners must be created from lowest val corner to highest val corner
@@ -133,11 +271,9 @@ public class AnnotationTest{
 			double xMax = Math.max( p0.getX(), p1.getX() );
 			double xMin = Math.min( p0.getX(), p1.getX() );
 			double yMax = Math.max( p0.getY(), p1.getY() );		
-			double yMin = Math.min( p0.getY(), p1.getY() );			
+			double yMin = Math.min( p0.getY(), p1.getY() );	
 			AnnotationIndex start = new AnnotationIndex(xMin, yMin, BOUNDS);
 			AnnotationIndex stop = new AnnotationIndex(xMax, yMax, BOUNDS);			
-			System.out.println( "Bounding box: bottom left: " + start.getX() + ", " + start.getY() );
-			System.out.println( "		         top right: " + stop.getX() + ", " + stop.getY() );
 			
 			/*
 			// spatial indexing bounding box test
@@ -174,18 +310,21 @@ public class AnnotationTest{
 				}				
 			}
 			*/
-			System.out.println("Check quadtree range generation");
+			
 			AnnotationBB bb = new AnnotationBB( BOUNDS );	
-			AnnotationBB ne = bb.getNE();
-			AnnotationBB se = bb.getSE();
-			AnnotationBB sw = bb.getSW();
-			AnnotationBB nw = bb.getNW();
-			AnnotationQuadTree tree =  new AnnotationQuadTree( bb );
-			System.out.println( "bb ll: " + bb.getRange().get(0).getIndex() + ", ur: " + bb.getRange().get(1).getIndex() );
-			System.out.println( "ne ll: " + ne.getRange().get(0).getIndex() + ", ur: " + ne.getRange().get(1).getIndex() );
-			System.out.println( "se ll: " + se.getRange().get(0).getIndex() + ", ur: " + se.getRange().get(1).getIndex() );
-			System.out.println( "sw ll: " + sw.getRange().get(0).getIndex() + ", ur: " + sw.getRange().get(1).getIndex() );
-			System.out.println( "nw ll: " + nw.getRange().get(0).getIndex() + ", ur: " + nw.getRange().get(1).getIndex() );
+			
+			int TEST_CASES = 100;
+			
+			for (int i=0; i<TEST_CASES; i++) {
+				System.out.print("Test " + i + ": ");
+				if (!divideBBTest( bb, 0, false )) System.out.println( "ERROR!" );	
+			}
+
+			for (int i=0; i<TEST_CASES; i++) {
+				System.out.print("Test " + i + ": ");
+				if (!quadTreeTest( annotations, false )) System.out.println( "ERROR!" );	
+				
+			}
 			
 			/*
 			System.out.println("Disabling and dropping table");
@@ -194,6 +333,7 @@ public class AnnotationTest{
 			endTime = System.currentTimeMillis();
 			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
 			*/
+			
 		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());
 		} finally {

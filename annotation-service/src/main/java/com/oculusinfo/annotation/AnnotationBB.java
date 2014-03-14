@@ -27,12 +27,16 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 
+/*
+ * A bounding box class in annotation index space
+ * 
+ */
 public class AnnotationBB implements Serializable {
 	
     private static final long serialVersionUID = 1L;
 
-    private long _centreX;
-    private long _centreY;
+    private long _x;	// lower left corner
+    private long _y;
     private long _width;
     private long _height;
     private long _start = -1;
@@ -40,20 +44,35 @@ public class AnnotationBB implements Serializable {
     private double[] _bounds;
     
     public AnnotationBB ( double[] bounds ) {
-    	_centreX = AnnotationIndex.transformToUnit( (bounds[0]+bounds[2])/2, bounds[0], bounds[2] );
-    	_centreY = AnnotationIndex.transformToUnit( (bounds[1]+bounds[3])/2, bounds[1], bounds[3] ); 	
-    	_width = AnnotationIndex.MAX_UNIT;
-    	_height = AnnotationIndex.MAX_UNIT;	
-    	_start = AnnotationIndex.getIndex( _centreX-_width/2,
-    								       _centreY-_height/2 );    	
-    	_stop = AnnotationIndex.getIndex( _centreX+_width/2,
-			       						   _centreY+_height/2 );
+    	_x = AnnotationIndex.transformToUnit( bounds[0], bounds[0], bounds[2] );
+    	_y = AnnotationIndex.transformToUnit( bounds[1], bounds[1], bounds[3] ); 	
+    	_width = AnnotationIndex.MAX_UNIT+1;
+    	_height = AnnotationIndex.MAX_UNIT+1;	
+    	_start = AnnotationIndex.getIndex( _x, _y );
+    	_stop = AnnotationIndex.getIndex( _x+_width-1, _y+_height-1 );
     	_bounds = bounds;
     }
     
+    
+    public AnnotationBB ( double[] extents, double[] bounds ) {
+    	_x = AnnotationIndex.transformToUnit( extents[0], bounds[0], bounds[2] );
+    	_y = AnnotationIndex.transformToUnit( extents[1], bounds[1], bounds[3] ); 
+    	
+    	long mx = AnnotationIndex.transformToUnit( extents[2], bounds[0], bounds[2] );
+    	long my = AnnotationIndex.transformToUnit( extents[3], bounds[1], bounds[3] ); 
+    	   	
+    	_width = mx - _x; //AnnotationIndex.MAX_UNIT+1;
+    	_height = my - _y; //AnnotationIndex.MAX_UNIT+1;	
+    	_start = AnnotationIndex.getIndex( _x, _y );
+    	_stop = AnnotationIndex.getIndex( _x+_width-1, _y+_height-1 );
+    	_bounds = bounds;
+    }
+    
+    
+    
     private AnnotationBB ( long x, long y, long width, long height, long start, long stop, double [] bounds ) {
-    	_centreX = x;
-    	_centreY = y;
+    	_x = x;
+    	_y = y;
     	_width = width;
     	_height = height;    	
     	_start = start;   	
@@ -61,22 +80,33 @@ public class AnnotationBB implements Serializable {
     	_bounds = bounds;
     }
 
-    public boolean contains( double x, double y ) {   	
-    	return x >= _centreX - (_width/2) && x <= _centreX + (_width/2) &&
-    		   y >= _centreY - (_height/2) && y <= _centreY + (_height/2);
+    /*
+    public boolean contains( long x, long y ) {   	
+    	return x > _x && x < _x + _width &&
+    		   y > _y && y < _y + _height;
+    }
+    */
+    
+    public boolean contains( AnnotationIndex index ) {   
+    	long x = AnnotationIndex.transformToUnit( index.getX(), index.getBounds()[0], index.getBounds()[2] );
+    	long y = AnnotationIndex.transformToUnit( index.getY(), index.getBounds()[1], index.getBounds()[3] );
+    	return x > _x && x < _x + _width &&
+     		   y > _y && y < _y + _height;
     }
     
     public boolean contains( AnnotationBB box ) {
     	
-    	return box._centreX + box._width/2 < _centreX + _width/2 &&
-    		   box._centreX - box._width/2 > _centreX - _width/2 &&
-    		   box._centreY + box._height/2 < _centreY + _height/2 &&
-    		   box._centreY - box._height/2 > _centreY - _height/2;
+    	return box._x + box._width < _x + _width &&
+    		   box._x > _x &&
+    		   box._y + box._height < _y + _height &&
+    		   box._y > _y;
     }
     
     public boolean intersects( AnnotationBB box ) {
-    	return (Math.abs(_centreX - box._centreX) * 2 < (_width + box._width)) &&
-    		   (Math.abs(_centreY - box._centreY) * 2 < (_height + box._height));
+    	return !( _x+_width < box._x ||
+    			  _y+_height < box._y ||
+    			  _x > box._x+box._width ||
+    			  _y > box._y+box._height );
     }
     
     public List<AnnotationIndex> getRange() {
@@ -89,50 +119,54 @@ public class AnnotationBB implements Serializable {
     	// stop range
     	range.add( new AnnotationIndex( _stop,
 									    _bounds ) );  	
-    	
-    	System.out.println( "ll: " + range.get(0).getX() + ", " + range.get(0).getY() + 
+    	/*
+    	System.out.println( "\tll: " + range.get(0).getX() + ", " + range.get(0).getY() + 
     						" ur: " + range.get(1).getX() + ", " + range.get(1).getY() );
-    	
+    	*/
     	return range;
     }
 
-    private long floorInc() {
-    	return (long)Math.floor( (_stop-_start)/4 );
+    private long floorInc() {    	
+    	return (_width * _height)/4 - 1;
     }
     
     private long ceilInc() {
-    	return (long)Math.ceil( (_stop-_start)/4 );
+    	return (_width * _height)/4;
     }
     
     public AnnotationBB getNE() {
-    	return new AnnotationBB( _centreX+_width/4, 
-						 	     _centreY+_height/4, 
+    	return new AnnotationBB( _x+(_width/2), 
+						 	     _y+(_height/2), 
 						  	     _width/2, _height/2,
-						  	     ceilInc()*3, ceilInc()*3+floorInc(),
+						  	     _start + ceilInc()*3,
+						  	     _start + ceilInc()*3+floorInc(),
 						  	     _bounds);
     }
     
     public AnnotationBB getSE() {
-    	return new AnnotationBB( _centreX+_width/4, 
-						 	     _centreY-_height/4, 
+    	return new AnnotationBB( _x+(_width/2), 
+						 	     _y, 
 						  	     _width/2, _height/2,
-						  	     ceilInc(), ceilInc() + floorInc(),
+						  	     _start + ceilInc(), 
+						  	     _start + ceilInc() + floorInc(),
 						  	     _bounds);
     }
     
     public AnnotationBB getSW() {
-    	return new AnnotationBB( _centreX-_width/4, 
-						 	     _centreY-_height/4, 
+    	return new AnnotationBB( _x, 
+						 	     _y, 
 						  	     _width/2, _height/2,
-						  	     _start, floorInc(),
+						  	     _start, 
+						  	     _start + floorInc(),
 						  	     _bounds);
     }
     
     public AnnotationBB getNW() {
-    	return new AnnotationBB( _centreX-_width/4, 
-						 	     _centreY+_height/4, 
+    	return new AnnotationBB( _x, 
+    							 _y+(_height/2), 
 						  	     _width/2, _height/2,
-						  	     ceilInc()*2, ceilInc()*2+floorInc(),
+						  	     _start + ceilInc()*2, 
+						  	     _start + ceilInc()*2+floorInc(),
 						  	     _bounds);
     }
     
