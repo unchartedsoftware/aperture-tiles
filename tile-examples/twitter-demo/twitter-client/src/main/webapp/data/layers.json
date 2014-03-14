@@ -15,11 +15,11 @@
 			"views": [
 				{
 					"renderer": "TopTextSentimentBars",
-					"layer": "twitter.2014-01-02.words.censored"
+					"layer": "twitter.2014-01-02.words.uncensored"
 				},
 				{
 					"renderer": "HashTagsByTime",
-					"layer": "twitter.2014-01-02.words.censored"
+					"layer": "twitter.2014-01-02.words.uncensored"
 				}
 				]
 		}

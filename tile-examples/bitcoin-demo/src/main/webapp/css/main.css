@@ -13,3 +13,7 @@ body {
 	padding: 10px;
 	color: black;
 }
+
+#marker-popup {
+    border-radius:10px;
+}

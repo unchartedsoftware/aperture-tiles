@@ -42,6 +42,11 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
     private int               _xBins;
     private int               _yBins;
 
+	// No-argument constructor, really just for use by Kryo, but we call it from
+	// the main constructor just to get rid of the warning.
+    private TileIndex () {
+    }
+    
     /**
      * Create a tile index representation.  The number of bins per axis is defaulted to 256.
      * 
@@ -53,6 +58,7 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
      *            The y coordinate of the tile
      */
     public TileIndex (int level, int x, int y) {
+    	this();
         _level = level;
         _x = x;
         _y = y;

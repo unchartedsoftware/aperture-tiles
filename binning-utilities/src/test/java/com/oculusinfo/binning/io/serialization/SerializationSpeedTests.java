@@ -28,14 +28,18 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Random;
+//import java.util.zip.DeflaterOutputStream;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
@@ -76,6 +80,60 @@ public class SerializationSpeedTests {
         _data = null;
     }
 
+    @Test
+    public void testKryoTileSerialization () throws Exception {
+    	int N = 100;
+
+    	Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(true);
+    	
+        kryo.register(TileData.class);
+        kryo.register(TileIndex.class);
+        kryo.register(ArrayList.class);
+        
+        // test serialization time
+        long startTime = System.currentTimeMillis();
+        for (int n=0; n<N; ++n) {
+        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        	Output output = new Output( baos );
+        	kryo.writeObject(output, _data);
+            output.close();
+//            System.out.println("Tile size: "+baos.toByteArray().length);
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("Kryo Serialization");
+        System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
+        System.out.println("Average time: "+(((endTime-startTime)/1000.0)/N)+" seconds");
+    }
+
+    @Test
+    public void testKryoTileDeSerialization () throws Exception {
+        int N = 100;
+
+        Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(true);        
+        Output output = new Output( new ByteArrayOutputStream() );      
+        kryo.register(TileData.class);
+        kryo.register(TileIndex.class);
+        kryo.register(ArrayList.class);
+        kryo.writeObject(output, _data);
+        output.close();
+        
+        byte[] data = ((ByteArrayOutputStream)output.getOutputStream()).toByteArray();
+        
+        
+        // test deserialization time
+        long startTime = System.currentTimeMillis();
+        for (int n=0; n<N; ++n) {
+        	Input input = new Input( data );
+        	TileData<Double> newTile = kryo.readObject(input, TileData.class);
+        	input.close();
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("Kryo Deserialization");
+        System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
+        System.out.println("Average time: "+(((endTime-startTime)/1000.0)/N)+" seconds");
+    }
 
     @Test
     public void testAvroTileSerialization () throws Exception {
@@ -83,17 +141,21 @@ public class SerializationSpeedTests {
 
         // test serialization time
         long startTime = System.currentTimeMillis();
+        int length = 0;
         for (int n=0; n<N; ++n) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             _serializer.serialize(_data, _pyramid, baos);
             baos.close();
             baos.flush();
-
+            length += baos.toByteArray().length;
         }
         long endTime = System.currentTimeMillis();
+        System.out.println();
         System.out.println("Avro Serialization");
         System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
         System.out.println("Average time: "+(((endTime-startTime)/1000.0)/N)+" seconds");
+        System.out.println("Average size: "+(length/N));
+        System.out.println();
     }
 
 
@@ -127,6 +189,7 @@ public class SerializationSpeedTests {
         for (int n=0; n<N; ++n) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
+            
             oos.writeObject(_data);
             oos.close();
             oos.flush();

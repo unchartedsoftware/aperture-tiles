@@ -42,7 +42,7 @@ define({
                 var sinh = function (arg) {
                     return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
                 };
-                return Math.atan(sinh(y)) * 57.2957795;
+                return Math.atan(sinh(y)) * (180.0/Math.PI);
             };
 
         // convert value to between -1  and 1
@@ -68,7 +68,7 @@ define({
                 // converts a latitude value from -85.05 to 85.05 into
                 // a y value from -PI(bottom) to PI(top)
                 var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
-                    sin = Math.sin(latitude * 0.0174532925 * sign);
+                    sin = Math.sin(latitude * (Math.PI/180.0) * sign);
 
                 return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
             };
@@ -232,7 +232,7 @@ define({
         var that = this,
             increment,
             pivot,
-            mapPixelSpan = axis.tileSize*(Math.pow(2,axis.zoom));
+            mapPixelSpan = axis.tileSize*(Math.pow(2, axis.zoom));
 
         function getPixelPosition( value ) {
             // given an axis value, get the pixel position on the page
