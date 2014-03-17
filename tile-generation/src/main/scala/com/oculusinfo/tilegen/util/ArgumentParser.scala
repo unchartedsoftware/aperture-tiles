@@ -76,6 +76,7 @@ class ArgumentParser (args: Array[String]) {
   private def prefixDescLines (description: String, prefix: String): String =
     description.split('\n').mkString(prefix, "\n"+prefix, "")
 
+/*
   private def getArgumentInternal[T] (key: String,
                                       description: String,
                                       argType: String,
@@ -89,8 +90,9 @@ class ArgumentParser (args: Array[String]) {
 			  if (default.isEmpty) {
 				  val message = "Missing argument -"+key+"\n"+prefixDescLines(description, "\t")
 				  throw new MissingArgumentException(message)
+			  } else {
+				  result = Some(default.get)
 			  }
-			  result = Some(default.get)
 		  } else {
 			  try {
 				  result = Some(conversion(valOpt.get))
@@ -111,6 +113,31 @@ class ArgumentParser (args: Array[String]) {
 
 		  argDescriptionsMap += key -> (argType, description, result, defaulted, false)
 		  result.get
+	  } catch {
+		  case e: Exception => {
+			  argDescriptionsMap += key -> (argType, description, None, false, true)
+			  throw e
+		  }
+	  }
+  }
+*/
+
+  private def getArgumentInternal[T] (key: String,
+                                      description: String,
+                                      argType: String,
+                                      conversion: String => T,
+                                      default: Option[T]): Option[T] = {
+	  var result: Option[T] = default
+	  var defaulted = true
+	  try {
+		  val valOpt = argsMap.get("-"+key.toLowerCase())
+		  if (!valOpt.isEmpty) {
+			  result = Some(conversion(valOpt.get))
+			  defaulted = false
+		  }
+
+		  argDescriptionsMap += key -> (argType, description, result, defaulted, false)
+		  result
 	  } catch {
 		  case e: Exception => {
 			  argDescriptionsMap += key -> (argType, description, None, false, true)
@@ -145,6 +172,17 @@ class ArgumentParser (args: Array[String]) {
                          description: String,
                          default: Option[String] = None): String =
     getArgumentInternal[String](key, description, "string",
+                                _.toString, default).get
+
+  /**
+   * Simple function to get an optional string argument from the argument list.
+   * The only functional difference between this and the above getStringArgument is 
+   *  that this version allows a default of None, which the above does not.
+   */
+  def getStringOptionArgument (key: String,
+                               description: String,
+                               default: Option[String] = None): Option[String] =
+    getArgumentInternal[String](key, description, "string",
                                 _.toString, default)
 
   /**
@@ -165,7 +203,7 @@ class ArgumentParser (args: Array[String]) {
   def getIntArgument (key: String,
                       description: String,
                       default: Option[Int] = None): Int =
-    getArgumentInternal[Int](key, description, "int", _.toInt, default)
+    getArgumentInternal[Int](key, description, "int", _.toInt, default).get
 
   /**
    * Simple function to get a integer-valued argument from the argument list.
@@ -185,7 +223,7 @@ class ArgumentParser (args: Array[String]) {
   def getLongArgument (key: String,
                        description: String,
                        default: Option[Long] = None): Long =
-    getArgumentInternal[Long](key, description, "int", _.toLong, default)
+    getArgumentInternal[Long](key, description, "int", _.toLong, default).get
 
   /**
    * Simple function to get a double-valued argument from the argument list.
@@ -205,7 +243,8 @@ class ArgumentParser (args: Array[String]) {
   def getDoubleArgument (key: String,
                          description: String,
                          default: Option[Double] = None): Double =
-    getArgumentInternal[Double](key, description, "double", _.toDouble, default)
+    getArgumentInternal[Double](key, description, "double",
+                                _.toDouble, default).get
 
   /**
    * Simple function to get a boolean-valued argument from the argument list.  
@@ -241,7 +280,7 @@ class ArgumentParser (args: Array[String]) {
           false
         }
       },
-                                 default)
+                                 default).get
 
 
   /**
@@ -270,7 +309,7 @@ class ArgumentParser (args: Array[String]) {
                          default: Option[Seq[Int]] = None): Seq[Int] =
     getArgumentInternal[Seq[Int]](key, description, "seq[int]",
                         _.split(separator).map(_.toInt).toSeq,
-                        default)
+                        default).get
   /**
    * Simple function to get an argument from the argument list whose value is a
    * list of strings.  The list uses the specified separator to separate
@@ -297,7 +336,7 @@ class ArgumentParser (args: Array[String]) {
                             default: Option[Seq[String]] = None): Seq[String] =
     getArgumentInternal[Seq[String]](key, description, "seq[string]",
                                      _.split(separator).map(_.toString).toSeq,
-                                     default)
+                                     default).get
 
 
 
@@ -317,8 +356,8 @@ class ArgumentParser (args: Array[String]) {
                              "spark user name (defaults to login name)",
                              Some(System.getProperty("user.name")))),
       jars,
-      Some(getStringArgument("kryo",
-                             "kryo registrator full class name (defaults to None, using java serialization)",
-                             None)
-      ))
+      getStringOptionArgument("kryo",
+                              "kryo registrator full class name (defaults to None, using java serialization)",
+                              None)
+    )
 }
