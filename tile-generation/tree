@@ -1,0 +1,138 @@
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Aperture Spark Tile Generation 0.3-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ tile-generation ---
+[INFO] com.oculusinfo:tile-generation:jar:0.3-SNAPSHOT
+[INFO] +- com.oculusinfo:binning-utilities:jar:0.3-SNAPSHOT:compile
+[INFO] |  +- org.apache.hadoop:hadoop-core:jar:2.0.0-mr1-cdh4.6.0:compile
+[INFO] |  |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  |  +- javax.servlet.jsp:jsp-api:jar:2.1:compile
+[INFO] |  |  +- commons-el:commons-el:jar:1.0:compile
+[INFO] |  |  +- javax.servlet:servlet-api:jar:2.5:compile
+[INFO] |  |  +- hsqldb:hsqldb:jar:1.8.0.10:compile
+[INFO] |  |  \- org.eclipse.jdt:core:jar:3.1.1:compile
+[INFO] |  +- org.apache.hadoop:hadoop-common:jar:2.0.0-cdh4.6.0:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-annotations:jar:2.0.0-cdh4.6.0:compile
+[INFO] |  |  |  \- jdk.tools:jdk.tools:jar:1.6:system
+[INFO] |  |  +- org.apache.commons:commons-math:jar:2.1:compile
+[INFO] |  |  +- org.apache.hadoop:cloudera-jets3t:jar:2.0.0-cdh4.6.0:compile
+[INFO] |  |  +- junit:junit:jar:4.8.2:compile
+[INFO] |  |  +- org.slf4j:slf4j-log4j12:jar:1.6.1:runtime
+[INFO] |  |  +- org.mockito:mockito-all:jar:1.8.5:compile
+[INFO] |  |  +- net.sf.kosmosfs:kfs:jar:0.3:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-auth:jar:2.0.0-cdh4.6.0:compile
+[INFO] |  |  \- com.jcraft:jsch:jar:0.1.42:compile
+[INFO] |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  +- com.thoughtworks.paranamer:paranamer:jar:2.3:compile
+[INFO] |  |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |  |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] |  +- org.json:json:jar:20090211:compile
+[INFO] |  \- org.xerial:sqlite-jdbc:jar:3.7.2:compile
+[INFO] +- org.apache.hadoop:hadoop-client:jar:2.0.0-mr1-cdh4.6.0:compile
+[INFO] |  \- org.apache.hadoop:hadoop-hdfs:jar:2.0.0-cdh4.6.0:compile
+[INFO] +- org.apache.hbase:hbase:jar:0.94.15-cdh4.6.0:compile
+[INFO] |  +- com.yammer.metrics:metrics-core:jar:2.1.2:compile
+[INFO] |  +- com.google.guava:guava:jar:11.0.2:compile
+[INFO] |  +- commons-cli:commons-cli:jar:1.2:compile
+[INFO] |  +- commons-configuration:commons-configuration:jar:1.6:compile
+[INFO] |  |  +- commons-collections:commons-collections:jar:3.2.1:compile
+[INFO] |  |  +- commons-digester:commons-digester:jar:1.8:compile
+[INFO] |  |  |  \- commons-beanutils:commons-beanutils:jar:1.7.0:compile
+[INFO] |  |  \- commons-beanutils:commons-beanutils-core:jar:1.8.0:compile
+[INFO] |  +- com.github.stephenc.high-scale-lib:high-scale-lib:jar:1.1.1:compile
+[INFO] |  +- commons-codec:commons-codec:jar:1.4:compile
+[INFO] |  +- commons-httpclient:commons-httpclient:jar:3.1:compile
+[INFO] |  +- commons-io:commons-io:jar:2.1:compile
+[INFO] |  +- commons-lang:commons-lang:jar:2.5:compile
+[INFO] |  +- commons-logging:commons-logging:jar:1.1.1:compile
+[INFO] |  +- io.netty:netty:jar:3.6.6.Final:compile
+[INFO] |  +- log4j:log4j:jar:1.2.17:compile
+[INFO] |  +- org.apache.zookeeper:zookeeper:jar:3.4.5-cdh4.6.0:compile
+[INFO] |  +- org.apache.thrift:libthrift:jar:0.9.0:compile
+[INFO] |  |  +- org.apache.httpcomponents:httpclient:jar:4.1.3:compile
+[INFO] |  |  \- org.apache.httpcomponents:httpcore:jar:4.1.3:compile
+[INFO] |  +- org.jruby:jruby-complete:jar:1.6.5:compile
+[INFO] |  +- org.mortbay.jetty:jetty:jar:6.1.26.cloudera.2:compile
+[INFO] |  +- org.mortbay.jetty:jetty-util:jar:6.1.26.cloudera.2:compile
+[INFO] |  +- org.mortbay.jetty:jsp-2.1:jar:6.1.14:compile
+[INFO] |  +- org.mortbay.jetty:jsp-api-2.1:jar:6.1.14:compile
+[INFO] |  +- org.mortbay.jetty:servlet-api-2.5:jar:6.1.14:compile
+[INFO] |  +- org.codehaus.jackson:jackson-core-asl:jar:1.8.8:compile
+[INFO] |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.8.8:compile
+[INFO] |  +- org.codehaus.jackson:jackson-jaxrs:jar:1.8.8:compile
+[INFO] |  +- org.codehaus.jackson:jackson-xc:jar:1.8.8:compile
+[INFO] |  +- tomcat:jasper-compiler:jar:5.5.23:compile
+[INFO] |  +- tomcat:jasper-runtime:jar:5.5.23:compile
+[INFO] |  +- org.jamon:jamon-runtime:jar:2.3.1:compile
+[INFO] |  +- com.google.protobuf:protobuf-java:jar:2.4.0a:compile
+[INFO] |  +- com.sun.jersey:jersey-core:jar:1.8:compile
+[INFO] |  +- com.sun.jersey:jersey-json:jar:1.8:compile
+[INFO] |  |  +- org.codehaus.jettison:jettison:jar:1.1:compile
+[INFO] |  |  \- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
+[INFO] |  +- com.sun.jersey:jersey-server:jar:1.8:compile
+[INFO] |  +- javax.xml.bind:jaxb-api:jar:2.1:compile
+[INFO] |  |  \- javax.activation:activation:jar:1.1:compile
+[INFO] |  \- stax:stax-api:jar:1.0.1:compile
+[INFO] +- org.apache.spark:spark-core_2.10:jar:0.9.0-incubating:compile
+[INFO] |  +- net.java.dev.jets3t:jets3t:jar:0.7.1:compile
+[INFO] |  +- org.apache.avro:avro-ipc:jar:1.7.4:compile
+[INFO] |  |  +- org.apache.velocity:velocity:jar:1.7:compile
+[INFO] |  |  \- org.mortbay.jetty:servlet-api:jar:2.5-20081211:compile
+[INFO] |  +- org.eclipse.jetty:jetty-server:jar:7.6.8.v20121106:compile
+[INFO] |  |  +- org.eclipse.jetty.orbit:javax.servlet:jar:2.5.0.v201103041518:compile
+[INFO] |  |  +- org.eclipse.jetty:jetty-continuation:jar:7.6.8.v20121106:compile
+[INFO] |  |  \- org.eclipse.jetty:jetty-http:jar:7.6.8.v20121106:compile
+[INFO] |  |     \- org.eclipse.jetty:jetty-io:jar:7.6.8.v20121106:compile
+[INFO] |  |        \- org.eclipse.jetty:jetty-util:jar:7.6.8.v20121106:compile
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:1.3.9:compile
+[INFO] |  +- org.slf4j:slf4j-api:jar:1.7.2:compile
+[INFO] |  +- com.ning:compress-lzf:jar:1.0.0:compile
+[INFO] |  +- org.xerial.snappy:snappy-java:jar:1.0.5:compile
+[INFO] |  +- org.ow2.asm:asm:jar:4.0:compile
+[INFO] |  +- com.twitter:chill_2.10:jar:0.3.1:compile
+[INFO] |  |  +- com.esotericsoftware.kryo:kryo:jar:2.21:compile
+[INFO] |  |  |  +- com.esotericsoftware.reflectasm:reflectasm:jar:shaded:1.07:compile
+[INFO] |  |  |  +- com.esotericsoftware.minlog:minlog:jar:1.2:compile
+[INFO] |  |  |  \- org.objenesis:objenesis:jar:1.2:compile
+[INFO] |  |  \- org.ow2.asm:asm-commons:jar:4.0:compile
+[INFO] |  |     \- org.ow2.asm:asm-tree:jar:4.0:compile
+[INFO] |  +- com.twitter:chill-java:jar:0.3.1:compile
+[INFO] |  +- org.spark-project.akka:akka-remote_2.10:jar:2.2.3-shaded-protobuf:compile
+[INFO] |  |  +- org.spark-project.akka:akka-actor_2.10:jar:2.2.3-shaded-protobuf:compile
+[INFO] |  |  |  \- com.typesafe:config:jar:1.0.2:compile
+[INFO] |  |  +- org.spark-project.protobuf:protobuf-java:jar:2.4.1-shaded:compile
+[INFO] |  |  \- org.uncommons.maths:uncommons-maths:jar:1.2.2a:compile
+[INFO] |  +- org.spark-project.akka:akka-slf4j_2.10:jar:2.2.3-shaded-protobuf:compile
+[INFO] |  +- net.liftweb:lift-json_2.10:jar:2.5.1:compile
+[INFO] |  +- it.unimi.dsi:fastutil:jar:6.4.4:compile
+[INFO] |  +- colt:colt:jar:1.2.0:compile
+[INFO] |  |  \- concurrent:concurrent:jar:1.3.4:compile
+[INFO] |  +- org.apache.mesos:mesos:jar:0.13.0:compile
+[INFO] |  +- io.netty:netty-all:jar:4.0.13.Final:compile
+[INFO] |  +- com.clearspring.analytics:stream:jar:2.4.0:compile
+[INFO] |  +- com.codahale.metrics:metrics-core:jar:3.0.0:compile
+[INFO] |  +- com.codahale.metrics:metrics-jvm:jar:3.0.0:compile
+[INFO] |  +- com.codahale.metrics:metrics-json:jar:3.0.0:compile
+[INFO] |  |  \- com.fasterxml.jackson.core:jackson-databind:jar:2.2.2:compile
+[INFO] |  |     +- com.fasterxml.jackson.core:jackson-annotations:jar:2.2.2:compile
+[INFO] |  |     \- com.fasterxml.jackson.core:jackson-core:jar:2.2.2:compile
+[INFO] |  +- com.codahale.metrics:metrics-ganglia:jar:3.0.0:compile
+[INFO] |  |  \- info.ganglia.gmetric4j:gmetric4j:jar:1.0.3:compile
+[INFO] |  |     \- org.acplt:oncrpc:jar:1.0.7:compile
+[INFO] |  \- com.codahale.metrics:metrics-graphite:jar:3.0.0:compile
+[INFO] +- org.apache.spark:spark-streaming_2.10:jar:0.9.0-incubating:compile
+[INFO] +- org.scala-lang:scala-library:jar:2.10.1:compile
+[INFO] \- org.scalatest:scalatest_2.10:jar:1.9.1:test
+[INFO]    +- org.scala-lang:scala-actors:jar:2.10.0:test
+[INFO]    \- org.scala-lang:scala-reflect:jar:2.10.0:test
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 4.033s
+[INFO] Finished at: Sat Mar 15 01:45:57 EDT 2014
+[INFO] Final Memory: 18M/981M
+[INFO] ------------------------------------------------------------------------

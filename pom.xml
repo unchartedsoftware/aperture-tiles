@@ -36,14 +36,18 @@
          http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH-Version-and-Packaging-Information/cdhvd_topic_8.html
     -->
 
-    <!-- cloudera version 5.0.0 beta 1
-         from http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH5/latest/CDH-Version-and-Packaging-Information/cdhvd_topic_8.html -->
+    <!-- cloudera version 5.0.0 beta 1 -->
+	<!--
     <hadoop-common-version>2.2.0-cdh5.0.0-beta-1</hadoop-common-version>
     <hadoop-core-version>2.2.0-mr1-cdh5.0.0-beta-1</hadoop-core-version>
-    <!-- HBasse version should be the following, but the jar doesn't exist in the cloudera maven repo.
-    Instead, we are using the latest version which does exist: -->
-    <!-- <hbase-version>0.94.6-cdh4.5.0</hbase-version> -->
     <hbase-version>0.95.2-cdh5.0.0-beta-1</hbase-version>
+	-->
+
+
+    <!-- cloudera version 4.6.0 -->
+    <hadoop-common-version>2.0.0-cdh4.6.0</hadoop-common-version>
+    <hadoop-core-version>2.0.0-mr1-cdh4.6.0</hadoop-core-version>
+    <hbase-version>0.94.15-cdh4.6.0</hbase-version>
 
 
     <!-- cloudera version 4.5.0
@@ -89,9 +93,10 @@
     <hbase-version>0.94.2-cdh4.2.0</hbase-version>
     -->
 
-    <aperture-version>1.0.3</aperture-version>
-    <scala-version>2.9.3</scala-version>
-    <spark-version>0.8.1-incubating</spark-version>
+    <aperture-version>1.0.4</aperture-version>
+    <dependency-scala-version>2.10</dependency-scala-version>
+	<scala-version>2.10.3</scala-version>
+    <spark-version>0.9.0-incubating</spark-version>
   </properties>
  
   <build>

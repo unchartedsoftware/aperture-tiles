@@ -42,6 +42,7 @@
 
 
   <dependencies>
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
@@ -53,16 +54,23 @@
       <artifactId>hadoop-common</artifactId>
       <version>${hadoop-common-version}</version>
     </dependency>
-    
+
+<!--    
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
       <version>${hbase-version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
+      <version>${hbase-version}</version>
+    </dependency>
+-->
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
       <version>${hbase-version}</version>
     </dependency>
 
@@ -90,14 +98,9 @@
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.7.2</version>
     </dependency>
-    
-    <dependency>
-        <groupId>com.esotericsoftware.kryo</groupId>
-        <artifactId>kryo</artifactId>
-        <version>2.22</version>
-    </dependency>
-    
+
   </dependencies>
+
 
 
   <build>

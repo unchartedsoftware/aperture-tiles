@@ -1,0 +1,105 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
+ * http://www.oculusinfo.com/
+ *
+ * Released under the MIT License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+ 
+package com.oculusinfo.tilegen.kryo;
+
+import com.esotericsoftware.kryo.Kryo;
+import org.apache.spark.serializer.KryoRegistrator;
+import com.oculusinfo.tilegen.spark.*;
+import com.oculusinfo.tilegen.tiling.*;
+import com.oculusinfo.tilegen.util.*;
+import com.oculusinfo.tilegen.datasets.*;
+import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.impl.*;
+import com.oculusinfo.binning.io.serialization.*;
+import com.oculusinfo.binning.io.serialization.impl.*;
+import com.oculusinfo.binning.util.*;
+
+
+public class TileRegistrator implements KryoRegistrator {
+
+  //static boolean needToRegister = true;
+
+  public void registerClasses(Kryo kryo) {
+
+    //if (needToRegister) {
+
+        // throw exception if class is being serialized, but has not been registered
+        kryo.setRegistrationRequired(true);
+
+        kryo.register(scala.runtime.BoxedUnit.class);
+
+        // com.oculusinfo.tilegen.spark
+        kryo.register(MinMaxAccumulableParam.class);
+        kryo.register(DoubleMinAccumulatorParam.class);
+        kryo.register(DoubleMaxAccumulatorParam.class);
+
+        // com.oculusinfo.tilegen.tiling
+        kryo.register(BinDescriptor.class);
+        kryo.register(StandardDoubleBinDescriptor.class);
+        kryo.register(CompatibilityDoubleBinDescriptor.class);
+        kryo.register(MinimumDoubleBinDescriptor.class);
+        kryo.register(MaximumDoubleBinDescriptor.class);
+        kryo.register(LogDoubleBinDescriptor.class);
+        kryo.register(StandardDoubleArrayBinDescriptor.class);
+        kryo.register(StringScoreBinDescriptor.class);
+        kryo.register(RecordParser.class);
+        kryo.register(FieldExtractor.class);
+        kryo.register(TileIO.class);
+        kryo.register(HBaseTileIO.class);
+        kryo.register(LevelMinMaxAccumulableParam.class);
+        kryo.register(GenericSeriesBinner.class);
+        kryo.register(TileToImageConverter.class);
+        kryo.register(SingleTileToImageConverter.class);
+        kryo.register(TileSeriesToImagesConverter.class);
+        kryo.register(ValueOrException.class) ;
+
+        // com.oculusinfo.tilegen.util
+        kryo.register(PropertiesWrapper.class);
+        kryo.register(Rectangle.class);
+        kryo.register(CSVRecordPropertiesWrapper.class);
+        kryo.register(CSVRecordParser.class);
+
+        // com.oculusinfo.binning
+        kryo.register(BinIndex.class);
+        kryo.register(TileAndBinIndices.class);
+        kryo.register(PyramidComparator.class);
+        kryo.register(TileData.class);
+        kryo.register(TileData[].class);
+        kryo.register(java.util.ArrayList.class);
+        kryo.register(TileIndex.class);
+        kryo.register(DensityStripData.class);
+        
+        // com.oculusinfo.binning.impl
+        kryo.register(AOITilePyramid.class);
+        kryo.register(WebMercatorTilePyramid.class);
+
+        // com.oculusinfo.binning.util
+        kryo.register(Pair.class);
+
+        //needToRegister = false;
+    //}
+  }
+}

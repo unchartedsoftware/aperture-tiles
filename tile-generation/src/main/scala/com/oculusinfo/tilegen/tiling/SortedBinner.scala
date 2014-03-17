@@ -211,7 +211,8 @@ extends GeneralSparkConnector(
     } else {
       jars
     }
-  }
+  },
+  properties.getOptionProperty("spark.kryo.registrar")
 )
 {
 }

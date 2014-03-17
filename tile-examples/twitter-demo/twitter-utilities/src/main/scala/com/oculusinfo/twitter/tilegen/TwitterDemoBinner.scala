@@ -48,7 +48,7 @@ object TwitterDemoBinner {
     argParser.debug
 
     val jars = 
-      Seq(new MavenReference("com.oculusinfo", "twitter-utilities", "0.1.2-SNAPSHOT")
+      Seq(new MavenReference("com.oculusinfo", "twitter-utilities", "0.3-SNAPSHOT")
       ) union SparkConnector.getDefaultLibrariesFromMaven
     val sc = argParser.getSparkConnector(jars).getSparkContext("Twitter demo data tiling")
     val source = argParser.getStringArgument("source", "The source location at which to find twitter data")
@@ -88,7 +88,7 @@ object TwitterDemoBinner {
           }
 	} catch {
 	    // Just ignore bad records, there aren't many
-	    case _ => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
+	    case _: Throwable => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
 	}
       })
     })

@@ -34,7 +34,7 @@ import scala.collection.mutable.MutableList
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.DStream
+import org.apache.spark.streaming.dstream.DStream
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.tilegen.tiling.BinDescriptor
