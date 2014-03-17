@@ -31,30 +31,28 @@ import java.util.ArrayList;
 public class AnnotationQuadTree implements Serializable {
 	
     private static final long serialVersionUID = 1L;
-    private static final int MAX_DEPTH = 4;
+    private static final int DEFAULT_QUERY_DEPTH = 8;
     
     private AnnotationBB _bb;
     private AnnotationQuadTree _ne;
     private AnnotationQuadTree _se;
     private AnnotationQuadTree _sw;
     private AnnotationQuadTree _nw;
-    private int _depth;
     
   
     public AnnotationQuadTree ( AnnotationBB bb ) {
     	_bb = bb;
-    	_depth = 0;
     }
     
     
-    public AnnotationQuadTree ( AnnotationBB bb, int depth ) {
-    	_bb = bb;
-    	_depth = depth;
+    public List<AnnotationIndex> getIndexRanges( AnnotationBB bb ) {
+    	return getIndexRanges( bb, DEFAULT_QUERY_DEPTH );
     }
 
-    public List<AnnotationIndex> getIndexRanges( AnnotationBB bb ) {
+    
+    public List<AnnotationIndex> getIndexRanges( AnnotationBB queryBB, int queryDepth ) {
     	
-    	List<AnnotationIndex> results = getIndexRangesRecursive( bb );
+    	List<AnnotationIndex> results = getIndexRangesRecursive( queryBB, queryDepth );
     	int i = 1;    	
     	while(i < results.size()-1 ) {
     		// check for contiguous ranges, concatenate them
@@ -71,34 +69,34 @@ public class AnnotationQuadTree implements Serializable {
     	return results;
     }
     
-    public List<AnnotationIndex> getIndexRangesRecursive( AnnotationBB bb ) {
+    public List<AnnotationIndex> getIndexRangesRecursive( AnnotationBB queryBB, int queryDepth ) {
     	
     	// if at max depth, return range
-    	if ( _depth == MAX_DEPTH )
+    	if ( queryDepth == 0 )
     		return _bb.getRange();
 
     	// if it doesn't intersect this node, return empty list
-    	if (!_bb.intersects( bb ) )
+    	if ( !_bb.intersects( queryBB ) )
     		return new ArrayList<AnnotationIndex>();
     	
     	// if node is completely contained don't recurse further into children
-    	if (bb.contains( _bb ))
+    	if ( queryBB.contains( _bb ) )
     		return _bb.getRange();
     	    	
-    	// create children nodes
-    	_ne = new AnnotationQuadTree( _bb.getNE(), _depth+1 );
-    	_se = new AnnotationQuadTree( _bb.getSE(), _depth+1 );
-    	_sw = new AnnotationQuadTree( _bb.getSW(), _depth+1 );
-    	_nw = new AnnotationQuadTree( _bb.getNW(), _depth+1 );
+    	// create children nodes if they don't exist
+    	if ( _ne == null ) _ne = new AnnotationQuadTree( _bb.getNE() );
+    	if ( _se == null ) _se = new AnnotationQuadTree( _bb.getSE() );
+    	if ( _sw == null ) _sw = new AnnotationQuadTree( _bb.getSW() );
+    	if ( _nw == null ) _nw = new AnnotationQuadTree( _bb.getNW() );
     	
     	// get range list
     	List<AnnotationIndex> list = new ArrayList<AnnotationIndex>();
     	
     	// check each child node
-    	list.addAll( _sw.getIndexRangesRecursive( bb ) );
-    	list.addAll( _se.getIndexRangesRecursive( bb ) );
-    	list.addAll( _nw.getIndexRangesRecursive( bb ) );
-    	list.addAll( _ne.getIndexRangesRecursive( bb ) );
+    	list.addAll( _sw.getIndexRangesRecursive( queryBB, queryDepth-1 ) );
+    	list.addAll( _se.getIndexRangesRecursive( queryBB, queryDepth-1 ) );
+    	list.addAll( _nw.getIndexRangesRecursive( queryBB, queryDepth-1 ) );
+    	list.addAll( _ne.getIndexRangesRecursive( queryBB, queryDepth-1 ) );
 
     	return list;
     }

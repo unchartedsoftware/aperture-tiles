@@ -229,67 +229,66 @@ public class AnnotationTest{
 		
 		HBaseAnnotationIO hbaseIO;
 		try {
-			/*
+			
+			// create hbase annotation io
 			hbaseIO = new HBaseAnnotationIO("hadoop-s1.oculus.local",
 											"2181",
 										    "hadoop-s1.oculus.local:60000");
 
+			/*
+			 *  Create Table
+			 */
 			System.out.println("Creating table");	
 			startTime = System.currentTimeMillis();
 			hbaseIO.createTable( TABLE_NAME );
 			endTime = System.currentTimeMillis();
 	        System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
+			 
+	        /*
+			 *  Write annotations
 			 */
-	        
 			System.out.println("Writing "+NUM_ENTRIES+" to table");	
 			startTime = System.currentTimeMillis();
 			List<AnnotationData> annotations = generateAnnotations(NUM_ENTRIES);
-			annotations.add( new AnnotationData( generateIndex(-180, -90), "p0", "bl") );
-			annotations.add( new AnnotationData( generateIndex(-0.01, -0.01), "p0", "blt") );
-						
-			annotations.add( new AnnotationData( generateIndex(0.01, -90), "p0", "br") );
-			annotations.add( new AnnotationData( generateIndex(180.0, -0.01), "p0", "brt") );
-			
-			annotations.add( new AnnotationData( generateIndex(-180, 0.01), "p0", "tl") );
-			annotations.add( new AnnotationData( generateIndex(-0.01, 90.00), "p0", "tlt") );
-			
-			annotations.add( new AnnotationData( generateIndex(0.01, 0.01), "p0", "tr") );
-			annotations.add( new AnnotationData( generateIndex(180.00, 90.00), "p0", "trt") );
-			
-			/*
 			hbaseIO.writeAnnotations(TABLE_NAME, annotations);	
 			endTime = System.currentTimeMillis();
-			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
-			
-			print( annotations );
-			*/
-			
+			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");			
+			//print( annotations );
+
+			/*
+			 *  Create bounding box query
+			 */
 			// build bounding box from 2 random points
-			// bounding box corners must be created from lowest val corner to highest val corner
 			AnnotationIndex p0 = generateIndex();
-			AnnotationIndex p1 = generateIndex();				
+			AnnotationIndex p1 = generateIndex();		
+			// bounding box corners must be created from lowest val corner to highest val corner
 			double xMax = Math.max( p0.getX(), p1.getX() );
 			double xMin = Math.min( p0.getX(), p1.getX() );
 			double yMax = Math.max( p0.getY(), p1.getY() );		
 			double yMin = Math.min( p0.getY(), p1.getY() );	
+			double [] bounds = { xMin, yMin, xMax, yMax };	
 			AnnotationIndex start = new AnnotationIndex(xMin, yMin, BOUNDS);
 			AnnotationIndex stop = new AnnotationIndex(xMax, yMax, BOUNDS);			
 			
 			/*
+			 *  Raw range indexing
+			 */
 			// spatial indexing bounding box test
-			System.out.println( "Spatial indexing test\nScanning table from " + start.getIndex() + " to " + stop.getIndex() );	
+			System.out.println( "Raw indexing test\nScanning table from " + start.getIndex() + " to " + stop.getIndex() );	
 			startTime = System.currentTimeMillis();
 			List<AnnotationData> scannedEntries = hbaseIO.scanAnnotations( TABLE_NAME, start, stop );			
 			endTime = System.currentTimeMillis();
 			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
-			print( scannedEntries );
+			//print( scannedEntries );
 			
+			/*
+			 *  Manual full scan
+			 */
 			// manual bounding box test, make sure indexing pulls in at least all of these... it will pull in more
-			System.out.println( "Manual indexing test\nScanning full table" );	
+			System.out.println( "Manual indexing test\nScanning full table and parsing indices manually" );	
 			startTime = System.currentTimeMillis();
 			List<AnnotationData> allEntries = hbaseIO.scanAnnotations( TABLE_NAME );
 			List<AnnotationData> manualEntries = new ArrayList<AnnotationData>();
-
 			for ( AnnotationData annotation : allEntries ) {
 				if ( annotation.getIndex().getX() >= xMin &&
 					 annotation.getIndex().getY() >= yMin &&
@@ -300,39 +299,33 @@ public class AnnotationTest{
 			}
 			endTime = System.currentTimeMillis();
 			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
-			print( manualEntries );
-			
-			
-			System.out.println( "Comparing scan to manual, scan returned " + scannedEntries.size() + " indices, manual " + manualEntries.size() );			
-			for ( AnnotationData annotation : manualEntries ) {
-				if ( !scannedEntries.contains( annotation ) ) {
-					System.out.println("Test failed: index " + annotation.getIndex().getIndex() + " is missing" );
-				}				
-			}
-			*/
-			
-			AnnotationBB bb = new AnnotationBB( BOUNDS );	
-			
-			int TEST_CASES = 100;
-			
-			for (int i=0; i<TEST_CASES; i++) {
-				System.out.print("Test " + i + ": ");
-				if (!divideBBTest( bb, 0, false )) System.out.println( "ERROR!" );	
-			}
-
-			for (int i=0; i<TEST_CASES; i++) {
-				System.out.print("Test " + i + ": ");
-				if (!quadTreeTest( annotations, false )) System.out.println( "ERROR!" );	
-				
-			}
+			//print( manualEntries );
 			
 			/*
+			 *  Quadtree range query
+			 */
+			System.out.println( "Quad tree based query");
+			AnnotationQuadTree tree =  new AnnotationQuadTree( new AnnotationBB( BOUNDS ) );	
+			startTime = System.currentTimeMillis();
+			AnnotationBB query = new AnnotationBB( bounds, BOUNDS );			
+			List<AnnotationIndex> ranges = tree.getIndexRanges(query);
+			List<AnnotationData> quadtreeEntries = new ArrayList<AnnotationData>();
+			for (int i=0; i<ranges.size(); i+=2) {
+				quadtreeEntries.addAll( hbaseIO.scanAnnotations( TABLE_NAME, ranges.get(i), ranges.get(i+1) ) );				
+			}
+			endTime = System.currentTimeMillis();
+			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
+			//print( quadtreeEntries );
+			
+			/*
+			 * Drop table
+			 */
 			System.out.println("Disabling and dropping table");
 			startTime = System.currentTimeMillis();
 			hbaseIO.dropTable(TABLE_NAME);
 			endTime = System.currentTimeMillis();
 			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
-			*/
+
 			
 		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());

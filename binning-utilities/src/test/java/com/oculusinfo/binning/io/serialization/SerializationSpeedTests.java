@@ -52,7 +52,7 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 /*
  * Some tests to help compare serialization speeds between various schemes
  */
-@Ignore
+//@Ignore
 public class SerializationSpeedTests {
     private TileSerializer<Double> _serializer;
     private TilePyramid            _pyramid;

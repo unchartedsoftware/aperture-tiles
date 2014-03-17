@@ -43,7 +43,9 @@ public class AnnotationBB implements Serializable {
     private long _stop = -1;
     private double[] _bounds;
     
+    
     public AnnotationBB ( double[] bounds ) {
+    	
     	_x = AnnotationIndex.transformToUnit( bounds[0], bounds[0], bounds[2] );
     	_y = AnnotationIndex.transformToUnit( bounds[1], bounds[1], bounds[3] ); 	
     	_width = AnnotationIndex.MAX_UNIT+1;
@@ -55,19 +57,17 @@ public class AnnotationBB implements Serializable {
     
     
     public AnnotationBB ( double[] extents, double[] bounds ) {
-    	_x = AnnotationIndex.transformToUnit( extents[0], bounds[0], bounds[2] );
-    	_y = AnnotationIndex.transformToUnit( extents[1], bounds[1], bounds[3] ); 
     	
+    	_x = AnnotationIndex.transformToUnit( extents[0], bounds[0], bounds[2] );
+    	_y = AnnotationIndex.transformToUnit( extents[1], bounds[1], bounds[3] );    	
     	long mx = AnnotationIndex.transformToUnit( extents[2], bounds[0], bounds[2] );
-    	long my = AnnotationIndex.transformToUnit( extents[3], bounds[1], bounds[3] ); 
-    	   	
-    	_width = mx - _x; //AnnotationIndex.MAX_UNIT+1;
-    	_height = my - _y; //AnnotationIndex.MAX_UNIT+1;	
+    	long my = AnnotationIndex.transformToUnit( extents[3], bounds[1], bounds[3] );   	   	
+    	_width = mx - _x;
+    	_height = my - _y;	
     	_start = AnnotationIndex.getIndex( _x, _y );
     	_stop = AnnotationIndex.getIndex( _x+_width-1, _y+_height-1 );
     	_bounds = bounds;
     }
-    
     
     
     private AnnotationBB ( long x, long y, long width, long height, long start, long stop, double [] bounds ) {
@@ -88,8 +88,12 @@ public class AnnotationBB implements Serializable {
     */
     
     public boolean contains( AnnotationIndex index ) {   
-    	long x = AnnotationIndex.transformToUnit( index.getX(), index.getBounds()[0], index.getBounds()[2] );
-    	long y = AnnotationIndex.transformToUnit( index.getY(), index.getBounds()[1], index.getBounds()[3] );
+    	long x = AnnotationIndex.transformToUnit( index.getX(), 
+    											  index.getBounds()[0], 
+    											  index.getBounds()[2] );
+    	long y = AnnotationIndex.transformToUnit( index.getY(), 
+    											  index.getBounds()[1], 
+    											  index.getBounds()[3] );
     	return x > _x && x < _x + _width &&
      		   y > _y && y < _y + _height;
     }
@@ -119,10 +123,6 @@ public class AnnotationBB implements Serializable {
     	// stop range
     	range.add( new AnnotationIndex( _stop,
 									    _bounds ) );  	
-    	/*
-    	System.out.println( "\tll: " + range.get(0).getX() + ", " + range.get(0).getY() + 
-    						" ur: " + range.get(1).getX() + ", " + range.get(1).getY() );
-    	*/
     	return range;
     }
 

@@ -70,8 +70,7 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
     //
     // Polar areas with abs(latitude) bigger then 85.05112878 are clipped off.    
     private static final double EPSG_900913_SCALE_FACTOR = 20037508.342789244;
-
-
+    private static final double EPSG_900913_LATITUDE	 = 85.05112878;
 
     private static final double PI                      = Math.PI;
     // ellipsoid equatorial getRadius, in meters
@@ -82,6 +81,34 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
     public static final double  WGS84_ES                = 0.00669437999013;
 
 
+    private double gudermannian(double y) {
+        // converts a y value from -PI(bottom) to PI(top) into the
+        // mercator projection latitude        
+        return Math.toDegrees(Math.atan( Math.sinh(y) ));
+    }
+    
+    
+    private double gudermannianInv (double latitude ) {
+        // converts a latitude value from -EPSG_900913_LATITUDE to EPSG_900913_LATITUDE into
+        // a y value from -PI(bottom) to PI(top)
+        double sign = ( latitude != 0 ) ? latitude / Math.abs(latitude) : 0,
+            sin = Math.sin(Math.toRadians(latitude) * sign);
+        return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
+    }
+    
+    
+    private double linearToGudermannian (double value) {  
+    	// convert linear coordinates into their equivalent gudermannian counterparts
+        return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );
+    }
+
+    
+    private double gudermannianToLinear (double value) {      
+    	// convert gudermannian coordinates into their equivalent linear counterparts
+        return (gudermannianInv( value ) / Math.PI) * EPSG_900913_LATITUDE;
+    }
+    
+    
     private Point2D rootToTileMercator (Point2D point, int level) {
         return rootToTileMercator(point.getX(), point.getY(), level);
     }
@@ -186,6 +213,7 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
         return Math.toDegrees(Math.atan(Math.sinh(n)));
     }
 
+    
     @Override
     public Rectangle2D getTileBounds (TileIndex tile) {
         int level = tile.getLevel();
@@ -254,12 +282,12 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
     // All web mercator tile pyramids are equal
     @Override
     public int hashCode () {
-	return 1500450271;
+    	return 1500450271;
     }
 
     @Override
     public boolean equals (Object that) {
-	if (null == that) return false;
-	return (that instanceof WebMercatorTilePyramid);
+		if (null == that) return false;
+		return (that instanceof WebMercatorTilePyramid);
     }
 }
