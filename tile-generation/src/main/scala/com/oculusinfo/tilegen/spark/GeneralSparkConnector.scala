@@ -26,6 +26,7 @@
 package com.oculusinfo.tilegen.spark
 
 import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
 
 class GeneralSparkConnector (master: String,
                              sparkHome: String,
@@ -54,6 +55,12 @@ extends SparkConnector(jars)
       println("\tJava Serialization Enabled")
     }   
 
-    new SparkContext(master, appName, sparkHome, jarList, null, null)
+//	val conf = new SparkConf(true)
+//		.setMaster(master)
+//		.setAppName(appName)
+//		.setSparkHome(sparkHome)
+//		.setJars(jarList)
+//	new SparkContext(conf);
+	  new SparkContext(master, appName, sparkHome, jarList)
   }
 }

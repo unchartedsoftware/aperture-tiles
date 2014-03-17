@@ -65,13 +65,9 @@ object SparkConnector {
         new MavenReference("com.oculusinfo", "binning-utilities", "0.3-SNAPSHOT"),
         new MavenReference("com.oculusinfo", "tile-generation", "0.3-SNAPSHOT"),
         // These two are needed for avro serialization
-        new MavenReference("org.apache.avro", "avro", "1.7.4"),
-        new MavenReference("org.apache.commons", "commons-compress", "1.4.1"),
-        new MavenReference("org.apache.hbase", "hbase-client", "0.95.2-cdh5.0.0-beta-1"),
-        new MavenReference("org.apache.hbase", "hbase-protocol", "0.95.2-cdh5.0.0-beta-1"),
-        new MavenReference("org.apache.hbase", "hbase-common", "0.95.2-cdh5.0.0-beta-1"),
-        new MavenReference("org.apache.hbase", "hbase-server", "0.95.2-cdh5.0.0-beta-1"),
-        new MavenReference("org.cloudera.htrace", "htrace-core", "2.01")
+        // new MavenReference("org.apache.avro", "avro", "1.7.4"),
+        // new MavenReference("org.apache.commons", "commons-compress", "1.4.1"),
+         new MavenReference("org.apache.hbase", "hbase", "0.94.15-cdh4.6.0")
       )
 }
 

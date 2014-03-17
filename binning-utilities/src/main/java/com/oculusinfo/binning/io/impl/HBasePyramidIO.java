@@ -41,7 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
+//import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -222,7 +222,8 @@ public class HBasePyramidIO implements PyramidIO {
     @Override
     public void initializeForWrite (String tableName) throws IOException {
         if (!_admin.tableExists(tableName)) {
-            HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
+//            HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
+            HTableDescriptor tableDesc = new HTableDescriptor(tableName);
             
             HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
             tableDesc.addFamily(metadataFamily);

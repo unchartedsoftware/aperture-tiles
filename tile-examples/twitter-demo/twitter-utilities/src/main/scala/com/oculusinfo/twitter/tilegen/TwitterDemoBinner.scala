@@ -88,7 +88,7 @@ object TwitterDemoBinner {
           }
 	} catch {
 	    // Just ignore bad records, there aren't many
-	    case _ => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
+	    case _: Throwable => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
 	}
       })
     })

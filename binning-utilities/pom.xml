@@ -54,16 +54,23 @@
       <artifactId>hadoop-common</artifactId>
       <version>${hadoop-common-version}</version>
     </dependency>
-    
+
+<!--    
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
       <version>${hbase-version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
+      <version>${hbase-version}</version>
+    </dependency>
+-->
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
       <version>${hbase-version}</version>
     </dependency>
 
