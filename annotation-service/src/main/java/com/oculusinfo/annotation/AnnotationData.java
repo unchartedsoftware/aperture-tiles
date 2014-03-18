@@ -39,6 +39,9 @@ public class AnnotationData implements Serializable {
     private String _priority;
     private String _comment;
 
+    private AnnotationData () {
+    }   
+    
     public AnnotationData (double x, double y, double bounds[], String priority, String comment) {
     	_index = new AnnotationIndex(x, y, bounds);
     	_comment = comment;
@@ -74,8 +77,7 @@ public class AnnotationData implements Serializable {
     		System.out.println("Error: " + e.getMessage());
     	}
     	
-    }
-    
+    }  
     
     public String getComment() {
     	return _comment;

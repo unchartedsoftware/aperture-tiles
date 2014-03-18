@@ -36,7 +36,9 @@ import com.oculusinfo.binning.impl.*;
 
 public class AnnotationTest{
 	
-	static final double[] BOUNDS = {-180.0, -90.0, 180.0, 90.0};
+	static final double[] BOUNDS = {-180.0, -90.0, 180.0, 90.0};	
+	static final String   TABLE_NAME = "AnnotationTable";
+	static final int      NUM_ENTRIES = 1000;
 	
 	public static void print( List<AnnotationData> annotations ) {
 		
@@ -223,9 +225,7 @@ public class AnnotationTest{
 	{
 		long startTime;
 		long endTime;
-		
-		String TABLE_NAME = "AnnotationTable";
-		int NUM_ENTRIES = 1000;
+
 		
 		HBaseAnnotationIO hbaseIO;
 		try {
@@ -316,6 +316,11 @@ public class AnnotationTest{
 			endTime = System.currentTimeMillis();
 			System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
 			//print( quadtreeEntries );
+			
+			
+			
+			
+			
 			
 			/*
 			 * Drop table

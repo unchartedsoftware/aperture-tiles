@@ -23,30 +23,26 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.IOException;
-import java.lang.Number;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.oculusinfo.annotation.io.*;
+public interface AnnotationService {
 
-
-public class AnnotationModule extends AbstractModule{
+	/*
+	 * Write an annotation to the storage service
+	 * 
+	 */
+	public void writeAnnotation( AnnotationData annotation );
 	
-	@Override
-	protected void configure() {
-	}
+	/*
+	 * Remove an annotation from the storage service
+	 * 
+	 */
+	public void removeAnnotaton( AnnotationIndex index );
 	
-	@Provides
-    HBaseAnnotationIO provideHBaseIo(
-			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperQuorum")String zookeeperQuorum,
-			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperPort")String zookeeperPort,
-			@Named("com.oculusinfo.tile.pyramidio.hbase.hbaseMaster")String hbaseMaster) 
-					throws IOException {
-
-		return new HBaseAnnotationIO(zookeeperQuorum, zookeeperPort, hbaseMaster);
-	}
+	/*
+	 * Read annotations from the service
+	 * 
+	 */
+	//public List<AnnotationData> readAnnotations();
+	
 
 }

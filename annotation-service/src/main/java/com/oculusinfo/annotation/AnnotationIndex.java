@@ -53,11 +53,16 @@ public class AnnotationIndex implements Serializable {
        
     public static final long MAX_UNIT = Integer.MAX_VALUE;
     
+    public static final int ANNOTATIONS_PER_AXIS = 32;
+    
     private double _xCoord;
     private double _yCoord;
     private double _bounds[];
     private long   _index;
 
+    private AnnotationIndex() {
+    } 
+    
     public AnnotationIndex (double x, double y, double bounds[]) {
     	_xCoord = x;
     	_yCoord = y;
@@ -149,7 +154,11 @@ public class AnnotationIndex implements Serializable {
         return coords;
     }
     
-    public static long getIndex( long x, long y ) {
+    public static long getIndex( long x, long y) {
+    	   	
+    	//int shifts = 31 - (int)(Math.log(ANNOTATIONS_PER_AXIS) / Math.log(2));
+    	
+    	//x = x << (shifts-level); // values from [0 - (2^31)-1] to [0 - 2^8]
     	
     	x = (x | (x << SHIFTS[4])) & BITS[4];
         x = (x | (x << SHIFTS[3])) & BITS[3];

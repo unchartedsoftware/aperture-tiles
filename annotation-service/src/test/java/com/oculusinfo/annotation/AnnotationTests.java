@@ -33,65 +33,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 
-public class AnnotationTests {
+public class AnnotationTests extends AnnotationTestsBase {
 	
-	static final int      NUM_ENTRIES = 1000000;
-	static final int      NUM_TESTS = 25;
-	static final double[] BOUNDS = {-180.0, -90.0, 180.0, 90.0};
-	static final boolean  VERBOSE = false;
-	
-	/*
-	 * Annotation list printing utility function
-	 */
-	private void print( List<AnnotationData> annotations ) {
-		
-		int i = 0;
-		for (AnnotationData annotation : annotations ) {
-			
-			System.out.println("\tEntry "+i+": " + annotation.getIndex().getX() 
-											     + ", " 
-											     + annotation.getIndex().getY() 
-											     + ", "
-											     + annotation.getIndex().getIndex() 
-											     + ", "
-											     + annotation.getComment() );
-			i++;
-		}
-	}
-
-	/*
-	 * Annotation index generation function
-	 */
-	private AnnotationIndex generateIndex() {
-
-		final Random rand = new Random();
-		
-		double x = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
-		double y = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
-			
-		return new AnnotationIndex( x, y ,BOUNDS );
-	}
-	
-	/*
-	 * Annotation index generation function
-	 */	
-	private AnnotationIndex generateIndex(double lon, double lat) {
-	    		
-		return new AnnotationIndex( lon, lat, BOUNDS );
-	}
-	
-	
-	private List<AnnotationData> generateAnnotations(int numEntries) {
-
-		List<AnnotationData> annotations = new ArrayList<>();		
-		for (int i=0; i<numEntries; i++) {
-			
-			AnnotationIndex index = generateIndex();	
-			annotations.add(new AnnotationData( index, "p"+Integer.toString((int)Math.random()*5), "comment " + i));	
-		}
-		return annotations;
-	}
-	
+	static final boolean VERBOSE = false;
 	
 	@Test
 	public void divideBBTest() {

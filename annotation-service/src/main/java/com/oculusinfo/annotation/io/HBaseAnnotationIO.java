@@ -36,15 +36,23 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.io.OutputStream;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
+//import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.oculusinfo.annotation.*;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 
 public class HBaseAnnotationIO {
 	
@@ -54,8 +62,7 @@ public class HBaseAnnotationIO {
     public static final HBaseColumn  ANNOTATION_COLUMN    = new HBaseColumn(ANNOTATION_FAMILY_NAME, EMPTY_BYTES);
     private static final byte[]      METADATA_FAMILY_NAME = "metaData".getBytes();
     public static final HBaseColumn  METADATA_COLUMN      = new HBaseColumn(METADATA_FAMILY_NAME, EMPTY_BYTES);
-
-    
+  
     public static class HBaseColumn {
         byte[] family;
         byte[] qualifier;
@@ -66,23 +73,40 @@ public class HBaseAnnotationIO {
 	    public byte[] getFamily    () { return family; }
 	    public byte[] getQualifier () { return qualifier; }
     }
-
-    
+   
     private Configuration       _config;
     private HBaseAdmin          _admin;
-
+    private Kryo				_kryo;
+    
+    private boolean _useKryo = false;
+    private boolean _useCompression = false;
     
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
     						  String hbaseMaster) throws IOException {
+    	
         _config = HBaseConfiguration.create();
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);
+        
+        _kryo = new Kryo();
+        _kryo.setRegistrationRequired(true); 	
+        _kryo.register(AnnotationData.class);
+        _kryo.register(AnnotationIndex.class);
+        _kryo.register(double[].class);
     }
 
 
+    public void setKryo( boolean flag ) {
+    	_useKryo = flag;
+    }
+    
+    public void setCompression( boolean flag ) {
+    	_useCompression = flag;
+    }
+    
     public HBaseAdmin getAdmin() {
     	return _admin;
     }
@@ -90,7 +114,7 @@ public class HBaseAnnotationIO {
     
     public void createTable( String tableName ) {
     	
-    	HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf( tableName ));            
+    	HTableDescriptor tableDesc = new HTableDescriptor( /*TableName.valueOf(*/ tableName /*)*/ );            
         HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
         tableDesc.addFamily(metadataFamily);
         HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
@@ -105,8 +129,8 @@ public class HBaseAnnotationIO {
     public void dropTable( String tableName ) {
     	
     	try {
-    		_admin.disableTable( TableName.valueOf( tableName ) );
-    		_admin.deleteTable( TableName.valueOf( tableName ) );
+    		_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
+    		_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
         } catch (Exception e) {}
     	
     	
@@ -243,12 +267,12 @@ public class HBaseAnnotationIO {
 	        
 	    ResultScanner rs = table.getScanner(scan);
 	    
-	    List<Map<HBaseColumn, byte[]>> allResults = new ArrayList<Map<HBaseColumn,byte[]>>();
+	    List<Map<HBaseColumn, byte[]>> allResults = new LinkedList<Map<HBaseColumn,byte[]>>();
 
 	    try {
 	    	// process results
 	    	for (Result r = rs.next(); r != null; r = rs.next()) {
-	    		allResults.add(decodeRawResult(r, columns));
+	    		allResults.add( decodeRawResult(r, columns) );
 	    	}
 	        
 	    } finally {
@@ -262,7 +286,7 @@ public class HBaseAnnotationIO {
     
     public void initializeForWrite (String tableName) throws IOException {
         if (!_admin.tableExists(tableName)) {
-            HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));            
+            HTableDescriptor tableDesc = new HTableDescriptor( /*TableName.valueOf(*/ tableName /*)*/ );            
             HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
             tableDesc.addFamily(metadataFamily);
             HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
@@ -272,17 +296,33 @@ public class HBaseAnnotationIO {
     }
 
 
-    public void writeAnnotations (String tableName, List<AnnotationData> annotations) throws IOException {
+    public void writeAnnotations (String tableName, List<AnnotationData> annotations ) throws IOException {
         
     	List<Row> rows = new ArrayList<Row>();
         for (AnnotationData annotation : annotations) {
-        	byte [] bytes = annotation.getBytes();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            baos.write(bytes, 0, bytes.length);
+        	
+        	byte[] bytes;
+        	
+        	if (_useKryo) {
+        		
+        		Output output;
+            	if (_useCompression) {
+    	        	OutputStream outputStream = new DeflaterOutputStream( new ByteArrayOutputStream() );
+    	            output = new Output( outputStream );  
+            	} else {
+            		output = new Output( new ByteArrayOutputStream() );
+            	}
+                _kryo.writeObject(output, annotation);
+                bytes = output.getBuffer();
+                
+        	} else {
+        		bytes = annotation.getBytes();
+        	}       	
+
             rows.add( addToPut(null, 
             				   rowIdFromAnnotation( annotation.getIndex() ),
                                ANNOTATION_COLUMN, 
-                               baos.toByteArray()) );
+                               bytes ) );
         }
         
         try {
@@ -317,114 +357,29 @@ public class HBaseAnnotationIO {
 	        Map<HBaseColumn, byte[]> rawResult = iData.next();
 
             if (null != rawResult) {
-                byte[] rawData = rawResult.get(ANNOTATION_COLUMN);
-                ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-                
-                // TEMP
-                int length = bais.available();
-                byte [] buff = new byte[length];
-                bais.read(buff);
-                AnnotationData data = new AnnotationData(buff);
+
+            	byte[] rawData = rawResult.get(ANNOTATION_COLUMN);      
+            	AnnotationData data;
+            	if (_useKryo) {                      
+	                Input input = new Input( rawData );
+	            	data = _kryo.readObject( input, AnnotationData.class );
+            	} else {
+            		ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
+                    int length = bais.available();
+                    byte [] buff = new byte[length];
+                    bais.read(buff);
+                    data = new AnnotationData(buff);
+            	}
+
                 results.add(data);
             }
         }
 
         return results;
     }
+   
     
-    /*
-    private List<AggregatedAnnotation> aggregateAnnotations(List<AnnotationData> annotations, double clusterThreshold) {
-    	 
-    	List<AggregatedAnnotation> aggregates = new  LinkedList<AggregatedAnnotation>();	 
-    	Map<Long, Boolean> alreadyAggregated = new  HashMap<Long, Boolean>();
 
-    	for (int i=0; i < annotations.size(); i++) {    		
-    		
-    		AnnotationIndex annoI = annotations.get(i).getIndex();  
-    		Long keyI = annoI.getIndex();
-    		
-    		// make sure not already aggregated
-    		if ( alreadyAggregated.get( keyI ) != true ) {
-    			
-    		
-    			for (int j=i+1; j < annotations.size(); j++) {
-    			
-	    			AnnotationIndex annoJ = annotations.get(j).getIndex();
-	    			Long keyJ = annoJ.getIndex();
-	    			
-	    			// make sure not already aggregated
-	        		if ( alreadyAggregated.get( keyJ ) != true ) {
-	        			
-	        			double distance = annoI.squaredDistanceFrom( annoJ );
-		    			
-		    			if ( distance < clusterThreshold ) {
-		    				
-		    				alreadyAggregated.put( keyI, true );
-		    				alreadyAggregated.put( keyJ, true );
-		    				aggregates.
-		    			}
-    				}
-    			}
-    	
-    		}
-    	
-    	
-    	
-    	for (int i=0; i < annotations.size(); i++) {    		
-    		
-    		//AnnotationIndex index = annotations.get(i).getIndex();  
-    		
-    		for (int j=i+1; j < annotations.size(); j++) {
-    			  
-    			AnnotationData annoI = annotations.get(i);
-    			AnnotationData annoJ = annotations.get(j);
-    			
-    			double distance = annoI.getIndex().squaredDistanceFrom( annoJ.getIndex() );
-   			  			
-    			if ( distance < clusterThreshold ) {
-    				 Long keyI = annotations.get(i).getIndex().getIndex();
-    				 Long keyJ = annotations.get(j).getIndex().getIndex();
-    				 boolean clusterExists = false;
-    				 
-    				 AggregatedAnnotation agg;
-    				 if (aggregates.containsKey( keyJ )) {
-    					 // j annotation is already part of an aggregation
-    					 agg = aggregates.get( keyJ );
-    					 aggregates.put( keyI, agg );
-    					 clusterExists = true;
-    				 } else {	 
-    					 if (aggregates.containsKey( keyI )) {
-    						 agg = aggregates.get( keyI );
-    						 aggregates.put( keyJ, agg );
-    						 clusterExists = true;
-    					 } else {
-    						 agg = new AggregatedAnnotation();
-    						 
-    					 }
-    				 }
-    				 
-    				 if (clusterExists) {
-    					 // ensure this point is within mean
-    					 double distance = annoI.getIndex().squaredDistanceFrom( annoJ.getIndex() );
-    					 
-    				 } else {
-    					 // add to empty cluster
-    					 agg.add( annoI );
-    					 agg.add( annoJ );
-    				 }
-    					 
-    				 
-    				 
-    				 
-    				 
-    			}
-    		}
-    	}
-    	 
-    	 return aggregates;
-    }
-    */
-    
     public List<AnnotationData> scanAnnotations (String tableName, 
 											 	 AnnotationIndex bottomLeft,
 											 	 AnnotationIndex topRight) 
@@ -440,15 +395,19 @@ public class HBaseAnnotationIO {
     }
     
     
+
     public List<AnnotationData> scanAnnotations (String tableName) throws IOException {
-					
+    		 
     	byte [] empty = {};
-		List<Map<HBaseColumn, byte[]>> rawResults = scanRange(tableName, empty, empty, ANNOTATION_COLUMN);		
+		List<Map<HBaseColumn, byte[]>> rawResults = scanRange(tableName, 
+															  empty, 
+															  empty,
+															  ANNOTATION_COLUMN);		
 		return convertResults( rawResults );
 		
 	}
 
-    
+    /*    
     public List<AnnotationData> readAnnotations (String tableName,
 												 List<AnnotationIndex> annotations) 
 														throws IOException {
@@ -459,8 +418,10 @@ public class HBaseAnnotationIO {
         
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
 
-        return convertResults( rawResults );
+        return convertResults( rawResults, useKyro );
     }
+    */
+    
 
     /*
     @Override
