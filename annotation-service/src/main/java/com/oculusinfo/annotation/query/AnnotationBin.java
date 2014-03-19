@@ -21,25 +21,70 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation;
+package com.oculusinfo.annotation.query;
 
-
-import java.io.IOException;
 import java.io.Serializable;
-import java.lang.Number;
-import java.text.NumberFormat;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.LinkedList;
 
-public class Annotation implements Serializable {
+import com.oculusinfo.annotation.index.*;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+public class AnnotationBin<T> implements Serializable {
 	
     private static final long serialVersionUID = 1L;
 
-    private AnnotationIndex _index;
-    private double _x;
-    private double _y;
-    
-    public Annotation(){
-    	
+    private AnnotationIndex  _index;
+    private List<T> 		 _data = new LinkedList<T>();
+     
+    public AnnotationBin( AnnotationIndex index, T data ) {   
+    	_index = index;
+    	_data.add( data );
     }
+    
+    public AnnotationBin( AnnotationIndex index, List<T> data ){   
+    	_index = index;
+    	_data = data;
+    }
+    
+    public void add( T data ) {
+    	_data.add( data );
+    }
+    
+    public void remove( T data ) { 
+    	
+    	for (int i=0; i<_data.size(); i++) {
+			if ( _data.get(0).toString().equals( data.toString() ) ) {
+				_data.remove(i);
+				break;
+			}
+		}
+    }
+    
+    public AnnotationIndex getIndex() {
+    	return _index;
+    }
+    
+    public List<T> getData() {
+    	return _data;
+    } 
+    
+    @Override
+    public int hashCode () {
+    	return _index.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {   	    	
+    	if (that != null && that instanceof AnnotationBin)
+        {
+    		return _index.equals( ((AnnotationBin)that)._index );
+        }   	
+    	return false;
+    }
+    
 }

@@ -30,91 +30,69 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import com.oculusinfo.annotation.io.*;
-
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.After;
 import org.junit.Before;
 
+import com.oculusinfo.annotation.index.*;
+import com.oculusinfo.annotation.index.impl.*;
+import com.oculusinfo.annotation.io.*;
+import com.oculusinfo.annotation.io.impl.*;
+import com.oculusinfo.annotation.io.serialization.*;
+import com.oculusinfo.annotation.io.serialization.impl.*;
+import com.oculusinfo.annotation.query.*;
 
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
 
-	private HBaseAnnotationIO _hbaseIO;
-    private List<AnnotationData> _annotations;
-    private AnnotationIndex _start;
-    private AnnotationIndex _stop;
+	private AnnotationIO _io;
+	private AnnotationIndexer _indexer;
+	private AnnotationSerializer<JSONObject> _serializer;
     
+	private List<AnnotationBin<JSONObject>> _annotations;
+	private AnnotationIndex _start;
+	private AnnotationIndex _stop;
+	
     @Before
     public void setup () {
     	try {
-    		_hbaseIO = new HBaseAnnotationIO("hadoop-s1.oculus.local",
-										     "2181",
-									         "hadoop-s1.oculus.local:60000");
+    		_io = new HBaseAnnotationIO("hadoop-s1.oculus.local",
+										"2181",
+									    "hadoop-s1.oculus.local:60000");
     	} catch (Exception e) {
     		
 			System.out.println("Error: " + e.getMessage());
 			
 		} finally {
 		}	
-    	_annotations = generateAnnotations(NUM_ENTRIES);
     	
-    	// build bounding box from 2 random points
-		AnnotationIndex p0 = generateIndex();
-		AnnotationIndex p1 = generateIndex();		
-		// bounding box corners must be created from lowest val corner to highest val corner
-		double xMax = Math.max( p0.getX(), p1.getX() );
-		double xMin = Math.min( p0.getX(), p1.getX() );
-		double yMax = Math.max( p0.getY(), p1.getY() );		
-		double yMin = Math.min( p0.getY(), p1.getY() );		
-		_start = new AnnotationIndex(xMin, yMin, BOUNDS);
-		_stop = new AnnotationIndex(xMax, yMax, BOUNDS);	
+    	_indexer = new TiledAnnotationIndexer();
+    	_serializer = new TestJSONSerializer(); 
+    	
+    	_annotations = generateJSONAnnotations( NUM_ENTRIES, _indexer );
+    	
+        _start = generateJSONAnnotation( _indexer ).getIndex();
+    	_stop = generateJSONAnnotation( _indexer ).getIndex();
+    	
+    	if ( _stop.getValue() < _start.getValue() ) {
+    		AnnotationIndex temp = _start;
+    		_start = _stop;
+    		_stop = temp;
+    	}
+	
     }
 
     @After
     public void teardown () {
-    	_hbaseIO = null;
-    	_annotations = null;
-    	_start = null;
-    	_stop = null;
+    	_io = null;
     }
 	
-	public AnnotationIndex generateIndex() {
-
-		final Random rand = new Random();
-		
-		double x = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
-		double y = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
-			
-		return new AnnotationIndex( x, y ,BOUNDS );
-	}
 	
-	public AnnotationIndex generateIndex(double lon, double lat) {
-	    		
-		return new AnnotationIndex( lon, lat, BOUNDS );
-	}
-	
-	public List<AnnotationData> generateAnnotations(int numEntries) {
-
-		List<AnnotationData> annotations = new ArrayList<>();		
-		for (int i=0; i<numEntries; i++) {
-			
-			AnnotationIndex index = generateIndex();	
-			annotations.add(new AnnotationData( index, "p"+Integer.toString((int)Math.random()*5), "comment " + i));	
-		}
-		return annotations;
-	}
-    
     @Test
     public void testHBaseIO() {
-    	
-    	boolean USE_KRYO = true;
-    	boolean USE_COMPRESSION = true;
-    	
-    	_hbaseIO.setKryo( USE_KRYO );
-    	_hbaseIO.setCompression( USE_COMPRESSION );
     	
     	try {
     		
@@ -122,28 +100,30 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 *  Create Table
 	    	 */
 			System.out.println("Creating table");
-	    	_hbaseIO.createTable( TABLE_NAME );
+	    	_io.initializeForWrite( TABLE_NAME );
 	    	
 	        /*
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to table");	
-	    	_hbaseIO.writeAnnotations(TABLE_NAME, _annotations);
-	    	
+	    	_io.writeAnnotations(TABLE_NAME, _serializer, _annotations );
+	
 	        /*
 	    	 *  Scan range annotations
 	    	 */
-	    	System.out.println( "Scanning table from " + _start.getIndex() + " to " + _stop.getIndex() );	
-	    	List<AnnotationData> scannedEntries = _hbaseIO.scanAnnotations( TABLE_NAME, _start, _stop );			
+	    	System.out.println( "Scanning table from " + _start.getValue() + " to " + _stop.getValue() );	
+	    	List<AnnotationBin<JSONObject>> scannedEntries = _io.readAnnotations( TABLE_NAME, _serializer, _start, _stop );			
 	        if (VERBOSE) print( scannedEntries );
 	        
 	    	/*
 	    	 *  Scan and check all annotations
 	    	 */
 	    	System.out.println( "Scanning all annotations" );
-	    	List<AnnotationData> allEntries = _hbaseIO.scanAnnotations( TABLE_NAME );
+	    	List<AnnotationIndex> indices = convertToIndices( _annotations );
+	    	List<AnnotationBin<JSONObject>> allEntries = _io.readAnnotations( TABLE_NAME, _serializer, indices );
+
 	    	if (VERBOSE) print( allEntries );
-	    	for ( AnnotationData annotation : _annotations ) {
+	    	for ( AnnotationBin<JSONObject> annotation : _annotations ) {
 	    		Assert.assertTrue( allEntries.contains( annotation ) );
 	    		allEntries.remove( annotation );
 	    	}
@@ -157,7 +137,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 * Drop table
 	    	 */
 	    	System.out.println("Disabling and dropping table");
-	    	_hbaseIO.dropTable(TABLE_NAME);
+	    	((HBaseAnnotationIO)_io).dropTable(TABLE_NAME);
 		}
     }
 

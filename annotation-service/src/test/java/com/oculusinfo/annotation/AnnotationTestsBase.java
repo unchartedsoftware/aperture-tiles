@@ -23,63 +23,135 @@
  */
 package com.oculusinfo.annotation;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.oculusinfo.annotation.query.*;
+import com.oculusinfo.annotation.index.*;
+import com.oculusinfo.annotation.index.impl.*;
 import com.oculusinfo.annotation.io.*;
+import com.oculusinfo.annotation.io.impl.*;
+import com.oculusinfo.annotation.io.serialization.*;
+import com.oculusinfo.annotation.io.serialization.impl.*;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 
 public class AnnotationTestsBase {
 	
-	static final int      NUM_ENTRIES = 10000;
+	static final double   EPSILON = 0.000001;
+	static final int      NUM_ENTRIES = 100;
 	static final int      NUM_TESTS = 25;
-	static final double[] BOUNDS = {-180.0, -90.0, 180.0, 90.0};
+	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 	static final String   TABLE_NAME = "AnnotationTable";
 	
+
 	/*
 	 * Annotation list printing utility function
 	 */
-	protected void print( List<AnnotationData> annotations ) {
+	protected void print( List<AnnotationBin<JSONObject>> annotations ) {
 		
 		int i = 0;
-		for (AnnotationData annotation : annotations ) {
+		for (AnnotationBin<JSONObject> annotation : annotations ) {
 			
-			System.out.println("\tEntry "+i+": " + annotation.getIndex().getX() 
-											     + ", " 
-											     + annotation.getIndex().getY() 
-											     + ", "
-											     + annotation.getIndex().getIndex() 
-											     + ", "
-											     + annotation.getComment() );
-			i++;
+			System.out.println( "{" );
+			System.out.println( "\tindex: " + annotation.getIndex().getValue() + ", " );
+			System.out.println( "\tdata: [" );
+			
+			for (JSONObject data : annotation.getData() ) {
+				try {
+					
+					System.out.println( "\t\t{" );
+					System.out.println( "\t\t\tx: " + data.getDouble("x") + "," );
+					System.out.println( "\t\t\ty: " + data.getDouble("y") + "," );
+					System.out.println( "\t\t\tpriority: " + data.getString("comment") + "," );			
+					System.out.println( "\t\t\tcomment: " + data.getString("priority") );					
+					System.out.println( "\t\t}," );
+					
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+
+			System.out.println( "\t]" );
+			System.out.println( "}" );
 		}
 	}
 
+	
 	/*
 	 * Annotation index generation function
 	 */
-	protected AnnotationIndex generateIndex() {
+	protected JSONObject generateJSON() {
 
 		final Random rand = new Random();
 		
 		double x = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
 		double y = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
+		
+		try {
+			// generate JSON data array
+			JSONObject data = new JSONObject();
+			data.put("x", x);
+			data.put("y", y);
+			data.put("comment", randomComment() );
+			data.put("priority", "P0");	
+			return data;
 			
-		return new AnnotationIndex( x, y ,BOUNDS );
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+				
 	}
 	
 	/*
 	 * Annotation index generation function
-	 */	
-	protected AnnotationIndex generateIndex(double lon, double lat) {
-	    		
-		return new AnnotationIndex( lon, lat, BOUNDS );
+	 */
+	protected <T> AnnotationBin<JSONObject> generateJSONAnnotation( AnnotationIndexer indexer ) {
+
+		final Random rand = new Random();
+		
+		double x = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
+		double y = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
+		
+		// generate bin index
+		AnnotationIndex index = indexer.getIndex( x, y, 0 );
+		
+		try {
+			// generate JSON data array
+			JSONObject data = new JSONObject();
+			data.put("x", x);
+			data.put("y", y);
+			data.put("comment", randomComment() );
+			data.put("priority", "P0");	
+			JSONArray dataArray = new JSONArray();
+			dataArray.put( data );
+			
+			JSONObject bin = new JSONObject();
+			// add index to json
+			bin.put( "index", index );
+			// add data to json
+			bin.put( "data", dataArray );
+			return new AnnotationBin<JSONObject>( index, data );
+			
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+				
 	}
-	
 	
 	protected String randomComment() {
 		int LENGTH = 256;		
@@ -94,16 +166,30 @@ public class AnnotationTestsBase {
 	    return new String(text);
 	}
 	
-	/*
-	 * Annotation index generation function
-	 */
-	protected List<AnnotationData> generateAnnotations(int numEntries) {
+	protected <T> List<AnnotationIndex> convertToIndices( List<AnnotationBin<T>> annotations ) {
+		List<AnnotationIndex> indices = new ArrayList<AnnotationIndex>();
+		for ( AnnotationBin<T> annotation : annotations ) {
+			indices.add( annotation.getIndex() );
+		}
+		return indices;
+	}
 
-		List<AnnotationData> annotations = new ArrayList<>();		
+	protected List<AnnotationBin<JSONObject>> generateJSONAnnotations(int numEntries, AnnotationIndexer indexer ) {
+
+		List<AnnotationBin<JSONObject>> annotations = new ArrayList<>();		
 		for (int i=0; i<numEntries; i++) {
-			
-			AnnotationIndex index = generateIndex();	
-			annotations.add(new AnnotationData( index, "p"+Integer.toString((int)Math.random()*5), randomComment() ));	
+				
+			annotations.add( generateJSONAnnotation( indexer ) );	
+		}
+		return annotations;
+	}
+	
+	protected List<JSONObject> generateJSONs( int numEntries ) {
+
+		List<JSONObject> annotations = new ArrayList<>();		
+		for (int i=0; i<numEntries; i++) {
+				
+			annotations.add( generateJSON() );	
 		}
 		return annotations;
 	}

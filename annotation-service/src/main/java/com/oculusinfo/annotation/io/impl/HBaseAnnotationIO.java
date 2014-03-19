@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.io;
+package com.oculusinfo.annotation.io.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,14 +47,13 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 //import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.annotation.io.*;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.query.*;
+import com.oculusinfo.annotation.index.*;
 
-public class HBaseAnnotationIO {
+
+public class HBaseAnnotationIO implements AnnotationIO {
 	
     private static final String      META_DATA_INDEX      = "metadata";
     private static final byte[]      EMPTY_BYTES          = new byte[0];
@@ -76,11 +75,7 @@ public class HBaseAnnotationIO {
    
     private Configuration       _config;
     private HBaseAdmin          _admin;
-    private Kryo				_kryo;
-    
-    private boolean _useKryo = false;
-    private boolean _useCompression = false;
-    
+
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
     						  String hbaseMaster) throws IOException {
@@ -90,22 +85,134 @@ public class HBaseAnnotationIO {
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);
-        
-        _kryo = new Kryo();
-        _kryo.setRegistrationRequired(true); 	
-        _kryo.register(AnnotationData.class);
-        _kryo.register(AnnotationIndex.class);
-        _kryo.register(double[].class);
-    }
-
-
-    public void setKryo( boolean flag ) {
-    	_useKryo = flag;
     }
     
-    public void setCompression( boolean flag ) {
-    	_useCompression = flag;
+    @Override    
+    public void initializeForWrite (String tableName) throws IOException {
+        if (!_admin.tableExists(tableName)) {
+            HTableDescriptor tableDesc = new HTableDescriptor( /*TableName.valueOf(*/ tableName /*)*/ );            
+            HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
+            tableDesc.addFamily(metadataFamily);
+            HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
+            tableDesc.addFamily(tileFamily);
+            _admin.createTable(tableDesc);
+        }
     }
+    
+    
+    @Override
+    public <T> void writeAnnotations (String tableName,
+    								  AnnotationSerializer<T> serializer,
+    								  List<AnnotationBin<T>> annotations ) throws IOException {
+        
+    	List<Row> rows = new ArrayList<Row>();
+        for (AnnotationBin<T> annotation : annotations) {
+        	
+        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            serializer.serialize( annotation, baos );
+            rows.add( addToPut(null, 
+            				   rowIdFromAnnotation( annotation.getIndex() ),
+                               ANNOTATION_COLUMN, 
+                               baos.toByteArray() ) );
+        }
+        
+        try {
+            writeRows(tableName, rows);
+        } catch (InterruptedException e) {
+            throw new IOException("Error writing annotations to HBase", e);
+        }
+    }
+
+    @Override   
+    public void writeMetaData (String tableName, String metaData) throws IOException {
+        try {
+            List<Row> rows = new ArrayList<Row>();
+            rows.add(addToPut(null, META_DATA_INDEX.getBytes(), METADATA_COLUMN, metaData.getBytes()));
+            Put put = new Put(META_DATA_INDEX.getBytes());
+            put.add(METADATA_FAMILY_NAME, EMPTY_BYTES, metaData.getBytes());
+            writeRows(tableName, rows);
+        } catch (InterruptedException e) {
+            throw new IOException("Error writing metadata to HBase", e);
+        }
+    }
+    
+    
+    @Override
+    public void initializeForRead( String pyramidId ) {
+    	// NO-OP
+    }
+    
+
+    @Override
+    public <T> List<AnnotationBin<T>> readAnnotations (String tableName,
+    												   AnnotationSerializer<T> serializer,
+												       List<AnnotationIndex> annotations) 
+														throws IOException {
+        List<byte[]> rowIds = new ArrayList<byte[]>();
+        for (AnnotationIndex annotation: annotations) {
+            rowIds.add(rowIdFromAnnotation(annotation));
+        }
+        
+        List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
+
+        return convertResults( rawResults, serializer );
+    }
+    
+    @Override
+    public <T> List<AnnotationBin<T>> readAnnotations (String tableName, 
+												       AnnotationSerializer<T> serializer,
+													   AnnotationIndex from,
+													   AnnotationIndex to) throws IOException {
+		List<Map<HBaseColumn, byte[]>> rawResults = scanRange(tableName, 
+				    	      from.getBytes(), 
+				    		  to.getBytes(),
+							  ANNOTATION_COLUMN);
+		
+		return convertResults( rawResults, serializer );
+	}
+
+    @Override
+    public String readMetaData (String tableName) throws IOException {
+        List<Map<HBaseColumn, byte[]>> rawData = readRows(tableName, 
+        												  Collections.singletonList(META_DATA_INDEX.getBytes()),
+        												  METADATA_COLUMN);
+
+		if (null == rawData) return null;
+		if (rawData.isEmpty()) return null;
+		if (null == rawData.get(0)) return null;
+	    if (!rawData.get(0).containsKey(METADATA_COLUMN)) return null;
+
+        return new String(rawData.get(0).get(METADATA_COLUMN));
+    }
+    
+    
+    @Override
+    public void initializeForRemove( String pyramidId ) {
+    	// NO-OP
+    }
+   
+    @Override
+    public void removeAnnotations (String tableName,
+								   List<AnnotationIndex> annotations) 
+														throws IOException {
+    	
+    	List<byte[]> rowIds = new ArrayList<byte[]>();
+        for (AnnotationIndex annotation: annotations) {
+            rowIds.add(rowIdFromAnnotation(annotation));
+        }        
+        deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
+    }
+
+    @Override
+    public void removeMetaData (String tableName, String metaData) throws IOException {
+    	// TODO
+    }
+    
+    
+    
+    
+    
+    
     
     public HBaseAdmin getAdmin() {
     	return _admin;
@@ -253,6 +360,23 @@ public class HBaseAnnotationIO {
         }
         return allResults;
     }
+    
+    
+    private void deleteRows (String tableName, List<byte[]> rows, HBaseColumn... columns) throws IOException {
+        HTable table = getTable(tableName);
+
+        List<Delete> deletes = new ArrayList<Delete>(rows.size());
+        for (byte[] rowId: rows) {
+        	Delete delete = new Delete(rowId);
+        	/*
+            for (HBaseColumn column: columns) {
+            	delete.deleteColumn(column.family, column.qualifier);
+            }*/
+            deletes.add(delete);
+        }
+
+        table.delete(deletes);
+    }
 
      
     private List<Map<HBaseColumn, byte[]>> scanRange(String tableName, byte[] startRow, byte[] stopRow, HBaseColumn... columns) throws IOException {
@@ -284,177 +408,29 @@ public class HBaseAnnotationIO {
     }
 
     
-    public void initializeForWrite (String tableName) throws IOException {
-        if (!_admin.tableExists(tableName)) {
-            HTableDescriptor tableDesc = new HTableDescriptor( /*TableName.valueOf(*/ tableName /*)*/ );            
-            HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
-            tableDesc.addFamily(metadataFamily);
-            HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
-            tableDesc.addFamily(tileFamily);
-            _admin.createTable(tableDesc);
-        }
-    }
-
-
-    public void writeAnnotations (String tableName, List<AnnotationData> annotations ) throws IOException {
-        
-    	List<Row> rows = new ArrayList<Row>();
-        for (AnnotationData annotation : annotations) {
-        	
-        	byte[] bytes;
-        	
-        	if (_useKryo) {
-        		
-        		Output output;
-            	if (_useCompression) {
-    	        	OutputStream outputStream = new DeflaterOutputStream( new ByteArrayOutputStream() );
-    	            output = new Output( outputStream );  
-            	} else {
-            		output = new Output( new ByteArrayOutputStream() );
-            	}
-                _kryo.writeObject(output, annotation);
-                bytes = output.getBuffer();
-                
-        	} else {
-        		bytes = annotation.getBytes();
-        	}       	
-
-            rows.add( addToPut(null, 
-            				   rowIdFromAnnotation( annotation.getIndex() ),
-                               ANNOTATION_COLUMN, 
-                               bytes ) );
-        }
-        
-        try {
-            writeRows(tableName, rows);
-        } catch (InterruptedException e) {
-            throw new IOException("Error writing annotations to HBase", e);
-        }
-    }
-
-    
-    public void writeMetaData (String tableName, String metaData) throws IOException {
-        try {
-            List<Row> rows = new ArrayList<Row>();
-            rows.add(addToPut(null, META_DATA_INDEX.getBytes(), METADATA_COLUMN, metaData.getBytes()));
-            Put put = new Put(META_DATA_INDEX.getBytes());
-            put.add(METADATA_FAMILY_NAME, EMPTY_BYTES, metaData.getBytes());
-            writeRows(tableName, rows);
-        } catch (InterruptedException e) {
-            throw new IOException("Error writing metadata to HBase", e);
-        }
-    }
-
-    
-    private List<AnnotationData> convertResults( List<Map<HBaseColumn, byte[]>> rawResults ) 
-			throws IOException {
+    private <T> List<AnnotationBin<T>> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
+    											       AnnotationSerializer<T> serializer ) 
+    											    		   	throws IOException {
     	
-    	List<AnnotationData> results = new LinkedList<AnnotationData>();
+    	List<AnnotationBin<T>> results = new LinkedList<AnnotationBin<T>>();
 
         Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
 
+        
         while (iData.hasNext()) {
 	        Map<HBaseColumn, byte[]> rawResult = iData.next();
-
+	        
             if (null != rawResult) {
 
             	byte[] rawData = rawResult.get(ANNOTATION_COLUMN);      
-            	AnnotationData data;
-            	if (_useKryo) {                      
-	                Input input = new Input( rawData );
-	            	data = _kryo.readObject( input, AnnotationData.class );
-            	} else {
-            		ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-                    int length = bais.available();
-                    byte [] buff = new byte[length];
-                    bais.read(buff);
-                    data = new AnnotationData(buff);
-            	}
-
+                ByteArrayInputStream bais = new ByteArrayInputStream(rawData);                
+                AnnotationBin<T> data = serializer.deserialize( bais );
                 results.add(data);
             }
         }
 
         return results;
     }
-   
-    
 
-    public List<AnnotationData> scanAnnotations (String tableName, 
-											 	 AnnotationIndex bottomLeft,
-											 	 AnnotationIndex topRight) 
-														   throws IOException {
-    	
-    	List<Map<HBaseColumn, byte[]>> rawResults = scanRange(tableName, 
-    														  bottomLeft.getBytes(), 
-    														  topRight.getBytes(),
-    														  ANNOTATION_COLUMN);
-
-    	return convertResults( rawResults );
-
-    }
-    
-    
-
-    public List<AnnotationData> scanAnnotations (String tableName) throws IOException {
-    		 
-    	byte [] empty = {};
-		List<Map<HBaseColumn, byte[]>> rawResults = scanRange(tableName, 
-															  empty, 
-															  empty,
-															  ANNOTATION_COLUMN);		
-		return convertResults( rawResults );
-		
-	}
-
-    /*    
-    public List<AnnotationData> readAnnotations (String tableName,
-												 List<AnnotationIndex> annotations) 
-														throws IOException {
-        List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (AnnotationIndex annotation: annotations) {
-            rowIds.add(rowIdFromAnnotation(annotation));
-        }
-        
-        List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
-
-        return convertResults( rawResults, useKyro );
-    }
-    */
-    
-
-    /*
-    @Override
-    public InputStream getTileStream (String tableName, TileIndex tile) throws IOException {
-        List<String> rowIds = new ArrayList<String>();
-        rowIds.add(rowIdFromTileIndex(tile));
-        
-        List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
-        Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
-
-        if (iData.hasNext()) {
-            Map<HBaseColumn, byte[]> rawResult = iData.next();
-            if (null != rawResult) {
-                byte[] rawData = rawResult.get(TILE_COLUMN);
-                return new ByteArrayInputStream(rawData);
-            }
-        }
-
-        return null;
-    }
-	*/
-
-    public String readMetaData (String tableName) throws IOException {
-        List<Map<HBaseColumn, byte[]>> rawData = readRows(tableName, 
-        												  Collections.singletonList(META_DATA_INDEX.getBytes()),
-        												  METADATA_COLUMN);
-
-		if (null == rawData) return null;
-		if (rawData.isEmpty()) return null;
-		if (null == rawData.get(0)) return null;
-	    if (!rawData.get(0).containsKey(METADATA_COLUMN)) return null;
-
-        return new String(rawData.get(0).get(METADATA_COLUMN));
-    }
     
 }

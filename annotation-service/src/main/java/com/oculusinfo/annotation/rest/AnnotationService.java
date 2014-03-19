@@ -21,28 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation;
+package com.oculusinfo.annotation.rest;
 
+import java.util.List;
+import  com.oculusinfo.annotation.index.*;
+import  com.oculusinfo.annotation.query.*;
 
-public interface AnnotationService {
+public interface AnnotationService<T> {
 
 	/*
 	 * Write an annotation to the storage service
 	 * 
 	 */
-	public void writeAnnotation( AnnotationData annotation );
+	public abstract void writeAnnotation( T annotation );
 	
+	
+	/*
+	 * Read annotations from the storage service
+	 * 
+	 */
+	public abstract List<AnnotationBin<T>> readAnnotations( double xMin, double yMin,
+															double xMax, double yMax, int level );	
+	
+
 	/*
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public void removeAnnotaton( AnnotationIndex index );
-	
-	/*
-	 * Read annotations from the service
-	 * 
-	 */
-	//public List<AnnotationData> readAnnotations();
-	
+	public abstract void removeAnnotation( T annotation );
 
 }

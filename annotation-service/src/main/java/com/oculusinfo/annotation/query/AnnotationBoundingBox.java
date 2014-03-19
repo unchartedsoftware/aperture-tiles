@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation;
+package com.oculusinfo.annotation.query;
 
 import java.io.Serializable;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.ArrayList;
  * A bounding box class in annotation index space
  * 
  */
-public class AnnotationBB implements Serializable {
+public class AnnotationBoundingBox implements Serializable {
 	
     private static final long serialVersionUID = 1L;
 
@@ -44,7 +44,7 @@ public class AnnotationBB implements Serializable {
     private double[] _bounds;
     
     
-    public AnnotationBB ( double[] bounds ) {
+    public AnnotationBoundingBox ( double[] bounds ) {
     	
     	_x = AnnotationIndex.transformToUnit( bounds[0], bounds[0], bounds[2] );
     	_y = AnnotationIndex.transformToUnit( bounds[1], bounds[1], bounds[3] ); 	
@@ -56,7 +56,7 @@ public class AnnotationBB implements Serializable {
     }
     
     
-    public AnnotationBB ( double[] extents, double[] bounds ) {
+    public AnnotationBoundingBox ( double[] extents, double[] bounds ) {
     	
     	_x = AnnotationIndex.transformToUnit( extents[0], bounds[0], bounds[2] );
     	_y = AnnotationIndex.transformToUnit( extents[1], bounds[1], bounds[3] );    	
@@ -70,7 +70,7 @@ public class AnnotationBB implements Serializable {
     }
     
     
-    private AnnotationBB ( long x, long y, long width, long height, long start, long stop, double [] bounds ) {
+    private AnnotationBoundingBox ( long x, long y, long width, long height, long start, long stop, double [] bounds ) {
     	_x = x;
     	_y = y;
     	_width = width;
