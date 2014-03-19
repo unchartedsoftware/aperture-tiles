@@ -58,71 +58,71 @@ import com.oculusinfo.tile.util.AvroJSONConverter;
  */
 @Singleton
 public class TileServiceImpl implements TileService {
-    private static final Logger _logger = LoggerFactory.getLogger(TileServiceImpl.class);
+	private static final Logger _logger = LoggerFactory.getLogger(TileServiceImpl.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 
 	
-    private Map<String, JSONObject> _metadataCache;
-    private Map<UUID, JSONObject>   _uuidToOptionsMap;
-    private Map<String, UUID>       _latestIDMap;
+	private Map<String, JSONObject> _metadataCache;
+	private Map<UUID, JSONObject>   _uuidToOptionsMap;
+	private Map<String, UUID>       _latestIDMap;
 
-    @Inject
-    private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
-    @Inject
-    private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-    @Inject
-    private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
+	@Inject
+	private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+	@Inject
+	private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
+	@Inject
+	private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
 
-    public TileServiceImpl () {
-	    _metadataCache = Collections.synchronizedMap(new HashMap<String, JSONObject>());
-	    _uuidToOptionsMap = Collections.synchronizedMap(new HashMap<UUID, JSONObject>());
-	    _latestIDMap = Collections.synchronizedMap(new HashMap<String, UUID>());
+	public TileServiceImpl () {
+		_metadataCache = Collections.synchronizedMap(new HashMap<String, JSONObject>());
+		_uuidToOptionsMap = Collections.synchronizedMap(new HashMap<UUID, JSONObject>());
+		_latestIDMap = Collections.synchronizedMap(new HashMap<String, UUID>());
 	}
 
 	/*
-     * Returns an uninitialized render parameter factory
-     */
-    private LayerConfiguration getLayerConfiguration () throws ConfigurationException {
-        return new LayerConfiguration(_pyramidIOFactoryProvider,
-                                      _serializationFactoryProvider,
-                                      _rendererFactoryProvider, null,
-                                      new ArrayList<String>());
-    }
+	 * Returns an uninitialized render parameter factory
+	 */
+	private LayerConfiguration getLayerConfiguration () throws ConfigurationException {
+		return new LayerConfiguration(_pyramidIOFactoryProvider,
+		                              _serializationFactoryProvider,
+		                              _rendererFactoryProvider, null,
+		                              new ArrayList<String>());
+	}
 
-    /* (non-Javadoc)
+	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getLayer(String)
 	 */
 	public JSONObject getLayer(String hostUrl, JSONObject options) {
 		try {
 			
 			UUID id = UUID.randomUUID();
-            String layer = options.getString("layer");
+			String layer = options.getString("layer");
 			_uuidToOptionsMap.put(id, options);
 			_latestIDMap.put(layer, id);
 
 			// Determine the pyramidIO, so we can get the metaData
 			LayerConfiguration config = getLayerConfiguration();
-            config.readConfiguration(options);
-            PyramidIO pyramidIO = config.produce(PyramidIO.class);
-            PyramidMetaData metadata = getMetadata(layer, pyramidIO);
+			config.readConfiguration(options);
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			PyramidMetaData metadata = getMetadata(layer, pyramidIO);
 
-            // Construct our return object
-            String[] names = JSONObject.getNames(metadata.getRawData());
-            JSONObject result = new JSONObject(metadata.getRawData(), names);
+			// Construct our return object
+			String[] names = JSONObject.getNames(metadata.getRawData());
+			JSONObject result = new JSONObject(metadata.getRawData(), names);
 
-            result.put("layer", layer);
+			result.put("layer", layer);
 			result.put("id", id);
 			result.put("tms", hostUrl + "tile/" + id.toString() + "/");
 			result.put("apertureservice", "/tile/" + id.toString() + "/");
 
-            TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
+			TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
 			result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
 
 			System.out.println("UUID Count after "+layer+": " + _uuidToOptionsMap.size());
 			return result;
 		} catch (ConfigurationException e) {
-            _logger.warn("Configuration exception trying to apply layer parameters to json object.", e);
-            return new JSONObject();
+			_logger.warn("Configuration exception trying to apply layer parameters to json object.", e);
+			return new JSONObject();
 		} catch (JSONException e) {
 			_logger.warn("Failed to apply layer parameters to json object.", e);
 			return new JSONObject();
@@ -132,27 +132,27 @@ public class TileServiceImpl implements TileService {
 
 	@Override
 	public LayerConfiguration getLevelSpecificConfiguration (UUID id, String layer, TileIndex tile) throws ConfigurationException {
-        LayerConfiguration config = getLayerConfiguration();
+		LayerConfiguration config = getLayerConfiguration();
 
-        if (null == id) {
-            id = _latestIDMap.get(layer);
-        }
+		if (null == id) {
+			id = _latestIDMap.get(layer);
+		}
 
-        if (id != null){
-            // Get rendering options
-            JSONObject options = _uuidToOptionsMap.get(id);
-            config.readConfiguration(options);
-        } else {
-            config.readConfiguration(new JSONObject());
-        }
+		if (id != null){
+			// Get rendering options
+			JSONObject options = _uuidToOptionsMap.get(id);
+			config.readConfiguration(options);
+		} else {
+			config.readConfiguration(new JSONObject());
+		}
 
-        PyramidIO pyramidIO = config.produce(PyramidIO.class);
+		PyramidIO pyramidIO = config.produce(PyramidIO.class);
 
-        PyramidMetaData metadata = getMetadata(config.getPropertyValue(LayerConfiguration.LAYER_NAME), pyramidIO);
-        config.setLevelProperties(tile,
-                                  metadata.getLevelMinimum(tile.getLevel()),
-                                  metadata.getLevelMaximum(tile.getLevel()));
-        return config;
+		PyramidMetaData metadata = getMetadata(config.getPropertyValue(LayerConfiguration.LAYER_NAME), pyramidIO);
+		config.setLevelProperties(tile,
+		                          metadata.getLevelMinimum(tile.getLevel()),
+		                          metadata.getLevelMaximum(tile.getLevel()));
+		return config;
 	}
 
 	/* (non-Javadoc)
@@ -161,24 +161,24 @@ public class TileServiceImpl implements TileService {
 	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y) {
 		int width = 256;
 		int height = 256;
-        BufferedImage bi = null;
+		BufferedImage bi = null;
 
-        try {
-            LayerConfiguration config = getLevelSpecificConfiguration(id, layer, new TileIndex(zoomLevel, (int) x, (int) y));
+		try {
+			LayerConfiguration config = getLevelSpecificConfiguration(id, layer, new TileIndex(zoomLevel, (int) x, (int) y));
     
-    		// Record image dimensions in case of error. 
-            width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-            height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			// Record image dimensions in case of error. 
+			width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 
-		    TileDataImageRenderer tileRenderer = config.produce(TileDataImageRenderer.class);
+			TileDataImageRenderer tileRenderer = config.produce(TileDataImageRenderer.class);
 
-		    bi = tileRenderer.render(config);
-        } catch (ConfigurationException e) {
-            _logger.info("No renderer specified for tile request.");
-        }
+			bi = tileRenderer.render(config);
+		} catch (ConfigurationException e) {
+			_logger.info("No renderer specified for tile request.");
+		}
 
 		if (bi == null){
-            bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = bi.createGraphics();
 			g.setColor(COLOR_BLANK);
 			g.fillRect(0, 0, 256, 256);
@@ -194,24 +194,24 @@ public class TileServiceImpl implements TileService {
 	public JSONObject getTileObject(UUID id, String layer, int zoomLevel, double x, double y) {
 		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
 		try {
-            LayerConfiguration config = getLayerConfiguration();
-            if (id != null){
-                // Get rendering options
-                config.readConfiguration(_uuidToOptionsMap.get(id));
-            } else {
-                config.readConfiguration(new JSONObject());
-            }
-		    PyramidIO pyramidIO = config.produce(PyramidIO.class);
-    		InputStream tile = pyramidIO.getTileStream(layer, tileCoordinate);
-    		if (null == tile) return null;
-    		return AvroJSONConverter.convert(tile);
+			LayerConfiguration config = getLayerConfiguration();
+			if (id != null){
+				// Get rendering options
+				config.readConfiguration(_uuidToOptionsMap.get(id));
+			} else {
+				config.readConfiguration(new JSONObject());
+			}
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			InputStream tile = pyramidIO.getTileStream(layer, tileCoordinate);
+			if (null == tile) return null;
+			return AvroJSONConverter.convert(tile);
 		} catch (IOException e) {
-		    _logger.warn("Exception getting tile for {}", tileCoordinate, e);
+			_logger.warn("Exception getting tile for {}", tileCoordinate, e);
 		} catch (JSONException e) {
-            _logger.warn("Exception getting tile for {}", tileCoordinate, e);
-        } catch (ConfigurationException e) {
-            _logger.warn("Exception getting tile for {}", tileCoordinate, e);
-        }
+			_logger.warn("Exception getting tile for {}", tileCoordinate, e);
+		} catch (ConfigurationException e) {
+			_logger.warn("Exception getting tile for {}", tileCoordinate, e);
+		}
 		return null;
 	}
 
@@ -221,19 +221,19 @@ public class TileServiceImpl implements TileService {
 	 * @return
 	 */
 	private PyramidMetaData getMetadata (String layer, PyramidIO pyramidIO) {
-        try {
-            JSONObject metadata = _metadataCache.get(layer);
-            if (metadata == null){
+		try {
+			JSONObject metadata = _metadataCache.get(layer);
+			if (metadata == null){
 				String s = pyramidIO.readMetaData(layer);
 				metadata = new JSONObject(s);
 				_metadataCache.put(layer, metadata);
-            }
-            return new PyramidMetaData(metadata);
+			}
+			return new PyramidMetaData(metadata);
 		} catch (JSONException e) {
-		    _logger.error("Metadata file for layer is missing or corrupt: "+layer, e);
-        } catch (IOException e) {
-            _logger.error("Couldn't read metadata: "+layer, e);
-        }
-        return new PyramidMetaData(new JSONObject());
+			_logger.error("Metadata file for layer is missing or corrupt: "+layer, e);
+		} catch (IOException e) {
+			_logger.error("Couldn't read metadata: "+layer, e);
+		}
+		return new PyramidMetaData(new JSONObject());
 	}
 }

@@ -91,7 +91,7 @@ public class TileResource extends ApertureServerResource {
 			
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-					"Unable to create JSON object from supplied options string", e);
+			                            "Unable to create JSON object from supplied options string", e);
 		}
 	}
 	
@@ -126,21 +126,21 @@ public class TileResource extends ApertureServerResource {
 				setStatus(Status.SUCCESS_CREATED);
 				return imageRep;
 			} else if (ResponseType.Tile.equals(extType.getResponseType())) {
-			    // We return an object including the tile index ("index") and 
-			    // the tile data ("data").
-			    //
-			    // The data should include index information, but it has to be 
-			    // there for tiles with no data too, so we can't count on it.
-			    JSONObject result = new JSONObject();
-			    JSONObject tileIndex = new JSONObject();
-			    tileIndex.put("level", zoomLevel);
-			    tileIndex.put("xIndex", x);
-			    tileIndex.put("yIndex", y);
-			    result.put("index", tileIndex);
-			    result.put("tile", _service.getTileObject(uuid, layer, zoomLevel, x, y));
+				// We return an object including the tile index ("index") and 
+				// the tile data ("data").
+				//
+				// The data should include index information, but it has to be 
+				// there for tiles with no data too, so we can't count on it.
+				JSONObject result = new JSONObject();
+				JSONObject tileIndex = new JSONObject();
+				tileIndex.put("level", zoomLevel);
+				tileIndex.put("xIndex", x);
+				tileIndex.put("yIndex", y);
+				result.put("index", tileIndex);
+				result.put("tile", _service.getTileObject(uuid, layer, zoomLevel, x, y));
 
-			    setStatus(Status.SUCCESS_CREATED);
-			    return new JsonRepresentation(result);
+				setStatus(Status.SUCCESS_CREATED);
+				return new JsonRepresentation(result);
 			} else {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			}
@@ -148,7 +148,7 @@ public class TileResource extends ApertureServerResource {
 			return null;
 		} catch (Exception e){
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-					"Unable to interpret requested tile from supplied URL.", e);
+			                            "Unable to interpret requested tile from supplied URL.", e);
 		}
 	}
 }
