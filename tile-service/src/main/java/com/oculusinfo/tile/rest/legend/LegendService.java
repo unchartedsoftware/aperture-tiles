@@ -26,10 +26,10 @@ package com.oculusinfo.tile.rest.legend;
 
 import java.awt.image.BufferedImage;
 
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 
 public interface LegendService {
 	
-	public BufferedImage getLegend(Object transform, ColorRampParameter rampType, String layer, int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally);
+	public BufferedImage getLegend (LayerConfiguration config, String layer, int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally);
 	
 }

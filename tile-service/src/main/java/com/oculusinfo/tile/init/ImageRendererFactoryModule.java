@@ -22,32 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.io;
-
-import java.io.File;
+package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.name.Named;
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
-import com.oculusinfo.binning.io.PyramidIO;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.tile.init.providers.StandardImageRendererFactoryProvider;
+import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
+public class ImageRendererFactoryModule extends AbstractModule {
 
-public class FileSystemModule extends AbstractModule {
-
-	@Override
-	protected void configure() {
-		bind(PyramidIO.class).to(FileSystemPyramidIO.class);
-	}
-	
-	@Provides
-	FileSystemPyramidIO provideFileSystemIo(@Named("com.oculusinfo.tile.pyramidio.file.location")String location,
-	                                        @Named("com.oculusinfo.tile.pyramidio.file.extension")String extension){
-	    // Make sure our location ends with a slash
-        if (!location.endsWith("/") && !location.endsWith("\\"))
-            location = location + File.separator;
-
-		return new FileSystemPyramidIO(location, extension);
-	}
-	
+    @Override
+    protected void configure() {
+        bind(new TypeLiteral<FactoryProvider<TileDataImageRenderer>>() {}).toInstance(new StandardImageRendererFactoryProvider());
+    }
 }

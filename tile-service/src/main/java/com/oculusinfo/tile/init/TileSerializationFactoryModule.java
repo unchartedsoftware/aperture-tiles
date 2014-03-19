@@ -22,26 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.io;
+package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.name.Named;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider;
 
-public class SQLiteModule extends AbstractModule {
+public class TileSerializationFactoryModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		bind(PyramidIO.class).to(SQLitePyramidIO.class);
-	}
-	
-	@Provides
-	SQLitePyramidIO provideSQLiteIO(
-			@Named("com.oculusinfo.tile.pyramidio.sqlite.db.location")String location) 
-					throws Exception {
-		return new SQLitePyramidIO(location);
-	}
-
+    @Override
+    protected void configure() {
+        TypeLiteral<FactoryProvider<TileSerializer<?>>> bindType = new TypeLiteral<FactoryProvider<TileSerializer<?>>>() {};
+        bind(bindType).to(StandardTileSerializationFactoryProvider.class);
+    }
 }

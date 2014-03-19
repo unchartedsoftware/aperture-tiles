@@ -33,6 +33,7 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.apache.avro.file.CodecFactory;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
@@ -45,7 +46,7 @@ import com.oculusinfo.binning.util.Pair;
 public class TwitterDemoSerializationTests {
     @Test
     public void roundTripTest () throws IOException {
-        TwitterDemoAvroSerializer serializer = new TwitterDemoAvroSerializer();
+        TwitterDemoAvroSerializer serializer = new TwitterDemoAvroSerializer(CodecFactory.nullCodec());
         TwitterDemoRecord recordIn = new TwitterDemoRecord("tag",
                                                            12, Arrays.asList(1, 12, 2, 6, 3, 4),
                                                            15, Arrays.asList(1, 15, 3, 5),

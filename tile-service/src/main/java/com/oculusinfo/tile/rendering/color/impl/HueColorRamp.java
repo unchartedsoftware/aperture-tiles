@@ -24,12 +24,8 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.color.ColorRampParameter;
-import com.oculusinfo.tile.util.JsonUtilities;
 
 /**
  * Generates colours based on the hue value between 'fromVal' and 'toVal'.
@@ -44,9 +40,6 @@ import com.oculusinfo.tile.util.JsonUtilities;
  *
  */
 public class HueColorRamp implements ColorRamp {
-
-	private static final Logger logger = LoggerFactory.getLogger(HueColorRamp.class);
-
 	private double fromVal = 0.0;
 	private double toVal = 0.0;
 	
@@ -54,22 +47,9 @@ public class HueColorRamp implements ColorRamp {
 		return (v > min)? ((v < max)? v : max): min;   
 	}
 	
-	public HueColorRamp(ColorRampParameter params) {
-		try {
-			fromVal = clamp(JsonUtilities.getNumber(params.getString("from")).doubleValue(), 0, 1);
-		}
-		catch (Exception e) {
-			logger.error("Hue ramp's 'from' value is invalid. Should be 0 -> 1", e);
-			fromVal = 0;
-		}
-		try {
-			toVal = clamp(JsonUtilities.getNumber(params.getString("to")).doubleValue(), 0, 1);
-		}
-		catch (Exception e) {
-			logger.error("Hue ramp's 'to' value is invalid. Should be 0 -> 1", e);
-			toVal = 0;
-		}
-	
+	public HueColorRamp(double from, double to) {
+	    fromVal = clamp(from, 0.0, 1.0);
+	    toVal = clamp(to, 0.0, 1.0);
 	}
 	
 	@Override

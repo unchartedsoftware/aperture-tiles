@@ -63,6 +63,8 @@ import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.avro.file.CodecFactory;
+
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
@@ -342,7 +344,7 @@ public class BinVisualizer extends JFrame {
         switch (type) {
             case Avro:
                 if (null == _serializer || !(_serializer instanceof DoubleAvroSerializer)) {
-                    _serializer = new DoubleAvroSerializer();
+                    _serializer = new DoubleAvroSerializer(CodecFactory.bzip2Codec());
                     changed = true;
                 }
                 break;

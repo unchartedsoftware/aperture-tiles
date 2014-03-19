@@ -35,15 +35,18 @@ import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.file.CodecFactory;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
 import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 
 
 public class TwitterDemoAvroSerializer
 extends GenericAvroArraySerializer<TwitterDemoRecord> {
     private static final long serialVersionUID = -3141583853288128394L;
+    private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(TwitterDemoRecord.class);
 
     public static final Map<String, String> META;
     static {
@@ -55,8 +58,8 @@ extends GenericAvroArraySerializer<TwitterDemoRecord> {
 
 
 
-    public TwitterDemoAvroSerializer () {
-        super();
+    public TwitterDemoAvroSerializer (CodecFactory compressionCodec) {
+        super(compressionCodec, TYPE_DESCRIPTOR);
     }
 
     @Override

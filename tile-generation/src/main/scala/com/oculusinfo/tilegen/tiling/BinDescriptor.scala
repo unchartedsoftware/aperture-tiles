@@ -36,6 +36,7 @@ import java.util.{List => JavaList}
 import java.util.{Map => JavaMap}
 import java.util.ArrayList
 
+import org.apache.avro.file.CodecFactory
 
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
@@ -89,7 +90,7 @@ class StandardDoubleBinDescriptor extends BinDescriptor[Double, JavaDouble] {
   def defaultMax: JavaDouble = JavaDouble.MIN_VALUE
   def defaultBinValue: Double = 0.0
   def convert (value: Double): JavaDouble = new JavaDouble(value)
-  def getSerializer: TileSerializer[JavaDouble] = new DoubleAvroSerializer()
+  def getSerializer: TileSerializer[JavaDouble] = new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 }
 
 class CompatibilityDoubleBinDescriptor extends StandardDoubleBinDescriptor {
@@ -147,7 +148,7 @@ class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaLi
   def defaultBinValue: Seq[Double] = Seq[Double]()
   def convert (value: Seq[Double]): JavaList[JavaDouble] =
     value.map(v => new JavaDouble(v)).toList.asJava
-  def getSerializer: TileSerializer[JavaList[JavaDouble]] = new DoubleArrayAvroSerializer()
+  def getSerializer: TileSerializer[JavaList[JavaDouble]] = new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 }
 
 class StringScoreBinDescriptor extends BinDescriptor[Map[String, Double],
@@ -192,5 +193,5 @@ class StringScoreBinDescriptor extends BinDescriptor[Map[String, Double],
       .map(p => new Pair[String, JavaDouble](p._1, p._2))
       .toList.sortBy(_.getSecond).asJava
   def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] = 
-    new StringDoublePairArrayAvroSerializer()
+    new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 }

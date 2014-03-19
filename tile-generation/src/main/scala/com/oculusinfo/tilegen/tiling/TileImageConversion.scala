@@ -43,6 +43,7 @@ import scala.collection.mutable.{Map => MutableMap}
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 
+import org.apache.avro.file.CodecFactory
 
 
 import com.oculusinfo.binning.BinIndex
@@ -106,7 +107,7 @@ object TileToTextConverter {
       val t = argParser.getIntArgument("t", "The number in the series of values to display")
 
       val sc = connector.getSparkContext("Convert tile pyramid to images")
-      val serializer = new DoubleArrayAvroSerializer()
+      val serializer = new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
       val tiles = tileIO.readTileSet(sc, serializer, source, List(level))
       val tile = tiles.filter(tile => {
         val index = tile.getDefinition()
@@ -215,11 +216,11 @@ object TileToImageConverter {
                              source, destination, scale, levels, metaData)
 
         case "double" =>
-          convertDoubleTiles(sc, tileIO, tilePyramid, new DoubleAvroSerializer(),
+          convertDoubleTiles(sc, tileIO, tilePyramid, new DoubleAvroSerializer(CodecFactory.bzip2Codec()),
                              source, destination, scale, levels, metaData)
 
         case "doublearray" =>
-          convertVectorTiles(sc, tileIO, tilePyramid, new DoubleArrayAvroSerializer(),
+          convertVectorTiles(sc, tileIO, tilePyramid, new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec()),
                              source, destination, scale, levels, metaData)
       }
     } catch {

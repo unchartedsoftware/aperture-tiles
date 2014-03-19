@@ -30,6 +30,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Random;
 
+import org.apache.avro.file.CodecFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,7 +57,7 @@ public class SerializationSpeedTests {
 
     @Before
     public void setup () {
-        _serializer = new DoubleAvroSerializer();
+        _serializer = new DoubleAvroSerializer(CodecFactory.deflateCodec(4));
         _pyramid = new AOITilePyramid(0.0, 0.0, 1.0, 1.0);
 
         // Create some data

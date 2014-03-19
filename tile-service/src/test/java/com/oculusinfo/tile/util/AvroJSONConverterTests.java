@@ -36,6 +36,7 @@ import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Parser;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -119,7 +120,7 @@ public class AvroJSONConverterTests {
     public void testReadWordScoreTile () throws IOException, JSONException {
         // Create a tile to test
         TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
-        TileSerializer<List<Pair<String, Double>>> serializer = new StringDoublePairArrayAvroSerializer();
+        TileSerializer<List<Pair<String, Double>>> serializer = new StringDoublePairArrayAvroSerializer(CodecFactory.nullCodec());
         TileIndex index = new TileIndex(0, 0, 0, 1, 1);
         TileData<List<Pair<String, Double>>> tile = new TileData<>(index);
         List<Pair<String, Double>> bin = new ArrayList<>();

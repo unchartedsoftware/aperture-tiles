@@ -33,20 +33,18 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
-import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 
 /**
  * A renderer that renders tiles of series of doubles
@@ -55,71 +53,94 @@ import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
  */
 public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
-	
+
+
+	// Best we can do here :-(
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Class<List<Double>> getRuntimeBinClass () {
+        return (Class)List.class;
+    }
+    public static TypeDescriptor getRuntimeTypeDescriptor () {
+        return new TypeDescriptor(List.class,
+                                  new TypeDescriptor(Double.class));
+    }
+
+
+
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
 	
-	private PyramidIO _pyramidIo;
-	private TileSerializer<List<Double>> _serializer;
+
 
 	/**
 	 * 
 	 */
-	@Inject
-	public DoublesSeriesImageRenderer (PyramidIO pyramidIo) {
-		_pyramidIo = pyramidIo;
-		_serializer = new DoubleArrayAvroSerializer();
+    public DoublesSeriesImageRenderer () {
 	}
 
-	@Override
-	public BufferedImage render (RenderParameter parameter) {
+    @Override
+    public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+        double minimumValue;
+        String rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MINIMUMS);
+        try {
+            minimumValue = Double.parseDouble(rawValue);
+        } catch (NumberFormatException e) {
+            _logger.warn("Expected a numeric minimum for level, got {}", rawValue);
+            minimumValue = 0.0;
+        }
+        
+        double maximumValue;
+        rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MAXIMUMS);
+        try {
+            maximumValue = Double.parseDouble(rawValue);
+        } catch (NumberFormatException e) {
+            _logger.warn("Expected a numeric maximum for level, got {}", rawValue);
+            maximumValue = 1000.0;
+        }
+        return new Pair<Double, Double>(minimumValue, maximumValue);
+    }
+
+    @Override
+	public BufferedImage render (LayerConfiguration config) {
  		BufferedImage bi;
+        String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {  // TODO: harden at a finer granularity.
-			int outputWidth = parameter.getOutputWidth();
-			int outputHeight = parameter.getOutputHeight();
-			int rangeMax = parameter.getAsInt("rangeMax");
-			int rangeMin = parameter.getAsInt("rangeMin");
-			String layer = parameter.getString("layer");
+			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
+			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
-			
-			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 255);
-			
-			double minimumValue;
-			try {
-				minimumValue = parameter.getAsDouble("levelMinimums");
-			} catch (NumberFormatException e) {
-			    _logger.warn("Expected a numeric minimum for level, got {}", parameter.getString("levelMinimums"));
-			    minimumValue = 0.0;
-			}
-			
-			double maximumValue;
-			try {
-				maximumValue = parameter.getAsDouble("levelMaximums");
-			} catch (NumberFormatException e) {
-			    _logger.warn("Expected a numeric maximum for level, got {}", parameter.getString("levelMaximums"));
-			    maximumValue = 1000.0;
-			}
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getObject("transform", Object.class), minimumValue, maximumValue);
+
+			IValueTransformer t = config.produce(IValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
+			double maximumValue = getLevelExtrema(config).getSecond();
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
-			
-			List<TileData<List<Double>>> tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(parameter.getObject("tileCoordinate", TileIndex.class)));
+
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<List<Double>> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+			                                                                                 getRuntimeBinClass(),
+			                                                                                 getRuntimeTypeDescriptor());
+			List<TileData<List<Double>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile " + parameter.getObject("tileCoordinate", TileIndex.class) + " for layer " + layer);
+			    _logger.info("Missing tile " + index + " for layer " + layer);
 			    return null;
 			}
 
-			int currentImage = getCurrentImage(parameter);
+			// Default to 0 if the default of -1 is given
+			int currentImage = Math.max(0, config.getPropertyValue(LayerConfiguration.CURRENT_IMAGE));
 			
 			TileData<List<Double>> data = tileDatas.get(0);
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
-			
+
 			double xScale = ((double) outputWidth)/xBins;
 			double yScale = ((double) outputHeight)/yBins;
+
+			ColorRamp colorRamp = config.produce(ColorRamp.class);
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 					int minX = (int) Math.round(tx*xScale);
@@ -137,7 +158,7 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 					if (binCount > 0
 							&& transformedValue >= scaledLevelMinFreq
 							&& transformedValue <= scaledLevelMaxFreq) {
-						rgb = ramp.getRGB(transformedValue);
+						rgb = colorRamp.getRGB(transformedValue);
 					} else {
 						rgb = COLOR_BLANK.getRGB();
 					}
@@ -154,25 +175,13 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
+			_logger.debug("Tile is corrupt: " + layer + ":" + index);
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}
 		return bi;
 	}
-	
-	private int getCurrentImage(RenderParameter param) {
-		int currentImage = 0;
-		try {
-			currentImage = param.getAsInt("currentImage");
-		}
-		catch (Exception e) {
-			_logger.error("Could not retrieve 'currentImage' from layer params.", e);
-		}
-		
-		return currentImage;
-	}
-	
+
 	@Override
 	public int getNumberOfImagesPerTile(PyramidMetaData metadata) {
 	    int minFrames = Integer.MAX_VALUE;

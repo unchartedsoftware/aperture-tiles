@@ -26,6 +26,12 @@
     </dependency>
     <dependency>
       <groupId>com.oculusinfo</groupId>
+      <artifactId>tile-service</artifactId>
+      <version>${project.version}</version>
+      <classifier>classes</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
       <artifactId>tile-generation</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>

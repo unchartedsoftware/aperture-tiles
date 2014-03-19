@@ -14,20 +14,14 @@
       <!-- A :-separated list of modules, so there must be a : after all but 
 	   the last module listed. -->
 
-      <!-- Storage type __________________________________________________ -->
-      <!-- Pick one of the modules below.  Note that appropriate properties 
-	   must be set in tile.properties to match the storage module 
-	   chosen. -->
-      <!-- To read tiles from HBase -->
-      <!-- com.oculusinfo.tile.io.HBaseModule: -->
-      <!-- To read tiles from the file system -->
-      com.oculusinfo.tile.io.FileSystemModule:
-      <!-- To read tiles from a .jar file -->
-      <!-- com.oculusinfo.tile.io.ResourceStreamModule: -->
-      <!-- To read tiles from a .zip file -->
-      <!-- com.oculusinfo.tile.io.ZipResourceStreamModule: -->
-      <!-- To read tiles from a SQLite database -->
-      <!-- com.oculusinfo.tile.io.SQLiteModule: -->
+      <!-- Pyramid factory module - override to add custom TilePyramids -->
+      com.oculusinfo.tile.init.TilePyramidFactoryModule:
+      <!-- Renderer factory module - override to add custom server-side renderers. -->
+      com.oculusinfo.tile.init.ImageRendererFactoryModule:
+      <!-- Serialization factory module - override to add custom tile serializers -->
+      com.oculusinfo.tile.init.TileSerializationFactoryModule:
+      <!-- Pyramid IO factory module - override to add custom PyramidIO implementations -->
+      com.oculusinfo.tile.init.PyramidIOFactoryModule:
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:

@@ -27,7 +27,6 @@ package com.oculusinfo.tile.rendering.impl;
 
 import java.util.List;
 
-import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.util.Pair;
 
 /**
@@ -40,10 +39,6 @@ import com.oculusinfo.binning.util.Pair;
  * @author nkronenfeld
  */
 public class TopAndBottomTextScoresImageRenderer extends TopTextScoresImageRenderer {
-	public TopAndBottomTextScoresImageRenderer (PyramidIO pyramidIo) {
-		super(pyramidIo);
-	}
-
 	@Override
 	protected int[] getTextsToDraw(List<Pair<String, Double>> cellData) {
 		int n = cellData.size();

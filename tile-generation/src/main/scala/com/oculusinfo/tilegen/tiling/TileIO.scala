@@ -35,6 +35,8 @@ import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
+import org.apache.avro.file.CodecFactory
+
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
@@ -264,10 +266,10 @@ object TileSerializerChooser {
 	def getSerializer (serializerType: String): TileSerializer[_] =
 		serializerType match {
 			case "legacy" => new BackwardCompatibilitySerializer()
-			case "avro-double" => new DoubleAvroSerializer()
-			case "avro-double-array" => new DoubleArrayAvroSerializer()
-			case "avro-string-array" => new StringArrayAvroSerializer()
-			case "avro-string-int-pair-array" => new StringIntPairArrayAvroSerializer()
+			case "avro-double" => new DoubleAvroSerializer(CodecFactory.bzip2Codec())
+			case "avro-double-array" => new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
+			case "avro-string-array" => new StringArrayAvroSerializer(CodecFactory.bzip2Codec())
+			case "avro-string-int-pair-array" => new StringIntPairArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case _ => throw new IllegalArgumentException("Illegal serializer type "+serializerType)
 		}
 }
@@ -310,7 +312,7 @@ object TestTableEquality {
 		if ("legacy" == serializerType) {
 			compareTables[JavaDouble](sc, tileIO,
 			                          table1, new BackwardCompatibilitySerializer(),
-			                          table2, new DoubleAvroSerializer(),
+			                          table2, new DoubleAvroSerializer(CodecFactory.bzip2Codec()),
 			                          levels)
 		} else {
 			val serializer = TileSerializerChooser.getSerializer(args(2))

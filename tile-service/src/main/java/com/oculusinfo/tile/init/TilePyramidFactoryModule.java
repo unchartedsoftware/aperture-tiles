@@ -22,34 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.io;
-
-import java.io.File;
+package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.name.Named;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
-import com.oculusinfo.binning.io.impl.ResourcePyramidStreamSource;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
 
+public class TilePyramidFactoryModule extends AbstractModule {
 
-public class ResourceStreamModule extends AbstractModule {
-
-	@Override
-	protected void configure() {
-		bind(PyramidIO.class).to(ResourceStreamReadOnlyPyramidIO.class);
-	}
-	
-	@Provides
-	ResourceStreamReadOnlyPyramidIO provideFileSystemIo(
-			@Named("com.oculusinfo.tile.pyramidio.resource.location")String location,
-			@Named("com.oculusinfo.tile.pyramidio.resource.extension")String extension){
-        // Make sure our location ends with a slash
-        if (!location.endsWith("/") && !location.endsWith("\\"))
-            location = location + File.separator;
-
-        return new ResourceStreamReadOnlyPyramidIO( new ResourcePyramidStreamSource(location, extension) );
-	}
-	
+    @Override
+    protected void configure() {
+        TypeLiteral<FactoryProvider<TilePyramid>> bindType = new TypeLiteral<FactoryProvider<TilePyramid>>() {};
+        bind(bindType).to(StandardTilePyramidFactoryProvider.class);
+    }
 }

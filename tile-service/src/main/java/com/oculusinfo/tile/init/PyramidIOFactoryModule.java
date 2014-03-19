@@ -22,37 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.io;
-
-import java.io.IOException;
+package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.name.Named;
-import com.oculusinfo.binning.io.impl.HBasePyramidIO;
+import com.google.inject.TypeLiteral;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 
-/**
- * HBase as the storage.
- * 
- * @author dgray
- *
- */
-public class HBaseModule extends AbstractModule {
+public class PyramidIOFactoryModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		bind(PyramidIO.class).to(HBasePyramidIO.class);
-	}
-	
-	@Provides
-	HBasePyramidIO provideHBaseIo(
-			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperQuorum")String zookeeperQuorum,
-			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperPort")String zookeeperPort,
-			@Named("com.oculusinfo.tile.pyramidio.hbase.hbaseMaster")String hbaseMaster) 
-					throws IOException {
-
-		return new HBasePyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster);
-	}
-	
+    @Override
+    protected void configure() {
+        bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).toInstance(new StandardPyramidIOFactoryProvider());
+    }
 }

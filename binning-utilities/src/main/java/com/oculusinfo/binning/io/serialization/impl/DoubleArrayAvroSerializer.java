@@ -28,12 +28,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class DoubleArrayAvroSerializer extends GenericAvroArraySerializer<Double> {
-    private static final long serialVersionUID = -5878944840179404265L;
+    private static final long serialVersionUID = 5332785638604238627L;
+    private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);
 
 
 
@@ -47,8 +50,8 @@ public class DoubleArrayAvroSerializer extends GenericAvroArraySerializer<Double
 
 
 
-    public DoubleArrayAvroSerializer () {
-        super();
+    public DoubleArrayAvroSerializer (CodecFactory compressionCodec) {
+        super(compressionCodec, TYPE_DESCRIPTOR);
     }
 
     @Override

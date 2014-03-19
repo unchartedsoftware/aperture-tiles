@@ -30,12 +30,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class IntegerAvroSerializer extends GenericAvroSerializer<Integer> {
-    private static final long serialVersionUID = 3241009200123502169L;
+    private static final long serialVersionUID = -8317163654416878678L;
+    private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Integer.class);
 
 
 
@@ -49,8 +52,8 @@ public class IntegerAvroSerializer extends GenericAvroSerializer<Integer> {
 
 
 
-    public IntegerAvroSerializer () {
-        super();
+    public IntegerAvroSerializer (CodecFactory compressionCodec) {
+        super(compressionCodec, TYPE_DESCRIPTOR);
     }
 
     @Override

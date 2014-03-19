@@ -39,13 +39,16 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);
+
+	@Override
+	public TypeDescriptor getBinTypeDescription () {
+	    return TYPE_DESCRIPTOR;
+	}
 
 	@Override
 	public TileData<Double> deserialize(TileIndex index, InputStream rawData) throws IOException {

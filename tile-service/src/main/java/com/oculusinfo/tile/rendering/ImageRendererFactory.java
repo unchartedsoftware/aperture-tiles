@@ -25,40 +25,60 @@
 
 package com.oculusinfo.tile.rendering;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 import com.oculusinfo.tile.rendering.impl.DoublesImageRenderer;
 import com.oculusinfo.tile.rendering.impl.DoublesSeriesImageRenderer;
 import com.oculusinfo.tile.rendering.impl.DoublesStatisticImageRenderer;
-import com.oculusinfo.tile.rendering.impl.LegacyDoublesImageRenderer;
 import com.oculusinfo.tile.rendering.impl.TopAndBottomTextScoresImageRenderer;
 import com.oculusinfo.tile.rendering.impl.TopTextScoresImageRenderer;
 
-public class ImageRendererFactory {
-	public static TileDataImageRenderer getRenderer (JSONObject parameterObject, PyramidIO pyramidIo) {
-	    String rendererType = "default";
-	    try {
-	        if (null != parameterObject) {
-	            rendererType = parameterObject.getString("renderer");
-	        }
-	    } catch (JSONException e) {
-		}
-		
+public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRenderer> {
+    private static StringProperty RENDERER_TYPE = new StringProperty("type",
+                                                                     "The type of renderer that will be used to render the data on the server",
+                                                                     "heatmap",
+                                                                     new String[] {"heatmap", "toptextscores", "textscores", "doubleeseries",
+                                                                                   "doublestatistics" }
+                                                                     );
+
+
+
+    public ImageRendererFactory (ConfigurableFactory<?> parent,
+                                 List<String> path) {
+        this(null, parent, path);
+    }
+
+    public ImageRendererFactory (String name, ConfigurableFactory<?> parent,
+                                 List<String> path) {
+        super(name, TileDataImageRenderer.class, parent, path);
+
+        addProperty(RENDERER_TYPE);
+        addChildFactory(new ColorRampFactory(this, new ArrayList<String>()));
+    }
+
+
+    @Override
+    protected TileDataImageRenderer create () {
+        String rendererType = getPropertyValue(RENDERER_TYPE);
+
 		rendererType = rendererType.toLowerCase();
-		if ("toptextscores".equals(rendererType)) {
-			return new TopTextScoresImageRenderer(pyramidIo);
-		} else if ("textscores".equals(rendererType) || "textscore".equals(rendererType)) {
-			return new TopAndBottomTextScoresImageRenderer(pyramidIo);
-		} else if ("legacy".equals(rendererType)) {
-			return new LegacyDoublesImageRenderer(pyramidIo);
-		} else if ("doubleseries".equals(rendererType)) {
-			return new DoublesSeriesImageRenderer(pyramidIo);
-		} else if ("doublestatistics".equals(rendererType)){
-			return new DoublesStatisticImageRenderer(pyramidIo);
-		} else {
-			return new DoublesImageRenderer(pyramidIo);
-		}
+
+        if ("heatmap".equals(rendererType)) {
+            return new DoublesImageRenderer();
+        } else if ("toptextscores".equals(rendererType)) {
+            return new TopTextScoresImageRenderer();
+        } else if ("textscores".equals(rendererType)) {
+            return new TopAndBottomTextScoresImageRenderer();
+        } else if ("doubleeseries".equals(rendererType)) {
+            return new DoublesSeriesImageRenderer();
+        } else if ("doublestatistics".equals(rendererType)) {
+            return new DoublesStatisticImageRenderer();
+        } else {
+            return null;
+        }
 	}
 }
