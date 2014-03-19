@@ -1,20 +1,50 @@
 Aperture Tiles Web Client
 
-In order to run a web client, one needs to set a few configuration details.
+In order to run a web client, one needs to set a few configuration details.  
+These can be set in your client project, but their descriptions are grouped by 
+the component they affect, not where they are found.
 
 
 == Server ==
 
-First, the server must know where and how to get the data to display.
+The server only needs configuration if one intends to use custom data classes 
+or server-side renderers.
 
-  * tile-server/src/main/webapp/WEB-INF/web.xml
-    This file determines how the server locates tiles.  Details can be found
-    within the file - look for "Storage type".
+  * src/main/resources/tile.properties
+    This file contains a list of all modules to load.  Four modules in 
+    particular allow points at which tiling can be customized.  None of this 
+    customization can be done without java code - so one should be comfortable
+    looking at source if one intends to use custom binning and tiling classes.
 
-  * tile-server/src/main/resources/tile.properties
-    This file describes where the server will find tile pyramids.  Again, 
-    details are contained therein - look for the name of the storage module
-    you enabled in web.xml.
+    * com.oculusinfo.tile.init.TilePyramidFactoryModule sets up 
+      com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider to 
+      be the pyramid factory provider.  This provider allows the use of an AoI
+      (Area of Interest) tile pyramid, and a Web Mercator tile pyramid.  We 
+      expect it to be rare that one needs a different, custom mapping from the
+      data space to tile space - generally, one would simply map the raw values
+      somehow - but if one needs such a custom mapping, one will need to 
+      override this module with an extension that serves up one's custom tile 
+      pyramids. 
+    * com.oculusinfo.tile.init.PyramidIOFactoryModule sets up 
+      com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider to
+      be the pyramid IO factory provider.  This provider allows reading tile 
+      pyramids from the file system, from HBase, from a .jar file, from a zip 
+      file embedded in a .jar file, through a JDBC connection, or from sqlite 
+      database.  If one needs tile pyramids stored in other locations, one 
+      will need to override this module.
+    * com.oculusinfo.tile.init.TileSerializationFactoryModule sets up 
+      com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider.
+      This factory provider serves up a factory that will create the standard 
+      serialization types defined in the binning-utilities project.  If one 
+      has a custom data type as the bin value in ones tiles, one will need to 
+      override this module with one that serves up an extended factory that 
+      can also create a serializer for one's custom data type.
+    * com.oculusinfo.tile.init.ImageRendererRactoryModule sets up
+      com.oculusinfo.tile.init.providers.StandardImageRendererFactoryProvider,
+      which serves up a factory that can create the server-side renderers we 
+      have created in tile-service.  If one has written custom server-side 
+      renderers, this module will have to be overridden with an extension that
+      serves up a factory that can also produce one's custom rendering types.
 
 == Client ==
 
@@ -37,9 +67,10 @@ display, and how.  All client configuration files are in src/main/webapp/data.
         as 'Layer')
       * Layer - The id by which the server knows the layer.
       * Transform - What transform to apply to the data values when determining
-        color.  Options are:
-          * linear - no transformation
-          * log10 - take the logarithm of raw values
+        color.
+          * name - the name of the transform.  Options are:
+              * linear - no transformation
+              * log10 - take the logarithm of raw values
       * Ramp - The color ramp to apply to transformed data values to determine 
         how it is dispayed.  Options are described, where appropriate, as 
         applying from the minimum data value to the maximum.
@@ -58,11 +89,25 @@ display, and how.  All client configuration files are in src/main/webapp/data.
       * Renderer The renderer the server should use to render tiles.  This also 
         specifies how the server will read the tiles, as the renderer and 
         serializer are intimitaly linked.
-          * default - render to a heat-map, based on a standard avro 
-            double-valued tile
-          * doubleseries - render to a series of heat-maps, based on a
-            standard avro double-series-valued tile
-          * textscore - Render to an image showing the scored words, with bars
-            based on their score
-          * legacy - identical rendere to the default, but reading an old tile
-            format that no one should now need.
+          * heatmap - render to a heat-map.  Requires a serializer that reads 
+            tiles of doubles.  This is the default.
+          * toptextscores - Render to an image showing the top 10 scored 
+            strings, with bars based on their score.  Requires a serializer 
+            that reads tiles of lists of string/double pairs.
+          * textscores - similar to toptextscores, but renders the top 5 and 
+            bottom 5 scored strings.
+          * doubleeseries - renders a series of images.  Requires a serializer 
+            that reads tiles of arrays of doubles.
+          * doublestatistics - renders statistics about a tile as text
+      * pyramidio - specifies from where tile are read
+          * type - hbase, file-system, zip, resource, jdbc, or sqlite.  
+            Further properties depend on the type.
+      * serializer - specifies how tiles are read.
+          * type - defines the type of serializer.  This generally consists of 
+            a short-hand for the bin type of the tiles, followed by a suffix 
+            determining the file format - "-j" for json, or "-a" for avro.  
+            The type short-hand is the java type, all lower-case, with [] 
+            indicating lists, nad () indicating tuples.  So 
+            "[(string, double)]-a" indicates a serializer that reads avro 
+            tiles, whose bins are lists of string/double pairs.
+      * 
