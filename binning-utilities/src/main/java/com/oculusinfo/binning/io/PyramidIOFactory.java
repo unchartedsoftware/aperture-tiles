@@ -23,7 +23,10 @@
  */
 package com.oculusinfo.binning.io;
 
+import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +39,7 @@ import com.oculusinfo.binning.io.impl.ResourcePyramidStreamSource;
 import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
 import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
 
@@ -74,6 +78,23 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
                                                                              "Only used if type=\"jdbc\".  The full class name of the JDBC driver to use.  There is no default for this property.",
                                                                              null);
 
+	// We meed a global cache of zip stream sources - zip files are very slow to
+	// read, so the source is slow to initialize, so creating a new one each
+	// time we run isn't feasible.
+    private static Map<Pair<String, String>, ZipResourcePyramidStreamSource> _zipfileCache = new HashMap<>();
+    private static ZipResourcePyramidStreamSource getZipSource (String rootpath, String extension) {
+    	Pair<String, String> key = new Pair<>(rootpath, extension);
+    	if (!_zipfileCache.containsKey(key)) {
+    		synchronized (_zipfileCache) {
+    			if (!_zipfileCache.containsKey(key)) {
+    				URL zipFile = PyramidIOFactory.class.getResource(rootpath);
+    				ZipResourcePyramidStreamSource source = new ZipResourcePyramidStreamSource(zipFile.getFile(), extension);
+    				_zipfileCache.put(key, source);
+    			}
+    		}
+    	}
+    	return _zipfileCache.get(key);
+    }
 
 
     public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
@@ -119,9 +140,8 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
                 PyramidStreamSource source = new ResourcePyramidStreamSource(rootPath, extension);
                 return new ResourceStreamReadOnlyPyramidIO(source);
             } else if ("zip".equals(pyramidIOType)) {
-                String rootPath = getPropertyValue(ROOT_PATH);
-                String extension = getPropertyValue(EXTENSION);
-                PyramidStreamSource source = new ZipResourcePyramidStreamSource(rootPath, extension);
+            	// We need a cache of zip sources - they are slow to read.
+            	PyramidStreamSource source = getZipSource(getPropertyValue(ROOT_PATH), getPropertyValue(EXTENSION));
                 return new ResourceStreamReadOnlyPyramidIO(source);
             } else if ("sqlite".equals(pyramidIOType)) {
                 String rootPath = getPropertyValue(ROOT_PATH);
