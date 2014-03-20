@@ -48,8 +48,8 @@ import org.junit.Test;
 
 public class AnnotationTestsBase {
 	
-	static final double   EPSILON = 0.000001;
-	static final int      NUM_ENTRIES = 100;
+	static final double   EPSILON = 0.00001;
+	static final int      NUM_ENTRIES = 50000;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 	static final String   TABLE_NAME = "AnnotationTable";
@@ -58,26 +58,27 @@ public class AnnotationTestsBase {
 	/*
 	 * Annotation list printing utility function
 	 */
-	protected void print( List<AnnotationBin<JSONObject>> annotations ) {
+	protected <T> void print( List<AnnotationBin<T>> annotations ) {
 		
-		int i = 0;
-		for (AnnotationBin<JSONObject> annotation : annotations ) {
+		for (AnnotationBin<T> annotation : annotations ) {
 			
 			System.out.println( "{" );
 			System.out.println( "\tindex: " + annotation.getIndex().getValue() + ", " );
 			System.out.println( "\tdata: [" );
 			
-			for (JSONObject data : annotation.getData() ) {
+			for (T data : annotation.getData() ) {
 				try {
-					
+					/*
 					System.out.println( "\t\t{" );
 					System.out.println( "\t\t\tx: " + data.getDouble("x") + "," );
 					System.out.println( "\t\t\ty: " + data.getDouble("y") + "," );
 					System.out.println( "\t\t\tpriority: " + data.getString("comment") + "," );			
 					System.out.println( "\t\t\tcomment: " + data.getString("priority") );					
 					System.out.println( "\t\t}," );
+					*/
+					System.out.println( data.toString() );
 					
-				} catch (JSONException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
@@ -118,15 +119,23 @@ public class AnnotationTestsBase {
 	/*
 	 * Annotation index generation function
 	 */
-	protected <T> AnnotationBin<JSONObject> generateJSONAnnotation( AnnotationIndexer indexer ) {
+	protected <T> AnnotationBin<JSONObject> generateJSONAnnotation( AnnotationIndexer<JSONObject> indexer ) {
 
 		final Random rand = new Random();
 		
 		double x = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
 		double y = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
 		
+		JSONObject json = new JSONObject();	
+		try {
+			json.put("x", x);
+			json.put("y", y);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		// generate bin index
-		AnnotationIndex index = indexer.getIndex( x, y, 0 );
+		AnnotationIndex index = indexer.getIndex( json, 0 );
 		
 		try {
 			// generate JSON data array
@@ -174,7 +183,7 @@ public class AnnotationTestsBase {
 		return indices;
 	}
 
-	protected List<AnnotationBin<JSONObject>> generateJSONAnnotations(int numEntries, AnnotationIndexer indexer ) {
+	protected List<AnnotationBin<JSONObject>> generateJSONAnnotations(int numEntries, AnnotationIndexer<JSONObject> indexer ) {
 
 		List<AnnotationBin<JSONObject>> annotations = new ArrayList<>();		
 		for (int i=0; i<numEntries; i++) {

@@ -55,14 +55,15 @@ public class AnnotationBin<T> implements Serializable {
     	_data.add( data );
     }
     
-    public void remove( T data ) { 
+    public boolean remove( T data ) { 
     	
     	for (int i=0; i<_data.size(); i++) {
-			if ( _data.get(0).toString().equals( data.toString() ) ) {
+			if ( _data.get(i).toString().equals( data.toString() ) ) {
 				_data.remove(i);
-				break;
+				return true;
 			}
 		}
+    	return false;
     }
     
     public AnnotationIndex getIndex() {
@@ -80,10 +81,14 @@ public class AnnotationBin<T> implements Serializable {
 
     @Override
     public boolean equals (Object that) {   	    	
-    	if (that != null && that instanceof AnnotationBin)
-        {
-    		return _index.equals( ((AnnotationBin)that)._index );
-        }   	
+    	if (that != null)
+    	{
+    		if (that instanceof AnnotationBin) {
+    			return _index.equals( ((AnnotationBin)that)._index );
+    		} else if (that instanceof AnnotationIndex) {
+    			return _index.equals( (AnnotationIndex)that );
+    		}    		
+    	}	
     	return false;
     }
     

@@ -23,12 +23,6 @@
  */
 package com.oculusinfo.annotation.index.impl;
 
-import java.io.Serializable;
-import java.lang.Number;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -36,7 +30,9 @@ import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.*;
 
-public class TiledAnnotationIndexer extends AnnotationIndexer {
+import org.json.JSONObject;
+
+public class TiledAnnotationIndexer extends AnnotationIndexer<JSONObject> {
 	
 
     public TiledAnnotationIndexer() {
@@ -44,26 +40,29 @@ public class TiledAnnotationIndexer extends AnnotationIndexer {
     } 
     
     @Override
-    public List<AnnotationIndex> getIndices( double x, double y ) {
+    public List<AnnotationIndex> getIndices( JSONObject data ) {
     	
 		List<AnnotationIndex> indices = new LinkedList<AnnotationIndex>();		
 		for (int i=0; i<LEVELS; i++) {
-			indices.add( getIndex( x, y, i ) );
-			//System.out.println( "level " + i + ", index: " + indices.get(i).getValue() );
+			indices.add( getIndex( data, i ) );
 		}
 		return indices;
     }
     
     @Override
-    public AnnotationIndex getIndex( double x, double y, int level ) {
-		
-		TileIndex tile = _pyramid.rootToTile( x,  y, level, BINS );
-		BinIndex bin = _pyramid.rootToBin( x,  y, tile );
-		
-		int bx = tile.getX()*tile.getXBins() + bin.getX();
-		int by = tile.getY()*tile.getYBins() + (tile.getYBins()-1)-bin.getY();
-    	
-		return new AnnotationIndex( interleave( bx, by, level ) );
+    public AnnotationIndex getIndex( JSONObject data, int level ) {
+		try {
+			
+			TileIndex tile = _pyramid.rootToTile( data.getDouble("x"),  data.getDouble("y"), level, BINS );
+			BinIndex bin = _pyramid.rootToBin( data.getDouble("x"),  data.getDouble("y"), tile );
+			int bx = tile.getX()*tile.getXBins() + bin.getX();
+			int by = tile.getY()*tile.getYBins() + (tile.getYBins()-1)-bin.getY();
+			
+			return new AnnotationIndex( interleave( bx, by, level ) );
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
     }
 
     private long interleave( long x, long y, int level ) {
@@ -87,6 +86,6 @@ public class TiledAnnotationIndexer extends AnnotationIndexer {
 
     private long getKeyLevelOffset(int level) {   	
     	if (level == 0) return 0;   	
-    	return (long)Math.pow(4, level+LEVELS_EXP) + getKeyLevelOffset( level-1 );
+    	return (long)Math.pow(4, level+BINS_EXP) + getKeyLevelOffset( level-1 );
     }
 }

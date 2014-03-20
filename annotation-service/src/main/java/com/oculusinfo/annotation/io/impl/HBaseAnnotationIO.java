@@ -40,12 +40,16 @@ import java.io.OutputStream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 //import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
 
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
@@ -80,11 +84,16 @@ public class HBaseAnnotationIO implements AnnotationIO {
     						  String zookeeperPort, 
     						  String hbaseMaster) throws IOException {
     	
+        Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.hadoop.hbase.zookeeper").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.hadoop.hbase.client").setLevel(Level.WARN);
+    	
         _config = HBaseConfiguration.create();
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);
+        
     }
     
     @Override    
@@ -164,9 +173,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
 													   AnnotationIndex from,
 													   AnnotationIndex to) throws IOException {
 		List<Map<HBaseColumn, byte[]>> rawResults = scanRange(tableName, 
-				    	      from.getBytes(), 
-				    		  to.getBytes(),
-							  ANNOTATION_COLUMN);
+												    	      from.getBytes(), 
+												    		  to.getBytes(),
+															  ANNOTATION_COLUMN);
 		
 		return convertResults( rawResults, serializer );
 	}
@@ -354,7 +363,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         }
 
         Result[] results = table.get(gets);
-        List<Map<HBaseColumn, byte[]>> allResults = new ArrayList<Map<HBaseColumn,byte[]>>(rows.size());
+        List<Map<HBaseColumn, byte[]>> allResults = new LinkedList<Map<HBaseColumn,byte[]>>();
         for (Result result: results) {
             allResults.add(decodeRawResult(result, columns));
         }
@@ -365,7 +374,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     private void deleteRows (String tableName, List<byte[]> rows, HBaseColumn... columns) throws IOException {
         HTable table = getTable(tableName);
 
-        List<Delete> deletes = new ArrayList<Delete>(rows.size());
+        List<Delete> deletes = new LinkedList<Delete>();
         for (byte[] rowId: rows) {
         	Delete delete = new Delete(rowId);
         	/*
@@ -384,6 +393,11 @@ public class HBaseAnnotationIO implements AnnotationIO {
 
         Scan scan;
         if ( startRow.length > 0 && stopRow.length > 0) {
+        	
+        	// add trailing zero for inclusive
+        	byte [] trailingZero = {0};
+        	stopRow = ArrayUtils.addAll(stopRow, trailingZero);
+        	
         	scan = new Scan( startRow, stopRow );
         } else {
         	scan = new Scan();

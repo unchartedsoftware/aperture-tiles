@@ -24,14 +24,12 @@
 package com.oculusinfo.annotation.index;
 
 import java.io.Serializable;
-import java.lang.Number;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
+import com.oculusinfo.annotation.query.*;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 
 public class AnnotationIndex implements Serializable {
 	
@@ -39,8 +37,6 @@ public class AnnotationIndex implements Serializable {
 
     private long _index;
     
-    private AnnotationIndex() {
-    } 
     
     public AnnotationIndex ( long index ) {
     	_index = index;
@@ -53,7 +49,18 @@ public class AnnotationIndex implements Serializable {
 
     
     public final byte[] getBytes() {
-
+    	
+    	/*
+    	try {
+	    	ByteArrayOutputStream b = new ByteArrayOutputStream();
+	        ObjectOutputStream o = new ObjectOutputStream( b );
+	        o.writeObject(_index);
+	        return b.toByteArray();
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	return new byte[0];
+    	*/
         ByteBuffer buf = ByteBuffer.allocate(8);
         buf.order(ByteOrder.BIG_ENDIAN);
         buf.putLong(_index);
@@ -63,15 +70,28 @@ public class AnnotationIndex implements Serializable {
     
     @Override
     public int hashCode () {
-    	return (int)getValue();
+    	/*
+    	byte [] bytes = getBytes();
+        int value = 0;
+        for (int i = 0; i < 4; i++) {
+            int shift = (4 - 1 - i) * 8;
+            value += (bytes[i] & 0x000000FF) << shift;
+        }
+        return value;
+    	*/
+    	return (int)_index;
     }
 
     @Override
-    public boolean equals (Object that) {  	    	
-    	if (that != null && that instanceof AnnotationIndex)
-        {
-            return getValue() == ((AnnotationIndex)that).getValue();
-        }    	
+    public boolean equals (Object that) {
+    	if (that != null)
+    	{
+    		if (that instanceof AnnotationBin) {
+    			return _index == ((AnnotationBin)that).getIndex().getValue();
+    		} else if (that instanceof AnnotationIndex) {
+    			return _index == ((AnnotationIndex)that)._index;
+    		}    		
+    	}	
     	return false;
     }
     

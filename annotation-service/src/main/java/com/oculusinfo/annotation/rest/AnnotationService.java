@@ -34,20 +34,18 @@ public interface AnnotationService<T> {
 	 * 
 	 */
 	public abstract void writeAnnotation( T annotation );
-	
+	public abstract void writeAnnotations( List<T> annotations );
 	
 	/*
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract List<AnnotationBin<T>> readAnnotations( double xMin, double yMin,
-															double xMax, double yMax, int level );	
+	public abstract List<AnnotationBin<T>> readAnnotations( T start, T stop, int level );	
 	
-
 	/*
 	 * Remove an annotation from the storage service
 	 * 
 	 */
 	public abstract void removeAnnotation( T annotation );
-
+	public abstract void removeAnnotations( List<T> annotations );
 }

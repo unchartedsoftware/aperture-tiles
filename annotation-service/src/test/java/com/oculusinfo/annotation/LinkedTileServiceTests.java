@@ -41,14 +41,14 @@ import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.annotation.rest.impl.*;
 
 
-public class TiledServiceTests extends GenericServiceTests<JSONObject> {
+public class LinkedTileServiceTests extends GenericServiceTests<JSONObject> {
 	
 	static final boolean VERBOSE = true;
 	
     @Before
     public void setup () {
     	
-    	_service = new TiledAnnotationService();
+    	_service = new LinkedTileAnnotationService();
 
     	_annotations = generateJSONs( NUM_ENTRIES );
 

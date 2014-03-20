@@ -107,6 +107,9 @@ public abstract class GenericJSONSerializer<T> implements AnnotationSerializer<T
 			// index
 			jsonEntry.put("index", annotation.getIndex().getValue());
 			
+			// count
+			jsonEntry.put("count", annotation.getData().size());
+			
 			// data array
 			
 			JSONArray data = new JSONArray();

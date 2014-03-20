@@ -23,8 +23,8 @@
  */
 package com.oculusinfo.annotation.index.impl;
 
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.binning.*;
@@ -32,42 +32,42 @@ import com.oculusinfo.binning.impl.*;
 
 import org.json.JSONObject;
 
-public class FlatAnnotationIndexer extends AnnotationIndexer<JSONObject> {
+public class LinkedAnnotationIndexer extends AnnotationIndexer<JSONObject> {
 	
-	public static final int LEVEL_RES = 30;
-    
-	public FlatAnnotationIndexer() {
+
+    public LinkedAnnotationIndexer() {
     	_pyramid = new WebMercatorTilePyramid();
     } 
     
     @Override
     public List<AnnotationIndex> getIndices( JSONObject data ) {
     	
-    	List<AnnotationIndex> result = new LinkedList<AnnotationIndex>();
-    	result.add( getIndex( data, 0 ) );
-    	return result;
-    	
+		List<AnnotationIndex> indices = new LinkedList<AnnotationIndex>();		
+		for (int i=0; i<LEVELS; i++) {
+			indices.add( getIndex( data, i ) );
+		}
+		return indices;
     }
     
     @Override
     public AnnotationIndex getIndex( JSONObject data, int level ) {
-    	
-    	try {
-	    	TileIndex tile = _pyramid.rootToTile( data.getDouble("x"),  
-	    										  data.getDouble("y"), 
-	    										  LEVEL_RES );
-	    	
-			return new AnnotationIndex( interleave( tile.getX(), tile.getY() ) );
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
-    	return null;
+		try {
+			
+			TileIndex tile = _pyramid.rootToTile( data.getDouble("x"),  data.getDouble("y"), level, BINS );
+			BinIndex bin = _pyramid.rootToBin( data.getDouble("x"),  data.getDouble("y"), tile );
+			int bx = tile.getX()*tile.getXBins() + bin.getX();
+			int by = tile.getY()*tile.getYBins() + (tile.getYBins()-1)-bin.getY();
+			
+			return new AnnotationIndex( interleave( bx, by, level ) );
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
     }
 
-    
-    private long interleave( long x, long y) {
-    	   	
-    	x = (x | (x << SHIFTS[4])) & BITS[4];
+    private long interleave( long x, long y, int level ) {
+
+        x = (x | (x << SHIFTS[4])) & BITS[4];
         x = (x | (x << SHIFTS[3])) & BITS[3];
         x = (x | (x << SHIFTS[2])) & BITS[2];
         x = (x | (x << SHIFTS[1])) & BITS[1];
@@ -79,8 +79,13 @@ public class FlatAnnotationIndexer extends AnnotationIndexer<JSONObject> {
         y = (y | (y << SHIFTS[1])) & BITS[1];
         y = (y | (y << SHIFTS[0])) & BITS[0];
 
-        return x | (y << 1);
+        long z = x | (y << 1);
+
+        return z + getKeyLevelOffset(level);
     }
 
-    
+    private long getKeyLevelOffset(int level) {   	
+    	if (level == 0) return 0;   	
+    	return (long)Math.pow(4, level+BINS_EXP) + getKeyLevelOffset( level-1 );
+    }
 }

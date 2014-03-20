@@ -23,18 +23,11 @@
  */
 package com.oculusinfo.annotation.index;
 
-import java.io.Serializable;
-import java.lang.Number;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.List;
 
 import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
 
-public abstract class AnnotationIndexer {
+public abstract class AnnotationIndexer<T> {
 
 	protected static final String TABLE_NAME = "AnnotationTable";
 	
@@ -46,18 +39,16 @@ public abstract class AnnotationIndexer {
 										   0x00000000FFFFFFFFL};
     protected static final long SHIFTS[] = { 1, 2, 4, 8, 16 };	
     protected static final int BINS = 16;
+    protected static final int BINS_EXP = (int)(Math.log(BINS) / Math.log(2));
     protected static final int LEVELS = 20;
-    protected static final int LEVELS_EXP = (int) (Math.log(LEVELS) / Math.log(2));
+    
 	
     protected TilePyramid _pyramid;
     
     public AnnotationIndexer() { 	
     }
     
-    public abstract List<AnnotationIndex> getIndices( double x, double y );
-    public abstract AnnotationIndex getIndex( double x, double y, int level );
-    /*
-    public abstract AnnotationBoundingBox getBoundingBox(  double xMin, double yMin, 
-    													   double xMax, double yMax );
-	*/
+    public abstract List<AnnotationIndex> getIndices( T data );
+    public abstract AnnotationIndex getIndex( T data, int level );
+
 }
