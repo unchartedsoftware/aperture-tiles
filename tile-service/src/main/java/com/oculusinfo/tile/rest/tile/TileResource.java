@@ -103,7 +103,7 @@ public class TileResource extends ApertureServerResource {
     private Collection<TileIndex> parseTileSetDescription (String tileSetDescription) {
         Set<TileIndex> indices = null;
         if (null != tileSetDescription) {
-            String[] tileDescriptions = tileSetDescription.split(",");
+            String[] tileDescriptions = tileSetDescription.split("|");
             for (String tileDescription: tileDescriptions) {
                 TileIndex index = TileIndex.fromString(tileDescription);
                 if (null != index) {

@@ -84,6 +84,20 @@ define(function (require) {
             }
 
             return all;
+        },
+
+        toString: function () {
+            var srep = "", index;
+
+            while (this.hasNext()) {
+                if (srep.length > 0) {
+                    srep = srep + "|";
+                }
+                index = this.next();
+                srep = srep + "["+index.xIndex+"/"+index.xBinCount+","+index.yIndex+"/"+index.yBinCount+", lvl "+index.level+"]";
+            }
+
+            return srep;
         }
     });
 
