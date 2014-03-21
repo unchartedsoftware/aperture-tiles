@@ -59,9 +59,12 @@ public class SparkModule extends AbstractModule {
         // Include tile-generation
         jarList.add(getJarPathForClass(com.oculusinfo.tilegen.tiling.TileIO.class));
         // Include any additionally configured jars
-        if (null != extraJars) {
-            for (String extraJar: extraJars.split(":"))
-                jarList.add(extraJar);
+        if (null != extraJars && !extraJars.isEmpty()) {
+            for (String extraJar: extraJars.split(":")) {
+                extraJar = extraJar.trim();
+                if (!extraJar.isEmpty())
+                    jarList.add(extraJar);
+            }
         }
         String[] jars = jarList.toArray(new String[jarList.size()]);
 

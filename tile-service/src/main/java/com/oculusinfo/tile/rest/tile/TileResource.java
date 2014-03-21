@@ -134,9 +134,10 @@ public class TileResource extends ApertureServerResource {
             TileIndex index = new TileIndex(zoomLevel, x, y);
 
             Collection<TileIndex> tileSet = parseTileSetDescription((String) getRequest().getAttributes().get("tileset"));
-            if (null != tileSet) {
-                tileSet.add(index);
+            if (null == tileSet) {
+                tileSet = new HashSet<>();
             }
+            tileSet.add(index);
 
 			UUID uuid = null;
 			if( !"default".equals(id) ){ // Special indicator - no ID.

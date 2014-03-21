@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 
 /**
  * This class tracks an entry in an LRU cache for a particular tile; it keeps 
@@ -40,18 +41,24 @@ import com.oculusinfo.binning.TileData;
  * @author nkronenfeld
  */
 public class ImageTileCacheEntry<T> {
-	/* Our actual data */
-	private TileData<T> _tile;
-	/* The time of our original request */
-	private long _requestTime;
-	/* True only if this tile has ever actually been retrieved */
-	private boolean _retreived;
-	/* A list of listeners for tile requests */
-	private List<CacheRequestCallback<T>> _requests;
+    /* The index of our data */
+    private TileIndex                     _index;
+    /* Our actual data */
+    private TileData<T>                   _tile;
+    /* The time of our original request */
+    private long                          _requestTime;
+    /* True only if the data for this tile has been recieved */
+    private boolean                       _received;
+    /* True only if this tile has ever actually been retrieved */
+    private boolean                       _retreived;
+    /* A list of listeners for tile requests */
+    private List<CacheRequestCallback<T>> _requests;
 
-	public ImageTileCacheEntry () {
+	public ImageTileCacheEntry (TileIndex index) {
+	    _index = index;
 		_tile = null;
 		_requestTime = System.currentTimeMillis();
+		_received = false;
 		_retreived = false;
 		_requests = new ArrayList<>();
 	}
@@ -61,8 +68,8 @@ public class ImageTileCacheEntry<T> {
 	 * the tile is received (immediately if it is already there)
 	 */
 	public void requestTile (CacheRequestCallback<T> callback) {
-		if (null != _tile) {
-			callback.onTileReceived(_tile);
+        if (_received) {
+            callback.onTileReceived(_index, _tile);
 			_retreived = true;
 		} else {
 			_requests.add(callback);
@@ -76,11 +83,12 @@ public class ImageTileCacheEntry<T> {
 	 *            The requested tile
 	 */
 	void setTile (TileData<T> tile) {
+	    _received = true;
 		_tile = tile;
 		Iterator<CacheRequestCallback<T>> i = _requests.iterator();
 		while (i.hasNext()) {
 			CacheRequestCallback<T> callback = i.next();
-			if (callback.onTileReceived(_tile)) {
+			if (callback.onTileReceived(_index, _tile)) {
 			    _retreived = true;
 			    i.remove();
 			}
@@ -94,7 +102,7 @@ public class ImageTileCacheEntry<T> {
 		Iterator<CacheRequestCallback<T>> i = _requests.iterator();
 		while (i.hasNext()) {
 			CacheRequestCallback<T> callback = i.next();
-			callback.onTileAbandoned();
+			callback.onTileAbandoned(_index);
 			i.remove();
 		}
 	}
@@ -131,6 +139,7 @@ public class ImageTileCacheEntry<T> {
 		                        /**
          * Called when the data for a tile is found.
          * 
+         * @param index The index of the requested tile
          * @param tile The tile data that was requested
          * @return True if the tile was processed, and can freely be deleted
          *         from the repository (and this callback won't be called
@@ -139,11 +148,11 @@ public class ImageTileCacheEntry<T> {
          *         recieved a second time) If false, some other callback may
          *         still process it, in which case it may still be deleted.
          */
-		public boolean onTileReceived (TileData<T> tile);
+		public boolean onTileReceived (TileIndex index, TileData<T> tile);
 		
 		/**
 		 * Called when the system has given up on listening for a tile
 		 */
-		public void onTileAbandoned ();
+		public void onTileAbandoned (TileIndex index);
 	}
 }

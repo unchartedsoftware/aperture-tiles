@@ -27,12 +27,12 @@ package com.oculusinfo.tile.init;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.tile.rest.tile.caching.LiveTilePyramidIOFactory;
+import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 
 public class PyramidIOFactoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).toInstance(new LiveTilePyramidIOFactory());
+        bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).toInstance(new StandardPyramidIOFactoryProvider());
     }
 }

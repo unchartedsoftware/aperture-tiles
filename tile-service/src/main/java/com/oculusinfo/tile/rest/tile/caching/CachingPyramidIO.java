@@ -28,7 +28,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,21 +136,40 @@ public class CachingPyramidIO implements PyramidIO {
         }
     }
 
+    /**
+     * Request a set of tiles, retrieving some of them immediately, and setting
+     * the rest up for eventual retrieval
+     * 
+     * @param pyramidId
+     * @param serializer
+     * @param indices Indices of tiles to be requested.  May not be null.
+     * @return
+     * @throws IOException
+     */
     public <T> void requestTiles (String pyramidId,
                                   TileSerializer<T> serializer,
-                                  Iterable<TileIndex> indices,
-                                  TileIndex defaultIndex) throws IOException {
-        if (null == indices) {
-            indices = Collections.singleton(defaultIndex);
-        }
-
+                                  Iterable<TileIndex> indices) throws IOException {
         TileCache<T> cache = getTileCache(pyramidId);
-        // Only request those we don't already have
-        indices = cache.getNewRequests(indices);
-        PyramidIO base = getBasePyramidIO(pyramidId);
-        List<TileData<T>> tiles = base.readTiles(pyramidId, serializer, indices);
-        for (TileData<T> tile: tiles) {
-            cache.provideTile(tile);
+
+        synchronized (cache) {
+            // First, request and retrieve all tiles needed over the long term
+            // Only request those we don't already have
+            List<TileIndex> newIndices = new ArrayList<>(cache.getNewRequests(indices));
+            if (newIndices.isEmpty())
+                return;
+
+            PyramidIO base = getBasePyramidIO(pyramidId);
+            List<TileData<T>> tiles = base.readTiles(pyramidId, serializer, newIndices);
+    
+            // Cache recieved tiles...
+            for (TileData<T> tile: tiles) {
+                cache.provideTile(tile);
+                newIndices.remove(tile.getDefinition());
+            }
+            // And the fact that some were empty
+            for (TileIndex index: newIndices) {
+                cache.provideEmptyTile(index);
+            }
         }
     }
 
@@ -159,15 +177,20 @@ public class CachingPyramidIO implements PyramidIO {
     public <T> List<TileData<T>> readTiles (String pyramidId,
                                             TileSerializer<T> serializer,
                                             Iterable<TileIndex> indices) throws IOException {
-        List<TileData<T>> tiles = new ArrayList<>();
-        for (TileIndex index: indices) {
-            // We rely on configuration to make sure types match here
-            @SuppressWarnings({"unchecked", "rawtypes"})
-            TileData<T> tile = (TileData) getTileData(pyramidId, index);
-            tiles.add(tile);
-        }
+        TileCache<T> cache = getTileCache(pyramidId);
+        synchronized (cache) {
+            List<TileData<T>> tiles = new ArrayList<>();
+            for (TileIndex index: indices) {
+                // We rely on configuration to make sure types match here
+                @SuppressWarnings({"unchecked", "rawtypes"})
+                TileData<T> tile = (TileData) getTileData(pyramidId, index);
 
-        return(tiles);
+                if (null != tile)
+                    tiles.add(tile);
+            }
+    
+            return(tiles);
+        }
     }
 
     @Override
@@ -220,7 +243,7 @@ public class CachingPyramidIO implements PyramidIO {
             if (!_notified)
                 try {
                     _waiting = true;
-                    wait();
+                    wait(1000);
                 } catch (InterruptedException e) {
                     LOGGER.warn("Error waiting for return for tile.", e);
                     return null;
@@ -232,7 +255,7 @@ public class CachingPyramidIO implements PyramidIO {
         }
 
         @Override
-        synchronized public boolean onTileReceived (TileData<T> tile) {
+        synchronized public boolean onTileReceived (TileIndex index, TileData<T> tile) {
             _tile = tile;
             _notified = true;
             if (_waiting)
@@ -241,7 +264,7 @@ public class CachingPyramidIO implements PyramidIO {
         }
 
         @Override
-        public void onTileAbandoned () {
+        public void onTileAbandoned (TileIndex index) {
             if (_waiting)
                 this.notify();
         }

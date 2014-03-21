@@ -87,7 +87,7 @@ public class TileCache<T> {
             for (TileIndex index : requests) {
                 if (!_cache.containsKey(index)) {
                     // Create the tile request, and listen for its fulfilment
-                    ImageTileCacheEntry<T> entry = new ImageTileCacheEntry<T>();
+                    ImageTileCacheEntry<T> entry = new ImageTileCacheEntry<T>(index);
                     entry.requestTile(_entryListener);
 
                     // Add to cache
@@ -126,11 +126,15 @@ public class TileCache<T> {
             entry.setTile(tile);
     }
 
+    public void provideEmptyTile (TileIndex index) {
+        ImageTileCacheEntry<T> entry = _cache.get(index);
+        if (null != entry)
+            entry.setTile(null);
+    }
 
     private class CacheEntryListener implements CacheRequestCallback<T> {
         @Override
-        public boolean onTileReceived (TileData<T> tile) {
-            TileIndex index = tile.getDefinition();
+        public boolean onTileReceived (TileIndex index, TileData<T> tile) {
             ImageTileCacheEntry<T> entry = _cache.get(index);
             if (null != entry) {
                 _haveData.add(new Pair<TileIndex, Long>(index,
@@ -140,7 +144,7 @@ public class TileCache<T> {
         }
 
         @Override
-        public void onTileAbandoned () {
+        public void onTileAbandoned (TileIndex index) {
             // If we're here, everything's already handled, so there is nothing
             // more to do.
         }

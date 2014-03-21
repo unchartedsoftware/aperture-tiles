@@ -183,13 +183,13 @@ public class TileCacheTests {
     // Simple callback to do nothing, but act as if we've done something.
     private class NoOpCacheRequestCallback implements CacheRequestCallback<Integer> {
         @Override
-        public boolean onTileReceived (TileData<Integer> tile) {
+        public boolean onTileReceived (TileIndex index, TileData<Integer> tile) {
             // Noop, but say we did something.
             return true;
         }
 
         @Override
-        public void onTileAbandoned () {
+        public void onTileAbandoned (TileIndex index) {
             // Noop
         }
     }

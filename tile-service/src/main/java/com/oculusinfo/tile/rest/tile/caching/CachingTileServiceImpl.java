@@ -81,7 +81,7 @@ public class CachingTileServiceImpl extends TileServiceImpl {
                                         Iterable<TileIndex> tileSet) {
         try {
             TileSerializer<?> serializer = config.produce(TileSerializer.class);
-            _pyramidIO.requestTiles(layer, serializer, tileSet, tile);
+            _pyramidIO.requestTiles(layer, serializer, tileSet);
         } catch (IOException e) {
             LOGGER.warn("Error requesting tile set", e);
         } catch (ConfigurationException e) {
