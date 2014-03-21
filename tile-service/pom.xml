@@ -59,6 +59,12 @@
       <groupId>com.oculusinfo</groupId>
       <artifactId>binning-utilities</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>asm</artifactId>
+          <groupId>asm</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
