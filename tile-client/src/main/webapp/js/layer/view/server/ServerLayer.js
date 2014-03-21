@@ -457,7 +457,7 @@ define(function (require) {
                                 transparent: true,
                                 getURL: function (bounds) {
                                     var res, x, y, z, maxBounds, tileSize,
-                                        extents, pyramid, fullUrl, tiles;
+                                        extents, pyramid, fullUrl, viewBounds;
 
                                     res = this.map.getResolution();
                                     tileSize = this.tileSize;
@@ -474,16 +474,22 @@ define(function (require) {
                                         extents = this.map.getExtent();
                                         pyramid = new AoIPyramid(-20037500, -20037500,
                                                                  20037500,  20037500);
-                                        tiles = new TileIterator(pyramid, z,
-                                                                 extents.left, extents.bottom,
-                                                                 extents.right, extents.top).toString();
+                                        viewBounds = new TileIterator(pyramid, z,
+                                                                      extents.left, extents.bottom,
+                                                                      extents.right, extents.top).toTileBounds();
                                         
                                         fullUrl = (this.url + this.version + "/" +
                                                    this.layername + "/" + 
                                                    z + "/" + x + "/" + y + "." + this.type);
 
-                                        if (tiles.length > 0) {
-                                            fullUrl = fullUrl + "?tileset=" + tiles;
+                                        if (viewBounds) {
+                                            fullUrl = (fullUrl
+                                                       + "?minX=" + viewBounds.minX
+                                                       + "&maxX=" + viewBounds.maxX
+                                                       + "&minY=" + viewBounds.minY
+                                                       + "&maxY=" + viewBounds.maxY
+                                                       + "&minZ=" + viewBounds.minZ
+                                                       + "&maxZ=" + viewBounds.maxZ);
                                         }
 
                                         return fullUrl;

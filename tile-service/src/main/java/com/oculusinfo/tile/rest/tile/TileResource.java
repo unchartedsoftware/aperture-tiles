@@ -34,6 +34,7 @@ import oculus.aperture.common.rest.ApertureServerResource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
@@ -100,17 +101,68 @@ public class TileResource extends ApertureServerResource {
 		}
 	}
 
-    private Collection<TileIndex> parseTileSetDescription (String tileSetDescription) {
+    private Integer getIntQueryValue (Form query, String key) {
+        String stringValue = query.getFirstValue(key, true, null);
+        if (null == stringValue) return null;
+        try {
+            return Integer.parseInt(stringValue);
+        } catch (NumberFormatException e) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                                        "Parameter "+key+" had non-integer value \""+stringValue+"\"");
+        }
+    }
+
+    private TileIndex getTileIndexQueryValue (Form query, String key) {
+        String stringValue = query.getFirstValue(key, true, null);
+        if (null == stringValue) return null;
+        return TileIndex.fromString(stringValue);
+    }
+
+    private Collection<TileIndex>  parseTileSetDescription (Form query) {
         Set<TileIndex> indices = null;
-        if (null != tileSetDescription) {
-            String[] tileDescriptions = tileSetDescription.split("|");
-            for (String tileDescription: tileDescriptions) {
-                TileIndex index = TileIndex.fromString(tileDescription);
-                if (null != index) {
-                    if (null == indices) {
-                        indices = new HashSet<>();
+
+        if (null != query) {
+            // Check for specifically requested tiles
+            String[] tileSets = query.getValuesArray("tileset", true);
+            for (String tileSetDescription: tileSets) {
+                String[] tileDescriptions = tileSetDescription.split("\\|");
+                for (String tileDescription: tileDescriptions) {
+                    TileIndex index = TileIndex.fromString(tileDescription);
+                    if (null != index) {
+                        if (null == indices) {
+                            indices = new HashSet<>();
+                        }
+                        indices.add(index);
                     }
-                    indices.add(index);
+                }
+            }
+
+            // Check for simple bounds
+            Integer minX = getIntQueryValue(query, "minx");
+            Integer maxX = getIntQueryValue(query, "maxx");
+            Integer minY = getIntQueryValue(query, "miny");
+            Integer maxY = getIntQueryValue(query, "maxy");
+            Integer minZ = getIntQueryValue(query, "minz");
+            Integer maxZ = getIntQueryValue(query, "maxz");
+
+            TileIndex minTile = getTileIndexQueryValue(query, "mintile");
+            TileIndex maxTile = getTileIndexQueryValue(query, "maxtile");
+
+            if (null == minTile && null != minX && null != minY && null != minZ) {
+                minTile = new TileIndex(minZ, minX, minY);
+            }
+            if (null == maxTile && null != maxX && null != maxY && null != maxZ) {
+                maxTile = new TileIndex(maxZ, maxX, maxY);
+            }
+            if (null != minTile && null != maxTile) {
+                for (int z=minTile.getLevel(); z <= maxTile.getLevel(); ++z) {
+                    for (int x=minTile.getX(); x <= maxTile.getX(); ++x) {
+                        for (int y=minTile.getY(); y <= maxTile.getY(); ++y) {
+                            if (null == indices)
+                                indices = new HashSet<>();
+                                indices.add(new TileIndex(z, x, y));
+                        }
+                    }
                 }
             }
         }
@@ -133,7 +185,8 @@ public class TileResource extends ApertureServerResource {
 			int y = Integer.parseInt(yAttr);
             TileIndex index = new TileIndex(zoomLevel, x, y);
 
-            Collection<TileIndex> tileSet = parseTileSetDescription((String) getRequest().getAttributes().get("tileset"));
+
+            Collection<TileIndex> tileSet = parseTileSetDescription(getRequest().getResourceRef().getQueryAsForm());
             if (null == tileSet) {
                 tileSet = new HashSet<>();
             }

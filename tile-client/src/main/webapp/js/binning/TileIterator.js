@@ -98,6 +98,17 @@ define(function (require) {
             }
 
             return srep;
+        },
+
+        toTileBounds: function () {
+            return {
+                'minX': this.minTile.xIndex,
+                'maxX': this.maxTile.xIndex,
+                'minY': this.minTile.yIndex,
+                'maxY': this.maxTile.yIndex,
+                'minZ': this.level,
+                'maxZ': this.level
+            };
         }
     });
 

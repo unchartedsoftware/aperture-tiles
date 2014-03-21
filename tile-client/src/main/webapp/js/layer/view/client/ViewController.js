@@ -195,7 +195,7 @@ define(function (require) {
         onMapUpdate: function() {
 
             var i,
-                tiles,
+                tileIterator, tiles, tileSetBounds,
                 level = this.map.getZoom(),
                 bounds = this.map.olMap_.getExtent(),
                 mapExtents = this.map.olMap_.getMaxExtent(),
@@ -209,9 +209,11 @@ define(function (require) {
             }
 
             // determine all tiles in view
-            tiles = new TileIterator(mapPyramid, level,
-                                     bounds.left, bounds.bottom,
-                                     bounds.right, bounds.top).getRest();
+            tileIterator = new TileIterator(mapPyramid, level,
+                                            bounds.left, bounds.bottom,
+                                            bounds.right, bounds.top);
+            tiles = tileIterator.getRest();
+            tileSetBounds = {'params': tileIterator.toTileBounds()};
 
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
@@ -223,7 +225,7 @@ define(function (require) {
 
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], $.proxy(this.updateAndRedrawViews, this));
+                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], tileSetBounds, $.proxy(this.updateAndRedrawViews, this));
             }
 
             // always redraw immediately in case tiles are already in memory, or need to be drawn

@@ -44,8 +44,8 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 
 
     private TileIndex() {
-        
     }
+
     /**
      * Create a tile index representation.  The number of bins per axis is defaulted to 256.
      * 
@@ -57,6 +57,7 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
      *            The y coordinate of the tile
      */
     public TileIndex (int level, int x, int y) {
+        this();
         _level = level;
         _x = x;
         _y = y;
@@ -272,16 +273,16 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
             int x = Integer.parseInt(string.substring(a, b).trim());
             a = b + 1;
             b = string.indexOf(',', a);
-            int xBins = Integer.parseInt(string.substring(a + 1, b).trim());
+            int xBins = Integer.parseInt(string.substring(a, b).trim());
             a = b + 1;
             b = string.indexOf('/', a);
-            int y = Integer.parseInt(string.substring(a + 1, b).trim());
+            int y = Integer.parseInt(string.substring(a, b).trim());
             a = b + 1;
             b = string.indexOf(", lvl", a);
-            int yBins = Integer.parseInt(string.substring(a + 1, b).trim());
+            int yBins = Integer.parseInt(string.substring(a, b).trim());
             a = b + 5;
             b = string.indexOf(']', a);
-            int level = Integer.parseInt(string.substring(a + 1, b).trim());
+            int level = Integer.parseInt(string.substring(a, b).trim());
 
             return new TileIndex(level, x, y, xBins, yBins);
         } catch (NumberFormatException e) {
