@@ -40,7 +40,7 @@ import com.oculusinfo.binning.TileIndex;
  * 
  * @author nkronenfeld
  */
-public class ImageTileCacheEntry<T> {
+public class TileCacheEntry<T> {
     /* The index of our data */
     private TileIndex                     _index;
     /* Our actual data */
@@ -54,7 +54,7 @@ public class ImageTileCacheEntry<T> {
     /* A list of listeners for tile requests */
     private List<CacheRequestCallback<T>> _requests;
 
-	public ImageTileCacheEntry (TileIndex index) {
+	public TileCacheEntry (TileIndex index) {
 	    _index = index;
 		_tile = null;
 		_requestTime = System.currentTimeMillis();

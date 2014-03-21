@@ -50,10 +50,6 @@ public class SparkModule extends AbstractModule {
         // Construct our jarlist
         List<String> jarList = new ArrayList<>();
         // First, get our known needed jars from our own classpath
-        // Include math-utilities
-        // jarList.add(getJarPathForClass(com.oculusinfo.math.algebra.AngleUtilities.class));
-        // Include geometric-utilities
-        // jarList.add(getJarPathForClass(com.oculusinfo.geometry.geodesic.WrappingRectangle.class));
         // Include binning-utilities
         jarList.add(getJarPathForClass(com.oculusinfo.binning.TilePyramid.class));
         // Include tile-generation

@@ -226,7 +226,7 @@ public class CachingPyramidIO implements PyramidIO {
 
 
 
-    private class CacheListenerCallback<T> implements ImageTileCacheEntry.CacheRequestCallback<T> {
+    private class CacheListenerCallback<T> implements TileCacheEntry.CacheRequestCallback<T> {
         private TileData<T> _tile;
         private boolean     _waiting;
         private boolean     _notified;

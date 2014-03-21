@@ -38,7 +38,7 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.LRUCache.RemovalPolicy;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.SynchronizedLRUCache;
-import com.oculusinfo.tile.rest.tile.caching.ImageTileCacheEntry.CacheRequestCallback;
+import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
 
 
 
@@ -54,7 +54,7 @@ public class TileCache<T> {
     // the cache, in milliseconds
     private long                                                    _maxTileAge;
     // The cache iteself
-    private SynchronizedLRUCache<TileIndex, ImageTileCacheEntry<T>> _cache;
+    private SynchronizedLRUCache<TileIndex, TileCacheEntry<T>> _cache;
     // A list of all keys which have recieved their data, with the time at which they were first requested.
     private TreeSet<Pair<TileIndex, Long>>                          _haveData;
     // A list of all keys, in the order in which they were requested.
@@ -87,7 +87,7 @@ public class TileCache<T> {
             for (TileIndex index : requests) {
                 if (!_cache.containsKey(index)) {
                     // Create the tile request, and listen for its fulfilment
-                    ImageTileCacheEntry<T> entry = new ImageTileCacheEntry<T>(index);
+                    TileCacheEntry<T> entry = new TileCacheEntry<T>(index);
                     entry.requestTile(_entryListener);
 
                     // Add to cache
@@ -121,13 +121,13 @@ public class TileCache<T> {
             return;
 
         TileIndex index = tile.getDefinition();
-        ImageTileCacheEntry<T> entry = _cache.get(index);
+        TileCacheEntry<T> entry = _cache.get(index);
         if (null != entry)
             entry.setTile(tile);
     }
 
     public void provideEmptyTile (TileIndex index) {
-        ImageTileCacheEntry<T> entry = _cache.get(index);
+        TileCacheEntry<T> entry = _cache.get(index);
         if (null != entry)
             entry.setTile(null);
     }
@@ -135,7 +135,7 @@ public class TileCache<T> {
     private class CacheEntryListener implements CacheRequestCallback<T> {
         @Override
         public boolean onTileReceived (TileIndex index, TileData<T> tile) {
-            ImageTileCacheEntry<T> entry = _cache.get(index);
+            TileCacheEntry<T> entry = _cache.get(index);
             if (null != entry) {
                 _haveData.add(new Pair<TileIndex, Long>(index,
                                                         entry.initialRequestTime()));
@@ -154,17 +154,17 @@ public class TileCache<T> {
 
     private class TileCacheRemovalPolicy
                                         implements
-                                        RemovalPolicy<TileIndex, ImageTileCacheEntry<T>> {
+                                        RemovalPolicy<TileIndex, TileCacheEntry<T>> {
         @Override
-        public boolean shouldRemove (Entry<TileIndex, ImageTileCacheEntry<T>> entry,
-                                     Map<TileIndex, ImageTileCacheEntry<T>> map,
+        public boolean shouldRemove (Entry<TileIndex, TileCacheEntry<T>> entry,
+                                     Map<TileIndex, TileCacheEntry<T>> map,
                                      int suggestedMaxSize) {
             if (null == entry) {
                 return false;
             } else if (null == entry.getValue()) {
                 return true;
             } else {
-                ImageTileCacheEntry<T> value = entry.getValue();
+                TileCacheEntry<T> value = entry.getValue();
                 if (value.hasBeenRetrieved() || value.age() > _maxTileAge) {
                     // This entry has been received, or is to old for us to
                     // care; just remove it.
@@ -174,7 +174,7 @@ public class TileCache<T> {
                     // handled, so can be freely deleted.
                     for (Pair<TileIndex, Long> hasData: _haveData) {
                         TileIndex index = hasData.getFirst();
-                        ImageTileCacheEntry<T> entryWithData = _cache.get(index);
+                        TileCacheEntry<T> entryWithData = _cache.get(index);
                         if (entryWithData.hasBeenRetrieved()) {
                             _cache.remove(index);
                             return false;
@@ -187,7 +187,7 @@ public class TileCache<T> {
                     // its safety any more.
                     if (_orderedKeys.size() > 0) {
                         TileIndex oldestKey = _orderedKeys.get(0);
-                        ImageTileCacheEntry<T> oldestEntry = _cache.get(oldestKey);
+                        TileCacheEntry<T> oldestEntry = _cache.get(oldestKey);
                         if (oldestEntry.age() > _maxTileAge) {
                             _cache.remove(oldestKey);
                         }
@@ -199,7 +199,7 @@ public class TileCache<T> {
 
         @Override
         public void onElementRemoved (TileIndex key,
-                                      ImageTileCacheEntry<T> value) {
+                                      TileCacheEntry<T> value) {
             value.abandonTile();
         }
     }

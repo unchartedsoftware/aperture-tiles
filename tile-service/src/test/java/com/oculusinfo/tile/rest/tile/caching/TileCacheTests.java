@@ -36,7 +36,7 @@ import org.junit.Test;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.tile.rest.tile.caching.TileCache;
-import com.oculusinfo.tile.rest.tile.caching.ImageTileCacheEntry.CacheRequestCallback;
+import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
 
 
 
