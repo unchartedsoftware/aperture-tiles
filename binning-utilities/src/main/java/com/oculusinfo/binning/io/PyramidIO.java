@@ -80,22 +80,20 @@ public interface PyramidIO {
     public void writeMetaData (String pyramidId, String metaData) throws IOException;
 
     /**
-	 * Initialize a dataset for reading. This rarely has to do anything, but in
-	 * live tile generation, must describe the dataset pretty completely.
-	 * 
-	 * @param pyramidId
-	 *            The ID of the data set to be read
-	 * @param tileSize
-	 *            The desired number of bins per axis per tile, if known. Some
-	 *            implementations will need this information (if they are
-	 *            generating tiles), and will generate an error if an invalid
-	 *            number is given; others, returning pregenerated tiles, will
-	 *            ignore this number entirely.
-	 * @param dataDescription
-	 *            A description of the pyramid to be read; if tiles are
-	 *            pregenerated, this is likely to be ignored.
-	 */
-    public void initializeForRead (String pyramidId, int tileSize, Properties dataDescription);
+     * Initialize a dataset for reading. This rarely has to do anything, but in
+     * live tile generation, must describe the dataset pretty completely.
+     * 
+     * @param pyramidId The ID of the data set to be read
+     * @param width The desired number of bins per tile along the X axis. Some
+     *            implementations will need this information (if they are
+     *            generating tiles), and will generate an error if an invalid
+     *            number is given; others, returning pregenerated tiles, will
+     *            ignore this number entirely.
+     * @param height The desired number of bins per tile along the Y axis.
+     * @param dataDescription A description of the pyramid to be read; if tiles
+     *            are pregenerated, this is likely to be ignored.
+     */
+    public void initializeForRead (String pyramidId, int width, int height, Properties dataDescription);
 
     /**
      * Read in a set of tiles
@@ -115,12 +113,16 @@ public interface PyramidIO {
      * 
      * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
      *            is dependent on the I/O type
+     * @param serializer A serializaer class that defines how the specific data
+     *            format will be read
      * @param tile The coordinates of the tile to fetch
      * @return A data stream streaming the raw data of the indicated tile, or
      *         null if the indicated tile is not found
      * @throws IOException
      */
-    public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException;
+    public <T> InputStream getTileStream (String pyramidId,
+                                          TileSerializer<T> serializer,
+                                          TileIndex tile) throws IOException;
 
     /**
      * Gets the metadata for this tile set

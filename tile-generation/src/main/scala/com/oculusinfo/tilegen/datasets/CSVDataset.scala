@@ -334,7 +334,9 @@ object CSVDatasetBase {
 }
 
 abstract class CSVDatasetBase (rawProperties: Properties,
-		  tileSize: Int) extends Dataset[Double, JavaDouble] {
+                               tileWidth: Int,
+                               tileHeight: Int)
+		extends Dataset[Double, JavaDouble] {
   def manifest = implicitly[ClassManifest[Double]]
 
   private val properties = new CSVRecordPropertiesWrapper(rawProperties)
@@ -398,9 +400,9 @@ abstract class CSVDatasetBase (rawProperties: Properties,
     // Include a fraction of a bin extra in the bounds, so the max goes on the 
     // right side of the last tile, rather than forming an extra tile.
     val maxLevel = levels.map(_.reduce(_ max _)).reduce(_ max _)
-    val epsilon = (1.0/(1 << maxLevel))/(tileSize*tileSize)
-    val adjustedMaxX = maxX+(maxX-minX)*epsilon
-    val adjustedMaxY = maxY+(maxY-minY)*epsilon
+    val epsilon = (1.0/(1 << maxLevel))
+    val adjustedMaxX = maxX+(maxX-minX)*epsilon/(tileWidth*tileWidth)
+    val adjustedMaxY = maxY+(maxY-minY)*epsilon/(tileHeight*tileHeight)
     if (_debug) {
       println(("\n\n\nGot bounds: %.4f to %.4f (%.4f) x, "+
 	      "%.4f to %.4f (%.4f) y").format(minX, maxX, adjustedMaxX, minY, maxY, adjustedMaxY))
@@ -424,7 +426,8 @@ abstract class CSVDatasetBase (rawProperties: Properties,
     extractor.getTilePyramid("", minX, maxX, "", minY, maxY)
   }
 
-  override def getBins = tileSize
+  override def getNumXBins = tileWidth
+  override def getNumYBins = tileHeight
 
   def getBinDescriptor: BinDescriptor[Double, JavaDouble] = {
     val fieldAggregation = properties.getProperty("oculus.binning.parsing." + zVar + ".fieldAggregation", "add")
@@ -483,10 +486,10 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 /**
  * Handles basic RDD's using a ProcessingStrategy. 
  */
-class CSVDataset (
-    rawProperties: Properties,
-    tileSize: Int)
-extends CSVDatasetBase(rawProperties, tileSize) {
+class CSVDataset (rawProperties: Properties,
+                  tileWidth: Int,
+                  tileHeight: Int)
+extends CSVDatasetBase(rawProperties, tileWidth, tileHeight) {
 
   type STRATEGY_TYPE = ProcessingStrategy[Double]
   protected var strategy: STRATEGY_TYPE = null
@@ -519,10 +522,11 @@ object StreamingCSVDataset {
  * for the case where the stream is windowed. In this case the stream must be
  * preparsed and then a new strategy created for each window.  
  */
-class StreamingCSVDataset (
-    rawProperties: Properties, 
-	tileSize: Int)
-extends CSVDatasetBase(StreamingCSVDataset.removeAutoBounds(rawProperties), tileSize) with StreamingProcessor[Double]  {
+class StreamingCSVDataset (rawProperties: Properties, 
+                           tileWidth: Int,
+                           tileHeight: Int)
+extends CSVDatasetBase(StreamingCSVDataset.removeAutoBounds(rawProperties),
+                       tileWidth, tileHeight) with StreamingProcessor[Double]  {
  
   type STRATEGY_TYPE = StreamingProcessingStrategy[Double]
   protected var strategy: STRATEGY_TYPE = null

@@ -71,7 +71,8 @@ abstract class Dataset[BT: ClassManifest, PT] {
 
   def getTilePyramid: TilePyramid
 
-  def getBins: Int = 256
+  def getNumXBins: Int = 256
+  def getNumYBins: Int = 256
 
   def getConsolidationPartitions: Option[Int] = None
   
@@ -92,24 +93,26 @@ abstract class Dataset[BT: ClassManifest, PT] {
    */
   def getBinDescriptor: BinDescriptor[BT, PT]
 
-  /**
-   * Creates a blank metadata describing this dataset
-   */
-  def createMetaData (pyramidId: String): TileMetaData = {
-    val tileSize = getBins
-    val tilePyramid = getTilePyramid
-    val fullBounds = tilePyramid.getTileBounds(new TileIndex(0, 0, 0, tileSize, tileSize))
-    new TileMetaData(pyramidId,
-		     getDescription,
-                     tileSize,
-                     tilePyramid.getTileScheme(),
-                     tilePyramid.getProjection(),
-                     0,
-                     scala.Int.MaxValue,
-                     fullBounds,
-                     MutableList[(Int, String)](),
-                     MutableList[(Int, String)]())
-  }
+	/**
+	 * Creates a blank metadata describing this dataset
+	 */
+	def createMetaData (pyramidId: String): TileMetaData = {
+		val tileSize = (getNumXBins max getNumYBins)
+		val tilePyramid = getTilePyramid
+		val fullBounds = tilePyramid.getTileBounds(
+			new TileIndex(0, 0, 0, getNumXBins, getNumYBins)
+		)
+		new TileMetaData(pyramidId,
+		                 getDescription,
+		                 tileSize,
+		                 tilePyramid.getTileScheme(),
+		                 tilePyramid.getProjection(),
+		                 0,
+		                 scala.Int.MaxValue,
+		                 fullBounds,
+		                 MutableList[(Int, String)](),
+		                 MutableList[(Int, String)]())
+	}
 
 
   type STRATEGY_TYPE <: ProcessingStrategy[BT]
@@ -225,11 +228,12 @@ extends ProcessingStrategy[BT] {
 
 
 object DatasetFactory {
-  def createDataset (sc: SparkContext,
-		     dataDescription: Properties,
-		     cache: Boolean,
-		     tileSize: Int = 256): Dataset[_, _] = {
-    val dataset = new CSVDataset(dataDescription, tileSize)
+	def createDataset (sc: SparkContext,
+	                   dataDescription: Properties,
+	                   cache: Boolean,
+	                   tileWidth: Int = 256,
+	                   tileHeight: Int = 256): Dataset[_, _] = {
+    val dataset = new CSVDataset(dataDescription, tileWidth, tileHeight)
     dataset.initialize(sc, cache)
     dataset
   }

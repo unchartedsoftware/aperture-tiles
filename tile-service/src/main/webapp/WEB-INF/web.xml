@@ -28,7 +28,10 @@
       <!-- Sets up the tile-rendering service -->
       com.oculusinfo.tile.rest.TileModule:
       oculus.aperture.capture.PhantomCaptureModule:
-      oculus.aperture.cms.couchdb.CouchDbModule
+      oculus.aperture.cms.couchdb.CouchDbModule:
+
+      <!-- Sets up the spark connection -->
+      com.oculusinfo.tile.SparkModule
     </param-value>
   </context-param>
 

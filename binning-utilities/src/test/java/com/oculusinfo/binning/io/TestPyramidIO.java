@@ -86,8 +86,7 @@ public class TestPyramidIO implements PyramidIO {
     }
 
     @Override
-    public void initializeForRead(String pyramidId, int tileSize,
-    		Properties dataDescription) {
+    public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
     	// Noop
     }
 
@@ -110,7 +109,9 @@ public class TestPyramidIO implements PyramidIO {
     }
 
     @Override
-    public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException {
+    public <T> InputStream getTileStream (String pyramidId,
+                                          TileSerializer<T> serializer,
+                                          TileIndex tile) throws IOException {
         String key = getTileKey(pyramidId, tile);
         if (_data.containsKey(key)) {
             byte[] data = _data.get(key);

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.json.JSONException;
@@ -44,6 +45,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
@@ -51,6 +53,7 @@ import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.util.AvroJSONConverter;
+import com.oculusinfo.tile.util.JsonUtilities;
 
 /**
  * @author dgray
@@ -79,14 +82,24 @@ public class TileServiceImpl implements TileService {
 		_latestIDMap = Collections.synchronizedMap(new HashMap<String, UUID>());
 	}
 
+	protected FactoryProvider<PyramidIO> getPyramidIOFactoryProvider () {
+	    return _pyramidIOFactoryProvider;
+	}
+	protected FactoryProvider<TileSerializer<?>> getSerializationFactoryProvider () {
+	    return _serializationFactoryProvider;
+	}
+	protected FactoryProvider<TileDataImageRenderer> getRendererFactoryProvider () {
+	    return _rendererFactoryProvider;
+	}
+
 	/*
 	 * Returns an uninitialized render parameter factory
 	 */
-	private LayerConfiguration getLayerConfiguration () throws ConfigurationException {
-		return new LayerConfiguration(_pyramidIOFactoryProvider,
-		                              _serializationFactoryProvider,
-		                              _rendererFactoryProvider, null,
-		                              new ArrayList<String>());
+	protected LayerConfiguration getLayerConfiguration () throws ConfigurationException {
+		return new LayerConfiguration(getPyramidIOFactoryProvider(),
+		                              getSerializationFactoryProvider(),
+		                              getRendererFactoryProvider(),
+		                              null, new ArrayList<String>());
 	}
 
 	/* (non-Javadoc)
@@ -96,7 +109,7 @@ public class TileServiceImpl implements TileService {
 		try {
 			
 			UUID id = UUID.randomUUID();
-			String layer = options.getString("layer");
+			String layer = options.getString(LayerConfiguration.LAYER_NAME.getName());
 			_uuidToOptionsMap.put(id, options);
 			_latestIDMap.put(layer, id);
 
@@ -105,6 +118,15 @@ public class TileServiceImpl implements TileService {
 			config.readConfiguration(options);
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			PyramidMetaData metadata = getMetadata(layer, pyramidIO);
+
+            // Initialize the pyramid for reading
+			JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+			if (null != initJSON) {
+	            int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+	            int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			    Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+			    pyramidIO.initializeForRead(layer, width, height, initProps);
+			}
 
 			// Construct our return object
 			String[] names = JSONObject.getNames(metadata.getRawData());
@@ -158,19 +180,22 @@ public class TileServiceImpl implements TileService {
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
-	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y) {
+	@Override
+	public BufferedImage getTileImage (UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet) {
 		int width = 256;
 		int height = 256;
 		BufferedImage bi = null;
 
 		try {
-			LayerConfiguration config = getLevelSpecificConfiguration(id, layer, new TileIndex(zoomLevel, (int) x, (int) y));
+			LayerConfiguration config = getLevelSpecificConfiguration(id, layer, index);
     
 			// Record image dimensions in case of error. 
 			width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 
 			TileDataImageRenderer tileRenderer = config.produce(TileDataImageRenderer.class);
+
+			prepareForRendering(layer, config, index, tileSet);
 
 			bi = tileRenderer.render(config);
 		} catch (ConfigurationException e) {
@@ -191,8 +216,7 @@ public class TileServiceImpl implements TileService {
 	}
 
 	@Override
-	public JSONObject getTileObject(UUID id, String layer, int zoomLevel, double x, double y) {
-		TileIndex tileCoordinate = new TileIndex(zoomLevel, (int)x, (int)y);
+	public JSONObject getTileObject(UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet) {
 		try {
 			LayerConfiguration config = getLayerConfiguration();
 			if (id != null){
@@ -202,17 +226,39 @@ public class TileServiceImpl implements TileService {
 				config.readConfiguration(new JSONObject());
 			}
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			InputStream tile = pyramidIO.getTileStream(layer, tileCoordinate);
+			TileSerializer<?> serializer = config.produce(TileSerializer.class);
+
+            prepareForRendering(layer, config, index, tileSet);
+
+			InputStream tile = pyramidIO.getTileStream(layer, serializer, index);
 			if (null == tile) return null;
 			return AvroJSONConverter.convert(tile);
 		} catch (IOException e) {
-			_logger.warn("Exception getting tile for {}", tileCoordinate, e);
+			_logger.warn("Exception getting tile for {}", index, e);
 		} catch (JSONException e) {
-			_logger.warn("Exception getting tile for {}", tileCoordinate, e);
+			_logger.warn("Exception getting tile for {}", index, e);
 		} catch (ConfigurationException e) {
-			_logger.warn("Exception getting tile for {}", tileCoordinate, e);
+			_logger.warn("Exception getting tile for {}", index, e);
 		}
 		return null;
+	}
+
+	/*
+     * This is a placeholder for the caching tile service to override; it does
+     * nothing in this version.
+     * 
+     * Theoretically, it allows for a hook point for extending classes to make
+     * last-minute preparations before actually rendering a tile, whether to
+     * JSON or an image.
+     * 
+     * @param layer The layer to be rendered.
+     * @param config The configuration of the layer to be rendered
+     * @param tile The tile to be rendered
+     * @param tileSet Any other tiles that will need to be rendered along with
+     *            this one.
+     */
+	protected void prepareForRendering (String layer, LayerConfiguration config, TileIndex tile, Iterable<TileIndex> tileSet) {
+	    // NOOP
 	}
 
 	/**

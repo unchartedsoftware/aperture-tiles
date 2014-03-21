@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.spi.impl.pyramidio.image;
+package com.oculusinfo.tile.rest.tile.caching;
 
 
 
@@ -35,7 +35,8 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.ImageTileCacheEntry.CacheRequestCallback;
+import com.oculusinfo.tile.rest.tile.caching.TileCache;
+import com.oculusinfo.tile.rest.tile.caching.ImageTileCacheEntry.CacheRequestCallback;
 
 
 

@@ -50,15 +50,26 @@ public interface TileService {
 	 * TMS tile request.
 	 * 
 	 * @param id - 'default' is ok - means use server defaults. Use getLayer (/layer) to obtain an id.
-	 * @param layer
-	 * @param zoomLevel
-	 * @param x
-	 * @param y
-	 * @return rendered image.
+     * @param layer - The layer for which to get an image
+     * @param index The index of the desired tile
+     * @param tileSet A set of other tiles which will be wanted along with this
+     *            one
+     * @return rendered image.
 	 */
-	public BufferedImage getTileImage (UUID id, String layer, int zoomLevel, double x, double y);
+	public BufferedImage getTileImage (UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet);
 
-	public JSONObject getTileObject (UUID fromString, String layer, int zoomLevel, double x, double y);
+    /**
+     * TMS raw tile data request.
+     * 
+     * @param id - 'default' is ok - means use server defaults. Use getLayer
+     *            (/layer) to obtain an id.
+     * @param layer - The layer for which to get tile data
+     * @param index The index of the desired tile
+     * @param tileSet A set of other tiles which will be wanted along with this
+     *            one
+     * @return The raw data for the indicated tile
+     */
+	public JSONObject getTileObject (UUID fromString, String layer, TileIndex index, Iterable<TileIndex> tileSet);
 
 	public LayerConfiguration getLevelSpecificConfiguration (UUID id, String layer, TileIndex tile) throws ConfigurationException;
 }

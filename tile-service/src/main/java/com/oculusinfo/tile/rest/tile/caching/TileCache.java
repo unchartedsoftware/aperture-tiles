@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.spi.impl.pyramidio.image;
+package com.oculusinfo.tile.rest.tile.caching;
 
 
 
@@ -35,10 +35,10 @@ import java.util.TreeSet;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.Pair;
 import com.oculusinfo.binning.util.LRUCache.RemovalPolicy;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.SynchronizedLRUCache;
-import com.oculusinfo.tile.spi.impl.pyramidio.image.ImageTileCacheEntry.CacheRequestCallback;
+import com.oculusinfo.tile.rest.tile.caching.ImageTileCacheEntry.CacheRequestCallback;
 
 
 
@@ -81,7 +81,7 @@ public class TileCache<T> {
      *            The list of tiles needed
      * @return A sublist of just those tiles not already requested
      */
-    public List<TileIndex> getNewRequests (List<TileIndex> requests) {
+    public List<TileIndex> getNewRequests (Iterable<TileIndex> requests) {
         List<TileIndex> needed = new ArrayList<>();
         synchronized (_cache) {
             for (TileIndex index : requests) {

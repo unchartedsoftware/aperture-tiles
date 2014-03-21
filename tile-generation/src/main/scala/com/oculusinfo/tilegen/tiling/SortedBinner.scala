@@ -242,11 +242,12 @@ object SortedBinnerTest {
 			{
 				val procFcn: RDD[(Double, Double, BT)] => Unit = rdd =>
 				{
+					val bins = (dataset.getNumXBins max dataset.getNumYBins)
 					val tiles = binner.processDataByLevel(rdd,
 					                                      dataset.getBinDescriptor,
 					                                      dataset.getTilePyramid,
 					                                      levels,
-					                                      dataset.getBins,
+					                                      bins,
 					                                      dataset.getConsolidationPartitions)
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,

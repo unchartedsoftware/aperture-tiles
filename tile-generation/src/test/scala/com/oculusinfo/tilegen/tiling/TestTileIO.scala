@@ -82,8 +82,9 @@ class TestPyramidIO extends PyramidIO with Serializable {
   }
 
   def initializeForRead (pyramidId: String,
-			 tileSize: Int,
-			 dataDescription: Properties): Unit = {}
+                         tileWidth: Int,
+                         tileHeight: Int,
+                         dataDescription: Properties): Unit = {}
 
   def readTiles[T] (pyramidId: String,
 		    serializer: TileSerializer[T], 
@@ -93,7 +94,7 @@ class TestPyramidIO extends PyramidIO with Serializable {
                       }).toList.asInstanceOf[List[TileData[T]]].asJava
   }
 
-  def getTileStream (pyramidId: String, tile: TileIndex): InputStream = {
+  def getTileStream[T] (pyramidId: String, serializer: TileSerializer[T], tile: TileIndex): InputStream = {
     throw new UnsupportedOperationException("Can't get a stream from a TestPyramidIO")
   }
 

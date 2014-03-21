@@ -25,6 +25,9 @@
 package com.oculusinfo.tile.rest.tile;
 
 import java.awt.image.BufferedImage;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import oculus.aperture.common.rest.ApertureServerResource;
@@ -38,7 +41,9 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
+
 import com.google.inject.Inject;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 
 public class TileResource extends ApertureServerResource {
@@ -94,7 +99,24 @@ public class TileResource extends ApertureServerResource {
 			                            "Unable to create JSON object from supplied options string", e);
 		}
 	}
-	
+
+    private Collection<TileIndex> parseTileSetDescription (String tileSetDescription) {
+        Set<TileIndex> indices = null;
+        if (null != tileSetDescription) {
+            String[] tileDescriptions = tileSetDescription.split(",");
+            for (String tileDescription: tileDescriptions) {
+                TileIndex index = TileIndex.fromString(tileDescription);
+                if (null != index) {
+                    if (null == indices) {
+                        indices = new HashSet<>();
+                    }
+                    indices.add(index);
+                }
+            }
+        }
+        return indices;
+    }
+
 	@Get
 	public Representation getTile() throws ResourceException {
 
@@ -109,7 +131,13 @@ public class TileResource extends ApertureServerResource {
 			int x = Integer.parseInt(xAttr);
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
-			
+            TileIndex index = new TileIndex(zoomLevel, x, y);
+
+            Collection<TileIndex> tileSet = parseTileSetDescription((String) getRequest().getAttributes().get("tileset"));
+            if (null != tileSet) {
+                tileSet.add(index);
+            }
+
 			UUID uuid = null;
 			if( !"default".equals(id) ){ // Special indicator - no ID.
 				uuid = UUID.fromString(id);
@@ -120,7 +148,7 @@ public class TileResource extends ApertureServerResource {
 			if (null == extType) {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			} else if (ResponseType.Image.equals(extType.getResponseType())) {
-				BufferedImage tile = _service.getTileImage(uuid, layer, zoomLevel, x, y);
+				BufferedImage tile = _service.getTileImage(uuid, layer, index, tileSet);
 				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
 
 				setStatus(Status.SUCCESS_CREATED);
@@ -137,7 +165,7 @@ public class TileResource extends ApertureServerResource {
 				tileIndex.put("xIndex", x);
 				tileIndex.put("yIndex", y);
 				result.put("index", tileIndex);
-				result.put("tile", _service.getTileObject(uuid, layer, zoomLevel, x, y));
+				result.put("tile", _service.getTileObject(uuid, layer, index, tileSet));
 
 				setStatus(Status.SUCCESS_CREATED);
 				return new JsonRepresentation(result);

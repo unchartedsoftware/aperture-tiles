@@ -65,108 +65,119 @@ import com.oculusinfo.tilegen.util.Rectangle
  * This class reads and caches a data set for live queries of its tiles
  */
 class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
-  private val datasets = MutableMap[String, Dataset[_, _]]()
+	private val datasets = MutableMap[String, Dataset[_, _]]()
 
 
-  def initializeForWrite (pyramidId: String): Unit = {
-  }
+	def initializeForWrite (pyramidId: String): Unit = {
+	}
 
-  def writeTiles[T] (pyramidId: String,
-                     tilePyramid: TilePyramid,
-                     serializer: TileSerializer[T],
-                     data: JavaIterable[TileData[T]]): Unit =
-    throw new IOException("Can't write raw data")
+	def writeTiles[T] (pyramidId: String,
+	                   tilePyramid: TilePyramid,
+	                   serializer: TileSerializer[T],
+	                   data: JavaIterable[TileData[T]]): Unit =
+		throw new IOException("Can't write raw data")
 
-  def writeMetaData (pyramidId: String,
-                     metaData: String): Unit =
-    throw new IOException("Can't write raw data")
+	def writeMetaData (pyramidId: String,
+	                   metaData: String): Unit =
+		throw new IOException("Can't write raw data")
 
-  def initializeForRead (pyramidId: String,
-			 tileSize: Int,
-			 dataDescription: Properties): Unit = {
-    if (!datasets.contains(pyramidId)) {
-      datasets(pyramidId) = DatasetFactory.createDataset(sc, dataDescription, true, tileSize)
-    }
-  }
+	def initializeForRead (pyramidId: String,
+	                       width: Int, height: Int,
+	                       dataDescription: Properties): Unit = {
+		if (!datasets.contains(pyramidId)) {
+			datasets(pyramidId) =
+				DatasetFactory.createDataset(sc, dataDescription,
+				                             true, width, height)
+		}
+	}
 
-  /*
-   * Convert a set of tiles to testable bounds.
-   *
-   * The returned bounds are in two potential forms, paired into a 2-tuble.
-   *
-   * The first element is the bounds, in tile indices.
-   */
-  private def tilesToBounds (pyramid: TilePyramid,
-                             tiles: Iterable[TileIndex]): Bounds = {
-    var mutableRows = MutableList[Bounds]()
-    val bounds = tiles.map(tile => 
-      ((tile.getX, tile.getY()),
-       new Bounds(tile.getLevel(),
-                  new Rectangle[Int](tile.getX(), tile.getX(), tile.getY(), tile.getY()),
-                  None))
-    ).toSeq.sortBy(_._1).map(_._2).foreach(bounds => {
-      if (mutableRows.isEmpty) {
-        mutableRows += bounds
-      } else {
-        val last = mutableRows.last
-        val combination = last union bounds
-        if (combination.isEmpty) {
-          mutableRows += bounds
-        } else {
-          mutableRows(mutableRows.size-1) = combination.get
-        }
-      }
-    })
+	/*
+	 * Convert a set of tiles to testable bounds.
+	 *
+	 * The returned bounds are in two potential forms, paired into a 2-tuble.
+	 *
+	 * The first element is the bounds, in tile indices.
+	 */
+	private def tilesToBounds (pyramid: TilePyramid,
+	                           tiles: Iterable[TileIndex]): Bounds = {
+		var mutableRows = MutableList[Bounds]()
+		val bounds = tiles.map(tile =>
+			((tile.getX, tile.getY()),
+			 new Bounds(tile.getLevel(),
+			            new Rectangle[Int](tile.getX(), tile.getX(),
+			                               tile.getY(), tile.getY()),
+			            None))
+		).toSeq.sortBy(_._1).map(_._2).foreach(bounds =>
+			{
+				if (mutableRows.isEmpty) {
+					mutableRows += bounds
+				} else {
+					val last = mutableRows.last
+					val combination = last union bounds
+					if (combination.isEmpty) {
+						mutableRows += bounds
+					} else {
+						mutableRows(mutableRows.size-1) = combination.get
+					}
+				}
+			}
+		)
 
-    val rows = mutableRows.foldRight(None: Option[Bounds])((bounds, rest) =>
-      Some(new Bounds(bounds.level, bounds.indexBounds, rest))
-    ).getOrElse(null)
+		val rows = mutableRows.foldRight(None: Option[Bounds])((bounds, rest) =>
+			Some(new Bounds(bounds.level, bounds.indexBounds, rest))
+		).getOrElse(null)
 
-    if (null == rows) {
-      null
-    } else {
-      // reduce returns None if no reduction is required
-      rows.reduce.getOrElse(rows)
-    }
-  }
+		if (null == rows) {
+			null
+		} else {
+			// reduce returns None if no reduction is required
+			rows.reduce.getOrElse(rows)
+		}
+	}
 
-  def readTiles[PT] (pyramidId: String,
-                     serializer: TileSerializer[PT],
-                     javaTiles: JavaIterable[TileIndex]): JavaList[TileData[PT]] = {
-    def inner[BT: ClassManifest]: JavaList[TileData[PT]] = {
-      val tiles: Iterable[TileIndex] = javaTiles.asScala
+	def readTiles[PT] (pyramidId: String,
+	                   serializer: TileSerializer[PT],
+	                   javaTiles: JavaIterable[TileIndex]):
+			JavaList[TileData[PT]] = {
+		def inner[BT: ClassManifest]: JavaList[TileData[PT]] = {
+			val tiles: Iterable[TileIndex] = javaTiles.asScala
 
-      if (!datasets.contains(pyramidId) || 
-          tiles.isEmpty) {
-	null
-      } else {
-	val dataset = datasets(pyramidId).asInstanceOf[Dataset[BT, PT]]
+			if (!datasets.contains(pyramidId) ||
+				    tiles.isEmpty) {
+				null
+			} else {
+				val dataset = datasets(pyramidId).asInstanceOf[Dataset[BT, PT]]
 
-	val pyramid = dataset.getTilePyramid
-	val bins = tiles.head.getXBins()
-	val bounds = tilesToBounds(pyramid, tiles)
+				val pyramid = dataset.getTilePyramid
+				val bins = tiles.head.getXBins()
+				val bounds = tilesToBounds(pyramid, tiles)
 
-	val boundsTest = bounds.getSerializableContainmentTest(pyramid, bins)
-	val spreaderFcn = bounds.getSpreaderFunction[BT](pyramid, bins);
+				val boundsTest = bounds.getSerializableContainmentTest(pyramid,
+				                                                       bins)
+				val spreaderFcn = bounds.getSpreaderFunction[BT](pyramid, bins);
 
-	val binner = new RDDBinner
-	binner.debug = true
+				val binner = new RDDBinner
+				binner.debug = true
 
-	dataset.transformRDD[TileData[PT]](
-	  rdd => {
-	    binner.processData(rdd, dataset.getBinDescriptor, spreaderFcn, bins)
-	  }
-	).collect.toList.asJava
-      }
-    }
+				dataset.transformRDD[TileData[PT]](
+					rdd => {
+						binner.processData(rdd, dataset.getBinDescriptor,
+						                   spreaderFcn, bins)
+					}
+				).collect.toList.asJava
+			}
+		}
 
-    inner
-  }
+		inner
+	}
 
-  def getTileStream (pyramidId: String, tile: TileIndex): InputStream = {
-    null
-  }
+	def getTileStream[T] (pyramidId: String, serializer: TileSerializer[T],
+	                      tile: TileIndex): InputStream = {
+		null
+	}
 
-  def readMetaData (pyramidId: String): String =
-    datasets.get(pyramidId).map(_.createMetaData(pyramidId).toString).getOrElse(null)
+	def readMetaData (pyramidId: String): String =
+		datasets.get(pyramidId)
+			.map(_.createMetaData(pyramidId).toString)
+			.getOrElse(null)
 }

@@ -82,5 +82,5 @@ public interface TileSerializer<T> extends Serializable {
      * @throws IOException
      */
     public void serialize (TileData<T> data, TilePyramid tilePyramid,
-                           OutputStream ouput) throws IOException;
+                           OutputStream output) throws IOException;
 }

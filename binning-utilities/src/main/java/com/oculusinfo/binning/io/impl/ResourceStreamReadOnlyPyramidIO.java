@@ -73,8 +73,7 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
     }
 
     @Override
-    public void initializeForRead(String pyramidId, int tileSize,
-    		Properties dataDescription) {
+    public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
     	// Noop
     }
 
@@ -99,7 +98,9 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
     }
 
     @Override
-    public InputStream getTileStream (String basePath, TileIndex tile) throws IOException {
+    public <T> InputStream getTileStream (String basePath,
+                                          TileSerializer<T> serializer,
+                                          TileIndex tile) throws IOException {
         return _stream.getTileStream(basePath, tile);
     }
 

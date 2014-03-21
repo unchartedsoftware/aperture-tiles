@@ -28,28 +28,28 @@ package com.oculusinfo.tile.init.providers;
 import java.util.List;
 
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.rest.tile.caching.LiveTilePyramidIOFactory;
 
 
 
 public class StandardPyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
     @Override
     public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-        return new PyramidIOFactory(null, path);
+        return new LiveTilePyramidIOFactory(null, path);
     }
 
     @Override
     public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
                                                          List<String> path) {
-        return new PyramidIOFactory(parent, path);
+        return new LiveTilePyramidIOFactory(parent, path);
     }
 
     @Override
     public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
                                                          ConfigurableFactory<?> parent,
                                                          List<String> path) {
-        return new PyramidIOFactory(factoryName, parent, path);
+        return new LiveTilePyramidIOFactory(factoryName, parent, path);
     }
 }
