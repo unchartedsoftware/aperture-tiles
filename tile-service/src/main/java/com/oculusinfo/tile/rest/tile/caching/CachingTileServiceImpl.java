@@ -26,7 +26,9 @@ package com.oculusinfo.tile.rest.tile.caching;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,9 +115,26 @@ public class CachingTileServiceImpl extends TileServiceImpl {
         }
 
         @Override
-        protected PyramidIO create () {
+        public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
+            super.readConfiguration(rootNode);
+            _baseFactory.readConfiguration(rootNode);
+            setupBasePyramidIO();
+        }
+
+        @Override
+        public void readConfiguration (Properties properties) throws ConfigurationException {
+            super.readConfiguration(properties);
+            _baseFactory.readConfiguration(properties);
+            setupBasePyramidIO();
+        }
+
+        private void setupBasePyramidIO () {
             String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_NAME);
             _pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
+        }
+
+        @Override
+        protected PyramidIO create () {
             return _pyramidIO;
         }
         
