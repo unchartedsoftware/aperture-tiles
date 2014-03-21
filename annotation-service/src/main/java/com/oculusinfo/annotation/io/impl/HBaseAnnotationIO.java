@@ -167,6 +167,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         return convertResults( rawResults, serializer );
     }
     
+    
     @Override
     public <T> List<AnnotationBin<T>> readAnnotations (String tableName, 
 												       AnnotationSerializer<T> serializer,
@@ -179,7 +180,8 @@ public class HBaseAnnotationIO implements AnnotationIO {
 		
 		return convertResults( rawResults, serializer );
 	}
-
+    
+    
     @Override
     public String readMetaData (String tableName) throws IOException {
         List<Map<HBaseColumn, byte[]>> rawData = readRows(tableName, 

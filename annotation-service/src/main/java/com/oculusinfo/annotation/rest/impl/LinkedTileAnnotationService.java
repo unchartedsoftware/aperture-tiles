@@ -48,12 +48,12 @@ import org.json.JSONObject;
 
 public class LinkedTileAnnotationService implements AnnotationService<JSONObject> {
 	
-	static final String   TABLE_NAME = "AnnotationTable";
+	private static final String TABLE_NAME = "AnnotationTable";
 	
-	AnnotationIO _io;
-    AnnotationIndexer<JSONObject> _indexer;
-    AnnotationIndexer<JSONObject> _dataIndexer; 
-    AnnotationSerializer<JSONObject> _serializer;
+	private AnnotationIO _io;
+    private AnnotationIndexer<JSONObject> _indexer;
+    private AnnotationIndexer<JSONObject> _dataIndexer; 
+    private AnnotationSerializer<JSONObject> _serializer;
 
     
 	public LinkedTileAnnotationService() {
@@ -78,6 +78,7 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 		AnnotationIndex dataIndex = new AnnotationIndex( -_dataIndexer.getIndex( data, 0 ).getValue() -1 );
 		return new AnnotationBin<JSONObject>( dataIndex, data );	
 	}
+	
 	
 	private JSONObject getDataReference( AnnotationIndex index ) {
 		
@@ -214,7 +215,7 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 	 */
 	public List<AnnotationBin<JSONObject>> readAnnotations( JSONObject start, JSONObject stop, int level ) {
 		
-		int MAX_ENTRIES_PER_BIN = 10;
+		int MAX_ENTRIES_PER_BIN = 0;
 		
 		AnnotationIndex to = _indexer.getIndex( start, level );
 		AnnotationIndex from = _indexer.getIndex( stop, level );
@@ -236,7 +237,7 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 				results.addAll( _io.readAnnotations( TABLE_NAME, _serializer, indices ) );
 				
 			}
-			System.out.println( results.size() + " total data entries read from " + bins.size() + " bins" );
+			//System.out.println( results.size() + " total data entries read from " + bins.size() + " bins" );
 			
 			return results;
 			
@@ -308,8 +309,15 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 		
 		try {
 
+
+			//TODO: also remember to look into nested loop structure
+			
 			// initialise for write
 			_io.initializeForWrite( TABLE_NAME );
+			
+			// maintain lists of what bins to modify and what bins to remove
+			Set<AnnotationBin<JSONObject>> toWrite = new LinkedHashSet<AnnotationBin<JSONObject>>();
+			Set<AnnotationIndex> toRemove = new LinkedHashSet<AnnotationIndex>();
 			
 			// get all affected bin indices, no duplicates
 			Set<AnnotationIndex> allIndices = new LinkedHashSet<>();
@@ -317,21 +325,26 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 			Map<JSONObject, List<AnnotationIndex>> indexMap = new HashMap<>();
 			
 			for (JSONObject annotation : annotations) {
+				
 				// get list of the indices for all levels
 				List<AnnotationIndex> indices = _indexer.getIndices( annotation );
 				allIndices.addAll( indices );
-				indexMap.put( annotation, indices );
+				
+				// get data index and reference
+				AnnotationIndex dataIndex =  getDataBin( annotation ).getIndex();
+				JSONObject dataReference = getDataReference( dataIndex );
+				
+				// flag data index for removal
+				toRemove.add( dataIndex );
+								
+				indexMap.put( dataReference, indices );
 			}
 
 			// read all these bins into memory
 			List<AnnotationBin<JSONObject>> bins = _io.readAnnotations( TABLE_NAME, _serializer, new ArrayList<>( allIndices ) );
 			
-			// maintain lists of what bins to modify and what bins to remove
-			Set<AnnotationBin<JSONObject>> toWrite = new LinkedHashSet<AnnotationBin<JSONObject>>();
-			Set<AnnotationIndex> toRemove = new LinkedHashSet<AnnotationIndex>();
-			
 			for (Map.Entry<JSONObject, List<AnnotationIndex>> entry : indexMap.entrySet()) {
-				JSONObject data = entry.getKey();
+				JSONObject dataReference = entry.getKey();
 				List<AnnotationIndex> indices = entry.getValue();
 
 				// for all bins that this data node will be written into
@@ -343,13 +356,15 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 						// bin exists
 						AnnotationBin<JSONObject> bin = bins.get(j);
 						// remove data entry from bin
-						if ( bin.remove( data ) ) {
+						if ( bin.remove( dataReference ) ) {
 							// if successfully removed data from this bin, flag to write change
 							toWrite.add( bin );
 						}
 						if ( bin.getData().size() == 0 ) {
 							// no data left, flag bin for removal
 							toRemove.add( bin.getIndex() );
+							// no longer have to write this bin back
+							toWrite.remove( bin );
 						}
 					}
 				}

@@ -45,9 +45,9 @@ public class FlatAnnotationService implements AnnotationService<JSONObject> {
 	
 	static final String   TABLE_NAME = "AnnotationTable";
 	
-	AnnotationIO _io;
-    AnnotationIndexer<JSONObject> _indexer;   
-    AnnotationSerializer<JSONObject> _serializer;
+	private AnnotationIO _io;
+	private AnnotationIndexer<JSONObject> _indexer;   
+	private AnnotationSerializer<JSONObject> _serializer;
 	
 	public FlatAnnotationService() {
 		

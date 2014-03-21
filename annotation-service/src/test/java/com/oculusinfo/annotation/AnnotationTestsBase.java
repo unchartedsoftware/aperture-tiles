@@ -49,10 +49,10 @@ import org.junit.Test;
 public class AnnotationTestsBase {
 	
 	static final double   EPSILON = 0.00001;
-	static final int      NUM_ENTRIES = 50000;
+	static final int      NUM_ENTRIES = 20000;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
-	static final String   TABLE_NAME = "AnnotationTable";
+
 	
 
 	/*

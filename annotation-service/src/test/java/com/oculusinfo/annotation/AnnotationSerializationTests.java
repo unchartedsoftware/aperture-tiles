@@ -49,7 +49,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
 	
-	private AnnotationIndexer    _indexer;
+	private AnnotationIndexer<JSONObject>    _indexer;
 	private AnnotationSerializer<JSONObject> _serializer;
 	
    @Before

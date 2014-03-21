@@ -38,14 +38,14 @@ public abstract class AnnotationIndexer<T> {
 										   0x0000FFFF0000FFFFL,
 										   0x00000000FFFFFFFFL};
     protected static final long SHIFTS[] = { 1, 2, 4, 8, 16 };	
-    protected static final int BINS = 16;
+    protected static final int BINS = 8;
     protected static final int BINS_EXP = (int)(Math.log(BINS) / Math.log(2));
     protected static final int LEVELS = 20;
     
 	
     protected TilePyramid _pyramid;
     
-    public AnnotationIndexer() { 	
+    public AnnotationIndexer() {
     }
     
     public abstract List<AnnotationIndex> getIndices( T data );

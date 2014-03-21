@@ -46,10 +46,11 @@ import com.oculusinfo.annotation.query.*;
 
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
-	static final boolean VERBOSE = true;
+	private static final String  TABLE_NAME = "AnnotationTable";
+	private static final boolean VERBOSE = true;
 
 	private AnnotationIO _io;
-	private AnnotationIndexer _indexer;
+	private AnnotationIndexer<JSONObject> _indexer;
 	private AnnotationSerializer<JSONObject> _serializer;
     
 	private List<AnnotationBin<JSONObject>> _annotations;
