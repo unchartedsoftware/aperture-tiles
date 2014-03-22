@@ -117,16 +117,17 @@ public class TileServiceImpl implements TileService {
 			LayerConfiguration config = getLayerConfiguration();
 			config.readConfiguration(options);
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			PyramidMetaData metadata = getMetadata(layer, pyramidIO);
 
-            // Initialize the pyramid for reading
-			JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
-			if (null != initJSON) {
+	        // Initialize the pyramid for reading
+	        JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+	        if (null != initJSON) {
 	            int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 	            int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-			    Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-			    pyramidIO.initializeForRead(layer, width, height, initProps);
-			}
+	            Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+	            pyramidIO.initializeForRead(layer, width, height, initProps);
+	        }
+
+	        PyramidMetaData metadata = getMetadata(layer, pyramidIO);
 
 			// Construct our return object
 			String[] names = JSONObject.getNames(metadata.getRawData());
@@ -169,6 +170,15 @@ public class TileServiceImpl implements TileService {
 		}
 
 		PyramidIO pyramidIO = config.produce(PyramidIO.class);
+
+        // Initialize the pyramid for reading
+        JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+        if (null != initJSON) {
+            int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+            int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+            Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+            pyramidIO.initializeForRead(layer, width, height, initProps);
+        }
 
 		PyramidMetaData metadata = getMetadata(config.getPropertyValue(LayerConfiguration.LAYER_NAME), pyramidIO);
 		config.setLevelProperties(tile,

@@ -21,7 +21,7 @@
       <!-- Serialization factory module - override to add custom tile serializers -->
       com.oculusinfo.tile.init.TileSerializationFactoryModule:
       <!-- Pyramid IO factory module - override to add custom PyramidIO implementations -->
-      com.oculusinfo.tile.init.PyramidIOFactoryModule:
+      com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:

@@ -21,12 +21,15 @@
       <!-- Serialization factory module - override to add custom tile serializers -->
       com.oculusinfo.tile.init.TileSerializationFactoryModule:
       <!-- Pyramid IO factory module - override to add custom PyramidIO implementations -->
-      com.oculusinfo.tile.init.PyramidIOFactoryModule:
+      com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.TileModule
+      com.oculusinfo.tile.rest.TileModule:
+
+      <!-- Sets up the spark connection -->
+      com.oculusinfo.tile.SparkModule
     </param-value>
   </context-param>
 

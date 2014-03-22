@@ -42,11 +42,12 @@ public class LiveTilePyramidIOFactory extends PyramidIOFactory {
     @Inject
     private JavaSparkContext _context;
 
-    public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
-        this(null, parent, path);
+    public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, JavaSparkContext context) {
+        this(null, parent, path, context);
     }
-    public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path) {
+    public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, JavaSparkContext context) {
         super(name, parent, path);
+        _context = context;
     }
 
     @Override

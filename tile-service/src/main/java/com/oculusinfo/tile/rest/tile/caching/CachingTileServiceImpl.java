@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
@@ -112,6 +113,8 @@ public class CachingTileServiceImpl extends TileServiceImpl {
             super(name, PyramidIO.class, parent, path);
             _parent = parent;
             _baseFactory = base;
+
+            addProperty(PyramidIOFactory.INITIALIZATION_DATA);
         }
 
         @Override
