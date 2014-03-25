@@ -27,14 +27,19 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
+import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
-import com.oculusinfo.annotation.query.*;
+import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.impl.*;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,37 +54,42 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
 	
-	private AnnotationIndexer<JSONObject>    _indexer;
-	private AnnotationSerializer<JSONObject> _serializer;
+	private AnnotationIndexer<TileAndBinIndices> _indexer;
+	private AnnotationSerializer<AnnotationTile> _tileSerializer;
+	private AnnotationSerializer<AnnotationData> _dataSerializer;
+	private TilePyramid _pyramid;
 	
-   @Before
+    @Before
     public void setup () {
-    	_indexer = new TiledAnnotationIndexer();
-    	_serializer = new TestJSONSerializer();
+	   _pyramid = new WebMercatorTilePyramid();
+    	_indexer = new TileAnnotationIndexer( _pyramid );
+    	_tileSerializer = new JSONTileSerializer();
+    	_dataSerializer = new JSONDataSerializer();
     }
 
     @After
     public void teardown () {
     	_indexer = null;
-    	_serializer = null;
+    	_tileSerializer = null;
+    	_dataSerializer = null;    	
     }
 
     @Test
-    public void testJSONSerialization () throws Exception {
+    public void testDataJSONSerialization () throws Exception {
     	
-		List<AnnotationBin<JSONObject>> before = generateJSONAnnotations( NUM_ENTRIES, _indexer );
-		List<AnnotationBin<JSONObject>> after = new ArrayList<AnnotationBin<JSONObject>>();
+		List<AnnotationData> before = generateJSONAnnotations( NUM_ENTRIES );
+		List<AnnotationData> after = new ArrayList<>();
 			
 		if (VERBOSE) {
 			System.out.println( "*** Before ***");
-			print( before );
+			printData( before );
 		}
 		
-		for ( AnnotationBin<JSONObject> annotation : before ) {
+		for ( AnnotationData annotation : before ) {
 			
 			// serialize
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			_serializer.serialize( annotation, baos );
+			_dataSerializer.serialize( annotation, baos );
 			baos.close();
             baos.flush();
             
@@ -87,20 +97,56 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
             byte[] data = baos.toByteArray();
 
             ByteArrayInputStream bais = new ByteArrayInputStream(data);
-            AnnotationBin<JSONObject> bin = _serializer.deserialize( bais );
-            after.add( bin );
+            AnnotationData anno = _dataSerializer.deserialize( bais );
+            after.add( anno );
             bais.close();
             
-            Assert.assertEquals( annotation, bin );
+            Assert.assertEquals( annotation, anno );
 		}
 		
 		
 		if (VERBOSE) {
 			System.out.println( "*** After ***");
-			print( before );
+			printData( after );
 		}
     }
 	
 	
+    @Test
+    public void testTileJSONSerialization () throws Exception {
+    	
+		List<AnnotationTile> before = generateTiles( NUM_ENTRIES, _indexer );
+		List<AnnotationTile> after = new ArrayList<>();
+
+		if (VERBOSE) {
+			System.out.println( "*** Before ***");
+			printTiles( before );
+		}
+		
+		for ( AnnotationTile tile : before ) {
+			
+			// serialize
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			_tileSerializer.serialize( tile, baos );
+			baos.close();
+            baos.flush();
+            
+            // deserialize
+            byte[] data = baos.toByteArray();
+
+            ByteArrayInputStream bais = new ByteArrayInputStream(data);
+            AnnotationTile t = _tileSerializer.deserialize( bais );
+            after.add( t );
+            bais.close();
+            
+            Assert.assertEquals( tile, t );
+		}
+		
+		
+		if (VERBOSE) {
+			System.out.println( "*** After ***");
+			printTiles( after );
+		}
+    }
 	
 }

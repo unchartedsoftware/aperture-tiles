@@ -25,30 +25,29 @@ package com.oculusinfo.annotation.rest;
 
 import java.util.List;
 
-import org.json.JSONObject;
+import com.oculusinfo.annotation.*;
+import com.oculusinfo.binning.*;
 
-import  com.oculusinfo.annotation.index.*;
-import  com.oculusinfo.annotation.query.*;
 
-public interface AnnotationService<T> {
-
+public interface AnnotationService {
+	
 	/*
 	 * Write an annotation to the storage service
 	 * 
 	 */
-	public abstract void writeAnnotation( T annotation );
-	public abstract void writeAnnotations( List<T> annotations );
+	public abstract void writeAnnotation( AnnotationData annotation );
 	
 	/*
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract List<AnnotationBin<T>> readAnnotations( T start, T stop, int level );	
+	public abstract List<AnnotationData> readAnnotations( List<TileIndex> tiles );	
 	
 	/*
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public abstract void removeAnnotation( T annotation );
-	public abstract void removeAnnotations( List<T> annotations );
+	public abstract void removeAnnotation( AnnotationData annotation );
+
+	
 }

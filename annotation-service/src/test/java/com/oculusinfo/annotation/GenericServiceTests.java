@@ -24,11 +24,13 @@
 package com.oculusinfo.annotation;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.annotation.query.*;
+import com.oculusinfo.binning.*;
+import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.rest.*;
 
 
@@ -36,37 +38,39 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
 	
 	protected static final int BLOCK_SIZE = 250;
 
-	protected AnnotationService<T> _service;	
-	protected List<T> _annotations;
-	protected T _start;
-	protected T _stop;
+	protected AnnotationService    _service;	
+	protected List<AnnotationData> _annotations;
 
-	public abstract void setMaxStartStop( int level );	
-	public abstract void setRandomStartStop();
+	//public abstract void setMaxStartStop( int level );	
+	//public abstract void setRandomStartStop();
 	
 
-	private void scanTests() {
+	private List<AnnotationData> readAll() {
 		
+		List<TileIndex> tiles = new ArrayList<>();
+		tiles.add( new TileIndex( 0, 0, 0 ) );
+		 
 		// scan all
-    	setMaxStartStop( 0 );
-    	System.out.println("Scanning ALL annotations");
+    	//setMaxStartStop( 0 );
+    	System.out.println("Reading ALL annotations");
     	long start = System.currentTimeMillis();
-    	List<AnnotationBin<T>> scan = _service.readAnnotations( _start, _stop, 0 );
+    	List<AnnotationData> scan = _service.readAnnotations( tiles );
     	long end = System.currentTimeMillis();
     	double time = ((end-start)/1000.0);
 		System.out.println( "\t" + scan.size() + " entries scanned in " + time + " seconds");
-		
+		printData( scan );
+		return scan;
+		/*
 		System.out.println("Scanning random bounding boxes" );
-		for (int i=0; i<NUM_TESTS; i++) {
-			int level = (int)(Math.random() * 18);
-			
-			setMaxStartStop( level );		
+		for (int i=0; i<20; i++) {
+			setMaxStartStop( i );		
 	    	start = System.currentTimeMillis();
-	    	scan = _service.readAnnotations( _start, _stop, level );
+	    	scan = _service.readAnnotations( _start, _stop, i );
 	    	end = System.currentTimeMillis();
 			time = ((end-start)/1000.0);
-			System.out.println( "\t" + scan.size() + " entries scanned in at level " + level + " in " + time + " seconds");
-		}	
+			System.out.println( "\t" + scan.size() + " entries scanned in at level " + i + " in " + time + " seconds");
+		}
+		*/
 	}
 	
 	
@@ -83,14 +87,14 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	double time;
     	double timeSum = 0;
     	
-    	int INDIVIDUAL_NUM_ENTRIES = NUM_ENTRIES / 100;
+    	int INDIVIDUAL_NUM_ENTRIES = NUM_ENTRIES;
     	int BATCH_SIZE = INDIVIDUAL_NUM_ENTRIES / 10;
     	
     	_annotations = _annotations.subList(0, INDIVIDUAL_NUM_ENTRIES);
     	
     	System.out.println("Writing " + INDIVIDUAL_NUM_ENTRIES + " annotations");
     	start = System.currentTimeMillis();
-    	for (T annotation : _annotations ) {
+    	for (AnnotationData annotation : _annotations ) {
     		_service.writeAnnotation( annotation );
     		count++;
     		if (count % BATCH_SIZE == 0) {
@@ -104,14 +108,14 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	System.out.println( "Average write time is " + timeSum / INDIVIDUAL_NUM_ENTRIES + " seconds");
 
     	// scan all
-    	scanTests();		
+    	readAll();		
 		
     	// remove annotations
     	System.out.println("Removing " + INDIVIDUAL_NUM_ENTRIES + " annotations");
     	count = 0;
     	timeSum = 0;
     	start = System.currentTimeMillis();
-    	for (T annotation : _annotations ) {
+    	for (AnnotationData annotation : _annotations ) {
     		_service.removeAnnotation( annotation );
     		count++;
     		if (count % BATCH_SIZE == 0) {
@@ -125,13 +129,13 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	System.out.println( "Average remove time is " + timeSum / INDIVIDUAL_NUM_ENTRIES + " seconds");
 
     	// ensure everything was removed
-    	List<AnnotationBin<T>> scan = _service.readAnnotations( _start, _stop, 0 );
-    	print( scan );
+    	List<AnnotationData> scan = readAll();
+    	printData( scan );
     	Assert.assertTrue( scan.size() == 0 );
     }
     
-    
-    @Test
+    /*
+    //@Test
     public void testBatchService() {
 
     	System.out.println("\n*************************************************");
@@ -184,6 +188,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	System.out.println("Writing " + NUM_ENTRIES + " annotations");
     	start = System.currentTimeMillis();
     	for(int i=0; i<NUM_ENTRIES; i+=BLOCK_SIZE) {
+    		
     		List<T> block = _annotations.subList(i, i+BLOCK_SIZE);
     		_service.writeAnnotations( block );
 			end = System.currentTimeMillis();
@@ -219,6 +224,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	
     	Assert.assertTrue( scan.size() == 0 );
     }
+    */
 
 	
 }

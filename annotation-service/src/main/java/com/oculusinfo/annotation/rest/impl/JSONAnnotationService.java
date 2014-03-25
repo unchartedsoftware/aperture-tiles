@@ -31,36 +31,43 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ListIterator;
 
+import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.query.*;
 import com.oculusinfo.annotation.index.impl.*;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.impl.*;
 
-public class LinkedTileAnnotationService implements AnnotationService<JSONObject> {
+public class JSONAnnotationService implements AnnotationService {
 	
 	private static final String TABLE_NAME = "AnnotationTable";
 	
 	private AnnotationIO _io;
-    private AnnotationIndexer<JSONObject> _indexer;
-    private AnnotationIndexer<JSONObject> _dataIndexer; 
-    private AnnotationSerializer<JSONObject> _serializer;
-
+    private AnnotationSerializer<AnnotationTile> _tileSerializer;
+    private AnnotationSerializer<AnnotationData> _dataSerializer; 
+    private AnnotationIndexer<TileAndBinIndices> _indexer;
+    private TilePyramid _pyramid;
     
-	public LinkedTileAnnotationService() {
+    
+	public JSONAnnotationService() {
 		
-		_indexer = new TiledAnnotationIndexer();
-		_dataIndexer = new FlatAnnotationIndexer();
-		_serializer = new TestJSONSerializer();
+		_tileSerializer = new JSONTileSerializer();
+		_dataSerializer = new JSONDataSerializer();
+		
+		_pyramid = new WebMercatorTilePyramid();		
+		_indexer = new TileAnnotationIndexer( _pyramid );
 		
 		try {
 			_io = new HBaseAnnotationIO("hadoop-s1.oculus.local",
@@ -73,31 +80,23 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 		((HBaseAnnotationIO)_io).dropTable( TABLE_NAME );
 	}
 
-	
-	private AnnotationBin<JSONObject> getDataBin( JSONObject data ){
-		AnnotationIndex dataIndex = new AnnotationIndex( -_dataIndexer.getIndex( data, 0 ).getValue() -1 );
-		return new AnnotationBin<JSONObject>( dataIndex, data );	
-	}
-	
-	
-	private JSONObject getDataReference( AnnotationIndex index ) {
-		
-		try {
-			JSONObject dataReference = new JSONObject();
-			dataReference.put("key", index.getValue() );
-			return dataReference;
-		} catch (Exception e) { 
-			e.printStackTrace(); 
+
+	private int indexOf( List<AnnotationTile> tiles, TileIndex index ) {
+		int i = 0;
+		for ( AnnotationTile tile : tiles ) {
+			if (tile.getIndex().equals( index )) {
+				return i;
+			}
+			i++;
 		}
-		return null;
+		return -1;
 	}
-	
 	/*
 	 * Write an annotation to the storage service
 	 * 
 	 */
 	@Override
-	public void writeAnnotation( JSONObject annotation ) {
+	public void writeAnnotation( AnnotationData annotation ) {
 		
 		try {
 			
@@ -105,47 +104,40 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 			_io.initializeForWrite( TABLE_NAME );
 			
 			// get list of the indices for all levels
-			List<AnnotationIndex> indices = _indexer.getIndices( annotation );
-		
-			// get index of data, create entry for data			
-			AnnotationBin<JSONObject> dataObject = getDataBin( annotation );
-			
-			// create reference object
-			JSONObject dataReference = getDataReference( dataObject.getIndex() );
-
-			_io.initializeForRead( TABLE_NAME );
-			
+	    	List<TileAndBinIndices> indices = _indexer.getIndices( annotation );
+	    	
 			// read all these bins into memory
-			List<AnnotationBin<JSONObject>> bins = _io.readAnnotations( TABLE_NAME, _serializer, indices );
+			_io.initializeForRead( TABLE_NAME );
+			List<AnnotationTile> tiles = _io.readTiles( TABLE_NAME, _tileSerializer, convert( indices ) );
 						
-			for ( AnnotationIndex index : indices ) {
-				 int i = bins.indexOf( index );
+			for ( TileAndBinIndices index : indices ) {
+				
+				 int i = indexOf( tiles, index.getTile() );
 				 
 				 if ( i != -1) {
-					 // bin exists, add data to it
-					 bins.get(i).add( dataReference );
-
+					 // tile exists, add data to it
+					 tiles.get(i).add( index.getBin(), annotation );
 				 } else {
-					 // bin does not exist, create					 					 					 
-					 bins.add( new AnnotationBin<JSONObject>( index, dataReference ) );
+					 // tile does not exist, create	it
+					 tiles.add( new AnnotationTile( index.getTile(), new AnnotationBin( index.getBin(), annotation ) ) );
 				 }
 			}
-			
-			// write bins back to io
-			_io.writeAnnotations( TABLE_NAME, _serializer, bins );
-			
-			List<AnnotationBin<JSONObject>> dataEntry = new LinkedList<AnnotationBin<JSONObject>>();
-			dataEntry.add( dataObject );
-			
+					
+			// write tiles back to io
+			_io.writeTiles( TABLE_NAME, _tileSerializer, tiles );
+
 			// write data to io
-			_io.writeAnnotations( TABLE_NAME, _serializer, dataEntry );
+			List<AnnotationData> data = new LinkedList<>();
+			data.add( annotation );
+			_io.writeData( TABLE_NAME, _dataSerializer, data );
 			
 		} catch (Exception e) { 
 			e.printStackTrace(); 
 		}
 	}
 	
-	public void writeAnnotations( List<JSONObject> annotations ) {
+	/*
+	public void writeAnnotations( List<T> annotations ) {
 	
 		try {
 			
@@ -153,22 +145,22 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 			_io.initializeForWrite( TABLE_NAME );
 						
 			// get index of data, create entry for data			
-			List<AnnotationBin<JSONObject>> dataObjects = new LinkedList<AnnotationBin<JSONObject>>();
-			List<JSONObject> dataReferences = new LinkedList<JSONObject>();
+			List<AnnotationBin<T>> dataObjects = new LinkedList<AnnotationBin<T>>();
+			List<T> dataReferences = new LinkedList<T>();
 			
 			// get all affected bin indices, no duplicates
 			Set<AnnotationIndex> allIndices = new LinkedHashSet<>();
 			
 			// find mapping from annotation data to bin index
-			Map<JSONObject, List<AnnotationIndex>> indexMap = new HashMap<>();
+			Map<T, List<AnnotationIndex>> indexMap = new HashMap<>();
 			
-			for (JSONObject annotation : annotations) {
+			for (T annotation : annotations) {
 				// get list of the indices for all levels
 				List<AnnotationIndex> indices = _indexer.getIndices( annotation );
 				
-				AnnotationBin<JSONObject> dataObject =  getDataBin( annotation );
+				AnnotationBin<T> dataObject =  getDataBin( annotation );
 				dataObjects.add( dataObject );
-				JSONObject dataReference = getDataReference( dataObject.getIndex() );
+				T dataReference = getDataReference( dataObject.getIndex() );
 				dataReferences.add( dataReference );
 				
 				allIndices.addAll( indices );
@@ -176,10 +168,11 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 			}
 			
 			// read all these bins into memory
-			List<AnnotationBin<JSONObject>> bins = _io.readAnnotations( TABLE_NAME, _serializer, new ArrayList<>( allIndices ) );
+			_io.initializeForRead( TABLE_NAME );
+			List<AnnotationBin<T>> bins = _io.readAnnotations( TABLE_NAME, _serializer, new ArrayList<>( allIndices ) );
 						
-			for (Map.Entry<JSONObject, List<AnnotationIndex>> entry : indexMap.entrySet()) {
-				JSONObject dataReference = entry.getKey();
+			for (Map.Entry<T, List<AnnotationIndex>> entry : indexMap.entrySet()) {
+				T dataReference = entry.getKey();
 				List<AnnotationIndex> indices = entry.getValue();
 
 				// for all bins that this data node will be written into
@@ -192,7 +185,7 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 						 bins.get(j).add( dataReference );
 					 } else {
 						 // bin does not exist, create
-						 bins.add( new AnnotationBin<JSONObject>( index, dataReference ) );
+						 bins.add( new AnnotationBin<T>( index, dataReference ) );
 					 }
 				}
 			}
@@ -207,42 +200,93 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 			e.printStackTrace(); 
 		}
 	}
+	*/
 	
+	
+	private List<TileIndex> convert( List<TileAndBinIndices> tiles ) {
+				
+		List<TileIndex> indices = new ArrayList<>();
+		for ( TileAndBinIndices tile : tiles ) {			
+			indices.add( tile.getTile() );
+		}
+		
+		return indices;
+	}
+	
+	private List<TileIndex> addUnivariateIndices( List<TileIndex> tiles ) {		
+		
+		Map<String, Boolean> rangeCheck = new HashMap<>();
+		
+		ListIterator<TileIndex> iter = tiles.listIterator();
+		
+		while( iter.hasNext() ) {
+			
+			TileIndex tile = iter.next();
+			
+			if ( !rangeCheck.containsKey( "x"+tile.getX() ) ) {
+				System.out.println( "x"+tile.getX());
+				rangeCheck.put( "x"+tile.getX(),  true );
+				iter.add( new TileIndex( tile.getLevel(), tile.getX(), -1) );
+			}
+			
+			if ( !rangeCheck.containsKey( "y"+tile.getY() ) ) {
+				System.out.println( "y"+tile.getY());
+				rangeCheck.put( "y"+tile.getY(),  true );
+				iter.add(  new TileIndex( tile.getLevel(), -1, tile.getY()) );
+			}
+		}
+
+		return tiles;
+	}
 	
 	/*
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public List<AnnotationBin<JSONObject>> readAnnotations( JSONObject start, JSONObject stop, int level ) {
-		
-		int MAX_ENTRIES_PER_BIN = 0;
-		
-		AnnotationIndex to = _indexer.getIndex( start, level );
-		AnnotationIndex from = _indexer.getIndex( stop, level );
+	public List<AnnotationData> readAnnotations( List<TileIndex> query ) {
 		
 		try {		
 			
+			List<TileIndex> indices = addUnivariateIndices( query );
+			
 			// read all bins in range
 			_io.initializeForRead( TABLE_NAME );
-			List<AnnotationBin<JSONObject>> bins = _io.readAnnotations( TABLE_NAME, _serializer, to, from );
+			List<AnnotationTile> tiles = _io.readTiles( TABLE_NAME, _tileSerializer, indices );
 			
 			// for each bin, read in all data entries
-			List<AnnotationBin<JSONObject>> results = new LinkedList<AnnotationBin<JSONObject>>();			
-			for (AnnotationBin<JSONObject> bin : bins) {
-				
-				List<AnnotationIndex> indices = new LinkedList<AnnotationIndex>();
-				for (int i=0; i<MAX_ENTRIES_PER_BIN && i<bin.getData().size(); i++) {
-					indices.add( new AnnotationIndex( bin.getData().get(i).getLong("key") ) );
+			List<AnnotationData> results = new LinkedList<>();
+			
+			// for each tile
+			for ( AnnotationTile tile : tiles ) {
+								
+				// for each bin
+				for (Map.Entry<BinIndex, AnnotationBin> binEntry : tile.getBins().entrySet() ) {
+					
+					BinIndex binKey = binEntry.getKey();
+					AnnotationBin bin = binEntry.getValue();
+					
+					List<Long> dataReferences = new LinkedList<>();
+					
+					// for each reference
+					for (Map.Entry<String, List<Long>> referenceEntry : bin.getReferences().entrySet() ) {
+				    	
+				    	String priority = referenceEntry.getKey();
+				    	List<Long> references = referenceEntry.getValue();
+				    	dataReferences.addAll( references );
+				    	
+					}
+					
+					results.addAll( _io.readData( TABLE_NAME, _dataSerializer, dataReferences ) );				
+					
 				}
-				results.addAll( _io.readAnnotations( TABLE_NAME, _serializer, indices ) );
 				
+				//System.out.println( "\t\t" + results.size() + " total data entries, read from " + tile.getBins().size() + " bins" );
 			}
-			//System.out.println( results.size() + " total data entries read from " + bins.size() + " bins" );
 			
 			return results;
 			
 		} catch (Exception e) { 
-			System.out.println( e.getMessage() );
+			e.printStackTrace();
 		}		
 		return null;
 		
@@ -253,47 +297,43 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public void removeAnnotation( JSONObject annotation ) {
+	public void removeAnnotation( AnnotationData annotation ) {
 		
 		try {
 			// get list of the indices for all levels
-			List<AnnotationIndex> indices = _indexer.getIndices( annotation );
-			
-			// get index of data, create entry for data
-			AnnotationIndex dataIndex = getDataBin( annotation ).getIndex(); 
-			
-			// create reference object
-			JSONObject dataReference = getDataReference( dataIndex );
-						
+	    	List<TileAndBinIndices> indices = _indexer.getIndices( annotation );	    	
+	
 			// maintain lists of what bins to modify and what bins to remove
-			List<AnnotationBin<JSONObject>> toWrite = new LinkedList<AnnotationBin<JSONObject>>();
-			List<AnnotationIndex> toRemove = new LinkedList<AnnotationIndex>();
-			toRemove.add( dataIndex ); // remove data entry
+			List<AnnotationTile> tilesToWrite = new LinkedList<>();
+			List<AnnotationTile> tilesToRemove = new LinkedList<>();
+			List<AnnotationData> dataToRemove = new LinkedList<>();
+			dataToRemove.add( annotation ); // remove data entry
 			
 			// read existing bins
 			_io.initializeForRead( TABLE_NAME );
-			List<AnnotationBin<JSONObject>> annotations = _io.readAnnotations( TABLE_NAME, _serializer, indices );		
+			List<AnnotationTile> tiles = _io.readTiles( TABLE_NAME, _tileSerializer, convert( indices ) );		
 
-			for (AnnotationBin<JSONObject> existing : annotations) {
-				if ( existing.remove( dataReference ) ) {
+			for ( AnnotationTile tile : tiles ) {
+				if ( tile.remove( annotation ) ) {
 					// if successfully removed data from this bin, flag to write change
-					toWrite.add( existing );
+					tilesToWrite.add( tile );
 				}
-				if ( existing.getData().size() == 0 ) {
+				if ( tile.getBins().size() == 0 ) {
 					// if no data left, flag bin for removal
-					toRemove.add( existing.getIndex() );
+					tilesToRemove.add( tile );
 					// no longer have to write this bin back
-					toWrite.remove( existing );
+					tilesToWrite.remove( tile );
 				}
 			}	
 			
 			// write modified bins
 			_io.initializeForWrite( TABLE_NAME );
-			_io.writeAnnotations( TABLE_NAME, _serializer, toWrite );
+			_io.writeTiles( TABLE_NAME, _tileSerializer, tilesToWrite );
 			
 			// remove empty bins
 			_io.initializeForRemove( TABLE_NAME );
-			_io.removeAnnotations( TABLE_NAME, toRemove );
+			_io.removeTiles( TABLE_NAME, tilesToRemove );
+			_io.removeData( TABLE_NAME, dataToRemove );
 			
 		} catch (Exception e) { 
 			e.printStackTrace(); 
@@ -305,26 +345,23 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public void removeAnnotations( List<JSONObject> annotations ) {
+	/*
+	public void removeAnnotations( List<T> annotations ) {
 		
 		try {
-
-
-			//TODO: also remember to look into nested loop structure
-			
 			// initialise for write
 			_io.initializeForWrite( TABLE_NAME );
 			
 			// maintain lists of what bins to modify and what bins to remove
-			Set<AnnotationBin<JSONObject>> toWrite = new LinkedHashSet<AnnotationBin<JSONObject>>();
+			Set<AnnotationBin<T>> toWrite = new LinkedHashSet<AnnotationBin<T>>();
 			Set<AnnotationIndex> toRemove = new LinkedHashSet<AnnotationIndex>();
 			
 			// get all affected bin indices, no duplicates
 			Set<AnnotationIndex> allIndices = new LinkedHashSet<>();
 			// find mapping from annotation data to bin index
-			Map<JSONObject, List<AnnotationIndex>> indexMap = new HashMap<>();
+			Map<T, List<AnnotationIndex>> indexMap = new HashMap<>();
 			
-			for (JSONObject annotation : annotations) {
+			for (T annotation : annotations) {
 				
 				// get list of the indices for all levels
 				List<AnnotationIndex> indices = _indexer.getIndices( annotation );
@@ -332,7 +369,7 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 				
 				// get data index and reference
 				AnnotationIndex dataIndex =  getDataBin( annotation ).getIndex();
-				JSONObject dataReference = getDataReference( dataIndex );
+				T dataReference = getDataReference( dataIndex );
 				
 				// flag data index for removal
 				toRemove.add( dataIndex );
@@ -341,10 +378,10 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 			}
 
 			// read all these bins into memory
-			List<AnnotationBin<JSONObject>> bins = _io.readAnnotations( TABLE_NAME, _serializer, new ArrayList<>( allIndices ) );
+			List<AnnotationBin<T>> bins = _io.readAnnotations( TABLE_NAME, _serializer, new ArrayList<>( allIndices ) );
 			
-			for (Map.Entry<JSONObject, List<AnnotationIndex>> entry : indexMap.entrySet()) {
-				JSONObject dataReference = entry.getKey();
+			for (Map.Entry<T, List<AnnotationIndex>> entry : indexMap.entrySet()) {
+				T dataReference = entry.getKey();
 				List<AnnotationIndex> indices = entry.getValue();
 
 				// for all bins that this data node will be written into
@@ -354,7 +391,7 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 					
 					if ( j != -1) {					 
 						// bin exists
-						AnnotationBin<JSONObject> bin = bins.get(j);
+						AnnotationBin<T> bin = bins.get(j);
 						// remove data entry from bin
 						if ( bin.remove( dataReference ) ) {
 							// if successfully removed data from this bin, flag to write change
@@ -383,4 +420,5 @@ public class LinkedTileAnnotationService implements AnnotationService<JSONObject
 			e.printStackTrace();  
 		}
 	}
+	*/
 }

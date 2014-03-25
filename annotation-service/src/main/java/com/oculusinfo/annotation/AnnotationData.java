@@ -21,78 +21,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.index;
+package com.oculusinfo.annotation;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
-import com.oculusinfo.annotation.query.*;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 
-public class AnnotationIndex implements Serializable {
+import org.json.JSONObject;
+
+import com.oculusinfo.binning.BinIndex;
+
+public abstract class AnnotationData implements Serializable {
+    
+	private static final long serialVersionUID = 1L;
 	
-    private static final long serialVersionUID = 2L;
+	public abstract Double getX();
+	public abstract Double getY();
+	public abstract String getPriority();
+	public abstract <T> T getData();
+	public abstract Long getIndex();
 
-    private long _index;
-    
-    
-    public AnnotationIndex ( long index ) {
-    	_index = index;
-    }
-
-    
-    public long getValue() {
-    	return _index;
-    }
-
-    
-    public final byte[] getBytes() {
-    	
-    	/*
-    	try {
-	    	ByteArrayOutputStream b = new ByteArrayOutputStream();
-	        ObjectOutputStream o = new ObjectOutputStream( b );
-	        o.writeObject(_index);
-	        return b.toByteArray();
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
-    	return new byte[0];
-    	*/
-        ByteBuffer buf = ByteBuffer.allocate(8);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.putLong(_index);
-        byte [] bytes = buf.array();
-        return bytes;
-    }
-    
-    @Override
+	@Override
     public int hashCode () {
-    	/*
-    	byte [] bytes = getBytes();
-        int value = 0;
-        for (int i = 0; i < 4; i++) {
-            int shift = (4 - 1 - i) * 8;
-            value += (bytes[i] & 0x000000FF) << shift;
-        }
-        return value;
-    	*/
-    	return (int)_index;
+    	return getIndex().intValue();
     }
 
     @Override
-    public boolean equals (Object that) {
+    public boolean equals (Object that) {   	    	
     	if (that != null)
     	{
-    		if (that instanceof AnnotationBin) {
-    			return _index == ((AnnotationBin)that).getIndex().getValue();
-    		} else if (that instanceof AnnotationIndex) {
-    			return _index == ((AnnotationIndex)that)._index;
+    		if (that instanceof AnnotationData) {
+    			AnnotationData o = (AnnotationData)that;
+    			return getIndex().equals( o.getIndex() ) &&
+    				   getX() == o.getX() &&
+    				   getY() == o.getY() &&
+    				   getData().equals( o.getData() );
     		}    		
     	}	
     	return false;
     }
-    
 }

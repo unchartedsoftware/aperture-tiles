@@ -21,45 +21,47 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.index;
+package com.oculusinfo.annotation.index.impl;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import com.oculusinfo.binning.*;
+import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.*;
+import com.oculusinfo.binning.*;
 
-public abstract class AnnotationIndexer<T> {
+public class TileAnnotationIndexer extends AnnotationIndexer<TileAndBinIndices> {
 
-	protected static final String TABLE_NAME = "AnnotationTable";
-	
-	/*
-	protected static final long BITS[] = { 0x5555555555555555L, 
-										   0x3333333333333333L, 
-										   0x0F0F0F0F0F0F0F0FL,
-										   0x00FF00FF00FF00FFL, 
-										   0x0000FFFF0000FFFFL,
-										   0x00000000FFFFFFFFL};
-    protected static final long SHIFTS[] = { 1, 2, 4, 8, 16 };	
-    */
-    //protected static final int BINS = 8;
-    //protected static final int BINS_EXP = (int)(Math.log(BINS) / Math.log(2));
-    protected static final int LEVELS = 20;
-    
-    protected TilePyramid _pyramid;
-    
-    public AnnotationIndexer() {
+
+    public TileAnnotationIndexer( TilePyramid pyramid ) {
+    	_pyramid = pyramid;
     }
     
-    public List<T> getIndices( AnnotationData data ) {
-    	List<T> indices = new LinkedList<>();		
-		for (int i=0; i<LEVELS; i++) {
-			indices.add( getIndex( data, i ) );
+
+    @Override
+    public TileAndBinIndices getIndex( AnnotationData data, int level ) {
+    	
+    	// fill in defaults if dimensions are missing
+    	boolean xExists = data.getX() != null;
+    	boolean yExists = data.getY() != null;
+    	double x = ( xExists ) ? data.getX() : 0;
+    	double y = ( yExists ) ? data.getY() : 0;
+    	
+    	// map from raw x and y to tile and bin
+    	TileIndex tile = _pyramid.rootToTile( x, y, level, AnnotationTile.NUM_BINS );
+		BinIndex bin = _pyramid.rootToBin( x, y, tile );
+				
+		if ( xExists && yExists ) {
+			return new TileAndBinIndices( tile, bin );
+		} else if ( !xExists ) {
+			return new TileAndBinIndices( new TileIndex( tile.getLevel(), -1, tile.getY(), AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS ), 
+										  new BinIndex( -1, bin.getY() ) );
+		} else {
+			return new TileAndBinIndices( new TileIndex( tile.getLevel(), tile.getX(), -1, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS ), 
+					  					  new BinIndex( bin.getX(), -1 ) );
 		}
-		return indices;
+
     }
-    
-    public abstract T getIndex( AnnotationData data, int level );
 
     
 }

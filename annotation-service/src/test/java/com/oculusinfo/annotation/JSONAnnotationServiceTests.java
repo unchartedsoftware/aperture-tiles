@@ -36,73 +36,19 @@ import org.junit.Test;
 import org.junit.After;
 import org.junit.Before;
 
-import com.oculusinfo.annotation.query.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.annotation.rest.impl.*;
 
 
-public class TiledServiceTests extends GenericServiceTests<JSONObject> {
+public class JSONAnnotationServiceTests extends GenericServiceTests<JSONObject> {
 	
 	static final boolean VERBOSE = true;
-	
-	public void setMaxStartStop( int level ) {
-		_start = new JSONObject();
-		_stop = new JSONObject();
-		
-		int numTiles = (int)Math.pow(2, level);		
-		int maxTiles = ( numTiles > 5 )? 5 : numTiles;
-
-		// range covered per tile
-		double xRange = ( BOUNDS[2] - BOUNDS[0] )/numTiles;
-		double yRange = ( BOUNDS[3] - BOUNDS[1] )/numTiles;
-		
-		try {
-			_start.put("x", BOUNDS[0] );
-			_start.put("y", BOUNDS[1] );
-			
-			_stop.put("x",  BOUNDS[0] + xRange * maxTiles );
-			_stop.put("y",  BOUNDS[1] + yRange * maxTiles );
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}	
-	}
-	
-	
-	public void setRandomStartStop() {
-		
-		final Random rand = new Random();
-		
-		double x0 = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
-		double y0 = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
-		double x1 = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
-		double y1 = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
-		
-		double xMax = Math.max( x0, x1);
-		double xMin = Math.min( x0, x1 );
-		double yMax = Math.max( y0, y1 );		
-		double yMin = Math.min( y0, y1 );	
-		
-		_start = new JSONObject();
-		_stop = new JSONObject();
-		
-		try {
-			_start.put("x", xMin );
-			_start.put("y", yMin );
-			
-			_stop.put("x", xMax );
-			_stop.put("y", yMax );
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}	
-	}
 	
     @Before
     public void setup () {
     	
-    	_service = new TiledAnnotationService();
-    	_annotations = generateJSONs( NUM_ENTRIES );
+    	_service = new JSONAnnotationService();
+    	_annotations = generateJSONAnnotations( NUM_ENTRIES );
 
     }
 

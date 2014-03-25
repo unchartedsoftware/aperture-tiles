@@ -39,7 +39,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.query.*;
+import com.oculusinfo.binning.*;
 
 public abstract class GenericJSONSerializer<T> implements AnnotationSerializer<T> {
 	
@@ -49,6 +49,7 @@ public abstract class GenericJSONSerializer<T> implements AnnotationSerializer<T
 	abstract protected JSONObject translateToJSON (T value);
 
 	protected GenericJSONSerializer () {
+
 	}
 
 	public String getFileExtension(){
@@ -56,25 +57,15 @@ public abstract class GenericJSONSerializer<T> implements AnnotationSerializer<T
 	}
 
 	@Override
-	public AnnotationBin<T> deserialize (InputStream rawData){
+	public T deserialize (InputStream rawData){
 
 		String jsonString = convertStreamToString(rawData);
 		
-		try {			
-			JSONObject json = new JSONObject( jsonString );
+		try {	
 			
-			// get index
-			AnnotationIndex index = new AnnotationIndex( json.getLong("index") );
-			
-			// get data array
-			JSONArray data = json.getJSONArray("data");
+			JSONObject json = new JSONObject( jsonString );		
+			return getValue( json );
 
-			List<T> values = new ArrayList<T>();
-			for (int i = 0; i < data.length(); i++) {
-				values.add( getValue( data.getJSONObject(i) ) );
-			} 
-			return new AnnotationBin<T>( index, values );
-			
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -98,32 +89,17 @@ public abstract class GenericJSONSerializer<T> implements AnnotationSerializer<T
 	}
 
 	@Override
-	public void serialize (AnnotationBin<T> annotation, OutputStream stream) throws IOException {
+	public void serialize (T data, OutputStream stream) throws IOException {
 
 		try {
-			
-			JSONObject jsonEntry = new JSONObject();
-
-			// index
-			jsonEntry.put("index", annotation.getIndex().getValue());
-			
-			// count
-			jsonEntry.put("count", annotation.getData().size());
-			
-			// data array
-			
-			JSONArray data = new JSONArray();
-			for ( T value: annotation.getData() ) {
-
-				data.put( translateToJSON( value ) );
-			}
-			jsonEntry.put("data", data);
+			  
+			JSONObject jsonEntry = translateToJSON( data );
 
 			OutputStreamWriter writer = new OutputStreamWriter(stream, "UTF-8");
 			writer.write(jsonEntry.toString());
 			writer.close();
 			
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

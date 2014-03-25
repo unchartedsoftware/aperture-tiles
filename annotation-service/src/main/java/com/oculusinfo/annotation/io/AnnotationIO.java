@@ -27,13 +27,11 @@ package com.oculusinfo.annotation.io;
 import java.io.IOException;
 import java.util.List;
 
-
-
-
-import com.oculusinfo.annotation.query.*;
-import com.oculusinfo.annotation.index.*;
+import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.serialization.*;
+import com.oculusinfo.binning.*;
 
+import org.json.JSONObject;
 
 public interface AnnotationIO {
    
@@ -41,31 +39,34 @@ public interface AnnotationIO {
 	 * Write
 	 */
     public void initializeForWrite (String id) throws IOException;
-    public <T> void writeAnnotations (String tableName, 
-    							      AnnotationSerializer<T> serializer, 
-    							      List<AnnotationBin<T>> annotations ) throws IOException;
-    public void writeMetaData (String tableName, String metaData) throws IOException;;
+    public void writeTiles (String tableName, 
+    				        AnnotationSerializer<AnnotationTile> serializer, 
+    				        List<AnnotationTile> tiles ) throws IOException;
+    public void writeData (String tableName, 
+					       AnnotationSerializer<AnnotationData> serializer, 
+					       List<AnnotationData> data ) throws IOException;
+    //public void writeMetaData (String tableName, String metaData) throws IOException;;
    
     /*
      * Read
      */
-    public void initializeForRead (String id) throws IOException; 
-    public <T> List<AnnotationBin<T>> readAnnotations (String tableName, 
-		    									       AnnotationSerializer<T> serializer,
-		    										   List<AnnotationIndex> annotations) throws IOException;
-    public <T> List<AnnotationBin<T>> readAnnotations (String tableName, 
-												       AnnotationSerializer<T> serializer,
-													   AnnotationIndex from,
-													   AnnotationIndex to) throws IOException;
-
-    public String readMetaData (String id) throws IOException;
+    public void initializeForRead (String id) throws IOException;    
+    public List<AnnotationTile> readTiles (String tableName, 
+						    			    AnnotationSerializer<AnnotationTile> serializer,
+						    			    List<TileIndex> indices) throws IOException;  
+    public List<AnnotationData> readData (String tableName, 
+								          AnnotationSerializer<AnnotationData> serializer,
+								          List<Long> indices) throws IOException;
+    //public String readMetaData (String id) throws IOException;
        
     /*
      * Delete
      */
     public void initializeForRemove (String id) throws IOException;
-    public void removeAnnotations (String tableName, 
-    							   List<AnnotationIndex> annotations ) throws IOException;
-    public void removeMetaData (String tableName, String metaData) throws IOException;
+    public void removeTiles (String tableName, 
+			   				 List<AnnotationTile> tiles ) throws IOException;
+    public void removeData (String tableName, 
+   							List<AnnotationData> data ) throws IOException;
+    //public void removeMetaData (String tableName, String metaData) throws IOException;
        
 }

@@ -29,12 +29,11 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.query.*;
 
 
 public interface AnnotationSerializer<T> extends Serializable {
 	
-    public AnnotationBin<T> deserialize ( InputStream rawData) throws IOException;
-
-    public void serialize (AnnotationBin<T> annotation, OutputStream ouput) throws IOException;
+    public T deserialize ( InputStream rawData ) throws IOException;
+    public void serialize (T annotation, OutputStream ouput) throws IOException;
+    
 }

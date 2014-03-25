@@ -42,21 +42,25 @@ import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
-import com.oculusinfo.annotation.query.*;
+import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.impl.*;
+import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
 	private static final String  TABLE_NAME = "AnnotationTable";
 	private static final boolean VERBOSE = true;
 
-	private AnnotationIO _io;
-	private AnnotationIndexer<JSONObject> _indexer;
-	private AnnotationSerializer<JSONObject> _serializer;
-    
-	private List<AnnotationBin<JSONObject>> _annotations;
-	private AnnotationIndex _start;
-	private AnnotationIndex _stop;
 	
+	
+	private AnnotationIO _io;
+	private AnnotationIndexer<TileAndBinIndices> _indexer;
+	private AnnotationSerializer<AnnotationTile> _tileSerializer;
+	private AnnotationSerializer<AnnotationData> _dataSerializer;
+	private TilePyramid _pyramid;
+	
+
     @Before
     public void setup () {
     	try {
@@ -70,19 +74,10 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 		} finally {
 		}	
     	
-    	_indexer = new TiledAnnotationIndexer();
-    	_serializer = new TestJSONSerializer(); 
-    	
-    	_annotations = generateJSONAnnotations( NUM_ENTRIES, _indexer );
-    	
-        _start = generateJSONAnnotation( _indexer ).getIndex();
-    	_stop = generateJSONAnnotation( _indexer ).getIndex();
-    	
-    	if ( _stop.getValue() < _start.getValue() ) {
-    		AnnotationIndex temp = _start;
-    		_start = _stop;
-    		_stop = temp;
-    	}
+    	_pyramid = new WebMercatorTilePyramid();
+    	_indexer = new TileAnnotationIndexer( _pyramid );
+    	_tileSerializer = new JSONTileSerializer();
+    	_dataSerializer = new JSONDataSerializer();  	
 	
     }
 
@@ -95,6 +90,13 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     @Test
     public void testHBaseIO() {
     	
+    	
+        List<AnnotationData> annotations = generateJSONAnnotations( NUM_ENTRIES );
+        List<AnnotationTile> tiles = generateTiles( NUM_ENTRIES, _indexer );
+    	
+        List<TileIndex> tileIndices = tilesToIndices( tiles );
+        List<Long> dataIndices = dataToIndices( annotations );
+        
     	try {
     		
 	        /*
@@ -107,26 +109,24 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to table");	
-	    	_io.writeAnnotations(TABLE_NAME, _serializer, _annotations );
-	
-	        /*
-	    	 *  Scan range annotations
-	    	 */
-	    	System.out.println( "Scanning table from " + _start.getValue() + " to " + _stop.getValue() );	
-	    	List<AnnotationBin<JSONObject>> scannedEntries = _io.readAnnotations( TABLE_NAME, _serializer, _start, _stop );			
-	        if (VERBOSE) print( scannedEntries );
+	    	_io.writeTiles(TABLE_NAME, _tileSerializer, tiles );
+	    	_io.writeData(TABLE_NAME, _dataSerializer, annotations );
 	        
 	    	/*
-	    	 *  Scan and check all annotations
+	    	 *  Read and check all annotations
 	    	 */
-	    	System.out.println( "Scanning all annotations" );
-	    	List<AnnotationIndex> indices = convertToIndices( _annotations );
-	    	List<AnnotationBin<JSONObject>> allEntries = _io.readAnnotations( TABLE_NAME, _serializer, indices );
+	    	System.out.println( "Reading all annotations" );
+	    	List<AnnotationTile> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
+	    	List<AnnotationData> allData = _io.readData( TABLE_NAME, _dataSerializer, dataIndices );
 
-	    	if (VERBOSE) print( allEntries );
-	    	for ( AnnotationBin<JSONObject> annotation : _annotations ) {
-	    		Assert.assertTrue( allEntries.contains( annotation ) );
-	    		allEntries.remove( annotation );
+	    	if (VERBOSE) printTiles( allTiles );
+	    	if (VERBOSE) printData( allData );
+	    	
+	    	for ( AnnotationTile tile : tiles ) {
+	    		Assert.assertTrue( allTiles.contains( tile ) );
+	    	}
+	    	for ( AnnotationData d : annotations ) {
+	    		Assert.assertTrue( allData.contains( d ) );
 	    	}
 	
     	} catch (Exception e) {
