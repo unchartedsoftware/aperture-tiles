@@ -75,12 +75,12 @@ public class HBaseAnnotationIO implements AnnotationIO {
             this.family = family;
             this.qualifier = qualifier;
         }
-	    public byte[] getFamily    () { return family; }
-	    public byte[] getQualifier () { return qualifier; }
+	    public byte[] getFamily   () { return family; }
+	    public byte[] getQualifier() { return qualifier; }
     }
-   
-    private Configuration       _config;
-    private HBaseAdmin          _admin;
+    
+    private Configuration     _config;
+    private HBaseAdmin        _admin;
 
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
@@ -374,9 +374,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         if (null == existingPut) {
             existingPut = new Put(rowId);
         }
-
         existingPut.add(column.family, column.qualifier, data);
-
         return existingPut;
     }
 
@@ -443,39 +441,31 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     
     private void deleteRows (String tableName, List<byte[]> rows, HBaseColumn... columns) throws IOException {
-        HTable table = getTable(tableName);
-
+        
+    	HTable table = getTable(tableName);
         List<Delete> deletes = new LinkedList<Delete>();
         for (byte[] rowId: rows) {
         	Delete delete = new Delete(rowId);
-        	/*
-            for (HBaseColumn column: columns) {
-            	delete.deleteColumn(column.family, column.qualifier);
-            }*/
             deletes.add(delete);
         }
-
         table.delete(deletes);
     }
 
      
     private List<Map<HBaseColumn, byte[]>> scanRange(String tableName, byte[] startRow, byte[] stopRow, HBaseColumn... columns) throws IOException {
-        HTable table = getTable(tableName);
-
+        
+    	HTable table = getTable(tableName);
         Scan scan;
-        if ( startRow.length > 0 && stopRow.length > 0) {
-        	
+        if ( startRow.length > 0 && stopRow.length > 0) {      	
         	// add trailing zero for inclusive
         	byte [] trailingZero = {0};
-        	stopRow = ArrayUtils.addAll(stopRow, trailingZero);
-        	
+        	stopRow = ArrayUtils.addAll(stopRow, trailingZero);      	
         	scan = new Scan( startRow, stopRow );
         } else {
         	scan = new Scan();
         }
 	        
-	    ResultScanner rs = table.getScanner(scan);
-	    
+	    ResultScanner rs = table.getScanner(scan);	    
 	    List<Map<HBaseColumn, byte[]>> allResults = new LinkedList<Map<HBaseColumn,byte[]>>();
 
 	    try {
@@ -495,13 +485,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     private <T> List<T> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
     									AnnotationSerializer<T> serializer ) 
-    											    		   	throws IOException {
-    	
+    											    		   	throws IOException {    	
     	List<T> results = new LinkedList<>();
-
-        Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
-
-        
+        Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();       
         while (iData.hasNext()) {
 	        Map<HBaseColumn, byte[]> rawResult = iData.next();
 	        
@@ -513,7 +499,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
                 results.add(data);
             }
         }
-
         return results;
     }
 

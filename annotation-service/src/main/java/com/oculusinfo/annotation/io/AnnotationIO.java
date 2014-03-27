@@ -52,8 +52,8 @@ public interface AnnotationIO {
      */
     public void initializeForRead (String id) throws IOException;    
     public List<AnnotationTile> readTiles (String tableName, 
-						    			    AnnotationSerializer<AnnotationTile> serializer,
-						    			    List<TileIndex> indices) throws IOException;  
+						    			   AnnotationSerializer<AnnotationTile> serializer,
+						    			   List<TileIndex> indices) throws IOException;  
     public List<AnnotationData> readData (String tableName, 
 								          AnnotationSerializer<AnnotationData> serializer,
 								          List<Long> indices) throws IOException;

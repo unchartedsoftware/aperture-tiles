@@ -31,20 +31,7 @@ import com.oculusinfo.annotation.*;
 
 public abstract class AnnotationIndexer<T> {
 
-	protected static final String TABLE_NAME = "AnnotationTable";
-	
-	/*
-	protected static final long BITS[] = { 0x5555555555555555L, 
-										   0x3333333333333333L, 
-										   0x0F0F0F0F0F0F0F0FL,
-										   0x00FF00FF00FF00FFL, 
-										   0x0000FFFF0000FFFFL,
-										   0x00000000FFFFFFFFL};
-    protected static final long SHIFTS[] = { 1, 2, 4, 8, 16 };	
-    */
-    //protected static final int BINS = 8;
-    //protected static final int BINS_EXP = (int)(Math.log(BINS) / Math.log(2));
-    protected static final int LEVELS = 20;
+    protected static final int NUM_LEVELS = 20;
     
     protected TilePyramid _pyramid;
     
@@ -53,7 +40,7 @@ public abstract class AnnotationIndexer<T> {
     
     public List<T> getIndices( AnnotationData data ) {
     	List<T> indices = new LinkedList<>();		
-		for (int i=0; i<LEVELS; i++) {
+		for (int i=0; i<NUM_LEVELS; i++) {
 			indices.add( getIndex( data, i ) );
 		}
 		return indices;

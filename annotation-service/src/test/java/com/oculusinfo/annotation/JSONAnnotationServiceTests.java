@@ -48,7 +48,7 @@ public class JSONAnnotationServiceTests extends GenericServiceTests<JSONObject> 
     public void setup () {
     	
     	_service = new JSONAnnotationService();
-    	_annotations = generateJSONAnnotations( NUM_ENTRIES );
+    	
 
     }
 

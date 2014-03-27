@@ -57,7 +57,6 @@ public class AnnotationTestsBase {
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 
-	
 
 	/*
 	 * Annotation list printing utility function

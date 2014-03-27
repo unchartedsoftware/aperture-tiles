@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class AnnotationSerializationTests extends AnnotationTestsBase {
 	
-	static final boolean VERBOSE = true;
+	static final boolean VERBOSE = false;
 	
 	private AnnotationIndexer<TileAndBinIndices> _indexer;
 	private AnnotationSerializer<AnnotationTile> _tileSerializer;

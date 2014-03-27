@@ -41,38 +41,33 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
 	protected AnnotationService    _service;	
 	protected List<AnnotationData> _annotations;
 
-	//public abstract void setMaxStartStop( int level );	
-	//public abstract void setRandomStartStop();
+	private class TestRunnable implements Runnable {
+		
+		TestRunnable() {
+			
+		}
+		
+		public void run() {
+			
+		}
+		
+	}
 	
-
 	private List<AnnotationData> readAll() {
 		
-		List<TileIndex> tiles = new ArrayList<>();
-		tiles.add( new TileIndex( 0, 0, 0 ) );
+		TileIndex tile = new TileIndex( 0, 0, 0 );
 		 
 		// scan all
-    	//setMaxStartStop( 0 );
     	System.out.println("Reading ALL annotations");
     	long start = System.currentTimeMillis();
-    	List<AnnotationData> scan = _service.readAnnotations( tiles );
+    	List<AnnotationData> scan = _service.readAnnotation( tile );
     	long end = System.currentTimeMillis();
     	double time = ((end-start)/1000.0);
 		System.out.println( "\t" + scan.size() + " entries scanned in " + time + " seconds");
-		printData( scan );
 		return scan;
-		/*
-		System.out.println("Scanning random bounding boxes" );
-		for (int i=0; i<20; i++) {
-			setMaxStartStop( i );		
-	    	start = System.currentTimeMillis();
-	    	scan = _service.readAnnotations( _start, _stop, i );
-	    	end = System.currentTimeMillis();
-			time = ((end-start)/1000.0);
-			System.out.println( "\t" + scan.size() + " entries scanned in at level " + i + " in " + time + " seconds");
-		}
-		*/
+
 	}
-	
+
 	
     @Test
     public void testSingularService() {
@@ -90,11 +85,12 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	int INDIVIDUAL_NUM_ENTRIES = NUM_ENTRIES;
     	int BATCH_SIZE = INDIVIDUAL_NUM_ENTRIES / 10;
     	
-    	_annotations = _annotations.subList(0, INDIVIDUAL_NUM_ENTRIES);
+    	List<AnnotationData> annotations = generateJSONAnnotations( NUM_ENTRIES );
+    	annotations = annotations.subList(0, INDIVIDUAL_NUM_ENTRIES);
     	
     	System.out.println("Writing " + INDIVIDUAL_NUM_ENTRIES + " annotations");
     	start = System.currentTimeMillis();
-    	for (AnnotationData annotation : _annotations ) {
+    	for (AnnotationData annotation : annotations ) {
     		_service.writeAnnotation( annotation );
     		count++;
     		if (count % BATCH_SIZE == 0) {
@@ -115,7 +111,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	count = 0;
     	timeSum = 0;
     	start = System.currentTimeMillis();
-    	for (AnnotationData annotation : _annotations ) {
+    	for (AnnotationData annotation : annotations ) {
     		_service.removeAnnotation( annotation );
     		count++;
     		if (count % BATCH_SIZE == 0) {

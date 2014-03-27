@@ -50,10 +50,8 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
 	private static final String  TABLE_NAME = "AnnotationTable";
-	private static final boolean VERBOSE = true;
+	private static final boolean VERBOSE = false;
 
-	
-	
 	private AnnotationIO _io;
 	private AnnotationIndexer<TileAndBinIndices> _indexer;
 	private AnnotationSerializer<AnnotationTile> _tileSerializer;
@@ -118,16 +116,17 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	System.out.println( "Reading all annotations" );
 	    	List<AnnotationTile> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
 	    	List<AnnotationData> allData = _io.readData( TABLE_NAME, _dataSerializer, dataIndices );
-
 	    	if (VERBOSE) printTiles( allTiles );
 	    	if (VERBOSE) printData( allData );
 	    	
+	    	System.out.println( "Comparing annotations" );	    	
 	    	for ( AnnotationTile tile : tiles ) {
 	    		Assert.assertTrue( allTiles.contains( tile ) );
 	    	}
 	    	for ( AnnotationData d : annotations ) {
 	    		Assert.assertTrue( allData.contains( d ) );
 	    	}
+	    	System.out.println( "Complete" );
 	
     	} catch (Exception e) {
     		

@@ -243,7 +243,7 @@ public class JSONAnnotationService implements AnnotationService {
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public List<AnnotationData> readAnnotations( List<TileIndex> query ) {
+	public List<AnnotationData> readAnnotation( TileIndex query ) {
 		
 		try {		
 			
