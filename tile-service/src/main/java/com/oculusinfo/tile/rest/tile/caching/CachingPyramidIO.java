@@ -116,11 +116,15 @@ public class CachingPyramidIO implements PyramidIO {
      */
     void setupBasePyramidIO (String pyramidId, ConfigurableFactory<PyramidIO> factory) {
         if (!_basePyramidIOs.containsKey(pyramidId)) {
-            try {
-                PyramidIO basePyramidIO = factory.produce(PyramidIO.class);
-                _basePyramidIOs.put(pyramidId, basePyramidIO);
-            } catch (ConfigurationException e) {
-                LOGGER.warn("Error creating base pyramid IO", e);
+            synchronized (_basePyramidIOs) {
+                if (!_basePyramidIOs.containsKey(pyramidId)) {
+                    try {
+                        PyramidIO basePyramidIO = factory.produce(PyramidIO.class);
+                        _basePyramidIOs.put(pyramidId, basePyramidIO);
+                    } catch (ConfigurationException e) {
+                        LOGGER.warn("Error creating base pyramid IO", e);
+                    }
+                }
             }
         }
     }

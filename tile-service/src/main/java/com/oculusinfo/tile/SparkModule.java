@@ -27,6 +27,7 @@ package com.oculusinfo.tile;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import com.google.inject.AbstractModule;
@@ -54,6 +55,8 @@ public class SparkModule extends AbstractModule {
         jarList.add(getJarPathForClass(com.oculusinfo.binning.TilePyramid.class));
         // Include tile-generation
         jarList.add(getJarPathForClass(com.oculusinfo.tilegen.tiling.TileIO.class));
+        // Include the HBase jar
+        jarList.add(getJarPathForClass(org.apache.hadoop.hbase.HBaseConfiguration.class));
         // Include any additionally configured jars
         if (null != extraJars && !extraJars.isEmpty()) {
             for (String extraJar: extraJars.split(":")) {
@@ -64,6 +67,12 @@ public class SparkModule extends AbstractModule {
         }
         String[] jars = jarList.toArray(new String[jarList.size()]);
 
-        return new JavaSparkContext(master, jobName, sparkHome, jars);
+        SparkConf config = new SparkConf();
+        config.setMaster(master);
+        config.setAppName(jobName);
+        config.setSparkHome(sparkHome);
+        config.setJars(jars);
+        config.set("spark.logConf", "true");
+        return new JavaSparkContext(config);
     }
 }

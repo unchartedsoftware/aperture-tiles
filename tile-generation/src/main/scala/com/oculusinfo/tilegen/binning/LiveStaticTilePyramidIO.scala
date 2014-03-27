@@ -84,10 +84,14 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	def initializeForRead (pyramidId: String,
 	                       width: Int, height: Int,
 	                       dataDescription: Properties): Unit = {
-		if (!datasets.contains(pyramidId)) {
-			datasets(pyramidId) =
-				DatasetFactory.createDataset(sc, dataDescription,
-				                             true, width, height)
+        if (!datasets.contains(pyramidId)) {
+            datasets.synchronized {
+                if (!datasets.contains(pyramidId)) {
+                    datasets(pyramidId) =
+                            DatasetFactory.createDataset(sc, dataDescription,
+                                                         true, width, height)
+                }
+            }
 		}
 	}
 
