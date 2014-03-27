@@ -46,7 +46,7 @@ public class AnnotationBin implements Serializable {
 	
     private static final long serialVersionUID = 1L;
 
-    private BinIndex 			    _index;
+    private final BinIndex _index;
     private Map<String, List<Long>> _references = new LinkedHashMap<>();
     
     
@@ -96,11 +96,13 @@ public class AnnotationBin implements Serializable {
     	return _references;
     } 
     
+    
     @Override
     public int hashCode () {
     	return _index.hashCode();
     }
 
+    
     @Override
     public boolean equals (Object that) {   	    	
     	if (that != null)

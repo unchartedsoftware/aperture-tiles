@@ -79,23 +79,33 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 			System.out.println( "Thread " + _name + " begins writing first half" );    	
 	    	for (AnnotationData annotation : firstHalf ) {    	    		
 	    		_service.writeAnnotation( annotation );
+	    		System.out.println( "Thread " + _name + " wrote "+ annotation.getIndex() );
 	    	}
 	    	System.out.println( "Thread " + _name + " finished writing first half" );
 	    	
 	    	// read
-	    	readAll();	
+	    	System.out.println( "Thread " + _name + " begins reading entries" );
+	    	List<AnnotationData> scan = readAll();	
+	    	System.out.println( "Thread " + _name + " begins read " + scan.size() +" entries" );
 	    	
 	    	// write
 	    	System.out.println( "Thread " + _name + " begins writing second half" );  	
 	    	for (AnnotationData annotation : secondHalf ) {    	    		
 	    		_service.writeAnnotation( annotation );
+	    		System.out.println( "Thread " + _name + " wrote "+ annotation.getIndex() );
 	    	}
 	    	System.out.println( "Thread " + _name + " finished writing second half" );
+	    	
+	    	// read
+	    	System.out.println( "Thread " + _name + " begins reading entries" );
+	    	scan = readAll();	
+	    	System.out.println( "Thread " + _name + " begins read " + scan.size() +" entries" );
 	    	
 	    	// remove
 	    	System.out.println( "Thread " + _name + " begins removing all" );
 			for (AnnotationData annotation : annotations ) {
 	    		_service.removeAnnotation( annotation );
+	    		System.out.println( "Thread " + _name + " removed "+ annotation.getIndex() );
 	    	}
 			System.out.println( "Thread " + _name + " finished removing all" );
 	    	
@@ -132,7 +142,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	List<AnnotationData> scan = _service.readAnnotation( tile );
+    	List<AnnotationData> scan = _service.readAnnotation( tile );   	
     	return scan;
 
 	}

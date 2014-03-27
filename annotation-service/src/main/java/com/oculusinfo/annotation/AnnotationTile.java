@@ -51,8 +51,8 @@ public class AnnotationTile implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
-    private TileIndex  	_index;
-    private Map<BinIndex, AnnotationBin> _bins = new LinkedHashMap<>();
+    private final TileIndex _index;
+    volatile private Map<BinIndex, AnnotationBin> _bins = new LinkedHashMap<>();
      
     public AnnotationTile( TileIndex index ) {   
     	_index = index;

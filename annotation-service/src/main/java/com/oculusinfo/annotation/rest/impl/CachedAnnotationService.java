@@ -74,11 +74,10 @@ public class CachedAnnotationService implements AnnotationService {
 		
 	protected Map<TileIndex, AnnotationTile> _tileCache = new HashMap <>();
 	protected Map<Long, AnnotationData>      _dataCache = new HashMap <>();
-    
-	private final Object _lock =  new Object();
-	private final Object _cacheLock =  new Object();
-	private final Object _hbaseLock =  new Object();
-	//private final ReadWriteLock _lock = new ReentrantReadWriteLock();
+	
+	private final ReadWriteLock _cacheLock = new ReentrantReadWriteLock();
+	private final ReadWriteLock _hbaseLock = new ReentrantReadWriteLock();
+		
 	
 	public CachedAnnotationService() {
 		
@@ -92,6 +91,7 @@ public class CachedAnnotationService implements AnnotationService {
 			_io = new HBaseAnnotationIO("hadoop-s1.oculus.local",
 										"2181",
 									    "hadoop-s1.oculus.local:60000");
+			System.out.println( "Dropping previous table");
 			((HBaseAnnotationIO)_io).dropTable(TABLE_NAME);
 			_io.initializeForWrite( TABLE_NAME );
 			
@@ -106,55 +106,47 @@ public class CachedAnnotationService implements AnnotationService {
 		
 		// get list of the indices for all levels
     	List<TileAndBinIndices> indices = _indexer.getIndices( data );
+    	   	
+    	List<AnnotationTile> tiles = getTiles( convert( indices ) );	/* synchronized */
     	
-    	synchronized( _lock ) {
-  
-    		List<AnnotationTile> tiles = getTiles( convert( indices ) );
-
-			for ( TileAndBinIndices index : indices ) {
+    	for ( TileAndBinIndices index : indices ) {
 				
-				 int i = indexOf( tiles, index.getTile() );
-	
-				 if ( i != -1) {
-					 // tile exists, add data to it
-					 tiles.get(i).add( index.getBin(), data );
-				 } else {
-					 // tile does not exist, create	it
-					 tiles.add( new AnnotationTile( index.getTile(), new AnnotationBin( index.getBin(), data ) ) );
-				 }
-	
-			}
+			addDataReferenceToTile( tiles, index, data );	/* synchronized */
+		}
     	
-			// write tiles back to io
-			putTiles( tiles );
-			
-			// write data to io
-			putData( data );
-    	}
+		// write tiles back to io
+		writeTiles( tiles );	/* synchronized */
+		
+		// write data to io
+		writeData( data );		/* synchronized */
+    	
 	}
 	
 
 	public List<AnnotationData> readAnnotation( TileIndex query ) {
-		synchronized( _lock ) {
-			return getData( addUnivariateIndices( query ) );
-		}
+	
+		return getData( addUnivariateIndices( query ) ); /* synchronized */
+
 	}
 	
 	
 	
 	public void removeAnnotation( AnnotationData annotation ) {
-		
-		synchronized( _lock ) {
+
+		try {
+			// get list of the indices for all levels
+	    	List<TileAndBinIndices> indices = _indexer.getIndices( annotation );	    	
+
+			// maintain lists of what bins to modify and what bins to remove
+			List<AnnotationTile> tilesToWrite = new LinkedList<>();
+			List<AnnotationTile> tilesToRemove = new LinkedList<>();
+			
+			// read existing tiles
+			List<AnnotationTile> tiles = getTiles( convert( indices ) ); 	/* synchronized */
+			
+			/////////
+			_cacheLock.writeLock().lock();
 			try {
-				// get list of the indices for all levels
-		    	List<TileAndBinIndices> indices = _indexer.getIndices( annotation );	    	
-	
-				// maintain lists of what bins to modify and what bins to remove
-				List<AnnotationTile> tilesToWrite = new LinkedList<>();
-				List<AnnotationTile> tilesToRemove = new LinkedList<>();
-				
-				// read existing tiles
-				List<AnnotationTile> tiles = getTiles( convert( indices ) ); 
 				
 				for ( AnnotationTile tile : tiles ) {
 					
@@ -171,18 +163,23 @@ public class CachedAnnotationService implements AnnotationService {
 						tilesToWrite.remove( tile );
 					}
 				}	
-				
-				// write modified tiles
-				putTiles( tilesToWrite );
-							
-				// remove empty tiles and data
-				removeTiles( tilesToRemove );
-				removeData( annotation );
-				
-			} catch (Exception e) { 
-				e.printStackTrace(); 
+			
+			} finally {
+				_cacheLock.writeLock().unlock();
 			}
+			/////////
+			
+			// write modified tiles
+			writeTiles( tilesToWrite );		/* synchronized */
+						
+			// remove empty tiles and data
+			removeTiles( tilesToRemove );	/* synchronized */
+			removeData( annotation );		/* synchronized */
+			
+		} catch (Exception e) { 
+			e.printStackTrace(); 
 		}
+		
 	}
 
 	
@@ -191,15 +188,24 @@ public class CachedAnnotationService implements AnnotationService {
 	 * Helper methods
 	 * 
 	 */
-	private int indexOf( List<AnnotationTile> tiles, TileIndex index ) {
-		int i = 0;
-		for ( AnnotationTile tile : tiles ) {
-			if (tile.getIndex().equals( index )) {
-				return i;
+	private void addDataReferenceToTile( List<AnnotationTile> tiles, TileAndBinIndices index, AnnotationData data ) {		
+		_cacheLock.writeLock().lock();
+		try {
+
+			for ( AnnotationTile tile : tiles ) {
+				if ( tile.getIndex().equals( index ) ) {
+					// found tile
+					tile.add( index.getBin(), data );
+					return;
+
+				} else {
+					tiles.add( new AnnotationTile( index.getTile(), new AnnotationBin( index.getBin(), data ) ) );					
+				}
 			}
-			i++;
+			
+		} finally {
+			_cacheLock.writeLock().unlock();
 		}
-		return -1;
 	}
 	
 	private List<TileIndex> convert( List<TileAndBinIndices> tiles ) {
@@ -224,9 +230,123 @@ public class CachedAnnotationService implements AnnotationService {
 
 	/*
 	 * 
-	 * Cache methods
+	 * Synchronized Cache methods
 	 * 
 	 */
+	
+	
+	/*
+	 * Get
+	 */
+	private AnnotationData getDataFromCache( Long index ) {
+		
+		_cacheLock.readLock().lock();
+		try {
+			return _dataCache.get( index );
+		} finally {
+			_cacheLock.readLock().unlock();
+		}
+	}
+	private AnnotationTile getTileFromCache( TileIndex index ) {
+		
+		_cacheLock.readLock().lock();
+		try {
+			return _tileCache.get( index );
+		} finally {
+			_cacheLock.readLock().unlock();
+		}
+	}
+	
+	/*
+	 * Put
+	 */
+	private void putDataInCache( List<AnnotationData> data ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			for ( AnnotationData d : data ) {
+				_dataCache.put( d.getIndex(), d );
+			}
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	private void putDataInCache( AnnotationData data ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			_dataCache.put( data.getIndex(), data );
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	private void putTilesInCache( List<AnnotationTile> tiles ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			for ( AnnotationTile tile : tiles ) {
+				_tileCache.put( tile.getIndex(), tile );
+			}
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	private void putTileInCache( AnnotationTile tile ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			_tileCache.put( tile.getIndex(), tile );
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	
+	/*
+	 * Remove
+	 */
+	private void removeDataFromCache( List<AnnotationData> data ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			for ( AnnotationData d : data ) {
+				_dataCache.remove( d.getIndex() );
+			}
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	private void removeDataFromCache( AnnotationData data ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			_dataCache.remove( data.getIndex() );
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	private void removeTilesFromCache( List<AnnotationTile> tiles ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			for ( AnnotationTile tile : tiles ) {
+				_tileCache.remove( tile.getIndex() );
+			}
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	private void removeTileFromCache( AnnotationTile tile ) {
+		
+		_cacheLock.writeLock().lock();
+		try {
+			_tileCache.remove( tile.getIndex() );	
+		} finally {
+			_cacheLock.writeLock().unlock();
+		}
+	}
+	
+	
+	
 	private List<AnnotationTile> getTiles( List<TileIndex> indices ) {
 		
 		List<AnnotationTile> tiles = new LinkedList<>();			
@@ -235,7 +355,7 @@ public class CachedAnnotationService implements AnnotationService {
 		// pull from cache
 		for ( TileIndex index : indices ) {
 			
-			AnnotationTile tile = _tileCache.get( index );			
+			AnnotationTile tile = getTileFromCache( index ); /* read synchronized */			
 			if ( tile != null ) {
 				// found in cache
 				tiles.add( tile );
@@ -257,14 +377,13 @@ public class CachedAnnotationService implements AnnotationService {
 		List<Long> dataToReadFromIO = new LinkedList<>();		
 		// pull data from cache
 		for ( Long index : indices ) {
-			AnnotationData d =  _dataCache.get( index );
+			
+			AnnotationData d = getDataFromCache( index ); /* read synchronized */	
 			if ( d != null ) {				
 				// found in cache
 				data.add( d );
-				//System.out.println("Data Hit!");
 			} else {				
 				// not in cache, flag to read from io
-				//System.out.println("Data Miss!");
 				dataToReadFromIO.add( index );
 			}
 		}
@@ -278,7 +397,7 @@ public class CachedAnnotationService implements AnnotationService {
 	private List<AnnotationData> getData( List<TileIndex> indices ) {
 		
 		// get all required tiles
-		List<AnnotationTile> tiles = getTiles( indices );
+		List<AnnotationTile> tiles = getTiles( indices );  /* read synchronized */
 		
 		// get filtered references from tiles
 		List<Long> references = new LinkedList<>();			
@@ -292,28 +411,33 @@ public class CachedAnnotationService implements AnnotationService {
 	private List<AnnotationData> getData( List<TileIndex> indices, Map<String, Integer> filter ) {
 					
 		// get all required tiles
-		List<AnnotationTile> tiles = getTiles( indices );
+		List<AnnotationTile> tiles = getTiles( indices ); /* read synchronized */
 		
 		// get filtered references from tiles
 		List<Long> references = new LinkedList<>();			
 		for ( AnnotationTile tile : tiles ) {
-			references.addAll( tile.getFilteredReferences( filter ) );	 
+			references.addAll( tile.getFilteredReferences( filter ) );										 
 		}
 		return getDataFromIndex( references );
 	}
 
 	
-	private void putTiles( List<AnnotationTile> tiles ) {
+	private void writeTiles( List<AnnotationTile> tiles ) {
 		
-		for ( AnnotationTile tile : tiles ) {
-			_tileCache.put( tile.getIndex(), tile );
-		}
-		
+		putTilesInCache( tiles ); /* write synchronized */
+
 		try {
 			
-			_io.initializeForWrite( TABLE_NAME );
-			_io.writeTiles( TABLE_NAME, _tileSerializer, tiles );
-			
+			_hbaseLock.writeLock().lock();
+			try {
+				
+				_io.initializeForWrite( TABLE_NAME );
+				_io.writeTiles( TABLE_NAME, _tileSerializer, tiles );
+				
+			} finally {
+				_hbaseLock.writeLock().unlock();
+			}	
+						
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
@@ -321,17 +445,25 @@ public class CachedAnnotationService implements AnnotationService {
 	}
 	
 	
-	private void putData( AnnotationData data ) {
+	private void writeData( AnnotationData data ) {
 		
-		_dataCache.put( data.getIndex(), data );
-
+		putDataInCache( data ); /* write synchronized */
+		
 		List<AnnotationData> dataList = new LinkedList<>();
 		dataList.add( data );
 		
 		try {
 			
-			_io.initializeForWrite( TABLE_NAME );		
-			_io.writeData( TABLE_NAME, _dataSerializer, dataList );
+			_hbaseLock.writeLock().lock();
+			try {
+				
+				_io.initializeForWrite( TABLE_NAME );		
+				_io.writeData( TABLE_NAME, _dataSerializer, dataList );
+				
+			} finally {
+				_hbaseLock.writeLock().unlock();
+			}
+			
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -341,13 +473,19 @@ public class CachedAnnotationService implements AnnotationService {
 
 	private void removeTiles( List<AnnotationTile> tiles ) {
 
+		removeTilesFromCache( tiles ); /* write synchronized */
+
 		try {
 			
-			for ( AnnotationTile tile : tiles ) {
-				_tileCache.remove( tile.getIndex() );
-			}
-			_io.initializeForRemove( TABLE_NAME );		
-			_io.removeTiles( TABLE_NAME, tiles );
+			_hbaseLock.writeLock().lock();
+			try {
+				
+				_io.initializeForRemove( TABLE_NAME );		
+				_io.removeTiles( TABLE_NAME, tiles );
+				
+			} finally {
+				_hbaseLock.writeLock().unlock();
+			}			
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -357,16 +495,23 @@ public class CachedAnnotationService implements AnnotationService {
 	
 	
 	private void removeData( AnnotationData data ) {
-						
+		
+		removeDataFromCache( data ); /* write synchronized */
+
 		List<AnnotationData> dataList = new LinkedList<>();
 		dataList.add( data );
 		
 		try {
 			
-			_dataCache.remove( data.getIndex() );
-			_io.initializeForRemove( TABLE_NAME );	
-			_io.removeData( TABLE_NAME, dataList );
-			
+			_hbaseLock.writeLock().lock();
+			try {
+				
+				_io.initializeForRemove( TABLE_NAME );	
+				_io.removeData( TABLE_NAME, dataList );	
+				
+			} finally {
+				_hbaseLock.writeLock().unlock();
+			}						
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -380,16 +525,23 @@ public class CachedAnnotationService implements AnnotationService {
 		List<AnnotationTile> tiles = new LinkedList<>();
 		try {
 			
-			_io.initializeForRead( TABLE_NAME );		
-			tiles = _io.readTiles( TABLE_NAME, _tileSerializer, indices );
-			// add to cache
-			for ( AnnotationTile tile : tiles ) {
-				_tileCache.put( tile.getIndex(), tile );
+			_hbaseLock.readLock().lock();
+			try {
+				
+				_io.initializeForRead( TABLE_NAME );		
+				tiles = _io.readTiles( TABLE_NAME, _tileSerializer, indices );						
+				
+			} finally {
+				_hbaseLock.readLock().unlock();
 			}
 					
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
+		
+		// add to cache
+		putTilesInCache( tiles ); /* write synchronized */
+
 		return tiles;		
 	}
 	
@@ -399,17 +551,23 @@ public class CachedAnnotationService implements AnnotationService {
 		List<AnnotationData> data = new LinkedList<>();
 		try {
 			
-			_io.initializeForRead( TABLE_NAME );	
-			 data = _io.readData( TABLE_NAME, _dataSerializer, indices );
-			// add to cache
-			for ( AnnotationData d : data ) {
-				_dataCache.put( d.getIndex(), d );
-			}
+			_hbaseLock.readLock().lock();
+			try {
+				
+				_io.initializeForRead( TABLE_NAME );	
+				data = _io.readData( TABLE_NAME, _dataSerializer, indices );
+				
+			} finally {
+				_hbaseLock.readLock().unlock();
+			}			
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
-				
+		
+		// add to cache
+		putDataInCache( data ); /* write synchronized */		
+		
 		return data;		
 	}
 	
