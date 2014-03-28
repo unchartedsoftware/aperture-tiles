@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.spark
 
 import org.apache.spark.SparkContext
@@ -33,34 +33,34 @@ class GeneralSparkConnector (master: String,
                              user: Option[String],
                              jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven,
                              kryoRegistrator: Option[String])
-extends SparkConnector(jars)
+		extends SparkConnector(jars)
 {
-  override def getSparkContext (jobName: String): SparkContext = {
-    debugConnection("property-based", jobName)
+	override def getSparkContext (jobName: String): SparkContext = {
+		debugConnection("property-based", jobName)
 
-    val appName = jobName + (if (user.isDefined) "("+user.get+")" else "")
+		val appName = jobName + (if (user.isDefined) "("+user.get+")" else "")
 
-    println("Creating spark context")
-    println("\tMaster: "+master)
-    println("\tJob name: "+appName)
-    println("\tHome: "+sparkHome)
+		println("Creating spark context")
+		println("\tMaster: "+master)
+		println("\tJob name: "+appName)
+		println("\tHome: "+sparkHome)
 
-    if (kryoRegistrator != None) {
-      // inform spark that we are using kryo serialization instead of java serialization
-      System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      // set the kryo registrator to point to the base tile registrator 
-      System.setProperty("spark.kryo.registrator", kryoRegistrator.get)
-      println("\tKryo Serialization Enabled, registrator: "+kryoRegistrator.get)
-    } else {
-      println("\tJava Serialization Enabled")
-    }   
+		if (kryoRegistrator != None) {
+			// inform spark that we are using kryo serialization instead of java serialization
+			System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+			// set the kryo registrator to point to the base tile registrator
+			System.setProperty("spark.kryo.registrator", kryoRegistrator.get)
+			println("\tKryo Serialization Enabled, registrator: "+kryoRegistrator.get)
+		} else {
+			println("\tJava Serialization Enabled")
+		}
 
-//	val conf = new SparkConf(true)
-//		.setMaster(master)
-//		.setAppName(appName)
-//		.setSparkHome(sparkHome)
-//		.setJars(jarList)
-//	new SparkContext(conf);
-	  new SparkContext(master, appName, sparkHome, jarList)
-  }
+		//	val conf = new SparkConf(true)
+		//		.setMaster(master)
+		//		.setAppName(appName)
+		//		.setSparkHome(sparkHome)
+		//		.setJars(jarList)
+		//	new SparkContext(conf);
+		new SparkContext(master, appName, sparkHome, jarList)
+	}
 }
