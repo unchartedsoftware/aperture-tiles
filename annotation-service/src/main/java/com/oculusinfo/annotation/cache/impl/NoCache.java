@@ -21,40 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation;
+package com.oculusinfo.annotation.cache.impl;
 
-import java.awt.geom.Point2D;
 import java.io.IOException;
-import java.lang.Number;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ListIterator;
+import java.util.concurrent.locks.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.After;
-import org.junit.Before;
 
-import com.oculusinfo.annotation.rest.*;
-import com.oculusinfo.annotation.rest.impl.*;
+import com.oculusinfo.annotation.cache.*;
 
 
-public class JSONAnnotationServiceTests extends GenericServiceTests<JSONObject> {
+public class NoCache<A, B> implements AnnotationCache<A, B> {
 	
-	static final boolean VERBOSE = true;
+	public NoCache() {}
 	
-    @Before
-    public void setup () {
-    	
-    	_service = new AnnotationServiceImpl();
-    	
-
-    }
-
-    @After
-    public void teardown () {
-    	_service = null;
-    }
+	public B get( A key ) { return null; }	
+	public List<B> get( List<A> keys ) { return new LinkedList<>(); }	
+	public void put( A key, B value ) {};
+	public void remove( A key ) {};
 	
 }

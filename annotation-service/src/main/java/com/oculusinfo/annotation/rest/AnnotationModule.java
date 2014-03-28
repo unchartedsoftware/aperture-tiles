@@ -34,7 +34,7 @@ public class AnnotationModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(AnnotationService.class).to(JSONAnnotationService.class);
+		bind(AnnotationService.class).to(AnnotationServiceImpl.class);
 	}
 
 }

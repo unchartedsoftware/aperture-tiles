@@ -51,6 +51,9 @@ public class JSONTileSerializer extends GenericJSONSerializer<AnnotationTile>{
 	@Override
     protected JSONObject translateToJSON ( AnnotationTile value ) {
 		
+		return value.toJSON();
+		
+		/*
 		JSONObject tileJSON = new JSONObject();
 		
 		try {
@@ -93,6 +96,7 @@ public class JSONTileSerializer extends GenericJSONSerializer<AnnotationTile>{
 		}
 		
 		return tileJSON;
+		*/
 	}
 
 	

@@ -52,7 +52,7 @@ public class AnnotationTile implements Serializable {
 	private static final long serialVersionUID = 1L;
 
     private final TileIndex _index;
-    volatile private Map<BinIndex, AnnotationBin> _bins = new LinkedHashMap<>();
+    private Map<BinIndex, AnnotationBin> _bins = new LinkedHashMap<>();
      
     public AnnotationTile( TileIndex index ) {   
     	_index = index;
@@ -67,8 +67,16 @@ public class AnnotationTile implements Serializable {
     	_index = index;
     	_bins = bins;
     }
-
-    public void add( BinIndex bin, AnnotationData data ) {
+    
+    public TileIndex getIndex() {
+    	return _index;
+    }
+     
+    public Map<BinIndex, AnnotationBin> getBins() {
+    	return _bins;
+    }
+    
+    public synchronized void add( BinIndex bin, AnnotationData data ) {
     	
     	if ( _bins.containsKey( bin ) ) {
     		_bins.get( bin ).add( data );
@@ -78,65 +86,26 @@ public class AnnotationTile implements Serializable {
     	
     }
     
-    public boolean remove( AnnotationData data ) { 
+    public synchronized boolean remove( AnnotationData data ) { 
     	
-    	boolean removedAny = false;
-    	Iterator<Map.Entry<BinIndex, AnnotationBin>> iter = _bins.entrySet().iterator();	
-    	while ( iter.hasNext() ) {
-    		
-    	    Map.Entry<BinIndex, AnnotationBin> entry = iter.next();   	    
-    	    AnnotationBin bin = entry.getValue();
-    	    
-    	    String priority = data.getPriority();
-    	    Long index = data.getIndex();
-    	    Map<String, List<Long>> binReferences = bin.getReferences();
-    	    
-    	    // check if bin contains this priority group
-    	    if ( binReferences.containsKey( priority ) ) {
-    	    	
-    	    	List<Long> references = binReferences.get( priority );
-    	    	
-    	    	// data found in bin references
-    	    	if ( references.contains( index ) ) {
-    	    		// remove index from references
-    	    		references.remove( index );
-    	    		removedAny = true;
-    	    	}
-    	    	
-    	    	if ( references.size() == 0 ) {
-    	    		// remove references for priority
-    	    		//System.out.println( "No more references for priority, remove priority ");
-    	    		binReferences.remove( priority );
-    	    	}
-    	    	
-    	    	if ( binReferences.size() == 0 ) {
-    	    		// remove bin
+    	boolean removedAny = false; 	
+    	Iterator<AnnotationBin> iter = _bins.values().iterator();
+    	// for each bin
+    	while ( iter.hasNext() ) {  		    	    
+    	    AnnotationBin bin = iter.next();      	    
+    	    if ( bin.remove( data ) ) {
+    	    	// flag as removed
+    	    	removedAny = true;
+    	    	if ( bin.size() == 0 ) {
+    	    		// remove bin if empty
     	    		iter.remove();
     	    	}
     	    }
     	}    	
-
     	return removedAny;
     }
 
-        
-    public TileIndex getIndex() {
-    	return _index;
-    }
-    
-    
-    public Map<BinIndex, AnnotationBin> getBins() {
-    	return _bins;
-    } 
-    
-    
-    public void copy( AnnotationTile tile ) {
-    	// copy contents of other tile into this tile
-    	_bins = tile.getBins();   	
-    }
-
-    
-    public List<Long> getAllReferences() {
+    public synchronized List<Long> getAllReferences() {
     	
     	List<Long> allReferences = new LinkedList<>();  
     	// for each bin
@@ -145,23 +114,11 @@ public class AnnotationTile implements Serializable {
 			for ( List<Long> references : bin.getReferences().values() ) {
 				allReferences.addAll( references );
 			}
-		}
-   	
-    	/*  	
-    	// for each bin
-    	for ( AnnotationBin bin : _bins.values() ) {  		
-    		// for each priority group in a bin
-		    for (Map.Entry<String, List<Long>> referenceEntry : bin.getReferences().entrySet() ) {
-		    	
-		    	allReferences.addAll( referenceEntry.getValue() );
-		    }
-    	}
-    	*/  	
+		} 	
     	return allReferences;
     }
-   
-    
-    public List<Long> getFilteredReferences( Map<String, Integer> filter ) {
+       
+    public synchronized List<Long> getFilteredReferences( Map<String, Integer> filter ) {
     	
     	List<Long> filtered = new LinkedList<>();
     	// for each bin
@@ -179,6 +136,35 @@ public class AnnotationTile implements Serializable {
 			}
     	}
 		return filtered;
+    }
+    
+    
+    public JSONObject toJSON() {
+    	
+    	JSONObject tileJSON = new JSONObject();
+		
+		try {
+			
+			tileJSON.put("level", _index.getLevel() );
+			tileJSON.put("x", _index.getX() );
+			tileJSON.put("y", _index.getY() );
+			
+			// for each bin
+			for (Map.Entry<BinIndex, AnnotationBin> binEntry : _bins.entrySet() ) {
+								
+				BinIndex key = binEntry.getKey();
+				AnnotationBin bin = binEntry.getValue();
+
+			    // add bin object to tile
+			    tileJSON.put( key.toString(), bin.toJSON() );
+			}
+
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+		
+		return tileJSON;
+    	
     }
     
     

@@ -21,40 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation;
+package com.oculusinfo.annotation.cache;
 
-import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.lang.Number;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
-import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.After;
-import org.junit.Before;
-
-import com.oculusinfo.annotation.rest.*;
-import com.oculusinfo.annotation.rest.impl.*;
-
-
-public class JSONAnnotationServiceTests extends GenericServiceTests<JSONObject> {
 	
-	static final boolean VERBOSE = true;
-	
-    @Before
-    public void setup () {
-    	
-    	_service = new AnnotationServiceImpl();
-    	
-
-    }
-
-    @After
-    public void teardown () {
-    	_service = null;
-    }
+public interface AnnotationCache<A, B> {
+		
+	public B get( A key );	
+	public List<B> get( List<A> keys );	
+	public void put( A key, B value );
+	public void remove( A key );
 	
 }

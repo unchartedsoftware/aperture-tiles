@@ -48,21 +48,26 @@ public class AnnotationBin implements Serializable {
 
     private final BinIndex _index;
     private Map<String, List<Long>> _references = new LinkedHashMap<>();
-    
-    
+       
     public AnnotationBin( BinIndex index, Map<String, List<Long>> references ) {   
     	_index = index;
     	_references = references;
     }
-    
-    
+        
     public AnnotationBin( BinIndex index, AnnotationData data ) {   
     	_index = index;
     	add( data );
     }
     
+    public synchronized int size() {
+    	return _references.size();
+    }
+      
+    public BinIndex getIndex() {
+    	return _index;
+    }
 
-    public void add( AnnotationData data ) {
+    public synchronized void add( AnnotationData data ) {
     	if ( _references.containsKey( data.getPriority() ) ) {
     		List<Long> entries = _references.get( data.getPriority() );
     		entries.add( data.getIndex() );
@@ -72,36 +77,67 @@ public class AnnotationBin implements Serializable {
     		_references.put( data.getPriority(), entries );
     	}    	
     }
-    
-    
-    public boolean remove( AnnotationData data ) { 
+       
+    public synchronized boolean remove( AnnotationData data ) { 
     	
-    	if ( _references.containsKey( data.getPriority() ) ) {
-    		List<Long> entries = _references.get( data.getPriority() );
-    		if ( entries.contains( data.getIndex() ) ) {
-    			entries.remove( data.getIndex() );
-    			return true;
-    		}   		
+    	String priority = data.getPriority();
+    	Long index =  data.getIndex();
+    	boolean removedAny = false;
+    	
+    	if ( _references.containsKey( priority ) ) {
+    		
+    		List<Long> entries = _references.get( priority );
+    		
+    		if ( entries.contains( index ) ) {
+    			entries.remove(index );
+    			removedAny = true;
+    		} 
+    		   		
+    		if ( entries.size() == 0 ) {
+	    		// remove references for priority
+    			_references.remove( priority );
+	    	}
     	} 
-    	return false;
+
+    	return removedAny;
     }
     
-    
-    public BinIndex getIndex() {
-    	return _index;
+    public JSONObject toJSON() {
+    	
+    	JSONObject binJSON = new JSONObject();
+    	try {
+			   	
+	    	// for each priority group in a bin
+		    for (Map.Entry<String, List<Long>> referenceEntry : _references.entrySet() ) {
+		    	
+		    	String priority = referenceEntry.getKey();
+		    	List<Long> references = referenceEntry.getValue();
+		    	
+		    	JSONArray referenceJSON = new JSONArray();
+		    	for ( Long reference : references ) {
+		    		referenceJSON.put( reference );
+		    	}
+		    	
+		    	// add priority to bin json object
+		    	binJSON.put( priority, referenceJSON );		    	
+		    }
+		    
+    	} catch ( Exception e ) {
+    		e.printStackTrace();
+    	}
+    	
+    	return binJSON;
     }
     
     
     public Map<String, List<Long>> getReferences() {
     	return _references;
-    } 
-    
-    
+    }
+           
     @Override
     public int hashCode () {
     	return _index.hashCode();
     }
-
     
     @Override
     public boolean equals (Object that) {   	    	

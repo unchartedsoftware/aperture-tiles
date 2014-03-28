@@ -53,7 +53,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     @Before
     public void setup () {
     	
-    	_service = new CachedAnnotationService();
+    	_service = new AnnotationServiceImpl();
 
     }
 
