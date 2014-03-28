@@ -56,8 +56,8 @@ public abstract class AnnotationData implements Serializable {
     			AnnotationData o = (AnnotationData)that;
     			return getIndex().equals( o.getIndex() ) &&
     				   getX() == o.getX() &&
-    				   getY() == o.getY() &&
-    				   getData().equals( o.getData() );
+    				   getY() == o.getY(); /* &&
+    				   getData().equals( o.getData() ); */
     		}    		
     	}	
     	return false;

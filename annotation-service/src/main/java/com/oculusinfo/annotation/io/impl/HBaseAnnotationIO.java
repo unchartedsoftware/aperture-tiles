@@ -118,10 +118,10 @@ public class HBaseAnnotationIO implements AnnotationIO {
 	public static byte[] rowIdFromTile (TileIndex index) {
         // Use the minimum possible number of digits for the tile key
         int digits = (int) Math.floor(Math.log10(1 << index.getLevel()))+1;
-        return String.format("%02d,%0"+digits+"d,%0"+digits+"d",
+        return String.format( "%02d,%0"+digits+"d,%0"+digits+"d",
         		index.getLevel(), 
         		index.getX(),
-        		index.getY()).getBytes();
+        		index.getY() ).getBytes();
     }
 
     

@@ -128,22 +128,38 @@ public class AnnotationTile implements Serializable {
     public Map<BinIndex, AnnotationBin> getBins() {
     	return _bins;
     } 
+    
+    
+    public void copy( AnnotationTile tile ) {
+    	// copy contents of other tile into this tile
+    	_bins = tile.getBins();   	
+    }
 
     
     public List<Long> getAllReferences() {
     	
-    	List<Long> references = new LinkedList<>();    	
+    	List<Long> allReferences = new LinkedList<>();  
+    	// for each bin
+		for ( AnnotationBin bin : _bins.values() ) {
+			// for each priority group in a bin
+			for ( List<Long> references : bin.getReferences().values() ) {
+				allReferences.addAll( references );
+			}
+		}
+   	
+    	/*  	
     	// for each bin
     	for ( AnnotationBin bin : _bins.values() ) {  		
     		// for each priority group in a bin
 		    for (Map.Entry<String, List<Long>> referenceEntry : bin.getReferences().entrySet() ) {
 		    	
-		    	references.addAll( referenceEntry.getValue() );
+		    	allReferences.addAll( referenceEntry.getValue() );
 		    }
-    	}   	
-    	return references;
+    	}
+    	*/  	
+    	return allReferences;
     }
-    
+   
     
     public List<Long> getFilteredReferences( Map<String, Integer> filter ) {
     	
