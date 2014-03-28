@@ -73,4 +73,34 @@ public class TwitterDemoSerializationTests {
         TwitterDemoRecord recordOut = tileOut.getBin(0, 0).get(0);
         Assert.assertEquals(recordIn, recordOut);
     }
+    
+    @Test
+    public void unicodeTest () throws IOException {
+        TwitterDemoAvroSerializer serializer = new TwitterDemoAvroSerializer(CodecFactory.nullCodec());
+        TwitterDemoRecord recordIn = new TwitterDemoRecord("tag",
+                                                           12, Arrays.asList(1, 12, 2, 6, 3, 4),
+                                                           15, Arrays.asList(1, 15, 3, 5),
+                                                           16, Arrays.asList(1, 16, 2, 8, 4),
+                                                           5, Arrays.asList(5, 1),
+                                                           Arrays.asList(new Pair<String, Long>("\u00C0", 1L),
+                                                                         new Pair<String, Long>("\u2728", 2L),
+                                                                         new Pair<String, Long>("\u1F302", -4L)));
+
+        TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        TileIndex index = new TileIndex(0, 0, 0, 1, 1);
+        TileData<List<TwitterDemoRecord>> tileIn = new TileData<>(index, Arrays.asList(Arrays.asList(recordIn)));
+        serializer.serialize(tileIn, pyramid, baos);
+        baos.flush();
+        baos.close();
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        TileData<List<TwitterDemoRecord>> tileOut = serializer.deserialize(index, bais);
+        Assert.assertNotNull(tileOut);
+        Assert.assertEquals(index, tileOut.getDefinition());
+        Assert.assertNotNull(tileOut.getBin(0, 0));
+        Assert.assertEquals(1, tileOut.getBin(0, 0).size());
+        TwitterDemoRecord recordOut = tileOut.getBin(0, 0).get(0);
+        Assert.assertEquals(recordIn, recordOut);
+    }
 }
