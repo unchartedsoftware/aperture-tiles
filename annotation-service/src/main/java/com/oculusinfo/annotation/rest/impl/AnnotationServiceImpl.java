@@ -27,18 +27,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.locks.*;
 
-
 //import com.google.inject.Singleton;
 import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.cache.*;
-import com.oculusinfo.annotation.cache.impl.*;
-import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
@@ -53,15 +46,14 @@ import com.oculusinfo.binning.impl.*;
 //@Singleton
 public class AnnotationServiceImpl implements AnnotationService {
 
-	protected static final String TABLE_NAME = "AnnotationTable";
-	
+	protected static final String TABLE_NAME = "AnnotationTable";	
 	protected AnnotationIO _io;
 	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
 	protected AnnotationSerializer<AnnotationData> _dataSerializer; 
 	protected AnnotationIndexer<TileAndBinIndices> _indexer;
 	protected TilePyramid _pyramid;
 
-	private final ReadWriteLock _lock = new ReentrantReadWriteLock();
+	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
 	public AnnotationServiceImpl() {
 		
@@ -95,14 +87,11 @@ public class AnnotationServiceImpl implements AnnotationService {
     	try {
     		
     		// get all affected tiles
-    		List<AnnotationTile> tiles = getTiles( convert( indices ) );  
-    		
+    		List<AnnotationTile> tiles = getTiles( convert( indices ) );     		
     		// add new data reference to tiles
-        	addDataReferenceToTiles( tiles, indices, data );
-        	
+        	addDataReferenceToTiles( tiles, indices, data );       	
     		// write tiles back to io
-    		writeTilesToIO( tiles );
-    		
+    		writeTilesToIO( tiles );    		
     		// write data to io
     		writeDataToIO( data );
     		
@@ -124,8 +113,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     	}
 	}
 	
-	
-	
+		
 	public void removeAnnotation( AnnotationData annotation ) {
 
 		_lock.writeLock().lock();		
@@ -133,23 +121,20 @@ public class AnnotationServiceImpl implements AnnotationService {
 			
 			// get list of the indices for all levels
 	    	List<TileAndBinIndices> indices = _indexer.getIndices( annotation );	    	
-
-			// maintain lists of what bins to modify and what bins to remove
+			
+	    	// maintain lists of what bins to modify and what bins to remove
 			List<AnnotationTile> tilesToWrite = new LinkedList<>();
-			List<AnnotationTile> tilesToRemove = new LinkedList<>();
+			List<AnnotationTile> tilesToRemove = new LinkedList<>();		
 			
 			// read existing tiles
 			List<AnnotationTile> tiles = getTiles( convert( indices ) );
 							
-			for ( AnnotationTile tile : tiles ) {
-				
-				if ( tile.remove( annotation ) ) {
-					
+			for ( AnnotationTile tile : tiles ) {			
+				if ( tile.remove( annotation ) ) {					
 					// if successfully removed data from this bin, flag to write change
 					tilesToWrite.add( tile );
 				}
-				if ( tile.getBins().size() == 0 ) {
-					
+				if ( tile.getBins().size() == 0 ) {				
 					// if no data left, flag bin for removal
 					tilesToRemove.add( tile );
 					// no longer have to write this bin back
@@ -158,8 +143,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 			}	
 
 			// write modified tiles
-			writeTilesToIO( tilesToWrite );
-						
+			writeTilesToIO( tilesToWrite );						
+			
 			// remove empty tiles and data
 			removeTilesFromIO( tilesToRemove );
 			removeDataFromIO( annotation );
@@ -219,29 +204,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	
 	private List<AnnotationTile> getTiles( List<TileIndex> indices ) {
 		
-		return readTilesFromIO( indices );
-		/*
-		List<AnnotationTile> tiles = new LinkedList<>();			
-		List<TileIndex> toReadFromIO = new LinkedList<>();	
-		
-		// pull from cache
-		for ( TileIndex index : indices ) {
-			
-			AnnotationTile tile = _tileCache.get( index );		
-			if ( tile != null ) {
-				// found in cache
-				tiles.add( tile );
-			} else {
-				// not in cache, flag to read from io
-				toReadFromIO.add( index );
-			}
-		}
-		
-		// pull tiles from io while updating cache
-    	tiles.addAll( readTilesFromIO( toReadFromIO ) );
-		
-		return tiles;	
-		*/	
+		return readTilesFromIO( indices );	
 	}
 	
 	
@@ -257,8 +220,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return getDataFromIndex( references );
 
 	}
-	
-	
+		
 	private List<AnnotationData> getData( List<TileIndex> indices, Map<String, Integer> filter ) {
 					
 		// get all required tiles
@@ -274,37 +236,14 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 	
 	private List<AnnotationData> getDataFromIndex( List<Long> indices ) {
-		
-		/*
-		List<AnnotationData> data = new LinkedList<>();	
-		List<Long> dataToReadFromIO = new LinkedList<>();
-		
-		// for each reference, pull from cache and flag missing for read
-		for ( Long index : indices ) {
-			
-			AnnotationData d = _dataCache.get( index );	
-			if ( d != null ) {				
-				// found in cache
-				data.add( d );
-			} else {				
-				// not in cache, flag to read from io
-				dataToReadFromIO.add( index );
-			}
-		}
-		
-    	// pull data from io and update cache	
-    	data.addAll( readDataFromIO( dataToReadFromIO ) );
-			
-		return data;
-		*/
-		return readDataFromIO( indices );
-		
+
+		return readDataFromIO( indices );		
 	}
 	
 
-
-	
-	private void writeTilesToIO( List<AnnotationTile> tiles ) {
+	protected void writeTilesToIO( List<AnnotationTile> tiles ) {
+		
+		if ( tiles.size() == 0 ) return;
 		
 		try {
 
@@ -318,7 +257,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	private void writeDataToIO( AnnotationData data ) {
+	protected void writeDataToIO( AnnotationData data ) {
 		
 		List<AnnotationData> dataList = new LinkedList<>();
 		dataList.add( data );
@@ -334,8 +273,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	private void removeTilesFromIO( List<AnnotationTile> tiles ) {
+	protected void removeTilesFromIO( List<AnnotationTile> tiles ) {
 
+		if ( tiles.size() == 0 ) return;
+		
 		try {		
 
 			_io.initializeForRemove( TABLE_NAME );		
@@ -348,7 +289,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	private void removeDataFromIO( AnnotationData data ) {
+	protected void removeDataFromIO( AnnotationData data ) {
 		
 		List<AnnotationData> dataList = new LinkedList<>();
 		dataList.add( data );
@@ -365,9 +306,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	private List<AnnotationTile> readTilesFromIO( List<TileIndex> indices ) {
+	protected List<AnnotationTile> readTilesFromIO( List<TileIndex> indices ) {
 			
 		List<AnnotationTile> tiles = new LinkedList<>();
+		
+		if ( indices.size() == 0 ) return tiles;
+		
 		try {
 			
 			_io.initializeForRead( TABLE_NAME );		
@@ -381,9 +325,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	private List<AnnotationData> readDataFromIO( List<Long> indices ) {
+	protected List<AnnotationData> readDataFromIO( List<Long> indices ) {
 		
 		List<AnnotationData> data = new LinkedList<>();
+		
+		if ( indices.size() == 0 ) return data;
 		
 		try {
 			

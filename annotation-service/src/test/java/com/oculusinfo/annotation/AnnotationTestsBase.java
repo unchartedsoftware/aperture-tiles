@@ -53,7 +53,7 @@ import org.junit.Test;
 public class AnnotationTestsBase {
 	
 	static final double   EPSILON = 0.00001;
-	static final int      NUM_ENTRIES = 20;
+	static final int      NUM_ENTRIES = 100;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 

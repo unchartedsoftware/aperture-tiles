@@ -52,7 +52,7 @@ public class ConcurrentLRUCache<A, B> implements AnnotationCache<A, B> {
 	
 	private Map<A,B> _map;
 	private final ReadWriteLock _lock = new ReentrantReadWriteLock();
-			
+
 	public ConcurrentLRUCache( int maxEntries ) {
 		_map = new LRULinkedHashMap<>( maxEntries );	
 	}

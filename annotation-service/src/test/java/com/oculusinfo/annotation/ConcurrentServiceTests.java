@@ -38,6 +38,7 @@ import org.junit.After;
 import org.junit.Before;
 
 import com.oculusinfo.annotation.rest.*;
+import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.annotation.rest.impl.*;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
@@ -46,14 +47,14 @@ import com.oculusinfo.binning.TileIndex;
 public class ConcurrentServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
-	static final int NUM_THREADS = 20;
+	static final int NUM_THREADS = 32;
 	protected AnnotationService    _service;	
 	protected List<AnnotationData> _annotations;
 	
     @Before
     public void setup () {
     	
-    	_service = new AnnotationServiceImpl();
+    	_service = new CachedAnnotationServiceImpl();
 
     }
 

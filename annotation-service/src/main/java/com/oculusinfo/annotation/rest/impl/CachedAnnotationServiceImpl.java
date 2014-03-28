@@ -1,0 +1,153 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+ * 
+ * Released under the MIT License.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package com.oculusinfo.annotation.rest.impl;
+
+import java.util.LinkedList;
+import java.util.List;
+
+//import com.google.inject.Singleton;
+import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.cache.*;
+import com.oculusinfo.annotation.cache.impl.*;
+import com.oculusinfo.binning.*;
+
+
+//@Singleton
+public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
+
+	private AnnotationCache<TileIndex, AnnotationTile> _tileCache;
+	private AnnotationCache<Long, AnnotationData>      _dataCache;
+
+	public CachedAnnotationServiceImpl() {
+		
+		super();
+		_tileCache = new ConcurrentLRUCache<>( 10000 );
+		_dataCache = new ConcurrentLRUCache<>( 10000 );
+	}
+	
+	@Override
+	protected void writeTilesToIO( List<AnnotationTile> tiles ) {
+		
+		// put in cache
+		for ( AnnotationTile tile : tiles ) {
+			_tileCache.put( tile.getIndex(), tile );
+		}
+
+		super.writeTilesToIO( tiles );
+	}
+	
+	@Override
+	protected void writeDataToIO( AnnotationData data ) {
+		
+		// put in cache
+		_dataCache.put( data.getIndex(), data );
+		
+		super.writeDataToIO( data );
+	}
+	
+	@Override
+	protected void removeTilesFromIO( List<AnnotationTile> tiles ) {
+
+		// remove from cache
+		for ( AnnotationTile tile : tiles ) {
+			_tileCache.remove( tile.getIndex() );
+		}
+		
+		super.removeTilesFromIO( tiles );
+
+	}
+	
+	@Override
+	protected void removeDataFromIO( AnnotationData data ) {
+		
+		// remove from cache
+		_dataCache.remove( data.getIndex() );
+
+		super.removeDataFromIO( data );
+
+	}
+	
+	@Override
+	protected List<AnnotationTile> readTilesFromIO( List<TileIndex> indices ) {
+			
+		List<AnnotationTile> tiles = new LinkedList<>();			
+		List<TileIndex> toReadFromIO = new LinkedList<>();	
+		
+		// pull from cache
+		for ( TileIndex index : indices ) {
+			
+			AnnotationTile tile = _tileCache.get( index );		
+			if ( tile != null ) {
+				// found in cache
+				tiles.add( tile );
+			} else {
+				// not in cache, flag to read from io
+				toReadFromIO.add( index );
+			}
+		}
+		
+		// pull tiles from io while updating cache
+    	tiles.addAll( super.readTilesFromIO( toReadFromIO ) );
+		
+		// add to cache
+		for ( AnnotationTile tile : tiles ) {
+			_tileCache.put( tile.getIndex(), tile );
+		}
+
+		return tiles;		
+	}
+	
+	
+	@Override
+	protected List<AnnotationData> readDataFromIO( List<Long> indices ) {
+				
+		List<AnnotationData> data = new LinkedList<>();	
+		List<Long> dataToReadFromIO = new LinkedList<>();
+		
+		// for each reference, pull from cache and flag missing for read
+		for ( Long index : indices ) {
+			
+			AnnotationData d = _dataCache.get( index );	
+			if ( d != null ) {				
+				// found in cache
+				data.add( d );
+			} else {				
+				// not in cache, flag to read from io
+				dataToReadFromIO.add( index );
+			}
+		}
+		
+    	// pull data from io and update cache	
+		data.addAll( super.readDataFromIO( dataToReadFromIO ) );
+		
+		// add to cache
+		for ( AnnotationData d : data ) {
+			_dataCache.put( d.getIndex(), d );
+		}
+
+		return data;		
+	}
+	
+	
+}
