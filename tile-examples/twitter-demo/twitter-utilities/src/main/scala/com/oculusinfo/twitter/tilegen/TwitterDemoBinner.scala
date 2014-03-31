@@ -77,19 +77,20 @@ object TwitterDemoBinner {
     } else {
       sc.textFile(source, partitions)
     }
+   
     val data = rawData.mapPartitions(i => {
       val recordParser = new TwitterDemoRecordParser(startTime.getTime(), endTime.getTime, bins)
       i.flatMap(line => {
-	try {
-          if (useWords) {
-	    recordParser.getRecordsByWord(line, stopWordList)
-          } else {
-            recordParser.getRecordsByTag(line)
-          }
-	} catch {
-	    // Just ignore bad records, there aren't many
-	    case _: Throwable => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
-	}
+    	  try {
+    		  if (useWords) {
+    			  recordParser.getRecordsByWord(line, stopWordList)
+    		  } else {
+    			  recordParser.getRecordsByTag(line)
+    		  }
+    	  } catch {
+    		  // Just ignore bad records, there aren't many
+    	  	case _: Throwable => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
+    	  }
       })
     })
     data.cache

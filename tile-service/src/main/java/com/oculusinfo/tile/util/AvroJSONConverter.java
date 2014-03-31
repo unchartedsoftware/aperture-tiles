@@ -84,7 +84,7 @@ public class AvroJSONConverter {
         } finally {
             fileReader.close();
         }
-        String jsonString = output.toString();
+        String jsonString = output.toString("UTF-8");
         return new JSONObject(jsonString);
     }
 }
