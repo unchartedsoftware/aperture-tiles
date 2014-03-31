@@ -53,6 +53,12 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <version>${hadoop-common-version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>asm</artifactId>
+          <groupId>asm</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
 <!--    
