@@ -36,14 +36,16 @@ import com.oculusinfo.binning.*;
 //@Singleton
 public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 
+	private final int MAX_CACHE_ENTRIES = 10000;
+	
 	private AnnotationCache<TileIndex, AnnotationTile> _tileCache;
 	private AnnotationCache<Long, AnnotationData>      _dataCache;
 
 	public CachedAnnotationServiceImpl() {
 		
 		super();
-		_tileCache = new ConcurrentLRUCache<>( 10000 );
-		_dataCache = new ConcurrentLRUCache<>( 10000 );
+		_tileCache = new ConcurrentLRUCache<>( MAX_CACHE_ENTRIES );
+		_dataCache = new ConcurrentLRUCache<>( MAX_CACHE_ENTRIES );
 	}
 	
 	@Override
@@ -108,10 +110,11 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		}
 		
 		// pull tiles from io while updating cache
-    	tiles.addAll( super.readTilesFromIO( toReadFromIO ) );
+		List<AnnotationTile> freshTiles = super.readTilesFromIO( toReadFromIO );
+    	tiles.addAll( freshTiles );
 		
 		// add to cache
-		for ( AnnotationTile tile : tiles ) {
+		for ( AnnotationTile tile : freshTiles ) {
 			_tileCache.put( tile.getIndex(), tile );
 		}
 
@@ -139,10 +142,11 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		}
 		
     	// pull data from io and update cache	
-		data.addAll( super.readDataFromIO( dataToReadFromIO ) );
+		List<AnnotationData> freshData = super.readDataFromIO( dataToReadFromIO );
+		data.addAll( freshData );
 		
 		// add to cache
-		for ( AnnotationData d : data ) {
+		for ( AnnotationData d : freshData ) {
 			_dataCache.put( d.getIndex(), d );
 		}
 

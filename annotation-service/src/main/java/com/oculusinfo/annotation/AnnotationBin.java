@@ -29,11 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
-import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.binning.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 /*
  * Annotation Bin:
  * {

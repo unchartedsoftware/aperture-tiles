@@ -24,14 +24,6 @@
 package com.oculusinfo.annotation;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-
-import org.json.JSONObject;
-
-import com.oculusinfo.binning.BinIndex;
 
 public abstract class AnnotationData implements Serializable {
     

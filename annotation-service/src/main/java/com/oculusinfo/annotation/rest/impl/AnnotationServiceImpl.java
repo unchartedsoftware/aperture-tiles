@@ -143,7 +143,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			}	
 
 			// write modified tiles
-			writeTilesToIO( tilesToWrite );						
+			writeTilesToIO( tilesToWrite );	
 			
 			// remove empty tiles and data
 			removeTilesFromIO( tilesToRemove );

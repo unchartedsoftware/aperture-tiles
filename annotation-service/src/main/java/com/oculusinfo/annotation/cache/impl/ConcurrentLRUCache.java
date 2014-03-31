@@ -26,11 +26,16 @@ package com.oculusinfo.annotation.cache.impl;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.locks.*;
 
 import com.oculusinfo.annotation.cache.*;
 	
+/**
+ * Simple Least-Recently-Used cache that extends LinkedHashMap for its internal map. As
+ * a LinkedHashMap is not thread-safe, per key locks are implemented.
+ * 
+ */
 public class ConcurrentLRUCache<A, B> implements AnnotationCache<A, B> {
 	
 	private class LRULinkedHashMap<C, D> extends LinkedHashMap<C, D> {
@@ -51,64 +56,75 @@ public class ConcurrentLRUCache<A, B> implements AnnotationCache<A, B> {
 	}
 	
 	private Map<A,B> _map;
-	private final ReadWriteLock _lock = new ReentrantReadWriteLock();
-
+	private HashSet<A> _locks = new HashSet<>(); 
+	
+	private void lock( A key ) {
+	    synchronized( _locks ) {
+	        while( _locks.contains( key ) ) {
+	        	// already being locked
+	        	try {
+	        		 // wait for release
+	        		_locks.wait();          
+	        	} catch ( Exception e ) {
+	        		e.printStackTrace();
+	        	}
+	        }	     
+	        // I lock it
+	        _locks.add( key );            
+	    }
+	}
+	
+	private void unlock( A key ) {
+	    synchronized( _locks ) {
+	    	_locks.remove( key );
+	    	_locks.notifyAll();
+	    }
+	}
+	
 	public ConcurrentLRUCache( int maxEntries ) {
-		_map = new LRULinkedHashMap<>( maxEntries );	
+		_map = new LRULinkedHashMap<>( maxEntries );
+		
 	}
 	
 	public B get( A key ) {
-		_lock.readLock().lock();
+				
+		lock( key );
 		try {
 			return _map.get( key );
 		} finally {
-			_lock.readLock().unlock();
+			unlock( key );
 		}
 	}
+	
 	
 	public List<B> get( List<A> keys ) {
 		
-		_lock.readLock().lock();
-		try {
-			List<B> bs = new LinkedList<>();
-			for ( A key : keys ) {
-				bs.add( _map.get( key ) );
-			}
-			return bs;
-			
-		} finally {
-			_lock.readLock().unlock();
+		List<B> bs = new LinkedList<>();
+		for ( A key : keys ) {
+			bs.add( get( key ) );
 		}
+		return bs;
 	}
 	
-	public void put( A key, B value ) {		
-		_lock.writeLock().lock();
+	
+	public void put( A key, B value ) {	
+		
+		lock( key );
 		try {
 			_map.put( key , value );
 		} finally {
-			_lock.writeLock().unlock();
+			unlock( key );
 		}
 	}
 	
-	public void put( List<A> keys, List<B> values ) {		
-		_lock.writeLock().lock();
-		try {
-			for (int i=0; i<keys.size(); i++) {
-				_map.put( keys.get(i) , values.get(i) );
-			}
-			
-		} finally {
-			_lock.writeLock().unlock();
-		}
-	}
 	
 	public void remove( A key ) {
 		
-		_lock.writeLock().lock();
+		lock( key );
 		try {
 			_map.remove( key );
 		} finally {
-			_lock.writeLock().unlock();
+			unlock( key );
 		}			
 	}
 	

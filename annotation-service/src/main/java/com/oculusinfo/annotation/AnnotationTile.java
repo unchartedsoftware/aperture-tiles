@@ -30,10 +30,8 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 
-import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.binning.*;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /*

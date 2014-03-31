@@ -24,12 +24,49 @@
 package com.oculusinfo.annotation.cache;
 
 import java.util.List;
-	
+
+
 public interface AnnotationCache<A, B> {
 		
+	/**
+     * Get an entry from the cache
+     * 
+     * @param key
+     *           	The map key for the cache entry
+     * @return 
+     * 				The cache entry
+     */
 	public B get( A key );	
+	
+	
+	/**
+     * Get multiple entries from the cache
+     * 
+     * @param keys
+     *           	List of map keys for the cache entries
+     * @return 
+     * 				The cache entries
+     */
 	public List<B> get( List<A> keys );	
+	
+	
+	/**
+     * Put an entry into the cache
+     * 
+     * @param keys
+     *           	The map key for the cache entry
+     * @param value
+     * 				The map value for the cache entry
+     */
 	public void put( A key, B value );
+	
+	
+	/**
+     * Removes an entry from the cache
+     * 
+     * @param key
+     *           	The map key for the cache entry
+     */
 	public void remove( A key );
 	
 }
