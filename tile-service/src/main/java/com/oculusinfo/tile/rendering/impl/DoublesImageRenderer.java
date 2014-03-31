@@ -65,7 +65,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
         String rawValue = parameter.getPropertyValue(property);
         try {
             return Double.parseDouble(rawValue);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException|NullPointerException e) {
             LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
             return def;
         }

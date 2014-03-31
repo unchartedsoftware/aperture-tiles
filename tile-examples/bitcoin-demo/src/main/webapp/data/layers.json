@@ -30,7 +30,8 @@
                     "oculus.binning.parsing.logamount.fieldAggregation": "log",
                     "oculus.binning.parsing.logamount.fieldBase": "10",
                     "oculus.binning.xField": "source",
-                    "oculus.binning.yField": "destination"
+                    "oculus.binning.yField": "destination",
+					"oculus.binning.levels": "0-10"
                 }
             }
 	    }

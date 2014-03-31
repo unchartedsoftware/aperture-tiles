@@ -27,6 +27,9 @@ package com.oculusinfo.tile;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 
@@ -48,6 +51,11 @@ public class SparkModule extends AbstractModule {
                                           @Named("org.apache.spark.jobName") String jobName,
                                           @Named("org.apache.spark.home")    String sparkHome,
                                           @Named("org.apache.spark.jars")    String extraJars) {
+	    Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+	    Logger.getLogger("org.apache.spark").setLevel(Level.WARN);
+	    Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
+	    Logger.getLogger("akka").setLevel(Level.WARN);
+
         // Construct our jarlist
         List<String> jarList = new ArrayList<>();
         // First, get our known needed jars from our own classpath
