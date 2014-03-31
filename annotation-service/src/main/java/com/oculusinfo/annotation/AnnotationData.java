@@ -25,6 +25,8 @@ package com.oculusinfo.annotation;
 
 import java.io.Serializable;
 
+import org.json.JSONObject;
+
 public abstract class AnnotationData implements Serializable {
     
 	private static final long serialVersionUID = 1L;
@@ -35,6 +37,20 @@ public abstract class AnnotationData implements Serializable {
 	public abstract <T> T getData();
 	public abstract Long getIndex();
 
+	public JSONObject toJSON() {
+		try {
+			JSONObject json = new JSONObject();
+			if ( getX() != null) json.put( "x", getX() );
+			if ( getY() != null) json.put( "y", getY() );
+			json.put("priority", getPriority() );
+			json.put("data", getData() );
+			return json;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;	
+	}
+	
 	@Override
     public int hashCode () {
     	return getIndex().intValue();

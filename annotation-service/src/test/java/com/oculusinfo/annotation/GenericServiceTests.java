@@ -60,7 +60,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
 		// scan all
     	System.out.println("Reading ALL annotations");
     	long start = System.currentTimeMillis();
-    	List<AnnotationData> scan = _service.readAnnotation( tile );
+    	List<AnnotationData> scan = _service.readAnnotations( tile );
     	long end = System.currentTimeMillis();
     	double time = ((end-start)/1000.0);
 		System.out.println( "\t" + scan.size() + " entries scanned in " + time + " seconds");

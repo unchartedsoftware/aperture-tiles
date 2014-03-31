@@ -82,37 +82,8 @@ public class AnnotationTestsBase {
 	
 	protected void printTiles( List<AnnotationTile> tiles ) {
 		
-		for ( AnnotationTile tile : tiles ) {
-			
-			System.out.println( "{" );
-			System.out.println( "    \"level\":" + tile.getIndex().getLevel() + ",");
-			System.out.println( "    \"x\":" + tile.getIndex().getX() + ",");
-			System.out.println( "    \"y\":" + tile.getIndex().getY() + ",");
-			System.out.println( "    bins: {" );
-			
-			// for each bin
-			for (Map.Entry<BinIndex, AnnotationBin> binEntry : tile.getBins().entrySet() ) {
-							
-				BinIndex key = binEntry.getKey();
-				AnnotationBin bin = binEntry.getValue();
-			    System.out.print( "        \"" + key.toString() + "\":{");
-				// for each priority group in a bin
-			    for (Map.Entry<String, List<Long>> referenceEntry : bin.getReferences().entrySet() ) {
-			    	
-			    	String priority = referenceEntry.getKey();
-			    	List<Long> references = referenceEntry.getValue();
-			    	
-			    	System.out.print( "\"" + priority + "\":[");
-			    	
-			    	for ( Long reference : references ) {
-			    		System.out.print( reference + ",");				    	
-			    	}
-			    	System.out.print( "]");		    	
-			    }
-			    System.out.println( "}" );		
-			}
-			
-			System.out.println( "    }" );
+		for ( AnnotationTile tile : tiles ) {			
+			System.out.println( tile.toJSON().toString() );			
 		}
 	}
 	

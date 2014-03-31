@@ -55,7 +55,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     @Before
     public void setup () {
     	
-    	_service = new AnnotationServiceImpl();
+    	_service = new CachedAnnotationServiceImpl();
 
     }
 
@@ -90,8 +90,12 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     			}
     			case 1:
     			{  		    	
-    				List<AnnotationData> scan = readRandom();	
-    		    	//System.out.println( "Thread " + name + " read " + scan.size() +" entries" );	
+    				long start = System.currentTimeMillis();
+    				List<AnnotationData> scan = readRandom();	   				
+    				long end = System.currentTimeMillis();
+    		    	double time = ((end-start)/1000.0);
+    		    	_readTimesPerEntry.get( name ).add( time );
+    		    	//System.out.println( "Thread " + name + " read " + scan.size() +" entries in " + time );	
     				_status++;
     				break;
     			}	
@@ -115,7 +119,9 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     }
     
 
-    static ConcurrentMap<String, List<WriteReadRemove>> _dataRecord = new ConcurrentHashMap<>();
+    static ConcurrentMap<String, List<WriteReadRemove>> _dataRecord = new ConcurrentHashMap<>();   
+    static ConcurrentMap<String, List<Double>> _readTimesPerEntry = new ConcurrentHashMap<>();
+    
     //static ConcurrentMap<String, AnnotationTile> _tileRecord = new ConcurrentHashMap<>();
     
    
@@ -136,7 +142,8 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 				annotations.add( new WriteReadRemove( generateJSONAnnotation() ) );
 			}	
 			_dataRecord.put( _name, annotations );
-
+			_readTimesPerEntry.put( _name, new LinkedList<Double>() );
+						
 			List<Integer> indices = new ArrayList<>();
 			for (int i=0; i<NUM_ENTRIES; i++) {
 				indices.add(i);
@@ -149,7 +156,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	    		if ( annotations.get( indices.get(i) ).process( _name ) ) {
 	    			indices.remove(i);	    			
 	    		}
-
+	    		
 	    	}
 	    	
 		}		
@@ -202,13 +209,24 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	long end = System.currentTimeMillis();
     	double time = ((end-start)/1000.0);
 		System.out.println( "Completed in " + time + " seconds");
+		
+		double sum = 0;
+		int count = 0;
+		for ( List<Double> t : _readTimesPerEntry.values() ) {
+			for ( Double d : t ) {
+				sum += d;
+				count++;
+			}			
+		}	
+		System.out.println( "Average read times of " + ( sum / count ) + " seconds per scan");
+		
 	}
 	
 	private List<AnnotationData> readAll() {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	List<AnnotationData> scan = _service.readAnnotation( tile );   	
+    	List<AnnotationData> scan = _service.readAnnotations( tile );   	
     	return scan;
 
 	}
@@ -224,7 +242,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		//TileIndex tile = new TileIndex( 0, 0, 0 );
     	
-		List<AnnotationData> scan = _service.readAnnotation( tile );   	
+		List<AnnotationData> scan = _service.readAnnotations( tile );   	
     	return scan;
 
 	}

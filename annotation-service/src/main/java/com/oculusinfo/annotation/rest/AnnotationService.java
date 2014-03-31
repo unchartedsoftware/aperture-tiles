@@ -41,7 +41,7 @@ public interface AnnotationService {
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract List<AnnotationData> readAnnotation( TileIndex tile );	
+	public abstract List<AnnotationData> readAnnotations( TileIndex tile );	
 	
 	/*
 	 * Remove an annotation from the storage service

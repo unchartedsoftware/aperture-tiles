@@ -30,11 +30,11 @@ import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.annotation.rest.impl.*;
 
 
-public class AnnotationModule extends AbstractModule {
+public class AnnotationServiceModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(AnnotationService.class).to(AnnotationServiceImpl.class);
+		bind(AnnotationService.class).to(CachedAnnotationServiceImpl.class);
 	}
 
 }

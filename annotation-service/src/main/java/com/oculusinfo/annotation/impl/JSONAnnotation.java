@@ -92,6 +92,7 @@ public class JSONAnnotation extends AnnotationData {
 		return _priority;
 	}
 	
+	/*
 	public JSONObject toJSON() {
 		try {
 			JSONObject json = new JSONObject();
@@ -105,6 +106,7 @@ public class JSONAnnotation extends AnnotationData {
 		}
 		return null;	
 	}
+	*/
 	
 	private Long hash( JSONObject data ) {
     	

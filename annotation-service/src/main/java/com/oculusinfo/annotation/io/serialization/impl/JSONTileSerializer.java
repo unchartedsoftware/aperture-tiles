@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -114,6 +115,7 @@ public class JSONTileSerializer extends GenericJSONSerializer<AnnotationTile>{
 											 tileJSON.getInt("y"), 
 											 AnnotationTile.NUM_BINS, 
 											 AnnotationTile.NUM_BINS );
+			
 			// for all binkeys
 	        Iterator<?> binKeys = tileJSON.keys();
 	        while( binKeys.hasNext() ) {

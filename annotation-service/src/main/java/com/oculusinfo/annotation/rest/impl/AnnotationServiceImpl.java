@@ -101,7 +101,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	public List<AnnotationData> readAnnotation( TileIndex query ) {
+	public List<AnnotationData> readAnnotations( TileIndex query ) {
 		
 		_lock.readLock().lock();
     	try {
@@ -129,12 +129,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 			// read existing tiles
 			List<AnnotationTile> tiles = getTiles( convert( indices ) );
 							
-			for ( AnnotationTile tile : tiles ) {			
-				if ( tile.remove( annotation ) ) {					
+			for ( AnnotationTile tile : tiles ) {	
+				
+				// get bin index for the annotation in this tile
+				BinIndex binIndex = _indexer.getIndex( annotation, tile.getIndex().getLevel() ).getBin();
+				
+				if ( tile.remove( binIndex, annotation ) ) {					
 					// if successfully removed data from this bin, flag to write change
 					tilesToWrite.add( tile );
 				}
-				if ( tile.getBins().size() == 0 ) {				
+				if ( tile.size() == 0 ) {				
 					// if no data left, flag bin for removal
 					tilesToRemove.add( tile );
 					// no longer have to write this bin back

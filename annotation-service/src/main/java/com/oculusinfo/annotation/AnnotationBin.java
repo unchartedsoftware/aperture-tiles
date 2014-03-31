@@ -48,25 +48,30 @@ public class AnnotationBin implements Serializable {
 
     private final BinIndex _index;
     private Map<String, List<Long>> _references = new LinkedHashMap<>();
-       
+      
+    public AnnotationBin( BinIndex index ) {   
+    	_index = index;
+    }   
     public AnnotationBin( BinIndex index, Map<String, List<Long>> references ) {   
     	_index = index;
     	_references = references;
-    }
-        
+    }        
     public AnnotationBin( BinIndex index, AnnotationData data ) {   
     	_index = index;
     	add( data );
     }
     
+    
+    public BinIndex getIndex() {
+    	return _index;
+    }
+    
+    
     public synchronized int size() {
     	return _references.size();
     }
       
-    public BinIndex getIndex() {
-    	return _index;
-    }
-
+    
     public synchronized void add( AnnotationData data ) {
     	if ( _references.containsKey( data.getPriority() ) ) {
     		List<Long> entries = _references.get( data.getPriority() );
@@ -77,7 +82,8 @@ public class AnnotationBin implements Serializable {
     		_references.put( data.getPriority(), entries );
     	}    	
     }
-       
+      
+    
     public synchronized boolean remove( AnnotationData data ) { 
     	
     	String priority = data.getPriority();
@@ -101,6 +107,29 @@ public class AnnotationBin implements Serializable {
 
     	return removedAny;
     }
+
+    
+    public synchronized List<Long> getReferences( String priority ) {
+    	
+    	if ( _references.containsKey( priority ) ) {
+    		return _references.get( priority );
+    	} else {
+    		return new LinkedList<>();
+    	}
+    	
+    }
+    
+    
+    public synchronized List<Long> getAllReferences() {
+    	
+    	List<Long> allReferences = new LinkedList<>();  
+    	// for each priority group in a bin
+		for ( List<Long> references : _references.values() ) {
+			allReferences.addAll( references );
+		}	
+    	return allReferences;
+    }    
+    
     
     public JSONObject toJSON() {
     	
@@ -129,15 +158,12 @@ public class AnnotationBin implements Serializable {
     	return binJSON;
     }
     
-    
-    public Map<String, List<Long>> getReferences() {
-    	return _references;
-    }
-           
+     
     @Override
     public int hashCode () {
     	return _index.hashCode();
     }
+    
     
     @Override
     public boolean equals (Object that) {   	    	

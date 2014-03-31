@@ -25,12 +25,18 @@
 package com.oculusinfo.annotation.rest;
 
 import java.awt.image.BufferedImage;
+import java.util.List;
 import java.util.UUID;
 
 import oculus.aperture.common.rest.ApertureServerResource;
 
+import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.impl.*;
+import com.oculusinfo.binning.*;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
@@ -38,34 +44,29 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
+
 import com.google.inject.Inject;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 
 public class AnnotationResource extends ApertureServerResource {
-
 	
 	private AnnotationService _service;
-	
 	
 	@Inject
 	public AnnotationResource(AnnotationService service) {
 		_service = service;
 	}
 	
+
+	
 	@Post("json")
-	public Representation getLayer(String jsonData) throws ResourceException {
+	public void postAnnotation( String jsonData ) throws ResourceException {
 
 		try {
-			
 			JSONObject jsonObj = new JSONObject(jsonData);
-			
-			String host = getRequest().getResourceRef().getPath();
-			
-			host = host.substring(0, host.lastIndexOf("layer"));
-			
-			JSONObject layerInfo = _service.getLayer(host, jsonObj);
-			
-			return new JsonRepresentation(layerInfo);
+
+			_service.writeAnnotation( new AnnotationData( jsonData ) );
+
 			
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
@@ -73,14 +74,15 @@ public class AnnotationResource extends ApertureServerResource {
 		}
 	}
 	
+	
 	@Get
-	public Representation getAnnotations() throws ResourceException {
+	public Representation getAnnotation() throws ResourceException {
 
 		try {
+			
 			// No alternate versions supported. But if we did:
 			//String version = (String) getRequest().getAttributes().get("version");
 			String id = (String) getRequest().getAttributes().get("id");
-			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
 			String xAttr = (String) getRequest().getAttributes().get("x");
@@ -98,18 +100,25 @@ public class AnnotationResource extends ApertureServerResource {
 		    //
 		    // The data should include index information, but it has to be 
 		    // there for tiles with no data too, so we can't count on it.
-		    JSONObject result = new JSONObject();
+			JSONObject result = new JSONObject();
 		    JSONObject tileIndex = new JSONObject();
 		    tileIndex.put("level", zoomLevel);
 		    tileIndex.put("xIndex", x);
 		    tileIndex.put("yIndex", y);
-		    result.put("index", tileIndex);
+		    result.put("index", tileIndex );
+		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
 		    
-		    TileIndex index = new TileIndex();
-		    result.put("tile", _service.getTileObject(uuid, layer, zoomLevel, x, y));
+		    List<AnnotationData> data = _service.readAnnotations( index );
+		    
+		    JSONArray dataArray = new JSONArray();
+		    for ( AnnotationData d : data ) {
+		    	dataArray.put( d );
+		    }
+		    
+		    result.put("annotations", dataArray );
 
 		    setStatus(Status.SUCCESS_CREATED);
-		    return new JsonRepresentation(result);
+		    return new JsonRepresentation( result );
 
 		} catch (Exception e){
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,

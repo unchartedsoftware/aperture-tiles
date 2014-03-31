@@ -24,6 +24,7 @@
 package com.oculusinfo.annotation;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,76 +52,72 @@ public class AnnotationTile implements Serializable {
 
     private final TileIndex _index;
     private Map<BinIndex, AnnotationBin> _bins = new LinkedHashMap<>();
-     
+
+    
     public AnnotationTile( TileIndex index ) {   
     	_index = index;
-    }
-    
+    }    
     public AnnotationTile( TileIndex index, AnnotationBin bin ) {   
     	_index = index;
     	_bins.put( bin.getIndex(), bin );
-    }
-    
+    }    
     public AnnotationTile( TileIndex index, Map<BinIndex, AnnotationBin> bins ) {   
     	_index = index;
     	_bins = bins;
     }
     
+    
     public TileIndex getIndex() {
     	return _index;
     }
      
-    public Map<BinIndex, AnnotationBin> getBins() {
-    	return _bins;
+    
+    public synchronized int size() {
+    	return _bins.size();
     }
     
-    public synchronized void add( BinIndex bin, AnnotationData data ) {
+    
+    public synchronized void add( BinIndex binIndex, AnnotationData data ) {
     	
-    	if ( _bins.containsKey( bin ) ) {
-    		_bins.get( bin ).add( data );
+		if ( _bins.containsKey( binIndex ) ) {
+    		_bins.get( binIndex ).add( data );
     	} else {
-    		_bins.put( bin, new AnnotationBin( bin, data ) );
-    	}
-    	
+    		_bins.put( binIndex, new AnnotationBin( binIndex, data ) );
+    	}	   	
     }
     
-    public synchronized boolean remove( AnnotationData data ) { 
+    
+    public synchronized boolean remove( BinIndex binIndex, AnnotationData data ) { 
     	
-    	boolean removedAny = false; 	
-    	Iterator<AnnotationBin> iter = _bins.values().iterator();
-    	// for each bin
-    	while ( iter.hasNext() ) {  		    	    
-    	    AnnotationBin bin = iter.next();      	    
-    	    if ( bin.remove( data ) ) {
-    	    	// flag as removed
-    	    	removedAny = true;
-    	    	if ( bin.size() == 0 ) {
-    	    		// remove bin if empty
-    	    		iter.remove();
-    	    	}
-    	    }
-    	}    	
-    	return removedAny;
+		AnnotationBin bin = _bins.get( binIndex );		
+		if ( bin.remove( data ) ) {
+			// remove bin if empty
+			if ( bin.size() == 0 ) {    				   				
+				_bins.remove( binIndex );
+			}
+			return true;
+		}
+		return false;
     }
 
+    
     public synchronized List<Long> getAllReferences() {
     	
     	List<Long> allReferences = new LinkedList<>();  
     	// for each bin
 		for ( AnnotationBin bin : _bins.values() ) {
-			// for each priority group in a bin
-			for ( List<Long> references : bin.getReferences().values() ) {
-				allReferences.addAll( references );
-			}
+			// get all references
+			allReferences.addAll( bin.getAllReferences() );
 		} 	
     	return allReferences;
     }
        
+    
     public synchronized List<Long> getFilteredReferences( Map<String, Integer> filter ) {
     	
     	List<Long> filtered = new LinkedList<>();
     	// for each bin
-    	for ( AnnotationBin bin : _bins.values() ) { 
+    	for ( AnnotationBin bin : _bins.values() ) {
     		
 			// go through filter list get references by priority and by count
 			for (Map.Entry<String, Integer> f : filter.entrySet() ) {
@@ -128,13 +125,12 @@ public class AnnotationTile implements Serializable {
 				String priority = f.getKey();
 				Integer count = f.getValue();
 				
-				if ( bin.getReferences().containsKey( priority ) ) {
-					filtered.addAll( bin.getReferences().get( priority ).subList( 0, count ) );
-				}
+				List<Long> references = bin.getReferences( priority );
+				filtered.addAll( references.subList( 0, count < references.size() ? count : references.size() ) );
 			}
     	}
 		return filtered;
-    }
+    }    
     
     
     public JSONObject toJSON() {
@@ -171,6 +167,7 @@ public class AnnotationTile implements Serializable {
     	return _index.hashCode();
     }
 
+    
     @Override
     public boolean equals (Object that) {   	    	
     	if (that != null)
