@@ -53,12 +53,12 @@ object LiveTileSampleApp {
 
     try {
       val sc = argParser.getSparkConnector().getSparkContext("tile generator")
-      val dataFile = argParser.getStringArgument("s", "The source data file to read")
+      val dataFile = argParser.getString("s", "The source data file to read")
       val data = sc.textFile(dataFile).map(s => {
         val fields = s.split('\t')
         (fields(0).toDouble, fields(1).toDouble, fields(2).toDouble)
       }).cache
-      val imageDir = argParser.getStringArgument("d", "The destination directory into which to put images")
+      val imageDir = argParser.getString("d", "The destination directory into which to put images")
       val pyramid = new AOITilePyramid(-1.0, -1.0, 1.0, 1.0)
       val binDesc = new StandardDoubleBinDescriptor
 

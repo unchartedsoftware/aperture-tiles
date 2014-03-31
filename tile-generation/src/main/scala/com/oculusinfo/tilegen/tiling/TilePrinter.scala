@@ -48,10 +48,10 @@ object TilePrinter {
     val sc = argParser.getSparkConnector().getSparkContext("Tile Edges Test")
 
     val baseLocation = 
-      argParser.getStringArgument("loc",
-                                  "The location from which to get the data")
-    val level = argParser.getIntArgument("level",
-                                         "The level of data to print")
+      argParser.getString("loc",
+                          "The location from which to get the data")
+    val level = argParser.getInt("level",
+                                 "The level of data to print")
     val tileIO = TileIO.fromArguments(argParser)
 
     val binDesc = new StandardDoubleBinDescriptor

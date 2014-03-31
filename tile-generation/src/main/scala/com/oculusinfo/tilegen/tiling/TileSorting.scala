@@ -46,8 +46,8 @@ object TileSortingTest {
     val connector = argParser.getSparkConnector()
     val sc = connector.getSparkContext("Test Pyramid Sort")
 
-    val source = argParser.getStringArgument("s", "source location")
-    val destination = argParser.getStringArgument("d", "destination location")
+    val source = argParser.getString("s", "source location")
+    val destination = argParser.getString("d", "destination location")
 
 
     val pyramid = new AOITilePyramid(-2.0, -2.0, 2.0, 2.0)
@@ -58,8 +58,8 @@ object TileSortingTest {
     val sorter = new TileSorter
 
     val data = sc.textFile(source)
-    val partitions = argParser.getIntArgument("p", "number of partitions",
-                                              Some(data.partitions.length))
+    val partitions = argParser.getInt("p", "number of partitions",
+                                      Some(data.partitions.length))
     val sortedData = sorter.sortDatasetByTile(data, pyramid, coordFcn)
 
     println("Coalescing "+sortedData.partitions.length+

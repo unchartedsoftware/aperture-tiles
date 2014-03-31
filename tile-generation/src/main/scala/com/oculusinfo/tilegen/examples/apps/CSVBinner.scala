@@ -63,16 +63,16 @@ import com.oculusinfo.tilegen.tiling.TileIO
  *      which to write them
  *
  * 
- *  spark.connection.url
+ *  spark
  *      The location of the spark master.
  *      Defaults to "localhost"
  *
- *  spark.connection.home
+ *  sparkhome
  *      The file system location of Spark in the remote location (and,
  *      necessarily, on the local machine too)
  *      Defaults to "/srv/software/spark-0.7.2"
  * 
- *  spark.connection.user
+ *  user
  *      A user name to stick in the job title so people know who is running the
  *      job
  *
@@ -93,40 +93,26 @@ import com.oculusinfo.tilegen.tiling.TileIO
 
 
 
-class PropertyBasedSparkConnector (properties: PropertiesWrapper)
-extends GeneralSparkConnector(
-  properties.getProperty("spark.connection.url", "local"),
-  properties.getProperty("spark.connection.home", "/srv/software/spark-0.7.2"),
-  properties.getOptionProperty("spark.connection.user"),
-  {
-    val jars = properties.getSeqProperty("spark.connection.classpath")
-    if (jars.isEmpty) {
-      SparkConnector.getDefaultLibrariesFromMaven
-    } else {
-      jars
-    }
-  },
-  properties.getOptionProperty("kryo.serialization.registrator")
-  )
-{
-}
-
-
-
-
 object CSVBinner {
   def getTileIO(properties: PropertiesWrapper): TileIO = {
-    properties.getProperty("oculus.tileio.type", "hbase") match {
+    properties.getString("oculus.tileio.type",
+                         "Where to put tiles",
+                         Some("hbase")) match {
       case "hbase" => {
-        val quorum = properties.getOptionProperty("hbase.zookeeper.quorum").get
-        val port = properties.getProperty("hbase.zookeeper.port", "2181")
-        val master = properties.getOptionProperty("hbase.master").get
+        val quorum = properties.getStringOption("hbase.zookeeper.quorum",
+                                                "The HBase zookeeper quorum").get
+        val port = properties.getString("hbase.zookeeper.port",
+                                        "The HBase zookeeper port",
+                                        Some("2181"))
+        val master = properties.getStringOption("hbase.master",
+                                                "The HBase master").get
         new HBaseTileIO(quorum, port, master)
       }
       case _ => {
         val extension =
-            properties.getProperty("oculus.tileio.file.extension",
-                                          "avro")
+            properties.getString("oculus.tileio.file.extension",
+                                 "The extension with which to write tiles",
+                                 Some("avro"))
         new LocalTileIO(extension)
       }
     }
@@ -182,8 +168,7 @@ object CSVBinner {
       argIdx = argIdx + 1
     }
     val defaultProperties = new PropertiesWrapper(defProps)
-
-    val connector = new PropertyBasedSparkConnector(defaultProperties)
+    val connector = defaultProperties.getSparkConnector()
     val sc = connector.getSparkContext("Pyramid Binning")
     val tileIO = getTileIO(defaultProperties)
 

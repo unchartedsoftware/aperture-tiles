@@ -51,10 +51,10 @@ class PropertyWrapperTestSuite extends FunSuite {
     props.setProperty("e.3", "l")
 
     val wrappedProps = new PropertiesWrapper(props)
-    assert(List[String]() === wrappedProps.getSeqProperty("a").toList)
-    assert(List[String]("0") === wrappedProps.getSeqProperty("b").toList)
-    assert(List[String]("a", "b") === wrappedProps.getSeqProperty("c").toList)
-    assert(List[String]("x", "y", "z") === wrappedProps.getSeqProperty("d").toList)
-    assert(List[String]("i", "j", "k", "l") === wrappedProps.getSeqProperty("e").toList)
+    assert(List[String]() === wrappedProps.getStringPropSeq("a", "").toList)
+    assert(List[String]("0") === wrappedProps.getStringPropSeq("b", "").toList)
+    assert(List[String]("a", "b") === wrappedProps.getStringPropSeq("c", "").toList)
+    assert(List[String]("x", "y", "z") === wrappedProps.getStringPropSeq("d", "").toList)
+    assert(List[String]("i", "j", "k", "l") === wrappedProps.getStringPropSeq("e", "").toList)
   }
 }

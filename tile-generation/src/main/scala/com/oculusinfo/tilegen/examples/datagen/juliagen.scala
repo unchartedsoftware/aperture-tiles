@@ -50,54 +50,54 @@ object JuliaSetGenerator {
       val jobName = "Julia Set Generation"
       val sc = argParser.getSparkConnector().getSparkContext(jobName)
 
-      val cReal = argParser.getDoubleArgument("real",
-                                              "The real portion of the "
-                                              +"parameter defining the "
-                                              +"Julia set to generate.")
-      val cImag = argParser.getDoubleArgument("imag",
-                                              "The imaginary portion of the "
-                                              +"parameter defining the Julia "
-                                              +"set to generate.")
-      val minR = argParser.getDoubleArgument("minreal",
-                                             "The minimum real value of the "
-                                             +"input domain.",
-                                             Some(-1.0))
-      val maxR = argParser.getDoubleArgument("maxreal",
-                                             "The maximum real value of the "
-                                             +"input domain",
-                                             Some(1.0))
-      val minI = argParser.getDoubleArgument("minimag",
-                                             "The minimum imaginary value of "
-                                             +"the input domain",
-                                             Some(-1.0))
-      val maxI = argParser.getDoubleArgument("maximag",
-                                             "The maximum imaginary value of "
-                                             +"the input domain",
-                                             Some(1.0))
-      val samples = argParser.getLongArgument("samples",
-                                              "The number of sample points "
-                                              +"to generate in our Julia set. "
-                                              +"There will be some duplication "
-                                              +"- point choice is random.  Also, "
-					      +"note that there can be no more "
-					      +"than about 2g samples per "
-					      +"partition",
-                                              Some(10000000l))
-      val partitions = argParser.getIntArgument("partitions",
-                                                "The number of partitions "
-                                                +"into which to break up "
-                                                +"the data set.",
-                                                Some(5))
+      val cReal = argParser.getDouble("real",
+                                      "The real portion of the "
+	                                      +"parameter defining the "
+	                                      +"Julia set to generate.")
+      val cImag = argParser.getDouble("imag",
+                                      "The imaginary portion of the "
+	                                      +"parameter defining the Julia "
+	                                      +"set to generate.")
+      val minR = argParser.getDouble("minreal",
+                                     "The minimum real value of the "
+	                                     +"input domain.",
+                                     Some(-1.0))
+      val maxR = argParser.getDouble("maxreal",
+                                     "The maximum real value of the "
+	                                     +"input domain",
+                                     Some(1.0))
+      val minI = argParser.getDouble("minimag",
+                                     "The minimum imaginary value of "
+	                                     +"the input domain",
+                                     Some(-1.0))
+      val maxI = argParser.getDouble("maximag",
+                                     "The maximum imaginary value of "
+	                                     +"the input domain",
+                                     Some(1.0))
+      val samples = argParser.getLong("samples",
+                                      "The number of sample points "
+	                                      +"to generate in our Julia set. "
+	                                      +"There will be some duplication "
+	                                      +"- point choice is random.  Also, "
+	                                      +"note that there can be no more "
+	                                      +"than about 2g samples per "
+	                                      +"partition",
+                                      Some(10000000l))
+      val partitions = argParser.getInt("partitions",
+                                        "The number of partitions "
+	                                        +"into which to break up "
+	                                        +"the data set.",
+                                        Some(5))
       val meanIterations =
-        argParser.getIntArgument("iter",
-                                 "The average number of iterations to use "
-                                 +"for each sample",
-                                 Some(100))
-      val outputFile = argParser.getStringArgument("output",
-                                                   "The location to which to "
-                                                   +"output the generated "
-                                                   +"data.",
-                                                   Some("julia"))
+        argParser.getInt("iter",
+                         "The average number of iterations to use "
+	                         +"for each sample",
+                         Some(100))
+      val outputFile = argParser.getString("output",
+                                           "The location to which to "
+	                                           +"output the generated "
+	                                           +"data.",
+                                           Some("julia"))
 
 
       val C = new Complex(cReal, cImag)

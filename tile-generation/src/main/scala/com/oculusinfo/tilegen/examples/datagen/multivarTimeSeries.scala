@@ -38,8 +38,9 @@ import java.io.PrintWriter
 object MultivarTimeSeries {
  
   /**
-   * Breaks the input time range up into sub-ranges and returns them as a list.  If the step in the time range is
-   * not equally divided by the step, the range will be truncated.
+   * Breaks the input time range up into sub-ranges and returns them as a list.  
+   * If the step in the time range is not equally divided by the step, the 
+   *  range will be truncated.
    */
   private def computePartitionRanges(partitions: Int, timeRange: NumericRange[Long]) = {
     val partitionExtra = (timeRange.end - timeRange.start) % timeRange.step
@@ -77,18 +78,18 @@ object MultivarTimeSeries {
     try {
       argParser.debug
       
-    	val fileName = argParser.getStringArgument("output", "Name for generated output files", Some("multivar_data"))
+    	val fileName = argParser.getString("output", "Name for generated output files", Some("multivar_data"))
 
-      val numPoints = argParser.getLongArgument("timestamps", "Number of timestamps to generate", Some(1000))
-      val partitions = argParser.getIntArgument("partitions", "Number of partitions to split the data into when generating", Some(4))
+      val numPoints = argParser.getLong("timestamps", "Number of timestamps to generate", Some(1000))
+      val partitions = argParser.getInt("partitions", "Number of partitions to split the data into when generating", Some(4))
   
-      val numDays = argParser.getIntArgument("days", "Number of days in the time period", Some(90))
+      val numDays = argParser.getInt("days", "Number of days in the time period", Some(90))
       
-      val numVariables = argParser.getIntArgument("variables", "Number of variables for each timestamp", Some(10))
+      val numVariables = argParser.getInt("variables", "Number of variables for each timestamp", Some(10))
  
-      val octaves = argParser.getIntArgument("octaves", "Number of frequences to use in random signal", Some(6))
-      val h = argParser.getDoubleArgument("h", "Noise increment value", Some(0.1))
-      val lacunarity = argParser.getDoubleArgument("lacunarity", "Gap between frequences in random signal", Some(2.0))
+      val octaves = argParser.getInt("octaves", "Number of frequences to use in random signal", Some(6))
+      val h = argParser.getDouble("h", "Noise increment value", Some(0.1))
+      val lacunarity = argParser.getDouble("lacunarity", "Gap between frequences in random signal", Some(2.0))
       
       val startTime = new Date().getTime()
       val cal = new GregorianCalendar()

@@ -74,17 +74,17 @@ object TileToTextConverter {
       val tileIO = TileIO.fromArguments(argParser)
 
       // ... a source location ...
-      val source = argParser.getStringArgument("s", "source location")
+      val source = argParser.getString("s", "source location")
       //   (and while we're here, get the tile meta data)
       val metaData = tileIO.readMetaData(source).get
 
       // ... a tile pyramid ...
       val tilePyramid: TilePyramid = 
-        argParser.getStringArgument("p",
-                                    "pyramid type\n"
-                                    +"EPSG:900913 (mercator)\n"
-                                    +"EPSG:4326 (aoi) DEFAULT",
-                                    Some("EPSG:4326")) match {
+        argParser.getString("p",
+                            "pyramid type\n"
+	                            +"EPSG:900913 (mercator)\n"
+	                            +"EPSG:4326 (aoi) DEFAULT",
+                            Some("EPSG:4326")) match {
           case "EPSG:900913" => {
             new WebMercatorTilePyramid()
           }
@@ -101,10 +101,10 @@ object TileToTextConverter {
       // ... spark connection details ...
       val connector = argParser.getSparkConnector()
 
-      val level = argParser.getIntArgument("level", "The level of tile to display")
-      val x = argParser.getIntArgument("x", "The x index of the tile to display")
-      val y = argParser.getIntArgument("y", "The y index of the tile to display")
-      val t = argParser.getIntArgument("t", "The number in the series of values to display")
+      val level = argParser.getInt("level", "The level of tile to display")
+      val x = argParser.getInt("x", "The x index of the tile to display")
+      val y = argParser.getInt("y", "The y index of the tile to display")
+      val t = argParser.getInt("t", "The number in the series of values to display")
 
       val sc = connector.getSparkContext("Convert tile pyramid to images")
       val serializer = new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
@@ -145,21 +145,21 @@ object TileToImageConverter {
       val tileIO = TileIO.fromArguments(argParser)
 
       // ... a source location ...
-      val source = argParser.getStringArgument("s", "source location")
+      val source = argParser.getString("s", "source location")
 
       //   (and while we're here, get the tile meta data)
       val metaData = tileIO.readMetaData(source).get
 
       // ... a destination location ...
-      val destination = argParser.getStringArgument("d", "destination location")
+      val destination = argParser.getString("d", "destination location")
     
       // ... a tile pyramid ...
       val tilePyramid: TilePyramid = 
-        argParser.getStringArgument("p",
-                                    "pyramid type\n"
-                                    +"EPSG:900913 (mercator)\n"
-                                    +"EPSG:4326 (aoi) DEFAULT",
-                                    Some("EPSG:4326")) match {
+        argParser.getString("p",
+                            "pyramid type\n"
+	                            +"EPSG:900913 (mercator)\n"
+	                            +"EPSG:4326 (aoi) DEFAULT",
+                            Some("EPSG:4326")) match {
           case "EPSG:900913" => {
             new WebMercatorTilePyramid()
           }
@@ -177,7 +177,7 @@ object TileToImageConverter {
       val connector = argParser.getSparkConnector()
 
       // ... a scale to apply to bin values ...
-      val scale = argParser.getStringArgument(
+      val scale = argParser.getString(
         "scale",
         "Scale to apply to bin values.  Can be:\n"
         +"\tlinear - to leave them unchanged (DEFAULT)\n"
@@ -194,23 +194,23 @@ object TileToImageConverter {
       }
 
       // ... and a list of levels
-      val levels = argParser.getIntSeqArgument("levels",
-                                               "comma-spearated list of levels, with no spaces",
-                                               ',')
+      val levels = argParser.getIntSeq("levels",
+                                       "comma-spearated list of levels, with no spaces",
+                                       ",")
 
 
       val sc = connector.getSparkContext("Convert tile pyramid to images")
 
       // And, finally, the serializer determines the converter type
-      argParser.getStringArgument("ser",
-                                  "serializer type\n"
-                                  +"\tcompatibility - for an old style "
-                                  +"backwards-compatibility serializer\n"
-                                  +"\tdouble - for an up-to-date avro-based "
-                                  +"serializer of double tiles (DEFAULT)\n"
-                                  +"\tdoublearray - for an up-to-date avro-based "
-                                  +"serializer of double vector tiles.",
-                                  Some("double")) match {
+      argParser.getString("ser",
+                          "serializer type\n"
+	                          +"\tcompatibility - for an old style "
+	                          +"backwards-compatibility serializer\n"
+	                          +"\tdouble - for an up-to-date avro-based "
+	                          +"serializer of double tiles (DEFAULT)\n"
+	                          +"\tdoublearray - for an up-to-date avro-based "
+	                          +"serializer of double vector tiles.",
+                          Some("double")) match {
         case "compatibility" =>
           convertDoubleTiles(sc, tileIO, tilePyramid, new BackwardCompatibilitySerializer(),
                              source, destination, scale, levels, metaData)

@@ -1,7 +1,6 @@
 # spark connection details
-spark.connection.url=spark://hadoop-s1.oculus.local:7077
-spark.connection.home=/opt/spark
-spark.connection.user=cbethune
+spark=spark://hadoop-s1.oculus.local:7077
+sparkhome=/opt/spark
 
 # hbase connection details
 hbase.zookeeper.quorum=hadoop-s1.oculus.local

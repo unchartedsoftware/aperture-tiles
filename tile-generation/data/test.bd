@@ -1,6 +1,6 @@
 # spark connection details
-spark.connection.url=local
-spark.connection.home=/home/bigdata/software/spark-0.7.2
+spark=local
+sparkhome=/opt/spark
 
 # general output properties
 oculus.tileio.type=file

@@ -50,6 +50,7 @@ import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerial
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 
 import com.oculusinfo.tilegen.util.ArgumentParser
+import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 
 
 
@@ -68,23 +69,23 @@ object TileIO {
 	/**
 	 * A standard way of creating a tile IO from command-line arguments
 	 */
-	def fromArguments (argParser: ArgumentParser): TileIO = {
-		argParser.getStringArgument("io",
-		                            "TileIO type - either hbase "
-			                            +"or file (DEFAULT).\n",
-		                            Some("file")) match {
+	def fromArguments (argParser: KeyValueArgumentSource): TileIO = {
+		argParser.getString("io",
+		                    "TileIO type - either hbase "
+			                    +"or file (DEFAULT).\n",
+		                    Some("file")) match {
 			case "hbase" => new HBaseTileIO(
-				argParser.getStringArgument("zookeeperquorum",
-				                            "The name of the zookeeper quorum machine"),
-				argParser.getStringArgument("zookeeperport",
-				                            "The port on which zookeeper is listening",
-				                            Some("2181")),
-				argParser.getStringArgument("hbasemaster",
-				                            "The master machine for hbase"));
+				argParser.getString("zookeeperquorum",
+				                    "The name of the zookeeper quorum machine"),
+				argParser.getString("zookeeperport",
+				                    "The port on which zookeeper is listening",
+				                    Some("2181")),
+				argParser.getString("hbasemaster",
+				                    "The master machine for hbase"));
 			case _ => new LocalTileIO(
-				argParser.getStringArgument("tileextension",
-				                            "The extension used for each tile file.  Default is \"avro\"",
-				                            Some("avro")))
+				argParser.getString("tileextension",
+				                    "The extension used for each tile file.  Default is \"avro\"",
+				                    Some("avro")))
 		}
 	}
 }
@@ -258,10 +259,10 @@ class LocalTileIO (extension: String) extends TileIO {
 
 
 object TileSerializerChooser {
-	def fromArguments (argParser: ArgumentParser): TileSerializer[_] =
-		getSerializer(argParser.getStringArgument("serializer",
-		                                          "The type of tile serializer to use",
-		                                          Some("avro-double")))
+	def fromArguments (argParser: KeyValueArgumentSource): TileSerializer[_] =
+		getSerializer(argParser.getString("serializer",
+		                                  "The type of tile serializer to use",
+		                                  Some("avro-double")))
 
 	def getSerializer (serializerType: String): TileSerializer[_] =
 		serializerType match {

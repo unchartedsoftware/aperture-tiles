@@ -87,20 +87,20 @@ extends ObjectifiedBinnerBase[T](source, parser, extractor) {
 
     try {
       // Figure out our axis variables
-      val xVar = argParser.getStringArgument("x",
-                                             "The variable to use as the X "
-                                             +"axis when binning")
-      val yVar = argParser.getStringArgument("y",
-                                             "The variable to use as the Y "
-                                             +"axis when binning")
+      val xVar = argParser.getString("x",
+                                     "The variable to use as the X "
+	                                     +"axis when binning")
+      val yVar = argParser.getString("y",
+                                     "The variable to use as the Y "
+	                                     +"axis when binning")
 
       // Figure out what value to bin
       val resultField = 
-        argParser.getStringArgument("result",
-                                    "The variable to use as the bin "
-                                    +"contents.  Defaults to a simple count "
-                                    +"of records in that bin.",
-                                    Some("count"))
+        argParser.getString("result",
+                            "The variable to use as the bin "
+	                            +"contents.  Defaults to a simple count "
+	                            +"of records in that bin.",
+                            Some("count"))
 
       val localExtractor = extractor // localized to avoid the need for serialization
       val resultFcn = if ("count" == resultField) {
@@ -114,9 +114,9 @@ extends ObjectifiedBinnerBase[T](source, parser, extractor) {
       }
 
       // Figure out what levels to bin
-      val levels = argParser.getIntSeqArgument("levels",
-                                               "A list of comma-separated "
-                                               +"levels to bin")
+      val levels = argParser.getIntSeq("levels",
+                                       "A list of comma-separated "
+	                                       +"levels to bin")
 
       // And some other utility classes
       val jobName = (name+"bin tiling "+xVar+" vs "+yVar+", levels "

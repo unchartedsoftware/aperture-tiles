@@ -32,35 +32,42 @@ class GeneralSparkConnector (master: String,
                              sparkHome: String,
                              user: Option[String],
                              jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven,
-                             kryoRegistrator: Option[String])
+                             sparkArgs: Map[String, String])
 		extends SparkConnector(jars)
 {
+	var debug = true
+
 	override def getSparkContext (jobName: String): SparkContext = {
 		debugConnection("property-based", jobName)
 
 		val appName = jobName + (if (user.isDefined) "("+user.get+")" else "")
 
-		println("Creating spark context")
-		println("\tMaster: "+master)
-		println("\tJob name: "+appName)
-		println("\tHome: "+sparkHome)
+		println()
+		println()
+		println("Setting master to "+master)
+		println("Setting app name to "+appName)
+		println("Setting spark home to "+sparkHome)
+		println("Setting spark jars to ")
+		jarList.foreach(jar => println("\t"+jar))
 
-		if (kryoRegistrator != None) {
-			// inform spark that we are using kryo serialization instead of java serialization
-			System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-			// set the kryo registrator to point to the base tile registrator
-			System.setProperty("spark.kryo.registrator", kryoRegistrator.get)
-			println("\tKryo Serialization Enabled, registrator: "+kryoRegistrator.get)
-		} else {
-			println("\tJava Serialization Enabled")
+		val conf = new SparkConf(true)
+			.setMaster(master)
+			.setAppName(appName)
+			.setSparkHome(sparkHome)
+			.setJars(jarList)
+
+		sparkArgs.foreach(kv => conf.set(kv._1, kv._2))
+		// If we have a kryo registrator, automatically use kryo serialization
+		if (sparkArgs.contains("spark.kryo.registrator"))
+			conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+
+		if (debug) {
+			println()
+			println("Configuration:")
+			println(conf.toDebugString)
+			println()
 		}
 
-		//	val conf = new SparkConf(true)
-		//		.setMaster(master)
-		//		.setAppName(appName)
-		//		.setSparkHome(sparkHome)
-		//		.setJars(jarList)
-		//	new SparkContext(conf);
-		new SparkContext(master, appName, sparkHome, jarList)
+		new SparkContext(conf);
 	}
 }

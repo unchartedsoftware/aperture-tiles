@@ -259,7 +259,7 @@ object CountHBaseRowsByLevel {
 		val argParser = new ArgumentParser(Array("-io", "hbase") ++ args)
 		val tileIO = TileIO.fromArguments(argParser)
 		val serializer = TileSerializerChooser.fromArguments(argParser)
-		val table = argParser.getStringArgument("table", "The name of the table to read")
+		val table = argParser.getString("table", "The name of the table to read")
 		val sc = argParser.getSparkConnector().getSparkContext("Testing table equality")
 
 		tileIO.readTileSet(sc, serializer, table, null).map(tile =>

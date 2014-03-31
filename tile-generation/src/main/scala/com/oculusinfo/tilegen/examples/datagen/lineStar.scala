@@ -94,18 +94,18 @@ object LineStarSampleGenerator {
 
     
 
-    val fileName = argParser.getStringArgument("f",
-                                               "The file to which to write the sample data")
-    val topLevel = argParser.getIntArgument(
-      "top",
-      "The level at which our raidal lines will first fill the area of interest.  At all "
-      +"levels at this level and above, every pixel in the data set will have a count of at "
-      +"least one.  At levels below this, there will be empty pixels",
-      Option(0))
-    val bottomLevel = argParser.getIntArgument(
-      "bottom",
-      "The lowest level at which a line will display as continuous, with no breaks.",
-      Option(10))
+    val fileName = argParser.getString("f",
+                                       "The file to which to write the sample data")
+    val topLevel = argParser.getInt(
+	    "top",
+	    "The level at which our raidal lines will first fill the area of interest.  At all "
+		    +"levels at this level and above, every pixel in the data set will have a count of at "
+		    +"least one.  At levels below this, there will be empty pixels",
+	    Option(0))
+    val bottomLevel = argParser.getInt(
+	    "bottom",
+	    "The lowest level at which a line will display as continuous, with no breaks.",
+	    Option(10))
 
     val sc = argParser.getSparkConnector().getSparkContext("Create sample data for live tile demonstration")
 

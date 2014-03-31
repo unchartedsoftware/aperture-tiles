@@ -66,20 +66,20 @@ object CreateSeriesBinData {
   def main (args: Array[String]): Unit = {
     val argParser = new ArgumentParser(args)
     try {
-      val fileName = argParser.getStringArgument("file",
-                                                 "The name of the file in which "
-                                                 +"to write artificial time "
-                                                 +"series data")
+      val fileName = argParser.getString("file",
+                                         "The name of the file in which "
+	                                         +"to write artificial time "
+	                                         +"series data")
       val writer = new java.io.FileWriter(fileName)
 
-      val size = argParser.getIntArgument("size",
-                                          "The x and y size of the tiles to be "
-                                          +"created")
+      val size = argParser.getInt("size",
+                                  "The x and y size of the tiles to be "
+	                                  +"created")
       val halfSize = size/2
-      val lineWidth = argParser.getIntArgument("linewidth",
-                                               "The width of the expanding "
-                                               +"line to draw on the sample "
-                                               +"tiles", Some(2))
+      val lineWidth = argParser.getInt("linewidth",
+                                       "The width of the expanding "
+	                                       +"line to draw on the sample "
+	                                       +"tiles", Some(2))
       val halfWidthD = lineWidth/2.0
       val halfWidth = lineWidth/2
 

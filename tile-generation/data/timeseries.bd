@@ -1,12 +1,11 @@
 # spark connection details
-spark.connection.url=local
-spark.connection.home=C:\\Dev\\Spark\\spark-0.8.1-incubating
-spark.connection.user=cbethune
+spark=local
+sparkhome=/opt/spark
 
 # general output properties
 oculus.tileio.type=file
 oculus.binning.name=timeseries_1M_10V
-oculus.binning.source.location=C:\\Dev\\Workspaces\\ApertureGit\\aperture-tiles\\tile-generation\\multivar_timeseries
+oculus.binning.source.location=file:///datasets/multivar_timeseries
 
 oculus.binning.parsing.separator=,
 oculus.binning.parsing.x.index=0
