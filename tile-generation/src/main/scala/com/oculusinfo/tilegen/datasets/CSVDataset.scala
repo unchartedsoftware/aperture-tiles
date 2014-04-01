@@ -352,7 +352,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
       if (0 == extrema.size) Seq[Int]()
       if (1 == extrema.size) Seq[Int](extrema(0).toInt)
       else Range(extrema(0).toInt, extrema(1).toInt+1).toSeq
-    }).reduce(_ ++ _)
+    }).fold(Seq[Int]())(_ ++ _)
   })
   private val consolidationPartitions =
     properties.getIntOptionProperty("oculus.binning.consolidationPartitions")
@@ -399,7 +399,10 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 
     // Include a fraction of a bin extra in the bounds, so the max goes on the 
     // right side of the last tile, rather than forming an extra tile.
-    val maxLevel = levels.map(_.reduce(_ max _)).reduce(_ max _)
+    val maxLevel = {
+	    if (levels.isEmpty) 18
+	    else levels.map(_.reduce(_ max _)).reduce(_ max _)
+    }
     val epsilon = (1.0/(1 << maxLevel))
     val adjustedMaxX = maxX+(maxX-minX)*epsilon/(tileWidth*tileWidth)
     val adjustedMaxY = maxY+(maxY-minY)*epsilon/(tileHeight*tileHeight)
@@ -428,6 +431,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 
   override def getNumXBins = tileWidth
   override def getNumYBins = tileHeight
+  override def getConsolidationPartitions: Option[Int] = consolidationPartitions
 
   def getBinDescriptor: BinDescriptor[Double, JavaDouble] = {
     val fieldAggregation = properties.getProperty("oculus.binning.parsing." + zVar + ".fieldAggregation", "add")
