@@ -30,7 +30,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.oculusinfo.annotation.io.impl.*;
-import com.oculusinfo.annotation.io.*;
 
 /**
  * HBase as the storage.
@@ -50,7 +49,7 @@ public class HBaseAnnotationIOModule extends AbstractModule {
 			@Named("com.oculusinfo.tile.pyramidio.hbase.hbaseMaster")String hbaseMaster) 
 					throws IOException {
 
-		return new HBaseAnnotationIO(zookeeperQuorum, zookeeperPort, hbaseMaster);
+		return new HBaseAnnotationIO( zookeeperQuorum, zookeeperPort, hbaseMaster );
 	}
 	
 }

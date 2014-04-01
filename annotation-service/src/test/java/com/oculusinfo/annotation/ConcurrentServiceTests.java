@@ -39,6 +39,8 @@ import org.junit.Test;
 import org.junit.After;
 import org.junit.Before;
 
+import com.google.inject.Inject;
+
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.annotation.rest.impl.*;
@@ -50,13 +52,12 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
 	static final int NUM_THREADS = 20;
+
 	protected AnnotationService    _service;	
 	
     @Before
-    public void setup () {
-    	
-    	_service = new CachedAnnotationServiceImpl();
-
+    public void setup () { 	
+    	//_service = new CachedAnnotationServiceImpl();
     }
 
     @After

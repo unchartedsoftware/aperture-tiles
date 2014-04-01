@@ -30,9 +30,11 @@ import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.binning.*;
 
+import com.google.inject.Inject;
+
 public class TileAnnotationIndexer extends AnnotationIndexer<TileAndBinIndices> {
 
-
+	@Inject
     public TileAnnotationIndexer( TilePyramid pyramid ) {
     	_pyramid = pyramid;
     }

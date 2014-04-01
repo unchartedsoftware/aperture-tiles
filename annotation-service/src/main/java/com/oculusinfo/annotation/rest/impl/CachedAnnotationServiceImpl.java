@@ -26,14 +26,18 @@ package com.oculusinfo.annotation.rest.impl;
 import java.util.LinkedList;
 import java.util.List;
 
-//import com.google.inject.Singleton;
+import com.google.inject.Singleton;
+import com.google.inject.Inject;
+
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.binning.*;
 
 
-//@Singleton
+@Singleton
 public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 
 	private final int MAX_CACHE_ENTRIES = 10000;
@@ -41,9 +45,10 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	private AnnotationCache<TileIndex, AnnotationTile> _tileCache;
 	private AnnotationCache<Long, AnnotationData>      _dataCache;
 
-	public CachedAnnotationServiceImpl() {
+	@Inject
+	public CachedAnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
-		super();
+		super( io, indexer );
 		_tileCache = new ConcurrentLRUCache<>( MAX_CACHE_ENTRIES );
 		_dataCache = new ConcurrentLRUCache<>( MAX_CACHE_ENTRIES );
 	}

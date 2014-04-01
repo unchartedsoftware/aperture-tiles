@@ -30,7 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.*;
 
-//import com.google.inject.Singleton;
+import com.google.inject.Singleton;
+import com.google.inject.Inject;
+
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.impl.*;
@@ -40,10 +42,11 @@ import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.*;
 
 
-//@Singleton
+@Singleton
 public class AnnotationServiceImpl implements AnnotationService {
 
 	protected static final String TABLE_NAME = "AnnotationTable";	
@@ -51,22 +54,20 @@ public class AnnotationServiceImpl implements AnnotationService {
 	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
 	protected AnnotationSerializer<AnnotationData> _dataSerializer; 
 	protected AnnotationIndexer<TileAndBinIndices> _indexer;
-	protected TilePyramid _pyramid;
+	//protected TilePyramid _pyramid;
 
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
-	public AnnotationServiceImpl() {
+	@Inject
+	public AnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
-		_tileSerializer = new JSONTileSerializer();
-		_dataSerializer = new JSONDataSerializer();
-		
-		_pyramid = new WebMercatorTilePyramid();		
-		_indexer = new TileAnnotationIndexer( _pyramid );
-		
+		_io = io;
 		try {
+			/*
 			_io = new HBaseAnnotationIO("hadoop-s1.oculus.local",
 										"2181",
 									    "hadoop-s1.oculus.local:60000");
+			*/
 			System.out.println( "Dropping previous table");
 			((HBaseAnnotationIO)_io).dropTable(TABLE_NAME);
 			_io.initializeForWrite( TABLE_NAME );
@@ -74,6 +75,15 @@ public class AnnotationServiceImpl implements AnnotationService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		_tileSerializer = new JSONTileSerializer();
+		_dataSerializer = new JSONDataSerializer();		
+		//_pyramid = pyramid; //new WebMercatorTilePyramid();		
+		_indexer = indexer; //new TileAnnotationIndexer( _pyramid );
+		
+		
+		
+		
 
 	}
 	
@@ -87,9 +97,9 @@ public class AnnotationServiceImpl implements AnnotationService {
     	try {
     		
     		// get all affected tiles
-    		List<AnnotationTile> tiles = getTiles( convert( indices ) );     		
+    		List<AnnotationTile> tiles = getTiles( convert( indices ) );
     		// add new data reference to tiles
-        	addDataReferenceToTiles( tiles, indices, data );       	
+        	addDataReferenceToTiles( tiles, indices, data );
     		// write tiles back to io
     		writeTilesToIO( tiles );    		
     		// write data to io
@@ -221,7 +231,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		for ( AnnotationTile tile : tiles ) {
 			references.addAll( tile.getAllReferences() );
 		}
-		return getDataFromIndex( references );
+		return readDataFromIO( references );
 
 	}
 		
@@ -235,13 +245,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		for ( AnnotationTile tile : tiles ) {
 			references.addAll( tile.getFilteredReferences( filter ) );
 		}
-		return getDataFromIndex( references );
-	}
-
-	
-	private List<AnnotationData> getDataFromIndex( List<Long> indices ) {
-
-		return readDataFromIO( indices );		
+		return readDataFromIO( references );
 	}
 	
 

@@ -46,14 +46,13 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 import com.google.inject.Inject;
-import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 
 public class AnnotationResource extends ApertureServerResource {
 	
 	private AnnotationService _service;
 	
 	@Inject
-	public AnnotationResource(AnnotationService service) {
+	public AnnotationResource( AnnotationService service ) {
 		_service = service;
 	}
 	
@@ -63,9 +62,9 @@ public class AnnotationResource extends ApertureServerResource {
 	public void postAnnotation( String jsonData ) throws ResourceException {
 
 		try {
-			JSONObject jsonObj = new JSONObject(jsonData);
+			JSONObject json = new JSONObject(jsonData);
 
-			_service.writeAnnotation( new AnnotationData( jsonData ) );
+			_service.writeAnnotation( new JSONAnnotation( json ) );
 
 			
 		} catch (JSONException e) {

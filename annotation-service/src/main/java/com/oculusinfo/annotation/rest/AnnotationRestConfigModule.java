@@ -28,8 +28,6 @@ import oculus.aperture.common.rest.ResourceDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
-import com.oculusinfo.tile.rest.legend.LegendResource;
-import com.oculusinfo.tile.rest.tile.TileResource;
 
 public class AnnotationRestConfigModule extends AbstractModule {
 
@@ -37,12 +35,11 @@ public class AnnotationRestConfigModule extends AbstractModule {
 	@Override
 	protected void configure() {
 
-		// Bind REST endpoints for clients.
+		// Bind REST endpoints for clients
 		MapBinder<String, ResourceDefinition> resourceBinder =
 			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
 			
 		resourceBinder.addBinding("/annotation/{id}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));
-		
-	
+
 	}
 }
