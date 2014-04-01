@@ -84,6 +84,8 @@ define(function (require) {
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
 
+            this.projection = new OpenLayers.Projection("EPSG:900913");
+            
 			// Create axes
 			this.axes = [];	
 		

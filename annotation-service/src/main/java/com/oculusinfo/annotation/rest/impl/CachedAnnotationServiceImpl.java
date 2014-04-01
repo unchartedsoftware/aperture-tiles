@@ -54,49 +54,49 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	}
 	
 	@Override
-	protected void writeTilesToIO( List<AnnotationTile> tiles ) {
+	protected void writeTilesToIO( String layer, List<AnnotationTile> tiles ) {
 		
 		// put in cache
 		for ( AnnotationTile tile : tiles ) {
 			_tileCache.put( tile.getIndex(), tile );
 		}
 
-		super.writeTilesToIO( tiles );
+		super.writeTilesToIO( layer, tiles );
 	}
 	
 	@Override
-	protected void writeDataToIO( AnnotationData data ) {
+	protected void writeDataToIO( String layer, AnnotationData data ) {
 		
 		// put in cache
 		_dataCache.put( data.getIndex(), data );
 		
-		super.writeDataToIO( data );
+		super.writeDataToIO( layer, data );
 	}
 	
 	@Override
-	protected void removeTilesFromIO( List<AnnotationTile> tiles ) {
+	protected void removeTilesFromIO( String layer, List<AnnotationTile> tiles ) {
 
 		// remove from cache
 		for ( AnnotationTile tile : tiles ) {
 			_tileCache.remove( tile.getIndex() );
 		}
 		
-		super.removeTilesFromIO( tiles );
+		super.removeTilesFromIO( layer, tiles );
 
 	}
 	
 	@Override
-	protected void removeDataFromIO( AnnotationData data ) {
+	protected void removeDataFromIO( String layer, AnnotationData data ) {
 		
 		// remove from cache
 		_dataCache.remove( data.getIndex() );
 
-		super.removeDataFromIO( data );
+		super.removeDataFromIO( layer, data );
 
 	}
 	
 	@Override
-	protected List<AnnotationTile> readTilesFromIO( List<TileIndex> indices ) {
+	protected List<AnnotationTile> readTilesFromIO( String layer, List<TileIndex> indices ) {
 			
 		List<AnnotationTile> tiles = new LinkedList<>();			
 		List<TileIndex> toReadFromIO = new LinkedList<>();	
@@ -115,7 +115,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		}
 		
 		// pull tiles from io while updating cache
-		List<AnnotationTile> freshTiles = super.readTilesFromIO( toReadFromIO );
+		List<AnnotationTile> freshTiles = super.readTilesFromIO( layer, toReadFromIO );
     	tiles.addAll( freshTiles );
 		
 		// add to cache
@@ -128,7 +128,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	
 	
 	@Override
-	protected List<AnnotationData> readDataFromIO( List<Long> indices ) {
+	protected List<AnnotationData> readDataFromIO( String layer, List<Long> indices ) {
 				
 		List<AnnotationData> data = new LinkedList<>();	
 		List<Long> dataToReadFromIO = new LinkedList<>();
@@ -147,7 +147,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		}
 		
     	// pull data from io and update cache	
-		List<AnnotationData> freshData = super.readDataFromIO( dataToReadFromIO );
+		List<AnnotationData> freshData = super.readDataFromIO( layer, dataToReadFromIO );
 		data.addAll( freshData );
 		
 		// add to cache

@@ -85,7 +85,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     			case 0:
     			{
     				//System.out.println( "Thread " + name + " writing " + _data.getIndex() );   		    	
-    				_service.writeAnnotation( _data );	
+    				_service.writeAnnotation( TEST_LAYER_NAME, _data );	
     				_status++;
     				break;
     			}
@@ -103,7 +103,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     			case 2:
     			{
     				//System.out.println( "Thread " + name + " removing " + _data.getIndex() );   		    	
-    				_service.removeAnnotation( _data );		
+    				_service.removeAnnotation( TEST_LAYER_NAME, _data );		
     				_status++;
     				break;
     			}  
@@ -227,7 +227,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	List<AnnotationData> scan = _service.readAnnotations( tile );   	
+    	List<AnnotationData> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}
@@ -243,7 +243,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		//TileIndex tile = new TileIndex( 0, 0, 0 );
     	
-		List<AnnotationData> scan = _service.readAnnotations( tile );   	
+		List<AnnotationData> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}

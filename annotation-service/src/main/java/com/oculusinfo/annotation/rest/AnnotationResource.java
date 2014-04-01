@@ -57,15 +57,15 @@ public class AnnotationResource extends ApertureServerResource {
 	}
 	
 
-	
 	@Post("json")
-	public void postAnnotation( String jsonData ) throws ResourceException {
+	public Representation postAnnotation( String jsonData ) throws ResourceException {
 
 		try {
 			JSONObject json = new JSONObject(jsonData);
 
-			_service.writeAnnotation( new JSONAnnotation( json ) );
-
+			_service.writeAnnotation( json.getString("layer"), new JSONAnnotation( json.getJSONObject("annotation") ) );
+			
+			return new JsonRepresentation(json);
 			
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
@@ -81,7 +81,7 @@ public class AnnotationResource extends ApertureServerResource {
 			
 			// No alternate versions supported. But if we did:
 			//String version = (String) getRequest().getAttributes().get("version");
-			String id = (String) getRequest().getAttributes().get("id");
+			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
 			String xAttr = (String) getRequest().getAttributes().get("x");
@@ -89,10 +89,12 @@ public class AnnotationResource extends ApertureServerResource {
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
 			
+			/*
 			UUID uuid = null;
 			if( !"default".equals(id) ){ // Special indicator - no ID.
 				uuid = UUID.fromString(id);
 			}
+			*/
 		
 		    // We return an object including the tile index ("index") and 
 		    // the tile data ("data").
@@ -107,11 +109,12 @@ public class AnnotationResource extends ApertureServerResource {
 		    result.put("index", tileIndex );
 		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
 		    
-		    List<AnnotationData> data = _service.readAnnotations( index );
-		    
+		    List<AnnotationData> data = _service.readAnnotations( layer, index );
+
 		    JSONArray dataArray = new JSONArray();
 		    for ( AnnotationData d : data ) {
-		    	dataArray.put( d );
+		    	System.out.println("\n\n\n" + d.toJSON().toString() + "\n\n\n");
+		    	dataArray.put( d.toJSON() );
 		    }
 		    
 		    result.put("annotations", dataArray );

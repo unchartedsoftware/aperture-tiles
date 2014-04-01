@@ -22,25 +22,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.rest;
 
-import oculus.aperture.common.rest.ResourceDefinition;
+ 
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
-public class AnnotationRestConfigModule extends AbstractModule {
-
-
-	@Override
-	protected void configure() {
-
-		// Bind REST end points for clients
-		MapBinder<String, ResourceDefinition> resourceBinder =
-			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
+define( function (require) {
+    "use strict";
 		
-		resourceBinder.addBinding("/annotation").toInstance(new ResourceDefinition( AnnotationResource.class ));
-		resourceBinder.addBinding("/annotation/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));
-		
-	}
-}
+    var AnnotationLayer = require('./AnnotationLayer');
+
+	return {
+	
+		createLayers: function(layerJSON, map) {
+			var i = 0,
+				layers = [];
+			for (i=0; i<layerJSON.length; i++) {   
+				layers.push( this.createLayer(layerJSON[i], map) );
+			}	
+			return layers;
+		},
+	
+
+		createLayer: function(layerJSON, map) {
+
+			var spec = {
+				map: map.map,
+				projection: map.projection,
+				layer: layerJSON.layer,
+				filters: layerJSON.filters
+
+			};
+			return new AnnotationLayer( spec );
+
+		}
+
+
+    };	
+	
+
+});

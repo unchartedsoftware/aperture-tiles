@@ -8,5 +8,14 @@
 			"opacity": 0.85
 		}
 	],
-	"ClientLayers": []
+	"ClientLayers": [],
+	"AnnotationLayers": [
+		{
+			"layer": "bitcoin.annotations",
+			"filters" : [{
+				"priority": "P0",
+				"count":10
+				}]
+		}
+	]
 }

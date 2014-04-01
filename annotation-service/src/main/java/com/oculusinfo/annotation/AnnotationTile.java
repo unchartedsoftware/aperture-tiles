@@ -79,8 +79,8 @@ public class AnnotationTile implements Serializable {
     
     public synchronized void add( BinIndex binIndex, AnnotationData data ) {
     	
-		if ( _bins.containsKey( binIndex ) ) {
-    		_bins.get( binIndex ).add( data );
+		if ( _bins.containsKey( binIndex ) ) {			
+			_bins.get( binIndex ).add( data );
     	} else {
     		_bins.put( binIndex, new AnnotationBin( binIndex, data ) );
     	}	   	

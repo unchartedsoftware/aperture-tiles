@@ -41,7 +41,7 @@ define (function (require) {
         WebMercatorTilePyramid,
         PI                       = Math.PI,
         EPSG_900913_SCALE_FACTOR = 20037508.342789244,
-		EPSG_900913_LATITUDE	 = 85.05,
+		EPSG_900913_LATITUDE	 = 85.05112878,
         DEGREES_TO_RADIANS       = PI / 180.0,	// Factor for changing degrees to radians      
         RADIANS_TO_DEGREES       = 180.0 / PI,	// Factor for changing radians to degrees
         rootToTileMercator, sinh, tileToLon, tileToLat,
@@ -49,13 +49,11 @@ define (function (require) {
         gudermannianToLinear;
 
 
-
     rootToTileMercator = function (lon, lat, level) {
         var latR = lat * DEGREES_TO_RADIANS,
             pow2 = 1 << level,
             x    = (lon + 180.0) / 360.0 * pow2,
-            y    = (pow2 * (1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / PI)
-                    / 2);
+            y    = (pow2 * (1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / PI) / 2);
         return {x: x, y: pow2-y};
     };
 
@@ -99,6 +97,7 @@ define (function (require) {
     };
 
     WebMercatorTilePyramid = Class.extend({
+
         ClassName: "WebMercatorTilePyramid",
         getProjection: "EPSG:900913",
         getTileScheme: "TMS",
@@ -159,40 +158,18 @@ define (function (require) {
             };
         },
 
-        getTileBoundsMercator: function (tile) {
-
-            var bounds = this.getTileBounds(tile),
-                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
-                // coordinates  back into their equivalent linear counterparts. Interpolate these,
-                // then convert to the equivalent gudermannian coordinate.
-                linNorth = gudermannianToLinear(bounds.maxY),
-                linSouth = gudermannianToLinear(bounds.minY);
-
-                bounds.centerY = linearToGudermannian( (linNorth+linSouth)/2.0 );
-
-             return bounds;
-        },
-
-        getBinBoundsMercator: function (tile, bin) {
-
-            var bounds = this.getBinBounds(tile, bin),
-                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
-                // coordinates  back into their equivalent linear counterparts. Interpolate these,
-                // then convert to the equivalent gudermannian coordinate.
-                linNorth = gudermannianToLinear(bounds.maxY),
-                linSouth = gudermannianToLinear(bounds.minY);
-
-                bounds.centerY = linearToGudermannian( (linNorth+linSouth)/2.0 );
-
-             return bounds;
-        },
-
         getTileBounds: function (tile) {
             var level = tile.level,
                 north = tileToLat(tile.yIndex+1, level),
                 south = tileToLat(tile.yIndex, level),
                 east  = tileToLon(tile.xIndex+1, level),
-                west  = tileToLon(tile.xIndex, level);
+                west  = tileToLon(tile.xIndex, level),
+                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
+                // coordinates back into their equivalent linear counterparts. Interpolate these,
+                // then convert to the equivalent gudermannian coordinate.
+                linNorth = gudermannianToLinear(north),
+                linSouth = gudermannianToLinear(south),
+                centerY = linearToGudermannian( (linNorth+linSouth)/2.0 );
 
             return {
                 minX:    west,
@@ -200,7 +177,7 @@ define (function (require) {
                 maxX:    east,
                 maxY:    north,
                 centerX: (east+west)/2.0,
-                centerY: (north+south)/2.0,
+                centerY: centerY,
                 width:   (east-west),
                 height:  (north-south)
             };
@@ -215,7 +192,13 @@ define (function (require) {
                 north   = tileToLat(baseY + binYInc, level),
                 south   = tileToLat(baseY, level),
                 east    = tileToLon(baseX + binXInc, level),
-                west    = tileToLon(baseX, level);
+                west    = tileToLon(baseX, level),
+                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
+                // coordinates back into their equivalent linear counterparts. Interpolate these,
+                // then convert to the equivalent gudermannian coordinate.
+                linNorth = gudermannianToLinear(north),
+                linSouth = gudermannianToLinear(south),
+                centerY = linearToGudermannian( (linNorth+linSouth)/2.0 );
 
             return {
                 minX:    west,
@@ -223,7 +206,7 @@ define (function (require) {
                 maxX:    east,
                 maxY:    north,
                 centerX: (east+west)/2.0,
-                centerY: (north+south)/2.0,
+                centerY: centerY,
                 width:   (east-west),
                 height:  (north-south)
             };

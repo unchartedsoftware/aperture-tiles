@@ -24,32 +24,19 @@
  */
 package com.oculusinfo.annotation.rest;
 
-
 import com.google.inject.AbstractModule;
-import com.oculusinfo.annotation.AnnotationData;
-import com.oculusinfo.annotation.AnnotationTile;
-import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+
 import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.annotation.rest.impl.*;
-
-import com.oculusinfo.binning.TileAndBinIndices;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
 
 
 public class AnnotationServiceModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
+		
 		bind(AnnotationService.class).to(CachedAnnotationServiceImpl.class);
-		/*
-		bind(AnnotationIndexer.class).to(TileAnnotationIndexer.class);
-		bind(TilePyramid.class).to(WebMercatorTilePyramid.class);
-		*/
+
 	}
 
 }

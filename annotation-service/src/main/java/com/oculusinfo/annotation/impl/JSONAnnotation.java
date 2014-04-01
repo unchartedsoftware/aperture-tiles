@@ -92,22 +92,7 @@ public class JSONAnnotation extends AnnotationData {
 		return _priority;
 	}
 	
-	/*
-	public JSONObject toJSON() {
-		try {
-			JSONObject json = new JSONObject();
-			if (_x != null) json.put( "x", _x );
-			if (_y != null) json.put( "y", _y );
-			json.put("priority", _priority);
-			json.put("data", _data );
-			return json;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;	
-	}
-	*/
-	
+
 	private Long hash( JSONObject data ) {
     	
     	String dataStr = data.toString();

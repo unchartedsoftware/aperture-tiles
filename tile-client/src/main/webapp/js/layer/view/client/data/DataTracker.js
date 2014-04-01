@@ -35,7 +35,7 @@ define(function (require) {
 
     var Class = require('../../../../class'),
         WebPyramid = require('../../../../binning/WebTilePyramid'),
-        webPyramid,
+        AoITilePyramid = require('../../../../binning/AoITilePyramid'),
         getArrayLength,
         DataTracker;
 
@@ -58,9 +58,6 @@ define(function (require) {
     };
 
 
-    webPyramid = new WebPyramid();
-
-
     DataTracker = Class.extend({
         ClassName: "DataTracker",
 
@@ -80,7 +77,20 @@ define(function (require) {
             // The relative position within each bin at which visuals will 
             // be drawn
             this.position = {x: 'minX', y: 'centerY'}; //{x: 'centerX', y: 'centerY'};
-            this.isMercatorProjected = true;        // set default to mercator projected
+            // set tile pyramid type
+            if (this.layerInfo.projection === "EPSG:900913") {
+                // mercator projection
+                this.tilePyramid = new WebPyramid();
+            } else {
+                // linear projection, pass bounds of data
+                this.tilePyramid = new AoITilePyramid(this.layerInfo.bounds[0],
+                                                      this.layerInfo.bounds[1],
+                                                      this.layerInfo.bounds[2],
+                                                      this.layerInfo.bounds[3]);
+            }
+            
+            
+            
         },
 
 
@@ -376,24 +386,6 @@ define(function (require) {
 
 
         /**
-         * Returns the bin rectangle based on tiledata and bin x/y. Will mercator project
-         * if isMercatorProjected is set to true
-         *
-         * @param tileData The data associated with this tile.
-         * @param bin      The bin x and y values
-         */
-        getBinRect: function(tileData, bin) {
-            var binRect;
-            if (this.isMercatorProjected) {
-                binRect = webPyramid.getBinBoundsMercator(tileData, bin);
-            } else {
-                binRect = webPyramid.getBinBounds(tileData, bin);
-            }
-            return binRect;
-        },
-
-
-        /**
          * Transforms a tile's worth of data into a series of bins of data
          *
          * This can be overridden; most of the result is use-specific - There are,
@@ -438,7 +430,7 @@ define(function (require) {
                     for (x=0; x<tileData.xBinCount; ++x) {
                         bin =  {x: x, y: y};
 
-                        binRect = this.getBinRect(tileData, bin);
+                        binRect = this.tilePyramid.getBinBounds(tileData, bin);
                         
                         binData = {
                             level: tileData.level,
@@ -538,7 +530,7 @@ define(function (require) {
                     xBinCount: tileData.xBinCount,
                     yBinCount: tileData.yBinCount
                 };
-            return this.getBinRect(tile, bin);
+            return this.tilePyramid.getBinBounds(tile, bin);
         }
     });
 

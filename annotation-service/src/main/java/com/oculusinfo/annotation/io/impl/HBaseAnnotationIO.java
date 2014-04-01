@@ -186,8 +186,8 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     
     @Override
-    public void initializeForRead( String pyramidId ) {
-    	// NO-OP
+    public void initializeForRead( String tableName ) throws IOException {
+    	initializeForWrite( tableName );
     }
     
 

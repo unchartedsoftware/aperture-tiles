@@ -75,7 +75,13 @@ public class AnnotationBin implements Serializable {
     public synchronized void add( AnnotationData data ) {
     	if ( _references.containsKey( data.getPriority() ) ) {
     		List<Long> entries = _references.get( data.getPriority() );
-    		entries.add( data.getIndex() );
+    		
+    		// only add if reference does not already exist
+    		if ( !entries.contains( data.getIndex() )) {
+    			entries.add( data.getIndex() );
+    		}
+    		
+    		
     	} else {
     		List<Long> entries = new LinkedList<>();
     		entries.add( data.getIndex() );

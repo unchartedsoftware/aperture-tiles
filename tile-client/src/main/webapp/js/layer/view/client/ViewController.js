@@ -129,7 +129,7 @@ define(function (require) {
             this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
             this.tileViewMap = {};      	// maps a tile key to its view index
             this.views = [];				// array of all views
-			this.mouseState = mouseState; 	// mouse state to be shared by all views
+			this.mouseState = mouseState; 	// global mouse state to be shared by all views
 
             // attach map
             attachMap(spec.map);

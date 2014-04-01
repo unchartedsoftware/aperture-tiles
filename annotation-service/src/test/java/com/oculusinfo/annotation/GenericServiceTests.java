@@ -60,7 +60,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
 		// scan all
     	System.out.println("Reading ALL annotations");
     	long start = System.currentTimeMillis();
-    	List<AnnotationData> scan = _service.readAnnotations( tile );
+    	List<AnnotationData> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );
     	long end = System.currentTimeMillis();
     	double time = ((end-start)/1000.0);
 		System.out.println( "\t" + scan.size() + " entries scanned in " + time + " seconds");
@@ -91,7 +91,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	System.out.println("Writing " + INDIVIDUAL_NUM_ENTRIES + " annotations");
     	start = System.currentTimeMillis();
     	for (AnnotationData annotation : annotations ) {
-    		_service.writeAnnotation( annotation );
+    		_service.writeAnnotation( TEST_LAYER_NAME, annotation );
     		count++;
     		if (count % BATCH_SIZE == 0) {
     			end = System.currentTimeMillis();
@@ -112,7 +112,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	timeSum = 0;
     	start = System.currentTimeMillis();
     	for (AnnotationData annotation : annotations ) {
-    		_service.removeAnnotation( annotation );
+    		_service.removeAnnotation( TEST_LAYER_NAME, annotation );
     		count++;
     		if (count % BATCH_SIZE == 0) {
     			end = System.currentTimeMillis();

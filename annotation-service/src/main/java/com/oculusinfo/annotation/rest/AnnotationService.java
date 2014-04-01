@@ -35,19 +35,19 @@ public interface AnnotationService {
 	 * Write an annotation to the storage service
 	 * 
 	 */
-	public abstract void writeAnnotation( AnnotationData annotation );
+	public abstract void writeAnnotation( String layer, AnnotationData annotation );
 	
 	/*
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract List<AnnotationData> readAnnotations( TileIndex tile );	
+	public abstract List<AnnotationData> readAnnotations( String layer, TileIndex tile );	
 	
 	/*
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public abstract void removeAnnotation( AnnotationData annotation );
+	public abstract void removeAnnotation( String layer, AnnotationData annotation );
 
 	
 }

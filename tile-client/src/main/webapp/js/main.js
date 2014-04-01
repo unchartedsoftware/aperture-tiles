@@ -22,17 +22,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+ /*global OpenLayers */
 
 require(['./FileLoader',
          './map/Map',
          './layer/view/server/ServerLayerFactory',
-         './layer/view/client/ClientLayerFactory'
+         './layer/view/client/ClientLayerFactory',
+         './annotation/AnnotationLayerFactory',
+         './annotation/AnnotationTracker'
         ],
 
         function (FileLoader, 
         	      Map,
                   ServerLayerFactory,
-                  ClientLayerFactory) {
+                  ClientLayerFactory,
+                  AnnotationLayerFactory,
+                  AnnotationTracker) {
             "use strict";
 
             var mapFile = "./data/map.json",
@@ -41,20 +46,56 @@ require(['./FileLoader',
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFile, layersFile, function (jsonDataMap) {
                 // We have all our data now; construct the UI.
-                var worldMap;
+                var worldMap,
+                    /*******************/
+                    /*
+                    defaultStyle,
+                    hoverStyle,
+                    selectStyle,
+                    temporaryStyle,
+                    
+                    vector,
+                    addPointControl,
+                    selectControl,
+                    dragControl,
+                    highlightControl,
+                    */
+                    annotation, 
+                    a;
+                    /*******************/
 
                 // Create world map and axes from json file under mapFile
                 worldMap = new Map("map", jsonDataMap[mapFile]);
 
                 // Create client and server layers
+                annotation = AnnotationLayerFactory.createLayers(jsonDataMap[layersFile].AnnotationLayers, worldMap);
                 ClientLayerFactory.createLayers(jsonDataMap[layersFile].ClientLayers, worldMap);
                 ServerLayerFactory.createLayers(jsonDataMap[layersFile].ServerLayers, worldMap);
 
                 // Trigger the initial resize event to resize everything
                 $(window).resize();
 
+                annotation = annotation[0];
+
+                a = {
+                        x: "12.45",
+                        y: "56.78",
+                        priority : "P0",
+                        data: {
+                            comment: "derpderp"
+                        }
+                    };
+
+                annotation.tracker.postAnnotation( a );
+
+/*
+                AnnotationTracker.getData( "0,0,0", function( anno ) {
+                    console.log( anno );
+                });
+*/
                 /*****************************************************************/
-                var defaultStyle = new OpenLayers.Style({
+                /*
+                defaultStyle = new OpenLayers.Style({
                     externalGraphic: 'http://www.openlayers.org/dev/img/marker.png', 
                     graphicWidth: 21, 
                     graphicHeight: 25,
@@ -62,7 +103,7 @@ require(['./FileLoader',
                     'cursor': 'pointer'              
                 });
 
-                var hoverStyle = new OpenLayers.Style({
+                hoverStyle = new OpenLayers.Style({
                     externalGraphic: 'http://www.openlayers.org/dev/img/marker-green.png', 
                     graphicWidth: 21, 
                     graphicHeight: 25,
@@ -70,7 +111,7 @@ require(['./FileLoader',
                     'cursor': 'pointer'                 
                 });
 
-                var selectStyle = new OpenLayers.Style({
+                selectStyle = new OpenLayers.Style({
                     externalGraphic: 'http://www.openlayers.org/dev/img/marker-blue.png',
                     graphicWidth: 21, 
                     graphicHeight: 25,
@@ -78,11 +119,11 @@ require(['./FileLoader',
                     'cursor': 'pointer'                  
                 });
 
-                var temporaryStyle = new OpenLayers.Style({
+                temporaryStyle = new OpenLayers.Style({
                     display:"none"               
                 });
 
-                var vector = new OpenLayers.Layer.Vector( "Vectors Layer", { 
+                vector = new OpenLayers.Layer.Vector( "Vectors Layer", { 
                     ratio: 2,
                     styleMap: new OpenLayers.StyleMap({ 
                         "default" : defaultStyle,
@@ -93,7 +134,10 @@ require(['./FileLoader',
                     eventListeners: {
                         "featureselected": function(e) {
                         
-                            var popup = new OpenLayers.Popup("marker-popup",
+                            var latlon,
+                                px,
+                                size,
+                                popup = new OpenLayers.Popup("marker-popup",
                                                          OpenLayers.LonLat.fromString(e.feature.geometry.toShortString()),
                                                          null,
                                                          "<div style='padding-top:5px; padding-left:15px;'>"+
@@ -113,9 +157,9 @@ require(['./FileLoader',
                             e.feature.popup = popup;
                             worldMap.map.olMap_.addPopup(popup, false);
 
-                            var latlon = OpenLayers.LonLat.fromString(e.feature.geometry.toShortString());
-                            var px = worldMap.map.olMap_.getLayerPxFromViewPortPx( worldMap.map.olMap_.getPixelFromLonLat(latlon) );
-                            var size = popup.size;
+                            latlon = OpenLayers.LonLat.fromString(e.feature.geometry.toShortString());
+                            px = worldMap.map.olMap_.getLayerPxFromViewPortPx( worldMap.map.olMap_.getPixelFromLonLat(latlon) );
+                            size = popup.size;
                             px.x -= size.w / 2;
                             px.y -= size.h + 25;
                             popup.moveTo( px );
@@ -130,30 +174,30 @@ require(['./FileLoader',
 
                 worldMap.map.olMap_.addLayer(vector);
 
-                var addPointControl = new OpenLayers.Control.DrawFeature(vector, OpenLayers.Handler.Point);
-                var selectControl = new OpenLayers.Control.SelectFeature(vector, {
+                addPointControl = new OpenLayers.Control.DrawFeature(vector, OpenLayers.Handler.Point);
+                selectControl = new OpenLayers.Control.SelectFeature(vector, {
                     clickout: true
                 });
 
-                var dragControl = new OpenLayers.Control.DragFeature(vector, {
+                dragControl = new OpenLayers.Control.DragFeature(vector, {
                     onStart: function(feature, pixel){
                         selectControl.clickFeature(feature);
                     },
                     onDrag: function(feature, pixel){
 
-                        var latlon = OpenLayers.LonLat.fromString(feature.geometry.toShortString());
-                        var px = worldMap.map.olMap_.getLayerPxFromViewPortPx( worldMap.map.olMap_.getPixelFromLonLat(latlon) );
-                        var size = feature.popup.size;
+                        var latlon = OpenLayers.LonLat.fromString(feature.geometry.toShortString()),
+                            px = worldMap.map.olMap_.getLayerPxFromViewPortPx( worldMap.map.olMap_.getPixelFromLonLat(latlon) ),
+                            size = feature.popup.size;
                         px.x -= size.w / 2;
                         px.y -= size.h + 25;
                         feature.popup.moveTo( px );
-                    },
+                    }
                                                        
                 });
-                var highlightControl = new OpenLayers.Control.SelectFeature(vector, {
+                highlightControl = new OpenLayers.Control.SelectFeature(vector, {
                     hover: true,
                     highlightOnly: true,
-                    renderIntent: "hover",
+                    renderIntent: "hover"
 
                 });
 
@@ -166,6 +210,7 @@ require(['./FileLoader',
                 dragControl.activate();
                 highlightControl.activate();
                 selectControl.activate();
+                */
                 /*****************************************************************/
             });
         });
