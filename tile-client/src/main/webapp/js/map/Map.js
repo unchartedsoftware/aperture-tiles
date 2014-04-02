@@ -34,6 +34,8 @@ define(function (require) {
 
 	
     var Class = require('../class'),
+        AoITilePyramid = require('../binning/AoITilePyramid'),
+        TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),
         Map;
 
@@ -84,7 +86,7 @@ define(function (require) {
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
 
-            this.projection = new OpenLayers.Projection("EPSG:900913");
+            this.projection = new OpenLayers.Projection(mapSpecs.options.projection);
             
 			// Create axes
 			this.axes = [];	
@@ -133,6 +135,19 @@ define(function (require) {
 												
 			// Trigger the initial resize event to resize everything
             $(window).resize();			
+        },
+
+        getTilesInView: function() {
+            var level = this.map.getZoom(),
+                bounds = this.map.olMap_.getExtent(),
+                mapExtents = this.map.olMap_.getMaxExtent(),
+                mapPyramid = new AoITilePyramid(mapExtents.left, mapExtents.bottom,
+                                            mapExtents.right, mapExtents.top);
+
+            // determine all tiles in view
+            return new TileIterator(mapPyramid, level,
+                                    bounds.left, bounds.bottom,
+                                    bounds.right, bounds.top).getRest();
         },
 
         setOpacity: function (newOpacity) {

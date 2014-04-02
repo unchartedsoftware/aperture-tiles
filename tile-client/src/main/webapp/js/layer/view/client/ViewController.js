@@ -27,10 +27,10 @@
 
 /**
  * This module defines a ViewController class which provides delegation between multiple client renderers
- * and their respective data sources. Each view is composed of a ClientRenderer and DataTracker. Each view has
- * a TileTracker which delegates tile requests from the view and its DataTracker.
+ * and their respective data sources. Each view is composed of a ClientRenderer and DataService. Each view has
+ * a TileTracker which delegates tile requests from the view and its DataService.
  *
- * Each DataTracker manages a unique set of data. Upon tile requests, if data ofr the tile is not held in memory, it is pulled from the server.
+ * Each DataService manages a unique set of data. Upon tile requests, if data for the tile is not held in memory, it is pulled from the server.
  * Each TileTracker manages the set of tiles that a currently visible within a particular view.
  * Each ClientRenderer is responsible for drawing only the elements currently visible within a specific view.
  *
@@ -43,7 +43,7 @@ define(function (require) {
     var Class        = require('../../../class'),
         AoIPyramid   = require('../../../binning/AoITilePyramid'),
         TileIterator = require('../../../binning/TileIterator'),
-        TileTracker  = require('./data/TileTracker'),
+        TileTracker  = require('../../TileTracker'),
         MouseState   = require('./MouseState'),
         permData     = [],  // temporary aperture.js bug workaround //
 		mapNodeLayer = {},
@@ -61,7 +61,7 @@ define(function (require) {
 		 *					map : 	aperture.js map
 		 *					views : array of views of the form:
 		 *							[{
-		 *								dataTracker : 	the DataTracker from which to pull the tile data
+		 *								dataService : 	the DataService from which to pull the tile data
 		 *								renderer : 		the ClientRenderer to draw the view data
 		 *							}]
 		 *
@@ -114,7 +114,7 @@ define(function (require) {
                     // view id, used to map tile to view via getTileViewIndex()
                     id: viewspec.renderer.id,
                     // tracks the active tiles used per view at given moment
-                    tileTracker: new TileTracker(viewspec.dataTracker, viewspec.renderer.id),
+                    tileTracker: new TileTracker(viewspec.dataService),
                     // render layer for the view
                     renderer: viewspec.renderer
                 };
@@ -182,6 +182,9 @@ define(function (require) {
             // swap tile data, this function prevents data de-allocation if they share same data source
             oldTracker.swapTileWith(newTracker, tilekey, $.proxy(this.updateAndRedrawViews, this));
 
+            // remove old renderer id from the data
+            this.removeRendererIdFromData(oldViewIndex, oldTracker, tilekey);
+
             // always redraw immediately in case tile is already in memory (to draw new tile), or if
             // it isn't in memory (draw empty tile)
             this.updateAndRedrawViews();
@@ -232,6 +235,40 @@ define(function (require) {
         },
 
 
+        /** add views renderer id to node data
+         *
+         * @param viewIndex index of the view
+         * @param data      data to add renderer id to
+         */
+        addRendererIdToData: function(viewIndex, data) {
+            var i;
+            for (i=0; i<data.length; i++ ) {
+                if (data[i].renderer === undefined) {
+                    data[i].renderer = {};
+                }
+                data[i].renderer[this.views[viewIndex].id] = true; // stamp tile data with renderer id
+            }
+            return data;
+        },
+
+
+        /** add views renderer id to node data
+         *
+         * @param viewIndex     index of the view
+         * @param oldTracker    previous tile tracker
+         * @param tilekey       tile key of tile to remove renderer id from
+         */
+        removeRendererIdFromData: function(viewIndex, oldTracker, tilekey) {
+
+            var i,
+                tiles = oldTracker.getData( tilekey );
+
+            for (i=0; i<tiles.length; i++) {
+                delete tiles[i].renderer[ this.views[ viewIndex ].id ];
+            }
+
+        },
+
         /**
          * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
          * the layers
@@ -241,7 +278,7 @@ define(function (require) {
                 data = [];
 
             for (i=0; i< this.views.length; i++ ) {
-                $.merge(data, this.views[i].tileTracker.getNodeData());
+                $.merge(data, this.addRendererIdToData( i, this.views[i].tileTracker.getData() ) );
             }
 
             /////////////////////////////////////////////

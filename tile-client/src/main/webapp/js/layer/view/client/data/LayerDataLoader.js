@@ -31,7 +31,7 @@
 define( function (require) {
     "use strict";
 
-    var DataTracker = require('./DataTracker'),
+    var TileService = require('./TileService'),
         requestStatus = {},
         requestCache = {},
 		pendingRequests = []
@@ -114,9 +114,9 @@ define( function (require) {
 				var i;								
 				// flag as loaded
 				requestStatus[id] = "loaded";
-				if (requestCache[id].type === "data-tracker") {
+				if (requestCache[id].type === "tile-service") {
 					// create data tracker object
-					requestCache[id].data = new DataTracker(data.layerInfos[id]);
+					requestCache[id].data = new TileService(data.layerInfos[id]);
 				} else {
 					// store raw data
 					requestCache[id].data = data;

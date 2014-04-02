@@ -43,7 +43,7 @@ define( function (require) {
 		 * @param map			map object from map.js
 		 */
 		createLayers: function(layerJSON, map) {
-			var i = 0;
+			var i;
 			for (i=0; i<layerJSON.length; i++) {   
 				this.createLayer(layerJSON[i], map);
 			}		
@@ -87,7 +87,7 @@ define( function (require) {
 					});
 				// get data tracker from server
 				requirements.push({
-					type : "data-tracker",
+					type : "tile-service",
 					id : layerJSON.views[i].layer,
 					spec : layerJSON.views[i],
 					func : getLayerInfoFromServer
@@ -109,7 +109,7 @@ define( function (require) {
 				for (i=0; i<layerJSON.views.length; i++) {
 					spec.views.push({
 						renderer: new layerDataMap[layerJSON.views[i].renderer](),
-						dataTracker: layerDataMap[layerJSON.views[i].layer]
+						dataService: layerDataMap[layerJSON.views[i].layer]
 					});
 				}
 				

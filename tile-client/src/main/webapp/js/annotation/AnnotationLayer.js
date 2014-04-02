@@ -32,7 +32,8 @@ define(function (require) {
     var Class        = require('../class'),
         AoIPyramid   = require('../binning/AoITilePyramid'),
         TileIterator = require('../binning/TileIterator'),
-        AnnotationTracker = require('./AnnotationTracker'),
+        AnnotationService = require('./AnnotationService'),
+        TileTracker = require('../layer/TileTracker'),
         defaultStyle,
         hoverStyle,
         selectStyle,
@@ -77,15 +78,17 @@ define(function (require) {
 
             var that = this;
 
+            this.addingFromServer = false;
+
             this.map = spec.map;
             this.projection = spec.projection;
             this.layer = spec.layer;
             this.filters = spec.filters;
-            this.tracker = new AnnotationTracker( spec.layer );
+
+            this.tracker = new TileTracker( new AnnotationService( spec.layer ) );
 
             // set callbacks
-            this.map.olMap_.events.register('zoomend', that.map.olMap_, function() {
-                that._olLayer.destroyFeatures();
+            this.map.olMap_.events.register('zoomend', that.map.olMap_, function() {                
                 that.onMapUpdate();
             });
 
@@ -113,27 +116,44 @@ define(function (require) {
                                      bounds.left, bounds.bottom,
                                      bounds.right, bounds.top).getRest();
 
-            this.tracker.getAnnotations( tiles, $.proxy( this.onAnnotationReceive, this ) );
+            this.tracker.filterAndRequestTiles( tiles, $.proxy( this.redrawAnnotations, this ) );
+            
+            this.redrawAnnotations();
+
         },
 
 
-        onAnnotationReceive: function( annotations ) {
+        redrawAnnotations: function() {
 
-            var i;
-            console.log("OnReceive");
+            var i,
+                points =[],
+                mapExtents = this.map.olMap_.getMaxExtent(),
+                mapPyramid = new AoIPyramid(mapExtents.left, mapExtents.bottom,
+                                        mapExtents.right, mapExtents.top),
+                projection = new OpenLayers.Projection( mapPyramid.getProjection ),
+                latlon,
+                annotations = this.tracker.getData();
+
+            // remove old annotations
+            this._olLayer.destroyFeatures();
+
+            // for each new annotation, add it
             for (i=0; i<annotations.length; i++) {
-                console.log( "x: "+annotations[i].x );
-                console.log( "y: "+annotations[i].y );
-                console.log( "priority: "+annotations[i].priority );
-                console.log( "data: "+annotations[i].data );
+
+                latlon = new OpenLayers.LonLat( annotations[i].x, annotations[i].y ).transform( projection, this.projection );
+                points.push( new OpenLayers.Feature.Vector( new OpenLayers.Geometry.Point( latlon.lon, 
+                                                                                           latlon.lat) ) ); 
             }
-            this.createAnnotations( annotations );
-                
+
+            this.addingFromServer = true;
+            this._olLayer.addFeatures( points );
+            this.addingFromServer = false;
         },
+
 
         createLayer: function() {
 
-            var that = this,          
+            var that = this,
                 addPointControl,
                 selectControl,
                 dragControl,
@@ -149,9 +169,10 @@ define(function (require) {
                 }),
                 eventListeners: {
 
-                    /*
                     "featureselected": function(e) {
-                    
+
+                        addPointControl.deactivate();
+                        /*
                         var latlon = OpenLayers.LonLat.fromString(e.feature.geometry.toShortString()),
                             px,
                             size,
@@ -181,27 +202,48 @@ define(function (require) {
                         px.x -= size.w / 2;
                         px.y -= size.h + 25;
                         popup.moveTo( px );
+                        */
                     },
-                    */
-                    /*
+
+
                     "featureunselected": function(e) {
-                        
+
+                        addPointControl.activate();
+                        /*
                         that.map.olMap_.removePopup(e.feature.popup);
                         e.feature.popup.destroy();
                         e.feature.popup = null;
-                        
+                        */
                     },
-                    */
+
+
                     "featureadded": function(e) {
+
                         var mapExtents = that.map.olMap_.getMaxExtent(),
                             mapPyramid = new AoIPyramid(mapExtents.left, mapExtents.bottom,
-                                                    mapExtents.right, mapExtents.top),
+                                                        mapExtents.right, mapExtents.top),
                             projection = new OpenLayers.Projection( mapPyramid.getProjection ),
                             latlon = OpenLayers.LonLat.fromString( e.feature.geometry.toShortString() ),
-                            trueLatLon = new OpenLayers.LonLat( latlon.lon, latlon.lat ).transform( that.projection, projection );
-                                
-                        console.log("Added: "+trueLatLon.lon +","+trueLatLon.lat);
+                            trueLatLon = new OpenLayers.LonLat( latlon.lon, latlon.lat ).transform( that.projection, projection),
+                            a;
+
+                        if ( that.addingFromServer === false ) {
+
+                            a = {
+                                x: trueLatLon.lon,
+                                y: trueLatLon.lat,
+                                priority : "P0",
+                                data: {
+                                    comment: "derpderpderp"
+                                }
+                            };
+
+                            that.tracker.dataService.postRequest( a );
+
+                        }
+                        // check if was read from server, or added manually, if added manually, post to server
                     }
+
                 }
             });
 
@@ -245,28 +287,8 @@ define(function (require) {
             dragControl.activate();
             highlightControl.activate();
             selectControl.activate();
-        },
-
-        createAnnotations: function( annotations ) {
-
-            var i,
-                points =[],
-                mapExtents = this.map.olMap_.getMaxExtent(),
-                mapPyramid = new AoIPyramid(mapExtents.left, mapExtents.bottom,
-                                        mapExtents.right, mapExtents.top),
-                projection = new OpenLayers.Projection( mapPyramid.getProjection ),
-                latlon;
-
-
-            for (i=0; i<annotations.length; i++) {
-
-                latlon = new OpenLayers.LonLat( annotations[i].x, annotations[i].y ).transform( projection, this.projection );
-                points.push( new OpenLayers.Feature.Vector( new OpenLayers.Geometry.Point( latlon.lon, 
-                                                                                           latlon.lat) ) ); 
-            }
-
-            this._olLayer.addFeatures( points );
         }
+
 
 
      });

@@ -26,18 +26,20 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
+
 /**
- * This module defines a DataTracker class which manages all tile data from a
- * single dataset.
+ * This module defines a TileService class that is to be injected into a
+ * TileTracker instance. This class is responsible for RESTful requests
+ * from the server along with caching requested tiles
  */
 define(function (require) {
     "use strict";
 
-    var Class = require('../../../../class'),
+    var DataService = require('../../../DataService'),
         WebPyramid = require('../../../../binning/WebTilePyramid'),
         AoITilePyramid = require('../../../../binning/AoITilePyramid'),
         getArrayLength,
-        DataTracker;
+        TileService;
 
     /*
      * Get the length of this array property, if it is an array property.
@@ -58,22 +60,18 @@ define(function (require) {
     };
 
 
-    DataTracker = Class.extend({
-        ClassName: "DataTracker",
+    TileService = DataService.extend({
+        ClassName: "TileService",
 
         /**
-         * Construct a DataTracker
+         * Construct a TileService
          */
         init: function (layerInfo) {
 
             // All the data we've received, put in one object, keyed by
             // tile key (as defined by the createTileKey method).
+            this._super();
             this.layerInfo = layerInfo;
-            this.data = {};
-            this.referenceCount = {};
-            this.dataStatus = {};
-            this.dataCallbacks = [];
-            this.memoryQueue = [];
             // The relative position within each bin at which visuals will 
             // be drawn
             this.position = {x: 'minX', y: 'centerY'}; //{x: 'centerX', y: 'centerY'};
@@ -95,125 +93,6 @@ define(function (require) {
 
 
         /**
-         * Create a universal unique key for a given tile
-         *
-         * @param tilekeys Array of tile identification keys to merge into node data
-         */
-        getTileNodeData: function (tilekeys) {
-            var allData = [];
-            $.each(this.data, function (element, value) {
-                // assemble only requested tiles
-                if (tilekeys.indexOf(element) !== -1) {
-                    $.merge(allData, value);
-                }
-            });
-            return allData;
-        },
-
-
-        /**
-         * Create a universal unique key for a given tile
-         *
-         * @param tile Some description of a tile.  This can be the tile
-         *             index, or the tile itself.
-         */
-        createTileKey: function (tile) {
-            return tile.level + "," + tile.xIndex + "," + tile.yIndex;
-        },
-
-
-        /**
-         * Create a universal unique key for a given bin in a given tile
-         *
-         * @param tileKey The universal tile key, as calculated by the
-         *                createTileKey method.
-         * @param bin The bin; assumed to be in {x: #, y: #} format.
-         */
-        createBinKey: function (tileKey, bin) {
-            return tileKey + ":" + bin.x + "," + bin.y;
-        },
-
-
-        /**
-         * Increment reference count for specific tile data
-         *
-         * @param tilekey tile identification key for data
-         */
-        addReference: function(tilekey) {
-
-            if (this.referenceCount[tilekey] === undefined) {
-                this.referenceCount[tilekey] = 0;
-            }
-
-            // ensure fresh requests cause tile to be pushed onto the back of queue
-            if (this.memoryQueue.indexOf(tilekey) !== -1) {
-                this.memoryQueue.splice(this.memoryQueue.indexOf(tilekey), 1);
-            }
-            this.memoryQueue.push(tilekey);
-
-            this.referenceCount[tilekey]++;
-        },
-
-
-        /**
-         * Decrement reference count for specific tile data, if reference count hits 0,
-         * call memory management function
-         *
-         * @param tilekey tile identification key for data
-         */
-        removeReference: function(tilekey) {
-
-            this.referenceCount[tilekey]--;
-            if (this.referenceCount[tilekey] === 0) {
-                this.memoryManagement();
-            }
-
-        },
-
-
-        /**
-         * Returns current reference count of a tile
-         *
-         * @param tilekey tile identification key for data
-         */
-        getReferenceCount: function(tilekey) {
-            if (this.referenceCount[tilekey] === undefined) {
-                return 0;
-            }
-            return this.referenceCount[tilekey];
-        },
-
-
-        /**
-         * Manages how defunct tile data is de-allocated, once max number
-         * of in memory tiles is reached, de-allocates tiles that were
-         * used longest ago. Current max tile count is 100
-         */
-        memoryManagement: function() {
-
-            var i = 0,
-                tilekey,
-                MAX_NUMBER_OF_ENTRIES = 100;
-
-            while (this.memoryQueue.length > MAX_NUMBER_OF_ENTRIES) {
-
-                // while over limit of tiles in memory,
-                // iterate from last used tile to most recent and remove them if
-                // reference counts are 0
-                tilekey = this.memoryQueue[i];
-                if (this.getReferenceCount(tilekey) === 0) {
-                    delete this.data[tilekey];
-                    delete this.dataStatus[tilekey];
-                    delete this.referenceCount[tilekey];
-                    this.memoryQueue.splice(i, 1);
-                }
-                i++;
-            }
-
-        },
-
-
-        /**
          * Requests tile data. If tile is not in memory, send GET request to server and
          * set individual callback function on receive. Callback is not called if tile
          * is already in memory
@@ -221,11 +100,11 @@ define(function (require) {
          * @param requestedTiles array of requested tilekeys
          * @param callback callback function
          */
-        requestTiles: function(requestedTiles, callback) {
+        getDataFromServer: function(requestedTiles, callback) {
             var i;
             // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
-                this.getData(requestedTiles[i], callback);
+                this.getRequest(requestedTiles[i], callback);
             }
         },
 
@@ -262,7 +141,7 @@ define(function (require) {
          *   }
          * }
          */
-        getData: function(tilekey, callback) {
+        getRequest: function(tilekey, callback) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
@@ -273,8 +152,8 @@ define(function (require) {
 
                 // flag tile as loading, add callback to list
                 this.dataStatus[tilekey] = "loading";
-                this.dataCallbacks[tilekey] = [];
-                this.dataCallbacks[tilekey].push(callback);
+                this.getCallbacks[tilekey] = [];
+                this.getCallbacks[tilekey].push(callback);
 
                 // request data from server
                 aperture.io.rest(
@@ -284,7 +163,7 @@ define(function (require) {
                      xIndex+'/'+
                      yIndex+'.json'),
                      'GET',
-                    $.proxy(this.receiveDataCallback, this)
+                    $.proxy(this.getCallback, this)
                 );
                 this.addReference(tilekey);
 
@@ -296,7 +175,7 @@ define(function (require) {
                     return true;
                 }
                 // waiting on tile from server, add to callback list
-                this.dataCallbacks[tilekey].push(callback);
+                this.getCallbacks[tilekey].push(callback);
             }
 
             return false;
@@ -309,7 +188,7 @@ define(function (require) {
          *
          * @param tileData received tile data from server
          */
-        receiveDataCallback: function(tileData) {
+        getCallback: function(tileData) {
 
             // create tile key: "level, xIndex, yIndex"
             var tilekey = this.createTileKey(tileData.index),
@@ -319,16 +198,16 @@ define(function (require) {
             this.dataStatus[tilekey] = "loaded"; // flag as loaded
 
             if (this.data[tilekey].length > 0) {
-                if (this.dataCallbacks[tilekey] === undefined) {
+                if (this.getCallbacks[tilekey] === undefined) {
                     console.log('ERROR: Received tile out of sync from server... ');
                     return;
                 }
-                for (i =0; i <this.dataCallbacks[tilekey].length; i++ ) {
-                    this.dataCallbacks[tilekey][i](this.data[tilekey]);
+                for (i =0; i <this.getCallbacks[tilekey].length; i++ ) {
+                    this.getCallbacks[tilekey][i](this.data[tilekey]);
                 }
             }
 
-            delete this.dataCallbacks[tilekey];
+            delete this.getCallbacks[tilekey];
         },
 
 
@@ -389,9 +268,8 @@ define(function (require) {
          * Transforms a tile's worth of data into a series of bins of data
          *
          * This can be overridden; most of the result is use-specific - There are,
-         * however, a few properties used by the ClientLayer and the
-         * TileLayerDataTracker themselves, which must be correctly set here
-         * in each bin object:
+         * however, a few properties used by the ClientLayer themselves, which must
+         * be correctly set here in each bin object:
          *
          * <dl>
          *   <dt> binkey </dt>
@@ -441,8 +319,7 @@ define(function (require) {
                             bin: tileData.values[binNum],
                             tilekey: tileKey
                         };
-                        results[results.length] = binData;
-
+                        results.push( binData );
                         ++binNum;
                     }
                 }
@@ -534,5 +411,5 @@ define(function (require) {
         }
     });
 
-    return DataTracker;
+    return TileService;
 });

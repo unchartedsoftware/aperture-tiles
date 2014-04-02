@@ -27,29 +27,27 @@
 /*global OpenLayers */
 
 /**
- * This module defines a DataTracker class which manages all tile data from a
- * single dataset.
+ * This module defines a AnnotationService class which manages all annotation data requests
+ * and storage from the server.
  */
 define(function (require) {
     "use strict";
 
-    var Class = require('../class'),
-        AnnotationTracker;
+    var DataService = require('../layer/DataService'),
+        AnnotationService;
 
 
-    AnnotationTracker = Class.extend({
-        ClassName: "AnnotationTracker",
+    AnnotationService = DataService.extend({
+        ClassName: "AnnotationService",
 
         /**
-         * Construct a DataTracker
+         * Construct an AnnotationService
          */
         init: function ( layer ) {
 
+            this._super();
             this.layer = layer;
-            this.annotations = {};
-            this.annotationStatus = {};
-            this.getCallbacks = {};
-            this.annotatonStatus = {};
+
             /*
             // set tile pyramid type
             if (this.layerInfo.projection === "EPSG:900913") {
@@ -67,21 +65,16 @@ define(function (require) {
         },
 
 
-        createTileKey: function (tile) {
-            return tile.level + "," + tile.xIndex + "," + tile.yIndex;
-        },
-
-
-        getAnnotations: function(requestedTiles, callback) {
+        getDataFromServer: function(requestedTiles, callback) {
             var i;
             // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
-                this.getAnnotation( this.createTileKey( requestedTiles[i] ), callback );
+                this.getRequest( requestedTiles[i], callback );
             }
         },
 
 
-        getAnnotation: function(tilekey, callback) {
+        getRequest: function(tilekey, callback) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
@@ -89,10 +82,10 @@ define(function (require) {
                 yIndex = parseInt(parsedValues[2], 10);
 
 
-            if (this.annotationStatus[tilekey] === undefined) {
+            if (this.dataStatus[tilekey] === undefined) {
 
                 // flag tile as loading, add callback to list
-                this.annotationStatus[tilekey] = "loading";
+                this.dataStatus[tilekey] = "loading";
                 this.getCallbacks[tilekey] = [];
                 this.getCallbacks[tilekey].push(callback);
 
@@ -106,11 +99,13 @@ define(function (require) {
                      'GET',
                     $.proxy( this.getCallback, this )
                 );
+                this.addReference(tilekey);
 
             } else {
 
-                if (this.annotationStatus[tilekey] === "loaded") {
-                    callback(this.annotations[tilekey]);
+                this.addReference(tilekey);
+                if (this.dataStatus[tilekey] === "loaded") {
+                    callback(this.data[tilekey]);
                     return;
                 }
                 // waiting on tile from server, add to callback list
@@ -126,18 +121,18 @@ define(function (require) {
             var tilekey = this.createTileKey( annotationData.index ),
                 i;
 
-            console.log("After get: "+ tilekey);
+            this.data[tilekey] = annotationData.annotations;
+            this.dataStatus[tilekey] = "loaded"; // flag as loaded
 
-            this.annotations[tilekey] = annotationData.annotations;
-            this.annotationStatus[tilekey] = "loaded"; // flag as loaded
-
-            if (this.annotations[tilekey].length > 0) {
+            if (this.data[tilekey].length > 0) {
                 if (this.getCallbacks[tilekey] === undefined) {
                     console.log('ERROR: Received annotation data out of sync from server... ');
                     return;
                 }
+
                 for (i =0; i <this.getCallbacks[tilekey].length; i++ ) {
-                    this.getCallbacks[tilekey][i]( this.annotations[tilekey] );
+                    console.log("After get: "+ tilekey);
+                    this.getCallbacks[tilekey][i]( this.data[tilekey] );
                 }
             }
 
@@ -145,7 +140,7 @@ define(function (require) {
         },
 
 
-        postAnnotation: function(annotation) {
+        postRequest: function( annotation ) {
 
             // Request the layer information
             aperture.io.rest('/annotation',
@@ -157,6 +152,7 @@ define(function (require) {
                                             },
                                  contentType: 'application/json'
                              });
+
         },
 
 
@@ -166,10 +162,7 @@ define(function (require) {
 
         }
 
-
-        
-
     });
 
-    return AnnotationTracker;
+    return AnnotationService;
 });
