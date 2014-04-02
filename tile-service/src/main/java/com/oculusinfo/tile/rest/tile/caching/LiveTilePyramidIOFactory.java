@@ -25,14 +25,13 @@ package com.oculusinfo.tile.rest.tile.caching;
 
 import java.util.List;
 
-import org.apache.spark.api.java.JavaSparkContext;
-
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.tile.spark.SparkContextProvider;
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
 
 public class LiveTilePyramidIOFactory extends PyramidIOFactory {
@@ -40,14 +39,14 @@ public class LiveTilePyramidIOFactory extends PyramidIOFactory {
             PyramidIOFactory.PYRAMID_IO_TYPE.overridePossibleValues(StringProperty.addToArray(PyramidIOFactory.PYRAMID_IO_TYPE.getPossibleValues(), "live"));
 
     @Inject
-    private JavaSparkContext _context;
+    private SparkContextProvider _contextProvider;
 
-    public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, JavaSparkContext context) {
-        this(null, parent, path, context);
+    public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
+        this(null, parent, path, contextProvider);
     }
-    public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, JavaSparkContext context) {
+    public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
         super(name, parent, path);
-        _context = context;
+        _contextProvider = contextProvider;
     }
 
     @Override
@@ -64,7 +63,7 @@ public class LiveTilePyramidIOFactory extends PyramidIOFactory {
         String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
 
         if ("live".equals(pyramidIOType)) {
-            return new LiveStaticTilePyramidIO(JavaSparkContext.toSparkContext(_context));
+            return new LiveStaticTilePyramidIO(_contextProvider.getSparkContext());
         } else {
             return super.create();
         }

@@ -29,7 +29,7 @@
       com.oculusinfo.tile.rest.TileModule:
 
       <!-- Sets up the spark connection -->
-      com.oculusinfo.tile.SparkModule
+      com.oculusinfo.tile.spark.SparkModule
     </param-value>
   </context-param>
 
@@ -54,7 +54,7 @@
 
   <!-- Servlet config must run on app deployment -->
   <listener>
-    <listener-class>oculus.aperture.ApertureServerConfig</listener-class>
+    <listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
   </listener>
 
 </web-app>

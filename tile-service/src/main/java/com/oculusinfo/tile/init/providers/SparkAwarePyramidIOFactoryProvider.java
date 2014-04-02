@@ -27,35 +27,34 @@ package com.oculusinfo.tile.init.providers;
 
 import java.util.List;
 
-import org.apache.spark.api.java.JavaSparkContext;
-
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rest.tile.caching.LiveTilePyramidIOFactory;
+import com.oculusinfo.tile.spark.SparkContextProvider;
 
 
 
 public class SparkAwarePyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
     @Inject
-    private JavaSparkContext _context;
+    private SparkContextProvider _contextProvider;
 
     @Override
     public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-        return new LiveTilePyramidIOFactory(null, path, _context);
+        return new LiveTilePyramidIOFactory(null, path, _contextProvider);
     }
 
     @Override
     public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
                                                          List<String> path) {
-        return new LiveTilePyramidIOFactory(parent, path, _context);
+        return new LiveTilePyramidIOFactory(parent, path, _contextProvider);
     }
 
     @Override
     public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
                                                          ConfigurableFactory<?> parent,
                                                          List<String> path) {
-        return new LiveTilePyramidIOFactory(factoryName, parent, path, _context);
+        return new LiveTilePyramidIOFactory(factoryName, parent, path, _contextProvider);
     }
 }
