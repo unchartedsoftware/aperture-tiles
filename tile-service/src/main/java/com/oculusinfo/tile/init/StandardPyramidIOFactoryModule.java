@@ -29,10 +29,10 @@ import com.google.inject.TypeLiteral;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 
-public class PyramidIOFactoryModule extends AbstractModule {
+public class StandardPyramidIOFactoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).toInstance(new StandardPyramidIOFactoryProvider());
+        bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(StandardPyramidIOFactoryProvider.class);
     }
 }

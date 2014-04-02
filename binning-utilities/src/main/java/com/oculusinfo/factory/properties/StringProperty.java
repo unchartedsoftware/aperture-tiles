@@ -95,4 +95,37 @@ public class StringProperty implements ConfigurationProperty<String> {
     public String unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
         return unencode(propertyNode.getAsString());
     }
+
+    /**
+     * Create a duplicate property, identical in all but the list of possible
+     * values.
+     * 
+     * @param newPossibilities The new list of possible values to use for the
+     *            new property.
+     * @return A duplicate property as described.
+     */
+    public StringProperty overridePossibleValues (String[] newPossibilities) {
+        return new StringProperty(_name, _description, _defaultValue, newPossibilities);
+    }
+
+    /**
+     * A utility function, mostly for use with the above
+     * {@link #overridePossibleValues(String[])}, to get an array that is
+     * essentially the union of two arrays.
+     * 
+     * @param array The old array
+     * @param newValues Any new values to add
+     * @return An array of all the old and new values
+     */
+    public static String[] addToArray (String[] array, String... newValues) {
+        if (null == array || 0 == array.length) return newValues;
+        if (null == newValues || 0 == newValues.length) return array;
+
+        int n = array.length;
+        String[] result = new String[n+newValues.length];
+        for (int i=0; i<n; ++i) result[i] = array[i];
+        for (int i=0; i<newValues.length; ++i) result[i+n] = newValues[i];
+
+        return result;
+    }
 }

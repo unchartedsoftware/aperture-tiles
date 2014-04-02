@@ -39,7 +39,6 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
@@ -196,15 +195,5 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         } catch (ConfigurationException e) {
             LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
         }
-    }
-
-    /**
-     * Just make this public - we use the factory directly for rendering
-     * properties, since there are bunches of small properties which don't
-     * properly belong in any particular object.
-     */
-    @Override
-    public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
-        return super.getPropertyValue(property);
     }
 }

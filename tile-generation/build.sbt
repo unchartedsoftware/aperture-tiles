@@ -8,7 +8,7 @@ name:="tile-generation"
 
 version:="0.3-SNAPSHOT"
 
-scalaVersion:="2.9.3"
+scalaVersion:="2.10.3"
 
 
 
@@ -35,9 +35,9 @@ scalacOptions += "-deprecation"
 scalacOptions += "-unchecked"
 
 libraryDependencies ++= Seq(
-	"org.apache.spark" % "spark-core_2.9.3" % "0.8.0-incubating",
-	"org.apache.spark" % "spark-streaming_2.9.3" % "0.8.0-incubating",
-        "com.oculusinfo" % "binning-utilities" % "0.1.2-SNAPSHOT",
+	"org.apache.spark" % "spark-core_2.10" % "0.9.0-incubating",
+	"com.oculusinfo" % "binning-utilities" % "0.3-SNAPSHOT",
+	"org.apache.spark" % "spark-streaming_2.10" % "0.9.0-incubating",
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test"
 )
 
@@ -64,3 +64,5 @@ mergeStrategy in assembly := {
   case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.first
 }
+
+net.virtualvoid.sbt.graph.Plugin.graphSettings

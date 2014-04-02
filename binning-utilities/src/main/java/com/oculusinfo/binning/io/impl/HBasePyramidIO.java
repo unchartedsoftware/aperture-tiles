@@ -265,8 +265,7 @@ public class HBasePyramidIO implements PyramidIO {
     }
 
     @Override
-    public void initializeForRead(String pyramidId, int tileSize,
-    		Properties dataDescription) {
+    public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
     	// Noop
     }
 
@@ -301,7 +300,9 @@ public class HBasePyramidIO implements PyramidIO {
     }
 
     @Override
-    public InputStream getTileStream (String tableName, TileIndex tile) throws IOException {
+    public <T> InputStream getTileStream (String tableName,
+                                          TileSerializer<T> serializer,
+                                          TileIndex tile) throws IOException {
         List<String> rowIds = new ArrayList<String>();
         rowIds.add(rowIdFromTileIndex(tile));
         

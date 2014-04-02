@@ -169,4 +169,18 @@ public class TwitterDemoRecordTests {
                                                     new ArrayList<Pair<String, Long>>());
         Assert.assertEquals(c, TwitterDemoRecord.maxOfRecords(a, b));
     }
+
+    @Test
+    public void testStringConversion () {
+        TwitterDemoRecord a = new TwitterDemoRecord("abc",
+                                                    10, Arrays.asList(4, 3, 2, 1),
+                                                    14, Arrays.asList(5, 4, 3, 2),
+                                                    18, Arrays.asList(6, 5, 4, 3),
+                                                    22, Arrays.asList(7, 6, 5, 4),
+                                                    Arrays.asList(new Pair<String, Long>("abcdef", 11l),
+                                                                  new Pair<String, Long>("abc\"\"\\\"\\\\\"\\\\\\\"def", 1l)));
+        String as = a.toString();
+        TwitterDemoRecord b = TwitterDemoRecord.fromString(as);
+        Assert.assertEquals(a, b);
+    }
 }

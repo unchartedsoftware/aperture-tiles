@@ -248,4 +248,27 @@ class TwitterDemoTestSuite extends FunSuite {
 
     assert(expected === bd.min(bd.convert(record1), bd.convert(record2)).asScala.toList)
   }
+
+  test("bin to string conversion") {
+    val bd = new TwitterDemoBinDescriptor
+
+    val record = Map(
+      "abc" -> new TwitterDemoRecord("abc", 17, jIntList(9, 8),
+                                     7, jIntList(4, 3), 2, jIntList(2, 0), 8, jIntList(3, 5),
+                                     tweetList(("Recent tweet 12 of abc", 12),
+                                               ("Recent tweet 10 of abc", 10))),
+      "def" -> new TwitterDemoRecord("def", 13, jIntList(4, 9),
+                                     6, jIntList(1, 5), 3, jIntList(1, 2), 4, jIntList(2, 2),
+                                     tweetList(("Recent tweet 12 of def", 12),
+                                               ("Recent tweet 10 of def", 10))))
+    val recordString = ("{tag: \"abc\", count: 17, countList: [9, 8], positive: 7, positiveList: [4, 3], neutral: 2, neutralList: [2, 0], negative: 8, negativeList: [3, 5], recent: [(\"Recent tweet 12 of abc\", 12), (\"Recent tweet 10 of abc\", 10)]};"+
+	                        "{tag: \"def\", count: 13, countList: [4, 9], positive: 6, positiveList: [1, 5], neutral: 3, neutralList: [1, 2], negative: 4, negativeList: [2, 2], recent: [(\"Recent tweet 12 of def\", 12), (\"Recent tweet 10 of def\", 10)]}")
+
+	  assert(recordString ===
+		         bd.binToString(bd.convert(record)))
+	  assert(record ===
+		         bd.stringToBin(recordString).asScala.map(record =>
+			         (record.getTag(), record)
+		         ).toMap)
+  }
 }

@@ -16,12 +16,25 @@
 
       <!-- Pyramid factory module - override to add custom TilePyramids -->
       com.oculusinfo.tile.init.TilePyramidFactoryModule:
-      <!-- Renderer factory module - override to add custom server-side renderers. -->
+      <!-- Renderer factory module - override to add custom server-side 
+           renderers. -->
       com.oculusinfo.tile.init.ImageRendererFactoryModule:
-      <!-- Serialization factory module - override to add custom tile serializers -->
+      <!-- Serialization factory module - override to add custom tile 
+           serializers -->
       com.oculusinfo.tile.init.TileSerializationFactoryModule:
-      <!-- Pyramid IO factory module - override to add custom PyramidIO implementations -->
-      com.oculusinfo.tile.init.PyramidIOFactoryModule:
+      <!-- Pyramid IO factory module - override to add custom PyramidIO 
+           implementations -->
+      <!-- For standard, pre-batched tiling -->
+      <!-- Standard implementation -->
+      com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+      <!-- For tiling requiring a spark connection
+      com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
+      -->
+
+      <!-- For any operation requiring a spark connection (including live
+           tiling or drill-through to raw data)
+      com.oculusinfo.tile.spark.SparkModule:
+      -->
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:
@@ -51,7 +64,8 @@
 
   <!-- Servlet config must run on app deployment -->
   <listener>
-    <listener-class>oculus.aperture.ApertureServerConfig</listener-class>
+    <!-- Required with a spark connection, harmless in all other cases -->
+    <listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
   </listener>
 
 </web-app>

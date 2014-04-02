@@ -24,6 +24,8 @@
 package com.oculusinfo.binning.io;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,8 @@ import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
 import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.properties.JSONProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 
 
@@ -77,6 +81,9 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
     public static StringProperty JDBC_DRIVER            = new StringProperty("jdbc.driver",
                                                                              "Only used if type=\"jdbc\".  The full class name of the JDBC driver to use.  There is no default for this property.",
                                                                              null);
+    public static JSONProperty   INITIALIZATION_DATA    = new JSONProperty("data",
+                                                                           "Data to be passed to the PyramidIO for read initialization",
+                                                                           null);
 
 	// We meed a global cache of zip stream sources - zip files are very slow to
 	// read, so the source is slow to initialize, so creating a new one each
@@ -105,15 +112,17 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
                              List<String> path) {
         super(name, PyramidIO.class, parent, path);
 
-        addProperty(PYRAMID_IO_TYPE);
-        addProperty(HBASE_ZOOKEEPER_QUORUM);
-        addProperty(HBASE_ZOKEEPER_PORT);
-        addProperty(HBASE_MASTER);
-        addProperty(ROOT_PATH);
-        addProperty(EXTENSION);
-        addProperty(JDBC_DRIVER);
+        for (ConfigurationProperty<?> property: getPyramidIOPropertyList())
+            addProperty(property);
     }
 
+    protected List<ConfigurationProperty<?>> getPyramidIOPropertyList () {
+        List<ConfigurationProperty<?>> result = new ArrayList<>();
+        result.addAll(Arrays.asList(PYRAMID_IO_TYPE, HBASE_ZOOKEEPER_QUORUM,
+                                    HBASE_ZOKEEPER_PORT, HBASE_MASTER, ROOT_PATH,
+                                    EXTENSION, JDBC_DRIVER));
+        return result;
+    }
 
 
     @Override

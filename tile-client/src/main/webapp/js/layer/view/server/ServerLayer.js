@@ -38,6 +38,8 @@ define(function (require) {
 
     var Class = require('../../../class'),
         DataLayer = require('../../DataLayer'),
+        TileIterator = require('../../../binning/TileIterator'),
+        AoIPyramid = require('../../../binning/AoITilePyramid'),
 
         ServerRenderedMapLayer,
         minRect,
@@ -454,7 +456,8 @@ define(function (require) {
                                 'maxExtent': olBounds,
                                 transparent: true,
                                 getURL: function (bounds) {
-                                    var res, x, y, z, maxBounds, tileSize;
+                                    var res, x, y, z, maxBounds, tileSize,
+                                        extents, pyramid, fullUrl, viewBounds;
 
                                     res = this.map.getResolution();
                                     tileSize = this.tileSize;
@@ -468,9 +471,28 @@ define(function (require) {
                                     z = this.map.getZoom();
 
                                     if (x >= 0 && y >= 0) {
-                                        return this.url + this.version + "/" +
-                                            this.layername + "/" + 
-                                            z + "/" + x + "/" + y + "." + this.type;
+                                        extents = this.map.getExtent();
+                                        pyramid = new AoIPyramid(-20037500, -20037500,
+                                                                 20037500,  20037500);
+                                        viewBounds = new TileIterator(pyramid, z,
+                                                                      extents.left, extents.bottom,
+                                                                      extents.right, extents.top).toTileBounds();
+                                        
+                                        fullUrl = (this.url + this.version + "/" +
+                                                   this.layername + "/" + 
+                                                   z + "/" + x + "/" + y + "." + this.type);
+
+                                        if (viewBounds) {
+                                            fullUrl = (fullUrl
+                                                       + "?minX=" + viewBounds.minX
+                                                       + "&maxX=" + viewBounds.maxX
+                                                       + "&minY=" + viewBounds.minY
+                                                       + "&maxY=" + viewBounds.maxY
+                                                       + "&minZ=" + viewBounds.minZ
+                                                       + "&maxZ=" + viewBounds.maxZ);
+                                        }
+
+                                        return fullUrl;
                                     }
                                 }
                             }

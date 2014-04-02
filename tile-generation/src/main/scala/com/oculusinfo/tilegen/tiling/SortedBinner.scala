@@ -153,7 +153,7 @@ class SortedBinner {
 
 		// Go through each partition, transforming it directly to tiles of the 
 		// processing type
-		data.mapPartitions(iter =>
+		val tiledByPartition = data.mapPartitions(iter =>
 			{
 				val partitionResults = MutableMap[TileIndex, TileData[PT]]()
 
@@ -191,10 +191,18 @@ class SortedBinner {
 				partitionResults.iterator
 			}
 		)
-		// Combine any tiles that happen to show up in multiple partitions
-			.reduceByKey(combineTiles(_, _))
-		// Transform to our bin type
-			.map(indexAndTile => convert(indexAndTile._2))
+
+		if (consolidationPartitions.isEmpty) {
+			// Combine any tiles that happen to show up in multiple partitions
+			tiledByPartition.reduceByKey(combineTiles(_, _))
+			// Transform to our bin type
+				.map(indexAndTile => convert(indexAndTile._2))
+		} else {
+			// Combine any tiles that happen to show up in multiple partitions
+			tiledByPartition.reduceByKey(combineTiles(_, _), consolidationPartitions.get)
+			// Transform to our bin type
+				.map(indexAndTile => convert(indexAndTile._2))
+		}
 	}
 }
 
@@ -231,11 +239,12 @@ object SortedBinnerTest {
 			{
 				val procFcn: RDD[(Double, Double, BT)] => Unit = rdd =>
 				{
+					val bins = (dataset.getNumXBins max dataset.getNumYBins)
 					val tiles = binner.processDataByLevel(rdd,
 					                                      dataset.getBinDescriptor,
 					                                      dataset.getTilePyramid,
 					                                      levels,
-					                                      dataset.getBins,
+					                                      bins,
 					                                      dataset.getConsolidationPartitions)
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,

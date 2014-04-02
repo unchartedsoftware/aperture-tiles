@@ -128,7 +128,7 @@ object CSVBinner {
 						    dataset.getBinDescriptor,
 						    dataset.getTilePyramid,
 						    levels,
-						    dataset.getBins,
+						    (dataset.getNumXBins max dataset.getNumYBins),
 						    dataset.getConsolidationPartitions)
               tileIO.writeTileSet(dataset.getTilePyramid,
 				  dataset.getName,

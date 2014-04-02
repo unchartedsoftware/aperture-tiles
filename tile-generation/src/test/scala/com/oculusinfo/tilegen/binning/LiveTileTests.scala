@@ -77,7 +77,7 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext {
       readProps.setProperty("oculus.binning.yField", "y")
       readProps.setProperty("oculus.binning.levels.0", "1")
 
-      pyramidIo.initializeForRead(pyramidId, 4, readProps)
+      pyramidIo.initializeForRead(pyramidId, 4, 4, readProps)
 
       val tile00 = pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 0, 0, 4, 4)).asJava)
       assert(tile00.isEmpty)

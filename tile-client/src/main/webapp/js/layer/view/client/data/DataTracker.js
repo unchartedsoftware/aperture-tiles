@@ -211,11 +211,11 @@ define(function (require) {
          * @param requestedTiles array of requested tilekeys
          * @param callback callback function
          */
-        requestTiles: function(requestedTiles, callback) {
+        requestTiles: function(requestedTiles, tileSetBounds, callback) {
             var i;
             // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
-                this.getData(requestedTiles[i], callback);
+                this.getData(requestedTiles[i], tileSetBounds, callback);
             }
         },
 
@@ -252,7 +252,7 @@ define(function (require) {
          *   }
          * }
          */
-        getData: function(tilekey, callback) {
+        getData: function(tilekey, tileSetBounds, callback) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
@@ -274,7 +274,9 @@ define(function (require) {
                      xIndex+'/'+
                      yIndex+'.json'),
                      'GET',
-                    $.proxy(this.receiveDataCallback, this)
+                    $.proxy(this.receiveDataCallback, this),
+                    // Add in the list of all needed tiles
+                    tileSetBounds
                 );
                 this.addReference(tilekey);
 

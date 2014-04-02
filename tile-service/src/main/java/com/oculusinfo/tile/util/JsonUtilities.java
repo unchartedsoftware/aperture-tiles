@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -199,4 +200,20 @@ public class JsonUtilities {
 		}
 		return val;
 	}
+
+    public static Properties jsonObjToProperties (JSONObject jsonObj) {
+        Properties properties = new Properties();
+        
+        Iterator<?> keys = jsonObj.keys();
+        while (keys.hasNext()) {
+            String key = keys.next().toString();
+            Object value = jsonObj.opt(key);
+
+            if (value instanceof String) {
+                properties.setProperty(key, (String) value);
+            }
+        }
+        
+        return properties;
+    }
 }

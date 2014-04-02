@@ -19,6 +19,24 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>tile-generation</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>binning-utilities</artifactId>
+      <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>asm</artifactId>
+          <groupId>asm</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.5</version>
@@ -53,12 +71,6 @@
       <artifactId>aperture-cms</artifactId>
       <version>${aperture-version}</version>
       <type>jar</type>
-    </dependency>
-
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
-      <artifactId>binning-utilities</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
     <dependency>

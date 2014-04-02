@@ -167,7 +167,7 @@ abstract public class ConfigurableFactory<T> {
      * @param property The property of interest.
      * @return True if the property is listed and non-default in the factory.
      */
-    protected boolean hasPropertyValue (ConfigurationProperty<?> property) {
+    public boolean hasPropertyValue (ConfigurationProperty<?> property) {
         return _properties.containsKey(property) && !_properties.get(property)._default;
     }
 
@@ -177,7 +177,7 @@ abstract public class ConfigurableFactory<T> {
      * The behavior of this function is undefined if called before
      * readConfiguration (either version).
      */
-    protected <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
+    public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
         PropertyValue<PT> value = getPropertyValueObject(property);
         if (null == value || value._default) {
             return property.getDefaultValue();
@@ -248,6 +248,29 @@ abstract public class ConfigurableFactory<T> {
         } else {
             for (ConfigurableFactory<?> child: _children) {
                 GT result = child.produce(name, goodsType);
+                if (null != result) return result;
+            }
+        }
+        return null;
+    }
+
+    public <GT> ConfigurableFactory<GT> getProducer (Class<GT> goodsType) {
+        return getProducer(null, goodsType);
+    }
+
+    // We are suppressing the warnings in the
+    //    return this;
+    // line. We have just, in the line before, checked that goodsType - which is
+    // Class<GT> - matches _factoryType - which is Class<T> - so therefore, GT
+    // and T must be the same, so this cast is guaranteed safe, even if the
+    // compiler can't figure that out.
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <GT> ConfigurableFactory<GT> getProducer (String name, Class<GT> goodsType) {
+        if ((null == name || name.equals(_name)) && goodsType.equals(_factoryType)) {
+            return (ConfigurableFactory) this;
+        } else {
+            for (ConfigurableFactory<?> child: _children) {
+                ConfigurableFactory<GT> result = child.getProducer(name, goodsType);
                 if (null != result) return result;
             }
         }
