@@ -30,6 +30,9 @@ import java.util.List;
 
 import javax.servlet.ServletContextEvent;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -73,7 +76,6 @@ public class SparkContextProviderImpl implements SparkContextProvider {
     private String[] _jars;
 
     private JavaSparkContext _context;
-
 
     @Inject
     public SparkContextProviderImpl (@Named("org.apache.spark.master") String master,
@@ -129,6 +131,13 @@ public class SparkContextProviderImpl implements SparkContextProvider {
     @Override
     synchronized public JavaSparkContext getJavaSparkContext () {
         if (null == _context) {
+	        // Thin out the log of spark spam
+	        Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+	        Logger.getLogger("org.apache.spark").setLevel(Level.WARN);
+	        Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
+	        Logger.getLogger("akka").setLevel(Level.WARN);
+
+
             SparkConf config = new SparkConf();
             config.setMaster(_master);
             config.setAppName(_jobName);

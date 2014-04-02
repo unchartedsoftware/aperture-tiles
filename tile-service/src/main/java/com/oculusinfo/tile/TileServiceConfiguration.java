@@ -38,11 +38,8 @@ import oculus.aperture.ApertureServerConfig;
 
 @Singleton
 public class TileServiceConfiguration extends ApertureServerConfig {
-    private List<ServletLifecycleListener> _lifecycleListeners;
+	static private List<ServletLifecycleListener> _lifecycleListeners = new ArrayList<>();
 
-    public TileServiceConfiguration () {
-        _lifecycleListeners = new ArrayList<>();
-    }
 
     public void addLifecycleListener (ServletLifecycleListener listener) {
         _lifecycleListeners.add(listener);

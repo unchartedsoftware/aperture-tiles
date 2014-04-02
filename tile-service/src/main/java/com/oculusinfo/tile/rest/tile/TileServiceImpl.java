@@ -282,15 +282,6 @@ public class TileServiceImpl implements TileService {
 			if (metadata == null){
 				String s = pyramidIO.readMetaData(layer);
 
-				System.out.println();
-				System.out.println();
-				System.out.println();
-				System.out.println("Got metadata for layer "+layer);
-				System.out.println(s);
-				System.out.println();
-				System.out.println();
-				System.out.println();
-
 				metadata = new JSONObject(s);
 				_metadataCache.put(layer, metadata);
 			}
@@ -303,13 +294,6 @@ public class TileServiceImpl implements TileService {
 		return new PyramidMetaData(new JSONObject());
 	}
 	protected void clearMetadataCache (String layer) {
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println("Clearing metadata!!!");
-		System.out.println();
-		System.out.println();
-		System.out.println();
 		_metadataCache.remove(layer);
 	}
 }
