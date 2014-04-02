@@ -172,14 +172,130 @@ public class TwitterDemoRecord implements Serializable {
         }
         return result;
     }
+
+    private static String escapeString (String string) {
+        return string.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static String unescapeString (String string) {
+        return string.replace("\\\"", "\"").replace("\\\\", "\\");
+    }
+
+    private static String eat (String from, String prefix) {
+        if (from.startsWith(prefix)) {
+            return from.substring(prefix.length());
+        }
+        throw new IllegalArgumentException("String "+from+" didn't begin with expected prefix "+prefix);
+    }
+
+    private static int getQuotedStringEnd (String from) {
+        if (!from.startsWith("\"")) throw new IllegalArgumentException("Quoted string didn't start with quote");
+        int lastQuote = 0;
+        while (true) {
+            lastQuote = from.indexOf("\"", lastQuote+1);
+            if (lastQuote < 0) throw new IllegalArgumentException("Couldn't find the end of quoted string");
+            int slashes = 0;
+            for (int i=lastQuote-1; i>=0; --i) {
+                if ('\\' == from.charAt(i)) {
+                    ++slashes;
+                } else {
+                    break;
+                }
+            }
+            if (0 == (slashes%2)) {
+                // final quote - we're done
+                return lastQuote;
+            }
+        }
+    }
+
     @Override
     public String toString () {
-        return ("{tag: \"" + _tag + "\", "+
+        String result = ("{tag: \"" + escapeString(_tag) + "\", "+
                 "count: "    + _count    + ", countList: ["    + mkString(_countBins,    ", ") + "], " +
                 "positive: " + _positive + ", positiveList: [" + mkString(_positiveBins, ", ") + "], " +
                 "neutral: "  + _neutral  + ", neutralList: ["  + mkString(_neutralBins,  ", ") + "], " +
                 "negative: " + _negative + ", negativeList: [" + mkString(_negativeBins, ", ") + "], " +
-                "recent: [" + mkString(_recentTweets, ", ")+"]}");
+                "recent: [");
+        for (int i=0; i<_recentTweets.size(); ++i) {
+            Pair<String, Long> rt = _recentTweets.get(i);
+            if (i>0) result += ", ";
+            result += "(\""+escapeString(rt.getFirst())+"\", "+rt.getSecond()+")";
+        }
+        result = result + "]}";
+        return result;
+    }
+
+    private static String eatIntList (String from, List<Integer> result) {
+        int nextComma = from.indexOf(",");
+        int nextBracket = from.indexOf("]");
+        while (nextComma > 0 && nextComma < nextBracket) {
+            result.add(Integer.parseInt(from.substring(0, nextComma)));
+            from = from.substring(nextComma+2);
+            nextComma = from.indexOf(",");
+            nextBracket = from.indexOf("]");
+        }
+        if (nextBracket > 0)
+            result.add(Integer.parseInt(from.substring(0, nextBracket)));
+        return from.substring(nextBracket);
+    }
+
+    public static TwitterDemoRecord fromString (String value) {
+        value = eat(value, "{tag: ");
+        int end = getQuotedStringEnd(value);
+        String tag = unescapeString(value.substring(1, end));
+
+        value = eat(value.substring(end+1), ", count: ");
+        end = value.indexOf(", countList: [");
+        int count = Integer.parseInt(value.substring(0, end));
+
+        value = eat(value.substring(end), ", countList: [");
+        List<Integer> countList = new ArrayList<>();
+        value = eatIntList(value, countList);
+
+        value = eat(value, "], positive: ");
+        end = value.indexOf(", positiveList: [");
+        int positive = Integer.parseInt(value.substring(0, end));
+        
+        value = eat(value.substring(end), ", positiveList: [");
+        List<Integer> positiveList = new ArrayList<>();
+        value = eatIntList(value, positiveList);
+
+        value = eat(value, "], neutral: ");
+        end = value.indexOf(", neutralList: [");
+        int neutral = Integer.parseInt(value.substring(0, end));
+        
+        value = eat(value.substring(end), ", neutralList: [");
+        List<Integer> neutralList = new ArrayList<>();
+        value = eatIntList(value, neutralList);
+
+        value = eat(value, "], negative: ");
+        end = value.indexOf(", negativeList: [");
+        int negative = Integer.parseInt(value.substring(0, end));
+        
+        value = eat(value.substring(end), ", negativeList: [");
+        List<Integer> negativeList = new ArrayList<>();
+        value = eatIntList(value, negativeList);
+
+        value = eat(value, "], recent: [");
+        List<Pair<String, Long>> recentTweets = new ArrayList<>();
+        while (value.startsWith("(")) {
+            value = eat(value, "(");
+            end = getQuotedStringEnd(value);
+            String tweet= unescapeString(value.substring(1, end));
+
+            value = eat(value.substring(end+1), ", ");
+            end = value.indexOf(")");
+            long tweetCount = Long.parseLong(value.substring(0, end));
+
+            recentTweets.add(new Pair<String, Long>(tweet, tweetCount));
+
+            value = value.substring(end+1);
+            if (value.startsWith(", "))
+                value = eat(value, ", ");
+        }
+
+        return new TwitterDemoRecord(tag, count, countList, positive, positiveList, neutral, neutralList, negative, negativeList, recentTweets);
     }
 
     private static void addInPlace (List<Integer> accumulatedSum, List<Integer> newAddend) {
