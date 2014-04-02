@@ -61,6 +61,8 @@ public class TileCache<T> {
     private List<TileIndex>                                         _orderedKeys;
     // A listener to attach to all entries
     private CacheEntryListener                                      _entryListener;
+    // A list of global listeners to all requests
+    private List<CacheRequestCallback<?>>                           _globalCallbacks;
 
     public TileCache (long maxAge, int maxSize) {
         _maxTileAge = maxAge;
@@ -69,7 +71,16 @@ public class TileCache<T> {
         _haveData= new TreeSet<>(new EntryAgeComparator());
         _orderedKeys = new LinkedList<>();
         _entryListener = new CacheEntryListener();
+        _globalCallbacks = new ArrayList<>();
     }
+
+	public void addGlobalCallback (CacheRequestCallback<?> callback) {
+		_globalCallbacks.add(callback);
+	}
+
+	public void removeGlobalCallback (CacheRequestCallback<?> callback) {
+		_globalCallbacks.remove(callback);
+	}
 
     /**
      * Take a list of tiles to request, and return the subset that are new
@@ -139,6 +150,12 @@ public class TileCache<T> {
             if (null != entry) {
                 _haveData.add(new Pair<TileIndex, Long>(index,
                                                         entry.initialRequestTime()));
+            }
+            // Notify any global listeners
+            if (null != _globalCallbacks && !_globalCallbacks.isEmpty()) {
+	            for (CacheRequestCallback<?> callback: _globalCallbacks) {
+		            ((CacheRequestCallback)callback).onTileReceived(index, tile);
+	            }
             }
             return false;
         }

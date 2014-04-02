@@ -71,6 +71,19 @@ trait BinDescriptor[PT, BT] extends Serializable {
    */
   def defaultMax: BT
 
+  /**
+   * Convert a bin value to a string.  Used when writing out the minimum and 
+   * maximum fields in the metadata of a tile tree
+   */
+  def binToString (value: BT): String = value.toString
+
+  /**
+   * Convert a bin value that has been written to a string back into a bin 
+   * value.  Used when updating the minimum and maximum fields in the 
+   * metadata of a tile tree.
+   */
+  def stringToBin (value: String): BT
+
   /** Return the default value to be used in unoccupied bins, before conversion */
   def defaultBinValue: PT
 
@@ -89,6 +102,7 @@ class StandardDoubleBinDescriptor extends BinDescriptor[Double, JavaDouble] {
   def max (a: JavaDouble, b: JavaDouble): JavaDouble = JavaMath.max(a, b)
   def defaultMax: JavaDouble = JavaDouble.MIN_VALUE
   def defaultBinValue: Double = 0.0
+  def stringToBin (value: String): JavaDouble = convert(value.toDouble)
   def convert (value: Double): JavaDouble = new JavaDouble(value)
   def getSerializer: TileSerializer[JavaDouble] = new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 }
@@ -131,7 +145,7 @@ class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaLi
       if (n < alen && n < blen) a.get(n).doubleValue min b.get(n).doubleValue
       else if (n < alen) a.get(n).doubleValue
       else b.get(n).doubleValue
-    }).map(new JavaDouble(_)).toList.asJava
+    }).map(new JavaDouble(_)).asJava
   }
   def max (a: JavaList[JavaDouble], b: JavaList[JavaDouble]): JavaList[JavaDouble] = {
     val alen = a.size
@@ -141,13 +155,18 @@ class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaLi
       if (n < alen && n < blen) a.get(n).doubleValue max b.get(n).doubleValue
       else if (n < alen) a.get(n).doubleValue
       else b.get(n).doubleValue
-    }).map(new JavaDouble(_)).toList.asJava
+    }).map(new JavaDouble(_)).asJava
   }
   def defaultMin: JavaList[JavaDouble] = _emptyList
   def defaultMax: JavaList[JavaDouble] = _emptyList
+
+  override def binToString (value: JavaList[JavaDouble]): String =
+    value.asScala.mkString(",")
+  def stringToBin (value: String): JavaList[JavaDouble] =
+    convert(value.split(",").map(_.toDouble).toSeq)
   def defaultBinValue: Seq[Double] = Seq[Double]()
   def convert (value: Seq[Double]): JavaList[JavaDouble] =
-    value.map(v => new JavaDouble(v)).toList.asJava
+    value.map(v => new JavaDouble(v)).asJava
   def getSerializer: TileSerializer[JavaList[JavaDouble]] = new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 }
 
@@ -165,7 +184,7 @@ class StringScoreBinDescriptor extends BinDescriptor[Map[String, Double],
   def min (a: JavaList[Pair[String, JavaDouble]],
            b: JavaList[Pair[String, JavaDouble]]): JavaList[Pair[String, JavaDouble]] = {
     val aMap = a.asScala.map(p => p.getFirst() -> p.getSecond().doubleValue).toMap
-    val bMap = a.asScala.map(p => p.getFirst() -> p.getSecond().doubleValue).toMap
+    val bMap = b.asScala.map(p => p.getFirst() -> p.getSecond().doubleValue).toMap
     convert((aMap.keySet union bMap.keySet).map(key => {
       val aVal = aMap.getOrElse(key, Double.MaxValue)
       val bVal = bMap.getOrElse(key, Double.MaxValue)
@@ -176,7 +195,7 @@ class StringScoreBinDescriptor extends BinDescriptor[Map[String, Double],
   def max (a: JavaList[Pair[String, JavaDouble]],
            b: JavaList[Pair[String, JavaDouble]]): JavaList[Pair[String, JavaDouble]] = {
     val aMap = a.asScala.map(p => p.getFirst() -> p.getSecond().doubleValue).toMap
-    val bMap = a.asScala.map(p => p.getFirst() -> p.getSecond().doubleValue).toMap
+    val bMap = b.asScala.map(p => p.getFirst() -> p.getSecond().doubleValue).toMap
     convert((aMap.keySet union bMap.keySet).map(key => {
       val aVal = aMap.getOrElse(key, Double.MinValue)
       val bVal = bMap.getOrElse(key, Double.MinValue)
@@ -184,14 +203,41 @@ class StringScoreBinDescriptor extends BinDescriptor[Map[String, Double],
     }).toMap)
   }
 
+  override def binToString (value: JavaList[Pair[String, JavaDouble]]): String = {
+	  value.asScala.map(pair => 
+		  "\""+pair.getFirst.replace("\"", "\\\"") + "\":" + pair.getSecond).mkString(",")
+  }
+  def stringToBin (value: String): JavaList[Pair[String, JavaDouble]] = {
+	  def inner (value: String): List[(String, Double)] = {
+		  if (value.isEmpty) List[(String, Double)]()
+		  else {
+			  val firstQuote = value.indexOf("\"")
+			  var secondQuote = value.indexOf("\"", firstQuote+1)
+			  while (secondQuote > 0 && '\\' == value.charAt(secondQuote-1))
+				  secondQuote = value.indexOf("\"", secondQuote+1)
+			  val colon = value.indexOf(":", secondQuote)
+			  val comma = value.indexOf(",", colon)
+			  if (comma > 0)
+				  ((value.substring(firstQuote+1, secondQuote),
+				    (value.substring(colon+1, comma).toDouble)) +:
+					   inner(value.substring(comma+1)))
+			  else
+				  List((value.substring(firstQuote+1, secondQuote),
+				        value.substring(colon+1).toDouble))
+		  }
+	  }
+	  inner(value).map(p => new Pair[String, JavaDouble](p._1, new JavaDouble(p._2))).asJava
+  }
+
   def defaultMin: JavaList[Pair[String, JavaDouble]] = _emptyList
   def defaultMax: JavaList[Pair[String, JavaDouble]] = _emptyList
   def defaultBinValue: Map[String, Double] = Map[String, Double]()
-  def convert (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] =
+  def convert (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] = {
     value
       .mapValues(d => new JavaDouble(d))
       .map(p => new Pair[String, JavaDouble](p._1, p._2))
       .toList.sortBy(_.getSecond).asJava
+  }
   def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] = 
     new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 }

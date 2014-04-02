@@ -79,6 +79,24 @@ extends BinDescriptor[Map[String, TwitterDemoRecord], JavaList[TwitterDemoRecord
     List(max).asJava
   }
 
+
+  override def binToString (value: JavaList[TwitterDemoRecord]): String =
+    value.asScala.mkString(";")
+
+  def stringToBin (value: String): JavaList[TwitterDemoRecord] = {
+	  var input = value
+	  val result = new java.util.ArrayList[TwitterDemoRecord]()
+	  while (input.length>0) {
+		  val nextRecord = TwitterDemoRecord.fromString(input)
+		  result.add(nextRecord)
+		  val nextRecordString = nextRecord.toString
+		  input = input.substring(nextRecordString.length())
+		  if (input.startsWith(";"))
+			  input = input.substring(1)
+	  }
+	  result
+  }
+
   def defaultBinValue: Map[String, TwitterDemoRecord] = Map[String, TwitterDemoRecord]()
 
   def convert (value: Map[String, TwitterDemoRecord]): JavaList[TwitterDemoRecord] =

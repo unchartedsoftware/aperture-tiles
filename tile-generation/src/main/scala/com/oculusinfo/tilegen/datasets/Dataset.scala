@@ -51,8 +51,8 @@ import org.apache.spark.streaming.Time
  * simple property files, which can be passed into a binning process from any
  * place that needs raw data to be binned.
  */
-abstract class Dataset[BT: ClassManifest, PT] {
-  val binTypeManifest = implicitly[ClassManifest[BT]]
+abstract class Dataset[PT: ClassManifest, BT] {
+  val binTypeManifest = implicitly[ClassManifest[PT]]
   var _debug = true;
 
 
@@ -91,7 +91,7 @@ abstract class Dataset[BT: ClassManifest, PT] {
   /**
    * Get a bin descriptor that can be used to bin this data
    */
-  def getBinDescriptor: BinDescriptor[BT, PT]
+  def getBinDescriptor: BinDescriptor[PT, BT]
 
 	/**
 	 * Creates a blank metadata describing this dataset
@@ -115,7 +115,7 @@ abstract class Dataset[BT: ClassManifest, PT] {
 	}
 
 
-  type STRATEGY_TYPE <: ProcessingStrategy[BT]
+  type STRATEGY_TYPE <: ProcessingStrategy[PT]
 
   protected var strategy: STRATEGY_TYPE
   def initialize (strategy: STRATEGY_TYPE): Unit = {
@@ -129,7 +129,7 @@ abstract class Dataset[BT: ClassManifest, PT] {
    * Note that these function may be serialized remotely, so any context-stored
    * parameters must be serializable
    */
-  def process[OUTPUT] (fcn: (RDD[(Double, Double, BT)]) => OUTPUT,
+  def process[OUTPUT] (fcn: (RDD[(Double, Double, PT)]) => OUTPUT,
 		       completionCallback: Option[OUTPUT => Unit]): Unit = {
     if (null == strategy) {
       throw new Exception("Attempt to process uninitialized dataset "+getName)
@@ -139,7 +139,7 @@ abstract class Dataset[BT: ClassManifest, PT] {
   }
 
   def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: (RDD[(Double, Double, BT)]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+  (fcn: (RDD[(Double, Double, PT)]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
     if (null == strategy) {
       throw new Exception("Attempt to process uninitialized dataset "+getName)
     } else {
@@ -147,7 +147,7 @@ abstract class Dataset[BT: ClassManifest, PT] {
     }
 
   def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: (RDD[(Double, Double, BT)]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+  (fcn: (RDD[(Double, Double, PT)]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
     if (null == strategy) {
       throw new Exception("Attempt to process uninitialized dataset "+getName)
     } else {
@@ -155,61 +155,61 @@ abstract class Dataset[BT: ClassManifest, PT] {
     }
 }
 
-trait StreamingProcessor[BT] {
-  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, BT)] => OUTPUT,
+trait StreamingProcessor[PT] {
+  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, PT)] => OUTPUT,
 		       completionCallback: Option[Time => OUTPUT => Unit]): Unit
 }
 
-abstract class ProcessingStrategy[BT: ClassManifest] {
-  def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
+abstract class ProcessingStrategy[PT: ClassManifest] {
+  def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
 		       completionCallback: Option[OUTPUT => Unit]): Unit
 
   def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
+  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
 
   def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
+  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
 }
 
-abstract class StaticProcessingStrategy[BT: ClassManifest] (sc: SparkContext, cache: Boolean) 
-	 extends ProcessingStrategy[BT] {
+abstract class StaticProcessingStrategy[PT: ClassManifest] (sc: SparkContext, cache: Boolean) 
+	 extends ProcessingStrategy[PT] {
   private val rdd = getData
 
-  protected def getData: RDD[(Double, Double, BT)]
+  protected def getData: RDD[(Double, Double, PT)]
 
-  final def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
+  final def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
 			     completionCallback: Option[OUTPUT => Unit] = None): Unit = {
     val result = fcn(rdd)
     completionCallback.map(_(result))
   }
 
   final def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
     fcn(rdd)
 
   final def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
     throw new Exception("Attempt to call DStream transform on RDD processor")
 }
 
-abstract class StreamingProcessingStrategy[BT: ClassManifest]
-extends ProcessingStrategy[BT] {
+abstract class StreamingProcessingStrategy[PT: ClassManifest]
+extends ProcessingStrategy[PT] {
   private val dstream = getData
 
-  protected def getData: DStream[(Double, Double, BT)]
+  protected def getData: DStream[(Double, Double, PT)]
 
-  private final def internalProcess[OUTPUT] (rdd: RDD[(Double, Double, BT)], fcn: RDD[(Double, Double, BT)] => OUTPUT,
+  private final def internalProcess[OUTPUT] (rdd: RDD[(Double, Double, PT)], fcn: RDD[(Double, Double, PT)] => OUTPUT,
 			     completionCallback: Option[OUTPUT => Unit] = None): Unit = {
     val result = fcn(rdd)
     completionCallback.map(_(result))
   }
 
-  def process[OUTPUT] (fcn: RDD[(Double, Double, BT)] => OUTPUT,
+  def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
 			     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
     dstream.foreach(internalProcess(_, fcn, completionCallback))
   }
 
-  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, BT)] => OUTPUT,
+  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, PT)] => OUTPUT,
 		       completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
     dstream.foreach{(rdd, time) =>
       internalProcess(rdd, fcn(time), completionCallback.map(_(time)))
@@ -217,11 +217,11 @@ extends ProcessingStrategy[BT] {
   }
   
   final def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
     throw new Exception("Attempt to call RDD transform on DStream processor")
 
   final def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, BT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
     dstream.transform(fcn)
 }
 

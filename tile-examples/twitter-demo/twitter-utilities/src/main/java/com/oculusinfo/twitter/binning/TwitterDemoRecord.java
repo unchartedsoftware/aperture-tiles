@@ -174,10 +174,19 @@ public class TwitterDemoRecord implements Serializable {
     }
 
     private static String escapeString (String string) {
-        return string.replace("\\", "\\\\").replace("\"", "\\\"");
+	    if (null == string)
+		    return "null";
+	    else
+		    return "\""+string.replace("\\", "\\\\").replace("\"", "\\\"")+"\"";
     }
 
     private static String unescapeString (String string) {
+	    if (null == string) return null;
+	    if ("null".equals(string)) return null;
+
+	    // Remove start and end quote
+	    string = string.substring(1, string.length()-1);
+	    // Replace escaped characters
         return string.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
@@ -189,6 +198,7 @@ public class TwitterDemoRecord implements Serializable {
     }
 
     private static int getQuotedStringEnd (String from) {
+	    if (from.startsWith("null")) return 4;
         if (!from.startsWith("\"")) throw new IllegalArgumentException("Quoted string didn't start with quote");
         int lastQuote = 0;
         while (true) {
@@ -204,14 +214,14 @@ public class TwitterDemoRecord implements Serializable {
             }
             if (0 == (slashes%2)) {
                 // final quote - we're done
-                return lastQuote;
+                return lastQuote+1;
             }
         }
     }
 
     @Override
     public String toString () {
-        String result = ("{tag: \"" + escapeString(_tag) + "\", "+
+        String result = ("{tag: " + escapeString(_tag) + ", "+
                 "count: "    + _count    + ", countList: ["    + mkString(_countBins,    ", ") + "], " +
                 "positive: " + _positive + ", positiveList: [" + mkString(_positiveBins, ", ") + "], " +
                 "neutral: "  + _neutral  + ", neutralList: ["  + mkString(_neutralBins,  ", ") + "], " +
@@ -220,7 +230,7 @@ public class TwitterDemoRecord implements Serializable {
         for (int i=0; i<_recentTweets.size(); ++i) {
             Pair<String, Long> rt = _recentTweets.get(i);
             if (i>0) result += ", ";
-            result += "(\""+escapeString(rt.getFirst())+"\", "+rt.getSecond()+")";
+            result += "("+escapeString(rt.getFirst())+", "+rt.getSecond()+")";
         }
         result = result + "]}";
         return result;
@@ -243,9 +253,9 @@ public class TwitterDemoRecord implements Serializable {
     public static TwitterDemoRecord fromString (String value) {
         value = eat(value, "{tag: ");
         int end = getQuotedStringEnd(value);
-        String tag = unescapeString(value.substring(1, end));
+        String tag = unescapeString(value.substring(0, end));
 
-        value = eat(value.substring(end+1), ", count: ");
+        value = eat(value.substring(end), ", count: ");
         end = value.indexOf(", countList: [");
         int count = Integer.parseInt(value.substring(0, end));
 
@@ -282,9 +292,9 @@ public class TwitterDemoRecord implements Serializable {
         while (value.startsWith("(")) {
             value = eat(value, "(");
             end = getQuotedStringEnd(value);
-            String tweet= unescapeString(value.substring(1, end));
+            String tweet= unescapeString(value.substring(0, end));
 
-            value = eat(value.substring(end+1), ", ");
+            value = eat(value.substring(end), ", ");
             end = value.indexOf(")");
             long tweetCount = Long.parseLong(value.substring(0, end));
 

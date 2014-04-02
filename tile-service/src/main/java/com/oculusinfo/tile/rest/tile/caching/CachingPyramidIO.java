@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -46,17 +47,28 @@ import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 
+import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
+
 public class CachingPyramidIO implements PyramidIO {
     private static final Logger LOGGER = LoggerFactory.getLogger(CachingPyramidIO.class);
 
-    private Map<String, TileCache<?>> _tileCaches;
-    private Map<String, PyramidIO>    _basePyramidIOs;
+    private Map<String, TileCache<?>>                    _tileCaches;
+    private Map<String, PyramidIO>                       _basePyramidIOs;
+	private List<LayerDataChangedListener>               _layerListeners;
 
     public CachingPyramidIO () {
         _tileCaches = new HashMap<>();
         _basePyramidIOs = new HashMap<>();
+        _layerListeners = new ArrayList<>();
     }
 
+	public void addLayerListener (LayerDataChangedListener listener) {
+		_layerListeners.add(listener);
+	}
+
+	public void removeLayerListener (LayerDataChangedListener listener) {
+		_layerListeners.remove(listener);
+	}
 
     synchronized private PyramidIO getBasePyramidIO (String pyramidId) {
         return _basePyramidIOs.get(pyramidId);
@@ -68,6 +80,7 @@ public class CachingPyramidIO implements PyramidIO {
         TileCache<T> cache = (TileCache)_tileCaches.get(pyramidId);
         if (null == cache) {
             cache = new TileCache<>(10000, 100);
+            cache.addGlobalCallback(new GlobalCallback(pyramidId));
             _tileCaches.put(pyramidId, cache);
         }
         return cache;
@@ -230,7 +243,7 @@ public class CachingPyramidIO implements PyramidIO {
 
 
 
-    private class CacheListenerCallback<T> implements TileCacheEntry.CacheRequestCallback<T> {
+    private class CacheListenerCallback<T> implements CacheRequestCallback<T> {
         private TileData<T> _tile;
         private boolean     _waiting;
         private boolean     _notified;
@@ -273,5 +286,25 @@ public class CachingPyramidIO implements PyramidIO {
                 this.notify();
         }
     }
-}
 
+	private class GlobalCallback<T> implements TileCacheEntry.CacheRequestCallback<T> {
+		private String _layer;
+		GlobalCallback (String layer) {
+			_layer = layer;
+		}
+        @Override
+	    public boolean onTileReceived (TileIndex index, TileData<T> tile) {
+	        for (LayerDataChangedListener listener: _layerListeners) {
+		        listener.onLayerDataChanged(_layer);
+	        }
+	        return false;
+        }
+
+        @Override
+        public void onTileAbandoned (TileIndex index) {
+        }
+	}
+	public interface LayerDataChangedListener {
+		public void onLayerDataChanged (String layer);
+	}
+}
