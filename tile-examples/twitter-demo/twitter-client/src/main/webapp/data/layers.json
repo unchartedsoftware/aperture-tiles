@@ -6,7 +6,9 @@
 	    "transform": {
                 "name": "log10"
             },
-	    "ramp": "ware",
+	    "renderer": {
+                "ramp": "ware"
+            },
 	    "opacity": 0.85,
             "pyramidio": {
                 "type": "hbase",

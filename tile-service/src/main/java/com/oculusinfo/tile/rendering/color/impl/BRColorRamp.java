@@ -24,7 +24,6 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.oculusinfo.tile.rendering.color.FixedPoint;
@@ -35,9 +34,9 @@ public class BRColorRamp extends AbstractColorRamp {
 
 	public BRColorRamp (boolean inverted, int opacity) {
 	    super(inverted,
-	          Arrays.asList(new FixedPoint(0.25, 0), new FixedPoint(0.75, 1)),
-	          new ArrayList<FixedPoint>(),
-	          Arrays.asList(new FixedPoint(0, 0.5), new FixedPoint(0.5, 0), new FixedPoint(1, 1)),
+			  Arrays.asList(new FixedPoint(0.25, 0.0), new FixedPoint(0.50, 0.5), new FixedPoint(1.00, 1.0)),
+		      Arrays.asList(new FixedPoint(0.25, 0.0), new FixedPoint(0.375, 0.25), new FixedPoint(0.625, 0.25), new FixedPoint(0.75, 0.0)),
+			  Arrays.asList(new FixedPoint(0.00, 0.5), new FixedPoint(0.25, 1.0), new FixedPoint(0.75, 0.0)),
 	          null,
 	          opacity);
 	}

@@ -324,7 +324,11 @@ define(function (require) {
          */
         setSubLayerRampType: function (subLayerId, rampType) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            layerSpec.ramp = rampType;
+            if (!layerSpec.renderer) {
+                layerSpec.renderer = {ramp: rampType};
+            } else {
+                layerSpec.renderer.ramp = rampType;
+            }
             this.dataListener.retrieveLayerInfo();
         },
 
@@ -334,7 +338,7 @@ define(function (require) {
          */
         getSubLayerRampType: function (subLayerId) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            return layerSpec.ramp;
+            return layerSpec.renderer.ramp;
         },
 
         /**
