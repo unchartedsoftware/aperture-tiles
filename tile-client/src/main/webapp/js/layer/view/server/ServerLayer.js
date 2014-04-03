@@ -346,7 +346,7 @@ define(function (require) {
          */
         setSubLayerRampFunction: function (subLayerId, rampFunction) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            layerSpec.transform = rampFunction;
+            layerSpec.transform.name = rampFunction;
             this.dataListener.retrieveLayerInfo();
         },
 
@@ -356,7 +356,7 @@ define(function (require) {
          */
         getSubLayerRampFunction: function (subLayerId) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            return layerSpec.transform;
+            return layerSpec.transform.name;
         },
 
         /**

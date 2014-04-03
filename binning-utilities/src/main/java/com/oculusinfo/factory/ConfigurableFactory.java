@@ -71,6 +71,8 @@ abstract public class ConfigurableFactory<T> {
     private List<ConfigurableFactory<?>>                    _children;
     private boolean                                         _configured;
     private String                                          _propertyPrefix;
+    private JSONObject                                      _JSONConfigurationSource;
+    private Properties                                      _propertyConfigurationSource;
 
 
 
@@ -116,6 +118,8 @@ abstract public class ConfigurableFactory<T> {
         _children = new ArrayList<>();
         _configured = false;
         _propertyPrefix = null;
+        _JSONConfigurationSource = null;
+        _propertyConfigurationSource = null;
     }
 
     private <PT> void putPropertyValueObject (ConfigurationProperty<PT> property, PropertyValue<PT> value) {
@@ -303,6 +307,7 @@ abstract public class ConfigurableFactory<T> {
             child.readConfiguration(properties);
         }
 
+        _propertyConfigurationSource = properties;
         _configured = true;
     }
 
@@ -396,6 +401,7 @@ abstract public class ConfigurableFactory<T> {
                 child.readConfiguration(rootNode);
             }
 
+            _JSONConfigurationSource = factoryNode;
             _configured = true;
         } catch (JSONException e) {
             throw new ConfigurationException("Error configuring factory "+this.getClass().getName(), e);
@@ -477,5 +483,18 @@ abstract public class ConfigurableFactory<T> {
         for (ConfigurableFactory<?> child: _children) {
             child.writeConfigurationInformation(stream, prefix);
         }
+    }
+
+    /**
+     * Return the object with which this was configured. This returns a
+     * bare-typed Object so that (a) no one uses this for anything meaningful,
+     * just for printing out configurations to a debug stream or the like, and
+     * (b) so that we can get away with just one such function, rather than one
+     * for each configuration stream (JSON or Property at the moment).
+     */
+    public Object debugConfiguration () {
+        if (null != _JSONConfigurationSource) return _JSONConfigurationSource;
+        if (null != _propertyConfigurationSource) return _propertyConfigurationSource;
+        return null;
     }
 }
