@@ -29,14 +29,14 @@ import com.google.inject.AbstractModule;
 import com.oculusinfo.tile.rest.legend.LegendService;
 import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
 import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.caching.CachingTileServiceImpl;
+import com.oculusinfo.tile.rest.tile.TileServiceImpl;
 
 
 public class TileModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(TileService.class).to(CachingTileServiceImpl.class);
+		bind(TileService.class).to(TileServiceImpl.class);
 		bind(LegendService.class).to(LegendServiceImpl.class);
 	}
 
