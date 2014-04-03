@@ -71,7 +71,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
                                                                                    "linear",
                                                                                    new String[] {"linear", "log10"});
     public static final ListProperty<Integer> LEGEND_RANGE    = new ListProperty<>(new IntegerProperty("", "", -1),
-                                                                                   "legendRange",
+                                                                                   "legendrange",
                                                                                    "The value bounds to use for coloration");
     public static final IntegerProperty       CURRENT_IMAGE   = new IntegerProperty("currentImage",
                                                                                     "used to determine which of a series of potential images should be displayed.  Ordinarily, this parameter is for programatic use only.",
