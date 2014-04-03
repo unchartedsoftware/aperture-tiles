@@ -25,17 +25,43 @@
  
 package com.oculusinfo.tilegen.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import org.apache.spark.serializer.KryoRegistrator;
-import com.oculusinfo.tilegen.spark.*;
-import com.oculusinfo.tilegen.tiling.*;
-import com.oculusinfo.tilegen.util.*;
-import com.oculusinfo.tilegen.datasets.*;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
-import com.oculusinfo.binning.io.serialization.*;
-import com.oculusinfo.binning.io.serialization.impl.*;
-import com.oculusinfo.binning.util.*;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.DensityStripData;
+import com.oculusinfo.binning.PyramidComparator;
+import com.oculusinfo.binning.TileAndBinIndices;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.tilegen.datasets.CSVRecordParser;
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper;
+import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam;
+import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam;
+import com.oculusinfo.tilegen.spark.MinMaxAccumulableParam;
+import com.oculusinfo.tilegen.tiling.BinDescriptor;
+import com.oculusinfo.tilegen.tiling.CompatibilityDoubleBinDescriptor;
+import com.oculusinfo.tilegen.tiling.FieldExtractor;
+import com.oculusinfo.tilegen.tiling.GenericSeriesBinner;
+import com.oculusinfo.tilegen.tiling.HBaseTileIO;
+import com.oculusinfo.tilegen.tiling.LevelMinMaxAccumulableParam;
+import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor;
+import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor;
+import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor;
+import com.oculusinfo.tilegen.tiling.RecordParser;
+import com.oculusinfo.tilegen.tiling.SingleTileToImageConverter;
+import com.oculusinfo.tilegen.tiling.StandardDoubleArrayBinDescriptor;
+import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor;
+import com.oculusinfo.tilegen.tiling.StringScoreBinDescriptor;
+import com.oculusinfo.tilegen.tiling.TileIO;
+import com.oculusinfo.tilegen.tiling.TileSeriesToImagesConverter;
+import com.oculusinfo.tilegen.tiling.TileToImageConverter;
+import com.oculusinfo.tilegen.tiling.ValueOrException;
+import com.oculusinfo.tilegen.util.PropertiesWrapper;
+import com.oculusinfo.tilegen.util.Rectangle;
 
 
 public class TileRegistrator implements KryoRegistrator {
