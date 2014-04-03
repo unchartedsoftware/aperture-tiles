@@ -109,8 +109,8 @@ define(function (require) {
                 layerState.setName(layerName);
                 layerState.setEnabled(true);
                 layerState.setOpacity(layerSpec.opacity);
-                layerState.setRampFunction(layerSpec.transform);
-                layerState.setRampType(layerSpec.ramp);
+                layerState.setRampFunction(mapLayer.getSubLayerRampFunction(layerId));
+                layerState.setRampType(mapLayer.getSubLayerRampType(layerId));
                 layerState.setFilterRange([0.0, 1.0]);
                 layerState.setZIndex(i);
 

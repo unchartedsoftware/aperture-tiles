@@ -324,6 +324,10 @@ define(function (require) {
          */
         setSubLayerRampType: function (subLayerId, rampType) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            if (!layerSpec) {
+                return;
+            }
+
             if (!layerSpec.renderer) {
                 layerSpec.renderer = {ramp: rampType};
             } else {
@@ -338,6 +342,9 @@ define(function (require) {
          */
         getSubLayerRampType: function (subLayerId) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            if (!layerSpec || !layerSpec.renderer || !layerSpec.renderer.ramp) {
+                return "ware";
+            }
             return layerSpec.renderer.ramp;
         },
 
@@ -350,7 +357,15 @@ define(function (require) {
          */
         setSubLayerRampFunction: function (subLayerId, rampFunction) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            layerSpec.transform.name = rampFunction;
+            if (!layerSpec) {
+                return;
+            }
+
+            if (!layerSpec.transform) {
+                layerSpec.transform = {name: rampFunction};
+            } else {
+                layerSpec.transform.name = rampFunction;
+            }
             this.dataListener.retrieveLayerInfo();
         },
 
@@ -360,6 +375,9 @@ define(function (require) {
          */
         getSubLayerRampFunction: function (subLayerId) {
             var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
+            if (!layerSpec || !layerSpec.transform || !layerSpec.transform.name) {
+                return "linear";
+            }
             return layerSpec.transform.name;
         },
 
