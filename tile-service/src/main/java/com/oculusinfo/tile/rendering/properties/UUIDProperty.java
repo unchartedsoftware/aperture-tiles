@@ -99,4 +99,26 @@ public class UUIDProperty implements ConfigurationProperty<UUID> {
     public UUID unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
         return unencode(propertyNode.getAsString());
     }
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof UUIDProperty)) return false;
+
+        UUIDProperty thatP = (UUIDProperty) that;
+        return thatP._name.equals(this._name);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"UUID\"/>", _name);
+    }
 }

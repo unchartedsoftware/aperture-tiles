@@ -108,4 +108,26 @@ public class JSONProperty implements ConfigurationProperty<JSONObject> {
     public JSONObject unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
         return propertyNode.getAsJSONObject();
     }
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof JSONProperty)) return false;
+        
+        JSONProperty thatP = (JSONProperty) that;
+        return thatP._name.equals(this._name);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"JSON\"/>", _name);
+    }
 }

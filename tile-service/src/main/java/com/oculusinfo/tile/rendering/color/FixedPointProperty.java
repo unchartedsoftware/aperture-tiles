@@ -91,4 +91,26 @@ public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
         return new FixedPoint(node.getDouble("scale"), node.getDouble("value"));
     }
 
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof FixedPointProperty)) return false;
+        
+        FixedPointProperty thatP = (FixedPointProperty) that;
+        return thatP._name.equals(this._name);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"fixed point\"/>", _name);
+    }
 }

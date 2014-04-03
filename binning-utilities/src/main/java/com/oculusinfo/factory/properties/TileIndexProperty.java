@@ -102,4 +102,26 @@ public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 
         return new TileIndex(level, xIndex, yIndex, numXBins, numYBins);
     }
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof TileIndexProperty)) return false;
+        
+        TileIndexProperty thatP = (TileIndexProperty) that;
+        return thatP._name.equals(this._name);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"tile index\"/>");
+    }
 }

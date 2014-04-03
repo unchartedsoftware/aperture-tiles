@@ -96,6 +96,30 @@ public class StringProperty implements ConfigurationProperty<String> {
         return unencode(propertyNode.getAsString());
     }
 
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof StringProperty)) return false;
+        
+        StringProperty thatP = (StringProperty) that;
+        return thatP._name.equals(this._name);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"string\"/>", _name);
+    }
+
+
+
     /**
      * Create a duplicate property, identical in all but the list of possible
      * values.
@@ -107,6 +131,8 @@ public class StringProperty implements ConfigurationProperty<String> {
     public StringProperty overridePossibleValues (String[] newPossibilities) {
         return new StringProperty(_name, _description, _defaultValue, newPossibilities);
     }
+
+
 
     /**
      * A utility function, mostly for use with the above

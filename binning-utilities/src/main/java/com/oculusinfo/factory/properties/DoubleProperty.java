@@ -90,4 +90,26 @@ public class DoubleProperty implements ConfigurationProperty<Double> {
     public Double unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
         return propertyNode.getAsDouble();
     }
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof DoubleProperty)) return false;
+        
+        DoubleProperty thatP = (DoubleProperty) that;
+        return thatP._name.equals(this._name);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"double\"/>", _name);
+    }
 }

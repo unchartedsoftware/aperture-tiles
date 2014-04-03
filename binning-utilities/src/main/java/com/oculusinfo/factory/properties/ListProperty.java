@@ -121,4 +121,26 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
         }
         return result;
     }
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode() + _baseProperty.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof ListProperty)) return false;
+
+        ListProperty<?> thatP = (ListProperty<?>) that;
+        return thatP._name.equals(this._name) && thatP._baseProperty.equals(this._baseProperty);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"List[%s]\"/>", _name, _baseProperty.getType().getSimpleName());
+    }
 }

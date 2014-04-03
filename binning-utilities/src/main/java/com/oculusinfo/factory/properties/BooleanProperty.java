@@ -90,4 +90,26 @@ public class BooleanProperty implements ConfigurationProperty<Boolean> {
     public Boolean unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
         return propertyNode.getAsBoolean();
     }
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof BooleanProperty)) return false;
+        
+        BooleanProperty thatP = (BooleanProperty) that;
+        return thatP._name.equals(this._name);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"boolean\"/>", _name);
+    }
 }

@@ -90,4 +90,26 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
     public T unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
         return unencode(propertyNode.getAsString());
     }
+
+
+
+    @Override
+    public int hashCode () {
+        return _name.hashCode() + _type.hashCode();
+    }
+
+    @Override
+    public boolean equals (Object that) {
+        if (this == that) return true;
+        if (null == that) return false;
+        if (!(that instanceof EnumProperty)) return false;
+        
+        EnumProperty<?> thatP = (EnumProperty<?>) that;
+        return thatP._name.equals(this._name) && thatP._type.equals(this._type);
+    }
+
+    @Override
+    public String toString () {
+        return String.format("<property name=\"%s\" type=\"enum[%s]\"/>", _name, _type.getSimpleName());
+    }
 }
