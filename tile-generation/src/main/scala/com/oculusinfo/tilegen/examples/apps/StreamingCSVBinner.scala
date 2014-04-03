@@ -315,7 +315,7 @@ object StreamingCSVBinner {
 			        	    dataset.getBinDescriptor,
 						    dataset.getTilePyramid,
 						    levels,
-						    dataset.getBins,
+						    (dataset.getNumXBins max dataset.getNumYBins),
 						    dataset.getConsolidationPartitions)
           tileIO.writeTileSet(dataset.getTilePyramid,
 			  jobName,
@@ -401,7 +401,7 @@ object StreamingCSVBinner {
         //create a the windowed strategy for the job
         val strategy = new WindowedProcessingStrategy(parsedStream, windowDurTimeSec, slideDurTimeSec)
         
-        val dataset = new StreamingCSVDataset(props, 256)
+        val dataset = new StreamingCSVDataset(props, 256, 256)
         dataset.initialize(strategy)
 
         processDatasetGeneric(dataset, tileIO, job)
