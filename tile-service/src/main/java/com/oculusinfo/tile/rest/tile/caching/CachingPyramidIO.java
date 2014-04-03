@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -46,7 +45,6 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
-
 import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
 
 public class CachingPyramidIO implements PyramidIO {
@@ -80,7 +78,7 @@ public class CachingPyramidIO implements PyramidIO {
         TileCache<T> cache = (TileCache)_tileCaches.get(pyramidId);
         if (null == cache) {
             cache = new TileCache<>(10000, 100);
-            cache.addGlobalCallback(new GlobalCallback(pyramidId));
+            cache.addGlobalCallback(new GlobalCallback<T>(pyramidId));
             _tileCaches.put(pyramidId, cache);
         }
         return cache;
