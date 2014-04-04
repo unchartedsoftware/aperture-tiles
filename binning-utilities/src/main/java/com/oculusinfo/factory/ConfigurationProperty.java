@@ -39,65 +39,65 @@ import org.json.JSONException;
  * @author nkronenfeld
  */
 public interface ConfigurationProperty<T> {
-    public String getName ();
+	public String getName ();
 
-    public String getDescription ();
+	public String getDescription ();
 
-    public Class<T> getType ();
+	public Class<T> getType ();
 
-    public T[] getPossibleValues ();
+	public T[] getPossibleValues ();
 
-    public T getDefaultValue ();
+	public T getDefaultValue ();
 
-    /**
-     * Give a string version of a value for this property.
-     */
-    public String encode (T value);
+	/**
+	 * Give a string version of a value for this property.
+	 */
+	public String encode (T value);
 
-    /**
-     * Convert a string version of a value for this property back into the
-     * proper value type.
-     */
-    public T unencode (String string) throws ConfigurationException;
+	/**
+	 * Convert a string version of a value for this property back into the
+	 * proper value type.
+	 */
+	public T unencode (String string) throws ConfigurationException;
 
-    /**
-     * <p>
-     * Store a value for this property into the factory's JSON node. Typically,
-     * this can be just
-     * </p>
-     * 
-     * <code>propertyNode.setAsString(encode(value))</code>
-     * 
-     * <p>
-     * but in the case of complicated property types, this can be made more
-     * complex.
-     * </p>
-     * 
-     * @param propertyNode The type-independent representation of the location
-     *            in the JSON tree with the value of this property.
-     * @param value The value to set
-     * @throws JSONException
-     */
-    public void encodeJSON (JSONNode propertyNode, T value) throws JSONException;
+	/**
+	 * <p>
+	 * Store a value for this property into the factory's JSON node. Typically,
+	 * this can be just
+	 * </p>
+	 * 
+	 * <code>propertyNode.setAsString(encode(value))</code>
+	 * 
+	 * <p>
+	 * but in the case of complicated property types, this can be made more
+	 * complex.
+	 * </p>
+	 * 
+	 * @param propertyNode The type-independent representation of the location
+	 *            in the JSON tree with the value of this property.
+	 * @param value The value to set
+	 * @throws JSONException
+	 */
+	public void encodeJSON (JSONNode propertyNode, T value) throws JSONException;
 
-    /**
-     * <p>
-     * Read a value for this property from the factory's JSON node. Typically,
-     * this can be just
-     * </p>
-     * 
-     * <code>return unencode(propertyNode.getAsString())</code>
-     * 
-     * <p>
-     * but in the case of complicated property types, this can be made more
-     * complex.
-     * </p>
-     * 
-     * If a value is missing, the JSONException can be passed through - if a
-     * JSONException is thrown, the default value will be used automatically.
-     * 
-     * @param propertyNode The type-independent representation fo the location
-     *            in the JSON tree with the value of this property.
-     */
-    public T unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException;
+	/**
+	 * <p>
+	 * Read a value for this property from the factory's JSON node. Typically,
+	 * this can be just
+	 * </p>
+	 * 
+	 * <code>return unencode(propertyNode.getAsString())</code>
+	 * 
+	 * <p>
+	 * but in the case of complicated property types, this can be made more
+	 * complex.
+	 * </p>
+	 * 
+	 * If a value is missing, the JSONException can be passed through - if a
+	 * JSONException is thrown, the default value will be used automatically.
+	 * 
+	 * @param propertyNode The type-independent representation fo the location
+	 *            in the JSON tree with the value of this property.
+	 */
+	public T unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException;
 }

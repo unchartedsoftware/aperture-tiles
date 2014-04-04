@@ -42,8 +42,8 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class FileSystemPyramidIO implements PyramidIO {
-    private String _rootPath;
-    private String _extension;
+	private String _rootPath;
+	private String _extension;
 
 
 
@@ -52,95 +52,95 @@ public class FileSystemPyramidIO implements PyramidIO {
 		_extension = extension;
 	}
 
-    public Object getRootPath () {
-        return _rootPath;
-    }
+	public Object getRootPath () {
+		return _rootPath;
+	}
 
 	private File getTileFile (String basePath, TileIndex tile) {
-        return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
-                                              + "/%d/%d/%d." + _extension,
-                                      _rootPath + basePath,
-                                      tile.getLevel(), tile.getX(), tile.getY()));
-    }
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/%d/%d." + _extension,
+		                              _rootPath + basePath,
+		                              tile.getLevel(), tile.getX(), tile.getY()));
+	}
 
-    private File getMetaDataFile (String basePath) {
-        return new File(_rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME);
-    }
+	private File getMetaDataFile (String basePath) {
+		return new File(_rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME);
+	}
 
-    @Override
-    public void initializeForWrite (String basePath) throws IOException {
-    }
+	@Override
+	public void initializeForWrite (String basePath) throws IOException {
+	}
 
-    @Override
-    public <T> void writeTiles (String basePath, TilePyramid tilePyramid, TileSerializer<T> serializer,
-                                Iterable<TileData<T>> data) throws IOException {
-        for (TileData<T> tile: data) {
-            File tileFile = getTileFile(basePath, tile.getDefinition());
-            File parent = tileFile.getParentFile();
-            if (!parent.exists()) parent.mkdirs();
+	@Override
+	public <T> void writeTiles (String basePath, TilePyramid tilePyramid, TileSerializer<T> serializer,
+	                            Iterable<TileData<T>> data) throws IOException {
+		for (TileData<T> tile: data) {
+			File tileFile = getTileFile(basePath, tile.getDefinition());
+			File parent = tileFile.getParentFile();
+			if (!parent.exists()) parent.mkdirs();
 
-            FileOutputStream fileStream = new FileOutputStream(tileFile);
-            serializer.serialize(tile, tilePyramid, fileStream);
-            fileStream.close();
-        }
-    }
+			FileOutputStream fileStream = new FileOutputStream(tileFile);
+			serializer.serialize(tile, tilePyramid, fileStream);
+			fileStream.close();
+		}
+	}
 
-    @Override
-    public void writeMetaData (String basePath, String metaData) throws IOException {
-        FileOutputStream stream = new FileOutputStream(getMetaDataFile(basePath));
-        stream.write(metaData.getBytes());
-        stream.close();
-    }
+	@Override
+	public void writeMetaData (String basePath, String metaData) throws IOException {
+		FileOutputStream stream = new FileOutputStream(getMetaDataFile(basePath));
+		stream.write(metaData.getBytes());
+		stream.close();
+	}
 
-    @Override
-    public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
-    	// Noop
-    }
+	@Override
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
+		// Noop
+	}
 
-    @Override
-    public <T> List<TileData<T>> readTiles (String basePath,
-                                            TileSerializer<T> serializer,
-                                            Iterable<TileIndex> tiles) throws IOException {
-        List<TileData<T>> results = new LinkedList<TileData<T>>();
-        for (TileIndex tile: tiles) {
-            File tileFile = getTileFile(basePath, tile);
+	@Override
+	public <T> List<TileData<T>> readTiles (String basePath,
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException {
+		List<TileData<T>> results = new LinkedList<TileData<T>>();
+		for (TileIndex tile: tiles) {
+			File tileFile = getTileFile(basePath, tile);
 
-            if (tileFile.exists() && tileFile.isFile()) {
-                FileInputStream stream = new FileInputStream(tileFile);
-                TileData<T> data = serializer.deserialize(tile, stream);
-                results.add(data);
-                stream.close();
-            }
-        }
-        return results;
-    }
+			if (tileFile.exists() && tileFile.isFile()) {
+				FileInputStream stream = new FileInputStream(tileFile);
+				TileData<T> data = serializer.deserialize(tile, stream);
+				results.add(data);
+				stream.close();
+			}
+		}
+		return results;
+	}
 
-    @Override
-    public <T> InputStream getTileStream (String basePath,
-                                          TileSerializer<T> serializer,
-                                          TileIndex tile) throws IOException {
-        File tileFile = getTileFile(basePath, tile);
+	@Override
+	public <T> InputStream getTileStream (String basePath,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException {
+		File tileFile = getTileFile(basePath, tile);
 
-        if (tileFile.exists() && tileFile.isFile()) {
-            return new FileInputStream(tileFile);
-        } else {
-            return null;
-        }
-    }
+		if (tileFile.exists() && tileFile.isFile()) {
+			return new FileInputStream(tileFile);
+		} else {
+			return null;
+		}
+	}
 
-    @Override
-    public String readMetaData (String basePath) throws IOException {
-        File metaDataFile = getMetaDataFile(basePath);
-        if (!metaDataFile.exists()) return null;
+	@Override
+	public String readMetaData (String basePath) throws IOException {
+		File metaDataFile = getMetaDataFile(basePath);
+		if (!metaDataFile.exists()) return null;
 
-        FileInputStream stream = new FileInputStream(metaDataFile);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String rawMetaData = "";
-        String line;
-        while (null != (line = reader.readLine())) {
-            rawMetaData = rawMetaData + line;
-        }
-        reader.close();
-        return rawMetaData;
-    }
+		FileInputStream stream = new FileInputStream(metaDataFile);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+		String rawMetaData = "";
+		String line;
+		while (null != (line = reader.readLine())) {
+			rawMetaData = rawMetaData + line;
+		}
+		reader.close();
+		return rawMetaData;
+	}
 }

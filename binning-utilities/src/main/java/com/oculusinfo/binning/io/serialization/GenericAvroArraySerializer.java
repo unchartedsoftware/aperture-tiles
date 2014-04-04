@@ -38,11 +38,11 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 
 
 abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerializer<List<T>> {
-    private static final long serialVersionUID = 6426634603381096097L;
+	private static final long serialVersionUID = 6426634603381096097L;
 
 
 
-    public GenericAvroArraySerializer (CodecFactory compressionCodec, TypeDescriptor elementTypeDescription) {
+	public GenericAvroArraySerializer (CodecFactory compressionCodec, TypeDescriptor elementTypeDescription) {
 		super(compressionCodec, new TypeDescriptor(List.class, elementTypeDescription));
 	}
 
@@ -51,41 +51,41 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 	abstract protected void setEntryValue (GenericRecord avroEntry, T rawEntry) throws IOException;
 
 	@Override
-    protected String getRecordSchemaFile () {
-        return "arrayData.avsc";
-    }
+	protected String getRecordSchemaFile () {
+		return "arrayData.avsc";
+	}
 
 	protected Schema getEntrySchema () throws IOException {
 		return new AvroSchemaComposer().addResource(getEntrySchemaFile()).resolved();
 	}
 	@Override
 	protected Schema getRecordSchema() throws IOException {
-        return new AvroSchemaComposer().add(getEntrySchema()).addResource(getRecordSchemaFile()).resolved();
+		return new AvroSchemaComposer().add(getEntrySchema()).addResource(getRecordSchemaFile()).resolved();
 	}
 
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	@Override
-    protected List<T> getValue (GenericRecord bin) {
-        GenericData.Array<GenericRecord> avroValues = (GenericData.Array<GenericRecord>) bin.get("value");
-        List<T> values = new ArrayList<T>();
-        for (GenericRecord entry: avroValues) {
-            values.add(getEntryValue(entry));
-        }
-        return values;
-    }
+	protected List<T> getValue (GenericRecord bin) {
+		GenericData.Array<GenericRecord> avroValues = (GenericData.Array<GenericRecord>) bin.get("value");
+		List<T> values = new ArrayList<T>();
+		for (GenericRecord entry: avroValues) {
+			values.add(getEntryValue(entry));
+		}
+		return values;
+	}
 
-    @Override
-    protected void setValue (GenericRecord bin, List<T> values) throws IOException {
-        Schema entrySchema = getEntrySchema();
+	@Override
+	protected void setValue (GenericRecord bin, List<T> values) throws IOException {
+		Schema entrySchema = getEntrySchema();
 
-        List<GenericRecord> avroValues = new ArrayList<GenericRecord>();
+		List<GenericRecord> avroValues = new ArrayList<GenericRecord>();
 
-        for (T value: values) {
-            GenericRecord avroValue = new GenericData.Record(entrySchema);
-            setEntryValue(avroValue, value);
-            avroValues.add(avroValue);
-        }
+		for (T value: values) {
+			GenericRecord avroValue = new GenericData.Record(entrySchema);
+			setEntryValue(avroValue, value);
+			avroValues.add(avroValue);
+		}
 
-        bin.put("value", avroValues);
-    }
+		bin.put("value", avroValues);
+	}
 }

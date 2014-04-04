@@ -43,92 +43,92 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
  * @author nkronenfeld
  */
 public interface PyramidIO {
-    // TODO: Move these out of here.
-    public final static String METADATA_FILENAME = "metadata.json";
-    public final static String TILES_FOLDERNAME  = "tiles";
+	// TODO: Move these out of here.
+	public final static String METADATA_FILENAME = "metadata.json";
+	public final static String TILES_FOLDERNAME  = "tiles";
 
 
 
-    /**
-     * Initialize the system for writing a pyramid
-     * 
-     * @param pyramidId The ID of the pyramid to be written; the meaning of this
-     *            ID is dependent on the I/O type
-     */
-    public void initializeForWrite (String pyramidId) throws IOException;
+	/**
+	 * Initialize the system for writing a pyramid
+	 * 
+	 * @param pyramidId The ID of the pyramid to be written; the meaning of this
+	 *            ID is dependent on the I/O type
+	 */
+	public void initializeForWrite (String pyramidId) throws IOException;
 
-    /**
-     * Write a set of tiles out
-     * 
-     * @param pyramidId The ID of the pyramid to be written; the meaning of this
-     *            ID is dependent on the I/O type
-     * @param serializer A serializer class that defines how the specific data
-     *            format will be written
-     * @param data The data to be written
-     */
-    public <T> void writeTiles (String pyramidId, TilePyramid tilePyramid,
-                                TileSerializer<T> serializer,
-                                Iterable<TileData<T>> data) throws IOException;
+	/**
+	 * Write a set of tiles out
+	 * 
+	 * @param pyramidId The ID of the pyramid to be written; the meaning of this
+	 *            ID is dependent on the I/O type
+	 * @param serializer A serializer class that defines how the specific data
+	 *            format will be written
+	 * @param data The data to be written
+	 */
+	public <T> void writeTiles (String pyramidId, TilePyramid tilePyramid,
+	                            TileSerializer<T> serializer,
+	                            Iterable<TileData<T>> data) throws IOException;
 
-    /**
-     * Writes out new metadata for this tile set
-     * 
-     * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
-     *            is dependent on the I/O type
-     * @param metaData The metadata to be written
-     */
-    public void writeMetaData (String pyramidId, String metaData) throws IOException;
+	/**
+	 * Writes out new metadata for this tile set
+	 * 
+	 * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
+	 *            is dependent on the I/O type
+	 * @param metaData The metadata to be written
+	 */
+	public void writeMetaData (String pyramidId, String metaData) throws IOException;
 
-    /**
-     * Initialize a dataset for reading. This rarely has to do anything, but in
-     * live tile generation, must describe the dataset pretty completely.
-     * 
-     * @param pyramidId The ID of the data set to be read
-     * @param width The desired number of bins per tile along the X axis. Some
-     *            implementations will need this information (if they are
-     *            generating tiles), and will generate an error if an invalid
-     *            number is given; others, returning pregenerated tiles, will
-     *            ignore this number entirely.
-     * @param height The desired number of bins per tile along the Y axis.
-     * @param dataDescription A description of the pyramid to be read; if tiles
-     *            are pregenerated, this is likely to be ignored.
-     */
-    public void initializeForRead (String pyramidId, int width, int height, Properties dataDescription);
+	/**
+	 * Initialize a dataset for reading. This rarely has to do anything, but in
+	 * live tile generation, must describe the dataset pretty completely.
+	 * 
+	 * @param pyramidId The ID of the data set to be read
+	 * @param width The desired number of bins per tile along the X axis. Some
+	 *            implementations will need this information (if they are
+	 *            generating tiles), and will generate an error if an invalid
+	 *            number is given; others, returning pregenerated tiles, will
+	 *            ignore this number entirely.
+	 * @param height The desired number of bins per tile along the Y axis.
+	 * @param dataDescription A description of the pyramid to be read; if tiles
+	 *            are pregenerated, this is likely to be ignored.
+	 */
+	public void initializeForRead (String pyramidId, int width, int height, Properties dataDescription);
 
-    /**
-     * Read in a set of tiles
-     * 
-     * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
-     *            is dependent on the I/O type
-     * @param serializer A serializaer class that defines how the specific data
-     *            format will be read
-     * @param data The tiles to be read
-     * @return A list of tiles
-     */
-    public <T> List<TileData<T>> readTiles (String pyramidId, TileSerializer<T> serializer,
-                                            Iterable<TileIndex> tiles) throws IOException;
+	/**
+	 * Read in a set of tiles
+	 * 
+	 * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
+	 *            is dependent on the I/O type
+	 * @param serializer A serializaer class that defines how the specific data
+	 *            format will be read
+	 * @param data The tiles to be read
+	 * @return A list of tiles
+	 */
+	public <T> List<TileData<T>> readTiles (String pyramidId, TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException;
 
-    /**
-     * Get a stream containing the raw data for one tile.
-     * 
-     * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
-     *            is dependent on the I/O type
-     * @param serializer A serializaer class that defines how the specific data
-     *            format will be read
-     * @param tile The coordinates of the tile to fetch
-     * @return A data stream streaming the raw data of the indicated tile, or
-     *         null if the indicated tile is not found
-     * @throws IOException
-     */
-    public <T> InputStream getTileStream (String pyramidId,
-                                          TileSerializer<T> serializer,
-                                          TileIndex tile) throws IOException;
+	/**
+	 * Get a stream containing the raw data for one tile.
+	 * 
+	 * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
+	 *            is dependent on the I/O type
+	 * @param serializer A serializaer class that defines how the specific data
+	 *            format will be read
+	 * @param tile The coordinates of the tile to fetch
+	 * @return A data stream streaming the raw data of the indicated tile, or
+	 *         null if the indicated tile is not found
+	 * @throws IOException
+	 */
+	public <T> InputStream getTileStream (String pyramidId,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException;
 
-    /**
-     * Gets the metadata for this tile set
-     * 
-     * @param pyramidId An ID of the pyramid to be read; the use of this ID is
-     *            dependent on the I/O type
-     */
-    public String readMetaData (String pyramidId) throws IOException;
+	/**
+	 * Gets the metadata for this tile set
+	 * 
+	 * @param pyramidId An ID of the pyramid to be read; the use of this ID is
+	 *            dependent on the I/O type
+	 */
+	public String readMetaData (String pyramidId) throws IOException;
 }

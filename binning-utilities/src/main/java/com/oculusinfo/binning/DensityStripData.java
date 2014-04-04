@@ -35,18 +35,18 @@ package com.oculusinfo.binning;
  * @author nkronenfeld
  */
 public class DensityStripData<T> extends TileData<T> {
-    private static final long serialVersionUID = -6730290410026585691L;
+	private static final long serialVersionUID = -6730290410026585691L;
 
 
 
-    public DensityStripData (TileIndex definition) {
-        super(definition);
-    }
+	public DensityStripData (TileIndex definition) {
+		super(definition);
+	}
 
-    @Override
-    public void setBin (int x, int y, T value) {
-        for (int i = 0; i < getDefinition().getYBins(); ++i) {
-            super.setBin(x, i, value);
-        }
-    }
+	@Override
+	public void setBin (int x, int y, T value) {
+		for (int i = 0; i < getDefinition().getYBins(); ++i) {
+			super.setBin(x, i, value);
+		}
+	}
 }

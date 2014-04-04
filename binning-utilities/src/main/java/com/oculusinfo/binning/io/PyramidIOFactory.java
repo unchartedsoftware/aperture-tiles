@@ -55,112 +55,112 @@ import com.oculusinfo.factory.properties.StringProperty;
  * @author nkronenfeld
  */
 public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PyramidIOFactory.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(PyramidIOFactory.class);
 
 
 
-    public static StringProperty PYRAMID_IO_TYPE        = new StringProperty("type",
-                                                                             "The location to and from which to read tile pyramids",
-                                                                             "hbase",
-                                                                             new String[] { "hbase", "file-system", "file", "jdbc", "resource", "zip", "sqlite"});
-    public static StringProperty HBASE_ZOOKEEPER_QUORUM = new StringProperty("hbase.zookeeper.quorum",
-                                                                             "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
-                                                                             null);
-    public static StringProperty HBASE_ZOKEEPER_PORT    = new StringProperty("hbase.zookeeper.port",
-                                                                             "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.",
-                                                                             "2181");
-    public static StringProperty HBASE_MASTER           = new StringProperty("hbase.master",
-                                                                             "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
-                                                                             null);
-    public static StringProperty ROOT_PATH              = new StringProperty("root.path",
-                                                                             "Unused with type=\"hbase\".  Indicates the root path of the tile pyramid - either a directory (if \"file-system\"), a package name (if \"resource\"), the full path to a .zip file (if \"zip\"), the database path (if \"sqlite\"), or the URL of the database (if \"jdbc\").  There is no default for this property.",
-                                                                             null);
-    public static StringProperty EXTENSION              = new StringProperty("extension",
-                                                                             "Used with type=\"file-system\", \"resource\", or \"zip\".  The file extension which the serializer should expect to find on individual tiles.",
-                                                                             "avro");
-    public static StringProperty JDBC_DRIVER            = new StringProperty("jdbc.driver",
-                                                                             "Only used if type=\"jdbc\".  The full class name of the JDBC driver to use.  There is no default for this property.",
-                                                                             null);
-    public static JSONProperty   INITIALIZATION_DATA    = new JSONProperty("data",
-                                                                           "Data to be passed to the PyramidIO for read initialization",
-                                                                           null);
+	public static StringProperty PYRAMID_IO_TYPE        = new StringProperty("type",
+		   "The location to and from which to read tile pyramids",
+		   "hbase",
+		   new String[] { "hbase", "file-system", "file", "jdbc", "resource", "zip", "sqlite"});
+	public static StringProperty HBASE_ZOOKEEPER_QUORUM = new StringProperty("hbase.zookeeper.quorum",
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
+		   null);
+	public static StringProperty HBASE_ZOKEEPER_PORT    = new StringProperty("hbase.zookeeper.port",
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.",
+		   "2181");
+	public static StringProperty HBASE_MASTER           = new StringProperty("hbase.master",
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
+		   null);
+	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
+		   "Unused with type=\"hbase\".  Indicates the root path of the tile pyramid - either a directory (if \"file-system\"), a package name (if \"resource\"), the full path to a .zip file (if \"zip\"), the database path (if \"sqlite\"), or the URL of the database (if \"jdbc\").  There is no default for this property.",
+		   null);
+	public static StringProperty EXTENSION              = new StringProperty("extension",
+		   "Used with type=\"file-system\", \"resource\", or \"zip\".  The file extension which the serializer should expect to find on individual tiles.",
+		   "avro");
+	public static StringProperty JDBC_DRIVER            = new StringProperty("jdbc.driver",
+		   "Only used if type=\"jdbc\".  The full class name of the JDBC driver to use.  There is no default for this property.",
+		   null);
+	public static JSONProperty   INITIALIZATION_DATA    = new JSONProperty("data",
+		 "Data to be passed to the PyramidIO for read initialization",
+		 null);
 
 	// We meed a global cache of zip stream sources - zip files are very slow to
 	// read, so the source is slow to initialize, so creating a new one each
 	// time we run isn't feasible.
-    private static Map<Pair<String, String>, ZipResourcePyramidStreamSource> _zipfileCache = new HashMap<>();
-    private static ZipResourcePyramidStreamSource getZipSource (String rootpath, String extension) {
-    	Pair<String, String> key = new Pair<>(rootpath, extension);
-    	if (!_zipfileCache.containsKey(key)) {
-    		synchronized (_zipfileCache) {
-    			if (!_zipfileCache.containsKey(key)) {
-    				URL zipFile = PyramidIOFactory.class.getResource(rootpath);
-    				ZipResourcePyramidStreamSource source = new ZipResourcePyramidStreamSource(zipFile.getFile(), extension);
-    				_zipfileCache.put(key, source);
-    			}
-    		}
-    	}
-    	return _zipfileCache.get(key);
-    }
+	private static Map<Pair<String, String>, ZipResourcePyramidStreamSource> _zipfileCache = new HashMap<>();
+	private static ZipResourcePyramidStreamSource getZipSource (String rootpath, String extension) {
+		Pair<String, String> key = new Pair<>(rootpath, extension);
+		if (!_zipfileCache.containsKey(key)) {
+			synchronized (_zipfileCache) {
+				if (!_zipfileCache.containsKey(key)) {
+					URL zipFile = PyramidIOFactory.class.getResource(rootpath);
+					ZipResourcePyramidStreamSource source = new ZipResourcePyramidStreamSource(zipFile.getFile(), extension);
+					_zipfileCache.put(key, source);
+				}
+			}
+		}
+		return _zipfileCache.get(key);
+	}
 
 
-    public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
-        this(null, parent, path);
-    }
+	public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+		this(null, parent, path);
+	}
 
-    public PyramidIOFactory (String name, ConfigurableFactory<?> parent,
-                             List<String> path) {
-        super(name, PyramidIO.class, parent, path);
+	public PyramidIOFactory (String name, ConfigurableFactory<?> parent,
+	                         List<String> path) {
+		super(name, PyramidIO.class, parent, path);
 
-        for (ConfigurationProperty<?> property: getPyramidIOPropertyList())
-            addProperty(property);
-    }
+		for (ConfigurationProperty<?> property: getPyramidIOPropertyList())
+			addProperty(property);
+	}
 
-    protected List<ConfigurationProperty<?>> getPyramidIOPropertyList () {
-        List<ConfigurationProperty<?>> result = new ArrayList<>();
-        result.addAll(Arrays.asList(PYRAMID_IO_TYPE, HBASE_ZOOKEEPER_QUORUM,
-                                    HBASE_ZOKEEPER_PORT, HBASE_MASTER, ROOT_PATH,
-                                    EXTENSION, JDBC_DRIVER));
-        return result;
-    }
+	protected List<ConfigurationProperty<?>> getPyramidIOPropertyList () {
+		List<ConfigurationProperty<?>> result = new ArrayList<>();
+		result.addAll(Arrays.asList(PYRAMID_IO_TYPE, HBASE_ZOOKEEPER_QUORUM,
+		                            HBASE_ZOKEEPER_PORT, HBASE_MASTER, ROOT_PATH,
+		                            EXTENSION, JDBC_DRIVER));
+		return result;
+	}
 
 
-    @Override
-    protected PyramidIO create () {
-        String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
+	@Override
+	protected PyramidIO create () {
+		String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
 
-        try {
-            if ("hbase".equals(pyramidIOType)) {
-                String quorum = getPropertyValue(HBASE_ZOOKEEPER_QUORUM);
-                String port = getPropertyValue(HBASE_ZOKEEPER_PORT);
-                String master = getPropertyValue(HBASE_MASTER);
-                return new HBasePyramidIO(quorum, port, master);
-            } else if ("file-system".equals(pyramidIOType) || "file".equals(pyramidIOType)) {
-                String rootPath = getPropertyValue(ROOT_PATH);
-                String extension = getPropertyValue(EXTENSION);
-                return new FileSystemPyramidIO(rootPath, extension);
-            } else if ("jdbc".equals(pyramidIOType)) {
-                String driver = getPropertyValue(JDBC_DRIVER);
-                String rootPath = getPropertyValue(ROOT_PATH);
-                return new JDBCPyramidIO(driver, rootPath);
-            } else if ("resource".equals(pyramidIOType)) {
-                String rootPath = getPropertyValue(ROOT_PATH);
-                String extension = getPropertyValue(EXTENSION);
-                PyramidStreamSource source = new ResourcePyramidStreamSource(rootPath, extension);
-                return new ResourceStreamReadOnlyPyramidIO(source);
-            } else if ("zip".equals(pyramidIOType)) {
-            	// We need a cache of zip sources - they are slow to read.
-            	PyramidStreamSource source = getZipSource(getPropertyValue(ROOT_PATH), getPropertyValue(EXTENSION));
-                return new ResourceStreamReadOnlyPyramidIO(source);
-            } else if ("sqlite".equals(pyramidIOType)) {
-                String rootPath = getPropertyValue(ROOT_PATH);
-                return new SQLitePyramidIO(rootPath);
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error trying to create PyramidIO", e);
-            return null;
-        }
-    }
+		try {
+			if ("hbase".equals(pyramidIOType)) {
+				String quorum = getPropertyValue(HBASE_ZOOKEEPER_QUORUM);
+				String port = getPropertyValue(HBASE_ZOKEEPER_PORT);
+				String master = getPropertyValue(HBASE_MASTER);
+				return new HBasePyramidIO(quorum, port, master);
+			} else if ("file-system".equals(pyramidIOType) || "file".equals(pyramidIOType)) {
+				String rootPath = getPropertyValue(ROOT_PATH);
+				String extension = getPropertyValue(EXTENSION);
+				return new FileSystemPyramidIO(rootPath, extension);
+			} else if ("jdbc".equals(pyramidIOType)) {
+				String driver = getPropertyValue(JDBC_DRIVER);
+				String rootPath = getPropertyValue(ROOT_PATH);
+				return new JDBCPyramidIO(driver, rootPath);
+			} else if ("resource".equals(pyramidIOType)) {
+				String rootPath = getPropertyValue(ROOT_PATH);
+				String extension = getPropertyValue(EXTENSION);
+				PyramidStreamSource source = new ResourcePyramidStreamSource(rootPath, extension);
+				return new ResourceStreamReadOnlyPyramidIO(source);
+			} else if ("zip".equals(pyramidIOType)) {
+				// We need a cache of zip sources - they are slow to read.
+				PyramidStreamSource source = getZipSource(getPropertyValue(ROOT_PATH), getPropertyValue(EXTENSION));
+				return new ResourceStreamReadOnlyPyramidIO(source);
+			} else if ("sqlite".equals(pyramidIOType)) {
+				String rootPath = getPropertyValue(ROOT_PATH);
+				return new SQLitePyramidIO(rootPath);
+			} else {
+				return null;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error trying to create PyramidIO", e);
+			return null;
+		}
+	}
 }

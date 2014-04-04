@@ -47,7 +47,7 @@ public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 
 	@Override
 	public TypeDescriptor getBinTypeDescription () {
-	    return TYPE_DESCRIPTOR;
+		return TYPE_DESCRIPTOR;
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 
 	@Override
 	public void serialize(TileData<Double> data, TilePyramid tilePyramid,
-			OutputStream output) throws IOException {
+	                      OutputStream output) throws IOException {
 
 		ZipOutputStream zip = new ZipOutputStream(output);
 		zip.putNextEntry(new ZipEntry("tile.data"));

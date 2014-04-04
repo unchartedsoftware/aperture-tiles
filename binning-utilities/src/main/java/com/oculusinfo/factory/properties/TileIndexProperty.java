@@ -32,96 +32,96 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
-    private String    _name;
-    private String    _description;
-    private TileIndex _defaultValue;
+	private String    _name;
+	private String    _description;
+	private TileIndex _defaultValue;
 
 
 
-    public TileIndexProperty (String name, String description, TileIndex defaultValue) {
-        _name = name;
-        _description = description;
-        _defaultValue = defaultValue;
-    }
+	public TileIndexProperty (String name, String description, TileIndex defaultValue) {
+		_name = name;
+		_description = description;
+		_defaultValue = defaultValue;
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<TileIndex> getType () {
-        return TileIndex.class;
-    }
+	@Override
+	public Class<TileIndex> getType () {
+		return TileIndex.class;
+	}
 
-    @Override
-    public TileIndex[] getPossibleValues () {
-        return null;
-    }
+	@Override
+	public TileIndex[] getPossibleValues () {
+		return null;
+	}
 
-    @Override
-    public TileIndex getDefaultValue () {
-        return _defaultValue;
-    }
+	@Override
+	public TileIndex getDefaultValue () {
+		return _defaultValue;
+	}
 
-    @Override
-    public String encode (TileIndex value) {
-        if (null == value) return "null";
-        return value.toString();
-    }
+	@Override
+	public String encode (TileIndex value) {
+		if (null == value) return "null";
+		return value.toString();
+	}
 
-    @Override
-    public TileIndex unencode (String value) throws ConfigurationException {
-        return TileIndex.fromString(value);
-    }
+	@Override
+	public TileIndex unencode (String value) throws ConfigurationException {
+		return TileIndex.fromString(value);
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, TileIndex value) throws JSONException {
-        JSONObject result = new JSONObject();
-        result.put("level", value.getLevel());
-        result.put("xIndex", value.getX());
-        result.put("yIndex", value.getY());
-        result.put("xBinCount", value.getXBins());
-        result.put("yBinCount", value.getYBins());
-        propertyNode.setAsJSONObject(result);
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, TileIndex value) throws JSONException {
+		JSONObject result = new JSONObject();
+		result.put("level", value.getLevel());
+		result.put("xIndex", value.getX());
+		result.put("yIndex", value.getY());
+		result.put("xBinCount", value.getXBins());
+		result.put("yBinCount", value.getYBins());
+		propertyNode.setAsJSONObject(result);
+	}
 
-    @Override
-    public TileIndex unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        JSONObject propertyObj = propertyNode.getAsJSONObject();
-        int level = propertyObj.getInt("level");
-        int xIndex = propertyObj.getInt("xIndex");
-        int yIndex = propertyObj.getInt("yIndex");
-        int numXBins = propertyObj.getInt("xBinCount");
-        int numYBins= propertyObj.getInt("yBinCount");
+	@Override
+	public TileIndex unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		JSONObject propertyObj = propertyNode.getAsJSONObject();
+		int level = propertyObj.getInt("level");
+		int xIndex = propertyObj.getInt("xIndex");
+		int yIndex = propertyObj.getInt("yIndex");
+		int numXBins = propertyObj.getInt("xBinCount");
+		int numYBins= propertyObj.getInt("yBinCount");
 
-        return new TileIndex(level, xIndex, yIndex, numXBins, numYBins);
-    }
+		return new TileIndex(level, xIndex, yIndex, numXBins, numYBins);
+	}
 
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode();
-    }
+	@Override
+	public int hashCode () {
+		return _name.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof TileIndexProperty)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof TileIndexProperty)) return false;
         
-        TileIndexProperty thatP = (TileIndexProperty) that;
-        return thatP._name.equals(this._name);
-    }
+		TileIndexProperty thatP = (TileIndexProperty) that;
+		return thatP._name.equals(this._name);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"tile index\"/>");
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"tile index\"/>");
+	}
 }

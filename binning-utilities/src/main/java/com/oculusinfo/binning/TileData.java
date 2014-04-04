@@ -46,106 +46,106 @@ import com.oculusinfo.binning.TileIndex;
  * @param <T> The type of data stored in the bins of this tile.
  */
 public class TileData<T> implements Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 
 
-    private TileIndex         _definition;
-    private ArrayList<T>      _data;
+	private TileIndex         _definition;
+	private ArrayList<T>      _data;
 
 
-    private TileData() {
+	private TileData() {
         
-    }
-    /**
-     * Construct a tile data object for a particular tile. All entries are
-     * initialized to null.
-     * 
-     * @param definition The index of the tile whose data is to be collected by
-     *            this object.
-     */
-    public TileData (TileIndex definition) {
-        this(definition, (T) null);
-    }
+	}
+	/**
+	 * Construct a tile data object for a particular tile. All entries are
+	 * initialized to null.
+	 * 
+	 * @param definition The index of the tile whose data is to be collected by
+	 *            this object.
+	 */
+	public TileData (TileIndex definition) {
+		this(definition, (T) null);
+	}
 
-    /**
-     * Construct a set of tile data for a particular tile. All entries are
-     * initialized to the given default value.
-     * 
-     * @param definition The index of the tile whose data is to be
-     *            collected by this object.
-     * @param defaultValue The default value of each bin
-     */
-    public TileData (TileIndex definition, T defaultValue) {
-        _definition = definition;
-        _data = new ArrayList<T>(_definition.getXBins()
-                                 * _definition.getYBins());
-        for (int x = 0; x < _definition.getXBins(); ++x) {
-            for (int y = 0; y < _definition.getYBins(); ++y) {
-                _data.add(defaultValue);
-            }
-        }
-    }
+	/**
+	 * Construct a set of tile data for a particular tile. All entries are
+	 * initialized to the given default value.
+	 * 
+	 * @param definition The index of the tile whose data is to be
+	 *            collected by this object.
+	 * @param defaultValue The default value of each bin
+	 */
+	public TileData (TileIndex definition, T defaultValue) {
+		_definition = definition;
+		_data = new ArrayList<T>(_definition.getXBins()
+		                         * _definition.getYBins());
+		for (int x = 0; x < _definition.getXBins(); ++x) {
+			for (int y = 0; y < _definition.getYBins(); ++y) {
+				_data.add(defaultValue);
+			}
+		}
+	}
 
-    /**
-     * Construct a set of tile data for a particular tile, with preset data.
-     * 
-     * @param definition The index of the tile whose data is to be
-     *            represented by this object.
-     * @param tileData The data for this tile
-     */
-    public TileData (TileIndex definition, List<T> tileData) {
-        _definition = definition;
-        int requiredLength = _definition.getXBins() * _definition.getYBins();
-        if (tileData.size() != requiredLength) {
-            throw new IllegalArgumentException(
-                                               "Data was of the wrong length.  Should have been "
-                                                       + requiredLength
-                                                       + ", was "
-                                                       + tileData.size());
-        }
-        _data = new ArrayList<T>(tileData);
-    }
+	/**
+	 * Construct a set of tile data for a particular tile, with preset data.
+	 * 
+	 * @param definition The index of the tile whose data is to be
+	 *            represented by this object.
+	 * @param tileData The data for this tile
+	 */
+	public TileData (TileIndex definition, List<T> tileData) {
+		_definition = definition;
+		int requiredLength = _definition.getXBins() * _definition.getYBins();
+		if (tileData.size() != requiredLength) {
+			throw new IllegalArgumentException(
+			                                   "Data was of the wrong length.  Should have been "
+			                                   + requiredLength
+			                                   + ", was "
+			                                   + tileData.size());
+		}
+		_data = new ArrayList<T>(tileData);
+	}
 
-    /**
-     * Get the tile index defining which tile is associated with this data
-     * 
-     * @return
-     */
-    public TileIndex getDefinition () {
-        return _definition;
-    }
+	/**
+	 * Get the tile index defining which tile is associated with this data
+	 * 
+	 * @return
+	 */
+	public TileIndex getDefinition () {
+		return _definition;
+	}
 
-    /**
-     * Set the value of a particular bin in this tile
-     * 
-     * @param x The x coordinate of the bin to be changed.
-     * @param y The y coordinate of the bin to be changed.
-     * @param value The value to which to set the bin in question.
-     */
-    public void setBin (int x, int y, T value) {
-        _data.set(x + y * _definition.getXBins(), value);
-    }
+	/**
+	 * Set the value of a particular bin in this tile
+	 * 
+	 * @param x The x coordinate of the bin to be changed.
+	 * @param y The y coordinate of the bin to be changed.
+	 * @param value The value to which to set the bin in question.
+	 */
+	public void setBin (int x, int y, T value) {
+		_data.set(x + y * _definition.getXBins(), value);
+	}
 
-    /**
-     * Get the value of a particular bin in this tile.
-     * 
-     * @param x The x coordinate of the bin to be changed.
-     * @param y The y coordinate of the bin to be changed.
-     * @return The value of the bin in question.
-     */
-    public T getBin (int x, int y) {
-        return _data.get(x + y * _definition.getXBins());
-    }
+	/**
+	 * Get the value of a particular bin in this tile.
+	 * 
+	 * @param x The x coordinate of the bin to be changed.
+	 * @param y The y coordinate of the bin to be changed.
+	 * @return The value of the bin in question.
+	 */
+	public T getBin (int x, int y) {
+		return _data.get(x + y * _definition.getXBins());
+	}
 
-    /**
-     * Get all the data for this tile. While this data is row-by-row, use of
-     * this method is intended for users using the data as a block (such as for
-     * I/O) without any need to know what the data itself is - the only thing
-     * most users should know is that the format output here is the same one
-     * expected by {@link #TileData(TileIndex, double[]).
-     */
-    public List<T> getData () {
-        return Collections.unmodifiableList(_data);
-    }
+	/**
+	 * Get all the data for this tile. While this data is row-by-row, use of
+	 * this method is intended for users using the data as a block (such as for
+	 * I/O) without any need to know what the data itself is - the only thing
+	 * most users should know is that the format output here is the same one
+	 * expected by {@link #TileData(TileIndex, double[]).
+	 */
+	public List<T> getData () {
+		return Collections.unmodifiableList(_data);
+	}
 }

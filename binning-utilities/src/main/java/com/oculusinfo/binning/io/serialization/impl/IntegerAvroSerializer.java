@@ -37,43 +37,43 @@ import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class IntegerAvroSerializer extends GenericAvroSerializer<Integer> {
-    private static final long serialVersionUID = -8317163654416878678L;
-    private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Integer.class);
+	private static final long serialVersionUID = -8317163654416878678L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Integer.class);
 
 
 
-    public static final Map<String,String> META;
-    static {
-        Map<String,String> map = new HashMap<String, String>();
-        map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "int");
-        META = Collections.unmodifiableMap(map);
-    }
+	public static final Map<String,String> META;
+	static {
+		Map<String,String> map = new HashMap<String, String>();
+		map.put("source", "Oculus Binning Utilities");
+		map.put("data-type", "int");
+		META = Collections.unmodifiableMap(map);
+	}
 
 
 
-    public IntegerAvroSerializer (CodecFactory compressionCodec) {
-        super(compressionCodec, TYPE_DESCRIPTOR);
-    }
+	public IntegerAvroSerializer (CodecFactory compressionCodec) {
+		super(compressionCodec, TYPE_DESCRIPTOR);
+	}
 
-    @Override
-    protected String getRecordSchemaFile () {
-        return "integerData.avsc";
-    }
+	@Override
+	protected String getRecordSchemaFile () {
+		return "integerData.avsc";
+	}
 
-    @Override
-    protected Map<String, String> getTileMetaData () {
-        return META;
-    }
+	@Override
+	protected Map<String, String> getTileMetaData () {
+		return META;
+	}
 
-    @Override
-    protected Integer getValue (GenericRecord bin) {
-        return (Integer) bin.get("value");
-    }
+	@Override
+	protected Integer getValue (GenericRecord bin) {
+		return (Integer) bin.get("value");
+	}
 
-    @Override
-    protected void setValue (GenericRecord bin, Integer value) throws IOException {
-        if (null == value) throw new IOException("Null value for bin");
-        bin.put("value", value);
-    }
+	@Override
+	protected void setValue (GenericRecord bin, Integer value) throws IOException {
+		if (null == value) throw new IOException("Null value for bin");
+		bin.put("value", value);
+	}
 }

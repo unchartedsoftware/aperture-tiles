@@ -30,86 +30,86 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class DoubleProperty implements ConfigurationProperty<Double> {
-    private String _name;
-    private String _description;
-    private double    _defaultValue;
+	private String _name;
+	private String _description;
+	private double    _defaultValue;
 
 
 
-    public DoubleProperty (String name, String description, double defaultValue) {
-        _name = name;
-        _description = description;
-        _defaultValue = defaultValue;
-    }
+	public DoubleProperty (String name, String description, double defaultValue) {
+		_name = name;
+		_description = description;
+		_defaultValue = defaultValue;
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<Double> getType () {
-        return Double.class;
-    }
+	@Override
+	public Class<Double> getType () {
+		return Double.class;
+	}
 
-    @Override
-    public Double[] getPossibleValues () {
-        return null;
-    }
+	@Override
+	public Double[] getPossibleValues () {
+		return null;
+	}
 
-    @Override
-    public Double getDefaultValue () {
-        return _defaultValue;
-    }
+	@Override
+	public Double getDefaultValue () {
+		return _defaultValue;
+	}
 
-    @Override
-    public String encode (Double value) {
-        return value.toString();
-    }
+	@Override
+	public String encode (Double value) {
+		return value.toString();
+	}
 
-    @Override
-    public Double unencode (String value) throws ConfigurationException {
-        try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException e) {
-            throw new ConfigurationException("Unparsable double value "+value, e);
-        }
-    }
+	@Override
+	public Double unencode (String value) throws ConfigurationException {
+		try {
+			return Double.parseDouble(value);
+		} catch (NumberFormatException e) {
+			throw new ConfigurationException("Unparsable double value "+value, e);
+		}
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, Double value) throws JSONException {
-        propertyNode.setAsDouble(value.doubleValue());
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, Double value) throws JSONException {
+		propertyNode.setAsDouble(value.doubleValue());
+	}
 
-    @Override
-    public Double unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return propertyNode.getAsDouble();
-    }
+	@Override
+	public Double unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		return propertyNode.getAsDouble();
+	}
 
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode();
-    }
+	@Override
+	public int hashCode () {
+		return _name.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof DoubleProperty)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof DoubleProperty)) return false;
         
-        DoubleProperty thatP = (DoubleProperty) that;
-        return thatP._name.equals(this._name);
-    }
+		DoubleProperty thatP = (DoubleProperty) that;
+		return thatP._name.equals(this._name);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"double\"/>", _name);
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"double\"/>", _name);
+	}
 }

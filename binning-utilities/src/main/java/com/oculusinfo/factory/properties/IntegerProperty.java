@@ -30,86 +30,86 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class IntegerProperty implements ConfigurationProperty<Integer> {
-    private String _name;
-    private String _description;
-    private int    _defaultValue;
+	private String _name;
+	private String _description;
+	private int    _defaultValue;
 
 
 
-    public IntegerProperty (String name, String description, int defaultValue) {
-        _name = name;
-        _description = description;
-        _defaultValue = defaultValue;
-    }
+	public IntegerProperty (String name, String description, int defaultValue) {
+		_name = name;
+		_description = description;
+		_defaultValue = defaultValue;
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<Integer> getType () {
-        return Integer.class;
-    }
+	@Override
+	public Class<Integer> getType () {
+		return Integer.class;
+	}
 
-    @Override
-    public Integer[] getPossibleValues () {
-        return null;
-    }
+	@Override
+	public Integer[] getPossibleValues () {
+		return null;
+	}
 
-    @Override
-    public Integer getDefaultValue () {
-        return _defaultValue;
-    }
+	@Override
+	public Integer getDefaultValue () {
+		return _defaultValue;
+	}
 
-    @Override
-    public String encode (Integer value) {
-        return value.toString();
-    }
+	@Override
+	public String encode (Integer value) {
+		return value.toString();
+	}
 
-    @Override
-    public Integer unencode (String value) throws ConfigurationException {
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            throw new ConfigurationException("Unparsable int value "+value, e);
-        }
-    }
+	@Override
+	public Integer unencode (String value) throws ConfigurationException {
+		try {
+			return Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			throw new ConfigurationException("Unparsable int value "+value, e);
+		}
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, Integer value) throws JSONException {
-        propertyNode.setAsInt(value.intValue());
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, Integer value) throws JSONException {
+		propertyNode.setAsInt(value.intValue());
+	}
 
-    @Override
-    public Integer unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return propertyNode.getAsInt();
-    }
+	@Override
+	public Integer unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		return propertyNode.getAsInt();
+	}
 
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode();
-    }
+	@Override
+	public int hashCode () {
+		return _name.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof IntegerProperty)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof IntegerProperty)) return false;
         
-        IntegerProperty thatP = (IntegerProperty) that;
-        return thatP._name.equals(this._name);
-    }
+		IntegerProperty thatP = (IntegerProperty) that;
+		return thatP._name.equals(this._name);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"int\"/>", _name);
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"int\"/>", _name);
+	}
 }

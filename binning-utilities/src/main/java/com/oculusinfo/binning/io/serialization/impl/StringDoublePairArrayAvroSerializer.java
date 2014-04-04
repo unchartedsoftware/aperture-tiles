@@ -37,48 +37,48 @@ import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class StringDoublePairArrayAvroSerializer
-    extends GenericAvroArraySerializer<Pair<String, Double>>
+	extends GenericAvroArraySerializer<Pair<String, Double>>
 {
-    private static final long serialVersionUID = 4626180730261555975L;
-    private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Pair.class,
-                                                                             new TypeDescriptor(String.class),
-                                                                             new TypeDescriptor(Double.class));
+	private static final long serialVersionUID = 4626180730261555975L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Pair.class,
+		   new TypeDescriptor(String.class),
+		   new TypeDescriptor(Double.class));
 
 
 
-    public static final Map<String,String> META;
-    static {
-        Map<String,String> map = new HashMap<String, String>();
-        map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "string-int pair array");
-        META = Collections.unmodifiableMap(map);
-    }
+	public static final Map<String,String> META;
+	static {
+		Map<String,String> map = new HashMap<String, String>();
+		map.put("source", "Oculus Binning Utilities");
+		map.put("data-type", "string-int pair array");
+		META = Collections.unmodifiableMap(map);
+	}
 
 
 
-    public StringDoublePairArrayAvroSerializer(CodecFactory compressionCodec) {
-        super(compressionCodec, TYPE_DESCRIPTOR);
-    }
+	public StringDoublePairArrayAvroSerializer(CodecFactory compressionCodec) {
+		super(compressionCodec, TYPE_DESCRIPTOR);
+	}
 
-    @Override
-    protected String getEntrySchemaFile () {
-        return "stringDoublePairEntry.avsc";
-    }
+	@Override
+	protected String getEntrySchemaFile () {
+		return "stringDoublePairEntry.avsc";
+	}
 
-    @Override
-    protected Map<String, String> getTileMetaData () {
-        return META;
-    }
+	@Override
+	protected Map<String, String> getTileMetaData () {
+		return META;
+	}
 
-    @Override
-    protected Pair<String, Double> getEntryValue (GenericRecord entry) {
-        return new Pair<String, Double>(entry.get("key").toString(), (Double) entry.get("value"));
-    }
+	@Override
+	protected Pair<String, Double> getEntryValue (GenericRecord entry) {
+		return new Pair<String, Double>(entry.get("key").toString(), (Double) entry.get("value"));
+	}
 
-    @Override
-    protected void setEntryValue (GenericRecord avroEntry,
-                                  Pair<String, Double> rawEntry) throws IOException {
-        avroEntry.put("key", rawEntry.getFirst());
-        avroEntry.put("value", rawEntry.getSecond());
-    }
+	@Override
+	protected void setEntryValue (GenericRecord avroEntry,
+	                              Pair<String, Double> rawEntry) throws IOException {
+		avroEntry.put("key", rawEntry.getFirst());
+		avroEntry.put("value", rawEntry.getSecond());
+	}
 }

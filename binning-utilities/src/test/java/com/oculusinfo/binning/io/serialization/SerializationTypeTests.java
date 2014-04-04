@@ -37,17 +37,17 @@ import com.oculusinfo.binning.util.Pair;
 
 // Test that serializers can check their bin types somehow
 public class SerializationTypeTests {
-    @Test
-    public void testSerializerTypeing () {
-        Assert.assertEquals(new TypeDescriptor(Double.class),
-                            new DoubleAvroSerializer(null).getBinTypeDescription());
-        Assert.assertEquals(new TypeDescriptor(List.class,
-                                                       new TypeDescriptor(Double.class)),
-                            new DoubleArrayAvroSerializer(null).getBinTypeDescription());
-        Assert.assertEquals(new TypeDescriptor(List.class,
-                                                       new TypeDescriptor(Pair.class,
-                                                                                  new TypeDescriptor(String.class),
-                                                                                  new TypeDescriptor(Integer.class))),
-                            new StringIntPairArrayAvroSerializer(null).getBinTypeDescription());
-    }
+	@Test
+	public void testSerializerTypeing () {
+		Assert.assertEquals(new TypeDescriptor(Double.class),
+		                    new DoubleAvroSerializer(null).getBinTypeDescription());
+		Assert.assertEquals(new TypeDescriptor(List.class,
+		                                       new TypeDescriptor(Double.class)),
+		                    new DoubleArrayAvroSerializer(null).getBinTypeDescription());
+		Assert.assertEquals(new TypeDescriptor(List.class,
+		                                       new TypeDescriptor(Pair.class,
+		                                                          new TypeDescriptor(String.class),
+		                                                          new TypeDescriptor(Integer.class))),
+		                    new StringIntPairArrayAvroSerializer(null).getBinTypeDescription());
+	}
 }

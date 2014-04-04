@@ -29,12 +29,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TypeDescriptorTests {
-    @Test
-    public void testToString () {
-        TypeDescriptor desc = new TypeDescriptor(List.class,
-                                                 new TypeDescriptor(Pair.class,
-                                                                    new TypeDescriptor(Double.class),
-                                                                    new TypeDescriptor(String.class)));
-        Assert.assertEquals("List<Pair<Double, String>>", desc.toString());
-    }
+	@Test
+	public void testToString () {
+		TypeDescriptor desc = new TypeDescriptor(List.class,
+		                                         new TypeDescriptor(Pair.class,
+		                                                            new TypeDescriptor(Double.class),
+		                                                            new TypeDescriptor(String.class)));
+		Assert.assertEquals("List<Pair<Double, String>>", desc.toString());
+	}
 }

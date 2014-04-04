@@ -36,56 +36,56 @@ import java.util.List;
  * @author nkronenfeld
  */
 public class TypeDescriptor {
-    private Class<?>                     _mainType;
-    private List<TypeDescriptor> _genericTypes;
+	private Class<?>                     _mainType;
+	private List<TypeDescriptor> _genericTypes;
 
-    public TypeDescriptor (Class<?> mainType) {
-        _mainType = mainType;
-        _genericTypes = null;
-    }
+	public TypeDescriptor (Class<?> mainType) {
+		_mainType = mainType;
+		_genericTypes = null;
+	}
 
-    public TypeDescriptor (Class<?> mainType,
-                                   TypeDescriptor... genericTypes) {
-        _mainType = mainType;
-        _genericTypes = Arrays.asList(genericTypes);
-    }
+	public TypeDescriptor (Class<?> mainType,
+	                       TypeDescriptor... genericTypes) {
+		_mainType = mainType;
+		_genericTypes = Arrays.asList(genericTypes);
+	}
 
-    @Override
-    public boolean equals (Object obj) {
-        if (this == obj)
-            return true;
-        if (null == obj)
-            return false;
-        if (!(obj instanceof TypeDescriptor))
-            return false;
+	@Override
+	public boolean equals (Object obj) {
+		if (this == obj)
+			return true;
+		if (null == obj)
+			return false;
+		if (!(obj instanceof TypeDescriptor))
+			return false;
 
-        TypeDescriptor that = (TypeDescriptor) obj;
-        if (!_mainType.equals(that._mainType))
-            return false;
+		TypeDescriptor that = (TypeDescriptor) obj;
+		if (!_mainType.equals(that._mainType))
+			return false;
 
-        int thisSize = (null == this._genericTypes ? 0 : this._genericTypes.size());
-        int thatSize = (null == that._genericTypes ? 0 : that._genericTypes.size());
-        if (thisSize != thatSize)
-            return false;
-        for (int i = 0; i < thisSize; ++i) {
-            if (!this._genericTypes.get(i).equals(that._genericTypes.get(i)))
-                return false;
-        }
-        return true;
-    }
+		int thisSize = (null == this._genericTypes ? 0 : this._genericTypes.size());
+		int thatSize = (null == that._genericTypes ? 0 : that._genericTypes.size());
+		if (thisSize != thatSize)
+			return false;
+		for (int i = 0; i < thisSize; ++i) {
+			if (!this._genericTypes.get(i).equals(that._genericTypes.get(i)))
+				return false;
+		}
+		return true;
+	}
 
-    @Override
-    public String toString () {
-        String result = _mainType.getSimpleName();
-        if (null != _genericTypes && !_genericTypes.isEmpty()) {
-            result += "<";
-            for (int i=0; i<_genericTypes.size(); ++i) {
-                if (i>0) result += ", ";
-                result += _genericTypes.get(i).toString();
-            }
-            result += ">";
-        }
+	@Override
+	public String toString () {
+		String result = _mainType.getSimpleName();
+		if (null != _genericTypes && !_genericTypes.isEmpty()) {
+			result += "<";
+			for (int i=0; i<_genericTypes.size(); ++i) {
+				if (i>0) result += ", ";
+				result += _genericTypes.get(i).toString();
+			}
+			result += ">";
+		}
 
-        return result;
-    }
+		return result;
+	}
 }

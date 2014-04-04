@@ -45,149 +45,149 @@ import org.json.JSONObject;
  * @author nkronenfeld
  */
 public class JSONNode {
-    // We either get one or the other of these initializations; our goal is to
-    // allow a user to use either interchangably.
+	// We either get one or the other of these initializations; our goal is to
+	// allow a user to use either interchangably.
 
-    // Representation 1: child node of an object.
-    private JSONObject _parentNode;
-    private String     _childNodeName;
+	// Representation 1: child node of an object.
+	private JSONObject _parentNode;
+	private String     _childNodeName;
 
-    // Representation 2: element of an array.
-    private JSONArray  _parentArray;
-    private int        _index;
+	// Representation 2: element of an array.
+	private JSONArray  _parentArray;
+	private int        _index;
 
 
-    public JSONNode (JSONObject parent, String child) {
-        _parentNode = parent;
-        _childNodeName = child;
-        _parentArray = null;
-        _index = -1;
-    }
+	public JSONNode (JSONObject parent, String child) {
+		_parentNode = parent;
+		_childNodeName = child;
+		_parentArray = null;
+		_index = -1;
+	}
 
-    public JSONNode (JSONArray parent, int index) {
-        _parentNode = null;
-        _childNodeName = null;
-        _parentArray = parent;
-        _index = index;
-    }
+	public JSONNode (JSONArray parent, int index) {
+		_parentNode = null;
+		_childNodeName = null;
+		_parentArray = parent;
+		_index = index;
+	}
 
-    public boolean getAsBoolean () throws JSONException {
-        if (null != _parentNode) {
-            return _parentNode.getBoolean(_childNodeName);
-        } else {
-            return _parentArray.getBoolean(_index);
-        }
-    }
+	public boolean getAsBoolean () throws JSONException {
+		if (null != _parentNode) {
+			return _parentNode.getBoolean(_childNodeName);
+		} else {
+			return _parentArray.getBoolean(_index);
+		}
+	}
 
-    public void setAsBoolean (boolean value) throws JSONException {
-        if (null != _parentNode) {
-            _parentNode.put(_childNodeName, value);
-        } else {
-            _parentArray.put(_index, value);
-        }
-    }
+	public void setAsBoolean (boolean value) throws JSONException {
+		if (null != _parentNode) {
+			_parentNode.put(_childNodeName, value);
+		} else {
+			_parentArray.put(_index, value);
+		}
+	}
 
-    public int getAsInt () throws JSONException {
-        if (null != _parentNode) {
-            return _parentNode.getInt(_childNodeName);
-        } else {
-            return _parentArray.getInt(_index);
-        }
-    }
+	public int getAsInt () throws JSONException {
+		if (null != _parentNode) {
+			return _parentNode.getInt(_childNodeName);
+		} else {
+			return _parentArray.getInt(_index);
+		}
+	}
 
-    public void setAsInt (int value) throws JSONException {
-        if (null != _parentNode) {
-            _parentNode.put(_childNodeName, value);
-        } else {
-            _parentArray.put(_index, value);
-        }
-    }
+	public void setAsInt (int value) throws JSONException {
+		if (null != _parentNode) {
+			_parentNode.put(_childNodeName, value);
+		} else {
+			_parentArray.put(_index, value);
+		}
+	}
 
-    public long getAsLong () throws JSONException {
-        if (null != _parentNode) {
-            return _parentNode.getLong(_childNodeName);
-        } else {
-            return _parentArray.getLong(_index);
-        }
-    }
+	public long getAsLong () throws JSONException {
+		if (null != _parentNode) {
+			return _parentNode.getLong(_childNodeName);
+		} else {
+			return _parentArray.getLong(_index);
+		}
+	}
 
-    public void setAsLong (long value) throws JSONException {
-        if (null != _parentNode) {
-            _parentNode.put(_childNodeName, value);
-        } else {
-            _parentArray.put(_index, value);
-        }
-    }
+	public void setAsLong (long value) throws JSONException {
+		if (null != _parentNode) {
+			_parentNode.put(_childNodeName, value);
+		} else {
+			_parentArray.put(_index, value);
+		}
+	}
 
-    public double getAsDouble () throws JSONException {
-        if (null != _parentNode) {
-            return _parentNode.getDouble(_childNodeName);
-        } else {
-            return _parentArray.getDouble(_index);
-        }
-    }
+	public double getAsDouble () throws JSONException {
+		if (null != _parentNode) {
+			return _parentNode.getDouble(_childNodeName);
+		} else {
+			return _parentArray.getDouble(_index);
+		}
+	}
 
-    public void setAsDouble (double value) throws JSONException {
-        if (null != _parentNode) {
-            _parentNode.put(_childNodeName, value);
-        } else {
-            _parentArray.put(_index, value);
-        }
-    }
+	public void setAsDouble (double value) throws JSONException {
+		if (null != _parentNode) {
+			_parentNode.put(_childNodeName, value);
+		} else {
+			_parentArray.put(_index, value);
+		}
+	}
 
-    public String getAsString () throws JSONException {
-        if (null != _parentNode) {
-            return _parentNode.getString(_childNodeName);
-        } else {
-            return _parentArray.getString(_index);
-        }
-    }
+	public String getAsString () throws JSONException {
+		if (null != _parentNode) {
+			return _parentNode.getString(_childNodeName);
+		} else {
+			return _parentArray.getString(_index);
+		}
+	}
 
-    public void setAsString (String value) throws JSONException {
-        if (null != _parentNode) {
-            _parentNode.put(_childNodeName, value);
-        } else {
-            _parentArray.put(_index, value);
-        }
-    }
+	public void setAsString (String value) throws JSONException {
+		if (null != _parentNode) {
+			_parentNode.put(_childNodeName, value);
+		} else {
+			_parentArray.put(_index, value);
+		}
+	}
 
-    public JSONObject getAsJSONObject () throws JSONException {
-        if (null != _parentNode) {
-            return _parentNode.getJSONObject(_childNodeName);
-        } else {
-            return _parentArray.getJSONObject(_index);
-        }
-    }
+	public JSONObject getAsJSONObject () throws JSONException {
+		if (null != _parentNode) {
+			return _parentNode.getJSONObject(_childNodeName);
+		} else {
+			return _parentArray.getJSONObject(_index);
+		}
+	}
 
-    public void setAsJSONObject (JSONObject value) throws JSONException {
-        if (null != _parentNode) {
-            _parentNode.put(_childNodeName, value);
-        } else {
-            _parentArray.put(_index, value);
-        }
-    }
+	public void setAsJSONObject (JSONObject value) throws JSONException {
+		if (null != _parentNode) {
+			_parentNode.put(_childNodeName, value);
+		} else {
+			_parentArray.put(_index, value);
+		}
+	}
 
-    public JSONArray getAsJSONArray () throws JSONException {
-        if (null != _parentNode) {
-            return _parentNode.getJSONArray(_childNodeName);
-        } else {
-            return _parentArray.getJSONArray(_index);
-        }
-    }
+	public JSONArray getAsJSONArray () throws JSONException {
+		if (null != _parentNode) {
+			return _parentNode.getJSONArray(_childNodeName);
+		} else {
+			return _parentArray.getJSONArray(_index);
+		}
+	}
 
-    public void setAsJSONArray (JSONArray value) throws JSONException {
-        if (null != _parentNode) {
-            _parentNode.put(_childNodeName, value);
-        } else {
-            _parentArray.put(_index, value);
-        }
-    }
+	public void setAsJSONArray (JSONArray value) throws JSONException {
+		if (null != _parentNode) {
+			_parentNode.put(_childNodeName, value);
+		} else {
+			_parentArray.put(_index, value);
+		}
+	}
 
-    public JSONNode getNamedChildNode (String childNodeName) throws JSONException {
-        return new JSONNode(getAsJSONObject(), childNodeName);
-    }
+	public JSONNode getNamedChildNode (String childNodeName) throws JSONException {
+		return new JSONNode(getAsJSONObject(), childNodeName);
+	}
 
-    public JSONNode getIndexedChildNode (int index) throws JSONException {
-        return new JSONNode(getAsJSONArray(), index);
-    }
+	public JSONNode getIndexedChildNode (int index) throws JSONException {
+		return new JSONNode(getAsJSONArray(), index);
+	}
 }

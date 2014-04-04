@@ -153,8 +153,8 @@ public class JDBCPyramidIO implements PyramidIO {
 
 	@Override
 	public <T> void writeTiles(String pyramidId, TilePyramid tilePyramid,
-			TileSerializer<T> serializer, Iterable<TileData<T>> data)
-			throws IOException {
+	                           TileSerializer<T> serializer, Iterable<TileData<T>> data)
+		throws IOException {
 		PreparedStatement ps = null;
 
 		try {
@@ -214,7 +214,7 @@ public class JDBCPyramidIO implements PyramidIO {
 
 	@Override
 	public void writeMetaData(String pyramidId, String metaData)
-			throws IOException {
+		throws IOException {
 		Statement stmt = null;
 		try {
 			StringBuilder sb = new StringBuilder();
@@ -245,15 +245,15 @@ public class JDBCPyramidIO implements PyramidIO {
 		}
 	}
 
-    @Override
-    public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
-    	// Noop
-    }
+	@Override
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
+		// Noop
+	}
 
 	@Override
 	public <T> List<TileData<T>> readTiles(String pyramidId,
-			TileSerializer<T> serializer, Iterable<TileIndex> tiles)
-			throws IOException {
+	                                       TileSerializer<T> serializer, Iterable<TileIndex> tiles)
+		throws IOException {
 		PreparedStatement ps = null;
 		try {
 			if (!tableExists(pyramidId)) {
@@ -289,7 +289,7 @@ public class JDBCPyramidIO implements PyramidIO {
 				byte[] tileBytes = resultSet.getBytes(COL_TILE_DATA);
 
 				TileData<T> data = serializer.deserialize(tile,
-						new ByteArrayInputStream(tileBytes));
+				                                          new ByteArrayInputStream(tileBytes));
 				results.add(data);
 			}
 			return results;
@@ -301,7 +301,7 @@ public class JDBCPyramidIO implements PyramidIO {
 				try {
 					ps.close();
 				} catch (SQLException e) {
-				    throw new IOException(e);
+					throw new IOException(e);
 				}
 			}
 		}
@@ -311,48 +311,48 @@ public class JDBCPyramidIO implements PyramidIO {
 	public <T> InputStream getTileStream (String pyramidId,
 	                                      TileSerializer<T> serializer,
 	                                      TileIndex tile) throws IOException {
-        PreparedStatement ps = null;
-        try {
-            if (!tableExists(pyramidId)) {
-                // TODO: Right thing to return when the table doesn't exist?
-                return null;
-            }
+		PreparedStatement ps = null;
+		try {
+			if (!tableExists(pyramidId)) {
+				// TODO: Right thing to return when the table doesn't exist?
+				return null;
+			}
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT ");
-            sb.append(COL_TILE_DATA);
-            sb.append(" FROM ");
-            sb.append(toTableName(pyramidId));
-            sb.append(" WHERE ");
-            sb.append(COL_ZOOM_LVL);
-            sb.append(" = ? AND ");
-            sb.append(COL_TILE_COLUMN);
-            sb.append(" = ? AND ");
-            sb.append(COL_TILE_ROW);
-            sb.append(" = ?");
+			StringBuilder sb = new StringBuilder();
+			sb.append("SELECT ");
+			sb.append(COL_TILE_DATA);
+			sb.append(" FROM ");
+			sb.append(toTableName(pyramidId));
+			sb.append(" WHERE ");
+			sb.append(COL_ZOOM_LVL);
+			sb.append(" = ? AND ");
+			sb.append(COL_TILE_COLUMN);
+			sb.append(" = ? AND ");
+			sb.append(COL_TILE_ROW);
+			sb.append(" = ?");
 
-            ps = _connection.prepareStatement(sb.toString());
-            ps.setInt(1, tile.getLevel());
-            ps.setInt(2, tile.getX());
-            ps.setInt(3, tile.getY());
+			ps = _connection.prepareStatement(sb.toString());
+			ps.setInt(1, tile.getLevel());
+			ps.setInt(2, tile.getX());
+			ps.setInt(3, tile.getY());
 
-            ResultSet resultSet = ps.executeQuery();
-            if (resultSet.next()) {
-                byte[] tileBytes = resultSet.getBytes(COL_TILE_DATA);
-                return new ByteArrayInputStream(tileBytes);
-            }
-        } catch (Exception e) {
-            throw new IOException("Error reading tiles.", e);
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                    throw new IOException(e);
-                }
-            }
-        }
-        return null;
+			ResultSet resultSet = ps.executeQuery();
+			if (resultSet.next()) {
+				byte[] tileBytes = resultSet.getBytes(COL_TILE_DATA);
+				return new ByteArrayInputStream(tileBytes);
+			}
+		} catch (Exception e) {
+			throw new IOException("Error reading tiles.", e);
+		} finally {
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (SQLException e) {
+					throw new IOException(e);
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -376,7 +376,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			
 			stmt = _connection.createStatement();
 			ResultSet resultSet = stmt.executeQuery(sb
-					.toString());
+			                                        .toString());
 			if (!resultSet.next())
 				return null;
 

@@ -36,55 +36,54 @@ import com.oculusinfo.factory.properties.StringProperty;
 
 
 public class TilePyramidFactory extends ConfigurableFactory<TilePyramid> {
-    private StringProperty PYRAMID_TYPE = new StringProperty("type",
-                                                             "The type of tile pyramid to be created",
-                                                             "web-mercator",
-                                                             new String[] {"area-of-interest", "epsg:4326", "web-mercator", "epsg:900913", "epsg:3857"});
-    private DoubleProperty MINIMUM_X = new DoubleProperty("minimum-x-value",
-                                                          "The lower bound for the X axis in an area-of-interest tile pyramid",
-                                                          0.0);
-    private DoubleProperty MAXIMUM_X = new DoubleProperty("maximum-x-value",
-                                                          "The upper bound for the X axis in an area-of-interest tile pyramid",
-                                                          0.0);
-    private DoubleProperty MINIMUM_Y = new DoubleProperty("minimum-y-value",
-                                                          "The lower bound for the Y axis in an area-of-interest tile pyramid",
-                                                          0.0);
-    private DoubleProperty MAXIMUM_Y = new DoubleProperty("maximum-y-value",
-                                                          "The upper bound for the Y axis in an area-of-interest tile pyramid",
-                                                          0.0);
+	private StringProperty PYRAMID_TYPE = new StringProperty("type",
+	                                                         "The type of tile pyramid to be created",
+	                                                         "web-mercator",
+	                                                         new String[] {"area-of-interest", "epsg:4326", "web-mercator", "epsg:900913", "epsg:3857"});
+	private DoubleProperty MINIMUM_X = new DoubleProperty("minimum-x-value",
+	                                                      "The lower bound for the X axis in an area-of-interest tile pyramid",
+	                                                      0.0);
+	private DoubleProperty MAXIMUM_X = new DoubleProperty("maximum-x-value",
+	                                                      "The upper bound for the X axis in an area-of-interest tile pyramid",
+	                                                      0.0);
+	private DoubleProperty MINIMUM_Y = new DoubleProperty("minimum-y-value",
+	                                                      "The lower bound for the Y axis in an area-of-interest tile pyramid",
+	                                                      0.0);
+	private DoubleProperty MAXIMUM_Y = new DoubleProperty("maximum-y-value",
+	                                                      "The upper bound for the Y axis in an area-of-interest tile pyramid",
+	                                                      0.0);
 
 
 
-    public TilePyramidFactory (ConfigurableFactory<?> parent, List<String> path) {
-        this(null, parent, path);
-    }
+	public TilePyramidFactory (ConfigurableFactory<?> parent, List<String> path) {
+		this(null, parent, path);
+	}
 
-    public TilePyramidFactory (String name, ConfigurableFactory<?> parent,
-                               List<String> path) {
-        super(name, TilePyramid.class, parent, path);
+	public TilePyramidFactory (String name, ConfigurableFactory<?> parent,
+	                           List<String> path) {
+		super(name, TilePyramid.class, parent, path);
 
-        addProperty(PYRAMID_TYPE);
-        addProperty(MINIMUM_X);
-        addProperty(MAXIMUM_X);
-        addProperty(MINIMUM_Y);
-        addProperty(MAXIMUM_Y);
-    }
+		addProperty(PYRAMID_TYPE);
+		addProperty(MINIMUM_X);
+		addProperty(MAXIMUM_X);
+		addProperty(MINIMUM_Y);
+		addProperty(MAXIMUM_Y);
+	}
 
-    @Override
-    protected TilePyramid create () {
-        String pyramidType = getPropertyValue(PYRAMID_TYPE);
+	@Override
+	protected TilePyramid create () {
+		String pyramidType = getPropertyValue(PYRAMID_TYPE);
 
-        if ("web-mercator".equals(pyramidType) || "epsg:900913".equals(pyramidType) || "epsg:3857".equals(pyramidType)) {
-            return new WebMercatorTilePyramid();
-        } else if ("area-of-interest".equals(pyramidType) || "epsg:4326".equals(pyramidType)) {
-            double minX = getPropertyValue(MINIMUM_X);
-            double maxX = getPropertyValue(MAXIMUM_X);
-            double minY = getPropertyValue(MINIMUM_Y);
-            double maxY = getPropertyValue(MAXIMUM_Y);
-            return new AOITilePyramid(minX, minY, maxX, maxY);
-        } else {
-            return null;
-        }
-    }
-
+		if ("web-mercator".equals(pyramidType) || "epsg:900913".equals(pyramidType) || "epsg:3857".equals(pyramidType)) {
+			return new WebMercatorTilePyramid();
+		} else if ("area-of-interest".equals(pyramidType) || "epsg:4326".equals(pyramidType)) {
+			double minX = getPropertyValue(MINIMUM_X);
+			double maxX = getPropertyValue(MAXIMUM_X);
+			double minY = getPropertyValue(MINIMUM_Y);
+			double maxY = getPropertyValue(MAXIMUM_Y);
+			return new AOITilePyramid(minX, minY, maxX, maxY);
+		} else {
+			return null;
+		}
+	}
 }

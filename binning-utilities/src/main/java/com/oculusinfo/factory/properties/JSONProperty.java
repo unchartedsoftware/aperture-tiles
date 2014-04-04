@@ -33,101 +33,101 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class JSONProperty implements ConfigurationProperty<JSONObject> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JSONProperty.class);
-    private String     _name;
-    private String     _description;
-    private JSONObject _defaultValue;
+	private static final Logger LOGGER = LoggerFactory.getLogger(JSONProperty.class);
+	private String     _name;
+	private String     _description;
+	private JSONObject _defaultValue;
 
 
 
-    public JSONProperty (String name, String description, String defaultValue) {
-        _name = name;
-        _description = description;
-        if (null == defaultValue) {
-            _defaultValue = null;
-        } else {
-            try {
-                _defaultValue = new JSONObject(defaultValue);
-            } catch (JSONException e) {
-                if (LOGGER.isWarnEnabled()) {
-                    LOGGER.warn("Error reading default value for property "+_name+".  Input default was: \""+defaultValue+"\"", e);
-                }
-            }
-        }
-    }
+	public JSONProperty (String name, String description, String defaultValue) {
+		_name = name;
+		_description = description;
+		if (null == defaultValue) {
+			_defaultValue = null;
+		} else {
+			try {
+				_defaultValue = new JSONObject(defaultValue);
+			} catch (JSONException e) {
+				if (LOGGER.isWarnEnabled()) {
+					LOGGER.warn("Error reading default value for property "+_name+".  Input default was: \""+defaultValue+"\"", e);
+				}
+			}
+		}
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<JSONObject> getType () {
-        return JSONObject.class;
-    }
+	@Override
+	public Class<JSONObject> getType () {
+		return JSONObject.class;
+	}
 
-    @Override
-    public JSONObject[] getPossibleValues () {
-        // Innumerable possibilities.
-        return null;
-    }
+	@Override
+	public JSONObject[] getPossibleValues () {
+		// Innumerable possibilities.
+		return null;
+	}
 
-    @Override
-    public JSONObject getDefaultValue () {
-        return _defaultValue;
-    }
+	@Override
+	public JSONObject getDefaultValue () {
+		return _defaultValue;
+	}
 
-    @Override
-    public String encode (JSONObject value) {
-        return value.toString();
-    }
+	@Override
+	public String encode (JSONObject value) {
+		return value.toString();
+	}
 
-    @Override
-    public JSONObject unencode (String value) throws ConfigurationException {
-        try {
-            return new JSONObject(value);
-        } catch (JSONException e) {
-            if (LOGGER.isWarnEnabled()) {
-                LOGGER.warn("Error reading value for property "+_name+".  Input was: \""+value+"\"", e);
-            }
-            return null;
-        }
-    }
+	@Override
+	public JSONObject unencode (String value) throws ConfigurationException {
+		try {
+			return new JSONObject(value);
+		} catch (JSONException e) {
+			if (LOGGER.isWarnEnabled()) {
+				LOGGER.warn("Error reading value for property "+_name+".  Input was: \""+value+"\"", e);
+			}
+			return null;
+		}
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, JSONObject value) throws JSONException {
-        propertyNode.setAsJSONObject(value);
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, JSONObject value) throws JSONException {
+		propertyNode.setAsJSONObject(value);
+	}
 
-    @Override
-    public JSONObject unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return propertyNode.getAsJSONObject();
-    }
+	@Override
+	public JSONObject unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		return propertyNode.getAsJSONObject();
+	}
 
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode();
-    }
+	@Override
+	public int hashCode () {
+		return _name.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof JSONProperty)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof JSONProperty)) return false;
         
-        JSONProperty thatP = (JSONProperty) that;
-        return thatP._name.equals(this._name);
-    }
+		JSONProperty thatP = (JSONProperty) that;
+		return thatP._name.equals(this._name);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"JSON\"/>", _name);
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"JSON\"/>", _name);
+	}
 }

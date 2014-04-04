@@ -39,16 +39,16 @@ public class ResourcePyramidStreamSource implements PyramidStreamSource {
 		_extension = extension;
 	}
 	
-    @Override
-    public InputStream getTileStream(String basePath, TileIndex tile) {
-    	String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _extension, _rootPath + basePath, tile.getLevel(), tile.getX(), tile.getY());
-    	return ResourcePyramidStreamSource.class.getResourceAsStream(tileLocation);
-    }
+	@Override
+	public InputStream getTileStream(String basePath, TileIndex tile) {
+		String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _extension, _rootPath + basePath, tile.getLevel(), tile.getX(), tile.getY());
+		return ResourcePyramidStreamSource.class.getResourceAsStream(tileLocation);
+	}
 
-    @Override
-    public InputStream getMetaDataStream (String basePath) {
-    	String location = _rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME;
-    	return ResourcePyramidStreamSource.class.getResourceAsStream(location);
-    }
+	@Override
+	public InputStream getMetaDataStream (String basePath) {
+		String location = _rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME;
+		return ResourcePyramidStreamSource.class.getResourceAsStream(location);
+	}
 
 }

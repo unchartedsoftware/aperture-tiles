@@ -30,86 +30,86 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class BooleanProperty implements ConfigurationProperty<Boolean> {
-    private String  _name;
-    private String  _description;
-    private boolean _defaultValue;
+	private String  _name;
+	private String  _description;
+	private boolean _defaultValue;
 
 
 
-    public BooleanProperty (String name, String description, boolean defaultValue) {
-        _name = name;
-        _description = description;
-        _defaultValue = defaultValue;
-    }
+	public BooleanProperty (String name, String description, boolean defaultValue) {
+		_name = name;
+		_description = description;
+		_defaultValue = defaultValue;
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<Boolean> getType () {
-        return Boolean.class;
-    }
+	@Override
+	public Class<Boolean> getType () {
+		return Boolean.class;
+	}
 
-    @Override
-    public Boolean[] getPossibleValues () {
-        return null;
-    }
+	@Override
+	public Boolean[] getPossibleValues () {
+		return null;
+	}
 
-    @Override
-    public Boolean getDefaultValue () {
-        return _defaultValue;
-    }
+	@Override
+	public Boolean getDefaultValue () {
+		return _defaultValue;
+	}
 
-    @Override
-    public String encode (Boolean value) {
-        return value.toString();
-    }
+	@Override
+	public String encode (Boolean value) {
+		return value.toString();
+	}
 
-    @Override
-    public Boolean unencode (String value) throws ConfigurationException {
-        try {
-            return Boolean.valueOf(value);
-        } catch (NumberFormatException e) {
-            throw new ConfigurationException("Unparsable boolean value "+value, e);
-        }
-    }
+	@Override
+	public Boolean unencode (String value) throws ConfigurationException {
+		try {
+			return Boolean.valueOf(value);
+		} catch (NumberFormatException e) {
+			throw new ConfigurationException("Unparsable boolean value "+value, e);
+		}
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, Boolean value) throws JSONException {
-        propertyNode.setAsBoolean(value.booleanValue());
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, Boolean value) throws JSONException {
+		propertyNode.setAsBoolean(value.booleanValue());
+	}
 
-    @Override
-    public Boolean unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return propertyNode.getAsBoolean();
-    }
+	@Override
+	public Boolean unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		return propertyNode.getAsBoolean();
+	}
 
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode();
-    }
+	@Override
+	public int hashCode () {
+		return _name.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof BooleanProperty)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof BooleanProperty)) return false;
         
-        BooleanProperty thatP = (BooleanProperty) that;
-        return thatP._name.equals(this._name);
-    }
+		BooleanProperty thatP = (BooleanProperty) that;
+		return thatP._name.equals(this._name);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"boolean\"/>", _name);
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"boolean\"/>", _name);
+	}
 }

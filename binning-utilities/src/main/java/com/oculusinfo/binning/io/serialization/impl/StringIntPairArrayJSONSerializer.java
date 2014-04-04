@@ -37,24 +37,24 @@ import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>>{
-    private static final long serialVersionUID = -7445619308538292627L;
-    private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(List.class,
-                                                                             new TypeDescriptor(Pair.class,
-                                                                                                new TypeDescriptor(String.class),
-                                                                                                new TypeDescriptor(Integer.class)));
+	private static final long serialVersionUID = -7445619308538292627L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(List.class,
+		   new TypeDescriptor(Pair.class,
+		                      new TypeDescriptor(String.class),
+		                      new TypeDescriptor(Integer.class)));
 
 
 
-    public StringIntPairArrayJSONSerializer() {
+	public StringIntPairArrayJSONSerializer() {
 		super();
 	}
 
-    @Override
-    public TypeDescriptor getBinTypeDescription () {
-        return TYPE_DESCRIPTOR;
-    }
+	@Override
+	public TypeDescriptor getBinTypeDescription () {
+		return TYPE_DESCRIPTOR;
+	}
 
-    @Override
+	@Override
 	public JSONArray translateToJSON (List<Pair<String, Integer>> value) {
 		JSONArray outputMap = new JSONArray();
 

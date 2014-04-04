@@ -42,147 +42,147 @@ import com.oculusinfo.binning.TilePyramid;
  * @author Jesse McGeachie
  */
 public class AOITilePyramid implements TilePyramid, Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 
 
-    double _minX;
-    double _maxX;
-    double _minY;
-    double _maxY;
+	double _minX;
+	double _maxX;
+	double _minY;
+	double _maxY;
 
-    public AOITilePyramid(double minX, double minY, double maxX, double maxY){
-        _minX = minX;
-        _maxX = maxX;
-        _minY = minY;
-        _maxY = maxY;
-    }
+	public AOITilePyramid(double minX, double minY, double maxX, double maxY){
+		_minX = minX;
+		_maxX = maxX;
+		_minY = minY;
+		_maxY = maxY;
+	}
 
-    @Override
-        public String getProjection () {
-        return "EPSG:4326";
-    }
+	@Override
+	public String getProjection () {
+		return "EPSG:4326";
+	}
 
-    @Override
-        public String getTileScheme () {
-        return "TMS";
-    }
+	@Override
+	public String getTileScheme () {
+		return "TMS";
+	}
 
-    @Override
-    public TileIndex rootToTile (Point2D point, int level) {
-        return rootToTile(point.getX(), point.getY(), level, 256);
-    }
+	@Override
+	public TileIndex rootToTile (Point2D point, int level) {
+		return rootToTile(point.getX(), point.getY(), level, 256);
+	}
 
-    @Override
-    public TileIndex rootToTile (Point2D point, int level, int bins) {
-        return rootToTile(point.getX(), point.getY(), level, bins);
-    }
+	@Override
+	public TileIndex rootToTile (Point2D point, int level, int bins) {
+		return rootToTile(point.getX(), point.getY(), level, bins);
+	}
 
-    @Override
-    public TileIndex rootToTile (double x, double y, int level) {
-        return rootToTile(x, y, level, 256);
-    }
+	@Override
+	public TileIndex rootToTile (double x, double y, int level) {
+		return rootToTile(x, y, level, 256);
+	}
 
-    @Override
-    public TileIndex rootToTile (double x, double y, int level, int bins) {
-        int numDivs = 1 << level;
+	@Override
+	public TileIndex rootToTile (double x, double y, int level, int bins) {
+		int numDivs = 1 << level;
 
-        int tileX = (int) Math.floor(numDivs*(x-_minX)/(_maxX - _minX));
-        int tileY = (int) Math.floor(numDivs*(y-_minY)/(_maxY - _minY));
+		int tileX = (int) Math.floor(numDivs*(x-_minX)/(_maxX - _minX));
+		int tileY = (int) Math.floor(numDivs*(y-_minY)/(_maxY - _minY));
 
-        return new TileIndex(level, tileX, tileY, bins, bins);
-    }
+		return new TileIndex(level, tileX, tileY, bins, bins);
+	}
 
-    @Override
-    public BinIndex rootToBin (Point2D point, TileIndex tile) {
-        return rootToBin(point.getX(), point.getY(), tile);
-    }
+	@Override
+	public BinIndex rootToBin (Point2D point, TileIndex tile) {
+		return rootToBin(point.getX(), point.getY(), tile);
+	}
 
-    @Override
-    public BinIndex rootToBin (double x, double y, TileIndex tile) {
-        int pow2 = 1 << tile.getLevel();
-        double tileXSize = (_maxX-_minX)/pow2;
-        double tileYSize = (_maxY-_minY)/pow2;
+	@Override
+	public BinIndex rootToBin (double x, double y, TileIndex tile) {
+		int pow2 = 1 << tile.getLevel();
+		double tileXSize = (_maxX-_minX)/pow2;
+		double tileYSize = (_maxY-_minY)/pow2;
 
-        double xInTile = x-_minX - tile.getX()*tileXSize;
-        double yInTile = y-_minY - tile.getY()*tileYSize;
+		double xInTile = x-_minX - tile.getX()*tileXSize;
+		double yInTile = y-_minY - tile.getY()*tileYSize;
 
-        int binX = (int) Math.floor(xInTile*tile.getXBins()/tileXSize);
-        int binY = (int) Math.floor(yInTile*tile.getYBins()/tileYSize);
+		int binX = (int) Math.floor(xInTile*tile.getXBins()/tileXSize);
+		int binY = (int) Math.floor(yInTile*tile.getYBins()/tileYSize);
 
-        return new BinIndex(binX, tile.getYBins()-1-binY);
-    }
+		return new BinIndex(binX, tile.getYBins()-1-binY);
+	}
 
-    @Override
-    public Rectangle2D getTileBounds (TileIndex tile) {
-        int pow2 = 1 << tile.getLevel();
-        double tileXSize = (_maxX-_minX)/pow2;
-        double tileYSize = (_maxY-_minY)/pow2;
+	@Override
+	public Rectangle2D getTileBounds (TileIndex tile) {
+		int pow2 = 1 << tile.getLevel();
+		double tileXSize = (_maxX-_minX)/pow2;
+		double tileYSize = (_maxY-_minY)/pow2;
 
-        return new Rectangle2D.Double(_minX+tileXSize*tile.getX(),
-                                      _minY+tileYSize*tile.getY(),
-                                      tileXSize, tileYSize);
-    }
+		return new Rectangle2D.Double(_minX+tileXSize*tile.getX(),
+		                              _minY+tileYSize*tile.getY(),
+		                              tileXSize, tileYSize);
+	}
 
-    @Override
-    public Rectangle2D getBinBounds(TileIndex tile, BinIndex bin) {
-        int pow2 = 1 << tile.getLevel();
-        double tileXSize = (_maxX-_minX)/pow2;
-        double tileYSize = (_maxY-_minY)/pow2;
-        double binXSize = tileXSize/tile.getXBins();
-        double binYSize = tileYSize/tile.getYBins();
+	@Override
+	public Rectangle2D getBinBounds(TileIndex tile, BinIndex bin) {
+		int pow2 = 1 << tile.getLevel();
+		double tileXSize = (_maxX-_minX)/pow2;
+		double tileYSize = (_maxY-_minY)/pow2;
+		double binXSize = tileXSize/tile.getXBins();
+		double binYSize = tileYSize/tile.getYBins();
 
-        int adjustedBinY = tile.getYBins()-1-bin.getY();
-        return new Rectangle2D.Double(_minX+tileXSize*tile.getX()+binXSize*bin.getX(),
-                                      _minY+tileYSize*tile.getY()+binYSize*adjustedBinY,
-                                      binXSize, binYSize);
-    }
+		int adjustedBinY = tile.getYBins()-1-bin.getY();
+		return new Rectangle2D.Double(_minX+tileXSize*tile.getX()+binXSize*bin.getX(),
+		                              _minY+tileYSize*tile.getY()+binYSize*adjustedBinY,
+		                              binXSize, binYSize);
+	}
 
-    @Override
-    public double getBinOverlap (TileIndex tile, BinIndex bin, Rectangle2D area) {
-        Rectangle2D binBounds = getBinBounds(tile, bin);
+	@Override
+	public double getBinOverlap (TileIndex tile, BinIndex bin, Rectangle2D area) {
+		Rectangle2D binBounds = getBinBounds(tile, bin);
 
-        // We actually work in lat/lon, so this is what we want.
-        double minx = (area.getMinX()-binBounds.getMinX())/binBounds.getWidth();
-        double maxx = (area.getMaxX()-binBounds.getMinX())/binBounds.getWidth();
-        double miny = (area.getMinY()-binBounds.getMinY())/binBounds.getHeight();
-        double maxy = (area.getMaxY()-binBounds.getMinY())/binBounds.getHeight();
+		// We actually work in lat/lon, so this is what we want.
+		double minx = (area.getMinX()-binBounds.getMinX())/binBounds.getWidth();
+		double maxx = (area.getMaxX()-binBounds.getMinX())/binBounds.getWidth();
+		double miny = (area.getMinY()-binBounds.getMinY())/binBounds.getHeight();
+		double maxy = (area.getMaxY()-binBounds.getMinY())/binBounds.getHeight();
 
-        minx = Math.min(Math.max(minx, 0.0), 1.0);
-        maxx = Math.min(Math.max(maxx, 0.0), 1.0);
-        miny = Math.min(Math.max(miny, 0.0), 1.0);
-        maxy = Math.min(Math.max(maxy, 0.0), 1.0);
+		minx = Math.min(Math.max(minx, 0.0), 1.0);
+		maxx = Math.min(Math.max(maxx, 0.0), 1.0);
+		miny = Math.min(Math.max(miny, 0.0), 1.0);
+		maxy = Math.min(Math.max(maxy, 0.0), 1.0);
 
-        return Math.abs((maxx-minx) * (maxy-miny));
-    }
+		return Math.abs((maxx-minx) * (maxy-miny));
+	}
 
-    @Override
-    public Collection<TileIndex> getBestTiles(Rectangle2D bounds) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	@Override
+	public Collection<TileIndex> getBestTiles(Rectangle2D bounds) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 
 
-    @Override
-    public int hashCode () {
-	return (int) Math.round(_minX * 49980419 + _maxX * 54907427 +
-				_minY * 62059399 + _maxY * 67432721);
-    }
+	@Override
+	public int hashCode () {
+		return (int) Math.round(_minX * 49980419 + _maxX * 54907427 +
+		                        _minY * 62059399 + _maxY * 67432721);
+	}
 
-    @Override
-    public boolean equals (Object other) {
-	if (this == other) return true;
-	if (null == other) return false;
-	if (!(other instanceof AOITilePyramid)) return false;
+	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof AOITilePyramid)) return false;
 
-	AOITilePyramid that = (AOITilePyramid) other;
-	double epsilon = 1E-12;
-	if (Math.abs(this._minX - that._minX) > epsilon) return false;
-	if (Math.abs(this._maxX - that._maxX) > epsilon) return false;
-	if (Math.abs(this._minY - that._minY) > epsilon) return false;
-	if (Math.abs(this._maxY - that._maxY) > epsilon) return false;
+		AOITilePyramid that = (AOITilePyramid) other;
+		double epsilon = 1E-12;
+		if (Math.abs(this._minX - that._minX) > epsilon) return false;
+		if (Math.abs(this._maxX - that._maxX) > epsilon) return false;
+		if (Math.abs(this._minY - that._minY) > epsilon) return false;
+		if (Math.abs(this._maxY - that._maxY) > epsilon) return false;
 
-	return true;
-    }
+		return true;
+	}
 }

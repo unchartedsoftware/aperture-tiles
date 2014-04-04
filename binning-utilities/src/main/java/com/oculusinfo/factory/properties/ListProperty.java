@@ -34,113 +34,113 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class ListProperty<T> implements ConfigurationProperty<List<T>> {
-    private ConfigurationProperty<T> _baseProperty;
-    private String                   _name;
-    private String                   _description;
+	private ConfigurationProperty<T> _baseProperty;
+	private String                   _name;
+	private String                   _description;
 
-    /**
-     * Construct a list property
-     * @param baseProperty A base property of a type describing individual list elements (and how to encode/decode them).
-     * @param name The name of this property
-     * @param description A description of this property
-     */
-    public ListProperty (ConfigurationProperty<T> baseProperty, String name,
-                         String description) {
-        _baseProperty = baseProperty;
-        _name = name;
-        _description = description;
-    }
+	/**
+	 * Construct a list property
+	 * @param baseProperty A base property of a type describing individual list elements (and how to encode/decode them).
+	 * @param name The name of this property
+	 * @param description A description of this property
+	 */
+	public ListProperty (ConfigurationProperty<T> baseProperty, String name,
+	                     String description) {
+		_baseProperty = baseProperty;
+		_name = name;
+		_description = description;
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<List<T>> getType () {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	@Override
+	public Class<List<T>> getType () {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public List<T>[] getPossibleValues () {
-        // List properties really shouldn't be enumerable.
-        return null;
-    }
+	@Override
+	public List<T>[] getPossibleValues () {
+		// List properties really shouldn't be enumerable.
+		return null;
+	}
 
-    @Override
-    public List<T> getDefaultValue () {
-        // Default to an empty list if not overridden.
-        return new ArrayList<>();
-    }
+	@Override
+	public List<T> getDefaultValue () {
+		// Default to an empty list if not overridden.
+		return new ArrayList<>();
+	}
 
-    @Override
-    public String encode (List<T> value) {
+	@Override
+	public String encode (List<T> value) {
         
-        // TODO Auto-generated method stub
-        return null;
-    }
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public List<T> unencode (String string) throws ConfigurationException {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	@Override
+	public List<T> unencode (String string) throws ConfigurationException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    public T unencodeEntry (String value) throws ConfigurationException {
-        return _baseProperty.unencode(value);
-    }
+	public T unencodeEntry (String value) throws ConfigurationException {
+		return _baseProperty.unencode(value);
+	}
 
-    public String encodeEntry (T value) throws ConfigurationException {
-        return _baseProperty.encode(value);
-    }
+	public String encodeEntry (T value) throws ConfigurationException {
+		return _baseProperty.encode(value);
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, List<T> value) throws JSONException {
-        JSONArray valueToPut = new JSONArray();
-        int i = 0;
-        for (T v: value) {
-            _baseProperty.encodeJSON(new JSONNode(valueToPut, i), v);
-            ++i;
-        }
-        propertyNode.setAsJSONArray(valueToPut);
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, List<T> value) throws JSONException {
+		JSONArray valueToPut = new JSONArray();
+		int i = 0;
+		for (T v: value) {
+			_baseProperty.encodeJSON(new JSONNode(valueToPut, i), v);
+			++i;
+		}
+		propertyNode.setAsJSONArray(valueToPut);
+	}
 
-    @Override
-    public List<T> unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        JSONArray array = propertyNode.getAsJSONArray();
-        int length = array.length();
-        List<T> result = new ArrayList<>(length);
-        for (int i=0; i<length; ++i) {
-            result.add(_baseProperty.unencodeJSON(new JSONNode(array, i)));
-        }
-        return result;
-    }
+	@Override
+	public List<T> unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		JSONArray array = propertyNode.getAsJSONArray();
+		int length = array.length();
+		List<T> result = new ArrayList<>(length);
+		for (int i=0; i<length; ++i) {
+			result.add(_baseProperty.unencodeJSON(new JSONNode(array, i)));
+		}
+		return result;
+	}
 
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode() + _baseProperty.hashCode();
-    }
+	@Override
+	public int hashCode () {
+		return _name.hashCode() + _baseProperty.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof ListProperty)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof ListProperty)) return false;
 
-        ListProperty<?> thatP = (ListProperty<?>) that;
-        return thatP._name.equals(this._name) && thatP._baseProperty.equals(this._baseProperty);
-    }
+		ListProperty<?> thatP = (ListProperty<?>) that;
+		return thatP._name.equals(this._name) && thatP._baseProperty.equals(this._baseProperty);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"List[%s]\"/>", _name, _baseProperty.getType().getSimpleName());
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"List[%s]\"/>", _name, _baseProperty.getType().getSimpleName());
+	}
 }

@@ -72,111 +72,111 @@ public class LRUCache<K, V>  {
 		public void onElementRemoved (K key, V value);
 	}
 	
-    protected class LruRemovalHashMap extends LinkedHashMap<K, V> {
-        private static final long serialVersionUID = 1L;
-        public RemovalPolicy<K, V> removalPolicy;
+	protected class LruRemovalHashMap extends LinkedHashMap<K, V> {
+		private static final long serialVersionUID = 1L;
+		public RemovalPolicy<K, V> removalPolicy;
 
-        public LruRemovalHashMap(int initialCapacity, float loadFactor, boolean accessOrder) {
-            super(initialCapacity, loadFactor, accessOrder);
-        }
+		public LruRemovalHashMap(int initialCapacity, float loadFactor, boolean accessOrder) {
+			super(initialCapacity, loadFactor, accessOrder);
+		}
 
-        public LruRemovalHashMap(int initialCapacity, float loadFactor, boolean accessOrder, RemovalPolicy<K, V> removalPolicy) {
-            super(initialCapacity, loadFactor, accessOrder);
-            this.removalPolicy = removalPolicy;
-        }
+		public LruRemovalHashMap(int initialCapacity, float loadFactor, boolean accessOrder, RemovalPolicy<K, V> removalPolicy) {
+			super(initialCapacity, loadFactor, accessOrder);
+			this.removalPolicy = removalPolicy;
+		}
         
-        protected boolean removeEldestEntry (Map.Entry<K, V> entry) { 
-        	boolean result = false;
-            if (size() > LRUCache.this._size) {
-            	result = true;
-            	if (removalPolicy != null) {
-            		result = removalPolicy.shouldRemove(entry, this, LRUCache.this._size);
-            		if (result)
-            			removalPolicy.onElementRemoved(entry.getKey(), entry.getValue());
-            	}
-            }
-            return result;
-        }
-    }
+		protected boolean removeEldestEntry (Map.Entry<K, V> entry) { 
+			boolean result = false;
+			if (size() > LRUCache.this._size) {
+				result = true;
+				if (removalPolicy != null) {
+					result = removalPolicy.shouldRemove(entry, this, LRUCache.this._size);
+					if (result)
+						removalPolicy.onElementRemoved(entry.getKey(), entry.getValue());
+				}
+			}
+			return result;
+		}
+	}
 
 
-    protected LruRemovalHashMap _map = null;
-    protected int _size;
+	protected LruRemovalHashMap _map = null;
+	protected int _size;
 
-    public LRUCache() {
-        _size = 250;
-        _map = new LruRemovalHashMap(_size, 0.75f, true);      
-    }
+	public LRUCache() {
+		_size = 250;
+		_map = new LruRemovalHashMap(_size, 0.75f, true);      
+	}
 
-    public LRUCache(int size) {
-        _size = size;
-        _map = new LruRemovalHashMap(_size, 0.75f, true);      
-    }
+	public LRUCache(int size) {
+		_size = size;
+		_map = new LruRemovalHashMap(_size, 0.75f, true);      
+	}
 
-    public LRUCache(int size, RemovalPolicy<K, V> removalPolicy) {
-        _size = size;
-        _map = new LruRemovalHashMap(_size, 0.75f, true, removalPolicy);      
-    }
+	public LRUCache(int size, RemovalPolicy<K, V> removalPolicy) {
+		_size = size;
+		_map = new LruRemovalHashMap(_size, 0.75f, true, removalPolicy);      
+	}
 
     
-    public boolean containsKey (Object key) {
-        return _map.containsKey(key);
-    }
+	public boolean containsKey (Object key) {
+		return _map.containsKey(key);
+	}
 
 
-    public void put(K key, V value) {
-        V oldValue = _map.put(key, value);
-        if (oldValue != null && _map.removalPolicy != null)
-        	_map.removalPolicy.onElementRemoved(key, oldValue);
-    }
+	public void put(K key, V value) {
+		V oldValue = _map.put(key, value);
+		if (oldValue != null && _map.removalPolicy != null)
+			_map.removalPolicy.onElementRemoved(key, oldValue);
+	}
     
-    public void remove(K key) {
-    	V value = _map.remove(key);
-    	if (_map.removalPolicy != null)
-    		_map.removalPolicy.onElementRemoved(key, value);
-    }
+	public void remove(K key) {
+		V value = _map.remove(key);
+		if (_map.removalPolicy != null)
+			_map.removalPolicy.onElementRemoved(key, value);
+	}
 
-    public V get (Object key) {
-        return _map.get(key);
-    }
-
-
-    public int getCurrentSize() {
-        return _map.size();
-    }
+	public V get (Object key) {
+		return _map.get(key);
+	}
 
 
-    synchronized public void setSize (int size) {
-        _size = size;
+	public int getCurrentSize() {
+		return _map.size();
+	}
+
+
+	synchronized public void setSize (int size) {
+			_size = size;
         
-        while (_map.size() > _size) {
-        	K key = _map.keySet().iterator().next();
-        	V value = _map.remove(key);
-        	if (_map.removalPolicy != null)
-        		_map.removalPolicy.onElementRemoved(key, value);
-        }
-    }
+			while (_map.size() > _size) {
+				K key = _map.keySet().iterator().next();
+				V value = _map.remove(key);
+				if (_map.removalPolicy != null)
+					_map.removalPolicy.onElementRemoved(key, value);
+			}
+		}
 
-    public void setRemovalPolicy(RemovalPolicy<K, V> removalPolicy) {
-    	_map.removalPolicy = removalPolicy;
-    }
+	public void setRemovalPolicy(RemovalPolicy<K, V> removalPolicy) {
+		_map.removalPolicy = removalPolicy;
+	}
 
-    synchronized public int getSize() {
-        return _size;                
-    }
+	synchronized public int getSize() {
+			return _size;                
+		}
     
     
-    public void clear() {
-    	if (_map.removalPolicy != null) {
-    		for (Entry<K, V> entry : _map.entrySet()) {
-    			_map.removalPolicy.onElementRemoved(entry.getKey(), entry.getValue());
-    		}
-    	}
-        _map.clear();
-    }  
+	public void clear() {
+		if (_map.removalPolicy != null) {
+			for (Entry<K, V> entry : _map.entrySet()) {
+				_map.removalPolicy.onElementRemoved(entry.getKey(), entry.getValue());
+			}
+		}
+		_map.clear();
+	}  
     
     
-    public Collection<V> values() {
-    	return Collections.unmodifiableCollection(_map.values());
-    }
+	public Collection<V> values() {
+		return Collections.unmodifiableCollection(_map.values());
+	}
 }

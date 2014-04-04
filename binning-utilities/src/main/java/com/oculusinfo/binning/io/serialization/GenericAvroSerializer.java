@@ -48,99 +48,99 @@ import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
-    private static final long serialVersionUID = 5775555328063499845L;
+	private static final long serialVersionUID = 5775555328063499845L;
 
 
-    private CodecFactory _compressionCodec;
-    private TypeDescriptor _typeDescription;
-    protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
-        _compressionCodec = compressionCodec;
-        _typeDescription = typeDescription;
-    }
+	private CodecFactory _compressionCodec;
+	private TypeDescriptor _typeDescription;
+	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
+		_compressionCodec = compressionCodec;
+		_typeDescription = typeDescription;
+	}
 
-    abstract protected String getRecordSchemaFile ();
-    abstract protected Map<String, String> getTileMetaData ();
-    abstract protected T getValue (GenericRecord bin);
-    abstract protected void setValue (GenericRecord bin, T value) throws IOException ;
+	abstract protected String getRecordSchemaFile ();
+	abstract protected Map<String, String> getTileMetaData ();
+	abstract protected T getValue (GenericRecord bin);
+	abstract protected void setValue (GenericRecord bin, T value) throws IOException ;
     
-    public String getFileExtension(){
-    	return "avro";
-    }
+	public String getFileExtension(){
+		return "avro";
+	}
     
-    protected Schema getRecordSchema () throws IOException {
-        return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
-    }
-    protected Schema getTileSchema () throws IOException {
-        return new AvroSchemaComposer().add(getRecordSchema()).addResource("tile.avsc").resolved();
-    }
+	protected Schema getRecordSchema () throws IOException {
+		return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
+	}
+	protected Schema getTileSchema () throws IOException {
+		return new AvroSchemaComposer().add(getRecordSchema()).addResource("tile.avsc").resolved();
+	}
 
-    @Override
-    public TypeDescriptor getBinTypeDescription () {
-        return _typeDescription;
-    }
+	@Override
+	public TypeDescriptor getBinTypeDescription () {
+		return _typeDescription;
+	}
 
-    @Override
+	@Override
 	public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
 
-    	DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>();
-    	DataFileStream<GenericRecord> dataFileReader = new DataFileStream<GenericRecord>(stream, reader);
+		DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>();
+		DataFileStream<GenericRecord> dataFileReader = new DataFileStream<GenericRecord>(stream, reader);
     	
-        try {
+		try {
         	
-        	GenericRecord r = dataFileReader.next();
+			GenericRecord r = dataFileReader.next();
 
-            int level = (Integer) r.get("level");
-            int xIndex = (Integer) r.get("xIndex");
-            int yIndex = (Integer) r.get("yIndex");
-            int xBins = (Integer) r.get("xBinCount");
-            int yBins = (Integer) r.get("yBinCount");
+			int level = (Integer) r.get("level");
+			int xIndex = (Integer) r.get("xIndex");
+			int yIndex = (Integer) r.get("yIndex");
+			int xBins = (Integer) r.get("xBinCount");
+			int yBins = (Integer) r.get("yBinCount");
                     
-            @SuppressWarnings("unchecked")
-            GenericData.Array<GenericRecord> bins = (GenericData.Array<GenericRecord>) r.get("values");
+			@SuppressWarnings("unchecked")
+			GenericData.Array<GenericRecord> bins = (GenericData.Array<GenericRecord>) r.get("values");
 
-            // Warning suppressed because Array.newInstance definitionally returns 
-            // something of the correct type, or throws an exception 
-            List<T> data = new ArrayList<T>(xBins*yBins);
-            int i = 0;
-            for (GenericRecord bin: bins) {
-                data.add(getValue(bin));
-                if (i >= xBins*yBins) break;
-            }
-            TileIndex newTileIndex = new TileIndex(level, xIndex, yIndex, xBins, yBins);
-            TileData<T> newTile = new TileData<T>(newTileIndex, data);
-            return newTile;
-        } finally {
-        	dataFileReader.close();
-        	stream.close();
-        }
-    }
+			// Warning suppressed because Array.newInstance definitionally returns 
+			// something of the correct type, or throws an exception 
+			List<T> data = new ArrayList<T>(xBins*yBins);
+			int i = 0;
+			for (GenericRecord bin: bins) {
+				data.add(getValue(bin));
+				if (i >= xBins*yBins) break;
+			}
+			TileIndex newTileIndex = new TileIndex(level, xIndex, yIndex, xBins, yBins);
+			TileData<T> newTile = new TileData<T>(newTileIndex, data);
+			return newTile;
+		} finally {
+			dataFileReader.close();
+			stream.close();
+		}
+	}
 
-    @Override
-    public void serialize (TileData<T> tile, TilePyramid pyramid, OutputStream stream) throws IOException {
-        Schema recordSchema = getRecordSchema();
-        Schema tileSchema = getTileSchema();
+	@Override
+	public void serialize (TileData<T> tile, TilePyramid pyramid, OutputStream stream) throws IOException {
+		Schema recordSchema = getRecordSchema();
+		Schema tileSchema = getTileSchema();
 
-        List<GenericRecord> bins = new ArrayList<GenericRecord>();
+		List<GenericRecord> bins = new ArrayList<GenericRecord>();
 
-        for (T value: tile.getData()){
-        	if (value == null)continue;
-            GenericRecord bin = new GenericData.Record(recordSchema);
-            setValue(bin, value);
-            bins.add(bin);
-        }
+		for (T value: tile.getData()){
+			if (value == null)continue;
+			GenericRecord bin = new GenericData.Record(recordSchema);
+			setValue(bin, value);
+			bins.add(bin);
+		}
 
-        GenericRecord tileRecord = new GenericData.Record(tileSchema);
-        TileIndex idx = tile.getDefinition();
-        tileRecord.put("level", idx.getLevel());
-        tileRecord.put("xIndex", idx.getX());
-        tileRecord.put("yIndex", idx.getY());
-        tileRecord.put("xBinCount", idx.getXBins());
-        tileRecord.put("yBinCount", idx.getYBins());
-        tileRecord.put("values", bins);
-        tileRecord.put("default", null);
-        tileRecord.put("meta", getTileMetaData());
+		GenericRecord tileRecord = new GenericData.Record(tileSchema);
+		TileIndex idx = tile.getDefinition();
+		tileRecord.put("level", idx.getLevel());
+		tileRecord.put("xIndex", idx.getX());
+		tileRecord.put("yIndex", idx.getY());
+		tileRecord.put("xBinCount", idx.getXBins());
+		tileRecord.put("yBinCount", idx.getYBins());
+		tileRecord.put("values", bins);
+		tileRecord.put("default", null);
+		tileRecord.put("meta", getTileMetaData());
 
-        DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
+		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
 			dataFileWriter.setCodec(_compressionCodec);
@@ -149,5 +149,5 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 			dataFileWriter.close();
 			stream.close();
 		} catch (IOException e) {throw new RuntimeException("Error serializing",e);}	
-    }
+	}
 }

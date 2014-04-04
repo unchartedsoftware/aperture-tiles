@@ -45,33 +45,33 @@ public class SynchronizedLRUCache<K, V> extends LRUCache<K, V> {
 
 	@Override
 	public synchronized boolean containsKey(Object key) {
-		return super.containsKey(key);
-	}
+			return super.containsKey(key);
+		}
 
 	@Override
 	public synchronized void put(K key, V value) {
-		super.put(key, value);
-	}
+			super.put(key, value);
+		}
 	
 	@Override
 	public synchronized void remove(K key) {
-		super.remove(key);
-	}
+			super.remove(key);
+		}
 
 	@Override
 	public synchronized V get(Object key) {
-		return super.get(key);
-	}
+			return super.get(key);
+		}
 
 	@Override
 	public synchronized int getCurrentSize() {
-		return super.getCurrentSize();
-	}
+			return super.getCurrentSize();
+		}
 
 	@Override
 	public synchronized void clear() {
-		super.clear();
-	}
+			super.clear();
+		}
 
 	@Override
 	public Collection<V> values() {
