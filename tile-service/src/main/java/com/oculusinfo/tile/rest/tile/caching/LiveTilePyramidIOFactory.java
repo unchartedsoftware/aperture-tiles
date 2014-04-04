@@ -35,37 +35,37 @@ import com.oculusinfo.tile.spark.SparkContextProvider;
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
 
 public class LiveTilePyramidIOFactory extends PyramidIOFactory {
-    public static StringProperty PYRAMID_IO_TYPE =
-            PyramidIOFactory.PYRAMID_IO_TYPE.overridePossibleValues(StringProperty.addToArray(PyramidIOFactory.PYRAMID_IO_TYPE.getPossibleValues(), "live"));
+	public static StringProperty PYRAMID_IO_TYPE =
+		PyramidIOFactory.PYRAMID_IO_TYPE.overridePossibleValues(StringProperty.addToArray(PyramidIOFactory.PYRAMID_IO_TYPE.getPossibleValues(), "live"));
 
-    @Inject
-    private SparkContextProvider _contextProvider;
+	@Inject
+	private SparkContextProvider _contextProvider;
 
-    public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
-        this(null, parent, path, contextProvider);
-    }
-    public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
-        super(name, parent, path);
-        _contextProvider = contextProvider;
-    }
+	public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
+		this(null, parent, path, contextProvider);
+	}
+	public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
+		super(name, parent, path);
+		_contextProvider = contextProvider;
+	}
 
-    @Override
-    protected List<ConfigurationProperty<?>> getPyramidIOPropertyList () {
-        List<ConfigurationProperty<?>> result = super.getPyramidIOPropertyList();
-        // Replace the type property with our own
-        int n = result.indexOf(PyramidIOFactory.PYRAMID_IO_TYPE);
-        result.set(n, PYRAMID_IO_TYPE);
-        return result;
-    }
+	@Override
+	protected List<ConfigurationProperty<?>> getPyramidIOPropertyList () {
+		List<ConfigurationProperty<?>> result = super.getPyramidIOPropertyList();
+		// Replace the type property with our own
+		int n = result.indexOf(PyramidIOFactory.PYRAMID_IO_TYPE);
+		result.set(n, PYRAMID_IO_TYPE);
+		return result;
+	}
 
-    @Override
-    protected PyramidIO create () {
-        String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
+	@Override
+	protected PyramidIO create () {
+		String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
 
-        if ("live".equals(pyramidIOType)) {
-            return new LiveStaticTilePyramidIO(_contextProvider.getSparkContext());
-        } else {
-            return super.create();
-        }
-    }
+		if ("live".equals(pyramidIOType)) {
+			return new LiveStaticTilePyramidIO(_contextProvider.getSparkContext());
+		} else {
+			return super.create();
+		}
+	}
 }

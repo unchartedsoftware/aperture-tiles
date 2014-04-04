@@ -60,5 +60,5 @@ public interface TileDataImageRenderer {
 	 * From configuration information, collect metadata and figure out level extrema as needed and possible.
 	 * @throws ConfigurationException 
 	 */
-    public abstract Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException;
+	public abstract Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException;
 }

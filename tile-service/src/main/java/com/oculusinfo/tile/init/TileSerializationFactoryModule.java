@@ -31,9 +31,9 @@ import com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvid
 
 public class TileSerializationFactoryModule extends AbstractModule {
 
-    @Override
-    protected void configure() {
-        TypeLiteral<FactoryProvider<TileSerializer<?>>> bindType = new TypeLiteral<FactoryProvider<TileSerializer<?>>>() {};
-        bind(bindType).to(StandardTileSerializationFactoryProvider.class);
-    }
+	@Override
+	protected void configure() {
+		TypeLiteral<FactoryProvider<TileSerializer<?>>> bindType = new TypeLiteral<FactoryProvider<TileSerializer<?>>>() {};
+		bind(bindType).to(StandardTileSerializationFactoryProvider.class);
+	}
 }

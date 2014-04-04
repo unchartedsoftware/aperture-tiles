@@ -36,14 +36,14 @@ import javax.servlet.ServletContextEvent;
  * 
  */
 public interface ServletLifecycleListener {
-    /**
-     * Called when the servlet is initialized; this will only get called if the
-     * listener somehow registers itself before the servlet is initialized.
-     */
-    public void onServletInitialized (ServletContextEvent event);
+	/**
+	 * Called when the servlet is initialized; this will only get called if the
+	 * listener somehow registers itself before the servlet is initialized.
+	 */
+	public void onServletInitialized (ServletContextEvent event);
 
-    /**
-     * Called when the servlet is destroyed.
-     */
-    public void onServletDestroyed (ServletContextEvent event);
+	/**
+	 * Called when the servlet is destroyed.
+	 */
+	public void onServletDestroyed (ServletContextEvent event);
 }

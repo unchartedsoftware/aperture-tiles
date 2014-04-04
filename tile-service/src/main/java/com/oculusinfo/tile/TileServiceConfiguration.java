@@ -41,35 +41,35 @@ public class TileServiceConfiguration extends ApertureServerConfig {
 	static private List<ServletLifecycleListener> _lifecycleListeners = new ArrayList<>();
 
 
-    public void addLifecycleListener (ServletLifecycleListener listener) {
-        _lifecycleListeners.add(listener);
-    }
+	public void addLifecycleListener (ServletLifecycleListener listener) {
+		_lifecycleListeners.add(listener);
+	}
 
-    public void removeLifecycleListener (ServletLifecycleListener listener) {
-        _lifecycleListeners.remove(listener);
-    }
+	public void removeLifecycleListener (ServletLifecycleListener listener) {
+		_lifecycleListeners.remove(listener);
+	}
 
-    @Override
-    public void contextInitialized (ServletContextEvent event) {
-        // Notify any listeners
-        if (null != _lifecycleListeners) {
-            for (ServletLifecycleListener listener: _lifecycleListeners) {
-                listener.onServletInitialized(event);
-            }
-        }
+	@Override
+	public void contextInitialized (ServletContextEvent event) {
+		// Notify any listeners
+		if (null != _lifecycleListeners) {
+			for (ServletLifecycleListener listener: _lifecycleListeners) {
+				listener.onServletInitialized(event);
+			}
+		}
 
-        super.contextInitialized(event);
-    }
+		super.contextInitialized(event);
+	}
 
-    @Override
-    public void contextDestroyed (ServletContextEvent event) {
-        // Notify any listeners
-        if (null != _lifecycleListeners) {
-            for (ServletLifecycleListener listener: _lifecycleListeners) {
-                listener.onServletDestroyed(event);
-            }
-        }
+	@Override
+	public void contextDestroyed (ServletContextEvent event) {
+		// Notify any listeners
+		if (null != _lifecycleListeners) {
+			for (ServletLifecycleListener listener: _lifecycleListeners) {
+				listener.onServletDestroyed(event);
+			}
+		}
 
-        super.contextDestroyed(event);
-    }
+		super.contextDestroyed(event);
+	}
 }

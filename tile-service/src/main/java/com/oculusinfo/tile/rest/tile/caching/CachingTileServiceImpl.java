@@ -54,116 +54,116 @@ import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedLi
  */
 @Singleton
 public class CachingTileServiceImpl extends TileServiceImpl {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CachingTileServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(CachingTileServiceImpl.class);
 
 
 
-    private FactoryProvider<PyramidIO> _cachingProvider;
-    private CachingPyramidIO           _pyramidIO;
+	private FactoryProvider<PyramidIO> _cachingProvider;
+	private CachingPyramidIO           _pyramidIO;
 
-    public CachingTileServiceImpl () {
-        super();
-        _cachingProvider = new CachingPyramidIOProvider();
-        _pyramidIO = new CachingPyramidIO();
-        _pyramidIO.addLayerListener(new LayerDataChangedListener () {
-		        public void onLayerDataChanged (String layer) {
-			        clearMetadataCache(layer);
-		        }
-	        });
-    }
+	public CachingTileServiceImpl () {
+		super();
+		_cachingProvider = new CachingPyramidIOProvider();
+		_pyramidIO = new CachingPyramidIO();
+		_pyramidIO.addLayerListener(new LayerDataChangedListener () {
+				public void onLayerDataChanged (String layer) {
+					clearMetadataCache(layer);
+				}
+			});
+	}
 
-    @Override
-    protected LayerConfiguration getLayerConfiguration () throws ConfigurationException {
-        return new LayerConfiguration(_cachingProvider,
-                                      getSerializationFactoryProvider(),
-                                      getRendererFactoryProvider(),
-                                      null, new ArrayList<String>());
-    }
-
-
-
-    @Override
-    protected void prepareForRendering (String layer,
-                                        LayerConfiguration config,
-                                        TileIndex tile,
-                                        Iterable<TileIndex> tileSet) {
-        try {
-            TileSerializer<?> serializer = config.produce(TileSerializer.class);
-            _pyramidIO.requestTiles(layer, serializer, tileSet);
-        } catch (IOException e) {
-            LOGGER.warn("Error requesting tile set", e);
-        } catch (ConfigurationException e) {
-            LOGGER.warn("Error requesting tile set", e);
-        }
-    }
+	@Override
+	protected LayerConfiguration getLayerConfiguration () throws ConfigurationException {
+		return new LayerConfiguration(_cachingProvider,
+		                              getSerializationFactoryProvider(),
+		                              getRendererFactoryProvider(),
+		                              null, new ArrayList<String>());
+	}
 
 
 
-    private class CachingPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-        private ConfigurableFactory<?>         _parent;
-        private ConfigurableFactory<PyramidIO> _baseFactory;
+	@Override
+	protected void prepareForRendering (String layer,
+	                                    LayerConfiguration config,
+	                                    TileIndex tile,
+	                                    Iterable<TileIndex> tileSet) {
+		try {
+			TileSerializer<?> serializer = config.produce(TileSerializer.class);
+			_pyramidIO.requestTiles(layer, serializer, tileSet);
+		} catch (IOException e) {
+			LOGGER.warn("Error requesting tile set", e);
+		} catch (ConfigurationException e) {
+			LOGGER.warn("Error requesting tile set", e);
+		}
+	}
 
 
 
-        CachingPyramidIOFactory (ConfigurableFactory<?> parent,
-                                 List<String> path,
-                                 ConfigurableFactory<PyramidIO> base) {
-            this(null, parent, path, base);
-        }
+	private class CachingPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+		private ConfigurableFactory<?>         _parent;
+		private ConfigurableFactory<PyramidIO> _baseFactory;
 
-        CachingPyramidIOFactory (String name,
-                                 ConfigurableFactory<?> parent,
-                                 List<String> path,
-                                 ConfigurableFactory<PyramidIO> base) {
-            super(name, PyramidIO.class, parent, path);
-            _parent = parent;
-            _baseFactory = base;
 
-            addProperty(PyramidIOFactory.INITIALIZATION_DATA);
-        }
 
-        @Override
-        public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
-            super.readConfiguration(rootNode);
-            _baseFactory.readConfiguration(rootNode);
-            setupBasePyramidIO();
-        }
+		CachingPyramidIOFactory (ConfigurableFactory<?> parent,
+		                         List<String> path,
+		                         ConfigurableFactory<PyramidIO> base) {
+			this(null, parent, path, base);
+		}
 
-        @Override
-        public void readConfiguration (Properties properties) throws ConfigurationException {
-            super.readConfiguration(properties);
-            _baseFactory.readConfiguration(properties);
-            setupBasePyramidIO();
-        }
+		CachingPyramidIOFactory (String name,
+		                         ConfigurableFactory<?> parent,
+		                         List<String> path,
+		                         ConfigurableFactory<PyramidIO> base) {
+			super(name, PyramidIO.class, parent, path);
+			_parent = parent;
+			_baseFactory = base;
 
-        private void setupBasePyramidIO () {
-            String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_NAME);
-            _pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
-        }
+			addProperty(PyramidIOFactory.INITIALIZATION_DATA);
+		}
 
-        @Override
-        protected PyramidIO create () {
-            return _pyramidIO;
-        }
+		@Override
+		public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
+			super.readConfiguration(rootNode);
+			_baseFactory.readConfiguration(rootNode);
+			setupBasePyramidIO();
+		}
+
+		@Override
+		public void readConfiguration (Properties properties) throws ConfigurationException {
+			super.readConfiguration(properties);
+			_baseFactory.readConfiguration(properties);
+			setupBasePyramidIO();
+		}
+
+		private void setupBasePyramidIO () {
+			String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_NAME);
+			_pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
+		}
+
+		@Override
+		protected PyramidIO create () {
+			return _pyramidIO;
+		}
         
-    }
-    private class CachingPyramidIOProvider implements FactoryProvider<PyramidIO> {
-        @Override
-        public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-            return new CachingPyramidIOFactory(null, path, getPyramidIOFactoryProvider().createFactory(path));
-        }
+	}
+	private class CachingPyramidIOProvider implements FactoryProvider<PyramidIO> {
+		@Override
+		public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
+			return new CachingPyramidIOFactory(null, path, getPyramidIOFactoryProvider().createFactory(path));
+		}
 
-        @Override
-        public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
-                                                             List<String> path) {
-            return new CachingPyramidIOFactory(parent, path, getPyramidIOFactoryProvider().createFactory(parent, path));
-        }
+		@Override
+		public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
+		                                                     List<String> path) {
+			return new CachingPyramidIOFactory(parent, path, getPyramidIOFactoryProvider().createFactory(parent, path));
+		}
 
-        @Override
-        public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
-                                                             ConfigurableFactory<?> parent,
-                                                             List<String> path) {
-            return new CachingPyramidIOFactory(parent, path, getPyramidIOFactoryProvider().createFactory(factoryName, parent, path));
-        }
-    }
+		@Override
+		public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
+		                                                     ConfigurableFactory<?> parent,
+		                                                     List<String> path) {
+			return new CachingPyramidIOFactory(parent, path, getPyramidIOFactoryProvider().createFactory(factoryName, parent, path));
+		}
+	}
 }

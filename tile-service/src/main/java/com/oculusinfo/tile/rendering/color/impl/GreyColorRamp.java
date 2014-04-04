@@ -32,10 +32,10 @@ import com.oculusinfo.tile.rendering.color.FixedPoint;
 public class GreyColorRamp extends AbstractColorRamp {
 	public GreyColorRamp (boolean inverted, int opacity) {
 		super(inverted,
-              Arrays.asList(new FixedPoint(0.0, 0.0), new FixedPoint(1.0, 1.0)),
-              Arrays.asList(new FixedPoint(0.0, 0.0), new FixedPoint(1.0, 1.0)),
-              Arrays.asList(new FixedPoint(0.0, 0.0), new FixedPoint(1.0, 1.0)),
-              null,
-              opacity);
+		      Arrays.asList(new FixedPoint(0.0, 0.0), new FixedPoint(1.0, 1.0)),
+		      Arrays.asList(new FixedPoint(0.0, 0.0), new FixedPoint(1.0, 1.0)),
+		      Arrays.asList(new FixedPoint(0.0, 0.0), new FixedPoint(1.0, 1.0)),
+		      null,
+		      opacity);
 	}
 }

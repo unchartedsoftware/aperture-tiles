@@ -33,11 +33,11 @@ import com.oculusinfo.tile.rendering.color.FixedPoint;
 import com.oculusinfo.tile.util.JsonUtilities;
 
 public abstract class AbstractColorRamp implements ColorRamp {
-    private boolean isInverted;
-    protected List<FixedPoint> reds = new ArrayList<FixedPoint>();
-    protected List<FixedPoint> greens = new ArrayList<FixedPoint>();
-    protected List<FixedPoint> blues = new ArrayList<FixedPoint>();
-    protected List<FixedPoint> alphas = new ArrayList<FixedPoint>();
+	private boolean isInverted;
+	protected List<FixedPoint> reds = new ArrayList<FixedPoint>();
+	protected List<FixedPoint> greens = new ArrayList<FixedPoint>();
+	protected List<FixedPoint> blues = new ArrayList<FixedPoint>();
+	protected List<FixedPoint> alphas = new ArrayList<FixedPoint>();
 
 	public AbstractColorRamp (boolean inverted, List<FixedPoint> reds, List<FixedPoint> greens, List<FixedPoint> blues, List<FixedPoint> alphas, int opacity){
 		this.isInverted = inverted;
@@ -45,12 +45,12 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		this.greens = greens;
 		this.blues = blues;
 		if (null == alphas) {
-            //there's no alphas, so initialize them with the single opacity field
-            this.alphas = new ArrayList<>();
-            this.alphas.add(new FixedPoint(0, opacity));
-            this.alphas.add(new FixedPoint(1, opacity));
+			//there's no alphas, so initialize them with the single opacity field
+			this.alphas = new ArrayList<>();
+			this.alphas.add(new FixedPoint(0, opacity));
+			this.alphas.add(new FixedPoint(1, opacity));
 		} else {
-		    this.alphas = alphas;
+			this.alphas = alphas;
 		}
 	}
 
@@ -59,7 +59,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	
 	public int getRGB(double scale) {
 		return smoothBetweenFixedPoints(reds, greens, blues, alphas,
-				(this.isInverted ? 1-scale : scale));
+		                                (this.isInverted ? 1-scale : scale));
 	}
 	
 	public static double luminosity(int r, int g, int b) {
@@ -92,7 +92,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	}
 	
 	public static int smoothBetweenFixedPoints(List<FixedPoint> reds, List<FixedPoint> greens,
-			List<FixedPoint> blues, List<FixedPoint> alphas, double scale) {
+	                                           List<FixedPoint> blues, List<FixedPoint> alphas, double scale) {
 		int r = (int)(valueFromFixedPoints(reds,scale) * 255);
 		int b = (int)(valueFromFixedPoints(blues,scale) * 255);
 		int g = 0;

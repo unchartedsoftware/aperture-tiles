@@ -28,29 +28,29 @@ package com.oculusinfo.tile.rendering.color;
  * Describes a fixed point on a color scale.
  */
 public class FixedPoint {
-    double scale;
-    double value;
-    public FixedPoint(double scale, double value) {
-        this.scale = scale;
-        this.value = value;
-    }
+	double scale;
+	double value;
+	public FixedPoint(double scale, double value) {
+		this.scale = scale;
+		this.value = value;
+	}
 
-    public double getScale () {
-        return this.scale;
-    }
-    public double getValue () {
-        return this.value;
-    }
+	public double getScale () {
+		return this.scale;
+	}
+	public double getValue () {
+		return this.value;
+	}
 
-    @Override
-    public boolean equals (Object obj) {
-        if (this == obj) return true;
-        if (null == obj) return false;
-        if (!(obj instanceof FixedPoint)) return false;
+	@Override
+	public boolean equals (Object obj) {
+		if (this == obj) return true;
+		if (null == obj) return false;
+		if (!(obj instanceof FixedPoint)) return false;
 
-        FixedPoint that = (FixedPoint) obj;
-        if (this.scale != that.scale) return false;
-        if (this.value != that.value) return false;
-        return true;
-    }
+		FixedPoint that = (FixedPoint) obj;
+		if (this.scale != that.scale) return false;
+		if (this.value != that.value) return false;
+		return true;
+	}
 }

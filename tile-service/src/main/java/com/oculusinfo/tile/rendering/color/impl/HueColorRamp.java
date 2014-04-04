@@ -48,8 +48,8 @@ public class HueColorRamp implements ColorRamp {
 	}
 	
 	public HueColorRamp(double from, double to) {
-	    fromVal = clamp(from, 0.0, 1.0);
-	    toVal = clamp(to, 0.0, 1.0);
+		fromVal = clamp(from, 0.0, 1.0);
+		toVal = clamp(to, 0.0, 1.0);
 	}
 	
 	@Override

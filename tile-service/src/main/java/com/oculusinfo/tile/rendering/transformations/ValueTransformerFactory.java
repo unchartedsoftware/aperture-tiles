@@ -37,66 +37,66 @@ import com.oculusinfo.factory.properties.StringProperty;
  *
  */
 public class ValueTransformerFactory extends ConfigurableFactory<IValueTransformer> {
-    public static final StringProperty TRANSFORM_NAME    = new StringProperty("name",
-                                                                              "The type of transformation to apply to the data.",
-                                                                              "linear",
-                                                                              new String[] {"linear", "log10", "minmax"});
-    public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("max",
-                                                                              "The maximum value to allow in the input data, when using a minmax transformation",
-                                                                              Double.MAX_VALUE);
-    public static final DoubleProperty TRANSFORM_MINIMUM = new DoubleProperty("min",
-                                                                              "The minimum value to allow in the input data, when using a minmax transformation",
-                                                                              Double.MIN_VALUE);
-    public static final DoubleProperty LAYER_MAXIMUM     = new DoubleProperty("layerMax",
-                                                                              "For use by the server only",
-                                                                              Double.MAX_VALUE);
-    public static final DoubleProperty LAYER_MINIMUM     = new DoubleProperty("layerMin",
-                                                                              "For use by the server only",
-                                                                              Double.MIN_VALUE);
+	public static final StringProperty TRANSFORM_NAME    = new StringProperty("name",
+		    "The type of transformation to apply to the data.",
+		    "linear",
+		    new String[] {"linear", "log10", "minmax"});
+	public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("max",
+		    "The maximum value to allow in the input data, when using a minmax transformation",
+		    Double.MAX_VALUE);
+	public static final DoubleProperty TRANSFORM_MINIMUM = new DoubleProperty("min",
+		    "The minimum value to allow in the input data, when using a minmax transformation",
+		    Double.MIN_VALUE);
+	public static final DoubleProperty LAYER_MAXIMUM     = new DoubleProperty("layerMax",
+		    "For use by the server only",
+		    Double.MAX_VALUE);
+	public static final DoubleProperty LAYER_MINIMUM     = new DoubleProperty("layerMin",
+		    "For use by the server only",
+		    Double.MIN_VALUE);
 
 
 
-    public ValueTransformerFactory (ConfigurableFactory<?> parent, List<String> path) {
-        this(null, parent, path);
-    }
+	public ValueTransformerFactory (ConfigurableFactory<?> parent, List<String> path) {
+		this(null, parent, path);
+	}
 
-    public ValueTransformerFactory (String name, ConfigurableFactory<?> parent, List<String> path) {
-        super(name, IValueTransformer.class, parent, path);
+	public ValueTransformerFactory (String name, ConfigurableFactory<?> parent, List<String> path) {
+		super(name, IValueTransformer.class, parent, path);
 
-        addProperty(TRANSFORM_NAME);
-        addProperty(TRANSFORM_MAXIMUM);
-        addProperty(TRANSFORM_MINIMUM);
-        addProperty(LAYER_MAXIMUM);
-        addProperty(LAYER_MINIMUM);
-    }
+		addProperty(TRANSFORM_NAME);
+		addProperty(TRANSFORM_MAXIMUM);
+		addProperty(TRANSFORM_MINIMUM);
+		addProperty(LAYER_MAXIMUM);
+		addProperty(LAYER_MINIMUM);
+	}
 
-    // Extrema are calculated properties; we must allow a way to set them.
-    public void setExtrema (double min, double max) {
-        setPropertyValue(LAYER_MAXIMUM, max);
-        setPropertyValue(LAYER_MINIMUM, min);
-    }
+	// Extrema are calculated properties; we must allow a way to set them.
+	public void setExtrema (double min, double max) {
+		setPropertyValue(LAYER_MAXIMUM, max);
+		setPropertyValue(LAYER_MINIMUM, min);
+	}
 
-    @Override
-    protected IValueTransformer create () {
+	@Override
+	protected IValueTransformer create () {
 		String name = getPropertyValue(TRANSFORM_NAME);
 		double layerMax = getPropertyValue(LAYER_MAXIMUM);
 
 		if ("log10".equals(name)) {
-		    return new Log10ValueTransformer(layerMax);
+			return new Log10ValueTransformer(layerMax);
 		} else if ("minmax".equals(name)) {
-            double max;
-            if (hasPropertyValue(TRANSFORM_MAXIMUM)) max = getPropertyValue(TRANSFORM_MINIMUM);
-            else max = layerMax;
+			double max;
+			if (hasPropertyValue(TRANSFORM_MAXIMUM)) max = getPropertyValue(TRANSFORM_MINIMUM);
+			else max = layerMax;
 
-            double min;
-            if (hasPropertyValue(TRANSFORM_MINIMUM)) min = getPropertyValue(TRANSFORM_MINIMUM);
-            else min = getPropertyValue(LAYER_MINIMUM);
+			double min;
+			if (hasPropertyValue(TRANSFORM_MINIMUM)) min = getPropertyValue(TRANSFORM_MINIMUM);
+			else min = getPropertyValue(LAYER_MINIMUM);
 
-            return new LinearCappedValueTransformer(min, max, layerMax);
+			return new LinearCappedValueTransformer(min, max, layerMax);
 		} else {
-		    // Linear is default, even if passed an unknown type.
-            double min = getPropertyValue(LAYER_MINIMUM);
-		    return new LinearCappedValueTransformer(min, layerMax, layerMax);
+			// Linear is default, even if passed an unknown type.
+			double min = getPropertyValue(LAYER_MINIMUM);
+			return new LinearCappedValueTransformer(min, layerMax, layerMax);
 		}
 	}
 

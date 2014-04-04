@@ -42,6 +42,6 @@ public class LinearCappedValueTransformer implements IValueTransformer {
 
 	@Override
 	public double getMaximumValue () {
-	    return _layerMax;
+		return _layerMax;
 	}
 }

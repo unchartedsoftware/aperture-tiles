@@ -70,90 +70,90 @@ import com.oculusinfo.tile.TileServiceConfiguration;
  * @author nkronenfeld
  */
 public class SparkContextProviderImpl implements SparkContextProvider {
-    private String   _master;
-    private String   _jobName;
-    private String   _sparkHome;
-    private String[] _jars;
+	private String   _master;
+	private String   _jobName;
+	private String   _sparkHome;
+	private String[] _jars;
 
-    private JavaSparkContext _context;
+	private JavaSparkContext _context;
 
-    @Inject
-    public SparkContextProviderImpl (@Named("org.apache.spark.master") String master,
-                                     @Named("org.apache.spark.jobName") String jobName,
-                                     @Named("org.apache.spark.home") String sparkHome,
-                                     @Named("org.apache.spark.jars") String extraJars,
-                                     TileServiceConfiguration config) {
-        _master = master;
-        _jobName = jobName;
-        _sparkHome = sparkHome;
+	@Inject
+	public SparkContextProviderImpl (@Named("org.apache.spark.master") String master,
+	                                 @Named("org.apache.spark.jobName") String jobName,
+	                                 @Named("org.apache.spark.home") String sparkHome,
+	                                 @Named("org.apache.spark.jars") String extraJars,
+	                                 TileServiceConfiguration config) {
+		_master = master;
+		_jobName = jobName;
+		_sparkHome = sparkHome;
 
-        // Construct our jarlist
-        List<String> jarList = new ArrayList<>();
-        // First, get our known needed jars from our own classpath
-        // Include binning-utilities
-        jarList.add(getJarPathForClass(com.oculusinfo.binning.TilePyramid.class));
-        // Include tile-generation
-        jarList.add(getJarPathForClass(com.oculusinfo.tilegen.tiling.TileIO.class));
-        // Include the HBase jar
-        jarList.add(getJarPathForClass(org.apache.hadoop.hbase.HBaseConfiguration.class));
-        // Include any additionally configured jars
-        if (null != extraJars && !extraJars.isEmpty()) {
-            for (String extraJar: extraJars.split(":")) {
-                extraJar = extraJar.trim();
-                if (!extraJar.isEmpty())
-                    jarList.add(extraJar);
-            }
-        }
-        _jars = jarList.toArray(new String[jarList.size()]);
+		// Construct our jarlist
+		List<String> jarList = new ArrayList<>();
+		// First, get our known needed jars from our own classpath
+		// Include binning-utilities
+		jarList.add(getJarPathForClass(com.oculusinfo.binning.TilePyramid.class));
+		// Include tile-generation
+		jarList.add(getJarPathForClass(com.oculusinfo.tilegen.tiling.TileIO.class));
+		// Include the HBase jar
+		jarList.add(getJarPathForClass(org.apache.hadoop.hbase.HBaseConfiguration.class));
+		// Include any additionally configured jars
+		if (null != extraJars && !extraJars.isEmpty()) {
+			for (String extraJar: extraJars.split(":")) {
+				extraJar = extraJar.trim();
+				if (!extraJar.isEmpty())
+					jarList.add(extraJar);
+			}
+		}
+		_jars = jarList.toArray(new String[jarList.size()]);
 
-        config.addLifecycleListener(new ServletLifecycleListener() {
-            @Override
-            public void onServletInitialized (ServletContextEvent event) {
-            }
+		config.addLifecycleListener(new ServletLifecycleListener() {
+				@Override
+				public void onServletInitialized (ServletContextEvent event) {
+				}
             
-            @Override
-            public void onServletDestroyed (ServletContextEvent event) {
-                shutdownSparkContext();
-            }
-        });
-    }
+				@Override
+				public void onServletDestroyed (ServletContextEvent event) {
+					shutdownSparkContext();
+				}
+			});
+	}
 
-    private String getJarPathForClass (Class<?> type) {
-        return type.getProtectionDomain().getCodeSource().getLocation()
-                   .getPath();
-    }
+	private String getJarPathForClass (Class<?> type) {
+		return type.getProtectionDomain().getCodeSource().getLocation()
+			.getPath();
+	}
 
-    @Override
-    public SparkContext getSparkContext () {
-        return JavaSparkContext.toSparkContext(getJavaSparkContext());
-    }
+	@Override
+	public SparkContext getSparkContext () {
+		return JavaSparkContext.toSparkContext(getJavaSparkContext());
+	}
 
-    @Override
-    synchronized public JavaSparkContext getJavaSparkContext () {
-        if (null == _context) {
-	        // Thin out the log of spark spam
-	        Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
-	        Logger.getLogger("org.apache.spark").setLevel(Level.WARN);
-	        Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
-	        Logger.getLogger("akka").setLevel(Level.WARN);
+	@Override
+	synchronized public JavaSparkContext getJavaSparkContext () {
+		if (null == _context) {
+			// Thin out the log of spark spam
+			Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+			Logger.getLogger("org.apache.spark").setLevel(Level.WARN);
+			Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
+			Logger.getLogger("akka").setLevel(Level.WARN);
 
 
-            SparkConf config = new SparkConf();
-            config.setMaster(_master);
-            config.setAppName(_jobName);
-            config.setSparkHome(_sparkHome);
-            config.setJars(_jars);
-            config.set("spark.logConf", "true");
-            _context = new JavaSparkContext(config);
-        }
-        return _context;
-    }
+			SparkConf config = new SparkConf();
+			config.setMaster(_master);
+			config.setAppName(_jobName);
+			config.setSparkHome(_sparkHome);
+			config.setJars(_jars);
+			config.set("spark.logConf", "true");
+			_context = new JavaSparkContext(config);
+		}
+		return _context;
+	}
 
-    @Override
-    synchronized public void shutdownSparkContext () {
-        if (null != _context) {
-            _context.stop();
-            _context = null;
-        }
-    }
+	@Override
+	synchronized public void shutdownSparkContext () {
+		if (null != _context) {
+			_context.stop();
+			_context = null;
+		}
+	}
 }

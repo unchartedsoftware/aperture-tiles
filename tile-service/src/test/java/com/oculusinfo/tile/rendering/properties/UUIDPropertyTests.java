@@ -31,14 +31,14 @@ import org.junit.Test;
 import com.oculusinfo.factory.ConfigurationException;
 
 public class UUIDPropertyTests {
-    @Test
-    public void testUUIDPropertyEncoding () throws ConfigurationException {
-        UUIDProperty property = new UUIDProperty("", "");
-        for (int i=0; i<100; ++i) {
-            UUID id = UUID.randomUUID();
-            String asString = property.encode(id);
-            UUID redux = property.unencode(asString);
-            Assert.assertEquals(id, redux);
-        }
-    }
+	@Test
+	public void testUUIDPropertyEncoding () throws ConfigurationException {
+		UUIDProperty property = new UUIDProperty("", "");
+		for (int i=0; i<100; ++i) {
+			UUID id = UUID.randomUUID();
+			String asString = property.encode(id);
+			UUID redux = property.unencode(asString);
+			Assert.assertEquals(id, redux);
+		}
+	}
 }

@@ -32,8 +32,6 @@ import com.oculusinfo.tile.rest.legend.LegendResource;
 import com.oculusinfo.tile.rest.tile.TileResource;
 
 public class RestConfigModule extends AbstractModule {
-
-
 	@Override
 	protected void configure() {
 

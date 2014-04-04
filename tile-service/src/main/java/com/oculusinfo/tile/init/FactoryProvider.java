@@ -40,48 +40,48 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * 
  */
 public interface FactoryProvider<T> {
-    /**
-     * Create a new factory of the required type.
-     * 
-     * @param path The path to the factory's parameters from the root
-     *            configuration node.
-     * @return A new factory ready to initialize its parameters from the root
-     *         configuration node.
-     */
-    public ConfigurableFactory<T> createFactory (List<String> path);
+	/**
+	 * Create a new factory of the required type.
+	 * 
+	 * @param path The path to the factory's parameters from the root
+	 *            configuration node.
+	 * @return A new factory ready to initialize its parameters from the root
+	 *         configuration node.
+	 */
+	public ConfigurableFactory<T> createFactory (List<String> path);
 
-    /**
-     * Create a new factory of the required type.
-     * 
-     * Passing in a null parent is the equivalent of calling
-     * {@link #createFactory(String[])}
-     * 
-     * @param parent The parent factory to which this factory will provide its
-     *            goods
-     * @param path The path from the parent factory's configuration node to this
-     *            one.
-     * @return A new factory ready to initialize its parameters from the parent
-     *         factory's configuration node.
-     */
-    public ConfigurableFactory<T> createFactory (ConfigurableFactory<?> parent,
-                                                 List<String> path);
+	/**
+	 * Create a new factory of the required type.
+	 * 
+	 * Passing in a null parent is the equivalent of calling
+	 * {@link #createFactory(String[])}
+	 * 
+	 * @param parent The parent factory to which this factory will provide its
+	 *            goods
+	 * @param path The path from the parent factory's configuration node to this
+	 *            one.
+	 * @return A new factory ready to initialize its parameters from the parent
+	 *         factory's configuration node.
+	 */
+	public ConfigurableFactory<T> createFactory (ConfigurableFactory<?> parent,
+	                                             List<String> path);
 
-    /**
-     * Create a new factory of the required type.
-     * 
-     * Passing in a null parent is the equivalent of calling
-     * {@link #createFactory(String[])}
-     * 
-     * @param name The name of this particular factory, so as to differentiate
-     *            it from other factories of the same type.
-     * @param parent The parent factory to which this factory will provide its
-     *            goods
-     * @param path The path from the parent factory's configuration node to this
-     *            one.
-     * @return A new factory ready to initialize its parameters from the parent
-     *         factory's configuration node.
-     */
-    public ConfigurableFactory<T> createFactory (String factoryName,
-                                                 ConfigurableFactory<?> parent,
-                                                 List<String> path);
+	/**
+	 * Create a new factory of the required type.
+	 * 
+	 * Passing in a null parent is the equivalent of calling
+	 * {@link #createFactory(String[])}
+	 * 
+	 * @param name The name of this particular factory, so as to differentiate
+	 *            it from other factories of the same type.
+	 * @param parent The parent factory to which this factory will provide its
+	 *            goods
+	 * @param path The path from the parent factory's configuration node to this
+	 *            one.
+	 * @return A new factory ready to initialize its parameters from the parent
+	 *         factory's configuration node.
+	 */
+	public ConfigurableFactory<T> createFactory (String factoryName,
+	                                             ConfigurableFactory<?> parent,
+	                                             List<String> path);
 }

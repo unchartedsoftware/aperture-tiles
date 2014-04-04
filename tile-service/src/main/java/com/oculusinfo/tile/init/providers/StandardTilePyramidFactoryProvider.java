@@ -31,21 +31,21 @@ import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
 
 public class StandardTilePyramidFactoryProvider implements FactoryProvider<TilePyramid> {
-    @Override
-    public ConfigurableFactory<TilePyramid> createFactory (List<String> path) {
-        return new TilePyramidFactory(null, path);
-    }
+	@Override
+	public ConfigurableFactory<TilePyramid> createFactory (List<String> path) {
+		return new TilePyramidFactory(null, path);
+	}
 
-    @Override
-    public ConfigurableFactory<TilePyramid> createFactory (ConfigurableFactory<?> parent,
-                                                           List<String> path) {
-        return new TilePyramidFactory(parent, path);
-    }
+	@Override
+	public ConfigurableFactory<TilePyramid> createFactory (ConfigurableFactory<?> parent,
+	                                                       List<String> path) {
+		return new TilePyramidFactory(parent, path);
+	}
 
-    @Override
-    public ConfigurableFactory<TilePyramid> createFactory (String factoryName,
-                                                           ConfigurableFactory<?> parent,
-                                                           List<String> path) {
-        return new TilePyramidFactory(factoryName, parent, path);
-    }
+	@Override
+	public ConfigurableFactory<TilePyramid> createFactory (String factoryName,
+	                                                       ConfigurableFactory<?> parent,
+	                                                       List<String> path) {
+		return new TilePyramidFactory(factoryName, parent, path);
+	}
 }

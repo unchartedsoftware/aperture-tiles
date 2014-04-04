@@ -83,13 +83,13 @@ public class TileServiceImpl implements TileService {
 	}
 
 	protected FactoryProvider<PyramidIO> getPyramidIOFactoryProvider () {
-	    return _pyramidIOFactoryProvider;
+		return _pyramidIOFactoryProvider;
 	}
 	protected FactoryProvider<TileSerializer<?>> getSerializationFactoryProvider () {
-	    return _serializationFactoryProvider;
+		return _serializationFactoryProvider;
 	}
 	protected FactoryProvider<TileDataImageRenderer> getRendererFactoryProvider () {
-	    return _rendererFactoryProvider;
+		return _rendererFactoryProvider;
 	}
 
 	/*
@@ -118,16 +118,16 @@ public class TileServiceImpl implements TileService {
 			config.readConfiguration(options);
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
 
-	        // Initialize the pyramid for reading
-	        JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
-	        if (null != initJSON) {
-	            int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-	            int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-	            Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-	            pyramidIO.initializeForRead(layer, width, height, initProps);
-	        }
+			// Initialize the pyramid for reading
+			JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+			if (null != initJSON) {
+				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+				pyramidIO.initializeForRead(layer, width, height, initProps);
+			}
 
-	        PyramidMetaData metadata = getMetadata(layer, pyramidIO);
+			PyramidMetaData metadata = getMetadata(layer, pyramidIO);
 
 			// Construct our return object
 			String[] names = JSONObject.getNames(metadata.getRawData());
@@ -171,14 +171,14 @@ public class TileServiceImpl implements TileService {
 
 		PyramidIO pyramidIO = config.produce(PyramidIO.class);
 
-        // Initialize the pyramid for reading
-        JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
-        if (null != initJSON) {
-            int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-            int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-            Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-            pyramidIO.initializeForRead(layer, width, height, initProps);
-        }
+		// Initialize the pyramid for reading
+		JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+		if (null != initJSON) {
+			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+			pyramidIO.initializeForRead(layer, width, height, initProps);
+		}
 
 		PyramidMetaData metadata = getMetadata(config.getPropertyValue(LayerConfiguration.LAYER_NAME), pyramidIO);
 		config.setLevelProperties(tile,
@@ -238,7 +238,7 @@ public class TileServiceImpl implements TileService {
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			TileSerializer<?> serializer = config.produce(TileSerializer.class);
 
-            prepareForRendering(layer, config, index, tileSet);
+			prepareForRendering(layer, config, index, tileSet);
 
 			InputStream tile = pyramidIO.getTileStream(layer, serializer, index);
 			if (null == tile) return null;
@@ -254,21 +254,21 @@ public class TileServiceImpl implements TileService {
 	}
 
 	/*
-     * This is a placeholder for the caching tile service to override; it does
-     * nothing in this version.
-     * 
-     * Theoretically, it allows for a hook point for extending classes to make
-     * last-minute preparations before actually rendering a tile, whether to
-     * JSON or an image.
-     * 
-     * @param layer The layer to be rendered.
-     * @param config The configuration of the layer to be rendered
-     * @param tile The tile to be rendered
-     * @param tileSet Any other tiles that will need to be rendered along with
-     *            this one.
-     */
+	 * This is a placeholder for the caching tile service to override; it does
+	 * nothing in this version.
+	 * 
+	 * Theoretically, it allows for a hook point for extending classes to make
+	 * last-minute preparations before actually rendering a tile, whether to
+	 * JSON or an image.
+	 * 
+	 * @param layer The layer to be rendered.
+	 * @param config The configuration of the layer to be rendered
+	 * @param tile The tile to be rendered
+	 * @param tileSet Any other tiles that will need to be rendered along with
+	 *            this one.
+	 */
 	protected void prepareForRendering (String layer, LayerConfiguration config, TileIndex tile, Iterable<TileIndex> tileSet) {
-	    // NOOP
+		// NOOP
 	}
 
 	/**

@@ -33,23 +33,23 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.JSONNode;
 
 public class FixedPointTests {
-    @Test
-    public void testPropertyFileSerialization () throws ConfigurationException {
-        FixedPointProperty prop = new FixedPointProperty("", "");
-        FixedPoint pt = new FixedPoint(3.0, 4.0);
-        String encoded = prop.encode(pt);
-        FixedPoint redux = prop.unencode(encoded);
-        Assert.assertEquals(pt, redux);
-    }
+	@Test
+	public void testPropertyFileSerialization () throws ConfigurationException {
+		FixedPointProperty prop = new FixedPointProperty("", "");
+		FixedPoint pt = new FixedPoint(3.0, 4.0);
+		String encoded = prop.encode(pt);
+		FixedPoint redux = prop.unencode(encoded);
+		Assert.assertEquals(pt, redux);
+	}
 
-    @Test
-    public void testJSONSerialization () throws JSONException, ConfigurationException {
-        FixedPointProperty prop = new FixedPointProperty("", "");
-        FixedPoint pt = new FixedPoint(3.0, 4.0);
-        JSONObject root = new JSONObject();
-        JSONNode node = new JSONNode(root, "fixedpoint");
-        prop.encodeJSON(node, pt);
-        FixedPoint redux = prop.unencodeJSON(node);
-        Assert.assertEquals(pt, redux);
-    }
+	@Test
+	public void testJSONSerialization () throws JSONException, ConfigurationException {
+		FixedPointProperty prop = new FixedPointProperty("", "");
+		FixedPoint pt = new FixedPoint(3.0, 4.0);
+		JSONObject root = new JSONObject();
+		JSONNode node = new JSONNode(root, "fixedpoint");
+		prop.encodeJSON(node, pt);
+		FixedPoint redux = prop.unencodeJSON(node);
+		Assert.assertEquals(pt, redux);
+	}
 }

@@ -56,14 +56,14 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 
 	// Best we can do here :-(
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static Class<List<Double>> getRuntimeBinClass () {
-        return (Class)List.class;
-    }
-    public static TypeDescriptor getRuntimeTypeDescriptor () {
-        return new TypeDescriptor(List.class,
-                                  new TypeDescriptor(Double.class));
-    }
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static Class<List<Double>> getRuntimeBinClass () {
+		return (Class)List.class;
+	}
+	public static TypeDescriptor getRuntimeTypeDescriptor () {
+		return new TypeDescriptor(List.class,
+		                          new TypeDescriptor(Double.class));
+	}
 
 
 
@@ -74,36 +74,36 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 	/**
 	 * 
 	 */
-    public DoublesSeriesImageRenderer () {
+	public DoublesSeriesImageRenderer () {
 	}
 
-    @Override
-    public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-        double minimumValue;
-        String rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MINIMUMS);
-        try {
-            minimumValue = Double.parseDouble(rawValue);
-        } catch (NumberFormatException e) {
-            _logger.warn("Expected a numeric minimum for level, got {}", rawValue);
-            minimumValue = 0.0;
-        }
+	@Override
+	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+		double minimumValue;
+		String rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MINIMUMS);
+		try {
+			minimumValue = Double.parseDouble(rawValue);
+		} catch (NumberFormatException e) {
+			_logger.warn("Expected a numeric minimum for level, got {}", rawValue);
+			minimumValue = 0.0;
+		}
         
-        double maximumValue;
-        rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MAXIMUMS);
-        try {
-            maximumValue = Double.parseDouble(rawValue);
-        } catch (NumberFormatException e) {
-            _logger.warn("Expected a numeric maximum for level, got {}", rawValue);
-            maximumValue = 1000.0;
-        }
-        return new Pair<Double, Double>(minimumValue, maximumValue);
-    }
+		double maximumValue;
+		rawValue = config.getPropertyValue(LayerConfiguration.LEVEL_MAXIMUMS);
+		try {
+			maximumValue = Double.parseDouble(rawValue);
+		} catch (NumberFormatException e) {
+			_logger.warn("Expected a numeric maximum for level, got {}", rawValue);
+			maximumValue = 1000.0;
+		}
+		return new Pair<Double, Double>(minimumValue, maximumValue);
+	}
 
-    @Override
+	@Override
 	public BufferedImage render (LayerConfiguration config) {
- 		BufferedImage bi;
-        String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
-        TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+		BufferedImage bi;
+		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {  // TODO: harden at a finer granularity.
 			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
@@ -126,8 +126,8 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 			List<TileData<List<Double>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile " + index + " for layer " + layer);
-			    return null;
+				_logger.info("Missing tile " + index + " for layer " + layer);
+				return null;
 			}
 
 			// Default to 0 if the default of -1 is given
@@ -156,8 +156,8 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 					double transformedValue = t.transform(binCount);
 					int rgb;
 					if (binCount > 0
-							&& transformedValue >= scaledLevelMinFreq
-							&& transformedValue <= scaledLevelMaxFreq) {
+					    && transformedValue >= scaledLevelMinFreq
+					    && transformedValue <= scaledLevelMaxFreq) {
 						rgb = colorRamp.getRGB(transformedValue);
 					} else {
 						rgb = COLOR_BLANK.getRGB();
@@ -184,19 +184,19 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 	@Override
 	public int getNumberOfImagesPerTile(PyramidMetaData metadata) {
-	    int minFrames = Integer.MAX_VALUE;
-	    Map<Integer, String> levelMaximums = metadata.getLevelMaximums();
-	    for (String value: levelMaximums.values()) {
-	        String lvlMax = value.toLowerCase();
-	        if (lvlMax.startsWith("list(") && lvlMax.endsWith(")")) {
-	            lvlMax = lvlMax.substring(5, lvlMax.length()-1);
-	        }
-	        String[] maxesByFrame = lvlMax.split(",");
-	        int frames = maxesByFrame.length;
-	        if (frames < minFrames) minFrames = frames;
-	    }
-	    if (minFrames == Integer.MAX_VALUE) return 0;
-	    return minFrames;
+		int minFrames = Integer.MAX_VALUE;
+		Map<Integer, String> levelMaximums = metadata.getLevelMaximums();
+		for (String value: levelMaximums.values()) {
+			String lvlMax = value.toLowerCase();
+			if (lvlMax.startsWith("list(") && lvlMax.endsWith(")")) {
+				lvlMax = lvlMax.substring(5, lvlMax.length()-1);
+			}
+			String[] maxesByFrame = lvlMax.split(",");
+			int frames = maxesByFrame.length;
+			if (frames < minFrames) minFrames = frames;
+		}
+		if (minFrames == Integer.MAX_VALUE) return 0;
+		return minFrames;
 	}
 
 }

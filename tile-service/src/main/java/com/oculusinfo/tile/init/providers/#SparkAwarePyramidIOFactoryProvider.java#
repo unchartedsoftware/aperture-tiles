@@ -27,29 +27,34 @@ package com.oculusinfo.tile.init.providers;
 
 import java.util.List;
 
+import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.rest.tile.caching.LiveTilePyramidIOFactory;
+import com.oculusinfo.tile.spark.SparkContextProvider;
 
 
 
-public class StandardPyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
-	@Override
+public class SparkAwarePyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
+    @Inject
+	private SparkContextProvider _contextProvider;
+
+    @Override
 	public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-		return new PyramidIOFactory(null, path);
+	return new LiveTilePyramidIOFactory(null, path, _contextProvider);
+    }
+    
+    @Override
+		public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
+		                                                     List<String> path) {
+		return new LiveTilePyramidIOFactory(parent, path, _contextProvider);
 	}
 
 	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return new PyramidIOFactory(parent, path);
-	}
-
-	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
-	                                                     ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return new PyramidIOFactory(factoryName, parent, path);
+		public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
+		                                                     ConfigurableFactory<?> parent,
+		                                                     List<String> path) {
+		return new LiveTilePyramidIOFactory(factoryName, parent, path, _contextProvider);
 	}
 }

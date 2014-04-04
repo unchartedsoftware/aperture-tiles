@@ -48,17 +48,17 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
 
 public class CachingPyramidIO implements PyramidIO {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CachingPyramidIO.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(CachingPyramidIO.class);
 
-    private Map<String, TileCache<?>>                    _tileCaches;
-    private Map<String, PyramidIO>                       _basePyramidIOs;
+	private Map<String, TileCache<?>>                    _tileCaches;
+	private Map<String, PyramidIO>                       _basePyramidIOs;
 	private List<LayerDataChangedListener>               _layerListeners;
 
-    public CachingPyramidIO () {
-        _tileCaches = new HashMap<>();
-        _basePyramidIOs = new HashMap<>();
-        _layerListeners = new ArrayList<>();
-    }
+	public CachingPyramidIO () {
+		_tileCaches = new HashMap<>();
+		_basePyramidIOs = new HashMap<>();
+		_layerListeners = new ArrayList<>();
+	}
 
 	public void addLayerListener (LayerDataChangedListener listener) {
 		_layerListeners.add(listener);
@@ -68,239 +68,239 @@ public class CachingPyramidIO implements PyramidIO {
 		_layerListeners.remove(listener);
 	}
 
-    synchronized private PyramidIO getBasePyramidIO (String pyramidId) {
-        return _basePyramidIOs.get(pyramidId);
-    }
+	synchronized private PyramidIO getBasePyramidIO (String pyramidId) {
+		return _basePyramidIOs.get(pyramidId);
+	}
 
-    synchronized private <T> TileCache<T> getTileCache (String pyramidId) {
-        // We rely on configuration to make sure types match here
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        TileCache<T> cache = (TileCache)_tileCaches.get(pyramidId);
-        if (null == cache) {
-            cache = new TileCache<>(10000, 100);
-            cache.addGlobalCallback(new GlobalCallback<T>(pyramidId));
-            _tileCaches.put(pyramidId, cache);
-        }
-        return cache;
-    }
+	synchronized private <T> TileCache<T> getTileCache (String pyramidId) {
+		// We rely on configuration to make sure types match here
+		@SuppressWarnings({"rawtypes", "unchecked"})
+		TileCache<T> cache = (TileCache)_tileCaches.get(pyramidId);
+		if (null == cache) {
+			cache = new TileCache<>(10000, 100);
+			cache.addGlobalCallback(new GlobalCallback<T>(pyramidId));
+			_tileCaches.put(pyramidId, cache);
+		}
+		return cache;
+	}
 
-    // Using the callback mechanism in the tile cache, get a tile and hand it
-    // back synchronously.
-    //
-    // This does _not_ handle making the request; that must be done separately
-    // with RequestData.
-    private <T> TileData<T> getTileData (String pyramidId, TileIndex index) {
-        TileCache<T> cache = getTileCache(pyramidId);
+	// Using the callback mechanism in the tile cache, get a tile and hand it
+	// back synchronously.
+	//
+	// This does _not_ handle making the request; that must be done separately
+	// with RequestData.
+	private <T> TileData<T> getTileData (String pyramidId, TileIndex index) {
+		TileCache<T> cache = getTileCache(pyramidId);
 
-        CacheListenerCallback<T> callback = new CacheListenerCallback<>();
-        cache.requestTile(index, callback);
+		CacheListenerCallback<T> callback = new CacheListenerCallback<>();
+		cache.requestTile(index, callback);
 
-        TileData<T> tile = callback.waitForTile();
+		TileData<T> tile = callback.waitForTile();
 
-        return tile;
-    }
-
-
-
-
-    @Override
-    public void initializeForWrite (String pyramidId) throws IOException {
-        throw new UnsupportedOperationException("Caching Pyramid IO only supports reading");
-    }
-
-    @Override
-    public <T> void writeTiles (String pyramidId, TilePyramid tilePyramid,
-                                TileSerializer<T> serializer,
-                                Iterable<TileData<T>> data) throws IOException {
-        throw new UnsupportedOperationException("Caching Pyramid IO only supports reading");
-    }
-
-    @Override
-    public void writeMetaData (String pyramidId, String metaData) throws IOException {
-        throw new UnsupportedOperationException("Caching Pyramid IO only supports reading");
-    }
+		return tile;
+	}
 
 
 
-    /*
-     * Set up a base pyramid from which to read when we get a cache miss
-     */
-    void setupBasePyramidIO (String pyramidId, ConfigurableFactory<PyramidIO> factory) {
-        if (!_basePyramidIOs.containsKey(pyramidId)) {
-            synchronized (_basePyramidIOs) {
-                if (!_basePyramidIOs.containsKey(pyramidId)) {
-                    try {
-                        PyramidIO basePyramidIO = factory.produce(PyramidIO.class);
-                        _basePyramidIOs.put(pyramidId, basePyramidIO);
-                    } catch (ConfigurationException e) {
-                        LOGGER.warn("Error creating base pyramid IO", e);
-                    }
-                }
-            }
-        }
-    }
+
+	@Override
+	public void initializeForWrite (String pyramidId) throws IOException {
+		throw new UnsupportedOperationException("Caching Pyramid IO only supports reading");
+	}
+
+	@Override
+	public <T> void writeTiles (String pyramidId, TilePyramid tilePyramid,
+	                            TileSerializer<T> serializer,
+	                            Iterable<TileData<T>> data) throws IOException {
+		throw new UnsupportedOperationException("Caching Pyramid IO only supports reading");
+	}
+
+	@Override
+	public void writeMetaData (String pyramidId, String metaData) throws IOException {
+		throw new UnsupportedOperationException("Caching Pyramid IO only supports reading");
+	}
 
 
-    @Override
-    public void initializeForRead (String pyramidId, int width, int height,
-                                   Properties dataDescription) {
-        if (!_basePyramidIOs.containsKey(pyramidId)) {
-            LOGGER.info("Attempt to initialize unknown pyramid" + pyramidId + "'.");
-        } else {
-            _basePyramidIOs.get(pyramidId).initializeForRead(pyramidId, width, height, dataDescription);
-        }
-    }
 
-    /**
-     * Request a set of tiles, retrieving some of them immediately, and setting
-     * the rest up for eventual retrieval
-     * 
-     * @param pyramidId
-     * @param serializer
-     * @param indices Indices of tiles to be requested.  May not be null.
-     * @return
-     * @throws IOException
-     */
-    public <T> void requestTiles (String pyramidId,
-                                  TileSerializer<T> serializer,
-                                  Iterable<TileIndex> indices) throws IOException {
-        TileCache<T> cache = getTileCache(pyramidId);
+	/*
+	 * Set up a base pyramid from which to read when we get a cache miss
+	 */
+	void setupBasePyramidIO (String pyramidId, ConfigurableFactory<PyramidIO> factory) {
+		if (!_basePyramidIOs.containsKey(pyramidId)) {
+			synchronized (_basePyramidIOs) {
+				if (!_basePyramidIOs.containsKey(pyramidId)) {
+					try {
+						PyramidIO basePyramidIO = factory.produce(PyramidIO.class);
+						_basePyramidIOs.put(pyramidId, basePyramidIO);
+					} catch (ConfigurationException e) {
+						LOGGER.warn("Error creating base pyramid IO", e);
+					}
+				}
+			}
+		}
+	}
 
-        synchronized (cache) {
-            // First, request and retrieve all tiles needed over the long term
-            // Only request those we don't already have
-            List<TileIndex> newIndices = new ArrayList<>(cache.getNewRequests(indices));
-            if (newIndices.isEmpty())
-                return;
 
-            PyramidIO base = getBasePyramidIO(pyramidId);
-            List<TileData<T>> tiles = base.readTiles(pyramidId, serializer, newIndices);
+	@Override
+	public void initializeForRead (String pyramidId, int width, int height,
+	                               Properties dataDescription) {
+		if (!_basePyramidIOs.containsKey(pyramidId)) {
+			LOGGER.info("Attempt to initialize unknown pyramid" + pyramidId + "'.");
+		} else {
+			_basePyramidIOs.get(pyramidId).initializeForRead(pyramidId, width, height, dataDescription);
+		}
+	}
+
+	/**
+	 * Request a set of tiles, retrieving some of them immediately, and setting
+	 * the rest up for eventual retrieval
+	 * 
+	 * @param pyramidId
+	 * @param serializer
+	 * @param indices Indices of tiles to be requested.  May not be null.
+	 * @return
+	 * @throws IOException
+	 */
+	public <T> void requestTiles (String pyramidId,
+	                              TileSerializer<T> serializer,
+	                              Iterable<TileIndex> indices) throws IOException {
+		TileCache<T> cache = getTileCache(pyramidId);
+
+		synchronized (cache) {
+			// First, request and retrieve all tiles needed over the long term
+			// Only request those we don't already have
+			List<TileIndex> newIndices = new ArrayList<>(cache.getNewRequests(indices));
+			if (newIndices.isEmpty())
+				return;
+
+			PyramidIO base = getBasePyramidIO(pyramidId);
+			List<TileData<T>> tiles = base.readTiles(pyramidId, serializer, newIndices);
     
-            // Cache recieved tiles...
-            for (TileData<T> tile: tiles) {
-                cache.provideTile(tile);
-                newIndices.remove(tile.getDefinition());
-            }
-            // And the fact that some were empty
-            for (TileIndex index: newIndices) {
-                cache.provideEmptyTile(index);
-            }
-        }
-    }
+			// Cache recieved tiles...
+			for (TileData<T> tile: tiles) {
+				cache.provideTile(tile);
+				newIndices.remove(tile.getDefinition());
+			}
+			// And the fact that some were empty
+			for (TileIndex index: newIndices) {
+				cache.provideEmptyTile(index);
+			}
+		}
+	}
 
-    @Override
-    public <T> List<TileData<T>> readTiles (String pyramidId,
-                                            TileSerializer<T> serializer,
-                                            Iterable<TileIndex> indices) throws IOException {
-        TileCache<T> cache = getTileCache(pyramidId);
-        synchronized (cache) {
-            List<TileData<T>> tiles = new ArrayList<>();
-            for (TileIndex index: indices) {
-                // We rely on configuration to make sure types match here
-                @SuppressWarnings({"unchecked", "rawtypes"})
-                TileData<T> tile = (TileData) getTileData(pyramidId, index);
+	@Override
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> indices) throws IOException {
+		TileCache<T> cache = getTileCache(pyramidId);
+		synchronized (cache) {
+			List<TileData<T>> tiles = new ArrayList<>();
+			for (TileIndex index: indices) {
+				// We rely on configuration to make sure types match here
+				@SuppressWarnings({"unchecked", "rawtypes"})
+				TileData<T> tile = (TileData) getTileData(pyramidId, index);
 
-                if (null != tile)
-                    tiles.add(tile);
-            }
+				if (null != tile)
+					tiles.add(tile);
+			}
     
-            return(tiles);
-        }
-    }
+			return(tiles);
+		}
+	}
 
-    @Override
-    public <T> InputStream getTileStream (String pyramidId,
-                                          TileSerializer<T> serializer,
-                                          TileIndex index) throws IOException {
-        // We cache tiles, not streams, so we need to serialize the tile into a
-        // stream, in order to return a stream.
-        TileData<T> tile = getTileData(pyramidId, index);
+	@Override
+	public <T> InputStream getTileStream (String pyramidId,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex index) throws IOException {
+		// We cache tiles, not streams, so we need to serialize the tile into a
+		// stream, in order to return a stream.
+		TileData<T> tile = getTileData(pyramidId, index);
 
-        if (null == tile) {
-            return null;
-        } else {
-            try {
-                PyramidMetaData metaData = new PyramidMetaData(readMetaData(pyramidId));
-                TilePyramid pyramid = metaData.getTilePyramid();
+		if (null == tile) {
+			return null;
+		} else {
+			try {
+				PyramidMetaData metaData = new PyramidMetaData(readMetaData(pyramidId));
+				TilePyramid pyramid = metaData.getTilePyramid();
     
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                serializer.serialize(tile, pyramid, baos);
-                baos.flush();
-                baos.close();
-                return new ByteArrayInputStream(baos.toByteArray());
-            } catch (JSONException e) {
-                throw new IOException("Exception trying to obtain metadata for pyramid "+pyramidId, e);
-            }
-        }
-    }
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				serializer.serialize(tile, pyramid, baos);
+				baos.flush();
+				baos.close();
+				return new ByteArrayInputStream(baos.toByteArray());
+			} catch (JSONException e) {
+				throw new IOException("Exception trying to obtain metadata for pyramid "+pyramidId, e);
+			}
+		}
+	}
 
-    @Override
-    public String readMetaData (String pyramidId) throws IOException {
-        return getBasePyramidIO(pyramidId).readMetaData(pyramidId);
-    }
-
-
-
-    private class CacheListenerCallback<T> implements CacheRequestCallback<T> {
-        private TileData<T> _tile;
-        private boolean     _waiting;
-        private boolean     _notified;
+	@Override
+	public String readMetaData (String pyramidId) throws IOException {
+		return getBasePyramidIO(pyramidId).readMetaData(pyramidId);
+	}
 
 
 
-        public CacheListenerCallback () {
-            _tile = null;
-            _waiting = false;
-            _notified = false;
-        }
+	private class CacheListenerCallback<T> implements CacheRequestCallback<T> {
+		private TileData<T> _tile;
+		private boolean     _waiting;
+		private boolean     _notified;
 
-        synchronized public TileData<T> waitForTile () {
-            if (!_notified)
-                try {
-                    _waiting = true;
-                    wait(1000);
-                } catch (InterruptedException e) {
-                    LOGGER.warn("Error waiting for return for tile.", e);
-                    return null;
-                } finally {
-                    _waiting = false;
-                }
 
-            return _tile;
-        }
 
-        @Override
-        synchronized public boolean onTileReceived (TileIndex index, TileData<T> tile) {
-            _tile = tile;
-            _notified = true;
-            if (_waiting)
-                this.notify();
-            return true;
-        }
+		public CacheListenerCallback () {
+			_tile = null;
+			_waiting = false;
+			_notified = false;
+		}
 
-        @Override
-        public void onTileAbandoned (TileIndex index) {
-            if (_waiting)
-                this.notify();
-        }
-    }
+		synchronized public TileData<T> waitForTile () {
+				if (!_notified)
+					try {
+						_waiting = true;
+						wait(1000);
+					} catch (InterruptedException e) {
+						LOGGER.warn("Error waiting for return for tile.", e);
+						return null;
+					} finally {
+						_waiting = false;
+					}
+
+				return _tile;
+			}
+
+		@Override
+		synchronized public boolean onTileReceived (TileIndex index, TileData<T> tile) {
+				_tile = tile;
+				_notified = true;
+				if (_waiting)
+					this.notify();
+				return true;
+			}
+
+		@Override
+		public void onTileAbandoned (TileIndex index) {
+			if (_waiting)
+				this.notify();
+		}
+	}
 
 	private class GlobalCallback<T> implements TileCacheEntry.CacheRequestCallback<T> {
 		private String _layer;
 		GlobalCallback (String layer) {
 			_layer = layer;
 		}
-        @Override
-	    public boolean onTileReceived (TileIndex index, TileData<T> tile) {
-	        for (LayerDataChangedListener listener: _layerListeners) {
-		        listener.onLayerDataChanged(_layer);
-	        }
-	        return false;
-        }
+		@Override
+		public boolean onTileReceived (TileIndex index, TileData<T> tile) {
+			for (LayerDataChangedListener listener: _layerListeners) {
+				listener.onLayerDataChanged(_layer);
+			}
+			return false;
+		}
 
-        @Override
-        public void onTileAbandoned (TileIndex index) {
-        }
+		@Override
+		public void onTileAbandoned (TileIndex index) {
+		}
 	}
 	public interface LayerDataChangedListener {
 		public void onLayerDataChanged (String layer);

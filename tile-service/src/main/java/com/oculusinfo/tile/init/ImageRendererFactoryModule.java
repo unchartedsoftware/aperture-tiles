@@ -31,8 +31,8 @@ import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
 public class ImageRendererFactoryModule extends AbstractModule {
 
-    @Override
-    protected void configure() {
-        bind(new TypeLiteral<FactoryProvider<TileDataImageRenderer>>() {}).toInstance(new StandardImageRendererFactoryProvider());
-    }
+	@Override
+	protected void configure() {
+		bind(new TypeLiteral<FactoryProvider<TileDataImageRenderer>>() {}).toInstance(new StandardImageRendererFactoryProvider());
+	}
 }

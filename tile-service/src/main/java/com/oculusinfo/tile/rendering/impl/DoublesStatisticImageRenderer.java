@@ -63,59 +63,59 @@ import com.oculusinfo.tile.util.GraphicsUtilities;
  * @author  dgray
  */
 public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DoublesStatisticImageRenderer.class);
-    private static final Font   FONT   = new Font("Tahoma", Font.PLAIN, 13);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesStatisticImageRenderer.class);
+	private static final Font   FONT   = new Font("Tahoma", Font.PLAIN, 13);
 
 
 
-    public static Class<Double> getRuntimeBinClass () {
-        return Double.class;
-    }
-    public static TypeDescriptor getRuntimeTypeDescriptor () {
-        return new TypeDescriptor(Double.class);
-    }
+	public static Class<Double> getRuntimeBinClass () {
+		return Double.class;
+	}
+	public static TypeDescriptor getRuntimeTypeDescriptor () {
+		return new TypeDescriptor(Double.class);
+	}
 	
 
-    /* (non-Javadoc)
-     * @see TileDataImageRenderer#getLevelExtrema(LayerConfiguration)
-     */
-    @Override
-    public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-        return new Pair<Double, Double>(0.0, 0.0);
-    }
+	/* (non-Javadoc)
+	 * @see TileDataImageRenderer#getLevelExtrema(LayerConfiguration)
+	 */
+	@Override
+	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+		return new Pair<Double, Double>(0.0, 0.0);
+	}
 
 	/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
 	public BufferedImage render(LayerConfiguration config) {
- 		BufferedImage bi = null;
- 		TileIndex tileIndex = null;
- 		String layer = "?";
- 		int lineNumber = 0;
+		BufferedImage bi = null;
+		TileIndex tileIndex = null;
+		String layer = "?";
+		int lineNumber = 0;
  		
 		try {
-            tileIndex = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
-            layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
-            String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
-		    int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-		    int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-		    lineNumber = config.getPropertyValue(LayerConfiguration.LINE_NUMBER);
-		    PyramidIO pyramidIO = config.produce(PyramidIO.class);
-		    TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
-		                                                                               getRuntimeBinClass(),
-		                                                                               getRuntimeTypeDescriptor());
+			tileIndex = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+			layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+			String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
+			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			lineNumber = config.getPropertyValue(LayerConfiguration.LINE_NUMBER);
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+				     getRuntimeBinClass(),
+				     getRuntimeTypeDescriptor());
 
-		    bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
+			bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
 		
-            List<TileData<Double>> tileDatas = pyramidIO.readTiles(layer,
-                                                                   serializer,
-                                                                   Collections.singleton(tileIndex));
+			List<TileData<Double>> tileDatas = pyramidIO.readTiles(layer,
+			                                                       serializer,
+			                                                       Collections.singleton(tileIndex));
 			
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    LOGGER.info("Missing tile " + tileIndex + " for layer " + layer);
-			    return null;
+				LOGGER.info("Missing tile " + tileIndex + " for layer " + layer);
+				return null;
 			}
 
 			TileData<Double> data = tileDatas.get(0);
@@ -184,15 +184,15 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 		float sw = (float) layout.getBounds().getWidth();
 		float sh = (float) layout.getBounds().getHeight();
 		Shape shape = layout.getOutline(AffineTransform.getTranslateInstance(
-				bounds.getWidth()/2-sw/2 + xOffset, 
-				bounds.getHeight()*0.5+sh/2 + yOffset));
+		                                                                     bounds.getWidth()/2-sw/2 + xOffset, 
+		                                                                     bounds.getHeight()*0.5+sh/2 + yOffset));
 		
 		BufferedImage biText = GraphicsUtilities.createCompatibleImage(destination);
 		Graphics2D gText = biText.createGraphics(); // { gText
-			gText.setFont(g.getFont());
-			gText.setColor(glowColor);
-			gText.setStroke(new BasicStroke(2));
-			gText.draw(shape);
+		gText.setFont(g.getFont());
+		gText.setColor(glowColor);
+		gText.setStroke(new BasicStroke(2));
+		gText.draw(shape);
 		gText.dispose(); // } End gText	
 		
 		StackBlurFilter blur = new StackBlurFilter(3, 3);

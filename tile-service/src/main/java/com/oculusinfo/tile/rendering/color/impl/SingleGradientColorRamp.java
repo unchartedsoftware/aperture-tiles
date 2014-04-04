@@ -41,11 +41,11 @@ import com.oculusinfo.tile.rendering.color.FixedPoint;
 public class SingleGradientColorRamp extends AbstractColorRamp {
 
 	public SingleGradientColorRamp (Color from, Color to) {
-	    super(false,
-              Arrays.asList(new FixedPoint(0.0, from.getRed()/255.0),   new FixedPoint(1.0, to.getRed()/255.0)),
-              Arrays.asList(new FixedPoint(0.0, from.getGreen()/255.0), new FixedPoint(1.0, to.getGreen()/255.0)),
-              Arrays.asList(new FixedPoint(0.0, from.getBlue()/255.0),  new FixedPoint(1.0, to.getBlue()/255.0)),
-              Arrays.asList(new FixedPoint(0.0, from.getAlpha()/255.0), new FixedPoint(1.0, to.getAlpha()/255.0)),
-	          255);
+		super(false,
+		      Arrays.asList(new FixedPoint(0.0, from.getRed()/255.0),   new FixedPoint(1.0, to.getRed()/255.0)),
+		      Arrays.asList(new FixedPoint(0.0, from.getGreen()/255.0), new FixedPoint(1.0, to.getGreen()/255.0)),
+		      Arrays.asList(new FixedPoint(0.0, from.getBlue()/255.0),  new FixedPoint(1.0, to.getBlue()/255.0)),
+		      Arrays.asList(new FixedPoint(0.0, from.getAlpha()/255.0), new FixedPoint(1.0, to.getAlpha()/255.0)),
+		      255);
 	}
 }

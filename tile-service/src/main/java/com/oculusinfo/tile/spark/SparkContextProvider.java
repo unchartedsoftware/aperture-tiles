@@ -33,18 +33,18 @@ import org.apache.spark.api.java.JavaSparkContext;
  * @author nkronenfeld
  */
 public interface SparkContextProvider {
-    /**
-     * Get a usable spark context
-     */
-    public SparkContext getSparkContext ();
+	/**
+	 * Get a usable spark context
+	 */
+	public SparkContext getSparkContext ();
 
-    /**
-     * Get a usable spark context, in Java API form
-     */
-    public JavaSparkContext getJavaSparkContext ();
+	/**
+	 * Get a usable spark context, in Java API form
+	 */
+	public JavaSparkContext getJavaSparkContext ();
 
-    /**
-     * Shut down the web server's spark context.
-     */
-    public void shutdownSparkContext ();
+	/**
+	 * Shut down the web server's spark context.
+	 */
+	public void shutdownSparkContext ();
 }

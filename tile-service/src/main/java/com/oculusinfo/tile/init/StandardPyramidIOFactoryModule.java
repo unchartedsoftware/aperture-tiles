@@ -31,8 +31,8 @@ import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 
 public class StandardPyramidIOFactoryModule extends AbstractModule {
 
-    @Override
-    protected void configure() {
-        bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(StandardPyramidIOFactoryProvider.class);
-    }
+	@Override
+	protected void configure() {
+		bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(StandardPyramidIOFactoryProvider.class);
+	}
 }

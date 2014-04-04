@@ -33,11 +33,11 @@ import com.oculusinfo.tile.rendering.color.FixedPoint;
 public class WareColorRamp extends AbstractColorRamp {
 
 	public WareColorRamp (boolean inverted, int opacity) {
-	    super(inverted,
-	          Arrays.asList(new FixedPoint(0, 0.25), new FixedPoint(0.25, 0.9), new FixedPoint(0.5, 0.1), new FixedPoint(0.75, 1)),
-	          new ArrayList<FixedPoint>(),
-	          Arrays.asList(new FixedPoint(0, 0.25), new FixedPoint(0.25, 0), new FixedPoint(0.85, 0), new FixedPoint(1, 1)),
-	          null,
-	          opacity);
+		super(inverted,
+		      Arrays.asList(new FixedPoint(0, 0.25), new FixedPoint(0.25, 0.9), new FixedPoint(0.5, 0.1), new FixedPoint(0.75, 1)),
+		      new ArrayList<FixedPoint>(),
+		      Arrays.asList(new FixedPoint(0, 0.25), new FixedPoint(0.25, 0), new FixedPoint(0.85, 0), new FixedPoint(1, 1)),
+		      null,
+		      opacity);
 	}
 }

@@ -29,22 +29,22 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 
 public class SerializationTypeChecker {
-    /**
-     * All this method does is check the return type of a serializer
-     * programatically, As such, it supercedes the warnings hidden here.
-     * 
-     * It will only work, of course, if the serializer is set up correctly
-     * (i.e., without lying about its type_, and if the pass-ed class and
-     * expandedClass actually match; mis-use will, of course, cause errors.
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> TileSerializer<T> checkBinClass (TileSerializer<?> serializer, Class<T> expectedBinClass, TypeDescriptor expandedExpectedBinClass) throws ConfigurationException {
-        if (null == serializer) {
-            throw new ConfigurationException("No serializer given for renderer");
-        }
-        if (!expandedExpectedBinClass.equals(serializer.getBinTypeDescription())) {
-            throw new ConfigurationException("Serialization type does not match rendering type.  Serialization class was "+serializer.getBinTypeDescription()+", renderer type was "+expandedExpectedBinClass);
-        }
-        return (TileSerializer) serializer;
-    }
+	/**
+	 * All this method does is check the return type of a serializer
+	 * programatically, As such, it supercedes the warnings hidden here.
+	 * 
+	 * It will only work, of course, if the serializer is set up correctly
+	 * (i.e., without lying about its type_, and if the pass-ed class and
+	 * expandedClass actually match; mis-use will, of course, cause errors.
+	 */
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static <T> TileSerializer<T> checkBinClass (TileSerializer<?> serializer, Class<T> expectedBinClass, TypeDescriptor expandedExpectedBinClass) throws ConfigurationException {
+		if (null == serializer) {
+			throw new ConfigurationException("No serializer given for renderer");
+		}
+		if (!expandedExpectedBinClass.equals(serializer.getBinTypeDescription())) {
+			throw new ConfigurationException("Serialization type does not match rendering type.  Serialization class was "+serializer.getBinTypeDescription()+", renderer type was "+expandedExpectedBinClass);
+		}
+		return (TileSerializer) serializer;
+	}
 }

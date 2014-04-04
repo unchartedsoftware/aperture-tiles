@@ -35,21 +35,21 @@ import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
 
 public class StandardImageRendererFactoryProvider implements FactoryProvider<TileDataImageRenderer> {
-    @Override
-    public ConfigurableFactory<TileDataImageRenderer> createFactory (List<String> path) {
-        return new ImageRendererFactory(null, path);
-    }
+	@Override
+	public ConfigurableFactory<TileDataImageRenderer> createFactory (List<String> path) {
+		return new ImageRendererFactory(null, path);
+	}
 
-    @Override
-    public ConfigurableFactory<TileDataImageRenderer> createFactory (ConfigurableFactory<?> parent,
-                                                         List<String> path) {
-        return new ImageRendererFactory(parent, path);
-    }
+	@Override
+	public ConfigurableFactory<TileDataImageRenderer> createFactory (ConfigurableFactory<?> parent,
+	                                                                 List<String> path) {
+		return new ImageRendererFactory(parent, path);
+	}
 
-    @Override
-    public ConfigurableFactory<TileDataImageRenderer> createFactory (String factoryName,
-                                                         ConfigurableFactory<?> parent,
-                                                         List<String> path) {
-        return new ImageRendererFactory(factoryName, parent, path);
-    }
+	@Override
+	public ConfigurableFactory<TileDataImageRenderer> createFactory (String factoryName,
+	                                                                 ConfigurableFactory<?> parent,
+	                                                                 List<String> path) {
+		return new ImageRendererFactory(factoryName, parent, path);
+	}
 }

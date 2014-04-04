@@ -31,9 +31,9 @@ import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
 
 public class TilePyramidFactoryModule extends AbstractModule {
 
-    @Override
-    protected void configure() {
-        TypeLiteral<FactoryProvider<TilePyramid>> bindType = new TypeLiteral<FactoryProvider<TilePyramid>>() {};
-        bind(bindType).to(StandardTilePyramidFactoryProvider.class);
-    }
+	@Override
+	protected void configure() {
+		TypeLiteral<FactoryProvider<TilePyramid>> bindType = new TypeLiteral<FactoryProvider<TilePyramid>>() {};
+		bind(bindType).to(StandardTilePyramidFactoryProvider.class);
+	}
 }

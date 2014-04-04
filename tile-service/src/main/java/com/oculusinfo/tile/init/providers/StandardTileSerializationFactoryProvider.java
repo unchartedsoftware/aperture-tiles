@@ -35,21 +35,21 @@ import com.oculusinfo.tile.init.FactoryProvider;
 
 
 public class StandardTileSerializationFactoryProvider implements FactoryProvider<TileSerializer<?>> {
-    @Override
-    public ConfigurableFactory<TileSerializer<?>> createFactory (List<String> path) {
-        return new StandardTileSerializerFactory(null, path);
-    }
+	@Override
+	public ConfigurableFactory<TileSerializer<?>> createFactory (List<String> path) {
+		return new StandardTileSerializerFactory(null, path);
+	}
 
-    @Override
-    public ConfigurableFactory<TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
-                                                                 List<String> path) {
-        return new StandardTileSerializerFactory(parent, path);
-    }
+	@Override
+	public ConfigurableFactory<TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
+	                                                             List<String> path) {
+		return new StandardTileSerializerFactory(parent, path);
+	}
 
-    @Override
-    public ConfigurableFactory<TileSerializer<?>> createFactory (String factoryName,
-                                                                 ConfigurableFactory<?> parent,
-                                                                 List<String> path) {
-        return new StandardTileSerializerFactory(factoryName, parent, path);
-    }
+	@Override
+	public ConfigurableFactory<TileSerializer<?>> createFactory (String factoryName,
+	                                                             ConfigurableFactory<?> parent,
+	                                                             List<String> path) {
+		return new StandardTileSerializerFactory(factoryName, parent, path);
+	}
 }

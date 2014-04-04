@@ -27,8 +27,8 @@ package com.oculusinfo.tile.spark;
 import com.google.inject.AbstractModule;
 
 public class SparkModule extends AbstractModule {
-    @Override
-    protected void configure () {
-        bind(SparkContextProvider.class).to(SparkContextProviderImpl.class);
-    }
+	@Override
+	protected void configure () {
+		bind(SparkContextProvider.class).to(SparkContextProviderImpl.class);
+	}
 }

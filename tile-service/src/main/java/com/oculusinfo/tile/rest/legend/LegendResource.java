@@ -54,10 +54,10 @@ import com.oculusinfo.tile.rest.tile.TileService;
 
 public class LegendResource extends ApertureServerResource {
 
-    @Inject
-    private LegendService _service;
-    @Inject
-    private TileService   _tileService;
+	@Inject
+	private LegendService _service;
+	@Inject
+	private TileService   _tileService;
 
 
 	
@@ -91,10 +91,10 @@ public class LegendResource extends ApertureServerResource {
 			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-					"Unable to create JSON object from supplied options string", e);
+			                            "Unable to create JSON object from supplied options string", e);
 		} catch (ConfigurationException e) {
-		    throw new ResourceException(Status.SERVER_ERROR_SERVICE_UNAVAILABLE,
-		                                "Attempt to create legend for unregistered layer", e);
+			throw new ResourceException(Status.SERVER_ERROR_SERVICE_UNAVAILABLE,
+			                            "Attempt to create legend for unregistered layer", e);
 		}
 	}
 	
@@ -125,20 +125,20 @@ public class LegendResource extends ApertureServerResource {
 			
 		} catch (NumberFormatException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-				"Unable to create Integer from supplied string. Check parameters.", e);
+			                            "Unable to create Integer from supplied string. Check parameters.", e);
 		}
 
 		try {
-		    LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0));
+			LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0));
 
-		    if(outputType.equalsIgnoreCase("uri")){
-		        return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
-		    } else { //(outputType.equalsIgnoreCase("png")){
-		        return generateImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
-		    }
+			if(outputType.equalsIgnoreCase("uri")){
+				return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			} else { //(outputType.equalsIgnoreCase("png")){
+				return generateImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			}
 		} catch (ConfigurationException e) {
-            throw new ResourceException(Status.SERVER_ERROR_SERVICE_UNAVAILABLE,
-                                        "Attempt to create legend for unregistered layer", e);
+			throw new ResourceException(Status.SERVER_ERROR_SERVICE_UNAVAILABLE,
+			                            "Attempt to create legend for unregistered layer", e);
 		}
 	}
 
@@ -150,12 +150,12 @@ public class LegendResource extends ApertureServerResource {
 	 * @param height
 	 * @return
 	 */
-    private ImageOutputRepresentation generateImage (LayerConfiguration config,
-                                                     String layer,
-                                                     int zoomLevel, int width,
-                                                     int height,
-                                                     boolean doAxis,
-                                                     boolean renderHorizontally) {
+	private ImageOutputRepresentation generateImage (LayerConfiguration config,
+	                                                 String layer,
+	                                                 int zoomLevel, int width,
+	                                                 int height,
+	                                                 boolean doAxis,
+	                                                 boolean renderHorizontally) {
 		try {
 			BufferedImage tile = _service.getLegend(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
@@ -177,13 +177,13 @@ public class LegendResource extends ApertureServerResource {
 	 * @param height
 	 * @return
 	 */
-    private StringRepresentation generateEncodedImage (LayerConfiguration config,
-                                                       String layer,
-                                                       int zoomLevel,
-                                                       int width,
-                                                       int height,
-                                                       boolean doAxis,
-                                                       boolean renderHorizontally) {
+	private StringRepresentation generateEncodedImage (LayerConfiguration config,
+	                                                   String layer,
+	                                                   int zoomLevel,
+	                                                   int width,
+	                                                   int height,
+	                                                   boolean doAxis,
+	                                                   boolean renderHorizontally) {
 		try {
 			BufferedImage tile = _service.getLegend(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -201,7 +201,7 @@ public class LegendResource extends ApertureServerResource {
 			
 		} catch (IOException e) {
 			throw new ResourceException(Status.CONNECTOR_ERROR_INTERNAL,
-					"Unable to encode legend image.", e);
+			                            "Unable to encode legend image.", e);
 		}
 	}
 }

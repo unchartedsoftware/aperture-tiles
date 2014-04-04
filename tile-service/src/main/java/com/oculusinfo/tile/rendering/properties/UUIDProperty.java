@@ -32,93 +32,93 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class UUIDProperty implements ConfigurationProperty<UUID> {
-    private String   _name;
-    private String   _description;
+	private String   _name;
+	private String   _description;
 
 
 
-    public UUIDProperty (String name, String description) {
-        _name = name;
-        _description = description;
-    }
+	public UUIDProperty (String name, String description) {
+		_name = name;
+		_description = description;
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<UUID> getType () {
-        return UUID.class;
-    }
+	@Override
+	public Class<UUID> getType () {
+		return UUID.class;
+	}
 
-    @Override
-    public UUID[] getPossibleValues () {
-        // UUIDs are inherently uninnumerable
-        return null;
-    }
+	@Override
+	public UUID[] getPossibleValues () {
+		// UUIDs are inherently uninnumerable
+		return null;
+	}
 
-    @Override
-    public UUID getDefaultValue () {
-        // Being unique, UUIDs should never have a default value
-        return null;
-    }
+	@Override
+	public UUID getDefaultValue () {
+		// Being unique, UUIDs should never have a default value
+		return null;
+	}
 
-    @Override
-    public String encode (UUID value) {
-        long msb = value.getMostSignificantBits();
-        long lsb = value.getLeastSignificantBits();
-        return String.format("%s%x:%s%x",
-                             (msb >= 0 ? "" : "-"), Math.abs(msb),
-                             (lsb >= 0 ? "" : "-"), Math.abs(lsb));
-    }
+	@Override
+	public String encode (UUID value) {
+		long msb = value.getMostSignificantBits();
+		long lsb = value.getLeastSignificantBits();
+		return String.format("%s%x:%s%x",
+		                     (msb >= 0 ? "" : "-"), Math.abs(msb),
+		                     (lsb >= 0 ? "" : "-"), Math.abs(lsb));
+	}
 
-    @Override
-    public UUID unencode (String value) throws ConfigurationException {
-        try {
-            String[] parts = value.split(":");
-            long msb = Long.parseLong(parts[0], 16);
-            long lsb = Long.parseLong(parts[1], 16);
-            return new UUID(msb, lsb);
-        } catch (NullPointerException|NumberFormatException|ArrayIndexOutOfBoundsException e) {
-            throw new ConfigurationException("Error parsing stored UUID", e);
-        }
-    }
+	@Override
+	public UUID unencode (String value) throws ConfigurationException {
+		try {
+			String[] parts = value.split(":");
+			long msb = Long.parseLong(parts[0], 16);
+			long lsb = Long.parseLong(parts[1], 16);
+			return new UUID(msb, lsb);
+		} catch (NullPointerException|NumberFormatException|ArrayIndexOutOfBoundsException e) {
+			throw new ConfigurationException("Error parsing stored UUID", e);
+		}
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, UUID value) throws JSONException {
-        propertyNode.setAsString(encode(value));
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, UUID value) throws JSONException {
+		propertyNode.setAsString(encode(value));
+	}
 
-    @Override
-    public UUID unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        return unencode(propertyNode.getAsString());
-    }
+	@Override
+	public UUID unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		return unencode(propertyNode.getAsString());
+	}
 
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode();
-    }
+	@Override
+	public int hashCode () {
+		return _name.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof UUIDProperty)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof UUIDProperty)) return false;
 
-        UUIDProperty thatP = (UUIDProperty) that;
-        return thatP._name.equals(this._name);
-    }
+		UUIDProperty thatP = (UUIDProperty) that;
+		return thatP._name.equals(this._name);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"UUID\"/>", _name);
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"UUID\"/>", _name);
+	}
 }

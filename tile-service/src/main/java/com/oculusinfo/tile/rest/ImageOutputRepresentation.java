@@ -35,10 +35,8 @@ import org.restlet.representation.OutputRepresentation;
 
 /**
  * @author dgray
- *
  */
 public class ImageOutputRepresentation extends OutputRepresentation {
-	
 	private BufferedImage _image;
 	
 	/**
@@ -59,5 +57,4 @@ public class ImageOutputRepresentation extends OutputRepresentation {
 		// TODO: create a constant map of MediaType to ImageIO file type for the "png".
 		ImageIO.write(_image, "png", outputStream);
 	}
-
 }

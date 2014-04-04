@@ -59,73 +59,73 @@ public class LegendServiceImpl implements LegendService {
 	 * @see LegendService#getLegend(Object, ColorRampParameter, String, int, int, int, boolean, boolean)
 	 */
 	public BufferedImage getLegend (LayerConfiguration config, String layer, 
-			int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
+	                                int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = bi.createGraphics();	
 
 		try {
-    		IValueTransformer t = config.produce(IValueTransformer.class);
-    		ColorRamp colorRamp = config.produce(ColorRamp.class);
-            double levelMax = t.getMaximumValue();
+			IValueTransformer t = config.produce(IValueTransformer.class);
+			ColorRamp colorRamp = config.produce(ColorRamp.class);
+			double levelMax = t.getMaximumValue();
     		
-    		int fontHeight = 12;
-    		int barHeight = height - fontHeight;
-    		int barYOffset = fontHeight/2;
-    		int labelBarSpacer = 8;
-    		int barWidth = width - g.getFontMetrics().stringWidth(Integer.toString((int)levelMax)) - labelBarSpacer;
-    		int barXOffset = width - barWidth + labelBarSpacer;
+			int fontHeight = 12;
+			int barHeight = height - fontHeight;
+			int barYOffset = fontHeight/2;
+			int labelBarSpacer = 8;
+			int barWidth = width - g.getFontMetrics().stringWidth(Integer.toString((int)levelMax)) - labelBarSpacer;
+			int barXOffset = width - barWidth + labelBarSpacer;
     		
-    		if (renderHorizontally){
-    			for (int i = 0; i < width; i++){
-    				double v = ((double)(i+1)/(double)width) * levelMax;
-    				int colorInt = colorRamp.getRGB(t.transform(v));		
-    				g.setColor(new Color(colorInt));
-    				g.drawLine(i, 0, i, height);
-    			}
-    		} else {
-    			//Override the above.
-    			barHeight = height;
-    			barYOffset = 0;
-    			barXOffset = 0;
+			if (renderHorizontally){
+				for (int i = 0; i < width; i++){
+					double v = ((double)(i+1)/(double)width) * levelMax;
+					int colorInt = colorRamp.getRGB(t.transform(v));		
+					g.setColor(new Color(colorInt));
+					g.drawLine(i, 0, i, height);
+				}
+			} else {
+				//Override the above.
+				barHeight = height;
+				barYOffset = 0;
+				barXOffset = 0;
     			
-    			for(int i = 0; i <= barHeight; i++){
-    				double v = ((double)(i+1)/(double)barHeight) * levelMax;
-    				int colorInt = colorRamp.getRGB(t.transform(v));		
-    				g.setColor(new Color(colorInt));
-    				int y = barHeight-i+barYOffset;
-    				g.drawLine(barXOffset, y, width, y);
-    			}
-    		}
+				for(int i = 0; i <= barHeight; i++){
+					double v = ((double)(i+1)/(double)barHeight) * levelMax;
+					int colorInt = colorRamp.getRGB(t.transform(v));		
+					g.setColor(new Color(colorInt));
+					int y = barHeight-i+barYOffset;
+					g.drawLine(barXOffset, y, width, y);
+				}
+			}
     		
-    		if(doAxis){
-    			// We currently don't support rendering labels for horizontal legends
-    			if (!renderHorizontally){ 
-    				// Draw text labels.
-    				int textRightEdge = barXOffset - labelBarSpacer;
-    				int numInnerLabels = height/fontHeight/4;
-    				int labelStep = height/numInnerLabels;
-    				MathContext mathContext = new MathContext(2, RoundingMode.DOWN);
-    				g.setColor(Color.black);
+			if(doAxis){
+				// We currently don't support rendering labels for horizontal legends
+				if (!renderHorizontally){ 
+					// Draw text labels.
+					int textRightEdge = barXOffset - labelBarSpacer;
+					int numInnerLabels = height/fontHeight/4;
+					int labelStep = height/numInnerLabels;
+					MathContext mathContext = new MathContext(2, RoundingMode.DOWN);
+					g.setColor(Color.black);
     				
-    				g.drawLine(barXOffset-3, barYOffset, barXOffset-3, barYOffset+barHeight);
-    				//g.drawString(Integer.toString(levelMaxFreq), 0, fontHeight);
+					g.drawLine(barXOffset-3, barYOffset, barXOffset-3, barYOffset+barHeight);
+					//g.drawString(Integer.toString(levelMaxFreq), 0, fontHeight);
     				
-    				for(int i = 0; i < height+fontHeight; i+=labelStep){
-    					BigDecimal value = new BigDecimal(levelMax - levelMax * ( (double)i/(double)height ), mathContext );
-    					String label = value.toPlainString();
-    					int labelWidth = g.getFontMetrics().stringWidth(label);
+					for(int i = 0; i < height+fontHeight; i+=labelStep){
+						BigDecimal value = new BigDecimal(levelMax - levelMax * ( (double)i/(double)height ), mathContext );
+						String label = value.toPlainString();
+						int labelWidth = g.getFontMetrics().stringWidth(label);
     					
-    					g.drawString(label, textRightEdge - labelWidth, i+(fontHeight) );
-    					g.drawLine(barXOffset-6, i+barYOffset, barXOffset-3, i+barYOffset);
-    				}
-    			}
+						g.drawString(label, textRightEdge - labelWidth, i+(fontHeight) );
+						g.drawLine(barXOffset-6, i+barYOffset, barXOffset-3, i+barYOffset);
+					}
+				}
     			
-    			//g.drawString(Integer.toString(levelMinFreq), 0, height);
-    		}
+				//g.drawString(Integer.toString(levelMinFreq), 0, height);
+			}
     		
-    		g.dispose();
+			g.dispose();
 		} catch (ConfigurationException e) {
-		    LOGGER.warn("Error attempting to get legend - mis-configured layer");
+			LOGGER.warn("Error attempting to get legend - mis-configured layer");
 		}
 		return bi;
 	}

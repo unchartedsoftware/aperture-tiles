@@ -41,8 +41,8 @@ import org.json.JSONObject;
  *
  */
 public class JsonUtilities {
-    private JsonUtilities() {
-    }
+	private JsonUtilities() {
+	}
     
 	/**
 	 * Converts a {@link JSONObject} into a {@link Map} of key-value pairs.
@@ -201,19 +201,19 @@ public class JsonUtilities {
 		return val;
 	}
 
-    public static Properties jsonObjToProperties (JSONObject jsonObj) {
-        Properties properties = new Properties();
+	public static Properties jsonObjToProperties (JSONObject jsonObj) {
+		Properties properties = new Properties();
         
-        Iterator<?> keys = jsonObj.keys();
-        while (keys.hasNext()) {
-            String key = keys.next().toString();
-            Object value = jsonObj.opt(key);
+		Iterator<?> keys = jsonObj.keys();
+		while (keys.hasNext()) {
+			String key = keys.next().toString();
+			Object value = jsonObj.opt(key);
 
-            if (value instanceof String) {
-                properties.setProperty(key, (String) value);
-            }
-        }
+			if (value instanceof String) {
+				properties.setProperty(key, (String) value);
+			}
+		}
         
-        return properties;
-    }
+		return properties;
+	}
 }

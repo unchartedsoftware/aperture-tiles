@@ -32,85 +32,85 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 
 public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
-    private String _name;
-    private String _description;
-    public FixedPointProperty (String name, String description) {
-        _name = name;
-        _description = description;
-    }
+	private String _name;
+	private String _description;
+	public FixedPointProperty (String name, String description) {
+		_name = name;
+		_description = description;
+	}
 
-    @Override
-    public String getName () {
-        return _name;
-    }
+	@Override
+	public String getName () {
+		return _name;
+	}
 
-    @Override
-    public String getDescription () {
-        return _description;
-    }
+	@Override
+	public String getDescription () {
+		return _description;
+	}
 
-    @Override
-    public Class<FixedPoint> getType () {
-        return FixedPoint.class;
-    }
+	@Override
+	public Class<FixedPoint> getType () {
+		return FixedPoint.class;
+	}
 
-    @Override
-    public FixedPoint[] getPossibleValues () {
-        // Describing continuous values; no enumeration possible.
-        return null;
-    }
+	@Override
+	public FixedPoint[] getPossibleValues () {
+		// Describing continuous values; no enumeration possible.
+		return null;
+	}
 
-    @Override
-    public FixedPoint getDefaultValue () {
-        // Similarly, no default value possible.
-        return null;
-    }
+	@Override
+	public FixedPoint getDefaultValue () {
+		// Similarly, no default value possible.
+		return null;
+	}
 
-    @Override
-    public String encode (FixedPoint value) {
-        return String.format("%fby%f", value.getScale(), value.getValue());
-    }
+	@Override
+	public String encode (FixedPoint value) {
+		return String.format("%fby%f", value.getScale(), value.getValue());
+	}
 
-    @Override
-    public FixedPoint unencode (String string) throws ConfigurationException {
-        String[] parts = string.split("by");
-        return new FixedPoint(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
-    }
+	@Override
+	public FixedPoint unencode (String string) throws ConfigurationException {
+		String[] parts = string.split("by");
+		return new FixedPoint(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
+	}
 
-    @Override
-    public void encodeJSON (JSONNode propertyNode, FixedPoint value) throws JSONException {
-        JSONObject jsonValue = new JSONObject();
-        jsonValue.put("scale", value.getScale());
-        jsonValue.put("value", value.getValue());
-        propertyNode.setAsJSONObject(jsonValue);
-    }
+	@Override
+	public void encodeJSON (JSONNode propertyNode, FixedPoint value) throws JSONException {
+		JSONObject jsonValue = new JSONObject();
+		jsonValue.put("scale", value.getScale());
+		jsonValue.put("value", value.getValue());
+		propertyNode.setAsJSONObject(jsonValue);
+	}
 
-    @Override
-    public FixedPoint unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
-        JSONObject node = propertyNode.getAsJSONObject();
-        return new FixedPoint(node.getDouble("scale"), node.getDouble("value"));
-    }
-
-
+	@Override
+	public FixedPoint unencodeJSON (JSONNode propertyNode) throws JSONException, ConfigurationException {
+		JSONObject node = propertyNode.getAsJSONObject();
+		return new FixedPoint(node.getDouble("scale"), node.getDouble("value"));
+	}
 
 
-    @Override
-    public int hashCode () {
-        return _name.hashCode();
-    }
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof FixedPointProperty)) return false;
+
+	@Override
+	public int hashCode () {
+		return _name.hashCode();
+	}
+
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof FixedPointProperty)) return false;
         
-        FixedPointProperty thatP = (FixedPointProperty) that;
-        return thatP._name.equals(this._name);
-    }
+		FixedPointProperty thatP = (FixedPointProperty) that;
+		return thatP._name.equals(this._name);
+	}
 
-    @Override
-    public String toString () {
-        return String.format("<property name=\"%s\" type=\"fixed point\"/>", _name);
-    }
+	@Override
+	public String toString () {
+		return String.format("<property name=\"%s\" type=\"fixed point\"/>", _name);
+	}
 }

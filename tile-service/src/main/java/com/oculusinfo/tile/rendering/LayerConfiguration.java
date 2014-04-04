@@ -58,142 +58,142 @@ import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
  * @author nkronenfeld
  */
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
-    public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
-                                                                                   "The ID of the layer; exact format depends on how the layer is stored.",
-                                                                                   null);
-    public static final StringProperty        SHORT_NAME      = new StringProperty("name",
-                                                                                   "A shortened, human-readable version of the layer name.  Defaults to the same value as LAYER_NAME",
-                                                                                   null);
-    public static final StringProperty        TRANSFORM       = new StringProperty("transform",
-                                                                                   "The transformation to apply to the data before display",
-                                                                                   "linear",
-                                                                                   new String[] {"linear", "log10"});
-    public static final ListProperty<Integer> LEGEND_RANGE    = new ListProperty<>(new IntegerProperty("", "", -1),
-                                                                                   "legendrange",
-                                                                                   "The value bounds to use for coloration");
-    public static final IntegerProperty       CURRENT_IMAGE   = new IntegerProperty("currentImage",
-                                                                                    "used to determine which of a series of potential images should be displayed.  Ordinarily, this parameter is for programatic use only.",
-                                                                                    -1);
-    public static final IntegerProperty       COARSENESS      = new IntegerProperty("coarseness",
-                                                                                    "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
-                                                                                    1);
+	public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
+		         "The ID of the layer; exact format depends on how the layer is stored.",
+		         null);
+	public static final StringProperty        SHORT_NAME      = new StringProperty("name",
+		         "A shortened, human-readable version of the layer name.  Defaults to the same value as LAYER_NAME",
+		         null);
+	public static final StringProperty        TRANSFORM       = new StringProperty("transform",
+		         "The transformation to apply to the data before display",
+		         "linear",
+		         new String[] {"linear", "log10"});
+	public static final ListProperty<Integer> LEGEND_RANGE    = new ListProperty<>(new IntegerProperty("", "", -1),
+		         "legendrange",
+		         "The value bounds to use for coloration");
+	public static final IntegerProperty       CURRENT_IMAGE   = new IntegerProperty("currentImage",
+		          "used to determine which of a series of potential images should be displayed.  Ordinarily, this parameter is for programatic use only.",
+		          -1);
+	public static final IntegerProperty       COARSENESS      = new IntegerProperty("coarseness",
+		          "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
+		          1);
 
-    public static final IntegerProperty       LINE_NUMBER     = new IntegerProperty("lineNumber",
-                                                                                    "For use by the server only",
-                                                                                    0);
-    public static final IntegerProperty       OUTPUT_WIDTH    = new IntegerProperty("outputEidth",
-                                                                                    "For use by the server only",
-                                                                                    256);
-    public static final IntegerProperty       OUTPUT_HEIGHT   = new IntegerProperty("outputHeight",
-                                                                                    "For use by the server only",
-                                                                                    256);
-    public static final IntegerProperty       RANGE_MIN       = new IntegerProperty("rangeMin",
-                                                                                    "For server use only - derived property",
-                                                                                    0);
-    public static final IntegerProperty       RANGE_MAX       = new IntegerProperty("rangeMax",
-                                                                                    "For server use only - derived property",
-                                                                                    100);
+	public static final IntegerProperty       LINE_NUMBER     = new IntegerProperty("lineNumber",
+		          "For use by the server only",
+		          0);
+	public static final IntegerProperty       OUTPUT_WIDTH    = new IntegerProperty("outputEidth",
+		          "For use by the server only",
+		          256);
+	public static final IntegerProperty       OUTPUT_HEIGHT   = new IntegerProperty("outputHeight",
+		          "For use by the server only",
+		          256);
+	public static final IntegerProperty       RANGE_MIN       = new IntegerProperty("rangeMin",
+		          "For server use only - derived property",
+		          0);
+	public static final IntegerProperty       RANGE_MAX       = new IntegerProperty("rangeMax",
+		          "For server use only - derived property",
+		          100);
 
-    // Per-tile properties
-    public static final TileIndexProperty     TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
-                                                                                      "For server use only, on a tile-by-tile basis",
-                                                                                      null);
-    public static final StringProperty        LEVEL_MINIMUMS  = new StringProperty("levelMinimums",
-                                                                                   "For server use only, on a tile-by-tile basis",
-                                                                                   null);
-    public static final StringProperty        LEVEL_MAXIMUMS  = new StringProperty("levelMaximums",
-                                                                                   "For server use only, on a tile-by-tile basis",
-                                                                                   null);
+	// Per-tile properties
+	public static final TileIndexProperty     TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
+		            "For server use only, on a tile-by-tile basis",
+		            null);
+	public static final StringProperty        LEVEL_MINIMUMS  = new StringProperty("levelMinimums",
+		         "For server use only, on a tile-by-tile basis",
+		         null);
+	public static final StringProperty        LEVEL_MAXIMUMS  = new StringProperty("levelMaximums",
+		         "For server use only, on a tile-by-tile basis",
+		         null);
 
 
 
-    private ValueTransformerFactory _transformFactory;
+	private ValueTransformerFactory _transformFactory;
 
-    public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
-                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-                               FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-                               ConfigurableFactory<?> parent,
-                               List<String> path) {
-        this(pyramidIOFactoryProvider, serializationFactoryProvider,
-             rendererFactoryProvider, null, parent, path);
-    }
+	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
+	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+	                           ConfigurableFactory<?> parent,
+	                           List<String> path) {
+		this(pyramidIOFactoryProvider, serializationFactoryProvider,
+		     rendererFactoryProvider, null, parent, path);
+	}
 
-    public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
-                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-                               FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-                               String name, ConfigurableFactory<?> parent,
-                               List<String> path) {
-        super(name, LayerConfiguration.class, parent, path);
+	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
+	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+	                           String name, ConfigurableFactory<?> parent,
+	                           List<String> path) {
+		super(name, LayerConfiguration.class, parent, path);
 
-        addProperty(LAYER_NAME);
-        addProperty(SHORT_NAME);
-        addProperty(TRANSFORM);
-        addProperty(LEGEND_RANGE);
-        addProperty(CURRENT_IMAGE);
-        addProperty(OUTPUT_WIDTH);
-        addProperty(OUTPUT_HEIGHT);
-        addProperty(LINE_NUMBER);
-        addProperty(COARSENESS);
-        addProperty(RANGE_MIN);
-        addProperty(RANGE_MAX);
+		addProperty(LAYER_NAME);
+		addProperty(SHORT_NAME);
+		addProperty(TRANSFORM);
+		addProperty(LEGEND_RANGE);
+		addProperty(CURRENT_IMAGE);
+		addProperty(OUTPUT_WIDTH);
+		addProperty(OUTPUT_HEIGHT);
+		addProperty(LINE_NUMBER);
+		addProperty(COARSENESS);
+		addProperty(RANGE_MIN);
+		addProperty(RANGE_MAX);
 
-        addProperty(TILE_COORDINATE);
-        addProperty(LEVEL_MINIMUMS);
-        addProperty(LEVEL_MAXIMUMS);
+		addProperty(TILE_COORDINATE);
+		addProperty(LEVEL_MINIMUMS);
+		addProperty(LEVEL_MAXIMUMS);
 
-        _transformFactory = new ValueTransformerFactory(this, Collections.singletonList("transform"));
-        addChildFactory(_transformFactory);
-        addChildFactory(rendererFactoryProvider.createFactory(this, Collections.singletonList("renderer")));
-        addChildFactory(pyramidIOFactoryProvider.createFactory(this, Collections.singletonList("pyramidio")));
-        addChildFactory(serializationFactoryProvider.createFactory(this, Collections.singletonList("serializer")));
-    }
+		_transformFactory = new ValueTransformerFactory(this, Collections.singletonList("transform"));
+		addChildFactory(_transformFactory);
+		addChildFactory(rendererFactoryProvider.createFactory(this, Collections.singletonList("renderer")));
+		addChildFactory(pyramidIOFactoryProvider.createFactory(this, Collections.singletonList("pyramidio")));
+		addChildFactory(serializationFactoryProvider.createFactory(this, Collections.singletonList("serializer")));
+	}
 
-    @Override
-    protected LayerConfiguration create () {
-        return this;
-    }
+	@Override
+	protected LayerConfiguration create () {
+		return this;
+	}
 
-    @Override
-    public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
-        super.readConfiguration(rootNode);
+	@Override
+	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
+		super.readConfiguration(rootNode);
 
-        calculateDerivedProperties();
-    }
+		calculateDerivedProperties();
+	}
 
-    @Override
-    public void readConfiguration (Properties properties) throws ConfigurationException {
-        super.readConfiguration(properties);
+	@Override
+	public void readConfiguration (Properties properties) throws ConfigurationException {
+		super.readConfiguration(properties);
 
-        calculateDerivedProperties();
-    }
+		calculateDerivedProperties();
+	}
 
-    private void calculateDerivedProperties () {
-        List<Integer> legendRange = getPropertyValue(LayerConfiguration.LEGEND_RANGE);
-        if (null != legendRange && !legendRange.isEmpty()) {
-            setPropertyValue(RANGE_MIN,  legendRange.get(0));
-            setPropertyValue(RANGE_MAX,  legendRange.get(1));
-        }
+	private void calculateDerivedProperties () {
+		List<Integer> legendRange = getPropertyValue(LayerConfiguration.LEGEND_RANGE);
+		if (null != legendRange && !legendRange.isEmpty()) {
+			setPropertyValue(RANGE_MIN,  legendRange.get(0));
+			setPropertyValue(RANGE_MAX,  legendRange.get(1));
+		}
 
-        if (!hasPropertyValue(SHORT_NAME)) {
-            setPropertyValue(SHORT_NAME, getPropertyValue(LAYER_NAME));
-        }
-    }
+		if (!hasPropertyValue(SHORT_NAME)) {
+			setPropertyValue(SHORT_NAME, getPropertyValue(LAYER_NAME));
+		}
+	}
 
-    public void setLevelProperties (TileIndex tileIndex,
-                                    String levelMinimum,
-                                    String levelMaximum) {
-        setPropertyValue(TILE_COORDINATE, tileIndex);
-        setPropertyValue(LEVEL_MAXIMUMS, levelMaximum);
-        setPropertyValue(LEVEL_MINIMUMS, levelMinimum);
+	public void setLevelProperties (TileIndex tileIndex,
+	                                String levelMinimum,
+	                                String levelMaximum) {
+		setPropertyValue(TILE_COORDINATE, tileIndex);
+		setPropertyValue(LEVEL_MAXIMUMS, levelMaximum);
+		setPropertyValue(LEVEL_MINIMUMS, levelMinimum);
 
-        try {
-            TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
-            Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
-            _transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
-        } catch (ConfigurationException e) {
-            LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
-        }
-    }
+		try {
+			TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
+			Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
+			_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+		} catch (ConfigurationException e) {
+			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
+		}
+	}
 }

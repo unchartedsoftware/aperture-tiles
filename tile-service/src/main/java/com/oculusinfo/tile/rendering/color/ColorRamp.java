@@ -41,5 +41,4 @@ public interface ColorRamp {
 	 * 	The rgb colour value.
 	 */
 	int getRGB(double scale);
-	
 }

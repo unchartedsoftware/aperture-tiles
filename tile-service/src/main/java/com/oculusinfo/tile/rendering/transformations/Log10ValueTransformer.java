@@ -40,6 +40,6 @@ public class Log10ValueTransformer implements IValueTransformer {
 
 	@Override
 	public double getMaximumValue () {
-	    return _layerMax;
+		return _layerMax;
 	}
 }
