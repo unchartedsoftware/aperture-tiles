@@ -92,7 +92,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     			case 1:
     			{  		    	
     				long start = System.currentTimeMillis();
-    				List<AnnotationData> scan = readRandom();	   				
+    				Map<BinIndex, List<AnnotationData>> scan = readRandom();	   				
     				long end = System.currentTimeMillis();
     		    	double time = ((end-start)/1000.0);
     		    	_readTimesPerEntry.get( name ).add( time );
@@ -203,7 +203,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		*/
 		
 		// ensure everything was removed
-		List<AnnotationData> scan = readAll();
+		Map<BinIndex, List<AnnotationData>> scan = readAll();
     	printData( scan );
     	Assert.assertTrue( scan.size() == 0 );
     	
@@ -223,16 +223,16 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 	}
 	
-	private List<AnnotationData> readAll() {
+	private Map<BinIndex, List<AnnotationData>> readAll() {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	List<AnnotationData> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
+    	Map<BinIndex, List<AnnotationData>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}
 	
-	private List<AnnotationData> readRandom() {
+	private Map<BinIndex, List<AnnotationData>> readRandom() {
 		
 		final int MAX_DEPTH = 4;
 		int level = (int)(Math.random() * MAX_DEPTH);
@@ -243,7 +243,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		//TileIndex tile = new TileIndex( 0, 0, 0 );
     	
-		List<AnnotationData> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
+		Map<BinIndex, List<AnnotationData>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}

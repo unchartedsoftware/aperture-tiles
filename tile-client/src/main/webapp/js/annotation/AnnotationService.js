@@ -34,6 +34,7 @@ define(function (require) {
     "use strict";
 
     var DataService = require('../layer/DataService'),
+        TileAnnotationIndexer = require('./TileAnnotationIndexer'),
         AnnotationService;
 
 
@@ -47,21 +48,7 @@ define(function (require) {
 
             this._super();
             this.layer = layer;
-
-            /*
-            // set tile pyramid type
-            if (this.layerInfo.projection === "EPSG:900913") {
-                // mercator projection
-                this.tilePyramid = new WebPyramid();
-            } else {
-                // linear projection, pass bounds of data
-                this.tilePyramid = new AoITilePyramid(this.layerInfo.bounds[0],
-                                                      this.layerInfo.bounds[1],
-                                                      this.layerInfo.bounds[2],
-                                                      this.layerInfo.bounds[3]);
-            }
-            */
-            
+            this.indexer = new TileAnnotationIndexer();
         },
 
 
@@ -80,7 +67,6 @@ define(function (require) {
                 level = parseInt(parsedValues[0], 10),
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10);
-
 
             if (this.dataStatus[tilekey] === undefined) {
 
@@ -105,7 +91,6 @@ define(function (require) {
 
                 this.addReference(tilekey);
                 if (this.dataStatus[tilekey] === "loaded") {
-                    callback(this.data[tilekey]);
                     return;
                 }
                 // waiting on tile from server, add to callback list
@@ -121,10 +106,11 @@ define(function (require) {
             var tilekey = this.createTileKey( annotationData.index ),
                 i;
 
-            this.data[tilekey] = annotationData.annotations;
+            this.data[tilekey] = annotationData.data;
             this.dataStatus[tilekey] = "loaded"; // flag as loaded
 
-            if (this.data[tilekey].length > 0) {
+            if ( !$.isEmptyObject( this.data[tilekey] ) ) {
+
                 if (this.getCallbacks[tilekey] === undefined) {
                     console.log('ERROR: Received annotation data out of sync from server... ');
                     return;
@@ -140,7 +126,30 @@ define(function (require) {
         },
 
 
-        postRequest: function( annotation ) {
+        postRequest: function( type, annotation ) {
+
+            type = type.toLowerCase();
+
+            switch ( type ) {
+
+                case "write":
+
+                    // add annotation to client cache
+                    this.addAnnotationToData( annotation );
+                    break;
+
+                case "modify":
+
+                    // replace old entry with new annotation in client cache
+                    this.modifyAnnotationInData( annotation.old, annotation['new'] );
+                    break;
+
+                case "delete":
+
+                    // remove entry
+                    this.removeAnnotationFromData( annotation );
+                    break;
+            }
 
             // Request the layer information
             aperture.io.rest('/annotation',
@@ -148,6 +157,7 @@ define(function (require) {
                              $.proxy(this.postCallback, this),
                              {
                                  postData: {    "layer": this.layer,
+                                                "type": type,
                                                 "annotation" : annotation
                                             },
                                  contentType: 'application/json'
@@ -160,6 +170,73 @@ define(function (require) {
 
             console.log("DEBUG: POST complete: "+ postResult );
 
+        },
+
+
+        addAnnotationToData: function( annotation ) {
+
+            // get all tile indices
+            var indices = this.indexer.getIndices( annotation),
+                tile,
+                i;
+
+            // add data to each tile in the correct bin
+            for (i=0; i<indices.length;i++) {
+
+                // make sure entry exists
+                if ( this.data[ indices[i].tilekey ] === undefined ) {
+                    this.data[ indices[i].tilekey ] = {};
+                }
+
+                tile = this.data[ indices[i].tilekey ];
+
+                if ( tile[ indices[i].binkey ] === undefined ) {
+                    tile[ indices[i].binkey ] = [];
+                }
+                tile[ indices[i].binkey ].push( annotation );
+            }
+        },
+
+
+        removeAnnotationFromData: function( annotation ) {
+
+            // get all tile indices
+            var indices = this.indexer.getIndices( annotation ),
+                tile,
+                bin,
+                index,
+                i;
+
+            // add data to each tile in the correct bin
+            for (i=0; i<indices.length; i++) {
+                // get tile
+                tile = this.data[ indices[i].tilekey ];
+                // if tile exists in cache
+                if ( tile !== undefined ) {
+                    // get bin
+                    bin = tile[ indices[i].binkey ];
+                    // if bin exists in cache
+                    if ( bin !== undefined ) {
+                        // get index in bin
+                        index = bin.indexOf( annotation );
+                        // remove data
+                        if ( index > -1 ) {
+                            bin.splice(index, 1);
+                        }
+                    }
+                }
+            }
+
+        },
+
+
+        modifyAnnotationInData: function( oldAnnotation, newAnnotation ) {
+
+            // remove from old
+            this.removeAnnotationFromData( oldAnnotation );
+
+            // add to new
+            this.addAnnotationToData( newAnnotation );
         }
 
     });

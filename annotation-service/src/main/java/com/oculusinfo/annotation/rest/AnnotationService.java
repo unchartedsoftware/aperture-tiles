@@ -24,6 +24,7 @@
 package com.oculusinfo.annotation.rest;
 
 import java.util.List;
+import java.util.Map;
 
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.binning.*;
@@ -41,7 +42,7 @@ public interface AnnotationService {
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract List<AnnotationData> readAnnotations( String layer, TileIndex tile );	
+	public abstract Map<BinIndex, List<AnnotationData>> readAnnotations( String layer, TileIndex tile );
 	
 	/*
 	 * Remove an annotation from the storage service

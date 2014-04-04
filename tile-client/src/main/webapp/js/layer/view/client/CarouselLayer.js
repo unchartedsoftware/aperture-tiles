@@ -54,15 +54,15 @@ define(function (require) {
             this.selectedTileInfo = {};
 
             // add mouse move and zoom callbacks
-            this.map.olMap_.events.register('mousemove', this.map.olMap_, function(event) {
-                var tilekey = that.mapMouseToTileKey(event.xy.x, event.xy.y);
+            this.map.on('mousemove', function(event) {
+                var tilekey = that.map.getTileKeyUnderMouse(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
                 that.previousMouse.x = event.xy.x;
                 that.previousMouse.y = event.xy.y;
             });
 
-            this.map.olMap_.events.register('zoomend', this.map.olMap_, function() {
-                var tilekey = that.mapMouseToTileKey(that.previousMouse.x, that.previousMouse.y);
+            this.map.on('zoomend', function() {
+                var tilekey = that.map.getTileKeyUnderMouse(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
             });
 
@@ -272,42 +272,6 @@ define(function (require) {
             });
 
             return outlineLayer;
-        },
-
-
-        /**
-         * Maps a mouse position in the mouse viewport to a tile identification key
-         * @param mx mouse x position in the map viewport
-         * @param my mouse y position in the map viewport
-        */
-        mapMouseToTileKey: function(mx, my) {
-
-            var TILESIZE = 256,
-                zoom,
-                maxPx = {},
-                minPx = {},
-                totalTilespan,
-                totalPixelSpan = {},
-                pixelMax = {},
-                pixelMin = {},
-                pixel = {};
-
-                zoom = this.map.olMap_.getZoom();
-                maxPx.x = this.map.olMap_.maxPx.x;
-                maxPx.y = this.map.olMap_.maxPx.y;
-                minPx.x = this.map.olMap_.minPx.x;
-                minPx.y = this.map.olMap_.minPx.y;
-                totalTilespan = Math.pow(2, zoom);
-                totalPixelSpan.x = TILESIZE * totalTilespan;
-                totalPixelSpan.y = this.map.olMap_.viewPortDiv.clientHeight;
-                pixelMax.x = totalPixelSpan.x - minPx.x;
-                pixelMax.y = totalPixelSpan.y - minPx.y;
-                pixelMin.x = totalPixelSpan.x - maxPx.x;
-                pixelMin.y = totalPixelSpan.x - maxPx.y;
-                pixel.x = mx + pixelMin.x;
-                pixel.y = (this.map.olMap_.size.h - my - pixelMax.y + totalPixelSpan.x );
-
-            return zoom + "," + Math.floor(pixel.x / TILESIZE) + "," + Math.floor(pixel.y / TILESIZE);
         },
 
 

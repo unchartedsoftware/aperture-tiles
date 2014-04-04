@@ -41,8 +41,6 @@ define(function (require) {
 
 
     var Class        = require('../../../class'),
-        AoIPyramid   = require('../../../binning/AoITilePyramid'),
-        TileIterator = require('../../../binning/TileIterator'),
         TileTracker  = require('../../TileTracker'),
         MouseState   = require('./MouseState'),
         permData     = [],  // temporary aperture.js bug workaround //
@@ -77,13 +75,13 @@ define(function (require) {
                 that.map = map;
 
                 // mouse event handlers
-                that.map.olMap_.events.register('click', that.map.olMap_, function() {
+                that.map.on('click', function() {
 					// if click event has not been swallowed yet, clear mouse state and redraw
 					that.mouseState.clearClickState();
 					that.mapNodeLayer.all().redraw();
 				});
 
-                that.map.olMap_.events.register('zoomend', that.map.olMap_, function() {
+                that.map.on('zoomend', function() {
 					// clear click mouse state on zoom and call map update function
                     that.mouseState.clearClickState();
                     permData = [];  // reset temporary fix on zoom
@@ -96,11 +94,11 @@ define(function (require) {
                 });
 				
 				// ensure only one mapNodeLayer is made for each unique map
-				if (mapNodeLayer[that.map.uid] === undefined) {
-					mapNodeLayer[that.map.uid] = that.map.addLayer(aperture.geo.MapNodeLayer);
+				if (mapNodeLayer[that.map.getUid()] === undefined) {
+					mapNodeLayer[that.map.getUid()] = that.map.addApertureLayer(aperture.geo.MapNodeLayer);
 				}
 
-                that.mapNodeLayer = mapNodeLayer[that.map.uid];
+                that.mapNodeLayer = mapNodeLayer[that.map.getUid()];
                 that.mapNodeLayer.map('longitude').from('longitude');
                 that.mapNodeLayer.map('latitude').from('latitude');
                 // Necessary so that aperture won't place labels and texts willy-nilly
@@ -199,11 +197,6 @@ define(function (require) {
 
             var i,
                 tiles,
-                level = this.map.getZoom(),
-                bounds = this.map.olMap_.getExtent(),
-                mapExtents = this.map.olMap_.getMaxExtent(),
-                mapPyramid = new AoIPyramid(mapExtents.left, mapExtents.bottom,
-                                            mapExtents.right, mapExtents.top),
                 viewIndex,
                 tilesByView = [];
 
@@ -212,9 +205,7 @@ define(function (require) {
             }
 
             // determine all tiles in view
-            tiles = new TileIterator(mapPyramid, level,
-                                     bounds.left, bounds.bottom,
-                                     bounds.right, bounds.top).getRest();
+            tiles = this.map.getTilesInView();
 
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
@@ -252,7 +243,7 @@ define(function (require) {
         },
 
 
-        /** add views renderer id to node data
+        /** removes views renderer id from node data
          *
          * @param viewIndex     index of the view
          * @param oldTracker    previous tile tracker
@@ -278,7 +269,7 @@ define(function (require) {
                 data = [];
 
             for (i=0; i< this.views.length; i++ ) {
-                $.merge(data, this.addRendererIdToData( i, this.views[i].tileTracker.getData() ) );
+                $.merge(data, this.addRendererIdToData( i, this.views[i].tileTracker.getDataArray() ) );
             }
 
             /////////////////////////////////////////////

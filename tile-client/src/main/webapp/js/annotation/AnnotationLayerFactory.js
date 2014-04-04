@@ -45,11 +45,9 @@ define( function (require) {
 		createLayer: function(layerJSON, map) {
 
 			var spec = {
-				map: map.map,
-				projection: map.projection,
+				map: map,
 				layer: layerJSON.layer,
 				filters: layerJSON.filters
-
 			};
 			return new AnnotationLayer( spec );
 

@@ -24,6 +24,7 @@
 package com.oculusinfo.annotation;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -76,6 +77,38 @@ public class AnnotationTile implements Serializable {
     	return _bins.size();
     }
     
+    /*
+    public synchronized Map<BinIndex, List<Long>> getReferencesByBin() {
+			
+    	Map<BinIndex, List<Long>> referencesByBin = new HashMap<>();   	
+		for ( AnnotationBin bin : _bins.values() ) {			
+			referencesByBin.put( bin.getIndex(), bin.getAllReferences() );
+		}		
+		return referencesByBin;
+	}	
+
+    
+    public synchronized Map<BinIndex, List<Long>> getReferencesByBin( Map<String, Integer> filter ) {
+		
+    	Map<BinIndex, List<Long>> referencesByBin = new HashMap<>();   	
+		for ( AnnotationBin bin : _bins.values() ) {
+			
+			List<Long> filtered = new LinkedList<>();						
+			// go through filter and get references by priority and by count
+			for (Map.Entry<String, Integer> f : filter.entrySet() ) {
+				
+				String priority = f.getKey();
+				Integer count = f.getValue();
+				
+				List<Long> references = bin.getReferences( priority );
+				filtered.addAll( references.subList( 0, count < references.size() ? count : references.size() ) );
+			}
+			referencesByBin.put( bin.getIndex(), filtered );
+		}		
+		return referencesByBin;
+	}
+	*/
+    
     
     public synchronized void add( BinIndex binIndex, AnnotationData data ) {
     	
@@ -100,7 +133,7 @@ public class AnnotationTile implements Serializable {
 		return false;
     }
 
-    
+   
     public synchronized List<Long> getAllReferences() {
     	
     	List<Long> allReferences = new LinkedList<>();  

@@ -6,7 +6,61 @@
 			"transform": "log10",
 			"ramp": "ware",
 			"opacity": 0.85,
-			"renderer": "default"
+			"renderer": "default",
+			"axis": [
+				{
+		        	"title": "Longitude",
+		        	"position": "bottom",
+		        	"repeat": true,
+		        	"intervalSpec": {
+		            	"type": "value",
+		            	"increment": 60,
+		            	"pivot": 0,
+		            	"allowScaleByZoom": true
+		        	},
+		        	"unitSpec": {
+		            	"type": "degrees",
+		            	"decimals": 2,
+		            	"allowStepDown": false
+		        	},
+		        	"style": {        	
+						"majorMarkerLength": 10,
+						"majorMarkerWidth": 1,
+						"majorMarkerColour": "#7E7E7E",
+						"markerLabelColour": "#7E7E7E",
+						"markerLabelFontSize": "0.75em",
+						"axisLabelColour": "#7E7E7E",
+						"axisLabelFontSize": "0.95em",
+						"fontFamily": "Tahoma, Verdana, Segoe, sans-serif"
+					}
+				},
+		    	{
+		        	"title": "Latitude",
+		        	"position": "left",
+		        	"repeat": false,
+		        	"intervalSpec": {
+		            	"type": "value",
+		            	"increment": 30,
+		            	"pivot": 0,
+		            	"allowScaleByZoom": true
+		        	},
+		        	"unitSpec": {
+		            	"type": "degrees",
+		            	"decimals": 2,
+		            	"allowStepDown": false
+		        	},   
+		        	"style": {
+						"majorMarkerLength": 10,
+						"majorMarkerWidth": 1,
+						"majorMarkerColour": "#7E7E7E",
+						"markerLabelColour": "#7E7E7E",
+						"markerLabelFontSize": "0.75em",
+						"axisLabelColour": "#7E7E7E",
+						"axisLabelFontSize": "0.95em",
+						"fontFamily": "Tahoma, Verdana, Segoe, sans-serif"
+					}
+	    		}
+	    	]
 		}
 	],
 	"ClientLayers": [
@@ -21,7 +75,7 @@
 					"renderer": "HashTagsByTime",
 					"layer": "twitter.2014-01-02.words.censored"
 				}
-				]
+			]
 		}
     ]
 }

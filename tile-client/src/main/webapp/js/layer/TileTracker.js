@@ -156,18 +156,36 @@ define(function (require) {
         /**
          * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
          */
-        getData: function ( tilekeys ) {
+        getDataArray: function ( tilekeys ) {
 
             // if tilekeys are specified, return those
             if ( tilekeys !== undefined ) {
-                if (!(tilekeys instanceof Array)) {
+                if ( !$.isArray( tilekeys ) ) {
                     // only one tilekey specified, wrap in array
                     tilekeys = [tilekeys];
                 }
-                return this.dataService.getData(tilekeys);
+                return this.dataService.getDataArray(tilekeys);
             }
             // otherwise, return all tiles currently tracked
-            return this.dataService.getData(this.tiles);
+            return this.dataService.getDataArray(this.tiles);
+
+        },
+
+        /**
+         * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
+         */
+        getDataObject: function ( tilekeys ) {
+
+            // if tilekeys are specified, return those
+            if ( tilekeys !== undefined ) {
+                if ( !$.isArray( tilekeys ) ) {
+                    // only one tilekey specified, wrap in array
+                    tilekeys = [tilekeys];
+                }
+                return this.dataService.getDataObject(tilekeys);
+            }
+            // otherwise, return all tiles currently tracked
+            return this.dataService.getDataObject(this.tiles);
 
         }
 

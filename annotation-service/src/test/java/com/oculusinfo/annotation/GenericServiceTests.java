@@ -25,6 +25,7 @@ package com.oculusinfo.annotation;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,26 +42,15 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
 	protected AnnotationService    _service;	
 	protected List<AnnotationData> _annotations;
 
-	private class TestRunnable implements Runnable {
-		
-		TestRunnable() {
-			
-		}
-		
-		public void run() {
-			
-		}
-		
-	}
 	
-	private List<AnnotationData> readAll() {
+	private Map<BinIndex, List<AnnotationData>> readAll() {
 		
 		TileIndex tile = new TileIndex( 0, 0, 0 );
 		 
 		// scan all
     	System.out.println("Reading ALL annotations");
     	long start = System.currentTimeMillis();
-    	List<AnnotationData> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );
+    	Map<BinIndex, List<AnnotationData>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );
     	long end = System.currentTimeMillis();
     	double time = ((end-start)/1000.0);
 		System.out.println( "\t" + scan.size() + " entries scanned in " + time + " seconds");
@@ -125,7 +115,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
     	System.out.println( "Average remove time is " + timeSum / INDIVIDUAL_NUM_ENTRIES + " seconds");
 
     	// ensure everything was removed
-    	List<AnnotationData> scan = readAll();
+    	Map<BinIndex, List<AnnotationData>> scan = readAll();
     	printData( scan );
     	Assert.assertTrue( scan.size() == 0 );
     }

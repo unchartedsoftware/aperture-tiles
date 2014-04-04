@@ -72,23 +72,28 @@ define(function (require) {
             // tile key (as defined by the createTileKey method).
             this._super();
             this.layerInfo = layerInfo;
+
             // The relative position within each bin at which visuals will 
             // be drawn
             this.position = {x: 'minX', y: 'centerY'}; //{x: 'centerX', y: 'centerY'};
+
             // set tile pyramid type
-            if (this.layerInfo.projection === "EPSG:900913") {
-                // mercator projection
-                this.tilePyramid = new WebPyramid();
-            } else {
-                // linear projection, pass bounds of data
-                this.tilePyramid = new AoITilePyramid(this.layerInfo.bounds[0],
-                                                      this.layerInfo.bounds[1],
-                                                      this.layerInfo.bounds[2],
-                                                      this.layerInfo.bounds[3]);
+            switch (this.layerInfo.projection) {
+
+                case 'EPSG:900913':
+                    // web mercator projection
+                    this.tilePyramid = new WebPyramid();
+                    break;
+                //case 'EPSG:4326':
+                default:
+                    // linear projection
+                    this.tilePyramid = new AoITilePyramid(this.layerInfo.bounds[0],
+                                                          this.layerInfo.bounds[1],
+                                                          this.layerInfo.bounds[2],
+                                                          this.layerInfo.bounds[3]);
+                    break;
             }
-            
-            
-            
+
         },
 
 

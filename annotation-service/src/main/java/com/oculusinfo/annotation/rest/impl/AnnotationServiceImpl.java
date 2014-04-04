@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.locks.*;
 
 import com.google.inject.Singleton;
@@ -63,17 +64,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_dataSerializer = new JSONDataSerializer();	
 		_indexer = indexer;
 		_io = io;
-		/*
-		try {
-
-			System.out.println( "Dropping previous table");
-			((HBaseAnnotationIO)_io).dropTable(TABLE_NAME);
-			_io.initializeForWrite( TABLE_NAME );
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		*/
 	}
 	
 		
@@ -100,12 +90,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	public List<AnnotationData> readAnnotations( String layer, TileIndex query ) {
+	public Map<BinIndex, List<AnnotationData>> readAnnotations( String layer, TileIndex query ) {
 		
 		_lock.readLock().lock();
     	try {
     		
-    		return getData( layer, addUnivariateIndices( query ) );
+    		return getData( layer, query ); //addUnivariateIndices( query ) );
     		
     	} finally { 		
     		_lock.readLock().unlock();
@@ -194,7 +184,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return indices;
 	}
 	
-	
+	/*
 	private List<TileIndex> addUnivariateIndices( TileIndex tile ) {		
 		
 		List<TileIndex> tiles = new LinkedList<>();
@@ -203,6 +193,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		tiles.add( new TileIndex( tile.getLevel(), -1, tile.getY() ) );
 		return tiles;
 	}
+	*/
 
 	
 	private List<AnnotationTile> getTiles( String layer, List<TileIndex> indices ) {
@@ -211,33 +202,53 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	private List<AnnotationData> getData( String layer, List<TileIndex> indices ) {
+	private Map<BinIndex, List<AnnotationData>> getData( String layer, TileIndex tileIndex ) {
 		
-		List<AnnotationTile> tiles = getTiles( layer, indices );
-		List<Long> references = new LinkedList<>();
+		return getData( layer, tileIndex, null );
 		
-		// for each tile, assemble list of all data references
-		for ( AnnotationTile tile : tiles ) {
-			references.addAll( tile.getAllReferences() );
-		}
-		return readDataFromIO( layer, references );
-
-	}
-		
-	private List<AnnotationData> getData( String layer, List<TileIndex> indices, Map<String, Integer> filter ) {
-					
-		// get all required tiles
-		List<AnnotationTile> tiles = getTiles( layer, indices );
-		
-		// get filtered references from tiles
-		List<Long> references = new LinkedList<>();			
-		for ( AnnotationTile tile : tiles ) {
-			references.addAll( tile.getFilteredReferences( filter ) );
-		}
-		return readDataFromIO( layer, references );
 	}
 	
+	
+	private Map<BinIndex, List<AnnotationData>> getData( String layer, TileIndex tileIndex, Map<String, Integer> filter ) {
+		
+		// wrap index into list 
+		List<TileIndex> indices = new LinkedList<>();
+		indices.add( tileIndex );
+			
+		// get tiles
+		List<AnnotationTile> tiles = getTiles( layer, indices );
+				
+		// for each tile, assemble list of all data references
+		List<Long> references = new LinkedList<>();
+		for ( AnnotationTile tile : tiles ) {					
+			if ( filter != null ) {
+				// filter provided
+				references.addAll( tile.getFilteredReferences( filter ) );
+			} else {
+				// no filter provided
+				references.addAll( tile.getAllReferences() );
+			}
+		}
+		
+		// read data from io in bulk
+		List<AnnotationData> data = readDataFromIO( layer, references );
 
+		// assemble data by bin
+		Map<BinIndex, List<AnnotationData>> dataByBin =  new HashMap<>();
+		for ( AnnotationData d : data ) {
+			// get index 
+			BinIndex binIndex = _indexer.getIndex( d, tileIndex.getLevel() ).getBin();
+			if (!dataByBin.containsKey( binIndex)) {
+				// no data under this bin, add list to map
+				dataByBin.put( binIndex, new LinkedList<AnnotationData>() );
+			}
+			// add data to list, under bin
+			dataByBin.get( binIndex ).add( d );
+		}
+		return dataByBin;
+	}
+
+	
 	protected void writeTilesToIO( String layer, List<AnnotationTile> tiles ) {
 		
 		if ( tiles.size() == 0 ) return;
@@ -321,7 +332,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return tiles;		
 	}
 	
-	
 	protected List<AnnotationData> readDataFromIO( String layer, List<Long> indices ) {
 		
 		List<AnnotationData> data = new LinkedList<>();
@@ -337,8 +347,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			e.printStackTrace();
 		}
 
-		return data;		
+		return data;
 	}
-	
 	
 }

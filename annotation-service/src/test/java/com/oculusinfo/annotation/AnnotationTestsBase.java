@@ -60,12 +60,17 @@ public class AnnotationTestsBase {
 
 
 	/*
-	 * Annotation list printing utility function
+	 * Annotation list printing utility functions
 	 */
+	protected void printData( Map<BinIndex, List<AnnotationData>> dataMap ) {
+		
+		for ( List<AnnotationData> annotations : dataMap.values() ) {	
+			printData( annotations );
+		}
+	}
 	protected void printData( List<AnnotationData> annotations ) {
 		
-		for ( AnnotationData annotation : annotations ) {
-			
+		for ( AnnotationData annotation : annotations ) {				
 			try {
 				System.out.println("{");
 				if ( annotation.getX() != null )
@@ -80,7 +85,6 @@ public class AnnotationTestsBase {
 		}
 	}
 
-	
 	protected void printTiles( List<AnnotationTile> tiles ) {
 		
 		for ( AnnotationTile tile : tiles ) {			

@@ -55,12 +55,35 @@ define(function (require) {
         },
 
       
-        getData: function (tilekeys) {
+        getDataArray: function ( tilekeys ) {
             var i,
                 allData = [];
+
             for(i=0; i<tilekeys.length; i++) {
+                // if data exists in tile
                 if ( this.data[ tilekeys[i] ] !== undefined ) {
-                    $.merge( allData, this.data[ tilekeys[i] ] );
+                    // check format of data
+                    if ( $.isArray( this.data[ tilekeys[i] ] ) ) {
+                        // for each tile, data is an array, merge it together
+                        $.merge( allData, this.data[ tilekeys[i] ] );
+                    } else {
+                        // for each tile, data is an object
+                        allData.push( this.data[ tilekeys[i] ] );
+                    }
+                }
+            }
+            return allData;
+        },
+
+
+        getDataObject: function ( tilekeys ) {
+            var i,
+                allData = {};
+
+            for(i=0; i<tilekeys.length; i++) {
+                // if data exists in tile
+                if ( this.data[ tilekeys[i] ] !== undefined ) {
+                    allData[ tilekeys[i] ] = this.data[ tilekeys[i] ];
                 }
             }
             return allData;

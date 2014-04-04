@@ -27,6 +27,7 @@ package com.oculusinfo.annotation.rest;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
 
 import oculus.aperture.common.rest.ApertureServerResource;
 
@@ -61,9 +62,29 @@ public class AnnotationResource extends ApertureServerResource {
 	public Representation postAnnotation( String jsonData ) throws ResourceException {
 
 		try {
-			JSONObject json = new JSONObject(jsonData);
+			JSONObject json = new JSONObject( jsonData );
+			JSONObject annotation = json.getJSONObject("annotation");
+			String type = json.getString( "type" ).toLowerCase();
+			String layer = json.getString("layer");
+			
+			// write
+			if ( type.equals("write") ) {
+				
+				_service.writeAnnotation( layer, new JSONAnnotation( annotation ) );				
+			
+			} else if ( type.equals("remove") ) {
 
-			_service.writeAnnotation( json.getString("layer"), new JSONAnnotation( json.getJSONObject("annotation") ) );
+				_service.removeAnnotation( layer, new JSONAnnotation( annotation ) );				
+				
+			} else if ( type.equals("modify") ) {
+				
+				JSONAnnotation oldAnnotation = new JSONAnnotation( annotation.getJSONObject("old") );
+				JSONAnnotation newAnnotation = new JSONAnnotation( annotation.getJSONObject("new") );
+				
+				_service.removeAnnotation( layer, oldAnnotation );
+				_service.writeAnnotation( layer, newAnnotation );
+			}
+			
 			
 			return new JsonRepresentation(json);
 			
@@ -79,8 +100,6 @@ public class AnnotationResource extends ApertureServerResource {
 
 		try {
 			
-			// No alternate versions supported. But if we did:
-			//String version = (String) getRequest().getAttributes().get("version");
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
@@ -89,35 +108,35 @@ public class AnnotationResource extends ApertureServerResource {
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
 			
-			/*
-			UUID uuid = null;
-			if( !"default".equals(id) ){ // Special indicator - no ID.
-				uuid = UUID.fromString(id);
-			}
-			*/
-		
 		    // We return an object including the tile index ("index") and 
 		    // the tile data ("data").
 		    //
 		    // The data should include index information, but it has to be 
 		    // there for tiles with no data too, so we can't count on it.
 			JSONObject result = new JSONObject();
-		    JSONObject tileIndex = new JSONObject();
-		    tileIndex.put("level", zoomLevel);
-		    tileIndex.put("xIndex", x);
-		    tileIndex.put("yIndex", y);
-		    result.put("index", tileIndex );
+		    JSONObject indexJson = new JSONObject();
+		    indexJson.put("level", zoomLevel);
+		    indexJson.put("xIndex", x);
+		    indexJson.put("yIndex", y);
+		    result.put("index", indexJson );
 		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
 		    
-		    List<AnnotationData> data = _service.readAnnotations( layer, index );
+		    Map<BinIndex, List<AnnotationData>> data = _service.readAnnotations( layer, index );
 
-		    JSONArray dataArray = new JSONArray();
-		    for ( AnnotationData d : data ) {
-		    	System.out.println("\n\n\n" + d.toJSON().toString() + "\n\n\n");
-		    	dataArray.put( d.toJSON() );
+		    JSONObject dataJson = new JSONObject();
+		    for (Map.Entry<BinIndex, List<AnnotationData>> entry : data.entrySet() ) {
+				
+		    	BinIndex binIndex = entry.getKey();
+		    	List<AnnotationData> annotations = entry.getValue();
+		    	
+		    	JSONArray annotationArray = new JSONArray();			    
+			    for ( AnnotationData annotation : annotations ) {
+			    	annotationArray.put( annotation.toJSON() );
+			    }
+			    dataJson.put( binIndex.toString(), annotationArray );
 		    }
 		    
-		    result.put("annotations", dataArray );
+		    result.put( "data", dataJson );
 
 		    setStatus(Status.SUCCESS_CREATED);
 		    return new JsonRepresentation( result );

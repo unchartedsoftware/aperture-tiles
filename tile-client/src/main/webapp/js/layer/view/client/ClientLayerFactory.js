@@ -100,11 +100,11 @@ define( function (require) {
 			
 				// once everything is in memory, construct layer
 				var spec =  {
-						map: map.map,
+						map: map,
 						views: []
 					}, 
 					i;
-			
+
 				// add views to layer spec object
 				for (i=0; i<layerJSON.views.length; i++) {
 					spec.views.push({
