@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -64,150 +64,154 @@ import com.oculusinfo.tilegen.util.ArgumentParser
 abstract protected class LineSegmentBinnerBase (tileScheme: TilePyramid,
                                                 minBins: Int,
                                                 maxBins: Int) {
-  protected def getMinBins = minBins
-  protected def getMaxBins = maxBins
-  protected def getTileScheme = tileScheme
-  var debug: Boolean = false
+	protected def getMinBins = minBins
+	protected def getMaxBins = maxBins
+	protected def getTileScheme = tileScheme
+	var debug: Boolean = false
 
 
 
-  /**
-   * Transforms a set of pairs of points to a level or set of levels in a tile
-   * set, indicating how many lines intersected each bin.  Write out the
-   * resultant tile level or levels, as well as returning them.
-   */
-  def binAndWriteData (data: RDD[((Double, Double), (Double, Double))],
-                       writeLocation: String,
-                       tileIO: TileIO,
-                       levels: List[Int],
-                       name: String = "unknown",
-                       description: String = "unknown") = {
-    val startTime = System.currentTimeMillis()
-    val tiles = processData(data, levels);
-    val binDesc = new StandardDoubleBinDescriptor
-    tileIO.writeTileSet(getTileScheme, writeLocation, tiles, binDesc, name, description)
-    val endTime = System.currentTimeMillis()
+	/**
+	 * Transforms a set of pairs of points to a level or set of levels in a tile
+	 * set, indicating how many lines intersected each bin.  Write out the
+	 * resultant tile level or levels, as well as returning them.
+	 */
+	def binAndWriteData (data: RDD[((Double, Double), (Double, Double))],
+	                     writeLocation: String,
+	                     tileIO: TileIO,
+	                     levels: List[Int],
+	                     name: String = "unknown",
+	                     description: String = "unknown") = {
+		val startTime = System.currentTimeMillis()
+		val tiles = processData(data, levels);
+		val binDesc = new StandardDoubleBinDescriptor
+		tileIO.writeTileSet(getTileScheme, writeLocation, tiles, binDesc, name, description)
+		val endTime = System.currentTimeMillis()
 
-    if (debug) {
-      println("Finished binning line segment data set " + name + " into " + levels.size
-              + " levels (" + levels.mkString(",") + ") in "
-              + ((endTime-startTime)/60000.0) + " minutes")
-    }
+		if (debug) {
+			println("Finished binning line segment data set " + name + " into " + levels.size
+				        + " levels (" + levels.mkString(",") + ") in "
+				        + ((endTime-startTime)/60000.0) + " minutes")
+		}
 
-    tiles
-  }
+		tiles
+	}
 
-  def processData(data: RDD[((Double, Double), (Double, Double))],
-                  levels: List[Int]): RDD[TileData[JavaDouble]];
-
-
-
-  /**
-   * Determine all bins that are required to draw a line two endpoint bins.
-   *
-   * Bresenham's algorithm for filling in the intermediate pixels in a line.
-   *
-   * From wikipedia
-   * 
-   * @param start
-   *        The start bin, in universal bin index coordinates (not tile bin
-   *        coordinates)
-   * @param end
-   *        The end bin, in universal bin index coordinates (not tile bin
-   *        coordinates)
-   * @return All bins, in universal bin coordinates, falling on the direct
-   *         line between the two endoint bins.
-   */
-  protected val endpointsToUniversalBins: (BinIndex, BinIndex) => IndexedSeq[BinIndex] =
-    (start, end) => {
-    // Bresenham's algorithm, as per wikipedia
-    var steep = math.abs(end.getY() - start.getY()) > math.abs(end.getX() - start.getX())
-
-    var (x0, y0, x1, y1) =
-      if (steep) {
-        if (start.getY() > end.getY()) {
-          (end.getY(), end.getX(), start.getY(), start.getX())
-        } else {
-          (start.getY(), start.getX(), end.getY(), end.getX())
-        }
-      } else {
-        if (start.getX() > end.getX()) {
-          (end.getX(), end.getY(), start.getX(), start.getY())
-        } else {
-          (start.getX(), start.getY(), end.getX(), end.getY())
-        }
-      }
-
-    val deltax = x1-x0
-    val deltay = math.abs(y1-y0)
-    var error = deltax/2
-    var y = y0
-    val ystep = if (y0 < y1) 1 else -1
-
-    Range(x0, x1).map(x => {
-      val ourY = y
-      error = error - deltay
-      if (error < 0) {
-        y = y + ystep
-        error = error + deltax
-      }
-
-      if (steep) new BinIndex(ourY, x)
-      else new BinIndex(x, ourY)
-    })
-  }
+	def processData(data: RDD[((Double, Double), (Double, Double))],
+	                levels: List[Int]): RDD[TileData[JavaDouble]];
 
 
 
+	/**
+	 * Determine all bins that are required to draw a line two endpoint bins.
+	 *
+	 * Bresenham's algorithm for filling in the intermediate pixels in a line.
+	 *
+	 * From wikipedia
+	 * 
+	 * @param start
+	 *        The start bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @param end
+	 *        The end bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @return All bins, in universal bin coordinates, falling on the direct
+	 *         line between the two endoint bins.
+	 */
+	protected val endpointsToUniversalBins: (BinIndex, BinIndex) => IndexedSeq[BinIndex] =
+		(start, end) => {
+			// Bresenham's algorithm, as per wikipedia
+			var steep = math.abs(end.getY() - start.getY()) > math.abs(end.getX() - start.getX())
 
-  /**
-   * Determine all tiles required to draw a line between two endpoint bins.
-   *
-   * @param baseTile
-   *        A sample tile specifying level and number of bins of all required
-   *        results.
-   * @param start
-   *        The start bin, in universal bin index coordinates (not tile bin
-   *        coordinates)
-   * @param end
-   *        The end bin, in universal bin index coordinates (not tile bin
-   *        coordinates)
-   * @return All tiles falling on the direct line (in universal bin
-   *         coordinates) between the two endpoint bins
-   */
-  protected val universalBinsToTiles:
-  (TileIndex, IndexedSeq[BinIndex]) => Traversable[TileIndex] =
-  (baseTile, bins) => {
-    bins.map(ubin => {
-      val tb = TileIndex.universalBinIndexToTileBinIndex(baseTile, ubin)
-      tb.getTile()
-    }).toSet
-    // transform to set to remove duplicates
-  }
+			var (x0, y0, x1, y1) =
+				if (steep) {
+					if (start.getY() > end.getY()) {
+						(end.getY(), end.getX(), start.getY(), start.getX())
+					} else {
+						(start.getY(), start.getX(), end.getY(), end.getX())
+					}
+				} else {
+					if (start.getX() > end.getX()) {
+						(end.getX(), end.getY(), start.getX(), start.getY())
+					} else {
+						(start.getX(), start.getY(), end.getX(), end.getY())
+					}
+				}
 
-  /**
-   * Determine all bins within a given tile that are required to draw a line
-   * between two endpoint bins.
-   *
-   * @param tile
-   *        The tile of interest
-   * @param start
-   *        The start bin, in universal bin index coordinates (not tile bin
-   *        coordinates)
-   * @param end
-   *        The end bin, in universal bin index coordinates (not tile bin
-   *        coordinates)
-   * @return All bins, in tile bin coordinates, in the given tile, falling on
-   *         the direct line (in universal bin coordinates) between the two
-   *         endoint bins.
-   */
-  protected val universalBinsToBins:
-  (TileIndex, IndexedSeq[BinIndex]) => IndexedSeq[BinIndex] =
-  (tile, bins) => {
-    bins.map(ubin =>
-      TileIndex.universalBinIndexToTileBinIndex(tile, ubin)
-    ).filter(_.getTile().equals(tile)).map(_.getBin())
-  }
+			val deltax = x1-x0
+			val deltay = math.abs(y1-y0)
+			var error = deltax/2
+			var y = y0
+			val ystep = if (y0 < y1) 1 else -1
+
+			Range(x0, x1).map(x =>
+				{
+					val ourY = y
+					error = error - deltay
+					if (error < 0) {
+						y = y + ystep
+						error = error + deltax
+					}
+
+					if (steep) new BinIndex(ourY, x)
+					else new BinIndex(x, ourY)
+				}
+			)
+		}
+
+
+
+
+	/**
+	 * Determine all tiles required to draw a line between two endpoint bins.
+	 *
+	 * @param baseTile
+	 *        A sample tile specifying level and number of bins of all required
+	 *        results.
+	 * @param start
+	 *        The start bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @param end
+	 *        The end bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @return All tiles falling on the direct line (in universal bin
+	 *         coordinates) between the two endpoint bins
+	 */
+	protected val universalBinsToTiles:
+			(TileIndex, IndexedSeq[BinIndex]) => Traversable[TileIndex] =
+		(baseTile, bins) => {
+			bins.map(ubin =>
+				{
+					val tb = TileIndex.universalBinIndexToTileBinIndex(baseTile, ubin)
+					tb.getTile()
+				}
+			).toSet
+			// transform to set to remove duplicates
+		}
+
+	/**
+	 * Determine all bins within a given tile that are required to draw a line
+	 * between two endpoint bins.
+	 *
+	 * @param tile
+	 *        The tile of interest
+	 * @param start
+	 *        The start bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @param end
+	 *        The end bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @return All bins, in tile bin coordinates, in the given tile, falling on
+	 *         the direct line (in universal bin coordinates) between the two
+	 *         endoint bins.
+	 */
+	protected val universalBinsToBins:
+			(TileIndex, IndexedSeq[BinIndex]) => IndexedSeq[BinIndex] =
+		(tile, bins) => {
+			bins.map(ubin =>
+				TileIndex.universalBinIndexToTileBinIndex(tile, ubin)
+			).filter(_.getTile().equals(tile)).map(_.getBin())
+		}
 }
 
 
@@ -227,76 +231,82 @@ abstract protected class LineSegmentBinnerBase (tileScheme: TilePyramid,
  */
 class LineSegmentPointBinner (tileScheme: TilePyramid,
                               minBins: Int = 1 << 1,
-                              maxBins: Int = 1 << 10) 
-extends LineSegmentBinnerBase(tileScheme, minBins, maxBins) {
-  def processData(data: RDD[((Double, Double), (Double, Double))],
-                  levels: List[Int]): RDD[TileData[JavaDouble]] =
-    consolidate(binData(data, levels))
+                              maxBins: Int = 1 << 10)
+		extends LineSegmentBinnerBase(tileScheme, minBins, maxBins) {
+	def processData(data: RDD[((Double, Double), (Double, Double))],
+	                levels: List[Int]): RDD[TileData[JavaDouble]] =
+		consolidate(binData(data, levels))
 
 
 
-  /*
-   * Figure out in which bins all the data lies on the given zoom levels
-   */
-  def binData (data: RDD[((Double, Double), (Double, Double))],
-               levels: List[Int]): RDD[((TileIndex, BinIndex), Int)] = {
-    val minPts = getMinBins
-    val maxPts = getMaxBins
-    val pixelator = endpointsToUniversalBins
-    val ts = getTileScheme
+	/*
+	 * Figure out in which bins all the data lies on the given zoom levels
+	 */
+	def binData (data: RDD[((Double, Double), (Double, Double))],
+	             levels: List[Int]): RDD[((TileIndex, BinIndex), Int)] = {
+		val minPts = getMinBins
+		val maxPts = getMaxBins
+		val pixelator = endpointsToUniversalBins
+		val ts = getTileScheme
 
-    data.flatMap(p => {
-      val pt1 = new Point2D.Double(p._1._1, p._1._2)
-      val pt2 = new Point2D.Double(p._2._1, p._2._2)
+		data.flatMap(p =>
+			{
+				val pt1 = new Point2D.Double(p._1._1, p._1._2)
+				val pt2 = new Point2D.Double(p._2._1, p._2._2)
 
-      levels.flatMap(level => {
-        val tile1 = ts.rootToTile(pt1, level)
-        val tileBin1 = ts.rootToBin(pt1, tile1)
-        val bin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+				levels.flatMap(level =>
+					{
+						val tile1 = ts.rootToTile(pt1, level)
+						val tileBin1 = ts.rootToBin(pt1, tile1)
+						val bin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
 
 
-        val tile2 = ts.rootToTile(pt2, level)
-        val tileBin2 = ts.rootToBin(pt2, tile2)
-        val bin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+						val tile2 = ts.rootToTile(pt2, level)
+						val tileBin2 = ts.rootToBin(pt2, tile2)
+						val bin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
 
-        val points = math.abs(bin1.getX()-bin2.getX()) max math.abs(bin1.getY()-bin2.getY())
-        if (points < minPts || maxPts < points) {
-          List[((TileIndex, BinIndex), Int)]()
-        } else {
-          pixelator(bin1, bin2).map(bin => {
-            val tb = TileIndex.universalBinIndexToTileBinIndex(tile1, bin);
-            ((tb.getTile(), tb.getBin()), 1)
-          })
-        }
-      })
-    })
-  }
-
-  /*
-   * Consolidate individual bins into tiles
-   */
-  private def consolidate (data: RDD[((TileIndex, BinIndex), Int)]):
-  RDD[TileData[JavaDouble]] = {
-    data.reduceByKey(_ + _).map(p =>
-      // Remap to key by tile, and have the value be (bin, count) pairs
-      (p._1._1, (p._1._2, p._2))
-    ).groupByKey().map(t => {
-      val tile = t._1
-      val bins:Map[BinIndex, Int] = t._2.toMap
-      val xLimit = tile.getXBins()
-      val yLimit = tile.getYBins()
-      val counter = new TileData[JavaDouble](tile)
-
-      for (x <- 0 until xLimit) {
-	for (y <- 0 until yLimit) {
-	  val bin = new BinIndex(x, y)
-	  val value: Int = bins.get(bin).getOrElse(0)
-	  counter.setBin(x, y, value)
+						val points = math.abs(bin1.getX()-bin2.getX()) max math.abs(bin1.getY()-bin2.getY())
+						if (points < minPts || maxPts < points) {
+							List[((TileIndex, BinIndex), Int)]()
+						} else {
+							pixelator(bin1, bin2).map(bin =>
+								{
+									val tb = TileIndex.universalBinIndexToTileBinIndex(tile1, bin);
+									((tb.getTile(), tb.getBin()), 1)
+								}
+							)
+						}
+					}
+				)
+			}
+		)
 	}
-      }
-      counter
-    })
-  }
+
+	/*
+	 * Consolidate individual bins into tiles
+	 */
+	private def consolidate (data: RDD[((TileIndex, BinIndex), Int)]):
+			RDD[TileData[JavaDouble]] = {
+		data.reduceByKey(_ + _).map(p =>
+			// Remap to key by tile, and have the value be (bin, count) pairs
+			(p._1._1, (p._1._2, p._2))
+		).groupByKey().map(t => {
+			                   val tile = t._1
+			                   val bins:Map[BinIndex, Int] = t._2.toMap
+			                   val xLimit = tile.getXBins()
+			                   val yLimit = tile.getYBins()
+			                   val counter = new TileData[JavaDouble](tile)
+
+			                   for (x <- 0 until xLimit) {
+				                   for (y <- 0 until yLimit) {
+					                   val bin = new BinIndex(x, y)
+					                   val value: Int = bins.get(bin).getOrElse(0)
+					                   counter.setBin(x, y, value)
+				                   }
+			                   }
+			                   counter
+		                   })
+	}
 }
 
 
@@ -321,60 +331,66 @@ extends LineSegmentBinnerBase(tileScheme, minBins, maxBins) {
 class LineSegmentTileBinner (tileScheme: TilePyramid,
                              minBins: Int = 1 << 1,
                              maxBins: Int = 1 << 10)
-extends LineSegmentBinnerBase(tileScheme, minBins, maxBins)  {
-  def processData(data: RDD[((Double, Double), (Double, Double))],
-                  levels: List[Int]): RDD[TileData[JavaDouble]] = {
-    val minPts = getMinBins
-    val maxPts = getMaxBins
-    val ts = getTileScheme
-    val pixelator = endpointsToUniversalBins
-    val tiler = universalBinsToTiles
-    val binner = universalBinsToBins
+		extends LineSegmentBinnerBase(tileScheme, minBins, maxBins)  {
+	def processData(data: RDD[((Double, Double), (Double, Double))],
+	                levels: List[Int]): RDD[TileData[JavaDouble]] = {
+		val minPts = getMinBins
+		val maxPts = getMaxBins
+		val ts = getTileScheme
+		val pixelator = endpointsToUniversalBins
+		val tiler = universalBinsToTiles
+		val binner = universalBinsToBins
 
-    // Figure out which segments intersect each tile
-    val tiledData = data.flatMap(p => {
-      val pt1 = new Point2D.Double(p._1._1, p._1._2)
-      val pt2 = new Point2D.Double(p._2._1, p._2._2)
+		// Figure out which segments intersect each tile
+		val tiledData = data.flatMap(p => {
+			                             val pt1 = new Point2D.Double(p._1._1, p._1._2)
+			                             val pt2 = new Point2D.Double(p._2._1, p._2._2)
 
-      levels.flatMap(level => {
-        val tile1 = ts.rootToTile(pt1, level)
-        val tileBin1 = ts.rootToBin(pt1, tile1)
-        val bin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+			                             levels.flatMap(level => {
+				                                            val tile1 = ts.rootToTile(pt1, level)
+				                                            val tileBin1 = ts.rootToBin(pt1, tile1)
+				                                            val bin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
 
-        val tile2 = ts.rootToTile(pt2, level)
-        val tileBin2 = ts.rootToBin(pt2, tile2)
-        val bin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+				                                            val tile2 = ts.rootToTile(pt2, level)
+				                                            val tileBin2 = ts.rootToBin(pt2, tile2)
+				                                            val bin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
 
-        val points = math.abs(bin1.getX()-bin2.getX()) max math.abs(bin1.getY()-bin2.getY())
-        if (points < minPts || maxPts < points) {
-          List[(TileIndex, (BinIndex, BinIndex))]()
-        } else {
-          tiler(tile1, pixelator(bin1, bin2)).map(tile =>
-            (tile, (bin1, bin2))
-          )
-        }
-      })
-    })
+				                                            val points = math.abs(bin1.getX()-bin2.getX()) max math.abs(bin1.getY()-bin2.getY())
+				                                            if (points < minPts || maxPts < points) {
+					                                            List[(TileIndex, (BinIndex, BinIndex))]()
+				                                            } else {
+					                                            tiler(tile1, pixelator(bin1, bin2)).map(tile =>
+						                                            (tile, (bin1, bin2))
+					                                            )
+				                                            }
+			                                            })
+		                             })
 
-    // Consolidate segments for each tile index, and draw a tile data based on 
-    // the consolidated results
-    tiledData.groupByKey().map(t => {
-      val tile: TileIndex = t._1
-      val segments: Seq[(BinIndex, BinIndex)] = t._2
+		// Consolidate segments for each tile index, and draw a tile data based on
+		// the consolidated results
+		tiledData.groupByKey().map(t =>
+			{
+				val tile: TileIndex = t._1
+				val segments: Seq[(BinIndex, BinIndex)] = t._2
 
-      val xLimit = tile.getXBins()
-      val yLimit = tile.getYBins()
-      val counter = new TileData[JavaDouble](tile)
+				val xLimit = tile.getXBins()
+				val yLimit = tile.getYBins()
+				val counter = new TileData[JavaDouble](tile)
 
-      segments.foreach(segment => {
-        binner(tile, pixelator(segment._1, segment._2)).foreach(bin => {
-          val x = bin.getX()
-          val y = bin.getY()
-          counter.setBin(x, y, counter.getBin(x, y)+1)
-        })
-      })
+				segments.foreach(segment =>
+					{
+						binner(tile, pixelator(segment._1, segment._2)).foreach(bin =>
+							{
+								val x = bin.getX()
+								val y = bin.getY()
+								counter.setBin(x, y, counter.getBin(x, y)+1)
+							}
+						)
+					}
+				)
 
-      counter
-    })
-  }
+				counter
+			}
+		)
+	}
 }

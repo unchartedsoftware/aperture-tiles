@@ -52,46 +52,46 @@ import org.apache.spark.streaming.Time
  * place that needs raw data to be binned.
  */
 abstract class Dataset[PT: ClassManifest, BT] {
-  val binTypeManifest = implicitly[ClassManifest[PT]]
-  var _debug = true;
+	val binTypeManifest = implicitly[ClassManifest[PT]]
+	var _debug = true;
 
 
 
-  /**
-   * Get a name for this dataset
-   */
-  def getName: String
+	/**
+	 * Get a name for this dataset
+	 */
+	def getName: String
 
-  /**
-   * Get a description of this dataset
-   */
-  def getDescription: String
+	/**
+	 * Get a description of this dataset
+	 */
+	def getDescription: String
 
-  def getLevels: Seq[Seq[Int]]
+	def getLevels: Seq[Seq[Int]]
 
-  def getTilePyramid: TilePyramid
+	def getTilePyramid: TilePyramid
 
-  def getNumXBins: Int = 256
-  def getNumYBins: Int = 256
+	def getNumXBins: Int = 256
+	def getNumYBins: Int = 256
 
-  def getConsolidationPartitions: Option[Int] = None
-  
-  def isDensityStrip: Boolean = false
+	def getConsolidationPartitions: Option[Int] = None
+	
+	def isDensityStrip: Boolean = false
 
-  /**
-   * Gets the data associated with this dataset, in a form that is ready for binning
-   *
-   * @param sc The Spark context in which the data should be retrieved
-   * @param cache If true, the data should be cached at an appropriate point.
-   *              If false, the caching state is unspecified, not necessarily
-   *              uncached.
-   */
-//  def getData (sc: SparkContext, cache: Boolean): RDD[(Double, Double, BT)]
+	/**
+	 * Gets the data associated with this dataset, in a form that is ready for binning
+	 *
+	 * @param sc The Spark context in which the data should be retrieved
+	 * @param cache If true, the data should be cached at an appropriate point.
+	 *              If false, the caching state is unspecified, not necessarily
+	 *              uncached.
+	 */
+	//  def getData (sc: SparkContext, cache: Boolean): RDD[(Double, Double, BT)]
 
-  /**
-   * Get a bin descriptor that can be used to bin this data
-   */
-  def getBinDescriptor: BinDescriptor[PT, BT]
+	/**
+	 * Get a bin descriptor that can be used to bin this data
+	 */
+	def getBinDescriptor: BinDescriptor[PT, BT]
 
 	/**
 	 * Creates a blank metadata describing this dataset
@@ -115,114 +115,114 @@ abstract class Dataset[PT: ClassManifest, BT] {
 	}
 
 
-  type STRATEGY_TYPE <: ProcessingStrategy[PT]
+	type STRATEGY_TYPE <: ProcessingStrategy[PT]
 
-  protected var strategy: STRATEGY_TYPE
-  def initialize (strategy: STRATEGY_TYPE): Unit = {
-    this.strategy = strategy
-  }
-  
-  
-  /**
-   * Completely process this data set in some way.
-   *
-   * Note that these function may be serialized remotely, so any context-stored
-   * parameters must be serializable
-   */
-  def process[OUTPUT] (fcn: (RDD[(Double, Double, PT)]) => OUTPUT,
-		       completionCallback: Option[OUTPUT => Unit]): Unit = {
-    if (null == strategy) {
-      throw new Exception("Attempt to process uninitialized dataset "+getName)
-    } else {
-      strategy.process(fcn, completionCallback)
-    }
-  }
+	protected var strategy: STRATEGY_TYPE
+	def initialize (strategy: STRATEGY_TYPE): Unit = {
+		this.strategy = strategy
+	}
+	
+	
+	/**
+	 * Completely process this data set in some way.
+	 *
+	 * Note that these function may be serialized remotely, so any context-stored
+	 * parameters must be serializable
+	 */
+	def process[OUTPUT] (fcn: (RDD[(Double, Double, PT)]) => OUTPUT,
+	                     completionCallback: Option[OUTPUT => Unit]): Unit = {
+		if (null == strategy) {
+			throw new Exception("Attempt to process uninitialized dataset "+getName)
+		} else {
+			strategy.process(fcn, completionCallback)
+		}
+	}
 
-  def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: (RDD[(Double, Double, PT)]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
-    if (null == strategy) {
-      throw new Exception("Attempt to process uninitialized dataset "+getName)
-    } else {
-      strategy.transformRDD[OUTPUT_TYPE](fcn)
-    }
+	def transformRDD[OUTPUT_TYPE: ClassManifest]
+		(fcn: (RDD[(Double, Double, PT)]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		if (null == strategy) {
+			throw new Exception("Attempt to process uninitialized dataset "+getName)
+		} else {
+			strategy.transformRDD[OUTPUT_TYPE](fcn)
+		}
 
-  def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: (RDD[(Double, Double, PT)]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
-    if (null == strategy) {
-      throw new Exception("Attempt to process uninitialized dataset "+getName)
-    } else {
-      strategy.transformDStream[OUTPUT_TYPE](fcn)
-    }
+	def transformDStream[OUTPUT_TYPE: ClassManifest]
+		(fcn: (RDD[(Double, Double, PT)]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		if (null == strategy) {
+			throw new Exception("Attempt to process uninitialized dataset "+getName)
+		} else {
+			strategy.transformDStream[OUTPUT_TYPE](fcn)
+		}
 }
 
 trait StreamingProcessor[PT] {
-  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, PT)] => OUTPUT,
-		       completionCallback: Option[Time => OUTPUT => Unit]): Unit
+	def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, PT)] => OUTPUT,
+	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit
 }
 
 abstract class ProcessingStrategy[PT: ClassManifest] {
-  def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
-		       completionCallback: Option[OUTPUT => Unit]): Unit
+	def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
+	                     completionCallback: Option[OUTPUT => Unit]): Unit
 
-  def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
+	def transformRDD[OUTPUT_TYPE: ClassManifest]
+		(fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
 
-  def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
+	def transformDStream[OUTPUT_TYPE: ClassManifest]
+		(fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
 }
 
-abstract class StaticProcessingStrategy[PT: ClassManifest] (sc: SparkContext, cache: Boolean) 
-	 extends ProcessingStrategy[PT] {
-  private val rdd = getData
+abstract class StaticProcessingStrategy[PT: ClassManifest] (sc: SparkContext, cache: Boolean)
+		extends ProcessingStrategy[PT] {
+	private val rdd = getData
 
-  protected def getData: RDD[(Double, Double, PT)]
+	protected def getData: RDD[(Double, Double, PT)]
 
-  final def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
-			     completionCallback: Option[OUTPUT => Unit] = None): Unit = {
-    val result = fcn(rdd)
-    completionCallback.map(_(result))
-  }
+	final def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
+	                           completionCallback: Option[OUTPUT => Unit] = None): Unit = {
+		val result = fcn(rdd)
+		completionCallback.map(_(result))
+	}
 
-  final def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
-    fcn(rdd)
+	final def transformRDD[OUTPUT_TYPE: ClassManifest]
+		(fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		fcn(rdd)
 
-  final def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
-    throw new Exception("Attempt to call DStream transform on RDD processor")
+	final def transformDStream[OUTPUT_TYPE: ClassManifest]
+		(fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		throw new Exception("Attempt to call DStream transform on RDD processor")
 }
 
 abstract class StreamingProcessingStrategy[PT: ClassManifest]
-extends ProcessingStrategy[PT] {
-  private val dstream = getData
+		extends ProcessingStrategy[PT] {
+	private val dstream = getData
 
-  protected def getData: DStream[(Double, Double, PT)]
+	protected def getData: DStream[(Double, Double, PT)]
 
-  private final def internalProcess[OUTPUT] (rdd: RDD[(Double, Double, PT)], fcn: RDD[(Double, Double, PT)] => OUTPUT,
-			     completionCallback: Option[OUTPUT => Unit] = None): Unit = {
-    val result = fcn(rdd)
-    completionCallback.map(_(result))
-  }
+	private final def internalProcess[OUTPUT] (rdd: RDD[(Double, Double, PT)], fcn: RDD[(Double, Double, PT)] => OUTPUT,
+	                                           completionCallback: Option[OUTPUT => Unit] = None): Unit = {
+		val result = fcn(rdd)
+		completionCallback.map(_(result))
+	}
 
-  def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
-			     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
-    dstream.foreach(internalProcess(_, fcn, completionCallback))
-  }
+	def process[OUTPUT] (fcn: RDD[(Double, Double, PT)] => OUTPUT,
+	                     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
+		dstream.foreach(internalProcess(_, fcn, completionCallback))
+	}
 
-  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, PT)] => OUTPUT,
-		       completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
-    dstream.foreach{(rdd, time) =>
-      internalProcess(rdd, fcn(time), completionCallback.map(_(time)))
-    }
-  }
-  
-  final def transformRDD[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
-    throw new Exception("Attempt to call RDD transform on DStream processor")
+	def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, PT)] => OUTPUT,
+	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
+		dstream.foreach{(rdd, time) =>
+			internalProcess(rdd, fcn(time), completionCallback.map(_(time)))
+		}
+	}
+	
+	final def transformRDD[OUTPUT_TYPE: ClassManifest]
+		(fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		throw new Exception("Attempt to call RDD transform on DStream processor")
 
-  final def transformDStream[OUTPUT_TYPE: ClassManifest]
-  (fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
-    dstream.transform(fcn)
+	final def transformDStream[OUTPUT_TYPE: ClassManifest]
+		(fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		dstream.transform(fcn)
 }
 
 
@@ -233,8 +233,8 @@ object DatasetFactory {
 	                   cache: Boolean,
 	                   tileWidth: Int = 256,
 	                   tileHeight: Int = 256): Dataset[_, _] = {
-    val dataset = new CSVDataset(dataDescription, tileWidth, tileHeight)
-    dataset.initialize(sc, cache)
-    dataset
-  }
+		val dataset = new CSVDataset(dataDescription, tileWidth, tileHeight)
+		dataset.initialize(sc, cache)
+		dataset
+	}
 }

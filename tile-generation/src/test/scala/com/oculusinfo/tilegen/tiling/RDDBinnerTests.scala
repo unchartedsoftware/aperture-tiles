@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -42,55 +42,55 @@ import com.oculusinfo.binning.TileIndex
 
 
 class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
-  test("Simple binning") {
-    val data = sc.parallelize(Range(0, 8)).map(n =>
-      (n.toDouble, (7-n).toDouble, 1.0)
-    )
+	test("Simple binning") {
+		val data = sc.parallelize(Range(0, 8)).map(n =>
+			(n.toDouble, (7-n).toDouble, 1.0)
+		)
 
-    val binner = new RDDBinner
-    val tileIO = new TestTileIO
-    val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
-    val pyramidId = "simple test"
+		val binner = new RDDBinner
+		val tileIO = new TestTileIO
+		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
+		val pyramidId = "simple test"
 
-    val toBinnerForm: Iterator[(Double, Double, Double)] =>
-    Iterator[(ValueOrException[Double],
-	      ValueOrException[Double],
-	      ValueOrException[Double])] = records => 
-    records.map(record =>
-      (new ValueOrException(Some(record._1), None),
-       new ValueOrException(Some(record._2), None),
-       new ValueOrException(Some(record._3), None))
-    )
-      
-    binner.binAndWriteData(data,
-			   toBinnerForm,
-			   new StandardDoubleBinDescriptor,
-			   pyramid,
-			   None,
-			   pyramidId,
-			   tileIO,
-			   List(List(1)),
-			   bins=4)
+		val toBinnerForm: Iterator[(Double, Double, Double)] =>
+		Iterator[(ValueOrException[Double],
+		          ValueOrException[Double],
+		          ValueOrException[Double])] = records =>
+		records.map(record =>
+			(new ValueOrException(Some(record._1), None),
+			 new ValueOrException(Some(record._2), None),
+			 new ValueOrException(Some(record._3), None))
+		)
+		
+		binner.binAndWriteData(data,
+		                       toBinnerForm,
+		                       new StandardDoubleBinDescriptor,
+		                       pyramid,
+		                       None,
+		                       pyramidId,
+		                       tileIO,
+		                       List(List(1)),
+		                       bins=4)
 
-    val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 4))
-    assert(tile00.isEmpty)
-    val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 4, 4))
-    assert(tile11.isEmpty)
+		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 4))
+		assert(tile00.isEmpty)
+		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 4, 4))
+		assert(tile11.isEmpty)
 
-    // Noting that visually, the tiles should look exactly as we enter them here.
-    val tile01 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 1, 4, 4))
-    assert(tile01.isDefined)
-    assert(tile01.get.getData.asScala.map(_.toString.toDouble) ===
-	   List[Double](1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0))
-    val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 4))
-    assert(tile10.isDefined)
-    assert(tile10.get.getData.asScala.map(_.toString.toDouble) ===
-	   List[Double](1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0))
-  }
+		// Noting that visually, the tiles should look exactly as we enter them here.
+		val tile01 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 1, 4, 4))
+		assert(tile01.isDefined)
+		assert(tile01.get.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](1.0, 0.0, 0.0, 0.0,
+			                    0.0, 1.0, 0.0, 0.0,
+			                    0.0, 0.0, 1.0, 0.0,
+			                    0.0, 0.0, 0.0, 1.0))
+		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 4))
+		assert(tile10.isDefined)
+		assert(tile10.get.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](1.0, 0.0, 0.0, 0.0,
+			                    0.0, 1.0, 0.0, 0.0,
+			                    0.0, 0.0, 1.0, 0.0,
+			                    0.0, 0.0, 0.0, 1.0))
+	}
 }

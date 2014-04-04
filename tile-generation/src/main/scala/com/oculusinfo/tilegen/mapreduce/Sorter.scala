@@ -85,8 +85,8 @@ class PyramidSorter extends Configured with Tool {
 		val job = Job.getInstance(getConf(), "Pyramid Sorter")
 
 		job.setJarByClass(this.getClass)
-        job.setMapOutputKeyClass(classOf[PyramidSortKey])
-        job.setMapOutputValueClass(classOf[Text])
+		job.setMapOutputKeyClass(classOf[PyramidSortKey])
+		job.setMapOutputValueClass(classOf[Text])
 		job.setMapperClass(classOf[PyramidSortMapper])
 		job.setReducerClass(classOf[PyramidSortReducer])
 		job.setOutputKeyClass(classOf[Text])

@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.datasets
 
 
@@ -182,14 +182,14 @@ import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
  * Simple class to add standard field interpretation to a properties wrapper
  */
 class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrapper(properties) {
-  val fields =
-    properties.stringPropertyNames.asScala.toSeq
-      .filter(_.startsWith("oculus.binning.parsing."))
-      .filter(_.endsWith(".index")).map(property => 
-      property.substring("oculus.binning.parsing.".length, property.length-".index".length)
-    )
-  val fieldIndices =
-      Range(0, fields.size).map(n => (fields(n) -> n)).toMap
+	val fields =
+		properties.stringPropertyNames.asScala.toSeq
+			.filter(_.startsWith("oculus.binning.parsing."))
+			.filter(_.endsWith(".index")).map(property =>
+			property.substring("oculus.binning.parsing.".length, property.length-".index".length)
+		)
+	val fieldIndices =
+		Range(0, fields.size).map(n => (fields(n) -> n)).toMap
 }
 
 /**
@@ -197,14 +197,14 @@ class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrap
  * property-style configuration file
  */
 class CSVDataSource (properties: CSVRecordPropertiesWrapper) extends DataSource {
-  def getDataFiles: Seq[String] = properties.getStringPropSeq(
-	  "oculus.binning.source.location",
-	  "The hdfs file name from which to get the CSV data.  Either a directory, all "+
-		  "of whose contents should be part of this dataset, or a single file.")
+	def getDataFiles: Seq[String] = properties.getStringPropSeq(
+		"oculus.binning.source.location",
+		"The hdfs file name from which to get the CSV data.  Either a directory, all "+
+			"of whose contents should be part of this dataset, or a single file.")
 
-  override def getIdealPartitions: Option[Int] = properties.getIntOption(
-	  "oculus.binning.source.partitions",
-	  "The number of partitions to use when reducing data, if needed")
+	override def getIdealPartitions: Option[Int] = properties.getIntOption(
+		"oculus.binning.source.partitions",
+		"The number of partitions to use when reducing data, if needed")
 }
 
 
@@ -213,159 +213,162 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) extends DataSource 
  * A simple parser that splits a record according to a given separator
  */
 class CSVRecordParser (properties: CSVRecordPropertiesWrapper) extends RecordParser[List[Double]] {
-    
-  def parseRecords (raw: Iterator[String], variables: String*): Iterator[ValueOrException[List[Double]]] = {
-	  // This method generally is only called on workers, therefore properties can't really be documented here.
+	
+	def parseRecords (raw: Iterator[String], variables: String*): Iterator[ValueOrException[List[Double]]] = {
+		// This method generally is only called on workers, therefore properties can't really be documented here.
 
-	  // Get some simple parsing info we'll need
-	  val separator = properties.getString(
-		  "oculus.binning.parsing.separator", "", Some("\t"))
+		// Get some simple parsing info we'll need
+		val separator = properties.getString(
+			"oculus.binning.parsing.separator", "", Some("\t"))
 
-	  val dateFormats = properties.fields.filter(field =>
-		  "date" == properties.getString("oculus.binning.parsing."+field+".fieldType", "", Some(""))
-	  ).map(field =>
-		  (field ->
-			   new SimpleDateFormat(properties.getString(
-				                        "oculus.binning.parsing."+field+".dateFormat",
-				                        "", Some("yyMMddHHmm"))))
-	  ).toMap
-
-
-
-
-	  // A quick couple of inline functions to make our lives easier
-	  // Split a string (but do so efficiently if the separator is a single character)
-	  def splitString (input: String, separator: String): Array[String] =
-		  if (1 == separator.length) input.split(separator.charAt(0))
-		  else input.split(separator)
-
-	  def getFieldType (field: String, suffix: String = "fieldType"): String = {
-		  properties.getString("oculus.binning.parsing."+field+"."+suffix,
-		                       "",
-		                       Some(if ("constant" == field || "zero" == field) "constant"
-		                            else ""))
-	  }
-
-	  // Convert a string to a double value according to field semantics
-	  def parseValue (value: String, field: String, parseType: String): Double = {
-		  if ("int" == parseType) {
-			  value.toInt.toDouble
-		  } else if ("long" == parseType) {
-			  value.toLong.toDouble
-		  } else if ("date" == parseType) {
-			  dateFormats(field).parse(value).getTime()
-		  } else if ("propertyMap" == parseType) {
-			  val property = properties.getStringOption("oculus.binning.parsing."+field+".property", "").get
-	      val propType = getFieldType(field, "propertyType")
-	      val propSep = properties.getStringOption("oculus.binning.parsing."+field+
-		                                               ".propertySeparator", "").get
-	      val valueSep = properties.getStringOption("oculus.binning.parsing."+field+
-		                                                ".propertyValueSeparator", "").get
-
-			  val kvPairs = splitString(value, propSep)
-			  val propPairs = kvPairs.map(splitString(_, valueSep))
-
-			  val propValue = propPairs.filter(kv => property.trim == kv(0).trim).map(kv =>
-				  if (kv.size>1) kv(1) else ""
-			  ).takeRight(1)(0)
-			  parseValue(propValue, field, propType)
-		  } else {
-			  value.toDouble
-		  }
-	  }
+		val dateFormats = properties.fields.filter(field =>
+			"date" == properties.getString("oculus.binning.parsing."+field+".fieldType", "", Some(""))
+		).map(field =>
+			(field ->
+				 new SimpleDateFormat(properties.getString(
+					                      "oculus.binning.parsing."+field+".dateFormat",
+					                      "", Some("yyMMddHHmm"))))
+		).toMap
 
 
 
 
+		// A quick couple of inline functions to make our lives easier
+		// Split a string (but do so efficiently if the separator is a single character)
+		def splitString (input: String, separator: String): Array[String] =
+			if (1 == separator.length) input.split(separator.charAt(0))
+			else input.split(separator)
 
-	  raw.map(s =>
-		  {
-			  val columns = splitString(s, separator)
-			  try {
-				  new ValueOrException(Some(properties.fields.toList.map(field =>
-					                            {
-						                            val fieldType = getFieldType(field)
-						                            var value = if ("constant" == fieldType ||
-							                                            "zero" == fieldType) 0.0
-						                            else {
-							                            val fieldIndex =
-								                            properties.getIntOption("oculus.binning.parsing."+
-									                                                    field+".index",
-								                                                    "").get
-							                            parseValue(columns(fieldIndex.toInt), field, fieldType)
-						                            }
-						                            val fieldScaling = 
-							                            properties.getString("oculus.binning.parsing."+field+
-								                                                 ".fieldScaling", "", Some(""))
-						                            if ("log" == fieldScaling) {
-							                            val base =
-								                            properties.getDouble("oculus.binning.parsing."+
-									                                                 field+".fieldBase",
-								                                                 "", Some(math.exp(1.0)))
-							                            value = math.log(value)/math.log(base)
-						                            }
-						                            value
-					                            })), None)
-			  } catch {
-				  case e: Exception => new ValueOrException(None, Some(e))
-			  }
-		  }
-	  )
-  }
+		def getFieldType (field: String, suffix: String = "fieldType"): String = {
+			properties.getString("oculus.binning.parsing."+field+"."+suffix,
+			                     "",
+			                     Some(if ("constant" == field || "zero" == field) "constant"
+			                          else ""))
+		}
+
+		// Convert a string to a double value according to field semantics
+		def parseValue (value: String, field: String, parseType: String): Double = {
+			if ("int" == parseType) {
+				value.toInt.toDouble
+			} else if ("long" == parseType) {
+				value.toLong.toDouble
+			} else if ("date" == parseType) {
+				dateFormats(field).parse(value).getTime()
+			} else if ("propertyMap" == parseType) {
+				val property = properties.getStringOption("oculus.binning.parsing."+field+".property", "").get
+				val propType = getFieldType(field, "propertyType")
+				val propSep = properties.getStringOption("oculus.binning.parsing."+field+
+					                                         ".propertySeparator", "").get
+				val valueSep = properties.getStringOption("oculus.binning.parsing."+field+
+					                                          ".propertyValueSeparator", "").get
+
+				val kvPairs = splitString(value, propSep)
+				val propPairs = kvPairs.map(splitString(_, valueSep))
+
+				val propValue = propPairs.filter(kv => property.trim == kv(0).trim).map(kv =>
+					if (kv.size>1) kv(1) else ""
+				).takeRight(1)(0)
+				parseValue(propValue, field, propType)
+			} else {
+				value.toDouble
+			}
+		}
+
+
+
+
+
+		raw.map(s =>
+			{
+				val columns = splitString(s, separator)
+				try {
+					new ValueOrException(
+						Some(properties.fields.toList.map(field =>
+							     {
+								     val fieldType = getFieldType(field)
+								     var value = if ("constant" == fieldType ||
+									                     "zero" == fieldType) 0.0
+								     else {
+									     val fieldIndex =
+										     properties.getIntOption("oculus.binning.parsing."+
+											                             field+".index",
+										                             "").get
+									     parseValue(columns(fieldIndex.toInt), field, fieldType)
+								     }
+								     val fieldScaling =
+									     properties.getString("oculus.binning.parsing."+field+
+										                          ".fieldScaling", "", Some(""))
+								     if ("log" == fieldScaling) {
+									     val base =
+										     properties.getDouble("oculus.binning.parsing."+
+											                          field+".fieldBase",
+										                          "", Some(math.exp(1.0)))
+									     value = math.log(value)/math.log(base)
+								     }
+								     value
+							     }
+						     )),
+						None)
+				} catch {
+					case e: Exception => new ValueOrException(None, Some(e))
+				}
+			}
+		)
+	}
 }
 
 
 
 class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldExtractor[List[Double]] {
-  def getValidFieldList: List[String] = List()
-  def isValidField (field: String): Boolean = true
-  def isConstantField (field: String): Boolean = {
-	  val getFieldType =
-		  (field: String) => properties.getString("oculus.binning.parsing."+field+".fieldType",
-		                                          "The type of the "+field+" field",
-		                                          Some(if ("constant" == field || "zero" == field) "constant"
-		                                               else ""))
+	def getValidFieldList: List[String] = List()
+	def isValidField (field: String): Boolean = true
+	def isConstantField (field: String): Boolean = {
+		val getFieldType =
+			(field: String) => properties.getString("oculus.binning.parsing."+field+".fieldType",
+			                                        "The type of the "+field+" field",
+			                                        Some(if ("constant" == field || "zero" == field) "constant"
+			                                             else ""))
 
-    val fieldType = getFieldType(field)
-    ("constant" == fieldType || "zero" == fieldType)
-  }
+		val fieldType = getFieldType(field)
+		("constant" == fieldType || "zero" == fieldType)
+	}
 
-  def getFieldValue (field: String)(record: List[Double]) : ValueOrException[Double] =
-    if ("count" == field) new ValueOrException(Some(1.0), None)
-    else if ("zero" == field) new ValueOrException(Some(0.0), None)
-    else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
+	def getFieldValue (field: String)(record: List[Double]) : ValueOrException[Double] =
+		if ("count" == field) new ValueOrException(Some(1.0), None)
+		else if ("zero" == field) new ValueOrException(Some(0.0), None)
+		else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
 
-  override def getTilePyramid (xField: String, minX: Double, maxX: Double,
-			       yField: String, minY: Double, maxY: Double): TilePyramid = {
-	  val projection = properties.getString("oculus.binning.projection",
-	                                        "The type of tile pyramid to use",
-	                                        Some("EPSG:4326"))
-	  if ("EPSG:900913" == projection) {
-		  new WebMercatorTilePyramid()
-	  } else {
-		  val autoBounds = properties.getBoolean("oculus.binning.projection.autobounds",
-		                                         "Whether to calculate pyramid bounds "+
-			                                         "automatically or not",
-		                                         Some(true))
-		  if (autoBounds) {
-			  new AOITilePyramid(minX, minY, maxX, maxY)
-		  } else {
-			  val minXp = properties.getDoubleOption("oculus.binning.projection.minx",
-			                                         "The minimum x value to use for the tile pyramid").get
-			  val maxXp = properties.getDoubleOption("oculus.binning.projection.maxx",
-			                                         "The maximum x value to use for the tile pyramid").get
-			  val minYp = properties.getDoubleOption("oculus.binning.projection.miny",
-			                                         "The minimum y value to use for the tile pyramid").get
-			  val maxYp = properties.getDoubleOption("oculus.binning.projection.maxy",
-			                                         "The maximum y value to use for the tile pyramid").get
-			  new AOITilePyramid(minXp, minYp, maxXp, maxYp)
-		  }
-	  }
-  }
+	override def getTilePyramid (xField: String, minX: Double, maxX: Double,
+	                             yField: String, minY: Double, maxY: Double): TilePyramid = {
+		val projection = properties.getString("oculus.binning.projection",
+		                                      "The type of tile pyramid to use",
+		                                      Some("EPSG:4326"))
+		if ("EPSG:900913" == projection) {
+			new WebMercatorTilePyramid()
+		} else {
+			val autoBounds = properties.getBoolean("oculus.binning.projection.autobounds",
+			                                       "Whether to calculate pyramid bounds "+
+				                                       "automatically or not",
+			                                       Some(true))
+			if (autoBounds) {
+				new AOITilePyramid(minX, minY, maxX, maxY)
+			} else {
+				val minXp = properties.getDoubleOption("oculus.binning.projection.minx",
+				                                       "The minimum x value to use for the tile pyramid").get
+				val maxXp = properties.getDoubleOption("oculus.binning.projection.maxx",
+				                                       "The maximum x value to use for the tile pyramid").get
+				val minYp = properties.getDoubleOption("oculus.binning.projection.miny",
+				                                       "The minimum y value to use for the tile pyramid").get
+				val maxYp = properties.getDoubleOption("oculus.binning.projection.maxy",
+				                                       "The maximum y value to use for the tile pyramid").get
+				new AOITilePyramid(minXp, minYp, maxXp, maxYp)
+			}
+		}
+	}
 }
 
-object CSVDatasetBase {  
-  val ZERO_STR = "zero"
+object CSVDatasetBase {
+	val ZERO_STR = "zero"
 }
 
 abstract class CSVDatasetBase (rawProperties: Properties,
@@ -556,28 +559,28 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 class CSVDataset (rawProperties: Properties,
                   tileWidth: Int,
                   tileHeight: Int)
-extends CSVDatasetBase(rawProperties, tileWidth, tileHeight) {
+		extends CSVDatasetBase(rawProperties, tileWidth, tileHeight) {
 
-  type STRATEGY_TYPE = ProcessingStrategy[Double]
-  protected var strategy: STRATEGY_TYPE = null
-  
-  def initialize (sc: SparkContext, cache: Boolean): Unit =
-    initialize(new CSVStaticProcessingStrategy(sc, cache))
-  
+	type STRATEGY_TYPE = ProcessingStrategy[Double]
+	protected var strategy: STRATEGY_TYPE = null
+	
+	def initialize (sc: SparkContext, cache: Boolean): Unit =
+		initialize(new CSVStaticProcessingStrategy(sc, cache))
+	
 }
 
 
 object StreamingCSVDataset {
 
-  /**
-   * Helper function to set autobounds to true for streaming datasets, since
-   * it doesn't make sense to use it if the data is being streamed in.
-   */
-  def removeAutoBounds(rawProperties: Properties) : Properties = {
-    rawProperties.setProperty("oculus.binning.projection.autobounds", "false")
-    rawProperties
-  }
-  
+	/**
+	 * Helper function to set autobounds to true for streaming datasets, since
+	 * it doesn't make sense to use it if the data is being streamed in.
+	 */
+	def removeAutoBounds(rawProperties: Properties) : Properties = {
+		rawProperties.setProperty("oculus.binning.projection.autobounds", "false")
+		rawProperties
+	}
+	
 }
 
 /**
@@ -589,22 +592,22 @@ object StreamingCSVDataset {
  * for the case where the stream is windowed. In this case the stream must be
  * preparsed and then a new strategy created for each window.  
  */
-class StreamingCSVDataset (rawProperties: Properties, 
+class StreamingCSVDataset (rawProperties: Properties,
                            tileWidth: Int,
                            tileHeight: Int)
-extends CSVDatasetBase(StreamingCSVDataset.removeAutoBounds(rawProperties),
-                       tileWidth, tileHeight) with StreamingProcessor[Double]  {
- 
-  type STRATEGY_TYPE = StreamingProcessingStrategy[Double]
-  protected var strategy: STRATEGY_TYPE = null
-  
-  def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, Double)] => OUTPUT, 
-		       completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
-    if (null == strategy) {
-      throw new Exception("Attempt to process uninitialized dataset "+getName)
-    } else {
-      strategy.processWithTime(fcn, completionCallback)
-    }
-  }
+		extends CSVDatasetBase(StreamingCSVDataset.removeAutoBounds(rawProperties),
+		                       tileWidth, tileHeight) with StreamingProcessor[Double]  {
+	
+	type STRATEGY_TYPE = StreamingProcessingStrategy[Double]
+	protected var strategy: STRATEGY_TYPE = null
+	
+	def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, Double)] => OUTPUT,
+	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
+		if (null == strategy) {
+			throw new Exception("Attempt to process uninitialized dataset "+getName)
+		} else {
+			strategy.processWithTime(fcn, completionCallback)
+		}
+	}
 
 }

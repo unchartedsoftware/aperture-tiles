@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -39,45 +39,47 @@ import com.oculusinfo.tilegen.util.ArgumentParser
 
 
 object TileSortingTest {
-  def main (args: Array[String]): Unit = {
-    val argParser = new ArgumentParser(args)
+	def main (args: Array[String]): Unit = {
+		val argParser = new ArgumentParser(args)
 
 
-    val connector = argParser.getSparkConnector()
-    val sc = connector.getSparkContext("Test Pyramid Sort")
+		val connector = argParser.getSparkConnector()
+		val sc = connector.getSparkContext("Test Pyramid Sort")
 
-    val source = argParser.getString("s", "source location")
-    val destination = argParser.getString("d", "destination location")
+		val source = argParser.getString("s", "source location")
+		val destination = argParser.getString("d", "destination location")
 
 
-    val pyramid = new AOITilePyramid(-2.0, -2.0, 2.0, 2.0)
-    val coordFcn: String => (Double, Double) = record => {
-      val fields = record.split('\t')
-      (fields(0).toDouble, fields(1).toDouble)
-    }
-    val sorter = new TileSorter
+		val pyramid = new AOITilePyramid(-2.0, -2.0, 2.0, 2.0)
+		val coordFcn: String => (Double, Double) = record => {
+			val fields = record.split('\t')
+			(fields(0).toDouble, fields(1).toDouble)
+		}
+		val sorter = new TileSorter
 
-    val data = sc.textFile(source)
-    val partitions = argParser.getInt("p", "number of partitions",
-                                      Some(data.partitions.length))
-    val sortedData = sorter.sortDatasetByTile(data, pyramid, coordFcn)
+		val data = sc.textFile(source)
+		val partitions = argParser.getInt("p", "number of partitions",
+		                                  Some(data.partitions.length))
+		val sortedData = sorter.sortDatasetByTile(data, pyramid, coordFcn)
 
-    println("Coalescing "+sortedData.partitions.length+
-            " of sorted data into "+partitions+
-            " partitions for writing")
-    sortedData.coalesce(partitions).saveAsTextFile(destination)
-  }
+		println("Coalescing "+sortedData.partitions.length+
+			        " of sorted data into "+partitions+
+			        " partitions for writing")
+		sortedData.coalesce(partitions).saveAsTextFile(destination)
+	}
 }
 
 class TileSorter {
-  def sortDatasetByTile[T: ClassManifest] (data: RDD[T],
-                                           pyramid: TilePyramid,
-                                           coordFcn: T => (Double, Double)):
-  RDD[T] = {
-    val comparator = new PyramidComparator(pyramid)
-    data.map(r => {
-      val coords = coordFcn(r)
-      (comparator.getComparisonKey(coords._1, coords._2), r)
-    }).sortByKey().map(_._2)
-  }
+	def sortDatasetByTile[T: ClassManifest] (data: RDD[T],
+	                                         pyramid: TilePyramid,
+	                                         coordFcn: T => (Double, Double)):
+			RDD[T] = {
+		val comparator = new PyramidComparator(pyramid)
+		data.map(r =>
+			{
+				val coords = coordFcn(r)
+				(comparator.getComparisonKey(coords._1, coords._2), r)
+			}
+		).sortByKey().map(_._2)
+	}
 }

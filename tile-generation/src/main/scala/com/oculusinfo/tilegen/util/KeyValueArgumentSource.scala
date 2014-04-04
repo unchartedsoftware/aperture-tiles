@@ -81,10 +81,10 @@ abstract class KeyValueArgumentSource {
 
 
 	/**
-     * Indicates that this object is used in a distributed computation, or not.
+	 * Indicates that this object is used in a distributed computation, or not.
 	 * When in a distributed computation, nothing is saved (so that nothing need 
-     * be returned to the master object)
-     */
+	 * be returned to the master object)
+	 */
 	def setDistributedComputation (distributed: Boolean): Unit = {
 		this.distributed = distributed
 	}
@@ -463,7 +463,7 @@ abstract class KeyValueArgumentSource {
 			}
 		}
 	}
-  
+
 
 	/**
 	 * This gets a unique list of all the subproperty names for the given property. Each name is

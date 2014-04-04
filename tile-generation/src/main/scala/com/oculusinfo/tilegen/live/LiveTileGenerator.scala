@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.live
 
 
@@ -50,35 +50,41 @@ class LiveTileGenerator[PT: ClassManifest,
                                             binDescriptor: BinDescriptor[PT, BT],
                                             numXBins: Int = 256,
                                             numYBins: Int = 256) {
-  var densityStrip: Boolean = false
+	var densityStrip: Boolean = false
 
-  def getTile (tileLevel: Int, tileX: Int, tileY: Int): TileData[BT] = {
-    // Localize some of our fields to avoid the need for serialization
-    val localPyramidScheme = pyramidScheme
-    val localBinDescriptor = binDescriptor
-    val targetTile = new TileIndex(tileLevel, tileX, tileY, numXBins, numYBins)
+	def getTile (tileLevel: Int, tileX: Int, tileY: Int): TileData[BT] = {
+		// Localize some of our fields to avoid the need for serialization
+		val localPyramidScheme = pyramidScheme
+		val localBinDescriptor = binDescriptor
+		val targetTile = new TileIndex(tileLevel, tileX, tileY, numXBins, numYBins)
 
-    val bins = data.filter(record => {
-      val tile = localPyramidScheme.rootToTile(record._1, record._2, tileLevel)
-      tileX == tile.getX() && tileY == tile.getY()
-    }).map(record => {
-      val bin = localPyramidScheme.rootToBin(record._1, record._2, targetTile)
-      (bin, record._3)
-    }).reduceByKey(localBinDescriptor.aggregateBins(_, _)).collect()
+		val bins = data.filter(record =>
+			{
+				val tile = localPyramidScheme.rootToTile(record._1, record._2, tileLevel)
+				tileX == tile.getX() && tileY == tile.getY()
+			}
+		).map(record =>
+			{
+				val bin = localPyramidScheme.rootToBin(record._1, record._2, targetTile)
+				(bin, record._3)
+			}
+		).reduceByKey(localBinDescriptor.aggregateBins(_, _)).collect()
 
-    val tile = if (densityStrip) new DensityStripData[BT](targetTile)
-               else new TileData[BT](targetTile)
-	val defaultBinValue = binDescriptor.convert(binDescriptor.defaultBinValue)
-    for (x <- 0 until numXBins) {
-      for (y <- 0 until numYBins) {
-        tile.setBin(x, y, defaultBinValue)
-      }
-    }
-    bins.foreach(p => {
-      val bin = p._1
-      val value = p._2
-      tile.setBin(bin.getX(), bin.getY(), binDescriptor.convert(value))
-    })
-    tile
-  }
+		val tile = if (densityStrip) new DensityStripData[BT](targetTile)
+		else new TileData[BT](targetTile)
+		val defaultBinValue = binDescriptor.convert(binDescriptor.defaultBinValue)
+		for (x <- 0 until numXBins) {
+			for (y <- 0 until numYBins) {
+				tile.setBin(x, y, defaultBinValue)
+			}
+		}
+		bins.foreach(p =>
+			{
+				val bin = p._1
+				val value = p._2
+				tile.setBin(bin.getX(), bin.getY(), binDescriptor.convert(value))
+			}
+		)
+		tile
+	}
 }

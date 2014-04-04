@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -42,74 +42,77 @@ import com.oculusinfo.tilegen.util.ArgumentParser
  * what (very approximately) the tile contains.
  */
 object TilePrinter {
-  def main (args: Array[String]) = {
-    val argParser = new ArgumentParser(args)
+	def main (args: Array[String]) = {
+		val argParser = new ArgumentParser(args)
 
-    val sc = argParser.getSparkConnector().getSparkContext("Tile Edges Test")
+		val sc = argParser.getSparkConnector().getSparkContext("Tile Edges Test")
 
-    val baseLocation = 
-      argParser.getString("loc",
-                          "The location from which to get the data")
-    val level = argParser.getInt("level",
-                                 "The level of data to print")
-    val tileIO = TileIO.fromArguments(argParser)
+		val baseLocation =
+			argParser.getString("loc",
+			                    "The location from which to get the data")
+		val level = argParser.getInt("level",
+		                             "The level of data to print")
+		val tileIO = TileIO.fromArguments(argParser)
 
-    val binDesc = new StandardDoubleBinDescriptor
-    val tiles = tileIO.readTileSet(sc, binDesc.getSerializer, baseLocation, List(level)).collect()
+		val binDesc = new StandardDoubleBinDescriptor
+		val tiles = tileIO.readTileSet(sc, binDesc.getSerializer, baseLocation,
+		                               List(level)).collect()
 
-    val printer = new TilePrinter()
-    tiles.foreach(t => {
-      println()
-      println(t.getDefinition())
-      printer.printTile(t)
-    })
-  }
+		val printer = new TilePrinter()
+		tiles.foreach(t =>
+			{
+				println()
+				println(t.getDefinition())
+				printer.printTile(t)
+			}
+		)
+	}
 }
 class TilePrinter {
-  def printTile (tile: TileData[JavaDouble]): Unit = {
-    println(tileToString(tile))
-  }
-
-  def tileToString (tile: TileData[JavaDouble]): String = {
-    var maxValue = 0.0
-    var minValue = 10000.0
-
-    val allRows = new MutableList[MutableList[Double]]()
-
-    for (MY <- 0 until 32) {
-      val row = new MutableList[Double]()
-      for (MX <- 0 until 32) {
-	var total = 0.0
-	for (my <- 0 until 8) {
-	  for (mx <- 0 until 8) {
-	    val x = MX*8+mx;
-	    val y = MY*8+my;
-	    val value = tile.getBin(x, y)
-	    total = total + value
-	  }
+	def printTile (tile: TileData[JavaDouble]): Unit = {
+		println(tileToString(tile))
 	}
 
-	if (total < minValue) minValue = total
-	if (total > maxValue) maxValue = total
-	row += total
-      }
-      allRows += row
-    }
+	def tileToString (tile: TileData[JavaDouble]): String = {
+		var maxValue = 0.0
+		var minValue = 10000.0
 
-    var result = "+--------------------------------+\n"
-    for (row <- allRows) {
-      result += "|"
-      for (value <- row) {
-	val scaledValue = ((value-minValue)/(maxValue-minValue)*4.0).toInt
-	if (0 == scaledValue) result += " "
-	else if (1 == scaledValue) result += "."
-	else if (2 == scaledValue) result += "o"
-	else result += "O"
-      }
-      result += "|\n"
-    }
-    result += "+--------------------------------+\n"
+		val allRows = new MutableList[MutableList[Double]]()
 
-    result
-  }
+		for (MY <- 0 until 32) {
+			val row = new MutableList[Double]()
+			for (MX <- 0 until 32) {
+				var total = 0.0
+				for (my <- 0 until 8) {
+					for (mx <- 0 until 8) {
+						val x = MX*8+mx;
+						val y = MY*8+my;
+						val value = tile.getBin(x, y)
+						total = total + value
+					}
+				}
+
+				if (total < minValue) minValue = total
+				if (total > maxValue) maxValue = total
+				row += total
+			}
+			allRows += row
+		}
+
+		var result = "+--------------------------------+\n"
+		for (row <- allRows) {
+			result += "|"
+			for (value <- row) {
+				val scaledValue = ((value-minValue)/(maxValue-minValue)*4.0).toInt
+				if (0 == scaledValue) result += " "
+				else if (1 == scaledValue) result += "."
+				else if (2 == scaledValue) result += "o"
+				else result += "O"
+			}
+			result += "|\n"
+		}
+		result += "+--------------------------------+\n"
+
+		result
+	}
 }

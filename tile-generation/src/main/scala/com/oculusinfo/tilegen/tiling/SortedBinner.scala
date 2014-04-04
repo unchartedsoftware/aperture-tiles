@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -151,7 +151,7 @@ class SortedBinner {
 		}
 
 
-		// Go through each partition, transforming it directly to tiles of the 
+		// Go through each partition, transforming it directly to tiles of the
 		// processing type
 		val tiledByPartition = data.mapPartitions(iter =>
 			{
@@ -209,7 +209,7 @@ class SortedBinner {
 
 object SortedBinnerTest {
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
-		properties.getString("oculus.tileio.type", 
+		properties.getString("oculus.tileio.type",
 		                     "Where to write tiles",
 		                     Some("hbase")) match {
 			case "hbase" => {
@@ -231,7 +231,7 @@ object SortedBinnerTest {
 			}
 		}
 	}
-  
+	
 	def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit = {
 		val binner = new SortedBinner
 		binner.debug = true
@@ -257,7 +257,7 @@ object SortedBinnerTest {
 			}
 		)
 	}
-  
+	
 	/**
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.

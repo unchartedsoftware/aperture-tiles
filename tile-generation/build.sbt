@@ -26,7 +26,7 @@ resolvers += "Global Maven Repository" at "http://repo1.maven.org/maven2/"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-// Needed for older akka libraries; I'm not sure how maven finds it, but SBT 
+// Needed for older akka libraries; I'm not sure how maven finds it, but SBT
 // seems to need it explicitly specified
 resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases"
 
@@ -47,22 +47,22 @@ publishTo := Some(Resolver.file("file", new File(Path.userHome.absolutePath+"/.m
 test in assembly := {}
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
-  cp filter {j => j.data.getName == "mesos-0.9.0-incubating.jar" ||
-                  j.data.getName == "mockito-all-1.8.5.jar" ||
-                  j.data.getName == "spark-core_2.9.3.jar" ||
-                  j.data.getName == "scala-library.jar" ||
-                  j.data.getName == "servlet-api-2.5-20081211.jar" ||
-                  j.data.getName == "javax.servlet-2.5.0.v201103041518.jar"
-            }
+	cp filter {j => j.data.getName == "mesos-0.9.0-incubating.jar" ||
+		j.data.getName == "mockito-all-1.8.5.jar" ||
+		j.data.getName == "spark-core_2.9.3.jar" ||
+		j.data.getName == "scala-library.jar" ||
+		j.data.getName == "servlet-api-2.5-20081211.jar" ||
+		j.data.getName == "javax.servlet-2.5.0.v201103041518.jar"
+	}
 }
 
 mergeStrategy in assembly := {
-  case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
-  case m if m.toLowerCase.endsWith(".rsa") => MergeStrategy.discard
-  case m if m.toLowerCase.endsWith(".dsa") => MergeStrategy.discard
-  case m if m.toLowerCase.endsWith(".sf") => MergeStrategy.discard
-  case "reference.conf" => MergeStrategy.concat
-  case _ => MergeStrategy.first
+	case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
+	case m if m.toLowerCase.endsWith(".rsa") => MergeStrategy.discard
+	case m if m.toLowerCase.endsWith(".dsa") => MergeStrategy.discard
+	case m if m.toLowerCase.endsWith(".sf") => MergeStrategy.discard
+	case "reference.conf" => MergeStrategy.concat
+	case _ => MergeStrategy.first
 }
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
