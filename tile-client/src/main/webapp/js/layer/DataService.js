@@ -171,7 +171,7 @@ define(function (require) {
 
             var i = 0,
                 tilekey,
-                MAX_NUMBER_OF_ENTRIES = 100;
+                MAX_NUMBER_OF_ENTRIES = 1000;
 
             while (this.memoryQueue.length > MAX_NUMBER_OF_ENTRIES) {
 

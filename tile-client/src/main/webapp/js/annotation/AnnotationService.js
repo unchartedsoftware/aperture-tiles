@@ -187,7 +187,6 @@ define(function (require) {
                 if ( this.data[ indices[i].tilekey ] === undefined ) {
                     this.data[ indices[i].tilekey ] = {};
                 }
-
                 tile = this.data[ indices[i].tilekey ];
 
                 if ( tile[ indices[i].binkey ] === undefined ) {

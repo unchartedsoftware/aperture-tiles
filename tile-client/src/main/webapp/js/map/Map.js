@@ -199,6 +199,14 @@ define(function (require) {
             return zoom + "," + Math.floor(pixel.x / TILESIZE) + "," + Math.floor(pixel.y / TILESIZE);
         },
 
+        getOLMap: function() {
+            return this.map.olMap_;
+        },
+
+        getApertureMap: function() {
+            return this.map;
+        },
+
         addApertureLayer: function(layer, mappings, spec) {
             return this.map.addLayer(layer, mappings, spec);
         },

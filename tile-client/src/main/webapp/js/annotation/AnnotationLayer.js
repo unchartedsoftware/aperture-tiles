@@ -32,8 +32,7 @@ define(function (require) {
     var Class        = require('../class'),
         AnnotationService = require('./AnnotationService'),
         TileTracker = require('../layer/TileTracker'),
-        POPUP_WIDTH = '200px',
-        POPUP_HEIGHT = '60px',
+        uniquePopupId = 0,
         defaultStyle,
         hoverStyle,
         selectStyle,
@@ -42,25 +41,26 @@ define(function (require) {
         generatePopup,
         generateEditablePopup;
 
+    generatePopup = function( id, feature ) {
 
-    generatePopup = function( feature ) {
+        return  "<input id='"+ id +"-edit' type='image' src='./images/edit-icon.png' width='17' height='17' style='position:absolute; right:0px; outline-width:0'>"+
+                "<div style='overflow:hidden' id='" + id + "' class='ui-widget-content'>"+
 
-        return "<input type='image' src='./images/edit-icon.png' width='17' height='17' style='position:absolute; right:0px; outline-width:0'>"+
-
-                "<div style='padding-top:5px; padding-left:15px;'>"+
-                    "<div style='width:"+POPUP_WIDTH+"; font-weight:bold; padding-bottom:10px;'>"+
-                        feature.attributes.annotation.data.title +
-                    "</div>"+
-                    "<div style='padding-bottom:10px'>"+
-                        "Priority: "+ feature.attributes.annotation.priority +
-                    "</div>"+
-                    "<div style='width:"+POPUP_WIDTH+"; height:"+POPUP_HEIGHT+"; overflow:auto; position:relative; right:0px'>"+
-                        feature.attributes.annotation.data.comment +
+                    "<div style='padding-top:5px; padding-left:15px;'>"+
+                        "<div style='width:256px; font-weight:bold; padding-bottom:10px; padding-right:20px'>"+
+                            feature.attributes.annotation.data.title +
+                        "</div>"+
+                        "<div style='padding-bottom:10px'>"+
+                            "Priority: "+ feature.attributes.annotation.priority +
+                        "</div>"+
+                        "<div style='width:256px; height:100px; overflow:auto;  padding-right:15px;'>"+
+                            feature.attributes.annotation.data.comment +
+                        "</div>"+
                     "</div>"+
                 "</div>";
     };
 
-    generateEditablePopup = function( feature ) {
+    generateEditablePopup = function( id, feature ) {
 
         var titleFill = "placeholder='Enter title'",
             priorityFill = "placeholder='Enter priority'",
@@ -78,32 +78,36 @@ define(function (require) {
             commentFill = "value='" + feature.attributes.annotation.data.comment + "'";
         }
 
-        /*
-        return  "<div style='padding-top:5px; padding-left:15px;'>"+
-                    "<textarea id='annotation-text-area'>"+ commentFill +"</textarea> " +
-                "</div>";
-        */
-        return  "<div id='main-div'>" +
-                "<div style='padding-top:5px; padding-left:15px; position:relative;'>"+
-                    "<div style='font-weight:bold; padding-bottom:10px;'>" +
-                        "<label style='width:60px; float:left;'>Title: </label>" +
-                        "<input style='width: calc(100% - 80px)' type='text' "+titleFill+">" +
-                    "</div>"+
-                    "<div style='font-weight:bold; padding-bottom:10px;'>" +
-                        "<label style='width:60px; float:left;'>Priority: </label>" +
-                        "<input style='width: calc(100% - 80px)' type='text' "+priorityFill+">" +
-                    "</div>"+
-                    "<div style='font-weight:bold;'> Description: </div>" +
+        return  "<div style='overflow:hidden'>"+
 
-                    "<div>"+
-                          "<textarea style='max-width: 300px; max-height: 200px;' id='annotation-text-area'>"+ commentFill+"</textarea> "+
-                    "</div>"+
-                    "<button style='margin-top:10px; border-radius:5px; float:right; '>Cancel</button>"+
-                    "<button style='margin-top:10px; border-radius:5px; float:right; '>Save</button>"+
-                "</div>"+
-                "</div>";
+                    "<div style='overflow:hidden' id='" + id + "' class='ui-widget-content'>"+
 
+                        "<div style='padding-top:15px; padding-left:15px; '>"+
+                            "<div style='font-weight:bold; padding-bottom:10px;'>" +
+
+                                "<label style='width:70px; float:left;'>Title: </label>" +
+                                "<input style='width: calc(100% - 90px)' type='text' "+titleFill+">" +
+
+                            "</div>"+
+                            "<div style='font-weight:bold; padding-bottom:10px;'>" +
+
+                                "<label style='width:70px; float:left;'>Priority: </label>" +
+                                "<input style='width: calc(100% - 90px)' type='text' "+priorityFill+">" +
+
+                            "</div>"+
+                            "<div style='font-weight:bold;  padding-bottom:10px;'> Description: </div>" +
+                            "<div>"+
+                                  "<textarea style='width: calc(100% - 25px); resize:none;' >"+ commentFill+"</textarea> "+
+                            "</div>"+
+                        "</div>"+
+
+                    "</div>"+
+                "<button style='margin-top:10px; border-radius:5px; float:right; '>Cancel</button>"+
+                "<button style='margin-top:10px; border-radius:5px; float:right; '>Save</button>"+
+                "</div>";
     };
+
+
 
 
     defaultStyle = new OpenLayers.Style({
@@ -153,11 +157,18 @@ define(function (require) {
 
             // set callbacks
             this.map.on('zoomend', function() {
-                that.addPointControl.activate();
+
+                that.unselect();
+
+                while( that.map.map.olMap_.popups.length ) {
+                    that.map.map.olMap_.removePopup( that.map.map.olMap_.popups[0] );
+                }
+
                 that.onMapUpdate();
             });
 
             this.map.on('panend', function() {
+                that.unselect();
                 that.onMapUpdate();
             });
 
@@ -170,11 +181,10 @@ define(function (require) {
 
             // determine all tiles in view
             var tiles = this.map.getTilesInView();
-
+            // request annotation data for all tiles in view
             this.tracker.filterAndRequestTiles( tiles, $.proxy( this.redrawAnnotations, this ) );
-            
+            // remove and redraw annotations
             this.redrawAnnotations();
-
         },
 
 
@@ -194,6 +204,19 @@ define(function (require) {
 
             return new OpenLayers.LonLat( latLon.lon, latLon.lat ).transform( fromProj, toProj );
         },
+
+
+
+        select: function() {
+            this.addPointControl.deactivate();
+            console.log("selected");
+        },
+
+        unselect: function() {
+            this.addPointControl.activate();
+            console.log("unselected");
+        },
+
 
         redrawAnnotations: function() {
 
@@ -227,12 +250,8 @@ define(function (require) {
                                 // create feature
                                 feature = new OpenLayers.Feature.Vector( new OpenLayers.Geometry.Point( latlon.lon, latlon.lat) );
 
-                                // store tilekey and binkey in annotation, for later reference
-                                feature.attributes = { tilekey : tilekey,
-                                                       binkey : binkey,
-                                                       index : i,
-                                                       annotation : annotation
-                                };
+                                // store annotation, for later reference
+                                feature.attributes = { annotation : annotation };
 
                                 // add marker
                                 points.push( feature );
@@ -264,36 +283,58 @@ define(function (require) {
 
                     "featureselected": function(e) {
 
-                        that.addPointControl.deactivate();
+                        that.select();
 
-                        var latlon = OpenLayers.LonLat.fromString(e.feature.geometry.toShortString()),
+                        var latlon = OpenLayers.LonLat.fromString( e.feature.geometry.toShortString() ),
+                            popupId = "annotation-popup-" + uniquePopupId++, //featureToId( e.feature ),
                             px,
                             size,
-                            popup = new OpenLayers.Popup("marker-popup",
-                                                     latlon,
-                                                     null,
-                                                     generateEditablePopup( e.feature ),
-                                                     true);
+                            popup = new OpenLayers.Popup("annotation-popup",
+                                                         latlon,
+                                                         null,
+                                                         generatePopup( popupId, e.feature ),
+                                                         true);
 
-
-
-                        popup.backgroundColor = '#222222';
+                        //popup.displayClass = "annotation-popup-class"
+                        //popup.backgroundColor = '#222222';
                         popup.autoSize = true;
-                        popup.panMapIfOutOfView = true;
+                        //popup.panMapIfOutOfView = true;
                         e.feature.popup = popup;
-                        that.map.map.olMap_.addPopup(popup, false);
+                        that.map.map.olMap_.addPopup( popup, false );
 
-                        latlon = OpenLayers.LonLat.fromString(e.feature.geometry.toShortString());
                         px = that.map.map.olMap_.getLayerPxFromViewPortPx( that.map.map.olMap_.getPixelFromLonLat(latlon) );
                         size = popup.size;
                         px.x -= size.w / 2;
                         px.y -= size.h + 35;
                         popup.moveTo( px );
                         popup.panIntoView();
-                        popup.updateSize();
 
-                        $('#annotation-text-area').resize( function(){
-                            popup.updateSize();
+                        $( "#"+popupId ).resizable({
+                            resize: function() {
+                                popup.updateSize();
+                            },
+                            stop: function() {
+
+                                console.log( popup.lonlat );
+                                var px = that.map.map.olMap_.getLayerPxFromViewPortPx( that.map.map.olMap_.getPixelFromLonLat( popup.lonlat ) ),
+                                    size = popup.size;
+                                px.x -= size.w / 2;
+                                px.y -= size.h + 25;
+                                popup.moveTo( px );
+                                popup.panIntoView();
+
+                            },
+                            maxWidth: 414,
+                            maxHeight: 256,
+                            minHeight: 80,
+                            minWidth: 129,
+                            handles: 'se'
+                        });
+
+
+                        $( "#"+popupId+"-edit" ).click( function() {
+                            console.log("edit button clicked");
+                            popup.setContentHTML( generateEditablePopup( popupId, e.feature ) );
                         });
 
                     },
@@ -301,9 +342,9 @@ define(function (require) {
 
                     "featureunselected": function(e) {
 
-                        that.addPointControl.activate();
+                        that.unselect();
                         /*
-                        that.map.olMap_.removePopup(e.feature.popup);
+                        that.map.map.olMap_.removePopup(e.feature.popup);
                         e.feature.popup.destroy();
                         e.feature.popup = null;
                         */
@@ -342,9 +383,12 @@ define(function (require) {
             this.map.addOLLayer( this._olLayer );
 
             this.addPointControl = new OpenLayers.Control.DrawFeature( this._olLayer, OpenLayers.Handler.Point );
+
+
             this.selectControl = new OpenLayers.Control.SelectFeature( this._olLayer, {
-                clickout: true
+                //clickout: true
             });
+
 
             this.dragControl = new OpenLayers.Control.DragFeature( this._olLayer, {
                 onStart: function(feature, pixel) {
@@ -354,34 +398,36 @@ define(function (require) {
                 onComplete: function(feature, pixel) {
 
                     var latlon = that.transformFromMapProj( OpenLayers.LonLat.fromString( feature.geometry.toShortString() )),
-                        tilekey = feature.attributes.tilekey,
-                        binkey = feature.attributes.binkey,
-                        index = feature.attributes.index,
                         oldAnno, newAnno;
 
                     // get reference to old data
-                    oldAnno = that.tracker.dataService.data[ tilekey ][ binkey ][ index ];
+                    oldAnno = feature.attributes.annotation; //that.tracker.dataService.data[ tilekey ][ binkey ][ index ];
 
-                    // copy object, add new location
-                    newAnno = JSON.parse(JSON.stringify( oldAnno ));
+                    // deep copy object, add new location
+                    newAnno = JSON.parse( JSON.stringify( oldAnno ) );
                     newAnno.x = latlon.lon;
                     newAnno.y = latlon.lat;
 
+                    // set openlayers feature to point to new annotation
+                    feature.attributes.annotation = newAnno;
+
                     // send POST request to write annotation to server
                     that.tracker.dataService.postRequest( "MODIFY", { "old" : oldAnno, "new" : newAnno } );
+                },
 
-                }
-                /*
+
                 onDrag: function(feature, pixel){
 
                     var latlon = OpenLayers.LonLat.fromString(feature.geometry.toShortString()),
-                        px = that.map.olMap_.getLayerPxFromViewPortPx( that.map.olMap_.getPixelFromLonLat(latlon) ),
+                        px = that.map.map.olMap_.getLayerPxFromViewPortPx( that.map.map.olMap_.getPixelFromLonLat(latlon) ),
                         size = feature.popup.size;
                     px.x -= size.w / 2;
                     px.y -= size.h + 25;
                     feature.popup.moveTo( px );
+                    feature.popup.lonlat = latlon;
                 }
-                */
+
+
                                                    
             });
             this.highlightControl = new OpenLayers.Control.SelectFeature( this._olLayer, {
