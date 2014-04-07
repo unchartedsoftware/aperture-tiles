@@ -62,12 +62,24 @@ public class LayerInfo {
 
 
 
+    public LayerInfo (JSONObject data) {
+    	this(data, null);
+    }
+
     protected LayerInfo (JSONObject data, JSONArray parentalAxisConfiguration) {
         _data = data;
         _parentalAxisConfiguration = parentalAxisConfiguration;
         _axisConfiguration = null;
         _rendererConfigurations = null;
         _children = null;
+    }
+
+    /*
+     * Get our JSON form - only for use with client communications, through the
+     * LayerResource.
+     */
+    JSONObject getRawData () {
+        return _data;
     }
 
     /**

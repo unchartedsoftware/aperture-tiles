@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.tile.util;
 
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,6 +35,7 @@ import java.util.Properties;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 
 /**
@@ -41,9 +43,36 @@ import org.json.JSONObject;
  *
  */
 public class JsonUtilities {
-	private JsonUtilities() {
+	/**
+	 * Reads an array of JSON objects from a data reader. The raw data in the
+	 * stream can be either a JSON-encoded array or object; if the latter, it is
+	 * read in and placed in a single-element JSONArray.
+	 * 
+	 * @param reader
+	 *            A reader containing the JSON data
+	 * @return A JSON array containing the object or objects from the stream.
+	 * @throws JSONException
+	 *             If the JSON in the stream wasn't valid.
+	 */
+	public static JSONArray readJSONArray (Reader reader)
+			throws JSONException {
+		try {
+			// Try reading it as an array
+			return new JSONArray(new JSONTokener(reader));
+		} catch (JSONException arrayException) {
+			// Array failed; try reading it as an object
+			try {
+				JSONObject obj = new JSONObject(new JSONTokener(reader));
+				JSONArray result = new JSONArray();
+				result.put(0, obj);
+				return result;
+			} catch (JSONException objectException) {
+				// Object failed too - we give up.
+				throw arrayException;
+			}
+		}
 	}
-    
+
 	/**
 	 * Converts a {@link JSONObject} into a {@link Map} of key-value pairs.
 	 * This iterates through the tree and converts all {@link JSONObject}s

@@ -24,6 +24,68 @@
  */
 package com.oculusinfo.tile.rest.layer;
 
-public interface LayerService {
 
+
+import java.util.List;
+import java.util.UUID;
+
+import org.json.JSONObject;
+
+import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+
+
+
+/**
+ * The LayerService is the service driving the LayerResource, and used by many
+ * other services and resources throughout the tile server. it keeps track of
+ * available layers, and the configurations thereof.
+ * 
+ * @author nkronenfeld
+ */
+public interface LayerService {
+    /**
+     * List all available layers. See {@link LayerResource#layerRequest(String)}
+     * for details (though this method returns a list of java objects, rather
+     * than a pile of JOSN).
+     * 
+     * @return
+     */
+    public List<LayerInfo> listLayers ();
+
+    /**
+     * Get the meta-data associated with the given layer (which must be listed
+     * by {@link #listLayers()})
+     */
+    public PyramidMetaData getMetaData (String layerId);
+
+    /**
+     * Configure a layer for rendering.
+     * 
+     * @param configuration
+     *            The configuration of the layer to set.
+     * @return A unique UUID by which this configuration should be known.
+     */
+    public UUID configureLayer (JSONObject configuration);
+
+    /**
+     * For use by other services; the LayerResource doesn't serve this out.
+     * 
+     * @param layer
+     *            the layer to be rendered
+     * @param tile
+     *            The level to be rendered. A negative value indicates that the
+     *            configuration should not be specialized for any particular
+     *            layer.
+     */
+    public LayerConfiguration getRenderingConfiguration (String layerId, int level);
+
+    /**
+     * Indicates to the service that all users are done with a given
+     * configuration.
+     * 
+     * @param uuid
+     *            The id of the configuration that is no longer needed.
+     */
+    public void forgetConfiguration (UUID uuid);
 }

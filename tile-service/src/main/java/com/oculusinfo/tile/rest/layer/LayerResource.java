@@ -25,8 +25,12 @@ package com.oculusinfo.tile.rest.layer;
 
 
 
+import java.util.List;
+import java.util.UUID;
+
 import oculus.aperture.common.rest.ApertureServerResource;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Status;
@@ -38,6 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
 
 
@@ -93,20 +101,29 @@ public class LayerResource extends ApertureServerResource {
      * Only final leaf nodes are true layers - all higher entries are
      * placeholders for organizational purposes only.</dd>
      * 
+     * <dt>metadata</dt>
+     * <dd>
+     * retrieves the metadata for the specified layer.  This request has one input parameter:
+     * <dl>
+     * <dt>layer</dt>
+     * <dd>The ID of the layer whose metadata is desired.</dd>
+     * </dl>
+     * </dd>
+     * 
      * <dt>
      * configure</dt>
      * <dd>
-     * Configure a layer for display by the client. This request has two input
+     * Configure a layer for display by the client. This request has one input
      * parameters:
      * <dl>
-     * <dt>layer</dt>
-     * <dd>The ID of the layer to be configured</dd>
      * <dt>configuration</dt>
      * <dd>An object specifying the configuration to be applied to said layer,
-     * defining how it will be rendered.</dd>
+     * defining how it will be rendered. This configuration includes the layer
+     * name.</dd>
      * </dl>
      * A <em>configure</em> request will return a string containing a UUID with
      * which the client can later reference this particular configuration</dd>
+     * 
      * <dt>unconfigure</dt>
      * <dd>Tells the server to forget a particular configuration, as it will no
      * longer be needed. This request has but one parameter:
@@ -123,7 +140,6 @@ public class LayerResource extends ApertureServerResource {
     public Representation layerRequest (String jsonArguments) {
         try {
             JSONObject arguments = new JSONObject(jsonArguments);
-            JSONObject result = new JSONObject();
 
             String requestType = arguments.getString("request");
 
@@ -133,12 +149,53 @@ public class LayerResource extends ApertureServerResource {
             requestType = requestType.toLowerCase();
 
             if ("list".equals(requestType)) {
+                // Layer list request
+                List<LayerInfo> layers = _service.listLayers();
+                JSONArray jsonLayers = new JSONArray();
+                for (int i=0; i<layers.size(); ++i) {
+                    jsonLayers.put(i, layers.get(i).getRawData());
+                }
+                return new JsonRepresentation(jsonLayers);
+            } else if ("metadata".equals(requestType)) {
+                // Metadata request
+                String layer = arguments.getString("layer");
+                PyramidMetaData metaData = _service.getMetaData(layer);
+                if (null == metaData) {
+                    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Unknown layer "+layer);
+                } else {
+                    return new JsonRepresentation(metaData.getRawData());
+                }
             } else if ("configure".equals(requestType)) {
+                // Configuration request
+                String layer = arguments.getString("layer");
+                JSONObject configuration = arguments.getJSONObject("configuration");
+                UUID id = _service.configureLayer(configuration);
+                String host = getRequest().getResourceRef().getPath();
+                host = host.substring(0, host.lastIndexOf("layer"));
+
+                JSONObject result = new JSONObject();
+                result.put("layer", layer);
+                result.put("id", id);
+                result.put("tms", host + "tile/" + id.toString() + "/");
+                result.put("apertureservice", "/tile/" + id.toString() + "/");
+
+                try {
+                    LayerConfiguration config = _service.getRenderingConfiguration(layer, -1);
+                    TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
+                    PyramidMetaData metadata = _service.getMetaData(layer);
+                    result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
+                } catch (ConfigurationException e) {
+                    LOGGER.warn("Couldn't determine renderer for layer {}", layer, e);
+                    // Other than logging something went wrong, there's not much
+                    // we can do here.
+                }
+
+                return new JsonRepresentation(result);
             } else if ("unconfigure".equals(requestType)) {
             } else {
                 throw new IllegalArgumentException("Illegal request type "+requestType);
             }
-            return new JsonRepresentation(result);
+            return null; // TODO: remove, placeholder until the above is done.
         } catch (JSONException e) {
             LOGGER.warn("Bad layers request: {}", jsonArguments, e);
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
