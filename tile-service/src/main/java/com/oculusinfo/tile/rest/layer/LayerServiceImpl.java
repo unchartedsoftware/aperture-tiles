@@ -25,14 +25,31 @@
 package com.oculusinfo.tile.rest.layer;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.name.Named;
 
 public class LayerServiceImpl implements LayerService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
+
+
+
     private List<LayerInfo> _layers;
 
+
+
     public LayerServiceImpl (@Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation) {
+        _layers = new ArrayList<>();
         readLayerConfiguration(layerConfigurationLocation);
     }
 
@@ -49,7 +66,22 @@ public class LayerServiceImpl implements LayerService {
     }
 
     private void readConfigFile (File contents) {
-        // TODO Auto-generated method stub
-        
+        JSONTokener tokener;
+        try {
+            tokener = new JSONTokener(new FileReader(contents));
+        } catch (FileNotFoundException e1) {
+            LOGGER.error("Cannot find layer configuration file {} ", contents);
+            return;
+        }
+
+        try {
+            JSONObject rawConfig = new JSONObject(tokener);
+        } catch (JSONException e) {
+            try {
+                JSONArray rawArray = new JSONArray(tokener);
+            } catch (JSONException e1) {
+                LOGGER.error("Layer configuration file {} was not valid JSON.", contents);
+            }
+        }
     }
 }
