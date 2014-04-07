@@ -1,0 +1,332 @@
+[
+    {
+        "id": "bitcoin",
+        "name": "All Bitcoin Layers",
+        "children": [
+            {
+                "id": "bitcoin.source.amount",
+                "name": "Source vs Amount",
+                "axes": {
+    	            "XAxisConfig" : {
+        	            "title" : "Source",
+        	            "id" : "source-x-axis",
+        	            "min" : 1,
+        	            "max" : 6336769,
+        	            "intervalSpec" : {
+            	            "type" : "percentage",
+            	            "value" : 20,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "decimal",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "bottom",
+        	            "repeat": false,
+			            "markerLabelRotation" : -45,
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            },
+    	            "YAxisConfig" : {
+        	            "title" : "Amount (BTC)",
+        	            "id" : "amount-y-axis",
+        	            "min" : 0,
+        	            "max" : 500000,
+        	            "intervalSpec" : {
+            	            "type" : "fixed",
+            	            "value" : 100000,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "decimal",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "left",
+        	            "repeat" : false,		
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            }
+                },
+                "configurations": [
+                    {
+                        "renderer": {
+                            "type": "double",
+                            "ramp": "ware",
+                            "opacity": 0.85
+                        },
+                        "transform": {
+                            "name": "log10"
+                        },
+                        "pyramidio": {
+                            "type": "hbase",
+                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                            "hbase.zookeeper.port": "2181",
+                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "bitcoin.time.amount",
+                "name": "Time vs. Amount",
+                "axes": {
+    	            "XAxisConfig" : {
+        	            "title" : "Time",
+        	            "id" : "time-x-axis",
+        	            "min" : 1230958800000,
+        	            "max" : 1365566400000,
+        	            "intervalSpec" : {
+            	            "type" : "percentage",
+            	            "value" : 20,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "time",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "bottom",
+        	            "repeat": false,
+			            "markerLabelRotation" : -45,
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            },
+    	            "YAxisConfig" : {
+        	            "title" : "Amount (BTC)",
+        	            "id" : "amount-y-axis",
+        	            "min" : 0,
+        	            "max" : 500000,
+        	            "intervalSpec" : {
+            	            "type" : "fixed",
+            	            "value" : 100000,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "decimal",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "left",
+        	            "repeat" : false,		
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            }
+                },
+                "configurations": [
+                    {
+                        "renderer": {
+                            "type": "double",
+                            "ramp": "ware",
+                            "opacity": 0.85
+                        },
+                        "transform": {
+                            "name": "log10"
+                        },
+                        "pyramidio": {
+                            "type": "hbase",
+                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                            "hbase.zookeeper.port": "2181",
+                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "bitcoin.time.destination",
+                "name": "Time vs. Destination",
+                "axes": {
+    	            "XAxisConfig" : {
+        	            "title" : "Time",
+        	            "id" : "time-x-axis",
+        	            "min" : 1230958800000,
+        	            "max" : 1365566400000,
+        	            "intervalSpec" : {
+            	            "type" : "percentage",
+            	            "value" : 20,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "time",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "bottom",
+        	            "repeat": false,
+			            "markerLabelRotation" : -45,
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            },
+    	            "YAxisConfig" : {
+        	            "title" : "Destination",
+        	            "id" : "dest-y-axis",
+        	            "min" : 0,
+        	            "max" : 6336769,
+        	            "intervalSpec" : {
+            	            "type" : "fixed",
+            	            "value" : 100000,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "decimal",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "left",
+        	            "repeat" : false,		
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            }
+                },
+                "configurations": [
+                    {
+                        "renderer": {
+                            "type": "double",
+                            "ramp": "ware",
+                            "opacity": 0.85
+                        },
+                        "transform": {
+                            "name": "log10"
+                        },
+                        "pyramidio": {
+                            "type": "hbase",
+                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                            "hbase.zookeeper.port": "2181",
+                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "bitcoin.time.source",
+                "name": "Time vs. Source",
+                "axes": {
+    	            "XAxisConfig" : {
+        	            "title" : "Time",
+        	            "id" : "time-x-axis",
+        	            "min" : 1230958800000,
+        	            "max" : 1365566400000,
+        	            "intervalSpec" : {
+            	            "type" : "percentage",
+            	            "value" : 20,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "time",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "bottom",
+        	            "repeat": false,
+			            "markerLabelRotation" : -45,
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            },
+    	            "YAxisConfig" : {
+        	            "title" : "Source",
+        	            "id" : "source-y-axis",
+        	            "min" : 0,
+        	            "max" : 6336769,
+        	            "intervalSpec" : {
+            	            "type" : "fixed",
+            	            "value" : 100000,
+            	            "pivot" : 0,
+            	            "allowScaleByZoom" : true,
+            	            "isMercatorProjected" : false
+        	            },
+        	            "unitSpec" : {
+            	            "type" : "decimal",
+            	            "decimals" : 2,
+            	            "allowStepDown" : false
+        	            },
+        	            "position" : "left",
+        	            "repeat" : false,		
+			            "majorMarkerLength" : 10,
+			            "majorMarkerWidth" : 1,
+			            "majorMarkerColour" : "#7E7E7E",
+			            "markerLabelColour" : "#7E7E7E",
+			            "axisLabelColour" : "#7E7E7E",
+			            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			            "markerLabelFontSize" : "0.75em",
+			            "axisLabelFontSize" : "0.95em"	
+    	            }
+                },
+                "configurations": [
+                    {
+                        "renderer": {
+                            "type": "double",
+                            "ramp": "ware",
+                            "opacity": 0.85
+                        },
+                        "transform": {
+                            "name": "log10"
+                        },
+                        "pyramidio": {
+                            "type": "hbase",
+                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                            "hbase.zookeeper.port": "2181",
+                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]

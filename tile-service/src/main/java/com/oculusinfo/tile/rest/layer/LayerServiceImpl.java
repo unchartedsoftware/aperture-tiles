@@ -22,27 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.tile.rest.layer;
 
-import oculus.aperture.common.rest.ResourceDefinition;
+import java.io.File;
+import java.util.List;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-import com.oculusinfo.tile.rest.layer.LayerResource;
-import com.oculusinfo.tile.rest.legend.LegendResource;
-import com.oculusinfo.tile.rest.tile.TileResource;
+import com.google.inject.name.Named;
 
-public class RestConfigModule extends AbstractModule {
-	@Override
-	protected void configure() {
+public class LayerServiceImpl implements LayerService {
+    private List<LayerInfo> _layers;
 
-		// Bind REST endpoints for clients.
-		MapBinder<String, ResourceDefinition> resourceBinder =
-			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
+    public LayerServiceImpl (@Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation) {
+        readLayerConfiguration(layerConfigurationLocation);
+    }
 
-		resourceBinder.addBinding("/layerList").toInstance(new ResourceDefinition(LayerResource.class));
-		resourceBinder.addBinding("/layerSpec").toInstance(new ResourceDefinition(LayerResource.class));
-		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
-		resourceBinder.addBinding("/legend").toInstance(new ResourceDefinition(LegendResource.class));
-	}
+    private void readLayerConfiguration (String layerConfigurationLocation) {
+        File location = new File(layerConfigurationLocation);
+        if (location.exists()) {
+            if (location.isDirectory()) {
+                for (File contents: location.listFiles())
+                    readConfigFile(contents);
+            } else {
+                readConfigFile(location);
+            }
+        }
+    }
+
+    private void readConfigFile (File contents) {
+        // TODO Auto-generated method stub
+        
+    }
 }
