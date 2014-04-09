@@ -42,6 +42,8 @@ define(function (require) {
         generatePopup,
         generateEditablePopup;
 
+
+
     generatePopup = function( id, feature ) {
 
         return  "<input id='"+ id +"-edit' type='image' src='./images/edit-icon.png' width='17' height='17' style='position:absolute; right:0px; outline-width:0'>"+
@@ -267,7 +269,6 @@ define(function (require) {
                 tilekey,
                 binkey,
                 defunctFeatures = {};
-
 
             // Copy out all keys from the current data.  As we go through
             // making new requests, we won't bother with tiles we've
@@ -540,6 +541,9 @@ define(function (require) {
                     // this feature only contains 1 annotation as you cannot drag aggregates
                     oldAnno = that.features[ oldkey ].getDataArray()[0];
 
+                    // set key attribute to new key
+                    feature.attributes.key = newkey;
+
                     // deep copy annotation data
                     newAnno = JSON.parse( JSON.stringify( oldAnno ) );
                     newAnno.x = latlon.lon;
@@ -547,6 +551,7 @@ define(function (require) {
 
                     if ( oldkey === newkey ) {
 
+                        console.log("A");
                         // remaining in same bin
                         // keep feature, change data
 
@@ -556,11 +561,16 @@ define(function (require) {
 
                     } else if ( that.features[ newkey ] !== undefined ) {
 
+                        console.log("B");
                         // occupied bin
                         // add data, remove old
 
                         // feature already exists in new location, aggregate!
                         that.features[ newkey ].addAnnotation( rawLatLon.lon, rawLatLon.lat, newAnno );
+
+                        // un-select before destroying
+                        that.highlightControl.unselect( feature );
+                        that.selectControl.unselect( feature );
 
                         // completely remove old feature
                         that.features[ oldkey ].removeFromLayerAndDestroy( that.olLayer_ );
@@ -568,6 +578,7 @@ define(function (require) {
 
                     } else {
 
+                        console.log("C");
                         // un-occupied bin
                         // swap new and old, change data
 
@@ -582,10 +593,7 @@ define(function (require) {
                         that.features[ newkey ].annotationsByPriority[ newAnno.priority ] = [ newAnno ];
                     }
 
-                    // set key attribute to new key
-                    feature.attributes.key = newkey;
-
-                    // send POST request to write annotation to server
+                    // send POST request to modify annotation on server
                     that.tracker.dataService.postRequest( "MODIFY", { "old" : oldAnno, "new" : newAnno } );
 
                 },
