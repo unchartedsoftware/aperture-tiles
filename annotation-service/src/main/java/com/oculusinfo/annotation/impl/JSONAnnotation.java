@@ -95,7 +95,9 @@ public class JSONAnnotation extends AnnotationData {
 
 	private Long hash( JSONObject data ) {
     	
-    	String dataStr = data.toString();
+		String x = ( _x != null ) ? _x.toString() : "";
+		String y = ( _y != null ) ? _y.toString() : "";
+    	String dataStr = x + y + data.toString();
     	long mix = 0 ^ 104395301;
     	long  mulp = 2654435789L;
     	

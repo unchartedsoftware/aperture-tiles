@@ -49,7 +49,6 @@ import com.oculusinfo.binning.impl.*;
 @Singleton
 public class AnnotationServiceImpl implements AnnotationService {
 
-	//protected static final String TABLE_NAME = "AnnotationTable";	
 	protected AnnotationIO _io;
 	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
 	protected AnnotationSerializer<AnnotationData> _dataSerializer; 
@@ -95,7 +94,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.readLock().lock();
     	try {
     		
-    		return getData( layer, query ); //addUnivariateIndices( query ) );
+    		return getData( layer, query );
     		
     	} finally { 		
     		_lock.readLock().unlock();
@@ -136,7 +135,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			}	
 
 			// write modified tiles
-			writeTilesToIO( layer, tilesToWrite );	
+			writeTilesToIO( layer, tilesToWrite );
 			
 			// remove empty tiles and data
 			removeTilesFromIO( layer, tilesToRemove );
@@ -183,17 +182,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		return indices;
 	}
-	
-	/*
-	private List<TileIndex> addUnivariateIndices( TileIndex tile ) {		
-		
-		List<TileIndex> tiles = new LinkedList<>();
-		tiles.add( tile );
-		tiles.add( new TileIndex( tile.getLevel(), tile.getX(), -1 ) );
-		tiles.add( new TileIndex( tile.getLevel(), -1, tile.getY() ) );
-		return tiles;
-	}
-	*/
 
 	
 	private List<AnnotationTile> getTiles( String layer, List<TileIndex> indices ) {

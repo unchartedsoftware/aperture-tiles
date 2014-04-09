@@ -91,7 +91,7 @@ define(function (require) {
 
                 this.addReference(tilekey);
                 if (this.dataStatus[tilekey] === "loaded") {
-                    return;
+                    return; // data is in memory
                 }
                 // waiting on tile from server, add to callback list
                 this.getCallbacks[tilekey].push(callback);
@@ -99,7 +99,23 @@ define(function (require) {
 
         },
 
-
+        /**
+         *
+         * @param annotationData annotation data received from server of the form:
+         *
+         *  {
+         *      index: {
+         *                  level:
+         *                  xIndex:
+         *                  yIndex:
+         *             }
+         *      data: {
+         *                  <binkey>: [ <annotation>, <annotation>, ... ]
+         *                  <binkey>: [ <annotation>, <annotation>, ... ]
+         *            }
+         *  }
+         *
+         */
         getCallback: function( annotationData ) {
 
             // create tile key: "level, xIndex, yIndex"
@@ -117,7 +133,6 @@ define(function (require) {
                 }
 
                 for (i =0; i <this.getCallbacks[tilekey].length; i++ ) {
-                    console.log("After get: "+ tilekey);
                     this.getCallbacks[tilekey][i]( this.data[tilekey] );
                 }
             }
@@ -176,23 +191,27 @@ define(function (require) {
         addAnnotationToData: function( annotation ) {
 
             // get all tile indices
-            var indices = this.indexer.getIndices( annotation),
+            var indices = this.indexer.getIndices( annotation ),
                 tile,
                 i;
 
-            // add data to each tile in the correct bin
-            for (i=0; i<indices.length;i++) {
+            // if tile exists in cache, add new data, if not, ignore it
+            for (i=0; i<indices.length; i++) {
 
-                // make sure entry exists
-                if ( this.data[ indices[i].tilekey ] === undefined ) {
-                    this.data[ indices[i].tilekey ] = {};
-                }
                 tile = this.data[ indices[i].tilekey ];
 
-                if ( tile[ indices[i].binkey ] === undefined ) {
-                    tile[ indices[i].binkey ] = [];
+                // if tilekey exists
+                if ( tile !== undefined ) {
+
+                    // create bin if not there
+                    if ( tile[ indices[i].binkey ] === undefined ) {
+                        tile[ indices[i].binkey ] = [];
+                    }
+                    tile[ indices[i].binkey ].push( annotation );
+                    console.log( "added to tile: " + indices[i].tilekey + ", and bin: " + indices[i].binkey );
                 }
-                tile[ indices[i].binkey ].push( annotation );
+                // if tilekey does not exist, it is not in cache, and doesn't need to be added, as it
+                // will need to be pulled anyway
             }
         },
 
@@ -206,24 +225,48 @@ define(function (require) {
                 index,
                 i;
 
-            // add data to each tile in the correct bin
+            function compare( a, b ) {
+
+                return a.x === b.x &&
+                       a.y === b.y &&
+                       a.priority === b.priority &&
+                      (a.data.comment.localeCompare( b.data.comment ) === 0);
+            }
+
+            function findIndex( array, data ) {
+                var i;
+                for (i=0; i< array.length; i++) {
+                    if ( compare(array[i], data) ) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            // if tile exists in cache, remove data from it
             for (i=0; i<indices.length; i++) {
-                // get tile
+
                 tile = this.data[ indices[i].tilekey ];
+
                 // if tile exists in cache
                 if ( tile !== undefined ) {
                     // get bin
                     bin = tile[ indices[i].binkey ];
                     // if bin exists in cache
                     if ( bin !== undefined ) {
+
                         // get index in bin
-                        index = bin.indexOf( annotation );
+                        index = findIndex( bin, annotation );
                         // remove data
                         if ( index > -1 ) {
+                            console.log( "removed from tile: " + indices[i].tilekey + ", and bin: " + indices[i].binkey );
                             bin.splice(index, 1);
+                        } else {
+                            console.log( "not found in bin: " + indices[i].binkey );
                         }
                     }
                 }
+
             }
 
         },

@@ -46,12 +46,8 @@ define(function (require) {
 		
 		
     TileAnnotationIndexer = Class.extend({
-        ClassName: "AoITilePyramid",
-        init: function (minX, minY, maxX, maxY) {
-            this.minX = minX;
-            this.minY = minY;
-            this.maxX = maxX;
-            this.maxY = maxY;
+        ClassName: "TileAnnotationIndexer",
+        init: function () {
         },
 
         getIndices: function( data ) {

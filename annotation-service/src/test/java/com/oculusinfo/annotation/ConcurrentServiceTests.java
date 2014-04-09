@@ -41,11 +41,14 @@ import org.junit.Before;
 
 import com.google.inject.Inject;
 
-import com.oculusinfo.annotation.rest.*;
+import com.oculusinfo.annotation.index.*;
+import com.oculusinfo.annotation.index.impl.*;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.annotation.rest.impl.*;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.impl.*;
 
 
 public class ConcurrentServiceTests extends AnnotationTestsBase {
@@ -53,11 +56,28 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	static final boolean VERBOSE = true;
 	static final int NUM_THREADS = 20;
 
-	protected AnnotationService    _service;	
-	
+	protected AnnotationService _service;	
+
     @Before
     public void setup () { 	
-    	//_service = new CachedAnnotationServiceImpl();
+    	    	
+    	TilePyramid pyramid = new WebMercatorTilePyramid();
+    	AnnotationIndexer<TileAndBinIndices> indexer = new TileAnnotationIndexer( pyramid );
+
+    	try {
+    		
+    		AnnotationIO io = new HBaseAnnotationIO("hadoop-s1.oculus.local", 
+    												"2181", 
+    												"hadoop-s1.oculus.local:60000");
+    		
+    		_service = new CachedAnnotationServiceImpl( io, indexer );
+    		
+    	} catch (Exception e) {
+    		
+			System.out.println("Error: " + e.getMessage());
+			
+		}
+    	
     }
 
     @After

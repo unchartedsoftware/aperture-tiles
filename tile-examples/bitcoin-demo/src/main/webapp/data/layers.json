@@ -70,10 +70,12 @@
 	"AnnotationLayers": [
 		{
 			"layer": "bitcoin.annotations",
-			"filters" : [{
-				"priority": "P0",
-				"count":10
-			}]
+			"filters" : [
+				{
+					"priority": "P0",
+					"count":1000
+				}
+			]
 		}
 	]
 }

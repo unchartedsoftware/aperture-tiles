@@ -171,6 +171,7 @@ define(function (require) {
 
         },
 
+
         /**
          * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
          */
