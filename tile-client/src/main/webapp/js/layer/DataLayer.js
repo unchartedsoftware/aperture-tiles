@@ -164,20 +164,14 @@ define(function (require) {
                 layerSpec = this.layerSpecs[layer];
 
                 // Request the layer information
-                aperture.io.rest('/layerList',
+                aperture.io.rest('/layer',
                                  'POST',
                                  $.proxy(this.onLayerInfoRetrieved, this),
                                  {
-                                     postData: {"call": "layers"},
-                                     contentType: 'application/json'
-                                 }
-                                );
-                // Request the layer information
-                aperture.io.rest('/layerSpec',
-                                 'POST',
-                                 $.proxy(this.onLayerInfoRetrieved, this),
-                                 {
-                                     postData: layerSpec,
+                                     postData: {
+                                         requestType: "configure",
+                                         configuration: layerSpec
+                                     },
                                      contentType: 'application/json'
                                  }
                                 );
