@@ -30,22 +30,8 @@ import java.util.UUID;
 import org.json.JSONObject;
 
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
 
 public interface TileService {
-	
-	/**
-	 * Given options (colour ramp to use, scale), return an ID
-	 * to use as the TMS 'layer name' for constructing TMS requests. 
-	 * This ID will be used by getTile to retrieve the options used
-	 * supplied here so it can render the image with them.
-	 * @param hostUrl
-	 * @param options
-	 * @return A JSON object containing (at least) a field called 'id', to use as the TMS layer identifier.
-	 */
-	public JSONObject getLayer(String hostUrl, JSONObject options);
-
 	/**
 	 * TMS tile request.
 	 * 
@@ -70,6 +56,4 @@ public interface TileService {
 	 * @return The raw data for the indicated tile
 	 */
 	public JSONObject getTileObject (UUID fromString, String layer, TileIndex index, Iterable<TileIndex> tileSet);
-
-	public LayerConfiguration getLevelSpecificConfiguration (UUID id, String layer, TileIndex tile) throws ConfigurationException;
 }

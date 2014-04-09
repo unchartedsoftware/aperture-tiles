@@ -46,6 +46,7 @@ import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.util.JsonUtilities;
 
 
 
@@ -167,31 +168,34 @@ public class LayerResource extends ApertureServerResource {
                 }
             } else if ("configure".equals(requestType)) {
                 // Configuration request
-                String layer = arguments.getString("layer");
+                String layerId = arguments.getString("layer");
                 JSONObject configuration = arguments.getJSONObject("configuration");
-                UUID id = _service.configureLayer(configuration);
+                UUID uuid = _service.configureLayer(layerId, configuration);
                 String host = getRequest().getResourceRef().getPath();
                 host = host.substring(0, host.lastIndexOf("layer"));
 
-                JSONObject result = new JSONObject();
-                result.put("layer", layer);
-                result.put("id", id);
-                result.put("tms", host + "tile/" + id.toString() + "/");
-                result.put("apertureservice", "/tile/" + id.toString() + "/");
+                // Figure out the number of images per tile
+                PyramidMetaData metaData = _service.getMetaData(layerId);
 
+                JSONObject result = JsonUtilities.deepClone(metaData.getRawData());
+                result.put("layer", layerId);
+                result.put("id", uuid);
+                result.put("tms", host + "tile/" + uuid.toString() + "/");
+                result.put("apertureservice", "/tile/" + uuid.toString() + "/");
                 try {
-                    LayerConfiguration config = _service.getRenderingConfiguration(layer, -1);
+                    LayerConfiguration config = _service.getRenderingConfiguration(uuid, null);
                     TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
-                    PyramidMetaData metadata = _service.getMetaData(layer);
-                    result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
+                    result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metaData));
                 } catch (ConfigurationException e) {
-                    LOGGER.warn("Couldn't determine renderer for layer {}", layer, e);
-                    // Other than logging something went wrong, there's not much
-                    // we can do here.
+                    // If we have to skip images per tile, it's not a huge deal
+                    LOGGER.info("Couldn't determine images per tile for layer {}", layerId, e);
                 }
 
                 return new JsonRepresentation(result);
             } else if ("unconfigure".equals(requestType)) {
+                String uuidRep = arguments.getString("configuration");
+                UUID uuid = UUID.fromString(uuidRep);
+                _service.forgetConfiguration(uuid);
             } else {
                 throw new IllegalArgumentException("Illegal request type "+requestType);
             }

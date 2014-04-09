@@ -32,7 +32,6 @@ import java.util.UUID;
 
 import oculus.aperture.common.rest.ApertureServerResource;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
@@ -40,7 +39,6 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 import com.google.inject.Inject;
@@ -81,26 +79,6 @@ public class TileResource extends ApertureServerResource {
 		this._service = service;
 	}
 	
-	@Post("json")
-	public Representation getLayer(String jsonData) throws ResourceException {
-
-		try {
-			JSONObject jsonObj = new JSONObject(jsonData);
-			
-			String host = getRequest().getResourceRef().getPath();
-			
-			host = host.substring(0, host.lastIndexOf("layer"));
-			
-			JSONObject layerInfo = _service.getLayer(host, jsonObj);
-			
-			return new JsonRepresentation(layerInfo);
-			
-		} catch (JSONException e) {
-			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-			                            "Unable to create JSON object from supplied options string", e);
-		}
-	}
-
 	private Integer getIntQueryValue (Form query, String key) {
 		String stringValue = query.getFirstValue(key, true, null);
 		if (null == stringValue) return null;

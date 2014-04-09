@@ -40,8 +40,7 @@ public class RestConfigModule extends AbstractModule {
 		MapBinder<String, ResourceDefinition> resourceBinder =
 			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
 
-		resourceBinder.addBinding("/layerList").toInstance(new ResourceDefinition(LayerResource.class));
-		resourceBinder.addBinding("/layerSpec").toInstance(new ResourceDefinition(LayerResource.class));
+		resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(LayerResource.class));
 		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
 		resourceBinder.addBinding("/legend").toInstance(new ResourceDefinition(LegendResource.class));
 	}

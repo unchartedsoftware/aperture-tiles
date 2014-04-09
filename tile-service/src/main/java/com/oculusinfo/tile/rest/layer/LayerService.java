@@ -31,6 +31,7 @@ import java.util.UUID;
 
 import org.json.JSONObject;
 
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 
@@ -62,23 +63,31 @@ public interface LayerService {
     /**
      * Configure a layer for rendering.
      * 
-     * @param configuration
-     *            The configuration of the layer to set.
+     * @param The ID of the layer to be configured
+     * @param configuration The configuration of the layer to set. This is layed
+     *            on top of the default configuration as returned by
+     *            {@link #listLayers()}, so for the most part, only properties
+     *            that are changed from the default need be listed. The one
+     *            exception is that, if there are more than one base renderer
+     *            configurations, the renderer type is used to tell which base
+     *            to override, so it must be specified.
      * @return A unique UUID by which this configuration should be known.
      */
-    public UUID configureLayer (JSONObject configuration);
+    public UUID configureLayer (String layerId, JSONObject configuration);
 
     /**
      * For use by other services; the LayerResource doesn't serve this out.
      * 
-     * @param layer
-     *            the layer to be rendered
-     * @param tile
-     *            The level to be rendered. A negative value indicates that the
-     *            configuration should not be specialized for any particular
-     *            layer.
+     * Gets a configuration object to be used when rendering a layer.
+     * 
+     * @param layer The layer to be rendered
+     * @param tile An index indicating the tile to be rendered. For most
+     *            renderers, the only part of this that matters is the level,
+     *            but there are a few exceptions. A null value indicates that
+     *            any tile-specific pieces of the configuration may safely be
+     *            ignored.
      */
-    public LayerConfiguration getRenderingConfiguration (String layerId, int level);
+    public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile);
 
     /**
      * Indicates to the service that all users are done with a given

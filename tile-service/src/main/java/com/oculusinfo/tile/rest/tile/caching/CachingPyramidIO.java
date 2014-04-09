@@ -125,7 +125,7 @@ public class CachingPyramidIO implements PyramidIO {
 	/*
 	 * Set up a base pyramid from which to read when we get a cache miss
 	 */
-	void setupBasePyramidIO (String pyramidId, ConfigurableFactory<PyramidIO> factory) {
+	public void setupBasePyramidIO (String pyramidId, ConfigurableFactory<PyramidIO> factory) {
 		if (!_basePyramidIOs.containsKey(pyramidId)) {
 			synchronized (_basePyramidIOs) {
 				if (!_basePyramidIOs.containsKey(pyramidId)) {

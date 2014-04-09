@@ -28,6 +28,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
@@ -47,17 +48,16 @@ import org.restlet.resource.ResourceException;
 
 import com.google.inject.Inject;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
-import com.oculusinfo.tile.rest.tile.TileService;
+import com.oculusinfo.tile.rest.layer.LayerService;
 
 public class LegendResource extends ApertureServerResource {
 
 	@Inject
 	private LegendService _service;
 	@Inject
-	private TileService   _tileService;
+    private LayerService  _layerService;
 
 
 	
@@ -73,6 +73,7 @@ public class LegendResource extends ApertureServerResource {
 			JSONObject jsonObj = new JSONObject(jsonData);
 
 			String layer 		= jsonObj.getString("layer");
+			UUID uuid           = UUID.fromString(jsonObj.getString("id"));
 			int zoomLevel		= jsonObj.getInt("level");
 
 			int width = jsonObj.getInt("width");
@@ -86,15 +87,12 @@ public class LegendResource extends ApertureServerResource {
 				renderHorizontally = jsonObj.getString("orientation").equalsIgnoreCase("horizontal");
 			}
 
-			LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0));
+			LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0));
 
 			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 			                            "Unable to create JSON object from supplied options string", e);
-		} catch (ConfigurationException e) {
-			throw new ResourceException(Status.SERVER_ERROR_SERVICE_UNAVAILABLE,
-			                            "Attempt to create legend for unregistered layer", e);
 		}
 	}
 	
@@ -105,8 +103,9 @@ public class LegendResource extends ApertureServerResource {
 		Form form = getRequest().getResourceRef().getQueryAsForm();
 		
 
-		String outputType = form.getFirstValue("output", "uri");
-		String layer = form.getFirstValue("layer").trim();
+		String outputType   = form.getFirstValue("output", "uri");
+		String layer        = form.getFirstValue("layer").trim();
+        UUID uuid           = UUID.fromString(form.getFirstValue("id").trim());
 		String doAxisString = form.getFirstValue("doAxis", "false").trim();
 		String orientationString = form.getFirstValue("orientation", "vertical").trim();
 
@@ -128,17 +127,12 @@ public class LegendResource extends ApertureServerResource {
 			                            "Unable to create Integer from supplied string. Check parameters.", e);
 		}
 
-		try {
-			LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0));
+	    LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0));
 
-			if(outputType.equalsIgnoreCase("uri")){
-				return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
-			} else { //(outputType.equalsIgnoreCase("png")){
-				return generateImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
-			}
-		} catch (ConfigurationException e) {
-			throw new ResourceException(Status.SERVER_ERROR_SERVICE_UNAVAILABLE,
-			                            "Attempt to create legend for unregistered layer", e);
+		if(outputType.equalsIgnoreCase("uri")){
+			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+		} else { //(outputType.equalsIgnoreCase("png")){
+			return generateImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		}
 	}
 

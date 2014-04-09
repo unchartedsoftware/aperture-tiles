@@ -60,7 +60,11 @@ import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
-	public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
+    public static final List<String>          RENDERER_PATH   = Collections.singletonList("renderer");
+    public static final List<String>          PYRAMID_IO_PATH = Collections.singletonList("pyramidio");
+    public static final List<String>          SERIALIZER_PATH = Collections.singletonList("serializer");
+
+    public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
 		         "The ID of the layer; exact format depends on how the layer is stored.",
 		         null);
 	public static final StringProperty        SHORT_NAME      = new StringProperty("name",
@@ -83,7 +87,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final IntegerProperty       LINE_NUMBER     = new IntegerProperty("lineNumber",
 		          "For use by the server only",
 		          0);
-	public static final IntegerProperty       OUTPUT_WIDTH    = new IntegerProperty("outputEidth",
+	public static final IntegerProperty       OUTPUT_WIDTH    = new IntegerProperty("outputWidth",
 		          "For use by the server only",
 		          256);
 	public static final IntegerProperty       OUTPUT_HEIGHT   = new IntegerProperty("outputHeight",
@@ -120,6 +124,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		     rendererFactoryProvider, null, parent, path);
 	}
 
+
 	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
@@ -145,9 +150,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 		_transformFactory = new ValueTransformerFactory(this, Collections.singletonList("transform"));
 		addChildFactory(_transformFactory);
-		addChildFactory(rendererFactoryProvider.createFactory(this, Collections.singletonList("renderer")));
-		addChildFactory(pyramidIOFactoryProvider.createFactory(this, Collections.singletonList("pyramidio")));
-		addChildFactory(serializationFactoryProvider.createFactory(this, Collections.singletonList("serializer")));
+		addChildFactory(rendererFactoryProvider.createFactory(this, RENDERER_PATH));
+		addChildFactory(pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH));
+		addChildFactory(serializationFactoryProvider.createFactory(this, SERIALIZER_PATH));
 	}
 
 	@Override
@@ -195,5 +200,24 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
 		}
+	}
+
+    /*
+     * This is a placeholder for the caching configuration to override; it does
+     * nothing in this version.
+     * 
+     * Theoretically, it allows for a hook point for extending classes to make
+     * last-minute preparations before actually rendering a tile, whether to
+     * JSON or an image.
+     * 
+     * @param layer The layer to be rendered.
+     * @param tile The tile to be rendered
+     * @param tileSet Any other tiles that will need to be rendered along with
+     *            this one.
+     */
+	public void prepareForRendering (String layer,
+	                                 TileIndex tile,
+	                                 Iterable<TileIndex> tileSet) {
+        // NOOP
 	}
 }

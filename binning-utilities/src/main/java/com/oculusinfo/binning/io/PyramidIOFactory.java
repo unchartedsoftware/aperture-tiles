@@ -104,6 +104,8 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	}
 
 
+
+	private PyramidIO _pyramidIO;
 	public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
 		this(null, parent, path);
 	}
@@ -111,6 +113,8 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	public PyramidIOFactory (String name, ConfigurableFactory<?> parent,
 	                         List<String> path) {
 		super(name, PyramidIO.class, parent, path);
+
+		_pyramidIO = null;
 
 		for (ConfigurationProperty<?> property: getPyramidIOPropertyList())
 			addProperty(property);
@@ -127,6 +131,13 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 
 	@Override
 	protected PyramidIO create () {
+	    if (null == _pyramidIO) {
+	        _pyramidIO = createSingleton();
+	    }
+	    return _pyramidIO;
+	}
+
+	protected PyramidIO createSingleton () {
 		String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
 
 		try {

@@ -43,33 +43,52 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
+import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 import com.oculusinfo.tile.util.JsonUtilities;
 
+@Singleton
 public class LayerServiceImpl implements LayerService {
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
 
 
 
-    private List<LayerInfo>         _layers;
-    private Map<String, LayerInfo>  _layersById;
-    private Map<String, JSONObject> _metaDataCache;
-    private Map<UUID, JSONObject>   _configurationssByUuid;
+    private List<LayerInfo>                     _layers;
+    private Map<String, LayerInfo>              _layersById;
+    private Map<String, JSONObject>             _metaDataCache;
+    private Map<UUID, JSONObject>               _configurationssByUuid;
+    private FactoryProvider<LayerConfiguration> _layerConfigurationProvider;
 
 
 
 	@Inject
-    public LayerServiceImpl (@Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation) {
+    public LayerServiceImpl (@Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,
+                             FactoryProvider<LayerConfiguration> layerConfigurationProvider) {
         _layers = new ArrayList<>();
         _layersById = new HashMap<>();
         _metaDataCache = new HashMap<>();
         _configurationssByUuid = new HashMap<>();
+        _layerConfigurationProvider = layerConfigurationProvider;
+
+        if (_layerConfigurationProvider instanceof CachingLayerConfigurationProvider) {
+            ((CachingLayerConfigurationProvider) _layerConfigurationProvider).addLayerListener(new LayerDataChangedListener () {
+                public void onLayerDataChanged (String layerId) {
+                    _metaDataCache.remove(layerId);
+                }
+            });
+        }
+
         readConfigFiles(getConfigurationFiles(layerConfigurationLocation));
     }
 
@@ -80,99 +99,177 @@ public class LayerServiceImpl implements LayerService {
 	    return _layers;
 	}
 
-	@Override
-	public PyramidMetaData getMetaData (String layerId) {
+    @Override
+    public PyramidMetaData getMetaData (String layerId) {
+        try {
+            LayerConfiguration config = getLayerConfiguration(layerId);
+            PyramidIO pyramidIO = config.produce(PyramidIO.class);
+            return getMetaData(layerId, pyramidIO);
+        } catch (ConfigurationException e) {
+            LOGGER.error("Couldn't determine pyramid I/O method for {}", layerId, e);
+            return null;
+        }
+    }
+    
+    private PyramidMetaData getMetaData (String layerId, PyramidIO pyramidIO) {
         try {
             JSONObject metadata = _metaDataCache.get(layerId);
             if (metadata == null){
-                LayerConfiguration config = getRenderingConfiguration(layerId, -1);
-                PyramidIO pyramidIO = config.produce(PyramidIO.class);
                 String s = pyramidIO.readMetaData(layerId);
 
                 metadata = new JSONObject(s);
                 _metaDataCache.put(layerId, metadata);
             }
             return new PyramidMetaData(metadata);
-        } catch (ConfigurationException e) {
-            LOGGER.error("Couldn't figure out how to read metadata for {}", layerId, e);
         } catch (JSONException e) {
             LOGGER.error("Metadata file for layer is missing or corrupt: {}", layerId, e);
         } catch (IOException e) {
             LOGGER.error("Couldn't read metadata: {}", layerId, e);
         }
         return new PyramidMetaData(new JSONObject());
+    }
+
+	private JSONObject getBaseConfiguration (String layerId, String rendererType, boolean choiceIsError) {
+        LayerInfo info = _layersById.get(layerId);
+        if (null == info) {
+            throw new IllegalArgumentException("Attempt to configure unknown layer "+layerId);
+        }
+
+        List<JSONObject> baseConfigurations = info.getRendererConfigurations();
+        if (0 == baseConfigurations.size()) {
+            throw new IllegalArgumentException("No configurations found for layer "+layerId);
+        }
+        if (1 == baseConfigurations.size()) {
+            // Only one possible base configuration (the usual case, at the moment)
+            return baseConfigurations.get(0);
+        } else if (null == rendererType) {
+            if (choiceIsError) {
+                throw new IllegalArgumentException("No way to choose between "+baseConfigurations.size()+" configurations - no renderer given");
+            }
+            // Just pick the first one - we're not actually rendering, so it shouldn't matter.
+            return baseConfigurations.get(0);
+        } else {
+            for (JSONObject config: baseConfigurations) {
+                try {
+                    ImageRendererFactory baseFactory = new ImageRendererFactory(null, null);
+                    baseFactory.readConfiguration(ConfigurableFactory.getLeafNode(config,
+                                                                                  LayerConfiguration.RENDERER_PATH));
+                    String configRenderer = baseFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
+                    if (rendererType.equals(configRenderer)) {
+                        return config;
+                    }
+                } catch (ConfigurationException e) {
+                    LOGGER.warn("Could not determine renderer from configuration {}", config, e);
+                }
+            }
+            throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
+        }
 	}
 
 	@Override
-	public UUID configureLayer (JSONObject overrideConfiguration) {
+	public UUID configureLayer (String layerId, JSONObject overrideConfiguration) {
+        // Figure out which renderer to match, if a choice is necessary
+        ImageRendererFactory overrideFactory = new ImageRendererFactory(null, null);
+        String overrideRenderer = null;
+        boolean rendererChoiceIsError = false;
         try {
-            String layer = overrideConfiguration.getString(LayerConfiguration.LAYER_NAME.getName());
+            overrideFactory.readConfiguration(ConfigurableFactory.getLeafNode(overrideConfiguration,
+                                                                              LayerConfiguration.RENDERER_PATH));
+            overrideRenderer = overrideFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
+        } catch (ConfigurationException e) {
+            // No renderer is allowed, if there is only one renderer listed; otherwise, it's an error.
+            rendererChoiceIsError = true;
+        }
+        JSONObject baseConfiguration = getBaseConfiguration(layerId, overrideRenderer, rendererChoiceIsError);
+        JSONObject configuration = JsonUtilities.deepClone(baseConfiguration);
+        JsonUtilities.overlayInPlace(configuration, overrideConfiguration);
+        
+        UUID uuid = UUID.randomUUID();
+        _configurationssByUuid.put(uuid, configuration);
 
-            LayerInfo info = _layersById.get(layer);
-            if (null == info) {
-                return null;
-            }
-            // TODO: Merge input configuration with the one we know about from our own configuration
-            // Merge the passed-in configuration with the stored one from our general configuration.
-            JSONObject baseConfiguration = null;
-            for (JSONObject possibleBase: info.getRendererConfigurations()) {
-                // TODO: Figure out which one it came from.
-            }
-            JSONObject configuration = new JSONObject(metadata.getRawData(), names);
-            
-            UUID uuid = UUID.randomUUID();
-            _configurationssByUuid.put(uuid, configuration);
-            _latestIDMap.put(layer, id);
+        return uuid;
+	}
 
-            // Determine the pyramidIO, so we can get the metaData
-            LayerConfiguration config = getLayerConfiguration();
-            config.readConfiguration(options);
+	@Override
+	public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile) {
+	    try {
+	        ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(new ArrayList<String>());
+	        JSONObject rawConfiguration = _configurationssByUuid.get(uuid);
+	        if (null == rawConfiguration)
+	            throw new IllegalArgumentException("Unknown configuration: "+uuid);
+
+	        factory.readConfiguration(rawConfiguration);
+	        LayerConfiguration config = factory.produce(LayerConfiguration.class);
+            String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
             PyramidIO pyramidIO = config.produce(PyramidIO.class);
 
-            // Initialize the pyramid for reading
+	        // Initialize the PyramidIO for reading
             JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
             if (null != initJSON) {
                 int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
                 int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
                 Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-                pyramidIO.initializeForRead(layer, width, height, initProps);
+
+                pyramidIO.initializeForRead(layerId, width, height, initProps);
             }
 
-            PyramidMetaData metadata = getMetadata(layer, pyramidIO);
+            // Set level-specific properties in the configuration
+            if (null != tile) {
+                PyramidMetaData metadata = getMetaData(layerId, pyramidIO);
+                config.setLevelProperties(tile,
+                                          metadata.getLevelMinimum(tile.getLevel()),
+                                          metadata.getLevelMaximum(tile.getLevel()));
+            }
 
-            // Construct our return object
-            String[] names = JSONObject.getNames(metadata.getRawData());
-            JSONObject result = new JSONObject(metadata.getRawData(), names);
-
-            result.put("layer", layer);
-            result.put("id", id);
-            result.put("tms", hostUrl + "tile/" + id.toString() + "/");
-            result.put("apertureservice", "/tile/" + id.toString() + "/");
-
-            TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
-            result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metadata));
-
-            System.out.println("UUID Count after "+layer+": " + _uuidToOptionsMap.size());
-            return result;
-        } catch (ConfigurationException e) {
-            _logger.warn("Configuration exception trying to apply layer parameters to json object.", e);
-            return new JSONObject();
-        } catch (JSONException e) {
-            _logger.warn("Failed to apply layer parameters to json object.", e);
-            return new JSONObject();
-        } 
+            return config;
+	    } catch (ConfigurationException e) {
+	        LOGGER.warn("Error configuring rendering for {}", uuid, e);
+	        return null;
+	    }
 	}
 
-	@Override
-	public LayerConfiguration getRenderingConfiguration (String layerId, int level) {
-	    // TODO Auto-generated method stub
-	    return null;
+	/*
+     * Get a layer configuration not suitable for rendering.
+     * 
+     * For internal use only, basically just for getting metadata, which
+     * shouldn't depend on anything but the pyramidIO.
+     * 
+     * While there is no theoretical reason the PyramidIO should necessarily be
+     * the same across all possible ways of looking at a layer, for the moment,
+     * we simply stipulate that it will be so this will work. If you want to
+     * look at some data both live and batched (to compare, say), configure them
+     * as separate layers, with separate IDs.
+     */
+	private LayerConfiguration getLayerConfiguration (String layerId) {
+        try {
+            ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(new ArrayList<String>());
+            JSONObject baseConfiguration = getBaseConfiguration(layerId, null, false);
+            if (null == baseConfiguration)
+                throw new IllegalArgumentException("Unknown configuration: "+layerId);
+
+            factory.readConfiguration(baseConfiguration);
+            LayerConfiguration config = factory.produce(LayerConfiguration.class);
+
+            // Initialize the PyramidIO for reading
+            JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+            if (null != initJSON) {
+                int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+                int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+                Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+
+                PyramidIO pyramidIO = config.produce(PyramidIO.class);
+                pyramidIO.initializeForRead(layerId, width, height, initProps);
+            }
+            return config;
+        } catch (ConfigurationException e) {
+            LOGGER.warn("Error configuring rendering for {}", layerId, e);
+            return null;
+        }
 	}
 
 	@Override
 	public void forgetConfiguration (UUID uuid) {
-	    // TODO Auto-generated method stub
-	    
+	    _configurationssByUuid.remove(uuid);
 	}
 
 
