@@ -31,12 +31,13 @@ import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.init.PyramidIOFactoryProvider;
 import com.oculusinfo.tile.rest.tile.caching.LiveTilePyramidIOFactory;
 import com.oculusinfo.tile.spark.SparkContextProvider;
 
 
 
-public class SparkAwarePyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
+public class SparkAwarePyramidIOFactoryProvider implements PyramidIOFactoryProvider {
 	@Inject
 	private SparkContextProvider _contextProvider;
 
@@ -56,5 +57,15 @@ public class SparkAwarePyramidIOFactoryProvider implements FactoryProvider<Pyram
 	                                                     ConfigurableFactory<?> parent,
 	                                                     List<String> path) {
 		return new LiveTilePyramidIOFactory(factoryName, parent, path, _contextProvider);
+	}
+	
+	@Override
+	public String getFactoryName() {
+		return "live";
+	}
+	
+	@Override
+	public List<String> getPath() {
+		return null;
 	}
 }

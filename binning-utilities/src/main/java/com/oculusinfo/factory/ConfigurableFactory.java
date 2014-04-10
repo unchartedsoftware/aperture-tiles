@@ -148,6 +148,14 @@ abstract public class ConfigurableFactory<T> {
 	public List<String> getRootPath () {
 		return _rootPath;
 	}
+	
+	/**
+	 * Get the name associated with the factory.
+	 * @return A string name if provided upon construction, or else null if none was provided.
+	 */
+	public String getName() {
+		return _name;
+	}
 
 	/**
 	 * List out all properties directly expected by this factory.
