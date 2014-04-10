@@ -33,83 +33,22 @@ define(function (require) {
         AnnotationService = require('./AnnotationService'),
         AnnotationFeature = require('./AnnotationFeature'),
         TileTracker = require('../layer/TileTracker'),
-        ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
-        ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
-        ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
-        uniquePopupId = 0,
         defaultStyle,
         hoverStyle,
         selectStyle,
         temporaryStyle,
-        AnnotationLayer,
-        generatePopup,
-        generateEditablePopup,
-        annotationContext;
+        annotationContext,
+        AnnotationLayer;
 
-
-
-    generatePopup = function( id, feature ) {
-
-        return  "<input id='"+ id +"-edit' type='image' src='./images/edit-icon.png' width='17' height='17' style='position:absolute; right:0px; outline-width:0'>"+
-                "<div style='overflow:hidden' id='" + id + "' class='ui-widget-content'>"+
-
-                    "<div style='padding-top:5px; padding-left:15px;'>"+
-                        "<div style='width:256px; font-weight:bold; padding-bottom:10px; padding-right:20px'>"+
-                            feature.attributes.annotation.data.title +
-                        "</div>"+
-                        "<div style='padding-bottom:10px'>"+
-                            "Priority: "+ feature.attributes.annotation.priority +
-                        "</div>"+
-                        "<div style='width:256px; height:100px; overflow:auto;  padding-right:15px;'>"+
-                            feature.attributes.annotation.data.comment +
-                        "</div>"+
-                    "</div>"+
-                "</div>";
-    };
-
-
-    generateEditablePopup = function( id, feature ) {
-
-        var TITLE_PLACEHOLDER = 'Enter title',
-            PRIORITY_PLACEHOLDER = 'Enter priority',
-            DESCRIPTION_PLACEHOLDER = 'Enter description',
-            titleVal= feature.attributes.annotation.data.title || "",
-            priorityVal = feature.attributes.annotation.priority || "",
-            descriptionVal = feature.attributes.annotation.data.comment || "";
-
-        return  "<div style='overflow:hidden'>"+
-
-                    "<div style='overflow:hidden' id='" + id + "' class='ui-widget-content'>"+
-
-                        "<div style='padding-top:15px; padding-left:15px; '>"+
-                            "<div style='font-weight:bold; padding-bottom:10px;'>" +
-
-                                "<label style='width:70px; float:left;'>Title: </label>" +
-                                "<input id='"+ ANNOTATION_POPUP_TITLE_ID +"' style='width: calc(100% - 90px)' type='text' placeholder='"+TITLE_PLACEHOLDER+"' value='"+ titleVal +"'>" +
-
-                            "</div>"+
-                            "<div style='font-weight:bold; padding-bottom:10px;'>" +
-
-                                "<label style='width:70px; float:left;'>Priority: </label>" +
-                                "<input id='"+ ANNOTATION_POPUP_PRIORITY_ID +"' style='width: calc(100% - 90px)' type='text' placeholder='"+PRIORITY_PLACEHOLDER+"' value='"+ priorityVal +"'>" +
-
-                            "</div>"+
-                            "<div style='font-weight:bold;  padding-bottom:10px;'> Description: </div>" +
-                            "<div>"+
-                                  "<textarea id='"+ ANNOTATION_POPUP_DESCRIPTION_ID +"' style='width: calc(100% - 25px); resize:none;' placeholder='"+DESCRIPTION_PLACEHOLDER+"'>"+ descriptionVal +"</textarea> "+
-                            "</div>"+
-                        "</div>"+
-
-                    "</div>"+
-                "<button id='" + id + "-cancel' style='margin-top:10px; border-radius:5px; float:right; '>Cancel</button>"+
-                "<button id='" + id + "-save' style='margin-top:10px; border-radius:5px; float:right; '>Save</button>"+
-                "</div>";
-    };
 
 
     annotationContext = {
         getLabel: function( feature ) {
-            return ( feature.attributes.key )
+
+            if ( feature.attributes.feature === undefined || !feature.attributes.feature.isAggregated() ) {
+                return "";
+            }
+            return feature.attributes.feature.getAnnotationCount()
         }
     };
 
@@ -119,17 +58,14 @@ define(function (require) {
         graphicWidth: 24,
         graphicHeight: 24,
         graphicYOffset: -23,
-
-        context: annotationContext,
-
-        label: "${count}",
+        label: "${getLabel}",
         labelYOffset: 35,
         labelOutlineColor: "#000000",
         labelOutlineWidth: 3,
         fontColor: "#FFFFFF",
 
         'cursor': 'pointer'
-    });
+    }, { context: annotationContext });
 
     hoverStyle = new OpenLayers.Style({
         externalGraphic: "./images/marker-green.png",
@@ -166,13 +102,20 @@ define(function (require) {
             this.filters = spec.filters;
             this.tracker = new TileTracker( new AnnotationService( spec.layer ) );
             this.features = {};
+            this.pendingFeature = null;
+
             this.createLayer();
 
             // set callbacks
             this.map.on('zoomend', function() {
 
                 that.unselect();
-                that.destroyPopup();
+
+                while( that.map.map.olMap_.popups.length ) {
+                    that.map.map.olMap_.removePopup( that.map.map.olMap_.popups[0] );
+                }
+
+                that.cancelPendingFeature();
                 that.onMapUpdate();
             });
 
@@ -317,7 +260,7 @@ define(function (require) {
             for (key in defunctFeatures) {
                 if (defunctFeatures.hasOwnProperty( key )) {
 
-                    this.features[ key ].removeFromLayerAndDestroy( this.olLayer_ );
+                    this.features[ key ].removeFromLayerAndDestroy();
                     delete this.features[ key ];
                 }
             }
@@ -325,222 +268,110 @@ define(function (require) {
         },
 
 
-        createEditablePopup: function( feature, closeFunc, saveFunc ) {
-
-            var that = this,
-                id = "annotation-popup-" + uniquePopupId++;
-
-            function onClosePopup() {
-
-                that.destroyPopup();
-                that.unselect();
-                closeFunc( feature );
-            }
-
-            this.createPopup( feature, id, generateEditablePopup, onClosePopup );
-
-            $( "#"+id+"-save" ).click( function() {
-                saveFunc( feature );
-            });
-
-            $( "#"+id+"-cancel" ).click( onClosePopup );
-
-        },
-
-
-        createDisplayPopup: function( feature, closeFunc, editFunc ) {
-
-            var that = this,
-                id = "annotation-popup-" + uniquePopupId++;
-
-            function onClosePopup() {
-
-                that.destroyPopup();
-                that.unselect();
-                closeFunc( feature );
-            }
-
-            this.createPopup( feature, id, generatePopup, onClosePopup );
-
-            $( "#"+id+"-edit" ).click( function() {
-                editFunc( feature );
-            });
-
-        },
-
-        createPopup: function( feature, id, popupFunc, closeFunc ) {
-
-            var that = this,
-                latlon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() );
-
-            this.popup = new OpenLayers.Popup("annotation-popup",
-                                               latlon,
-                                               null,
-                                               popupFunc( id, feature ),
-                                               true,
-                                               closeFunc );
-
-            this.popup.autoSize = true;
-
-            feature.popup = this.popup;
-
-            this.map.map.olMap_.addPopup( this.popup, false );
-
-            this.centrePopup( latlon );
-
-            $( "#"+id ).resizable({
-                resize: function() {
-                    that.popup.updateSize();
-                },
-                stop: function() {
-                    that.centrePopup( that.popup.lonlat );
-                },
-                maxWidth: 414,
-                maxHeight: 256,
-                minHeight: 80,
-                minWidth: 129,
-                handles: 'se'
-            });
-
-        },
-
-
-        destroyPopup: function() {
-
-            if ( this.popup !== null && this.popup !== undefined ) {
-                this.map.map.olMap_.removePopup( this.popup );
-                this.popup.destroy();
-                this.popup = null;
-            }
-        },
-
-
-        centrePopup: function( latlon ) {
-            var px = this.map.map.olMap_.getLayerPxFromViewPortPx( this.map.map.olMap_.getPixelFromLonLat(latlon) ),
-                size = this.popup.size;
-            px.x -= size.w / 2;
-            px.y -= size.h + 35;
-            this.popup.moveTo( px );
-            //this.popup.panIntoView();
-            this.popup.lonlat = latlon;
-        },
-
-
-        checkAndSetData: function( feature ) {
-
-            var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
-                $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
-                $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID),
-                annotation = feature.attributes.annotation;
-
-            // check input values
-            if ( $title.val() !== "" &&
-                $priority.val() !== "" &&
-                $description.val() !== "" ) {
-
-                annotation.priority = $priority.val();
-                annotation.data.title = $title.val();
-                annotation.data.comment = $description.val();
-
-                return true;
-            }
-
-            return false;
-        },
-
-
         popupCreationClose : function( feature ) {
-
-            // manually remove feature
-            this.olLayer_.removeFeatures( [feature] );
-            feature.destroy();
+            // destroy popup
+            feature.removeAndDestroyPopup();
+            // destroy feature
+            feature.removeFromLayerAndDestroy();
+            this.pendingFeature = null;
         },
 
 
         popupCreationSave : function( feature ) {
 
-            var annotation = feature.attributes.annotation,
-                key = feature.attributes.key,
-                rawLatLon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() ),
-                annotationsByPriority = {},
-                spec;
+            var annotation = feature.getDataArray()[0],
+                key = feature.olFeature_.attributes.key,
+                rawLatLon = OpenLayers.LonLat.fromString( feature.olFeature_.geometry.toShortString() );
 
-            if ( this.checkAndSetData( feature ) ) {
+            if ( feature.checkAndSetData() ) {
+
+                this.pendingFeature = null;
 
                 if ( this.features[key] !== undefined ) {
 
                     // already exists, aggregate
                     this.features[key].addAnnotation( rawLatLon.lon, rawLatLon.lat, annotation );
-
-                    // manually remove feature, since it is being aggregated
-                    this.olLayer_.removeFeatures( [e.feature] );
-                    e.feature.destroy();
+                    // destroy feature
+                    feature.removeFromLayerAndDestroy();
+                    // set feature to correct feature
+                    feature = this.features[key];
 
                 } else {
 
-                    // create new feature
-                    annotationsByPriority[ annotation.priority ] = [ annotation ];
-
-                    spec = {
-                        feature : feature,
-                        annotationsByPriority : annotationsByPriority,
-                        key : key
-                    };
-
-                    this.features[key] = new AnnotationFeature( spec );
-                    // no need to attach, its already attached to layer
+                    this.features[key] = feature;
                 }
 
                 // send POST request to write annotation to server
                 this.tracker.dataService.postRequest( "WRITE", annotation );
 
-                this.destroyPopup();
-                this.createDisplayPopup( feature, $.proxy( this.popupDisplayClose, this ),
-                                                  $.proxy( this.popupDisplayEdit, this ) );
+                feature.removeAndDestroyPopup();
+                feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
+                                            $.proxy( this.popupDisplayEdit, this ) );
             }
-
-
-
         },
 
 
         popupEditClose : function( feature ) {
-            // empty
+            // destroy popup
+            feature.removeAndDestroyPopup();
+            // go back to display
+            feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
+                                        $.proxy( this.popupDisplayEdit, this ) );
         },
 
 
         popupEditSave : function( feature ) {
 
-
-            if ( this.checkAndSetData( feature ) ) {
+            if ( feature.checkAndSetData() ) {
 
                 // save stuff
 
                 // then
-                this.destroyPopup();
-                this.createDisplayPopup( feature, $.proxy( this.popupDisplayClose, this ),
-                                                  $.proxy( this.popupDisplayEdit, this ) );
+                feature.removeAndDestroyPopup();
+                feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
+                                            $.proxy( this.popupDisplayEdit, this ) );
             }
-
-
         },
 
 
         popupDisplayClose : function( feature ) {
-            // empty
+            // destroy popup
+            feature.removeAndDestroyPopup();
+            this.selectControl.clickoutFeature(feature.olFeature_);
         },
 
 
         popupDisplayEdit : function( feature ) {
-            //
-            this.destroyPopup();
-            console.log("here");
-            this.createEditablePopup( feature, $.proxy( this.popupEditClose, this ),
-                                               $.proxy( this.popupEditSave, this ) );
-
+            // destroy popup
+            feature.removeAndDestroyPopup();
+            feature.createEditablePopup( $.proxy( this.popupEditClose, this ),
+                                         $.proxy( this.popupEditSave, this ) );
         },
 
 
+        getFeatureInfo: function( feature ) {
+
+            var mapLatLon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() ),
+                latlon = this.transformFromMapProj( mapLatLon ),
+                index = this.tracker.dataService.indexer.getIndex( {x:latlon.lon, y:latlon.lat}, this.map.getZoom() );
+
+            return {
+                    key: index.tilekey + "," + index.binkey,
+                    lat: mapLatLon.lat,
+                    lon: mapLatLon.lon,
+                    x: latlon.lon,
+                    y: latlon.lat
+                };
+        },
+
+
+        cancelPendingFeature: function() {
+
+            if ( this.pendingFeature !== null ) {
+                this.pendingFeature.removeFromLayerAndDestroy();
+                this.pendingFeature = null;
+            }
+        },
 
 
         createLayer: function() {
@@ -560,21 +391,24 @@ define(function (require) {
                     "featureselected": function(e) {
 
                         console.log("featureselected");
-                        that.select();
-                        /*
-                        if ( that.selectedFeature === e.feature.attributes.annotation ) {
-                            return;
-                        }
 
-                        that.destroyPopup();
-                        that.createPopup( e );
-                        */
+                        // cancel any pending feature creation
+                        that.cancelPendingFeature();
+
+                        that.select();
+
+                        e.feature.attributes.feature.createDisplayPopup( $.proxy( that.popupDisplayClose, that ),
+                                                                         $.proxy( that.popupDisplayEdit, that ) );
+
                     },
 
 
                     "featureunselected": function(e) {
 
                         console.log("featureunselected");
+
+                        e.feature.attributes.feature.removeAndDestroyPopup();
+
                         that.unselect();
                     },
 
@@ -583,26 +417,29 @@ define(function (require) {
 
                         console.log("featureadded");
 
-                        var rawLatLon = OpenLayers.LonLat.fromString( e.feature.geometry.toShortString() ),
-                            latlon = that.transformFromMapProj( rawLatLon ),
-                            annotation,
-                            tempData = { x: latlon.lon, y: latlon.lat },
-                            index = that.tracker.dataService.indexer.getIndex( tempData, that.map.getZoom() ),
-                            key = index.tilekey + "," + index.binkey;
+                        // cancel any previous pending feature creation
+                        that.cancelPendingFeature();
+
+                        var info = that.getFeatureInfo( e.feature ),
+                            annotation;
 
                         // create base annotation
                         annotation = {
-                            x: latlon.lon,
-                            y: latlon.lat,
+                            x: info.x,
+                            y: info.y,
                             data: {}
                         };
 
-                        // add key to feature
-                        e.feature.attributes.key = key;
-                        e.feature.attributes.annotation = annotation;
+                        // create temporary feature
+                        that.pendingFeature = new AnnotationFeature({
+                            feature : e.feature,
+                            annotationsByPriority : { _pending : [annotation] },
+                            key : info.key
+                        });
 
-                        that.createEditablePopup( e.feature, $.proxy( that.popupCreationClose, that ),
-                                                             $.proxy( that.popupCreationSave, that ) );
+                        // create edit popup to enter annotation info
+                        that.pendingFeature.createEditablePopup( $.proxy( that.popupCreationClose, that ),
+                                                                 $.proxy( that.popupCreationSave, that ));
 
                     }
 
@@ -630,6 +467,12 @@ define(function (require) {
                     // get feature key
                     var key = feature.attributes.key;
 
+                    if ( that.pendingFeature !== null &&
+                         that.pendingFeature.olFeature_ === feature ) {
+                        // cannot select pending feature
+                        return;
+                    }
+
                     if ( that.features[ key ].isAggregated() ) {
                         // disable dragging of aggregated points!
                         that.dragControl.handlers.drag.deactivate();
@@ -641,29 +484,34 @@ define(function (require) {
 
                 onComplete: function(feature, pixel) {
 
-                    var rawLatLon = OpenLayers.LonLat.fromString( feature.geometry.toShortString()),
-                        latlon = that.transformFromMapProj( rawLatLon ),
-                        tempData = { x: latlon.lon, y: latlon.lat },
+                    var info = that.getFeatureInfo( feature ),
                         oldkey = feature.attributes.key,
-                        index = that.tracker.dataService.indexer.getIndex( tempData, that.map.getZoom() ),
-                        newkey = index.tilekey + "," + index.binkey,
+                        newkey = info.key,
                         oldAnno,
                         newAnno;
-
-                    // this feature only contains 1 annotation as you cannot drag aggregates
-                    oldAnno = that.features[ oldkey ].getDataArray()[0];
 
                     // set key attribute to new key
                     feature.attributes.key = newkey;
 
+                    if (that.pendingFeature !== null &&
+                        that.pendingFeature.olFeature_ === feature ) {
+
+                        oldAnno = that.pendingFeature.getDataArray()[0];
+                        oldAnno.x = info.x;
+                        oldAnno.y = info.y;
+                        return;
+                    }
+
+                    // this feature only contains 1 annotation as you cannot drag aggregates
+                    oldAnno = that.features[ oldkey ].getDataArray()[0];
+
                     // deep copy annotation data
                     newAnno = JSON.parse( JSON.stringify( oldAnno ) );
-                    newAnno.x = latlon.lon;
-                    newAnno.y = latlon.lat;
+                    newAnno.x = info.x;
+                    newAnno.y = info.y;
 
                     if ( oldkey === newkey ) {
 
-                        console.log("A");
                         // remaining in same bin
                         // keep feature, change data
 
@@ -673,24 +521,22 @@ define(function (require) {
 
                     } else if ( that.features[ newkey ] !== undefined ) {
 
-                        console.log("B");
                         // occupied bin
                         // add data, remove old
 
                         // feature already exists in new location, aggregate!
-                        that.features[ newkey ].addAnnotation( rawLatLon.lon, rawLatLon.lat, newAnno );
+                        that.features[ newkey ].addAnnotation( info.lon, info.lat, newAnno );
 
                         // un-select before destroying
                         that.highlightControl.unselect( feature );
                         that.selectControl.unselect( feature );
 
                         // completely remove old feature
-                        that.features[ oldkey ].removeFromLayerAndDestroy( that.olLayer_ );
+                        that.features[ oldkey ].removeFromLayerAndDestroy();
                         delete that.features[ oldkey ];
 
                     } else {
 
-                        console.log("C");
                         // un-occupied bin
                         // swap new and old, change data
 
@@ -712,7 +558,7 @@ define(function (require) {
 
                 onDrag: function(feature, pixel) {
 
-                    //that.centrePopup( OpenLayers.LonLat.fromString(feature.geometry.toShortString()) );
+                    feature.attributes.feature.centrePopup( OpenLayers.LonLat.fromString( feature.geometry.toShortString() ) );
                 }
 
 
