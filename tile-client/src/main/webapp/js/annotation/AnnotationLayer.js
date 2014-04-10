@@ -33,6 +33,9 @@ define(function (require) {
         AnnotationService = require('./AnnotationService'),
         AnnotationFeature = require('./AnnotationFeature'),
         TileTracker = require('../layer/TileTracker'),
+        ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
+        ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
+        ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
         uniquePopupId = 0,
         defaultStyle,
         hoverStyle,
@@ -40,7 +43,8 @@ define(function (require) {
         temporaryStyle,
         AnnotationLayer,
         generatePopup,
-        generateEditablePopup;
+        generateEditablePopup,
+        annotationContext;
 
 
 
@@ -63,23 +67,15 @@ define(function (require) {
                 "</div>";
     };
 
+
     generateEditablePopup = function( id, feature ) {
 
-        var titleFill = "placeholder='Enter title'",
-            priorityFill = "placeholder='Enter priority'",
-            commentFill = "placeholder='Enter description'";
-
-        if ( feature.attributes.annotation.data.title !== undefined ) {
-            titleFill = "value='" + feature.attributes.annotation.data.title + "'";
-        }
-
-        if ( feature.attributes.annotation.priority !== undefined ) {
-            priorityFill = "value='" + feature.attributes.annotation.priority + "'";
-        }
-
-        if ( feature.attributes.annotation.data.comment !== undefined ) {
-            commentFill = "value='" + feature.attributes.annotation.data.comment + "'";
-        }
+        var TITLE_PLACEHOLDER = 'Enter title',
+            PRIORITY_PLACEHOLDER = 'Enter priority',
+            DESCRIPTION_PLACEHOLDER = 'Enter description',
+            titleVal= feature.attributes.annotation.data.title || "",
+            priorityVal = feature.attributes.annotation.priority || "",
+            descriptionVal = feature.attributes.annotation.data.comment || "";
 
         return  "<div style='overflow:hidden'>"+
 
@@ -89,28 +85,33 @@ define(function (require) {
                             "<div style='font-weight:bold; padding-bottom:10px;'>" +
 
                                 "<label style='width:70px; float:left;'>Title: </label>" +
-                                "<input style='width: calc(100% - 90px)' type='text' "+titleFill+">" +
+                                "<input id='"+ ANNOTATION_POPUP_TITLE_ID +"' style='width: calc(100% - 90px)' type='text' placeholder='"+TITLE_PLACEHOLDER+"' value='"+ titleVal +"'>" +
 
                             "</div>"+
                             "<div style='font-weight:bold; padding-bottom:10px;'>" +
 
                                 "<label style='width:70px; float:left;'>Priority: </label>" +
-                                "<input style='width: calc(100% - 90px)' type='text' "+priorityFill+">" +
+                                "<input id='"+ ANNOTATION_POPUP_PRIORITY_ID +"' style='width: calc(100% - 90px)' type='text' placeholder='"+PRIORITY_PLACEHOLDER+"' value='"+ priorityVal +"'>" +
 
                             "</div>"+
                             "<div style='font-weight:bold;  padding-bottom:10px;'> Description: </div>" +
                             "<div>"+
-                                  "<textarea style='width: calc(100% - 25px); resize:none;' >"+ commentFill+"</textarea> "+
+                                  "<textarea id='"+ ANNOTATION_POPUP_DESCRIPTION_ID +"' style='width: calc(100% - 25px); resize:none;' placeholder='"+DESCRIPTION_PLACEHOLDER+"'>"+ descriptionVal +"</textarea> "+
                             "</div>"+
                         "</div>"+
 
                     "</div>"+
-                "<button style='margin-top:10px; border-radius:5px; float:right; '>Cancel</button>"+
-                "<button style='margin-top:10px; border-radius:5px; float:right; '>Save</button>"+
+                "<button id='" + id + "-cancel' style='margin-top:10px; border-radius:5px; float:right; '>Cancel</button>"+
+                "<button id='" + id + "-save' style='margin-top:10px; border-radius:5px; float:right; '>Save</button>"+
                 "</div>";
     };
 
 
+    annotationContext = {
+        getLabel: function( feature ) {
+            return ( feature.attributes.key )
+        }
+    };
 
 
     defaultStyle = new OpenLayers.Style({
@@ -118,6 +119,15 @@ define(function (require) {
         graphicWidth: 24,
         graphicHeight: 24,
         graphicYOffset: -23,
+
+        context: annotationContext,
+
+        label: "${count}",
+        labelYOffset: 35,
+        labelOutlineColor: "#000000",
+        labelOutlineWidth: 3,
+        fontColor: "#FFFFFF",
+
         'cursor': 'pointer'
     });
 
@@ -168,7 +178,6 @@ define(function (require) {
 
             this.map.on('panend', function() {
 
-                that.unselect();
                 that.onMapUpdate();
             });
 
@@ -178,7 +187,6 @@ define(function (require) {
 
 
         onMapUpdate: function() {
-
             // determine all tiles in view
             var tiles = this.map.getTilesInView();
             // request annotation data for all tiles in view
@@ -189,19 +197,17 @@ define(function (require) {
 
 
         transformToMapProj: function(latLon) {
-
+            // convert to lat / long to OpenLayers map projection
             var fromProj = new OpenLayers.Projection("EPSG:4326"),
                 toProj = this.map.projection;
-
             return new OpenLayers.LonLat( latLon.lon, latLon.lat ).transform( fromProj, toProj );
         },
 
 
         transformFromMapProj: function(latLon) {
-
+            // convert from OpenLayers map projection to lat / long
             var fromProj = this.map.projection,
                 toProj = new OpenLayers.Projection("EPSG:4326");
-
             return new OpenLayers.LonLat( latLon.lon, latLon.lat ).transform( fromProj, toProj );
         },
 
@@ -262,6 +268,7 @@ define(function (require) {
 
         },
 
+
         redrawAnnotations: function() {
 
             var annotations = this.tracker.getDataObject(),
@@ -318,36 +325,74 @@ define(function (require) {
         },
 
 
-        createPopup: function( e ) {
-
-            this.selectedFeature = e.feature.attributes.annotation;
+        createEditablePopup: function( feature, closeFunc, saveFunc ) {
 
             var that = this,
-                latlon = OpenLayers.LonLat.fromString( e.feature.geometry.toShortString() ),
-                popupId = "annotation-popup-" + uniquePopupId++;
+                id = "annotation-popup-" + uniquePopupId++;
+
+            function onClosePopup() {
+
+                that.destroyPopup();
+                that.unselect();
+                closeFunc( feature );
+            }
+
+            this.createPopup( feature, id, generateEditablePopup, onClosePopup );
+
+            $( "#"+id+"-save" ).click( function() {
+                saveFunc( feature );
+            });
+
+            $( "#"+id+"-cancel" ).click( onClosePopup );
+
+        },
+
+
+        createDisplayPopup: function( feature, closeFunc, editFunc ) {
+
+            var that = this,
+                id = "annotation-popup-" + uniquePopupId++;
+
+            function onClosePopup() {
+
+                that.destroyPopup();
+                that.unselect();
+                closeFunc( feature );
+            }
+
+            this.createPopup( feature, id, generatePopup, onClosePopup );
+
+            $( "#"+id+"-edit" ).click( function() {
+                editFunc( feature );
+            });
+
+        },
+
+        createPopup: function( feature, id, popupFunc, closeFunc ) {
+
+            var that = this,
+                latlon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() );
 
             this.popup = new OpenLayers.Popup("annotation-popup",
                                                latlon,
                                                null,
-                                               generatePopup( popupId, e.feature ),
+                                               popupFunc( id, feature ),
                                                true,
-                                               function() {
-                                                   that.destroyPopup();
-                                                   that.unselect();
-                                               });
+                                               closeFunc );
 
             this.popup.autoSize = true;
-            e.feature.popup = this.popup;
+
+            feature.popup = this.popup;
+
             this.map.map.olMap_.addPopup( this.popup, false );
 
             this.centrePopup( latlon );
 
-            $( "#"+popupId ).resizable({
+            $( "#"+id ).resizable({
                 resize: function() {
                     that.popup.updateSize();
                 },
                 stop: function() {
-
                     that.centrePopup( that.popup.lonlat );
                 },
                 maxWidth: 414,
@@ -357,12 +402,6 @@ define(function (require) {
                 handles: 'se'
             });
 
-
-            $( "#"+popupId+"-edit" ).click( function() {
-
-                that.popup.setContentHTML( generateEditablePopup( popupId, e.feature ) );
-                // TODO: will need to rebind jQuery callbacks to this new html
-            });
         },
 
 
@@ -372,8 +411,6 @@ define(function (require) {
                 this.map.map.olMap_.removePopup( this.popup );
                 this.popup.destroy();
                 this.popup = null;
-                this.selectedFeature = null;
-                //this.selectControl.clickoutFeature();
             }
         },
 
@@ -387,6 +424,123 @@ define(function (require) {
             //this.popup.panIntoView();
             this.popup.lonlat = latlon;
         },
+
+
+        checkAndSetData: function( feature ) {
+
+            var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
+                $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
+                $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID),
+                annotation = feature.attributes.annotation;
+
+            // check input values
+            if ( $title.val() !== "" &&
+                $priority.val() !== "" &&
+                $description.val() !== "" ) {
+
+                annotation.priority = $priority.val();
+                annotation.data.title = $title.val();
+                annotation.data.comment = $description.val();
+
+                return true;
+            }
+
+            return false;
+        },
+
+
+        popupCreationClose : function( feature ) {
+
+            // manually remove feature
+            this.olLayer_.removeFeatures( [feature] );
+            feature.destroy();
+        },
+
+
+        popupCreationSave : function( feature ) {
+
+            var annotation = feature.attributes.annotation,
+                key = feature.attributes.key,
+                rawLatLon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() ),
+                annotationsByPriority = {},
+                spec;
+
+            if ( this.checkAndSetData( feature ) ) {
+
+                if ( this.features[key] !== undefined ) {
+
+                    // already exists, aggregate
+                    this.features[key].addAnnotation( rawLatLon.lon, rawLatLon.lat, annotation );
+
+                    // manually remove feature, since it is being aggregated
+                    this.olLayer_.removeFeatures( [e.feature] );
+                    e.feature.destroy();
+
+                } else {
+
+                    // create new feature
+                    annotationsByPriority[ annotation.priority ] = [ annotation ];
+
+                    spec = {
+                        feature : feature,
+                        annotationsByPriority : annotationsByPriority,
+                        key : key
+                    };
+
+                    this.features[key] = new AnnotationFeature( spec );
+                    // no need to attach, its already attached to layer
+                }
+
+                // send POST request to write annotation to server
+                this.tracker.dataService.postRequest( "WRITE", annotation );
+
+                this.destroyPopup();
+                this.createDisplayPopup( feature, $.proxy( this.popupDisplayClose, this ),
+                                                  $.proxy( this.popupDisplayEdit, this ) );
+            }
+
+
+
+        },
+
+
+        popupEditClose : function( feature ) {
+            // empty
+        },
+
+
+        popupEditSave : function( feature ) {
+
+
+            if ( this.checkAndSetData( feature ) ) {
+
+                // save stuff
+
+                // then
+                this.destroyPopup();
+                this.createDisplayPopup( feature, $.proxy( this.popupDisplayClose, this ),
+                                                  $.proxy( this.popupDisplayEdit, this ) );
+            }
+
+
+        },
+
+
+        popupDisplayClose : function( feature ) {
+            // empty
+        },
+
+
+        popupDisplayEdit : function( feature ) {
+            //
+            this.destroyPopup();
+            console.log("here");
+            this.createEditablePopup( feature, $.proxy( this.popupEditClose, this ),
+                                               $.proxy( this.popupEditSave, this ) );
+
+        },
+
+
 
 
         createLayer: function() {
@@ -429,68 +583,26 @@ define(function (require) {
 
                         console.log("featureadded");
 
-                        var rawLatLon = OpenLayers.LonLat.fromString(e.feature.geometry.toShortString()),
+                        var rawLatLon = OpenLayers.LonLat.fromString( e.feature.geometry.toShortString() ),
                             latlon = that.transformFromMapProj( rawLatLon ),
                             annotation,
-                            spec,
                             tempData = { x: latlon.lon, y: latlon.lat },
                             index = that.tracker.dataService.indexer.getIndex( tempData, that.map.getZoom() ),
-                            key = index.tilekey + "," + index.binkey,
-                            annotationsByPriority = {};
+                            key = index.tilekey + "," + index.binkey;
 
-
-                        function randString( num ) {
-                            var text = "";
-                            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                            for( var i=0; i < num; i++ ) {
-                                text += possible.charAt(Math.floor(Math.random() * possible.length));
-                            }
-                            return text;
-                        }
-
-                        /*
-                         TODO:  create feature with empty data, open edit popup. On 'save', write to server.
-                         */
-                        ////
+                        // create base annotation
                         annotation = {
                             x: latlon.lon,
                             y: latlon.lat,
-                            priority : "P0",
-                            data: {
-                                title: randString( 24 ),
-                                comment: randString( 256 )
-                            }
+                            data: {}
                         };
-                        /////
 
+                        // add key to feature
+                        e.feature.attributes.key = key;
+                        e.feature.attributes.annotation = annotation;
 
-                        //// temp
-                        if ( that.features[key] !== undefined ) {
-
-                            // already exists, aggregate
-                            that.features[key].addAnnotation( rawLatLon.lon, rawLatLon.lat, annotation );
-
-                            // manually remove feature, since it is being aggregated
-                            that.olLayer_.removeFeatures( [e.feature] );
-                            e.feature.destroy();
-
-                        } else {
-
-                            // create new feature
-                            annotationsByPriority[ annotation.priority ] = [ annotation ];
-
-                            spec = {
-                                feature : e.feature,
-                                annotationsByPriority : annotationsByPriority,
-                                key : key
-                            };
-
-                            that.features[key] = new AnnotationFeature( spec );
-                            // no need to attach, its already attached to layer
-                        }
-
-                        // send POST request to write annotation to server
-                        that.tracker.dataService.postRequest( "WRITE", annotation );
+                        that.createEditablePopup( e.feature, $.proxy( that.popupCreationClose, that ),
+                                                             $.proxy( that.popupCreationSave, that ) );
 
                     }
 
