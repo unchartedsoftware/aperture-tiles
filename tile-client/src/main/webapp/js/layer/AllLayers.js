@@ -32,8 +32,24 @@ define(function (require) {
     "use strict";
 
     var Class = require('../class'),
-        AllLayers;
+        AllLayers,
+        leafLayerFilter;
 
+    leafLayerFilter = function (layers, filterFcn) {
+        var result = [], i;
+
+        if ($.isArray(layers)) {
+            for (i = 0; i < layers.length; ++i) {
+                if (layers[i].children) {
+                    result = result.concat(leafLayerFilter(layers[i].children, filterFcn));
+                } else if (filterFcn(layers[i])) {
+                    result.push(layers[i]);
+                }
+            }
+        }
+
+        return result;
+    };
 
     AllLayers = Class.extend({
         ClassName: "AllLayers",
@@ -52,7 +68,7 @@ define(function (require) {
                                  $.proxy(this.onLayersListRetrieved, this),
                                  {
                                      postData: {
-                                         requestType: "list"
+                                         request: "list"
                                      },
                                      contentType: 'application/json'
                                  }
@@ -66,10 +82,12 @@ define(function (require) {
             }
             var callbacks = this.callbacks;
             this.callbacks = [];
-            callbacks.foreach(function(callback) {
+            callbacks.forEach(function(callback) {
                 callback(layers);
                     });
-        }
+        },
+
+        filterLeafLayers: leafLayerFilter
     });
 
     return AllLayers;

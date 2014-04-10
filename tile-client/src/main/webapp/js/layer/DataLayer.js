@@ -50,7 +50,7 @@ define(function (require) {
 
             // Populate both indexed by layer name
             for (i=0; i<layerSpecs.length; ++i) {
-                layer = layerSpecs[i].layer;
+                layer = layerSpecs[i].id;
                 this.layerSpecs[layer] = layerSpecs[i];
                 this.layerInfos[layer] = null;
             }
@@ -169,7 +169,7 @@ define(function (require) {
                                  $.proxy(this.onLayerInfoRetrieved, this),
                                  {
                                      postData: {
-                                         requestType: "configure",
+                                         request: "configure",
                                          configuration: layerSpec
                                      },
                                      contentType: 'application/json'

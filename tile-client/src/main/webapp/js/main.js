@@ -41,18 +41,28 @@ require(['./FileLoader',
 
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFile, function (jsonDataMap) {
-                var allLayers = new AllLayers();
-
-                allLayers.requestLayers(function (layers) {
-                    // We have all our data now; construct the UI.
-                    var worldMap;
-
+                var allLayers = new AllLayers(),
                     // Create world map and axes from json file under mapFile
-                    worldMap = new Map("map", jsonDataMap[mapFile]);
+                    worldMap;
+
+                // We need to initialize the map first, because that 
+                // initializes aperture, so sets our REST parameters; until we 
+                // do this, no server calls will work.
+                worldMap = new Map("map", jsonDataMap[mapFile]);
+
+                // Request all layers the server knows about.  Once we get 
+                // those, we can start drawing them.
+                allLayers.requestLayers(function (layers) {
+                    var clientLayers = allLayers.filterLeafLayers(layers, function (layerConfig) {
+                        return false;
+                    }),
+                        serverLayers = allLayers.filterLeafLayers(layers, function(layerConfig) {
+                            return true;
+                        });
 
                     // Create client and server layers
-                    // ClientLayerFactory.createLayers(jsonDataMap[layersFile].ClientLayers, worldMap);
-                    ServerLayerFactory.createLayers(layers[0], worldMap);
+                    ClientLayerFactory.createLayers(clientLayers, worldMap);
+                    ServerLayerFactory.createLayers(serverLayers, worldMap);
 
                     // Trigger the initial resize event to resize everything
                     $(window).resize();
