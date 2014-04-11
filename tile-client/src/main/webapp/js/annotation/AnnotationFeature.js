@@ -30,13 +30,23 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        ANNOTATION_CLASS = "annotation",
+        ANNOTATION_ATTRIBUTE_CLASS = ANNOTATION_CLASS + " annotation-attribute",
+        ANNOTATION_INPUT_CLASS = ANNOTATION_CLASS + " annotation-input",
+        ANNOTATION_LABEL_CLASS = ANNOTATION_CLASS + " annotation-label",
+        ANNOTATION_TEXTAREA_CLASS = ANNOTATION_CLASS + " annotation-textarea",
+        ANNOTATION_TEXT_DIV_CLASS = ANNOTATION_CLASS + " annotation-text-div",
+        ANNOTATION_CONTENT_CLASS = ANNOTATION_CLASS + " annotation-content-container",
+        ANNOTAITON_BUTTON_CLASS = ANNOTATION_CLASS + " annotation-button",
+        ANNOTATION_POPUP_OL_CONTAINER_ID = "annotation-ol-container",
         ANNOTATION_POPUP_ID = "annotation-popup-id",
-        ANNOTATION_CANCEL_BUTTON_ID = ANNOTATION_POPUP_ID + "-cancel",
-        ANNOTATION_SAVE_BUTTON_ID = ANNOTATION_POPUP_ID + "-save",
-        ANNOTATION_EDIT_BUTTON_ID = ANNOTATION_POPUP_ID + "-edit",
+        ANNOTATION_CANCEL_BUTTON_ID = "annotation-popup-cancel",
+        ANNOTATION_SAVE_BUTTON_ID = "annotation-popup-save",
+        ANNOTATION_EDIT_BUTTON_ID = "annotation-popup-edit",
         ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
         ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
         ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
+        ANNOTATION_ACCORDION_ID = "annotation-accordian-id",
         AnnotationFeature;
 
 
@@ -53,9 +63,8 @@ define(function (require) {
             this.popup = null;
 
             // TODO: maybe just have this point to the raw Service data?
+            // filter on popoup?
             this.annotationsByPriority = spec.annotationsByPriority;
-
-            //this.olFeature_.attributes.count = this.getAnnotationCount();
 
         },
 
@@ -140,6 +149,13 @@ define(function (require) {
         },
 
 
+        removeFromLayerAndDestroy: function() {
+
+            this.removeAndDestroyPopup();
+            this.olFeature_.layer.destroyFeatures( [this.olFeature_] );
+        },
+
+
         removeAndDestroyPopup: function() {
 
             // destroy popup
@@ -148,13 +164,6 @@ define(function (require) {
                 this.popup.destroy();
                 this.popup = null;
             }
-        },
-
-
-        removeFromLayerAndDestroy: function() {
-
-            this.removeAndDestroyPopup();
-            this.olFeature_.layer.destroyFeatures( [this.olFeature_] );
         },
 
 
@@ -204,14 +213,22 @@ define(function (require) {
             });
 
 
-            if ( !this.isAggregated() ) {
+            if ( this.isAggregated() ) {
+
+                // set accordian
+                $( "#"+ANNOTATION_ACCORDION_ID).accordion({
+                    active: false,
+                    collapsible: true,
+                    heightStyle: "content"
+                });
+
+            } else {
 
                 // set save callback
                 $( "#"+ANNOTATION_EDIT_BUTTON_ID ).click( function() {
                     editFunc( that );
                 });
             }
-
 
             // set cancel callback
             $( "#"+ANNOTATION_CANCEL_BUTTON_ID ).click( function() {
@@ -226,7 +243,7 @@ define(function (require) {
             var that = this,
                 latlon = OpenLayers.LonLat.fromString( this.olFeature_.geometry.toShortString() );
 
-            this.popup = new OpenLayers.Popup("annotation-popup",
+            this.popup = new OpenLayers.Popup(ANNOTATION_POPUP_OL_CONTAINER_ID,
                                               latlon,
                                               null,
                                               html,
@@ -245,10 +262,10 @@ define(function (require) {
                 stop: function() {
                     that.centrePopup( that.popup.lonlat );
                 },
-                maxWidth: 414,
+                maxWidth: 384,
                 maxHeight: 256,
-                minHeight: 80,
-                minWidth: 129,
+                minHeight: 150,
+                minWidth: 200,
                 handles: 'se'
             });
 
@@ -260,11 +277,11 @@ define(function (require) {
             var px,
                 size;
 
-            if (this.popup !== null && this.popup !== null ) {
+            if ( this.popup !== null ) {
                 px = this.olFeature_.layer.map.getLayerPxFromViewPortPx( this.olFeature_.layer.map.getPixelFromLonLat(latlon) );
                 size = this.popup.size;
                 px.x -= size.w / 2;
-                px.y -= size.h + 35;
+                px.y -= size.h + 32;
                 this.popup.moveTo( px );
                 //this.popup.panIntoView();
             }
@@ -277,7 +294,22 @@ define(function (require) {
             var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
                 $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
                 $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID),
+                INVALID_COLOR = '#7e0004',
+                INVALID_COLOR_EFFECT_LENGTH_MS = 3000,
                 annotation = this.getDataArray()[0];
+
+            // if entry is invalid, flash
+            if ( $title.val() === "" ) {
+                $title.effect("highlight", {color: INVALID_COLOR}, INVALID_COLOR_EFFECT_LENGTH_MS);
+            }
+
+            if ( $priority.val() === "" ) {
+                $priority.effect("highlight", {color: INVALID_COLOR}, INVALID_COLOR_EFFECT_LENGTH_MS);
+            }
+
+            if ( $description.val() === "" ) {
+                $description.effect("highlight", {color: INVALID_COLOR}, INVALID_COLOR_EFFECT_LENGTH_MS);
+            }
 
             // check input values
             if ( $title.val() !== "" &&
@@ -290,24 +322,24 @@ define(function (require) {
 
                 return true;
             }
-
             return false;
         },
 
         getSingleDisplayPopupHTML: function( annotation ) {
 
-            return  "<input id='"+ ANNOTATION_EDIT_BUTTON_ID + "' type='image' src='./images/edit-icon.png' width='17' height='17' style='position:absolute; right:0px; outline-width:0'>"+
-                    "<div style='overflow:hidden' id='" + ANNOTATION_POPUP_ID + "' class='ui-widget-content'>"+
-
-                        "<div style='padding-top:5px; padding-left:15px;'>"+
-                            "<div style='width:256px; font-weight:bold; padding-bottom:10px; padding-right:20px'>"+
-                                annotation.data.title +
-                            "</div>"+
-                            "<div style='padding-bottom:10px'>"+
-                                "Priority: "+ annotation.priority +
-                            "</div>"+
-                            "<div style='width:256px; height:100px; overflow:auto;  padding-right:15px;'>"+
-                                annotation.data.comment +
+            return  "<div style='overflow:hidden'>"+
+                        "<input id='"+ ANNOTATION_EDIT_BUTTON_ID + "' type='image' src='./images/edit-icon.png' width='17' height='17'>"+
+                        "<div id='" +ANNOTATION_POPUP_ID+ "' class='ui-widget-content'>"+
+                            "<div class='"+ANNOTATION_CONTENT_CLASS+"'>"+
+                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
+                                    annotation.data.title +
+                                "</div>"+
+                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
+                                    "Priority: "+ annotation.priority +
+                                "</div>"+
+                                "<div class='"+ANNOTATION_TEXT_DIV_CLASS+"'>"+
+                                    annotation.data.comment +
+                                "</div>"+
                             "</div>"+
                         "</div>"+
                     "</div>";
@@ -316,47 +348,81 @@ define(function (require) {
 
         getAggregateDisplayPopupHTML: function() {
 
-            return "<div style='overflow:hidden' id='" + ANNOTATION_POPUP_ID + "' class='ui-widget-content'>"+
-                        "Example aggregate"+
-                    "</div>";
+            var annotations = this.getDataArray(),
+                i,
+                html = "<div style='overflow:hidden'>"+
+                            "<div id='" +ANNOTATION_POPUP_ID+ "' class='ui-widget-content'>"+
+                                "<div id='"+ANNOTATION_ACCORDION_ID+"'>";
+
+
+            for (i=0; i<annotations.length; i++) {
+                html += "<h3>" + annotations[i].data.title + "</h3>"+
+                            "<div>"+
+                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
+                                    "Priority: "+ annotations[i].priority +
+                                "</div>"+
+                                "<div class='"+ANNOTATION_TEXT_DIV_CLASS+"'>"+
+                                    annotations[i].data.comment +
+                                "</div>"+
+                            "</div>";
+            }
+
+            return html + "</div></div></div>";
         },
 
 
         getEditablePopupHTML: function( annotation ) {
 
-            var TITLE_PLACEHOLDER = 'Enter title',
+            var TITLE_PLACEHOLDER = ' Enter title',
                 PRIORITY_PLACEHOLDER = 'Enter priority',
-                DESCRIPTION_PLACEHOLDER = 'Enter description',
+                DESCRIPTION_PLACEHOLDER = ' Enter description',
                 titleVal= annotation.data.title || "",
-                priorityVal = annotation.priority || "",
                 descriptionVal = annotation.data.comment || "";
 
-            return  "<div style='overflow:hidden'>"+
+                function getSelectHTML() {
 
-                        "<div style='overflow:hidden' id='" + ANNOTATION_POPUP_ID + "' class='ui-widget-content'>"+
+                    var html = "<select class='"+ANNOTATION_INPUT_CLASS+"' id='"+ ANNOTATION_POPUP_PRIORITY_ID+"'>",
+                        priorities = [ 'Urgent', 'High', 'Medium', 'Low'],
+                        i;
 
-                            "<div style='padding-top:15px; padding-left:15px; '>"+
-                                "<div style='font-weight:bold; padding-bottom:10px;'>" +
+                    for (i=0; i<priorities.length; i++) {
+                        if ( priorities[i] === annotation.priority ) {
+                            html += "<option selected='true' value='" +priorities[i] +"'>"+priorities[i]+"</option>";
+                        } else {
+                            html += "<option value='" +priorities[i] +"'>"+priorities[i]+"</option>";
+                        }
+                    }
 
-                                    "<label style='width:70px; float:left;'>Title: </label>" +
-                                    "<input id='"+ ANNOTATION_POPUP_TITLE_ID +"' style='width: calc(100% - 90px)' type='text' placeholder='"+TITLE_PLACEHOLDER+"' value='"+ titleVal +"'>" +
+                    if ( annotation.priority === undefined ) {
+                        html += "<option selected='true' style='display:none;' value=''>"+PRIORITY_PLACEHOLDER+"</option>";
+                    }
+
+                    return html + "</select>";
+                }
+
+                return  "<div style='overflow:hidden'>"+
+                            "<div id='" +ANNOTATION_POPUP_ID+ "' class='ui-widget-content'>"+
+                            "<div class='"+ANNOTATION_CONTENT_CLASS+"'>"+
+                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
+
+                                    "<label class='"+ANNOTATION_LABEL_CLASS+"'>Title: </label>" +
+                                    "<input class='"+ANNOTATION_INPUT_CLASS+"' id='"+ ANNOTATION_POPUP_TITLE_ID +"' type='text' placeholder='"+TITLE_PLACEHOLDER+"' value='"+ titleVal +"'>" +
 
                                 "</div>"+
-                                "<div style='font-weight:bold; padding-bottom:10px;'>" +
+                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
 
-                                    "<label style='width:70px; float:left;'>Priority: </label>" +
-                                    "<input id='"+ ANNOTATION_POPUP_PRIORITY_ID +"' style='width: calc(100% - 90px)' type='text' placeholder='"+PRIORITY_PLACEHOLDER+"' value='"+ priorityVal +"'>" +
+                                    "<label class='"+ANNOTATION_LABEL_CLASS+"'>Priority: </label>" +
+                                    getSelectHTML()+
 
                                 "</div>"+
-                                "<div style='font-weight:bold;  padding-bottom:10px;'> Description: </div>" +
-                                "<div>"+
-                                    "<textarea id='"+ ANNOTATION_POPUP_DESCRIPTION_ID +"' style='width: calc(100% - 25px); resize:none;' placeholder='"+DESCRIPTION_PLACEHOLDER+"'>"+ descriptionVal +"</textarea> "+
-                                "</div>"+
+                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'> Description: </div>" +
+                                "<textarea class='"+ANNOTATION_TEXTAREA_CLASS+"' id='"+ ANNOTATION_POPUP_DESCRIPTION_ID +"' placeholder='"+DESCRIPTION_PLACEHOLDER+"'>"+ descriptionVal +"</textarea> "+
                             "</div>"+
+
                         "</div>"+
 
-                        "<button id='" + ANNOTATION_CANCEL_BUTTON_ID + "' style='margin-top:10px; border-radius:5px; float:right; '>Cancel</button>"+
-                        "<button id='" + ANNOTATION_SAVE_BUTTON_ID + "' style='margin-top:10px; border-radius:5px; float:right; '>Save</button>"+
+                        "<button class='"+ANNOTAITON_BUTTON_CLASS+"' id='" + ANNOTATION_CANCEL_BUTTON_ID + "'>Cancel</button>"+
+                        "<button class='"+ANNOTAITON_BUTTON_CLASS+"' id='" + ANNOTATION_SAVE_BUTTON_ID + "'>Save</button>"+
                     "</div>";
         }
 

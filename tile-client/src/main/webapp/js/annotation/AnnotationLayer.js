@@ -48,7 +48,7 @@ define(function (require) {
             if ( feature.attributes.feature === undefined || !feature.attributes.feature.isAggregated() ) {
                 return "";
             }
-            return feature.attributes.feature.getAnnotationCount()
+            return feature.attributes.feature.getAnnotationCount();
         }
     };
 
@@ -167,7 +167,7 @@ define(function (require) {
 
         filterAnnotationBin: function( annotations, key ) {
 
-            var i, j,
+            var i, //j,
                 xSum = 0,
                 ySum = 0,
                 sumCount = 0,
@@ -176,26 +176,27 @@ define(function (require) {
                 priority,
                 spec;
 
+
             for (i=0; i<annotations.length; i++) {
-                for (j=0; j<this.filters.length; j++) {
+                //for (j=0; j<this.filters.length; j++) {
 
                     priority = annotations[i].priority;
 
-                    if ( priority === this.filters[j].priority ) {
+                    //if ( priority === this.filters[j].priority ) {
 
                         if ( annotationsByPriority[ priority ] === undefined ) {
                             annotationsByPriority[ priority ] = [];
                         }
 
                         // if within count, add
-                        if ( annotationsByPriority[ priority ].length < this.filters[j].count ) {
+                        //if ( annotationsByPriority[ priority ].length < this.filters[j].count ) {
                             xSum += annotations[i].x;
                             ySum += annotations[i].y;
                             sumCount++;
                             annotationsByPriority[ priority ].push( annotations[i] );
-                        }
-                    }
-                }
+                        //}
+                    //}
+                //}
             }
 
             // average display lat lon

@@ -48,6 +48,7 @@ define(function (require) {
     TileAnnotationIndexer = Class.extend({
         ClassName: "TileAnnotationIndexer",
         init: function () {
+            this._pyramid = new WebPyramid();
         },
 
         getIndices: function( data ) {
@@ -67,12 +68,11 @@ define(function (require) {
                 yExists = data.y !== null && data.y !== undefined,
                 x = xExists ? data.x : 0,
                 y = yExists ? data.y : 0,
-                pyramid = new WebPyramid(),
                 tile, bin, index;
 
             // map from raw x and y to tile and bin
-            tile = pyramid.rootToTile( x, y, level, NUM_BINS );
-            bin = pyramid.rootToBin( x, y, tile );
+            tile = this._pyramid.rootToTile( x, y, level, NUM_BINS );
+            bin = this._pyramid.rootToBin( x, y, tile );
 
             if ( xExists && yExists ) {
 

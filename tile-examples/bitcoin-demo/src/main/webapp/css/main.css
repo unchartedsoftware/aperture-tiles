@@ -14,6 +14,131 @@ body {
 	color: black;
 }
 
-#annotation-popup {
+/* open layers id given to the popup */
+#annotation-ol-container {
+    background-color: #222222 !important;
     border-radius:10px;
+}
+
+#annotation-popup-id {
+
+    background-color: #222222; 
+    background-image: none;
+    border: 1px solid #7E7E7E;
+    color: #7E7E7E; 
+    overflow:hidden;
+    width:256px;
+    height:192px;
+}
+
+.ui-resizable-handle.ui-resizable-se {
+    -webkit-filter: invert(100%);
+}
+
+#annotation-accordian-id {
+    width:100%; 
+    height: calc(100% - 25px);
+    background-color: #222222; 
+    background-image: none;
+    color: #7E7E7E; 
+    overflow:auto;
+}
+
+
+#annotation-accordian-id .ui-accordion-header {
+    height:16px;
+    background-color: #222222;
+    color: #7E7E7E; 
+    font-family: "Tahoma, Verdana, Segoe, sans-serif";
+    font-style:normal;
+    font-weight:bold;
+}
+
+#annotation-accordian-id .ui-accordion-header-active {
+    background-color: #444444;
+}
+
+
+#annotation-accordian-id .ui-accordian-content {
+    width: 100%;
+    background-color: #444444; 
+    background-image: none;
+    color: #7E7E7E; 
+    font-family: "Tahoma, Verdana, Segoe, sans-serif";
+     
+}
+
+.ui-accordion-icons {
+    -webkit-filter: invert(100%);
+}
+
+.annotation {
+    background-color: #222222;
+    color: #7E7E7E; 
+    font-family: "Tahoma, Verdana, Segoe, sans-serif"
+}
+
+.annotation-label {
+    float:left;
+    width:90px;
+}
+
+.annotation-content-container {
+    padding-top:15px; 
+    padding-left:15px; 
+    height:100%
+}
+
+.annotation-attribute {
+    white-space: nowrap;
+    font-weight:bold; 
+    padding-bottom:10px;
+}
+
+.annotation-input {
+    border: 1px solid #7E7E7E;
+    width: calc(100% - 108px)
+}
+
+.annotation-textarea {
+
+    border: 1px solid #7E7E7E;
+    width: calc(100% - 22px);
+    height: calc(100% - 135px);
+    max-width: 384px;
+    max-height: 256px;
+    resize:none;
+}
+
+.annotation-text-div {
+
+    width: calc(100% - 17px);
+    height: calc(100% - 98px);
+    max-width: 384px;
+    max-height: 256px;
+    overflow: auto;
+}
+
+.annotation-button {
+
+    margin-top:10px;
+    float:right;
+    -webkit-border-radius: 5;
+    -moz-border-radius: 5;
+    border-radius: 5px;
+    color: #7E7E7E;
+    background: #222222;
+    padding: 5px 8px 5px 8px;
+    border: solid #7E7E7E 1px;
+    text-decoration: none;
+}
+
+#annotation-popup-edit {
+    position:absolute; 
+    right:0px; 
+    outline-width:0;
+}
+
+.annotation-button:hover {
+    background: #333333;
 }
