@@ -53,6 +53,7 @@ public class TileAnnotationIndexer extends AnnotationIndexer<TileAndBinIndices> 
     	TileIndex tile = _pyramid.rootToTile( x, y, level, AnnotationTile.NUM_BINS );
 		BinIndex bin = _pyramid.rootToBin( x, y, tile );
 				
+		// insert -1's for univariate annotations
 		if ( xExists && yExists ) {
 			return new TileAndBinIndices( tile, bin );
 		} else if ( !xExists ) {

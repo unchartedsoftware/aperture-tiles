@@ -230,6 +230,7 @@ define(function (require) {
                 return a.x === b.x &&
                        a.y === b.y &&
                        a.priority === b.priority &&
+                      (a.data.title.localeCompare( b.data.title ) === 0) &&
                       (a.data.comment.localeCompare( b.data.comment ) === 0);
             }
 
@@ -263,6 +264,11 @@ define(function (require) {
                             bin.splice(index, 1);
                         } else {
                             console.log( "not found in bin: " + indices[i].binkey );
+                        }
+
+                        // remove bin from tile if it is now empty
+                        if ( bin.length === 0 ) {
+                            delete tile[ indices[i].binkey ];
                         }
                     }
                 }

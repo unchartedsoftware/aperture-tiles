@@ -241,7 +241,7 @@ define(function (require) {
                     for (binkey in annotations[tilekey]) {
                         if (annotations[tilekey].hasOwnProperty(binkey)) {
 
-                            key = tilekey + "," + binkey;
+                            key = this.createFeatureKey( tilekey, binkey );
 
                             if ( defunctFeatures[ key ] ) {
                                 // already have feature, remove from defunct list
@@ -394,6 +394,11 @@ define(function (require) {
         },
 
 
+        createFeatureKey: function( tilekey, binkey ) {
+            return tilekey + "," + binkey;
+        },
+
+
         getFeatureInfo: function( feature ) {
 
             var mapLatLon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() ),
@@ -401,7 +406,7 @@ define(function (require) {
                 index = this.tracker.dataService.indexer.getIndex( {x:latlon.lon, y:latlon.lat}, this.map.getZoom() );
 
             return {
-                    key: index.tilekey + "," + index.binkey,
+                    key: this.createFeatureKey( index.tilekey, index.binkey ),
                     lat: mapLatLon.lat,
                     lon: mapLatLon.lon,
                     x: latlon.lon,
@@ -564,7 +569,7 @@ define(function (require) {
 
                         // remaining in same bin
                         // keep feature, change data
-
+                        console.log("A");
                         // change internal data from old to new anno
                         that.features[ newkey ].setAnnotation( newAnno );
 
@@ -572,7 +577,7 @@ define(function (require) {
 
                         // occupied bin
                         // add data, remove old
-
+                        console.log("B");
                         // feature already exists in new location, aggregate!
                         that.features[ newkey ].addAnnotation( info.lon, info.lat, newAnno );
                         // remove and destroy feature
@@ -582,7 +587,7 @@ define(function (require) {
 
                         // un-occupied bin
                         // swap new and old, change data
-
+                        console.log("C");
                         // move feature to new bin
                         that.features[ newkey ] = that.features[ oldkey ];
                         // delete old bin

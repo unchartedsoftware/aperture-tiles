@@ -24,9 +24,7 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
-import java.util.UUID;
 import java.util.Map;
 
 import oculus.aperture.common.rest.ApertureServerResource;
@@ -38,7 +36,6 @@ import com.oculusinfo.binning.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
-import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -102,11 +99,13 @@ public class AnnotationResource extends ApertureServerResource {
 			
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
-			int zoomLevel = Integer.parseInt(levelDir);
 			String xAttr = (String) getRequest().getAttributes().get("x");
-			int x = Integer.parseInt(xAttr);
 			String yAttr = (String) getRequest().getAttributes().get("y");
-			int y = Integer.parseInt(yAttr);
+			
+			int zoomLevel = Integer.parseInt(levelDir);
+			// if x or y isn't supplied, fill with default -1 for univariate
+			int x = (xAttr != null) ? Integer.parseInt(xAttr) : -1;
+			int y = (yAttr != null) ? Integer.parseInt(yAttr) : -1;
 			
 		    // We return an object including the tile index ("index") and 
 		    // the tile data ("data").

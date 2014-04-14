@@ -43,8 +43,7 @@ public interface AnnotationIO {
     public void writeData (String id, 
 					       AnnotationSerializer<AnnotationData> serializer, 
 					       List<AnnotationData> data ) throws IOException;
-    //public void writeMetaData (String tableName, String metaData) throws IOException;;
-   
+
     /*
      * Read
      */
@@ -55,8 +54,7 @@ public interface AnnotationIO {
     public List<AnnotationData> readData (String id, 
 								          AnnotationSerializer<AnnotationData> serializer,
 								          List<Long> indices) throws IOException;
-    //public String readMetaData (String id) throws IOException;
-       
+ 
     /*
      * Delete
      */
@@ -65,6 +63,5 @@ public interface AnnotationIO {
 			   				 List<AnnotationTile> tiles ) throws IOException;
     public void removeData (String id, 
    							List<AnnotationData> data ) throws IOException;
-    //public void removeMetaData (String tableName, String metaData) throws IOException;
-       
+  
 }
