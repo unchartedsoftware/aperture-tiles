@@ -352,7 +352,8 @@ define(function (require) {
                 i,
                 html = "<div style='overflow:hidden'>"+
                             "<div id='" +ANNOTATION_POPUP_ID+ "' class='ui-widget-content'>"+
-                                "<div id='"+ANNOTATION_ACCORDION_ID+"'>";
+                                "<div class='"+ANNOTATION_CONTENT_CLASS+"'>"+
+                                    "<div id='"+ANNOTATION_ACCORDION_ID+"'>";
 
 
             for (i=0; i<annotations.length; i++) {
@@ -367,7 +368,7 @@ define(function (require) {
                             "</div>";
             }
 
-            return html + "</div></div></div>";
+            return html + "</div></div></div></div>";
         },
 
 
