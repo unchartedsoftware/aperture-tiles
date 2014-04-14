@@ -37,13 +37,15 @@ define(function (require) {
         ANNOTATION_TEXTAREA_CLASS = ANNOTATION_CLASS + " annotation-textarea",
         ANNOTATION_TEXT_DIV_CLASS = ANNOTATION_CLASS + " annotation-text-div",
         ANNOTATION_CONTENT_CLASS = ANNOTATION_CLASS + " annotation-content-container",
-        ANNOTAITON_BUTTON_CLASS = ANNOTATION_CLASS + " annotation-button",
+        ANNOTATION_BUTTON_CLASS = ANNOTATION_CLASS + " annotation-button",
+        ANNOTATION_LEFT_BUTTON_CLASS = ANNOTATION_BUTTON_CLASS + " annotation-button-left",
+        ANNOTATION_RIGHT_BUTTON_CLASS = ANNOTATION_BUTTON_CLASS + " annotation-button-right",
         ANNOTATION_POPUP_OL_CONTAINER_ID = "annotation-ol-container",
         ANNOTATION_POPUP_ID = "annotation-popup-id",
         ANNOTATION_CANCEL_BUTTON_ID = "annotation-popup-cancel",
         ANNOTATION_SAVE_BUTTON_ID = "annotation-popup-save",
         ANNOTATION_EDIT_BUTTON_ID = "annotation-popup-edit",
-        //ANNOTATION_REMOVE_BUTTON_ID = "annotation-popup-remove",
+        ANNOTATION_REMOVE_BUTTON_ID = "annotation-popup-remove",
         ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
         ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
         ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
@@ -93,6 +95,12 @@ define(function (require) {
 
         },
 
+
+        setAnnotation: function( annotation ) {
+
+            this.annotationsByPriority = {}; // clear old annotation
+            this.annotationsByPriority[ annotation.priority ] = [ annotation ]; // set new annotation
+        },
 
         getDataArray: function() {
 
@@ -168,27 +176,38 @@ define(function (require) {
         },
 
 
-        createEditablePopup: function( closeFunc, saveFunc ) {
+        createEditablePopup: function( closeFunc, saveFunc, removeFunc ) {
 
             // edit popup is only possible on single features, so take only data entry
             var that = this,
-                html = this.getEditablePopupHTML( this.getDataArray()[0] );
+                hasRemoveFunc = ( removeFunc !== undefined ),
+                html = this.getEditablePopupHTML( this.getDataArray()[0], hasRemoveFunc );
 
             // create popup with close callback
             this.createPopup( html, function() {
                 closeFunc( that );
+                return false;   // stop event propagation
             });
 
             // set save callback
             $( "#"+ANNOTATION_SAVE_BUTTON_ID ).click( function() {
                 saveFunc( that );
+                return false;   // stop event propagation
             });
 
             // set cancel callback
             $( "#"+ANNOTATION_CANCEL_BUTTON_ID ).click( function() {
                 closeFunc( that );
+                return false;   // stop event propagation
             });
 
+            if ( hasRemoveFunc ) {
+                // set remove callback
+                $( "#"+ANNOTATION_REMOVE_BUTTON_ID ).click( function() {
+                    removeFunc( that );
+                    return false;   // stop event propagation
+                });
+            }
         },
 
 
@@ -211,12 +230,13 @@ define(function (require) {
             // create popup with close callback
             this.createPopup( html, function() {
                 closeFunc( that );
+                return false;   // stop event propagation
             });
 
 
             if ( this.isAggregated() ) {
 
-                // set accordian
+                // set accordion
                 $( "#"+ANNOTATION_ACCORDION_ID ).accordion({
                     active: false,
                     collapsible: true,
@@ -228,12 +248,14 @@ define(function (require) {
                 // set save callback
                 $( "#"+ANNOTATION_EDIT_BUTTON_ID ).click( function() {
                     editFunc( that );
+                    return false;   // stop event propagation
                 });
             }
 
             // set cancel callback
             $( "#"+ANNOTATION_CANCEL_BUTTON_ID ).click( function() {
                 closeFunc( that );
+                return false;   // stop event propagation
             });
 
         },
@@ -290,14 +312,13 @@ define(function (require) {
         },
 
 
-        checkAndSetData: function() {
+        checkData: function() {
 
             var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
                 $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
                 $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID),
                 INVALID_COLOR = '#7e0004',
-                INVALID_COLOR_EFFECT_LENGTH_MS = 3000,
-                annotation = this.getDataArray()[0];
+                INVALID_COLOR_EFFECT_LENGTH_MS = 3000;
 
             // if entry is invalid, flash
             if ( $title.val() === "" ) {
@@ -314,17 +335,38 @@ define(function (require) {
 
             // check input values
             if ( $title.val() !== "" &&
-                 $priority.val() !== "" &&
-                 $description.val() !== "" ) {
-
-                annotation.priority = $priority.val();
-                annotation.data.title = $title.val();
-                annotation.data.comment = $description.val();
+                $priority.val() !== "" &&
+                $description.val() !== "" ) {
 
                 return true;
             }
             return false;
         },
+
+
+        setDataFromPopup: function( annotation ) {
+
+            var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
+                $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
+                $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID);
+
+            annotation.priority = $priority.val();
+            annotation.data.title = $title.val();
+            annotation.data.comment = $description.val();
+        },
+
+
+        checkAndSetData: function() {
+
+            var annotation = this.getDataArray()[0];
+
+            if ( this.checkData() ) {
+                this.setDataFromPopup( annotation );
+                return true;
+            }
+            return false;
+        },
+
 
         getSingleDisplayPopupHTML: function( annotation ) {
 
@@ -356,7 +398,6 @@ define(function (require) {
                                 "<div class='"+ANNOTATION_CONTENT_CLASS+"'>"+
                                     "<div id='"+ANNOTATION_ACCORDION_ID+"'>";
 
-
             for (i=0; i<annotations.length; i++) {
                 html += "<h3>" + annotations[i].data.title + "</h3>"+
                             "<div>"+
@@ -373,13 +414,14 @@ define(function (require) {
         },
 
 
-        getEditablePopupHTML: function( annotation ) {
+        getEditablePopupHTML: function( annotation, includeRemoveButton ) {
 
             var TITLE_PLACEHOLDER = ' Enter title',
                 PRIORITY_PLACEHOLDER = 'Enter priority',
                 DESCRIPTION_PLACEHOLDER = ' Enter description',
                 titleVal= annotation.data.title || "",
-                descriptionVal = annotation.data.comment || "";
+                descriptionVal = annotation.data.comment || "",
+                removeButtonHTML = includeRemoveButton ? "<button class='"+ANNOTATION_LEFT_BUTTON_CLASS+"' id='" + ANNOTATION_REMOVE_BUTTON_ID + "'>Remove</button>" : "";
 
                 function getSelectHTML() {
 
@@ -422,9 +464,9 @@ define(function (require) {
                             "</div>"+
 
                         "</div>"+
-
-                        "<button class='"+ANNOTAITON_BUTTON_CLASS+"' id='" + ANNOTATION_CANCEL_BUTTON_ID + "'>Cancel</button>"+
-                        "<button class='"+ANNOTAITON_BUTTON_CLASS+"' id='" + ANNOTATION_SAVE_BUTTON_ID + "'>Save</button>"+
+                        removeButtonHTML +
+                        "<button class='"+ANNOTATION_RIGHT_BUTTON_CLASS+"' id='" + ANNOTATION_CANCEL_BUTTON_ID + "'>Cancel</button>"+
+                        "<button class='"+ANNOTATION_RIGHT_BUTTON_CLASS+"' id='" + ANNOTATION_SAVE_BUTTON_ID + "'>Save</button>"+
                     "</div>";
         }
 

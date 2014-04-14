@@ -159,7 +159,7 @@ define(function (require) {
                     this.modifyAnnotationInData( annotation.old, annotation['new'] );
                     break;
 
-                case "delete":
+                case "remove":
 
                     // remove entry
                     this.removeAnnotationFromData( annotation );

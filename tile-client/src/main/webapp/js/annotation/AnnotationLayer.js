@@ -29,7 +29,7 @@ define(function (require) {
 
 
 
-    var Class        = require('../class'),
+    var Class = require('../class'),
         AnnotationService = require('./AnnotationService'),
         AnnotationFeature = require('./AnnotationFeature'),
         TileTracker = require('../layer/TileTracker'),
@@ -260,10 +260,7 @@ define(function (require) {
             // remove no longer needed features from map
             for (key in defunctFeatures) {
                 if (defunctFeatures.hasOwnProperty( key )) {
-
                     this.removeAndDestroyFeature( key );
-                    //this.features[ key ].removeFromLayerAndDestroy();
-                    //delete this.features[ key ];
                 }
             }
 
@@ -352,23 +349,26 @@ define(function (require) {
 
         popupEditSave : function( feature ) {
 
-            // get a deep copy of the old anootation data
-            var oldAnno = JSON.parse( JSON.stringify( feature.getDataArray()[0] ) ),
+            // get a deep copy of the old annotation data
+            var oldAnno,
                 newAnno;
 
-            if ( feature.checkAndSetData() ) {
+            if ( feature.checkData() ) {
 
-                // get new data
-                newAnno = feature.getDataArray()[0];
+                // get old data
+                oldAnno = feature.getDataArray()[0];
+
+                // deep copy annotation data
+                newAnno = JSON.parse( JSON.stringify( oldAnno ) );
+
+                // set new annotation data from popup input values
+                feature.setDataFromPopup( newAnno );
 
                 // send POST request to modify annotation on server
-                /*
-                    Normally on a modify request all old instances held by the AnnotationService are
-                    replaced. In this case, as the checkAndSetData() function sets the annotation
-                    values, the service will not find the 'old' annotation, as its content will have been
-                    replaced already.
-                 */
                 this.tracker.dataService.postRequest( "MODIFY", { "old" : oldAnno, "new" : newAnno } );
+
+                // swap old data for new
+                feature.setAnnotation( newAnno );
 
                 // then remove edit popup, and add display popup
                 feature.removeAndDestroyPopup();
@@ -389,7 +389,8 @@ define(function (require) {
             // destroy popup
             feature.removeAndDestroyPopup();
             feature.createEditablePopup( $.proxy( this.popupEditClose, this ),
-                                         $.proxy( this.popupEditSave, this ) );
+                                         $.proxy( this.popupEditSave, this ),
+                                         $.proxy( this.popupEditRemove, this ) );
         },
 
 
@@ -508,6 +509,8 @@ define(function (require) {
 
                 onStart: function(feature, pixel) {
 
+                    console.log("onStart");
+
                     // get feature key
                     var key = feature.attributes.key;
 
@@ -527,6 +530,8 @@ define(function (require) {
 
 
                 onComplete: function(feature, pixel) {
+
+                    console.log("onComplete");
 
                     var info = that.getFeatureInfo( feature ),
                         oldkey = feature.attributes.key,
@@ -560,9 +565,8 @@ define(function (require) {
                         // remaining in same bin
                         // keep feature, change data
 
-                        // change internal data
-                        that.features[ newkey ].annotationsByPriority = {};
-                        that.features[ newkey ].annotationsByPriority[ newAnno.priority ] = [ newAnno ];
+                        // change internal data from old to new anno
+                        that.features[ newkey ].setAnnotation( newAnno );
 
                     } else if ( that.features[ newkey ] !== undefined ) {
 
@@ -571,18 +575,8 @@ define(function (require) {
 
                         // feature already exists in new location, aggregate!
                         that.features[ newkey ].addAnnotation( info.lon, info.lat, newAnno );
-
                         // remove and destroy feature
                         that.removeAndDestroyFeature( oldkey );
-                        /*
-                        // un-select before destroying
-                        that.highlightControl.unselect( feature );
-                        that.selectControl.unselect( feature );
-
-                        // completely remove old feature
-                        that.features[ oldkey ].removeFromLayerAndDestroy();
-                        delete that.features[ oldkey ];
-                        */
 
                     } else {
 
@@ -591,13 +585,10 @@ define(function (require) {
 
                         // move feature to new bin
                         that.features[ newkey ] = that.features[ oldkey ];
-
                         // delete old bin
                         delete that.features[ oldkey ];
-
-                        // change internal data
-                        that.features[ newkey ].annotationsByPriority = {};
-                        that.features[ newkey ].annotationsByPriority[ newAnno.priority ] = [ newAnno ];
+                        // change internal data from old to new anno
+                        that.features[ newkey ].setAnnotation( newAnno );
                     }
 
                     // send POST request to modify annotation on server
@@ -606,6 +597,8 @@ define(function (require) {
                 },
 
                 onDrag: function(feature, pixel) {
+
+                    console.log("onDrag");
 
                     feature.attributes.feature.centrePopup( OpenLayers.LonLat.fromString( feature.geometry.toShortString() ) );
                 }

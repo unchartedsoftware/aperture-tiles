@@ -121,7 +121,6 @@ body {
 
 .annotation-button {
     margin-top:10px;
-    float:right;
     -webkit-border-radius: 5;
     -moz-border-radius: 5;
     border-radius: 5px;
@@ -131,6 +130,16 @@ body {
     border: solid #7E7E7E 1px;
     text-decoration: none;
 }
+
+.annotation-button-right {
+    float:right;
+}
+
+.annotation-button-left {
+    margin-left:15px;
+    float:left;
+}
+
 
 #annotation-popup-edit {
     position:absolute; 
