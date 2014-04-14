@@ -43,7 +43,7 @@ define(function (require) {
         ANNOTATION_CANCEL_BUTTON_ID = "annotation-popup-cancel",
         ANNOTATION_SAVE_BUTTON_ID = "annotation-popup-save",
         ANNOTATION_EDIT_BUTTON_ID = "annotation-popup-edit",
-        ANNOTATION_REMOVE_BUTTON_ID = "annotation-popup-remove",
+        //ANNOTATION_REMOVE_BUTTON_ID = "annotation-popup-remove",
         ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
         ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
         ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
