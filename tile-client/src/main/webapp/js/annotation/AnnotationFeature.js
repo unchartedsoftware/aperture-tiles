@@ -43,6 +43,7 @@ define(function (require) {
         ANNOTATION_CANCEL_BUTTON_ID = "annotation-popup-cancel",
         ANNOTATION_SAVE_BUTTON_ID = "annotation-popup-save",
         ANNOTATION_EDIT_BUTTON_ID = "annotation-popup-edit",
+        ANNOTATION_REMOVE_BUTTON_ID = "annotation-popup-remove",
         ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
         ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
         ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
@@ -216,7 +217,7 @@ define(function (require) {
             if ( this.isAggregated() ) {
 
                 // set accordian
-                $( "#"+ANNOTATION_ACCORDION_ID).accordion({
+                $( "#"+ANNOTATION_ACCORDION_ID ).accordion({
                     active: false,
                     collapsible: true,
                     heightStyle: "content"
@@ -260,7 +261,7 @@ define(function (require) {
                     that.popup.updateSize();
                 },
                 stop: function() {
-                    that.centrePopup( that.popup.lonlat );
+                    that.centrePopup( OpenLayers.LonLat.fromString( that.olFeature_.geometry.toShortString() ) );
                 },
                 maxWidth: 384,
                 maxHeight: 256,
@@ -383,14 +384,14 @@ define(function (require) {
                 function getSelectHTML() {
 
                     var html = "<select class='"+ANNOTATION_INPUT_CLASS+"' id='"+ ANNOTATION_POPUP_PRIORITY_ID+"'>",
-                        priorities = [ 'Urgent', 'High', 'Medium', 'Low'],
+                        PRIORITIES = [ 'Urgent', 'High', 'Medium', 'Low'],
                         i;
 
-                    for (i=0; i<priorities.length; i++) {
-                        if ( priorities[i] === annotation.priority ) {
-                            html += "<option selected='true' value='" +priorities[i] +"'>"+priorities[i]+"</option>";
+                    for (i=0; i<PRIORITIES.length; i++) {
+                        if ( PRIORITIES[i] === annotation.priority ) {
+                            html += "<option selected='true' value='" +PRIORITIES[i] +"'>"+PRIORITIES[i]+"</option>";
                         } else {
-                            html += "<option value='" +priorities[i] +"'>"+priorities[i]+"</option>";
+                            html += "<option value='" +PRIORITIES[i] +"'>"+PRIORITIES[i]+"</option>";
                         }
                     }
 

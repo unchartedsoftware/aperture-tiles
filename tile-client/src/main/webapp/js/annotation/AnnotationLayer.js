@@ -133,9 +133,9 @@ define(function (require) {
             // determine all tiles in view
             var tiles = this.map.getTilesInView();
             // request annotation data for all tiles in view
-            this.tracker.filterAndRequestTiles( tiles, $.proxy( this.redrawAnnotations, this ) );
+            this.tracker.filterAndRequestTiles( tiles, $.proxy( this.updateAnnotations, this ) );
             // remove and redraw annotations
-            this.redrawAnnotations();
+            this.updateAnnotations();
         },
 
 
@@ -213,7 +213,7 @@ define(function (require) {
         },
 
 
-        redrawAnnotations: function() {
+        updateAnnotations: function() {
 
             var annotations = this.tracker.getDataObject(),
                 key,
@@ -261,11 +261,25 @@ define(function (require) {
             for (key in defunctFeatures) {
                 if (defunctFeatures.hasOwnProperty( key )) {
 
-                    this.features[ key ].removeFromLayerAndDestroy();
-                    delete this.features[ key ];
+                    this.removeAndDestroyFeature( key );
+                    //this.features[ key ].removeFromLayerAndDestroy();
+                    //delete this.features[ key ];
                 }
             }
 
+        },
+
+
+        removeAndDestroyFeature: function( key ) {
+
+            var olFeature = this.features[ key ].olFeature_;
+
+            this.highlightControl.unselect( olFeature );
+            this.selectControl.unselect( olFeature );
+
+            // completely remove old feature
+            this.features[ key ].removeFromLayerAndDestroy();
+            delete this.features[ key ];
         },
 
 
@@ -286,6 +300,7 @@ define(function (require) {
 
             if ( feature.checkAndSetData() ) {
 
+                // null out pending feature as it is no longer pending
                 this.pendingFeature = null;
 
                 if ( this.features[key] !== undefined ) {
@@ -305,10 +320,24 @@ define(function (require) {
                 // send POST request to write annotation to server
                 this.tracker.dataService.postRequest( "WRITE", annotation );
 
+                // get rid of popup
                 feature.removeAndDestroyPopup();
-                feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
-                                            $.proxy( this.popupDisplayEdit, this ) );
+
+                // select newly added annotation up. This will open display popup
+                this.selectControl.select( feature.olFeature_ );
             }
+        },
+
+
+        popupEditRemove : function( feature ) {
+
+            var key = feature.olFeature_.attributes.key;
+
+            // send POST request to remove annotation from server
+            this.tracker.dataService.postRequest( "REMOVE", feature.getDataArray()[0] );
+
+            // remove and destroy feature from layer
+            this.removeAndDestroyFeature( key );
         },
 
 
@@ -323,11 +352,25 @@ define(function (require) {
 
         popupEditSave : function( feature ) {
 
+            // get a deep copy of the old anootation data
+            var oldAnno = JSON.parse( JSON.stringify( feature.getDataArray()[0] ) ),
+                newAnno;
+
             if ( feature.checkAndSetData() ) {
 
-                // save stuff
+                // get new data
+                newAnno = feature.getDataArray()[0];
 
-                // then
+                // send POST request to modify annotation on server
+                /*
+                    Normally on a modify request all old instances held by the AnnotationService are
+                    replaced. In this case, as the checkAndSetData() function sets the annotation
+                    values, the service will not find the 'old' annotation, as its content will have been
+                    replaced already.
+                 */
+                this.tracker.dataService.postRequest( "MODIFY", { "old" : oldAnno, "new" : newAnno } );
+
+                // then remove edit popup, and add display popup
                 feature.removeAndDestroyPopup();
                 feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
                                             $.proxy( this.popupDisplayEdit, this ) );
@@ -494,6 +537,7 @@ define(function (require) {
                     // set key attribute to new key
                     feature.attributes.key = newkey;
 
+                    // if dragging pending feature, update location and return
                     if (that.pendingFeature !== null &&
                         that.pendingFeature.olFeature_ === feature ) {
 
@@ -528,6 +572,9 @@ define(function (require) {
                         // feature already exists in new location, aggregate!
                         that.features[ newkey ].addAnnotation( info.lon, info.lat, newAnno );
 
+                        // remove and destroy feature
+                        that.removeAndDestroyFeature( oldkey );
+                        /*
                         // un-select before destroying
                         that.highlightControl.unselect( feature );
                         that.selectControl.unselect( feature );
@@ -535,6 +582,7 @@ define(function (require) {
                         // completely remove old feature
                         that.features[ oldkey ].removeFromLayerAndDestroy();
                         delete that.features[ oldkey ];
+                        */
 
                     } else {
 

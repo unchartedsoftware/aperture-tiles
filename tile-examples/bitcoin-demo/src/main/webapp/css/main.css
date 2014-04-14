@@ -21,7 +21,6 @@ body {
 }
 
 #annotation-popup-id {
-
     background-color: #222222; 
     background-image: none;
     border: 0px solid #7E7E7E;
@@ -89,8 +88,7 @@ body {
 .annotation-content-container {
     padding-top:15px; 
     padding-left:15px; 
-    height:100%;
-    height: calc(100% - 25px);
+    height:calc(100% - 25px);
 }
 
 .annotation-attribute {
@@ -107,7 +105,7 @@ body {
 .annotation-textarea {
     border: 1px solid #7E7E7E;
     width: calc(100% - 22px);
-    height: calc(100% - 135px);
+    height: calc(100% - 110px);
     max-width: 384px;
     max-height: 256px;
     resize:none;
@@ -115,7 +113,7 @@ body {
 
 .annotation-text-div {
     width: calc(100% - 17px);
-    height: calc(100% - 98px);
+    height: calc(100% - 73px);
     max-width: 384px;
     max-height: 256px;
     overflow: auto;
