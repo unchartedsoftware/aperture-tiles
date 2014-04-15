@@ -1,0 +1,19 @@
+body { 
+	background-color: black; 
+	color: #7E7E7E; 
+}
+
+#controls-container {
+	margin-top: 120px;
+	border: 2px solid #7E7E7E;
+	background-color: white;
+}
+
+#layer-controls {
+	padding: 10px;
+	color: black;
+}
+
+#description { 
+	margin-bottom: 15px; 
+}
