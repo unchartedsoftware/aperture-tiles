@@ -38,7 +38,9 @@
 		$(function () {
 			$.get("description.html", function (data) {
 				$("#title-description-container").append(data);
-				$("#description").accordion({ collapsible: true });
+				$("#description").accordion({ collapsible: true, activate: function( event, ui ) {
+					$(window).resize();		
+				}}); 
 			});
 		});
 	</script>
