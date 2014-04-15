@@ -39,7 +39,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	protected List<FixedPoint> blues = new ArrayList<FixedPoint>();
 	protected List<FixedPoint> alphas = new ArrayList<FixedPoint>();
 
-	public AbstractColorRamp (boolean inverted, List<FixedPoint> reds, List<FixedPoint> greens, List<FixedPoint> blues, List<FixedPoint> alphas, int opacity){
+	public AbstractColorRamp (boolean inverted, List<FixedPoint> reds, List<FixedPoint> greens, List<FixedPoint> blues, List<FixedPoint> alphas, double opacity){
 		this.isInverted = inverted;
 		this.reds = reds;
 		this.greens = greens;
@@ -106,6 +106,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		g = Math.max(0, Math.min(0xFF, g));
 		b = Math.max(0, Math.min(0xFF, b));
 		a = Math.max(0, Math.min(0xFF, a));
+
 		return (a << 24) | (r << 16) | (g << 8) | b;
 	}
 

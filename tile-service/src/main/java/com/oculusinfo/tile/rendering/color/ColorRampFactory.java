@@ -28,7 +28,10 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import org.json.JSONObject;
+
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.BooleanProperty;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
@@ -45,7 +48,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		      "The desired type of color ramp",
 		      "ware",
 		      new String[] {"br", "ware", "inv-ware", "grey", "inv-grey", "flat", "simple-gradient", "hue"});
-	public static final IntegerProperty          OPACITY   = new IntegerProperty("opacity", "The opacity with which a layer is displayed.", 255);
+	public static final DoubleProperty           OPACITY   = new DoubleProperty("opacity", "The opacity with which a layer is displayed.", 1.0);
 	public static final BooleanProperty          INVERTED  = new BooleanProperty("inverted", "Whether this scale is inverted from its normal direction or not", false);
 	public static final StringProperty           COLOR1     = new StringProperty("from", "A standard HTML description of the primary color for this ramp.  Used by flat and single-gradient ramp types.", "0xffffff");
 	public static final IntegerProperty          ALPHA1     = new IntegerProperty("from-alpha", "The opacity (0-255) of the primary color for this ramp.  Used by single-gradient ramps only.  -1 to use the base opacity.", -1);
@@ -69,10 +72,16 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	}
 
 	@Override
+	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
+	    // TODO Auto-generated method stub
+	    super.readConfiguration(rootNode);
+	}
+
+	@Override
 	protected ColorRamp create () {
 		String rampType = getPropertyValue(RAMP_TYPE);
 		boolean inverted = getPropertyValue(INVERTED);
-		int opacity = getPropertyValue(OPACITY);
+		double opacity = getPropertyValue(OPACITY);
         
 		ColorRamp ramp;
 		if (rampType.equalsIgnoreCase("br")){
@@ -95,10 +104,10 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 			ramp = new FlatColorRamp(color.getRGB(), opacity);
 		} else if (rampType.equalsIgnoreCase("single-gradient")) {
 			int alpha1 = getPropertyValue(ALPHA1);
-			if (-1 == alpha1) alpha1 = opacity;
+			if (-1 == alpha1) alpha1 = (int) Math.floor(255*opacity);
 			Color startColor = getColorWithAlpha(getPropertyValue(COLOR1), alpha1);
 			int alpha2 = getPropertyValue(ALPHA2);
-			if (-1 == alpha2) alpha2 = opacity;
+			if (-1 == alpha2) alpha2 = (int) Math.floor(255*opacity);
 			Color endColor = getColorWithAlpha(getPropertyValue(COLOR2), alpha2);
 			ramp = new SingleGradientColorRamp(startColor, endColor);
 		} else if (rampType.equalsIgnoreCase("hue")) {

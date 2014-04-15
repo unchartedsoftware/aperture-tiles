@@ -37,7 +37,25 @@ require(['./FileLoader',
                   ClientLayerFactory) {
             "use strict";
 
-            var mapFile = "./data/map.json";
+            var mapFile = "./data/map.json",
+                cloneObject;
+
+            cloneObject = function (base) {
+                var result = {}, key;
+
+                for (key in base) {
+                    if (base.hasOwnProperty(key)) {
+                        if ("object" === typeof(base[key])) {
+                            result[key] = cloneObject(base[key]);
+                        } else {
+                            result[key] = base[key];
+                        }
+                    }
+                }
+
+                return result;
+            };
+                
 
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(mapFile, function (jsonDataMap) {
@@ -53,12 +71,39 @@ require(['./FileLoader',
                 // Request all layers the server knows about.  Once we get 
                 // those, we can start drawing them.
                 allLayers.requestLayers(function (layers) {
-                    var clientLayers = allLayers.filterLeafLayers(layers, function (layerConfig) {
-                        return false;
+                    // For now, just take the first node specifying axes.
+                    // Eventually, we should let the user choose among them.
+                    var
+                    rootMapNode = allLayers.filterAxisLayers(layers)[0],
+                    axes = rootMapNode.axes,
+                    clientLayers = allLayers.filterLeafLayers(
+                        rootMapNode,
+                        function (layer) {
+                            // We'll get to client layers soon.
+                            return false;
+                        }
+                    ).map(function (layer, index, layersList) {
+                        // For now, just use the first configuration
+                        var config = cloneObject(layer.configurations[0]);
+                        config.layer = layer.id;
+                        config.name = layer.name;
+                        return config;
                     }),
-                        serverLayers = allLayers.filterLeafLayers(layers, function(layerConfig) {
+                    serverLayers =  allLayers.filterLeafLayers(
+                        rootMapNode,
+                        function (layer) {
                             return true;
-                        });
+                        }
+                    ).map(function(layer, index, layersList) {
+                        // For now, just use the first configuration
+                        var config = cloneObject(layer.configurations[0]);
+                        config.layer = layer.id;
+                        config.name = layer.name;
+                        return config;
+                    });
+
+                    // Set up our map axes
+                    worldMap.setAxisSpecs(axes);
 
                     // Create client and server layers
                     ClientLayerFactory.createLayers(clientLayers, worldMap);

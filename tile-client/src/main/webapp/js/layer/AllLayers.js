@@ -33,20 +33,44 @@ define(function (require) {
 
     var Class = require('../class'),
         AllLayers,
-        leafLayerFilter;
+        visitLayers,
+        leafLayerFilter,
+        axisLayerFilter;
 
-    leafLayerFilter = function (layers, filterFcn) {
-        var result = [], i;
-
+    visitLayers = function (layers, fcn) {
+        var i;
         if ($.isArray(layers)) {
-            for (i = 0; i < layers.length; ++i) {
-                if (layers[i].children) {
-                    result = result.concat(leafLayerFilter(layers[i].children, filterFcn));
-                } else if (filterFcn(layers[i])) {
-                    result.push(layers[i]);
-                }
+            for (i=0; i < layers.length; ++i) {
+                visitLayers(layers[i], fcn);
+            }
+        } else {
+            fcn(layers);
+            if (layers.children) {
+                visitLayers(layers.children, fcn);
             }
         }
+    };
+
+    leafLayerFilter = function (layers, filterFcn) {
+        var result = [];
+
+        visitLayers(layers, function (layer) {
+            if (!layer.children && (!filterFcn || filterFcn(layer))) {
+                result.push(layer);
+            }
+        });
+
+        return result;
+    };
+
+    axisLayerFilter = function (layers, filterFcn) {
+        var result = [];
+
+        visitLayers(layers, function (layer) {
+            if (layer.axes && (!filterFcn || filterFcn(layer))) {
+                result.push(layer);
+            }
+        });
 
         return result;
     };
@@ -58,6 +82,12 @@ define(function (require) {
             this.callbacks = [];
         },
 
+        /**
+         * Request layers from the server, sending them to the listed callback 
+         * function when they are received.
+         *
+         * @param callback A function taking a hierarchical layers description.
+         */
         requestLayers: function (callback) {
             if (this.layers) {
                 callback(this.layers);
@@ -87,7 +117,32 @@ define(function (require) {
                     });
         },
 
-        filterLeafLayers: leafLayerFilter
+        /**
+         * Run through the given hierarchical layers object, retrieving only 
+         * leaf nodes, and filtering those leaf nodes based on an arbitrary 
+         * function.
+         *
+         * @param layers A hierarchical layers object, as returned to the
+         *               callback from {@link #requestLayers}.
+         * @param filterFcn A function that takes a leaf node and returns 
+         *                  true if it is wanted, and false if it isn't.  If
+         *                  the filterFcn is null, all leaves are returned.
+         */
+        filterLeafLayers: leafLayerFilter,
+
+        /**
+         * Run through the given hierarchical layers object, retrieving only 
+         * nodes which specify axes, and filtering those leaf nodes based on 
+         * an arbitrary function.
+         *
+         * @param layers A hierarchical layers object, as returned to the
+         *               callback from {@link #requestLayers}.
+         * @param filterFcn A function that takes an axis node and returns 
+         *                  true if it is wanted, and false if it isn't. If
+         *                  filterFcn is null, all nodes specifying axes are
+         *                  returned.
+         */
+        filterAxisLayers: axisLayerFilter
     });
 
     return AllLayers;

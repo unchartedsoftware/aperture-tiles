@@ -7,7 +7,7 @@
                 "id": "bitcoin.source.amount",
                 "name": "Source vs Amount",
                 "axes": {
-    	            "XAxisConfig" : {
+    	            "xAxisConfig" : {
         	            "title" : "Source",
         	            "id" : "source-x-axis",
         	            "min" : 1,
@@ -36,7 +36,7 @@
 			            "markerLabelFontSize" : "0.75em",
 			            "axisLabelFontSize" : "0.95em"	
     	            },
-    	            "YAxisConfig" : {
+    	            "yAxisConfig" : {
         	            "title" : "Amount (BTC)",
         	            "id" : "amount-y-axis",
         	            "min" : 0,
@@ -68,7 +68,7 @@
                 "configurations": [
                     {
                         "renderer": {
-                            "type": "double",
+                            "type": "heatmap",
                             "ramp": "ware",
                             "opacity": 0.85
                         },
@@ -88,7 +88,7 @@
                 "id": "bitcoin.time.amount",
                 "name": "Time vs. Amount",
                 "axes": {
-    	            "XAxisConfig" : {
+    	            "xAxisConfig" : {
         	            "title" : "Time",
         	            "id" : "time-x-axis",
         	            "min" : 1230958800000,
@@ -117,7 +117,7 @@
 			            "markerLabelFontSize" : "0.75em",
 			            "axisLabelFontSize" : "0.95em"	
     	            },
-    	            "YAxisConfig" : {
+    	            "yAxisConfig" : {
         	            "title" : "Amount (BTC)",
         	            "id" : "amount-y-axis",
         	            "min" : 0,
@@ -149,7 +149,7 @@
                 "configurations": [
                     {
                         "renderer": {
-                            "type": "double",
+                            "type": "heatmap",
                             "ramp": "ware",
                             "opacity": 0.85
                         },
@@ -169,7 +169,7 @@
                 "id": "bitcoin.time.destination",
                 "name": "Time vs. Destination",
                 "axes": {
-    	            "XAxisConfig" : {
+    	            "xAxisConfig" : {
         	            "title" : "Time",
         	            "id" : "time-x-axis",
         	            "min" : 1230958800000,
@@ -198,7 +198,7 @@
 			            "markerLabelFontSize" : "0.75em",
 			            "axisLabelFontSize" : "0.95em"	
     	            },
-    	            "YAxisConfig" : {
+    	            "yAxisConfig" : {
         	            "title" : "Destination",
         	            "id" : "dest-y-axis",
         	            "min" : 0,
@@ -230,7 +230,7 @@
                 "configurations": [
                     {
                         "renderer": {
-                            "type": "double",
+                            "type": "heatmap",
                             "ramp": "ware",
                             "opacity": 0.85
                         },
@@ -250,7 +250,7 @@
                 "id": "bitcoin.time.source",
                 "name": "Time vs. Source",
                 "axes": {
-    	            "XAxisConfig" : {
+    	            "xAxisConfig" : {
         	            "title" : "Time",
         	            "id" : "time-x-axis",
         	            "min" : 1230958800000,
@@ -279,7 +279,7 @@
 			            "markerLabelFontSize" : "0.75em",
 			            "axisLabelFontSize" : "0.95em"	
     	            },
-    	            "YAxisConfig" : {
+    	            "yAxisConfig" : {
         	            "title" : "Source",
         	            "id" : "source-y-axis",
         	            "min" : 0,
@@ -311,7 +311,7 @@
                 "configurations": [
                     {
                         "renderer": {
-                            "type": "double",
+                            "type": "heatmap",
                             "ramp": "ware",
                             "opacity": 0.85
                         },

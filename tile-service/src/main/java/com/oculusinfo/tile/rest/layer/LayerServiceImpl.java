@@ -308,7 +308,8 @@ public class LayerServiceImpl implements LayerService {
 			try {
     			JSONArray configArray = JsonUtilities.readJSONArray(new FileReader(file));
     			for (int i=0; i<configArray.length(); ++i) {
-    				addConfiguration(configArray.getJSONObject(i));
+    		        LayerInfo info = new LayerInfo(configArray.getJSONObject(i));
+    				addConfiguration(info);
     			}
 	    	} catch (FileNotFoundException e1) {
 	    		LOGGER.error("Cannot find layer configuration file {} ", file);
@@ -320,10 +321,12 @@ public class LayerServiceImpl implements LayerService {
 		debugConfiguration();
     }
 
-    private void addConfiguration (JSONObject configJSON) {
-        LayerInfo info = new LayerInfo(configJSON);
+    private void addConfiguration (LayerInfo info) {
     	_layers.add(info);
     	_layersById.put(info.getID(), info);
+    	for (LayerInfo child: info.getChildren()) {
+    	    addConfiguration(child);
+    	}
     }
 
     private void debugConfiguration () {

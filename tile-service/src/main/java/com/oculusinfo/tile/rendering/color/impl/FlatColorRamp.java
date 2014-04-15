@@ -47,8 +47,9 @@ public class FlatColorRamp implements ColorRamp {
 	 * @param rgbCol
 	 * 	The rgb colour.
 	 */
-	public FlatColorRamp (int color, int opacity) {
-		this.col = ((opacity & 0xff) << 24) | (color & 0xffffff);	//merge the opacity and rgb together into argb
+	public FlatColorRamp (int color, double opacity) {
+	    int alpha = (int) Math.floor(255*opacity) & 0xff;
+		this.col = (alpha << 24) | (color & 0xffffff);	//merge the opacity and rgb together into argb
 	}
 
 	@Override
