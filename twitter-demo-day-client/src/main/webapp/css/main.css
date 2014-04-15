@@ -15,5 +15,6 @@ body {
 }
 
 #description { 
-	margin-bottom: 15px; 
+	margin-bottom: 15px;
+	font-size: 0.6em; 
 }
