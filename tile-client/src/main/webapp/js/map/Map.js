@@ -101,28 +101,20 @@ define(function (require) {
 			
 			// Set resize map callback
 			$(window).resize( function() {
-				var ASPECT_RATIO = 1.61803398875, // golden ratio
-					$map = $('#' + that.id),
+				var $map = $('#' + that.id),
 					$mapContainer = $map.parent(),
 					offset = $map.offset(),
 					leftOffset = offset.left || 0,
 					topOffset = offset.top || 0,
 					vertical_buffer = parseInt($mapContainer.css("marginBottom"), 10) + topOffset + 24,
-					horizontal_buffer = parseInt($mapContainer.css("marginRight"), 10) + leftOffset,			
+					horizontal_buffer = parseInt($mapContainer.css("marginRight"), 10) + leftOffset + 24,			
 					width = $(window).width(),
 					height = $(window).height(),				
 					newHeight,
 					newWidth;
 
-				if ((width-horizontal_buffer / ASPECT_RATIO) < height) {
-					// window height supports width
-					newWidth = width - horizontal_buffer;
-					newHeight = (width - horizontal_buffer) / ASPECT_RATIO;
-				} else {
-					// windows height does not support width
-					newWidth = (height - vertical_buffer) * ASPECT_RATIO;
-					newHeight = height - vertical_buffer;
-				}
+				newWidth = (width - horizontal_buffer);
+				newHeight = (height - vertical_buffer);
 					
 				$map.width(newWidth);
 				$map.height(newHeight);
