@@ -39,6 +39,7 @@ import java.util.UUID;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,34 +130,40 @@ public class LayerServiceImpl implements LayerService {
         return new PyramidMetaData(new JSONObject());
     }
 
+    /*
+     * Gets the base configuration - the combination of the renderer configuration and the data configuration.
+     */
 	private JSONObject getBaseConfiguration (String layerId, String rendererType, boolean choiceIsError) {
         LayerInfo info = _layersById.get(layerId);
         if (null == info) {
             throw new IllegalArgumentException("Attempt to configure unknown layer "+layerId);
         }
 
-        List<JSONObject> baseConfigurations = info.getRendererConfigurations();
-        if (0 == baseConfigurations.size()) {
+        // Figure out which renderer config to use
+        List<JSONObject> rendererConfigs = info.getRendererConfigurations();
+        JSONObject rendererConfig = null;
+        if (0 == rendererConfigs.size()) {
             throw new IllegalArgumentException("No configurations found for layer "+layerId);
         }
-        if (1 == baseConfigurations.size()) {
+        if (1 == rendererConfigs.size()) {
             // Only one possible base configuration (the usual case, at the moment)
-            return baseConfigurations.get(0);
+            rendererConfig = rendererConfigs.get(0);
         } else if (null == rendererType) {
             if (choiceIsError) {
-                throw new IllegalArgumentException("No way to choose between "+baseConfigurations.size()+" configurations - no renderer given");
+                throw new IllegalArgumentException("No way to choose between "+rendererConfigs.size()+" configurations - no renderer given");
             }
             // Just pick the first one - we're not actually rendering, so it shouldn't matter.
-            return baseConfigurations.get(0);
+            rendererConfig = rendererConfigs.get(0);
         } else {
-            for (JSONObject config: baseConfigurations) {
+            for (JSONObject config: rendererConfigs) {
                 try {
                     ImageRendererFactory baseFactory = new ImageRendererFactory(null, null);
                     baseFactory.readConfiguration(ConfigurableFactory.getLeafNode(config,
                                                                                   LayerConfiguration.RENDERER_PATH));
-                    String configRenderer = baseFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
-                    if (rendererType.equals(configRenderer)) {
-                        return config;
+                    String configType = baseFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
+                    if (rendererType.equals(configType)) {
+                        rendererConfig =  config;
+                        break;
                     }
                 } catch (ConfigurationException e) {
                     LOGGER.warn("Could not determine renderer from configuration {}", config, e);
@@ -164,6 +171,16 @@ public class LayerServiceImpl implements LayerService {
             }
             throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
         }
+
+        // Combine the renderer configuration with the data configuration
+        JSONObject dataConfig = info.getDataConfiguration();
+        JSONObject totalConfig = JsonUtilities.deepClone(dataConfig);
+        try {
+            totalConfig.put("renderer", JsonUtilities.deepClone(rendererConfig));
+        } catch (JSONException e) {
+            LOGGER.warn("Attempt to combine renderer and data configurations failed for layer {}", layerId, e);
+        }
+        return totalConfig;
 	}
 
 	@Override
@@ -180,8 +197,9 @@ public class LayerServiceImpl implements LayerService {
             // No renderer is allowed, if there is only one renderer listed; otherwise, it's an error.
             rendererChoiceIsError = true;
         }
-        JSONObject baseConfiguration = getBaseConfiguration(layerId, overrideRenderer, rendererChoiceIsError);
-        JSONObject configuration = JsonUtilities.deepClone(baseConfiguration);
+
+        // Get our base configuration - a combination of renderer and data configurations.
+        JSONObject configuration = getBaseConfiguration(layerId, overrideRenderer, rendererChoiceIsError);
         JsonUtilities.overlayInPlace(configuration, overrideConfiguration);
         
         UUID uuid = UUID.randomUUID();
@@ -306,9 +324,10 @@ public class LayerServiceImpl implements LayerService {
     private void readConfigFiles (File[] files) {
 		for (File file: files) {
 			try {
-    			JSONArray configArray = JsonUtilities.readJSONArray(new FileReader(file));
-    			for (int i=0; i<configArray.length(); ++i) {
-    		        LayerInfo info = new LayerInfo(configArray.getJSONObject(i));
+			    JSONObject contents = new JSONObject(new JSONTokener(new FileReader(file)));
+			    JSONArray configurations = contents.getJSONArray("layers");
+    			for (int i=0; i<configurations.length(); ++i) {
+    		        LayerInfo info = new LayerInfo(configurations.getJSONObject(i));
     				addConfiguration(info);
     			}
 	    	} catch (FileNotFoundException e1) {

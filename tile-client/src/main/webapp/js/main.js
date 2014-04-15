@@ -79,26 +79,55 @@ require(['./FileLoader',
                     clientLayers = allLayers.filterLeafLayers(
                         rootMapNode,
                         function (layer) {
-                            // We'll get to client layers soon.
-                            return false;
+                            var clientLayer = false;
+                            layer.renderers.forEach(function (renderer, index, renderers) {
+                                if ("client" === renderer.domain) {
+                                    clientLayer = true;
+                                    return;
+                                }
+                            });
+                            return clientLayer;
                         }
                     ).map(function (layer, index, layersList) {
-                        // For now, just use the first configuration
-                        var config = cloneObject(layer.configurations[0]);
-                        config.layer = layer.id;
-                        config.name = layer.name;
+                        // For now, just use the first client configuration we find
+                         var config;
+
+                        layer.renderers.forEach(function (renderer, index, renderers) {
+                            if ("client" === renderer.domain) {
+                                config = cloneObject(renderer);
+                                config.layer = layer.id;
+                                config.name = layer.name;
+                                return;
+                            }
+                        });
+
                         return config;
                     }),
                     serverLayers =  allLayers.filterLeafLayers(
                         rootMapNode,
                         function (layer) {
-                            return true;
+                            var serverLayer = false;
+                            layer.renderers.forEach(function (renderer, index, renderers) {
+                                if ("server" === renderer.domain) {
+                                    serverLayer = true;
+                                    return;
+                                }
+                            });
+                            return serverLayer;
                         }
                     ).map(function(layer, index, layersList) {
-                        // For now, just use the first configuration
-                        var config = cloneObject(layer.configurations[0]);
-                        config.layer = layer.id;
-                        config.name = layer.name;
+                        // For now, just use the first server configuration we find
+                         var config;
+
+                        layer.renderers.forEach(function (renderer, index, renderers) {
+                            if ("server" === renderer.domain) {
+                                config = cloneObject(renderer);
+                                config.layer = layer.id;
+                                config.name = layer.name;
+                                return;
+                            }
+                        });
+
                         return config;
                     });
 

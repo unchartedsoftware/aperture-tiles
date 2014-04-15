@@ -56,6 +56,7 @@ public class LayerInfo {
 
     private JSONObject          _data;
     private JSONArray           _axisConfiguration;
+    private JSONObject          _dataConfiguration;
     private JSONArray           _parentalAxisConfiguration;
     private List<JSONObject>    _rendererConfigurations;
     private List<LayerInfo>     _children;
@@ -70,6 +71,7 @@ public class LayerInfo {
         _data = data;
         _parentalAxisConfiguration = parentalAxisConfiguration;
         _axisConfiguration = null;
+        _dataConfiguration = null;
         _rendererConfigurations = null;
         _children = null;
     }
@@ -128,6 +130,23 @@ public class LayerInfo {
         return _axisConfiguration;
     }
 
+    public JSONObject getDataConfiguration () {
+        if (null == _dataConfiguration) {
+            synchronized (this) {
+                if (null == _dataConfiguration) {
+                    try {
+                        _dataConfiguration = _data.getJSONObject("data");
+                    } catch (JSONException e) {
+                        // If no data configuration, we're toast!
+                        LOGGER.error("No data configuration for layer "+getName());
+                        return null;
+                    }
+                }
+            }
+        }
+        return _dataConfiguration;
+    }
+
     /**
      * Gets a list of possible base renderer configurations that can be used
      * with this layer. The renderer listed in this configuration should not be
@@ -138,7 +157,7 @@ public class LayerInfo {
             synchronized (this) {
                 if (null == _rendererConfigurations) {
                     try {
-                        JSONArray rawConfigurations = _data.getJSONArray("configurations");
+                        JSONArray rawConfigurations = _data.getJSONArray("renderers");
                         _rendererConfigurations = new ArrayList<>();
                         for (int i = 0; i < rawConfigurations.length(); ++i) {
                             _rendererConfigurations.add(rawConfigurations.getJSONObject(i));
