@@ -24,7 +24,7 @@
 package com.oculusinfo.tile.rest.tile.caching;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.EmptyConfigurableFactory;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -41,6 +42,7 @@ import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.QueryParamsFactory;
 import com.oculusinfo.tile.rest.tile.TileServiceImpl;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
@@ -74,10 +76,20 @@ public class CachingTileServiceImpl extends TileServiceImpl {
 
 	@Override
 	protected LayerConfiguration getLayerConfiguration () throws ConfigurationException {
-		return new LayerConfiguration(_cachingProvider,
+		//the root factory that does nothing
+		EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
+		
+		//add another factory that will handle query params
+		QueryParamsFactory queryParamsFactory = new QueryParamsFactory(null, rootFactory, Collections.singletonList("query"));
+		rootFactory.addChildFactory(queryParamsFactory);
+		
+		//add the layer configuration factory under the path 'options'
+		LayerConfiguration layerConfiguration = new LayerConfiguration(_cachingProvider,
 		                              getSerializationFactoryProvider(),
 		                              getRendererFactoryProvider(),
-		                              null, new ArrayList<String>());
+		                              rootFactory, Collections.singletonList("options"));
+		rootFactory.addChildFactory(layerConfiguration);
+		return layerConfiguration;
 	}
 
 

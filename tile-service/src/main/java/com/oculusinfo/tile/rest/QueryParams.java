@@ -22,37 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
-
-import java.util.List;
-
-import com.oculusinfo.factory.ConfigurableFactory;
+package com.oculusinfo.tile.rest;
 
 /**
- * A helper factory to enable getting data from data paths within the configuration phase.<br>
- * For example, if all configuration data is under some root path, then this factory
- * can be added as the root of the configurable hierarchy to give everyone a different path,
- * without having to modify the path values for each factory directly. This factory doesn't create anything.
+ * Interface for retrieving a query parameter that was passed to the data
+ * request like in a "GET" request. This should act like a set of key/value
+ * pairs.
  * 
  * @author cregnier
  *
  */
-public class EmptyConfigurableFactory extends ConfigurableFactory<Object> {
-
-	public EmptyConfigurableFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
-		super(name, Object.class, parent, path);
-	}
-
-	@Override
-	protected Object create() {
-		return new Object();
-	}
+public interface QueryParams {
 
 	/**
-	 * Overridden in order to make this public so others can compose trees
+	 * Retrieves the value associated with the key name.
+	 * @param name
+	 * 	The name of a key within the query
+	 * @return
+	 * 	Returns the value associated with the key, or null if none exists. 
 	 */
-	@Override
-	public void addChildFactory(ConfigurableFactory<?> child) {
-		super.addChildFactory(child);
-	}
+	public String getValue(String name);
+	
+	/**
+	 * Retrieves the value associated with the key name or else it uses the default
+	 * value.
+	 * @param name
+	 * 	The name of a key within the query
+	 * @param defaultVal
+	 * 	The default value to return if the key doesn't exist.
+	 * @return
+	 * 	Returns the value associated with the key, or the default value if none exists. 
+	 */
+	public String getValueOrElse(String name, String defaultVal);
+	
 }

@@ -168,6 +168,23 @@ public class TileResource extends ApertureServerResource {
 		}
 		return indices;
 	}
+	
+	/**
+	 * If there's any query params, then they are turned into a {@link JSONObject}.
+	 * @param query
+	 * 	The query for the resource request.
+	 * <code>getRequest().getResourceRef().getQueryAsForm()</code>
+	 * @return
+	 * 	Returns a {@link JSONObject} that represents all the query parameters,
+	 * 	or null if the query doesn't exist
+	 */
+	private JSONObject createQueryParamsObject(Form query) {
+		JSONObject obj = null;
+		if (query != null) {
+			obj = new JSONObject(query.getValuesMap());
+		}
+		return obj;
+	}
 
 	@Get
 	public Representation getTile() throws ResourceException {
@@ -184,6 +201,7 @@ public class TileResource extends ApertureServerResource {
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
 			TileIndex index = new TileIndex(zoomLevel, x, y);
+			JSONObject queryParams = createQueryParamsObject(getRequest().getResourceRef().getQueryAsForm());
 
 
 			Collection<TileIndex> tileSet = parseTileSetDescription(getRequest().getResourceRef().getQueryAsForm());
@@ -202,7 +220,7 @@ public class TileResource extends ApertureServerResource {
 			if (null == extType) {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			} else if (ResponseType.Image.equals(extType.getResponseType())) {
-				BufferedImage tile = _service.getTileImage(uuid, layer, index, tileSet);
+				BufferedImage tile = _service.getTileImage(uuid, layer, index, tileSet, queryParams);
 				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
 
 				setStatus(Status.SUCCESS_CREATED);
@@ -219,7 +237,7 @@ public class TileResource extends ApertureServerResource {
 				tileIndex.put("xIndex", x);
 				tileIndex.put("yIndex", y);
 				result.put("index", tileIndex);
-				result.put("tile", _service.getTileObject(uuid, layer, index, tileSet));
+				result.put("tile", _service.getTileObject(uuid, layer, index, tileSet, queryParams));
 
 				setStatus(Status.SUCCESS_CREATED);
 				return new JsonRepresentation(result);

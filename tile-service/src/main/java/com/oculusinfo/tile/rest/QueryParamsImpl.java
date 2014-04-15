@@ -22,37 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.tile.rest;
 
-import java.util.List;
-
-import com.oculusinfo.factory.ConfigurableFactory;
+import org.json.JSONObject;
 
 /**
- * A helper factory to enable getting data from data paths within the configuration phase.<br>
- * For example, if all configuration data is under some root path, then this factory
- * can be added as the root of the configurable hierarchy to give everyone a different path,
- * without having to modify the path values for each factory directly. This factory doesn't create anything.
- * 
+ * A wrapper for a JSONObject that represents the key/value pairs passed through
+ * a data request.
+ *  
  * @author cregnier
  *
  */
-public class EmptyConfigurableFactory extends ConfigurableFactory<Object> {
+public class QueryParamsImpl implements QueryParams {
 
-	public EmptyConfigurableFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
-		super(name, Object.class, parent, path);
+	protected JSONObject _params;
+	
+	public QueryParamsImpl(JSONObject params) {
+		_params = params;
+		if (_params == null)
+			_params = new JSONObject();
 	}
-
+	
 	@Override
-	protected Object create() {
-		return new Object();
+	public String getValue(String name) {
+		return _params.optString(name);
 	}
-
-	/**
-	 * Overridden in order to make this public so others can compose trees
-	 */
+	
 	@Override
-	public void addChildFactory(ConfigurableFactory<?> child) {
-		super.addChildFactory(child);
+	public String getValueOrElse(String name, String defaultVal) {
+		return _params.optString(name, defaultVal);
 	}
 }

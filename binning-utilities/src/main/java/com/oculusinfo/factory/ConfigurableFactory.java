@@ -453,7 +453,7 @@ abstract public class ConfigurableFactory<T> {
 		return target;
 	}
 
-	private <PT> void readProperty (JSONObject factoryNode, ConfigurationProperty<PT> property) throws ConfigurationException {
+	protected <PT> void readProperty (JSONObject factoryNode, ConfigurationProperty<PT> property) throws ConfigurationException {
 		try {
 			if (null != factoryNode) {
 				PropertyValue<PT> valueObj = getPropertyValueObject(property);

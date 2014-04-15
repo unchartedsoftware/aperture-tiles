@@ -29,7 +29,6 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,14 +43,17 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.EmptyConfigurableFactory;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rest.QueryParamsFactory;
 import com.oculusinfo.tile.util.AvroJSONConverter;
 import com.oculusinfo.tile.util.JsonUtilities;
 
@@ -96,11 +98,40 @@ public class TileServiceImpl implements TileService {
 	 * Returns an uninitialized render parameter factory
 	 */
 	protected LayerConfiguration getLayerConfiguration () throws ConfigurationException {
-		return new LayerConfiguration(getPyramidIOFactoryProvider(),
+		//the root factory that does nothing
+		EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
+		
+		//add another factory that will handle query params
+		QueryParamsFactory queryParamsFactory = new QueryParamsFactory(null, rootFactory, Collections.singletonList("query"));
+		rootFactory.addChildFactory(queryParamsFactory);
+		
+		//add the layer configuration factory under the path 'options'
+		LayerConfiguration layerConfiguration = new LayerConfiguration(getPyramidIOFactoryProvider(),
 		                              getSerializationFactoryProvider(),
 		                              getRendererFactoryProvider(),
-		                              null, new ArrayList<String>());
+		                              rootFactory, Collections.singletonList("options"));
+		rootFactory.addChildFactory(layerConfiguration);
+		return layerConfiguration;
 	}
+	
+	/**
+	 * Wraps the options and query {@link JSONObject}s together into a new object.
+	 */
+	private JSONObject mergeQueryConfigOptions(JSONObject options, JSONObject query) {
+		JSONObject ret = new JSONObject();
+		try {
+			if (options != null)
+				ret.put("options", options);
+			if (query != null)
+				ret.put("query", query);
+		}
+		catch (Exception e) {
+			_logger.error("Couldn't merge query options with main options.", e);
+		}
+		return ret;
+	}
+	
+	
 
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getLayer(String)
@@ -115,7 +146,7 @@ public class TileServiceImpl implements TileService {
 
 			// Determine the pyramidIO, so we can get the metaData
 			LayerConfiguration config = getLayerConfiguration();
-			config.readConfiguration(options);
+			config.readConfiguration(mergeQueryConfigOptions(options, null));
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
 
 			// Initialize the pyramid for reading
@@ -154,8 +185,10 @@ public class TileServiceImpl implements TileService {
 	}
 
 	@Override
-	public LayerConfiguration getLevelSpecificConfiguration (UUID id, String layer, TileIndex tile) throws ConfigurationException {
+	public LayerConfiguration getLevelSpecificConfiguration (UUID id, String layer, TileIndex tile, JSONObject query) throws ConfigurationException {
 		LayerConfiguration config = getLayerConfiguration();
+		//NOTE: important to get the root of the tree so that readConfiguration is actually done on the whole tree, rather than just a subtree
+		ConfigurableFactory<?> root = config.getRoot();
 
 		if (null == id) {
 			id = _latestIDMap.get(layer);
@@ -164,15 +197,15 @@ public class TileServiceImpl implements TileService {
 		if (id != null){
 			// Get rendering options
 			JSONObject options = _uuidToOptionsMap.get(id);
-			config.readConfiguration(options);
+			root.readConfiguration(mergeQueryConfigOptions(options, query));
 		} else {
-			config.readConfiguration(new JSONObject());
+			root.readConfiguration(mergeQueryConfigOptions(new JSONObject(), query));
 		}
 
-		PyramidIO pyramidIO = config.produce(PyramidIO.class);
+		PyramidIO pyramidIO = root.produce(PyramidIO.class);
 
 		// Initialize the pyramid for reading
-		JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+		JSONObject initJSON = root.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
 		if (null != initJSON) {
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
@@ -191,13 +224,13 @@ public class TileServiceImpl implements TileService {
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
 	@Override
-	public BufferedImage getTileImage (UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet) {
+	public BufferedImage getTileImage (UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
 		int width = 256;
 		int height = 256;
 		BufferedImage bi = null;
 
 		try {
-			LayerConfiguration config = getLevelSpecificConfiguration(id, layer, index);
+			LayerConfiguration config = getLevelSpecificConfiguration(id, layer, index, query);
     
 			// Record image dimensions in case of error. 
 			width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
@@ -226,14 +259,14 @@ public class TileServiceImpl implements TileService {
 	}
 
 	@Override
-	public JSONObject getTileObject(UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet) {
+	public JSONObject getTileObject(UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
 		try {
 			LayerConfiguration config = getLayerConfiguration();
 			if (id != null){
 				// Get rendering options
-				config.readConfiguration(_uuidToOptionsMap.get(id));
+				config.readConfiguration(mergeQueryConfigOptions(_uuidToOptionsMap.get(id), query));
 			} else {
-				config.readConfiguration(new JSONObject());
+				config.readConfiguration(mergeQueryConfigOptions(new JSONObject(), query));
 			}
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			TileSerializer<?> serializer = config.produce(TileSerializer.class);

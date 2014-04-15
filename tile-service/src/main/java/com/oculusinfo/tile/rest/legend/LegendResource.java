@@ -65,6 +65,24 @@ public class LegendResource extends ApertureServerResource {
 	}
 
 
+	/**
+	 * If there's any query params, then they are turned into a {@link JSONObject}.
+	 * @param query
+	 * 	The query for the resource request.
+	 * <code>getRequest().getResourceRef().getQueryAsForm()</code>
+	 * @return
+	 * 	Returns a {@link JSONObject} that represents all the query parameters,
+	 * 	or null if the query doesn't exist
+	 */
+	private JSONObject createQueryParamsObject(Form query) {
+		JSONObject obj = null;
+		if (query != null) {
+			obj = new JSONObject(query.getValuesMap());
+		}
+		return obj;
+	}
+
+
 
 	@Post("json")
 	public StringRepresentation getLegend(String jsonData) throws ResourceException {
@@ -86,7 +104,7 @@ public class LegendResource extends ApertureServerResource {
 				renderHorizontally = jsonObj.getString("orientation").equalsIgnoreCase("horizontal");
 			}
 
-			LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0));
+			LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0), null);
 
 			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		} catch (JSONException e) {
@@ -129,7 +147,8 @@ public class LegendResource extends ApertureServerResource {
 		}
 
 		try {
-			LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0));
+			JSONObject query = createQueryParamsObject(form);
+			LayerConfiguration config = _tileService.getLevelSpecificConfiguration(null, layer, new TileIndex(zoomLevel, 0, 0), query);
 
 			if(outputType.equalsIgnoreCase("uri")){
 				return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
