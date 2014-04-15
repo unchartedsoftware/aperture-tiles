@@ -73,7 +73,7 @@ abstract public class ConfigurableFactory<T> {
 	private String                                          _propertyPrefix;
 	private JSONObject                                      _JSONConfigurationSource;
 	private Properties                                      _propertyConfigurationSource;
-
+	private ConfigurableFactory<?>							_parent;
 
 
 	/**
@@ -120,6 +120,10 @@ abstract public class ConfigurableFactory<T> {
 		_propertyPrefix = null;
 		_JSONConfigurationSource = null;
 		_propertyConfigurationSource = null;
+		
+		//NOTE: this should not be set to the parent passed in cause the parent won't necessarily
+		//be created before the children if you're doing a bottom up approach for some reason.
+		_parent = null; 
 	}
 
 	private <PT> void putPropertyValueObject (ConfigurationProperty<PT> property, PropertyValue<PT> value) {
@@ -138,6 +142,13 @@ abstract public class ConfigurableFactory<T> {
 		return (PropertyValue) _properties.get(property);
 	}
 
+	/**
+	 * Get the root node in the tree of configurables.
+	 * @return Returns the root of the configurable factories, or this factory if no parent is set.
+	 */
+	public ConfigurableFactory<?> getRoot() {
+		return (_parent != null)? _parent.getRoot() : this;
+	}
 
 	/**
 	 * Get the root path for configuration information for this factory.
@@ -222,6 +233,7 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	protected void addChildFactory (ConfigurableFactory<?> child) {
 		_children.add(child);
+		child._parent = this;
 	}
 
 	/**
