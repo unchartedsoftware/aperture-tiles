@@ -185,7 +185,9 @@ public class LayerResource extends ApertureServerResource {
                 try {
                     LayerConfiguration config = _service.getRenderingConfiguration(uuid, null);
                     TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
-                    result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metaData));
+                    if (null != renderer) {
+                        result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metaData));
+                    }
                 } catch (ConfigurationException e) {
                     // If we have to skip images per tile, it's not a huge deal
                     LOGGER.info("Couldn't determine images per tile for layer {}", layerId, e);

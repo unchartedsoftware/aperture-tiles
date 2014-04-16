@@ -195,8 +195,10 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 		try {
 			TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
-			Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
-			_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+			if (null != renderer) {
+			    Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
+			    _transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+			}
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
 		}

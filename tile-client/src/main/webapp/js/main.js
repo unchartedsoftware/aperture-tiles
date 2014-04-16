@@ -41,7 +41,13 @@ require(['./FileLoader',
                 cloneObject;
 
             cloneObject = function (base) {
-                var result = {}, key;
+                var result, key;
+
+                if ($.isArray(base)) {
+                    result = [];
+                } else {
+                    result = {};
+                }
 
                 for (key in base) {
                     if (base.hasOwnProperty(key)) {

@@ -27,7 +27,7 @@
       com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
       <!-- LayerConfiguration factory module - override to add custom layer configuration 
            parameters -->
-      com.oculusinfo.tile.init.StamdardLayerConfigurationModule:
+      com.oculusinfo.tile.init.StandardLayerConfigurationModule:
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:

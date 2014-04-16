@@ -132,9 +132,9 @@ define(function (require) {
 
             // Notify our user that we have new layer information
             if (this.onInfoRetrieved && this.onInfoRetrieved.length > 0) {
-                this.onInfoRetrieved.map(function (callback, index, array) {
+                this.onInfoRetrieved.forEach($.proxy(function (callback, index, array) {
                     callback(this, layerInfo);
-                });
+                }, this));
             }
         },
 

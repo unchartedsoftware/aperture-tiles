@@ -29,7 +29,7 @@ import com.google.inject.TypeLiteral;
 import com.oculusinfo.tile.init.providers.StandardLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 
-public class StamdardLayerConfigurationModule extends AbstractModule {
+public class StandardLayerConfigurationModule extends AbstractModule {
 
     @Override
     protected void configure() {
