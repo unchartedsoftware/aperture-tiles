@@ -37,12 +37,12 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.EmptyConfigurableFactory;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
+import com.oculusinfo.binning.io.RequestParamsFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rest.QueryParamsFactory;
 import com.oculusinfo.tile.rest.tile.TileServiceImpl;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
@@ -80,7 +80,7 @@ public class CachingTileServiceImpl extends TileServiceImpl {
 		EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
 		
 		//add another factory that will handle query params
-		QueryParamsFactory queryParamsFactory = new QueryParamsFactory(null, rootFactory, Collections.singletonList("query"));
+		RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.singletonList("query"));
 		rootFactory.addChildFactory(queryParamsFactory);
 		
 		//add the layer configuration factory under the path 'options'

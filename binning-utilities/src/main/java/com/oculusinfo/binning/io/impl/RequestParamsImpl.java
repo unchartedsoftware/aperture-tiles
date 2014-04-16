@@ -22,9 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.binning.io.impl;
 
 import org.json.JSONObject;
+
+import com.oculusinfo.binning.io.RequestParams;
 
 /**
  * A wrapper for a JSONObject that represents the key/value pairs passed through
@@ -33,11 +35,11 @@ import org.json.JSONObject;
  * @author cregnier
  *
  */
-public class QueryParamsImpl implements QueryParams {
+public class RequestParamsImpl implements RequestParams {
 
 	protected JSONObject _params;
 	
-	public QueryParamsImpl(JSONObject params) {
+	public RequestParamsImpl(JSONObject params) {
 		_params = params;
 		if (_params == null)
 			_params = new JSONObject();

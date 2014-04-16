@@ -22,20 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.binning.io;
 
 import java.util.List;
 import java.util.Properties;
 
 import org.json.JSONObject;
 
+import com.oculusinfo.binning.io.impl.RequestParamsImpl;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.JSONProperty;
 
 /**
- * This {@link ConfigurableFactory} is meant to create QueryParam objects that keep
+ * This {@link ConfigurableFactory} is meant to create {@link RequestParams} objects that keep
  * track of the key/value pairs passed through a data request like 'GET'. All
  * parameters passed to this object through {@link #readConfiguration(JSONObject)}
  * will be treated as query parameters. This makes it easy to pass in a configuration
@@ -45,48 +46,36 @@ import com.oculusinfo.factory.properties.JSONProperty;
  * JSONObject configData = new JSONObject();
  * configData.put("query", resource.getRequest().getResourceRef().getQueryAsForm().getValuesMap());
  * 
- * QueryParamsFactory configFactory = new QueryParamsFactory(null, null, Collections.singletonList("query"));
+ * RequestParamsFactory configFactory = new RequestParamsFactory(null, null, Collections.singletonList("query"));
  * configFactory.readConfiguration(configData);
  * </code></pre>
  * 
  * @author cregnier
  *
  */
-public class QueryParamsFactory extends ConfigurableFactory<QueryParams> {
+public class RequestParamsFactory extends ConfigurableFactory<RequestParams> {
 
-	public static JSONProperty QUERY_PARAMS = new JSONProperty("query", "The key/value pairs passed from a 'GET' query", null);
+	public static JSONProperty REQUEST_PARAMS = new JSONProperty("query", "The key/value pairs passed from a 'GET' request", null);
 	
-	public QueryParamsFactory(ConfigurableFactory<?> parent, List<String> path) {
+	public RequestParamsFactory(ConfigurableFactory<?> parent, List<String> path) {
 		this(null, parent, path);
 	}
 	
-	public QueryParamsFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-		super(factoryName, QueryParams.class, parent, path);
-		addProperty(QUERY_PARAMS);
+	public RequestParamsFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
+		super(factoryName, RequestParams.class, parent, path);
+		addProperty(REQUEST_PARAMS);
 	}
 	
 	@Override
-	protected QueryParams create() {
-		return new QueryParamsImpl(getPropertyValue(QUERY_PARAMS));
-	}
-
-	@Override
-	public void readConfiguration(JSONObject rootNode) throws ConfigurationException {
-		// TODO Auto-generated method stub
-		super.readConfiguration(rootNode);
-	}
-	
-	@Override
-	public void readConfiguration(Properties properties) throws ConfigurationException {
-		// TODO Auto-generated method stub
-		super.readConfiguration(properties);
+	protected RequestParams create() {
+		return new RequestParamsImpl(getPropertyValue(REQUEST_PARAMS));
 	}
 
 	@Override
 	protected <PT> void readProperty(JSONObject factoryNode, ConfigurationProperty<PT> property) throws ConfigurationException {
 		//we only care about the QUERY_PARAMS property, and we want to store all the properties that were passed to us
-		if (QUERY_PARAMS.equals(property)) {
-			setPropertyValue(QUERY_PARAMS, factoryNode);
+		if (REQUEST_PARAMS.equals(property)) {
+			setPropertyValue(REQUEST_PARAMS, factoryNode);
 		}
 	}
 }

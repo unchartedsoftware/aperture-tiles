@@ -22,17 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.binning.io;
 
 /**
- * Interface for retrieving a query parameter that was passed to the data
- * request like in a "GET" request. This should act like a set of key/value
+ * Interface for retrieving a request parameter that was passed to the data
+ * query like in a "GET" request. This should act like a set of key/value
  * pairs.
  * 
  * @author cregnier
  *
  */
-public interface QueryParams {
+public interface RequestParams {
 
 	/**
 	 * Retrieves the value associated with the key name.
