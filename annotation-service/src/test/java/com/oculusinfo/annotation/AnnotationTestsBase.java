@@ -25,11 +25,13 @@ package com.oculusinfo.annotation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
+import java.util.Date;
+
+import java.sql.Timestamp;
 
 import com.oculusinfo.binning.*;
 import com.oculusinfo.annotation.impl.*;
@@ -190,6 +192,9 @@ public class AnnotationTestsBase {
 		
 		double [] xy = randomPosition();
 		
+		Date date = new Date();
+		Long timestamp = new Timestamp( date.getTime() ).getTime();
+		
 		try {
 			JSONObject anno = new JSONObject();			
 			anno.put("x", xy[0]);
@@ -197,6 +202,7 @@ public class AnnotationTestsBase {
 			anno.put("level", (int)(rand.nextDouble() * 18) );
 			anno.put("priority", randomPriority() );
 			anno.put("uuid", UUID.randomUUID() );
+			anno.put("timestamp", timestamp.toString() );
 			JSONObject data = new JSONObject();
 			data.put("comment", randomComment() );
 			anno.put("data", data);

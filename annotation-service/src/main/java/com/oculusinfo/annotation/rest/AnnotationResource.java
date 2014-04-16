@@ -70,13 +70,13 @@ public class AnnotationResource extends ApertureServerResource {
 			// write
 			if ( type.equals("write") ) {
 				
-				JSONAnnotation annotation = JSONAnnotation.fromJSON( data );			
+				JSONAnnotation annotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );			
 				_service.writeAnnotation( layer, annotation );
 				jsonResult.put("data", annotation.toJSON() );
 				
 			} else if ( type.equals("remove") ) {
 	
-				_service.removeAnnotation( layer, JSONAnnotation.fromJSON( data ) );
+				_service.removeAnnotation( layer, JSONAnnotation.fromJSON( data.getJSONObject("old") ) );
 				
 			} else if ( type.equals("modify") ) {
 				
@@ -92,6 +92,9 @@ public class AnnotationResource extends ApertureServerResource {
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 					"Unable to create JSON object from supplied options string", e);
+		} catch (IllegalArgumentException e) {
+			throw new ResourceException(Status.SERVER_ERROR_INTERNAL,
+					e.getMessage(), e);
 		}
 	}
 	
@@ -107,9 +110,8 @@ public class AnnotationResource extends ApertureServerResource {
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			
 			int zoomLevel = Integer.parseInt(levelDir);
-			// if x or y isn't supplied, fill with default -1 for univariate
-			int x = (xAttr != null) ? Integer.parseInt(xAttr) : -1;
-			int y = (yAttr != null) ? Integer.parseInt(yAttr) : -1;
+			int x = Integer.parseInt(xAttr);
+			int y = Integer.parseInt(yAttr);
 			
 		    // We return an object including the tile index ("index") and 
 		    // the tile data ("data").

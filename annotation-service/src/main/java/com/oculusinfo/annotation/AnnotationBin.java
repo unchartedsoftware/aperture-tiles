@@ -94,7 +94,7 @@ public class AnnotationBin implements Serializable {
     public synchronized boolean remove( AnnotationData<?> data ) { 
     	
     	String priority = data.getPriority();
-    	UUID uuid =  data.getUUID();
+    	UUID uuid = data.getUUID();
     	boolean removedAny = false;
     	
     	if ( _references.containsKey( priority ) ) {

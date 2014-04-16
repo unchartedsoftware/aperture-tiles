@@ -36,21 +36,21 @@ public interface AnnotationService {
 	 * Write an annotation to the storage service
 	 * 
 	 */
-	public abstract void writeAnnotation( String layer, AnnotationData<?> annotation );
+	public abstract void writeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 	
 	
 	/*
 	 * Modify an annotation in the storage service
 	 * 
 	 */
-	public abstract void modifyAnnotation( String layer, AnnotationData<?> oldAnnotation, AnnotationData<?> newAnnotation );
+	public abstract void modifyAnnotation( String layer, AnnotationData<?> oldAnnotation, AnnotationData<?> newAnnotation ) throws IllegalArgumentException;
 	
 	
 	/*
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> readAnnotations( String layer, TileIndex tile );
+	public abstract Map<BinIndex, List<AnnotationData<?>>> readAnnotations( String layer, TileIndex tile ) throws IllegalArgumentException;
 	
 	
 	/*

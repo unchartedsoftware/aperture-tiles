@@ -48,7 +48,7 @@ import org.apache.log4j.Level;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
-import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.io.serialization.*;
 
 
 public class HBaseAnnotationIO implements AnnotationIO {

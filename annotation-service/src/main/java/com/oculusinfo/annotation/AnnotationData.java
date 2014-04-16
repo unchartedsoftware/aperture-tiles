@@ -35,9 +35,11 @@ public abstract class AnnotationData<T> implements Serializable {
 	public abstract Double getX();
 	public abstract Double getY();
 	public abstract Integer getLevel();
+	public abstract UUID getUUID();
+	public abstract Long getTimeStamp();
 	public abstract String getPriority();
 	public abstract T getData();
-	public abstract UUID getUUID();	
+	
 	
 	public boolean hasSameLocation( AnnotationData<?> other ) {
 		return getX() == other.getX() &&
@@ -55,6 +57,7 @@ public abstract class AnnotationData<T> implements Serializable {
 			json.put( "y", getY() );
 			json.put("level", getLevel() );
 			json.put("uuid", getUUID().toString() );
+			json.put("timestamp", getTimeStamp().toString() );
 			json.put("priority", getPriority() );
 			json.put("data", getData() );			
 			return json;

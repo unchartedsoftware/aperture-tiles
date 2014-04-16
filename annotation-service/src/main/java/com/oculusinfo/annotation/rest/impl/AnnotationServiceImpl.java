@@ -62,7 +62,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_io = io;
 	}
 	
-		
+
 	public void writeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
 		
     	_lock.writeLock().lock();
@@ -74,18 +74,6 @@ public class AnnotationServiceImpl implements AnnotationService {
     		}
     		
     		addDataToTiles( layer, annotation );
-    		/*
-    		// get list of the indices for all levels
-        	List<TileAndBinIndices> indices = _indexer.getIndices( data );
-    		// get all affected tiles
-    		List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );
-    		// add new data reference to tiles
-        	addDataReferenceToTiles( tiles, indices, data );
-    		// write tiles back to io
-    		writeTilesToIO( layer, tiles );
-    		// write data to io
-    		writeDataToIO( layer, data );
-    		*/
     		
     	} finally {
     		_lock.writeLock().unlock();
@@ -95,12 +83,19 @@ public class AnnotationServiceImpl implements AnnotationService {
 	
 	public void modifyAnnotation( String layer, 
 								  AnnotationData<?> oldAnnotation, 
-								  AnnotationData<?> newAnnotation ) {
+								  AnnotationData<?> newAnnotation ) throws IllegalArgumentException {
 		
 		// temporary naive modification, remove old, write new		
 		_lock.writeLock().lock();
     	try {
 		
+    		// ensure request is coherent with server state
+    		if ( isRequestOutOfDate( layer, oldAnnotation ) ) {
+    			throw new IllegalArgumentException("Client is out of sync with Server, "
+    											 + "MODIFY operation aborted. It is recommended "
+    											 + "upon receiving this exception to refresh all client annotations");        		
+    		}
+    		
 			// check if it is a spatial or content modification		
 			if ( newAnnotation.hasSameLocation( oldAnnotation ) ) {
 				
@@ -109,41 +104,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 				
 			} else {
 				
-				// different location, must re-tile
-				
-				// REMOVE
+				// different location, must re-tile				
+				// remove it from old tiles
 				removeDataFromTiles( layer, oldAnnotation );
-				
-				/*
-				// get list of the indices for all levels
-		    	List<TileAndBinIndices> indices = _indexer.getIndices( oldAnnotation );	    	
-				// read existing tiles
-				List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );					
-				// maintain lists of what bins to modify and what bins to remove
-				List<AnnotationTile> tilesToWrite = new LinkedList<>(); 
-				List<AnnotationTile> tilesToRemove = new LinkedList<>();			
-				// remove data from tiles and organize into lists to write and remove
-				removeDataReferenceFromTiles( tilesToWrite, tilesToRemove, tiles, oldAnnotation );
-				// write modified tiles
-				writeTilesToIO( layer, tilesToWrite );		
-				// remove empty tiles and data
-				removeTilesFromIO( layer, tilesToRemove );  
-				*/
-				
-				// WRITE
+				// add it to new tiles
 				addDataToTiles( layer, newAnnotation );
-				/*
-				// get list of the indices for all levels
-		    	indices = _indexer.getIndices( newAnnotation );
-	    		// get all affected tiles
-	    		tiles = readTilesFromIO( layer, convert( indices ) );
-	    		// add new data reference to tiles
-	        	addDataReferenceToTiles( tiles, indices, newAnnotation );
-	    		// write tiles back to io
-	    		writeTilesToIO( layer, tiles );    		
-	    		// write data to io
-	    		writeDataToIO( layer, newAnnotation );
-	    		*/
 			}
     	} finally {
     		_lock.writeLock().unlock();
@@ -163,27 +128,19 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 		
-	public void removeAnnotation( String layer, AnnotationData<?> annotation ) {
+	public void removeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
 
 		_lock.writeLock().lock();		
 		try {
 			
+			// ensure request is coherent with server state
+    		if ( isRequestOutOfDate( layer, annotation ) ) {
+    			throw new IllegalArgumentException("Client is out of sync with Server, "
+												 + "REMOVE operation aborted. It is recommended "
+												 + "upon receiving this exception to refresh all client annotations");       		
+    		}
+			
 			removeDataFromTiles( layer, annotation );
-			/*
-			// get list of the indices for all levels
-	    	List<TileAndBinIndices> indices = _indexer.getIndices( annotation );	    	
-			// read existing tiles
-			List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );					
-			// maintain lists of what bins to modify and what bins to remove
-			List<AnnotationTile> tilesToWrite = new LinkedList<>(); 
-			List<AnnotationTile> tilesToRemove = new LinkedList<>();			
-			// remove data from tiles and organize into lists to write and remove
-			removeDataReferenceFromTiles( tilesToWrite, tilesToRemove, tiles, annotation );
-			// write modified tiles
-			writeTilesToIO( layer, tilesToWrite );		
-			// remove empty tiles and data
-			removeTilesFromIO( layer, tilesToRemove );	
-			*/
 			removeDataFromIO( layer, annotation );
 			
 		} finally {
@@ -209,6 +166,30 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return ( readDataFromIO( layer, dataIndex ).size() > 0 ) ;
 
 	}
+	
+	/*
+	 * Check data timestamp from clients source, if out of date, return true
+	 */
+	public boolean isRequestOutOfDate( String layer, AnnotationData<?> annotation ) {
+		
+		List<UUID> uuid = new LinkedList<>();
+		uuid.add( annotation.getUUID() );
+		List<AnnotationData<?>> annotations = readDataFromIO( layer, uuid );
+		
+		if ( annotations.size() == 0 ) {
+			// removed since client update, abort
+			return true;
+		}
+		
+		if ( !annotations.get(0).getTimeStamp().equals( annotation.getTimeStamp() ) ) {
+			// clients timestamp doesn't not match most up to date, abort
+			return true;
+		}
+		
+		// everything seems to be in order
+		return false;
+	}
+	
 	
 	/*
 	 * Iterate through all indices, find matching tiles and add data reference, if tile

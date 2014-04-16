@@ -40,6 +40,7 @@ define(function (require) {
     AnnotationService = Class.extend({
         ClassName: "AnnotationService",
 
+
         /**
          * Construct an AnnotationService
          */
@@ -88,7 +89,11 @@ define(function (require) {
                 return v.toString(16);
             });
 
-            this.postRequest( "WRITE", annotation, callback );
+            var data = {
+                "new": annotation
+            };
+
+            this.postRequest( "WRITE", data, callback );
         },
 
 
@@ -100,12 +105,12 @@ define(function (require) {
          */
         modifyAnnotation: function( oldAnnotation, newAnnotation, callback ) {
 
-            var annotation = {
+            var data = {
                 "old": oldAnnotation,
                 "new": newAnnotation
             };
 
-            this.postRequest( "MODIFY", annotation, callback );
+            this.postRequest( "MODIFY", data, callback );
         },
 
 
@@ -116,7 +121,11 @@ define(function (require) {
          */
         removeAnnotation: function( annotation, callback ) {
 
-            this.postRequest( "REMOVE", annotation, callback );
+            var data = {
+                "old": annotation
+            };
+
+            this.postRequest( "REMOVE", data, callback );
         },
 
 
@@ -128,6 +137,12 @@ define(function (require) {
          */
         postRequest: function( type, data, callback ) {
 
+            // timestamp "new" request, this will replace the "old" timestamp if operation
+            // is successful
+            if ( data["new"] !== undefined ) {
+                data["new"].timestamp = new Date().getTime();
+            }
+           
             // Request the layer information
             aperture.io.rest('/annotation',
                              'POST',

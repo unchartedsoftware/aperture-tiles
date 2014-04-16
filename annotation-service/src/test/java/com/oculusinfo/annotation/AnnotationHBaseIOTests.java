@@ -38,7 +38,7 @@ import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.impl.*;
 
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	

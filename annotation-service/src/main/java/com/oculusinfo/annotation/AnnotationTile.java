@@ -91,7 +91,7 @@ public class AnnotationTile implements Serializable {
     public synchronized boolean remove( BinIndex binIndex, AnnotationData<?> data ) { 
     	
 		AnnotationBin bin = _bins.get( binIndex );		
-		if ( bin.remove( data ) ) {
+		if ( bin != null && bin.remove( data ) ) {
 			// remove bin if empty
 			if ( bin.size() == 0 ) {    				   				
 				_bins.remove( binIndex );

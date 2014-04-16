@@ -47,18 +47,20 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
 	
 	Double _x = null;
 	Double _y = null;
-	Integer _level = null;
-	String _priority = null;		
+	Integer _level = null;			
 	UUID _uuid = null;
+	Long _timestamp = null;
+	String _priority = null;
 	JSONObject _data = null;
 	
 	
-	public JSONAnnotation( Double x, Double y, Integer level, String priority, UUID uuid, JSONObject data ) {
+	public JSONAnnotation( Double x, Double y, Integer level, String priority, UUID uuid, Long timestamp, JSONObject data ) {
 		_x = x;
 		_y = y;
 		_level = level;
-		_priority = priority;
 		_uuid = uuid;
+		_timestamp = timestamp;
+		_priority = priority;		
 		_data = data;
 	}
 	
@@ -87,20 +89,21 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
 	}
 	
 	
-	public JSONObject getData() {
-		return _data;
-	}
-	
-	
-	public String getPriority() {
-		return _priority;
-	}
-	
-
 	public UUID getUUID() {
 		return _uuid;		
 	}
 	
+	public Long getTimeStamp() {
+		return _timestamp;		
+	}
+		
+	public String getPriority() {
+		return _priority;
+	}
+	
+	public JSONObject getData() {
+		return _data;
+	}
 	
 	static public JSONAnnotation fromJSON( JSONObject json ) throws IllegalArgumentException {		
 
@@ -111,8 +114,9 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
 			Integer level = json.getInt("level");
 			String priority = json.getString("priority");
 			UUID uuid = UUID.fromString( json.getString("uuid") );
+			Long timestamp = Long.parseLong( json.getString("timestamp") );
 			JSONObject data = json.getJSONObject("data");						
-			return new JSONAnnotation( x, y, level, priority, uuid, data );
+			return new JSONAnnotation( x, y, level, priority, uuid, timestamp, data );
 			
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e );
