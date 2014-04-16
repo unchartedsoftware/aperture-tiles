@@ -36,7 +36,7 @@ import com.oculusinfo.binning.io.ZipPyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 
 /**
- * Basic enum of all the default {@link PyramidIOFactoryProvider} types availables in the system.<br>
+ * Basic enum of all the default {@link DelegateFactoryProviderTarget} types availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
  * <pre><code>
@@ -64,15 +64,15 @@ public enum DefaultPyramidIOFactoryProvider {
 	}
 	
 	/**
-	 * Creates the {@link PyramidIOFactoryProvider} for the desired type.
+	 * Creates the {@link DelegateFactoryProviderTarget} for the desired type.
 	 */
-	public PyramidIOFactoryProvider create() {
+	public DelegateFactoryProviderTarget<PyramidIO> create() {
 		return new DefaultPyramidIOFactoryProviderImpl(factoryTypeName);
 	}
 
 	//-------------------------------------
 
-	protected static class DefaultPyramidIOFactoryProviderImpl implements PyramidIOFactoryProvider {
+	protected static class DefaultPyramidIOFactoryProviderImpl implements DelegateFactoryProviderTarget<PyramidIO> {
 	
 		private final String factoryType;
 		

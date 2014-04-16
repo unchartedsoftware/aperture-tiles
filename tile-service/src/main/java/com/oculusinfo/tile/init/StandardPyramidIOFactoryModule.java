@@ -34,7 +34,7 @@ public class StandardPyramidIOFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<PyramidIOFactoryProvider> factoryProviderBinder = Multibinder.newSetBinder(binder(), PyramidIOFactoryProvider.class);
+		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
 		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.HBASE.create());
 		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.FILE.create());
 		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.FILE_SYSTEM.create());

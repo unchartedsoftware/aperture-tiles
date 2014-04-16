@@ -28,17 +28,16 @@ package com.oculusinfo.tile.init;
 
 import java.util.List;
 
-import com.oculusinfo.binning.io.PyramidIO;
-
 /**
- * Specific type of {@link FactoryProvider} that creates {@link PyramidIO} configurables.
- * This interface allows a {@link FactoryProvider} to have an associated factory name, and
- * relative path that can be used when creating 
+ * Extends the {@link FactoryProvider} interface with an attached factory name, and
+ * the config lookup path for the factory. This allows a {@link DelegateFactoryProvider}
+ * to use guice and inject a set of these targets, so the associated factories can be
+ * registered appropriately together in a general way. 
  * 
  * @author cregnier
  *
  */
-public interface PyramidIOFactoryProvider extends FactoryProvider<PyramidIO> {
+public interface DelegateFactoryProviderTarget<T> extends FactoryProvider<T> {
 	
 	/**
 	 * Returns the factory name to be associated with the factory provider.

@@ -36,7 +36,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
-import com.oculusinfo.tile.init.PyramidIOFactoryProvider;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 
 
 @Singleton
@@ -77,8 +77,8 @@ public class StandardPyramidIOFactoryProvider implements FactoryProvider<Pyramid
 	
 	
 	@Inject
-	public StandardPyramidIOFactoryProvider(Set<PyramidIOFactoryProvider> providers) {
-		for (PyramidIOFactoryProvider provider : providers) {
+	public StandardPyramidIOFactoryProvider(Set<DelegateFactoryProviderTarget<PyramidIO>> providers) {
+		for (DelegateFactoryProviderTarget<PyramidIO> provider : providers) {
 			childFactories.add(new ChildProvider(provider, provider.getPath(), provider.getFactoryName()));
 		}
 	}
