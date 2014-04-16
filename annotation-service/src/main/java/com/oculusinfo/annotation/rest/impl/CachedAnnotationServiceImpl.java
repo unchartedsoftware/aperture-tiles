@@ -25,7 +25,7 @@ package com.oculusinfo.annotation.rest.impl;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
@@ -44,7 +44,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	private final int MAX_CACHE_ENTRIES = 10000;
 	
 	private AnnotationCache<TileIndex, AnnotationTile> _tileCache;
-	private AnnotationCache<Long, AnnotationData>      _dataCache;
+	private AnnotationCache<UUID, AnnotationData<?>> _dataCache;
 
 	@Inject
 	public CachedAnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
@@ -66,10 +66,10 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	}
 	
 	@Override
-	protected void writeDataToIO( String layer, AnnotationData data ) {
+	protected void writeDataToIO( String layer, AnnotationData<?> data ) {
 		
 		// put in cache
-		_dataCache.put( data.getIndex(), data );
+		_dataCache.put( data.getUUID(), data );
 		
 		super.writeDataToIO( layer, data );
 	}
@@ -87,10 +87,10 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	}
 	
 	@Override
-	protected void removeDataFromIO( String layer, AnnotationData data ) {
+	protected void removeDataFromIO( String layer, AnnotationData<?> data ) {
 		
 		// remove from cache
-		_dataCache.remove( data.getIndex() );
+		_dataCache.remove( data.getUUID() );
 
 		super.removeDataFromIO( layer, data );
 
@@ -129,15 +129,15 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	
 	
 	@Override
-	protected List<AnnotationData> readDataFromIO( String layer, List<Long> indices ) {
+	protected List<AnnotationData<?>> readDataFromIO( String layer, List<UUID> indices ) {
 				
-		List<AnnotationData> data = new LinkedList<>();	
-		List<Long> dataToReadFromIO = new LinkedList<>();
+		List<AnnotationData<?>> data = new LinkedList<>();	
+		List<UUID> dataToReadFromIO = new LinkedList<>();
 		
 		// for each reference, pull from cache and flag missing for read
-		for ( Long index : indices ) {
+		for ( UUID index : indices ) {
 			
-			AnnotationData d = _dataCache.get( index );	
+			AnnotationData<?> d = _dataCache.get( index );	
 			if ( d != null ) {				
 				// found in cache
 				data.add( d );
@@ -148,12 +148,12 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		}
 		
     	// pull data from io and update cache	
-		List<AnnotationData> freshData = super.readDataFromIO( layer, dataToReadFromIO );
+		List<AnnotationData<?>> freshData = super.readDataFromIO( layer, dataToReadFromIO );
 		data.addAll( freshData );
 		
 		// add to cache
-		for ( AnnotationData d : freshData ) {
-			_dataCache.put( d.getIndex(), d );
+		for ( AnnotationData<?> d : freshData ) {
+			_dataCache.put( d.getUUID(), d );
 		}
 
 		return data;		

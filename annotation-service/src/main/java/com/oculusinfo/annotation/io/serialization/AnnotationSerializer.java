@@ -28,8 +28,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 
-import com.oculusinfo.annotation.index.*;
-
 
 public interface AnnotationSerializer<T> extends Serializable {
 	

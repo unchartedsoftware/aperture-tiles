@@ -23,14 +23,9 @@
  */
 package com.oculusinfo.annotation;
 
-import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.lang.Number;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.UUID;
 
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.After;
@@ -42,8 +37,6 @@ import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 
@@ -55,7 +48,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	private AnnotationIO _io;
 	private AnnotationIndexer<TileAndBinIndices> _indexer;
 	private AnnotationSerializer<AnnotationTile> _tileSerializer;
-	private AnnotationSerializer<AnnotationData> _dataSerializer;
+	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
 	private TilePyramid _pyramid;
 	
 
@@ -89,11 +82,11 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     public void testHBaseIO() {
     	
     	
-        List<AnnotationData> annotations = generateJSONAnnotations( NUM_ENTRIES );
+        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
         List<AnnotationTile> tiles = generateTiles( NUM_ENTRIES, _indexer );
     	
         List<TileIndex> tileIndices = tilesToIndices( tiles );
-        List<Long> dataIndices = dataToIndices( annotations );
+        List<UUID> dataIndices = dataToIndices( annotations );
         
     	try {
     		
@@ -115,17 +108,14 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 */
 	    	System.out.println( "Reading all annotations" );
 	    	List<AnnotationTile> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
-	    	List<AnnotationData> allData = _io.readData( TABLE_NAME, _dataSerializer, dataIndices );
+	    	List<AnnotationData<?>> allData = _io.readData( TABLE_NAME, _dataSerializer, dataIndices );
 	    	if (VERBOSE) printTiles( allTiles );
 	    	if (VERBOSE) printData( allData );
 	    	
 	    	System.out.println( "Comparing annotations" );	    	
-	    	for ( AnnotationTile tile : tiles ) {
-	    		Assert.assertTrue( allTiles.contains( tile ) );
-	    	}
-	    	for ( AnnotationData d : annotations ) {
-	    		Assert.assertTrue( allData.contains( d ) );
-	    	}
+	    	Assert.assertTrue( compareTiles( allTiles, tiles, true ) );
+	    	Assert.assertTrue( compareData( allData, annotations, true ) );
+
 	    	System.out.println( "Complete" );
 	
     	} catch (Exception e) {

@@ -27,22 +27,15 @@ package com.oculusinfo.annotation.io.impl;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.io.OutputStream;
+import java.util.UUID;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -56,12 +49,10 @@ import com.oculusinfo.binning.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.annotation.index.*;
 
 
 public class HBaseAnnotationIO implements AnnotationIO {
 	
-    private static final String      META_DATA_INDEX      = "metadata";
     private static final byte[]      EMPTY_BYTES          = new byte[0];
     private static final byte[]      ANNOTATION_FAMILY_NAME = "annotationData".getBytes();
     public static final HBaseColumn  ANNOTATION_COLUMN    = new HBaseColumn(ANNOTATION_FAMILY_NAME, EMPTY_BYTES);
@@ -102,13 +93,12 @@ public class HBaseAnnotationIO implements AnnotationIO {
     /**
 	 * Determine the row ID we use in HBase for given annotation data 
 	 */
-	public static byte[] rowIdFromData (Long index) {
-        // Use the minimum possible number of digits for the tile key
-		ByteBuffer buf = ByteBuffer.allocate(8);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.putLong(index);
-        byte [] bytes = buf.array();
-        return bytes;
+	public static byte[] rowIdFromData (UUID uuid) {
+		
+		ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
+		bb.putLong(uuid.getMostSignificantBits());
+		bb.putLong(uuid.getLeastSignificantBits());
+		return bb.array();
     }
 
 	
@@ -163,16 +153,16 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     @Override
     public void writeData (String tableName, 
-					       AnnotationSerializer<AnnotationData> serializer, 
-					       List<AnnotationData> data ) throws IOException {
+					       AnnotationSerializer<AnnotationData<?>> serializer, 
+					       List<AnnotationData<?>> data ) throws IOException {
         
     	List<Row> rows = new ArrayList<Row>();
-        for (AnnotationData d : data) {
+        for (AnnotationData<?> d : data) {
         	
         	ByteArrayOutputStream baos = new ByteArrayOutputStream();
             serializer.serialize( d, baos );
             rows.add( addToPut(null, 
-            				   rowIdFromData( d.getIndex() ),
+            				   rowIdFromData( d.getUUID() ),
                                ANNOTATION_COLUMN, 
                                baos.toByteArray() ) );
         }
@@ -208,12 +198,12 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     
     @Override
-    public List<AnnotationData> readData (String tableName, 
-								          AnnotationSerializer<AnnotationData> serializer,
-								          List<Long> indices) throws IOException {
+    public List<AnnotationData<?>> readData (String tableName, 
+								          AnnotationSerializer<AnnotationData<?>> serializer,
+								          List<UUID> indices) throws IOException {
 
     	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (Long index: indices) {
+        for (UUID index: indices) {
             rowIds.add( rowIdFromData( index ) );
         }
         
@@ -222,23 +212,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
         return convertResults( rawResults, serializer );
     }
 
-
-    /*
-    @Override
-    public String readMetaData (String tableName) throws IOException {
-        List<Map<HBaseColumn, byte[]>> rawData = readRows(tableName, 
-        												  Collections.singletonList(META_DATA_INDEX.getBytes()),
-        												  METADATA_COLUMN);
-
-		if (null == rawData) return null;
-		if (rawData.isEmpty()) return null;
-		if (null == rawData.get(0)) return null;
-	    if (!rawData.get(0).containsKey(METADATA_COLUMN)) return null;
-
-        return new String(rawData.get(0).get(METADATA_COLUMN));
-    }
-    */
-    
     
     @Override
     public void initializeForRemove( String pyramidId ) {
@@ -259,27 +232,16 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     @Override
     public void removeData (String tableName,
-							List<AnnotationData> data) 
+							List<AnnotationData<?>> data) 
 														throws IOException {
     	
     	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (AnnotationData d: data) {
-            rowIds.add( rowIdFromData( d.getIndex() ) );
+        for (AnnotationData<?> d: data) {
+            rowIds.add( rowIdFromData( d.getUUID() ) );
         }        
         deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
     }
 
-    /*
-    @Override
-    public void removeMetaData (String tableName, String metaData) throws IOException {
-    	// TODO
-    }
-    */
-    
-    
-    
-    
-    
     
     
     public HBaseAdmin getAdmin() {
@@ -451,7 +413,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         table.delete(deletes);
     }
 
-     
+    /*
     private List<Map<HBaseColumn, byte[]>> scanRange(String tableName, byte[] startRow, byte[] stopRow, HBaseColumn... columns) throws IOException {
         
     	HTable table = getTable(tableName);
@@ -481,6 +443,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
 	    table.close();
         return allResults;
     }
+    */
 
     
     private <T> List<T> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,

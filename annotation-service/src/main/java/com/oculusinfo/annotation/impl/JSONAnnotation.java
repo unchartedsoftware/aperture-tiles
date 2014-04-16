@@ -23,51 +23,46 @@
  */
 package com.oculusinfo.annotation.impl;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.util.UUID;
+import org.json.JSONObject;
 
 import com.oculusinfo.annotation.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-
-import org.json.JSONObject;
 
 /*
  * JSONAnnotation
  * {
  * 		x:
  * 		y:
+ * 		level:
+ * 		uuid:
  * 		priority:
  * 		data: {}
  * }
  */
 
-public class JSONAnnotation extends AnnotationData {
+public class JSONAnnotation extends AnnotationData<JSONObject> {
 
 	private static final long serialVersionUID = 1L;
 	
 	Double _x = null;
 	Double _y = null;
-	String _priority;
-	JSONObject _data;
+	Integer _level = null;
+	String _priority = null;		
+	UUID _uuid = null;
+	JSONObject _data = null;
 	
-	public JSONAnnotation( JSONObject json ) {
-		
-		boolean xExists = !json.isNull("x");
-    	boolean yExists = !json.isNull("y");    	
-		try {			
-			_x = ( xExists ) ? json.getDouble("x") : null;
-			_y = ( yExists ) ? json.getDouble("y") : null;
-			_priority = json.getString("priority");
-			_data = json.getJSONObject("data");
-		} catch ( Exception e ) {
-			e.printStackTrace();
-		}
-		
+	
+	public JSONAnnotation( Double x, Double y, Integer level, String priority, UUID uuid, JSONObject data ) {
+		_x = x;
+		_y = y;
+		_level = level;
+		_priority = priority;
+		_uuid = uuid;
+		_data = data;
 	}
 	
+
 	public <T> void add( String key, T data ) {		
 		try {
 			_data.put( key, data );
@@ -76,51 +71,53 @@ public class JSONAnnotation extends AnnotationData {
 		}
 	}
 	
+	
 	public Double getX() {
 		return _x;
 	}
+	
 	
 	public Double getY() {
 		return _y;
 	}
 	
+	
+	public Integer getLevel() {
+		return _level;
+	}
+	
+	
 	public JSONObject getData() {
 		return _data;
 	}
+	
 	
 	public String getPriority() {
 		return _priority;
 	}
 	
 
-	private Long hash( JSONObject data ) {
-    	
-		String x = ( _x != null ) ? _x.toString() : "";
-		String y = ( _y != null ) ? _y.toString() : "";
-    	String dataStr = x + y + data.toString();
-    	long mix = 0 ^ 104395301;
-    	long  mulp = 2654435789L;
-    	
-    	for (int i = 0; i < dataStr.length(); i++){
-    	    char c = dataStr.charAt(i);  
-    	    mix += (c * mulp) ^ (mix >> 23);
-    	}
-    	
-    	return ( mix ^ (mix << 37) );
-    }
-	
-	public Long getIndex() {
-		return hash( toJSON() );		
+	public UUID getUUID() {
+		return _uuid;		
 	}
 	
-	@Override
-    public boolean equals (Object that) {   	    	
-    	if (that != null)
-    	{
-    		if (that instanceof JSONAnnotation) {
-    			return getIndex().equals( ((JSONAnnotation)that).getIndex() );
-    		}    		
-    	}	
-    	return false;
-    }
+	
+	static public JSONAnnotation fromJSON( JSONObject json ) throws IllegalArgumentException {		
+
+		try {
+			
+			Double x = json.getDouble("x");
+			Double y = json.getDouble("y");
+			Integer level = json.getInt("level");
+			String priority = json.getString("priority");
+			UUID uuid = UUID.fromString( json.getString("uuid") );
+			JSONObject data = json.getJSONObject("data");						
+			return new JSONAnnotation( x, y, level, priority, uuid, data );
+			
+		} catch ( Exception e ) {
+			throw new IllegalArgumentException( e );
+		}
+
+	}
+
 }

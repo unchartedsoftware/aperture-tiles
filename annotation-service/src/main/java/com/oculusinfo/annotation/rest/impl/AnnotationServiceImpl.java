@@ -23,27 +23,24 @@
  */
 package com.oculusinfo.annotation.rest.impl;
 
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.locks.*;
 
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
-import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.index.impl.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
 
 
 @Singleton
@@ -51,7 +48,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 	protected AnnotationIO _io;
 	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
-	protected AnnotationSerializer<AnnotationData> _dataSerializer; 
+	protected AnnotationSerializer<AnnotationData<?>> _dataSerializer; 
 	protected AnnotationIndexer<TileAndBinIndices> _indexer;
 
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
@@ -60,85 +57,133 @@ public class AnnotationServiceImpl implements AnnotationService {
 	public AnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
 		_tileSerializer = new JSONTileSerializer();
-		_dataSerializer = new JSONDataSerializer();	
+		_dataSerializer = new JSONDataSerializer();
 		_indexer = indexer;
 		_io = io;
 	}
 	
 		
-	public void writeAnnotation( String layer, AnnotationData data ) {
+	public void writeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
 		
-		// get list of the indices for all levels
-    	List<TileAndBinIndices> indices = _indexer.getIndices( data );
-    	   	
     	_lock.writeLock().lock();
     	try {
     		
+    		// check in case client generated UUID results in IO collision
+    		if ( checkForCollision( layer, annotation ) ) {
+    			throw new IllegalArgumentException("UUID for data results in collision, WRITE operation aborted");
+    		}
+    		
+    		addDataToTiles( layer, annotation );
+    		/*
+    		// get list of the indices for all levels
+        	List<TileAndBinIndices> indices = _indexer.getIndices( data );
     		// get all affected tiles
-    		List<AnnotationTile> tiles = getTiles( layer, convert( indices ) );
+    		List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );
     		// add new data reference to tiles
         	addDataReferenceToTiles( tiles, indices, data );
     		// write tiles back to io
-    		writeTilesToIO( layer, tiles );    		
+    		writeTilesToIO( layer, tiles );
     		// write data to io
     		writeDataToIO( layer, data );
+    		*/
     		
     	} finally {
     		_lock.writeLock().unlock();
     	}
 	}
+
+	
+	public void modifyAnnotation( String layer, 
+								  AnnotationData<?> oldAnnotation, 
+								  AnnotationData<?> newAnnotation ) {
+		
+		// temporary naive modification, remove old, write new		
+		_lock.writeLock().lock();
+    	try {
+		
+			// check if it is a spatial or content modification		
+			if ( newAnnotation.hasSameLocation( oldAnnotation ) ) {
+				
+				// same location, simply overwrite data index
+	    		writeDataToIO( layer, newAnnotation );
+				
+			} else {
+				
+				// different location, must re-tile
+				
+				// REMOVE
+				removeDataFromTiles( layer, oldAnnotation );
+				
+				/*
+				// get list of the indices for all levels
+		    	List<TileAndBinIndices> indices = _indexer.getIndices( oldAnnotation );	    	
+				// read existing tiles
+				List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );					
+				// maintain lists of what bins to modify and what bins to remove
+				List<AnnotationTile> tilesToWrite = new LinkedList<>(); 
+				List<AnnotationTile> tilesToRemove = new LinkedList<>();			
+				// remove data from tiles and organize into lists to write and remove
+				removeDataReferenceFromTiles( tilesToWrite, tilesToRemove, tiles, oldAnnotation );
+				// write modified tiles
+				writeTilesToIO( layer, tilesToWrite );		
+				// remove empty tiles and data
+				removeTilesFromIO( layer, tilesToRemove );  
+				*/
+				
+				// WRITE
+				addDataToTiles( layer, newAnnotation );
+				/*
+				// get list of the indices for all levels
+		    	indices = _indexer.getIndices( newAnnotation );
+	    		// get all affected tiles
+	    		tiles = readTilesFromIO( layer, convert( indices ) );
+	    		// add new data reference to tiles
+	        	addDataReferenceToTiles( tiles, indices, newAnnotation );
+	    		// write tiles back to io
+	    		writeTilesToIO( layer, tiles );    		
+	    		// write data to io
+	    		writeDataToIO( layer, newAnnotation );
+	    		*/
+			}
+    	} finally {
+    		_lock.writeLock().unlock();
+    	}
+	}
+	
 	
 
-	public Map<BinIndex, List<AnnotationData>> readAnnotations( String layer, TileIndex query ) {
+	public Map<BinIndex, List<AnnotationData<?>>> readAnnotations( String layer, TileIndex query ) {
 		
 		_lock.readLock().lock();
-    	try {
-    		
-    		return getData( layer, query );
-    		
+    	try {  		
+    		return getDataFromTiles( layer, query );    		
     	} finally { 		
     		_lock.readLock().unlock();
     	}
 	}
 	
 		
-	public void removeAnnotation( String layer, AnnotationData annotation ) {
+	public void removeAnnotation( String layer, AnnotationData<?> annotation ) {
 
 		_lock.writeLock().lock();		
 		try {
 			
+			removeDataFromTiles( layer, annotation );
+			/*
 			// get list of the indices for all levels
 	    	List<TileAndBinIndices> indices = _indexer.getIndices( annotation );	    	
-			
-	    	// maintain lists of what bins to modify and what bins to remove
-			List<AnnotationTile> tilesToWrite = new LinkedList<>();
-			List<AnnotationTile> tilesToRemove = new LinkedList<>();		
-			
 			// read existing tiles
-			List<AnnotationTile> tiles = getTiles( layer, convert( indices ) );
-							
-			for ( AnnotationTile tile : tiles ) {	
-				
-				// get bin index for the annotation in this tile
-				BinIndex binIndex = _indexer.getIndex( annotation, tile.getIndex().getLevel() ).getBin();
-				
-				if ( tile.remove( binIndex, annotation ) ) {					
-					// if successfully removed data from this bin, flag to write change
-					tilesToWrite.add( tile );
-				}
-				if ( tile.size() == 0 ) {				
-					// if no data left, flag bin for removal
-					tilesToRemove.add( tile );
-					// no longer have to write this bin back
-					tilesToWrite.remove( tile );
-				}
-			}	
-
+			List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );					
+			// maintain lists of what bins to modify and what bins to remove
+			List<AnnotationTile> tilesToWrite = new LinkedList<>(); 
+			List<AnnotationTile> tilesToRemove = new LinkedList<>();			
+			// remove data from tiles and organize into lists to write and remove
+			removeDataReferenceFromTiles( tilesToWrite, tilesToRemove, tiles, annotation );
 			// write modified tiles
-			writeTilesToIO( layer, tilesToWrite );
-			
+			writeTilesToIO( layer, tilesToWrite );		
 			// remove empty tiles and data
-			removeTilesFromIO( layer, tilesToRemove );
+			removeTilesFromIO( layer, tilesToRemove );	
+			*/
 			removeDataFromIO( layer, annotation );
 			
 		} finally {
@@ -152,8 +197,24 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 * 
 	 * Helper methods
 	 * 
+	 */	
+	
+	/*
+	 * Check data UUID in IO, if already exists, return true
 	 */
-	private void addDataReferenceToTiles( List<AnnotationTile> tiles, List<TileAndBinIndices> indices, AnnotationData data ) {		
+	private boolean checkForCollision( String layer, AnnotationData<?> data ) {
+		
+		List<UUID> dataIndex = new LinkedList<>();
+		dataIndex.add( data.getUUID() );
+		return ( readDataFromIO( layer, dataIndex ).size() > 0 ) ;
+
+	}
+	
+	/*
+	 * Iterate through all indices, find matching tiles and add data reference, if tile
+	 * is missing, add it
+	 */
+	private void addDataReferenceToTiles( List<AnnotationTile> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
 		
     	for ( TileAndBinIndices index : indices ) {			
 			// check all existing tiles for matching index
@@ -173,6 +234,39 @@ public class AnnotationServiceImpl implements AnnotationService {
 		}				
 	}
 	
+	/*
+	 * Iterate through all tiles, removing data reference from bins, any tiles with no bin entries
+	 * are added to tileToRemove, the rest are added to tilesToWrite
+	 */
+	private void removeDataReferenceFromTiles( List<AnnotationTile> tilesToWrite, List<AnnotationTile> tilesToRemove, List<AnnotationTile> tiles, AnnotationData<?> data ) {		
+		
+		// clear supplied lists
+		tilesToWrite.clear();
+		tilesToRemove.clear();	
+		
+		// for each tile, remove data from bins
+		for ( AnnotationTile tile : tiles ) {				
+			// get bin index for the annotation in this tile
+			BinIndex binIndex = _indexer.getIndex( data, tile.getIndex().getLevel() ).getBin();		
+			// remove data from tile
+			tile.remove( binIndex, data );				
+		}	
+		
+		// determine which tiles need to be re-written and which need to be removed
+		for ( AnnotationTile tile : tiles ) {			
+			if ( tile.size() == 0 ) {				
+				// if no data left, flag tile for removal
+				tilesToRemove.add( tile );
+			} else {
+				// flag tile to be written
+				tilesToWrite.add( tile );
+			}
+		}
+	}
+	
+	/*
+	 * convert a List<TileAndBinIndices> to List<TileIndex>
+	 */
 	private List<TileIndex> convert( List<TileAndBinIndices> tiles ) {
 		
 		List<TileIndex> indices = new ArrayList<>();
@@ -183,31 +277,26 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return indices;
 	}
 
+
 	
-	private List<AnnotationTile> getTiles( String layer, List<TileIndex> indices ) {
+	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex ) {
 		
-		return readTilesFromIO( layer, indices );	
-	}
-	
-	
-	private Map<BinIndex, List<AnnotationData>> getData( String layer, TileIndex tileIndex ) {
-		
-		return getData( layer, tileIndex, null );
+		return getDataFromTiles( layer, tileIndex, null );
 		
 	}
 	
 	
-	private Map<BinIndex, List<AnnotationData>> getData( String layer, TileIndex tileIndex, Map<String, Integer> filter ) {
+	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, Map<String, Integer> filter ) {
 		
 		// wrap index into list 
 		List<TileIndex> indices = new LinkedList<>();
 		indices.add( tileIndex );
 			
 		// get tiles
-		List<AnnotationTile> tiles = getTiles( layer, indices );
+		List<AnnotationTile> tiles = readTilesFromIO( layer, indices );
 				
 		// for each tile, assemble list of all data references
-		List<Long> references = new LinkedList<>();
+		List<UUID> references = new LinkedList<>();
 		for ( AnnotationTile tile : tiles ) {					
 			if ( filter != null ) {
 				// filter provided
@@ -219,16 +308,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 		}
 		
 		// read data from io in bulk
-		List<AnnotationData> data = readDataFromIO( layer, references );
+		List<AnnotationData<?>> data = readDataFromIO( layer, references );
 
 		// assemble data by bin
-		Map<BinIndex, List<AnnotationData>> dataByBin =  new HashMap<>();
-		for ( AnnotationData d : data ) {
+		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();
+		for ( AnnotationData<?> d : data ) {
 			// get index 
 			BinIndex binIndex = _indexer.getIndex( d, tileIndex.getLevel() ).getBin();
 			if (!dataByBin.containsKey( binIndex)) {
 				// no data under this bin, add list to map
-				dataByBin.put( binIndex, new LinkedList<AnnotationData>() );
+				dataByBin.put( binIndex, new LinkedList<AnnotationData<?>>() );
 			}
 			// add data to list, under bin
 			dataByBin.get( binIndex ).add( d );
@@ -236,6 +325,40 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return dataByBin;
 	}
 
+	
+	private void addDataToTiles( String layer, AnnotationData<?> data ) {
+		
+		// get list of the indices for all levels
+		List<TileAndBinIndices> indices = _indexer.getIndices( data );
+		// get all affected tiles
+		List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );
+		// add new data reference to tiles
+    	addDataReferenceToTiles( tiles, indices, data );
+		// write tiles back to io
+		writeTilesToIO( layer, tiles );    		
+		// write data to io
+		writeDataToIO( layer, data );
+
+	}
+	
+	
+	private void removeDataFromTiles( String layer, AnnotationData<?> data ) {
+		
+		// get list of the indices for all levels
+    	List<TileAndBinIndices> indices = _indexer.getIndices( data );	    	
+		// read existing tiles
+		List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );					
+		// maintain lists of what bins to modify and what bins to remove
+		List<AnnotationTile> tilesToWrite = new LinkedList<>(); 
+		List<AnnotationTile> tilesToRemove = new LinkedList<>();			
+		// remove data from tiles and organize into lists to write and remove
+		removeDataReferenceFromTiles( tilesToWrite, tilesToRemove, tiles, data );
+		// write modified tiles
+		writeTilesToIO( layer, tilesToWrite );		
+		// remove empty tiles and data
+		removeTilesFromIO( layer, tilesToRemove );
+	}
+	
 	
 	protected void writeTilesToIO( String layer, List<AnnotationTile> tiles ) {
 		
@@ -253,9 +376,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	protected void writeDataToIO( String layer, AnnotationData data ) {
+	protected void writeDataToIO( String layer, AnnotationData<?> data ) {
 		
-		List<AnnotationData> dataList = new LinkedList<>();
+		List<AnnotationData<?>> dataList = new LinkedList<>();
 		dataList.add( data );
 		
 		try {
@@ -285,9 +408,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	protected void removeDataFromIO( String layer, AnnotationData data ) {
+	protected void removeDataFromIO( String layer, AnnotationData<?> data ) {
 		
-		List<AnnotationData> dataList = new LinkedList<>();
+		List<AnnotationData<?>> dataList = new LinkedList<>();
 		dataList.add( data );
 		
 		try {
@@ -320,9 +443,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return tiles;		
 	}
 	
-	protected List<AnnotationData> readDataFromIO( String layer, List<Long> indices ) {
+	protected List<AnnotationData<?>> readDataFromIO( String layer, List<UUID> indices ) {
 		
-		List<AnnotationData> data = new LinkedList<>();
+		List<AnnotationData<?>> data = new LinkedList<>();
 		
 		if ( indices.size() == 0 ) return data;
 		

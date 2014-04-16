@@ -23,9 +23,6 @@
  */
 package com.oculusinfo.annotation.index.impl;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.binning.*;
@@ -41,29 +38,35 @@ public class TileAnnotationIndexer extends AnnotationIndexer<TileAndBinIndices> 
     
 
     @Override
-    public TileAndBinIndices getIndex( AnnotationData data, int level ) {
+    public TileAndBinIndices getIndex( AnnotationData<?> data, int level ) {
     	
     	// fill in defaults if dimensions are missing
-    	boolean xExists = data.getX() != null;
-    	boolean yExists = data.getY() != null;
+    	boolean xExists = data.getX() != -1;
+    	boolean yExists = data.getY() != -1;
     	double x = ( xExists ) ? data.getX() : 0;
     	double y = ( yExists ) ? data.getY() : 0;
     	
     	// map from raw x and y to tile and bin
     	TileIndex tile = _pyramid.rootToTile( x, y, level, AnnotationTile.NUM_BINS );
 		BinIndex bin = _pyramid.rootToBin( x, y, tile );
-				
-		// insert -1's for univariate annotations
-		if ( xExists && yExists ) {
-			return new TileAndBinIndices( tile, bin );
-		} else if ( !xExists ) {
-			return new TileAndBinIndices( new TileIndex( tile.getLevel(), -1, tile.getY(), AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS ), 
-										  new BinIndex( -1, bin.getY() ) );
-		} else {
-			return new TileAndBinIndices( new TileIndex( tile.getLevel(), tile.getX(), -1, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS ), 
-					  					  new BinIndex( bin.getX(), -1 ) );
-		}
 
+		// insert -1's for univariate annotations
+		if ( !xExists ) {			
+			tile = new TileIndex( tile.getLevel(), -1, tile.getY(), AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
+			bin = new BinIndex( -1, bin.getY() );	  
+		} else if ( !yExists ) {
+			tile = new TileIndex( tile.getLevel(), tile.getX(), -1, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
+			bin = new BinIndex( bin.getX(), -1 );
+		}
+		
+		/*
+		// if indexing level of insertion, do not bin, set as [-1, -1]
+		if ( data.getLevel() == level ) {
+			bin = new BinIndex( -1, -1 );
+		}
+		*/
+		
+		return new TileAndBinIndices( tile, bin );
     }
 
     

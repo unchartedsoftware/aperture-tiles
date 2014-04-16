@@ -24,13 +24,16 @@
 package com.oculusinfo.annotation;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.UUID;
 
 import com.oculusinfo.binning.*;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /*
@@ -63,7 +66,7 @@ public class AnnotationTile implements Serializable {
     	_index = index;
     	_bins = bins;
     }
-    
+
     
     public TileIndex getIndex() {
     	return _index;
@@ -75,7 +78,7 @@ public class AnnotationTile implements Serializable {
     }
     
     
-    public synchronized void add( BinIndex binIndex, AnnotationData data ) {
+    public synchronized void add( BinIndex binIndex, AnnotationData<?> data ) {
     	
 		if ( _bins.containsKey( binIndex ) ) {			
 			_bins.get( binIndex ).add( data );
@@ -85,7 +88,7 @@ public class AnnotationTile implements Serializable {
     }
     
     
-    public synchronized boolean remove( BinIndex binIndex, AnnotationData data ) { 
+    public synchronized boolean remove( BinIndex binIndex, AnnotationData<?> data ) { 
     	
 		AnnotationBin bin = _bins.get( binIndex );		
 		if ( bin.remove( data ) ) {
@@ -99,9 +102,9 @@ public class AnnotationTile implements Serializable {
     }
 
    
-    public synchronized List<Long> getAllReferences() {
+    public synchronized List<UUID> getAllReferences() {
     	
-    	List<Long> allReferences = new LinkedList<>();  
+    	List<UUID> allReferences = new LinkedList<>();  
     	// for each bin
 		for ( AnnotationBin bin : _bins.values() ) {
 			// get all references
@@ -111,9 +114,9 @@ public class AnnotationTile implements Serializable {
     }
        
     
-    public synchronized List<Long> getFilteredReferences( Map<String, Integer> filter ) {
+    public synchronized List<UUID> getFilteredReferences( Map<String, Integer> filter ) {
     	
-    	List<Long> filtered = new LinkedList<>();
+    	List<UUID> filtered = new LinkedList<>();
     	// for each bin
     	for ( AnnotationBin bin : _bins.values() ) {
     		
@@ -123,12 +126,70 @@ public class AnnotationTile implements Serializable {
 				String priority = f.getKey();
 				Integer count = f.getValue();
 				
-				List<Long> references = bin.getReferences( priority );
+				List<UUID> references = bin.getReferences( priority );
 				filtered.addAll( references.subList( 0, count < references.size() ? count : references.size() ) );
 			}
     	}
 		return filtered;
     }    
+    
+    
+    static public AnnotationTile fromJSON( JSONObject json ) throws IllegalArgumentException {
+    	
+    	Map<BinIndex, AnnotationBin> bins =  new LinkedHashMap<>();		
+
+		try {
+			
+			TileIndex index = new TileIndex( json.getInt("level"),
+											 json.getInt("x"),
+											 json.getInt("y"), 
+											 AnnotationTile.NUM_BINS, 
+											 AnnotationTile.NUM_BINS );			
+			// for all binkeys
+	        Iterator<?> binKeys = json.keys();
+	        while( binKeys.hasNext() ) {
+	        	
+	        	String binKey = (String)binKeys.next();
+	            
+	            if( json.get(binKey) instanceof JSONObject ){
+	            	
+	            	JSONObject bin = (JSONObject)json.get(binKey);
+	            	
+	            	BinIndex binIndex = BinIndex.fromString( binKey );
+	            		            	
+	            	Map<String, List<UUID>> references =  new LinkedHashMap<>();
+	            	
+	            	// for all priorities
+	            	Iterator<?> priorities = bin.keys();
+	     	        while( priorities.hasNext() ){
+	     	            String priority = (String)priorities.next();
+	     	            
+	     	            if( bin.get(priority) instanceof JSONArray ) {
+	     	            	
+	     	            	// get references
+	     	            	JSONArray referenceArr = bin.getJSONArray( priority );
+	     	            	List<UUID> referenceList = new LinkedList<>();
+	     	            	
+	     	            	for (int i=0; i<referenceArr.length(); i++) {
+	     	            		referenceList.add( UUID.fromString( referenceArr.getString(i) ) );
+	     	            	}
+	     	            	references.put( priority, referenceList );
+	     	            	
+	     	            }
+	     	        }
+	     	        
+	     	        bins.put( binIndex, new AnnotationBin( binIndex, references ) );
+
+	            }
+	        }
+			
+			return new AnnotationTile( index, bins );
+			
+		} catch ( Exception e ) {
+			throw new IllegalArgumentException( e );
+		}		
+    	
+    }
     
     
     public JSONObject toJSON() {

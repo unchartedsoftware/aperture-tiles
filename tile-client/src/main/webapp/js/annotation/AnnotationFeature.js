@@ -57,17 +57,39 @@ define(function (require) {
     AnnotationFeature = Class.extend({
 
 
-        init: function ( spec ) {
+        init: function ( spec  ) {
 
-            this.olFeature_ = spec.feature;
-            this.olFeature_.attributes.key = spec.key;
+            /* There are two ways to instantiate a AnnotationFeature:
+             *
+             *  a)  creation by the user, in this case, the OpenLayers.Feature.Vector is created in the
+             *      AnnotationLayer and already attached to the OpenLayers.Layer.Vector
+             *
+             *  b)  using data from the server, in this case the OpenLayers.Feature.Vector must be created
+             *      internally and manually attached to the OpenLayers.Layer.Vector
+             */
+
+            // case a)
+            if ( spec.feature !== undefined ) {
+                // feature already exists ( created by user )
+                this.olFeature_ = spec.feature;
+                this.olLayer_ = spec.feature.layer;
+            }
+
+            // case b)
+            if ( spec.layer !== undefined ) {
+                this.olLayer_ = spec.layer;
+            }
+
+            this.map = spec.map;
+
+            // sets annotations, if feature has not been provided, creates it at average annotation location
+            this.setAnnotations( spec.annotations );
+
+            // append tilekey, binkey and a reference to the OpenLayers.Feature.attributes
+            this.olFeature_.attributes.tilekey = spec.tilekey;
+            this.olFeature_.attributes.binkey = spec.binkey;
             this.olFeature_.attributes.feature = this;
-
-            this.popup = null;
-
-            // TODO: maybe just have this point to the raw Service data?
-            // filter on popoup?
-            this.annotationsByPriority = spec.annotationsByPriority;
+            this.olPopup_ = null;
 
         },
 
@@ -77,14 +99,73 @@ define(function (require) {
         },
 
 
-        addAnnotation: function( featureX, featureY, annotation ) {
+        transformToMapProj: function(latLon) {
+            // convert to lat / long to OpenLayers map projection
+            var fromProj = new OpenLayers.Projection("EPSG:4326"),
+                toProj = this.map.projection;
+            return new OpenLayers.LonLat( latLon.lon, latLon.lat ).transform( fromProj, toProj );
+        },
 
-            var count = this.getAnnotationCount();
+
+        setAnnotation: function( annotation ) {
+
+            this.annotationsByPriority = {}; // clear old annotation
+            this.annotationsByPriority[ annotation.priority ] = [ annotation ]; // set new annotation
+        },
+
+
+        setAnnotations: function( annotations ) {
+
+            var i,
+                xSum = 0,
+                ySum = 0,
+                sumCount = 0,
+                annotationsByPriority = {},
+                latlon,
+                priority;
+
+            // for each annotation
+            for (i=0; i<annotations.length; i++) {
+
+                // organize by priority
+                priority = annotations[i].priority;
+
+                if ( annotationsByPriority[ priority ] === undefined ) {
+                    annotationsByPriority[ priority ] = [];
+                }
+
+                xSum += annotations[i].x;
+                ySum += annotations[i].y;
+                sumCount++;
+                annotationsByPriority[ priority ].push( annotations[i] );
+            }
+
+            // average display lat lon
+            latlon = this.transformToMapProj( new OpenLayers.LonLat( xSum/sumCount, ySum/sumCount ) );
+
+            this.annotationsByPriority = annotationsByPriority;
+
+            if ( this.olFeature_ === undefined ) {
+                // if no feature exists yet, create it
+                this.olFeature_ = new OpenLayers.Feature.Vector( new OpenLayers.Geometry.Point( latlon.lon, latlon.lat) );
+                this.addToLayer( this.olLayer_ );
+            } else {
+                // otherwise change its location to new location
+                this.olFeature_.geometry.x = latlon.lon;
+                this.olFeature_.geometry.y = latlon.lat;
+                this.redraw();
+            }
+        },
+
+
+        addAnnotation: function( annotation ) {
+
+            var count = this.getAnnotationCount(),
+                latlon = this.transformToMapProj( new OpenLayers.LonLat( annotation.x, annotation.y ) );
 
             // re calculate avg position
-            this.olFeature_.geometry.x = ((this.olFeature_.geometry.x*count) + featureX) / (count+1);
-            this.olFeature_.geometry.y = ((this.olFeature_.geometry.y*count) + featureY) / (count+1);
-
+            this.olFeature_.geometry.x = ((this.olFeature_.geometry.x*count) + latlon.lon) / (count+1);
+            this.olFeature_.geometry.y = ((this.olFeature_.geometry.y*count) + latlon.lat) / (count+1);
 
             // add annotation to data object
             if ( this.annotationsByPriority[ annotation.priority ] === undefined ) {
@@ -95,12 +176,6 @@ define(function (require) {
 
         },
 
-
-        setAnnotation: function( annotation ) {
-
-            this.annotationsByPriority = {}; // clear old annotation
-            this.annotationsByPriority[ annotation.priority ] = [ annotation ]; // set new annotation
-        },
 
         getDataArray: function() {
 
@@ -168,10 +243,10 @@ define(function (require) {
         removeAndDestroyPopup: function() {
 
             // destroy popup
-            if ( this.popup !== null && this.popup !== undefined ) {
-                this.olFeature_.layer.map.removePopup( this.popup );
-                this.popup.destroy();
-                this.popup = null;
+            if ( this.olPopup_ !== null ) {
+                this.olFeature_.layer.map.removePopup( this.olPopup_ );
+                this.olPopup_.destroy();
+                this.olPopup_ = null;
             }
         },
 
@@ -266,21 +341,21 @@ define(function (require) {
             var that = this,
                 latlon = OpenLayers.LonLat.fromString( this.olFeature_.geometry.toShortString() );
 
-            this.popup = new OpenLayers.Popup(ANNOTATION_POPUP_OL_CONTAINER_ID,
+            this.olPopup_ = new OpenLayers.Popup(ANNOTATION_POPUP_OL_CONTAINER_ID,
                                               latlon,
                                               null,
                                               html,
                                               true,
                                               closeFunc );
 
-            this.popup.autoSize = true;
-            this.olFeature_.popup = this.popup;
-            this.olFeature_.layer.map.addPopup( this.popup, false );
+            this.olPopup_.autoSize = true;
+            this.olFeature_.popup = this.olPopup_;
+            this.olFeature_.layer.map.addPopup( this.olPopup_, false );
             this.centrePopup( latlon );
 
             $( "#"+ANNOTATION_POPUP_ID ).resizable({
                 resize: function() {
-                    that.popup.updateSize();
+                    that.olPopup_.updateSize();
                 },
                 stop: function() {
                     that.centrePopup( OpenLayers.LonLat.fromString( that.olFeature_.geometry.toShortString() ) );
@@ -300,13 +375,13 @@ define(function (require) {
             var px,
                 size;
 
-            if ( this.popup !== null ) {
+            if ( this.olPopup_ !== null ) {
                 px = this.olFeature_.layer.map.getLayerPxFromViewPortPx( this.olFeature_.layer.map.getPixelFromLonLat(latlon) );
-                size = this.popup.size;
+                size = this.olPopup_.size;
                 px.x -= size.w / 2;
                 px.y -= size.h + 32;
-                this.popup.moveTo( px );
-                //this.popup.panIntoView();
+                this.olPopup_.moveTo( px );
+                //this.olPopup_.panIntoView();
             }
 
         },
@@ -317,30 +392,24 @@ define(function (require) {
             var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
                 $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
                 $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID),
-                INVALID_COLOR = '#7e0004',
+                INVALID_COLOR = {color: '#7e0004'},
                 INVALID_COLOR_EFFECT_LENGTH_MS = 3000;
 
             // if entry is invalid, flash
             if ( $title.val() === "" ) {
-                $title.effect("highlight", {color: INVALID_COLOR}, INVALID_COLOR_EFFECT_LENGTH_MS);
+                $title.effect("highlight", INVALID_COLOR, INVALID_COLOR_EFFECT_LENGTH_MS);
             }
-
             if ( $priority.val() === "" ) {
-                $priority.effect("highlight", {color: INVALID_COLOR}, INVALID_COLOR_EFFECT_LENGTH_MS);
+                $priority.effect("highlight", INVALID_COLOR, INVALID_COLOR_EFFECT_LENGTH_MS);
             }
-
             if ( $description.val() === "" ) {
-                $description.effect("highlight", {color: INVALID_COLOR}, INVALID_COLOR_EFFECT_LENGTH_MS);
+                $description.effect("highlight", INVALID_COLOR, INVALID_COLOR_EFFECT_LENGTH_MS);
             }
 
             // check input values
-            if ( $title.val() !== "" &&
-                $priority.val() !== "" &&
-                $description.val() !== "" ) {
-
-                return true;
-            }
-            return false;
+            return ( $title.val() !== "" &&
+                     $priority.val() !== "" &&
+                     $description.val() !== "" );
         },
 
 

@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.UUID;
 
 import com.oculusinfo.binning.*;
 
@@ -47,16 +48,16 @@ public class AnnotationBin implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final BinIndex _index;
-    private Map<String, List<Long>> _references = new LinkedHashMap<>();
+    private Map<String, List<UUID>> _references = new LinkedHashMap<>();
       
     public AnnotationBin( BinIndex index ) {   
     	_index = index;
     }   
-    public AnnotationBin( BinIndex index, Map<String, List<Long>> references ) {   
+    public AnnotationBin( BinIndex index, Map<String, List<UUID>> references ) {   
     	_index = index;
     	_references = references;
     }        
-    public AnnotationBin( BinIndex index, AnnotationData data ) {   
+    public AnnotationBin( BinIndex index, AnnotationData<?> data ) {   
     	_index = index;
     	add( data );
     }
@@ -72,36 +73,36 @@ public class AnnotationBin implements Serializable {
     }
       
     
-    public synchronized void add( AnnotationData data ) {
-    	if ( _references.containsKey( data.getPriority() ) ) {
-    		List<Long> entries = _references.get( data.getPriority() );
-    		
+    public synchronized void add( AnnotationData<?> data ) {
+    	
+    	UUID uuid =  data.getUUID();
+    	
+    	if ( _references.containsKey( data.getPriority() ) ) {    		
+    		List<UUID> entries = _references.get( data.getPriority() );   		
     		// only add if reference does not already exist
-    		if ( !entries.contains( data.getIndex() )) {
-    			entries.add( data.getIndex() );
-    		}
-    		
-    		
+    		if ( !entries.contains( uuid ) ) {
+    			entries.add( uuid );
+    		}   		    		
     	} else {
-    		List<Long> entries = new LinkedList<>();
-    		entries.add( data.getIndex() );
+    		List<UUID> entries = new LinkedList<>();
+    		entries.add( uuid );
     		_references.put( data.getPriority(), entries );
     	}    	
     }
       
     
-    public synchronized boolean remove( AnnotationData data ) { 
+    public synchronized boolean remove( AnnotationData<?> data ) { 
     	
     	String priority = data.getPriority();
-    	Long index =  data.getIndex();
+    	UUID uuid =  data.getUUID();
     	boolean removedAny = false;
     	
     	if ( _references.containsKey( priority ) ) {
     		
-    		List<Long> entries = _references.get( priority );
+    		List<UUID> entries = _references.get( priority );
     		
-    		if ( entries.contains( index ) ) {
-    			entries.remove(index );
+    		if ( entries.contains( uuid ) ) {
+    			entries.remove( uuid );
     			removedAny = true;
     		} 
     		   		
@@ -115,7 +116,7 @@ public class AnnotationBin implements Serializable {
     }
 
     
-    public synchronized List<Long> getReferences( String priority ) {
+    public synchronized List<UUID> getReferences( String priority ) {
     	
     	if ( _references.containsKey( priority ) ) {
     		return _references.get( priority );
@@ -126,11 +127,11 @@ public class AnnotationBin implements Serializable {
     }
     
     
-    public synchronized List<Long> getAllReferences() {
+    public synchronized List<UUID> getAllReferences() {
     	
-    	List<Long> allReferences = new LinkedList<>();  
+    	List<UUID> allReferences = new LinkedList<>();  
     	// for each priority group in a bin
-		for ( List<Long> references : _references.values() ) {
+		for ( List<UUID> references : _references.values() ) {
 			allReferences.addAll( references );
 		}	
     	return allReferences;
@@ -143,13 +144,13 @@ public class AnnotationBin implements Serializable {
     	try {
 			   	
 	    	// for each priority group in a bin
-		    for (Map.Entry<String, List<Long>> referenceEntry : _references.entrySet() ) {
+		    for (Map.Entry<String, List<UUID>> referenceEntry : _references.entrySet() ) {
 		    	
 		    	String priority = referenceEntry.getKey();
-		    	List<Long> references = referenceEntry.getValue();
+		    	List<UUID> references = referenceEntry.getValue();
 		    	
 		    	JSONArray referenceJSON = new JSONArray();
-		    	for ( Long reference : references ) {
+		    	for ( UUID reference : references ) {
 		    		referenceJSON.put( reference );
 		    	}
 		    	

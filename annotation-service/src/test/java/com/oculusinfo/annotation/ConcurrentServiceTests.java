@@ -23,12 +23,10 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.Collections;
@@ -39,8 +37,7 @@ import org.junit.Test;
 import org.junit.After;
 import org.junit.Before;
 
-import com.google.inject.Inject;
-
+import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
 import com.oculusinfo.annotation.io.AnnotationIO;
@@ -54,8 +51,9 @@ import com.oculusinfo.binning.impl.*;
 public class ConcurrentServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
-	static final int NUM_THREADS = 20;
+	static final int NUM_THREADS = 8;
 
+	protected AnnotationIO _io;
 	protected AnnotationService _service;	
 
     @Before
@@ -66,11 +64,11 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 
     	try {
     		
-    		AnnotationIO io = new HBaseAnnotationIO("hadoop-s1.oculus.local", 
+    		_io = new HBaseAnnotationIO("hadoop-s1.oculus.local", 
     												"2181", 
     												"hadoop-s1.oculus.local:60000");
     		
-    		_service = new CachedAnnotationServiceImpl( io, indexer );
+    		_service = new CachedAnnotationServiceImpl( _io, indexer );
     		
     	} catch (Exception e) {
     		
@@ -88,48 +86,100 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     
     private class WriteReadRemove {
     	
-    	AnnotationData _data;
+    	AnnotationData<?> _data;
     	int _status = 0;
     	
-    	WriteReadRemove( AnnotationData data ) {
+    	WriteReadRemove( AnnotationData<?> data ) {
     		_data = data;
     	}
     	
-    	AnnotationData getData() {
-    		return _data;
+    	private void write( String name ) {
+    		//System.out.println( "Thread " + name + " writing " + _data.getUUID() );   		    	
+			_service.writeAnnotation( TEST_LAYER_NAME, _data );	
+			_status++;
     	}
     	
-    	boolean process( String name ) {
+    	private void read( String name ) {
+    		long start = System.currentTimeMillis();
+			Map<BinIndex, List<AnnotationData<?>>> scan = readRandom();	   				
+			long end = System.currentTimeMillis();
+	    	double time = ((end-start)/1000.0);
+	    	_readTimesPerEntry.get( name ).add( time );
+	    	//System.out.println( "Thread " + name + " read " + scan.size() +" entries in " + time );	
+			_status++;
+    	}
+    	
+    	private void modify( String name ) {
+    		
+    		//System.out.println( "Thread " + name + " writing " + _data.getUUID() );  		
+    		JSONObject json = _data.toJSON();    		
+    		try {
+    			
+    			int type = (int)(Math.random() * 2);    		
+        		switch (type) {
+        		
+    	    		case 0:
+    	    			
+    	    			// change position
+    	    			double [] xy = randomPosition();
+    	    			json.put("x", xy[0]);
+    	    			json.put("y", xy[1]);
+    	    			break;
+    	    			
+    	    		default:
+    	    			
+    	    			// change data
+    	    			JSONObject data = new JSONObject();
+    	    			data.put("comment", randomComment() );
+    	    			json.put("data", data);
+    	    			break;
+        		}
+        		
+    		} catch ( Exception e ) { 
+    			e.printStackTrace(); 
+    		}
+    		
+    		AnnotationData<?> newData = JSONAnnotation.fromJSON( json );
+    		
+			_service.modifyAnnotation( TEST_LAYER_NAME, _data, newData );
+			_data = newData;
+			_status++;
+    	}
+    	
+    	private void remove( String name ) {
+    		
+    		//System.out.println( "Thread " + name + " removing " + _data.getUUID() );   		    	
+			_service.removeAnnotation( TEST_LAYER_NAME, _data );		
+			_status++;
+    	}
+    	
+    	public boolean process( String name ) {
     		
     		switch ( _status ) { 		
     			case 0:
     			{
-    				//System.out.println( "Thread " + name + " writing " + _data.getIndex() );   		    	
-    				_service.writeAnnotation( TEST_LAYER_NAME, _data );	
-    				_status++;
+    				write( name );
     				break;
     			}
     			case 1:
-    			{  		    	
-    				long start = System.currentTimeMillis();
-    				Map<BinIndex, List<AnnotationData>> scan = readRandom();	   				
-    				long end = System.currentTimeMillis();
-    		    	double time = ((end-start)/1000.0);
-    		    	_readTimesPerEntry.get( name ).add( time );
-    		    	//System.out.println( "Thread " + name + " read " + scan.size() +" entries in " + time );	
-    				_status++;
+    			{  		   				
+    				read( name );
     				break;
-    			}	
+    			}
     			case 2:
     			{
-    				//System.out.println( "Thread " + name + " removing " + _data.getIndex() );   		    	
-    				_service.removeAnnotation( TEST_LAYER_NAME, _data );		
-    				_status++;
+    				modify( name );
+    				break;
+    			} 
+    			case 3:
+    			{
+    				read( name );
     				break;
     			}  
-    			case 3: 
+    			case 4: 
     			{
-    				System.out.println( "Thread " + name + " completed write, read, remove for index " + _data.getIndex() );
+    				remove( name );
+    				System.out.println( "Thread " + name + " completed write, read, remove for index " + _data.getUUID().toString() );
         			return true;
     			}
     		}
@@ -142,9 +192,6 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 
     static ConcurrentMap<String, List<WriteReadRemove>> _dataRecord = new ConcurrentHashMap<>();   
     static ConcurrentMap<String, List<Double>> _readTimesPerEntry = new ConcurrentHashMap<>();
-    
-    //static ConcurrentMap<String, AnnotationTile> _tileRecord = new ConcurrentHashMap<>();
-    
    
     
 	private class Tester implements Runnable {
@@ -187,72 +234,67 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	@Test
 	public void concurrentTest() {
 		
-		
-		long start = System.currentTimeMillis();
+		try {
 
-    	
-		List<Thread> threads = new LinkedList<>();
-		
-		// write / read
-		for (int i=0; i<NUM_THREADS; i++) {
-						
-			Thread t = new Thread( new Tester( ""+i ) );
-			threads.add( t );			
-			t.start();
-		}
-		
-		for( Thread t : threads ) {
-			try {
-				t.join();
-			} catch ( Exception e ) {
-				e.printStackTrace();
+			long start = System.currentTimeMillis();
+		    	
+			List<Thread> threads = new LinkedList<>();
+			
+			// write / read
+			for (int i=0; i<NUM_THREADS; i++) {
+							
+				Thread t = new Thread( new Tester( ""+i ) );
+				threads.add( t );			
+				t.start();
 			}
+			
+			for( Thread t : threads ) {
+				try {
+					t.join();
+				} catch ( Exception e ) {
+					e.printStackTrace();
+				}
+			}
+	
+			// ensure everything was removed
+			Map<BinIndex, List<AnnotationData<?>>> scan = readAll();
+	    	printData( scan );
+	    	Assert.assertTrue( scan.size() == 0 );
+	    	
+	    	long end = System.currentTimeMillis();
+	    	double time = ((end-start)/1000.0);
+			System.out.println( "Completed in " + time + " seconds");
+			
+			double sum = 0;
+			int count = 0;
+			for ( List<Double> t : _readTimesPerEntry.values() ) {
+				for ( Double d : t ) {
+					sum += d;
+					count++;
+				}			
+			}	
+			System.out.println( "Average read times of " + ( sum / count ) + " seconds per scan");
+			
+		} finally {
+			/*
+	    	 * Drop table
+	    	 */
+	    	System.out.println("Disabling and dropping table");
+	    	((HBaseAnnotationIO)_io).dropTable(TEST_LAYER_NAME);
 		}
-
-		/*
-		// check everything
-		List<AnnotationData> scan = readAll();		
-		System.out.println( "Scan resulted in " + scan.size() + " entries read" );
-		System.out.println( "Checking to see if all values from record have been written" );
-		
-		for ( List<WriteReadRemove> records: _dataRecord.values() ) {			
-			for ( WriteReadRemove record : records ) {
-				Assert.assertTrue( scan.contains( record.getData() ) );
-			}			
-		}
-		*/
-		
-		// ensure everything was removed
-		Map<BinIndex, List<AnnotationData>> scan = readAll();
-    	printData( scan );
-    	Assert.assertTrue( scan.size() == 0 );
-    	
-    	long end = System.currentTimeMillis();
-    	double time = ((end-start)/1000.0);
-		System.out.println( "Completed in " + time + " seconds");
-		
-		double sum = 0;
-		int count = 0;
-		for ( List<Double> t : _readTimesPerEntry.values() ) {
-			for ( Double d : t ) {
-				sum += d;
-				count++;
-			}			
-		}	
-		System.out.println( "Average read times of " + ( sum / count ) + " seconds per scan");
 		
 	}
 	
-	private Map<BinIndex, List<AnnotationData>> readAll() {
+	private Map<BinIndex, List<AnnotationData<?>>> readAll() {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	Map<BinIndex, List<AnnotationData>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
+    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}
 	
-	private Map<BinIndex, List<AnnotationData>> readRandom() {
+	private Map<BinIndex, List<AnnotationData<?>>> readRandom() {
 		
 		final int MAX_DEPTH = 4;
 		int level = (int)(Math.random() * MAX_DEPTH);
@@ -263,7 +305,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		//TileIndex tile = new TileIndex( 0, 0, 0 );
     	
-		Map<BinIndex, List<AnnotationData>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
+		Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}

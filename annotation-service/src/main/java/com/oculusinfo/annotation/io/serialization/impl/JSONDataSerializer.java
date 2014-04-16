@@ -24,19 +24,15 @@
  */
 package com.oculusinfo.annotation.io.serialization.impl;
 
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.binning.BinIndex;
 
-public class JSONDataSerializer extends GenericJSONSerializer<AnnotationData>{
+
+public class JSONDataSerializer extends GenericJSONSerializer<AnnotationData<?>>{
 	
     private static final long serialVersionUID = -6779123604244971240L;
 
@@ -45,32 +41,14 @@ public class JSONDataSerializer extends GenericJSONSerializer<AnnotationData>{
 	}
 
 	@Override
-    protected JSONObject translateToJSON ( AnnotationData value ) {
+    protected JSONObject translateToJSON ( AnnotationData<?> value ) {
 		
-		JSONObject json = new JSONObject();
-		
-		try {
-			if ( value.getX() != null ) {
-				json.put( "x", value.getX() );
-			}
-			if ( value.getY() != null ) {
-				json.put( "y", value.getY() );
-			}
-			json.put( "priority", value.getPriority() );
-			json.put( "data", value.getData() );
-			
-		} catch ( Exception e ) {
-			e.printStackTrace();
-		}
-		
-		return json;
+		return value.toJSON();
 	}
-
 	
 	@Override
 	protected JSONAnnotation getValue(Object obj) throws JSONException {
 		
-		return new JSONAnnotation( (JSONObject)obj );
-
+		return JSONAnnotation.fromJSON( (JSONObject)obj );
 	}
 }

@@ -23,22 +23,21 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
 /**
- * This module defines a AnnotationService class which manages all annotation data requests
- * and storage from the server.
+ * This module defines a AnnotationService class which manages all REST calls to the server for annotations
  */
 define(function (require) {
     "use strict";
 
-    var DataService = require('../layer/DataService'),
-        TileAnnotationIndexer = require('./TileAnnotationIndexer'),
+
+
+    var Class = require('../class'),
         AnnotationService;
 
 
-    AnnotationService = DataService.extend({
+
+    AnnotationService = Class.extend({
         ClassName: "AnnotationService",
 
         /**
@@ -46,245 +45,103 @@ define(function (require) {
          */
         init: function ( layer ) {
 
-            this._super();
             this.layer = layer;
-            this.indexer = new TileAnnotationIndexer();
+
         },
 
 
-        getDataFromServer: function(requestedTiles, callback) {
-            var i;
-            // send request to respective coordinator
-            for (i=0; i<requestedTiles.length; ++i) {
-                this.getRequest( requestedTiles[i], callback );
-            }
-        },
-
-
-        getRequest: function(tilekey, callback) {
+        /**
+         * send a GET request to the server to pull all annotation data for a specific tilekey
+         * @param tilekey   tile identification key
+         * @param callback  the callback that is called upon receiving data from server
+         */
+        getRequest: function( tilekey, callback ) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10);
 
-            if (this.dataStatus[tilekey] === undefined) {
-
-                // flag tile as loading, add callback to list
-                this.dataStatus[tilekey] = "loading";
-                this.getCallbacks[tilekey] = [];
-                this.getCallbacks[tilekey].push(callback);
-
-                // request data from server
-                aperture.io.rest(
-                    ('/annotation/'+
-                     this.layer+'/'+
-                     level+'/'+
-                     xIndex+'/'+
-                     yIndex+'.json'),
-                     'GET',
-                    $.proxy( this.getCallback, this )
-                );
-                this.addReference(tilekey);
-
-            } else {
-
-                this.addReference(tilekey);
-                if (this.dataStatus[tilekey] === "loaded") {
-                    return; // data is in memory
-                }
-                // waiting on tile from server, add to callback list
-                this.getCallbacks[tilekey].push(callback);
-            }
+            // request data from server
+            aperture.io.rest(
+                ('/annotation/'+
+                    this.layer+'/'+
+                    level+'/'+
+                    xIndex+'/'+
+                    yIndex+'.json'),
+                'GET',
+                callback
+            );
 
         },
+
 
         /**
-         *
-         * @param annotationData annotation data received from server of the form:
-         *
-         *  {
-         *      index: {
-         *                  level:
-         *                  xIndex:
-         *                  yIndex:
-         *             }
-         *      data: {
-         *                  <binkey>: [ <annotation>, <annotation>, ... ]
-         *                  <binkey>: [ <annotation>, <annotation>, ... ]
-         *            }
-         *  }
-         *
+         * write the annotation to the server
+         * @param annotation   annotation to be written
+         * @param callback     the callback that is called upon receiving data from server
          */
-        getCallback: function( annotationData ) {
+        writeAnnotation: function( annotation, callback ) {
 
-            // create tile key: "level, xIndex, yIndex"
-            var tilekey = this.createTileKey( annotationData.index ),
-                i;
+            // generate uuid for data
+            annotation.uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
 
-            this.data[tilekey] = annotationData.data;
-            this.dataStatus[tilekey] = "loaded"; // flag as loaded
-
-            if ( !$.isEmptyObject( this.data[tilekey] ) ) {
-
-                if (this.getCallbacks[tilekey] === undefined) {
-                    console.log('ERROR: Received annotation data out of sync from server... ');
-                    return;
-                }
-
-                for (i =0; i <this.getCallbacks[tilekey].length; i++ ) {
-                    this.getCallbacks[tilekey][i]( this.data[tilekey] );
-                }
-            }
-
-            delete this.getCallbacks[tilekey];
+            this.postRequest( "WRITE", annotation, callback );
         },
 
 
-        postRequest: function( type, annotation ) {
+        /**
+         * modifiy an the annotation on the server
+         * @param oldAnnotation   old state of the annotation to be modified
+         * @param newAnnotation   new state of the annotation to be modified
+         * @param callback        the callback that is called upon receiving data from server
+         */
+        modifyAnnotation: function( oldAnnotation, newAnnotation, callback ) {
 
-            type = type.toLowerCase();
+            var annotation = {
+                "old": oldAnnotation,
+                "new": newAnnotation
+            };
 
-            switch ( type ) {
+            this.postRequest( "MODIFY", annotation, callback );
+        },
 
-                case "write":
 
-                    // add annotation to client cache
-                    this.addAnnotationToData( annotation );
-                    break;
+        /**
+         * remove the annotation from the server
+         * @param annotation   annotation to be removed
+         * @param callback     the callback that is called upon receiving data from server
+         */
+        removeAnnotation: function( annotation, callback ) {
 
-                case "modify":
+            this.postRequest( "REMOVE", annotation, callback );
+        },
 
-                    // replace old entry with new annotation in client cache
-                    this.modifyAnnotationInData( annotation.old, annotation['new'] );
-                    break;
 
-                case "remove":
-
-                    // remove entry
-                    this.removeAnnotationFromData( annotation );
-                    break;
-            }
+        /**
+         * send a POST request to the server
+         * @param type   type of annotation service: "WRITE", "MODIFY", or "REMOVE"
+         * @param data   annotation data to send server
+         * @param callback  the callback that is called upon receiving data from server
+         */
+        postRequest: function( type, data, callback ) {
 
             // Request the layer information
             aperture.io.rest('/annotation',
                              'POST',
-                             $.proxy(this.postCallback, this),
+                             callback,
                              {
-                                 postData: {    "layer": this.layer,
-                                                "type": type,
-                                                "annotation" : annotation
+                                 postData: {
+                                                "layer": this.layer,
+                                                "type": type.toLowerCase(),
+                                                "data" : data
                                             },
                                  contentType: 'application/json'
                              });
 
-        },
-
-
-        postCallback: function( postResult ) {
-
-            console.log("DEBUG: POST complete: "+ postResult );
-
-        },
-
-
-        addAnnotationToData: function( annotation ) {
-
-            // get all tile indices
-            var indices = this.indexer.getIndices( annotation ),
-                tile,
-                i;
-
-            // if tile exists in cache, add new data, if not, ignore it
-            for (i=0; i<indices.length; i++) {
-
-                tile = this.data[ indices[i].tilekey ];
-
-                // if tilekey exists
-                if ( tile !== undefined ) {
-
-                    // create bin if not there
-                    if ( tile[ indices[i].binkey ] === undefined ) {
-                        tile[ indices[i].binkey ] = [];
-                    }
-                    tile[ indices[i].binkey ].push( annotation );
-                    console.log( "added to tile: " + indices[i].tilekey + ", and bin: " + indices[i].binkey );
-                }
-                // if tilekey does not exist, it is not in cache, and doesn't need to be added, as it
-                // will need to be pulled anyway
-            }
-        },
-
-
-        removeAnnotationFromData: function( annotation ) {
-
-            // get all tile indices
-            var indices = this.indexer.getIndices( annotation ),
-                tile,
-                bin,
-                index,
-                i;
-
-            function compare( a, b ) {
-
-                return a.x === b.x &&
-                       a.y === b.y &&
-                       a.priority === b.priority &&
-                      (a.data.title.localeCompare( b.data.title ) === 0) &&
-                      (a.data.comment.localeCompare( b.data.comment ) === 0);
-            }
-
-            function findIndex( array, data ) {
-                var i;
-                for (i=0; i< array.length; i++) {
-                    if ( compare(array[i], data) ) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-
-            // if tile exists in cache, remove data from it
-            for (i=0; i<indices.length; i++) {
-
-                tile = this.data[ indices[i].tilekey ];
-
-                // if tile exists in cache
-                if ( tile !== undefined ) {
-                    // get bin
-                    bin = tile[ indices[i].binkey ];
-                    // if bin exists in cache
-                    if ( bin !== undefined ) {
-
-                        // get index in bin
-                        index = findIndex( bin, annotation );
-                        // remove data
-                        if ( index > -1 ) {
-                            console.log( "removed from tile: " + indices[i].tilekey + ", and bin: " + indices[i].binkey );
-                            bin.splice(index, 1);
-                        } else {
-                            console.log( "not found in bin: " + indices[i].binkey );
-                        }
-
-                        // remove bin from tile if it is now empty
-                        if ( bin.length === 0 ) {
-                            delete tile[ indices[i].binkey ];
-                        }
-                    }
-                }
-
-            }
-
-        },
-
-
-        modifyAnnotationInData: function( oldAnnotation, newAnnotation ) {
-
-            // remove from old
-            this.removeAnnotationFromData( oldAnnotation );
-
-            // add to new
-            this.addAnnotationToData( newAnnotation );
         }
 
     });

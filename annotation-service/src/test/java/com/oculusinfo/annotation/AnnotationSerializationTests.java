@@ -27,23 +27,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.*;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,7 +47,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 	
 	private AnnotationIndexer<TileAndBinIndices> _indexer;
 	private AnnotationSerializer<AnnotationTile> _tileSerializer;
-	private AnnotationSerializer<AnnotationData> _dataSerializer;
+	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
 	private TilePyramid _pyramid;
 	
     @Before
@@ -77,15 +68,15 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
     @Test
     public void testDataJSONSerialization () throws Exception {
     	
-		List<AnnotationData> before = generateJSONAnnotations( NUM_ENTRIES );
-		List<AnnotationData> after = new ArrayList<>();
+		List<AnnotationData<?>> before = generateJSONAnnotations( NUM_ENTRIES );
+		List<AnnotationData<?>> after = new ArrayList<>();
 			
 		if (VERBOSE) {
 			System.out.println( "*** Before ***");
 			printData( before );
 		}
 		
-		for ( AnnotationData annotation : before ) {
+		for ( AnnotationData<?> annotation : before ) {
 			
 			// serialize
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -97,11 +88,11 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
             byte[] data = baos.toByteArray();
 
             ByteArrayInputStream bais = new ByteArrayInputStream(data);
-            AnnotationData anno = _dataSerializer.deserialize( bais );
+            AnnotationData<?> anno = _dataSerializer.deserialize( bais );
             after.add( anno );
             bais.close();
             
-            Assert.assertEquals( annotation, anno );
+            Assert.assertTrue( compareData( annotation, anno, true ) );
 		}
 		
 		
@@ -139,7 +130,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
             after.add( t );
             bais.close();
             
-            Assert.assertEquals( tile, t );
+            Assert.assertTrue( compareTiles( tile, t, true ) );
 		}
 		
 		

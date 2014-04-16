@@ -39,7 +39,6 @@ define(function (require) {
 
     var Class = require('../class'),
         WebPyramid = require('../binning/WebTilePyramid'),
-        NUM_LEVELS = 20,    // MUST MATCH AnnotationIndexer.NUM_LEVELS in 'AnnotationIndexer.java'
         NUM_BINS = 8,       // MUST MATCH AnnotationTile.NUM_BINS in 'AnnotationTile.java'
         TileAnnotationIndexer;
 
@@ -55,7 +54,7 @@ define(function (require) {
             var indices = [],
                 i;
 
-            for (i=0; i<NUM_LEVELS; i++) {
+            for (i=0; i<=data.level; i++) {
                 indices.push( this.getIndex( data, i ) );
             }
             return indices;
@@ -64,8 +63,8 @@ define(function (require) {
         getIndex: function( data, level ) {
 
             // fill in defaults if dimensions are missing
-            var xExists = data.x !== null && data.x !== undefined,
-                yExists = data.y !== null && data.y !== undefined,
+            var xExists = data.x !== -1,
+                yExists = data.y !== -1,
                 x = xExists ? data.x : 0,
                 y = yExists ? data.y : 0,
                 tile, bin, index;

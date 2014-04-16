@@ -23,31 +23,22 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.UUID;
 
 import com.oculusinfo.binning.*;
 import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.*;
-import com.oculusinfo.annotation.io.impl.*;
-import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 
 public class AnnotationTestsBase {
@@ -62,23 +53,17 @@ public class AnnotationTestsBase {
 	/*
 	 * Annotation list printing utility functions
 	 */
-	protected void printData( Map<BinIndex, List<AnnotationData>> dataMap ) {
+	protected void printData( Map<BinIndex, List<AnnotationData<?>>> dataMap ) {
 		
-		for ( List<AnnotationData> annotations : dataMap.values() ) {	
+		for ( List<AnnotationData<?>> annotations : dataMap.values() ) {	
 			printData( annotations );
 		}
 	}
-	protected void printData( List<AnnotationData> annotations ) {
+	protected void printData( List<AnnotationData<?>> annotations ) {
 		
-		for ( AnnotationData annotation : annotations ) {				
+		for ( AnnotationData<?> annotation : annotations ) {				
 			try {
-				System.out.println("{");
-				if ( annotation.getX() != null )
-					System.out.println("    \"x\":" + annotation.getX() + ",");
-				if ( annotation.getY() != null )
-					System.out.println("    \"y\":" + annotation.getY() + ",");
-				System.out.println("    \"priority\":" + annotation.getPriority() + ",");
-				System.out.println("}");
+				System.out.println( annotation.toJSON().toString( 4 ) );	
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}	
@@ -87,10 +72,114 @@ public class AnnotationTestsBase {
 
 	protected void printTiles( List<AnnotationTile> tiles ) {
 		
-		for ( AnnotationTile tile : tiles ) {			
-			System.out.println( tile.toJSON().toString() );			
+		for ( AnnotationTile tile : tiles ) {
+			try {
+				System.out.println( tile.toJSON().toString( 4 ) );	
+			} catch ( Exception e ) { e.printStackTrace(); }
+					
 		}
 	}
+	
+	
+	protected boolean compareData( List<AnnotationData<?>> as, List<AnnotationData<?>> bs, boolean verbose ) {
+		
+		for ( AnnotationData<?> a : as ) {
+			int foundCount = 0;
+			for ( AnnotationData<?> b : bs ) {				
+				if ( compareData(a, b, false ) ) {
+					foundCount++;
+				}
+			}	
+			if ( foundCount != 1 ) {
+				if ( verbose ) System.out.println( "Data lists do not match" );
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	protected boolean compareTiles( List<AnnotationTile> as, List<AnnotationTile> bs, boolean verbose ) {
+		
+		for ( AnnotationTile a : as ) {
+			int foundCount = 0;
+			for ( AnnotationTile b : bs ) {				
+				if ( compareTiles(a, b, false) ) {
+					foundCount++;
+				}
+			}	
+			if ( foundCount != 1 ) {
+				if ( verbose ) System.out.println( "Tile lists do not match" );
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	protected boolean compareData( AnnotationData<?> a, AnnotationData<?> b, boolean verbose ) {
+		
+		if ( !a.getUUID().equals( b.getUUID() ) ) {
+			if ( verbose ) System.out.println( "UUID are not equal" );
+			return false;
+		}
+		
+		if ( a.getX() != null && b.getX() != null ) {
+			if ( !a.getX().equals( b.getX() ) ) {
+				if ( verbose ) System.out.println( "X values are not equal" );
+				return false;
+			}
+		}		
+		if ( a.getY() != null && b.getY() != null ) {
+			if ( !a.getY().equals( b.getY() ) ) {
+				if ( verbose ) System.out.println( "Y values are not equal" );
+				return false;
+			}
+		}
+		
+		if ( !a.getLevel().equals( b.getLevel() ) ) {
+			if ( verbose ) System.out.println( "Level values are not equal" );
+			return false;
+		}
+		
+		if ( !a.getData().toString().equals( b.getData().toString() ) ) {
+			if ( verbose ) System.out.println( "Data objects are not equal" );
+			return false;
+		}		
+		return true;
+	}
+	
+	
+	protected boolean compareTiles( AnnotationTile a, AnnotationTile b, boolean verbose ) {
+		
+		List<UUID> aReferences = a.getAllReferences();
+		List<UUID> bReferences = b.getAllReferences();
+		
+		if ( !a.getIndex().equals( b.getIndex() ) ) {
+			if ( verbose ) System.out.println( "Bin indices are not equal");
+			return false;
+		}
+		
+		if ( aReferences.size() != bReferences.size() ) {
+			if ( verbose ) System.out.println( "Reference counts are not equal");
+			return false;		
+		}
+			
+		for ( UUID aRef : aReferences ) {
+			int foundCount = 0;
+			for ( UUID bRef : bReferences ) {
+				if ( aRef.equals( bRef ) ) {
+					foundCount++;
+				}
+			}		
+			if ( foundCount != 1 ) {
+				if ( verbose ) System.out.println( "Reference lists are not equal");
+				return false;
+			}			
+		}
+
+		return true;
+	}
+	
 	
 	/*
 	 * Annotation index generation function
@@ -99,35 +188,20 @@ public class AnnotationTestsBase {
 
 		final Random rand = new Random();
 		
-		double x = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
-		double y = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
-		
-		int priority = (int)(rand.nextDouble() * 3);
-		int dimCase = (int)(rand.nextDouble() * 10);
+		double [] xy = randomPosition();
 		
 		try {
-			JSONObject anno = new JSONObject();
-			
-			switch (dimCase) {
-			
-				case 0: 
-					anno.put("x", x);
-					break;
-				case 1: 
-					anno.put("y", y);
-					break;
-					
-				default:				
-					anno.put("x", x);
-					anno.put("y", y);
-					break;
-			}
-					
-			anno.put("priority", "P" + priority);	
+			JSONObject anno = new JSONObject();			
+			anno.put("x", xy[0]);
+			anno.put("y", xy[1]);	
+			anno.put("level", (int)(rand.nextDouble() * 18) );
+			anno.put("priority", randomPriority() );
+			anno.put("uuid", UUID.randomUUID() );
 			JSONObject data = new JSONObject();
 			data.put("comment", randomComment() );
 			anno.put("data", data);
 			return anno;
+			
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -139,20 +213,20 @@ public class AnnotationTestsBase {
 	/*
 	 * Annotation index generation function
 	 */
-	protected AnnotationData generateJSONAnnotation() {
+	protected AnnotationData<?> generateJSONAnnotation() {
 
-		return new JSONAnnotation( generateJSON() );
+		return JSONAnnotation.fromJSON( generateJSON() );
 				
 	}
 	
 	protected List<AnnotationTile> generateTiles( int numEntries, AnnotationIndexer<TileAndBinIndices> indexer ) {
 		
-		List<AnnotationData> annotations = generateJSONAnnotations( numEntries );
+		List<AnnotationData<?>> annotations = generateJSONAnnotations( numEntries );
 		
 
 		Map<TileIndex, AnnotationTile> tiles = new HashMap<>();
 				
-		for ( AnnotationData annotation : annotations ) {
+		for ( AnnotationData<?> annotation : annotations ) {
 			List<TileAndBinIndices> indices = indexer.getIndices( annotation );
 			
 			for ( TileAndBinIndices index : indices ) {
@@ -174,6 +248,36 @@ public class AnnotationTestsBase {
 	}
 	
 	
+	protected double[] randomPosition() {
+		
+		final Random rand = new Random();
+		double [] xy = new double[2];
+		xy[0] = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
+		xy[1] = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));		
+		
+		int univariateCase = (int)(rand.nextDouble() * 10);
+		switch (univariateCase) {
+		
+			case 0: 
+				xy[1] = -1;
+				break;
+			case 1: 
+				xy[0] = -1;
+				break;
+		}				
+		return xy;		
+	}
+	
+	
+	protected String randomPriority() {
+		
+		final Random rand = new Random();
+		String priorities[] = {"Urgent", "High", "Medium", "Low"};		
+		int priorityIndex = (int)(rand.nextDouble() * 3);
+		return priorities[ priorityIndex ];
+	}
+	
+	
 	protected String randomComment() {
 		int LENGTH = 256;		
 		Random rng = new Random();
@@ -186,6 +290,7 @@ public class AnnotationTestsBase {
 	    }
 	    return new String(text);
 	}
+	
 		
 	protected List<TileIndex> tilesToIndices( List<AnnotationTile> tiles ) {
 		List<TileIndex> indices = new ArrayList<>();
@@ -195,17 +300,17 @@ public class AnnotationTestsBase {
 		return indices;
 	}
 
-	protected List<Long> dataToIndices( List<AnnotationData> data ) {
-		List<Long> indices = new ArrayList<>();
-		for ( AnnotationData d : data ) {
-			indices.add( d.getIndex() );
+	protected List<UUID> dataToIndices( List<AnnotationData<?>> data ) {
+		List<UUID> indices = new ArrayList<>();
+		for ( AnnotationData<?> d : data ) {
+			indices.add( d.getUUID() );
 		}
 		return indices;
 	}
 	
-	protected List<AnnotationData> generateJSONAnnotations( int numEntries ) {
+	protected List<AnnotationData<?>> generateJSONAnnotations( int numEntries ) {
 
-		List<AnnotationData> annotations = new ArrayList<>();		
+		List<AnnotationData<?>> annotations = new ArrayList<>();		
 		for (int i=0; i<numEntries; i++) {
 				
 			annotations.add( generateJSONAnnotation() );	

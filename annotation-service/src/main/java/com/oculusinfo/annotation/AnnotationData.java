@@ -24,26 +24,39 @@
 package com.oculusinfo.annotation;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 import org.json.JSONObject;
 
-public abstract class AnnotationData implements Serializable {
+public abstract class AnnotationData<T> implements Serializable {
     
 	private static final long serialVersionUID = 1L;
 	
 	public abstract Double getX();
 	public abstract Double getY();
+	public abstract Integer getLevel();
 	public abstract String getPriority();
-	public abstract <T> T getData();
-	public abstract Long getIndex();
-
+	public abstract T getData();
+	public abstract UUID getUUID();	
+	
+	public boolean hasSameLocation( AnnotationData<?> other ) {
+		return getX() == other.getX() &&
+			   getY() == other.getY();
+	}
+	
+	static public AnnotationData<?> fromJSON( JSONObject json ) throws IllegalArgumentException {		
+		return null;		
+	}
+	
 	public JSONObject toJSON() {
 		try {
 			JSONObject json = new JSONObject();
-			if ( getX() != null) json.put( "x", getX() );
-			if ( getY() != null) json.put( "y", getY() );
+			json.put( "x", getX() );
+			json.put( "y", getY() );
+			json.put("level", getLevel() );
+			json.put("uuid", getUUID().toString() );
 			json.put("priority", getPriority() );
-			json.put("data", getData() );
+			json.put("data", getData() );			
 			return json;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -53,18 +66,19 @@ public abstract class AnnotationData implements Serializable {
 	
 	@Override
     public int hashCode () {
-    	return getIndex().intValue();
+    	return getUUID().hashCode();
     }
 
     @Override
     public boolean equals (Object that) {   	    	
     	if (that != null)
     	{
-    		if (that instanceof AnnotationData) {
-    			AnnotationData o = (AnnotationData)that;
-    			return getIndex().equals( o.getIndex() ) &&
+    		if (that instanceof AnnotationData<?>) {
+    			AnnotationData<?> o = (AnnotationData<?>)that;
+    			return getUUID().equals( o.getUUID() ) &&
     				   getX() == o.getX() &&
     				   getY() == o.getY() &&
+    				   getLevel() == o.getLevel() &&
     				   getData().equals( o.getData() );
     		}    		
     	}	

@@ -31,22 +31,20 @@ import com.oculusinfo.annotation.*;
 
 public abstract class AnnotationIndexer<T> {
 
-    protected static final int NUM_LEVELS = 20;
-    
     protected TilePyramid _pyramid;
     
     public AnnotationIndexer() {
     }
     
-    public List<T> getIndices( AnnotationData data ) {
+    public List<T> getIndices( AnnotationData<?> data ) {
     	List<T> indices = new LinkedList<>();		
-		for (int i=0; i<NUM_LEVELS; i++) {
+		for (int i=0; i<=data.getLevel(); i++) {
 			indices.add( getIndex( data, i ) );
 		}
 		return indices;
     }
     
-    public abstract T getIndex( AnnotationData data, int level );
+    public abstract T getIndex( AnnotationData<?> data, int level );
 
     
 }

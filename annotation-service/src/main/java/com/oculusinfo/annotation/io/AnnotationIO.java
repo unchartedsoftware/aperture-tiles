@@ -26,6 +26,7 @@ package com.oculusinfo.annotation.io;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.serialization.*;
@@ -41,8 +42,8 @@ public interface AnnotationIO {
     				        AnnotationSerializer<AnnotationTile> serializer, 
     				        List<AnnotationTile> tiles ) throws IOException;
     public void writeData (String id, 
-					       AnnotationSerializer<AnnotationData> serializer, 
-					       List<AnnotationData> data ) throws IOException;
+					       AnnotationSerializer<AnnotationData<?>> serializer, 
+					       List<AnnotationData<?>> data ) throws IOException;
 
     /*
      * Read
@@ -51,9 +52,9 @@ public interface AnnotationIO {
     public List<AnnotationTile> readTiles (String id, 
 						    			   AnnotationSerializer<AnnotationTile> serializer,
 						    			   List<TileIndex> indices) throws IOException;  
-    public List<AnnotationData> readData (String id, 
-								          AnnotationSerializer<AnnotationData> serializer,
-								          List<Long> indices) throws IOException;
+    public List<AnnotationData<?>> readData (String id, 
+								          AnnotationSerializer<AnnotationData<?>> serializer,
+								          List<UUID> indices) throws IOException;
  
     /*
      * Delete
@@ -62,6 +63,6 @@ public interface AnnotationIO {
     public void removeTiles (String id, 
 			   				 List<AnnotationTile> tiles ) throws IOException;
     public void removeData (String id, 
-   							List<AnnotationData> data ) throws IOException;
+   							List<AnnotationData<?>> data ) throws IOException;
   
 }

@@ -60,30 +60,34 @@ public class AnnotationResource extends ApertureServerResource {
 
 		try {
 			JSONObject json = new JSONObject( jsonData );
-			JSONObject annotation = json.getJSONObject("annotation");
+			JSONObject data = json.getJSONObject("data");
 			String type = json.getString( "type" ).toLowerCase();
 			String layer = json.getString("layer");
+			
+			JSONObject jsonResult = new JSONObject();
+			jsonResult.put("type", type);
 			
 			// write
 			if ( type.equals("write") ) {
 				
-				_service.writeAnnotation( layer, new JSONAnnotation( annotation ) );				
-			
+				JSONAnnotation annotation = JSONAnnotation.fromJSON( data );			
+				_service.writeAnnotation( layer, annotation );
+				jsonResult.put("data", annotation.toJSON() );
+				
 			} else if ( type.equals("remove") ) {
-
-				_service.removeAnnotation( layer, new JSONAnnotation( annotation ) );				
+	
+				_service.removeAnnotation( layer, JSONAnnotation.fromJSON( data ) );
 				
 			} else if ( type.equals("modify") ) {
 				
-				JSONAnnotation oldAnnotation = new JSONAnnotation( annotation.getJSONObject("old") );
-				JSONAnnotation newAnnotation = new JSONAnnotation( annotation.getJSONObject("new") );
-				
-				_service.removeAnnotation( layer, oldAnnotation );
-				_service.writeAnnotation( layer, newAnnotation );
+				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("old") );
+				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );				
+				_service.modifyAnnotation( layer, oldAnnotation, newAnnotation );				
+				jsonResult.put("data", newAnnotation.toJSON() );
 			}
 			
-			
-			return new JsonRepresentation(json);
+			setStatus(Status.SUCCESS_OK);			 
+			return new JsonRepresentation(jsonResult);
 			
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
@@ -120,22 +124,22 @@ public class AnnotationResource extends ApertureServerResource {
 		    result.put("index", indexJson );
 		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
 		    
-		    Map<BinIndex, List<AnnotationData>> data = _service.readAnnotations( layer, index );
+		    Map<BinIndex, List<AnnotationData<?>>> data = _service.readAnnotations( layer, index );
 
 		    JSONObject dataJson = new JSONObject();
-		    for (Map.Entry<BinIndex, List<AnnotationData>> entry : data.entrySet() ) {
+		    for (Map.Entry<BinIndex, List<AnnotationData<?>>> entry : data.entrySet() ) {
 				
 		    	BinIndex binIndex = entry.getKey();
-		    	List<AnnotationData> annotations = entry.getValue();
+		    	List<AnnotationData<?>> annotations = entry.getValue();
 		    	
 		    	JSONArray annotationArray = new JSONArray();			    
-			    for ( AnnotationData annotation : annotations ) {
+			    for ( AnnotationData<?> annotation : annotations ) {
 			    	annotationArray.put( annotation.toJSON() );
 			    }
 			    dataJson.put( binIndex.toString(), annotationArray );
 		    }
 		    
-		    result.put( "data", dataJson );
+		    result.put( "annotationsByBin", dataJson );
 
 		    setStatus(Status.SUCCESS_CREATED);
 		    return new JsonRepresentation( result );
