@@ -37,15 +37,15 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * @author cregnier
  *
  */
-public class EmptyConfigurableFactory extends ConfigurableFactory<Object> {
+public class EmptyConfigurableFactory extends ConfigurableFactory<Void> {
 
 	public EmptyConfigurableFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
-		super(name, Object.class, parent, path);
+		super(name, Void.class, parent, path);
 	}
 
 	@Override
-	protected Object create() {
-		return new Object();
+	protected Void create() {
+		return null;
 	}
 
 	/**
