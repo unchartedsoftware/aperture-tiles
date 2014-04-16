@@ -92,8 +92,6 @@ define(function (require) {
 
         init: function (spec) {
 
-            var that = this;
-
             this.map = spec.map;
             this.layer = spec.layer;
             this.indexer = new TileAnnotationIndexer();
@@ -172,8 +170,7 @@ define(function (require) {
 
             // request each tile from server
             for (i=0; i<tiles.length; i++ ) {
-
-                this.service.getRequest( createTileKey( tiles[i] ), $.proxy( this.getCallback,this ) );
+                this.service.getAnnotations( createTileKey( tiles[i] ), $.proxy( this.getCallback,this ) );
             }
 
         },

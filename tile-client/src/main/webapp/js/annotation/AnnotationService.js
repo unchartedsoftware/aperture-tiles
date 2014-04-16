@@ -55,7 +55,7 @@ define(function (require) {
          * @param tilekey   tile identification key
          * @param callback  the callback that is called upon receiving data from server
          */
-        getRequest: function( tilekey, callback ) {
+        getAnnotations: function( tilekey, callback ) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
@@ -72,7 +72,6 @@ define(function (require) {
                 'GET',
                 callback
             );
-
         },
 
 
