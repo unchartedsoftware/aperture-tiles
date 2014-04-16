@@ -22,22 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.color.impl;
+package com.oculusinfo.tile.init;
 
-import java.util.Arrays;
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.tile.init.providers.StandardLayerConfigurationProvider;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 
-import com.oculusinfo.tile.rendering.color.FixedPoint;
+public class StandardLayerConfigurationModule extends AbstractModule {
 
-
-
-public class BRColorRamp extends AbstractColorRamp {
-
-	public BRColorRamp (boolean inverted, double opacity) {
-		super(inverted,
-		      Arrays.asList(new FixedPoint(0.25, 0.0), new FixedPoint(0.50, 0.5), new FixedPoint(1.00, 1.0)),
-		      Arrays.asList(new FixedPoint(0.25, 0.0), new FixedPoint(0.375, 0.25), new FixedPoint(0.625, 0.25), new FixedPoint(0.75, 0.0)),
-		      Arrays.asList(new FixedPoint(0.00, 0.5), new FixedPoint(0.25, 1.0), new FixedPoint(0.75, 0.0)),
-		      null,
-		      opacity);
-	}
+    @Override
+    protected void configure() {
+        bind(new TypeLiteral<FactoryProvider<LayerConfiguration>>() {}).to(StandardLayerConfigurationProvider.class);
+    }
 }

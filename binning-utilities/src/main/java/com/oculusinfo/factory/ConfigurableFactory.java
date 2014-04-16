@@ -435,8 +435,20 @@ abstract public class ConfigurableFactory<T> {
 	 * information.
 	 */
 	private JSONObject getConfigurationNode (JSONObject rootNode) throws JSONException {
+	    return getLeafNode(rootNode, _rootPath);
+	}
+
+	/**
+     * Get the sub-node of a root node specified by a given path.
+     * 
+     * @param rootNode The root JSON object whose sub-node is desired.
+     * @param path A list of keys to follow from the root node to find the
+     *            desired leaf.
+     * @return The leaf node, or null if any branch along the path is missing.
+     */
+	public static JSONObject getLeafNode (JSONObject rootNode, List<String> path) {
 		JSONObject target = rootNode;
-		for (String pathElt: _rootPath) {
+		for (String pathElt: path) {
 			if (target.has(pathElt)) {
 				try {
 					target = target.getJSONObject(pathElt);

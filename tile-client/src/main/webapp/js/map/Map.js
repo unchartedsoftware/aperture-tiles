@@ -46,13 +46,10 @@ define(function (require) {
 
 			var that = this,
 				apertureConfig,
-				mapSpecs,
-				axisSpecs,
-				axisSpec;
+				mapSpecs;
 		
 			apertureConfig = spec.ApertureConfig;
 			mapSpecs = spec.MapConfig;
-			axisSpecs = spec.AxisConfig;
 			
 			// configure aperture
             aperture.config.provide({
@@ -86,43 +83,23 @@ define(function (require) {
 
 			// Create axes
 			this.axes = [];	
-		
-			// create x axis
-			axisSpec = axisSpecs.XAxisConfig;
-			axisSpec.parentId = this.id;
-			axisSpec.olMap = this.map.olMap_;
-			this.axes.push(new Axis(axisSpec));
-			
-			// create y axis
-			axisSpec = axisSpecs.YAxisConfig;
-			axisSpec.parentId = this.id;
-			axisSpec.olMap = this.map.olMap_;
-			this.axes.push(new Axis(axisSpec));
 			
 			// Set resize map callback
 			$(window).resize( function() {
-				var ASPECT_RATIO = 1.61803398875, // golden ratio
-					$map = $('#' + that.id),
+				var $map = $('#' + that.id),
 					$mapContainer = $map.parent(),
 					offset = $map.offset(),
 					leftOffset = offset.left || 0,
 					topOffset = offset.top || 0,
 					vertical_buffer = parseInt($mapContainer.css("marginBottom"), 10) + topOffset + 24,
-					horizontal_buffer = parseInt($mapContainer.css("marginRight"), 10) + leftOffset,			
+					horizontal_buffer = parseInt($mapContainer.css("marginRight"), 10) + leftOffset + 24,			
 					width = $(window).width(),
 					height = $(window).height(),				
 					newHeight,
 					newWidth;
 
-				if ((width-horizontal_buffer / ASPECT_RATIO) < height) {
-					// window height supports width
-					newWidth = width - horizontal_buffer;
-					newHeight = (width - horizontal_buffer) / ASPECT_RATIO;
-				} else {
-					// windows height does not support width
-					newWidth = (height - vertical_buffer) * ASPECT_RATIO;
-					newHeight = height - vertical_buffer;
-				}
+				newWidth = (width - horizontal_buffer);
+				newHeight = (height - vertical_buffer);
 					
 				$map.width(newWidth);
 				$map.height(newHeight);
@@ -131,6 +108,20 @@ define(function (require) {
 												
 			// Trigger the initial resize event to resize everything
             $(window).resize();			
+        },
+
+        setAxisSpecs: function (axes) {
+            var xAxisSpec, yAxisSpec;
+
+            xAxisSpec = axes.xAxisConfig;
+            xAxisSpec.parentId = this.id;
+            xAxisSpec.olMap = this.map.olMap_;
+            this.axes.push(new Axis(xAxisSpec));
+
+            yAxisSpec = axes.yAxisConfig;
+            yAxisSpec.parentId = this.id;
+            yAxisSpec.olMap = this.map.olMap_;
+            this.axes.push(new Axis(yAxisSpec));
         },
 
         setOpacity: function (newOpacity) {

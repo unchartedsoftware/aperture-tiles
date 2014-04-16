@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.tile.util;
 
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,6 +35,9 @@ import java.util.Properties;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -41,9 +45,148 @@ import org.json.JSONObject;
  *
  */
 public class JsonUtilities {
-	private JsonUtilities() {
-	}
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonUtilities.class);
+    private static Object getJSONNull () {
+        try {
+            return new JSONObject("{a: null}").get("a");
+        } catch (JSONException e) {
+            LOGGER.error("Can't come up with JSON null value");
+            return null;
+        }
+    }
+    private static final Object JSON_NULL = getJSONNull();
+
+    /**
+     * Clone a JSON object and all its child objects
+     */
+    public static JSONObject deepClone (JSONObject source) {
+        if (null == source) return null;
+
+        try {
+            JSONObject clone = new JSONObject();
+            for (String key: JSONObject.getNames(source)) {
+                Object value = source.get(key);
+                if (value instanceof JSONObject) {
+                    JSONObject valueClone = deepClone((JSONObject) value);
+                    clone.put(key, valueClone);
+                } else if (value instanceof JSONArray) {
+                    JSONArray valueClone = deepClone((JSONArray) value);
+                    clone.put(key, valueClone);
+                } else {
+                    clone.put(key, value);
+                }
+            }
+            return clone;
+        } catch (JSONException e) {
+            LOGGER.error("Weird JSON exception cloning object", e);
+            return null;
+        }
+    }
     
+    /**
+     * Clone a JSON array and all its child objects
+     */
+    public static JSONArray deepClone (JSONArray source) {
+        if (null == source) return null;
+
+        try {
+            JSONArray clone = new JSONArray();
+            for (int i=0; i<source.length(); ++i) {
+                Object value = source.get(i);
+                if (value instanceof JSONObject) {
+                    JSONObject valueClone = deepClone((JSONObject) value);
+                    clone.put(i, valueClone);
+                } else if (value instanceof JSONArray) {
+                    JSONArray valueClone = deepClone((JSONArray) value);
+                    clone.put(i, valueClone);
+                } else {
+                    clone.put(i, value);
+                }
+            }
+            return clone;
+        } catch (JSONException e) {
+            LOGGER.error("Weird JSON exception cloning object", e);
+            return null;
+        }
+    }
+
+    /**
+     * Overlays one JSON object, in place, over another, deeply.
+     * 
+     * @param base The object to alter
+     * @param overlay The object defining how the base will be altered.
+     * @return The base object, with the overlay now overlaid upon it.
+     */
+    public static JSONObject overlayInPlace (JSONObject base, JSONObject overlay) {
+        if (null == overlay) return base;
+        if (null == base) return deepClone(overlay);
+
+        try {
+            for (String key: JSONObject.getNames(overlay)) {
+                Object value = overlay.get(key);
+                if (value instanceof JSONObject) {
+                    if (base.has(key) && base.get(key) instanceof JSONObject) {
+                        overlayInPlace((JSONObject) base.get(key), (JSONObject) value);
+                    } else {
+                        base.put(key, deepClone((JSONObject) value));
+                    }
+                } else if (value instanceof JSONArray) {
+                    if (base.has(key) && base.get(key) instanceof JSONArray) {
+                        overlayInPlace((JSONArray) base.get(key), (JSONArray) value);
+                    } else {
+                        base.put(key, deepClone((JSONArray) value));
+                    }
+                } else {
+                    base.put(key, value);
+                }
+            }
+            return base;
+        } catch (JSONException e) {
+            LOGGER.error("Weird JSON exception cloning object", e);
+            return null;
+        }
+    }
+
+    /**
+     * Overlays one JSON array, in place, over another, deeply.
+     * 
+     * @param base The array to alter
+     * @param overlay The array defining how the base will be altered.
+     * @return The base array, with the overlay now overlaid upon it.
+     */
+    public static JSONArray overlayInPlace (JSONArray base, JSONArray overlay) {
+        if (null == overlay) return base;
+        if (null == base) return deepClone(overlay);
+
+        try {
+            for (int i=0; i<overlay.length(); ++i) {
+                Object value = overlay.get(i);
+                if (JSON_NULL.equals(value)) {
+                    // Null array element; ignore, don't everlay
+                } else if (value instanceof JSONObject) {
+                    if (base.length() > i && base.get(i) instanceof JSONObject) {
+                        overlayInPlace((JSONObject) base.get(i), (JSONObject) value);
+                    } else {
+                        base.put(i, deepClone((JSONObject) value));
+                    }
+                } else if (value instanceof JSONArray) {
+                    if (base.length() > i && base.get(i) instanceof JSONArray) {
+                        overlayInPlace((JSONArray) base.get(i), (JSONArray) value);
+                    } else {
+                        base.put(i, deepClone((JSONArray) value));
+                    }
+                } else {
+                    base.put(i, value);
+                }
+            }
+            return base;
+        } catch (JSONException e) {
+            LOGGER.error("Weird JSON exception cloning object", e);
+            return null;
+        }
+    }
+
+
 	/**
 	 * Converts a {@link JSONObject} into a {@link Map} of key-value pairs.
 	 * This iterates through the tree and converts all {@link JSONObject}s

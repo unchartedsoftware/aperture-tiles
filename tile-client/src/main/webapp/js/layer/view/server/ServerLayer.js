@@ -154,12 +154,18 @@ define(function (require) {
             this.dataListener = new DataLayer(layerSpec);
             this.dataListener.setRequestCallback($.proxy(this.requestLayerInfo,
                                                          this));
-            this.dataListener.setRetrievedCallback($.proxy(this.useLayerInfo,
+            this.dataListener.addRetrievedCallback($.proxy(this.useLayerInfo,
                                                            this));
 
             this.dataListener.retrieveLayerInfo();
         },
 
+        /**
+         * Let someone else listen to the layer info to which we listen
+         */
+        addLayerInfoListener: function (listener) {
+            this.dataListener.addRetrievedCallback(listener);
+        },
 
         /*
          * Called when data is requested from the server.

@@ -13,3 +13,8 @@ body {
 	padding: 10px;
 	color: black;
 }
+
+#description { 
+	margin-bottom: 15px; 
+	font-size: 0.6em; 
+}
