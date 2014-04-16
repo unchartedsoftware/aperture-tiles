@@ -92,7 +92,7 @@ require(['./FileLoader',
                 });
 
                 // Zoom to the area of the world with the data.
-                worldMap.map.zoomTo( 40, -95, 4 );
+                worldMap.map.zoomTo( -15, -60, 3 );
                 
 
                 // Request all layers the server knows about.  Once we get 
