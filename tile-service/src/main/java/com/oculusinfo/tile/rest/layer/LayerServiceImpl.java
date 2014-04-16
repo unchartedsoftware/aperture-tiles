@@ -186,6 +186,13 @@ public class LayerServiceImpl implements LayerService {
 	@Override
 	public UUID configureLayer (String layerId, JSONObject overrideConfiguration) {
         // Figure out which renderer to match, if a choice is necessary
+	    //
+        // This is necessary because we need to return the total number of
+        // images available, which at the moment, only the renderer knows. If we
+        // can figure out a way to do this without going through the renderer
+        // (say, using the serializer), we can get rid of this part where it has
+        // to find a renderer, which really shouldn't be at this point in the
+        // code.
         ImageRendererFactory overrideFactory = new ImageRendererFactory(null, null);
         String overrideRenderer = null;
         boolean rendererChoiceIsError = false;
