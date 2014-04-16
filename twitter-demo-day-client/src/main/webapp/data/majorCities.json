@@ -1,72 +1,102 @@
 {
-    "calgary" : {
-        "text": "Calgary, Alberta, Canada",
-        "lat": 51.0453246,
-        "long": -114.05810120000001
+    "Asunción" : {
+        "text": "Asunción, Paraguay",
+        "lat": -25.2822,
+        "long": -57.6351
     },
-    "chicago" : {
-        "text": "Chicago, Illinois, United States",
-        "lat": 41.8781136,
-        "long": -87.62979819999998
+    "Bogotá" : {
+        "text": "Bogotá, Colombia",
+        "lat": 4.5981,
+        "long": -74.0758
     },
-    "ecatepec": {
-        "text": "Ecatepec, State of Mexico, Mexico",
-        "lat": 19.601841,
-        "long": -99.050674
+    "Brasília": {
+        "text": "Brasília, Brazil",
+        "lat": -15.7989,
+        "long": -47.8667
     },
-    "guadalajara": {
-        "text": "Guadalajara, Jalisco, Mexico",
-        "lat": 20.659699,
-        "long": -103.349609
+    "Buenos Aires": {
+        "text": "Buenos Aires, Argentina",
+        "lat": -34.6033,
+        "long": -58.3817
     },
-    "houston": {
-        "text": "Houston, Texas, United States",
-        "lat": 29.7601927,
-        "long": -95.36938959999998
+    "Cali": {
+        "text": "Cali, Colombia",
+        "lat": 3.4206,
+        "long": -76.5222
     },
-    "los-angeles": {
-        "text": "Los Angeles, California, United States",
-        "lat": 34.0522342,
-        "long": -118.2436849
+    "Caracas": {
+        "text": "Caracas, Venezuela",
+        "lat": 10.5000,
+        "long": -66.9167
     },
-    "mexico-city": {
-        "text": "Mexico City, Federal District, Mexico",
-        "lat":  19.4326077 ,
-        "long": -99.13320799999997
+    "Córdoba": {
+        "text": "Córdoba, Argentina",
+        "lat":  -31.4167 ,
+        "long": -64.1833
     },
-    "monterrey": {
-        "text": "Monterrey, Nuevo León, Mexico",
-        "lat": 25.673211,
-        "long": -100.309201
+    "Fortaleza": {
+        "text": "Fortaleza, Brazil",
+        "lat": -3.7737,
+        "long": -38.5748
     },
-    "montreal": {
-        "text": "Montreal, Quebec, Canada",
-        "lat": 45.5086699,
-        "long": -73.55399249999999
+    "Georgetown": {
+        "text": "Georgetown, Guyana",
+        "lat": 6.8000,
+        "long": -58.1667
     },
-    "new-york-city" : {
-        "text": "New York City, New York, United States",
-        "lat": 40.7143528,
-        "long": -74.0059731
+    "La Paz" : {
+        "text": "La Paz, Bolivia",
+        "lat": -16.5000,
+        "long": -68.1500
     },
-    "san-francisco": {
-        "text": "San Francisco, California, United States",
-        "lat": 37.774929,
-        "long": -122.419416
+    "Lima": {
+        "text": "Lima, Peru",
+        "lat": -12.0433,
+        "long": -77.0283
     },
-	"toronto": {
-		"text": "Toronto, Ontario, Canada",
-		"lat": 43.653226,
-		"long": -79.38318429999998
+	"Maracaibo": {
+		"text": "Maracaibo, Venezuela",
+		"lat": 10.6500,
+		"long": -71.6333
 	},
-    "victoria": {
-        "text": "Victoria, British Columbia, Canada",
-        "lat": 48.428421,
-        "long": -123.365644
+    "Medellín": {
+        "text": "Medellín, Colombia",
+        "lat": 6.2359,
+        "long": -75.5751
     },
-    "washington": {
-        "text": "Washington D.C., United States",
-        "lat": 38.907231,
-        "long": -77.036464
+    "Montevideo": {
+        "text": "Montevideo, Uruguay",
+        "lat": -34.8836,
+        "long": -56.1819
+    },
+    "Quito": {
+        "text": "Quito, Ecuador",
+        "lat": 0.2500,
+        "long": -78.5833
+    },
+    "Rio de Janeiro": {
+        "text": "Rio de Janeiro, Brazil",
+        "lat": -22.9083,
+        "long": -43.1964
+    },
+    "São Paulo": {
+        "text": "São Paulo, Brazil",
+        "lat": -23.5500,
+        "long": -46.6333
+    },
+    "Salvador": {
+        "text": "Salvador, Brazil",
+        "lat": -12.9747,
+        "long": -38.4767
+    },
+    "Santiago": {
+        "text": "Santiago, Chile",
+        "lat": -33.4500,
+        "long": -70.6667
+    },
+    "Valencia": {
+        "text": "Valencia, Venezuela",
+        "lat": 10.1810,
+        "long": -68.0040
     }
 }
