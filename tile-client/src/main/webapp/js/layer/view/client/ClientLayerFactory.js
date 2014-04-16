@@ -53,7 +53,7 @@ define( function (require) {
 		createLayer: function(layerJSON, map) {
 
 			var requirements = [],	// this is an array of requirement spec objects. Each entry is used to load the individual requirements	
-				i;
+				i, dataLayer;
 	
 			// load module func
 			function loadModule(arg, callback) {
@@ -63,10 +63,10 @@ define( function (require) {
 			// get layer info from server func	
 			function getLayerInfoFromServer(arg, callback) {
 				var layerInfoListener = new DataLayer([arg]);
-				layerInfoListener.setRetrievedCallback(callback);
+				layerInfoListener.addRetrievedCallback(callback);
 				layerInfoListener.retrieveLayerInfo();
 			}	
-			
+
 			// add layer view controller to requirements
 			requirements.push({
 				type : "view-controller",
@@ -85,11 +85,20 @@ define( function (require) {
 					spec : "./impl/" + layerJSON.views[i].renderer,
 					func : loadModule
 					});
+                dataLayer = layerJSON.layer;
+                if (layerJSON.views[i].layer) {
+                    dataLayer = layerJSON.views[i].layer;
+                }
+
 				// get data tracker from server
 				requirements.push({
 					type : "data-tracker",
-					id : layerJSON.views[i].layer,
-					spec : layerJSON.views[i],
+					id : dataLayer,
+					spec : {
+                        request: "configure",
+                        layer: dataLayer,
+                        configuration: layerJSON.views[i]
+                    },
 					func : getLayerInfoFromServer
 					});				
 			}
@@ -103,13 +112,18 @@ define( function (require) {
 						map: map.map,
 						views: []
 					}, 
-					i;
+					i,
+                    dataLayer;
 			
 				// add views to layer spec object
 				for (i=0; i<layerJSON.views.length; i++) {
+                    dataLayer = layerJSON.layer;
+                    if (layerJSON.views[i].layer) {
+                        dataLayer = layerJSON.views[i].layer;
+                    }
 					spec.views.push({
 						renderer: new layerDataMap[layerJSON.views[i].renderer](),
-						dataTracker: layerDataMap[layerJSON.views[i].layer]
+						dataTracker: layerDataMap[dataLayer]
 					});
 				}
 				

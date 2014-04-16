@@ -57,7 +57,7 @@ define(function (require) {
 
             // Event information
             this.onInfoRequested = null;
-            this.onInfoRetrieved = null;
+            this.onInfoRetrieved = [];
         },
 
 
@@ -74,8 +74,16 @@ define(function (require) {
          * Set the callback function to be called when data is retrieved from 
          * the server
          */
-        setRetrievedCallback: function (callback) {
-            this.onInfoRetrieved = callback;
+        addRetrievedCallback: function (callback) {
+            var layer;
+            // Send it a notification of what we know right now
+            for (layer in this.layerInfos) {
+                if (this.layerInfos.hasOwnProperty(layer) && this.layerInfos[layer]) {
+                    callback(this, this.layerInfos[layer]);
+                }
+            }
+            // Add the callback to our list of things requiring notification.
+            this.onInfoRetrieved.push(callback);
         },
 
 
@@ -123,8 +131,10 @@ define(function (require) {
             // necessary?
 
             // Notify our user that we have new layer information
-            if (this.onInfoRetrieved) {
-                this.onInfoRetrieved(this, layerInfo);
+            if (this.onInfoRetrieved && this.onInfoRetrieved.length > 0) {
+                this.onInfoRetrieved.forEach($.proxy(function (callback, index, array) {
+                    callback(this, layerInfo);
+                }, this));
             }
         },
 
@@ -168,7 +178,11 @@ define(function (require) {
                                  'POST',
                                  $.proxy(this.onLayerInfoRetrieved, this),
                                  {
-                                     postData: layerSpec,
+                                     postData: {
+                                         request: "configure",
+                                         layer: layer,
+                                         configuration: layerSpec
+                                     },
                                      contentType: 'application/json'
                                  }
                                 );

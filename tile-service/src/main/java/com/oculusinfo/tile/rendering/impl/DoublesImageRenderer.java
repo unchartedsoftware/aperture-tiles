@@ -188,9 +188,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 					}
 				}
 			}
-			
+
 			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
-					
 		} catch (Exception e) {
 			LOGGER.debug("Tile is corrupt: " + layer + ":" + index);
 			LOGGER.debug("Tile error: ", e);

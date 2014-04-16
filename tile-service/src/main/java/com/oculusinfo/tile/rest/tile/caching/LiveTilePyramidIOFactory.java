@@ -59,7 +59,7 @@ public class LiveTilePyramidIOFactory extends PyramidIOFactory {
 	}
 
 	@Override
-	protected PyramidIO create () {
+	protected PyramidIO createSingleton () {
 		String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
 
 		if ("live".equals(pyramidIOType)) {
