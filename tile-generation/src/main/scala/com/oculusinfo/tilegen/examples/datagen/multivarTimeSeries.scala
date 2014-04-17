@@ -36,98 +36,99 @@ import java.io.File
 import java.io.PrintWriter
 
 object MultivarTimeSeries {
- 
-  /**
-   * Breaks the input time range up into sub-ranges and returns them as a list.  If the step in the time range is
-   * not equally divided by the step, the range will be truncated.
-   */
-  private def computePartitionRanges(partitions: Int, timeRange: NumericRange[Long]) = {
-    val partitionExtra = (timeRange.end - timeRange.start) % timeRange.step
-    val aliasedRange = (timeRange.start to timeRange.end - partitionExtra by timeRange.step)
-    val partitionSize = (aliasedRange.end - aliasedRange.start) / aliasedRange.step / partitions * aliasedRange.step
+	
+	/**
+	 * Breaks the input time range up into sub-ranges and returns them as a list.  
+	 * If the step in the time range is not equally divided by the step, the 
+	 *  range will be truncated.
+	 */
+	private def computePartitionRanges(partitions: Int, timeRange: NumericRange[Long]) = {
+		val partitionExtra = (timeRange.end - timeRange.start) % timeRange.step
+		val aliasedRange = (timeRange.start to timeRange.end - partitionExtra by timeRange.step)
+		val partitionSize = (aliasedRange.end - aliasedRange.start) / aliasedRange.step / partitions * aliasedRange.step
 
-    def computePartitionRange(partitionRange: NumericRange[Long], partitionNumber: Int): Seq[NumericRange[Long]] = {
-      val newRangeList = List(partitionRange.start to partitionRange.end by partitionRange.step)
-      if (partitionNumber == partitions - 1) {
-        newRangeList ++: computePartitionRange(
-            partitionRange.end + aliasedRange.step to aliasedRange.end by aliasedRange.step, partitionNumber + 1)
-      } else if (partitionNumber < partitions - 1) {
-        newRangeList ++: computePartitionRange(
-            partitionRange.end + aliasedRange.step to partitionRange.end + partitionSize + aliasedRange.step by aliasedRange.step, partitionNumber + 1)
-      } else {
-        newRangeList
-      }
-    }
-    computePartitionRange(aliasedRange.start to aliasedRange.start + partitionSize by aliasedRange.step, 1)
-  }
-     
-  /**
-   * Creates a sequence of names based on a sequence source values.  Names are formatted
-   * name-#.
-   */
-  private def generateNames(numNames: Int, names: IndexedSeq[_]) = {
-    for (i <- 0 until numNames) yield names(i % names.length) + "-" + i / names.length
-  }
+		def computePartitionRange(partitionRange: NumericRange[Long], partitionNumber: Int): Seq[NumericRange[Long]] = {
+			val newRangeList = List(partitionRange.start to partitionRange.end by partitionRange.step)
+			if (partitionNumber == partitions - 1) {
+				newRangeList ++: computePartitionRange(
+					partitionRange.end + aliasedRange.step to aliasedRange.end by aliasedRange.step, partitionNumber + 1)
+			} else if (partitionNumber < partitions - 1) {
+				newRangeList ++: computePartitionRange(
+					partitionRange.end + aliasedRange.step to partitionRange.end + partitionSize + aliasedRange.step by aliasedRange.step, partitionNumber + 1)
+			} else {
+				newRangeList
+			}
+		}
+		computePartitionRange(aliasedRange.start to aliasedRange.start + partitionSize by aliasedRange.step, 1)
+	}
+	
+	/**
+	 * Creates a sequence of names based on a sequence source values.  Names are formatted
+	 * name-#.
+	 */
+	private def generateNames(numNames: Int, names: IndexedSeq[_]) = {
+		for (i <- 0 until numNames) yield names(i % names.length) + "-" + i / names.length
+	}
 
-  /**
-   * Spark job main
-   */
-  def main(args: Array[String]): Unit = {    
-    val argParser = new ArgumentParser(args)
-    try {
-      argParser.debug
-      
-    	val fileName = argParser.getStringArgument("output", "Name for generated output files", Some("multivar_data"))
+	/**
+	 * Spark job main
+	 */
+	def main(args: Array[String]): Unit = {
+		val argParser = new ArgumentParser(args)
+		try {
+			argParser.debug
+			
+			val fileName = argParser.getString("output", "Name for generated output files", Some("multivar_data"))
 
-      val numPoints = argParser.getLongArgument("timestamps", "Number of timestamps to generate", Some(1000))
-      val partitions = argParser.getIntArgument("partitions", "Number of partitions to split the data into when generating", Some(4))
-  
-      val numDays = argParser.getIntArgument("days", "Number of days in the time period", Some(90))
-      
-      val numVariables = argParser.getIntArgument("variables", "Number of variables for each timestamp", Some(10))
- 
-      val octaves = argParser.getIntArgument("octaves", "Number of frequences to use in random signal", Some(6))
-      val h = argParser.getDoubleArgument("h", "Noise increment value", Some(0.1))
-      val lacunarity = argParser.getDoubleArgument("lacunarity", "Gap between frequences in random signal", Some(2.0))
-      
-      val startTime = new Date().getTime()
-      val cal = new GregorianCalendar()
-      cal.add(Calendar.DAY_OF_MONTH, numDays)
-      val endTime = cal.getTime().getTime()
-      val timeRange = (startTime to endTime by (endTime - startTime) / numPoints)
-     
-      val jobName = "Multi-variable Timeseries Generator"
-      val sc = argParser.getSparkConnector().getSparkContext(jobName)
-    	
-      // Create the RDD for spark to operate on.
-      val parallelCollection = sc.parallelize(computePartitionRanges(partitions, timeRange), partitions)
-      
-		  /**
-		   * Generates a time series where each timestamp has a corresponding set of variable values generated
-		   * using perlin noise.  The min is computed and added to the entire dataset to ensure positive values.
-		   */
-		  val generateVarData = (timeStamp: Long, timeRange: NumericRange[Long], numVars: Int, h: Double, octaves: Int, lacunarity: Double) => {
+			val numPoints = argParser.getLong("timestamps", "Number of timestamps to generate", Some(1000))
+			val partitions = argParser.getInt("partitions", "Number of partitions to split the data into when generating", Some(4))
+			
+			val numDays = argParser.getInt("days", "Number of days in the time period", Some(90))
+			
+			val numVariables = argParser.getInt("variables", "Number of variables for each timestamp", Some(10))
+			
+			val octaves = argParser.getInt("octaves", "Number of frequences to use in random signal", Some(6))
+			val h = argParser.getDouble("h", "Noise increment value", Some(0.1))
+			val lacunarity = argParser.getDouble("lacunarity", "Gap between frequences in random signal", Some(2.0))
+			
+			val startTime = new Date().getTime()
+			val cal = new GregorianCalendar()
+			cal.add(Calendar.DAY_OF_MONTH, numDays)
+			val endTime = cal.getTime().getTime()
+			val timeRange = (startTime to endTime by (endTime - startTime) / numPoints)
+			
+			val jobName = "Multi-variable Timeseries Generator"
+			val sc = argParser.getSparkConnector().getSparkContext(jobName)
+			
+			// Create the RDD for spark to operate on.
+			val parallelCollection = sc.parallelize(computePartitionRanges(partitions, timeRange), partitions)
+			
+			/**
+			 * Generates a time series where each timestamp has a corresponding set of variable values generated
+			 * using perlin noise.  The min is computed and added to the entire dataset to ensure positive values.
+			 */
+			val generateVarData = (timeStamp: Long, timeRange: NumericRange[Long], numVars: Int, h: Double, octaves: Int, lacunarity: Double) => {
 				val offsets = Array.fill(numVars)(Random.nextDouble);
 				val noiseVals = for (i <- 0 until numVars) yield {
-					Multifractal.fBm(((timeStamp.toDouble - timeRange.start) / (timeRange.end - timeRange.start)) + 0.1, offsets(i), 0.0, h, octaves, lacunarity) 
-				} 
+					Multifractal.fBm(((timeStamp.toDouble - timeRange.start) / (timeRange.end - timeRange.start)) + 0.1, offsets(i), 0.0, h, octaves, lacunarity)
+				}
 				val result = noiseVals map (_ + -noiseVals.foldLeft(noiseVals.head)(Math.min(_,_)))
-				result.mkString(timeStamp + ",", ",", "")		
-		  }
+				result.mkString(timeStamp + ",", ",", "")
+			}
 
-		  // Run spark parallel job against each time range and save the result to a text file
-      parallelCollection mapPartitions { timeRangeIter =>
-        val timeRange = timeRangeIter.next()
-        timeRange.iterator map (time => generateVarData(time, timeRange, numVariables, h, octaves, lacunarity))         
-      } saveAsTextFile(fileName)
-      
-      sc.stop()
-      
-    } catch {
-      case e: MissingArgumentException => {
-        println("Argument exception: " + e.getMessage())
-        argParser.usage
-      }
-    }
-  }
+			// Run spark parallel job against each time range and save the result to a text file
+			parallelCollection mapPartitions { timeRangeIter =>
+				val timeRange = timeRangeIter.next()
+				timeRange.iterator map (time => generateVarData(time, timeRange, numVariables, h, octaves, lacunarity))
+			} saveAsTextFile(fileName)
+			
+			sc.stop()
+			
+		} catch {
+			case e: MissingArgumentException => {
+				println("Argument exception: " + e.getMessage())
+				argParser.usage
+			}
+		}
+	}
 }

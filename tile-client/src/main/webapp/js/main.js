@@ -26,6 +26,7 @@
 
 require(['./FileLoader',
          './map/Map',
+         './layer/AllLayers',
          './layer/view/server/ServerLayerFactory',
          './layer/view/client/ClientLayerFactory',
          './annotation/AnnotationLayerFactory'
@@ -33,29 +34,121 @@ require(['./FileLoader',
 
         function (FileLoader, 
         	      Map,
+                  AllLayers,
                   ServerLayerFactory,
                   ClientLayerFactory,
                   AnnotationLayerFactory) {
             "use strict";
 
             var mapFile = "./data/map.json",
-                layersFile = "./data/layers.json";
+                cloneObject;
+
+            cloneObject = function (base) {
+                var result, key;
+
+                if ($.isArray(base)) {
+                    result = [];
+                } else {
+                    result = {};
+                }
+
+                for (key in base) {
+                    if (base.hasOwnProperty(key)) {
+                        if ("object" === typeof(base[key])) {
+                            result[key] = cloneObject(base[key]);
+                        } else {
+                            result[key] = base[key];
+                        }
+                    }
+                }
+
+                return result;
+            };
+                
 
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFile, layersFile, function (jsonDataMap) {
-                // We have all our data now; construct the UI.
-                var worldMap;
+            FileLoader.loadJSONData(mapFile, function (jsonDataMap) {
+                var allLayers = new AllLayers(),
+                    // Create world map and axes from json file under mapFile
+                    worldMap;
 
-                // Create world map and axes from json file under mapFile
+                // We need to initialize the map first, because that 
+                // initializes aperture, so sets our REST parameters; until we 
+                // do this, no server calls will work.
                 worldMap = new Map("map", jsonDataMap[mapFile]);
 
-                // Create client and server layers
-                AnnotationLayerFactory.createLayers(jsonDataMap[layersFile].AnnotationLayers, worldMap);
-                ClientLayerFactory.createLayers(jsonDataMap[layersFile].ClientLayers, worldMap);
-                ServerLayerFactory.createLayers(jsonDataMap[layersFile].ServerLayers, worldMap);
+                // Request all layers the server knows about.  Once we get 
+                // those, we can start drawing them.
+                allLayers.requestLayers(function (layers) {
+                    // For now, just take the first node specifying axes.
+                    // Eventually, we should let the user choose among them.
+                    var
+                    rootMapNode = allLayers.filterAxisLayers(layers)[0],
+                    axes = rootMapNode.axes,
+                    clientLayers = allLayers.filterLeafLayers(
+                        rootMapNode,
+                        function (layer) {
+                            var clientLayer = false;
+                            layer.renderers.forEach(function (renderer, index, renderers) {
+                                if ("client" === renderer.domain) {
+                                    clientLayer = true;
+                                    return;
+                                }
+                            });
+                            return clientLayer;
+                        }
+                    ).map(function (layer, index, layersList) {
+                        // For now, just use the first client configuration we find
+                         var config;
 
-                // Trigger the initial resize event to resize everything
-                $(window).resize();
+                        layer.renderers.forEach(function (renderer, index, renderers) {
+                            if ("client" === renderer.domain) {
+                                config = cloneObject(renderer);
+                                config.layer = layer.id;
+                                config.name = layer.name;
+                                return;
+                            }
+                        });
 
+                        return config;
+                    }),
+                    serverLayers =  allLayers.filterLeafLayers(
+                        rootMapNode,
+                        function (layer) {
+                            var serverLayer = false;
+                            layer.renderers.forEach(function (renderer, index, renderers) {
+                                if ("server" === renderer.domain) {
+                                    serverLayer = true;
+                                    return;
+                                }
+                            });
+                            return serverLayer;
+                        }
+                    ).map(function(layer, index, layersList) {
+                        // For now, just use the first server configuration we find
+                         var config;
+
+                        layer.renderers.forEach(function (renderer, index, renderers) {
+                            if ("server" === renderer.domain) {
+                                config = cloneObject(renderer);
+                                config.layer = layer.id;
+                                config.name = layer.name;
+                                return;
+                            }
+                        });
+
+                        return config;
+                    });
+
+                    // Set up our map axes
+                    worldMap.setAxisSpecs(axes);
+
+                    // Create client and server layers
+                    ClientLayerFactory.createLayers(clientLayers, worldMap);
+                    ServerLayerFactory.createLayers(serverLayers, worldMap);
+
+                    // Trigger the initial resize event to resize everything
+                    $(window).resize();
+                });
             });
         });

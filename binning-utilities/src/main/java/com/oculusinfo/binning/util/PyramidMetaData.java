@@ -51,163 +51,195 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
  * @author nkronenfeld
  */
 public class PyramidMetaData {
-    private static final Logger LOGGER = Logger.getLogger(PyramidMetaData.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(PyramidMetaData.class.getName());
 
 
 
-    private JSONObject          _metaData;
+	private JSONObject          _metaData;
 
 
 
-    public PyramidMetaData (JSONObject metaData) {
-        _metaData = metaData;
-    }
+	public PyramidMetaData (JSONObject metaData) {
+		_metaData = metaData;
+	}
 
-    public PyramidMetaData (String metaData) throws JSONException {
-        _metaData = new JSONObject(metaData);
-    }
+	public PyramidMetaData (String metaData) throws JSONException {
+		_metaData = new JSONObject(metaData);
+	}
 
-    /**
-     * Sometimes one just needs access to the raw json object - such as when one
-     * is constructing another such object. This method provides said access.
-     * 
-     * @return The raw JSON object describing the metadata of our layer.
-     */
-    public JSONObject getRawData () {
-        return _metaData;
-    }
+	/**
+	 * Sometimes one just needs access to the raw json object - such as when one
+	 * is constructing another such object. This method provides said access.
+	 * 
+	 * @return The raw JSON object describing the metadata of our layer.
+	 */
+	public JSONObject getRawData () {
+		return _metaData;
+	}
 
 
-    private JSONObject getLevelMaximumsObject () {
-        JSONObject metaInfo;
-        try {
-            metaInfo = _metaData.getJSONObject("meta");
-        } catch (JSONException e) {
-            LOGGER.log(Level.WARNING,
-                       "Missing meta object in pyramid metadata.");
-            return null;
-        }
+	private JSONObject getLevelExtremaObject (boolean max) {
+		JSONObject metaInfo;
+		try {
+			metaInfo = _metaData.getJSONObject("meta");
+		} catch (JSONException e) {
+			LOGGER.log(Level.WARNING,
+			           "Missing meta object in pyramid metadata.");
+			return null;
+		}
 
-        JSONObject maxes;
-        try {
-            maxes = metaInfo.getJSONObject("levelMaximums");
-        } catch (JSONException e1) {
-            try {
-                // Some older tiles use this instead - included for backwards
-                // compatibility. No real users should ever reach this.
-                maxes = metaInfo.getJSONObject("levelMaxFreq");
-            } catch (JSONException e2) {
-                LOGGER.log(Level.WARNING,
-                           "Missing level bounds in pyramid metadata.");
-                return null;
-            }
-        }
-        return maxes;
-    }
+		JSONObject extrema;
+		try {
+			if (max) extrema = metaInfo.getJSONObject("levelMaximums");
+			else extrema = metaInfo.getJSONObject("levelMinimums");
+		} catch (JSONException e1) {
+			try {
+				// Some older tiles use this instead - included for backwards
+				// compatibility. No real users should ever reach this.
+				if (max) extrema = metaInfo.getJSONObject("levelMaxFreq");
+				else extrema = metaInfo.getJSONObject("levelMinFreq");
+			} catch (JSONException e2) {
+				LOGGER.log(Level.WARNING,
+				           "Missing level bounds in pyramid metadata.");
+				return null;
+			}
+		}
+		return extrema;
+	}
 
-    /**
-     * Get a map, indexed by level, of the maximum value for each level
-     * 
-     * @return A map from level to maximum value of that level. May be empty,
-     *         but should never be null.
-     */
-    public Map<Integer, String> getLevelMaximums () {
-        JSONObject maxes = getLevelMaximumsObject();
+	private Map<Integer, String> getLevelExtrema (boolean max) {
+		JSONObject extrema = getLevelExtremaObject(max);
 
-        Map<Integer, String> byLevel = new HashMap<Integer, String>();
-        if (null != maxes) {
-            for (Iterator<?> i = maxes.keys(); i.hasNext();) {
-                Object rawKey = i.next();
-                try {
-                    int key = Integer.parseInt(rawKey.toString());
-                    String value = maxes.getString(rawKey.toString());
-                    byLevel.put(key, value);
-                } catch (NumberFormatException e) {
-                    LOGGER.log(Level.WARNING, "Unparsable level "+rawKey+".");
-                } catch (JSONException e) {
-                    LOGGER.log(Level.WARNING, "Error reading level maximum value for level "+rawKey+".");
-                }
-            }
-        }
-        return byLevel;
-    }
+		Map<Integer, String> byLevel = new HashMap<Integer, String>();
+		if (null != extrema) {
+			for (Iterator<?> i = extrema.keys(); i.hasNext();) {
+				Object rawKey = i.next();
+				try {
+					int key = Integer.parseInt(rawKey.toString());
+					String value = extrema.getString(rawKey.toString());
+					byLevel.put(key, value);
+				} catch (NumberFormatException e) {
+					LOGGER.log(Level.WARNING, "Unparsable level "+rawKey+".");
+				} catch (JSONException e) {
+					LOGGER.log(Level.WARNING, "Error reading level maximum value for level "+rawKey+".");
+				}
+			}
+		}
+		return byLevel;
+	}
 
-    /**
-     * Get the maximum value of a given level
-     * 
-     * @param level
-     *            The level of interest
-     * @return The maximum value of that level, or null if no maximum is
-     *         properly specified for that level.
-     */
-    public String getLevelMaximum (int level) {
-        JSONObject maxes = getLevelMaximumsObject();
+	public String getLevelExtremum (boolean max, int level) {
+		JSONObject extrema = getLevelExtremaObject(max);
 
-        if (null != maxes) {
-            for (Iterator<?> i = maxes.keys(); i.hasNext();) {
-                Object rawKey = i.next();
-                try {
-                    int key = Integer.parseInt(rawKey.toString());
-                    if (key == level) {
-                        return maxes.getString(rawKey.toString());
-                    }
-                } catch (NumberFormatException e) {
-                    LOGGER.log(Level.WARNING, "Unparsable level " + rawKey
-                                              + ".");
-                } catch (JSONException e) {
-                    LOGGER.log(Level.WARNING,
-                               "Error reading level maximum value for level "
-                                       + rawKey + ".");
-                }
-            }
-        }
-        return null;
-    }
+		if (null != extrema) {
+			for (Iterator<?> i = extrema.keys(); i.hasNext();) {
+				Object rawKey = i.next();
+				try {
+					int key = Integer.parseInt(rawKey.toString());
+					if (key == level) {
+						return extrema.getString(rawKey.toString());
+					}
+				} catch (NumberFormatException e) {
+					LOGGER.log(Level.WARNING, "Unparsable level " + rawKey
+					           + ".");
+				} catch (JSONException e) {
+					LOGGER.log(Level.WARNING,
+					           "Error reading level maximum value for level "
+					           + rawKey + ".");
+				}
+			}
+		}
+		return null;
+	}
 
-    public TilePyramid getTilePyramid () {
-        try {
-            String projection = _metaData.getString("projection");
-            if ("EPSG:4326".equals(projection)) {
-                JSONArray bounds = _metaData.getJSONArray("bounds");
-                double xMin = bounds.getDouble(0);
-                double yMin = bounds.getDouble(1);
-                double xMax = bounds.getDouble(2);
-                double yMax = bounds.getDouble(3);
-                return new AOITilePyramid(xMin, yMin, xMax, yMax);
-            } else if ("EPSG:900913".equals(projection) || "EPSG:3857".equals(projection)) {
-                return new WebMercatorTilePyramid();
-            }
-        } catch (JSONException e) {
-            LOGGER.log(Level.WARNING, "Bad projection data in tile pyramid", e);
-        }
-        return null;
-    }
+	/**
+	 * Get a map, indexed by level, of the maximum value for each level
+	 * 
+	 * @return A map from level to maximum value of that level. May be empty,
+	 *         but should never be null.
+	 */
+	public Map<Integer, String> getLevelMaximums () {
+		return getLevelExtrema(true);
+	}
 
-    /**
-     * Get a list of all levels described by the metadata of the given tile
-     * pyramid.
-     * 
-     * @return A list of levels. This should never be null, but may be empty if
-     *         an error is encountered getting the level information.
-     */
-    public List<Integer> getLevels () {
-        JSONObject maxes = getLevelMaximumsObject();
+	/**
+	 * Get a map, indexed by level, of the minimum value for each level
+	 * 
+	 * @return A map from level to minimum value of that level. May be empty,
+	 *         but should never be null.
+	 */
+	public Map<Integer, String> getLevelMinimums () {
+		return getLevelExtrema(false);
+	}
 
-        List<Integer> levels = new ArrayList<Integer>();
-        if (null != maxes) {
-            for (Iterator<?> i = maxes.keys(); i.hasNext();) {
-                Object rawKey = i.next();
-                try {
-                    int key = Integer.parseInt(rawKey.toString());
-                    levels.add(key);
-                } catch (NumberFormatException e) {
-                    LOGGER.log(Level.WARNING, "Unparsable level " + rawKey + ".");
-                }
-            }
+	/**
+	 * Get the maximum value of a given level
+	 * 
+	 * @param level
+	 *            The level of interest
+	 * @return The maximum value of that level, or null if no maximum is
+	 *         properly specified for that level.
+	 */
+	public String getLevelMaximum (int level) {
+		return getLevelExtremum(true, level);
+	}
 
-            Collections.sort(levels);
-        }
+	/**
+	 * Get the minimum value of a given level
+	 * 
+	 * @param level
+	 *            The level of interest
+	 * @return The minimum value of that level, or null if no maximum is
+	 *         properly specified for that level.
+	 */
+	public String getLevelMinimum (int level) {
+		return getLevelExtremum(false, level);
+	}
 
-        return levels;
-    }
+	public TilePyramid getTilePyramid () {
+		try {
+			String projection = _metaData.getString("projection");
+			if ("EPSG:4326".equals(projection)) {
+				JSONArray bounds = _metaData.getJSONArray("bounds");
+				double xMin = bounds.getDouble(0);
+				double yMin = bounds.getDouble(1);
+				double xMax = bounds.getDouble(2);
+				double yMax = bounds.getDouble(3);
+				return new AOITilePyramid(xMin, yMin, xMax, yMax);
+			} else if ("EPSG:900913".equals(projection) || "EPSG:3857".equals(projection)) {
+				return new WebMercatorTilePyramid();
+			}
+		} catch (JSONException e) {
+			LOGGER.log(Level.WARNING, "Bad projection data in tile pyramid", e);
+		}
+		return null;
+	}
+
+	/**
+	 * Get a list of all levels described by the metadata of the given tile
+	 * pyramid.
+	 * 
+	 * @return A list of levels. This should never be null, but may be empty if
+	 *         an error is encountered getting the level information.
+	 */
+	public List<Integer> getLevels () {
+		JSONObject maxes = getLevelExtremaObject(true);
+
+		List<Integer> levels = new ArrayList<Integer>();
+		if (null != maxes) {
+			for (Iterator<?> i = maxes.keys(); i.hasNext();) {
+				Object rawKey = i.next();
+				try {
+					int key = Integer.parseInt(rawKey.toString());
+					levels.add(key);
+				} catch (NumberFormatException e) {
+					LOGGER.log(Level.WARNING, "Unparsable level " + rawKey + ".");
+				}
+			}
+
+			Collections.sort(levels);
+		}
+
+		return levels;
+	}
 }

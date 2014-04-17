@@ -36,75 +36,94 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
-import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 
 /**
  * @author  dgray
  */
 public class DoublesImageRenderer implements TileDataImageRenderer {
+	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
-	
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
-	
-	private PyramidIO _pyramidIo;
-	private TileSerializer<Double> _serializer;
-
-	public DoublesImageRenderer(PyramidIO pyramidIo) {
-		_pyramidIo = pyramidIo;
-		_serializer = createSerializer();
+	public static Class<Double> getRuntimeBinClass () {
+		return Double.class;
 	}
-	
-	protected TileSerializer<Double> createSerializer() {
-		return new DoubleAvroSerializer();
+	public static TypeDescriptor getRuntimeTypeDescriptor () {
+		return new TypeDescriptor(Double.class);
+	}
+
+
+
+	private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
+		String rawValue = parameter.getPropertyValue(property);
+		try {
+			return Double.parseDouble(rawValue);
+		} catch (NumberFormatException|NullPointerException e) {
+			LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
+			return def;
+		}
 	}
 
 	/* (non-Javadoc)
-	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
+	 * @see TileDataImageRenderer#getLevelExtrema()
 	 */
 	@Override
-	public BufferedImage render(RenderParameter parameter) {
- 		BufferedImage bi;
-		try {  // TODO: harden at a finer granularity.
-			int outputWidth = parameter.getOutputWidth();
-			int outputHeight = parameter.getOutputHeight();
-			int rangeMax = parameter.getAsInt("rangeMax");
-			int rangeMin = parameter.getAsInt("rangeMin");
-			String layer = parameter.getString("layer");
-			int coarseness = Math.max(parameter.getAsIntOrElse("coarseness", 1), 1);
+	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
+		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
+		return new Pair<Double, Double>(minimumValue,  maximumValue);
+	}
+
+	/* (non-Javadoc)
+	 * @see TileDataImageRenderer#render(LayerConfiguration)
+	 */
+	@Override
+	public BufferedImage render (LayerConfiguration config) {
+		BufferedImage bi;
+		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+		try {
+			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
+			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
+			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
+			double maximumValue = getLevelExtrema(config).getSecond();
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-			double minimumValue = parameter.getAsDouble("levelMinimums");
-			double maximumValue = parameter.getAsDouble("levelMaximums");
-			
-			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 255);
-			IValueTransformer t = ValueTransformerFactory.create(parameter.getObject("transform", Object.class), minimumValue, maximumValue);
+			IValueTransformer t = config.produce(IValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 			
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
 
-			int coursenessFactor = (int)Math.pow(2, coarseness - 1);
-			
-			//get the tile indexes of the requested base tile and possibly the scaling one further up the tree
-			TileIndex baseLevelIndex = parameter.getObject("tileCoordinate", TileIndex.class);
-			TileIndex scaleLevelIndex = null; 
-			
+			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
+
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+			                                                                           getRuntimeBinClass(),
+			                                                                           getRuntimeTypeDescriptor());
+
 			List<TileData<Double>> tileDatas = null;
-			
-			//need to get the tile data for the level of the base level minus the courseness
+
+			// Get the coarseness-scaled true tile index
+			TileIndex scaleLevelIndex = null; 
+			// need to get the tile data for the level of the base level minus the courseness
 			for (int coursenessLevel = coarseness - 1; coursenessLevel >= 0; --coursenessLevel) {
-				scaleLevelIndex = new TileIndex(baseLevelIndex.getLevel() - coursenessLevel, (int)Math.floor(baseLevelIndex.getX() / coursenessFactor), (int)Math.floor(baseLevelIndex.getY() / coursenessFactor));				
+				scaleLevelIndex = new TileIndex(index.getLevel() - coursenessLevel,
+				                                (int)Math.floor(index.getX() / coarsenessFactor),
+				                                (int)Math.floor(index.getY() / coarsenessFactor));				
 				
-				tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(scaleLevelIndex));
+				tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(scaleLevelIndex));
 				if (tileDatas.size() >= 1) {
 					//we got data for this level so use it
 					break;
@@ -113,8 +132,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			
 			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile " + parameter.getObject("tileCoordinate", TileIndex.class) + " for layer " + layer);
-			    return null;
+				LOGGER.info("Missing tile " + index + " for layer " + layer);
+				return null;
 			}
 			
 			TileData<Double> data = tileDatas.get(0);
@@ -123,23 +142,24 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			
 			//calculate the tile tree multiplier to go between tiles at each level.
 			//this is also the number of x/y tiles in the base level for every tile in the scaled level
-			int tileTreeMultiplier = (int)Math.pow(2, baseLevelIndex.getLevel() - scaleLevelIndex.getLevel());
+			int tileTreeMultiplier = (int)Math.pow(2, index.getLevel() - scaleLevelIndex.getLevel());
 			
 			int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier; 
 
 			//the y tiles are backwards, so we need to shift the order around by reversing the counting direction
-			int yTileIndex = ((tileTreeMultiplier - 1) - (baseLevelIndex.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
+			int yTileIndex = ((tileTreeMultiplier - 1) - (index.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
 			
 			//figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
-			int xBinStart = (int)Math.floor(xBins * (((double)(baseLevelIndex.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
-			int xBinEnd = (int)Math.floor(xBins * (((double)(baseLevelIndex.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
+			int xBinStart = (int)Math.floor(xBins * (((double)(index.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
+			int xBinEnd = (int)Math.floor(xBins * (((double)(index.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
 			int yBinStart = ((int)Math.floor(yBins * (((double)(yTileIndex) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
 			int yBinEnd = ((int)Math.floor(yBins * (((double)(yTileIndex + 1) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
-			
+
 			int numBinsWide = xBinEnd - xBinStart;
 			int numBinsHigh = yBinEnd - yBinStart;
 			double xScale = ((double) bi.getWidth())/numBinsWide;
 			double yScale = ((double) bi.getHeight())/numBinsHigh;
+			ColorRamp colorRamp = config.produce(ColorRamp.class);
 			for(int ty = 0; ty < numBinsHigh; ty++){
 				for(int tx = 0; tx < numBinsWide; tx++){
 					//calculate the scaled dimensions of this 'pixel' within the image
@@ -152,9 +172,9 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 					double transformedValue = t.transform(binCount);
 					int rgb;
 					if (binCount > 0
-							&& transformedValue >= scaledLevelMinFreq
-							&& transformedValue <= scaledLevelMaxFreq) {
-						rgb = ramp.getRGB(transformedValue);
+					    && transformedValue >= scaledLevelMinFreq
+					    && transformedValue <= scaledLevelMaxFreq) {
+						rgb = colorRamp.getRGB(transformedValue);
 					} else {
 						rgb = COLOR_BLANK.getRGB();
 					}
@@ -168,12 +188,11 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 					}
 				}
 			}
-			
+
 			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
-					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
-			_logger.debug("Tile error: ", e);
+			LOGGER.debug("Tile is corrupt: " + layer + ":" + index);
+			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}
 		return bi;

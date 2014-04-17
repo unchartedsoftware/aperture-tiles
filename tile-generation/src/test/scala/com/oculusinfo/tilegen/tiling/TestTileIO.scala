@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -54,52 +54,57 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
  * synchronization issues
  */
 object TestPyramidIO {
-  private val metaDatas = MutableMap[String, String]()
-  private val datas = MutableMap[String, MutableMap[TileIndex, TileData[_]]]()
+	private val metaDatas = MutableMap[String, String]()
+	private val datas = MutableMap[String, MutableMap[TileIndex, TileData[_]]]()
 }
 class TestPyramidIO extends PyramidIO with Serializable {
-  import TestPyramidIO._
+	import TestPyramidIO._
 
-  def initializeForWrite (pyramidId: String): Unit = {
-  }
+	def initializeForWrite (pyramidId: String): Unit = {
+	}
 
-  def writeTiles[T] (pyramidId: String, 
-		     tilePyramid: TilePyramid,
-		     serializer: TileSerializer[T],
-		     data: JavaIterable[TileData[T]]): Unit = {
-    if (!datas.contains(pyramidId)) {
-      datas(pyramidId) = MutableMap[TileIndex, TileData[_]]()
-    }
+	def writeTiles[T] (pyramidId: String,
+	                   tilePyramid: TilePyramid,
+	                   serializer: TileSerializer[T],
+	                   data: JavaIterable[TileData[T]]): Unit = {
+		if (!datas.contains(pyramidId)) {
+			datas(pyramidId) = MutableMap[TileIndex, TileData[_]]()
+		}
 
-    data.asScala.foreach(datum => {
-      datas(pyramidId)(datum.getDefinition) = datum
-    })
-  }
+		data.asScala.foreach(datum =>
+			{
+				datas(pyramidId)(datum.getDefinition) = datum
+			}
+		)
+	}
 
-  def writeMetaData (pyramidId: String,
-		     metaData: String): Unit = {
-    metaDatas(pyramidId) = metaData
-  }
+	def writeMetaData (pyramidId: String,
+	                   metaData: String): Unit = {
+		metaDatas(pyramidId) = metaData
+	}
 
-  def initializeForRead (pyramidId: String,
-			 tileSize: Int,
-			 dataDescription: Properties): Unit = {}
+	def initializeForRead (pyramidId: String,
+	                       tileWidth: Int,
+	                       tileHeight: Int,
+	                       dataDescription: Properties): Unit = {}
 
-  def readTiles[T] (pyramidId: String,
-		    serializer: TileSerializer[T], 
-		    tiles: JavaIterable[TileIndex]): JavaList[TileData[T]] = {
-    tiles.asScala.map(index => {
-                        datas.get(pyramidId).map(_.get(index).getOrElse(null)).getOrElse(null)
-                      }).toList.asInstanceOf[List[TileData[T]]].asJava
-  }
+	def readTiles[T] (pyramidId: String,
+	                  serializer: TileSerializer[T],
+	                  tiles: JavaIterable[TileIndex]): JavaList[TileData[T]] = {
+		tiles.asScala.map(index =>
+			{
+				datas.get(pyramidId).map(_.get(index).getOrElse(null)).getOrElse(null)
+			}
+		).toList.asInstanceOf[List[TileData[T]]].asJava
+	}
 
-  def getTileStream (pyramidId: String, tile: TileIndex): InputStream = {
-    throw new UnsupportedOperationException("Can't get a stream from a TestPyramidIO")
-  }
+	def getTileStream[T] (pyramidId: String, serializer: TileSerializer[T], tile: TileIndex): InputStream = {
+		throw new UnsupportedOperationException("Can't get a stream from a TestPyramidIO")
+	}
 
-  def readMetaData (pyramidId: String): String = {
-    metaDatas.get(pyramidId).getOrElse(null)
-  }
+	def readMetaData (pyramidId: String): String = {
+		metaDatas.get(pyramidId).getOrElse(null)
+	}
 }
 
 
@@ -107,16 +112,16 @@ class TestPyramidIO extends PyramidIO with Serializable {
  * A simple TileIO implementation for in-memory tests
  */
 class TestTileIO extends TileIO {
-  val pyramidIO = new TestPyramidIO
-  def getPyramidIO: PyramidIO =
-    pyramidIO
+	val pyramidIO = new TestPyramidIO
+	def getPyramidIO: PyramidIO =
+		pyramidIO
 
-  def getTile (pyramidId: String, tile: TileIndex): Option[TileData[_]] = {
-    val tiles = pyramidIO.readTiles(pyramidId, null, List(tile).asJava)
-    if (null != tiles && !tiles.isEmpty() && null != tiles.get(0)) {
-      Some(tiles.get(0))
-    } else {
-      None
-    }
-  }
+	def getTile (pyramidId: String, tile: TileIndex): Option[TileData[_]] = {
+		val tiles = pyramidIO.readTiles(pyramidId, null, List(tile).asJava)
+		if (null != tiles && !tiles.isEmpty() && null != tiles.get(0)) {
+			Some(tiles.get(0))
+		} else {
+			None
+		}
+	}
 }

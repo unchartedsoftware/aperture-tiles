@@ -37,75 +37,74 @@ import java.util.Iterator;
  * @author Jesse McGeachie
  */
 public class TileIterator implements Iterator<TileIndex> {
-    private TilePyramid _pyramid;
+	private TilePyramid _pyramid;
 
-    // Desired tile level
-    private int        _level;
-
-
-    private int        _minTileX;
-    private int        _minTileY;
-    private int        _maxTileX;
-    private int        _maxTileY;
-
-    private int        _curTileX;
-    private int        _curTileY;
-
-    /**
-     * Create an iterator over a particular area for a particular level, given a
-     * projection.
-     * 
-     * @param pyramid The bin pyramid (projection) describing how to translate
-     *            raw coordinates to bin indices
-     * @param level
-     *            The tile level to check
-     * @param area
-     *            The area covered by this iterator
-     */
-    public TileIterator (TilePyramid pyramid, int level, Rectangle2D area) {
-        _pyramid = pyramid;
-        _level = level;
-
-        Point llCoords = getTileCoordinates(area.getMinX(), area.getMinY());
-        _minTileX = llCoords.x;
-        _minTileY = llCoords.y;
-
-        Point urCoords = getTileCoordinates(area.getMaxX(), area.getMaxY());
-        _maxTileX = urCoords.x;
-        _maxTileY = urCoords.y;
-
-        _curTileX = _minTileX;
-        _curTileY = _minTileY;
-    }
+	// Desired tile level
+	private int        _level;
 
 
-    private Point getTileCoordinates (double x, double y) {
-        Point2D point = new Point2D.Double(x, y);
-        TileIndex tile = _pyramid.rootToTile(point, _level);
-        return new Point(tile.getX(), tile.getY());
-    }
+	private int        _minTileX;
+	private int        _minTileY;
+	private int        _maxTileX;
+	private int        _maxTileY;
 
-    @Override
-    public boolean hasNext () {
-        return _curTileX <= _maxTileX && _curTileY <= _maxTileY;
-    }
+	private int        _curTileX;
+	private int        _curTileY;
 
-    @Override
-    public TileIndex next () {
-        TileIndex tile = new TileIndex(_level, _curTileX, _curTileY);
+	/**
+	 * Create an iterator over a particular area for a particular level, given a
+	 * projection.
+	 * 
+	 * @param pyramid The bin pyramid (projection) describing how to translate
+	 *            raw coordinates to bin indices
+	 * @param level
+	 *            The tile level to check
+	 * @param area
+	 *            The area covered by this iterator
+	 */
+	public TileIterator (TilePyramid pyramid, int level, Rectangle2D area) {
+		_pyramid = pyramid;
+		_level = level;
 
-        ++_curTileX;
-        if (_curTileX > _maxTileX) {
-            _curTileX = _minTileX;
-            ++_curTileY;
-        }
+		Point llCoords = getTileCoordinates(area.getMinX(), area.getMinY());
+		_minTileX = llCoords.x;
+		_minTileY = llCoords.y;
 
-        return tile;
-    }
+		Point urCoords = getTileCoordinates(area.getMaxX(), area.getMaxY());
+		_maxTileX = urCoords.x;
+		_maxTileY = urCoords.y;
 
-    @Override
-    public void remove () {
-        throw new UnsupportedOperationException("Can't remove from a bin iterator");
-    }
+		_curTileX = _minTileX;
+		_curTileY = _minTileY;
+	}
+
+
+	private Point getTileCoordinates (double x, double y) {
+		Point2D point = new Point2D.Double(x, y);
+		TileIndex tile = _pyramid.rootToTile(point, _level);
+		return new Point(tile.getX(), tile.getY());
+	}
+
+	@Override
+	public boolean hasNext () {
+		return _curTileX <= _maxTileX && _curTileY <= _maxTileY;
+	}
+
+	@Override
+	public TileIndex next () {
+		TileIndex tile = new TileIndex(_level, _curTileX, _curTileY);
+
+		++_curTileX;
+		if (_curTileX > _maxTileX) {
+			_curTileX = _minTileX;
+			++_curTileY;
+		}
+
+		return tile;
+	}
+
+	@Override
+	public void remove () {
+		throw new UnsupportedOperationException("Can't remove from a bin iterator");
+	}
 }
-

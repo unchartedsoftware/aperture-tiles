@@ -58,6 +58,23 @@ define(function (require) {
 
             this.layerStateMap = layerStateMap;
             this.mapLayer = mapLayer;
+
+            // Store and listen to configuration changes, so our requests can 
+            // match the map's configuration
+            this.layerInfos = {};
+            this.mapLayer.addLayerInfoListener($.proxy(function (dataListener, layerInfo) {
+                var layerState, layer;
+
+                // Record for posterity...
+                layer = layerInfo.layer;
+                this.layerInfos[layer] = layerInfo;
+
+                // And try to update our image.
+                layerState = this.layerStateMap[layer];
+                if (layerState) {
+                    this.setupRampImage(layerState, worldMapLayer.map.getZoom());
+                }
+            }, this));
             layerIds = mapLayer.getSubLayerIds();
 
             layerSpecsById = mapLayer.getSubLayerSpecsById();
@@ -108,9 +125,9 @@ define(function (require) {
                 layerState = new LayerState(layerId);
                 layerState.setName(layerName);
                 layerState.setEnabled(true);
-                layerState.setOpacity(layerSpec.opacity);
-                layerState.setRampFunction(layerSpec.transform);
-                layerState.setRampType(layerSpec.ramp);
+                layerState.setOpacity(layerSpec.renderer.opacity);
+                layerState.setRampFunction(mapLayer.getSubLayerRampFunction(layerId));
+                layerState.setRampType(mapLayer.getSubLayerRampType(layerId));
                 layerState.setFilterRange([0.0, 1.0]);
                 layerState.setZIndex(i);
 
@@ -158,18 +175,27 @@ define(function (require) {
          * the parameters to use when generating the image.
          */
         setupRampImage: function (layerState, level) {
-            var legendData = {
-                transform: layerState.getRampFunction(),
-                layer: layerState.getId(),
-                level: level,
-                width: 128,
-                height: 1,
-                orientation: "horizontal",
-                ramp: layerState.getRampType()
-            };
-            aperture.io.rest('/legend', 'POST', function (legendString, status) {
-                layerState.setRampImageUrl(legendString);
-            }, {postData: legendData, contentType: 'application/json'});
+            var layer, layerUuid, legendData;
+
+            // Make sure we have a configuration ID for this layer.
+            layer = layerState.getId();
+            if (this.layerInfos[layer]) {
+                layerUuid = this.layerInfos[layer].id;
+
+                legendData = {
+                    transform: layerState.getRampFunction(),
+                    layer: layer,
+                    id: layerUuid,
+                    level: level,
+                    width: 128,
+                    height: 1,
+                    orientation: "horizontal",
+                    ramp: layerState.getRampType()
+                };
+                aperture.io.rest('/legend', 'POST', function (legendString, status) {
+                    layerState.setRampImageUrl(legendString);
+                }, {postData: legendData, contentType: 'application/json'});
+            }
         }
     });
     return ServerLayerUiMediator;

@@ -38,21 +38,20 @@ import java.util.Iterator;
  * @author nkronenfeld
  */
 public class TileIterable implements Iterable<TileIndex> {
-    private TilePyramid _pyramid;
-    private int         _level;
-    private Rectangle2D _area;
+	private TilePyramid _pyramid;
+	private int         _level;
+	private Rectangle2D _area;
 
 
 
-    public TileIterable (TilePyramid pyramid, int level, Rectangle2D area) {
-        _pyramid = pyramid;
-        _level = level;
-        _area = area;
-    }
+	public TileIterable (TilePyramid pyramid, int level, Rectangle2D area) {
+		_pyramid = pyramid;
+		_level = level;
+		_area = area;
+	}
 
-    @Override
-    public Iterator<TileIndex> iterator () {
-        return new TileIterator(_pyramid, _level, _area);
-    }
-
+	@Override
+	public Iterator<TileIndex> iterator () {
+		return new TileIterator(_pyramid, _level, _area);
+	}
 }

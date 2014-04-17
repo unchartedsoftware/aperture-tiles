@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+	<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
     <title>Interactive Map Demo</title>
     
     <link rel="stylesheet" href="css/map.css" />
@@ -37,12 +38,18 @@
 		$(function () {
 			$.get("description.html", function (data) {
 				$("#title-description-container").append(data);
+				$("#description").accordion({ collapsible: true, activate: function( event, ui ) {
+					$(window).resize();		
+				}}); 
 			});
 		});
 	</script>
   </head>
   <body>
-	<div id="title-description-container"></div>
+  	<div id="description">
+  		<h3>Description</h3>
+		<div id="title-description-container"></div>
+	</div>
     <div id="map" style="width: 1000px; height: 600px;"> </div>
     <div id="controls-container">
         <div id="layer-controls" class="layer-control"></div>

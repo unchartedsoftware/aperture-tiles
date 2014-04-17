@@ -28,45 +28,48 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class DoubleArrayAvroSerializer extends GenericAvroArraySerializer<Double> {
-    private static final long serialVersionUID = -5878944840179404265L;
+	private static final long serialVersionUID = 5332785638604238627L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);
 
 
 
-    public static final Map<String,String> META;
-    static {
-        Map<String,String> map = new HashMap<String, String>();
-        map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "double array");
-        META = Collections.unmodifiableMap(map);
-    }
+	public static final Map<String,String> META;
+	static {
+		Map<String,String> map = new HashMap<String, String>();
+		map.put("source", "Oculus Binning Utilities");
+		map.put("data-type", "double array");
+		META = Collections.unmodifiableMap(map);
+	}
 
 
 
-    public DoubleArrayAvroSerializer () {
-        super();
-    }
+	public DoubleArrayAvroSerializer (CodecFactory compressionCodec) {
+		super(compressionCodec, TYPE_DESCRIPTOR);
+	}
 
-    @Override
-    protected Map<String, String> getTileMetaData () {
-        return META;
-    }
+	@Override
+	protected Map<String, String> getTileMetaData () {
+		return META;
+	}
 
-    @Override
-    protected String getEntrySchemaFile() {
-    	return "doubleEntry.avsc";
-    }
-    @Override
-    protected Double getEntryValue(GenericRecord entry) {
-    	return (Double) entry.get(0);
-    }
+	@Override
+	protected String getEntrySchemaFile() {
+		return "doubleEntry.avsc";
+	}
+	@Override
+	protected Double getEntryValue(GenericRecord entry) {
+		return (Double) entry.get(0);
+	}
 
-    @Override
-    protected void setEntryValue(GenericRecord avroEntry, Double rawEntry) {
-    	avroEntry.put("value", rawEntry);
-    }
+	@Override
+	protected void setEntryValue(GenericRecord avroEntry, Double rawEntry) {
+		avroEntry.put("value", rawEntry);
+	}
 }

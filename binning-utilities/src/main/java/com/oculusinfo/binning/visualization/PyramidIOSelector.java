@@ -33,7 +33,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 
 
 public interface PyramidIOSelector {
-    public PyramidIO getPyramidIO ();
+	public PyramidIO getPyramidIO ();
 
-    public JPanel getPanel ();
+	public JPanel getPanel ();
 }

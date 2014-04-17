@@ -40,14 +40,13 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
-import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 
 /**
  * A server side to render Map<String, Double> (well, technically,
@@ -62,19 +61,24 @@ import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
 
-
-
-	private PyramidIO _pyramidIo;
-	private TileSerializer<List<Pair<String, Double>>> _serializer;
-	public TopTextScoresImageRenderer (PyramidIO pyramidIo) {
-		_pyramidIo = pyramidIo;
-		_serializer = new StringDoublePairArrayAvroSerializer();
+	// Best we can do here :-(
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static Class<List<Pair<String, Double>>> getRuntimeBinClass () {
+		return (Class)List.class;
+	}
+	public static TypeDescriptor getRuntimeTypeDescriptor () {
+		return new TypeDescriptor(List.class,
+		                          new TypeDescriptor(Pair.class,
+		                                             new TypeDescriptor(String.class),
+		                                             new TypeDescriptor(Double.class)));
 	}
 
+
+
 	private void drawScoredText (Graphics2D g, Pair<String, Double> textScore, double offsetFromCenter,
-								 int minX, int maxX, int minY, int maxY,
-								 int rowHeight, int barHeight, int padding,
-								 ColorRamp ramp, double scale) {
+	                             int minX, int maxX, int minY, int maxY,
+	                             int rowHeight, int barHeight, int padding,
+	                             ColorRamp ramp, double scale) {
 		int centerX = (minX + maxX) / 2;
 		int centerY = (minY + maxY) / 2;
 		int baseline = (int) Math.round(centerY + offsetFromCenter * rowHeight - padding);
@@ -82,7 +86,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 		int barBaseline = baseline - (rowHeight - 2*padding - barHeight)/2;
 		// For bar purposes, value should be between -1 and 1
 		double value = textScore.getSecond()/scale;
-        // For color purposes, value should be between 0 and 1
+		// For color purposes, value should be between 0 and 1
 		double colorValue = (value+1.0)/2.0;
 		int barWidth = (int)Math.round((maxX-centerX)*0.8*value);
 
@@ -105,25 +109,34 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 			g.drawString(text, centerX-padding-textWidth, textBaseline);
 		}
 	}
-			
+
+	@Override
+	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+		return new Pair<Double, Double>(0.0, 0.0);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BufferedImage render(RenderParameter parameter) {
+	public BufferedImage render(LayerConfiguration config) {
 		BufferedImage bi;
+		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
-			int width = parameter.getOutputWidth();
-			int height = parameter.getOutputHeight();
-			String layer = parameter.getString("layer");
-			
-			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-			ColorRamp ramp = ColorRampFactory.create(parameter.getObject("rampType", ColorRampParameter.class), 64);
+			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<List<Pair<String, Double>>> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+				                         getRuntimeBinClass(),
+				                         getRuntimeTypeDescriptor());
 
-			List<TileData<List<Pair<String, Double>>>> tileDatas = _pyramidIo.readTiles(layer, _serializer, Collections.singleton(parameter.getObject("tileCoordinate", TileIndex.class)));
+			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+			List<TileData<List<Pair<String, Double>>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
 			if (tileDatas.isEmpty()) {
-			    _logger.debug("Layer {} is missing tile ().", layer, parameter.getObject("tileCoordinate", TileIndex.class));
-			    return null;
+				_logger.debug("Layer {} is missing tile ().", layer, index);
+				return null;
 			}
 			TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
 			int xBins = data.getDefinition().getXBins();
@@ -137,6 +150,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 			int rowHeight = 16;
 			int barHeight = 3;
 			int padding = 2;
+			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
 			for (int x=0; x<xBins; ++x) {
 				for (int y=0; y<yBins; ++y) {
@@ -148,14 +162,14 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 					List<Pair<String, Double>> cellData = new ArrayList<Pair<String, Double>>(data.getBin(x, y));
 					if (cellData.size()>0) {
 						Collections.sort(cellData, new Comparator<Pair<String, Double>>() {
-							@Override
-							public int compare(Pair<String, Double> p1,
-									           Pair<String, Double> p2) {
-								if (p1.getSecond() < p2.getSecond()) return -1;
-								else if (p1.getSecond() > p2.getSecond()) return 1;
-								else return 0;
-							}
-						});
+								@Override
+								public int compare(Pair<String, Double> p1,
+								                   Pair<String, Double> p2) {
+									if (p1.getSecond() < p2.getSecond()) return -1;
+									else if (p1.getSecond() > p2.getSecond()) return 1;
+									else return 0;
+								}
+							});
 						double minVal = cellData.get(0).getSecond();
 						double maxVal = cellData.get(cellData.size()-1).getSecond();
 						double scaleVal = Math.max(Math.abs(minVal), Math.abs(maxVal));
@@ -168,13 +182,13 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 						for (int i=0; i<n; ++i) {
 							double offset = (2*i + 1 - n) / 2.0;
 							drawScoredText(g, cellData.get(toDraw[i]), offset,
-									       xMin, xMax, yMin, yMax, rowHeight, barHeight, padding, ramp, scaleVal);
+							               xMin, xMax, yMin, yMax, rowHeight, barHeight, padding, colorRamp, scaleVal);
 						}
 					}
 				}
 			}
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + parameter.getString("layer") + ":" + parameter.getObject("tileCoordinate", TileIndex.class));
+			_logger.debug("Tile is corrupt: " + layer + ":" + index);
 			_logger.debug("Tile error: ", e);
 			bi = null;
 		}

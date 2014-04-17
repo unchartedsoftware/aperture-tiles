@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.spark
 
 
@@ -32,37 +32,39 @@ import org.apache.spark.AccumulatorParam
 
 
 class MinMaxAccumulableParam
-extends AccumulableParam[Map[Int, (Double, Double)], (Int, Double)]
-with Serializable {
-  private val defaultValue = (Double.MaxValue, Double.MinValue)
-  def addAccumulator (currentValue: Map[Int, (Double, Double)],
-		      addition: (Int, Double)): Map[Int, (Double, Double)] = {
-    val level = addition._1
-    val value = addition._2
-    val curMinMax = currentValue.getOrElse(level, defaultValue)
-    currentValue + ((level, (value min curMinMax._1, value max curMinMax._2)))
-  }
+		extends AccumulableParam[Map[Int, (Double, Double)], (Int, Double)]
+		with Serializable {
+	private val defaultValue = (Double.MaxValue, Double.MinValue)
+	def addAccumulator (currentValue: Map[Int, (Double, Double)],
+	                    addition: (Int, Double)): Map[Int, (Double, Double)] = {
+		val level = addition._1
+		val value = addition._2
+		val curMinMax = currentValue.getOrElse(level, defaultValue)
+		currentValue + ((level, (value min curMinMax._1, value max curMinMax._2)))
+	}
 
-  def addInPlace (a: Map[Int, (Double, Double)],
-		  b: Map[Int, (Double, Double)]): Map[Int, (Double, Double)] = {
-    val keys = a.keySet union b.keySet
-    keys.map(key => {
-      val aVal = a.getOrElse(key, defaultValue)
-      val bVal = b.getOrElse(key, defaultValue)
+	def addInPlace (a: Map[Int, (Double, Double)],
+	                b: Map[Int, (Double, Double)]): Map[Int, (Double, Double)] = {
+		val keys = a.keySet union b.keySet
+		keys.map(key =>
+			{
+				val aVal = a.getOrElse(key, defaultValue)
+				val bVal = b.getOrElse(key, defaultValue)
 
-      (key -> (aVal._1 min bVal._1, aVal._2 max bVal._2))
-    }).toMap
-  }
+				(key -> (aVal._1 min bVal._1, aVal._2 max bVal._2))
+			}
+		).toMap
+	}
 
-  def zero (initialValue: Map[Int, (Double, Double)]): Map[Int, (Double, Double)] =
-    Map[Int, (Double, Double)]()
+	def zero (initialValue: Map[Int, (Double, Double)]): Map[Int, (Double, Double)] =
+		Map[Int, (Double, Double)]()
 }
 
 class DoubleMinAccumulatorParam extends AccumulatorParam[Double] {
-  def addInPlace(t1: Double, t2: Double): Double = t1 min t2
-  def zero(initialValue: Double) = Double.MaxValue
+	def addInPlace(t1: Double, t2: Double): Double = t1 min t2
+	def zero(initialValue: Double) = Double.MaxValue
 }
 class DoubleMaxAccumulatorParam extends AccumulatorParam[Double] {
-  def addInPlace(t1: Double, t2: Double): Double = t1 max t2
-  def zero(initialValue: Double) = Double.MinValue
+	def addInPlace(t1: Double, t2: Double): Double = t1 max t2
+	def zero(initialValue: Double) = Double.MinValue
 }

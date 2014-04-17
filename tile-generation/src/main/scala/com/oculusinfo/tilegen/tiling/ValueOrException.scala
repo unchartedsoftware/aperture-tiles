@@ -22,20 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
 
 
 class ValueOrException[T: ClassManifest] (value: Option[T], exception: Option[Exception]) extends Serializable {
-  def hasValue: Boolean = value.isDefined
-  def get: T = value.get
-  def hasException: Boolean = exception.isDefined
-  def getException: Exception = exception.get
+	def hasValue: Boolean = value.isDefined
+	def get: T = value.get
+	def hasException: Boolean = exception.isDefined
+	def getException: Exception = exception.get
 
-  def convert[S: ClassManifest] (convertFcn: T => S): ValueOrException[S] = {
-    if (hasValue) new ValueOrException[S](Some(convertFcn(value.get)), None)
-    else new ValueOrException[S](None, exception)
-  }
+	def convert[S: ClassManifest] (convertFcn: T => S): ValueOrException[S] = {
+		if (hasValue) new ValueOrException[S](Some(convertFcn(value.get)), None)
+		else new ValueOrException[S](None, exception)
+	}
 }

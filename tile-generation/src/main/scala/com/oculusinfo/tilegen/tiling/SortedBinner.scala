@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -151,9 +151,9 @@ class SortedBinner {
 		}
 
 
-		// Go through each partition, transforming it directly to tiles of the 
+		// Go through each partition, transforming it directly to tiles of the
 		// processing type
-		data.mapPartitions(iter =>
+		val tiledByPartition = data.mapPartitions(iter =>
 			{
 				val partitionResults = MutableMap[TileIndex, TileData[PT]]()
 
@@ -191,50 +191,47 @@ class SortedBinner {
 				partitionResults.iterator
 			}
 		)
-		// Combine any tiles that happen to show up in multiple partitions
-			.reduceByKey(combineTiles(_, _))
-		// Transform to our bin type
-			.map(indexAndTile => convert(indexAndTile._2))
+
+		if (consolidationPartitions.isEmpty) {
+			// Combine any tiles that happen to show up in multiple partitions
+			tiledByPartition.reduceByKey(combineTiles(_, _))
+			// Transform to our bin type
+				.map(indexAndTile => convert(indexAndTile._2))
+		} else {
+			// Combine any tiles that happen to show up in multiple partitions
+			tiledByPartition.reduceByKey(combineTiles(_, _), consolidationPartitions.get)
+			// Transform to our bin type
+				.map(indexAndTile => convert(indexAndTile._2))
+		}
 	}
 }
 
 
-class PropertyBasedSparkConnector (properties: PropertiesWrapper)
-extends GeneralSparkConnector(
-  properties.getProperty("spark.connection.url", "local"),
-  properties.getProperty("spark.connection.home", "/srv/software/spark-0.7.2"),
-  properties.getOptionProperty("spark.connection.user"),
-  {
-    val jars = properties.getSeqProperty("spark.connection.classpath")
-    if (jars.isEmpty) {
-      SparkConnector.getDefaultLibrariesFromMaven
-    } else {
-      jars
-    }
-  },
-  properties.getOptionProperty("spark.kryo.registrar")
-)
-{
-}
-
 object SortedBinnerTest {
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
-		properties.getProperty("oculus.tileio.type", "hbase") match {
+		properties.getString("oculus.tileio.type",
+		                     "Where to write tiles",
+		                     Some("hbase")) match {
 			case "hbase" => {
-				val quorum = properties.getOptionProperty("hbase.zookeeper.quorum").get
-				val port = properties.getProperty("hbase.zookeeper.port", "2181")
-				val master = properties.getOptionProperty("hbase.master").get
+				val quorum = properties.getStringOption("hbase.zookeeper.quorum",
+				                                        "The HBase zookeeper quorum").get
+				val port = properties.getString("hbase.zookeeper.port",
+				                                "The HBase zookeeper port",
+				                                Some("2181"))
+				val master = properties.getStringOption("hbase.master",
+				                                        "The HBase master").get
 				new HBaseTileIO(quorum, port, master)
 			}
 			case _ => {
 				val extension =
-					properties.getProperty("oculus.tileio.file.extension",
-					                       "avro")
+					properties.getString("oculus.tileio.file.extension",
+					                     "The extension with which to write tiles",
+					                     Some("avro"))
 				new LocalTileIO(extension)
 			}
 		}
 	}
-  
+	
 	def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit = {
 		val binner = new SortedBinner
 		binner.debug = true
@@ -242,11 +239,12 @@ object SortedBinnerTest {
 			{
 				val procFcn: RDD[(Double, Double, BT)] => Unit = rdd =>
 				{
+					val bins = (dataset.getNumXBins max dataset.getNumYBins)
 					val tiles = binner.processDataByLevel(rdd,
 					                                      dataset.getBinDescriptor,
 					                                      dataset.getTilePyramid,
 					                                      levels,
-					                                      dataset.getBins,
+					                                      bins,
 					                                      dataset.getConsolidationPartitions)
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,
@@ -259,7 +257,7 @@ object SortedBinnerTest {
 			}
 		)
 	}
-  
+	
 	/**
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
@@ -287,8 +285,7 @@ object SortedBinnerTest {
 			argIdx = argIdx + 1
 		}
 		val defaultProperties = new PropertiesWrapper(defProps)
-
-		val connector = new PropertyBasedSparkConnector(defaultProperties)
+		val connector = defaultProperties.getSparkConnector()
 		val sc = connector.getSparkContext("Pyramid Binning")
 		val tileIO = getTileIO(defaultProperties)
 

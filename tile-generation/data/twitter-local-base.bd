@@ -1,10 +1,10 @@
 # spark connection details - specify the url of your spark master, connection 
 # user and location of spark home directory
 spark.connection.url=local
-spark.connection.home=/opt/spark-0.7.2
+spark.connection.home=/opt/spark
 # used to help distingish spark jobs in the spark or mesos UI, so other users 
 # can see who is running the job
-spark.connection.user=ndk
+spark.connection.user=me
 
 # output files to the current directory of the filesystem, and give them a 
 # prefix, to distinguish them from other runs
@@ -16,7 +16,7 @@ oculus.binning.name=twitter
 # location of raw input data - this can be a single file, or a directory full 
 # of files (which is standard for Spark).  If a directory, all files in the 
 # directory will be read.
-oculus.binning.source.location=file:////Users/slangevin/data/twitter
+oculus.binning.source.location=file:////data/twitter
 # The character used as a field delimiter
 oculus.binning.parsing.separator=,
 

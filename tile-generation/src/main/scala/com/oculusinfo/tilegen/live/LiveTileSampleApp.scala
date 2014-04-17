@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.live
 
 
@@ -47,88 +47,92 @@ import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 
 
 object LiveTileSampleApp {
-  def main (args: Array[String]): Unit = {
-    // get and cache our data
-    val argParser = new ArgumentParser(args)
+	def main (args: Array[String]): Unit = {
+		// get and cache our data
+		val argParser = new ArgumentParser(args)
 
-    try {
-      val sc = argParser.getSparkConnector().getSparkContext("tile generator")
-      val dataFile = argParser.getStringArgument("s", "The source data file to read")
-      val data = sc.textFile(dataFile).map(s => {
-        val fields = s.split('\t')
-        (fields(0).toDouble, fields(1).toDouble, fields(2).toDouble)
-      }).cache
-      val imageDir = argParser.getStringArgument("d", "The destination directory into which to put images")
-      val pyramid = new AOITilePyramid(-1.0, -1.0, 1.0, 1.0)
-      val binDesc = new StandardDoubleBinDescriptor
+		try {
+			val sc = argParser.getSparkConnector().getSparkContext("tile generator")
+			val dataFile = argParser.getString("s", "The source data file to read")
+			val data = sc.textFile(dataFile).map(s =>
+				{
+					val fields = s.split('\t')
+					(fields(0).toDouble, fields(1).toDouble, fields(2).toDouble)
+				}
+			).cache
+			val imageDir = argParser.getString("d", "The destination directory into which to put images")
+			val pyramid = new AOITilePyramid(-1.0, -1.0, 1.0, 1.0)
+			val binDesc = new StandardDoubleBinDescriptor
 
-      val generator = new LiveTileGenerator[Double, JavaDouble](data, pyramid, binDesc)
+			val generator = new LiveTileGenerator[Double, JavaDouble](data, pyramid, binDesc)
 
-      var done = false
-      do {
-        println("Enter tile level, x, and y, all comma-separated.")
-        println("Enter a blank line to end")
-        val userLine = readLine()
-        if (userLine.trim().isEmpty) {
-          done = true
-        } else {
-          val userVals = userLine.split(',')
-          val level = userVals(0).trim.toInt
-          val x = userVals(1).trim.toInt
-          val y = userVals(2).trim.toInt
+			var done = false
+			do {
+				println("Enter tile level, x, and y, all comma-separated.")
+				println("Enter a blank line to end")
+				val userLine = readLine()
+				if (userLine.trim().isEmpty) {
+					done = true
+				} else {
+					val userVals = userLine.split(',')
+					val level = userVals(0).trim.toInt
+					val x = userVals(1).trim.toInt
+					val y = userVals(2).trim.toInt
 
-          val startTime = System.currentTimeMillis
-          val tile = generator.getTile(level, x, y)
-          val endTime = System.currentTimeMillis
-          println("Generated tile ("+level+", "+x+", "+y+") in "+
-                  ((endTime-startTime)/1000.0)+" seconds")
-          val image = tileToImage(tile)
-          ImageIO.write(image, "png",
-                        new File("%s/tile-%d-%d-%d.png".format(imageDir, level, x, y)))
-        }
-      } while (!done)
-    } catch {
-      case e: Exception => {
-        println("Error in real-time tile generation")
-        println("\t"+e.getMessage)
-        argParser.usage
-      }
-    }
-  }
+					val startTime = System.currentTimeMillis
+					val tile = generator.getTile(level, x, y)
+					val endTime = System.currentTimeMillis
+					println("Generated tile ("+level+", "+x+", "+y+") in "+
+						        ((endTime-startTime)/1000.0)+" seconds")
+					val image = tileToImage(tile)
+					ImageIO.write(image, "png",
+					              new File("%s/tile-%d-%d-%d.png".format(imageDir, level, x, y)))
+				}
+			} while (!done)
+				} catch {
+			case e: Exception => {
+				println("Error in real-time tile generation")
+				println("\t"+e.getMessage)
+				argParser.usage
+			}
+		}
+	}
 
-  def scale (min: Double, x: JavaDouble, max: Double) = {
-    if (x.isNaN) 0
-    else (((x.doubleValue-min)/(max-min))*255.999).toInt
-  }
+	def scale (min: Double, x: JavaDouble, max: Double) = {
+		if (x.isNaN) 0
+		else (((x.doubleValue-min)/(max-min))*255.999).toInt
+	}
 
-  def binColorFcn (value: Option[JavaDouble],
-                   min: Double, max: Double): Int = {
-    val result = scale(min, value.getOrElse(new JavaDouble(Double.NaN)), max)
-    new java.awt.Color(result, result, result).getRGB()
-  }
+	def binColorFcn (value: Option[JavaDouble],
+	                 min: Double, max: Double): Int = {
+		val result = scale(min, value.getOrElse(new JavaDouble(Double.NaN)), max)
+		new java.awt.Color(result, result, result).getRGB()
+	}
 
-  def tileToImage (tile: TileData[JavaDouble]): BufferedImage = {
-    val index = tile.getDefinition()
-    val width = index.getXBins()
-    val height = index.getYBins()
+	def tileToImage (tile: TileData[JavaDouble]): BufferedImage = {
+		val index = tile.getDefinition()
+		val width = index.getXBins()
+		val height = index.getYBins()
 
-    val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
 
-    var min = Double.MaxValue
-    var max = Double.MinValue
-    Range(0, width).foreach(x =>
-      Range(0, height).foreach(y => {
-        min = min.min(tile.getBin(x, y))
-        max = max.max(tile.getBin(x, y))
-      })
-    )
-    Range(0, width).foreach(x =>
-      Range(0, height).foreach(y => {
-        val value = tile.getBin(x, y)
-        image.setRGB(x, y, binColorFcn(Some(value), min, max))
-      })
-    )
+		var min = Double.MaxValue
+		var max = Double.MinValue
+		Range(0, width).foreach(x =>
+			Range(0, height).foreach(y => {
+				                         min = min.min(tile.getBin(x, y))
+				                         max = max.max(tile.getBin(x, y))
+			                         })
+		)
+		Range(0, width).foreach(x =>
+			Range(0, height).foreach(y =>
+				{
+					val value = tile.getBin(x, y)
+					image.setRGB(x, y, binColorFcn(Some(value), min, max))
+				}
+			)
+		)
 
-    image
-  }
+		image
+	}
 }

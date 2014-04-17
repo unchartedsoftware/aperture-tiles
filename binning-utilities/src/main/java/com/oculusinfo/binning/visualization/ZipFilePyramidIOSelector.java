@@ -55,125 +55,125 @@ import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
  * 
  */
 public class ZipFilePyramidIOSelector extends JPanel implements PyramidIOSelector {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 
 
-    private String                          _zipPath;
-    private String                          _extension;
-    private ResourceStreamReadOnlyPyramidIO _io;
-    private JTextField                      _zipPathField;
-    private JFileChooser                    _fileChooser;
-    private JTextField                      _extensionField;
+	private String                          _zipPath;
+	private String                          _extension;
+	private ResourceStreamReadOnlyPyramidIO _io;
+	private JTextField                      _zipPathField;
+	private JFileChooser                    _fileChooser;
+	private JTextField                      _extensionField;
 
 
 
-    public ZipFilePyramidIOSelector (JFileChooser chooser) {
-        _zipPath = null;
-        _extension = "avro";
-        _io = null;
-        _fileChooser = chooser;
+	public ZipFilePyramidIOSelector (JFileChooser chooser) {
+		_zipPath = null;
+		_extension = "avro";
+		_io = null;
+		_fileChooser = chooser;
 
-        JLabel zipPathLabel = new JLabel("Zipfile path:");
-        _zipPathField = new JTextField();
-        JButton button = new JButton("...");
+		JLabel zipPathLabel = new JLabel("Zipfile path:");
+		_zipPathField = new JTextField();
+		JButton button = new JButton("...");
 
-        JLabel extensionLabel = new JLabel("Tile extension:");
-        _extensionField = new JTextField(_extension);
+		JLabel extensionLabel = new JLabel("Tile extension:");
+		_extensionField = new JTextField(_extension);
 
-        setLayout(new GridBagLayout());
-        add(zipPathLabel,    new GridBagConstraints(0, 0, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        add(_zipPathField,   new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-        add(button,          new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-        add(extensionLabel,  new GridBagConstraints(0, 1, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        add(_extensionField, new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		setLayout(new GridBagLayout());
+		add(zipPathLabel,    new GridBagConstraints(0, 0, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		add(_zipPathField,   new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		add(button,          new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		add(extensionLabel,  new GridBagConstraints(0, 1, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		add(_extensionField, new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
-        _zipPathField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void removeUpdate (DocumentEvent event) {
-                setRootPath(_zipPathField.getText());
-            }
+		_zipPathField.getDocument().addDocumentListener(new DocumentListener() {
+				@Override
+				public void removeUpdate (DocumentEvent event) {
+					setRootPath(_zipPathField.getText());
+				}
 
-            @Override
-            public void insertUpdate (DocumentEvent event) {
-                setRootPath(_zipPathField.getText());
-            }
+				@Override
+				public void insertUpdate (DocumentEvent event) {
+					setRootPath(_zipPathField.getText());
+				}
 
-            @Override
-            public void changedUpdate (DocumentEvent event) {
-                setRootPath(_zipPathField.getText());
-            }
-        });
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed (ActionEvent event) {
-                _fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                _fileChooser.setFileFilter(new FileNameExtensionFilter("zip files", "zip"));
-                _fileChooser.addChoosableFileFilter(_fileChooser.getAcceptAllFileFilter());
-                int returnVal = _fileChooser.showOpenDialog(ZipFilePyramidIOSelector.this);
+				@Override
+				public void changedUpdate (DocumentEvent event) {
+					setRootPath(_zipPathField.getText());
+				}
+			});
+		button.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed (ActionEvent event) {
+					_fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+					_fileChooser.setFileFilter(new FileNameExtensionFilter("zip files", "zip"));
+					_fileChooser.addChoosableFileFilter(_fileChooser.getAcceptAllFileFilter());
+					int returnVal = _fileChooser.showOpenDialog(ZipFilePyramidIOSelector.this);
 
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = _fileChooser.getSelectedFile();
-                    _zipPathField.setText(file.getAbsolutePath());
-                }
-            }
-        });
-        _extensionField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void removeUpdate (DocumentEvent event) {
-                setExtension(_extensionField.getText());
-            }
+					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						File file = _fileChooser.getSelectedFile();
+						_zipPathField.setText(file.getAbsolutePath());
+					}
+				}
+			});
+		_extensionField.getDocument().addDocumentListener(new DocumentListener() {
+				@Override
+				public void removeUpdate (DocumentEvent event) {
+					setExtension(_extensionField.getText());
+				}
 
-            @Override
-            public void insertUpdate (DocumentEvent event) {
-                setExtension(_extensionField.getText());
-            }
+				@Override
+				public void insertUpdate (DocumentEvent event) {
+					setExtension(_extensionField.getText());
+				}
 
-            @Override
-            public void changedUpdate (DocumentEvent event) {
-                setExtension(_extensionField.getText());
-            }
-        });
-    }
+				@Override
+				public void changedUpdate (DocumentEvent event) {
+					setExtension(_extensionField.getText());
+				}
+			});
+	}
 
-    private void setRootPath (String zipPath) {
-        if (!objectsEqual(_zipPath, zipPath)) {
-            _zipPath = zipPath;
-            updatePyramid();
-        }
-    }
+	private void setRootPath (String zipPath) {
+		if (!objectsEqual(_zipPath, zipPath)) {
+			_zipPath = zipPath;
+			updatePyramid();
+		}
+	}
 
-    private void setExtension (String extension) {
-        if (!objectsEqual(_extension, extension)) {
-            _extension = extension;
-            updatePyramid();
-        }
-    }
+	private void setExtension (String extension) {
+		if (!objectsEqual(_extension, extension)) {
+			_extension = extension;
+			updatePyramid();
+		}
+	}
 
-    private void updatePyramid () {
-        ResourceStreamReadOnlyPyramidIO oldIO = _io;
-        if (null != _zipPath && null != _extension) {
-            PyramidStreamSource newSource = new ZipResourcePyramidStreamSource(_zipPath, _extension);
-            _io = new ResourceStreamReadOnlyPyramidIO(newSource);
-            firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
-        } else if (null != oldIO) {
-            _io = null;
-            firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
-        }
-    }
+	private void updatePyramid () {
+		ResourceStreamReadOnlyPyramidIO oldIO = _io;
+		if (null != _zipPath && null != _extension) {
+			PyramidStreamSource newSource = new ZipResourcePyramidStreamSource(_zipPath, _extension);
+			_io = new ResourceStreamReadOnlyPyramidIO(newSource);
+			firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
+		} else if (null != oldIO) {
+			_io = null;
+			firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
+		}
+	}
 
-    @Override
-    public PyramidIO getPyramidIO () {
-        return _io;
-    }
+	@Override
+	public PyramidIO getPyramidIO () {
+		return _io;
+	}
 
-    @Override
-    public JPanel getPanel () {
-        return this;
-    }
+	@Override
+	public JPanel getPanel () {
+		return this;
+	}
 
-    private static boolean objectsEqual (Object a, Object b) {
-        if (null == a) return null == b;
-        return a.equals(b);
-    }
+	private static boolean objectsEqual (Object a, Object b) {
+		if (null == a) return null == b;
+		return a.equals(b);
+	}
 }

@@ -44,8 +44,8 @@ public class ZipResourcePyramidStreamSourceTest {
 	public void test() {
 		
 		ZipArchiveOutputStream zos = null;
-	    File archive;
-	    String filename = "";
+		File archive;
+		String filename = "";
 		try {
 			archive = File.createTempFile("test.", ".zip", null);
 			archive.deleteOnExit();

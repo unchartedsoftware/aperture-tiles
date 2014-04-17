@@ -51,20 +51,20 @@ object TwitterDemoBinner {
       Seq(new MavenReference("com.oculusinfo", "twitter-utilities", "0.3-SNAPSHOT")
       ) union SparkConnector.getDefaultLibrariesFromMaven
     val sc = argParser.getSparkConnector(jars).getSparkContext("Twitter demo data tiling")
-    val source = argParser.getStringArgument("source", "The source location at which to find twitter data")
+    val source = argParser.getString("source", "The source location at which to find twitter data")
     val dateParser = new SimpleDateFormat("yyyy/MM/dd.HH:mm:ss.zzzz")
-    val startTime = dateParser.parse(argParser.getStringArgument("start", "The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.zzzz"))
-    val endTime = dateParser.parse(argParser.getStringArgument("end", "The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.zzzz"))
-    val bins = argParser.getIntArgument("bins", "The number of time bins into which to divide the time range?", Some(1))
+    val startTime = dateParser.parse(argParser.getString("start", "The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.zzzz"))
+    val endTime = dateParser.parse(argParser.getString("end", "The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.zzzz"))
+    val bins = argParser.getInt("bins", "The number of time bins into which to divide the time range?", Some(1))
     val stopWordList = new TwitterDemoRecordParser(0L, 1L, 1).getStopWordList
 
-    val levelSets = argParser.getStringArgument("levels", "The level sets (;-separated) of ,-separated levels to bin.").split(";").map(_.split(",").map(_.toInt))
+    val levelSets = argParser.getString("levels", "The level sets (;-separated) of ,-separated levels to bin.").split(";").map(_.split(",").map(_.toInt))
 
-    val pyramidId = argParser.getStringArgument("id", "An ID by which to identify the finished pyramid.")
-    val pyramidName = argParser.getStringArgument("name", "A name with which to label the finished pyramid").replace("_", " ")
-    val pyramidDescription = argParser.getStringArgument("description", "A description with which to present the finished pyramid").replace("_", " ")
-    val partitions = argParser.getIntArgument("partitions", "The number of partitions into which to read the raw data", Some(0))
-    val useWords = argParser.getBooleanArgument("words", "If true, pull out all non-trival words from tweet text; if false, just pull out tags.", Some(false))
+    val pyramidId = argParser.getString("id", "An ID by which to identify the finished pyramid.")
+    val pyramidName = argParser.getString("name", "A name with which to label the finished pyramid").replace("_", " ")
+    val pyramidDescription = argParser.getString("description", "A description with which to present the finished pyramid").replace("_", " ")
+    val partitions = argParser.getInt("partitions", "The number of partitions into which to read the raw data", Some(0))
+    val useWords = argParser.getBoolean("words", "If true, pull out all non-trival words from tweet text; if false, just pull out tags.", Some(false))
 
     val binner = new RDDBinner
     binner.debug = true
@@ -77,19 +77,20 @@ object TwitterDemoBinner {
     } else {
       sc.textFile(source, partitions)
     }
+   
     val data = rawData.mapPartitions(i => {
       val recordParser = new TwitterDemoRecordParser(startTime.getTime(), endTime.getTime, bins)
       i.flatMap(line => {
-	try {
-          if (useWords) {
-	    recordParser.getRecordsByWord(line, stopWordList)
-          } else {
-            recordParser.getRecordsByTag(line)
-          }
-	} catch {
-	    // Just ignore bad records, there aren't many
-	    case _: Throwable => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
-	}
+    	  try {
+    		  if (useWords) {
+    			  recordParser.getRecordsByWord(line, stopWordList)
+    		  } else {
+    			  recordParser.getRecordsByTag(line)
+    		  }
+    	  } catch {
+    		  // Just ignore bad records, there aren't many
+    	  	case _: Throwable => Seq[(Double, Double, Map[String, TwitterDemoRecord])]()
+    	  }
       })
     })
     data.cache

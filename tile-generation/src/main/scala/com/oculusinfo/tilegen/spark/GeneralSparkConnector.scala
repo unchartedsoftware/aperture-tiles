@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.spark
 
 import org.apache.spark.SparkContext
@@ -32,35 +32,42 @@ class GeneralSparkConnector (master: String,
                              sparkHome: String,
                              user: Option[String],
                              jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven,
-                             kryoRegistrator: Option[String])
-extends SparkConnector(jars)
+                             sparkArgs: Map[String, String])
+		extends SparkConnector(jars)
 {
-  override def getSparkContext (jobName: String): SparkContext = {
-    debugConnection("property-based", jobName)
+	var debug = true
 
-    val appName = jobName + (if (user.isDefined) "("+user.get+")" else "")
+	override def getSparkContext (jobName: String): SparkContext = {
+		debugConnection("property-based", jobName)
 
-    println("Creating spark context")
-    println("\tMaster: "+master)
-    println("\tJob name: "+appName)
-    println("\tHome: "+sparkHome)
+		val appName = jobName + (if (user.isDefined) "("+user.get+")" else "")
 
-    if (kryoRegistrator != None) {
-      // inform spark that we are using kryo serialization instead of java serialization
-      System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      // set the kryo registrator to point to the base tile registrator 
-      System.setProperty("spark.kryo.registrator", kryoRegistrator.get)
-      println("\tKryo Serialization Enabled, registrator: "+kryoRegistrator.get)
-    } else {
-      println("\tJava Serialization Enabled")
-    }   
+		println()
+		println()
+		println("Setting master to "+master)
+		println("Setting app name to "+appName)
+		println("Setting spark home to "+sparkHome)
+		println("Setting spark jars to ")
+		jarList.foreach(jar => println("\t"+jar))
 
-//	val conf = new SparkConf(true)
-//		.setMaster(master)
-//		.setAppName(appName)
-//		.setSparkHome(sparkHome)
-//		.setJars(jarList)
-//	new SparkContext(conf);
-	  new SparkContext(master, appName, sparkHome, jarList)
-  }
+		val conf = new SparkConf(true)
+			.setMaster(master)
+			.setAppName(appName)
+			.setSparkHome(sparkHome)
+			.setJars(jarList)
+
+		sparkArgs.foreach(kv => conf.set(kv._1, kv._2))
+		// If we have a kryo registrator, automatically use kryo serialization
+		if (sparkArgs.contains("spark.kryo.registrator"))
+			conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+
+		if (debug) {
+			println()
+			println("Configuration:")
+			println(conf.toDebugString)
+			println()
+		}
+
+		new SparkContext(conf);
+	}
 }

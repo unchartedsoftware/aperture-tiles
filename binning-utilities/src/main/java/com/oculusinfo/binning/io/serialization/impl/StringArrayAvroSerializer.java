@@ -29,47 +29,50 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class StringArrayAvroSerializer extends GenericAvroArraySerializer<String> {
-    private static final long serialVersionUID = 4109155349465641129L;
+	private static final long serialVersionUID = -7368167703581745423L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(String.class);
 
 
 
-    public static final Map<String,String> META;
-    static {
-        Map<String,String> map = new HashMap<String, String>();
-        map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "string array");
-        META = Collections.unmodifiableMap(map);
-    }
+	public static final Map<String,String> META;
+	static {
+		Map<String,String> map = new HashMap<String, String>();
+		map.put("source", "Oculus Binning Utilities");
+		map.put("data-type", "string array");
+		META = Collections.unmodifiableMap(map);
+	}
 
 
 
-    public StringArrayAvroSerializer () {
-        super();
-    }
+	public StringArrayAvroSerializer (CodecFactory compressionCodec) {
+		super(compressionCodec, TYPE_DESCRIPTOR);
+	}
 
-    @Override
-    protected String getEntrySchemaFile() {
-    	return "stringEntry.avsc";
-    }
+	@Override
+	protected String getEntrySchemaFile() {
+		return "stringEntry.avsc";
+	}
 
-    @Override
-    protected Map<String, String> getTileMetaData () {
-        return META;
-    }
+	@Override
+	protected Map<String, String> getTileMetaData () {
+		return META;
+	}
 
-    @Override
-    protected String getEntryValue(GenericRecord entry) {
-    	return entry.get("value").toString();
-    }
+	@Override
+	protected String getEntryValue(GenericRecord entry) {
+		return entry.get("value").toString();
+	}
 
-    @Override
-    protected void setEntryValue(GenericRecord avroEntry, String rawEntry)
-    		throws IOException {
-    	avroEntry.put("value", rawEntry);
-    }
+	@Override
+	protected void setEntryValue(GenericRecord avroEntry, String rawEntry)
+		throws IOException {
+		avroEntry.put("value", rawEntry);
+	}
 }

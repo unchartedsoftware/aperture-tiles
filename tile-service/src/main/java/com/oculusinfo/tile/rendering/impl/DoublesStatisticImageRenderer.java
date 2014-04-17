@@ -47,12 +47,14 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.PyramidMetaData;
-import com.oculusinfo.tile.rendering.RenderParameter;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.util.GraphicsUtilities;
 import com.oculusinfo.tile.rendering.filter.StackBlurFilter;
+import com.oculusinfo.tile.util.GraphicsUtilities;
 
 /**
  * An image renderer that works off of tile grids, but instead of rendering
@@ -61,46 +63,59 @@ import com.oculusinfo.tile.rendering.filter.StackBlurFilter;
  * @author  dgray
  */
 public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
-	private  Font FONT = new Font("Tahoma", Font.PLAIN, 13);
-	
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
-	
-	private PyramidIO _pyramidIo;
-	private TileSerializer<Double> _serializer;
+	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesStatisticImageRenderer.class);
+	private static final Font   FONT   = new Font("Tahoma", Font.PLAIN, 13);
 
 
-	public DoublesStatisticImageRenderer(PyramidIO pyramidIo) {
-		_pyramidIo = pyramidIo;
-		_serializer = createSerializer();
+
+	public static Class<Double> getRuntimeBinClass () {
+		return Double.class;
+	}
+	public static TypeDescriptor getRuntimeTypeDescriptor () {
+		return new TypeDescriptor(Double.class);
 	}
 	
-	protected TileSerializer<Double> createSerializer() {
-		return new DoubleAvroSerializer();
+
+	/* (non-Javadoc)
+	 * @see TileDataImageRenderer#getLevelExtrema(LayerConfiguration)
+	 */
+	@Override
+	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+		return new Pair<Double, Double>(0.0, 0.0);
 	}
 
 	/* (non-Javadoc)
-	 * @see com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.TileDataImageRenderer#render(com.oculusinfo.tile.spi.impl.pyramidio.image.renderer.RenderParameter)
+	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render(RenderParameter parameter) {
- 		BufferedImage bi = null;
- 		TileIndex tileIndex = null;
- 		String layer = "?";
- 		Integer lineNumber = 0;
+	public BufferedImage render(LayerConfiguration config) {
+		BufferedImage bi = null;
+		TileIndex tileIndex = null;
+		String layer = "?";
+		int lineNumber = 0;
  		
 		try {
-			bi = GraphicsUtilities.createCompatibleTranslucentImage(parameter.getOutputWidth(), parameter.getOutputWidth());
+			tileIndex = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+			layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+			String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
+			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			lineNumber = config.getPropertyValue(LayerConfiguration.LINE_NUMBER);
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+				     getRuntimeBinClass(),
+				     getRuntimeTypeDescriptor());
+
+			bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
 		
-			tileIndex = parameter.getObject("tileCoordinate", TileIndex.class);
-			layer = parameter.getAsString("layer");
-			lineNumber = parameter.getAsIntOrElse("lineNumber", 0);
-			List<TileData<Double>> tileDatas = _pyramidIo.readTiles(layer,
-					_serializer, Collections.singleton(tileIndex));
+			List<TileData<Double>> tileDatas = pyramidIO.readTiles(layer,
+			                                                       serializer,
+			                                                       Collections.singleton(tileIndex));
 			
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-			    _logger.info("Missing tile " + tileIndex + " for layer " + layer);
-			    return null;
+				LOGGER.info("Missing tile " + tileIndex + " for layer " + layer);
+				return null;
 			}
 
 			TileData<Double> data = tileDatas.get(0);
@@ -134,12 +149,12 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			decFormat = new DecimalFormat("##.##");
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
-			String text = parameter.getAsString("shortName") + ": " + formattedTotal + " " + formattedCoverage;
+			String text = shortName + ": " + formattedTotal + " " + formattedCoverage;
 			drawTextGlow(bi, text, 5, 10 + (20*lineNumber), FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + layer + ":" + tileIndex);
-			_logger.debug("Tile error: ", e);
+			LOGGER.debug("Tile is corrupt: " + layer + ":" + tileIndex);
+			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}
 		return bi;
@@ -157,7 +172,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 * @param textColor
 	 * @param glowColor
 	 */
-	private static void drawTextGlow(BufferedImage destination, String text, int xOffset, int yOffset, Font font, Color textColor, Color glowColor) {
+	private static void drawTextGlow (BufferedImage destination, String text, int xOffset, int yOffset, Font font, Color textColor, Color glowColor) {
 		Graphics2D g = destination.createGraphics();
 		g.setFont(font);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -169,15 +184,15 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 		float sw = (float) layout.getBounds().getWidth();
 		float sh = (float) layout.getBounds().getHeight();
 		Shape shape = layout.getOutline(AffineTransform.getTranslateInstance(
-				bounds.getWidth()/2-sw/2 + xOffset, 
-				bounds.getHeight()*0.5+sh/2 + yOffset));
+		                                                                     bounds.getWidth()/2-sw/2 + xOffset, 
+		                                                                     bounds.getHeight()*0.5+sh/2 + yOffset));
 		
 		BufferedImage biText = GraphicsUtilities.createCompatibleImage(destination);
 		Graphics2D gText = biText.createGraphics(); // { gText
-			gText.setFont(g.getFont());
-			gText.setColor(glowColor);
-			gText.setStroke(new BasicStroke(2));
-			gText.draw(shape);
+		gText.setFont(g.getFont());
+		gText.setColor(glowColor);
+		gText.setStroke(new BasicStroke(2));
+		gText.draw(shape);
 		gText.dispose(); // } End gText	
 		
 		StackBlurFilter blur = new StackBlurFilter(3, 3);

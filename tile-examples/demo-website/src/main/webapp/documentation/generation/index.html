@@ -62,6 +62,7 @@
 							</ul>
 						</li>
 						</ul>
+					<div class="oculus-footer"></div>
 				</div>
 
 				<div class="content-body">
@@ -168,17 +169,18 @@ addToSparkClasspath org.apache.hbase hbase 0.94.6-cdh4.4.0</pre>
 						The following properties must be defined in the base property file:
 					</p>
 					
-					<pre class="code">spark.connection.url
+					<pre class="code">spark
    The location of the spark master.  Use "local" for spark standalone.
-   Defaults to "spark://localhost:7077"
+   Defaults to "local"
 
-spark.connection.home
+sparkhome
    The file system location of Spark in the remote location 
    (and, necessarily, on the local machine too)
-   Defaults to "/opt/spark-0.7.2"
+   Defaults to the value of the environment variable, SPARK_HOME
 
-spark.connection.user
+user
    A user name to stick in the job title so people know who is running the job
+   Defaults to the username of the current user
 
 oculus.tileio.type
    The way in which tiles are written - either hbase (to write to hbase, 

@@ -64,15 +64,15 @@ public class CacheConfigModule extends ServletModule {
 	private static class CustomPageCachingFilter extends SimplePageCachingFilter {
 		@Override
 		protected void doFilter(HttpServletRequest request,
-				HttpServletResponse response, FilterChain chain)
-				throws AlreadyGzippedException, AlreadyCommittedException,
-				FilterNonReentrantException, LockTimeoutException, Exception {
+		                        HttpServletResponse response, FilterChain chain)
+			throws AlreadyGzippedException, AlreadyCommittedException,
+			       FilterNonReentrantException, LockTimeoutException, Exception {
 
 			if( "GET".equals(request.getMethod()) ) {
 				// Go through cache
 				if (response.isCommitted()) {
 					throw new AlreadyCommittedException(
-							"Response already committed before doing buildPage.");
+					                                    "Response already committed before doing buildPage.");
 				}
 				logRequestHeaders(request);
 				PageInfo pageInfo = buildPageInfo(request, response, chain);

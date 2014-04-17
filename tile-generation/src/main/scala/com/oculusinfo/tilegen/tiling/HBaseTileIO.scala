@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.tiling
 
 
@@ -77,7 +77,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 
 
-	// We still use the basic HBasePyramidIO for table initialization and 
+	// We still use the basic HBasePyramidIO for table initialization and
 	// the like.  Plus, the basic TileIO interface requires we implement
 	// this.
 	def getPyramidIO : HBasePyramidIO =
@@ -88,11 +88,11 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 	/**
 	 * Read a set of tiles.
-     * 
-     * We can do a little better than the standard; if levels is null, we can 
-     * just read all tiles.
-     * 
-     * Note that this uses the new Hadoop API
+	 * 
+	 * We can do a little better than the standard; if levels is null, we can 
+	 * just read all tiles.
+	 * 
+	 * Note that this uses the new Hadoop API
 	 */
 	override def readTileSet[T] (sc: SparkContext,
 	                             serializer: TileSerializer[T],
@@ -138,9 +138,9 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 	/**
 	 * Write a tile set directly to HBase.
-     * 
-     * Note that this uses the old Hadoop API
-     */
+	 * 
+	 * Note that this uses the old Hadoop API
+	 */
 	override def writeTileSet[PT, BT] (pyramider: TilePyramid,
 	                                   baseLocation: String,
 	                                   data: RDD[TileData[BT]],
@@ -164,9 +164,9 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// And this is just for reporting, because it's basically free and easy
 		val tileCount = data.context.accumulator(0)
 
-		// Turn each tile into a table row, noting mins, maxes, and counts as 
+		// Turn each tile into a table row, noting mins, maxes, and counts as
 		// we go.  Note that none of the min/max/count accumulation is actually
-		// done until the file is writting - this just sets it up, it doesn't 
+		// done until the file is writting - this just sets it up, it doesn't
 		// run it
 		val HBaseTiles = data.map(tile =>
 			{
@@ -203,7 +203,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 		jobConfig.set(TableOutputFormat.OUTPUT_TABLE, baseLocation)
 
 		// Write tiles.
-		// This also populates the count, min, and max accumulators set up 
+		// This also populates the count, min, and max accumulators set up
 		// above.
 		HBaseTiles.saveAsHadoopDataset(jobConfig)
 		println("Input tiles: "+tileCount)
@@ -214,7 +214,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// our accumulators should be set, and we can update our metadata
 		println("Calculating metadata")
 		// Don't alter metadata if there was no data added.
-		// Ideally, we'd still alter levels, but that's stored in our min/max list, 
+		// Ideally, we'd still alter levels, but that's stored in our min/max list,
 		// so since we have no min/max info for levels with no data, we just don't store them.
 		if (tileCount.value > 0) {
 			val oldMetaData = readMetaData(baseLocation)
@@ -259,7 +259,7 @@ object CountHBaseRowsByLevel {
 		val argParser = new ArgumentParser(Array("-io", "hbase") ++ args)
 		val tileIO = TileIO.fromArguments(argParser)
 		val serializer = TileSerializerChooser.fromArguments(argParser)
-		val table = argParser.getStringArgument("table", "The name of the table to read")
+		val table = argParser.getString("table", "The name of the table to read")
 		val sc = argParser.getSparkConnector().getSparkContext("Testing table equality")
 
 		tileIO.readTileSet(sc, serializer, table, null).map(tile =>

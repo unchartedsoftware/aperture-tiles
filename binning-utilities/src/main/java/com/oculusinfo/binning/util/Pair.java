@@ -36,53 +36,53 @@ import java.io.Serializable;
  * @author nkronenfeld
  */
 public class Pair<S extends Serializable, T extends Serializable> implements Serializable {
-    private static final long serialVersionUID = -7793621678311661841L;
+	private static final long serialVersionUID = -7793621678311661841L;
 
 
 
-    private S _s;
-    private T _t;
-    public Pair (S s, T t) {
-        _s = s;
-        _t = t;
-    }
-    public S getFirst () {return _s;}
-    public T getSecond () {return _t;}
+	private S _s;
+	private T _t;
+	public Pair (S s, T t) {
+		_s = s;
+		_t = t;
+	}
+	public S getFirst () {return _s;}
+	public T getSecond () {return _t;}
 
 
 
-    @Override
-    public int hashCode () {
-        int h = 0;
-        if (null != _s) h = h+_s.hashCode();
-        if (null != _t) h = h*7+_t.hashCode();
-        return h;
-    }
+	@Override
+	public int hashCode () {
+		int h = 0;
+		if (null != _s) h = h+_s.hashCode();
+		if (null != _t) h = h*7+_t.hashCode();
+		return h;
+	}
 
-    @Override
-    public boolean equals (Object that) {
-        if (this == that) return true;
-        if (null == that) return false;
-        if (!(that instanceof Pair)) return false;
+	@Override
+	public boolean equals (Object that) {
+		if (this == that) return true;
+		if (null == that) return false;
+		if (!(that instanceof Pair)) return false;
 
-        Pair<?, ?> pThat = (Pair<?,  ?>) that;
-        if (!objectsEqual(_s, pThat._s)) return false;
-        if (!objectsEqual(_t, pThat._t)) return false;
-        return true;
-    }
+		Pair<?, ?> pThat = (Pair<?,  ?>) that;
+		if (!objectsEqual(_s, pThat._s)) return false;
+		if (!objectsEqual(_t, pThat._t)) return false;
+		return true;
+	}
 
-    private boolean objectsEqual (Object a, Object b) {
-        if (null == a) return null == b;
-        return a.equals(b);
-    }
+	private boolean objectsEqual (Object a, Object b) {
+		if (null == a) return null == b;
+		return a.equals(b);
+	}
 
-    @Override
-    public String toString () {
-        return "("+toString(_s)+", "+toString(_t)+")";
-    }
+	@Override
+	public String toString () {
+		return "("+toString(_s)+", "+toString(_t)+")";
+	}
 
-    private String toString (Object a) {
-        if (null == a) return "null";
-        return a.toString();
-    }
+	private String toString (Object a) {
+		if (null == a) return "null";
+		return a.toString();
+	}
 }

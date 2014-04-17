@@ -28,20 +28,19 @@ import oculus.aperture.common.rest.ResourceDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import com.oculusinfo.tile.rest.layer.LayerResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
 import com.oculusinfo.tile.rest.tile.TileResource;
 
 public class RestConfigModule extends AbstractModule {
-
-
 	@Override
 	protected void configure() {
 
 		// Bind REST endpoints for clients.
 		MapBinder<String, ResourceDefinition> resourceBinder =
 			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
-				
-		resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(TileResource.class));
+
+		resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(LayerResource.class));
 		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
 		resourceBinder.addBinding("/legend").toInstance(new ResourceDefinition(LegendResource.class));
 	}

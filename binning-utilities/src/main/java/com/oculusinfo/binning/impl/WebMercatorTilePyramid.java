@@ -269,10 +269,10 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
         return null;
     }
     
-    public Collection<TileIndex> getTiles (Rectangle2D bounds, int level){
-    	TileIterator tileIt = new TileIterator(this, level, bounds);
-    	List<TileIndex> results = new ArrayList<TileIndex>();
-    	while (tileIt.hasNext()) {
+	public Collection<TileIndex> getTiles (Rectangle2D bounds, int level){
+		TileIterator tileIt = new TileIterator(this, level, bounds);
+		List<TileIndex> results = new ArrayList<TileIndex>();
+		while (tileIt.hasNext()) {
 			results.add(tileIt.next());
 		}
     	

@@ -52,67 +52,68 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
 	}
 
 	public PyramidStreamSource getStream () {
-	    return _stream;
+		return _stream;
 	}
 
 	@Override
-    public void initializeForWrite (String basePath) throws IOException {
-    	throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
-    }
+	public void initializeForWrite (String basePath) throws IOException {
+		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+	}
 
-    @Override
-    public <T> void writeTiles (String basePath, TilePyramid tilePyramid, TileSerializer<T> serializer,
-                                Iterable<TileData<T>> data) throws IOException {
+	@Override
+	public <T> void writeTiles (String basePath, TilePyramid tilePyramid, TileSerializer<T> serializer,
+	                            Iterable<TileData<T>> data) throws IOException {
     	
-    	throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
-    }
+		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+	}
 
-    @Override
-    public void writeMetaData (String basePath, String metaData) throws IOException {
-    	throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
-    }
+	@Override
+	public void writeMetaData (String basePath, String metaData) throws IOException {
+		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+	}
 
-    @Override
-    public void initializeForRead(String pyramidId, int tileSize,
-    		Properties dataDescription) {
-    	// Noop
-    }
+	@Override
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
+		// Noop
+	}
 
-    @Override
-    public <T> List<TileData<T>> readTiles (String basePath,
-                                            TileSerializer<T> serializer,
-                                            Iterable<TileIndex> tiles) throws IOException {
-        List<TileData<T>> results = new LinkedList<TileData<T>>();
-        for (TileIndex tile: tiles) {
-            InputStream stream = _stream.getTileStream(basePath, tile);
-            //stream will be null if the tile cannot be found
-            if(stream==null){
-            	_logger.info("no tile data found for " + tile.toString() );
-            	continue;
-            }
+	@Override
+	public <T> List<TileData<T>> readTiles (String basePath,
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException {
+		List<TileData<T>> results = new LinkedList<TileData<T>>();
+		for (TileIndex tile: tiles) {
+			InputStream stream = _stream.getTileStream(basePath, tile);
+			//stream will be null if the tile cannot be found
+			if(stream==null){
+				_logger.info("no tile data found for " + tile.toString() );
+				continue;
+			}
             
-            TileData<T> data = serializer.deserialize(tile, stream);
-            results.add(data);
-            stream.close();
-        }
-        return results;
-    }
+			TileData<T> data = serializer.deserialize(tile, stream);
+			results.add(data);
+			stream.close();
+		}
+		return results;
+	}
 
-    @Override
-    public InputStream getTileStream (String basePath, TileIndex tile) throws IOException {
-        return _stream.getTileStream(basePath, tile);
-    }
+	@Override
+	public <T> InputStream getTileStream (String basePath,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException {
+		return _stream.getTileStream(basePath, tile);
+	}
 
-    @Override
-    public String readMetaData (String basePath) throws IOException {
-        InputStream stream = _stream.getMetaDataStream(basePath);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String rawMetaData = "";
-        String line;
-        while (null != (line = reader.readLine())) {
-            rawMetaData = rawMetaData + line;
-        }
-        reader.close();
-        return rawMetaData;
-    }
+	@Override
+	public String readMetaData (String basePath) throws IOException {
+		InputStream stream = _stream.getMetaDataStream(basePath);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+		String rawMetaData = "";
+		String line;
+		while (null != (line = reader.readLine())) {
+			rawMetaData = rawMetaData + line;
+		}
+		reader.close();
+		return rawMetaData;
+	}
 }

@@ -63,7 +63,7 @@ define(function (require) {
          * @param visibleTiles an array of all visible tiles that will need to be displayed
          * @param callback tile receive callback function
          */
-        filterAndRequestTiles: function(visibleTiles, callback) {
+        filterAndRequestTiles: function(visibleTiles, tileSetBounds, callback) {
 
             var activeTiles = [],
                 defunctTiles = {},
@@ -105,7 +105,7 @@ define(function (require) {
                 }
             }
             // Request needed tiles from dataService
-            this.dataService.getDataFromServer(neededTiles, callback);
+            this.dataService.getDataFromServer(neededTiles, tileSetBounds, callback);
         },
 
 
@@ -149,7 +149,7 @@ define(function (require) {
             if (this.tiles.indexOf(tilekey) === -1) {
                 this.tiles.push(tilekey);
             }
-            this.dataService.getDataFromServer([tilekey], callback);
+            this.dataService.getDataFromServer([tilekey], {}, callback);
         },
 
 

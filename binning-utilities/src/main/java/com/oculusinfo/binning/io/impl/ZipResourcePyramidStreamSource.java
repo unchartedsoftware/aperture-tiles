@@ -39,8 +39,8 @@ public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
 
-    private ZipFile      _tileSetArchive;
-    private String       _tileExtension;
+	private ZipFile      _tileSetArchive;
+	private String       _tileExtension;
 
 
 	
@@ -49,22 +49,21 @@ public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 			_tileSetArchive = new ZipFile(zipFilePath);
 			_tileExtension = tileExtension;
 		} catch (IOException e) {
-        	_logger.warn("Could not create zip file for " + zipFilePath, e);
+			_logger.warn("Could not create zip file for " + zipFilePath, e);
 		}
 	}
 	
 	@Override
 	public InputStream getTileStream(String basePath, TileIndex tile) throws IOException {
-    	String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _tileExtension, basePath, tile.getLevel(), tile.getX(), tile.getY());
-    	ZipArchiveEntry entry = _tileSetArchive.getEntry(tileLocation);
-    	return _tileSetArchive.getInputStream(entry);
+		String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _tileExtension, basePath, tile.getLevel(), tile.getX(), tile.getY());
+		ZipArchiveEntry entry = _tileSetArchive.getEntry(tileLocation);
+		return _tileSetArchive.getInputStream(entry);
 	}
 
 	@Override
 	public InputStream getMetaDataStream(String basePath) throws IOException {
-    	String location = basePath+"/"+PyramidIO.METADATA_FILENAME;
-    	ZipArchiveEntry entry = _tileSetArchive.getEntry(location);
-    	return _tileSetArchive.getInputStream(entry);
+		String location = basePath+"/"+PyramidIO.METADATA_FILENAME;
+		ZipArchiveEntry entry = _tileSetArchive.getEntry(location);
+		return _tileSetArchive.getInputStream(entry);
 	}
-
 }

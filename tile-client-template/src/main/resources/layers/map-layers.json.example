@@ -1,0 +1,155 @@
+{
+    "_comment": [
+        "This json configuration file specifies all layers associated with the twitter ",
+        "dataset, organized hierarchically according to two things: primarily, ability ",
+        "to go on the same map, and secondarily, by interest to the user.  This means ",
+        "that if two layers can go on the same map, using the same axes, they should fall ",
+        "under the same node in the hierarchy, and that the axes should be noted on the ",
+        "joint parent node under which they both fall.  However, as long as layers that ",
+        "can and should share a map are so grouped, any further organization is completely ",
+        "open, and should be used simply to present the layers to the user in a way that ",
+        "makes sense.",
+        "",
+        "Leaf nodes should all specify actual layers that can be displayed on a map, and ",
+        "all layers that can be so displayed should be leaf nodes.  Non-leaf nodes exist ",
+        "solely to organize and group layers as described above.",
+        "",
+        "Axis configuration is transitive downward - meaning that if axes are specified on ",
+        "a given node in the hierarchy, they also apply to all children of that node.  ",
+        "Axis configurations should be specified so that exactly one applies to each leaf ",
+        "node.  An axis configuration is specified under an 'axes' node, and should contain ",
+        "a xAxisConfig and yAxisConfig keys.  Each axis can each have the following keys: ",
+		"       title:      axis label text                     ex. Longitude",
+		"       id:         axis identifier                     ex. map-x-axis or map-y-axis",
+		"       min:        minimum axis value",
+		"       max:        maximum axis value",
+		"       intervalSpec:", 
+		"           type:   type of interval                    ex. fixed or percentage",
+		"           value:  fixed / percentage increment of the axis", 
+		"                                                       ex. 10",
+		"           pivot:  the fixed value / percentage that all other values are incremented from",
+		"                                                       ex. 0",
+		"           allowScaleByZoom: if the axis should be scaled by the zoom factor",
+		"                                                       ex. false",
+		"           isMercatorProjected: whether or not to project value by mercator projection",
+		"                                                       ex. true",
+		"       unitSpec:", 
+		"           type:       type of units parse in FormatAxis.js",
+		"                                                       ex.degrees, time, decimal, B, M, K",
+		"           decimals:   number of decimals              ex. 2",
+		"           allowStepDown: if the units can step down if they are below range",
+		"                                                       ex. true .001M => 1K",
+		"           repeat:     whether or not the axis will repeat",
+		"                                                       ex. true or false",
+		"       position:       where to place the axis         ex. left, right, top, bottom",
+		"       majorMarkerLength:  the length of the major marker tick mark",
+		"                                                       ex. 10",
+		"       majorMarkerWidth:   the width of the major marker tick mark",
+		"                                                       ex. 1",
+		"       majorMarkerColour:  the color of the major marker tick mark",
+		"                                                       ex. #7E7E7E",
+		"       markerLabelColour: the color of the major marker label",
+		"                                                       ex. #7E7E7E",
+		"       axisLabelColour:   the color of the axis label",
+		"                                                       ex. #7E7E7E",
+		"       fontFamily:         the font family to use for labels",
+		"                                                       ex. Tahoma, Verdana, Segoe, sans-serif",
+		"       markerLabelFontSize: the font size of the marker label", 
+		"                                                       ex. 0.75em",
+		"       axisLabelFontSize:   the font size of the axis label",
+		"                                                       ex. 0.95em"
+    ],
+    layers: [
+        {
+            "id": "twitter-heatmap",
+            "name": "Twitter Heatmap Layers",
+            "children": [
+                {
+                    id: "twitter.lon.lat",
+                    name: "Tweet heatmap",
+                    axes: {
+    	                "xAxisConfig" : {
+        	                "title" : "Longitude",
+        	                "id" : "map-x-axis",
+        	                "min" : -180,
+        	                "max" : 180,
+        	                "intervalSpec" : {
+            	                "type" : "fixed",
+            	                "value" : 60,
+            	                "pivot" : 0,
+            	                "allowScaleByZoom" : true,
+            	                "isMercatorProjected" : true
+        	                },
+        	                "unitSpec" : {
+            	                "type" : "degrees",
+            	                "decimals" : 2,
+            	                "allowStepDown" : false
+        	                },
+        	                "position" : "bottom",
+        	                "repeat" : true,
+			                "majorMarkerLength" : 10,
+			                "majorMarkerWidth" : 1,
+			                "majorMarkerColour" : "#7E7E7E",
+			                "markerLabelColour" : "#7E7E7E",
+			                "axisLabelColour" : "#7E7E7E",
+			                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			                "markerLabelFontSize" : "0.75em",
+			                "axisLabelFontSize" : "0.95em"
+    	                },
+    	                "yAxisConfig" : {
+        	                "title" : "Latitude",
+        	                "id" : "map-y-axis",
+        	                "min" : -85.051129,
+        	                "max" : 85.051129,
+        	                "intervalSpec" : {
+            	                "type" : "fixed",
+            	                "value" : 30,
+            	                "pivot" : 0,
+            	                "allowScaleByZoom" : true,
+            	                "isMercatorProjected" : true
+        	                },
+        	                "unitSpec" : {
+            	                "type" : "degrees",
+            	                "decimals" : 2,
+            	                "allowStepDown" : false
+        	                },
+        	                "position" : "left",
+        	                "repeat" : false,
+			                "majorMarkerLength" : 10,
+			                "majorMarkerWidth" : 1,
+			                "majorMarkerColour" : "#7E7E7E",
+			                "markerLabelColour" : "#7E7E7E",
+			                "axisLabelColour" : "#7E7E7E",
+			                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+			                "markerLabelFontSize" : "0.75em",
+			                "axisLabelFontSize" : "0.95em"
+    	                }
+                    },
+                    data: {
+                        pyramidio: {
+                            type: "zip",
+                            root.path: "/local-tilesets.zip",
+                            extension: "tile"
+                        },
+                        serializer: {
+                            type: "legacy"
+                        }
+                    },
+                    renderers: [
+                        {
+                            domain: "server",
+                            renderer: {
+                                type: "heatmap",
+	                            ramp: "ware",
+	                            opacity: 0.85
+                            },
+	                        transform: {
+                                name: "log10"
+                            },
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
