@@ -142,7 +142,7 @@ define(function (require) {
             if ( data["new"] !== undefined ) {
                 data["new"].timestamp = new Date().getTime();
             }
-           
+
             // Request the layer information
             aperture.io.rest('/annotation',
                              'POST',

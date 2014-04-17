@@ -234,6 +234,8 @@ define(function (require) {
 
                         // modify existing feature
                         this.features[ tilekey ][ binkey ].setAnnotations( annotationsByBin[ binkey ] );
+                        // redraw feature
+                        this.features[ tilekey ][ binkey ].redraw();
                         // remove from defunct list so we know not to delete it later
                         delete defunctFeatures[ binkey ];
                     }
@@ -253,19 +255,40 @@ define(function (require) {
 
         writeCallback: function( data ) {
 
-            console.log("WRITE returned from server");
+            if ( data.status.toLowerCase() === "success" ) {
+                // success
+                console.log("WRITE returned successfully from server");
+            } /*else {
+                // failure
+                // writes can only fail if server is dead or UUID collision
+            } */
+
         },
 
 
         modifyCallback: function( data ) {
 
-            console.log("MODIFY returned from server");
+            if ( data.status.toLowerCase() === "success" ) {
+                // success
+                console.log("MODIFY returned successfully from server");
+            } else {
+                // failure
+                // re-poll data in case client is out-of-sync
+                this.onMapUpdate();
+            }
         },
 
 
         removeCallback: function( data ) {
 
-            console.log("REMOVE returned from server");
+            if ( data.status.toLowerCase() === "success" ) {
+                // success
+                console.log("REMOVE returned successfully from server");
+            } else {
+                // failure
+                // re-poll data in case client is out-of-sync
+                this.onMapUpdate();
+            }
         },
 
 

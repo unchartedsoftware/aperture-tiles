@@ -59,13 +59,12 @@ public class AnnotationResource extends ApertureServerResource {
 	public Representation postAnnotation( String jsonData ) throws ResourceException {
 
 		try {
+
 			JSONObject json = new JSONObject( jsonData );
 			JSONObject data = json.getJSONObject("data");
 			String type = json.getString( "type" ).toLowerCase();
 			String layer = json.getString("layer");
-			
 			JSONObject jsonResult = new JSONObject();
-			jsonResult.put("type", type);
 			
 			// write
 			if ( type.equals("write") ) {
@@ -86,7 +85,8 @@ public class AnnotationResource extends ApertureServerResource {
 				jsonResult.put("data", newAnnotation.toJSON() );
 			}
 			
-			setStatus(Status.SUCCESS_OK);			 
+			setStatus(Status.SUCCESS_OK);		
+			jsonResult.put("status", "success");
 			return new JsonRepresentation(jsonResult);
 			
 		} catch (JSONException e) {
