@@ -225,7 +225,7 @@ public class AnnotationTestsBase {
 				
 	}
 	
-	protected List<AnnotationTile> generateTiles( int numEntries, AnnotationIndexer<TileAndBinIndices> indexer ) {
+	protected List<AnnotationTile> generateTiles( int numEntries, AnnotationIndexer indexer ) {
 		
 		List<AnnotationData<?>> annotations = generateJSONAnnotations( numEntries );
 		

@@ -23,28 +23,21 @@
  */
 package com.oculusinfo.annotation.index;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import com.oculusinfo.binning.*;
 import com.oculusinfo.annotation.*;
 
-public abstract class AnnotationIndexer<T> {
+public abstract class AnnotationIndexer {
 
     protected TilePyramid _pyramid;
     
     public AnnotationIndexer() {
     }
     
-    public List<T> getIndices( AnnotationData<?> data ) {
-    	List<T> indices = new LinkedList<>();		
-		for (int i=0; i<=data.getLevel(); i++) {
-			indices.add( getIndex( data, i ) );
-		}
-		return indices;
-    }
-    
-    public abstract T getIndex( AnnotationData<?> data, int level );
+    public abstract List<TileAndBinIndices> getIndices( AnnotationData<?> data );
+  
+    public abstract TileAndBinIndices getIndex( AnnotationData<?> data, int level );
 
     
 }

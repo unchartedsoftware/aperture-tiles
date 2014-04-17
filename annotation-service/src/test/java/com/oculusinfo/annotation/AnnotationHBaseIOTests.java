@@ -46,7 +46,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	private static final boolean VERBOSE = false;
 
 	private AnnotationIO _io;
-	private AnnotationIndexer<TileAndBinIndices> _indexer;
+	private AnnotationIndexer _indexer;
 	private AnnotationSerializer<AnnotationTile> _tileSerializer;
 	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
 	private TilePyramid _pyramid;

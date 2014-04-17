@@ -45,7 +45,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = false;
 	
-	private AnnotationIndexer<TileAndBinIndices> _indexer;
+	private AnnotationIndexer _indexer;
 	private AnnotationSerializer<AnnotationTile> _tileSerializer;
 	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
 	private TilePyramid _pyramid;

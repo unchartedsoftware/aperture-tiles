@@ -49,7 +49,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	protected AnnotationIO _io;
 	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
 	protected AnnotationSerializer<AnnotationData<?>> _dataSerializer; 
-	protected AnnotationIndexer<TileAndBinIndices> _indexer;
+	protected AnnotationIndexer _indexer;
 
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 

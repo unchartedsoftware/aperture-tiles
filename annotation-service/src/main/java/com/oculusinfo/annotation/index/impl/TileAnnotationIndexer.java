@@ -23,19 +23,31 @@
  */
 package com.oculusinfo.annotation.index.impl;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.binning.*;
-
 import com.google.inject.Inject;
 
-public class TileAnnotationIndexer extends AnnotationIndexer<TileAndBinIndices> {
+public class TileAnnotationIndexer extends AnnotationIndexer {
 
 	@Inject
     public TileAnnotationIndexer( TilePyramid pyramid ) {
     	_pyramid = pyramid;
     }
     
+	@Override
+	public List<TileAndBinIndices> getIndices( AnnotationData<?> data ) {
+		
+		// only generate indices upwards
+    	List<TileAndBinIndices> indices = new LinkedList<>();		
+		for (int i=0; i<=data.getLevel(); i++) {
+			indices.add( getIndex( data, i ) );
+		}
+		return indices;
+    }
 
     @Override
     public TileAndBinIndices getIndex( AnnotationData<?> data, int level ) {
