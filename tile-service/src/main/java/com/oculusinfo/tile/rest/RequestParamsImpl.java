@@ -22,11 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
+package com.oculusinfo.tile.rest;
 
 import org.json.JSONObject;
-
-import com.oculusinfo.binning.io.RequestParams;
 
 /**
  * A wrapper for a JSONObject that represents the key/value pairs passed through

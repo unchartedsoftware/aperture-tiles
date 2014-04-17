@@ -22,14 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.tile.rest;
 
 import java.util.List;
-import java.util.Properties;
 
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.io.impl.RequestParamsImpl;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;

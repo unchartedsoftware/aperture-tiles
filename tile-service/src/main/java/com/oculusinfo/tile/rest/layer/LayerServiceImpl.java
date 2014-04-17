@@ -51,7 +51,6 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.EmptyConfigurableFactory;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
-import com.oculusinfo.binning.io.RequestParamsFactory;
 import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
@@ -59,6 +58,7 @@ import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.RequestParamsFactory;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 import com.oculusinfo.tile.util.JsonUtilities;
 

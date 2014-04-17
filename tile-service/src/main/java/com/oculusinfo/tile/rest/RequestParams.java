@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.tile.rest;
 
 /**
  * Interface for retrieving a request parameter that was passed to the data
