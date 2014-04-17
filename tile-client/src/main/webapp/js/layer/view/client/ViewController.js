@@ -217,7 +217,7 @@ define(function (require) {
 
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], tileSetBounds, $.proxy(this.updateAndRedrawViews, this));
+                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], {}, $.proxy(this.updateAndRedrawViews, this));
             }
 
             // always redraw immediately in case tiles are already in memory, or need to be drawn

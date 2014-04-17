@@ -129,6 +129,102 @@ define(function (require) {
             this.axes.push(new Axis(yAxisSpec));
         },
 
+
+        getTileIterator: function() {
+            var level = this.map.getZoom(),
+                bounds = this.map.olMap_.getExtent(),
+                mapExtents = this.map.olMap_.getMaxExtent(),
+                mapPyramid = new AoITilePyramid(mapExtents.left, mapExtents.bottom,
+                    mapExtents.right, mapExtents.top);
+
+            // determine all tiles in view
+            return new TileIterator(mapPyramid, level,
+                                    bounds.left, bounds.bottom,
+                                    bounds.right, bounds.top);
+        },
+
+
+        getTilesInView: function() {
+
+            return this.getTileIterator().getRest();
+        },
+
+        /*
+        getTileSetBoundsInView: function() {
+
+            return {'params': this.getTileIterator().toTileBounds()};
+        },
+        */
+
+        /**
+         * Maps a mouse position in the mouse viewport to a tile identification key
+         * @param mx mouse x position in the map viewport
+         * @param my mouse y position in the map viewport
+         * @return string tile identification key under the specified mouse position
+         */
+        getTileKeyUnderMouse: function(mx, my) {
+
+            var TILESIZE = 256,
+                zoom,
+                maxPx = {},
+                minPx = {},
+                totalTilespan,
+                totalPixelSpan = {},
+                pixelMax = {},
+                pixelMin = {},
+                pixel = {};
+
+            zoom = this.map.olMap_.getZoom();
+            maxPx.x = this.map.olMap_.maxPx.x;
+            maxPx.y = this.map.olMap_.maxPx.y;
+            minPx.x = this.map.olMap_.minPx.x;
+            minPx.y = this.map.olMap_.minPx.y;
+            totalTilespan = Math.pow(2, zoom);
+            totalPixelSpan.x = TILESIZE * totalTilespan;
+            totalPixelSpan.y = this.map.olMap_.viewPortDiv.clientHeight;
+            pixelMax.x = totalPixelSpan.x - minPx.x;
+            pixelMax.y = totalPixelSpan.y - minPx.y;
+            pixelMin.x = totalPixelSpan.x - maxPx.x;
+            pixelMin.y = totalPixelSpan.x - maxPx.y;
+            pixel.x = mx + pixelMin.x;
+            pixel.y = (this.map.olMap_.size.h - my - pixelMax.y + totalPixelSpan.x );
+
+            return zoom + "," + Math.floor(pixel.x / TILESIZE) + "," + Math.floor(pixel.y / TILESIZE);
+        },
+
+        getOLMap: function() {
+            return this.map.olMap_;
+        },
+
+        getApertureMap: function() {
+            return this.map;
+        },
+
+        addApertureLayer: function(layer, mappings, spec) {
+            return this.map.addLayer(layer, mappings, spec);
+        },
+
+        addOLLayer: function(layer) {
+            return this.map.olMap_.addLayer(layer);
+        },
+
+        addOLControl: function(control) {
+            return this.map.olMap_.addControl(control);
+        },
+
+        getUid: function() {
+            return this.map.uid;
+        },
+
+        setLayerIndex: function(layer, zIndex) {
+            this.map.olMap_.setLayerIndex(layer, zIndex);
+        },
+
+        getLayerIndex: function(layer) {
+            return this.map.olMap_.getLayerIndex(layer);
+        },
+
+
         setOpacity: function (newOpacity) {
             this.map.olMap_.baseLayer.setOpacity(newOpacity);
         },

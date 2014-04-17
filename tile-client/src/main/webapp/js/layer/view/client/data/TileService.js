@@ -146,7 +146,7 @@ define(function (require) {
          *   }
          * }
          */
-        getRequest: function(tilekey, callback) {
+        getRequest: function(tilekey, tileSetBounds, callback) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),

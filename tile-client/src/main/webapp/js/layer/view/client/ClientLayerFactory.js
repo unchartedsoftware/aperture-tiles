@@ -112,8 +112,7 @@ define( function (require) {
 						map: map,
 						views: []
 					}, 
-					i,
-                    dataLayer;
+					i;
 			
 				// add views to layer spec object
 				for (i=0; i<layerJSON.views.length; i++) {
