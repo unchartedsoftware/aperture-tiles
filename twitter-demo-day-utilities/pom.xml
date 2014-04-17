@@ -85,6 +85,10 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
+  
+  <environmentVariables>	<!-- Oculus' key for using Google Translate API, April 2014 -->
+	<GOOGLE_TRANSLATE_KEY>AIzaSyCPcre8-V1F7u7twADzZpkTPd8v2AXdPSA</GOOGLE_TRANSLATE_KEY>
+  </environmentVariables>
 
   <build>
     <finalName>twitter-utilities</finalName>

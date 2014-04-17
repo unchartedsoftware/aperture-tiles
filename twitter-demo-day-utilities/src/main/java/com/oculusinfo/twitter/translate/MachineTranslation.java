@@ -35,29 +35,37 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Machine Translation using Google Translate API, which is accessed using REST calls 
+ * Machine Translation using Google Translate API, which is accessed using REST
+ * calls
+ * 
+ * (NOTE: This class requires a Google Translate API KEY string to be set as an
+ * environment variable named GOOGLE_TRANSLATE_KEY.)
  * 
  * @author dgiesbrecht
  */
 public class MachineTranslation {
 	
-    /**
-     * Translate text string from one language to another.
-     * 
-	 * @param sourceText	Original text string to be translated.
-     * 
-     * @param sourceLangID	Language ID of source text (NOTE: must be iso639-1 language code format).
-     * 						If this sourceLangID string is empty then Google Translate will try to auto-detect
-     * 						the source language
-     * @param targetLangID	Desired language ID of translated text (NOTE: must be iso639-1 language code format).
-     *           
-     * @return				Translated text string (NOTE: if any exceptions are caught, the original 
-     * 						(untranslated) text string will be returned.		
-     */	
+	/**
+	 * Translate text string from one language to another.
+	 * 
+	 * @param sourceText
+	 *            Original text string to be translated.
+	 * 
+	 * @param sourceLangID
+	 *            Language ID of source text (NOTE: must be iso639-1 language
+	 *            code format). If this sourceLangID string is empty then Google
+	 *            Translate will try to auto-detect the source language
+	 * @param targetLangID
+	 *            Desired language ID of translated text (NOTE: must be iso639-1
+	 *            language code format).
+	 * 
+	 * @return Translated text string (NOTE: if any exceptions are caught, the
+	 *         original (untranslated) text string will be returned.
+	 */
 	public String translateText(String sourceText, String sourceLangID, String targetLangID) {
 
 		String translatedText = "";
-		String googleTranslateKey = "AIzaSyCPcre8-V1F7u7twADzZpkTPd8v2AXdPSA";	//Oculus' key for Google Translate API
+		String googleTranslateKey = System.getenv("GOOGLE_TRANSLATE_KEY");	//Google Translate API key (set as env variable)
 		
 		if (sourceText.isEmpty() || sourceLangID == targetLangID) {
 			// just return original text string if sourceText is empty or if source and target language IDs are the same
