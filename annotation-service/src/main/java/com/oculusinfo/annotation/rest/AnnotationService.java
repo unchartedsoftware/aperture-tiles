@@ -25,6 +25,7 @@ package com.oculusinfo.annotation.rest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.binning.*;
@@ -50,7 +51,7 @@ public interface AnnotationService {
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> readAnnotations( String layer, TileIndex tile ) throws IllegalArgumentException;
+	public abstract Map<BinIndex, List<AnnotationData<?>>> readAnnotations( UUID id, String layer, TileIndex tile ) throws IllegalArgumentException;
 	
 	
 	/*
@@ -59,5 +60,11 @@ public interface AnnotationService {
 	 */
 	public abstract void removeAnnotation( String layer, AnnotationData<?> annotation );
 
+	
+	/*
+	 * Set filter for uuid
+	 * 
+	 */
+	public abstract void setFilter( UUID id, String layer, Map<String, Integer> filter );
 	
 }

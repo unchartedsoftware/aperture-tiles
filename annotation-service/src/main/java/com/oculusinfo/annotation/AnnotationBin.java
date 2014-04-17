@@ -50,14 +50,14 @@ public class AnnotationBin implements Serializable {
     private final BinIndex _index;
     private Map<String, List<UUID>> _references = new LinkedHashMap<>();
       
-    public AnnotationBin( BinIndex index ) {   
+    public AnnotationBin( BinIndex index ) {
     	_index = index;
-    }   
-    public AnnotationBin( BinIndex index, Map<String, List<UUID>> references ) {   
+    }
+    public AnnotationBin( BinIndex index, Map<String, List<UUID>> references ) {
     	_index = index;
     	_references = references;
-    }        
-    public AnnotationBin( BinIndex index, AnnotationData<?> data ) {   
+    }
+    public AnnotationBin( BinIndex index, AnnotationData<?> data ) {
     	_index = index;
     	add( data );
     }
@@ -75,10 +75,11 @@ public class AnnotationBin implements Serializable {
     
     public synchronized void add( AnnotationData<?> data ) {
     	
-    	UUID uuid =  data.getUUID();
+    	String priority = data.getPriority().toLowerCase();
+    	UUID uuid =  data.getUUID();   	
     	
-    	if ( _references.containsKey( data.getPriority() ) ) {    		
-    		List<UUID> entries = _references.get( data.getPriority() );   		
+    	if ( _references.containsKey( priority ) ) {    		
+    		List<UUID> entries = _references.get( priority );   		
     		// only add if reference does not already exist
     		if ( !entries.contains( uuid ) ) {
     			entries.add( uuid );
@@ -86,14 +87,14 @@ public class AnnotationBin implements Serializable {
     	} else {
     		List<UUID> entries = new LinkedList<>();
     		entries.add( uuid );
-    		_references.put( data.getPriority(), entries );
+    		_references.put( priority, entries );
     	}    	
     }
       
     
     public synchronized boolean remove( AnnotationData<?> data ) { 
     	
-    	String priority = data.getPriority();
+    	String priority = data.getPriority().toLowerCase();
     	UUID uuid = data.getUUID();
     	boolean removedAny = false;
     	
@@ -118,8 +119,9 @@ public class AnnotationBin implements Serializable {
     
     public synchronized List<UUID> getReferences( String priority ) {
     	
-    	if ( _references.containsKey( priority ) ) {
-    		return _references.get( priority );
+    	String lcPriority = priority.toLowerCase();
+    	if ( _references.containsKey( lcPriority ) ) {
+    		return _references.get( lcPriority );
     	} else {
     		return new LinkedList<>();
     	}
@@ -146,7 +148,7 @@ public class AnnotationBin implements Serializable {
 	    	// for each priority group in a bin
 		    for (Map.Entry<String, List<UUID>> referenceEntry : _references.entrySet() ) {
 		    	
-		    	String priority = referenceEntry.getKey();
+		    	String priority = referenceEntry.getKey().toLowerCase();
 		    	List<UUID> references = referenceEntry.getValue();
 		    	
 		    	JSONArray referenceJSON = new JSONArray();

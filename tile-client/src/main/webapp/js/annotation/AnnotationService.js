@@ -33,8 +33,22 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        generateUUID,
         AnnotationService;
 
+
+
+    /**
+     * Generates an RFC4122 version 4 compliant UUID
+     *
+     * @returns {string}    UUID
+     */
+    generateUUID = function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
+            return v.toString(16);
+        });
+    };
 
 
     AnnotationService = Class.extend({
@@ -44,10 +58,11 @@ define(function (require) {
         /**
          * Construct an AnnotationService
          */
-        init: function ( layer ) {
+        init: function ( layer, filters, callback ) {
 
             this.layer = layer;
-
+            this.uuid = generateUUID();
+            this.setFilters( filters, callback );
         },
 
 
@@ -66,6 +81,7 @@ define(function (require) {
             // request data from server
             aperture.io.rest(
                 ('/annotation/'+
+                    this.uuid+'/'+
                     this.layer+'/'+
                     level+'/'+
                     xIndex+'/'+
@@ -84,10 +100,7 @@ define(function (require) {
         writeAnnotation: function( annotation, callback ) {
 
             // generate uuid for data
-            annotation.uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
+            annotation.uuid = generateUUID();
 
             var data = {
                 "new": annotation
@@ -126,6 +139,21 @@ define(function (require) {
             };
 
             this.postRequest( "REMOVE", data, callback );
+        },
+
+
+        /**
+         * Set new server side annotation filters
+         * @param filters      filters to be passed to server
+         * @param callback     the callback that is called upon receiving data from server
+         */
+        setFilters: function( filters, callback ) {
+
+            var data = {
+                uuid: this.uuid,
+                filters: filters
+            };
+            this.postRequest( "FILTER", data, callback );
         },
 
 

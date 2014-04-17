@@ -48,7 +48,7 @@ public abstract class GenericServiceTests<T> extends AnnotationTestsBase {
 		// scan all
     	System.out.println("Reading ALL annotations");
     	long start = System.currentTimeMillis();
-    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );
+    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( null, TEST_LAYER_NAME, tile );
     	long end = System.currentTimeMillis();
     	double time = ((end-start)/1000.0);
 		System.out.println( "\t" + scan.size() + " entries scanned in " + time + " seconds");

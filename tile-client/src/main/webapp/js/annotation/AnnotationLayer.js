@@ -95,8 +95,8 @@ define(function (require) {
             this.map = spec.map;
             this.layer = spec.layer;
             this.indexer = new TileAnnotationIndexer();
-            //this.filters = spec.filters;
-            this.service = new AnnotationService( spec.layer );
+            this.filters = spec.filters;
+            this.service = new AnnotationService( this.layer, this.filters, $.proxy( this.onMapUpdate, this ) );
             this.features = {};
             this.pendingFeature = null;
 
@@ -107,7 +107,7 @@ define(function (require) {
             this.map.on('panend', $.proxy( this.onMapUpdate, this ) );
 
             // trigger callback to draw first frame
-            this.onMapUpdate();
+            //this.onMapUpdate();
         },
 
     /*

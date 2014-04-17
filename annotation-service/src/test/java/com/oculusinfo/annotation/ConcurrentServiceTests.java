@@ -289,7 +289,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
+    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( null, TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}
@@ -305,7 +305,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		//TileIndex tile = new TileIndex( 0, 0, 0 );
     	
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( TEST_LAYER_NAME, tile );   	
+		Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( null, TEST_LAYER_NAME, tile );   	
     	return scan;
 
 	}

@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.locks.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
@@ -50,7 +51,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
 	protected AnnotationSerializer<AnnotationData<?>> _dataSerializer; 
 	protected AnnotationIndexer _indexer;
-
+	protected ConcurrentHashMap< UUID, Map<String, Integer> > _uuidFilterMap;
+	
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
 	@Inject
@@ -58,6 +60,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		_tileSerializer = new JSONTileSerializer();
 		_dataSerializer = new JSONDataSerializer();
+		_uuidFilterMap =  new ConcurrentHashMap<>();
 		_indexer = indexer;
 		_io = io;
 	}
@@ -117,11 +120,17 @@ public class AnnotationServiceImpl implements AnnotationService {
 	
 	
 
-	public Map<BinIndex, List<AnnotationData<?>>> readAnnotations( String layer, TileIndex query ) {
+	public Map<BinIndex, List<AnnotationData<?>>> readAnnotations( UUID id, String layer, TileIndex query ) {
+		
+		Map<String, Integer> filters = null;
+		
+		if ( id != null ) {
+			filters = _uuidFilterMap.get( id );
+		}
 		
 		_lock.readLock().lock();
     	try {  		
-    		return getDataFromTiles( layer, query );    		
+    		return getDataFromTiles( layer, query, filters );    		
     	} finally { 		
     		_lock.readLock().unlock();
     	}
@@ -149,6 +158,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 	}
 
+	
+	public void setFilter( UUID id, String layer, Map<String, Integer> filter ) {
+		_uuidFilterMap.put( id, filter );
+	}
+	
 	
 	/*
 	 * 
@@ -259,12 +273,13 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 
-	
+	/*
 	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex ) {
 		
 		return getDataFromTiles( layer, tileIndex, null );
 		
 	}
+	*/
 	
 	
 	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, Map<String, Integer> filter ) {

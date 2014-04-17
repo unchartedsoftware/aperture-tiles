@@ -24,8 +24,11 @@
  */
 package com.oculusinfo.annotation.rest;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
 
 import oculus.aperture.common.rest.ApertureServerResource;
 
@@ -83,6 +86,24 @@ public class AnnotationResource extends ApertureServerResource {
 				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );				
 				_service.modifyAnnotation( layer, oldAnnotation, newAnnotation );				
 				jsonResult.put("data", newAnnotation.toJSON() );
+				
+			} else if ( type.equals("filter") ) {
+				
+				UUID uuid = UUID.fromString( data.getString("uuid") );
+				JSONObject jsonFilters = data.getJSONObject("filters");
+						
+				Map<String, Integer> filters = new HashMap<>();
+				
+				Iterator<?> priorities = jsonFilters.keys();
+		        while( priorities.hasNext() ) {
+		        	
+		        	String priority = (String)priorities.next();		            
+		            int count = jsonFilters.getInt( priority );
+		            filters.put( priority.toLowerCase(), count );
+		        }
+		        
+		        _service.setFilter( uuid, layer, filters );
+				
 			}
 			
 			setStatus(Status.SUCCESS_OK);		
@@ -104,6 +125,7 @@ public class AnnotationResource extends ApertureServerResource {
 
 		try {
 			
+			String id = (String) getRequest().getAttributes().get("id");
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			String xAttr = (String) getRequest().getAttributes().get("x");
@@ -112,6 +134,7 @@ public class AnnotationResource extends ApertureServerResource {
 			int zoomLevel = Integer.parseInt(levelDir);
 			int x = Integer.parseInt(xAttr);
 			int y = Integer.parseInt(yAttr);
+			UUID uuid = UUID.fromString( id );
 			
 		    // We return an object including the tile index ("index") and 
 		    // the tile data ("data").
@@ -126,7 +149,7 @@ public class AnnotationResource extends ApertureServerResource {
 		    result.put("index", indexJson );
 		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
 		    
-		    Map<BinIndex, List<AnnotationData<?>>> data = _service.readAnnotations( layer, index );
+		    Map<BinIndex, List<AnnotationData<?>>> data = _service.readAnnotations( uuid, layer, index );
 
 		    JSONObject dataJson = new JSONObject();
 		    for (Map.Entry<BinIndex, List<AnnotationData<?>>> entry : data.entrySet() ) {

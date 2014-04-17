@@ -58,8 +58,8 @@ public abstract class AnnotationData<T> implements Serializable {
 			json.put("level", getLevel() );
 			json.put("uuid", getUUID().toString() );
 			json.put("timestamp", getTimeStamp().toString() );
-			json.put("priority", getPriority() );
-			json.put("data", getData() );			
+			json.put("priority", getPriority().toLowerCase() );
+			json.put("data", getData() );
 			return json;
 		} catch (Exception e) {
 			e.printStackTrace();
