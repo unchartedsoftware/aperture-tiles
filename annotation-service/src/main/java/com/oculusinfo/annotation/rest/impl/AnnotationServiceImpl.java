@@ -99,20 +99,17 @@ public class AnnotationServiceImpl implements AnnotationService {
     											 + "upon receiving this exception to refresh all client annotations");        		
     		}
     		
-			// check if it is a spatial or content modification		
-			if ( newAnnotation.hasSameLocation( oldAnnotation ) ) {
-				
-				// same location, simply overwrite data index
-	    		writeDataToIO( layer, newAnnotation );
-				
-			} else {
-				
-				// different location, must re-tile				
-				// remove it from old tiles
-				removeDataFromTiles( layer, oldAnnotation );
-				// add it to new tiles
-				addDataToTiles( layer, newAnnotation );
-			}
+			/* Technically, you should not have to re-tile the annotation if
+			 * there is only a content change, as it will stay in the same tiles,
+			 * however, since we want to update the reference time-stamp on a content
+			 * change, it is re-tile so that we can filter from tiles without reading
+			 * the annotations themselves
+			 */
+			// remove from old tiles
+			removeDataFromTiles( layer, oldAnnotation );
+			// add it to new tiles
+			addDataToTiles( layer, newAnnotation );
+			
     	} finally {
     		_lock.writeLock().unlock();
     	}
@@ -173,11 +170,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 	/*
 	 * Check data UUID in IO, if already exists, return true
 	 */
-	private boolean checkForCollision( String layer, AnnotationData<?> data ) {
+	private boolean checkForCollision( String layer, AnnotationData<?> annotation ) {
 		
-		List<UUID> dataIndex = new LinkedList<>();
-		dataIndex.add( data.getUUID() );
-		return ( readDataFromIO( layer, dataIndex ).size() > 0 ) ;
+		List<AnnotationReference> reference = new LinkedList<>();
+		reference.add( annotation.getReference() );
+		return ( readDataFromIO( layer, reference ).size() > 0 ) ;
 
 	}
 	
@@ -186,9 +183,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 */
 	public boolean isRequestOutOfDate( String layer, AnnotationData<?> annotation ) {
 		
-		List<UUID> uuid = new LinkedList<>();
-		uuid.add( annotation.getUUID() );
-		List<AnnotationData<?>> annotations = readDataFromIO( layer, uuid );
+		List<AnnotationReference> reference = new LinkedList<>();
+		reference.add( annotation.getReference() );
+		List<AnnotationData<?>> annotations = readDataFromIO( layer, reference );
 		
 		if ( annotations.size() == 0 ) {
 			// removed since client update, abort
@@ -272,15 +269,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return indices;
 	}
 
-
-	/*
-	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex ) {
-		
-		return getDataFromTiles( layer, tileIndex, null );
-		
-	}
-	*/
-	
 	
 	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, Map<String, Integer> filter ) {
 		
@@ -292,7 +280,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		List<AnnotationTile> tiles = readTilesFromIO( layer, indices );
 				
 		// for each tile, assemble list of all data references
-		List<UUID> references = new LinkedList<>();
+		List<AnnotationReference> references = new LinkedList<>();
 		for ( AnnotationTile tile : tiles ) {					
 			if ( filter != null ) {
 				// filter provided
@@ -439,16 +427,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return tiles;		
 	}
 	
-	protected List<AnnotationData<?>> readDataFromIO( String layer, List<UUID> indices ) {
+	protected List<AnnotationData<?>> readDataFromIO( String layer, List<AnnotationReference> references ) {
 		
 		List<AnnotationData<?>> data = new LinkedList<>();
 		
-		if ( indices.size() == 0 ) return data;
+		if ( references.size() == 0 ) return data;
 		
 		try {
 			
 			_io.initializeForRead( layer );	
-			data = _io.readData( layer, _dataSerializer, indices );			
+			data = _io.readData( layer, _dataSerializer, references );			
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();

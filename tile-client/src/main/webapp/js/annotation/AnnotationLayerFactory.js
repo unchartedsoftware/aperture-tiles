@@ -47,6 +47,7 @@ define( function (require) {
 			var spec = {
 				map: map,
 				layer: layerJSON.layer,
+                priorities: layerJSON.priorities,
 				filters: layerJSON.filters
 			};
 			return new AnnotationLayer( spec );

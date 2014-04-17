@@ -94,6 +94,7 @@ define(function (require) {
 
             this.map = spec.map;
             this.layer = spec.layer;
+            this.priorities = spec.priorities;
             this.indexer = new TileAnnotationIndexer();
             this.filters = spec.filters;
             this.service = new AnnotationService( this.layer, this.filters, $.proxy( this.onMapUpdate, this ) );
@@ -412,7 +413,8 @@ define(function (require) {
         popupDisplayEdit : function( feature ) {
             // destroy popup
             feature.removeAndDestroyPopup();
-            feature.createEditablePopup( $.proxy( this.popupEditClose, this ),
+            feature.createEditablePopup( this.priorities,
+                                         $.proxy( this.popupEditClose, this ),
                                          $.proxy( this.popupEditSave, this ),
                                          $.proxy( this.popupEditRemove, this ) );
         },
@@ -504,7 +506,8 @@ define(function (require) {
                         });
 
                         // create edit popup to enter annotation info
-                        that.pendingFeature.createEditablePopup( $.proxy( that.popupCreationClose, that ),
+                        that.pendingFeature.createEditablePopup( that.priorities,
+                                                                 $.proxy( that.popupCreationClose, that ),
                                                                  $.proxy( that.popupCreationSave, that ));
 
                     }

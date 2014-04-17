@@ -99,7 +99,7 @@ public class AnnotationResource extends ApertureServerResource {
 		        	
 		        	String priority = (String)priorities.next();		            
 		            int count = jsonFilters.getInt( priority );
-		            filters.put( priority.toLowerCase(), count );
+		            filters.put( priority, count );
 		        }
 		        
 		        _service.setFilter( uuid, layer, filters );

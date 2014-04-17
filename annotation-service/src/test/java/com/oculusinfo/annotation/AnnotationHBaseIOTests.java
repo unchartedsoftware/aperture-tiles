@@ -24,7 +24,6 @@
 package com.oculusinfo.annotation;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -86,7 +85,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
         List<AnnotationTile> tiles = generateTiles( NUM_ENTRIES, _indexer );
     	
         List<TileIndex> tileIndices = tilesToIndices( tiles );
-        List<UUID> dataIndices = dataToIndices( annotations );
+        List<AnnotationReference> dataIndices = dataToIndices( annotations );
         
     	try {
     		

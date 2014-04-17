@@ -47,7 +47,7 @@ public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "test.annotations";
 	static final double   EPSILON = 0.00001;
-	static final int      NUM_ENTRIES = 10;
+	static final int      NUM_ENTRIES = 50;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 
@@ -153,8 +153,8 @@ public class AnnotationTestsBase {
 	
 	protected boolean compareTiles( AnnotationTile a, AnnotationTile b, boolean verbose ) {
 		
-		List<UUID> aReferences = a.getAllReferences();
-		List<UUID> bReferences = b.getAllReferences();
+		List<AnnotationReference> aReferences = a.getAllReferences();
+		List<AnnotationReference> bReferences = b.getAllReferences();
 		
 		if ( !a.getIndex().equals( b.getIndex() ) ) {
 			if ( verbose ) System.out.println( "Bin indices are not equal");
@@ -166,9 +166,9 @@ public class AnnotationTestsBase {
 			return false;		
 		}
 			
-		for ( UUID aRef : aReferences ) {
+		for ( AnnotationReference aRef : aReferences ) {
 			int foundCount = 0;
-			for ( UUID bRef : bReferences ) {
+			for ( AnnotationReference bRef : bReferences ) {
 				if ( aRef.equals( bRef ) ) {
 					foundCount++;
 				}
@@ -306,10 +306,10 @@ public class AnnotationTestsBase {
 		return indices;
 	}
 
-	protected List<UUID> dataToIndices( List<AnnotationData<?>> data ) {
-		List<UUID> indices = new ArrayList<>();
+	protected List<AnnotationReference> dataToIndices( List<AnnotationData<?>> data ) {
+		List<AnnotationReference> indices = new ArrayList<>();
 		for ( AnnotationData<?> d : data ) {
-			indices.add( d.getUUID() );
+			indices.add( d.getReference() );
 		}
 		return indices;
 	}

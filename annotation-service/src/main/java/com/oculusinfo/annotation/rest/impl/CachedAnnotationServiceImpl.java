@@ -25,11 +25,11 @@ package com.oculusinfo.annotation.rest.impl;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
-
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
@@ -43,23 +43,40 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 
 	private final int MAX_CACHE_ENTRIES = 10000;
 	
-	private AnnotationCache<TileIndex, AnnotationTile> _tileCache;
-	private AnnotationCache<UUID, AnnotationData<?>> _dataCache;
+	private ConcurrentHashMap< String, AnnotationCache<TileIndex, AnnotationTile> > _tileCache;
+	private ConcurrentHashMap< String, AnnotationCache<AnnotationReference, AnnotationData<?>> > _dataCache;
 
 	@Inject
 	public CachedAnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
 		super( io, indexer );
-		_tileCache = new ConcurrentLRUCache<>( MAX_CACHE_ENTRIES );
-		_dataCache = new ConcurrentLRUCache<>( MAX_CACHE_ENTRIES );
+		_tileCache = new ConcurrentHashMap<>();
+		_dataCache = new ConcurrentHashMap<>();
+	}
+	
+	protected AnnotationCache<TileIndex, AnnotationTile> getLayerTileCache( String layer ) {
+		if ( !_tileCache.containsKey( layer ) ) {
+			_tileCache.put( layer, new ConcurrentLRUCache< TileIndex, AnnotationTile >( MAX_CACHE_ENTRIES ) );
+		}
+		return _tileCache.get( layer );
+	}
+	
+	protected AnnotationCache<AnnotationReference, AnnotationData<?>> getLayerDataCache( String layer ) {
+		if ( !_dataCache.containsKey( layer ) ) {
+			_dataCache.put( layer, new ConcurrentLRUCache< AnnotationReference, AnnotationData<?> >( MAX_CACHE_ENTRIES ) );	
+		}
+		return _dataCache.get( layer );
 	}
 	
 	@Override
 	protected void writeTilesToIO( String layer, List<AnnotationTile> tiles ) {
 		
+		AnnotationCache<TileIndex, AnnotationTile> tileCache = getLayerTileCache( layer );
+		
 		// put in cache
 		for ( AnnotationTile tile : tiles ) {
-			_tileCache.put( tile.getIndex(), tile );
+
+			tileCache.put( tile.getIndex(), tile );
 		}
 
 		super.writeTilesToIO( layer, tiles );
@@ -68,8 +85,10 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	@Override
 	protected void writeDataToIO( String layer, AnnotationData<?> data ) {
 		
+		AnnotationCache<AnnotationReference, AnnotationData<?>> dataCache = getLayerDataCache( layer );
+		
 		// put in cache
-		_dataCache.put( data.getUUID(), data );
+		dataCache.put( data.getReference(), data );
 		
 		super.writeDataToIO( layer, data );
 	}
@@ -77,9 +96,11 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	@Override
 	protected void removeTilesFromIO( String layer, List<AnnotationTile> tiles ) {
 
+		AnnotationCache<TileIndex, AnnotationTile> tileCache = getLayerTileCache( layer );
+		
 		// remove from cache
 		for ( AnnotationTile tile : tiles ) {
-			_tileCache.remove( tile.getIndex() );
+			tileCache.remove( tile.getIndex() );
 		}
 		
 		super.removeTilesFromIO( layer, tiles );
@@ -89,8 +110,10 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	@Override
 	protected void removeDataFromIO( String layer, AnnotationData<?> data ) {
 		
+		AnnotationCache<AnnotationReference, AnnotationData<?>> dataCache = getLayerDataCache( layer );
+		
 		// remove from cache
-		_dataCache.remove( data.getUUID() );
+		dataCache.remove( data.getReference() );
 
 		super.removeDataFromIO( layer, data );
 
@@ -99,13 +122,15 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	@Override
 	protected List<AnnotationTile> readTilesFromIO( String layer, List<TileIndex> indices ) {
 			
+		AnnotationCache<TileIndex, AnnotationTile> tileCache = getLayerTileCache( layer );		
+		
 		List<AnnotationTile> tiles = new LinkedList<>();			
 		List<TileIndex> toReadFromIO = new LinkedList<>();	
 		
 		// pull from cache
 		for ( TileIndex index : indices ) {
 			
-			AnnotationTile tile = _tileCache.get( index );		
+			AnnotationTile tile = tileCache.get( index );		
 			if ( tile != null ) {
 				// found in cache
 				tiles.add( tile );
@@ -121,7 +146,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		
 		// add to cache
 		for ( AnnotationTile tile : freshTiles ) {
-			_tileCache.put( tile.getIndex(), tile );
+			tileCache.put( tile.getIndex(), tile );
 		}
 
 		return tiles;		
@@ -129,21 +154,23 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	
 	
 	@Override
-	protected List<AnnotationData<?>> readDataFromIO( String layer, List<UUID> indices ) {
-				
+	protected List<AnnotationData<?>> readDataFromIO( String layer, List<AnnotationReference> references ) {
+		
+		AnnotationCache<AnnotationReference, AnnotationData<?>> dataCache = getLayerDataCache( layer );		
+		
 		List<AnnotationData<?>> data = new LinkedList<>();	
-		List<UUID> dataToReadFromIO = new LinkedList<>();
+		List<AnnotationReference> dataToReadFromIO = new LinkedList<>();
 		
 		// for each reference, pull from cache and flag missing for read
-		for ( UUID index : indices ) {
+		for ( AnnotationReference reference : references ) {
 			
-			AnnotationData<?> d = _dataCache.get( index );	
+			AnnotationData<?> d = dataCache.get( reference );	
 			if ( d != null ) {				
 				// found in cache
 				data.add( d );
 			} else {				
 				// not in cache, flag to read from io
-				dataToReadFromIO.add( index );
+				dataToReadFromIO.add( reference );
 			}
 		}
 		
@@ -153,7 +180,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		
 		// add to cache
 		for ( AnnotationData<?> d : freshData ) {
-			_dataCache.put( d.getUUID(), d );
+			dataCache.put( d.getReference(), d );
 		}
 
 		return data;		

@@ -200,11 +200,11 @@ public class HBaseAnnotationIO implements AnnotationIO {
     @Override
     public List<AnnotationData<?>> readData (String tableName, 
 								          AnnotationSerializer<AnnotationData<?>> serializer,
-								          List<UUID> indices) throws IOException {
+								          List<AnnotationReference> references) throws IOException {
 
     	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (UUID index: indices) {
-            rowIds.add( rowIdFromData( index ) );
+        for (AnnotationReference reference: references) {
+            rowIds.add( rowIdFromData( reference.getUUID() ) );
         }
         
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);

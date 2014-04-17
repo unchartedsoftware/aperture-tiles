@@ -70,6 +70,7 @@
 	"AnnotationLayers": [
 		{
 			"layer": "bitcoin.annotations",
+			"priorities": [ "Urgent", "High", "Medium", "Low"],
 			"filters" : {
 					"Urgent": 10,
 					"High": 10,

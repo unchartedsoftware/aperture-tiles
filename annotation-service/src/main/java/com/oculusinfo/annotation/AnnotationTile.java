@@ -29,19 +29,17 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.UUID;
 
 import com.oculusinfo.binning.*;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /*
  * Annotation Tile
  * {
- * 		binKey0: AnnotationBin0, 
- * 		binKey1: AnnotationBin1,
- * 		binKey4: AnnotationBin4
+ * 		"binKey0": AnnotationBin, 
+ * 		"binKey1": AnnotationBin,
+ * 		"binKey4": AnnotationBin
  * }
  */
 
@@ -102,9 +100,9 @@ public class AnnotationTile implements Serializable {
     }
 
    
-    public synchronized List<UUID> getAllReferences() {
+    public synchronized List<AnnotationReference> getAllReferences() {
     	
-    	List<UUID> allReferences = new LinkedList<>();  
+    	List<AnnotationReference> allReferences = new LinkedList<>();  
     	// for each bin
 		for ( AnnotationBin bin : _bins.values() ) {
 			// get all references
@@ -114,9 +112,9 @@ public class AnnotationTile implements Serializable {
     }
        
     
-    public synchronized List<UUID> getFilteredReferences( Map<String, Integer> filter ) {
+    public synchronized List<AnnotationReference> getFilteredReferences( Map<String, Integer> filter ) {
     	
-    	List<UUID> filtered = new LinkedList<>();
+    	List<AnnotationReference> filtered = new LinkedList<>();
     	// for each bin
     	for ( AnnotationBin bin : _bins.values() ) {
     		
@@ -126,7 +124,9 @@ public class AnnotationTile implements Serializable {
 				String priority = f.getKey();
 				Integer count = f.getValue();
 				
-				List<UUID> references = bin.getReferences( priority );
+				List<AnnotationReference> references = bin.getReferences( priority );
+				
+				// references are sorted, so simply cut the tail off to get the n newest
 				filtered.addAll( references.subList( 0, count < references.size() ? count : references.size() ) );
 			}
     	}
@@ -144,7 +144,7 @@ public class AnnotationTile implements Serializable {
 											 json.getInt("x"),
 											 json.getInt("y"), 
 											 AnnotationTile.NUM_BINS, 
-											 AnnotationTile.NUM_BINS );			
+											 AnnotationTile.NUM_BINS );
 			// for all binkeys
 	        Iterator<?> binKeys = json.keys();
 	        while( binKeys.hasNext() ) {
@@ -153,33 +153,9 @@ public class AnnotationTile implements Serializable {
 	            
 	            if( json.get(binKey) instanceof JSONObject ){
 	            	
-	            	JSONObject bin = (JSONObject)json.get(binKey);
-	            	
-	            	BinIndex binIndex = BinIndex.fromString( binKey );
-	            		            	
-	            	Map<String, List<UUID>> references =  new LinkedHashMap<>();
-	            	
-	            	// for all priorities
-	            	Iterator<?> priorities = bin.keys();
-	     	        while( priorities.hasNext() ){
-	     	            String priority = (String)priorities.next();
-	     	            
-	     	            if( bin.get(priority) instanceof JSONArray ) {
-	     	            	
-	     	            	// get references
-	     	            	JSONArray referenceArr = bin.getJSONArray( priority );
-	     	            	List<UUID> referenceList = new LinkedList<>();
-	     	            	
-	     	            	for (int i=0; i<referenceArr.length(); i++) {
-	     	            		referenceList.add( UUID.fromString( referenceArr.getString(i) ) );
-	     	            	}
-	     	            	references.put( priority, referenceList );
-	     	            	
-	     	            }
-	     	        }
-	     	        
-	     	        bins.put( binIndex, new AnnotationBin( binIndex, references ) );
-
+	            	JSONObject bin = (JSONObject)json.get(binKey);            	
+	            	BinIndex binIndex = BinIndex.fromString( binKey );	            	
+	            	bins.put( binIndex, AnnotationBin.fromJSON( bin ) );
 	            }
 	        }
 			

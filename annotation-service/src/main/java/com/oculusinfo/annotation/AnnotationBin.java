@@ -24,11 +24,12 @@
 package com.oculusinfo.annotation;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
-import java.util.UUID;
+import java.util.Collections;
 
 import com.oculusinfo.binning.*;
 
@@ -38,8 +39,8 @@ import org.json.JSONObject;
 /*
  * Annotation Bin:
  * {
- * 		priorityName0 : [dataIndex0, dataIndex1, ... ]
- * 		priorityName1 : [dataIndex2, dataIndex3, ... ]
+ * 		"priorityName0" : [ AnnotationReference, AnnotationReference, ... ]
+ * 		"priorityName1" : [ AnnotationReference, AnnotationReference, ... ]
  * }
  */
 
@@ -48,12 +49,12 @@ public class AnnotationBin implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final BinIndex _index;
-    private Map<String, List<UUID>> _references = new LinkedHashMap<>();
+    private Map<String, List<AnnotationReference>> _references = new LinkedHashMap<>();
       
     public AnnotationBin( BinIndex index ) {
     	_index = index;
     }
-    public AnnotationBin( BinIndex index, Map<String, List<UUID>> references ) {
+    public AnnotationBin( BinIndex index, Map<String, List<AnnotationReference>> references ) {
     	_index = index;
     	_references = references;
     }
@@ -75,35 +76,39 @@ public class AnnotationBin implements Serializable {
     
     public synchronized void add( AnnotationData<?> data ) {
     	
-    	String priority = data.getPriority().toLowerCase();
-    	UUID uuid =  data.getUUID();   	
+    	String priority = data.getPriority();
+    	AnnotationReference reference =  data.getReference();   	
+    	List<AnnotationReference> entries;
     	
     	if ( _references.containsKey( priority ) ) {    		
-    		List<UUID> entries = _references.get( priority );   		
+    		entries = _references.get( priority );   		
     		// only add if reference does not already exist
-    		if ( !entries.contains( uuid ) ) {
-    			entries.add( uuid );
+    		if ( !entries.contains( reference ) ) {
+    			entries.add( reference );
     		}   		    		
     	} else {
-    		List<UUID> entries = new LinkedList<>();
-    		entries.add( uuid );
+    		entries = new LinkedList<>();
+    		entries.add( reference );
     		_references.put( priority, entries );
-    	}    	
+    	}
+    	
+    	// sort references after insertion... maybe instead use a SortedSet?
+    	Collections.sort( entries );
     }
       
     
     public synchronized boolean remove( AnnotationData<?> data ) { 
     	
-    	String priority = data.getPriority().toLowerCase();
-    	UUID uuid = data.getUUID();
+    	String priority = data.getPriority();
+    	AnnotationReference reference = data.getReference();
     	boolean removedAny = false;
     	
     	if ( _references.containsKey( priority ) ) {
     		
-    		List<UUID> entries = _references.get( priority );
+    		List<AnnotationReference> entries = _references.get( priority );
     		
-    		if ( entries.contains( uuid ) ) {
-    			entries.remove( uuid );
+    		if ( entries.contains( reference ) ) {
+    			entries.remove( reference );
     			removedAny = true;
     		} 
     		   		
@@ -117,11 +122,10 @@ public class AnnotationBin implements Serializable {
     }
 
     
-    public synchronized List<UUID> getReferences( String priority ) {
+    public synchronized List<AnnotationReference> getReferences( String priority ) {
     	
-    	String lcPriority = priority.toLowerCase();
-    	if ( _references.containsKey( lcPriority ) ) {
-    		return _references.get( lcPriority );
+    	if ( _references.containsKey( priority ) ) {
+    		return _references.get( priority );
     	} else {
     		return new LinkedList<>();
     	}
@@ -129,15 +133,51 @@ public class AnnotationBin implements Serializable {
     }
     
     
-    public synchronized List<UUID> getAllReferences() {
+    public synchronized List<AnnotationReference> getAllReferences() {
     	
-    	List<UUID> allReferences = new LinkedList<>();  
+    	List<AnnotationReference> allReferences = new LinkedList<>();  
     	// for each priority group in a bin
-		for ( List<UUID> references : _references.values() ) {
+		for ( List<AnnotationReference> references : _references.values() ) {
 			allReferences.addAll( references );
 		}	
     	return allReferences;
     }    
+    
+    
+    public static AnnotationBin fromJSON( JSONObject json ) throws IllegalArgumentException {
+    	
+    	try {
+			
+    		BinIndex index = new BinIndex( json.getInt("x"), json.getInt("y") );
+    		
+    		Map<String, List<AnnotationReference>> references =  new LinkedHashMap<>();
+        	
+        	Iterator<?> priorities = json.keys();
+            while( priorities.hasNext() ){
+            	
+                String priority = (String)priorities.next();
+                
+                if( json.get(priority) instanceof JSONArray ) {
+                
+	            	JSONArray jsonReferences = json.getJSONArray(priority);
+	            	
+	            	List<AnnotationReference> referenceList = new LinkedList<>();	            	
+	            	for (int i=0; i<jsonReferences.length(); i++) {
+	            		
+	            		JSONObject jsonRef = jsonReferences.getJSONObject( i );
+	            		referenceList.add( AnnotationReference.fromJSON( jsonRef ) );            		
+	            	}           	
+	            	references.put( priority, referenceList );	
+                }
+                
+            }	        
+    	    return new AnnotationBin( index, references );
+			
+		} catch ( Exception e ) {
+			throw new IllegalArgumentException( e );
+		}
+
+    }
     
     
     public JSONObject toJSON() {
@@ -145,15 +185,18 @@ public class AnnotationBin implements Serializable {
     	JSONObject binJSON = new JSONObject();
     	try {
 			   	
+    		binJSON.put("x", _index.getX() );
+    		binJSON.put("y", _index.getY() );
+    		
 	    	// for each priority group in a bin
-		    for (Map.Entry<String, List<UUID>> referenceEntry : _references.entrySet() ) {
+		    for (Map.Entry<String, List<AnnotationReference>> referenceEntry : _references.entrySet() ) {		    	
 		    	
-		    	String priority = referenceEntry.getKey().toLowerCase();
-		    	List<UUID> references = referenceEntry.getValue();
+		    	String priority = referenceEntry.getKey();
+		    	List<AnnotationReference> references = referenceEntry.getValue();
 		    	
 		    	JSONArray referenceJSON = new JSONArray();
-		    	for ( UUID reference : references ) {
-		    		referenceJSON.put( reference );
+		    	for ( AnnotationReference reference : references ) {
+		    		referenceJSON.put( reference.toJSON() );
 		    	}
 		    	
 		    	// add priority to bin json object

@@ -251,12 +251,12 @@ define(function (require) {
         },
 
 
-        createEditablePopup: function( closeFunc, saveFunc, removeFunc ) {
+        createEditablePopup: function( priorities, closeFunc, saveFunc, removeFunc ) {
 
             // edit popup is only possible on single features, so take only data entry
             var that = this,
                 hasRemoveFunc = ( removeFunc !== undefined ),
-                html = this.getEditablePopupHTML( this.getDataArray()[0], hasRemoveFunc );
+                html = this.getEditablePopupHTML( this.getDataArray()[0], priorities, hasRemoveFunc );
 
             // create popup with close callback
             this.createPopup( html, function() {
@@ -483,7 +483,7 @@ define(function (require) {
         },
 
 
-        getEditablePopupHTML: function( annotation, includeRemoveButton ) {
+        getEditablePopupHTML: function( annotation, priorities, includeRemoveButton ) {
 
             var TITLE_PLACEHOLDER = ' Enter title',
                 PRIORITY_PLACEHOLDER = 'Enter priority',
@@ -495,14 +495,13 @@ define(function (require) {
                 function getSelectHTML() {
 
                     var html = "<select class='"+ANNOTATION_INPUT_CLASS+"' id='"+ ANNOTATION_POPUP_PRIORITY_ID+"'>",
-                        PRIORITIES = [ 'Urgent', 'High', 'Medium', 'Low'],
                         i;
 
-                    for (i=0; i<PRIORITIES.length; i++) {
-                        if ( PRIORITIES[i] === annotation.priority ) {
-                            html += "<option selected='true' value='" +PRIORITIES[i] +"'>"+PRIORITIES[i]+"</option>";
+                    for (i=0; i<priorities.length; i++) {
+                        if ( priorities[i] === annotation.priority ) {
+                            html += "<option selected='true' value='" +priorities[i] +"'>"+priorities[i]+"</option>";
                         } else {
-                            html += "<option value='" +PRIORITIES[i] +"'>"+PRIORITIES[i]+"</option>";
+                            html += "<option value='" +priorities[i] +"'>"+priorities[i]+"</option>";
                         }
                     }
 

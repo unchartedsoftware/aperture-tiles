@@ -40,10 +40,8 @@ public abstract class AnnotationData<T> implements Serializable {
 	public abstract String getPriority();
 	public abstract T getData();
 	
-	
-	public boolean hasSameLocation( AnnotationData<?> other ) {
-		return getX() == other.getX() &&
-			   getY() == other.getY();
+	public AnnotationReference getReference() {
+		return new AnnotationReference( getUUID(), getTimeStamp() );
 	}
 	
 	static public AnnotationData<?> fromJSON( JSONObject json ) throws IllegalArgumentException {		
@@ -58,7 +56,7 @@ public abstract class AnnotationData<T> implements Serializable {
 			json.put("level", getLevel() );
 			json.put("uuid", getUUID().toString() );
 			json.put("timestamp", getTimeStamp().toString() );
-			json.put("priority", getPriority().toLowerCase() );
+			json.put("priority", getPriority() );
 			json.put("data", getData() );
 			return json;
 		} catch (Exception e) {
