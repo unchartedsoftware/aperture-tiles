@@ -20,5 +20,6 @@
 	<module>bitcoin-demo</module>
 	<module>twitter-demo</module>
 	<module>twitter-heatmap</module>
+	<module>summary-statistics</module>
   </modules>
 </project>
