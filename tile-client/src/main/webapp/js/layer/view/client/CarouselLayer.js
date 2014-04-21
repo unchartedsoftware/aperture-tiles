@@ -62,7 +62,7 @@ define(function (require) {
             });
 
             this.map.on('zoomend', function() {
-                var tilekey = that.map.getTileKeyUnderMouse(event.xy.x, event.xy.y);
+                var tilekey = that.map.getTileKeyUnderMouse( that.previousMouse.x, that.previousMouse.y );
                 that.updateSelectedTile(tilekey);
             });
 

@@ -85,18 +85,21 @@ define( function (require) {
 					spec : "./impl/" + layerJSON.views[i].renderer,
 					func : loadModule
 					});
+                /*
                 dataLayer = layerJSON.layer;
                 if (layerJSON.views[i].layer) {
                     dataLayer = layerJSON.views[i].layer;
                 }
+                */
 
 				// get data tracker from server
 				requirements.push({
 					type : "tile-service",
-					id : dataLayer,
+					id : layerJSON.layer, // dataLayer,
+
 					spec : {
                         request: "configure",
-                        layer: dataLayer,
+                        layer:  layerJSON.layer, // dataLayer,
                         configuration: layerJSON.views[i]
                     },
 					func : getLayerInfoFromServer
@@ -116,13 +119,15 @@ define( function (require) {
 			
 				// add views to layer spec object
 				for (i=0; i<layerJSON.views.length; i++) {
+                    /*
                     dataLayer = layerJSON.layer;
                     if (layerJSON.views[i].layer) {
                         dataLayer = layerJSON.views[i].layer;
                     }
+                    */
 					spec.views.push({
 						renderer: new layerDataMap[layerJSON.views[i].renderer](),
-						dataService: layerDataMap[layerJSON.views[i].layer]
+						dataService: layerDataMap[layerJSON.layer]
 					});
 				}
 				

@@ -252,7 +252,7 @@ define(function (require) {
         removeRendererIdFromData: function(viewIndex, oldTracker, tilekey) {
 
             var i,
-                tiles = oldTracker.getData( tilekey );
+                tiles = oldTracker.getDataArray( tilekey );
 
             for (i=0; i<tiles.length; i++) {
                 delete tiles[i].renderer[ this.views[ viewIndex ].id ];

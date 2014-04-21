@@ -75,7 +75,7 @@
                             "max" : 6336769,
                             "intervalSpec" : {
                                 "type" : "percentage",
-                                "value" : 20,
+                                "increment" : 20,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -87,15 +87,17 @@
                             },
                             "position" : "bottom",
                             "repeat": false,
-                            "markerLabelRotation" : -45,
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            style: {     
+                                "markerLabelRotation" : -45,
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em" 
+                            } 
                         },
                         "yAxisConfig" : {
                             "title" : "Amount (BTC)",
@@ -104,7 +106,7 @@
                             "max" : 500000,
                             "intervalSpec" : {
                                 "type" : "fixed",
-                                "value" : 100000,
+                                "increment" : 100000,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -116,14 +118,16 @@
                             },
                             "position" : "left",
                             "repeat" : false,       
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            style: {     
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em"  
+                            }
                         }
                     },
                     children: [
@@ -189,7 +193,7 @@
                             "max" : 1365566400000,
                             "intervalSpec" : {
                                 "type" : "percentage",
-                                "value" : 20,
+                                "increment" : 20,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -201,15 +205,17 @@
                             },
                             "position" : "bottom",
                             "repeat": false,
-                            "markerLabelRotation" : -45,
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            style: {     
+                                "markerLabelRotation" : -45,
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em"
+                            }  
                         },
                         "yAxisConfig" : {
                             "title" : "Amount (BTC)",
@@ -218,7 +224,7 @@
                             "max" : 500000,
                             "intervalSpec" : {
                                 "type" : "fixed",
-                                "value" : 100000,
+                                "increment" : 100000,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -230,14 +236,16 @@
                             },
                             "position" : "left",
                             "repeat" : false,       
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            style: {     
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em"  
+                            }
                         }
                     },
                     data: {
@@ -273,7 +281,7 @@
                             "max" : 1365566400000,
                             "intervalSpec" : {
                                 "type" : "percentage",
-                                "value" : 20,
+                                "increment" : 20,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -285,15 +293,17 @@
                             },
                             "position" : "bottom",
                             "repeat": false,
-                            "markerLabelRotation" : -45,
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            style: {     
+                                "markerLabelRotation" : -45,
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em"  
+                            }
                         },
                         "yAxisConfig" : {
                             "title" : "Destination",
@@ -302,7 +312,7 @@
                             "max" : 6336769,
                             "intervalSpec" : {
                                 "type" : "fixed",
-                                "value" : 100000,
+                                "increment" : 100000,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -312,16 +322,19 @@
                                 "decimals" : 2,
                                 "allowStepDown" : false
                             },
+                            
                             "position" : "left",
-                            "repeat" : false,       
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            "repeat" : false,  
+                            style: {     
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em"  
+                            }
                         }
                     },
                     data: {
@@ -357,7 +370,7 @@
                             "max" : 1365566400000,
                             "intervalSpec" : {
                                 "type" : "percentage",
-                                "value" : 20,
+                                "increment" : 20,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -369,15 +382,18 @@
                             },
                             "position" : "bottom",
                             "repeat": false,
-                            "markerLabelRotation" : -45,
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            style: {
+                                
+                                "markerLabelRotation" : -45,
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em"  
+                            }
                         },
                         "yAxisConfig" : {
                             "title" : "Source",
@@ -386,7 +402,7 @@
                             "max" : 6336769,
                             "intervalSpec" : {
                                 "type" : "fixed",
-                                "value" : 100000,
+                                "increment" : 100000,
                                 "pivot" : 0,
                                 "allowScaleByZoom" : true,
                                 "isMercatorProjected" : false
@@ -397,15 +413,18 @@
                                 "allowStepDown" : false
                             },
                             "position" : "left",
-                            "repeat" : false,       
-                            "majorMarkerLength" : 10,
-                            "majorMarkerWidth" : 1,
-                            "majorMarkerColour" : "#7E7E7E",
-                            "markerLabelColour" : "#7E7E7E",
-                            "axisLabelColour" : "#7E7E7E",
-                            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-                            "markerLabelFontSize" : "0.75em",
-                            "axisLabelFontSize" : "0.95em"  
+                            "repeat" : false,     
+                            style: {
+                                
+                                "majorMarkerLength" : 10,
+                                "majorMarkerWidth" : 1,
+                                "majorMarkerColour" : "#7E7E7E",
+                                "markerLabelColour" : "#7E7E7E",
+                                "axisLabelColour" : "#7E7E7E",
+                                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                                "markerLabelFontSize" : "0.75em",
+                                "axisLabelFontSize" : "0.95em"  
+                            }
                         }
                     },
                     data: {
