@@ -22,28 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.tile.rest.map;
 
-import oculus.aperture.common.rest.ResourceDefinition;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-import com.oculusinfo.tile.rest.layer.LayerResource;
-import com.oculusinfo.tile.rest.legend.LegendResource;
-import com.oculusinfo.tile.rest.map.MapResource;
-import com.oculusinfo.tile.rest.tile.TileResource;
+/**
+ * A simple map configuration provider interface
+ * 
+ * @author nkronenfeld
+ */
+public interface MapService {
+    /**
+     * Get an array of all maps known to the server
+     */
+    JSONArray getMaps ();
 
-public class RestConfigModule extends AbstractModule {
-	@Override
-	protected void configure() {
-
-		// Bind REST endpoints for clients.
-		MapBinder<String, ResourceDefinition> resourceBinder =
-			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
-
-		resourceBinder.addBinding("/maps").toInstance(new ResourceDefinition(MapResource.class));
-		resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(LayerResource.class));
-		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
-		resourceBinder.addBinding("/legend").toInstance(new ResourceDefinition(LegendResource.class));
-	}
+    /**
+     * Get a known map, by map id.
+     */
+    JSONObject getMap (String mapId);
 }

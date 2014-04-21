@@ -45,32 +45,18 @@ define(function (require) {
         init: function (id, spec) {
 
 			var that = this,
-				apertureConfig,
 				mapSpecs;
 		
-			apertureConfig = spec.ApertureConfig;
 			mapSpecs = spec.MapConfig;
+
+	        aperture.config.provide({
+		        // Set the map configuration
+		        'aperture.map' : {
+			        'defaultMapConfig' : mapSpecs
+		        }
+	        });
+		        
 			
-			// configure aperture
-            aperture.config.provide({
-            	/*
-                 * Set aperture log configuration
-                 */
-                'aperture.log' : apertureConfig['aperture.log'],
-                
-                /*
-                 * The endpoint locations for Aperture services accessed through the io interface
-                 */
-                'aperture.io' : apertureConfig['aperture.io'],
-
-                /*
-                 * Set the map configuration
-                 */
-                'aperture.map' : {
-                    'defaultMapConfig' : mapSpecs
-                }
-            });
-
             // Map div id
 			this.id = id;
 
