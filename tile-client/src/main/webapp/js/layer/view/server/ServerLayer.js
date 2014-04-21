@@ -136,7 +136,7 @@ define(function (require) {
 
     ServerRenderedMapLayer = Class.extend({
         ClassName: "ServerRenderedMapLayer",
-        init: function (layerSpec) {
+        init: function (layerSpec, map) {
             this.unfulfilledRequests = [];
             // The collected map bounds of all our map layers
             this.collectedMapBounds = null;
@@ -149,7 +149,7 @@ define(function (require) {
             this.mapLayer = {};
 
             // The map to which we render
-            this.map = null;
+            this.map = map; //null;
 
             this.dataListener = new DataLayer(layerSpec);
             this.dataListener.setRequestCallback($.proxy(this.requestLayerInfo,
@@ -177,13 +177,32 @@ define(function (require) {
         },
 
         /*
-         * Called when data the basic information about the layer is recieved 
+         * Called when data the basic information about the layer is received
          * from the server.
          */
         useLayerInfo: function (dataListener, layerInfo) {
-            var layer, ufrIndex;
+            var layer, ufrIndex; //, layerSpecs, i, axis;
 
             layer = layerInfo.layer;
+            //layerSpecs = dataListener.layerSpecs[layer];
+
+            /*
+            if ( layerSpecs.axis !== undefined && layerSpecs.axis.length > 0 ) {
+                for (i=0; i< layerSpecs.axis.length; i++) {
+                    axis = layerSpecs.axis[i];
+                    // add axis to map
+                    axis.projection = layerInfo.projection;
+                    if ( axis.position === 'top' || axis.position === 'bottom' ) {
+                        axis.min = layerInfo.dataBounds.left;
+                        axis.max = layerInfo.dataBounds.right;
+                    } else {
+                        axis.min = layerInfo.dataBounds.bottom;
+                        axis.max = layerInfo.dataBounds.top;
+                    }
+                    this.map.addAxis( axis );
+                }
+            }
+            */
 
             // Wait until all requests have been fulfilled
             ufrIndex = this.unfulfilledRequests.indexOf(layer);
@@ -193,7 +212,6 @@ define(function (require) {
             if (this.unfulfilledRequests.length > 0) {
                 return;
             }
-
 
             // We've got everything - create our map layers.
             this.updateLayers();
@@ -417,7 +435,7 @@ define(function (require) {
          */
         setSubLayerZIndex: function (subLayerId, zIndex) {
             var olLayer = this.mapLayer[subLayerId].olLayer_;
-            this.map.map.olMap_.setLayerIndex(olLayer, zIndex);
+            this.map.setLayerIndex(olLayer, zIndex);
         },
 
         /**
@@ -426,7 +444,7 @@ define(function (require) {
          */
         getSubLayerZIndex: function (subLayerId) {
             var olLayer = this.mapLayer[subLayerId].olLayer_;
-            return this.map.map.olMap_.getLayerIndex(olLayer);
+            return this.map.getLayerIndex(olLayer);
         },
 
         /**
@@ -472,7 +490,7 @@ define(function (require) {
                     }
 
                     // Add the new layer
-                    this.mapLayer[layer] = this.map.map.addLayer(
+                    this.mapLayer[layer] = this.map.addApertureLayer(
                         aperture.geo.MapTileLayer.TMS, {},
                         {
                             'name': 'Aperture Tile Layers',
@@ -532,7 +550,7 @@ define(function (require) {
                     // but does prevent them from overlapping client layers. In the future it 
                     // may be worth implementing a more sophisticated system to allow proper 
                     // client-server inclusive ordering
-					this.map.map.olMap_.setLayerIndex( this.mapLayer[layer].olLayer_, 0 );
+					this.map.setLayerIndex( this.mapLayer[layer].olLayer_, 0 );
 
                     // Apparently we can't set opacity through options, so we 
                     // hand-set it now

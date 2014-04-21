@@ -26,7 +26,7 @@
 define({
 
     /**
-     * Converts a data value from a linear function to its equivolent gudermannian value
+     * Converts a data value from a linear function to its equivalent gudermannian value
      * This converts the linear number to the equivolent gudermannian value where the current
      * linear value is!
      *
@@ -42,7 +42,7 @@ define({
                 var sinh = function (arg) {
                     return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
                 };
-                return Math.atan(sinh(y)) * 57.2957795;
+                return Math.atan(sinh(y)) * (180.0/Math.PI);
             };
 
         // convert value to between -1  and 1
@@ -68,7 +68,7 @@ define({
                 // converts a latitude value from -85.05 to 85.05 into
                 // a y value from -PI(bottom) to PI(top)
                 var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
-                    sin = Math.sin(latitude * 0.0174532925 * sign);
+                    sin = Math.sin(latitude * (Math.PI/180.0) * sign);
 
                 return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
             };
@@ -85,7 +85,7 @@ define({
      * @param value         the value of the label
      * @param labelSpec     format spec of label
      */
-    formatText : function(value, labelSpec){
+    formatText : function(value, unitSpec){
         "use strict";
         function formatNumber (value, decimals) {
             return parseFloat(value).toFixed(decimals);
@@ -167,28 +167,47 @@ define({
             return parseFloat(value.toFixed(decimals)) + "\u00b0";
         }
 
-        if (labelSpec){
+        if (unitSpec){
 
-            if (labelSpec.type === 'degrees'){
-                return formatDegrees(value, labelSpec.decimals );
-            }
-            if (labelSpec.type === 'time'){
-                return formatTime(value, labelSpec.divisor);
-            }
-            // Millions to 2 decimal places
-            if (labelSpec.type === 'decimal'){
-                return formatNumber(value, labelSpec.decimals);
-            }
-            if (labelSpec.type === 'B'){
-                return formatBillion(value, labelSpec.decimals, labelSpec.allowStepDown);
-            }
-            if (labelSpec.type === 'M'){
-                return formatMillion(value, labelSpec.decimals, labelSpec.allowStepDown);
-            }
-            if (labelSpec.type === 'K'){
-                return formatThousand(value, labelSpec.decimals, labelSpec.allowStepDown);
+            switch (unitSpec.type.toLowerCase()) {
+
+                case 'degrees':
+                case 'degree':
+                case 'deg':
+
+                    return formatDegrees(value, unitSpec.decimals );
+
+                case 'time':
+                case 'date':
+
+                    return formatTime(value, unitSpec.divisor);
+
+                case 'k':
+                case 'thousand':
+                case 'thousands':
+
+                    return formatThousand(value, unitSpec.decimals, unitSpec.allowStepDown);
+
+                case 'm':
+                case 'million':
+                case 'millions':
+
+                    return formatMillion(value, unitSpec.decimals, unitSpec.allowStepDown);
+
+                case 'b':
+                case 'billion':
+                case 'billions':
+
+                    return formatBillion(value, unitSpec.decimals, unitSpec.allowStepDown);
+
+                //case 'decimal':
+                //case 'd':
+                default:
+
+                    return formatNumber(value, unitSpec.decimals);
             }
         }
+
         return value;
     },
 
@@ -232,7 +251,7 @@ define({
         var that = this,
             increment,
             pivot,
-            mapPixelSpan = axis.tileSize*(Math.pow(2,axis.zoom));
+            mapPixelSpan = axis.tileSize*(Math.pow(2, axis.zoom));
 
         function getPixelPosition( value ) {
             // given an axis value, get the pixel position on the page
@@ -242,7 +261,7 @@ define({
                 pixelPosition = Math.round( (( (value - axis.min)*mapPixelSpan )/(axis.max-axis.min) ) - axis.pixelMin );
             } else {
 
-                if (axis.intervalSpec.isMercatorProjected) {
+                if (axis.projection === 'EPSG:900913') {
                     // find the linear value where this current gudermannian value is
                     value = that.scaleGudermannianToLinear( value, axis);
                 }
@@ -267,7 +286,7 @@ define({
                 minCull = axis.min;
             }
 
-            if (!axis.isXAxis && axis.intervalSpec.isMercatorProjected) {
+            if (!axis.isXAxis && axis.projection === 'EPSG:900913') {
                 // find the gudermannian value where this current linear value is
                 minCull = that.scaleLinearToGudermannian( minCull, axis );
             }
@@ -305,7 +324,7 @@ define({
                 maxCull = axis.max;
             }
 
-            if (!axis.isXAxis && axis.intervalSpec.isMercatorProjected) {
+            if (!axis.isXAxis && axis.projection === 'EPSG:900913') {
                 // find the gudermannian value where this current linear value is
                 maxCull = that.scaleLinearToGudermannian( maxCull, axis );
             }
@@ -354,16 +373,27 @@ define({
             return markers;
         }
 
-        // get increment and pivot value from axis
-        if ( axis.intervalSpec.type === "fixed" ) {
-            // use fixed interval
-            increment = axis.intervalSpec.value;
-            pivot = axis.intervalSpec.pivot;
-        } else {
-            // use percentage
-            increment = (axis.max-axis.min)*(axis.intervalSpec.value * 0.01);
-            pivot = (axis.max-axis.min)*(axis.intervalSpec.pivot*0.01) + axis.min;
+
+        switch (axis.intervalSpec.type.toLowerCase()) {
+
+            case "value":
+            case "fixed":
+            case "#":
+                // use fixed interval
+                increment = axis.intervalSpec.increment;
+                pivot = axis.intervalSpec.pivot;
+                break;
+
+            //case "percent":
+            //case " percentage":
+            //case "%":
+            default:
+                // use percentage
+                increment = (axis.max-axis.min)*(axis.intervalSpec.increment * 0.01);
+                pivot = (axis.max-axis.min)*(axis.intervalSpec.pivot*0.01) + axis.min;
+                break;
         }
+
         // scale increment if specified
         if ( axis.intervalSpec.allowScaleByZoom ) {
             // scale increment by zoom

@@ -43,7 +43,7 @@ define( function (require) {
 		 * @param map			map object from map.js
 		 */
 		createLayers: function(layerJSON, map) {
-			var i = 0;
+			var i;
 			for (i=0; i<layerJSON.length; i++) {   
 				this.createLayer(layerJSON[i], map);
 			}		
@@ -53,7 +53,7 @@ define( function (require) {
 		createLayer: function(layerJSON, map) {
 
 			var requirements = [],	// this is an array of requirement spec objects. Each entry is used to load the individual requirements	
-				i, dataLayer;
+				i;
 	
 			// load module func
 			function loadModule(arg, callback) {
@@ -85,18 +85,21 @@ define( function (require) {
 					spec : "./impl/" + layerJSON.views[i].renderer,
 					func : loadModule
 					});
+                /*
                 dataLayer = layerJSON.layer;
                 if (layerJSON.views[i].layer) {
                     dataLayer = layerJSON.views[i].layer;
                 }
+                */
 
 				// get data tracker from server
 				requirements.push({
-					type : "data-tracker",
-					id : dataLayer,
+					type : "tile-service",
+					id : layerJSON.layer, // dataLayer,
+
 					spec : {
                         request: "configure",
-                        layer: dataLayer,
+                        layer:  layerJSON.layer, // dataLayer,
                         configuration: layerJSON.views[i]
                     },
 					func : getLayerInfoFromServer
@@ -109,21 +112,22 @@ define( function (require) {
 			
 				// once everything is in memory, construct layer
 				var spec =  {
-						map: map.map,
+						map: map,
 						views: []
 					}, 
-					i,
-                    dataLayer;
+					i;
 			
 				// add views to layer spec object
 				for (i=0; i<layerJSON.views.length; i++) {
+                    /*
                     dataLayer = layerJSON.layer;
                     if (layerJSON.views[i].layer) {
                         dataLayer = layerJSON.views[i].layer;
                     }
+                    */
 					spec.views.push({
 						renderer: new layerDataMap[layerJSON.views[i].renderer](),
-						dataTracker: layerDataMap[dataLayer]
+						dataService: layerDataMap[layerJSON.layer]
 					});
 				}
 				

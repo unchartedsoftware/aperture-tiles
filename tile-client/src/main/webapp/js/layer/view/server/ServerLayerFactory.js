@@ -45,11 +45,11 @@ define( function (require) {
 		createLayers: function(layerJSON, map) {
 
 			// Set up server-rendered display layers
-			var serverLayers = new ServerLayer(layerJSON),
+			var serverLayers = new ServerLayer(layerJSON, map),
 				mapLayerState = {};
 				
 			// Attach to map
-			serverLayers.addToMap(map);
+			//serverLayers.addToMap(map);
 
 			// Populate the map layer state object with server layer data, and enable
 			// listeners that will push state changes into the layers.
