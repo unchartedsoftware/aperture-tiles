@@ -40,9 +40,6 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.tiling.BinDescriptor
-import com.oculusinfo.tilegen.tiling.DataSource
-import com.oculusinfo.tilegen.tiling.FieldExtractor
-import com.oculusinfo.tilegen.tiling.RecordParser
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -196,15 +193,27 @@ class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrap
  * A simple data source for binning of generic CSV data based on a
  * property-style configuration file
  */
-class CSVDataSource (properties: CSVRecordPropertiesWrapper) extends DataSource {
+class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 	def getDataFiles: Seq[String] = properties.getStringPropSeq(
 		"oculus.binning.source.location",
 		"The hdfs file name from which to get the CSV data.  Either a directory, all "+
 			"of whose contents should be part of this dataset, or a single file.")
 
-	override def getIdealPartitions: Option[Int] = properties.getIntOption(
+	def getIdealPartitions: Option[Int] = properties.getIntOption(
 		"oculus.binning.source.partitions",
 		"The number of partitions to use when reducing data, if needed")
+
+    /**
+     * Actually retrieve the data.
+     * This can be overridden if the data is not a simple file or set of files,
+     * but normally shouldn't be touched.
+     */
+    def getData (sc: SparkContext): RDD[String] =
+        if (getIdealPartitions.isDefined) {
+            getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
+        } else {
+            getDataFiles.map(sc.textFile(_)).reduce(_ union _)
+        }
 }
 
 
@@ -212,8 +221,7 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) extends DataSource 
 /**
  * A simple parser that splits a record according to a given separator
  */
-class CSVRecordParser (properties: CSVRecordPropertiesWrapper) extends RecordParser[List[Double]] {
-	
+class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 	def parseRecords (raw: Iterator[String], variables: String*): Iterator[ValueOrException[List[Double]]] = {
 		// This method generally is only called on workers, therefore properties can't really be documented here.
 
@@ -319,7 +327,7 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) extends RecordPar
 
 
 
-class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldExtractor[List[Double]] {
+class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) {
 	def getValidFieldList: List[String] = List()
 	def isValidField (field: String): Boolean = true
 	def isConstantField (field: String): Boolean = {
@@ -338,7 +346,7 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldEx
 		else if ("zero" == field) new ValueOrException(Some(0.0), None)
 		else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
 
-	override def getTilePyramid (xField: String, minX: Double, maxX: Double,
+	def getTilePyramid (xField: String, minX: Double, maxX: Double,
 	                             yField: String, minY: Double, maxY: Double): TilePyramid = {
 		val projection = properties.getString("oculus.binning.projection",
 		                                      "The type of tile pyramid to use",

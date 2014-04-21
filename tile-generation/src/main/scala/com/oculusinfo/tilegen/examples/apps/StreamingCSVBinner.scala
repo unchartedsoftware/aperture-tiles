@@ -48,13 +48,10 @@ import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
 import org.apache.spark.streaming.StreamingContext
 import com.oculusinfo.tilegen.datasets.ProcessingStrategy
 import org.apache.spark.streaming.Seconds
-import com.oculusinfo.tilegen.tiling.DataSource
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.LongWritable
 import org.apache.hadoop.io.Text
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
-import com.oculusinfo.tilegen.tiling.RecordParser
-import com.oculusinfo.tilegen.tiling.FieldExtractor
 import java.text.SimpleDateFormat
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
@@ -142,12 +139,11 @@ import org.apache.spark.streaming.dstream.LocalFileInputDStream
  * A simple data source for binning of generic CSV data based on a
  * property-style configuration file
  */
-class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingContext) extends DataSource {
-
+class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingContext) {
 	def getDataName: String = properties.getString("oculus.binning.source.name", "The name of the source", Some("unknown"))
 	def getDataFiles: Seq[String] = properties.getStringSeq("oculus.binning.source.location", "The path from which to get the CSV data. Either a directory, all "+
 		                                                        "of whose contents should be part of this dataset, or a single file.")
-	override def getIdealPartitions: Option[Int] = properties.getIntOption("oculus.binning.source.partitions", "The number of partitions to use when reducing data, if needed")
+	def getIdealPartitions: Option[Int] = properties.getIntOption("oculus.binning.source.partitions", "The number of partitions to use when reducing data, if needed")
 
 	//determines if the source location is a local file or not
 	private val useLocalIO: Boolean = {
