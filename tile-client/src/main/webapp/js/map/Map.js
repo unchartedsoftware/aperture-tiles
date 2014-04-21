@@ -115,32 +115,45 @@ define(function (require) {
             $(window).resize();			
         },
 
+    /*
+        addAxis: function(axisSpec) {
+
+            axisSpec.parentId = this.id;
+            axisSpec.olMap = this.map.olMap_;
+            this.axes.push( new Axis(axisSpec) );
+            $(window).resize();
+        },
+    */
+
         setAxisSpecs: function (axes) {
-            var xAxisSpec, yAxisSpec;
 
-            xAxisSpec = axes.xAxisConfig;
-            xAxisSpec.parentId = this.id;
-            xAxisSpec.olMap = this.map.olMap_;
-            this.axes.push(new Axis(xAxisSpec));
+            var i, spec;
 
-            yAxisSpec = axes.yAxisConfig;
-            yAxisSpec.parentId = this.id;
-            yAxisSpec.olMap = this.map.olMap_;
-            this.axes.push(new Axis(yAxisSpec));
+            for (i=0; i< axes.length; i++) {
+                spec = axes[i];
+                spec.parentId = this.id;
+                spec.olMap = this.map.olMap_;
+                this.axes.push(new Axis(spec));
+            }
+        },
+
+
+        getPyramid: function() {
+
+            var mapExtents = this.map.olMap_.getMaxExtent();
+            return new AoITilePyramid( mapExtents.left, mapExtents.bottom,
+                                       mapExtents.right, mapExtents.top);
         },
 
 
         getTileIterator: function() {
             var level = this.map.getZoom(),
-                bounds = this.map.olMap_.getExtent(),
-                mapExtents = this.map.olMap_.getMaxExtent(),
-                mapPyramid = new AoITilePyramid(mapExtents.left, mapExtents.bottom,
-                    mapExtents.right, mapExtents.top);
+                bounds = this.map.olMap_.getExtent();
 
             // determine all tiles in view
-            return new TileIterator(mapPyramid, level,
-                                    bounds.left, bounds.bottom,
-                                    bounds.right, bounds.top);
+            return new TileIterator( this.getPyramid(), level,
+                                     bounds.left, bounds.bottom,
+                                     bounds.right, bounds.top);
         },
 
 
@@ -149,20 +162,14 @@ define(function (require) {
             return this.getTileIterator().getRest();
         },
 
-        /*
+
         getTileSetBoundsInView: function() {
 
             return {'params': this.getTileIterator().toTileBounds()};
         },
-        */
 
-        /**
-         * Maps a mouse position in the mouse viewport to a tile identification key
-         * @param mx mouse x position in the map viewport
-         * @param my mouse y position in the map viewport
-         * @return string tile identification key under the specified mouse position
-         */
-        getTileKeyUnderMouse: function(mx, my) {
+
+        getPixelUnderMouse: function(mx, my) {
 
             var TILESIZE = 256,
                 zoom,
@@ -188,6 +195,22 @@ define(function (require) {
             pixelMin.y = totalPixelSpan.x - maxPx.y;
             pixel.x = mx + pixelMin.x;
             pixel.y = (this.map.olMap_.size.h - my - pixelMax.y + totalPixelSpan.x );
+
+            return pixel;
+        },
+
+
+        /**
+         * Maps a mouse position in the mouse viewport to a tile identification key
+         * @param mx mouse x position in the map viewport
+         * @param my mouse y position in the map viewport
+         * @return string tile identification key under the specified mouse position
+         */
+        getTileKeyUnderMouse: function(mx, my) {
+
+            var TILESIZE = 256,
+                zoom = this.map.olMap_.getZoom(),
+                pixel = this.getPixelUnderMouse(mx, my);
 
             return zoom + "," + Math.floor(pixel.x / TILESIZE) + "," + Math.floor(pixel.y / TILESIZE);
         },

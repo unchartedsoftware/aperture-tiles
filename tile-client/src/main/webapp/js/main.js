@@ -41,6 +41,7 @@ require(['./FileLoader',
             "use strict";
 
             var mapFile = "./data/map.json",
+                annotationsFile = "./data/annotations.json",
                 cloneObject;
 
             cloneObject = function (base) {
@@ -67,7 +68,7 @@ require(['./FileLoader',
                 
 
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFile, function (jsonDataMap) {
+            FileLoader.loadJSONData(mapFile, annotationsFile, function (jsonDataMap) {
                 var allLayers = new AllLayers(),
                     // Create world map and axes from json file under mapFile
                     worldMap;
@@ -146,6 +147,7 @@ require(['./FileLoader',
                     // Create client and server layers
                     ClientLayerFactory.createLayers(clientLayers, worldMap);
                     ServerLayerFactory.createLayers(serverLayers, worldMap);
+                    AnnotationLayerFactory.createLayers( jsonDataMap[annotationsFile].AnnotationLayers, worldMap );
 
                     // Trigger the initial resize event to resize everything
                     $(window).resize();

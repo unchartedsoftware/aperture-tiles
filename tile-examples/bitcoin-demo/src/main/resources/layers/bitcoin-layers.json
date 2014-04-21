@@ -65,7 +65,7 @@
             "name": "All Bitcoin Layers",
             "children": [
                 {
-                    "id": "source.v.amount",
+                    "id": "bitcoin.source.amount",
                     "name": "Source vs Amount layers",
                     "axes": {
                         "xAxisConfig" : {
@@ -130,55 +130,25 @@
                             }
                         }
                     },
-                    children: [
+                    data: {
+                        pyramidio: {
+                            type: "hbase",
+                            hbase.zookeeper.quorum: "hadoop-s1.oculus.local",
+                            hbase.zookeeper.port: "2181",
+                            hbase.master: "hadoop-s1.oculus.local:60000"
+                        }
+                    },
+                    renderers: [
                         {
-                            "id": "bitcoin.source.amount",
-                            "name": "Source vs Amount heatmap",
-                            data: {
-                                pyramidio: {
-                                    type: "hbase",
-                                    hbase.zookeeper.quorum: "hadoop-s1.oculus.local",
-                                    hbase.zookeeper.port: "2181",
-                                    hbase.master: "hadoop-s1.oculus.local:60000"
-                                }
+                            domain: "server",
+                            renderer: {
+                                type: "heatmap",
+                                ramp: "ware",
+                                opacity: 0.85
                             },
-                            renderers: [
-                                {
-                                    domain: "server",
-                                    renderer: {
-                                        type: "heatmap",
-                                        ramp: "ware",
-                                        opacity: 0.85
-                                    },
-                                    transform: {
-                                        name: "log10"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "id": "bitcoin.annotations",
-                            name: "bitcoin source vs. amount annotations",
-                            data: {
-                                pyramidio: {
-                                    type: "hbase",
-                                    hbase.zookeeper.quorum: "hadoop-s1.oculus.local",
-                                    hbase.zookeeper.port: "2181",
-                                    hbase.master: "hadoop-s1.oculus.local:60000"
-                                }
-                            },
-                            renderers: [
-                                {
-                                    domain: "annotations",
-                                    "priorities": [ "Urgent", "High", "Medium", "Low"],
-                                    "filters" : {
-                                        "Urgent": 10,
-                                        "High": 10,
-                                        "Medium": 10,
-                                        "Low" : 10
-                                    }
-                                }
-                            ]                                 
+                            transform: {
+                                name: "log10"
+                            }
                         }
                     ]
                 },

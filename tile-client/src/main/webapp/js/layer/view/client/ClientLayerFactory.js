@@ -53,7 +53,7 @@ define( function (require) {
 		createLayer: function(layerJSON, map) {
 
 			var requirements = [],	// this is an array of requirement spec objects. Each entry is used to load the individual requirements	
-				i, dataLayer;
+				i;
 	
 			// load module func
 			function loadModule(arg, callback) {

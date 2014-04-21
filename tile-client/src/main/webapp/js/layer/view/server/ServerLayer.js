@@ -177,15 +177,16 @@ define(function (require) {
         },
 
         /*
-         * Called when data the basic information about the layer is recieved 
+         * Called when data the basic information about the layer is received
          * from the server.
          */
         useLayerInfo: function (dataListener, layerInfo) {
-            var layer, ufrIndex, layerSpecs, i, axis;
+            var layer, ufrIndex; //, layerSpecs, i, axis;
 
             layer = layerInfo.layer;
-            layerSpecs = dataListener.layerSpecs[layer];
+            //layerSpecs = dataListener.layerSpecs[layer];
 
+            /*
             if ( layerSpecs.axis !== undefined && layerSpecs.axis.length > 0 ) {
                 for (i=0; i< layerSpecs.axis.length; i++) {
                     axis = layerSpecs.axis[i];
@@ -201,6 +202,7 @@ define(function (require) {
                     this.map.addAxis( axis );
                 }
             }
+            */
 
             // Wait until all requests have been fulfilled
             ufrIndex = this.unfulfilledRequests.indexOf(layer);

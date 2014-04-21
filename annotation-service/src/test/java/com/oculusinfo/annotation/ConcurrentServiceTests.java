@@ -65,8 +65,8 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	try {
     		
     		_io = new HBaseAnnotationIO("hadoop-s1.oculus.local", 
-    												"2181", 
-    												"hadoop-s1.oculus.local:60000");
+    									"2181", 
+    									"hadoop-s1.oculus.local:60000");
     		
     		_service = new CachedAnnotationServiceImpl( _io, indexer );
     		

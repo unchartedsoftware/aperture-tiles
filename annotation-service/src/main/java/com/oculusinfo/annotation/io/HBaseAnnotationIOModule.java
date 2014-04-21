@@ -43,13 +43,14 @@ public class HBaseAnnotationIOModule extends AbstractModule {
 	}
 	
 	@Provides
-	HBaseAnnotationIO provideHBaseIo(
+	HBaseAnnotationIO provideHBaseIo(/*
 			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperQuorum")String zookeeperQuorum,
 			@Named("com.oculusinfo.tile.pyramidio.hbase.zookeeperPort")String zookeeperPort,
 			@Named("com.oculusinfo.tile.pyramidio.hbase.hbaseMaster")String hbaseMaster) 
-					throws IOException {
+					*/ )throws IOException {
 
-		return new HBaseAnnotationIO( zookeeperQuorum, zookeeperPort, hbaseMaster );
+		//return new HBaseAnnotationIO( zookeeperQuorum, zookeeperPort, hbaseMaster );		 
+		return new HBaseAnnotationIO( "hadoop-s1.oculus.local", "2181", "hadoop-s1.oculus.local:60000" );
 	}
 	
 }

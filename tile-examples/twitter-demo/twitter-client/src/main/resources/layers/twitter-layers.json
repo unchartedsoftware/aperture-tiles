@@ -63,8 +63,8 @@
         {
             "id": "twitter",
             "name": "All Twitter Layers",
-            "axes": {
-    	        "xAxisConfig": {
+            "axes": [
+                {
         	        "title": "Longitude",
         	        "id": "map-x-axis",
         	        "min": -180,
@@ -73,8 +73,7 @@
             	        "type": "fixed",
             	        "increment": 60,
             	        "pivot": 0,
-            	        "allowScaleByZoom": true,
-            	        "isMercatorProjected": true
+            	        "allowScaleByZoom": true
         	        },
         	        "unitSpec": {
             	        "type": "degrees",
@@ -95,7 +94,7 @@
     			        "axisLabelFontSize": "0.95em"
                     }
 		        },
-    	        "yAxisConfig": {
+    	        {
         	        "title": "Latitude",
         	        "id": "map-y-axis",
         	        "min": -85.051129,
@@ -104,8 +103,7 @@
             	        "type": "fixed",
             	        "increment": 30,
             	        "pivot": 0,
-            	        "allowScaleByZoom": true,
-            	        "isMercatorProjected": true
+            	        "allowScaleByZoom": true
         	        },
         	        "unitSpec": {
             	        "type": "degrees",
@@ -126,7 +124,7 @@
     			        "axisLabelFontSize": "0.95em"
                     }
     	        }
-            },
+            ],
             "children": [
                 {
 	                id: "twitter.2014-01-02.longitude.latitude",
@@ -177,6 +175,9 @@
                                 },
                                 {
                                     renderer: "HashTagsByTime"
+                                },
+                                {
+                                    renderer: "EmptyRenderer"
                                 }
                             ]
                         }
