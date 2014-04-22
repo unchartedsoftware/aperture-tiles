@@ -29,7 +29,9 @@ require(['./FileLoader',
          './layer/AllLayers',
          './layer/view/server/ServerLayerFactory',
          './layer/view/client/ClientLayerFactory',
-         './annotation/AnnotationLayerFactory'
+         './annotation/AnnotationLayerFactory',
+         './layer/controller/LayerControls',
+         './layer/controller/UIMediator'
         ],
 
         function (FileLoader, 
@@ -37,7 +39,9 @@ require(['./FileLoader',
                   AllLayers,
                   ServerLayerFactory,
                   ClientLayerFactory,
-                  AnnotationLayerFactory) {
+                  AnnotationLayerFactory,
+                  LayerControls,
+                  UIMediator) {
             "use strict";
 
             var mapFile = "./data/map.json",
@@ -144,10 +148,17 @@ require(['./FileLoader',
                     // Set up our map axes
                     worldMap.setAxisSpecs(axes);
 
+                    // Populate the map layer state object with server layer data, and enable
+                    // listeners that will push state changes into the layers.
+                    var uiMediator = new UIMediator();
+
                     // Create client and server layers
-                    ClientLayerFactory.createLayers(clientLayers, worldMap);
-                    ServerLayerFactory.createLayers(serverLayers, worldMap);
+                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+                    ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
                     AnnotationLayerFactory.createLayers( jsonDataMap[annotationsFile].AnnotationLayers, worldMap );
+
+                    // Bind layer controls to the state model.
+                    new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
                     // Trigger the initial resize event to resize everything
                     $(window).resize();

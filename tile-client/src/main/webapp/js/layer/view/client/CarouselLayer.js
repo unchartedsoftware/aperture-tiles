@@ -44,12 +44,12 @@ define(function (require) {
         /**
          * Construct a carousel
          */
-        init: function (spec) {
+        init: function (map) {
 
             var that = this;
 
             // call base class ViewController constructor
-            this._super(spec);
+            this._super(map);
             this.previousMouse = {};
             this.selectedTileInfo = {};
 
@@ -65,11 +65,16 @@ define(function (require) {
                 var tilekey = that.map.getTileKeyUnderMouse( that.previousMouse.x, that.previousMouse.y );
                 that.updateSelectedTile(tilekey);
             });
+        },
+
+
+        setViews: function( views ) {
+
+            this._super(views);
 
             // create the carousel UI
             this.createUI();
         },
-
 
         /**
          * Construct the user interface aperture.iconlayers
@@ -280,6 +285,10 @@ define(function (require) {
          * @param tilekey tile identification key of the form: "level,x,y"
          */
         updateSelectedTile: function(tilekey) {
+
+            if (this.views === undefined || this.views.length === 0) {
+                return;
+            }
 
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
