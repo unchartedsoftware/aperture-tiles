@@ -38,7 +38,6 @@ define(function (require) {
 
 
     var Class = require('../class'),
-        WebPyramid = require('../binning/WebTilePyramid'),
         NUM_BINS = 8,       // MUST MATCH AnnotationTile.NUM_BINS in 'AnnotationTile.java'
         TileAnnotationIndexer;
 
@@ -46,8 +45,8 @@ define(function (require) {
 		
     TileAnnotationIndexer = Class.extend({
         ClassName: "TileAnnotationIndexer",
-        init: function () {
-            this._pyramid = new WebPyramid();
+        init: function ( pyramid ) {
+            this._pyramid = pyramid;
         },
 
         getIndices: function( data ) {

@@ -27,7 +27,11 @@ import java.io.Serializable;
 import java.util.UUID;
 import org.json.JSONObject;
 
-/*
+/**
+ * This class is used to represent an annotation data reference. Each reference is stored in the
+ * io with a unique uuid and has a timestamp associated with it. The timestamp is used to
+ * resolve client sync conflicts.
+ * 
  * Annotation Reference
  * {
  * 		uuid:  		UUID, 

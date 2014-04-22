@@ -34,8 +34,11 @@ import com.oculusinfo.binning.*;
 
 import org.json.JSONObject;
 
-/*
- * Annotation Tile
+/**
+ * This class represents a single tile worth of annotations. Annotations are stored by
+ * bin.
+ * 
+ * Annotation Tile JSON format:
  * {
  * 		"binKey0": AnnotationBin, 
  * 		"binKey1": AnnotationBin,

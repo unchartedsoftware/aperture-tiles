@@ -28,6 +28,10 @@ import java.util.UUID;
 
 import org.json.JSONObject;
 
+
+/**
+ * This class represents a single annotation
+ */
 public abstract class AnnotationData<T> implements Serializable {
     
 	private static final long serialVersionUID = 1L;
