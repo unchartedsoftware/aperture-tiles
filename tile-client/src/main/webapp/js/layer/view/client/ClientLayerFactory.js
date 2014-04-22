@@ -74,13 +74,6 @@ define( function (require) {
 				layerInfoListener.retrieveLayerInfo();
 			}
 
-            function onRetrieveController( deferred ){
-                return function( module ) {
-                    layer.controller = module;
-                    deferred.resolve();
-                };
-            }
-
             function onRetrieveRenderer( index, deferred ){
                 return function( Module ) {
                     layer.views[index].renderer = new Module();
@@ -94,13 +87,6 @@ define( function (require) {
                     deferred.resolve();
                 };
             }
-
-            /*
-            d = $.Deferred();
-            tasks.push( d );
-
-            loadRequireJsModule( "./" + layerJSON.type, onRetrieveController( d ) );
-            */
 
             // add view dependencies to requirements
             for (i=0; i<layerJSON.views.length; i++) {
@@ -127,7 +113,7 @@ define( function (require) {
             clientLayer = new ClientLayer(map);
 
             // instantiate layer object
-            uiMediator.addClientLayer( clientLayer, map );
+            uiMediator.addClientLayer( clientLayer );
 
             $.when.apply( $, tasks ).done( function() {
 
@@ -143,7 +129,7 @@ define( function (require) {
                     });
                 }
 
-               clientLayer.setViews( views ); // = new ClientLayer(map);
+               clientLayer.setViews( views );
             });
 
 		}
