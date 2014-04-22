@@ -22,6 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+ /*global OpenLayers */
 
 require(['./FileLoader',
          './ApertureConfig',
@@ -29,7 +30,10 @@ require(['./FileLoader',
          './map/Map',
          './layer/AllLayers',
          './layer/view/server/ServerLayerFactory',
-         './layer/view/client/ClientLayerFactory'
+         './layer/view/client/ClientLayerFactory',
+         './annotation/AnnotationLayerFactory',
+         './layer/controller/LayerControls',
+         './layer/controller/UIMediator'
         ],
 
         function (FileLoader, 
@@ -38,13 +42,17 @@ require(['./FileLoader',
         	      Map,
                   AvailableLayersTracker,
                   ServerLayerFactory,
-                  ClientLayerFactory) {
+                  ClientLayerFactory,
+                  AnnotationLayerFactory,
+                  LayerControls,
+                  UIMediator) {
             "use strict";
 
             var apertureConfigFile = "./data/aperture-config.json",
                 cloneObject,
                 getLayers,
-                pyramidsEqual;
+                pyramidsEqual,
+                uiMediator;
 
             cloneObject = function (base) {
                 var result, key;
@@ -153,14 +161,18 @@ require(['./FileLoader',
 				            // of the layer tree that match that pyramid.
 				            // Eventually, we should let the user choose among them.
 				            var filter = function (layer) {
-					            return pyramidsEqual(mapPyramid, layer.pyramid);
-				            },
+                                    return pyramidsEqual(mapPyramid, layer.pyramid);
+                                },
 				                clientLayers = getLayers("client", layers, filter),
 				                serverLayers = getLayers("server", layers, filter);
 
+				            uiMediator = new UIMediator();
+    
 				            // Create client and server layers
-				            ClientLayerFactory.createLayers(clientLayers, worldMap);
-				            ServerLayerFactory.createLayers(serverLayers, worldMap);
+				            ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+				            ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
+
+				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
 				            // Trigger the initial resize event to resize everything
 				            $(window).resize();

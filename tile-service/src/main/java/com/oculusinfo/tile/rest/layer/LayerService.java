@@ -87,7 +87,7 @@ public interface LayerService {
      *            any tile-specific pieces of the configuration may safely be
      *            ignored.
      */
-    public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile);
+    public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile, JSONObject requestParams);
 
     /**
      * Indicates to the service that all users are done with a given

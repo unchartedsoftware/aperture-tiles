@@ -28,15 +28,19 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Random;
+//import java.util.zip.DeflaterOutputStream;
 
 import org.apache.avro.file.CodecFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
@@ -49,7 +53,7 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 /*
  * Some tests to help compare serialization speeds between various schemes
  */
-@Ignore
+//@Ignore
 public class SerializationSpeedTests {
 	private TileSerializer<Double> _serializer;
 	private TilePyramid            _pyramid;

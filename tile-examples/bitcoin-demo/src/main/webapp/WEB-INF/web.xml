@@ -32,7 +32,15 @@
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.TileModule
+      com.oculusinfo.tile.rest.TileModule:
+
+
+      <!-- Annotation -->
+      com.oculusinfo.annotation.io.HBaseAnnotationIOModule:
+      com.oculusinfo.annotation.index.TileIndexerModule:
+      com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+      com.oculusinfo.annotation.rest.AnnotationServiceModule
+
     </param-value>
   </context-param>
 

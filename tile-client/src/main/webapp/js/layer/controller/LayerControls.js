@@ -104,7 +104,7 @@ define(function (require) {
 
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
-        if (layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
+        if ( layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
             $settings = $('<a>settings</a>');
             $settings.click(function () {
                 showLayerSettings($root, layerState);
@@ -149,6 +149,7 @@ define(function (require) {
         filterRange = layerState.getFilterRange();
         hasFilter = filterRange !== null && filterRange[0] >= 0 && filterRange[1] >= 0;
         className = hasFilter ? "opacity-slider" : "base-opacity-slider";
+
         $cell = $('<td class="' + className + '"></td>');
         $subTableRow.append($cell);
 
@@ -163,6 +164,7 @@ define(function (require) {
             }
         });
         $cell.append($opacitySlider);
+
 
         // Add the filter slider
         if (hasFilter) {
@@ -208,6 +210,7 @@ define(function (require) {
             });
             $cell.append($promotionButton);
         }
+
 
         $parentElement.append($layerControlSetRoot);
 
@@ -407,7 +410,13 @@ define(function (require) {
                     ));
                 }
             }
+        },
+
+        getLayerControlListDiv: function() {
+
+            return this.$layerControlsListRoot;
         }
+
     });
 
     return LayerControls;

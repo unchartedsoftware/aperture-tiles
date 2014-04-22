@@ -60,6 +60,16 @@ define(function (require) {
         },
 
 
+        getOpacity: function() {
+            return this.mouseState.opacity;
+        },
+
+
+        isVisible: function(data) {
+            return this.mouseState.isVisible;
+        },
+
+
         /**
          * Returns true if the layer is selected for the respective tile by the view controller,
          * the data.renderer attribute is assigned by the TileTracker
