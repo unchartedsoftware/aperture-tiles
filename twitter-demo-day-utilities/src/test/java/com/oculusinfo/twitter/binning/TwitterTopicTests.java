@@ -24,15 +24,34 @@
  */
 package com.oculusinfo.twitter.binning;
 
+import java.util.List;
+
+import com.oculusinfo.binning.util.Pair;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 public class TwitterTopicTests {
-    @Test
-    public void exampleTest () {
-        Assert.assertEquals(1, 1);
-    }
+//    @Test
+//    public void exampleTest () {
+//        Assert.assertEquals(1, 1);
+//    }
+	
+	@Test
+	public void testEmptyRecord() {
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord();
 
+		Assert.assertEquals(null, a.getTopic());
+		Assert.assertEquals(null, a.getTopicEnglish());
+		Assert.assertEquals(0, a.getCountMonthly());
+		Assert.assertEquals(null, a.getCountDaily());
+		Assert.assertEquals(null, a.getCountPer6hrs());
+		Assert.assertEquals(null, a.getCountPerHour());
+		Assert.assertEquals(null, a.getRecentTweets());
+	}
+	
+    
+	//TODO ...
     // Needed Tests:
     //  Create a topic with no counts and a given end time (test)
     //  Add a tweet to it in the following time ranges:
@@ -43,5 +62,5 @@ public class TwitterTopicTests {
     //    After the last valid time range (test)
     // In all cases, make sure all counts are updated or left alone appropriately.
     // Keep test cases small, clean, and obvious (as much as is reasonably possible, anyway)
-    
+	    
 }

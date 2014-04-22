@@ -34,26 +34,33 @@ import com.oculusinfo.binning.util.Pair;
 public class TwitterDemoTopicRecord {
 	//TODO do we need make this class serializable?? (as in TwitterDemoRecord class)
 
-	private List<String>            	_topics;			// Top 10 topics (for past month) in original language
-    private List<String>            	_topicsEnglish;		// Top 10 topics in English
-    private int							_totalTweets;		// Count of all twitter messages.
-    private List<Integer>           	_countMonthly;		// total number of tweets per month for each Top 10 Topic
-    private List<List<Integer>>			_countDaily;		// tweet count per day for the past month for each Top 10 Topic
-    private List<List<Integer>>			_countPer6hrs;		// tweet count per six hours for last week for each Top 10 Topic
-    private List<List<Integer>>			_countPerHour;		// tweet count per hour for last 24 hrs for each Top 10 Topic
-    private List<Pair<String, Long>>	_recentTweets;		// 10 most recent tweets
+	private String            			_topic;				// Twitter topic in original language
+    private String            			_topicEnglish;		// Twitter topic in English
+    private int           				_countMonthly;		// total number of tweets per month with this topic
+    private List<Integer>				_countDaily;		// tweet count per day for the past month with this topic
+    private List<Integer>				_countPer6hrs;		// tweet count per six hours for last week with this topic
+    private List<Integer>				_countPerHour;		// tweet count per hour for last 24 hrs with this topic
+    private List<Pair<String, Long>>	_recentTweets;		// 10 most recent tweets with this topic
     
-    public TwitterDemoTopicRecord (List<String> topics,
-    								List<String> topicsEnglish,		
-    								int totalTweets,	
-    								List<Integer> countMonthly,
-    								List<List<Integer>> countDaily,
-    								List<List<Integer>> countPer6hrs,		
-    								List<List<Integer>> countPerHour,
+	public TwitterDemoTopicRecord() {	// default constructor
+		   _topic = null;			
+		   _topicEnglish = null;		
+		   _countMonthly = 0;
+		   _countDaily = null;		
+		   _countPer6hrs = null;		
+		   _countPerHour = null;
+		   _recentTweets = null;		
+	}
+    
+    public TwitterDemoTopicRecord (String topic,
+    								String topicEnglish,			
+    								int countMonthly,
+    								List<Integer> countDaily,
+    								List<Integer> countPer6hrs,		
+    								List<Integer> countPerHour,
     								List<Pair<String, Long>> recentTweets) {
-	   _topics = topics;			
-	   _topicsEnglish = topicsEnglish;		
-	   _totalTweets = totalTweets;
+	   _topic = topic;			
+	   _topicEnglish = topicEnglish;		
 	   _countMonthly = countMonthly;
 	   _countDaily = countDaily;		
 	   _countPer6hrs = countPer6hrs;		
@@ -61,41 +68,72 @@ public class TwitterDemoTopicRecord {
 	   _recentTweets = recentTweets;	
 	}
     
-	public List<String> getTopics() {
-		return _topics;
+	public String getTopic() {
+		return _topic;
 	}
 	
-	public List<String> getTopicsEnglish() {
-		return _topicsEnglish;
+	public String getTopicEnglish() {
+		return _topicEnglish;
 	}	
 
-	public int getTotalTweets() {
-		return _totalTweets;
-	}
-
-	public List<Integer> getCountMonthly() {
+	public int getCountMonthly() {
 		return _countMonthly;
 	}
 
-	public List<List<Integer>> getCountDaily() {
+	public List<Integer> getCountDaily() {
 		return _countDaily;
 	}
 	
-	public List<List<Integer>> getCountPer6hrs() {
+	public List<Integer> getCountPer6hrs() {
 		return _countPer6hrs;
 	}
 	
-	public List<List<Integer>> getCountPerHour() {
+	public List<Integer> getCountPerHour() {
 		return _countPerHour;
 	}	
 
 	public List<Pair<String, Long>> getRecentTweets() {
 		return _recentTweets;
 	}
-	
+		
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (null == obj)
+			return false;
+		if (!(obj instanceof TwitterDemoTopicRecord))
+			return false;
 
+		TwitterDemoTopicRecord that = (TwitterDemoTopicRecord) obj;
+		return (this._topic == that._topic
+				&& this._topicEnglish == that._topicEnglish
+				&& this._countMonthly == that._countMonthly
+				&& listsEqual(this._countDaily, that._countDaily)
+				&& listsEqual(this._countPer6hrs, that._countPer6hrs)
+				&& listsEqual(this._countPerHour, that._countPerHour)
+				&& listsEqual(this._recentTweets, that._recentTweets));
+	}
 	
-	
+	private static boolean objectsEqual(Object a, Object b) {
+		if (null == a)
+			return null == b;
+		return a.equals(b);
+	}
+
+	private static <T> boolean listsEqual(List<T> a, List<T> b) {
+		if (null == a)
+			return null == b;
+		if (null == b)
+			return false;
+		if (a.size() != b.size())
+			return false;
+		for (int i = 0; i < a.size(); ++i) {
+			if (!objectsEqual(a.get(i), b.get(i)))
+				return false;
+		}
+		return true;
+	}
 }
 
 
