@@ -27,14 +27,18 @@ require(['./FileLoader',
          './map/Map',
          './layer/AllLayers',
          './layer/view/server/ServerLayerFactory',
-         './layer/view/client/ClientLayerFactory'
+         './layer/view/client/ClientLayerFactory',         
+         './layer/controller/LayerControls',
+         './layer/controller/UIMediator'
         ],
 
         function (FileLoader, 
-                  Map,
+        	      Map,
                   AllLayers,
                   ServerLayerFactory,
-                  ClientLayerFactory) {
+                  ClientLayerFactory,
+                  LayerControls,
+                  UIMediator) {
             "use strict";
 
             var mapFile = "./data/map.json",
@@ -161,9 +165,14 @@ require(['./FileLoader',
                     // Set up our map axes
                     worldMap.setAxisSpecs(axes);
 
+                    var uiMediator = new UIMediator();
+
                     // Create client and server layers
-                    ClientLayerFactory.createLayers(clientLayers, worldMap);
-                    ServerLayerFactory.createLayers(serverLayers, worldMap);
+                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+                    ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
+
+                    // Bind layer controls to the state model.
+                    new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
 
                     worldMap.on("mousemove", function(event) {

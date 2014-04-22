@@ -76,6 +76,7 @@ define(function (require) {
             this.createUI();
         },
 
+
         /**
          * Construct the user interface aperture.iconlayers
          */
@@ -155,7 +156,11 @@ define(function (require) {
             });
 
             viewSelectionLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+            });
+
+            viewSelectionLayer.map('opacity').from( function() {
+                return that.opacity;
             });
 
             return viewSelectionLayer;
@@ -219,7 +224,11 @@ define(function (require) {
             });
 
             viewIndexLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+            });
+
+            viewIndexLayer.map('opacity').from( function() {
+                return that.opacity;
             });
 
             return viewIndexLayer;
@@ -273,7 +282,11 @@ define(function (require) {
             });
 
             outlineLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+            });
+
+            outlineLayer.map('opacity').from( function() {
+                return that.opacity;
             });
 
             return outlineLayer;

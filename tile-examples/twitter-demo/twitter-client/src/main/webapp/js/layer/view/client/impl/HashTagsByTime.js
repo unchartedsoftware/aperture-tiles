@@ -163,7 +163,7 @@ define(function (require) {
             this.bars.map('orientation').asValue('vertical');
             this.bars.map('width').asValue(3);
             this.bars.map('visible').from( function() {
-                return that.isSelectedView(this);
+                return that.isSelectedView(this) && that.isVisible(this);
             });
             this.bars.map('fill').from( function(index) {
                 var tagIndex = Math.floor(index/24),
@@ -214,6 +214,9 @@ define(function (require) {
             this.bars.on('mouseout', function(event) {
                 that.onHoverOff(event);
             });
+            this.bars.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
 
         },
 
@@ -252,6 +255,9 @@ define(function (require) {
             });
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
+            this.summaryLabel.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
         },
 
 
@@ -262,7 +268,7 @@ define(function (require) {
             this.tagLabels = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabels.map('visible').from(function() {
-                return that.isSelectedView(this);
+                return that.isSelectedView(this) && that.isVisible(this);
             });
 
             this.tagLabels.map('fill').from( function(index) {
@@ -313,6 +319,9 @@ define(function (require) {
             this.tagLabels.on('mouseout', function(event) {
                 that.onHoverOff(event);
             });
+            this.tagLabels.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
 
         }
 

@@ -151,13 +151,14 @@ define(function (require) {
         },
 
         setOpacity: function( opacity ) {
-            this.opacity = opacity;
+            this.mouseState.opacity = opacity;
+            this.mapNodeLayer.all().redraw();
         },
 
 
         setVisibility: function( visible ) {
-            this.isVisible = visible;
-            console.log("test");
+            this.mouseState.isVisible = visible;
+            this.mapNodeLayer.all().redraw();
         },
 
         /**
