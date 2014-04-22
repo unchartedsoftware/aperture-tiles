@@ -46,6 +46,7 @@ require(['./FileLoader',
 
             var mapFile = "./data/map.json",
                 annotationsFile = "./data/annotations.json",
+                uiMediator,
                 cloneObject;
 
             cloneObject = function (base) {
@@ -150,7 +151,7 @@ require(['./FileLoader',
 
                     // Populate the map layer state object with server layer data, and enable
                     // listeners that will push state changes into the layers.
-                    var uiMediator = new UIMediator();
+                    uiMediator = new UIMediator();
 
                     // Create client and server layers
                     ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);

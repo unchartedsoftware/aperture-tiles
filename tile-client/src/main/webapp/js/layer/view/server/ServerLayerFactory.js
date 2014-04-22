@@ -31,9 +31,7 @@
 define( function (require) {
     "use strict";
 
-	var ServerLayer = require('./ServerLayer'),
-        LayerControls = require('../../controller/LayerControls'),
-		ServerLayerUiMediator = require('../../controller/UIMediator');
+	var ServerLayer = require('./ServerLayer');
 		
 	return {
 
@@ -46,18 +44,10 @@ define( function (require) {
 
 			// Set up server-rendered display layers
 			var serverLayers = new ServerLayer(layerJSON, map);
-				
-			// Attach to map
-			//serverLayers.addToMap(map);
 
 			// Populate the map layer state object with server layer data, and enable
 			// listeners that will push state changes into the layers.
-            //uiMediator = new ServerLayerUiMediator();
-
             uiMediator.setServerLayers(serverLayers, map);
-
-			// Bind layer controls to the state model.
-			//new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
 		}
 

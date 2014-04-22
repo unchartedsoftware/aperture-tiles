@@ -43,6 +43,7 @@ require(['./FileLoader',
 
             var mapFile = "./data/map.json",
                 majorCitiesFile = "./data/majorCities.json",
+                uiMediator,
                 cloneObject;
 
             cloneObject = function (base) {
@@ -165,7 +166,7 @@ require(['./FileLoader',
                     // Set up our map axes
                     worldMap.setAxisSpecs(axes);
 
-                    var uiMediator = new UIMediator();
+                    uiMediator = new UIMediator();
 
                     // Create client and server layers
                     ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
