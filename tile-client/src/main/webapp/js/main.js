@@ -147,14 +147,12 @@ require(['./FileLoader',
 		                worldMap,
 		                mapPyramid;
 
-                    // ... and request relevant data layers
-                    mapPyramid = mapConfig.PyramidConfig;
-
 		            // Initialize our map...
 		            worldMap = new Map("map", mapConfig);
                     // ... (set up our map axes) ...
                     worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
-
+                    // ... and request relevant data layers
+                    mapPyramid = mapConfig.PyramidConfig;
 
 		            AvailableLayersTracker.requestLayers(
 			            function (layers) {
@@ -163,7 +161,6 @@ require(['./FileLoader',
 				            // of the layer tree that match that pyramid.
 				            // Eventually, we should let the user choose among them.
 				            var filter = function (layer) {
-
                                     return pyramidsEqual(mapPyramid, layer.pyramid);
                                 },
 				                clientLayers = getLayers("client", layers, filter),
@@ -181,11 +178,6 @@ require(['./FileLoader',
 				            $(window).resize();
 			            }
 		            );
-
-                    worldMap.on("mousemove", function(event) {
-                        var pixel = worldMap.getCoordUnderMouse(event.xy.x, event.xy.y);
-                        console.log(pixel.x +", " + pixel.y);
-                    });
 
 	            });
             });
