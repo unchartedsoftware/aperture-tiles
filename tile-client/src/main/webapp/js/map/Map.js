@@ -35,8 +35,10 @@ define(function (require) {
 	
     var Class = require('../class'),
         AoITilePyramid = require('../binning/AoITilePyramid'),
+        WebPyramid = require('../binning/WebTilePyramid'),
         TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),
+        TILESIZE = 256,
         Map;
 
 
@@ -48,6 +50,7 @@ define(function (require) {
 
 			var that = this,
 				apertureConfig,
+                mapExtents,
 				mapSpecs;
 		
 			apertureConfig = spec.ApertureConfig;
@@ -87,6 +90,22 @@ define(function (require) {
 			this.axes = [];
 
 			this.projection = this.map.olMap_.projection;
+
+            // TEMPORARY: set tile pyramid type
+            switch (this.projection) {
+
+                case 'EPSG:900913':
+                    // web mercator projection
+                    this.pyramid = new WebPyramid();
+                    break;
+                //case 'EPSG:4326':
+                default:
+                    // linear projection
+                    mapExtents = this.map.olMap_.getMaxExtent();
+                    this.pyramid = new AoITilePyramid( mapExtents.left, mapExtents.bottom,
+                                               mapExtents.right, mapExtents.top);
+                    break;
+            }
 
 			// Set resize map callback
 			$(window).resize( function() {
@@ -139,9 +158,7 @@ define(function (require) {
 
         getPyramid: function() {
 
-            var mapExtents = this.map.olMap_.getMaxExtent();
-            return new AoITilePyramid( mapExtents.left, mapExtents.bottom,
-                                       mapExtents.right, mapExtents.top);
+            return this.pyramid;
         },
 
 
@@ -199,19 +216,57 @@ define(function (require) {
         },
 
 
-        /**
-         * Maps a mouse position in the mouse viewport to a tile identification key
-         * @param mx mouse x position in the map viewport
-         * @param my mouse y position in the map viewport
-         * @return string tile identification key under the specified mouse position
-         */
+        getTileAndBinUnderMouse: function(mx, my, xBinCount, yBinCount) {
+
+            var zoom = this.map.olMap_.getZoom(),
+                pixel = this.getPixelUnderMouse(mx, my),
+                tileIndexX = Math.floor(pixel.x / TILESIZE),
+                tileIndexY = Math.floor(pixel.y / TILESIZE),
+                tilePixelX = pixel.x % TILESIZE,
+                tilePixelY = pixel.y % TILESIZE;
+
+            return {
+                tile: {
+                    level : zoom,
+                    xIndex : tileIndexX,
+                    yIndex : tileIndexY,
+                    xBinCount : xBinCount,
+                    yBinCount : yBinCount
+                },
+                bin: {
+                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
+                    y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
+                }
+            };
+
+        },
+
+
         getTileKeyUnderMouse: function(mx, my) {
 
-            var TILESIZE = 256,
-                zoom = this.map.olMap_.getZoom(),
-                pixel = this.getPixelUnderMouse(mx, my);
+            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, 1, 1);
 
-            return zoom + "," + Math.floor(pixel.x / TILESIZE) + "," + Math.floor(pixel.y / TILESIZE);
+            return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.xIndex;
+        },
+
+
+        getBinKeyUnderMouse: function(mx, my, xBinCount, yBinCount) {
+
+            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, xBinCount, yBinCount );
+
+            return + tileAndBin.bin.x + "," + tileAndBin.bin.x;
+        },
+
+
+        getCoordUnderMouse: function(mx, my) {
+
+            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, TILESIZE, TILESIZE),
+                bounds = this.pyramid.getBinBounds( tileAndBin.tile, tileAndBin.bin );
+
+            return {
+                x: bounds.centerX,
+                y: bounds.centerY
+            };
         },
 
         getOLMap: function() {
@@ -245,7 +300,6 @@ define(function (require) {
         getLayerIndex: function(layer) {
             return this.map.olMap_.getLayerIndex(layer);
         },
-
 
         setOpacity: function (newOpacity) {
             this.map.olMap_.baseLayer.setOpacity(newOpacity);

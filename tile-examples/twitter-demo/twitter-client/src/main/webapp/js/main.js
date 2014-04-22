@@ -175,13 +175,6 @@ require(['./FileLoader',
                     // Bind layer controls to the state model.
                     new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
-
-                    worldMap.on("mousemove", function(event) {
-                        var pixel = worldMap.getPixelUnderMouse(event.xy.x, event.xy.y);
-                        console.log('x: ' + pixel.x + "," + pixel.y );
-                    })
-            
-
                     // Trigger the initial resize event to resize everything
                     $(window).resize();
                 });
