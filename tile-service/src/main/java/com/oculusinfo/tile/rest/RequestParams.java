@@ -22,20 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.tile.rest;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.tile.init.providers.SparkAwarePyramidIOFactoryProvider;
+/**
+ * Interface for retrieving a request parameter that was passed to the data
+ * query like in a "GET" request. This should act like a set of key/value
+ * pairs.
+ * 
+ * @author cregnier
+ *
+ */
+public interface RequestParams {
 
-public class SparkAwarePyramidIOFactoryModule extends AbstractModule {
-
-	@Override
-	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
-		factoryProviderBinder.addBinding().to(SparkAwarePyramidIOFactoryProvider.class);
-	}
+	/**
+	 * Retrieves the value associated with the key name.
+	 * @param name
+	 * 	The name of a key within the query
+	 * @return
+	 * 	Returns the value associated with the key, or null if none exists. 
+	 */
+	public String getValue(String name);
+	
+	/**
+	 * Retrieves the value associated with the key name or else it uses the default
+	 * value.
+	 * @param name
+	 * 	The name of a key within the query
+	 * @param defaultVal
+	 * 	The default value to return if the key doesn't exist.
+	 * @return
+	 * 	Returns the value associated with the key, or the default value if none exists. 
+	 */
+	public String getValueOrElse(String name, String defaultVal);
 	
 }

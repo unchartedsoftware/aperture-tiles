@@ -48,7 +48,8 @@ public class FileSystemPyramidIO implements PyramidIO {
 
 
 	public FileSystemPyramidIO (String rootPath, String extension){
-		_rootPath = rootPath;
+		//make sure the root path ends with a slash
+		_rootPath = (rootPath.trim().endsWith("/"))? rootPath : rootPath.trim() + "/";
 		_extension = extension;
 	}
 

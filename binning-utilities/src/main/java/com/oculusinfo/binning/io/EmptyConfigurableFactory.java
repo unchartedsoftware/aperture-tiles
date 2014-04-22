@@ -22,20 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.binning.io;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.tile.init.providers.SparkAwarePyramidIOFactoryProvider;
+import java.util.List;
 
-public class SparkAwarePyramidIOFactoryModule extends AbstractModule {
+import com.oculusinfo.factory.ConfigurableFactory;
+
+/**
+ * A helper factory to enable getting data from data paths within the configuration phase.<br>
+ * For example, if all configuration data is under some root path, then this factory
+ * can be added as the root of the configurable hierarchy to give everyone a different path,
+ * without having to modify the path values for each factory directly. This factory doesn't create anything.
+ * 
+ * @author cregnier
+ *
+ */
+public class EmptyConfigurableFactory extends ConfigurableFactory<Void> {
+
+	public EmptyConfigurableFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
+		super(name, Void.class, parent, path);
+	}
 
 	@Override
-	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
-		factoryProviderBinder.addBinding().to(SparkAwarePyramidIOFactoryProvider.class);
+	protected Void create() {
+		return null;
 	}
-	
+
+	/**
+	 * Overridden in order to make this public so others can compose trees
+	 */
+	@Override
+	public void addChildFactory(ConfigurableFactory<?> child) {
+		super.addChildFactory(child);
+	}
 }
