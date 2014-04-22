@@ -34,7 +34,7 @@ define(function (require) {
 
 	
     var Class = require('../class'),
-        AoITilePyramid = require('../binning/AoITilePyramid'),
+        //AoITilePyramid = require('../binning/AoITilePyramid'),
         WebPyramid = require('../binning/WebTilePyramid'),
         TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),

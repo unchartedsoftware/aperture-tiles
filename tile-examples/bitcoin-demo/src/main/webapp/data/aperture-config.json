@@ -2,9 +2,9 @@
     "_comment": [
 		"The json configuration file ApertureJS configuration options such as ",
         "logging and REST endpoints:",
-		"	aperture.log:  see ApertureJS documentation for details on configuring logging",
-		"	aperture.io:",
-		"	restEndpoint  specify the rest endpoint for your application",
+		"   aperture.log:  see ApertureJS documentation for details on configuring logging",
+		"   aperture.io:",
+		"   restEndpoint  specify the rest endpoint for your application"
     ],
     "aperture.log" : {
 		"level" : "info",
