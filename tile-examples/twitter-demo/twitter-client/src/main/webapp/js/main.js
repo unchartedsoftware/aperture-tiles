@@ -31,7 +31,7 @@ require(['./FileLoader',
         ],
 
         function (FileLoader, 
-        	      Map,
+                  Map,
                   AllLayers,
                   ServerLayerFactory,
                   ClientLayerFactory) {

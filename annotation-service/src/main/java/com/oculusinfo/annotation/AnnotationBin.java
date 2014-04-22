@@ -36,8 +36,11 @@ import com.oculusinfo.binning.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/*
- * Annotation Bin:
+/**
+ * This class represents an aggregation of annotations in a single bin. All annotations
+ * are stored by priority.
+ * 
+ * Annotation Bin JSON format:
  * {
  * 		"priorityName0" : [ AnnotationReference, AnnotationReference, ... ]
  * 		"priorityName1" : [ AnnotationReference, AnnotationReference, ... ]

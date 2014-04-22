@@ -91,6 +91,8 @@ define(function (require) {
             this.olFeature_.attributes.feature = this;
             this.olPopup_ = null;
 
+            this.redraw();
+
         },
 
 
