@@ -34,7 +34,7 @@ define(function (require) {
 
 	
     var Class = require('../class'),
-        //AoITilePyramid = require('../binning/AoITilePyramid'),
+        AoIPyramid = require('../binning/AoITilePyramid'),
         WebPyramid = require('../binning/WebTilePyramid'),
         TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),
@@ -76,7 +76,16 @@ define(function (require) {
 
 			this.projection = this.map.olMap_.projection;
 
-            this.pyramid = new WebPyramid();
+            if ( spec.PyramidConfig.type === "AreaOfInterest") {
+                this.pyramid = new AoIPyramid( spec.PyramidConfig.minX,
+                                               spec.PyramidConfig.minY,
+                                               spec.PyramidConfig.maxX,
+                                               spec.PyramidConfig.maxY);
+            } else {
+                this.pyramid = new WebPyramid();
+            }
+
+
 
 			// Set resize map callback
 			$(window).resize( function() {
@@ -217,7 +226,7 @@ define(function (require) {
 
             var tileAndBin = this.getTileAndBinUnderMouse( mx, my, 1, 1);
 
-            return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.xIndex;
+            return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
         },
 
 
@@ -225,7 +234,7 @@ define(function (require) {
 
             var tileAndBin = this.getTileAndBinUnderMouse( mx, my, xBinCount, yBinCount );
 
-            return + tileAndBin.bin.x + "," + tileAndBin.bin.x;
+            return tileAndBin.bin.x + "," + tileAndBin.bin.y;
         },
 
 
