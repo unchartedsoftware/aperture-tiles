@@ -67,8 +67,8 @@
                 {
                     "id": "bitcoin.source.amount",
                     "name": "Source vs Amount layers",
-                    "axes": {
-                        "xAxisConfig" : {
+                    "axes": [
+                        {
                             "title" : "Source",
                             "id" : "source-x-axis",
                             "min" : 1,
@@ -99,7 +99,7 @@
                                 "axisLabelFontSize" : "0.95em" 
                             } 
                         },
-                        "yAxisConfig" : {
+                        {
                             "title" : "Amount (BTC)",
                             "id" : "amount-y-axis",
                             "min" : 0,
@@ -129,7 +129,7 @@
                                 "axisLabelFontSize" : "0.95em"  
                             }
                         }
-                    },
+                    ],
                     data: {
                         pyramidio: {
                             type: "hbase",
@@ -155,8 +155,8 @@
                 {
                     "id": "bitcoin.time.amount",
                     "name": "Time vs. Amount",
-                    "axes": {
-                        "xAxisConfig" : {
+                    "axes": [
+                        {
                             "title" : "Time",
                             "id" : "time-x-axis",
                             "min" : 1230958800000,
@@ -187,7 +187,7 @@
                                 "axisLabelFontSize" : "0.95em"
                             }  
                         },
-                        "yAxisConfig" : {
+                        {
                             "title" : "Amount (BTC)",
                             "id" : "amount-y-axis",
                             "min" : 0,
@@ -217,7 +217,7 @@
                                 "axisLabelFontSize" : "0.95em"  
                             }
                         }
-                    },
+                    ],
                     data: {
                         pyramidio: {
                             type: "hbase",
@@ -243,8 +243,8 @@
                 {
                     "id": "bitcoin.time.destination",
                     "name": "Time vs. Destination",
-                    "axes": {
-                        "xAxisConfig" : {
+                    "axes": [
+                        {
                             "title" : "Time",
                             "id" : "time-x-axis",
                             "min" : 1230958800000,
@@ -275,7 +275,7 @@
                                 "axisLabelFontSize" : "0.95em"  
                             }
                         },
-                        "yAxisConfig" : {
+                        {
                             "title" : "Destination",
                             "id" : "dest-y-axis",
                             "min" : 0,
@@ -306,7 +306,7 @@
                                 "axisLabelFontSize" : "0.95em"  
                             }
                         }
-                    },
+                    ],
                     data: {
                         pyramidio: {
                             type: "hbase",
@@ -332,8 +332,8 @@
                 {
                     "id": "bitcoin.time.source",
                     "name": "Time vs. Source",
-                    "axes": {
-                        "xAxisConfig" : {
+                    "axes": [
+                        {
                             "title" : "Time",
                             "id" : "time-x-axis",
                             "min" : 1230958800000,
@@ -365,7 +365,7 @@
                                 "axisLabelFontSize" : "0.95em"  
                             }
                         },
-                        "yAxisConfig" : {
+                        {
                             "title" : "Source",
                             "id" : "source-y-axis",
                             "min" : 0,
@@ -396,7 +396,7 @@
                                 "axisLabelFontSize" : "0.95em"  
                             }
                         }
-                    },
+                    ],
                     data: {
                         pyramidio: {
                             type: "hbase",

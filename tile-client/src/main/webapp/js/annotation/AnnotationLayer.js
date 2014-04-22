@@ -95,7 +95,7 @@ define(function (require) {
             this.map = spec.map;
             this.layer = spec.layer;
             this.priorities = spec.priorities;
-            this.indexer = new TileAnnotationIndexer();
+            this.indexer = new TileAnnotationIndexer( this.map.getPyramid() );
             this.filters = spec.filters;
             this.service = new AnnotationService( this.layer, this.filters, $.proxy( this.onMapUpdate, this ) );
             this.features = {};

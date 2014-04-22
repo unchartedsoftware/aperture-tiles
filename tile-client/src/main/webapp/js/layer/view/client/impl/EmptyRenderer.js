@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -23,35 +23,41 @@
  * SOFTWARE.
  */
 
+/* JSLint global declarations: these objects don't need to be declared. */
+/*global OpenLayers */
+
+
 
 /**
- * This module when given a server layer json object, will load the required classes and build
- * the layers
+ * A simple test layer to test the client side of client rendering.
+ *
+ * This layer simply puts the tile coordinates and another string in 
+ * the middle of each tile.
  */
-define( function (require) {
+define(function (require) {
     "use strict";
-
-	var ServerLayer = require('./ServerLayer');
-		
-	return {
-
-		/**
-		 * Given a layer JSON specification object and a map, will create server rendered tile layers
-		 * @param layerJSON	 	layer specification JSON object
-		 * @param map			map object
-		 */
-		createLayers: function(layerJSON, uiMediator, map) {
-
-			// Set up server-rendered display layers
-			var serverLayers = new ServerLayer(layerJSON, map);
-
-			// Populate the map layer state object with server layer data, and enable
-			// listeners that will push state changes into the layers.
-            uiMediator.setServerLayers(serverLayers, map);
-
-		}
-
-    };	
 	
+	
+	
+    var ClientRenderer = require('../ClientRenderer'),
+        EmptyRenderer;
 
+		
+		
+    EmptyRenderer = ClientRenderer.extend({
+        ClassName: "EmptyRenderer",
+		
+        init: function () {
+            this._super('empty');
+        },		
+		
+		
+        createLayer: function(nodeLayer) {
+            // noop
+            console.log("jslint");
+        }
+
+    });
+
+    return EmptyRenderer;
 });

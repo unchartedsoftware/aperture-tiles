@@ -32,6 +32,7 @@ define( function (require) {
     "use strict";
 		
 	var TileService = require('./data/TileService'),
+        ClientLayer = require('./CarouselLayer'),
 		DataLayer = require('../../DataLayer');	
 		
 	return {
@@ -42,21 +43,22 @@ define( function (require) {
 		 * @param layerJSON	 	layer specification JSON object loaded from layers.json
 		 * @param map			map object from map.js
 		 */
-		createLayers: function(layerJSON, map) {
+		createLayers: function(layerJSON, uiMediator, map) {
 			var i;
 			for (i=0; i<layerJSON.length; i++) {   
-				this.createLayer(layerJSON[i], map);
+				this.createLayer(layerJSON[i], uiMediator, map);
 			}		
 		},
 	
 
-		createLayer: function(layerJSON, map) {
+		createLayer: function(layerJSON, uiMediator, map) {
 
 			var layer = {
                     views : [],
                     controller : {}
                 },
                 tasks = [],
+                clientLayer,
                 d,
                 i;
 	
@@ -72,13 +74,6 @@ define( function (require) {
 				layerInfoListener.retrieveLayerInfo();
 			}
 
-            function onRetrieveController( deferred ){
-                return function( module ) {
-                    layer.controller = module;
-                    deferred.resolve();
-                };
-            }
-
             function onRetrieveRenderer( index, deferred ){
                 return function( Module ) {
                     layer.views[index].renderer = new Module();
@@ -92,12 +87,6 @@ define( function (require) {
                     deferred.resolve();
                 };
             }
-
-            d = $.Deferred();
-            tasks.push( d );
-
-            loadRequireJsModule( "./" + layerJSON.type, onRetrieveController( d ) );
-
 
             // add view dependencies to requirements
             for (i=0; i<layerJSON.views.length; i++) {
@@ -121,27 +110,26 @@ define( function (require) {
                 }, onRetrieveLayerInfo(i, d ) );
             }
 
-            $.when.apply($, tasks).done( function() {
+            clientLayer = new ClientLayer(layerJSON.name, map);
+
+            // instantiate layer object
+            uiMediator.addClientLayer( clientLayer );
+
+            $.when.apply( $, tasks ).done( function() {
 
                 // once everything has loaded
-                var spec =  {
-                        map: map,
-                        views: []
-                    },
+                var views = [],
                     i;
 
                 // add views to layer spec object
                 for (i=0; i<layerJSON.views.length; i++) {
-
-                    spec.views.push({
+                    views.push({
                         renderer: layer.views[i].renderer,
                         dataService: layer.views[i].dataService
                     });
                 }
 
-                // instantiate layer object
-                return new layer.controller(spec);
-
+               clientLayer.setViews( views );
             });
 
 		}

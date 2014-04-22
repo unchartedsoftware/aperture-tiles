@@ -64,10 +64,9 @@ define(function (require) {
 		 *							}]
 		 *
          */
-        init: function (spec) {
+        init: function ( id, map) {
 
-            var that = this,
-                i;
+            var that = this;
 
             function attachMap(map) {
 
@@ -106,6 +105,25 @@ define(function (require) {
                 that.mapNodeLayer.map('height').asValue(1);
             }
 
+            // initialize attributes
+            this.id = id;
+            this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
+            this.tileViewMap = {};      	// maps a tile key to its view index
+            this.views = [];				// array of all views
+			this.mouseState = mouseState; 	// global mouse state to be shared by all views
+            this.opacity = 1.0;
+            this.isVisible = true;
+
+            // attach map
+            attachMap(map);
+        },
+
+
+        setViews: function( views ) {
+
+            var that =  this,
+                i;
+
             function addView(viewspec) {
                 // construct and add view
                 var view = {
@@ -123,23 +141,26 @@ define(function (require) {
                 that.views.push(view);
             }
 
-            // initialize attributes
-            this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
-            this.tileViewMap = {};      	// maps a tile key to its view index
-            this.views = [];				// array of all views
-			this.mouseState = mouseState; 	// global mouse state to be shared by all views
-
-            // attach map
-            attachMap(spec.map);
             // add views
-            for (i = 0; i < spec.views.length; i++) {
-                addView(spec.views[i]);
+            for (i = 0; i < views.length; i++) {
+                addView(views[i]);
             }
 
             // trigger callback to draw first frame
             this.onMapUpdate();
+
         },
 
+        setOpacity: function( opacity ) {
+            this.mouseState.opacity = opacity;
+            this.mapNodeLayer.all().redraw();
+        },
+
+
+        setVisibility: function( visible ) {
+            this.mouseState.isVisible = visible;
+            this.mapNodeLayer.all().redraw();
+        },
 
         /**
          * Returns the view index for the specified tile key
@@ -199,6 +220,10 @@ define(function (require) {
                 tiles,
                 viewIndex,
                 tilesByView = [];
+
+            if (this.views === undefined || this.views.length === 0) {
+                return;
+            }
 
             for (i=0; i<this.views.length; ++i) {
                 tilesByView[i] = [];

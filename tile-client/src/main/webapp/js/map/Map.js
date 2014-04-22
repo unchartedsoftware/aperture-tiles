@@ -87,8 +87,7 @@ define(function (require) {
 			this.axes = [];
 
 			this.projection = this.map.olMap_.projection;
-			
-			
+
 			// Set resize map callback
 			$(window).resize( function() {
 				var $map = $('#' + that.id),
