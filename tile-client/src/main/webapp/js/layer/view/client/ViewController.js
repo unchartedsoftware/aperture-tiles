@@ -27,10 +27,10 @@
 
 /**
  * This module defines a ViewController class which provides delegation between multiple client renderers
- * and their respective data sources. Each view is composed of a ClientRenderer and DataTracker. Each view has
- * a TileTracker which delegates tile requests from the view and its DataTracker.
+ * and their respective data sources. Each view is composed of a ClientRenderer and DataService. Each view has
+ * a TileTracker which delegates tile requests from the view and its DataService.
  *
- * Each DataTracker manages a unique set of data. Upon tile requests, if data ofr the tile is not held in memory, it is pulled from the server.
+ * Each DataService manages a unique set of data. Upon tile requests, if data for the tile is not held in memory, it is pulled from the server.
  * Each TileTracker manages the set of tiles that a currently visible within a particular view.
  * Each ClientRenderer is responsible for drawing only the elements currently visible within a specific view.
  *
@@ -41,9 +41,7 @@ define(function (require) {
 
 
     var Class        = require('../../../class'),
-        AoIPyramid   = require('../../../binning/AoITilePyramid'),
-        TileIterator = require('../../../binning/TileIterator'),
-        TileTracker  = require('./data/TileTracker'),
+        TileTracker  = require('../../TileTracker'),
         MouseState   = require('./MouseState'),
         permData     = [],  // temporary aperture.js bug workaround //
 		mapNodeLayer = {},
@@ -61,15 +59,14 @@ define(function (require) {
 		 *					map : 	aperture.js map
 		 *					views : array of views of the form:
 		 *							[{
-		 *								dataTracker : 	the DataTracker from which to pull the tile data
+		 *								dataService : 	the DataService from which to pull the tile data
 		 *								renderer : 		the ClientRenderer to draw the view data
 		 *							}]
 		 *
          */
-        init: function (spec) {
+        init: function ( id, map) {
 
-            var that = this,
-                i;
+            var that = this;
 
             function attachMap(map) {
 
@@ -77,13 +74,13 @@ define(function (require) {
                 that.map = map;
 
                 // mouse event handlers
-                that.map.olMap_.events.register('click', that.map.olMap_, function() {
+                that.map.on('click', function() {
 					// if click event has not been swallowed yet, clear mouse state and redraw
 					that.mouseState.clearClickState();
 					that.mapNodeLayer.all().redraw();
 				});
 
-                that.map.olMap_.events.register('zoomend', that.map.olMap_, function() {
+                that.map.on('zoomend', function() {
 					// clear click mouse state on zoom and call map update function
                     that.mouseState.clearClickState();
                     permData = [];  // reset temporary fix on zoom
@@ -96,11 +93,11 @@ define(function (require) {
                 });
 				
 				// ensure only one mapNodeLayer is made for each unique map
-				if (mapNodeLayer[that.map.uid] === undefined) {
-					mapNodeLayer[that.map.uid] = that.map.addLayer(aperture.geo.MapNodeLayer);
+				if (mapNodeLayer[that.map.getUid()] === undefined) {
+					mapNodeLayer[that.map.getUid()] = that.map.addApertureLayer(aperture.geo.MapNodeLayer);
 				}
 
-                that.mapNodeLayer = mapNodeLayer[that.map.uid];
+                that.mapNodeLayer = mapNodeLayer[that.map.getUid()];
                 that.mapNodeLayer.map('longitude').from('longitude');
                 that.mapNodeLayer.map('latitude').from('latitude');
                 // Necessary so that aperture won't place labels and texts willy-nilly
@@ -108,13 +105,32 @@ define(function (require) {
                 that.mapNodeLayer.map('height').asValue(1);
             }
 
+            // initialize attributes
+            this.id = id;
+            this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
+            this.tileViewMap = {};      	// maps a tile key to its view index
+            this.views = [];				// array of all views
+			this.mouseState = mouseState; 	// global mouse state to be shared by all views
+            this.opacity = 1.0;
+            this.isVisible = true;
+
+            // attach map
+            attachMap(map);
+        },
+
+
+        setViews: function( views ) {
+
+            var that =  this,
+                i;
+
             function addView(viewspec) {
                 // construct and add view
                 var view = {
                     // view id, used to map tile to view via getTileViewIndex()
                     id: viewspec.renderer.id,
                     // tracks the active tiles used per view at given moment
-                    tileTracker: new TileTracker(viewspec.dataTracker, viewspec.renderer.id),
+                    tileTracker: new TileTracker(viewspec.dataService),
                     // render layer for the view
                     renderer: viewspec.renderer
                 };
@@ -125,23 +141,26 @@ define(function (require) {
                 that.views.push(view);
             }
 
-            // initialize attributes
-            this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
-            this.tileViewMap = {};      	// maps a tile key to its view index
-            this.views = [];				// array of all views
-			this.mouseState = mouseState; 	// mouse state to be shared by all views
-
-            // attach map
-            attachMap(spec.map);
             // add views
-            for (i = 0; i < spec.views.length; i++) {
-                addView(spec.views[i]);
+            for (i = 0; i < views.length; i++) {
+                addView(views[i]);
             }
 
             // trigger callback to draw first frame
             this.onMapUpdate();
+
         },
 
+        setOpacity: function( opacity ) {
+            this.mouseState.opacity = opacity;
+            this.mapNodeLayer.all().redraw();
+        },
+
+
+        setVisibility: function( visible ) {
+            this.mouseState.isVisible = visible;
+            this.mapNodeLayer.all().redraw();
+        },
 
         /**
          * Returns the view index for the specified tile key
@@ -182,6 +201,9 @@ define(function (require) {
             // swap tile data, this function prevents data de-allocation if they share same data source
             oldTracker.swapTileWith(newTracker, tilekey, $.proxy(this.updateAndRedrawViews, this));
 
+            // remove old renderer id from the data
+            this.removeRendererIdFromData(oldViewIndex, oldTracker, tilekey);
+
             // always redraw immediately in case tile is already in memory (to draw new tile), or if
             // it isn't in memory (draw empty tile)
             this.updateAndRedrawViews();
@@ -195,25 +217,20 @@ define(function (require) {
         onMapUpdate: function() {
 
             var i,
-                tileIterator, tiles, tileSetBounds,
-                level = this.map.getZoom(),
-                bounds = this.map.olMap_.getExtent(),
-                mapExtents = this.map.olMap_.getMaxExtent(),
-                mapPyramid = new AoIPyramid(mapExtents.left, mapExtents.bottom,
-                                            mapExtents.right, mapExtents.top),
+                tiles,
                 viewIndex,
                 tilesByView = [];
+
+            if (this.views === undefined || this.views.length === 0) {
+                return;
+            }
 
             for (i=0; i<this.views.length; ++i) {
                 tilesByView[i] = [];
             }
 
             // determine all tiles in view
-            tileIterator = new TileIterator(mapPyramid, level,
-                                            bounds.left, bounds.bottom,
-                                            bounds.right, bounds.top);
-            tiles = tileIterator.getRest();
-            tileSetBounds = {'params': tileIterator.toTileBounds()};
+            tiles = this.map.getTilesInView();
 
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
@@ -225,7 +242,7 @@ define(function (require) {
 
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], tileSetBounds, $.proxy(this.updateAndRedrawViews, this));
+                this.views[i].tileTracker.filterAndRequestTiles(tilesByView[i], this.map.getTileSetBoundsInView(), $.proxy(this.updateAndRedrawViews, this));
             }
 
             // always redraw immediately in case tiles are already in memory, or need to be drawn
@@ -233,6 +250,40 @@ define(function (require) {
             this.updateAndRedrawViews();
         },
 
+
+        /** add views renderer id to node data
+         *
+         * @param viewIndex index of the view
+         * @param data      data to add renderer id to
+         */
+        addRendererIdToData: function(viewIndex, data) {
+            var i;
+            for (i=0; i<data.length; i++ ) {
+                if (data[i].renderer === undefined) {
+                    data[i].renderer = {};
+                }
+                data[i].renderer[this.views[viewIndex].id] = true; // stamp tile data with renderer id
+            }
+            return data;
+        },
+
+
+        /** removes views renderer id from node data
+         *
+         * @param viewIndex     index of the view
+         * @param oldTracker    previous tile tracker
+         * @param tilekey       tile key of tile to remove renderer id from
+         */
+        removeRendererIdFromData: function(viewIndex, oldTracker, tilekey) {
+
+            var i,
+                tiles = oldTracker.getDataArray( tilekey );
+
+            for (i=0; i<tiles.length; i++) {
+                delete tiles[i].renderer[ this.views[ viewIndex ].id ];
+            }
+
+        },
 
         /**
          * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
@@ -243,7 +294,7 @@ define(function (require) {
                 data = [];
 
             for (i=0; i< this.views.length; i++ ) {
-                $.merge(data, this.views[i].tileTracker.getNodeData());
+                $.merge(data, this.addRendererIdToData( i, this.views[i].tileTracker.getDataArray() ) );
             }
 
             /////////////////////////////////////////////

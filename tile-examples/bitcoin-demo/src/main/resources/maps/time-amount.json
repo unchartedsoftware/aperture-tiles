@@ -72,16 +72,15 @@
         "baseLayer" : {}
     },
 
-    "axes": {
-        "xAxisConfig" : {
+    "axes": [
+        {
             "title" : "Time",
             "id" : "time-x-axis",
             "intervalSpec" : {
                 "type" : "percentage",
-                "value" : 20,
+                "increment" : 20,
                 "pivot" : 0,
                 "allowScaleByZoom" : true,
-                "isMercatorProjected" : false
             },
             "unitSpec" : {
                 "type" : "time",
@@ -90,25 +89,26 @@
             },
             "position" : "bottom",
             "repeat": false,
-            "markerLabelRotation" : -45,
-            "majorMarkerLength" : 10,
-            "majorMarkerWidth" : 1,
-            "majorMarkerColour" : "#7E7E7E",
-            "markerLabelColour" : "#7E7E7E",
-            "axisLabelColour" : "#7E7E7E",
-            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-            "markerLabelFontSize" : "0.75em",
-            "axisLabelFontSize" : "0.95em"    
+            "style" : {
+                "markerLabelRotation" : -45,
+                "majorMarkerLength" : 10,
+                "majorMarkerWidth" : 1,
+                "majorMarkerColour" : "#7E7E7E",
+                "markerLabelColour" : "#7E7E7E",
+                "axisLabelColour" : "#7E7E7E",
+                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                "markerLabelFontSize" : "0.75em",
+                "axisLabelFontSize" : "0.95em"  
+            }   
         },
-        "yAxisConfig" : {
+        {
             "title" : "Amount (BTC)",
             "id" : "amount-y-axis",
             "intervalSpec" : {
                 "type" : "fixed",
-                "value" : 100000,
+                "increment" : 100000,
                 "pivot" : 0,
                 "allowScaleByZoom" : true,
-                "isMercatorProjected" : false
             },
             "unitSpec" : {
                 "type" : "decimal",
@@ -117,14 +117,17 @@
             },
             "position" : "left",
             "repeat" : false,        
-            "majorMarkerLength" : 10,
-            "majorMarkerWidth" : 1,
-            "majorMarkerColour" : "#7E7E7E",
-            "markerLabelColour" : "#7E7E7E",
-            "axisLabelColour" : "#7E7E7E",
-            "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-            "markerLabelFontSize" : "0.75em",
-            "axisLabelFontSize" : "0.95em"    
+            "style" : {
+                "markerLabelRotation" : -45,
+                "majorMarkerLength" : 10,
+                "majorMarkerWidth" : 1,
+                "majorMarkerColour" : "#7E7E7E",
+                "markerLabelColour" : "#7E7E7E",
+                "axisLabelColour" : "#7E7E7E",
+                "fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+                "markerLabelFontSize" : "0.75em",
+                "axisLabelFontSize" : "0.95em"  
+            }   
         }
-    }
+    ]
 }
