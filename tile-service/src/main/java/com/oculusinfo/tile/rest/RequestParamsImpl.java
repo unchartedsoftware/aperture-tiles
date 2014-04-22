@@ -22,20 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.tile.rest;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.tile.init.providers.SparkAwarePyramidIOFactoryProvider;
+import org.json.JSONObject;
 
-public class SparkAwarePyramidIOFactoryModule extends AbstractModule {
+/**
+ * A wrapper for a JSONObject that represents the key/value pairs passed through
+ * a data request.
+ *  
+ * @author cregnier
+ *
+ */
+public class RequestParamsImpl implements RequestParams {
 
-	@Override
-	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
-		factoryProviderBinder.addBinding().to(SparkAwarePyramidIOFactoryProvider.class);
+	protected JSONObject _params;
+	
+	public RequestParamsImpl(JSONObject params) {
+		_params = params;
+		if (_params == null)
+			_params = new JSONObject();
 	}
 	
+	@Override
+	public String getValue(String name) {
+		return _params.optString(name);
+	}
+	
+	@Override
+	public String getValueOrElse(String name, String defaultVal) {
+		return _params.optString(name, defaultVal);
+	}
 }

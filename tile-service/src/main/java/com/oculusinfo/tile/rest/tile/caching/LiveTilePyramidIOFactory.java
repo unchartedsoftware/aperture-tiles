@@ -25,18 +25,19 @@ package com.oculusinfo.tile.rest.tile.caching;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.spark.SparkContextProvider;
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
 
-public class LiveTilePyramidIOFactory extends PyramidIOFactory {
-	public static StringProperty PYRAMID_IO_TYPE =
-		PyramidIOFactory.PYRAMID_IO_TYPE.overridePossibleValues(StringProperty.addToArray(PyramidIOFactory.PYRAMID_IO_TYPE.getPossibleValues(), "live"));
+public class LiveTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(LiveTilePyramidIOFactory.class);
 
 	@Inject
 	private SparkContextProvider _contextProvider;
@@ -45,27 +46,18 @@ public class LiveTilePyramidIOFactory extends PyramidIOFactory {
 		this(null, parent, path, contextProvider);
 	}
 	public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
-		super(name, parent, path);
+		super(name, PyramidIO.class, parent, path);
 		_contextProvider = contextProvider;
 	}
 
 	@Override
-	protected List<ConfigurationProperty<?>> getPyramidIOPropertyList () {
-		List<ConfigurationProperty<?>> result = super.getPyramidIOPropertyList();
-		// Replace the type property with our own
-		int n = result.indexOf(PyramidIOFactory.PYRAMID_IO_TYPE);
-		result.set(n, PYRAMID_IO_TYPE);
-		return result;
-	}
-
-	@Override
-	protected PyramidIO createSingleton () {
-		String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
-
-		if ("live".equals(pyramidIOType)) {
+	protected PyramidIO create () {
+		try {
 			return new LiveStaticTilePyramidIO(_contextProvider.getSparkContext());
-		} else {
-			return super.create();
 		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create FileSystemPyramidIO", e);
+		}
+		return null;
 	}
 }

@@ -183,7 +183,7 @@ public class LayerResource extends ApertureServerResource {
                 result.put("tms", host + "tile/" + uuid.toString() + "/");
                 result.put("apertureservice", "/tile/" + uuid.toString() + "/");
                 try {
-                    LayerConfiguration config = _service.getRenderingConfiguration(uuid, null);
+                    LayerConfiguration config = _service.getRenderingConfiguration(uuid, null, null);
                     TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
                     if (null != renderer) {
                         result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metaData));
