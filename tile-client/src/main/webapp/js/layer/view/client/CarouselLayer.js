@@ -44,12 +44,12 @@ define(function (require) {
         /**
          * Construct a carousel
          */
-        init: function (map) {
+        init: function (id, map) {
 
             var that = this;
 
             // call base class ViewController constructor
-            this._super(map);
+            this._super(id, map);
             this.previousMouse = {};
             this.selectedTileInfo = {};
 

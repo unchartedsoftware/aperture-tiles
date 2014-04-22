@@ -110,7 +110,7 @@ define( function (require) {
                 }, onRetrieveLayerInfo(i, d ) );
             }
 
-            clientLayer = new ClientLayer(map);
+            clientLayer = new ClientLayer(layerJSON.name, map);
 
             // instantiate layer object
             uiMediator.addClientLayer( clientLayer );

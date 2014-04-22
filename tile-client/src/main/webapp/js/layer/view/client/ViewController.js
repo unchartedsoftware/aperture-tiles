@@ -64,7 +64,7 @@ define(function (require) {
 		 *							}]
 		 *
          */
-        init: function (map) {
+        init: function ( id, map) {
 
             var that = this;
 
@@ -106,6 +106,7 @@ define(function (require) {
             }
 
             // initialize attributes
+            this.id = id;
             this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
             this.tileViewMap = {};      	// maps a tile key to its view index
             this.views = [];				// array of all views

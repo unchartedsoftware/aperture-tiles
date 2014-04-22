@@ -175,8 +175,8 @@ define(function (require) {
             var layerState;
 
             // Create a layer state object for the base map.
-            layerState = new LayerState("Client Layer");
-            layerState.setName("Client Layer");
+            layerState = new LayerState( clientLayer.id );
+            layerState.setName( clientLayer.id );
             layerState.setEnabled( true );
             layerState.setOpacity( 1.0 );
             layerState.setRampFunction(null);
