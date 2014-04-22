@@ -136,6 +136,52 @@ define(function (require) {
         },
 
 
+        requestTiles: function(visibleTiles, tileSetBounds, callback) {
+
+            var activeTiles = [],
+                defunctTiles = {},
+                neededTiles = [],
+                i, tile, tileKey;
+
+            // Copy out all keys from the current data.  As we go through
+            // making new requests, we won't bother with tiles we've
+            // already received, but we'll remove them from the defunct
+            // list.  When we're done requesting data, we'll then know
+            // which tiles are defunct, and can be removed from the data
+            // set.
+            for (i=0; i<this.tiles.length; ++i) {
+                defunctTiles[this.tiles[i]] = true;
+            }
+
+            // Go through, seeing what we need.
+            for (i=0; i<visibleTiles.length; ++i) {
+                tile = visibleTiles[i];
+                tileKey = this.createTileKey(tile);
+
+                if (defunctTiles[tileKey]) {
+                    // Already have the data, remove from defunct list
+                    delete defunctTiles[tileKey];
+                } else {
+                    // New data.  Mark for fetch.
+                    neededTiles.push(tileKey);
+                }
+                // And mark tile it as meaningful
+                activeTiles.push(tileKey);
+            }
+
+            // Update our internal lists
+            this.tiles = activeTiles;
+            // Remove all old defunct tiles references
+            for (tileKey in defunctTiles) {
+                if (defunctTiles.hasOwnProperty(tileKey)) {
+                    this.dataService.removeReference(tileKey);
+                }
+            }
+            // Request needed tiles from dataService
+            this.dataService.getDataFromServer(neededTiles, tileSetBounds, callback);
+        },
+
+
         /**
          * Create a universal unique key for a given tile
          *

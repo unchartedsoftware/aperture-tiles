@@ -38,8 +38,6 @@ define(function (require) {
 
     var Class = require('../../../class'),
         DataLayer = require('../../DataLayer'),
-        TileIterator = require('../../../binning/TileIterator'),
-        AoIPyramid = require('../../../binning/AoITilePyramid'),
 
         ServerRenderedMapLayer,
         minRect,
@@ -451,6 +449,9 @@ define(function (require) {
          * Update all our openlayers layers on our map.
          */
         updateLayers: function () {
+
+            var that = this;
+
             if (!this.map) {
                 return;
             }
@@ -502,8 +503,7 @@ define(function (require) {
                                 'maxExtent': olBounds,
                                 transparent: true,
                                 getURL: function (bounds) {
-                                    var res, x, y, z, maxBounds, tileSize,
-                                        extents, pyramid, fullUrl, viewBounds;
+                                    var res, x, y, z, maxBounds, tileSize, fullUrl, viewBounds;
 
                                     res = this.map.getResolution();
                                     tileSize = this.tileSize;
@@ -517,12 +517,8 @@ define(function (require) {
                                     z = this.map.getZoom();
 
                                     if (x >= 0 && y >= 0) {
-                                        extents = this.map.getExtent();
-                                        pyramid = new AoIPyramid(-20037500, -20037500,
-                                                                 20037500,  20037500);
-                                        viewBounds = new TileIterator(pyramid, z,
-                                                                      extents.left, extents.bottom,
-                                                                      extents.right, extents.top).toTileBounds();
+
+                                        viewBounds = that.map.getTileSetBoundsInView().params;
                                         
                                         fullUrl = (this.url + this.version + "/" +
                                                    this.layername + "/" + 
