@@ -52,6 +52,9 @@
 		"                                                       ex. 0.95em"
     ],
 
+    id: "bitcoin time vs. destination",
+    description: "A plot of how many transactions at a given time a given bitcoin user participated in as the recipient,",
+
     PyramidConfig: {
         type: "AreaOfInterest",
         minX : 1230958800000,

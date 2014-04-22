@@ -39,8 +39,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+@Singleton
 public class MapServiceImpl implements MapService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MapServiceImpl.class);
 
@@ -104,14 +106,21 @@ public class MapServiceImpl implements MapService {
 
 	private void readConfigFiles (File[] files) {
 		for (File file: files) {
+		    JSONObject mapConfiguration = null;
 			try {
-				JSONObject mapConfiguration = new JSONObject(new JSONTokener(new FileReader(file)));
+				mapConfiguration = new JSONObject(new JSONTokener(new FileReader(file)));
+            } catch (FileNotFoundException e) {
+                LOGGER.error("Cannot find map configuration file {} ", file, e);
+            } catch (JSONException e) {
+                LOGGER.error("Map configuration file {} was not valid JSON.", file, e);
+            }
+			if (null != mapConfiguration) {
+			    try {
 				_mapConfigurationsById.put(mapConfiguration.getString("id"), mapConfiguration);
-				_mapConfigurations.put(mapConfiguration);
-			} catch (FileNotFoundException e1) {
-				LOGGER.error("Cannot find map configuration file {} ", file);
-			} catch (JSONException e1) {
-				LOGGER.error("Map configuration file {} was not valid JSON.", file);
+	            } catch (JSONException e) {
+	                LOGGER.warn("Map configuration file {} had no ID - configuration won't be accessible by id.", file, e);
+	            }
+			    _mapConfigurations.put(mapConfiguration);
 			}
 		}
 		debugConfiguration();
