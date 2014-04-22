@@ -32,7 +32,7 @@ import org.json.JSONObject;
  * io with a unique uuid and has a timestamp associated with it. The timestamp is used to
  * resolve client sync conflicts.
  * 
- * Annotation Reference
+ * Annotation Reference JSON format
  * {
  * 		uuid:  		UUID, 
  * 		timestamp: 	Long
