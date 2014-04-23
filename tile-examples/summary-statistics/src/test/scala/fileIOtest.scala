@@ -2,7 +2,7 @@ import scala.math.random
 import org.apache.spark._
 import SparkContext._
 import org.apache.spark.rdd.RDD
-import simple_statistics.qualitative.Frequency
+import com.oculusinfo.stats.qualitative.Frequency
 
 /**
  * @author ${user.name}
