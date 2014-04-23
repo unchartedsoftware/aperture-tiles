@@ -55,14 +55,14 @@ define(function (require) {
 
             // add mouse move and zoom callbacks
             this.map.on('mousemove', function(event) {
-                var tilekey = that.map.getTileKeyUnderMouse(event.xy.x, event.xy.y);
+                var tilekey = that.map.getTileKeyFromViewportPixel(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
                 that.previousMouse.x = event.xy.x;
                 that.previousMouse.y = event.xy.y;
             });
 
             this.map.on('zoomend', function() {
-                var tilekey = that.map.getTileKeyUnderMouse( that.previousMouse.x, that.previousMouse.y );
+                var tilekey = that.map.getTileKeyFromViewportPixel( that.previousMouse.x, that.previousMouse.y );
                 that.updateSelectedTile(tilekey);
             });
         },
