@@ -9,6 +9,8 @@ import java.io._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.AccumulableParam
+//Fingerprints.fingerPrintsParser("SCAN(V=5.51%D=1/2%OT=21%CT=22%CU=38310%PV=N%DS=4%DC=I%G=Y%TMFingerprints.=1F389%P=mip)")
 
 object Fingerprints extends App {
 
@@ -16,10 +18,38 @@ object Fingerprints extends App {
 //:load C:/Users/mkielo/workspace/tools/NSFPScorer.scala
 //
 
+implicit object OutputAccumulable extends AccumulableParam[String,String] with Serializable {
+
+    def zero(initialValue: String): String = {
+      ""
+    }
+
+    def addAccumulator(currentValue: String, addition: String): String = {
+      currentValue + addition
+    }
+
+    def addInPlace(Acc1: String, Acc2: String): String = {
+      Acc1 + Acc2
+    }
+  }  
+
+// def findMatchingBracket  ... implement this if necessary
+// breaks if tests are missing  
+//def customSplit(str: String): Array[String] = {
+//  val tests = Array("SEQ(","OPS(","WIN(","ECN(","T1(","T2(","T3(","T4(","T5(","T6(","T7(","U1(","IE(")
+//  
+//  tests.map(r => {
+//    println(r)
+//	  str.substring(str.indexOf(r),str.indexOf(")",str.indexOf(r)) + 1)
+//  })
+//}
+
 def fingerPrintsParser(fp: String): scala.collection.mutable.Map[String,String] = {
 	val candidateTL = mutable.Map.empty[String,String]
 	val comma = fp.split(",")
+
 	comma.foreach(r => {
+
 		val mainTest = r.substring(0,r.indexOf("("));
 		val testLR = r.substring(r.indexOf("(")+1,r.indexOf(")"));
 		val testLRsplit = testLR.split("%");
@@ -38,7 +68,7 @@ def fingerPrintsParser(fp: String): scala.collection.mutable.Map[String,String] 
 
 def buildRefDB(): List[(String,Map[String,String])] = {
 
-	val textFile = Source.fromFile("c:/Users/mkielo/workspace/tools/nmap-os-db.txt")("UTF-8").getLines();
+	val textFile = Source.fromFile("src/main/scala/com/oculusinfo/stats/customAnalytics/data/nmap-os-db.txt")("UTF-8").getLines();
 	//object of string OS descipritions and string OS raw test results
 	val refDB = mutable.ListBuffer.empty[(String,Map[String,String])]
 	while(!textFile.isEmpty){
@@ -60,7 +90,7 @@ def buildRefDB(): List[(String,Map[String,String])] = {
 
 def buildWeightDB() = {
 
-	val textFile = Source.fromFile("c:/Users/mkielo/workspace/tools/nmap-weight-db.txt")("UTF-8").getLines();
+	val textFile = Source.fromFile("src/main/scala/com/oculusinfo/stats/customAnalytics/data/nmap-weight-db.txt")("UTF-8").getLines();
 	var test = ""
 
 	textFile.foreach(r => {
@@ -101,7 +131,6 @@ def scoreRange(candidate: String, reference: String): Boolean = {
 		val min = Integer.parseInt(range(0),16)
 		val max = Integer.parseInt(range(1),16)
 		val candInt = Integer.parseInt(candidate,16)
-		println(min, " ", max, " ", candInt)
 
 		(candInt <= max && candInt >= min)
 		}
@@ -113,7 +142,6 @@ def scoreRange(candidate: String, reference: String): Boolean = {
 			val min = Integer.parseInt(reference.substring(0,reference.indexOf("-",1)),16)
 			val max = Integer.parseInt(reference.substring(reference.indexOf("-",1)+1,reference.length),16)
 			val candInt = Integer.parseInt(candidate,16)
-			println(min, " ", max, " ", candInt)
 		
 			(candInt <= max && candInt >= min)
 		}
@@ -150,8 +178,7 @@ def scoreGreater(candidate: String, reference: String): Boolean = {
 	if(isHex(candidate)){
 		val greaterVal = Integer.parseInt(reference.substring(1,reference.length),16)
 		val candInt = Integer.parseInt(candidate,16)
-		println(candInt, greaterVal)
-		
+
 		(candInt > greaterVal)
 	} else {
 	  false
@@ -159,7 +186,7 @@ def scoreGreater(candidate: String, reference: String): Boolean = {
 }
 
 def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weightDB: Map[String,Int])= {
-
+	try{
 	val candidateTRList: Map[String,String] = fingerPrintsParser(fingerprint).toMap
  	var i = 0
  	refDB.map(reference => {
@@ -198,9 +225,12 @@ def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weigh
  		 }).reduce(_ + _)
  		(reference._1, score)
  		})
+	} catch {
+	  case e: Exception => List((fingerprint,-1))
+	}
  }
  	
-
+// test functions
 //	val test = "SCAN(V=6.01%E=4%D=9/1%OT=80%CT=21%CU=41879%PV=N%DS=17%DC=I%G=N%TM=5041B791%P=mipsel-openwrt-linux-gnu),SEQ(SP=103%GCD=1%ISR=107%TI=I%CI=I%II=I%SS=S%TS=8),OPS(O1=M5B4NW0NNT11%O2=M5B4NW0NNT11%O3=M5B4NW0NNT11%O4=M5B4NW0NNT11%O5=M5B4NW0NNT11%O6=M5B4NNT11),WIN(W1=4000%W2=4000%W3=4000%W4=4000%W5=4000%W6=4000),ECN(R=Y%DF=Y%T=47%W=4000%O=M5B4NW0%CC=N%Q=),T1(R=Y%DF=Y%T=47%S=O%A=S+%F=AS%RD=0%Q=),T2(R=N),T3(R=Y%DF=Y%T=47%W=4000%S=O%A=S+%F=AS%O=M5B4NW0NNT11%RD=0%Q=),T4(R=Y%DF=N%T=47%W=0%S=A%A=Z%F=R%O=%RD=0%Q=),T5(R=Y%DF=N%T=47%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=),T6(R=Y%DF=N%T=47%W=0%S=A%A=Z%F=R%O=%RD=0%Q=),T7(R=Y%DF=N%T=47%W=0%S=Z%A=S%F=AR%O=%RD=0%Q=),U1(R=Y%DF=N%T=47%IPL=70%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=0%RUD=G),IE(R=Y%DFI=S%T=47%CD=S)"
 // 	val refDB = buildRefDB
 // 	println(refDB.size)
@@ -210,24 +240,55 @@ def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weigh
 //	println(scoreGreater("5",">2"))
 //	println("Done")
 
- def main(table: RDD[Array[String]], field: String, index: Int, customVars: String){
+// non-distributed version:
+//def main(){
+//  val refDB = buildRefDB
+//  val weightDB = buildWeightDB
+//  val table = scala.io.Source.fromFile("C:\\Users\\mkielo\\workspace\\vm\\net-scan\\fingerprints\\fingerPrintsCandidateSample1000.csv").getLines()
+//
+//  val writer = new PrintWriter("output/customAnalytic/FP.txt")
+//  
+//   	table.map(line => line.split("\t")(2)).foreach(r => {
+// 	  val a = scorer(r, refDB, weightDB)
+// 	  
+// 	  a.foreach(r => {
+// 	    val next = r._2.toString + ","
+// 	    writer.write(next)
+// 	  })
+// 	  writer.write("\n")
+// 	  })
+//  
+//}
+
+
+// scala version
+
+// distributed version
+ def main(table: RDD[Array[String]], field: String, index: Int, customVars: String, writer: PrintWriter){
 	
-   	val sc = table.context
-   	
-   //might need to broadcast.?
-	val writer = new PrintWriter(new File(customVars))
-   //val writerBroadcast = sc.broadcast(writer) ... how would I close this?
-   	
+   	val sc = table.context	
+   
  	val refDB = buildRefDB
  	val refBroadcast = sc.broadcast(refDB)
  	
  	val weightDB = buildWeightDB
  	val weightBroadcast = sc.broadcast(weightDB)
- 	
+
+ 	var outputAcc = sc.accumulable(OutputAccumulable.zero(""))
+
  	table.map(line => line(index)).foreach(r => {
  	  val a = scorer(r, refBroadcast.value, weightBroadcast.value)
  	  
- 	})  	
-
+ 	  a.foreach(r => {
+ 	    val next = r._2.toString + ","
+ 	    outputAcc += next
+ 	  })
+ 	  outputAcc += "\n"
+ 	  }
+ 	
+ 	)  	
+ 	writer.write(outputAcc.toString)
+ 	writer.close
  }
+ 
 }

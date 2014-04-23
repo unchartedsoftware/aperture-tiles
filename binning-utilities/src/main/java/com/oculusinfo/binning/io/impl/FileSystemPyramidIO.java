@@ -48,6 +48,11 @@ public class FileSystemPyramidIO implements PyramidIO {
 
 
 	public FileSystemPyramidIO (String rootPath, String extension){
+		//if there's no root path, then it should be based on a relative path, so make sure to set root path to '.'
+		if (rootPath == null || rootPath.trim().length() == 0) {
+			rootPath = "./";
+		}
+		
 		//make sure the root path ends with a slash
 		_rootPath = (rootPath.trim().endsWith("/"))? rootPath : rootPath.trim() + "/";
 		_extension = extension;

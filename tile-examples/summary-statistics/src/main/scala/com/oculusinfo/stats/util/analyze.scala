@@ -8,7 +8,7 @@ import org.apache.spark.SparkContext
 import com.oculusinfo.stats.numeric.StatTracker
 import com.oculusinfo.stats.qualitative.CountQualities
 import com.oculusinfo.stats.qualitative.Frequency
-import com.oculusinfo.stats.customAnalytics.Fingerprints // get rid of this...
+import com.oculusinfo.stats.customAnalytics._ // get rid of this...
 import org.apache.spark.AccumulableParam
 import org.apache.spark.rdd.RDD
 import scala.collection.mutable.ListBuffer
@@ -191,9 +191,9 @@ def fieldResults (table: RDD[Array[String]], field: String, index: Int, fieldTyp
     
   }
 
-	def customAnalytic(table: RDD[Array[String]], field: String, index: Int, customAnalytic: String, customVars: String){
+	def customAnalytic(table: RDD[Array[String]], field: String, index: Int, customAnalytic: String, customVars: String, customOutput: PrintWriter){
   //make it so I dont need to import the analytic
-		Fingerprints.main(table, field, index, customVars)
+		Fingerprints.main(table, field, index, customVars, customOutput)
 	}
 }
 
