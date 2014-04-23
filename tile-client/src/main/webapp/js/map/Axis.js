@@ -30,98 +30,15 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
-        updateMutableAttributes,
         MARKER_LABEL_SPACING = 5,
         AXIS_LABEL_SPACING = 10,
         Axis;
-
-
-
-    /** Private function
-     * Updates mutable spec attributes and set change flag to true if they are different
-     * from previous call. Change flag is used to determine whether or not to redraw the axis
-     */
-    updateMutableAttributes = function(axis) {
-
-        var totalPixelSpan,
-            newPixelMin,
-            newPixelMax,
-            newZoom,
-            newAxisLength;
-
-        // update zoom
-        newZoom = axis.olMap.getZoom();
-        if ( newZoom !== axis.zoom ) {
-            // zoom changed
-            axis.zoom = newZoom;
-            axis.changeFlag = true;
-        }
-
-        totalPixelSpan = {
-            x: axis.tileSize * Math.pow(2, axis.zoom),
-            y: axis.olMap.viewPortDiv.clientHeight
-        };
-
-        // update pixel min
-        newPixelMin = totalPixelSpan[axis.xOrY] - axis.olMap.maxPx[axis.xOrY];
-        if ( newPixelMin !== axis.pixelMin ) {
-            // zoom changed
-            axis.pixelMin = newPixelMin;
-            axis.changeFlag = true;
-        }
-
-        // update pixel max
-        newPixelMax = totalPixelSpan[axis.xOrY] - axis.olMap.minPx[axis.xOrY];
-        if ( newPixelMax !== axis.pixelMax ) {
-            // zoom changed
-            axis.pixelMax = newPixelMax;
-            axis.changeFlag = true;
-        }
-
-        // update axis length
-        newAxisLength = $("#" + axis.parentId).css(axis.widthOrHeight).replace('px', ''); // strip px suffix
-        if ( newAxisLength !== axis.axisLength ) {
-            // zoom changed
-            axis.axisLength = newAxisLength;
-            axis.changeFlag = true;
-        }
-    };
 
 
     Axis = Class.extend({
         /**
          * Construct an axis
          * @param spec Axis specification object:
-         *             {
-         *                  title:      axis label text,        ex. "Longitude"
-         *                  parentId:   container for axis,     ex. worldMap.mapSpec.id
-         *                  id:         id for axis,            ex. "map-x-axis"
-         *                  olMap:      OpenLayers map binding  ex. worldMap.map.olMap_
-         *                  min:        minimum axis value      ex. worldMap.mapSpec.options.mapExtents[0]
-         *                  max:        maximum axis value      ex. worldMap.mapSpec.options.mapExtents[2]
-         *                  projection: map projection used     ex. EPSG:900913
-         *                  intervalSpec: {
-         *                      type:   type of interval        ex. "fixed" or "percentage",
-         *                      increment:  fixed / percentage increment of the axis
-         *                                                      ex. 10
-         *                      pivot:  the fixed value / percentage that all other values are incremented from
-         *                                                      ex. 0
-         *                      allowScaleByZoom: if the axis should be scaled by the zoom factor
-         *                                                      ex. false
-         *                  },
-         *                  intervals:  number of ticks between min and max value at zoom level 1
-         *                                                      ex. 6
-         *                  unitSpec: {
-         *                      type:       type of units parse in FormatAxis.js
-         *                                                      ex.'degrees', 'time', 'decimal', 'B', 'M', 'K'
-         *                      divisor:    unit divisor        ex. undefined or 1000
-         *                      decimals:   number of decimals  ex. 2
-         *                      allowStepDown: if the units can step down if they are below range
-         *                                                  ex. true .001M => 1K
-         *                  },
-         *                  repeat:     whether or not the axis will repeat
-         *                                                  ex. true or false
-         *
          */
         init: function (spec) {
 
@@ -130,10 +47,9 @@ define(function (require) {
                 defaults = {
                     title : "",
                     position : "bottom",
-                    projection: "EPSG:4326",
                     repeat: false,
                     intervalSpec : {
-                        type: "percentage",
+                        type: "percentage", // or "fixed"
                         increment: 10,
                         pivot: 0,
                         allowScaleByZoom: true
@@ -168,12 +84,10 @@ define(function (require) {
             }
             this.min = spec.min;
             this.max = spec.max;
-            this.olMap = spec.olMap;
             this.map = spec.map;
 
             this.position = spec.position || defaults.position;
             this.id = spec.id || this.parentId + "-" + this.position + "-axis";
-            this.projection = spec.projection || defaults.projection;
 
             this.title = spec.title || defaults.title;
 
@@ -210,15 +124,14 @@ define(function (require) {
             this.isXAxis = (this.position === 'top' || this.position === 'bottom');
             this.xOrY = this.isXAxis ? 'x' : 'y';
             this.widthOrHeight = this.isXAxis ? "width" : "height";
-            this.tileSize = this.isXAxis ? this.olMap.getTileSize().w : this.olMap.getTileSize().h;
-
+            this.tileSize = this.map.getTileSize();
             this.maxLabelLength = 0;
 
-            this.olMap.events.register('mousemove', this.olMap, function(event) {
+            this.map.on('mousemove', function(event) {
                 that.redraw();
             });
 
-            this.olMap.events.register('zoomend', this.olMap, function(event) {
+            this.map.on('zoomend', function(event) {
                 that.redraw();
             });
 
@@ -294,10 +207,8 @@ define(function (require) {
 
                 // add axis to parent container
                 axis.parentContainer.append(axis.container);
-
                 // create the axis title label
                 axis.label = createAxisLabel();
-
                 // add axis label to container
                 axis.container.append(axis.label);
             }
@@ -424,59 +335,19 @@ define(function (require) {
                 axis.marginContainer.css('margin-' + that.position, labelOffset + 'px');
 
                 // div container may change size, this updates properties accordingly
-                that.olMap.updateSize();
+                that.map.updateSize();
             }
 
-            // update mutable spec attributes
-            updateMutableAttributes(this);
-            // only redraw if it has changed since last redraw
-            if (this.changeFlag) {
-                // generate array of marker labels and pixel locations
-                markers = AxisUtil.getMarkers(this);
-                // generate the main axis DOM elements
-                addAxisMainElements();
-                // add each marker to correct pixel location in axis DOM elements
-                addAxisMarkerElements();
-                // reset change flag
-                this.changeFlag = false;
-            }
+            // ensure axis length is correct
+            this.axisLength = $("#" + this.parentId).css(this.widthOrHeight).replace('px', ''); // strip px suffix
+            // generate array of marker labels and pixel locations
+            markers = AxisUtil.getMarkers(this);
+            // generate the main axis DOM elements
+            addAxisMainElements();
+            // add each marker to correct pixel location in axis DOM elements
+            addAxisMarkerElements();
 
-        },
-
-        /**
-         * Given an axis spec and pixel location, returns axis value.
-         *
-         * @param pixelLocation     Pixel location of axis query
-         */
-        getAxisValueForPixel : function(pixelLocation) {
-
-            var mapPixelSpan,
-                tickValue,
-                value;
-
-            updateMutableAttributes(this);
-
-            // The size used here is not the display width.
-            mapPixelSpan = this.tileSize*(Math.pow(2, this.zoom));
-
-            if (this.isXAxis){
-                tickValue = pixelLocation + this.pixelMin;
-                value = (tickValue * ((this.max-this.min)) / mapPixelSpan) + this.min;
-            }
-            else {
-                tickValue = (this.axisLength - pixelLocation - this.pixelMax + mapPixelSpan);
-                value = ((tickValue * ((this.max-this.min))) / mapPixelSpan) + this.min;
-            }
-
-            if (!this.isXAxis && this.projection === 'EPSG:900913') {
-                // find the gudermannian value where this current linear value is
-                value = AxisUtil.scaleLinearToGudermannian( value, this );
-            }
-
-            // return axis value, rollover if necessary
-            return AxisUtil.formatText( AxisUtil.getMarkerRollover( this, value ), this.unitSpec );
         }
-
     });
 
     return Axis;

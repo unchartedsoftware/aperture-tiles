@@ -201,14 +201,11 @@ define({
         function getPixelPosition( value ) {
             // given an axis value, get the pixel position on the page
             var pixelPosition;
-
             if (axis.isXAxis) {
                 pixelPosition = axis.map.getViewportPixelFromCoord( value, 0).x;
-
             } else {
                 pixelPosition = axis.map.getViewportPixelFromCoord( 0, value).y;
             }
-
             return pixelPosition;
         }
 
@@ -226,7 +223,6 @@ define({
                 // prevent roll-over
                 minCull = axis.min;
             }
-
 
             minIncrement = pivot;
 
@@ -328,7 +324,7 @@ define({
         // scale increment if specified
         if ( axis.intervalSpec.allowScaleByZoom ) {
             // scale increment by zoom
-            increment = increment/Math.pow(2,Math.max(axis.zoom-1,0));
+            increment = increment/Math.pow(2, Math.max( axis.map.getZoom()-1, 0 ) );
         }
 
         // add all points between minimum visible value and maximum visible value
