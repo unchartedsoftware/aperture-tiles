@@ -81,14 +81,14 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
     public static final double  WGS84_ES                = 0.00669437999013;
 
 
-    private double gudermannian(double y) {
+    protected double gudermannian(double y) {
         // converts a y value from -PI(bottom) to PI(top) into the
         // mercator projection latitude        
         return Math.toDegrees(Math.atan( Math.sinh(y) ));
     }
     
     
-    private double gudermannianInv (double latitude ) {
+    protected double gudermannianInv (double latitude ) {
         // converts a latitude value from -EPSG_900913_LATITUDE to EPSG_900913_LATITUDE into
         // a y value from -PI(bottom) to PI(top)
         double sign = ( latitude != 0 ) ? latitude / Math.abs(latitude) : 0,
@@ -97,13 +97,13 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
     }
     
     
-    private double linearToGudermannian (double value) {  
+    protected double linearToGudermannian (double value) {  
     	// convert linear coordinates into their equivalent gudermannian counterparts
         return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );
     }
 
     
-    private double gudermannianToLinear (double value) {      
+    protected double gudermannianToLinear (double value) {      
     	// convert gudermannian coordinates into their equivalent linear counterparts
         return (gudermannianInv( value ) / Math.PI) * EPSG_900913_LATITUDE;
     }

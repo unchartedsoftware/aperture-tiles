@@ -118,13 +118,13 @@ public class TileStorageUtility {
 	// user who set up our parameters.
 	@SuppressWarnings("unchecked")
 	private static <T> TileSerializer<T> getTileSerializer (Properties properties) {
-		String serializerClassName = properties.getProperty("serializer", "com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer");
+		// String serializerClassName = properties.getProperty("serializer", "com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer");
 		
 		//String serializerClassName = "com.oculusinfo.binning.io.serialization.impl.TwitterDemoAvroSerializer";
 		//String className2 = TwitterDemoAvroSerializer.class.getName();
 		try {
-			Class<?> serializerClass = Class.forName(serializerClassName);
-			//return (TileSerializer<T>) serializerClass.getConstructor().newInstance();
+			// Class<?> serializerClass = Class.forName(serializerClassName);
+			// return (TileSerializer<T>) serializerClass.getConstructor().newInstance();
 			return (TileSerializer<T>) new DoubleAvroSerializer(CodecFactory.bzip2Codec());	
 //		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
 //				IllegalArgumentException | InvocationTargetException | NoSuchMethodException |
