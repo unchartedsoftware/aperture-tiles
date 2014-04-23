@@ -53,6 +53,7 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		 "Data to be passed to the PyramidIO for read initialization",
 		 null);
 
+	private PyramidIO _product;
 	public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
 		this(null, parent, path, children);
 	}
@@ -60,6 +61,7 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	public PyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
 		super(name, PyramidIO.class, parent, path);
 
+		_product = null;
 		List<String> pyramidTypes = getPyramidTypes(children);
 		
 		//use the first factory name for the first child as the default type
@@ -104,14 +106,19 @@ public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	
 	@Override
 	protected PyramidIO create () {
-		String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
+	    if (null == _product) {
+	        synchronized (this) {
+	            if (null == _product) {
+	                String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
 
-		try {
-			return produce(pyramidIOType, PyramidIO.class);
-		} catch (Exception e) {
-			LOGGER.error("Error trying to create PyramidIO", e);
-			return null;
-		}
+	                try {
+	                    _product = produce(pyramidIOType, PyramidIO.class);
+	                } catch (Exception e) {
+	                    LOGGER.error("Error trying to create PyramidIO", e);
+	                }
+	            }
+	        }
+	    }
+	    return _product;
 	}
-	
 }

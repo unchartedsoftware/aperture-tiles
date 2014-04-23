@@ -378,11 +378,11 @@ public class LayerServiceImpl implements LayerService {
     		        LayerInfo info = new LayerInfo(configurations.getJSONObject(i));
     				addConfiguration(info);
     			}
-	    	} catch (FileNotFoundException e1) {
-	    		LOGGER.error("Cannot find layer configuration file {} ", file);
+	    	} catch (FileNotFoundException e) {
+	    		LOGGER.error("Cannot find layer configuration file {} ", file, e);
 	    		return;
-	    	} catch (JSONException e1) {
-	    		LOGGER.error("Layer configuration file {} was not valid JSON.", file);
+	    	} catch (JSONException e) {
+	    		LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
 	    	}
 		}
 		debugConfiguration();

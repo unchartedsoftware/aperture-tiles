@@ -34,7 +34,7 @@ define(function (require) {
 
 	
     var Class = require('../class'),
-        AoITilePyramid = require('../binning/AoITilePyramid'),
+        AoIPyramid = require('../binning/AoITilePyramid'),
         WebPyramid = require('../binning/WebTilePyramid'),
         TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),
@@ -49,33 +49,18 @@ define(function (require) {
         init: function (id, spec) {
 
 			var that = this,
-				apertureConfig,
-                mapExtents,
 				mapSpecs;
 		
-			apertureConfig = spec.ApertureConfig;
 			mapSpecs = spec.MapConfig;
+
+	        aperture.config.provide({
+		        // Set the map configuration
+		        'aperture.map' : {
+			        'defaultMapConfig' : mapSpecs
+		        }
+	        });
+		        
 			
-			// configure aperture
-            aperture.config.provide({
-            	/*
-                 * Set aperture log configuration
-                 */
-                'aperture.log' : apertureConfig['aperture.log'],
-                
-                /*
-                 * The endpoint locations for Aperture services accessed through the io interface
-                 */
-                'aperture.io' : apertureConfig['aperture.io'],
-
-                /*
-                 * Set the map configuration
-                 */
-                'aperture.map' : {
-                    'defaultMapConfig' : mapSpecs
-                }
-            });
-
             // Map div id
 			this.id = id;
 
@@ -91,21 +76,16 @@ define(function (require) {
 
 			this.projection = this.map.olMap_.projection;
 
-            // TEMPORARY: set tile pyramid type
-            switch (this.projection) {
-
-                case 'EPSG:900913':
-                    // web mercator projection
-                    this.pyramid = new WebPyramid();
-                    break;
-                //case 'EPSG:4326':
-                default:
-                    // linear projection
-                    mapExtents = this.map.olMap_.getMaxExtent();
-                    this.pyramid = new AoITilePyramid( mapExtents.left, mapExtents.bottom,
-                                               mapExtents.right, mapExtents.top);
-                    break;
+            if ( spec.PyramidConfig.type === "AreaOfInterest") {
+                this.pyramid = new AoIPyramid( spec.PyramidConfig.minX,
+                                               spec.PyramidConfig.minY,
+                                               spec.PyramidConfig.maxX,
+                                               spec.PyramidConfig.maxY);
+            } else {
+                this.pyramid = new WebPyramid();
             }
+
+
 
 			// Set resize map callback
 			$(window).resize( function() {
@@ -164,10 +144,16 @@ define(function (require) {
 
         getTileIterator: function() {
             var level = this.map.getZoom(),
-                bounds = this.map.olMap_.getExtent();
+                // Current map bounds, in meters
+                bounds = this.map.olMap_.getExtent(),
+                // Total map bounds, in meters
+                mapExtent = this.map.olMap_.getMaxExtent(),
+                // Pyramider for the total map bounds
+                mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
+                                            mapExtent.right, mapExtent.top);
 
             // determine all tiles in view
-            return new TileIterator( this.getPyramid(), level,
+            return new TileIterator( mapPyramid, level,
                                      bounds.left, bounds.bottom,
                                      bounds.right, bounds.top);
         },
@@ -246,7 +232,7 @@ define(function (require) {
 
             var tileAndBin = this.getTileAndBinUnderMouse( mx, my, 1, 1);
 
-            return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.xIndex;
+            return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
         },
 
 
@@ -254,7 +240,7 @@ define(function (require) {
 
             var tileAndBin = this.getTileAndBinUnderMouse( mx, my, xBinCount, yBinCount );
 
-            return + tileAndBin.bin.x + "," + tileAndBin.bin.x;
+            return tileAndBin.bin.x + "," + tileAndBin.bin.y;
         },
 
 

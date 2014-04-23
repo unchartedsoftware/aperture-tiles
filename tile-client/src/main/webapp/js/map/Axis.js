@@ -175,19 +175,23 @@ define(function (require) {
             this.projection = spec.projection || defaults.projection;
 
             this.title = spec.title || defaults.title;
-            this.intervalSpec = spec.intervalSpec || defaults.intervalSpec;
+
+            spec.intervalSpec = spec.intervalSpec || {};
+            this.intervalSpec = {};
             this.intervalSpec.type = spec.intervalSpec.type || defaults.intervalSpec.type;
             this.intervalSpec.increment = spec.intervalSpec.increment || defaults.intervalSpec.increment;
             this.intervalSpec.pivot = spec.intervalSpec.pivot || defaults.intervalSpec.pivot;
             this.intervalSpec.allowScaleByZoom = spec.intervalSpec.allowScaleByZoom || defaults.intervalSpec.allowScaleByZoom;
 
-            this.unitSpec = spec.unitSpec || defaults.unitSpec;
+            spec.unitSpec = spec.unitSpec || {};
+            this.unitSpec = {};
             this.unitSpec.type = spec.unitSpec.type || defaults.unitSpec.type;
             this.unitSpec.divisor = spec.unitSpec.divisor || defaults.unitSpec.divisor;
             this.unitSpec.decimals = spec.unitSpec.decimals || defaults.unitSpec.decimals;
             this.unitSpec.allowStepDown = spec.unitSpec.allowStepDown || defaults.unitSpec.allowStepDown;
 
-            this.style = spec.style || defaults.style;
+            spec.style = spec.style || {};
+            this.style = {};
             this.style.majorMarkerLength = spec.style.majorMarkerLength || defaults.style.majorMarkerLength;
             this.style.majorMarkerWidth = spec.style.majorMarkerWidth || defaults.style.majorMarkerWidth;
             this.style.majorMarkerColour = spec.style.majorMarkerColour || defaults.style.majorMarkerColour;

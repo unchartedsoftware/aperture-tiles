@@ -54,7 +54,7 @@ define(function (require) {
 		
         createLayer: function(nodeLayer) {
             // noop
-            console.log("jslint");
+            return undefined;
         }
 
     });

@@ -25,8 +25,11 @@
  /*global OpenLayers */
 
 require(['./FileLoader',
+         './ApertureConfig',
+         './map/MapTracker',
          './map/Map',
          './layer/AllLayers',
+         './customization',
          './layer/view/server/ServerLayerFactory',
          './layer/view/client/ClientLayerFactory',
          './annotation/AnnotationLayerFactory',
@@ -35,8 +38,11 @@ require(['./FileLoader',
         ],
 
         function (FileLoader, 
+                  configureAperture,
+                  MapTracker,
         	      Map,
-                  AllLayers,
+                  AvailableLayersTracker,
+                  MapCustomization,
                   ServerLayerFactory,
                   ClientLayerFactory,
                   AnnotationLayerFactory,
@@ -44,10 +50,11 @@ require(['./FileLoader',
                   UIMediator) {
             "use strict";
 
-            var mapFile = "./data/map.json",
-                annotationsFile = "./data/annotations.json",
-                uiMediator,
-                cloneObject;
+            var apertureConfigFile = "./data/aperture-config.json",
+                cloneObject,
+                getLayers,
+                pyramidsEqual,
+                uiMediator;
 
             cloneObject = function (base) {
                 var result, key;
@@ -70,99 +77,112 @@ require(['./FileLoader',
 
                 return result;
             };
-                
 
+	        // Get the layers from a layer tree that match a given filter and 
+	        // pertain to a given domain.
+	        getLayers = function (domain, rootNode, filterFcn) {
+		        // Filter function to filter out all layers not in the desired 
+		        // domain (server or client)
+		        var domainFilterFcn = function (domain) {
+			        return function (layer) {
+				        var accepted = false;
+				        if (filterFcn(layer)) {
+					        layer.renderers.forEach(function (renderer, index, renderers) {
+						        if (domain === renderer.domain) {
+							        accepted = true;
+							        return;
+						        }
+					        });
+				        }
+				        return accepted;
+			        };
+		        };
+
+		        // Run our filter, and on the returned nodes, return a renderer 
+		        // configuration appropriate to that domain.
+		        return AvailableLayersTracker.filterLeafLayers(
+			        rootNode,
+			        domainFilterFcn(domain)
+		        ).map(function (layer, index, layersList) {
+			        // For now, just use the first appropriate configuration we find.
+			        var config;
+
+			        layer.renderers.forEach(function (renderer, index, renderers) {
+				        if (domain === renderer.domain) {
+					        config = cloneObject(renderer);
+					        config.layer = layer.id;
+					        config.name = layer.name;
+					        return;
+				        }
+			        });
+
+			        return config;
+		        });
+	        };
+
+	        pyramidsEqual = function (a, b) {
+		        var result = false;
+		        if (a.type === b.type) {
+			        if ("AreaOfInterest" === a.type) {
+				        if (a.minX === b.minX &&
+				            a.maxX === b.maxX &&
+				            a.minY === b.minY &&
+				            a.maxY === b.maxY) {
+					        result = true;
+				        }
+			        } else {
+				        result = true;
+			        }
+		        }
+		        return result;
+	        };
+                        
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFile, annotationsFile, function (jsonDataMap) {
-                var allLayers = new AllLayers(),
-                    // Create world map and axes from json file under mapFile
-                    worldMap;
+            FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
+	            // First off, configure aperture.
+	            configureAperture(jsonDataMap[apertureConfigFile]);
 
-                // We need to initialize the map first, because that 
-                // initializes aperture, so sets our REST parameters; until we 
-                // do this, no server calls will work.
-                worldMap = new Map("map", jsonDataMap[mapFile]);
+	            // Get our list of maps
+	            MapTracker.requestMaps(function (maps) {
+		            // For now, just use the first map
+		            var mapConfig = maps[0],
+		                worldMap,
+		                mapPyramid;
 
-                // Request all layers the server knows about.  Once we get 
-                // those, we can start drawing them.
-                allLayers.requestLayers(function (layers) {
-                    // For now, just take the first node specifying axes.
-                    // Eventually, we should let the user choose among them.
-                    var
-                    rootMapNode = allLayers.filterAxisLayers(layers)[0],
-                    axes = rootMapNode.axes,
-                    clientLayers = allLayers.filterLeafLayers(
-                        rootMapNode,
-                        function (layer) {
-                            var clientLayer = false;
-                            layer.renderers.forEach(function (renderer, index, renderers) {
-                                if ("client" === renderer.domain) {
-                                    clientLayer = true;
-                                    return;
-                                }
-                            });
-                            return clientLayer;
-                        }
-                    ).map(function (layer, index, layersList) {
-                        // For now, just use the first client configuration we find
-                         var config;
+		            // Initialize our map...
+		            worldMap = new Map("map", mapConfig);
+                    // ... (set up our map axes) ...
+                    worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
+                    // ... perform any project-specific map cusomizations ...
+                    MapCustomization.customizeMap(worldMap);
+                    // ... and request relevant data layers
+                    mapPyramid = mapConfig.PyramidConfig;
 
-                        layer.renderers.forEach(function (renderer, index, renderers) {
-                            if ("client" === renderer.domain) {
-                                config = cloneObject(renderer);
-                                config.layer = layer.id;
-                                config.name = layer.name;
-                                return;
-                            }
-                        });
+		            AvailableLayersTracker.requestLayers(
+			            function (layers) {
+				            // TODO: Make it so we can pass the pyramid up to the server
+				            // in the layers request, and have it return only portions
+				            // of the layer tree that match that pyramid.
+				            // Eventually, we should let the user choose among them.
+				            var filter = function (layer) {
+                                    return pyramidsEqual(mapPyramid, layer.pyramid);
+                                },
+				                clientLayers = getLayers("client", layers, filter),
+				                serverLayers = getLayers("server", layers, filter);
 
-                        return config;
-                    }),
-                    serverLayers =  allLayers.filterLeafLayers(
-                        rootMapNode,
-                        function (layer) {
-                            var serverLayer = false;
-                            layer.renderers.forEach(function (renderer, index, renderers) {
-                                if ("server" === renderer.domain) {
-                                    serverLayer = true;
-                                    return;
-                                }
-                            });
-                            return serverLayer;
-                        }
-                    ).map(function(layer, index, layersList) {
-                        // For now, just use the first server configuration we find
-                         var config;
+				            uiMediator = new UIMediator();
+    
+				            // Create client and server layers
+				            ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+				            ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
 
-                        layer.renderers.forEach(function (renderer, index, renderers) {
-                            if ("server" === renderer.domain) {
-                                config = cloneObject(renderer);
-                                config.layer = layer.id;
-                                config.name = layer.name;
-                                return;
-                            }
-                        });
+				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
-                        return config;
-                    });
+				            // Trigger the initial resize event to resize everything
+				            $(window).resize();
+			            }
+		            );
 
-                    // Set up our map axes
-                    worldMap.setAxisSpecs(axes);
-
-                    // Populate the map layer state object with server layer data, and enable
-                    // listeners that will push state changes into the layers.
-                    uiMediator = new UIMediator();
-
-                    // Create client and server layers
-                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
-                    ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
-                    AnnotationLayerFactory.createLayers( jsonDataMap[annotationsFile].AnnotationLayers, worldMap );
-
-                    // Bind layer controls to the state model.
-                    new LayerControls().initialize( uiMediator.getLayerStateMap() );
-
-                    // Trigger the initial resize event to resize everything
-                    $(window).resize();
-                });
+	            });
             });
         });
