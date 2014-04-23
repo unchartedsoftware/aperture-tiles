@@ -52,7 +52,6 @@ object SummaryStatistics {
   
  def main(args: Array[String]): Unit = {
   // Load, parse, and cache data
-  // update where properties file is... not "mkielo" specific
   val propertiesFile = "config.properties"
   val prop = new Properties()
 
@@ -71,20 +70,17 @@ object SummaryStatistics {
   val outputLocation = prop.getProperty("oculus.binning.output.location")
   val writer = new PrintWriter(new File(outputLocation))
 
-//  System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-//  System.setProperty("spark.kryo.registrator", "simple_statistics.util.TileRegistrator")
-  
   val sparkMaster = prop.getProperty("spark.connection.url","local")
   val sparkHome = prop.getProperty("spark.connection.home","/opt/spark")
   
   val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, Seq("target/summary-statistics-0.3-SNAPSHOT.jar"))
-  val textFile = sc.textFile(inputLocation) //will likely need to change to hdfsTextFile(...) summary-statistics-0.3-SNAPSHOT.jar
-
+  val textFile = sc.textFile(inputLocation)
+  
   val table = textFile.map(record => (record.split(delimiter))).cache()
 
   val tableTests = prop.getProperty("oculus.binning.table.tests")
   
-  //analyze dataset at a high level. count total records ect.
+  //analyze dataset at a high level. count total records etc.
   analyze.tableResults(table, tableTests, writer)
   
    // Run analysis on each field. The type of analysis run is determined by whether the field is specified as numeric or qualitative.
