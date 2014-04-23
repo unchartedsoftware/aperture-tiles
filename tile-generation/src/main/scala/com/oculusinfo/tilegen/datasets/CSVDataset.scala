@@ -203,17 +203,17 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 		"oculus.binning.source.partitions",
 		"The number of partitions to use when reducing data, if needed")
 
-    /**
-     * Actually retrieve the data.
-     * This can be overridden if the data is not a simple file or set of files,
-     * but normally shouldn't be touched.
-     */
-    def getData (sc: SparkContext): RDD[String] =
-        if (getIdealPartitions.isDefined) {
-            getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
-        } else {
-            getDataFiles.map(sc.textFile(_)).reduce(_ union _)
-        }
+	/**
+	 * Actually retrieve the data.
+	 * This can be overridden if the data is not a simple file or set of files,
+	 * but normally shouldn't be touched.
+	 */
+	def getData (sc: SparkContext): RDD[String] =
+		if (getIdealPartitions.isDefined) {
+			getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
+		} else {
+			getDataFiles.map(sc.textFile(_)).reduce(_ union _)
+		}
 }
 
 
@@ -347,7 +347,7 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) {
 		else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
 
 	def getTilePyramid (xField: String, minX: Double, maxX: Double,
-	                             yField: String, minY: Double, maxY: Double): TilePyramid = {
+	                    yField: String, minY: Double, maxY: Double): TilePyramid = {
 		val projection = properties.getString("oculus.binning.projection",
 		                                      "The type of tile pyramid to use",
 		                                      Some("EPSG:4326"))
@@ -617,5 +617,4 @@ class StreamingCSVDataset (rawProperties: Properties,
 			strategy.processWithTime(fcn, completionCallback)
 		}
 	}
-
 }
