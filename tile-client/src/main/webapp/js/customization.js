@@ -35,7 +35,7 @@ define(function (require) {
     "use strict";
 
     return {
-        mapCustomization: function (worldMap) {
+        customizeMap: function (worldMap) {
             // NO-OP by default
             return undefined;
         }

@@ -34,7 +34,11 @@ define(function (require) {
 
 	
     var Class = require('../class'),
+        AoIPyramid = require('../binning/AoITilePyramid'),
+        WebPyramid = require('../binning/WebTilePyramid'),
+        TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),
+        TILESIZE = 256,
         Map;
 
 
@@ -68,8 +72,21 @@ define(function (require) {
             this.map.all().redraw();
 
 			// Create axes
-			this.axes = [];	
-			
+			this.axes = [];
+
+			this.projection = this.map.olMap_.projection;
+
+            if ( spec.PyramidConfig.type === "AreaOfInterest") {
+                this.pyramid = new AoIPyramid( spec.PyramidConfig.minX,
+                                               spec.PyramidConfig.minY,
+                                               spec.PyramidConfig.maxX,
+                                               spec.PyramidConfig.maxY);
+            } else {
+                this.pyramid = new WebPyramid();
+            }
+
+
+
 			// Set resize map callback
 			$(window).resize( function() {
 				var $map = $('#' + that.id),
@@ -96,18 +113,175 @@ define(function (require) {
             $(window).resize();			
         },
 
+    /*
+        addAxis: function(axisSpec) {
+
+            axisSpec.parentId = this.id;
+            axisSpec.olMap = this.map.olMap_;
+            this.axes.push( new Axis(axisSpec) );
+            $(window).resize();
+        },
+    */
+
         setAxisSpecs: function (axes) {
-            var xAxisSpec, yAxisSpec;
 
-            xAxisSpec = axes.xAxisConfig;
-            xAxisSpec.parentId = this.id;
-            xAxisSpec.olMap = this.map.olMap_;
-            this.axes.push(new Axis(xAxisSpec));
+            var i, spec;
 
-            yAxisSpec = axes.yAxisConfig;
-            yAxisSpec.parentId = this.id;
-            yAxisSpec.olMap = this.map.olMap_;
-            this.axes.push(new Axis(yAxisSpec));
+            for (i=0; i< axes.length; i++) {
+                spec = axes[i];
+                spec.parentId = this.id;
+                spec.olMap = this.map.olMap_;
+                this.axes.push(new Axis(spec));
+            }
+        },
+
+
+        getPyramid: function() {
+
+            return this.pyramid;
+        },
+
+
+        getTileIterator: function() {
+            var level = this.map.getZoom(),
+                bounds = this.map.olMap_.getExtent(),
+                mapExtent = this.map.olMap_.getMaxExtent(),
+                mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
+                                            mapExtent.right, mapExtent.top);
+
+            // determine all tiles in view
+            return new TileIterator( mapPyramid, level,
+                                     bounds.left, bounds.bottom,
+                                     bounds.right, bounds.top);
+        },
+
+
+        getTilesInView: function() {
+
+            return this.getTileIterator().getRest();
+        },
+
+
+        getTileSetBoundsInView: function() {
+
+            return {'params': this.getTileIterator().toTileBounds()};
+        },
+
+
+        getPixelUnderMouse: function(mx, my) {
+
+            var TILESIZE = 256,
+                zoom,
+                maxPx = {},
+                minPx = {},
+                totalTilespan,
+                totalPixelSpan = {},
+                pixelMax = {},
+                pixelMin = {},
+                pixel = {};
+
+            zoom = this.map.olMap_.getZoom();
+            maxPx.x = this.map.olMap_.maxPx.x;
+            maxPx.y = this.map.olMap_.maxPx.y;
+            minPx.x = this.map.olMap_.minPx.x;
+            minPx.y = this.map.olMap_.minPx.y;
+            totalTilespan = Math.pow(2, zoom);
+            totalPixelSpan.x = TILESIZE * totalTilespan;
+            totalPixelSpan.y = this.map.olMap_.viewPortDiv.clientHeight;
+            pixelMax.x = totalPixelSpan.x - minPx.x;
+            pixelMax.y = totalPixelSpan.y - minPx.y;
+            pixelMin.x = totalPixelSpan.x - maxPx.x;
+            pixelMin.y = totalPixelSpan.x - maxPx.y;
+            pixel.x = mx + pixelMin.x;
+            pixel.y = (this.map.olMap_.size.h - my - pixelMax.y + totalPixelSpan.x );
+
+            return pixel;
+        },
+
+
+        getTileAndBinUnderMouse: function(mx, my, xBinCount, yBinCount) {
+
+            var zoom = this.map.olMap_.getZoom(),
+                pixel = this.getPixelUnderMouse(mx, my),
+                tileIndexX = Math.floor(pixel.x / TILESIZE),
+                tileIndexY = Math.floor(pixel.y / TILESIZE),
+                tilePixelX = pixel.x % TILESIZE,
+                tilePixelY = pixel.y % TILESIZE;
+
+            return {
+                tile: {
+                    level : zoom,
+                    xIndex : tileIndexX,
+                    yIndex : tileIndexY,
+                    xBinCount : xBinCount,
+                    yBinCount : yBinCount
+                },
+                bin: {
+                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
+                    y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
+                }
+            };
+
+        },
+
+
+        getTileKeyUnderMouse: function(mx, my) {
+
+            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, 1, 1);
+
+            return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
+        },
+
+
+        getBinKeyUnderMouse: function(mx, my, xBinCount, yBinCount) {
+
+            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, xBinCount, yBinCount );
+
+            return tileAndBin.bin.x + "," + tileAndBin.bin.y;
+        },
+
+
+        getCoordUnderMouse: function(mx, my) {
+
+            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, TILESIZE, TILESIZE),
+                bounds = this.pyramid.getBinBounds( tileAndBin.tile, tileAndBin.bin );
+
+            return {
+                x: bounds.centerX,
+                y: bounds.centerY
+            };
+        },
+
+        getOLMap: function() {
+            return this.map.olMap_;
+        },
+
+        getApertureMap: function() {
+            return this.map;
+        },
+
+        addApertureLayer: function(layer, mappings, spec) {
+            return this.map.addLayer(layer, mappings, spec);
+        },
+
+        addOLLayer: function(layer) {
+            return this.map.olMap_.addLayer(layer);
+        },
+
+        addOLControl: function(control) {
+            return this.map.olMap_.addControl(control);
+        },
+
+        getUid: function() {
+            return this.map.uid;
+        },
+
+        setLayerIndex: function(layer, zIndex) {
+            this.map.olMap_.setLayerIndex(layer, zIndex);
+        },
+
+        getLayerIndex: function(layer) {
+            return this.map.olMap_.getLayerIndex(layer);
         },
 
         setOpacity: function (newOpacity) {
@@ -126,6 +300,10 @@ define(function (require) {
             return this.map.olMap_.getExtent();
         },
 
+        getZoom: function () {
+            return this.map.olMap_.getZoom();
+        },
+
         isEnabled: function () {
             return this.map.olMap_.baseLayer.getVisibility();
         },
@@ -139,16 +317,60 @@ define(function (require) {
         },
 
         on: function (eventType, callback) {
-            this.map.on(eventType, callback);
+
+            switch (eventType) {
+
+                case 'click':
+                case 'zoomend':
+                case 'mousemove':
+
+                    this.map.olMap_.events.register(eventType, this.map.olMap_, callback);
+                    break;
+
+                default:
+
+                    this.map.on(eventType, callback);
+                    break;
+            }
+
         },
 
         off: function(eventType, callback) {
-            this.map.off(eventType, callback);
+
+            switch (eventType) {
+
+                case 'click':
+                case 'zoomend':
+                case 'mousemove':
+
+                    this.map.olMap_.events.unregister(eventType, this.map.olMap_, callback);
+                    break;
+
+                default:
+
+                    this.map.off(eventType, callback);
+                    break;
+            }
         },
 
         trigger: function(eventType, event) {
-            this.map.trigger(eventType, event);
+
+            switch (eventType) {
+
+                case 'click':
+                case 'zoomend':
+                case 'mousemove':
+
+                    this.map.olMap_.events.triggerEvent(eventType, event);
+                    break;
+
+                default:
+
+                    this.map.trigger(eventType, event);
+                    break;
+            }
         }
+
     });
 
     return Map;

@@ -54,6 +54,7 @@ define(function (require) {
                     xIndex : -1,
                     yIndex : -1
             };
+
 			// holds the state of mouse clicks
             this.clickState = {
                     userData : {},
@@ -62,6 +63,9 @@ define(function (require) {
                     xIndex : -1,
                     yIndex : -1
             };
+
+            this.isVisible = true;
+            this.opacity = 1.0;
         },
 
 

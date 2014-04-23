@@ -30,7 +30,7 @@
 
 /**
  * This module defines a TileTracker class which delegates tile requests between a
- * ViewController's individual views and a DataTracker. Maintains a collection of
+ * ViewController's individual views and a DataService. Maintains a collection of
  * relevant tiles for each view.
  */
 define(function (require) {
@@ -38,7 +38,7 @@ define(function (require) {
 
 
 
-    var Class = require('../../../../class'),
+    var Class = require('../class'),
         TileTracker;
 
 
@@ -49,24 +49,23 @@ define(function (require) {
         /**
          * Construct a TileTracker
          */
-        init: function (dataTracker, id) {
+        init: function (dataService) {
 
-            this.dataTracker = dataTracker;
+            this.dataService = dataService;
             this.tiles = [];
-            this.id = id;
         },
 
 
         /**
          * Given a list of tiles, determines which are already tracked, which need to be
-         * requested from the DataTracker, and which need to be released from the DataTracker.
+         * requested from the dataService, and which need to be released from the dataService.
          * If a tile is already in memory, the callback function is ignored
          * @param visibleTiles an array of all visible tiles that will need to be displayed
          * @param callback tile receive callback function
          */
         filterAndRequestTiles: function(visibleTiles, tileSetBounds, callback) {
 
-            var usedTiles = [],
+            var activeTiles = [],
                 defunctTiles = {},
                 neededTiles = [],
                 i, tile, tileKey;
@@ -84,7 +83,7 @@ define(function (require) {
             // Go through, seeing what we need.
             for (i=0; i<visibleTiles.length; ++i) {
                 tile = visibleTiles[i];
-                tileKey = this.dataTracker.createTileKey(tile);
+                tileKey = this.dataService.createTileKey(tile);
 
                 if (defunctTiles[tileKey]) {
                     // Already have the data, remove from defunct list
@@ -94,25 +93,25 @@ define(function (require) {
                     neededTiles.push(tileKey);
                 }
                 // And mark tile it as meaningful
-                usedTiles.push(tileKey);
+                activeTiles.push(tileKey);
             }
 
             // Update our internal lists
-            this.tiles = usedTiles;
+            this.tiles = activeTiles;
             // Remove all old defunct tiles references
             for (tileKey in defunctTiles) {
                 if (defunctTiles.hasOwnProperty(tileKey)) {
-                    this.dataTracker.removeReference(tileKey);
+                    this.dataService.removeReference(tileKey);
                 }
             }
-            // Request needed tiles from dataTracker
-            this.dataTracker.requestTiles(neededTiles, tileSetBounds, callback);
+            // Request needed tiles from dataService
+            this.dataService.getDataFromServer(neededTiles, tileSetBounds, callback);
         },
 
 
         /**
          * Given another TileTracker and tilekey, swaps the tiles. This function ensures that
-         * if the DataTracker is shared between trackers, the data will not be de-allocated
+         * if the dataService is shared between trackers, the data will not be de-allocated
          * from memory during the swap.
          * @param newTracker the tracker to gain ownership of the tile
          * @param tilekey the tile identification key
@@ -120,7 +119,6 @@ define(function (require) {
          */
         swapTileWith: function(newTracker, tilekey, callback) {
 
-			var i;
             // in order to prevent data de-allocation between releasing this trackers tile
             // and requesting the other trackers tile, this function adds an artificial
             // reference count increment/decrement
@@ -130,28 +128,20 @@ define(function (require) {
                 return;
             }
             // prematurely increment reference in case other tracker shares data
-            newTracker.dataTracker.addReference(tilekey);
+            newTracker.dataService.addReference(tilekey);
             // release tile, this decrements reference. If data is shared, the data
             // reference count now set to 1, preventing unnecessary de-allocation
             this.tiles.splice(this.tiles.indexOf(tilekey), 1);
-            this.dataTracker.removeReference(tilekey);
+            this.dataService.removeReference(tilekey);
             // request tile, incrementing reference count again, value is now 2
             newTracker.requestTile(tilekey, callback);
             // remove extra reference, resulting in proper count of 1
-            newTracker.dataTracker.removeReference(tilekey);
-			
-			// remove renderer id from visibility map
-			for (i=0; i<this.dataTracker.data[tilekey].length; i++) {
-				if (this.dataTracker.data[tilekey][i].renderer !== undefined) {
-					delete this.dataTracker.data[tilekey][i].renderer[this.id];
-				}
-			}			
-			
+            newTracker.dataService.removeReference(tilekey);
         },
 
 
         /**
-         * Request a tile from the dataTracker
+         * Request a tile from the dataService
          * @param tilekey the tile identification key
          * @param callback the callback function after the tile is received
          */
@@ -159,24 +149,45 @@ define(function (require) {
             if (this.tiles.indexOf(tilekey) === -1) {
                 this.tiles.push(tilekey);
             }
-            this.dataTracker.requestTiles([tilekey], {}, callback);
+            this.dataService.getDataFromServer([tilekey], {}, callback);
         },
 
 
         /**
          * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
          */
-        getNodeData: function () {
-            // request needed tiles
-            var data = this.dataTracker.getTileNodeData(this.tiles),
-                i;
-            for (i=0; i<data.length; i++ ) {
-				if (data[i].renderer === undefined) {
-					data[i].renderer = {};
-				}
-                data[i].renderer[this.id] = true; // stamp tile data with renderer id
+        getDataArray: function ( tilekeys ) {
+
+            // if tilekeys are specified, return those
+            if ( tilekeys !== undefined ) {
+                if ( !$.isArray( tilekeys ) ) {
+                    // only one tilekey specified, wrap in array
+                    tilekeys = [tilekeys];
+                }
+                return this.dataService.getDataArray(tilekeys);
             }
-            return data;
+            // otherwise, return all tiles currently tracked
+            return this.dataService.getDataArray(this.tiles);
+
+        },
+
+
+        /**
+         * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
+         */
+        getDataObject: function ( tilekeys ) {
+
+            // if tilekeys are specified, return those
+            if ( tilekeys !== undefined ) {
+                if ( !$.isArray( tilekeys ) ) {
+                    // only one tilekey specified, wrap in array
+                    tilekeys = [tilekeys];
+                }
+                return this.dataService.getDataObject(tilekeys);
+            }
+            // otherwise, return all tiles currently tracked
+            return this.dataService.getDataObject(this.tiles);
+
         }
 
     });

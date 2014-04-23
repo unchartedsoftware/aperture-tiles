@@ -58,7 +58,7 @@ define(function (require) {
                     });
 		},
 		getAxisConfig: function (mapConfig) {
-			var axisConfig, pyramidConfig;
+			var axisConfig, pyramidConfig, i;
 
 			axisConfig = mapConfig.AxisConfig;
 			if (!axisConfig.boundsConfigured) {
@@ -66,10 +66,18 @@ define(function (require) {
 				axisConfig.boundsConfigured = true;
 				pyramidConfig = mapConfig.PyramidConfig;
 
-				axisConfig.xAxisConfig.min = pyramidConfig.minX;
-				axisConfig.xAxisConfig.max = pyramidConfig.maxX;
-				axisConfig.yAxisConfig.min = pyramidConfig.minY;
-				axisConfig.yAxisConfig.max = pyramidConfig.maxY;
+                for (i=0; i<axisConfig.length; i++) {
+                    if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
+                        axisConfig[i].min = pyramidConfig.minX;
+                        axisConfig[i].max = pyramidConfig.maxX;
+                    } else {
+                        axisConfig[i].min = pyramidConfig.minY;
+                        axisConfig[i].max = pyramidConfig.maxY;
+                    }
+                }
+
+
+
 			}
 
 			return axisConfig;
