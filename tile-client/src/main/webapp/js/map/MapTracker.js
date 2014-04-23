@@ -69,7 +69,7 @@ define(function (require) {
                 for (i=0; i<axisConfig.length; i++) {
                     // TEMPORARY, eventually these bounds wont be needed, the axis will generate
                     // the increments solely based off the Map.pyramid
-                    if ( pyramidConfig.type == "AreaOfInterest") {
+                    if ( pyramidConfig.type === "AreaOfInterest") {
                         if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
                             axisConfig[i].min = pyramidConfig.minX;
                             axisConfig[i].max = pyramidConfig.maxX;
