@@ -67,17 +67,28 @@ define(function (require) {
 				pyramidConfig = mapConfig.PyramidConfig;
 
                 for (i=0; i<axisConfig.length; i++) {
-                    if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
-                        axisConfig[i].min = pyramidConfig.minX;
-                        axisConfig[i].max = pyramidConfig.maxX;
+                    // TEMPORARY, eventually these bounds wont be needed, the axis will generate
+                    // the increments solely based off the Map.pyramid
+                    if ( pyramidConfig.type == "AreaOfInterest") {
+                        if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
+                            axisConfig[i].min = pyramidConfig.minX;
+                            axisConfig[i].max = pyramidConfig.maxX;
+                        } else {
+                            axisConfig[i].min = pyramidConfig.minY;
+                            axisConfig[i].max = pyramidConfig.maxY;
+                        }
                     } else {
-                        axisConfig[i].min = pyramidConfig.minY;
-                        axisConfig[i].max = pyramidConfig.maxY;
+                        // web mercator
+                        if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
+                            axisConfig[i].min = -180.0;
+                            axisConfig[i].max = 180.0;
+                        } else {
+                            axisConfig[i].min = -85.05;
+                            axisConfig[i].max = 85.05;
+                        }
                     }
+
                 }
-
-
-
 			}
 
 			return axisConfig;
