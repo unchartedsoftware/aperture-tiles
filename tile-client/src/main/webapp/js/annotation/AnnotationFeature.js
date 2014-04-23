@@ -77,6 +77,7 @@ define(function (require) {
 
             // case b)
             if ( spec.layer !== undefined ) {
+                // feature will need to be created as it is using data from server
                 this.olLayer_ = spec.layer;
             }
 
@@ -92,20 +93,11 @@ define(function (require) {
             this.olPopup_ = null;
 
             this.redraw();
-
         },
 
 
         redraw: function() {
             this.olFeature_.layer.drawFeature( this.olFeature_ );
-        },
-
-
-        transformToMapProj: function(latLon) {
-            // convert to lat / long to OpenLayers map projection
-            var fromProj = new OpenLayers.Projection("EPSG:4326"),
-                toProj = this.map.projection;
-            return new OpenLayers.LonLat( latLon.lon, latLon.lat ).transform( fromProj, toProj );
         },
 
 
@@ -123,6 +115,7 @@ define(function (require) {
                 ySum = 0,
                 sumCount = 0,
                 annotationsByPriority = {},
+                viewportPixel,
                 latlon,
                 priority;
 
@@ -143,7 +136,8 @@ define(function (require) {
             }
 
             // average display lat lon
-            latlon = this.transformToMapProj( new OpenLayers.LonLat( xSum/sumCount, ySum/sumCount ) );
+            viewportPixel = this.map.getViewportPixelFromCoord( xSum/sumCount, ySum/sumCount );
+            latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel );
 
             this.annotationsByPriority = annotationsByPriority;
 
@@ -163,7 +157,8 @@ define(function (require) {
         addAnnotation: function( annotation ) {
 
             var count = this.getAnnotationCount(),
-                latlon = this.transformToMapProj( new OpenLayers.LonLat( annotation.x, annotation.y ) );
+                viewportPixel = this.map.getViewportPixelFromCoord( annotation.x, annotation.y),
+                latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel);
 
             // re calculate avg position
             this.olFeature_.geometry.x = ((this.olFeature_.geometry.x*count) + latlon.lon) / (count+1);

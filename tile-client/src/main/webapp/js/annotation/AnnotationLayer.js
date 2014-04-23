@@ -41,6 +41,7 @@ define(function (require) {
         AnnotationLayer;
 
 
+
     // this function is used to determine what the label above each annotation is
     // only displays a number if above 1 ( annotation is aggregated )
     annotationContext = {
@@ -109,22 +110,6 @@ define(function (require) {
 
             // trigger callback to draw first frame
             //this.onMapUpdate();
-        },
-
-    /*
-        transformToMapProj: function(latLon) {
-            // convert to lat / long to OpenLayers map projection
-            var fromProj = new OpenLayers.Projection("EPSG:4326"),
-                toProj = this.map.projection;
-            return new OpenLayers.LonLat( latLon.lon, latLon.lat ).transform( fromProj, toProj );
-        },
-*/
-
-        transformFromMapProj: function(latLon) {
-            // convert from OpenLayers map projection to lat / long
-            var fromProj = this.map.projection,
-                toProj = new OpenLayers.Projection("EPSG:4326");
-            return new OpenLayers.LonLat( latLon.lon, latLon.lat ).transform( fromProj, toProj );
         },
 
 
@@ -423,16 +408,17 @@ define(function (require) {
         getFeatureInfo: function( feature ) {
 
             var latLon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() ),
-                xy = this.transformFromMapProj( latLon ),
-                index = this.indexer.getIndex( {x:xy.lon, y:xy.lat}, this.map.getZoom() );
+                viewportPixel = this.map.getOLMap().getViewPortPxFromLonLat( latLon ),
+                xy = this.map.getCoordFromViewportPixel( viewportPixel.x, viewportPixel.y ),
+                index = this.indexer.getIndex( xy, this.map.getZoom() );
 
             return {
                     tilekey: index.tilekey,
                     binkey: index.binkey,
                     lat: latLon.lat,
                     lon: latLon.lon,
-                    x: xy.lon,
-                    y: xy.lat
+                    x: xy.x,
+                    y: xy.y
                 };
         },
 

@@ -51,6 +51,7 @@ require(['./FileLoader',
             "use strict";
 
             var apertureConfigFile = "./data/aperture-config.json",
+                annotationConfigFile = "./data/annotation-config-temporary.json",
                 cloneObject,
                 getLayers,
                 pyramidsEqual,
@@ -138,7 +139,7 @@ require(['./FileLoader',
 	        };
                         
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
+            FileLoader.loadJSONData(apertureConfigFile, annotationConfigFile, function (jsonDataMap) {
 	            // First off, configure aperture.
 	            configureAperture(jsonDataMap[apertureConfigFile]);
 
@@ -177,6 +178,8 @@ require(['./FileLoader',
 				            ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
 
 				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
+
+                            AnnotationLayerFactory.createLayers( jsonDataMap[annotationConfigFile].AnnotationLayers, worldMap );
 
 				            // Trigger the initial resize event to resize everything
 				            $(window).resize();
