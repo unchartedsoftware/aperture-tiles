@@ -75,7 +75,8 @@
 	"AxisConfig": [
 		 {
 			"title" : "Time",
-			"id" : "time-x-axis",
+            "position" : "bottom",
+            "repeat": false,
 			"intervalSpec" : {
 				"type" : "percentage",
 				"increment" : 20,
@@ -87,8 +88,6 @@
 				"decimals" : 2,
 				"allowStepDown" : false
 			},
-			"position" : "bottom",
-			"repeat": false,
 			"style" : {
 				"markerLabelRotation" : -45,
 				"majorMarkerLength" : 10,
@@ -103,7 +102,8 @@
 		},
 		{
 			"title" : "Destination",
-			"id" : "dest-y-axis",
+            "position" : "left",
+            "repeat" : false,
 			"intervalSpec" : {
 				"type" : "fixed",
 				"increment" : 100000,
@@ -114,9 +114,7 @@
 				"type" : "decimal",
 				"decimals" : 2,
 				"allowStepDown" : false
-			},
-			"position" : "left",
-			"repeat" : false,
+			},			
 			"style" : {
 				"markerLabelRotation" : -45,
 				"majorMarkerLength" : 10,

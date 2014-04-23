@@ -78,8 +78,6 @@ define(function (require) {
 
 	        this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
 
-
-
 			// Set resize map callback
 			$(window).resize( function() {
 				var $map = $('#' + that.id),
@@ -99,7 +97,7 @@ define(function (require) {
 					
 				$map.width(newWidth);
 				$map.height(newHeight);
-				that.map.olMap_.updateSize();
+				that.updateSize();
 			});
 												
 			// Trigger the initial resize event to resize everything
@@ -210,7 +208,7 @@ define(function (require) {
             return {
                 x: mx + viewportMinMax.min.x,
                 y: my + ( this.getViewportHeight() - viewportMinMax.min.y )
-            }
+            };
         },
 
 

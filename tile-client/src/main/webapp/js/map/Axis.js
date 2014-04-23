@@ -35,6 +35,7 @@ define(function (require) {
         Axis;
 
 
+
     Axis = Class.extend({
         /**
          * Construct an axis
@@ -122,9 +123,7 @@ define(function (require) {
 
             // generate more attributes
             this.isXAxis = (this.position === 'top' || this.position === 'bottom');
-            this.xOrY = this.isXAxis ? 'x' : 'y';
             this.widthOrHeight = this.isXAxis ? "width" : "height";
-            this.tileSize = this.map.getTileSize();
             this.maxLabelLength = 0;
 
             this.map.on('mousemove', function(event) {
@@ -137,6 +136,7 @@ define(function (require) {
 
             this.redraw();
         },
+
 
         /**
          * Checks if the mutable spec attributes have changed, if so, redraws
@@ -260,7 +260,6 @@ define(function (require) {
                     + 'border-' + positionDir + ":" + that.style.majorMarkerWidth + "px solid" + that.style.majorMarkerColour + ";"
                     + positionDir + ":" + (marker.pixel - that.style.majorMarkerWidth*0.5) + "px;"
                     + '"></div>');
-
             }
 
             /**
@@ -330,10 +329,8 @@ define(function (require) {
 
                 // position axis label
                 axis.label.css( that.position, -labelOffset + 'px' );
-
                 // add margin space for axis
                 axis.marginContainer.css('margin-' + that.position, labelOffset + 'px');
-
                 // div container may change size, this updates properties accordingly
                 that.map.updateSize();
             }
@@ -346,8 +343,8 @@ define(function (require) {
             addAxisMainElements();
             // add each marker to correct pixel location in axis DOM elements
             addAxisMarkerElements();
-
         }
+
     });
 
     return Axis;

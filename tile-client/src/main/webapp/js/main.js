@@ -183,17 +183,6 @@ require(['./FileLoader',
 			            }
 		            );
 
-
-                    worldMap.on("mousemove", function(event) {
-                        var pixel = worldMap.getMapPixelFromViewportPixel(event.xy.x, event.xy.y);
-                        console.log( pixel.x +", " + pixel.y );
-
-                        var minMax = worldMap.getMapMinAndMaxInViewportPixels();
-                        //console.log( minMax.min.x +", " + minMax.min.y + "     " + minMax.max.x + ", " + minMax.max.y );
-
-                    });
-
-
 	            });
             });
         });
