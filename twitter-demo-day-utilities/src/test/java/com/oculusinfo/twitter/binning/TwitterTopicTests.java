@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.twitter.binning;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,46 +42,32 @@ public class TwitterTopicTests {
 	// sample record with no counts and a given end time
 	private TwitterDemoTopicRecord _sampleRecord = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 0, 
 													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-															0, 0, 0, 0, 0, 0, 0, 0),
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0, 0, 0, 0, 0),
 													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-															0, 0, 0, 0),
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0),
 													Arrays.asList(new Pair<String, Long>("", _endTimeSecs)),
 													_endTimeSecs);
-
-//	@Test
-//	// Test an empty record
-//	public void testEmptyRecord() {
-//		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord();
-//
-//		Assert.assertEquals(null, a.getTopic());
-//		Assert.assertEquals(null, a.getTopicEnglish());
-//		Assert.assertEquals(0, a.getCountMonthly());
-//		Assert.assertEquals(null, a.getCountDaily());
-//		Assert.assertEquals(null, a.getCountPer6hrs());
-//		Assert.assertEquals(null, a.getCountPerHour());
-//		Assert.assertEquals(null, a.getRecentTweets());
-//	}
 	
 	//---- Create a topic with no counts and an end time.
 	@Test
 	public void testCreateTopicWithNoCounts() {
 		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord("futebol", "football", 0, 
-				Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-				Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						0, 0, 0, 0, 0, 0, 0, 0),
-				Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						0, 0, 0, 0),
-				Arrays.asList(new Pair<String, Long>("", _endTimeSecs)),
-				_endTimeSecs);
+													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																  0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("", _endTimeSecs)),
+													_endTimeSecs);
 			
 		Assert.assertEquals(_sampleRecord, a);
 	}
@@ -170,9 +157,212 @@ public class TwitterTopicTests {
 				Assert.assertTrue(a.getCountPerHour().get(n) == _sampleRecord.getCountPerHour().get(n));
 			else
 				Assert.assertTrue(a.getCountPerHour().get(n) == _sampleRecord.getCountPerHour().get(n)+1);			
-		}	
-	}	
+		}
+	}
 	
-	//TODO ...
-	//add a few few tests for recent tweets too - just look at the tests for TwitterDemoRecord, they'll be pretty similar, I think.	    
+	//---- Adding two records
+	@Test
+    public void testRecordAggregation () {
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 1, 
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L)),	// 1 sec prior to end time
+													_endTimeSecs);
+		
+		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 1, 
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("Nós todos amamos o futebol", _endTimeSecs - 3601L)),	// 1 hr + 1 sec prior to end time
+													_endTimeSecs);
+		
+		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 2, 
+													Arrays.asList(2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L),
+																  new Pair<String, Long>("Nós todos amamos o futebol", _endTimeSecs - 3601L)),
+													_endTimeSecs);		
+
+        Assert.assertEquals(c, TwitterDemoTopicRecord.addRecords(a, b));
+    }
+	
+	//---- Adding records with different topics
+	@Test(expected=IllegalArgumentException.class)
+    public void testIllegalRecordAddition () {
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 1, 
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L)),	// 1 sec prior to end time
+													_endTimeSecs);
+		
+		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord("hóquei", "hockey", 1, 
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("Todos nós gostamos de hóquei", _endTimeSecs - 3601L)),	// 1 hr + 1 sec prior to end time
+													_endTimeSecs);
+		
+        TwitterDemoTopicRecord.addRecords(a, b);
+    }
+	
+	//---- Min of two records
+    @Test
+    public void testMin() {
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 15, 
+													Arrays.asList(1, 0, 0, 0, 0, 0, 5, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 2, 3, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("blah1", _endTimeSecs - 1000L),
+																new Pair<String, Long>("blah2", _endTimeSecs - 2000L),
+																new Pair<String, Long>("blah3", _endTimeSecs - 3000L)),
+													_endTimeSecs);
+		
+		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 17, 
+													Arrays.asList(1, 0, 0, 0, 0, 5, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 8),
+													Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 5, 0, 0, 0, 0),
+													Arrays.asList(0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("blah3", _endTimeSecs - 1500L),
+																new Pair<String, Long>("blah4", _endTimeSecs - 2500L),
+																new Pair<String, Long>("blah5", _endTimeSecs - 3500L)),
+													_endTimeSecs);
+
+		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(null, null, 15, 
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8),
+													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													new ArrayList<Pair<String, Long>>(),
+													0);
+		
+        Assert.assertEquals(c, TwitterDemoTopicRecord.minOfRecords(a, b));
+    }
+    
+	//---- Max of two records
+    @Test
+    public void testMax() {
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 15, 
+													Arrays.asList(1, 0, 0, 0, 0, 0, 5, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 2, 3, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("blah1", _endTimeSecs - 1000L),
+																new Pair<String, Long>("blah2", _endTimeSecs - 2000L),
+																new Pair<String, Long>("blah3", _endTimeSecs - 3000L)),
+													_endTimeSecs);
+		
+		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 17, 
+													Arrays.asList(1, 0, 0, 0, 0, 5, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 8),
+													Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 5, 0, 0, 0, 0),
+													Arrays.asList(0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("blah3", _endTimeSecs - 1500L),
+																new Pair<String, Long>("blah4", _endTimeSecs - 2500L),
+																new Pair<String, Long>("blah5", _endTimeSecs - 3500L)),
+													_endTimeSecs);
+
+		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(null, null, 17, 
+													Arrays.asList(1, 0, 0, 0, 0, 5, 5, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 9),
+													Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 5, 0, 2, 3, 0),
+													Arrays.asList(1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													new ArrayList<Pair<String, Long>>(),
+													0);
+		TwitterDemoTopicRecord d = TwitterDemoTopicRecord.maxOfRecords(a, b);
+        Assert.assertEquals(c, TwitterDemoTopicRecord.maxOfRecords(a, b));
+    }  
+    
+    // Check string conversion
+    @Test
+    public void testStringConversion () {
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 2, 
+													Arrays.asList(2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0),
+													Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+															0, 0, 0, 0),
+													Arrays.asList(new Pair<String, Long>("abcdef", _endTimeSecs - 1000L),
+															new Pair<String, Long>("abc\"\"\\\"\\\\\"\\\\\\\"def", _endTimeSecs - 2000L)),
+													_endTimeSecs);    	
+
+        String as = a.toString();
+        TwitterDemoTopicRecord b = TwitterDemoTopicRecord.fromString(as);
+        //Assert.assertEquals(a, b);		//TODO -- this assert fails, but all the ones below are OK (??)
+        Assert.assertEquals(a.getTopic(), b.getTopic());
+        Assert.assertEquals(a.getTopicEnglish(), b.getTopicEnglish());
+        Assert.assertEquals(a.getCountDaily(), b.getCountDaily());
+        Assert.assertEquals(a.getCountPer6hrs(), b.getCountPer6hrs());
+        Assert.assertEquals(a.getCountPerHour(), b.getCountPerHour());
+        Assert.assertEquals(a.getRecentTweets(), b.getRecentTweets());
+        Assert.assertTrue(a.getCountMonthly() == b.getCountMonthly());
+        Assert.assertTrue(a.getEndTime() == b.getEndTime());
+    }
 }

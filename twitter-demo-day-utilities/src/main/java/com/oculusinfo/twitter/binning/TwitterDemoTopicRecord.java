@@ -26,14 +26,20 @@ package com.oculusinfo.twitter.binning;
 
 //import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+
 import com.oculusinfo.binning.util.Pair;
 
 public class TwitterDemoTopicRecord {
 	// TODO do we need make this class serializable?? (as in TwitterDemoRecord
 	// class)
+	
+	private static final int NUM_DAYS = 31;			// days per month
+	private static final int NUM_QUARTERDAYS = 28;	// quarter days per week
+	private static final int NUM_HOURS = 24;		// hours per day	
 
 	private String _topic; 							// Twitter topic in original language
 	private String _topicEnglish; 					// Twitter topic in English
@@ -45,31 +51,61 @@ public class TwitterDemoTopicRecord {
 	private long _endTimeSecs;						// end time (in secs) for this data record (so valid time window
 													//    between endTimeSecs and endTimeSecs - 1 month
 
-	public TwitterDemoTopicRecord() { // default constructor
-		_topic = null; // TODO make lists the right length here??
-		_topicEnglish = null;
-		_countMonthly = 0;
-		_countDaily = null;
-		_countPer6hrs = null;
-		_countPerHour = null;
-		_recentTweets = null;
-		_endTimeSecs = 0;
-	}
-
 	public TwitterDemoTopicRecord(String topic, String topicEnglish,
 			int countMonthly, List<Integer> countDaily,
 			List<Integer> countPer6hrs, List<Integer> countPerHour,
 			List<Pair<String, Long>> recentTweets, long endTimeSecs) {
 		
-		// TODO make lists the right length here, if not already??
 		_topic = topic;
 		_topicEnglish = topicEnglish;
-		_countMonthly = countMonthly;							
-		_countDaily = countDaily;
-		_countPer6hrs = countPer6hrs;
-		_countPerHour = countPerHour;
+		_countMonthly = countMonthly;
 		_recentTweets = recentTweets;
 		_endTimeSecs = endTimeSecs;
+		
+		if (countDaily.size() == NUM_DAYS) {
+			_countDaily = countDaily;
+		}
+		else if (countDaily.size() > NUM_DAYS) {
+			throw new IllegalArgumentException("countDaily size cannot be > " + NUM_DAYS);
+		}
+		else {
+			_countDaily = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+										0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			for (int n=0; n<countDaily.size(); n++) {
+				_countDaily.set(n, countDaily.get(n));
+			}
+		}
+		
+		if (countPer6hrs.size() == NUM_QUARTERDAYS) {
+			_countPer6hrs = countPer6hrs;
+		}
+		else if (countPer6hrs.size() > NUM_QUARTERDAYS) {
+			throw new IllegalArgumentException("countPer6hrs size cannot be > " + NUM_QUARTERDAYS);
+		}
+		else {
+			_countPer6hrs = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+										0, 0, 0, 0, 0, 0, 0, 0);
+			for (int n=0; n<countPer6hrs.size(); n++) {
+				_countPer6hrs.set(n, countPer6hrs.get(n));
+			}
+		}
+		
+		if (countPerHour.size() == NUM_HOURS) {
+			_countPerHour = countPerHour;
+		}
+		else if (countPerHour.size() > NUM_HOURS) {
+			throw new IllegalArgumentException("countPerHour size cannot be > " + NUM_HOURS);
+		}
+		else {
+			_countPerHour = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+										0, 0, 0, 0);
+			for (int n=0; n<countPerHour.size(); n++) {
+				_countPerHour.set(n, countPerHour.get(n));
+			}
+		}		
 	}
 
 	public String getTopic() {
@@ -227,7 +263,7 @@ public class TwitterDemoTopicRecord {
 			result += "(" + escapeString(rt.getFirst()) + ", " + rt.getSecond()
 					+ ")";
 		}
-		result = result + "]}";
+		result += "], endTimeSecs: " + _endTimeSecs + "}";
 		return result;
 	}
 
@@ -262,11 +298,11 @@ public class TwitterDemoTopicRecord {
 		List<Integer> countDaily = new ArrayList<>();
 		value = eatIntList(value, countDaily);
 
-		value = eat(value.substring(end), "], countPer6hrs: [");
+		value = eat(value, "], countPer6hrs: [");
 		List<Integer> countPer6hrs = new ArrayList<>();
 		value = eatIntList(value, countPer6hrs);
 
-		value = eat(value.substring(end), "], countPerHour: [");
+		value = eat(value, "], countPerHour: [");
 		List<Integer> countPerHour = new ArrayList<>();
 		value = eatIntList(value, countPerHour);
 
@@ -288,8 +324,8 @@ public class TwitterDemoTopicRecord {
 				value = eat(value, ", ");
 		}
 		
-		value = eat(value.substring(end), "], endTimeSecs: ");
-		end = value.indexOf(",");
+		value = eat(value, "], endTimeSecs: ");
+		end = value.indexOf("}");
 		long endTimeSecs = Long.parseLong(value.substring(0, end));
 
 		return new TwitterDemoTopicRecord(topic, topicEnglish, countMonthly,
@@ -408,9 +444,9 @@ public class TwitterDemoTopicRecord {
 				record._recentTweets);
 		long endTimeSecs = record._endTimeSecs;
 		
-		long secsSinceEnd = endTimeSecs - newTweet.getSecond();	// time interval between new tweet and endTime
+		float secsSinceEnd = (float)(endTimeSecs - newTweet.getSecond());	// time interval between new tweet and endTime
 		
-		if (secsSinceEnd > 2678400L) { // 2678400 = 31*24*60*60
+		if (secsSinceEnd > 2.6784e6) { // 2678400 = 31*24*60*60
 			// more than 1 month ago disregard this new tweet
 			return new TwitterDemoTopicRecord(topic, topicEnglish,
 					countMonthly, countDaily, countPer6hrs, countPerHour,
@@ -424,24 +460,20 @@ public class TwitterDemoTopicRecord {
 			// new tweet occurred within 1 month from endtime
 			countMonthly++;
 			addRecentTweetInPlace(recentTweets, newTweet);
-			int hours = (int) (secsSinceEnd / 3600L);
-			int quarterDays = (int) (secsSinceEnd / 21600L); // 60*60*6;
-			int days = (int) (secsSinceEnd / 86400L); // 60*60*24;
+			int hours = (int)(secsSinceEnd * 2.7778e-4);	//1/3600
+			int quarterDays = (int)(secsSinceEnd * 4.6296e-5); // 1/21600 = 1/60*60*6;
+			int days = (int)(secsSinceEnd * 1.1574e-5); //1/86400 = 1/60*60*24;
 
-			if ((hours >= 0) && (hours < 24)) {
-				// TODO ... do we need to check list lengths here (and re-size if needed)?
-				assert (countPerHour.size() == 24);
+			if ((hours >= 0) && (hours < NUM_HOURS)) {
+				//assert (countPerHour.size() == NUM_HOURS);
 				countPerHour.set(hours, countPerHour.get(hours) + 1);
 			}
-			if ((quarterDays >= 0) && (quarterDays < 28)) {
-				// TODO ... do we need to check list lengths here (and re-size if needed)?
-				assert (countPer6hrs.size() == 28);
-				countPer6hrs
-						.set(quarterDays, countPer6hrs.get(quarterDays) + 1);
+			if ((quarterDays >= 0) && (quarterDays < NUM_QUARTERDAYS)) {
+				//assert (countPer6hrs.size() == NUM_QUARTERDAYS);
+				countPer6hrs.set(quarterDays, countPer6hrs.get(quarterDays) + 1);
 			}
-			if ((days >= 0) && (days < 31)) {
-				// TODO ... do we need to check list lengths here (and re-size if needed)?
-				assert (countDaily.size() == 31);
+			if ((days >= 0) && (days < NUM_DAYS)) {
+				//assert (countDaily.size() == NUM_DAYS);
 				countDaily.set(days, countDaily.get(days) + 1);
 			}
 		}
