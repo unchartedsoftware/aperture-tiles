@@ -48,7 +48,7 @@ import org.apache.spark.AccumulableParam
 import org.apache.spark.rdd.RDD
 
 
-object Application {
+object SummaryStatistics {
   
  def main(args: Array[String]): Unit = {
   // Load, parse, and cache data
@@ -74,18 +74,16 @@ object Application {
 //  System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 //  System.setProperty("spark.kryo.registrator", "simple_statistics.util.TileRegistrator")
   
-  val sc = new SparkContext("spark://hadoop-s1.oculus.local:7077", "Summary Stats Test", "/opt/spark", Seq("target/summary-statistics-0.0.1-SNAPSHOT.jar"))
-  val textFile = sc.textFile(inputLocation) //will likely need to change to hdfsTextFile(...)
-
-  val test = textFile.take(1)
+  val sparkMaster = prop.getProperty("spark.connection.url","local")
+  val sparkHome = prop.getProperty("spark.connection.home","/opt/spark")
   
-  val test2 = textFile.take(1)
+  val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, Seq("target/summary-statistics-0.3-SNAPSHOT.jar"))
+  val textFile = sc.textFile(inputLocation) //will likely need to change to hdfsTextFile(...) summary-statistics-0.3-SNAPSHOT.jar
 
   val table = textFile.map(record => (record.split(delimiter))).cache()
 
   val tableTests = prop.getProperty("oculus.binning.table.tests")
   
-
   //analyze dataset at a high level. count total records ect.
   analyze.tableResults(table, tableTests, writer)
   
@@ -94,7 +92,7 @@ object Application {
     // Load field information
     val index = prop.getProperty("oculus.binning.parsing." + field + ".index").toInt
     val fieldType = prop.getProperty("oculus.binning.parsing." + field + ".fieldType")
-    val customAnalytics = prop.getProperty("oculus.binning.parsing." + field + ".customAnalytics","")
+    val customAnalytics = prop.getProperty("oculus.binning.parsing." + field + ".custom.analytics","")
     
    //Set default tests if none specified based on whether data is quantitative or numeric
     val testList = if(fieldType.contains("double") || fieldType.contains("int") || fieldType.contains("long")){
@@ -105,8 +103,15 @@ object Application {
     
     if(customAnalytics != ""){
       //allows user to specify variables for the custom analytic
-      val customVariables = prop.getProperty("oculus.binning.parsing." + field + ".customAnalytics","")
-      util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables)
+      val customVariables = prop.getProperty("oculus.binning.parsing." + field + ".custom.variables","")
+      val customOutput =  prop.getProperty("oculus.binning.parsing." + field + ".custom.output","")
+      if (customOutput == ""){
+        util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, writer)
+      } else {
+        val customWriter = new PrintWriter(new File(customOutput))
+        util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, customWriter)
+      }
+      
     }
 
     util.analyze.fieldResults(table, field, index, fieldType, testList, writer)
