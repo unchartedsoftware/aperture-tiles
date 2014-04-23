@@ -144,8 +144,11 @@ define(function (require) {
 
         getTileIterator: function() {
             var level = this.map.getZoom(),
+                // Current map bounds, in meters
                 bounds = this.map.olMap_.getExtent(),
+                // Total map bounds, in meters
                 mapExtent = this.map.olMap_.getMaxExtent(),
+                // Pyramider for the total map bounds
                 mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
                                             mapExtent.right, mapExtent.top);
 
