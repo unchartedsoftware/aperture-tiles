@@ -85,6 +85,7 @@ define(function (require) {
          * @param {string} id - The immutable ID of the layer.
          */
         init: function (id) {
+            this.domain = 'server';
             this.id = id;
             this.zIndex = 0;
             this.name = id;

@@ -34,7 +34,11 @@ define(function (require) {
 
 	
     var Class = require('../class'),
+        AoIPyramid = require('../binning/AoITilePyramid'),
+        PyramidFactory = require('../binning/PyramidFactory'),
+        TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),
+        TILESIZE = 256,
         Map;
 
 
@@ -45,32 +49,18 @@ define(function (require) {
         init: function (id, spec) {
 
 			var that = this,
-				apertureConfig,
 				mapSpecs;
 		
-			apertureConfig = spec.ApertureConfig;
 			mapSpecs = spec.MapConfig;
+
+	        aperture.config.provide({
+		        // Set the map configuration
+		        'aperture.map' : {
+			        'defaultMapConfig' : mapSpecs
+		        }
+	        });
+		        
 			
-			// configure aperture
-            aperture.config.provide({
-            	/*
-                 * Set aperture log configuration
-                 */
-                'aperture.log' : apertureConfig['aperture.log'],
-                
-                /*
-                 * The endpoint locations for Aperture services accessed through the io interface
-                 */
-                'aperture.io' : apertureConfig['aperture.io'],
-
-                /*
-                 * Set the map configuration
-                 */
-                'aperture.map' : {
-                    'defaultMapConfig' : mapSpecs
-                }
-            });
-
             // Map div id
 			this.id = id;
 
@@ -82,8 +72,12 @@ define(function (require) {
             this.map.all().redraw();
 
 			// Create axes
-			this.axes = [];	
-			
+			this.axes = [];
+
+			this.projection = this.map.olMap_.projection;
+
+	        this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
+
 			// Set resize map callback
 			$(window).resize( function() {
 				var $map = $('#' + that.id),
@@ -103,25 +97,256 @@ define(function (require) {
 					
 				$map.width(newWidth);
 				$map.height(newHeight);
-				that.map.olMap_.updateSize();
+				that.updateSize();
 			});
 												
 			// Trigger the initial resize event to resize everything
             $(window).resize();			
         },
 
+
         setAxisSpecs: function (axes) {
-            var xAxisSpec, yAxisSpec;
 
-            xAxisSpec = axes.xAxisConfig;
-            xAxisSpec.parentId = this.id;
-            xAxisSpec.olMap = this.map.olMap_;
-            this.axes.push(new Axis(xAxisSpec));
+            var i, spec;
 
-            yAxisSpec = axes.yAxisConfig;
-            yAxisSpec.parentId = this.id;
-            yAxisSpec.olMap = this.map.olMap_;
-            this.axes.push(new Axis(yAxisSpec));
+            for (i=0; i< axes.length; i++) {
+                spec = axes[i];
+                spec.parentId = this.id;
+                spec.map = this;
+                spec.olMap = this.map.olMap_;
+                this.axes.push(new Axis(spec));
+            }
+        },
+
+
+        getPyramid: function() {
+
+            return this.pyramid;
+        },
+
+
+        getTileIterator: function() {
+            var level = this.map.getZoom(),
+                // Current map bounds, in meters
+                bounds = this.map.olMap_.getExtent(),
+                // Total map bounds, in meters
+                mapExtent = this.map.olMap_.getMaxExtent(),
+                // Pyramider for the total map bounds
+                mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
+                                            mapExtent.right, mapExtent.top);
+
+            // determine all tiles in view
+            return new TileIterator( mapPyramid, level,
+                                     bounds.left, bounds.bottom,
+                                     bounds.right, bounds.top);
+        },
+
+
+        getTilesInView: function() {
+
+            return this.getTileIterator().getRest();
+        },
+
+
+        getTileSetBoundsInView: function() {
+
+            return {'params': this.getTileIterator().toTileBounds()};
+        },
+
+
+        getViewportWidth: function() {
+            return this.map.olMap_.viewPortDiv.clientWidth;
+        },
+
+
+        getViewportHeight: function() {
+            return this.map.olMap_.viewPortDiv.clientHeight;
+        },
+
+
+        /**
+         * Returns the maps min and max pixels in viewport pixels
+         * NOTE:    viewport [0,0] is TOP-LEFT
+         *          map [0,0] is BOTTOM-LEFT
+         */
+        getMapMinAndMaxInViewportPixels: function() {
+            return {
+                min : {
+                    x: this.map.olMap_.minPx.x,
+                    y: this.map.olMap_.maxPx.y
+                },
+                max : {
+                    x: this.map.olMap_.maxPx.x,
+                    y: this.map.olMap_.minPx.y
+                }
+            };
+        },
+
+
+        /**
+         * Transforms a point from viewport pixel coordinates to map pixel coordinates
+         * NOTE:    viewport [0,0] is TOP-LEFT
+         *          map [0,0] is BOTTOM-LEFT
+         */
+        getMapPixelFromViewportPixel: function(vx, vy) {
+            var minAndMax = this.getMapMinAndMaxInViewportPixels(),
+                totalPixelSpan = TILESIZE * Math.pow( 2, this.getZoom() );
+            return {
+                x: totalPixelSpan + vx - minAndMax.max.x,
+                y: totalPixelSpan - vy + minAndMax.max.y
+            };
+        },
+
+
+        /**
+         * Transforms a point from map pixel coordinates to viewport pixel coordinates
+         * NOTE:    viewport [0,0] is TOP-LEFT
+         *          map [0,0] is BOTTOM-LEFT
+         */
+        getViewportPixelFromMapPixel: function(mx, my) {
+            var viewportMinMax = this.getMapMinAndMaxInViewportPixels();
+            return {
+                x: mx + viewportMinMax.min.x,
+                y: my + ( this.getViewportHeight() - viewportMinMax.min.y )
+            };
+        },
+
+
+        /**
+         * Transforms a point from data coordinates to map pixel coordinates
+         * NOTE:    data and map [0,0] are both BOTTOM-LEFT
+         */
+        getMapPixelFromCoord: function(x, y) {
+            var zoom = this.map.olMap_.getZoom(),
+                tile = this.pyramid.rootToTile( x, y, zoom, TILESIZE),
+                bin = this.pyramid.rootToBin( x, y, tile);
+            return {
+                x: tile.xIndex * TILESIZE + bin.x,
+                y: tile.yIndex * TILESIZE + TILESIZE - 1 - bin.y
+            };
+        },
+
+
+        /**
+         * Transforms a point from map pixel coordinates to data coordinates
+         * NOTE:    data and map [0,0] are both BOTTOM-LEFT
+         */
+        getCoordFromMapPixel: function(mx, my) {
+            var tileAndBin = this.getTileAndBinFromMapPixel(mx, my, TILESIZE, TILESIZE),
+                bounds = this.pyramid.getBinBounds( tileAndBin.tile, tileAndBin.bin );
+            return {
+                x: bounds.minX,
+                y: bounds.minY
+            };
+        },
+
+
+        /**
+         * Transforms a point from viewport pixel coordinates to data coordinates
+         * NOTE:    viewport [0,0] is TOP-LEFT
+         *          data [0,0] is BOTTOM-LEFT
+         */
+        getCoordFromViewportPixel: function(vx, vy) {
+            var mapPixel = this.getMapPixelFromViewportPixel(vx, vy);
+            return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
+        },
+
+
+        /**
+         * Transforms a point from data coordinates to viewport pixel coordinates
+         * NOTE:    viewport [0,0] is TOP-LEFT
+         *          data [0,0] is BOTTOM-LEFT
+         */
+        getViewportPixelFromCoord: function(x, y) {
+            var coord = this.getMapPixelFromCoord(x, y);
+            return this.getViewportPixelFromMapPixel(coord.x, coord.y);
+        },
+
+
+        /**
+         * Returns the tile and bin index corresponding to the given map pixel coordinate
+         */
+        getTileAndBinFromMapPixel: function(mx, my, xBinCount, yBinCount) {
+            var tileIndexX = Math.floor(mx / TILESIZE),
+                tileIndexY = Math.floor(my / TILESIZE),
+                tilePixelX = mx % TILESIZE,
+                tilePixelY = my % TILESIZE;
+            return {
+                tile: {
+                    level : this.getZoom(),
+                    xIndex : tileIndexX,
+                    yIndex : tileIndexY,
+                    xBinCount : xBinCount,
+                    yBinCount : yBinCount
+                },
+                bin: {
+                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
+                    y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
+                }
+            };
+        },
+
+
+        /**
+         * Returns the tile and bin index corresponding to the given viewport pixel coordinate
+         */
+        getTileAndBinFromViewportPixel: function(vx, vy, xBinCount, yBinCount) {
+            var mapPixel = this.getMapPixelFromViewportPixel(vx, vy);
+            return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
+        },
+
+
+        /**
+         * Returns the tile and bin index corresponding to the given data coordinate
+         */
+        getTileAndBinFromCoord: function(x, y, xBinCount, yBinCount) {
+            var mapPixel = this.getMapPixelFromCoord(x, y);
+            return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
+        },
+
+
+        getTileKeyFromViewportPixel: function(mx, my) {
+            var tileAndBin = this.getTileAndBinFromViewportPixel( mx, my, 1, 1);
+            return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
+        },
+
+
+        getBinKeyFromViewportPixel: function(mx, my, xBinCount, yBinCount) {
+            var tileAndBin = this.getTileAndBinFromViewportPixel( mx, my, xBinCount, yBinCount );
+            return tileAndBin.bin.x + "," + tileAndBin.bin.y;
+        },
+
+
+        getOLMap: function() {
+            return this.map.olMap_;
+        },
+
+        getApertureMap: function() {
+            return this.map;
+        },
+
+        addApertureLayer: function(layer, mappings, spec) {
+            return this.map.addLayer(layer, mappings, spec);
+        },
+
+        addOLLayer: function(layer) {
+            return this.map.olMap_.addLayer(layer);
+        },
+
+        addOLControl: function(control) {
+            return this.map.olMap_.addControl(control);
+        },
+
+        getUid: function() {
+            return this.map.uid;
+        },
+
+        setLayerIndex: function(layer, zIndex) {
+            this.map.olMap_.setLayerIndex(layer, zIndex);
+        },
+
+        getLayerIndex: function(layer) {
+            return this.map.olMap_.getLayerIndex(layer);
         },
 
         setOpacity: function (newOpacity) {
@@ -140,6 +365,10 @@ define(function (require) {
             return this.map.olMap_.getExtent();
         },
 
+        getZoom: function () {
+            return this.map.olMap_.getZoom();
+        },
+
         isEnabled: function () {
             return this.map.olMap_.baseLayer.getVisibility();
         },
@@ -152,17 +381,72 @@ define(function (require) {
             this.map.olMap_.zoomToExtent(extent, findClosestZoomLvl);
         },
 
+
+        updateSize: function() {
+            this.map.olMap_.updateSize();
+        },
+
+
+        getTileSize: function() {
+            return TILESIZE;
+        },
+
+
         on: function (eventType, callback) {
-            this.map.on(eventType, callback);
+
+            switch (eventType) {
+
+                case 'click':
+                case 'zoomend':
+                case 'mousemove':
+
+                    this.map.olMap_.events.register(eventType, this.map.olMap_, callback);
+                    break;
+
+                default:
+
+                    this.map.on(eventType, callback);
+                    break;
+            }
+
         },
 
         off: function(eventType, callback) {
-            this.map.off(eventType, callback);
+
+            switch (eventType) {
+
+                case 'click':
+                case 'zoomend':
+                case 'mousemove':
+
+                    this.map.olMap_.events.unregister(eventType, this.map.olMap_, callback);
+                    break;
+
+                default:
+
+                    this.map.off(eventType, callback);
+                    break;
+            }
         },
 
         trigger: function(eventType, event) {
-            this.map.trigger(eventType, event);
+
+            switch (eventType) {
+
+                case 'click':
+                case 'zoomend':
+                case 'mousemove':
+
+                    this.map.olMap_.events.triggerEvent(eventType, event);
+                    break;
+
+                default:
+
+                    this.map.trigger(eventType, event);
+                    break;
+            }
         }
+
     });
 
     return Map;

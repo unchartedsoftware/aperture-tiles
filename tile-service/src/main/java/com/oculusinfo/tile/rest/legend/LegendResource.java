@@ -65,6 +65,24 @@ public class LegendResource extends ApertureServerResource {
 	}
 
 
+	/**
+	 * If there's any request params, then they are turned into a {@link JSONObject}.
+	 * @param query
+	 * 	The query for the resource request.
+	 * <code>getRequest().getResourceRef().getQueryAsForm()</code>
+	 * @return
+	 * 	Returns a {@link JSONObject} that represents all the query parameters,
+	 * 	or null if the query doesn't exist
+	 */
+	private JSONObject createRequestParamsObject(Form query) {
+		JSONObject obj = null;
+		if (query != null) {
+			obj = new JSONObject(query.getValuesMap());
+		}
+		return obj;
+	}
+
+
 
 	@Post("json")
 	public StringRepresentation getLegend(String jsonData) throws ResourceException {
@@ -87,7 +105,7 @@ public class LegendResource extends ApertureServerResource {
 				renderHorizontally = jsonObj.getString("orientation").equalsIgnoreCase("horizontal");
 			}
 
-			LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0));
+			LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0), null);
 
 			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
 		} catch (JSONException e) {
@@ -127,7 +145,8 @@ public class LegendResource extends ApertureServerResource {
 			                            "Unable to create Integer from supplied string. Check parameters.", e);
 		}
 
-	    LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0));
+		JSONObject requestParams = createRequestParamsObject(form);
+	    LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0), requestParams);
 
 		if(outputType.equalsIgnoreCase("uri")){
 			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);

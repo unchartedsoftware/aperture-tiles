@@ -114,6 +114,7 @@
   </build>
 
   <modules>
+    <module>annotation-service</module>
     <module>geometric-utilities</module>
     <module>math-utilities</module>
     <module>binning-utilities</module>

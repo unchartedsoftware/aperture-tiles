@@ -137,7 +137,7 @@ define(function (require) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
 
                 bar.map('visible').from( function() {
-                    return that.isSelectedView(this);
+                    return that.isSelectedView(this) && that.isVisible(this);
                 });
 
                 bar.map('fill').from( function(index) {
@@ -181,6 +181,9 @@ define(function (require) {
                 bar.map('offset-y').from(function(index) {
                     return that.getYOffset(this, index) + 6;
                 });
+                bar.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
                 return bar;
             }
 
@@ -225,7 +228,7 @@ define(function (require) {
             this.summaryLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.summaryLabel.map('font-outline-width').asValue(3);
             this.summaryLabel.map('visible').from(function(){
-                return that.isSelectedView(this) &&
+                return that.isSelectedView(this) && that.isVisible(this) &&
                         that.mouseState.hoverState.tilekey === this.tilekey &&
                         (that.mouseState.hoverState.userData.id === 'topTextSentimentBarsPositive' ||
                          that.mouseState.hoverState.userData.id === 'topTextSentimentBarsNeutral' ||
@@ -268,6 +271,9 @@ define(function (require) {
             });
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
+            this.summaryLabel.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
         },
 
 
@@ -278,7 +284,7 @@ define(function (require) {
             this.tagLabel = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabel.map('visible').from(function() {
-                return that.isSelectedView(this);
+                return that.isSelectedView(this) && that.isVisible(this);
             });
 
             this.tagLabel.map('fill').from( function(index) {
@@ -334,6 +340,9 @@ define(function (require) {
             this.tagLabel.map('text-anchor-y').asValue('start');
             this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabel.map('font-outline-width').asValue(3);
+            this.tagLabel.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
         }
 
     });

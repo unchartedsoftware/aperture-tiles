@@ -31,8 +31,7 @@
 define(function (require) {
     "use strict";
 
-    var Class = require('../class'),
-        AllLayers,
+    var AllLayers,
         visitLayers,
         leafLayerFilter,
         axisLayerFilter;
@@ -75,12 +74,9 @@ define(function (require) {
         return result;
     };
 
-    AllLayers = Class.extend({
-        ClassName: "AllLayers",
-        init: function () {
-            this.layers = 0;
-            this.callbacks = [];
-        },
+    AllLayers = {
+	    layers: 0,
+	    callbacks: [],
 
         /**
          * Request layers from the server, sending them to the listed callback 
@@ -110,6 +106,7 @@ define(function (require) {
             if (!statusInfo.success) {
                 return;
             }
+	        this.layers = layers;
             var callbacks = this.callbacks;
             this.callbacks = [];
             callbacks.forEach(function(callback) {
@@ -143,7 +140,7 @@ define(function (require) {
          *                  returned.
          */
         filterAxisLayers: axisLayerFilter
-    });
+    };
 
     return AllLayers;
 });
