@@ -35,7 +35,7 @@ define(function (require) {
 	
     var Class = require('../class'),
         AoIPyramid = require('../binning/AoITilePyramid'),
-        WebPyramid = require('../binning/WebTilePyramid'),
+        PyramidFactory = require('../binning/PyramidFactory'),
         TileIterator = require('../binning/TileIterator'),
 		Axis =  require('./Axis'),
         TILESIZE = 256,
@@ -76,14 +76,7 @@ define(function (require) {
 
 			this.projection = this.map.olMap_.projection;
 
-            if ( spec.PyramidConfig.type === "AreaOfInterest") {
-                this.pyramid = new AoIPyramid( spec.PyramidConfig.minX,
-                                               spec.PyramidConfig.minY,
-                                               spec.PyramidConfig.maxX,
-                                               spec.PyramidConfig.maxY);
-            } else {
-                this.pyramid = new WebPyramid();
-            }
+	        this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
 
 
 
