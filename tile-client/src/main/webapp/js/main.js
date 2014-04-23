@@ -28,6 +28,7 @@ require(['./FileLoader',
          './map/MapTracker',
          './map/Map',
          './layer/AllLayers',
+         './customization',
          './layer/view/server/ServerLayerFactory',
          './layer/view/client/ClientLayerFactory'
         ],
@@ -37,6 +38,7 @@ require(['./FileLoader',
                   MapTracker,
         	      Map,
                   AvailableLayersTracker,
+                  MapCustomization,
                   ServerLayerFactory,
                   ClientLayerFactory) {
             "use strict";
@@ -143,6 +145,8 @@ require(['./FileLoader',
 		            worldMap = new Map("map", mapConfig);
                     // ... (set up our map axes) ...
                     worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
+                    // ... perform any project-specific map cusomizations ...
+                    MapCustomization.customizeMap(worldMap);
 
 		            // ... and request relevant data layers
 		            mapPyramid = mapConfig.PyramidConfig;

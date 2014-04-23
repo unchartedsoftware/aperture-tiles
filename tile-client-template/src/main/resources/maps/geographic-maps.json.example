@@ -52,45 +52,78 @@
 		"                                                       ex. 0.95em"
     ],
 
-    id: "bitcoin time vs. destination",
-    description: "A plot of how many transactions at a given time a given bitcoin user participated in as the recipient,",
+	"id": "geographic map example",
+	"description": "An example configuration for a geographic map with tiled data",
 
-    PyramidConfig: {
-        type: "AreaOfInterest",
-        minX : 1230958800000,
-        maxX : 1365566400000,
-        minY : 0,
-        maxY : 6336769
-    },
+	"PyramidConfig": {
+		"type": "WebMercator"
+	},
 
     "MapConfig" : {
     	"options" : {
     		"numZoomLevels" : 19,
     		"projection" : "EPSG:900913",
-            "displayProjection" : "EPSG:4326"
+            "displayProjection" : "EPSG:4326",
+            "units" : "m",
+            "maxExtent" : [
+            	-20037508.342789244,
+                -20037508.342789244,
+                 20037508.342789244,
+                 20037508.342789244
+            ]
         },
-        "baseLayer" : {}
+        "baseLayer" : {
+        	"Google" : {
+        		"options" : {
+            		"name" : "Google Black",
+            		"type" : "styled",
+            		"style" : [
+                		{ "stylers" : [ { "invert_lightness" : true },
+                                 		{ "saturation" : -100 },
+                                 		{ "visibility" : "simplified" } ] },
+                		{ "featureType" : "landscape.natural.landcover",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "road",
+                  	  	  "stylers" : [ { "visibility" : "on" } ] },
+                		{ "featureType" : "landscape.man_made",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "transit",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "poi",
+                  	  	  "stylers" : [ { "visibility" : "off" } ] },
+                		{ "featureType" : "administrative.country",
+                  	  	  "elementType" : "geometry",
+                  	  	  "stylers" : [ { "visibility" : "on" },
+                               			{ "lightness" : -56 } ] },
+                		{ "elementType": "labels",
+                  	  	  "stylers": [ 	{ "lightness" : -46 },
+			       						{ "visibility" : "on" } ] }
+            		]
+            	}
+            }
+        }
     },
 
-    "AxisConfig": {
-    	"xAxisConfig" : {
-        	"title" : "Time",
-        	"id" : "time-x-axis",
-        	"intervalSpec" : {
-            	"type" : "percentage",
-            	"value" : 20,
-            	"pivot" : 0,
-            	"allowScaleByZoom" : true,
-            	"isMercatorProjected" : false
-        	},
-        	"unitSpec" : {
-            	"type" : "time",
-            	"decimals" : 2,
-            	"allowStepDown" : false
-        	},
-        	"position" : "bottom",
-        	"repeat": false,
-			"markerLabelRotation" : -45,
+	"AxisConfig": {
+		"xAxisConfig" : {
+			"title" : "Longitude",
+			"id" : "map-x-axis",
+			"min" : -180,
+			"max" : 180,
+			"intervalSpec" : {
+				"type" : "fixed",
+				"value" : 60,
+				"pivot" : 0,
+				"allowScaleByZoom" : true,
+				"isMercatorProjected" : true
+			},
+			"unitSpec" : {
+				"type" : "degrees",
+				"decimals" : 2,
+				"allowStepDown" : false
+			},
+			"position" : "bottom",
+			"repeat" : true,
 			"majorMarkerLength" : 10,
 			"majorMarkerWidth" : 1,
 			"majorMarkerColour" : "#7E7E7E",
@@ -98,25 +131,27 @@
 			"axisLabelColour" : "#7E7E7E",
 			"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
 			"markerLabelFontSize" : "0.75em",
-			"axisLabelFontSize" : "0.95em"	
-    	},
-    	"yAxisConfig" : {
-        	"title" : "Destination",
-        	"id" : "dest-y-axis",
-        	"intervalSpec" : {
-            	"type" : "fixed",
-            	"value" : 100000,
-            	"pivot" : 0,
-            	"allowScaleByZoom" : true,
-            	"isMercatorProjected" : false
-        	},
-        	"unitSpec" : {
-            	"type" : "decimal",
-            	"decimals" : 2,
-            	"allowStepDown" : false
-        	},
-        	"position" : "left",
-        	"repeat" : false,		
+			"axisLabelFontSize" : "0.95em"
+		},
+		"yAxisConfig" : {
+			"title" : "Latitude",
+			"id" : "map-y-axis",
+			"min" : -85.051129,
+			"max" : 85.051129,
+			"intervalSpec" : {
+				"type" : "fixed",
+				"value" : 30,
+				"pivot" : 0,
+				"allowScaleByZoom" : true,
+				"isMercatorProjected" : true
+			},
+			"unitSpec" : {
+				"type" : "degrees",
+				"decimals" : 2,
+				"allowStepDown" : false
+			},
+			"position" : "left",
+			"repeat" : false,
 			"majorMarkerLength" : 10,
 			"majorMarkerWidth" : 1,
 			"majorMarkerColour" : "#7E7E7E",
@@ -124,7 +159,7 @@
 			"axisLabelColour" : "#7E7E7E",
 			"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
 			"markerLabelFontSize" : "0.75em",
-			"axisLabelFontSize" : "0.95em"	
-    	}
-    }
+			"axisLabelFontSize" : "0.95em"
+		}
+	}
 }

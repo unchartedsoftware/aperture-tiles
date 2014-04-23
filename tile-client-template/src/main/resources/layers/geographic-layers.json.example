@@ -1,6 +1,6 @@
 {
     "_comment": [
-        "This json configuration file specifies all layers associated with the bitcoin ",
+        "This json configuration file specifies all layers associated with the twitter ",
         "dataset, organized hierarchically according to two things: primarily, ability ",
         "to go on the same map, and secondarily, by interest to the user.  This means ",
         "that if two layers can go on the same map, using the same axes, they should fall ",
@@ -17,25 +17,20 @@
     ],
     "layers": [
         {
-            "id": "example",
-            "name": "All Layers",
+            "id": "example-layers",
+            "name": "Example geographic layers",
             "children": [
                 {
-                    "id": "example.table",
-                    "name": "X vs. Y",
-                    "pyramid": {
-	                    "type": "AreaOfInterest",
-	                    "minX" : 1,
-	                    "maxX" : 6336769,
-	                    "minY" : 0,
-	                    "maxY" : 500000
-                    },
+                    "id": "example.layer",
+                    "name": "Example Geographic Layer",
+	                "pyramid": {
+		                "type": "WebMercator"
+	                },
                     "data": {
                         "pyramidio": {
-                            "type": "hbase",
-                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
-                            "hbase.zookeeper.port": "2181",
-                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                            "type": "zip",
+                            "root.path": "/local-tilesets.zip",
+                            "extension": "tile"
                         }
                     },
                     "renderers": [
@@ -43,10 +38,10 @@
                             "domain": "server",
                             "renderer": {
                                 "type": "heatmap",
-                                "ramp": "ware",
-                                "opacity": 0.85
+	                            "ramp": "ware",
+	                            "opacity": 0.85
                             },
-                            "transform": {
+	                        "transform": {
                                 "name": "log10"
                             }
                         }

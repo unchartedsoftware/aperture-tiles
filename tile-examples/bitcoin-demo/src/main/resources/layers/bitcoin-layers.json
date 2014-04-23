@@ -119,7 +119,7 @@
                 {
                     id: "bitcoin.time.source",
                     name: "Time vs. Source",
-                    pyrmaid: {
+                    pyramid: {
                         type: "AreaOfInterest",
                         minX : 1230958800000,
                         maxX : 1365566400000,

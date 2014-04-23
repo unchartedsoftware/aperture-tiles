@@ -72,7 +72,7 @@
         "baseLayer" : {}
     },
 
-    "axes": {
+    "AxisConfig": {
         "xAxisConfig" : {
             "title" : "Time",
             "id" : "time-x-axis",

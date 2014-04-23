@@ -39,7 +39,7 @@ define(function (require) {
 				callback(this.maps);
 			} else {
                 this.callbacks.push(callback);
-                aperture.io.rest('/layer',
+                aperture.io.rest('/maps',
                                  'GET',
                                  $.proxy(this.onMapListRetrieved, this),
                                  {}
