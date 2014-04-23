@@ -169,6 +169,7 @@ define(function (require) {
             this.min = spec.min;
             this.max = spec.max;
             this.olMap = spec.olMap;
+            this.map = spec.map;
 
             this.position = spec.position || defaults.position;
             this.id = spec.id || this.parentId + "-" + this.position + "-axis";

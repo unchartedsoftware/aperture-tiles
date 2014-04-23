@@ -130,6 +130,7 @@ define(function (require) {
             for (i=0; i< axes.length; i++) {
                 spec = axes[i];
                 spec.parentId = this.id;
+                spec.map = this;
                 spec.olMap = this.map.olMap_;
                 this.axes.push(new Axis(spec));
             }
@@ -171,89 +172,162 @@ define(function (require) {
         },
 
 
-        getPixelUnderMouse: function(mx, my) {
-
-            var TILESIZE = 256,
-                zoom,
-                maxPx = {},
-                minPx = {},
-                totalTilespan,
-                totalPixelSpan = {},
-                pixelMax = {},
-                pixelMin = {},
-                pixel = {};
-
-            zoom = this.map.olMap_.getZoom();
-            maxPx.x = this.map.olMap_.maxPx.x;
-            maxPx.y = this.map.olMap_.maxPx.y;
-            minPx.x = this.map.olMap_.minPx.x;
-            minPx.y = this.map.olMap_.minPx.y;
-            totalTilespan = Math.pow(2, zoom);
-            totalPixelSpan.x = TILESIZE * totalTilespan;
-            totalPixelSpan.y = this.map.olMap_.viewPortDiv.clientHeight;
-            pixelMax.x = totalPixelSpan.x - minPx.x;
-            pixelMax.y = totalPixelSpan.y - minPx.y;
-            pixelMin.x = totalPixelSpan.x - maxPx.x;
-            pixelMin.y = totalPixelSpan.x - maxPx.y;
-            pixel.x = mx + pixelMin.x;
-            pixel.y = (this.map.olMap_.size.h - my - pixelMax.y + totalPixelSpan.x );
-
-            return pixel;
+        getViewportWidth: function() {
+            return this.map.olMap_.viewPortDiv.clientWidth;
         },
 
 
-        getTileAndBinUnderMouse: function(mx, my, xBinCount, yBinCount) {
+        getViewportHeight: function() {
+            return this.map.olMap_.viewPortDiv.clientHeight;
+        },
 
-            var zoom = this.map.olMap_.getZoom(),
-                pixel = this.getPixelUnderMouse(mx, my),
-                tileIndexX = Math.floor(pixel.x / TILESIZE),
-                tileIndexY = Math.floor(pixel.y / TILESIZE),
-                tilePixelX = pixel.x % TILESIZE,
-                tilePixelY = pixel.y % TILESIZE;
+
+        getMinAndMaxInViewportPixels: function() {
+            var maxPx = {
+                    x: this.map.olMap_.maxPx.x,
+                    y: this.map.olMap_.maxPx.y
+                },
+                minPx = {
+                    x: this.map.olMap_.minPx.x,
+                    y: this.map.olMap_.minPx.y
+                },
+                viewportHeight = this.getViewportHeight();
 
             return {
-                tile: {
-                    level : zoom,
-                    xIndex : tileIndexX,
-                    yIndex : tileIndexY,
-                    xBinCount : xBinCount,
-                    yBinCount : yBinCount
+                min : {
+                    x: minPx.x,
+                    y: viewportHeight - maxPx.y
                 },
-                bin: {
-                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
-                    y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
+                max : {
+                    x: maxPx.x,
+                    y: viewportHeight - minPx.y
                 }
             };
+        },
+
+
+        getMapPixelFromViewportPixel: function(vx, vy) {
+
+            var minAndMax = this.getMinAndMaxInViewportPixels(),
+                totalTilespan = Math.pow( 2, this.getZoom() ),
+                totalPixelSpan = TILESIZE * totalTilespan,
+                viewportHeight = this.getViewportHeight();
+
+            return {
+                x: vx + totalPixelSpan - minAndMax.max.x,
+                y: -vy + totalPixelSpan - minAndMax.max.y + viewportHeight
+                //y: (viewportHeight - vy - minAndMax.max.y + totalPixelSpan )
+            };
+        },
+
+
+        getViewportPixelFromMapPixel: function(mx, my) {
+
+            var viewportMinMax = this.getMinAndMaxInViewportPixels();
+
+            return {
+                x: mx + viewportMinMax.min.x,
+                y: my + viewportMinMax.min.y
+            }
 
         },
 
 
-        getTileKeyUnderMouse: function(mx, my) {
+        getMapPixelFromCoord: function(x, y) {
 
-            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, 1, 1);
+            var zoom = this.map.olMap_.getZoom(),
+                tile = this.pyramid.rootToTile( x, y, zoom, TILESIZE),
+                bin = this.pyramid.rootToBin( x, y, tile);
+
+            return {
+                x: tile.xIndex * TILESIZE + bin.x,
+                y: tile.yIndex * TILESIZE + TILESIZE - 1 - bin.y
+            };
+        },
+        
+        
+        getCoordFromMapPixel: function(mx, my) {
+
+            var tileAndBin = this.getTileAndBinFromMapPixel(mx, my, TILESIZE, TILESIZE),
+                bounds = this.pyramid.getBinBounds( tileAndBin.tile, tileAndBin.bin );
+
+            return {
+                x: bounds.minX,
+                y: bounds.minY
+            };
+        },
+
+
+        getCoordFromViewportPixel: function(vx, vy) {
+
+            var mapPixel = this.getMapPixelFromViewportPixel(vx, vy);
+            return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
+        },
+
+
+        getViewportPixelFromCoord: function(x, y) {
+
+            var coord = this.getMapPixelFromCoord(x, y);
+            return this.getViewportPixelFromMapPixel(coord.x, coord.y);
+        },
+
+
+        getTileAndBinFromMapPixel: function(mx, my, xBinCount, yBinCount) {
+
+                var tileIndexX = Math.floor(mx / TILESIZE),
+                    tileIndexY = Math.floor(my / TILESIZE),
+                    tilePixelX = mx % TILESIZE,
+                    tilePixelY = my % TILESIZE;
+
+                return {
+                    tile: {
+                        level : this.getZoom(),
+                        xIndex : tileIndexX,
+                        yIndex : tileIndexY,
+                        xBinCount : xBinCount,
+                        yBinCount : yBinCount
+                    },
+                    bin: {
+                        x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
+                        y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
+                    }
+                };
+        },
+
+
+        getTileAndBinFromViewportPixel: function(vx, vy, xBinCount, yBinCount) {
+
+            var mapPixel = this.getMapPixelFromViewportPixel(vx, vy);
+
+            return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
+
+        },
+
+
+        getTileAndBinFromCoord: function(x, y, xBinCount, yBinCount) {
+
+            var mapPixel = this.getMapPixelFromCoord(x, y);
+
+            return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
+
+        },
+
+
+        getTileKeyFromViewportPixel: function(mx, my) {
+
+            var tileAndBin = this.getTileAndBinFromViewportPixel( mx, my, 1, 1);
 
             return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
         },
 
 
-        getBinKeyUnderMouse: function(mx, my, xBinCount, yBinCount) {
+        getBinKeyFromViewportPixel: function(mx, my, xBinCount, yBinCount) {
 
-            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, xBinCount, yBinCount );
+            var tileAndBin = this.getTileAndBinFromViewportPixel( mx, my, xBinCount, yBinCount );
 
             return tileAndBin.bin.x + "," + tileAndBin.bin.y;
         },
 
-
-        getCoordUnderMouse: function(mx, my) {
-
-            var tileAndBin = this.getTileAndBinUnderMouse( mx, my, TILESIZE, TILESIZE),
-                bounds = this.pyramid.getBinBounds( tileAndBin.tile, tileAndBin.bin );
-
-            return {
-                x: bounds.centerX,
-                y: bounds.centerY
-            };
-        },
 
         getOLMap: function() {
             return this.map.olMap_;
