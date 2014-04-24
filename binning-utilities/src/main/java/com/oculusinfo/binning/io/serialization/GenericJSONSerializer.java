@@ -42,16 +42,15 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.TileData;
 
+
 public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 2617903534522413550L;
 
-
+	protected GenericJSONSerializer () {
+	}
 
 	abstract protected T getValue (Object bin) throws JSONException;
 	abstract protected Object translateToJSON (T value);
-
-	protected GenericJSONSerializer () {
-	}
 
 	public String getFileExtension(){
 		return "json";

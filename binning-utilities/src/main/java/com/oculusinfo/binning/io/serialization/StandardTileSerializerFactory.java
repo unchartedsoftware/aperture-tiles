@@ -37,6 +37,7 @@ import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.EnumProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
@@ -157,11 +158,9 @@ public class StandardTileSerializerFactory
 		if ("[(string, double)]-a".equals(serializerType)) {
 			return new StringDoublePairArrayAvroSerializer(codec);
 		}
-		/*
-		 * 
-		 * put my serializer here
-		 * 
-		 */
+		if ("string->[(string, long)]-j".equals(serializerType)) {
+			return new StringLongPairArrayMapJSONSerializer();
+		}
 
 		return null;
 	}

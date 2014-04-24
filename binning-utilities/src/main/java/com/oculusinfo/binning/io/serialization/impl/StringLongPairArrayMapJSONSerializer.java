@@ -30,9 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
+import org.apache.avro.file.CodecFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 
 
 import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
@@ -46,8 +48,6 @@ public class StringLongPairArrayMapJSONSerializer extends GenericJSONSerializer<
 		   new TypeDescriptor(Pair.class,
 		                      new TypeDescriptor(String.class),
 		                      new TypeDescriptor(Long.class))));
-
-
 
 	public StringLongPairArrayMapJSONSerializer() {
 		super();

@@ -37,7 +37,7 @@
 
       <!-- Annotation -->
       com.oculusinfo.annotation.io.HBaseAnnotationIOModule:
-      com.oculusinfo.annotation.index.TileIndexerModule:
+      com.oculusinfo.annotation.index.AnnotationIndexerModule:
       com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
       com.oculusinfo.annotation.rest.AnnotationServiceModule
 

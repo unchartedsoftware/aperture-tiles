@@ -30,7 +30,7 @@ import com.oculusinfo.binning.impl.*;
 import com.oculusinfo.annotation.index.impl.*;
 
 
-public class TileIndexerModule extends AbstractModule {
+public class AnnotationIndexerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
