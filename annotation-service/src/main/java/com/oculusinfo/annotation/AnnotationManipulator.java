@@ -23,7 +23,6 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,6 +33,7 @@ import java.util.UUID;
 import java.util.Comparator;
 
 import com.oculusinfo.binning.*;
+import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.binning.util.Pair;
 
 import org.json.JSONArray;
@@ -55,8 +55,19 @@ public class AnnotationManipulator {
     public static final int NUM_BINS = 8;
 
     
-    
-    
+    static public boolean isTileEmpty( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
+    	
+    	synchronized( tile ) {
+    		
+    		for ( Map<String, List<Pair<String, Long>>> bin : tile.getData()  ) {
+    			if ( bin != null ) {
+    				return false;
+    			}
+    		}
+    		return true;
+    	}
+    	
+    }
     
     static public void addDataToBin( Map<String, List<Pair<String, Long>>> bin, AnnotationData<?> data ) {
     	
@@ -112,6 +123,7 @@ public class AnnotationManipulator {
     
     
     static public void addDataToTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) {   	
+    	
     	synchronized( tile ) {
     		
     		Map<String, List<Pair<String, Long>>> bin = tile.getBin( binIndex.getX(), binIndex.getY() );
@@ -132,6 +144,7 @@ public class AnnotationManipulator {
     static public void removeDataFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) { 
     	
     	synchronized( tile ) {
+    		
     		Map<String, List<Pair<String, Long>>> bin = tile.getBin( binIndex.getX(), binIndex.getY() );  		
         	if ( bin != null && removeDataFromBin( bin, data ) ) {
     			// remove bin if empty
@@ -145,10 +158,13 @@ public class AnnotationManipulator {
    
     static public List<Pair<String, Long>> getReferencesFromBin( Map<String, List<Pair<String, Long>>> bin, String priority ) {
     	
-    	if ( bin.containsKey( priority ) ) {
-    		return bin.get( priority );
-    	} else {
-    		return new LinkedList<>();
+    	synchronized( bin ) {
+    		
+	    	if ( bin.containsKey( priority ) ) {
+	    		return bin.get( priority );
+	    	} else {
+	    		return new LinkedList<>();
+	    	}
     	}
     	
     }
@@ -156,12 +172,15 @@ public class AnnotationManipulator {
     
     static public List<Pair<String, Long>> getAllReferencesFromBin( Map<String, List<Pair<String, Long>>> bin ) {
     	
-    	List<Pair<String, Long>> allReferences = new LinkedList<>();  
-    	// for each priority group in a bin
-		for ( List<Pair<String, Long>> references : bin.values() ) {
-			allReferences.addAll( references );
-		}	
-    	return allReferences;
+    	synchronized( bin ) {
+    		List<Pair<String, Long>> allReferences = new LinkedList<>();  
+        	// for each priority group in a bin
+    		for ( List<Pair<String, Long>> references : bin.values() ) {
+    			allReferences.addAll( references );
+    		}	
+        	return allReferences;
+    	}
+    	
     }  
     
     
@@ -169,6 +188,7 @@ public class AnnotationManipulator {
     static public List<Pair<String, Long>> getAllReferencesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
     	
     	synchronized( tile ) {
+    		
 	    	List<Pair<String, Long>> allReferences = new LinkedList<>();  
 	    	// for each bin
 			for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
@@ -242,9 +262,7 @@ public class AnnotationManipulator {
     static public Map<String, List<Pair<String, Long>>> getBinFromJSON( JSONObject json ) throws IllegalArgumentException {
     	
     	try {
-			
-    		//BinIndex index = new BinIndex( json.getInt("x"), json.getInt("y") );
-    		
+
     		Map<String, List<Pair<String, Long>>> references =  new LinkedHashMap<>();
         	
         	Iterator<?> priorities = json.keys();
@@ -279,10 +297,7 @@ public class AnnotationManipulator {
     	
     	JSONObject binJSON = new JSONObject();
     	try {
-			   	
-    		//binJSON.put("x", _index.getX() );
-    		//binJSON.put("y", _index.getY() );
-    		
+
 	    	// for each priority group in a bin
 		    for (Map.Entry<String, List<Pair<String, Long>>> referenceEntry : bin.entrySet() ) {		    	
 		    	
@@ -316,8 +331,8 @@ public class AnnotationManipulator {
 			TileIndex index = new TileIndex( json.getInt("level"),
 											 json.getInt("x"),
 											 json.getInt("y"), 
-											 AnnotationTile.NUM_BINS, 
-											 AnnotationTile.NUM_BINS );
+											 AnnotationIndexer.NUM_BINS, 
+											 AnnotationIndexer.NUM_BINS );
 			
 			// create tile with empty bins
 			TileData<Map<String, List<Pair<String, Long>>>> tile = new TileData<>( index );

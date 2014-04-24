@@ -54,7 +54,7 @@ public class AnnotationJSONTests extends AnnotationTestsBase {
     @Before
     public void setup () {
 	    _pyramid = new WebMercatorTilePyramid();
-    	_indexer = new TileAnnotationIndexer( _pyramid );
+    	_indexer = new AnnotationIndexerImpl( _pyramid );
     }
 
     @After

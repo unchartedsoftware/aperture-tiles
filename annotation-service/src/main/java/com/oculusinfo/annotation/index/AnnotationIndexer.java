@@ -30,6 +30,8 @@ import com.oculusinfo.annotation.*;
 
 public abstract class AnnotationIndexer {
 
+	public static final int NUM_BINS = 8;
+	
     protected TilePyramid _pyramid;
     
     public AnnotationIndexer() {

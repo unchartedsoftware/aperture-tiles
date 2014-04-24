@@ -23,7 +23,6 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -70,9 +69,9 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 		}	
     	
     	_pyramid = new WebMercatorTilePyramid();
-    	_indexer = new TileAnnotationIndexer( _pyramid );
+    	_indexer = new AnnotationIndexerImpl( _pyramid );
     	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
-    	_dataSerializer = new JSONDataSerializer();  	
+    	_dataSerializer = new JSONAnnotationDataSerializer();  	
 	
     }
 
@@ -104,14 +103,14 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to table");	
-	    	_io.writeTiles(TABLE_NAME, _tileSerializer, tiles );
+	    	_io.writeTiles(TABLE_NAME, _pyramid, _tileSerializer, tiles );
 	    	_io.writeData(TABLE_NAME, _dataSerializer, annotations );
 	        
 	    	/*
 	    	 *  Read and check all annotations
 	    	 */
 	    	System.out.println( "Reading all annotations" );
-	    	List<AnnotationTile> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
+	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
 	    	List<AnnotationData<?>> allData = _io.readData( TABLE_NAME, _dataSerializer, dataIndices );
 	    	if (VERBOSE) printTiles( allTiles );
 	    	if (VERBOSE) printData( allData );

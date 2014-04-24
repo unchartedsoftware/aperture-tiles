@@ -28,26 +28,27 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 
 
-public class JSONTileSerializer extends GenericJSONSerializer<AnnotationTile>{
+public class JSONAnnotationDataSerializer extends GenericJSONAnnotationSerializer<AnnotationData<?>>{
 	
     private static final long serialVersionUID = -6779123604244971240L;
 
-    public JSONTileSerializer() {
+    public JSONAnnotationDataSerializer() {
 		super();
 	}
 
 	@Override
-    protected JSONObject translateToJSON ( AnnotationTile value ) {
+    protected JSONObject translateToJSON ( AnnotationData<?> value ) {
 		
 		return value.toJSON();
 	}
 	
 	@Override
-	protected AnnotationTile getValue(Object obj) throws JSONException {
-			
-		return AnnotationTile.fromJSON( (JSONObject)obj );		
+	protected JSONAnnotation getValue(Object obj) throws JSONException {
+		
+		return JSONAnnotation.fromJSON( (JSONObject)obj );
 	}
 }

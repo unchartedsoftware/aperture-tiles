@@ -30,38 +30,30 @@ import java.util.List;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.io.*;
+import com.oculusinfo.binning.util.*;
 
-public interface AnnotationIO {
+public interface AnnotationIO extends PyramidIO{
    
+	
 	/*
 	 * Write
 	 */
-    public void initializeForWrite (String id) throws IOException;
-    public void writeTiles (String id, 
-    				        AnnotationSerializer<AnnotationTile> serializer, 
-    				        List<AnnotationTile> tiles ) throws IOException;
     public void writeData (String id, 
 					       AnnotationSerializer<AnnotationData<?>> serializer, 
-					       List<AnnotationData<?>> data ) throws IOException;
+					       Iterable<AnnotationData<?>> data ) throws IOException;
 
     /*
      * Read
-     */
-    public void initializeForRead (String id) throws IOException;    
-    public List<AnnotationTile> readTiles (String id, 
-						    			   AnnotationSerializer<AnnotationTile> serializer,
-						    			   List<TileIndex> indices) throws IOException;  
+     */  
     public List<AnnotationData<?>> readData (String id, 
 								             AnnotationSerializer<AnnotationData<?>> serializer,
-								             List<AnnotationReference> references) throws IOException;
+								             List<Pair<String,Long>> references) throws IOException;
  
     /*
      * Delete
      */
-    public void initializeForRemove (String id) throws IOException;
-    public void removeTiles (String id, 
-			   				 List<AnnotationTile> tiles ) throws IOException;
-    public void removeData (String id, 
-   							List<AnnotationData<?>> data ) throws IOException;
+    public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException;
+    public void removeData (String id, Iterable<AnnotationData<?>> data ) throws IOException;
   
 }

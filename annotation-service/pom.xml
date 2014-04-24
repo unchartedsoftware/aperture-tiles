@@ -59,12 +59,19 @@
       <type>jar</type>
     </dependency>
 
+
     <dependency>
       <groupId>com.oculusinfo</groupId>
       <artifactId>binning-utilities</artifactId>
       <version>${project.version}</version>
     </dependency>
-
+<!--
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>tile-service</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+-->
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>

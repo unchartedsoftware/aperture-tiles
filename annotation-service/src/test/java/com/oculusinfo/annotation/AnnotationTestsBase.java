@@ -48,7 +48,7 @@ public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "test.annotations";
 	static final double   EPSILON = 0.001;
-	static final int      NUM_ENTRIES = 5;
+	static final int      NUM_ENTRIES = 50;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 
@@ -200,7 +200,7 @@ public class AnnotationTestsBase {
 			JSONObject anno = new JSONObject();			
 			anno.put("x", xy[0]);
 			anno.put("y", xy[1]);	
-			anno.put("level", (int)(rand.nextDouble() * 0) );
+			anno.put("level", (int)(rand.nextDouble() * 18) );
 			anno.put("priority", randomPriority() );
 			anno.put("uuid", UUID.randomUUID() );
 			anno.put("timestamp", timestamp.toString() );

@@ -35,14 +35,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public abstract class GenericJSONSerializer<T> implements AnnotationSerializer<T> {
+public abstract class GenericJSONAnnotationSerializer<T> implements AnnotationSerializer<T> {
 	
     private static final long serialVersionUID = 2617903534522413550L;
 
     abstract protected T getValue (Object bin) throws JSONException;
 	abstract protected JSONObject translateToJSON (T value);
 
-	protected GenericJSONSerializer () {
+	protected GenericJSONAnnotationSerializer () {
 
 	}
 

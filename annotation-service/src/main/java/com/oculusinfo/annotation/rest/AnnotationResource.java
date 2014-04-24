@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import oculus.aperture.common.rest.ApertureServerResource;
 
+import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.binning.*;
@@ -45,11 +46,14 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
 public class AnnotationResource extends ApertureServerResource {
-	
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationResource.class);
+    
 	private AnnotationService _service;
 	
 	@Inject
@@ -65,29 +69,29 @@ public class AnnotationResource extends ApertureServerResource {
 
 			JSONObject json = new JSONObject( jsonData );
 			JSONObject data = json.getJSONObject("data");
-			String type = json.getString( "type" ).toLowerCase();
+			String requestType = json.getString( "type" ).toLowerCase();
 			String layer = json.getString("layer");
 			JSONObject jsonResult = new JSONObject();
 			
 			// write
-			if ( type.equals("write") ) {
+			if ( requestType.equals("write") ) {
 				
 				JSONAnnotation annotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );			
 				_service.writeAnnotation( layer, annotation );
 				jsonResult.put("data", annotation.toJSON() );
 				
-			} else if ( type.equals("remove") ) {
+			} else if ( requestType.equals("remove") ) {
 	
 				_service.removeAnnotation( layer, JSONAnnotation.fromJSON( data.getJSONObject("old") ) );
 				
-			} else if ( type.equals("modify") ) {
+			} else if ( requestType.equals("modify") ) {
 				
 				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("old") );
 				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );				
 				_service.modifyAnnotation( layer, oldAnnotation, newAnnotation );				
 				jsonResult.put("data", newAnnotation.toJSON() );
 				
-			} else if ( type.equals("filter") ) {
+			} else if ( requestType.equals("filter") ) {
 				
 				UUID uuid = UUID.fromString( data.getString("uuid") );
 				JSONObject jsonFilters = data.getJSONObject("filters");
@@ -104,8 +108,40 @@ public class AnnotationResource extends ApertureServerResource {
 		        
 		        _service.setFilter( uuid, layer, filters );
 				
+			} /*else if ( requestType.equals("configure") ) {
+				
+				
+				
+                // Configuration request
+                String layerId = arguments.getString("layer");
+                JSONObject configuration = arguments.getJSONObject("configuration");
+                UUID uuid = _service.configureLayer(layerId, configuration);
+                String host = getRequest().getResourceRef().getPath();
+                host = host.substring(0, host.lastIndexOf("layer"));
+
+                // Figure out the number of images per tile
+                PyramidMetaData metaData = _service.getMetaData(layerId);
+
+                JSONObject result = JsonUtilities.deepClone(metaData.getRawData());
+                result.put("layer", layerId);
+                result.put("id", uuid);
+                result.put("tms", host + "tile/" + uuid.toString() + "/");
+                result.put("apertureservice", "/tile/" + uuid.toString() + "/");
+                try {
+                    LayerConfiguration config = _service.getRenderingConfiguration(uuid, null, null);
+                    TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
+                    if (null != renderer) {
+                        result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metaData));
+                    }
+                } catch (ConfigurationException e) {
+                    // If we have to skip images per tile, it's not a huge deal
+                    LOGGER.info("Couldn't determine images per tile for layer {}", layerId, e);
+                }
+                
+                
+                
 			}
-			
+			*/
 			setStatus(Status.SUCCESS_OK);		
 			jsonResult.put("status", "success");
 			return new JsonRepresentation(jsonResult);
@@ -147,7 +183,7 @@ public class AnnotationResource extends ApertureServerResource {
 		    indexJson.put("xIndex", x);
 		    indexJson.put("yIndex", y);
 		    result.put("index", indexJson );
-		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
+		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
 		    
 		    Map<BinIndex, List<AnnotationData<?>>> data = _service.readAnnotations( uuid, layer, index );
 

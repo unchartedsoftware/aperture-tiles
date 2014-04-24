@@ -57,9 +57,9 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
     @Before
     public void setup () {
 	   _pyramid = new WebMercatorTilePyramid();
-    	_indexer = new TileAnnotationIndexer( _pyramid );
+    	_indexer = new AnnotationIndexerImpl( _pyramid );
     	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
-    	_dataSerializer = new JSONDataSerializer();
+    	_dataSerializer = new JSONAnnotationDataSerializer();
     }
 
     @After
