@@ -23,7 +23,9 @@
  */
 package com.oculusinfo.annotation;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,18 +40,21 @@ import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.*;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
 	private static final String  TABLE_NAME = "AnnotationTable";
 	private static final boolean VERBOSE = false;
 
-	private AnnotationIO _io;
-	private AnnotationIndexer _indexer;
-	private AnnotationSerializer<AnnotationTile> _tileSerializer;
+	private AnnotationIO _io;	
+	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
 	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
 	private TilePyramid _pyramid;
-	
+	private AnnotationIndexer _indexer;
+
 
     @Before
     public void setup () {
@@ -66,7 +71,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     	
     	_pyramid = new WebMercatorTilePyramid();
     	_indexer = new TileAnnotationIndexer( _pyramid );
-    	_tileSerializer = new JSONTileSerializer();
+    	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
     	_dataSerializer = new JSONDataSerializer();  	
 	
     }
@@ -81,11 +86,11 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     public void testHBaseIO() {
     	
     	
-        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
-        List<AnnotationTile> tiles = generateTiles( NUM_ENTRIES, _indexer );
-    	
+        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );        
+        List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( NUM_ENTRIES, _indexer );
+		
         List<TileIndex> tileIndices = tilesToIndices( tiles );
-        List<AnnotationReference> dataIndices = dataToIndices( annotations );
+        List<Pair<String, Long>> dataIndices = dataToIndices( annotations );
         
     	try {
     		

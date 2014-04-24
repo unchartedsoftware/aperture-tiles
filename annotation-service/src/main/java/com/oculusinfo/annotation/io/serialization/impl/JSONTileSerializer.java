@@ -44,12 +44,10 @@ public class JSONTileSerializer extends GenericJSONSerializer<AnnotationTile>{
 		
 		return value.toJSON();
 	}
-
 	
 	@Override
 	protected AnnotationTile getValue(Object obj) throws JSONException {
 			
-		return AnnotationTile.fromJSON( (JSONObject)obj );
-		
+		return AnnotationTile.fromJSON( (JSONObject)obj );		
 	}
 }

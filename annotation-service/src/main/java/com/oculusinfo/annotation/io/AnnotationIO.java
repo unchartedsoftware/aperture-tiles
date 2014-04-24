@@ -52,8 +52,8 @@ public interface AnnotationIO {
 						    			   AnnotationSerializer<AnnotationTile> serializer,
 						    			   List<TileIndex> indices) throws IOException;  
     public List<AnnotationData<?>> readData (String id, 
-								          AnnotationSerializer<AnnotationData<?>> serializer,
-								          List<AnnotationReference> references) throws IOException;
+								             AnnotationSerializer<AnnotationData<?>> serializer,
+								             List<AnnotationReference> references) throws IOException;
  
     /*
      * Delete

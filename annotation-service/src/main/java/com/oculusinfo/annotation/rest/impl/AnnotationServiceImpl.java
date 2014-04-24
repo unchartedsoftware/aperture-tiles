@@ -24,6 +24,10 @@
 package com.oculusinfo.annotation.rest.impl;
 
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,8 +37,17 @@ import java.util.UUID;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.oculusinfo.annotation.config.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.*;
@@ -42,19 +55,88 @@ import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.layer.LayerInfo;
+import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
+import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
 
 @Singleton
 public class AnnotationServiceImpl implements AnnotationService {
-
-	protected AnnotationIO _io;
+    private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
+    	
 	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
-	protected AnnotationSerializer<AnnotationData<?>> _dataSerializer; 
-	protected AnnotationIndexer _indexer;
+	protected AnnotationSerializer<AnnotationData<?>> _dataSerializer; 	
 	protected ConcurrentHashMap< UUID, Map<String, Integer> > _uuidFilterMap;
+	
+	protected AnnotationIndexer _indexer;
+	protected AnnotationIO _io;
 	
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
+	/*
+	@Inject
+    public AnnotationServiceImpl( @Named("com.oculusinfo.tile.annotation.config") String annotationConfigurationLocation ) {
+
+		_tileSerializer = new JSONTileSerializer();
+		_dataSerializer = new JSONDataSerializer();
+		_uuidFilterMap =  new ConcurrentHashMap<>();
+		
+        readConfigFiles( getConfigurationFiles(annotationConfigurationLocation) );
+    }
+
+	// ////////////////////////////////////////////////////////////////////////
+	// Section: Configuration reading methods
+	//
+	private File[] getConfigurationFiles (String location) {
+    	try {
+	    	// Find our configuration file.
+	    	URI path = null;
+	    	if (location.startsWith("res://")) {
+	    		location = location.substring(6);
+	    		path = LayerServiceImpl.class.getResource(location).toURI();
+	    	} else {
+	    		path = new File(location).toURI();
+	    	}
+
+	    	File configRoot = new File(path);
+	    	if (!configRoot.exists())
+	    		throw new Exception(location+" doesn't exist");
+
+	    	if (configRoot.isDirectory()) {
+	    		return configRoot.listFiles();
+	    	} else {
+	    		return new File[] {configRoot};
+	    	}
+    	} catch (Exception e) {
+        	LOGGER.warn("Can't find configuration file {}", location, e);
+        	return new File[0];
+		}
+    }
+
+    private void readConfigFiles (File[] files) {
+		for (File file: files) {
+			try {
+			    JSONObject contents = new JSONObject(new JSONTokener(new FileReader(file)));
+			    JSONArray configurations = contents.getJSONArray("layers");
+    			for (int i=0; i<configurations.length(); ++i) {
+    				
+    				// only use first config for now
+    				break;
+    			}
+	    	} catch (FileNotFoundException e) {
+	    		LOGGER.error("Cannot find layer configuration file {} ", file, e);
+	    		return;
+	    	} catch (JSONException e) {
+	    		LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
+	    	}
+		}
+    }
+    */
+	
+	
 	@Inject
 	public AnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
@@ -71,7 +153,11 @@ public class AnnotationServiceImpl implements AnnotationService {
     	_lock.writeLock().lock();
     	try {
     		
-    		// check in case client generated UUID results in IO collision
+    		/* 
+    		 * check in case client generated UUID results in IO collision, if so
+    		 * prevent io corruption by throwing an exception, this is so statistically 
+    		 * unlikely that any further action is unnecessary
+    		 */ 
     		if ( checkForCollision( layer, annotation ) ) {
     			throw new IllegalArgumentException("UUID for data results in collision, WRITE operation aborted");
     		}
@@ -92,18 +178,22 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();
     	try {
 		
-    		// ensure request is coherent with server state
+    		/*
+    		 *  ensure request is coherent with server state, if client is operating
+    		 *  on a previous data state, prevent io corruption by throwing an exception
+    		 */
     		if ( isRequestOutOfDate( layer, oldAnnotation ) ) {
     			throw new IllegalArgumentException("Client is out of sync with Server, "
     											 + "MODIFY operation aborted. It is recommended "
     											 + "upon receiving this exception to refresh all client annotations");        		
     		}
     		
-			/* Technically, you should not have to re-tile the annotation if
-			 * there is only a content change, as it will stay in the same tiles,
-			 * however, since we want to update the reference time-stamp on a content
-			 * change, it is re-tile so that we can filter from tiles without reading
-			 * the annotations themselves
+			/* 
+			 * Technically you should not have to re-tile the annotation if
+			 * there is only a content change, as it will stay in the same tiles.
+			 * However, we want to update the reference time-stamp in the containing 
+			 * tile so that we can filter from tiles without relying on reading the 
+			 * individual annotations themselves
 			 */
 			// remove from old tiles
 			removeDataFromTiles( layer, oldAnnotation );
@@ -121,6 +211,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		Map<String, Integer> filters = null;
 		
+		/*
+		 * If user has specified a filter, use it, otherwise pull all annotations in tile 
+		 */
 		if ( id != null ) {
 			filters = _uuidFilterMap.get( id );
 		}
@@ -139,14 +232,18 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();		
 		try {
 			
-			// ensure request is coherent with server state
+			/*
+    		 *  ensure request is coherent with server state, if client is operating
+    		 *  on a previous data state, prevent io corruption by throwing an exception
+    		 */
     		if ( isRequestOutOfDate( layer, annotation ) ) {
     			throw new IllegalArgumentException("Client is out of sync with Server, "
 												 + "REMOVE operation aborted. It is recommended "
 												 + "upon receiving this exception to refresh all client annotations");       		
     		}
-			
+			// remove the references from tiles
 			removeDataFromTiles( layer, annotation );
+			// remove data from io
 			removeDataFromIO( layer, annotation );
 			
 		} finally {
@@ -206,22 +303,28 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 * Iterate through all indices, find matching tiles and add data reference, if tile
 	 * is missing, add it
 	 */
-	private void addDataReferenceToTiles( List<AnnotationTile> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
+	private void addDataReferenceToTiles( List< TileData<AnnotationBin> > tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
 		
     	for ( TileAndBinIndices index : indices ) {			
 			// check all existing tiles for matching index
     		boolean found = false;
-			for ( AnnotationTile tile : tiles ) {				
-				if ( tile.getIndex().equals( index.getTile() ) ) {
+			for ( TileData<AnnotationBin> tile : tiles ) {				
+				if ( tile.getDefinition().equals( index.getTile() ) ) {
 					// tile exists already, add data to bin
-					tile.add( index.getBin(), data );
+					AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
+					//tile.add( index.getBin(), data );
 					found = true;
 					break;
 				} 
 			}
 			if ( !found ) {
 				// no tile exists, add tile
-				tiles.add( new AnnotationTile( index.getTile(), new AnnotationBin( index.getBin(), data ) ) );	    	
+				TileData<AnnotationBin> tile = new TileData<>( index.getTile(), (AnnotationBin)null );
+				
+				AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
+				tiles.add( tile );
+				
+				//tiles.add( new TileData<AnnotationBin>( index.getTile(), new AnnotationBin( index.getBin(), data ) ) );	    	
 			}
 		}				
 	}

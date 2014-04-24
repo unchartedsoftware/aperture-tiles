@@ -28,8 +28,10 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 
+
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
@@ -46,7 +48,15 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	private ConcurrentHashMap< String, AnnotationCache<TileIndex, AnnotationTile> > _tileCache;
 	private ConcurrentHashMap< String, AnnotationCache<AnnotationReference, AnnotationData<?>> > _dataCache;
 
+	/*
 	@Inject
+    public CachedAnnotationServiceImpl( @Named("com.oculusinfo.tile.annotation.config") String annotationConfigurationLocation ) {
+		super( annotationConfigurationLocation );
+		_tileCache = new ConcurrentHashMap<>();
+		_dataCache = new ConcurrentHashMap<>();
+	}
+	*/
+		
 	public CachedAnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
 		super( io, indexer );

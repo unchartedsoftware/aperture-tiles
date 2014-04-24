@@ -36,6 +36,7 @@ import java.sql.Timestamp;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
+import com.oculusinfo.binning.util.*;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
 
@@ -46,8 +47,8 @@ import org.json.JSONObject;
 public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "test.annotations";
-	static final double   EPSILON = 0.00001;
-	static final int      NUM_ENTRIES = 50;
+	static final double   EPSILON = 0.001;
+	static final int      NUM_ENTRIES = 5;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 
@@ -72,11 +73,11 @@ public class AnnotationTestsBase {
 		}
 	}
 
-	protected void printTiles( List<AnnotationTile> tiles ) {
+	protected void printTiles( List<TileData< Map<String, List<Pair<String, Long>>>>> tiles ) {
 		
-		for ( AnnotationTile tile : tiles ) {
+		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : tiles ) {
 			try {
-				System.out.println( tile.toJSON().toString( 4 ) );	
+				System.out.println( AnnotationManipulator.tileToJSON( tile ).toString( 4 ) );	
 			} catch ( Exception e ) { e.printStackTrace(); }
 					
 		}
@@ -100,11 +101,11 @@ public class AnnotationTestsBase {
 		return true;
 	}
 	
-	protected boolean compareTiles( List<AnnotationTile> as, List<AnnotationTile> bs, boolean verbose ) {
+	protected boolean compareTiles( List<TileData< Map<String, List<Pair<String, Long>>>>> as, List<TileData< Map<String, List<Pair<String, Long>>>>> bs, boolean verbose ) {
 		
-		for ( AnnotationTile a : as ) {
+		for ( TileData< Map<String, List<Pair<String, Long>>>> a : as ) {
 			int foundCount = 0;
-			for ( AnnotationTile b : bs ) {				
+			for ( TileData< Map<String, List<Pair<String, Long>>>> b : bs ) {				
 				if ( compareTiles(a, b, false) ) {
 					foundCount++;
 				}
@@ -151,12 +152,12 @@ public class AnnotationTestsBase {
 	}
 	
 	
-	protected boolean compareTiles( AnnotationTile a, AnnotationTile b, boolean verbose ) {
+	protected boolean compareTiles( TileData< Map<String, List<Pair<String, Long>>>> a, TileData< Map<String, List<Pair<String, Long>>>> b, boolean verbose ) {
 		
-		List<AnnotationReference> aReferences = a.getAllReferences();
-		List<AnnotationReference> bReferences = b.getAllReferences();
+		List<Pair<String, Long>> aReferences = AnnotationManipulator.getAllReferencesFromTile( a );
+		List<Pair<String, Long>> bReferences = AnnotationManipulator.getAllReferencesFromTile( b );
 		
-		if ( !a.getIndex().equals( b.getIndex() ) ) {
+		if ( !a.getDefinition().equals( b.getDefinition() ) ) {
 			if ( verbose ) System.out.println( "Bin indices are not equal");
 			return false;
 		}
@@ -166,9 +167,9 @@ public class AnnotationTestsBase {
 			return false;		
 		}
 			
-		for ( AnnotationReference aRef : aReferences ) {
+		for ( Pair<String, Long> aRef : aReferences ) {
 			int foundCount = 0;
-			for ( AnnotationReference bRef : bReferences ) {
+			for ( Pair<String, Long> bRef : bReferences ) {
 				if ( aRef.equals( bRef ) ) {
 					foundCount++;
 				}
@@ -199,7 +200,7 @@ public class AnnotationTestsBase {
 			JSONObject anno = new JSONObject();			
 			anno.put("x", xy[0]);
 			anno.put("y", xy[1]);	
-			anno.put("level", (int)(rand.nextDouble() * 18) );
+			anno.put("level", (int)(rand.nextDouble() * 0) );
 			anno.put("priority", randomPriority() );
 			anno.put("uuid", UUID.randomUUID() );
 			anno.put("timestamp", timestamp.toString() );
@@ -225,12 +226,11 @@ public class AnnotationTestsBase {
 				
 	}
 	
-	protected List<AnnotationTile> generateTiles( int numEntries, AnnotationIndexer indexer ) {
+	protected List<TileData< Map<String, List<Pair<String, Long>>>>> generateTiles( int numEntries, AnnotationIndexer indexer ) {
 		
 		List<AnnotationData<?>> annotations = generateJSONAnnotations( numEntries );
-		
 
-		Map<TileIndex, AnnotationTile> tiles = new HashMap<>();
+		Map<TileIndex, TileData< Map<String, List<Pair<String, Long>>>>> tiles = new HashMap<>();
 				
 		for ( AnnotationData<?> annotation : annotations ) {
 			List<TileAndBinIndices> indices = indexer.getIndices( annotation );
@@ -241,10 +241,13 @@ public class AnnotationTestsBase {
 				BinIndex binIndex = index.getBin();	
 				
 				if ( tiles.containsKey(tileIndex) ) {
-					tiles.get( tileIndex ).add( binIndex, annotation );
+					
+					AnnotationManipulator.addDataToTile( tiles.get( tileIndex ), binIndex, annotation );
+
 				} else {
-					AnnotationTile tile = new AnnotationTile( tileIndex );
-					tile.add( binIndex, annotation );
+										
+					TileData< Map<String, List<Pair<String, Long>>>> tile = new TileData<>( tileIndex );				
+					AnnotationManipulator.addDataToTile( tile, binIndex, annotation );
 					tiles.put( tileIndex, tile );
 				}
 			}
@@ -261,6 +264,7 @@ public class AnnotationTestsBase {
 		xy[0] = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
 		xy[1] = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));		
 		
+		/*
 		int univariateCase = (int)(rand.nextDouble() * 10);
 		switch (univariateCase) {
 		
@@ -270,7 +274,8 @@ public class AnnotationTestsBase {
 			case 1: 
 				xy[0] = -1;
 				break;
-		}				
+		}
+		*/			
 		return xy;		
 	}
 	
@@ -298,16 +303,16 @@ public class AnnotationTestsBase {
 	}
 	
 		
-	protected List<TileIndex> tilesToIndices( List<AnnotationTile> tiles ) {
+	protected List<TileIndex> tilesToIndices( List<TileData< Map<String, List<Pair<String, Long>>>>> tiles ) {
 		List<TileIndex> indices = new ArrayList<>();
-		for ( AnnotationTile tile : tiles ) {
-			indices.add( tile.getIndex() );
+		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : tiles ) {
+			indices.add( tile.getDefinition() );
 		}
 		return indices;
 	}
 
-	protected List<AnnotationReference> dataToIndices( List<AnnotationData<?>> data ) {
-		List<AnnotationReference> indices = new ArrayList<>();
+	protected List<Pair<String, Long>> dataToIndices( List<AnnotationData<?>> data ) {
+		List<Pair<String, Long>> indices = new ArrayList<>();
 		for ( AnnotationData<?> d : data ) {
 			indices.add( d.getReference() );
 		}
