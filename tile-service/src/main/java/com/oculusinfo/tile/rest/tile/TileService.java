@@ -42,7 +42,7 @@ public interface TileService {
 	 *            one
 	 * @return rendered image.
 	 */
-	public BufferedImage getTileImage (UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet);
+	public BufferedImage getTileImage (UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query);
 
 	/**
 	 * TMS raw tile data request.
@@ -55,5 +55,5 @@ public interface TileService {
 	 *            one
 	 * @return The raw data for the indicated tile
 	 */
-	public JSONObject getTileObject (UUID fromString, String layer, TileIndex index, Iterable<TileIndex> tileSet);
+	public JSONObject getTileObject (UUID fromString, String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query);
 }

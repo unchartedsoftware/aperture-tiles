@@ -23,14 +23,58 @@
  */
 package com.oculusinfo.tile.rest.data;
 
-import org.restlet.representation.Representation;
-import org.restlet.resource.Post;
-
 import oculus.aperture.common.rest.ApertureServerResource;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.restlet.data.Status;
+import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.resource.Post;
+import org.restlet.resource.ResourceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
+
 public class DataResource extends ApertureServerResource {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataResource.class);
+
+
+    private DataService _service;
+    
+    @Inject
+    public DataResource (DataService service) {
+        _service = service;
+    }
+
     @Post("json:json")
     public Representation dataRequest (String jsonArguments) {
-        return null;
+        try {
+            JSONObject arguments = new JSONObject(jsonArguments);
+            JSONObject dataset = arguments.getJSONObject("dataset");
+            int requestCount = arguments.optInt("requestCount", 0);
+            boolean getCount = arguments.optBoolean("getCount", false);
+            boolean getData = true;
+            JSONObject query = arguments.getJSONObject("query");
+
+            if (0 >= requestCount) {
+                getData = false;
+                getCount = true;
+            }
+
+            JSONObject result = _service.getData(dataset, query, getCount, getData, requestCount);
+            // Add in request parameters so the requester can recognize which result matches which request.
+            result.put("dataset", dataset);
+            result.put("requestCount", requestCount);
+            result.put("query", query);
+
+            return new JsonRepresentation(result);
+        } catch (JSONException e) {
+            LOGGER.warn("Bad data request: {}", jsonArguments, e);
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                                        "Unable to create JSON object from supplied options string",
+                                        e);
+        }
     }
 }

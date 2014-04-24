@@ -195,7 +195,7 @@ object StreamingCSVBinner {
 		val strm = source.getDataStream
 		val data = strm.mapPartitions(iter =>
 			// Parse the records from the raw data
-			parser.parseRecords(iter, localXVar, localYVar)
+			parser.parseRecords(iter, localXVar, localYVar).map(_._2)
 		).filter(r =>
 			// Filter out unsuccessful parsings
 			r.hasValue

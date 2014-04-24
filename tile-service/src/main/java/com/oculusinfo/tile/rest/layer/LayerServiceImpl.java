@@ -30,6 +30,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.EmptyConfigurableFactory;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.util.PyramidMetaData;
@@ -56,6 +58,7 @@ import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.RequestParamsFactory;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 import com.oculusinfo.tile.util.JsonUtilities;
 
@@ -215,16 +218,44 @@ public class LayerServiceImpl implements LayerService {
         return uuid;
 	}
 
+	/**
+	 * Wraps the options and query {@link JSONObject}s together into a new object.
+	 */
+	private JSONObject mergeQueryConfigOptions(JSONObject options, JSONObject query) {
+		JSONObject ret = new JSONObject();
+		try {
+			if (options != null)
+				ret.put("config", options);
+			if (query != null)
+				ret.put("request", query);
+		}
+		catch (Exception e) {
+			LOGGER.error("Couldn't merge query options with main options.", e);
+		}
+		return ret;
+	}
+	
+
 	@Override
-	public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile) {
+	public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile, JSONObject requestParams) {
 	    try {
-	        ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(new ArrayList<String>());
+			//the root factory that does nothing
+			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
+			
+			//add another factory that will handle query params
+			RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.singletonList("request"));
+			rootFactory.addChildFactory(queryParamsFactory);
+			
+			//add the layer configuration factory under the path 'config'
+	        ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(rootFactory, Collections.singletonList("config"));
+	        rootFactory.addChildFactory(factory);
+	        
 	        JSONObject rawConfiguration = _configurationssByUuid.get(uuid);
 	        if (null == rawConfiguration)
 	            throw new IllegalArgumentException("Unknown configuration: "+uuid);
 
-	        factory.readConfiguration(rawConfiguration);
-	        LayerConfiguration config = factory.produce(LayerConfiguration.class);
+	        rootFactory.readConfiguration(mergeQueryConfigOptions(rawConfiguration, requestParams));
+	        LayerConfiguration config = rootFactory.produce(LayerConfiguration.class);
             String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
             PyramidIO pyramidIO = config.produce(PyramidIO.class);
 
@@ -267,13 +298,23 @@ public class LayerServiceImpl implements LayerService {
      */
 	private LayerConfiguration getLayerConfiguration (String layerId) {
         try {
-            ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(new ArrayList<String>());
+			//the root factory that does nothing
+			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
+			
+			//add another factory that will handle query params
+			RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.singletonList("request"));
+			rootFactory.addChildFactory(queryParamsFactory);
+			
+			//add the layer configuration factory under the path 'config'
+            ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(rootFactory, Collections.singletonList("config"));
+            rootFactory.addChildFactory(factory);
+            
             JSONObject baseConfiguration = getBaseConfiguration(layerId, null, false);
             if (null == baseConfiguration)
                 throw new IllegalArgumentException("Unknown configuration: "+layerId);
 
-            factory.readConfiguration(baseConfiguration);
-            LayerConfiguration config = factory.produce(LayerConfiguration.class);
+            rootFactory.readConfiguration(mergeQueryConfigOptions(baseConfiguration, null));
+            LayerConfiguration config = rootFactory.produce(LayerConfiguration.class);
 
             // Initialize the PyramidIO for reading
             JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
@@ -337,11 +378,11 @@ public class LayerServiceImpl implements LayerService {
     		        LayerInfo info = new LayerInfo(configurations.getJSONObject(i));
     				addConfiguration(info);
     			}
-	    	} catch (FileNotFoundException e1) {
-	    		LOGGER.error("Cannot find layer configuration file {} ", file);
+	    	} catch (FileNotFoundException e) {
+	    		LOGGER.error("Cannot find layer configuration file {} ", file, e);
 	    		return;
-	    	} catch (JSONException e1) {
-	    		LOGGER.error("Layer configuration file {} was not valid JSON.", file);
+	    	} catch (JSONException e) {
+	    		LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
 	    	}
 		}
 		debugConfiguration();

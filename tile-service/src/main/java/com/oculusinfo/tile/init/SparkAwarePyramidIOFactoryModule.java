@@ -26,6 +26,7 @@ package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.tile.init.providers.SparkAwarePyramidIOFactoryProvider;
 
@@ -33,6 +34,8 @@ public class SparkAwarePyramidIOFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(SparkAwarePyramidIOFactoryProvider.class);
+		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
+		factoryProviderBinder.addBinding().to(SparkAwarePyramidIOFactoryProvider.class);
 	}
+	
 }

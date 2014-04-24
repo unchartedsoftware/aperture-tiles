@@ -1,1 +1,0 @@
-//helper class to load/split files so that you dont need to parse them over and over again.

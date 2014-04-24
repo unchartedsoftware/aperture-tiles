@@ -298,7 +298,7 @@ object SortedBinnerTest {
 			props.load(propStream)
 			propStream.close()
 
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props, true), tileIO)
+			processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, true), tileIO)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

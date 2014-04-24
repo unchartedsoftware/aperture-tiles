@@ -44,27 +44,33 @@ define(function (require) {
         /**
          * Construct a carousel
          */
-        init: function (spec) {
+        init: function (id, map) {
 
             var that = this;
 
             // call base class ViewController constructor
-            this._super(spec);
+            this._super(id, map);
             this.previousMouse = {};
             this.selectedTileInfo = {};
 
             // add mouse move and zoom callbacks
-            this.map.olMap_.events.register('mousemove', this.map.olMap_, function(event) {
-                var tilekey = that.mapMouseToTileKey(event.xy.x, event.xy.y);
+            this.map.on('mousemove', function(event) {
+                var tilekey = that.map.getTileKeyFromViewportPixel(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
                 that.previousMouse.x = event.xy.x;
                 that.previousMouse.y = event.xy.y;
             });
 
-            this.map.olMap_.events.register('zoomend', this.map.olMap_, function() {
-                var tilekey = that.mapMouseToTileKey(that.previousMouse.x, that.previousMouse.y);
+            this.map.on('zoomend', function() {
+                var tilekey = that.map.getTileKeyFromViewportPixel( that.previousMouse.x, that.previousMouse.y );
                 that.updateSelectedTile(tilekey);
             });
+        },
+
+
+        setViews: function( views ) {
+
+            this._super(views);
 
             // create the carousel UI
             this.createUI();
@@ -150,7 +156,11 @@ define(function (require) {
             });
 
             viewSelectionLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+            });
+
+            viewSelectionLayer.map('opacity').from( function() {
+                return that.opacity;
             });
 
             return viewSelectionLayer;
@@ -214,7 +224,11 @@ define(function (require) {
             });
 
             viewIndexLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+            });
+
+            viewIndexLayer.map('opacity').from( function() {
+                return that.opacity;
             });
 
             return viewIndexLayer;
@@ -268,46 +282,14 @@ define(function (require) {
             });
 
             outlineLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey);
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+            });
+
+            outlineLayer.map('opacity').from( function() {
+                return that.opacity;
             });
 
             return outlineLayer;
-        },
-
-
-        /**
-         * Maps a mouse position in the mouse viewport to a tile identification key
-         * @param mx mouse x position in the map viewport
-         * @param my mouse y position in the map viewport
-        */
-        mapMouseToTileKey: function(mx, my) {
-
-            var TILESIZE = 256,
-                zoom,
-                maxPx = {},
-                minPx = {},
-                totalTilespan,
-                totalPixelSpan = {},
-                pixelMax = {},
-                pixelMin = {},
-                pixel = {};
-
-                zoom = this.map.olMap_.getZoom();
-                maxPx.x = this.map.olMap_.maxPx.x;
-                maxPx.y = this.map.olMap_.maxPx.y;
-                minPx.x = this.map.olMap_.minPx.x;
-                minPx.y = this.map.olMap_.minPx.y;
-                totalTilespan = Math.pow(2, zoom);
-                totalPixelSpan.x = TILESIZE * totalTilespan;
-                totalPixelSpan.y = this.map.olMap_.viewPortDiv.clientHeight;
-                pixelMax.x = totalPixelSpan.x - minPx.x;
-                pixelMax.y = totalPixelSpan.y - minPx.y;
-                pixelMin.x = totalPixelSpan.x - maxPx.x;
-                pixelMin.y = totalPixelSpan.x - maxPx.y;
-                pixel.x = mx + pixelMin.x;
-                pixel.y = (this.map.olMap_.size.h - my - pixelMax.y + totalPixelSpan.x );
-
-            return zoom + "," + Math.floor(pixel.x / TILESIZE) + "," + Math.floor(pixel.y / TILESIZE);
         },
 
 
@@ -316,6 +298,10 @@ define(function (require) {
          * @param tilekey tile identification key of the form: "level,x,y"
          */
         updateSelectedTile: function(tilekey) {
+
+            if (this.views === undefined || this.views.length === 0) {
+                return;
+            }
 
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
