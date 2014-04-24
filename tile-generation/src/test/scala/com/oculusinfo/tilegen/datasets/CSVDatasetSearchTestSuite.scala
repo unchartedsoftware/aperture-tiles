@@ -24,11 +24,19 @@
  */
 package com.oculusinfo.tilegen.datasets
 
-import org.scalatest.FunSuite
-import org.apache.spark.SharedSparkContext
+
+
 import java.io.File
 import java.io.PrintWriter
 import java.util.Properties
+
+import org.json.JSONObject
+
+import org.scalatest.FunSuite
+
+import org.apache.spark.SharedSparkContext
+
+
 
 class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	var dataset: CSVDataset = null;
@@ -98,7 +106,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 		val bFilter = dataset.getFieldFilterFunction("b", 3, 7)
 		val cFilter = dataset.getFieldFilterFunction("c", 2, 7)
 		val dFilter = dataset.getFieldFilterFunction("d", 1, 8)
-		val filter = LogicalFilterFunctions.and(bFilter, cFilter, dFilter)
+		val filter = FilterFunctions.and(bFilter, cFilter, dFilter)
 		val results = dataset.getFilteredRawData(filter).collect().toSet
 
 		assert(2 === results.size)
@@ -109,12 +117,71 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	test("Test or filters") {
 		val bFilter = dataset.getFieldFilterFunction("b", 8, 9)
 		val cFilter = dataset.getFieldFilterFunction("c", 6, 7)
-		val filter = LogicalFilterFunctions.or(bFilter, cFilter)
+		val filter = FilterFunctions.or(bFilter, cFilter)
 		val results = dataset.getFilteredRawData(filter).collect().toSet
 
 		assert(3 === results.size)
 		assert(results.contains(" 0,  8,  6, 10,  7"))
 		assert(results.contains(" 6,  9, 10,  4, 12"))
+		assert(results.contains("10,  4,  7,  7, 11"))
+	}
+
+	test("Test simple query parsing") {
+		val query = "{\"b\":{\"min\":3, \"max\":7}}"
+		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
+		val results = dataset.getFilteredRawData(filter).collect().toSet
+
+		assert(5 === results.size)
+		assert(results.contains(" 2,  3,  8,  0,  9"))
+		assert(results.contains("10,  4,  7,  7, 11"))
+		assert(results.contains(" 5,  5,  2, 12,  3"))
+		assert(results.contains(" 9,  6,  1,  1,  4"))
+		assert(results.contains(" 3,  7,  4,  5,  5"))
+	}
+
+	test("Test query or parsing") {
+		val query = "{\"or\":[{\"b\":{\"min\":8,\"max\":9}},{\"c\":{\"min\":6,\"max\":7}}]}"
+		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
+		val results = dataset.getFilteredRawData(filter).collect().toSet
+
+		assert(3 === results.size)
+		assert(results.contains(" 0,  8,  6, 10,  7"))
+		assert(results.contains(" 6,  9, 10,  4, 12"))
+		assert(results.contains("10,  4,  7,  7, 11"))
+	}
+
+	test("Test query and parsing") {
+		val query = "{\"and\":[{\"b\":{\"min\":3,\"max\":7}},{\"c\":{\"min\":2,\"max\":7}}]}"
+		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
+		val results = dataset.getFilteredRawData(filter).collect().toSet
+
+		assert(3 === results.size)
+		assert(results.contains("10,  4,  7,  7, 11"))
+		assert(results.contains(" 5,  5,  2, 12,  3"))
+		assert(results.contains(" 3,  7,  4,  5,  5"))
+	}
+
+	test("Test complex combination query") {
+		val query =
+			(""+
+				 "{\n"+
+				 "  \"or\": [\n"+
+				 "    {\"a\": {\"min\":2, \"max\":4}},\n"+
+				 "    {\"and\": [\n"+
+				 "      {\"b\": {\"min\": 3, \"max\": 7}},\n"+
+				 "      {\"c\": {\"min\": 2, \"max\": 7}}\n"+
+                 "    ]}\n"+
+                 "  ]\n"+
+				 "}")
+
+		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
+		val results = dataset.getFilteredRawData(filter).collect().toSet
+
+		assert(5 === results.size)
+		assert(results.contains(" 2,  3,  8,  0,  9"))
+		assert(results.contains(" 3,  7,  4,  5,  5"))
+		assert(results.contains(" 4, 11,  3,  3,  8"))
+		assert(results.contains(" 5,  5,  2, 12,  3"))
 		assert(results.contains("10,  4,  7,  7, 11"))
 	}
 }

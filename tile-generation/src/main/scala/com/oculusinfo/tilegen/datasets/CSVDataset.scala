@@ -183,12 +183,18 @@ import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
  * Simple class to add standard field interpretation to a properties wrapper
  */
 class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrapper(properties) {
-	val fields =
-		properties.stringPropertyNames.asScala.toSeq
+	val fields = {
+		val indexProps = properties.stringPropertyNames.asScala.toSeq
 			.filter(_.startsWith("oculus.binning.parsing."))
-			.filter(_.endsWith(".index")).map(property =>
+			.filter(_.endsWith(".index"))
+
+		val orderedProps = indexProps.map(prop => (prop, properties.getProperty(prop).toInt))
+			.sortBy(_._2).map(_._1)
+
+		indexProps.map(property =>
 			property.substring("oculus.binning.parsing.".length, property.length-".index".length)
 		)
+	}
 	val fieldIndices =
 		Range(0, fields.size).map(n => (fields(n) -> n)).toMap
 }
@@ -645,22 +651,6 @@ class CSVDataset (rawProperties: Properties,
 	def initialize (sc: SparkContext, cacheRaw: Boolean, cacheProcessed: Boolean): Unit =
 		initialize(new CSVStaticProcessingStrategy(sc, cacheRaw, cacheProcessed))
 	
-}
-
-object LogicalFilterFunctions {
-	def and (operands: (ValueOrException[List[Double]] => Boolean)*) = {
-		val result: ValueOrException[List[Double]] => Boolean = value =>
-		operands.map(_(value)).reduce(_ && _)
-
-		result;
-	}
-
-	def or (operands: (ValueOrException[List[Double]] => Boolean)*) = {
-		val result: ValueOrException[List[Double]] => Boolean = value =>
-		operands.map(_(value)).reduce(_ || _)
-
-		result;
-	}
 }
 
 object StreamingCSVDataset {
