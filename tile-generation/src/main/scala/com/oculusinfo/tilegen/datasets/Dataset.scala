@@ -171,7 +171,7 @@ abstract class ProcessingStrategy[PT: ClassManifest] {
 		(fcn: RDD[(Double, Double, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
 }
 
-abstract class StaticProcessingStrategy[PT: ClassManifest] (sc: SparkContext, cache: Boolean)
+abstract class StaticProcessingStrategy[PT: ClassManifest] (sc: SparkContext)
 		extends ProcessingStrategy[PT] {
 	private val rdd = getData
 
@@ -230,11 +230,12 @@ abstract class StreamingProcessingStrategy[PT: ClassManifest]
 object DatasetFactory {
 	def createDataset (sc: SparkContext,
 	                   dataDescription: Properties,
-	                   cache: Boolean,
+	                   cacheRaw: Boolean,
+	                   cacheProcessed: Boolean,
 	                   tileWidth: Int = 256,
 	                   tileHeight: Int = 256): Dataset[_, _] = {
 		val dataset = new CSVDataset(dataDescription, tileWidth, tileHeight)
-		dataset.initialize(sc, cache)
+		dataset.initialize(sc, cacheRaw, cacheProcessed)
 		dataset
 	}
 }

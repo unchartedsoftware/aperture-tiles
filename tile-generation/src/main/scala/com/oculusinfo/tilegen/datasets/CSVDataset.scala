@@ -30,10 +30,15 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Double => JavaDouble}
 import java.text.SimpleDateFormat
 import java.util.Properties
+
 import scala.collection.JavaConverters._
+
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
+import org.apache.spark.streaming.Time
+
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
@@ -43,7 +48,6 @@ import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
-import org.apache.spark.streaming.Time
 import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
@@ -222,7 +226,7 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
  * A simple parser that splits a record according to a given separator
  */
 class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
-	def parseRecords (raw: Iterator[String], variables: String*): Iterator[ValueOrException[List[Double]]] = {
+	def parseRecords (raw: Iterator[String], variables: String*): Iterator[(String, ValueOrException[List[Double]])] = {
 		// This method generally is only called on workers, therefore properties can't really be documented here.
 
 		// Get some simple parsing info we'll need
@@ -290,35 +294,37 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 			{
 				val columns = splitString(s, separator)
 				try {
-					new ValueOrException(
-						Some(properties.fields.toList.map(field =>
-							     {
-								     val fieldType = getFieldType(field)
-								     var value = if ("constant" == fieldType ||
-									                     "zero" == fieldType) 0.0
-								     else {
-									     val fieldIndex =
-										     properties.getIntOption("oculus.binning.parsing."+
-											                             field+".index",
-										                             "").get
-									     parseValue(columns(fieldIndex.toInt), field, fieldType)
-								     }
-								     val fieldScaling =
-									     properties.getString("oculus.binning.parsing."+field+
-										                          ".fieldScaling", "", Some(""))
-								     if ("log" == fieldScaling) {
-									     val base =
-										     properties.getDouble("oculus.binning.parsing."+
-											                          field+".fieldBase",
-										                          "", Some(math.exp(1.0)))
-									     value = math.log(value)/math.log(base)
-								     }
-								     value
-							     }
-						     )),
-						None)
+					(s,
+					 new ValueOrException(
+						 Some(properties.fields.toList.map(field =>
+							      {
+								      val fieldType = getFieldType(field)
+								      var value = if ("constant" == fieldType ||
+									                      "zero" == fieldType) 0.0
+								      else {
+									      val fieldIndex =
+										      properties.getIntOption("oculus.binning.parsing."+
+											                              field+".index",
+										                              "").get
+									      parseValue(columns(fieldIndex.toInt), field, fieldType)
+								      }
+								      val fieldScaling =
+									      properties.getString("oculus.binning.parsing."+field+
+										                           ".fieldScaling", "", Some(""))
+								      if ("log" == fieldScaling) {
+									      val base =
+										      properties.getDouble("oculus.binning.parsing."+
+											                           field+".fieldBase",
+										                           "", Some(math.exp(1.0)))
+									      value = math.log(value)/math.log(base)
+								      }
+								      value
+							      }
+						      )),
+						 None)
+                    )
 				} catch {
-					case e: Exception => new ValueOrException(None, Some(e))
+					case e: Exception => (s, new ValueOrException(None, Some(e)))
 				}
 			}
 		)
@@ -385,7 +391,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 		extends Dataset[Double, JavaDouble] {
 	def manifest = implicitly[ClassManifest[Double]]
 
-	private val properties = new CSVRecordPropertiesWrapper(rawProperties)
+	protected val properties = new CSVRecordPropertiesWrapper(rawProperties)
 
 	private val description = properties.getStringOption("oculus.binning.description",
 	                                                     "The description to put in the tile metadata")
@@ -525,36 +531,53 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 	override def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
 
 
-	class CSVStaticProcessingStrategy (sc: SparkContext, cache: Boolean)
-			extends StaticProcessingStrategy[Double](sc, cache) {
-		protected def getData: RDD[(Double, Double, Double)] = {
-			val source = new CSVDataSource(properties)
-			val parser = new CSVRecordParser(properties)
-			val extractor = new CSVFieldExtractor(properties)
+	class CSVStaticProcessingStrategy (sc: SparkContext,
+	                                   cacheRaw: Boolean,
+	                                   cacheProcessed: Boolean)
+			extends StaticProcessingStrategy[Double](sc) {
+		private var rawData: RDD[String] = null
 
+		def getRawData = rawData
+
+		def getData: RDD[(Double, Double, Double)] = {
+			val localProperties = properties
 			val localXVar = xVar
 			val localYVar = yVar
 			val localZVar = zVar
 
-			val rawData = source.getData(sc)
+			rawData = {
+				val source = new CSVDataSource(properties)
+				val data = source.getData(sc);
+				if (cacheRaw)
+					data.persist(StorageLevel.MEMORY_AND_DISK)
+				data
+			}
+
 			val data = rawData.mapPartitions(iter =>
-				// Parse the records from the raw data
-				parser.parseRecords(iter, localXVar, localYVar)
+				{
+					val parser = new CSVRecordParser(localProperties)
+					// Parse the records from the raw data
+					parser.parseRecords(iter, localXVar, localYVar).map(_._2)
+				}
 			).filter(r =>
 				// Filter out unsuccessful parsings
 				r.hasValue
 			).map(_.get).mapPartitions(iter =>
-				iter.map(t => (extractor.getFieldValue(localXVar)(t),
-				               extractor.getFieldValue(localYVar)(t),
-				               extractor.getFieldValue(localZVar)(t)))
+				{
+					val extractor = new CSVFieldExtractor(localProperties)
+
+					iter.map(t => (extractor.getFieldValue(localXVar)(t),
+					               extractor.getFieldValue(localYVar)(t),
+					               extractor.getFieldValue(localZVar)(t)))
+				}
 			).filter(record =>
 				record._1.hasValue && record._2.hasValue && record._3.hasValue
 			).map(record =>
 				(record._1.get, record._2.get, record._3.get)
 			)
 
-			if (cache)
-				data.cache
+			if (cacheProcessed)
+				data.persist(StorageLevel.MEMORY_AND_DISK)
 
 			data
 		}
@@ -569,14 +592,58 @@ class CSVDataset (rawProperties: Properties,
                   tileHeight: Int)
 		extends CSVDatasetBase(rawProperties, tileWidth, tileHeight) {
 
-	type STRATEGY_TYPE = ProcessingStrategy[Double]
+	type STRATEGY_TYPE = CSVStaticProcessingStrategy
 	protected var strategy: STRATEGY_TYPE = null
-	
-	def initialize (sc: SparkContext, cache: Boolean): Unit =
-		initialize(new CSVStaticProcessingStrategy(sc, cache))
+
+	def getRawData: RDD[String] = strategy.getRawData
+
+	def getFilteredRawData (filterFcn: ValueOrException[List[Double]] => Boolean):
+			RDD[String] = {
+		getRawData.mapPartitions(iter =>
+			{
+				val parser = new CSVRecordParser(properties)
+				// Parse the records from the raw data, parsing all fields
+				// The funny end syntax tells scala to treat fields as a varargs
+				parser.parseRecords(iter, properties.fields:_*)
+					.filter {case (record, fields) => filterFcn(fields)}
+					.map(_._1)
+			}
+		)
+	}
+
+	def getFieldFilterFunction (field: String, min: Double, max: Double):
+			ValueOrException[List[Double]] => Boolean = {
+		val filterFcn: ValueOrException[List[Double]] => Boolean =
+			valueList => {
+				val index = properties.fieldIndices(field)
+				valueList.hasValue && {
+					val value = (valueList.get)(index)
+					min <= value && value <= max
+				}
+			}
+		filterFcn
+	}
+
+	def initialize (sc: SparkContext, cacheRaw: Boolean, cacheProcessed: Boolean): Unit =
+		initialize(new CSVStaticProcessingStrategy(sc, cacheRaw, cacheProcessed))
 	
 }
 
+object LogicalFilterFunctions {
+	def andFilterFunction (operands: (ValueOrException[List[Double]] => Boolean)*) = {
+		val result: ValueOrException[List[Double]] => Boolean = value =>
+		operands.map(_(value)).reduce(_ && _)
+
+		result;
+	}
+
+	def orFilterFunction (operands: (ValueOrException[List[Double]] => Boolean)*) = {
+		val result: ValueOrException[List[Double]] => Boolean = value =>
+		operands.map(_(value)).reduce(_ || _)
+
+		result;
+	}
+}
 
 object StreamingCSVDataset {
 
