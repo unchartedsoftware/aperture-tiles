@@ -395,8 +395,9 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 
 	private val description = properties.getStringOption("oculus.binning.description",
 	                                                     "The description to put in the tile metadata")
-	private val xVar = properties.getStringOption("oculus.binning.xField",
-	                                              "The field to use for the X axis of tiles produced").get
+	private val xVar = properties.getString("oculus.binning.xField",
+	                                        "The field to use for the X axis of tiles produced",
+	                                        Some(CSVDatasetBase.ZERO_STR))
 	private val yVar = properties.getString("oculus.binning.yField",
 	                                        "The field to use for the Y axis of tiles produced",
 	                                        Some(CSVDatasetBase.ZERO_STR))
@@ -535,7 +536,22 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 	                                   cacheRaw: Boolean,
 	                                   cacheProcessed: Boolean)
 			extends StaticProcessingStrategy[Double](sc) {
-		private var rawData: RDD[String] = null
+		// This is a weird initialization problem that requires some 
+		// documentation to explain.
+		// What we really want here is for rawData to be initialized in the 
+		// getData method, below.  However, this method is called from 
+		// StaticProcessingStrategy.rdd, which is called during the our 
+		// parent's <init> call - which happens before we event get to this
+		// line.  So when we get here, if we assigned rawData directly in
+		// getData, this line below, having to assign rawData some value, 
+		// would overwrite it.
+		// We could just say rawData = rawData (that does work, I checked),
+		// but that seemed semantically too confusing to abide. So instead,
+		// getData sets rawData2, which can the be assigned to rawData before 
+		// it gets written in its own initialization (since initialization 
+		// lines are run in order).
+		private var rawData: RDD[String] = rawData2
+		private var rawData2: RDD[String] = null;
 
 		def getRawData = rawData
 
@@ -545,7 +561,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 			val localYVar = yVar
 			val localZVar = zVar
 
-			rawData = {
+			rawData2 = {
 				val source = new CSVDataSource(properties)
 				val data = source.getData(sc);
 				if (cacheRaw)
@@ -553,7 +569,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 				data
 			}
 
-			val data = rawData.mapPartitions(iter =>
+			val data = rawData2.mapPartitions(iter =>
 				{
 					val parser = new CSVRecordParser(localProperties)
 					// Parse the records from the raw data
@@ -599,12 +615,13 @@ class CSVDataset (rawProperties: Properties,
 
 	def getFilteredRawData (filterFcn: ValueOrException[List[Double]] => Boolean):
 			RDD[String] = {
+		val localProperties = properties
 		getRawData.mapPartitions(iter =>
 			{
-				val parser = new CSVRecordParser(properties)
+				val parser = new CSVRecordParser(localProperties)
 				// Parse the records from the raw data, parsing all fields
 				// The funny end syntax tells scala to treat fields as a varargs
-				parser.parseRecords(iter, properties.fields:_*)
+				parser.parseRecords(iter, localProperties.fields:_*)
 					.filter {case (record, fields) => filterFcn(fields)}
 					.map(_._1)
 			}
@@ -613,9 +630,10 @@ class CSVDataset (rawProperties: Properties,
 
 	def getFieldFilterFunction (field: String, min: Double, max: Double):
 			ValueOrException[List[Double]] => Boolean = {
+		val localProperties = properties
 		val filterFcn: ValueOrException[List[Double]] => Boolean =
 			valueList => {
-				val index = properties.fieldIndices(field)
+				val index = localProperties.fieldIndices(field)
 				valueList.hasValue && {
 					val value = (valueList.get)(index)
 					min <= value && value <= max
@@ -630,14 +648,14 @@ class CSVDataset (rawProperties: Properties,
 }
 
 object LogicalFilterFunctions {
-	def andFilterFunction (operands: (ValueOrException[List[Double]] => Boolean)*) = {
+	def and (operands: (ValueOrException[List[Double]] => Boolean)*) = {
 		val result: ValueOrException[List[Double]] => Boolean = value =>
 		operands.map(_(value)).reduce(_ && _)
 
 		result;
 	}
 
-	def orFilterFunction (operands: (ValueOrException[List[Double]] => Boolean)*) = {
+	def or (operands: (ValueOrException[List[Double]] => Boolean)*) = {
 		val result: ValueOrException[List[Double]] => Boolean = value =>
 		operands.map(_(value)).reduce(_ || _)
 
