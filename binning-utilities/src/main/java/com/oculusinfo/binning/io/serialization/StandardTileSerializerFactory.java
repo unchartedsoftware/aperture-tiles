@@ -157,6 +157,11 @@ public class StandardTileSerializerFactory
 		if ("[(string, double)]-a".equals(serializerType)) {
 			return new StringDoublePairArrayAvroSerializer(codec);
 		}
+		/*
+		 * 
+		 * put my serializer here
+		 * 
+		 */
 
 		return null;
 	}

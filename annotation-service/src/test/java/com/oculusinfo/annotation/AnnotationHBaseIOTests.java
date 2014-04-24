@@ -24,6 +24,7 @@
 package com.oculusinfo.annotation;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,18 +39,21 @@ import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.*;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
 	private static final String  TABLE_NAME = "AnnotationTable";
 	private static final boolean VERBOSE = false;
 
-	private AnnotationIO _io;
-	private AnnotationIndexer _indexer;
-	private AnnotationSerializer<AnnotationTile> _tileSerializer;
+	private AnnotationIO _io;	
+	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
 	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
 	private TilePyramid _pyramid;
-	
+	private AnnotationIndexer _indexer;
+
 
     @Before
     public void setup () {
@@ -65,9 +69,9 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 		}	
     	
     	_pyramid = new WebMercatorTilePyramid();
-    	_indexer = new TileAnnotationIndexer( _pyramid );
-    	_tileSerializer = new JSONTileSerializer();
-    	_dataSerializer = new JSONDataSerializer();  	
+    	_indexer = new AnnotationIndexerImpl( _pyramid );
+    	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
+    	_dataSerializer = new JSONAnnotationDataSerializer();  	
 	
     }
 
@@ -81,11 +85,11 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     public void testHBaseIO() {
     	
     	
-        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
-        List<AnnotationTile> tiles = generateTiles( NUM_ENTRIES, _indexer );
-    	
+        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );        
+        List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( NUM_ENTRIES, _indexer );
+		
         List<TileIndex> tileIndices = tilesToIndices( tiles );
-        List<AnnotationReference> dataIndices = dataToIndices( annotations );
+        List<Pair<String, Long>> dataIndices = dataToIndices( annotations );
         
     	try {
     		
@@ -99,14 +103,14 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to table");	
-	    	_io.writeTiles(TABLE_NAME, _tileSerializer, tiles );
+	    	_io.writeTiles(TABLE_NAME, _pyramid, _tileSerializer, tiles );
 	    	_io.writeData(TABLE_NAME, _dataSerializer, annotations );
 	        
 	    	/*
 	    	 *  Read and check all annotations
 	    	 */
 	    	System.out.println( "Reading all annotations" );
-	    	List<AnnotationTile> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
+	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
 	    	List<AnnotationData<?>> allData = _io.readData( TABLE_NAME, _dataSerializer, dataIndices );
 	    	if (VERBOSE) printTiles( allTiles );
 	    	if (VERBOSE) printData( allData );

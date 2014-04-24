@@ -26,6 +26,8 @@ package com.oculusinfo.annotation;
 import java.io.Serializable;
 import java.util.UUID;
 
+import com.oculusinfo.binning.util.Pair;
+
 import org.json.JSONObject;
 
 
@@ -44,12 +46,12 @@ public abstract class AnnotationData<T> implements Serializable {
 	public abstract String getPriority();
 	public abstract T getData();
 	
-	public AnnotationReference getReference() {
-		return new AnnotationReference( getUUID(), getTimeStamp() );
+	public Pair<String, Long> getReference() {
+		return new Pair<String, Long>( getUUID().toString(), getTimeStamp() );
 	}
 	
 	static public AnnotationData<?> fromJSON( JSONObject json ) throws IllegalArgumentException {		
-		return null;		
+		return null;
 	}
 	
 	public JSONObject toJSON() {
@@ -66,7 +68,7 @@ public abstract class AnnotationData<T> implements Serializable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;	
+		return null;
 	}
 	
 	@Override

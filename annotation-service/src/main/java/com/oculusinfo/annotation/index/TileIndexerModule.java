@@ -35,7 +35,7 @@ public class TileIndexerModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(TilePyramid.class).to(WebMercatorTilePyramid.class);
-		bind(AnnotationIndexer.class).to(TileAnnotationIndexer.class);		
+		bind(AnnotationIndexer.class).to(AnnotationIndexerImpl.class);		
 	}
 	
 }

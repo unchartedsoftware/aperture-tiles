@@ -24,6 +24,10 @@
 package com.oculusinfo.annotation.rest.impl;
 
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,8 +37,16 @@ import java.util.UUID;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.*;
@@ -42,24 +54,90 @@ import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
+import com.oculusinfo.binning.util.*;
 
 
 @Singleton
 public class AnnotationServiceImpl implements AnnotationService {
-
-	protected AnnotationIO _io;
-	protected AnnotationSerializer<AnnotationTile> _tileSerializer;
-	protected AnnotationSerializer<AnnotationData<?>> _dataSerializer; 
-	protected AnnotationIndexer _indexer;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationServiceImpl.class);
+    	
+    protected TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
+	protected AnnotationSerializer<AnnotationData<?>> _dataSerializer; 	
 	protected ConcurrentHashMap< UUID, Map<String, Integer> > _uuidFilterMap;
+	
+	protected AnnotationIndexer _indexer;
+	protected AnnotationIO _io;
 	
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
+	/*
+	@Inject
+    public AnnotationServiceImpl( @Named("com.oculusinfo.tile.annotation.config") String annotationConfigurationLocation ) {
+
+		_tileSerializer = new JSONTileSerializer();
+		_dataSerializer = new JSONDataSerializer();
+		_uuidFilterMap =  new ConcurrentHashMap<>();
+		
+        readConfigFiles( getConfigurationFiles(annotationConfigurationLocation) );
+    }
+
+	// ////////////////////////////////////////////////////////////////////////
+	// Section: Configuration reading methods
+	//
+	private File[] getConfigurationFiles (String location) {
+    	try {
+	    	// Find our configuration file.
+	    	URI path = null;
+	    	if (location.startsWith("res://")) {
+	    		location = location.substring(6);
+	    		path = LayerServiceImpl.class.getResource(location).toURI();
+	    	} else {
+	    		path = new File(location).toURI();
+	    	}
+
+	    	File configRoot = new File(path);
+	    	if (!configRoot.exists())
+	    		throw new Exception(location+" doesn't exist");
+
+	    	if (configRoot.isDirectory()) {
+	    		return configRoot.listFiles();
+	    	} else {
+	    		return new File[] {configRoot};
+	    	}
+    	} catch (Exception e) {
+        	LOGGER.warn("Can't find configuration file {}", location, e);
+        	return new File[0];
+		}
+    }
+
+    private void readConfigFiles (File[] files) {
+		for (File file: files) {
+			try {
+			    JSONObject contents = new JSONObject(new JSONTokener(new FileReader(file)));
+			    JSONArray configurations = contents.getJSONArray("layers");
+    			for (int i=0; i<configurations.length(); ++i) {
+    				
+    				// only use first config for now
+    				break;
+    			}
+	    	} catch (FileNotFoundException e) {
+	    		LOGGER.error("Cannot find layer configuration file {} ", file, e);
+	    		return;
+	    	} catch (JSONException e) {
+	    		LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
+	    	}
+		}
+    }
+    */
+	
+	
 	@Inject
 	public AnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
-		_tileSerializer = new JSONTileSerializer();
-		_dataSerializer = new JSONDataSerializer();
+		_tileSerializer = new StringLongPairArrayMapJSONSerializer();
+		_dataSerializer = new JSONAnnotationDataSerializer();
 		_uuidFilterMap =  new ConcurrentHashMap<>();
 		_indexer = indexer;
 		_io = io;
@@ -71,7 +149,11 @@ public class AnnotationServiceImpl implements AnnotationService {
     	_lock.writeLock().lock();
     	try {
     		
-    		// check in case client generated UUID results in IO collision
+    		/* 
+    		 * check in case client generated UUID results in IO collision, if so
+    		 * prevent io corruption by throwing an exception, this is so statistically 
+    		 * unlikely that any further action is unnecessary
+    		 */ 
     		if ( checkForCollision( layer, annotation ) ) {
     			throw new IllegalArgumentException("UUID for data results in collision, WRITE operation aborted");
     		}
@@ -92,18 +174,22 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();
     	try {
 		
-    		// ensure request is coherent with server state
+    		/*
+    		 *  ensure request is coherent with server state, if client is operating
+    		 *  on a previous data state, prevent io corruption by throwing an exception
+    		 */
     		if ( isRequestOutOfDate( layer, oldAnnotation ) ) {
     			throw new IllegalArgumentException("Client is out of sync with Server, "
     											 + "MODIFY operation aborted. It is recommended "
     											 + "upon receiving this exception to refresh all client annotations");        		
     		}
     		
-			/* Technically, you should not have to re-tile the annotation if
-			 * there is only a content change, as it will stay in the same tiles,
-			 * however, since we want to update the reference time-stamp on a content
-			 * change, it is re-tile so that we can filter from tiles without reading
-			 * the annotations themselves
+			/* 
+			 * Technically you should not have to re-tile the annotation if
+			 * there is only a content change, as it will stay in the same tiles.
+			 * However, we want to update the reference time-stamp in the containing 
+			 * tile so that we can filter from tiles without relying on reading the 
+			 * individual annotations themselves
 			 */
 			// remove from old tiles
 			removeDataFromTiles( layer, oldAnnotation );
@@ -121,6 +207,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		Map<String, Integer> filters = null;
 		
+		/*
+		 * If user has specified a filter, use it, otherwise pull all annotations in tile 
+		 */
 		if ( id != null ) {
 			filters = _uuidFilterMap.get( id );
 		}
@@ -139,14 +228,18 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();		
 		try {
 			
-			// ensure request is coherent with server state
+			/*
+    		 *  ensure request is coherent with server state, if client is operating
+    		 *  on a previous data state, prevent io corruption by throwing an exception
+    		 */
     		if ( isRequestOutOfDate( layer, annotation ) ) {
     			throw new IllegalArgumentException("Client is out of sync with Server, "
 												 + "REMOVE operation aborted. It is recommended "
 												 + "upon receiving this exception to refresh all client annotations");       		
     		}
-			
+			// remove the references from tiles
 			removeDataFromTiles( layer, annotation );
+			// remove data from io
 			removeDataFromIO( layer, annotation );
 			
 		} finally {
@@ -172,7 +265,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 */
 	private boolean checkForCollision( String layer, AnnotationData<?> annotation ) {
 		
-		List<AnnotationReference> reference = new LinkedList<>();
+		List<Pair<String,Long>> reference = new LinkedList<>();
 		reference.add( annotation.getReference() );
 		return ( readDataFromIO( layer, reference ).size() > 0 ) ;
 
@@ -183,7 +276,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 */
 	public boolean isRequestOutOfDate( String layer, AnnotationData<?> annotation ) {
 		
-		List<AnnotationReference> reference = new LinkedList<>();
+		List<Pair<String, Long>> reference = new LinkedList<>();
 		reference.add( annotation.getReference() );
 		List<AnnotationData<?>> annotations = readDataFromIO( layer, reference );
 		
@@ -206,22 +299,24 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 * Iterate through all indices, find matching tiles and add data reference, if tile
 	 * is missing, add it
 	 */
-	private void addDataReferenceToTiles( List<AnnotationTile> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
+	private void addDataReferenceToTiles( List< TileData<Map<String, List<Pair<String,Long>>>>> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
 		
     	for ( TileAndBinIndices index : indices ) {			
 			// check all existing tiles for matching index
     		boolean found = false;
-			for ( AnnotationTile tile : tiles ) {				
-				if ( tile.getIndex().equals( index.getTile() ) ) {
+			for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {				
+				if ( tile.getDefinition().equals( index.getTile() ) ) {
 					// tile exists already, add data to bin
-					tile.add( index.getBin(), data );
+					AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
 					found = true;
 					break;
 				} 
 			}
 			if ( !found ) {
 				// no tile exists, add tile
-				tiles.add( new AnnotationTile( index.getTile(), new AnnotationBin( index.getBin(), data ) ) );	    	
+				TileData<Map<String, List<Pair<String,Long>>>> tile = new TileData<>( index.getTile() );				
+				AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
+				tiles.add( tile );    	
 			}
 		}				
 	}
@@ -230,25 +325,28 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 * Iterate through all tiles, removing data reference from bins, any tiles with no bin entries
 	 * are added to tileToRemove, the rest are added to tilesToWrite
 	 */
-	private void removeDataReferenceFromTiles( List<AnnotationTile> tilesToWrite, List<AnnotationTile> tilesToRemove, List<AnnotationTile> tiles, AnnotationData<?> data ) {		
+	private void removeDataReferenceFromTiles( List<TileData<Map<String, List<Pair<String,Long>>>>> tilesToWrite, 
+											   List<TileIndex> tilesToRemove, 
+											   List<TileData<Map<String, List<Pair<String,Long>>>>> tiles, 
+											   AnnotationData<?> data ) {		
 		
 		// clear supplied lists
 		tilesToWrite.clear();
 		tilesToRemove.clear();	
 		
 		// for each tile, remove data from bins
-		for ( AnnotationTile tile : tiles ) {				
+		for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {				
 			// get bin index for the annotation in this tile
-			BinIndex binIndex = _indexer.getIndex( data, tile.getIndex().getLevel() ).getBin();		
+			BinIndex binIndex = _indexer.getIndex( data, tile.getDefinition().getLevel() ).getBin();		
 			// remove data from tile
-			tile.remove( binIndex, data );				
+			AnnotationManipulator.removeDataFromTile( tile, binIndex, data );				
 		}	
 		
 		// determine which tiles need to be re-written and which need to be removed
-		for ( AnnotationTile tile : tiles ) {			
-			if ( tile.size() == 0 ) {				
+		for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {
+			if ( AnnotationManipulator.isTileEmpty( tile ) ) {				
 				// if no data left, flag tile for removal
-				tilesToRemove.add( tile );
+				tilesToRemove.add( tile.getDefinition() );
 			} else {
 				// flag tile to be written
 				tilesToWrite.add( tile );
@@ -277,17 +375,17 @@ public class AnnotationServiceImpl implements AnnotationService {
 		indices.add( tileIndex );
 			
 		// get tiles
-		List<AnnotationTile> tiles = readTilesFromIO( layer, indices );
+		List<TileData<Map<String,List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, indices );
 				
 		// for each tile, assemble list of all data references
-		List<AnnotationReference> references = new LinkedList<>();
-		for ( AnnotationTile tile : tiles ) {					
+		List<Pair<String,Long>> references = new LinkedList<>();
+		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {					
 			if ( filter != null ) {
 				// filter provided
-				references.addAll( tile.getFilteredReferences( filter ) );
+				references.addAll( AnnotationManipulator.getFilteredReferencesFromTile( tile, filter ) );
 			} else {
 				// no filter provided
-				references.addAll( tile.getAllReferences() );
+				references.addAll(  AnnotationManipulator.getAllReferencesFromTile( tile ) );
 			}
 		}
 		
@@ -315,7 +413,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// get list of the indices for all levels
 		List<TileAndBinIndices> indices = _indexer.getIndices( data );
 		// get all affected tiles
-		List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );
+		List<TileData<Map<String, List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, convert( indices ) );
 		// add new data reference to tiles
     	addDataReferenceToTiles( tiles, indices, data );
 		// write tiles back to io
@@ -331,10 +429,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// get list of the indices for all levels
     	List<TileAndBinIndices> indices = _indexer.getIndices( data );	    	
 		// read existing tiles
-		List<AnnotationTile> tiles = readTilesFromIO( layer, convert( indices ) );					
+		List<TileData<Map<String, List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, convert( indices ) );					
 		// maintain lists of what bins to modify and what bins to remove
-		List<AnnotationTile> tilesToWrite = new LinkedList<>(); 
-		List<AnnotationTile> tilesToRemove = new LinkedList<>();			
+		List<TileData<Map<String, List<Pair<String,Long>>>>> tilesToWrite = new LinkedList<>(); 
+		List<TileIndex> tilesToRemove = new LinkedList<>();			
 		// remove data from tiles and organize into lists to write and remove
 		removeDataReferenceFromTiles( tilesToWrite, tilesToRemove, tiles, data );
 		// write modified tiles
@@ -344,14 +442,14 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	protected void writeTilesToIO( String layer, List<AnnotationTile> tiles ) {
+	protected void writeTilesToIO( String layer, List<TileData<Map<String, List<Pair<String,Long>>>>> tiles ) {
 		
 		if ( tiles.size() == 0 ) return;
 		
 		try {
 
 			_io.initializeForWrite( layer );
-			_io.writeTiles( layer, _tileSerializer, tiles );
+			_io.writeTiles( layer, null, _tileSerializer, tiles );
 					
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -376,13 +474,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	protected void removeTilesFromIO( String layer, List<AnnotationTile> tiles ) {
+	protected void removeTilesFromIO( String layer, List<TileIndex> tiles ) {
 
 		if ( tiles.size() == 0 ) return;
 		
 		try {		
-
-			_io.initializeForRemove( layer );		
+		
 			_io.removeTiles( layer, tiles );	
 			
 		} catch ( Exception e ) {
@@ -399,7 +496,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 			
-			_io.initializeForRemove( layer );	
 			_io.removeData( layer, dataList );											
 			
 		} catch ( Exception e ) {
@@ -409,15 +505,15 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	protected List<AnnotationTile> readTilesFromIO( String layer, List<TileIndex> indices ) {
+	protected List<TileData<Map<String, List<Pair<String,Long>>>>> readTilesFromIO( String layer, List<TileIndex> indices ) {
 			
-		List<AnnotationTile> tiles = new LinkedList<>();
+		List<TileData<Map<String, List<Pair<String,Long>>>>> tiles = new LinkedList<>();
 		
 		if ( indices.size() == 0 ) return tiles;
 		
 		try {
 			
-			_io.initializeForRead( layer );		
+			_io.initializeForRead( layer, 0, 0, null );		
 			tiles = _io.readTiles( layer, _tileSerializer, indices );						
 					
 		} catch ( Exception e ) {
@@ -427,7 +523,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return tiles;		
 	}
 	
-	protected List<AnnotationData<?>> readDataFromIO( String layer, List<AnnotationReference> references ) {
+	protected List<AnnotationData<?>> readDataFromIO( String layer, List<Pair<String,Long>> references ) {
 		
 		List<AnnotationData<?>> data = new LinkedList<>();
 		
@@ -435,7 +531,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 			
-			_io.initializeForRead( layer );	
+			_io.initializeForRead( layer, 0, 0, null );	
 			data = _io.readData( layer, _dataSerializer, references );			
 			
 		} catch ( Exception e ) {

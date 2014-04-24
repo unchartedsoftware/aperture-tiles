@@ -27,12 +27,14 @@ package com.oculusinfo.annotation.io.impl;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 import java.nio.ByteBuffer;
 
@@ -46,6 +48,9 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.io.impl.HBasePyramidIO.HBaseColumn;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.*;
@@ -85,10 +90,28 @@ public class HBaseAnnotationIO implements AnnotationIO {
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
-        _admin = new HBaseAdmin(_config);
-        
+        _admin = new HBaseAdmin(_config);       
     }
-    
+
+
+	/**
+	 * Writes out new metadata for this tile set
+	 * TODO: Implement annotation meta data
+	 */
+	public void writeMetaData (String pyramidId, String metaData) throws IOException {
+		throw new IOException("annotation metadata not supported");
+	}
+
+
+	/**
+	 * Gets the metadata for this tile set
+	 * TODO: Implement annotation meta data
+	 */
+	public String readMetaData (String pyramidId) throws IOException {
+		throw new IOException("annotation metadata not supported");
+	}
+	
+
     
     /**
 	 * Determine the row ID we use in HBase for given annotation data 
@@ -129,17 +152,17 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     
     @Override
-    public void writeTiles (String tableName,
-    				   		AnnotationSerializer<AnnotationTile> serializer,
-    				   		List<AnnotationTile> tiles ) throws IOException {
-        
+    public <T> void writeTiles (String tableName, TilePyramid tilePyramid,
+            TileSerializer<T> serializer,
+            Iterable<TileData<T>> data) throws IOException {
+
     	List<Row> rows = new ArrayList<Row>();
-        for (AnnotationTile tile : tiles) {
+        for (TileData<T> tile : data) {
         	
         	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            serializer.serialize( tile, baos );
+            serializer.serialize( tile, tilePyramid, baos );
             rows.add( addToPut(null, 
-            				   rowIdFromTile( tile.getIndex() ),
+            				   rowIdFromTile( tile.getDefinition() ),
                                ANNOTATION_COLUMN, 
                                baos.toByteArray() ) );
         }
@@ -154,7 +177,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     @Override
     public void writeData (String tableName, 
 					       AnnotationSerializer<AnnotationData<?>> serializer, 
-					       List<AnnotationData<?>> data ) throws IOException {
+					       Iterable<AnnotationData<?>> data ) throws IOException {
         
     	List<Row> rows = new ArrayList<Row>();
         for (AnnotationData<?> d : data) {
@@ -176,19 +199,24 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     
     @Override
-    public void initializeForRead( String tableName ) throws IOException {
+	public void initializeForRead (String tableName, int width, int height, Properties dataDescription) {		
+    	try {
     	initializeForWrite( tableName );
-    }
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+	}
+
     
 
     
     @Override
-    public List<AnnotationTile> readTiles (String tableName, 
-										   AnnotationSerializer<AnnotationTile> serializer,
-										   List<TileIndex> indices) throws IOException {
-    	
+
+	public <T> List<TileData<T>> readTiles (String tableName, TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException {
+
     	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (TileIndex index: indices) {
+        for (TileIndex index: tiles) {
             rowIds.add( rowIdFromTile( index ) );
         }
         
@@ -200,40 +228,53 @@ public class HBaseAnnotationIO implements AnnotationIO {
     @Override
     public List<AnnotationData<?>> readData (String tableName, 
 								          AnnotationSerializer<AnnotationData<?>> serializer,
-								          List<AnnotationReference> references) throws IOException {
+								          List<Pair<String,Long>> references) throws IOException {
 
     	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (AnnotationReference reference: references) {
-            rowIds.add( rowIdFromData( reference.getUUID() ) );
+        for (Pair<String,Long> reference: references) {
+            rowIds.add( rowIdFromData( UUID.fromString( reference.getFirst() ) ) );
         }
         
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
 
         return convertResults( rawResults, serializer );
     }
-
     
     @Override
-    public void initializeForRemove( String pyramidId ) {
-    	// NO-OP
-    }
+	public <T> InputStream getTileStream (String tableName,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException {
+		List<byte[]> rowIds = new ArrayList<>();
+		rowIds.add(rowIdFromTile(tile));
+        
+		readRows(tableName, rowIds, ANNOTATION_COLUMN);
+
+		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
+		Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
+
+		if (iData.hasNext()) {
+			Map<HBaseColumn, byte[]> rawResult = iData.next();
+			if (null != rawResult) {
+				byte[] rawData = rawResult.get(ANNOTATION_COLUMN);
+				return new ByteArrayInputStream(rawData);
+			}
+		}
+		return null;
+	}
+
    
     @Override
-    public void removeTiles (String tableName,
-							 List<AnnotationTile> tiles) 
-														throws IOException {
+    public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
     	
     	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (AnnotationTile tile: tiles) {
-            rowIds.add( rowIdFromTile( tile.getIndex() ) );
+        for (TileIndex tile: tiles) {
+            rowIds.add( rowIdFromTile( tile ) );
         }        
         deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
     }
     
     @Override
-    public void removeData (String tableName,
-							List<AnnotationData<?>> data) 
-														throws IOException {
+    public void removeData (String tableName, Iterable<AnnotationData<?>> data) throws IOException {
     	
     	List<byte[]> rowIds = new ArrayList<byte[]>();
         for (AnnotationData<?> d: data) {
@@ -445,11 +486,11 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     */
 
-    
-    private <T> List<T> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
-    									AnnotationSerializer<T> serializer ) 
+
+    private <T> List<TileData<T>> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
+    		TileSerializer<T> serializer ) 
     											    		   	throws IOException {    	
-    	List<T> results = new LinkedList<>();
+    	List<TileData<T>> results = new LinkedList<>();
         Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();       
         while (iData.hasNext()) {
 	        Map<HBaseColumn, byte[]> rawResult = iData.next();
@@ -458,11 +499,30 @@ public class HBaseAnnotationIO implements AnnotationIO {
 
             	byte[] rawData = rawResult.get(ANNOTATION_COLUMN);      
                 ByteArrayInputStream bais = new ByteArrayInputStream(rawData);                
-                T data = serializer.deserialize( bais );
+                TileData<T> data = serializer.deserialize( (TileIndex)null, bais );
                 results.add(data);
             }
         }
         return results;
+    }
+    
+    private <T> List<T> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
+			AnnotationSerializer<T> serializer ) 
+					    		   	throws IOException {    	
+		List<T> results = new LinkedList<>();
+		Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();       
+		while (iData.hasNext()) {
+		Map<HBaseColumn, byte[]> rawResult = iData.next();
+		
+		if (null != rawResult) {
+		
+		byte[] rawData = rawResult.get(ANNOTATION_COLUMN);      
+		ByteArrayInputStream bais = new ByteArrayInputStream(rawData);                
+		T data = serializer.deserialize( bais );
+		results.add(data);
+		}
+		}
+		return results;
     }
 
     

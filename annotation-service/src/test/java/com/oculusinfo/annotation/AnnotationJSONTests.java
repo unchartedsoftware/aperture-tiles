@@ -29,48 +29,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.util.*;
 import com.oculusinfo.binning.impl.*;
-import com.oculusinfo.binning.io.serialization.*;
-import com.oculusinfo.binning.io.serialization.impl.*;
+import com.oculusinfo.binning.util.Pair;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.json.JSONObject;
 
-
-public class AnnotationSerializationTests extends AnnotationTestsBase {
+public class AnnotationJSONTests extends AnnotationTestsBase {
 	
-	static final boolean VERBOSE = true;
+	static final boolean VERBOSE = false;
 	
-	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
-	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
-	private TilePyramid _pyramid;
 	private AnnotationIndexer _indexer;
+	private TilePyramid _pyramid;
 	
     @Before
     public void setup () {
-	   _pyramid = new WebMercatorTilePyramid();
+	    _pyramid = new WebMercatorTilePyramid();
     	_indexer = new AnnotationIndexerImpl( _pyramid );
-    	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
-    	_dataSerializer = new JSONAnnotationDataSerializer();
     }
 
     @After
     public void teardown () {
-    	_indexer = null;
-    	_tileSerializer = null;
-    	_dataSerializer = null;    	
+    	_indexer = null;   	
+    	_pyramid = null;
     }
 
+
     @Test
-    public void testDataJSONSerialization () throws Exception {
+    public void testDataJSON () throws Exception {
     	
 		List<AnnotationData<?>> before = generateJSONAnnotations( NUM_ENTRIES );
 		List<AnnotationData<?>> after = new ArrayList<>();
@@ -82,65 +77,45 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 		
 		for ( AnnotationData<?> annotation : before ) {
 			
-			// serialize
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			_dataSerializer.serialize( annotation, baos );
-			baos.close();
-            baos.flush();
-            
-            // deserialize
-            byte[] data = baos.toByteArray();
-
-            ByteArrayInputStream bais = new ByteArrayInputStream(data);
-            AnnotationData<?> anno = _dataSerializer.deserialize( bais );
-            after.add( anno );
-            bais.close();
-            
-            Assert.assertTrue( compareData( annotation, anno, true ) );
+			JSONObject json = annotation.toJSON();
+			after.add( JSONAnnotation.fromJSON( json ) );
 		}
-		
 		
 		if (VERBOSE) {
 			System.out.println( "*** After ***");
 			printData( after );
 		}
+		
+		Assert.assertTrue( compareData( before, after, false ) );
+		
     }
 	
 	
     @Test
     public void testTileJSONSerialization () throws Exception {
     	
-    	List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( NUM_ENTRIES, _indexer );
+		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( NUM_ENTRIES, _indexer );
 		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
 
 		if (VERBOSE) {
 			System.out.println( "*** Before ***");
 			printTiles( before );
 		}
+
 		
 		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : before ) {
 			
-			// serialize
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			_tileSerializer.serialize( tile, _pyramid, baos );
-			baos.close();
-            baos.flush();
-            
-            // deserialize
-            byte[] data = baos.toByteArray();
-
-            ByteArrayInputStream bais = new ByteArrayInputStream(data);
-            TileData< Map<String, List<Pair<String, Long>>>> t = _tileSerializer.deserialize( (TileIndex)null, bais );
-            after.add( t );
-            bais.close();   
+			JSONObject json = AnnotationManipulator.tileToJSON( tile );
+			after.add( AnnotationManipulator.getTileFromJSON( json ) );
 		}
-				
+		
+		
 		if (VERBOSE) {
 			System.out.println( "*** After ***");
 			printTiles( after );
 		}
 		
-		Assert.assertTrue( compareTiles( before, after, true ) );
+		Assert.assertTrue( compareTiles( before, after, false ) );
     }
 	
 }

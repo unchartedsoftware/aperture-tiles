@@ -60,7 +60,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     public void setup () { 	
     	    	
     	TilePyramid pyramid = new WebMercatorTilePyramid();
-    	AnnotationIndexer indexer = new TileAnnotationIndexer( pyramid );
+    	AnnotationIndexer indexer = new AnnotationIndexerImpl( pyramid );
 
     	try {
     		
@@ -300,11 +300,8 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		int level = (int)(Math.random() * MAX_DEPTH);
 		int x = (int)(Math.random() * (level * (1 << level)) );
 		int y = (int)(Math.random() * (level * (1 << level)) );
-		// scan all
-		TileIndex tile = new TileIndex( level, x, y, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
-		
-		//TileIndex tile = new TileIndex( 0, 0, 0 );
-    	
+		TileIndex tile = new TileIndex( level, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
+
 		Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( null, TEST_LAYER_NAME, tile );   	
     	return scan;
 

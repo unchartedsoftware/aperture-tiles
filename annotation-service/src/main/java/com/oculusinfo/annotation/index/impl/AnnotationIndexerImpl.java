@@ -31,10 +31,10 @@ import com.oculusinfo.annotation.*;
 import com.oculusinfo.binning.*;
 import com.google.inject.Inject;
 
-public class TileAnnotationIndexer extends AnnotationIndexer {
+public class AnnotationIndexerImpl extends AnnotationIndexer {
 
 	@Inject
-    public TileAnnotationIndexer( TilePyramid pyramid ) {
+    public AnnotationIndexerImpl( TilePyramid pyramid ) {
     	_pyramid = pyramid;
     }
     
@@ -59,15 +59,15 @@ public class TileAnnotationIndexer extends AnnotationIndexer {
     	double y = ( yExists ) ? data.getY() : 0;
     	
     	// map from raw x and y to tile and bin
-    	TileIndex tile = _pyramid.rootToTile( x, y, level, AnnotationTile.NUM_BINS );
+    	TileIndex tile = _pyramid.rootToTile( x, y, level, NUM_BINS );
 		BinIndex bin = _pyramid.rootToBin( x, y, tile );
 
 		// insert -1's for univariate annotations
 		if ( !xExists ) {			
-			tile = new TileIndex( tile.getLevel(), -1, tile.getY(), AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
+			tile = new TileIndex( tile.getLevel(), -1, tile.getY(), NUM_BINS, NUM_BINS );
 			bin = new BinIndex( -1, bin.getY() );	  
 		} else if ( !yExists ) {
-			tile = new TileIndex( tile.getLevel(), tile.getX(), -1, AnnotationTile.NUM_BINS, AnnotationTile.NUM_BINS );
+			tile = new TileIndex( tile.getLevel(), tile.getX(), -1, NUM_BINS, NUM_BINS );
 			bin = new BinIndex( bin.getX(), -1 );
 		}
 		
