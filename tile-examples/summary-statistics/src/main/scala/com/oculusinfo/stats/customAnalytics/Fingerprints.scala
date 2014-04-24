@@ -186,11 +186,13 @@ def scoreGreater(candidate: String, reference: String): Boolean = {
 }
 
 def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weightDB: Map[String,Int])= {
-	try{
+	val startTime = System.currentTimeMillis
+  try{
 	val candidateTRList: Map[String,String] = fingerPrintsParser(fingerprint).toMap
  	var i = 0
- 	refDB.map(reference => {
- 		//println(1)
+ 	val amount = refDB.map(reference => {
+// 	refDB.map(reference => {
+ 	  //println(1)
  		i += 1
  		val refTRPair = reference._2
  		val score = candidateTRList.map(candidateTest => {
@@ -225,9 +227,13 @@ def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weigh
  		 }).reduce(_ + _)
  		(reference._1, score)
  		})
+ 		val time = (startTime - System.currentTimeMillis) * 1000
+ 		(time,amount)
 	} catch {
-	  case e: Exception => List((fingerprint,-1))
-	}
+	  case e: Exception => {
+	    val time = (startTime - System.currentTimeMillis) * 1000
+	    (time,List((fingerprint,-1)))}
+	  }
  }
  	
 // test functions
@@ -266,6 +272,8 @@ def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weigh
 // distributed version
  def main(table: RDD[Array[String]], field: String, index: Int, customVars: String, writer: PrintWriter){
 	
+	val startTime = System.nanoTime
+   
    	val sc = table.context	
    
  	val refDB = buildRefDB
@@ -278,8 +286,8 @@ def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weigh
 
  	table.map(line => line(index)).foreach(r => {
  	  val a = scorer(r, refBroadcast.value, weightBroadcast.value)
- 	  
- 	  a.foreach(r => {
+ 	  outputAcc += a._1.toString + ","
+ 	  a._2.foreach(r => {
  	    val next = r._2.toString + ","
  	    outputAcc += next
  	  })
