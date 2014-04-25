@@ -149,4 +149,10 @@ public class FileSystemPyramidIO implements PyramidIO {
 		reader.close();
 		return rawMetaData;
 	}
+	
+	@Override
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
+		throw new IOException("removeTiles not currently supported for FileSystemPyramidIO");
+	}
+    
 }

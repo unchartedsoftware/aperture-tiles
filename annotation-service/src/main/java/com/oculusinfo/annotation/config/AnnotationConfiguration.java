@@ -35,13 +35,8 @@ import org.slf4j.LoggerFactory;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.properties.IntegerProperty;
-import com.oculusinfo.factory.properties.ListProperty;
-import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.factory.properties.TileIndexProperty;
 import com.oculusinfo.tile.init.FactoryProvider;
 
 

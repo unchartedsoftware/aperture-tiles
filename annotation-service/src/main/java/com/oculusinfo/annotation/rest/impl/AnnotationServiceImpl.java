@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,6 +57,7 @@ import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.io.*;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.*;
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -72,25 +74,34 @@ public class AnnotationServiceImpl implements AnnotationService {
     private Map<String, AnnotationInfo>  _annotationLayersById;
     private ConcurrentHashMap< UUID, Map<String, Integer> > _filtersByUuid;
     
-    private FactoryProvider<AnnotationConfiguration> _annotationConfigurationProvider;
+    private FactoryProvider<PyramidIO>         _pyramidIOFactoryProvider;
+    private FactoryProvider<TileSerializer<?>> _tileSerializerFactoryProvider;
+    private FactoryProvider<TilePyramid>       _tilePyramidFactoryProvider;
+    
     
     protected AnnotationSerializer<AnnotationData<?>> _dataSerializer;
     protected AnnotationIndexer _indexer;
+    protected AnnotationIO _io;
 	
-	
-
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
 	
 	@Inject
     public AnnotationServiceImpl( @Named("com.oculusinfo.annotation.config") String annotationConfigurationLocation,
-    							  FactoryProvider<LayerConfiguration> layerConfigurationProvider,
-    							  AnnotationIndexer indexer,
+					    		  FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+					    	      FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
+					    		  FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+					    		  AnnotationIndexer indexer,
+					    		  AnnotationIO io,
     							  AnnotationSerializer<AnnotationData<?>> serializer ) {
 
+		_pyramidIOFactoryProvider = pyramidIOFactoryProvider;
+		_tileSerializerFactoryProvider = tileSerializerFactoryProvider;
+		_tilePyramidFactoryProvider = tilePyramidFactoryProvider;
 		_dataSerializer = serializer;	
 		_filtersByUuid =  new ConcurrentHashMap<>();		
 		_indexer = indexer;
+		_io = io;
 		
         readConfigFiles( getConfigurationFiles(annotationConfigurationLocation) );
     }
@@ -225,7 +236,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 				// remove the references from tiles
 				removeDataFromTiles( layer, annotation, pyramid );
 				// remove data from io
-				removeDataFromIO( layer, annotation );
+				removeDataFromIO( layer, annotation.getReference() );
 				
 			} finally {
 				_lock.writeLock().unlock();
@@ -244,22 +255,26 @@ public class AnnotationServiceImpl implements AnnotationService {
 	
 
 	public AnnotationConfiguration getAnnotationConfiguration( String layer ) {
+					
+		try {
+			AnnotationConfiguration configFactory = new AnnotationConfiguration( _pyramidIOFactoryProvider,
+					_tileSerializerFactoryProvider,
+					_tilePyramidFactoryProvider, null, Collections.singletonList("config") );
 			
-		_annotationConfigurationProvider.readConfiguration( _annotationLayersById.get(layer).getRawData() ); //_configurationsById.get( layer ) );
-		return _annotationConfigurationProvider.produce(AnnotationConfiguration.class);
+			configFactory.readConfiguration( _annotationLayersById.get(layer).getRawData() );		
+			return configFactory.produce(AnnotationConfiguration.class);
+			
+		} catch (ConfigurationException e) {
+	        LOGGER.warn("Error configuring annotatons for {}", layer, e);
+	        return null;
+	    }
+		
+
 	}
 
 	@Override
-	public UUID configureFilters (String layerId, JSONObject jsonFilters) {
+	public UUID configureFilters (String layerId, Map<String, Integer> filters ) {
 
-		Map<String, Integer> filters = new HashMap<>();	
-		Iterator<?> priorities = jsonFilters.keys();
-        while( priorities.hasNext() ) {
-        	
-        	String priority = (String)priorities.next();		            
-            int count = jsonFilters.getInt( priority );
-            filters.put( priority, count );
-        }
 		
         UUID uuid = UUID.randomUUID();
         _filtersByUuid.put( uuid, filters );
@@ -536,13 +551,17 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
+	private String getDataLayerId( String layer ) {
+		return layer + ".data";
+	}
+	
 	protected void writeTilesToIO( String layer, List<TileData<Map<String, List<Pair<String,Long>>>>> tiles ) {
 		
 		if ( tiles.size() == 0 ) return;
 		
 		try {
 			AnnotationConfiguration config = getAnnotationConfiguration(layer);
-			AnnotationIO io = config.produce(AnnotationIO.class);	
+			PyramidIO io = config.produce(PyramidIO.class);	
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
 			io.initializeForWrite( layer );
@@ -560,11 +579,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 		List<AnnotationData<?>> dataList = new LinkedList<>();
 		dataList.add( data );
 		
+		String dataLayer = getDataLayerId( layer );
+		
 		try {
-			AnnotationConfiguration config = getAnnotationConfiguration(layer);
-			AnnotationIO io = config.produce(AnnotationIO.class);				
-			io.initializeForWrite( layer );		
-			io.writeData( layer, _dataSerializer, dataList );
+			
+			_io.initializeForWrite( dataLayer );		
+			_io.writeData( dataLayer, _dataSerializer, dataList );
 
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -578,7 +598,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {		
 			AnnotationConfiguration config = getAnnotationConfiguration(layer);
-			AnnotationIO io = config.produce(AnnotationIO.class);			
+			PyramidIO io = config.produce(PyramidIO.class);			
 			io.removeTiles( layer, tiles );	
 			
 		} catch ( Exception e ) {
@@ -588,15 +608,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	protected void removeDataFromIO( String layer, AnnotationData<?> data ) {
+	protected void removeDataFromIO( String layer, Pair<String, Long> data ) {
 		
-		List<AnnotationData<?>> dataList = new LinkedList<>();
+		List<Pair<String, Long>> dataList = new LinkedList<>();
 		dataList.add( data );
 		
+		String dataLayer = getDataLayerId( layer );
+				
 		try {
-			AnnotationConfiguration config = getAnnotationConfiguration(layer);
-			AnnotationIO io = config.produce(AnnotationIO.class);	
-			io.removeData( layer, dataList );											
+
+			_io.removeData( dataLayer, dataList );											
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -613,7 +634,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 			AnnotationConfiguration config = getAnnotationConfiguration(layer);
-			AnnotationIO io = config.produce(AnnotationIO.class);	
+			PyramidIO io = config.produce(PyramidIO.class);	
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
 			io.initializeForRead( layer, 0, 0, null );		
@@ -632,11 +653,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		if ( references.size() == 0 ) return data;
 		
+		String dataLayer = getDataLayerId( layer );		
+		
 		try {
-			AnnotationConfiguration config = getAnnotationConfiguration(layer);
-			AnnotationIO io = config.produce(AnnotationIO.class);	
-			io.initializeForRead( layer, 0, 0, null );	
-			data = io.readData( layer, _dataSerializer, references );			
+
+			_io.initializeForRead( dataLayer );	
+			data = _io.readData( dataLayer, _dataSerializer, references );			
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();

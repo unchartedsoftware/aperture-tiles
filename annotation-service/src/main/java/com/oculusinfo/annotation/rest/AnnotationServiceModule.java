@@ -30,6 +30,8 @@ import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.annotation.rest.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
+import com.oculusinfo.annotation.io.*;
+import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 
@@ -39,6 +41,7 @@ public class AnnotationServiceModule extends AbstractModule {
 	protected void configure() {
 		
 		bind(AnnotationSerializer.class).to(JSONAnnotationDataSerializer.class);
+		bind(AnnotationIO.class).to(HBaseAnnotationIO.class);
 		bind(AnnotationIndexer.class).to(AnnotationIndexerImpl.class);
 		bind(AnnotationService.class).to(CachedAnnotationServiceImpl.class);
 

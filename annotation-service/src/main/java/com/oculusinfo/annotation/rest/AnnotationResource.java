@@ -95,9 +95,18 @@ public class AnnotationResource extends ApertureServerResource {
 			} else if ( requestType.equals("filter") ) {
 				
 				//UUID uuid = UUID.fromString( data.getString("uuid") );
+				
+				Map<String, Integer> filters = new HashMap<>();	
 				JSONObject jsonFilters = data.getJSONObject("filters");
-						
-				UUID uuid = _service.configureFilters( layer, jsonFilters );
+				Iterator<?> priorities = jsonFilters.keys();
+		        while( priorities.hasNext() ) {
+		        	
+		        	String priority = (String)priorities.next();		            
+		            int count = jsonFilters.getInt( priority );
+		            filters.put( priority, count );
+		        }
+	
+				UUID uuid = _service.configureFilters( layer, filters );
 
                 jsonResult.put("uuid", uuid);
 

@@ -31,16 +31,25 @@ import java.util.Map;
 
 
 
+
+
+
+
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
+import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.*;
+import com.oculusinfo.tile.init.FactoryProvider;
 
 @Singleton
 public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
@@ -53,10 +62,17 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	
 	@Inject
     public CachedAnnotationServiceImpl( @Named("com.oculusinfo.annotation.config") String annotationConfigurationLocation,
-    									FactoryProvider<LayerConfiguration> layerConfigurationProvider,
-    									AnnotationIndexer indexer,
+							    		FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+							  	        FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
+							  		    FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+							  		    AnnotationIndexer indexer,
+							  		    AnnotationIO io,
 									    AnnotationSerializer<AnnotationData<?>> serializer ) {
-		super( annotationConfigurationLocation, layerConfigurationProvider, indexer, serializer );
+		super( annotationConfigurationLocation, 
+			   pyramidIOFactoryProvider, 
+			   tileSerializerFactoryProvider, 
+			   tilePyramidFactoryProvider, 
+			   indexer, io, serializer );
 		_tileCache = new ConcurrentHashMap<>();
 		_dataCache = new ConcurrentHashMap<>();
 	}
@@ -125,14 +141,14 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	}
 	
 	@Override
-	protected void removeDataFromIO( String layer, AnnotationData<?> data ) {
+	protected void removeDataFromIO( String layer, Pair<String,Long> reference ) {
 		
 		AnnotationCache<Pair<String,Long>, AnnotationData<?>> dataCache = getLayerDataCache( layer );
 		
 		// remove from cache
-		dataCache.remove( data.getReference() );
+		dataCache.remove( reference );
 
-		super.removeDataFromIO( layer, data );
+		super.removeDataFromIO( layer, reference );
 
 	}
 	

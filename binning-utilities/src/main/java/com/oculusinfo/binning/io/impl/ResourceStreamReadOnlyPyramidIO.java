@@ -116,4 +116,9 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
 		reader.close();
 		return rawMetaData;
 	}
+	
+	@Override
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
+		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+	}
 }

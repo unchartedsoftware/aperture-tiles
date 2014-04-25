@@ -68,7 +68,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     									"2181", 
     									"hadoop-s1.oculus.local:60000");
     		
-    		_service = new CachedAnnotationServiceImpl( _io, indexer );
+    		_service = null; //new CachedAnnotationServiceImpl( _io, indexer );
     		
     	} catch (Exception e) {
     		

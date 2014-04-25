@@ -93,27 +93,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
         _admin = new HBaseAdmin(_config);       
     }
 
-
-	/**
-	 * Writes out new metadata for this tile set
-	 * TODO: Implement annotation meta data
-	 */
-    @Override
-	public void writeMetaData (String pyramidId, String metaData) throws IOException {
-		throw new IOException("annotation metadata not supported");
-	}
-
-
-	/**
-	 * Gets the metadata for this tile set
-	 * TODO: Implement annotation meta data
-	 */
-	@Override
-	public String readMetaData (String pyramidId) throws IOException {
-		throw new IOException("annotation metadata not supported");
-	}
-	
-
     
     /**
 	 * Determine the row ID we use in HBase for given annotation data 
@@ -124,19 +103,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
 		bb.putLong(uuid.getMostSignificantBits());
 		bb.putLong(uuid.getLeastSignificantBits());
 		return bb.array();
-    }
-
-	
-	/**
-	 * Determine the row ID we use in HBase for a given tile index
-	 */
-	public static byte[] rowIdFromTile (TileIndex index) {
-        // Use the minimum possible number of digits for the tile key
-        int digits = (int) Math.floor(Math.log10(1 << index.getLevel()))+1;
-        return String.format( "%02d,%0"+digits+"d,%0"+digits+"d",
-        		index.getLevel(), 
-        		index.getX(),
-        		index.getY() ).getBytes();
     }
 
     
@@ -153,29 +119,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     
     
-    @Override
-    public <T> void writeTiles (String tableName, TilePyramid tilePyramid,
-            TileSerializer<T> serializer,
-            Iterable<TileData<T>> data) throws IOException {
-
-    	List<Row> rows = new ArrayList<Row>();
-        for (TileData<T> tile : data) {
-        	
-        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            serializer.serialize( tile, tilePyramid, baos );
-            rows.add( addToPut(null, 
-            				   rowIdFromTile( tile.getDefinition() ),
-                               ANNOTATION_COLUMN, 
-                               baos.toByteArray() ) );
-        }
-        
-        try {
-            writeRows(tableName, rows);
-        } catch (InterruptedException e) {
-            throw new IOException("Error writing annotations to HBase", e);
-        }
-    }
-    
+   
     @Override
     public void writeData (String tableName, 
 					       AnnotationSerializer<AnnotationData<?>> serializer, 
@@ -201,7 +145,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     
     @Override
-	public void initializeForRead (String tableName, int width, int height, Properties dataDescription) {		
+	public void initializeForRead (String tableName) {		
     	try {
     	initializeForWrite( tableName );
     	} catch (Exception e) {
@@ -209,19 +153,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
     	}
 	}
 
-    @Override
-	public <T> List<TileData<T>> readTiles (String tableName, TileSerializer<T> serializer,
-	                                        Iterable<TileIndex> tiles) throws IOException {
-
-    	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (TileIndex index: tiles) {
-            rowIds.add( rowIdFromTile( index ) );
-        }
-        
-        List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
-
-        return convertResults( rawResults, serializer );
-    }
     
     @Override
     public List<AnnotationData<?>> readData (String tableName, 
@@ -237,45 +168,14 @@ public class HBaseAnnotationIO implements AnnotationIO {
 
         return convertResults( rawResults, serializer );
     }
+
     
     @Override
-	public <T> InputStream getTileStream (String tableName,
-	                                      TileSerializer<T> serializer,
-	                                      TileIndex tile) throws IOException {
-		List<byte[]> rowIds = new ArrayList<>();
-		rowIds.add(rowIdFromTile(tile));
-        
-		readRows(tableName, rowIds, ANNOTATION_COLUMN);
-
-		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
-		Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
-
-		if (iData.hasNext()) {
-			Map<HBaseColumn, byte[]> rawResult = iData.next();
-			if (null != rawResult) {
-				byte[] rawData = rawResult.get(ANNOTATION_COLUMN);
-				return new ByteArrayInputStream(rawData);
-			}
-		}
-		return null;
-	}
-
-    @Override
-    public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
+    public void removeData (String tableName, Iterable<Pair<String,Long>> references) throws IOException {
     	
     	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (TileIndex tile: tiles) {
-            rowIds.add( rowIdFromTile( tile ) );
-        }        
-        deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
-    }
-    
-    @Override
-    public void removeData (String tableName, Iterable<AnnotationData<?>> data) throws IOException {
-    	
-    	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (AnnotationData<?> d: data) {
-            rowIds.add( rowIdFromData( d.getUUID() ) );
+        for (Pair<String,Long> reference: references) {
+            rowIds.add( rowIdFromData( UUID.fromString( reference.getFirst() ) ) );
         }        
         deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
     }
@@ -306,11 +206,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
     		_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
     		_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
         } catch (Exception e) {}
-    	
-    	
+ 	
     }
-    
-    
+        
 	/**
 	 * Get the configuration used to connect to HBase.
 	 */
@@ -327,28 +225,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     
 
-    /**
-	 * Determine the row ID we use in HBase for a given tile index
-	 */
-	public static String rowIdFromTileIndex (TileIndex tile) {
-        // Use the minimum possible number of digits for the tile key
-        int digits = (int) Math.floor(Math.log10(1 << tile.getLevel()))+1;
-        return String.format("%02d,%0"+digits+"d,%0"+digits+"d",
-                             tile.getLevel(), tile.getX(), tile.getY());
-    }
-
-	/**
-	 * Determine tile index given a row id
-	 */
-	public static TileIndex tileIndexFromRowId (String rowId) {
-		String[] fields = rowId.split(",");
-		return new TileIndex(Integer.parseInt(fields[0]),
-		                     Integer.parseInt(fields[1]),
-		                     Integer.parseInt(fields[2]));
-	}
-
-
-    
     /*
      * Given a put request (a request to put data into a table), add a single
      * entry into the request
@@ -450,6 +326,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         table.delete(deletes);
     }
 
+    
     /*
     private List<Map<HBaseColumn, byte[]>> scanRange(String tableName, byte[] startRow, byte[] stopRow, HBaseColumn... columns) throws IOException {
         
@@ -483,25 +360,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
     */
 
 
-    private <T> List<TileData<T>> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
-    		TileSerializer<T> serializer ) 
-    											    		   	throws IOException {    	
-    	List<TileData<T>> results = new LinkedList<>();
-        Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();       
-        while (iData.hasNext()) {
-	        Map<HBaseColumn, byte[]> rawResult = iData.next();
-	        
-            if (null != rawResult) {
-
-            	byte[] rawData = rawResult.get(ANNOTATION_COLUMN);      
-                ByteArrayInputStream bais = new ByteArrayInputStream(rawData);                
-                TileData<T> data = serializer.deserialize( (TileIndex)null, bais );
-                results.add(data);
-            }
-        }
-        return results;
-    }
-    
     private <T> List<T> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
 			AnnotationSerializer<T> serializer ) 
 					    		   	throws IOException {    	

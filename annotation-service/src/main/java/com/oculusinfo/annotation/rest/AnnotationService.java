@@ -72,7 +72,7 @@ public interface AnnotationService {
 	 */
 	public abstract AnnotationConfiguration getAnnotationConfiguration( String layer );
 	//public abstract UUID configureAnnotationLayer (String layerId, JSONObject configuration);
-	public abstract UUID configureFilters (String layerId, JSONObject filters);
+	public abstract UUID configureFilters (String layerId, Map<String, Integer> filters );
 	
 	public abstract List<AnnotationInfo> listAnnotations();
 }

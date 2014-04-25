@@ -156,6 +156,7 @@ public class AnnotationManipulator {
     	
     }
 
+   
     
     static public void addDataToTiles( List< TileData<Map<String, List<Pair<String,Long>>>>> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
     	 /*
