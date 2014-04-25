@@ -29,19 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 
-
-
-
-
-
-
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
-import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
@@ -66,13 +59,12 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 							  	        FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
 							  		    FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 							  		    AnnotationIndexer indexer,
-							  		    AnnotationIO io,
-									    AnnotationSerializer<AnnotationData<?>> serializer ) {
+									    AnnotationSerializer serializer ) {
 		super( annotationConfigurationLocation, 
 			   pyramidIOFactoryProvider, 
 			   tileSerializerFactoryProvider, 
 			   tilePyramidFactoryProvider, 
-			   indexer, io, serializer );
+			   indexer, serializer );
 		_tileCache = new ConcurrentHashMap<>();
 		_dataCache = new ConcurrentHashMap<>();
 	}
@@ -197,7 +189,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		// for each reference, pull from cache and flag missing for read
 		for ( Pair<String,Long> reference : references ) {
 			
-			AnnotationData<?> d = dataCache.get( reference );	
+			AnnotationData<?> d = dataCache.get( reference );
 			if ( d != null ) {				
 				// found in cache
 				data.add( d );

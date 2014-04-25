@@ -26,12 +26,9 @@ package com.oculusinfo.annotation.io;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.io.*;
 import com.oculusinfo.binning.util.*;
 
 public interface AnnotationIO {
@@ -42,7 +39,7 @@ public interface AnnotationIO {
 	 */
 	public void initializeForWrite (String tableName) throws IOException;
     public void writeData (String id, 
-					       AnnotationSerializer<AnnotationData<?>> serializer, 
+					       AnnotationSerializer serializer, 
 					       Iterable<AnnotationData<?>> data ) throws IOException;
 
     /*
@@ -50,7 +47,7 @@ public interface AnnotationIO {
      */
     public void initializeForRead (String tableName);
     public List<AnnotationData<?>> readData (String id, 
-								             AnnotationSerializer<AnnotationData<?>> serializer,
+								             AnnotationSerializer serializer,
 								             List<Pair<String,Long>> references) throws IOException;
  
     /*

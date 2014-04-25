@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.io.PyramidIO;
@@ -41,8 +39,7 @@ import com.oculusinfo.tile.init.FactoryProvider;
 
 
 public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfiguration> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationConfiguration.class);
-
+	
 	public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");    
     public static final List<String> PYRAMID_IO_PATH = Collections.singletonList("pyramidio");
     public static final List<String> SERIALIZER_PATH = Collections.singletonList("serializer");

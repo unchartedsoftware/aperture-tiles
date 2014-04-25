@@ -46,14 +46,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
 public class AnnotationResource extends ApertureServerResource {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationResource.class);
-    
+
 
 	private AnnotationService 			 _service;
 	
@@ -69,24 +66,28 @@ public class AnnotationResource extends ApertureServerResource {
 		try {
 
 			JSONObject json = new JSONObject( jsonData );
-			JSONObject data = json.getJSONObject("data");
-			String requestType = json.getString( "type" ).toLowerCase();
-			String layer = json.getString("layer");
+			
+			String requestType = json.getString( "type" ).toLowerCase();	
 			JSONObject jsonResult = new JSONObject();
 			
-			// write
 			if ( requestType.equals("write") ) {
 				
+				String layer = json.getString("layer");
+				JSONObject data = json.getJSONObject("data");
 				JSONAnnotation annotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );			
 				_service.writeAnnotation( layer, annotation );
 				jsonResult.put("data", annotation.toJSON() );
 				
 			} else if ( requestType.equals("remove") ) {
 	
+				String layer = json.getString("layer");
+				JSONObject data = json.getJSONObject("data");
 				_service.removeAnnotation( layer, JSONAnnotation.fromJSON( data.getJSONObject("old") ) );
 				
 			} else if ( requestType.equals("modify") ) {
 				
+				String layer = json.getString("layer");
+				JSONObject data = json.getJSONObject("data");
 				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("old") );
 				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );				
 				_service.modifyAnnotation( layer, oldAnnotation, newAnnotation );				
@@ -94,20 +95,10 @@ public class AnnotationResource extends ApertureServerResource {
 				
 			} else if ( requestType.equals("filter") ) {
 				
-				//UUID uuid = UUID.fromString( data.getString("uuid") );
-				
-				Map<String, Integer> filters = new HashMap<>();	
+				String layer = json.getString("layer");
+				JSONObject data = json.getJSONObject("data");
 				JSONObject jsonFilters = data.getJSONObject("filters");
-				Iterator<?> priorities = jsonFilters.keys();
-		        while( priorities.hasNext() ) {
-		        	
-		        	String priority = (String)priorities.next();		            
-		            int count = jsonFilters.getInt( priority );
-		            filters.put( priority, count );
-		        }
-	
-				UUID uuid = _service.configureFilters( layer, filters );
-
+				UUID uuid = _service.configureFilters( layer, jsonFilters );
                 jsonResult.put("uuid", uuid);
 
 			} else if ( requestType.equals("list") ) {
@@ -149,8 +140,13 @@ public class AnnotationResource extends ApertureServerResource {
 			int zoomLevel = Integer.parseInt(levelDir);
 			int x = Integer.parseInt(xAttr);
 			int y = Integer.parseInt(yAttr);
-			UUID uuid = UUID.fromString( id );
 			
+			
+			UUID uuid = null;
+			if( !id.equals("default") ){
+				uuid = UUID.fromString(id);
+			}
+
 		    // We return an object including the tile index ("index") and 
 		    // the tile data ("data").
 		    //

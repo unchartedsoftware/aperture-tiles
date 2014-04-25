@@ -51,10 +51,10 @@ require(['./FileLoader',
             "use strict";
 
             var apertureConfigFile = "./data/aperture-config.json",
-                annotationConfigFile = "./data/annotation-config-temporary.json",
                 cloneObject,
                 getLayers,
                 pyramidsEqual,
+                //getAnnotationLayers,
                 uiMediator;
 
             cloneObject = function (base) {
@@ -137,9 +137,22 @@ require(['./FileLoader',
 		        }
 		        return result;
 	        };
+
+            /*
+            getAnnotationLayers = function( allLayers, filter ) {
+                var i, validLayers =[];
+                for (i=0; i<allLayers.length; i++) {
+
+                    if ( filter( allLayers[i] ) ) {
+                        validLayers.push( allLayers[i] );
+                    }
+                }
+                return validLayers;
+            };
+            */
                         
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(apertureConfigFile, annotationConfigFile, function (jsonDataMap) {
+            FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
 	            // First off, configure aperture.
 	            configureAperture(jsonDataMap[apertureConfigFile]);
 
@@ -154,7 +167,7 @@ require(['./FileLoader',
 		            worldMap = new Map("map", mapConfig);
                     // ... (set up our map axes) ...
                     worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
-                    // ... perform any project-specific map cusomizations ...
+                    // ... perform any project-specific map customizations ...
                     MapCustomization.customizeMap(worldMap);
                     // ... and request relevant data layers
                     mapPyramid = mapConfig.PyramidConfig;
@@ -179,7 +192,16 @@ require(['./FileLoader',
 
 				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
-                            AnnotationLayerFactory.createLayers( jsonDataMap[annotationConfigFile].AnnotationLayers, worldMap );
+                            /*
+                            AnnotationLayerFactory.requestLayers(
+                                function( layers ) {
+
+                                    var annotationLayers = getAnnotationLayers(layers, filter);
+                                    AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
+
+                                 }
+                            );
+                            */
 
 				            // Trigger the initial resize event to resize everything
 				            $(window).resize();

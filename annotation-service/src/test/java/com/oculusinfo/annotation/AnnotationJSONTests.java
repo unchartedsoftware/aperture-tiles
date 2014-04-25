@@ -23,8 +23,6 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +30,6 @@ import java.util.Map;
 import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.*;
 import com.oculusinfo.binning.util.Pair;

@@ -234,6 +234,8 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	@Test
 	public void concurrentTest() {
 		
+		
+		/*
 		try {
 
 			long start = System.currentTimeMillis();
@@ -276,12 +278,11 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 			System.out.println( "Average read times of " + ( sum / count ) + " seconds per scan");
 			
 		} finally {
-			/*
-	    	 * Drop table
-	    	 */
+	    	// Drop table
 	    	System.out.println("Disabling and dropping table");
 	    	((HBaseAnnotationIO)_io).dropTable(TEST_LAYER_NAME);
 		}
+		*/
 		
 	}
 	

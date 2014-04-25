@@ -27,14 +27,12 @@ package com.oculusinfo.annotation.io.impl;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
 import java.nio.ByteBuffer;
 
@@ -47,9 +45,6 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.io.impl.HBasePyramidIO.HBaseColumn;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.*;
@@ -122,7 +117,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
    
     @Override
     public void writeData (String tableName, 
-					       AnnotationSerializer<AnnotationData<?>> serializer, 
+					       AnnotationSerializer serializer, 
 					       Iterable<AnnotationData<?>> data ) throws IOException {
         
     	List<Row> rows = new ArrayList<Row>();
@@ -156,7 +151,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     @Override
     public List<AnnotationData<?>> readData (String tableName, 
-								          AnnotationSerializer<AnnotationData<?>> serializer,
+								          AnnotationSerializer serializer,
 								          List<Pair<String,Long>> references) throws IOException {
 
     	List<byte[]> rowIds = new ArrayList<byte[]>();
@@ -360,21 +355,21 @@ public class HBaseAnnotationIO implements AnnotationIO {
     */
 
 
-    private <T> List<T> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
-			AnnotationSerializer<T> serializer ) 
+    private List<AnnotationData<?>> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
+									AnnotationSerializer serializer ) 
 					    		   	throws IOException {    	
-		List<T> results = new LinkedList<>();
+		List<AnnotationData<?>> results = new LinkedList<>();
 		Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();       
 		while (iData.hasNext()) {
-		Map<HBaseColumn, byte[]> rawResult = iData.next();
+			Map<HBaseColumn, byte[]> rawResult = iData.next();
 		
-		if (null != rawResult) {
+			if (null != rawResult) {
 		
-		byte[] rawData = rawResult.get(ANNOTATION_COLUMN);      
-		ByteArrayInputStream bais = new ByteArrayInputStream(rawData);                
-		T data = serializer.deserialize( bais );
-		results.add(data);
-		}
+				byte[] rawData = rawResult.get(ANNOTATION_COLUMN);      
+				ByteArrayInputStream bais = new ByteArrayInputStream(rawData);                
+				AnnotationData<?> data = serializer.deserialize( bais );
+				results.add(data);
+			}
 		}
 		return results;
     }

@@ -21,18 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.io.serialization;
+package com.oculusinfo.annotation.io;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
 
-import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.rest.AnnotationInfo;
+import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 
-public interface AnnotationSerializer extends Serializable {
-	
-    public AnnotationData<?> deserialize ( InputStream rawData ) throws IOException;
-    public void serialize (AnnotationData<?> annotation, OutputStream ouput) throws IOException;
-    
+
+public class AnnotationIOFactory  {
+
+	public static String ANNOTATION_IO_TYPE = new String("type");
+	public static String HBASE_IO_TYPE = new String("hbase");
+	static public AnnotationIO produce( AnnotationInfo info ) throws IOException {
+
+		JSONObject data = info.getDataConfiguration();
+		
+		try {
+			JSONObject pyramidio = data.getJSONObject("pyramidio");
+			if ( pyramidio.getString(ANNOTATION_IO_TYPE).equals("HBASE_IO_TYPE") ) {
+				return new HBaseAnnotationIO( pyramidio.getString("hbase.zookeeper.quorum"),
+										  pyramidio.getString("hbase.zookeeper.port"),
+										  pyramidio.getString("hbase.mater"));
+			} else {
+				throw new IOException("AnnotationIO type not recognized!");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 }

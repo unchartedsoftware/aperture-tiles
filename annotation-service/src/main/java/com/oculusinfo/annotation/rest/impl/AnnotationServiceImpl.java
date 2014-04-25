@@ -39,6 +39,7 @@ import java.util.UUID;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,17 +54,14 @@ import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.config.*;
 import com.oculusinfo.annotation.io.*;
 import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.rest.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.io.*;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.*;
-import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
 
 
 @Singleton
@@ -72,16 +70,15 @@ public class AnnotationServiceImpl implements AnnotationService {
       
     private List<AnnotationInfo>         _annotationLayers;
     private Map<String, AnnotationInfo>  _annotationLayersById;
+    private Map<String, UUID>  			 _defaultFilterUuidById;
     private ConcurrentHashMap< UUID, Map<String, Integer> > _filtersByUuid;
-    
+
     private FactoryProvider<PyramidIO>         _pyramidIOFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _tileSerializerFactoryProvider;
     private FactoryProvider<TilePyramid>       _tilePyramidFactoryProvider;
-    
-    
-    protected AnnotationSerializer<AnnotationData<?>> _dataSerializer;
+        
+    protected AnnotationSerializer _dataSerializer;
     protected AnnotationIndexer _indexer;
-    protected AnnotationIO _io;
 	
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
@@ -92,16 +89,19 @@ public class AnnotationServiceImpl implements AnnotationService {
 					    	      FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
 					    		  FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 					    		  AnnotationIndexer indexer,
-					    		  AnnotationIO io,
-    							  AnnotationSerializer<AnnotationData<?>> serializer ) {
+    							  AnnotationSerializer serializer ) {
 
+		_annotationLayers = new ArrayList<>();
+		_annotationLayersById = new HashMap<>();
+		_defaultFilterUuidById = new HashMap<>();
+		_filtersByUuid = new ConcurrentHashMap<>();	
+		
 		_pyramidIOFactoryProvider = pyramidIOFactoryProvider;
 		_tileSerializerFactoryProvider = tileSerializerFactoryProvider;
 		_tilePyramidFactoryProvider = tilePyramidFactoryProvider;
-		_dataSerializer = serializer;	
-		_filtersByUuid =  new ConcurrentHashMap<>();		
+		
+		_dataSerializer = serializer;			
 		_indexer = indexer;
-		_io = io;
 		
         readConfigFiles( getConfigurationFiles(annotationConfigurationLocation) );
     }
@@ -189,11 +189,14 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 	public Map<BinIndex, List<AnnotationData<?>>> readAnnotations( UUID id, String layer, TileIndex query ) {
 		
-		Map<String, Integer> filters = null;		
+		Map<String, Integer> filters;		
 		/*
 		 * If user has specified a filter, use it, otherwise pull all annotations in tile 
 		 */
-		if ( id != null ) {
+		if ( id == null ) {
+			// use default filter
+			filters = _filtersByUuid.get( _defaultFilterUuidById.get( id ) );
+		} else {
 			filters = _filtersByUuid.get( id );
 		}
 		
@@ -273,39 +276,15 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 	@Override
-	public UUID configureFilters (String layerId, Map<String, Integer> filters ) {
+	public UUID configureFilters (String layerId, JSONObject filters ) {
 
 		
         UUID uuid = UUID.randomUUID();
-        _filtersByUuid.put( uuid, filters );
+        _filtersByUuid.put( uuid, getFiltersFromJSON( filters ) );
 
         return uuid;
 	}
-	
-	/*
-	@Override
-	public UUID configureAnnotationLayer (String layerId, JSONObject configuration) {
-        
-		AnnotationInfo info = new AnnotationInfo( configuration );
-		JSONObject jsonFilters = info.getFilterConfiguration();
-	
-		Map<String, Integer> filters = new HashMap<>();	
-		Iterator<?> priorities = jsonFilters.keys();
-        while( priorities.hasNext() ) {
-        	
-        	String priority = (String)priorities.next();		            
-            int count = jsonFilters.getInt( priority );
-            filters.put( priority, count );
-        }
-		
-        UUID uuid = UUID.randomUUID();
-        _configurationsById.put( layerId, configuration );
-        _filtersByUuid.put( uuid, filters );
 
-        return uuid;
-	}
-	*/
-	
 	
 	// ////////////////////////////////////////////////////////////////////////
 	// Section: Configuration reading methods
@@ -341,7 +320,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 			try {
 			    JSONObject contents = new JSONObject(new JSONTokener(new FileReader(file)));
 			    JSONArray configurations = contents.getJSONArray("layers");
-    			for (int i=0; i<configurations.length(); ++i) {    				
+    			for (int i=0; i<configurations.length(); ++i) {    	
+    				
     				AnnotationInfo info = new AnnotationInfo(configurations.getJSONObject(i));
     				addConfiguration(info);
     			}
@@ -357,8 +337,32 @@ public class AnnotationServiceImpl implements AnnotationService {
 	private void addConfiguration (AnnotationInfo info) {
     	_annotationLayers.add(info);
     	_annotationLayersById.put(info.getID(), info);
+    	// set default filter
+    	UUID uuid = UUID.randomUUID();
+    	_defaultFilterUuidById.put( info.getID(), uuid );
+    	// info.getFilterConfiguration() IS RETURNING NULL
+    	_filtersByUuid.put( uuid, getFiltersFromJSON( info.getFilterConfiguration() ) );	
     }
 	
+	private Map<String, Integer> getFiltersFromJSON( JSONObject jsonFilters ) {
+		
+		Map<String, Integer> filters = new HashMap<>();
+		
+		try {
+			System.out.println( "\n\n\n" + jsonFilters.toString(4) + "\n\n\n" );
+			Iterator<?> priorities = jsonFilters.keys();
+	        while( priorities.hasNext() ) {
+	        	
+	        	String priority = (String)priorities.next();		            
+	            int count = jsonFilters.getInt( priority );
+	            filters.put( priority, count );
+	        }
+	        
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return filters;
+	}
 	
 	
 	
@@ -565,7 +569,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
 			io.initializeForWrite( layer );
-			io.writeTiles( layer, (TilePyramid)null, serializer, tiles );
+			io.writeTiles( layer, null, serializer, tiles );
 					
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -582,9 +586,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		String dataLayer = getDataLayerId( layer );
 		
 		try {
-			
-			_io.initializeForWrite( dataLayer );		
-			_io.writeData( dataLayer, _dataSerializer, dataList );
+			AnnotationIO io = AnnotationIOFactory.produce( _annotationLayersById.get(layer) );		
+			io.initializeForWrite( dataLayer );		
+			io.writeData( dataLayer, _dataSerializer, dataList );
 
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -616,8 +620,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 		String dataLayer = getDataLayerId( layer );
 				
 		try {
-
-			_io.removeData( dataLayer, dataList );											
+			AnnotationIO io = AnnotationIOFactory.produce( _annotationLayersById.get(layer) );		
+			io.removeData( dataLayer, dataList );											
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -657,8 +661,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 
-			_io.initializeForRead( dataLayer );	
-			data = _io.readData( dataLayer, _dataSerializer, references );			
+			AnnotationIO io = AnnotationIOFactory.produce( _annotationLayersById.get(layer) );
+			io.initializeForRead( dataLayer );	
+			data = io.readData( dataLayer, _dataSerializer, references );			
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -666,5 +671,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 		return data;
 	}
+
 	
 }

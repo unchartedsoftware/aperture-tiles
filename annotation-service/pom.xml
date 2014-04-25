@@ -70,6 +70,7 @@
       <groupId>com.oculusinfo</groupId>
       <artifactId>tile-service</artifactId>
       <version>${project.version}</version>
+      <classifier>classes</classifier>
     </dependency>
 
     <dependency>
