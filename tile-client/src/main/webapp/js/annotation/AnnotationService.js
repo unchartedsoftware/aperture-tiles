@@ -58,11 +58,10 @@ define(function (require) {
         /**
          * Construct an AnnotationService
          */
-        init: function ( layer, filters, callback ) {
+        init: function ( layer ) {
 
             this.layer = layer;
-            this.uuid = generateUUID();
-            this.setFilters( filters, callback );
+            this.uuid = "default"; // use default filters
         },
 
 
@@ -149,11 +148,26 @@ define(function (require) {
          */
         setFilters: function( filters, callback ) {
 
-            var data = {
+            var that = this,
+                data = {
                 uuid: this.uuid,
                 filters: filters
             };
-            this.postRequest( "FILTER", data, callback );
+
+            this.postRequest( "FILTER", data, function( result ) {
+                that.uuid = result.uuid;
+                callback();
+            });
+        },
+
+
+        /**
+         * Receive all annotation layers from server
+         * @param callback     the callback that is called upon receiving data from server
+         */
+        requestLayers: function( callback ) {
+
+            this.postRequest( "LIST", {}, callback );
         },
 
 

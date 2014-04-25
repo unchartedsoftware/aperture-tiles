@@ -32,13 +32,11 @@ define( function (require) {
 
 	return {
 	
-		createLayers: function(layerJSON, map) {
-			var i = 0,
-				layers = [];
-			for (i=0; i<layerJSON.length; i++) {   
-				layers.push( this.createLayer(layerJSON[i], map) );
-			}	
-			return layers;
+		createLayers: function(layersJSON, map) {
+			var i;
+			for (i=0; i<layersJSON.length; i++) {
+				this.createLayer(layersJSON[i], map);
+			}
 		},
 	
 
@@ -46,13 +44,33 @@ define( function (require) {
 
 			var spec = {
 				map: map,
-				layer: layerJSON.layer,
+				layer: layerJSON.id,
                 priorities: layerJSON.priorities,
 				filters: layerJSON.filters
 			};
 			return new AnnotationLayer( spec );
 
-		}
+		},
+
+
+        /**
+         * Receive all annotation layers from server
+         * @param callback     the callback that is called upon receiving data from server
+         */
+        requestLayers: function( callback ) {
+
+            // Request the layer information
+            aperture.io.rest('/annotation',
+                'POST',
+                callback,
+                {
+                    postData: {
+                        "type": "list"
+                    },
+                    contentType: 'application/json'
+                });
+
+        }
 
 
     };	

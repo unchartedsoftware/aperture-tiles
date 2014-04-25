@@ -29,31 +29,30 @@ import java.util.List;
 
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.io.*;
 import com.oculusinfo.binning.util.*;
 
-public interface AnnotationIO extends PyramidIO{
+public interface AnnotationIO {
    
 	
 	/*
 	 * Write
 	 */
+	public void initializeForWrite (String tableName) throws IOException;
     public void writeData (String id, 
-					       AnnotationSerializer<AnnotationData<?>> serializer, 
+					       AnnotationSerializer serializer, 
 					       Iterable<AnnotationData<?>> data ) throws IOException;
 
     /*
      * Read
-     */  
+     */
+    public void initializeForRead (String tableName);
     public List<AnnotationData<?>> readData (String id, 
-								             AnnotationSerializer<AnnotationData<?>> serializer,
+								             AnnotationSerializer serializer,
 								             List<Pair<String,Long>> references) throws IOException;
  
     /*
      * Delete
      */
-    public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException;
-    public void removeData (String id, Iterable<AnnotationData<?>> data ) throws IOException;
+    public void removeData (String id, Iterable<Pair<String,Long>> data ) throws IOException;
   
 }

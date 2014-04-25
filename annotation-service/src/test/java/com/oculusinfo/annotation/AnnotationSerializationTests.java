@@ -56,8 +56,8 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 	
     @Before
     public void setup () {
-	   _pyramid = new WebMercatorTilePyramid();
-    	_indexer = new AnnotationIndexerImpl( _pyramid );
+	    _pyramid = new WebMercatorTilePyramid();
+    	_indexer = new AnnotationIndexerImpl();
     	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
     	_dataSerializer = new JSONAnnotationDataSerializer();
     }
@@ -110,7 +110,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
     @Test
     public void testTileJSONSerialization () throws Exception {
     	
-    	List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( NUM_ENTRIES, _indexer );
+    	List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( NUM_ENTRIES, _indexer, _pyramid );
 		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
 
 		if (VERBOSE) {

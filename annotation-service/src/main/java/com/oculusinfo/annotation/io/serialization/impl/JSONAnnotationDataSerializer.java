@@ -32,7 +32,7 @@ import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 
 
-public class JSONAnnotationDataSerializer extends GenericJSONAnnotationSerializer<AnnotationData<?>>{
+public class JSONAnnotationDataSerializer extends GenericJSONAnnotationSerializer<JSONObject> {
 	
     private static final long serialVersionUID = -6779123604244971240L;
 

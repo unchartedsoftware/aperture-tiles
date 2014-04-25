@@ -252,4 +252,8 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 
 	def readMetaData (pyramidId: String): String =
 		getMetaData(pyramidId).map(_.toString).getOrElse(null)
+
+	def removeTiles (id: String, tiles: JavaIterable[TileIndex]  ) : Unit =
+		throw new IOException("removeTiles not currently supported for LiveStaticTilePyramidIO")
+	
 }

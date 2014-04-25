@@ -37,8 +37,12 @@ import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.*;
+import com.oculusinfo.tile.init.FactoryProvider;
 
 @Singleton
 public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
@@ -48,21 +52,32 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	private ConcurrentHashMap< String, AnnotationCache<TileIndex, TileData<Map<String, List<Pair<String,Long>>>>> > _tileCache;
 	private ConcurrentHashMap< String, AnnotationCache<Pair<String,Long>, AnnotationData<?>> > _dataCache;
 
-	/*
+	
 	@Inject
-    public CachedAnnotationServiceImpl( @Named("com.oculusinfo.tile.annotation.config") String annotationConfigurationLocation ) {
-		super( annotationConfigurationLocation );
+    public CachedAnnotationServiceImpl( @Named("com.oculusinfo.annotation.config") String annotationConfigurationLocation,
+							    		FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+							  	        FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
+							  		    FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+							  		    AnnotationIndexer indexer,
+									    AnnotationSerializer serializer ) {
+		super( annotationConfigurationLocation, 
+			   pyramidIOFactoryProvider, 
+			   tileSerializerFactoryProvider, 
+			   tilePyramidFactoryProvider, 
+			   indexer, serializer );
 		_tileCache = new ConcurrentHashMap<>();
 		_dataCache = new ConcurrentHashMap<>();
 	}
-	*/
-		
+	
+	/*
+	@Inject
 	public CachedAnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
 		super( io, indexer );
 		_tileCache = new ConcurrentHashMap<>();
 		_dataCache = new ConcurrentHashMap<>();
 	}
+	*/
 	
 	protected AnnotationCache<TileIndex, TileData<Map<String, List<Pair<String,Long>>>>> getLayerTileCache( String layer ) {
 		if ( !_tileCache.containsKey( layer ) ) {
@@ -118,14 +133,14 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	}
 	
 	@Override
-	protected void removeDataFromIO( String layer, AnnotationData<?> data ) {
+	protected void removeDataFromIO( String layer, Pair<String,Long> reference ) {
 		
 		AnnotationCache<Pair<String,Long>, AnnotationData<?>> dataCache = getLayerDataCache( layer );
 		
 		// remove from cache
-		dataCache.remove( data.getReference() );
+		dataCache.remove( reference );
 
-		super.removeDataFromIO( layer, data );
+		super.removeDataFromIO( layer, reference );
 
 	}
 	
@@ -174,7 +189,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		// for each reference, pull from cache and flag missing for read
 		for ( Pair<String,Long> reference : references ) {
 			
-			AnnotationData<?> d = dataCache.get( reference );	
+			AnnotationData<?> d = dataCache.get( reference );
 			if ( d != null ) {				
 				// found in cache
 				data.add( d );

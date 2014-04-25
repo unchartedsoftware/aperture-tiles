@@ -23,8 +23,6 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +30,6 @@ import java.util.Map;
 import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.*;
 import com.oculusinfo.binning.util.Pair;
@@ -54,7 +50,7 @@ public class AnnotationJSONTests extends AnnotationTestsBase {
     @Before
     public void setup () {
 	    _pyramid = new WebMercatorTilePyramid();
-    	_indexer = new AnnotationIndexerImpl( _pyramid );
+    	_indexer = new AnnotationIndexerImpl();
     }
 
     @After
@@ -94,7 +90,7 @@ public class AnnotationJSONTests extends AnnotationTestsBase {
     @Test
     public void testTileJSONSerialization () throws Exception {
     	
-		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( NUM_ENTRIES, _indexer );
+		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( NUM_ENTRIES, _indexer, _pyramid );
 		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
 
 		if (VERBOSE) {

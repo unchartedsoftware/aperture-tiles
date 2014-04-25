@@ -21,23 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.index;
+package com.oculusinfo.annotation.io;
 
-import java.util.List;
+import org.json.JSONObject;
 
-import com.oculusinfo.binning.*;
-import com.oculusinfo.annotation.*;
+import java.io.IOException;
 
-public abstract class AnnotationIndexer {
+import com.oculusinfo.annotation.rest.AnnotationInfo;
+import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 
-	public static final int NUM_BINS = 8;
-	
-    public AnnotationIndexer() {
-    }
-    
-    public abstract List<TileAndBinIndices> getIndices( AnnotationData<?> data, TilePyramid pyramid );
-  
-    public abstract TileAndBinIndices getIndex( AnnotationData<?> data, int level, TilePyramid pyramid );
 
-    
+public class AnnotationIOFactory  {
+
+	public static String ANNOTATION_IO_TYPE = new String("type");
+	public static String HBASE_IO_TYPE = new String("hbase");
+	static public AnnotationIO produce( AnnotationInfo info ) throws IOException {
+
+		JSONObject data = info.getDataConfiguration();
+		
+		try {
+			JSONObject pyramidio = data.getJSONObject("pyramidio");
+			if ( pyramidio.getString(ANNOTATION_IO_TYPE).equals("HBASE_IO_TYPE") ) {
+				return new HBaseAnnotationIO( pyramidio.getString("hbase.zookeeper.quorum"),
+										  pyramidio.getString("hbase.zookeeper.port"),
+										  pyramidio.getString("hbase.mater"));
+			} else {
+				throw new IOException("AnnotationIO type not recognized!");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 }

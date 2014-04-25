@@ -38,6 +38,8 @@ import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.io.*;
+import com.oculusinfo.binning.io.impl.*;
 import com.oculusinfo.binning.impl.*;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
@@ -45,10 +47,13 @@ import com.oculusinfo.binning.util.Pair;
 
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
-	private static final String  TABLE_NAME = "AnnotationTable";
+	private static final String  TILE_TABLE_NAME = "annotation.hbase.test";
+	private static final String  DATA_TABLE_NAME = TILE_TABLE_NAME + ".data";
 	private static final boolean VERBOSE = false;
 
-	private AnnotationIO _io;	
+	private AnnotationIO _dataIO;
+	private PyramidIO _tileIO;
+	
 	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
 	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
 	private TilePyramid _pyramid;
@@ -58,9 +63,13 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     @Before
     public void setup () {
     	try {
-    		_io = new HBaseAnnotationIO("hadoop-s1.oculus.local",
+    		_dataIO = new HBaseAnnotationIO("hadoop-s1.oculus.local",
 										"2181",
 									    "hadoop-s1.oculus.local:60000");
+    		
+    		_tileIO = new HBasePyramidIO("hadoop-s1.oculus.local",
+										 "2181",
+									     "hadoop-s1.oculus.local:60000");
     	} catch (Exception e) {
     		
 			System.out.println("Error: " + e.getMessage());
@@ -69,7 +78,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 		}	
     	
     	_pyramid = new WebMercatorTilePyramid();
-    	_indexer = new AnnotationIndexerImpl( _pyramid );
+    	_indexer = new AnnotationIndexerImpl();
     	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
     	_dataSerializer = new JSONAnnotationDataSerializer();  	
 	
@@ -77,7 +86,8 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 
     @After
     public void teardown () {
-    	_io = null;
+    	_tileIO = null;
+    	_dataIO = null;
     }
 	
 	
@@ -86,7 +96,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     	
     	
         List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );        
-        List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( NUM_ENTRIES, _indexer );
+        List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( NUM_ENTRIES, _indexer, _pyramid );
 		
         List<TileIndex> tileIndices = tilesToIndices( tiles );
         List<Pair<String, Long>> dataIndices = dataToIndices( annotations );
@@ -97,28 +107,38 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 *  Create Table
 	    	 */
 			System.out.println("Creating table");
-	    	_io.initializeForWrite( TABLE_NAME );
-	    	
+	    	_tileIO.initializeForWrite( TILE_TABLE_NAME );
+	    	_dataIO.initializeForWrite( DATA_TABLE_NAME );
 	        /*
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to table");	
-	    	_io.writeTiles(TABLE_NAME, _pyramid, _tileSerializer, tiles );
-	    	_io.writeData(TABLE_NAME, _dataSerializer, annotations );
+	    	_tileIO.writeTiles(TILE_TABLE_NAME, _pyramid, _tileSerializer, tiles );
+	    	_dataIO.writeData(DATA_TABLE_NAME, _dataSerializer, annotations );
 	        
 	    	/*
 	    	 *  Read and check all annotations
 	    	 */
 	    	System.out.println( "Reading all annotations" );
-	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _io.readTiles( TABLE_NAME, _tileSerializer, tileIndices );
-	    	List<AnnotationData<?>> allData = _io.readData( TABLE_NAME, _dataSerializer, dataIndices );
+	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _tileIO.readTiles( TILE_TABLE_NAME, _tileSerializer, tileIndices );
+	    	List<AnnotationData<?>> allData = _dataIO.readData( DATA_TABLE_NAME, _dataSerializer, dataIndices );
 	    	if (VERBOSE) printTiles( allTiles );
 	    	if (VERBOSE) printData( allData );
 	    	
 	    	System.out.println( "Comparing annotations" );	    	
 	    	Assert.assertTrue( compareTiles( allTiles, tiles, true ) );
 	    	Assert.assertTrue( compareData( allData, annotations, true ) );
-
+	    	
+	    	System.out.println("Removing "+NUM_ENTRIES+" from table");	
+	    	_tileIO.removeTiles(TILE_TABLE_NAME, tileIndices );
+	    	_dataIO.removeData(DATA_TABLE_NAME, dataIndices );
+	       
+	    	allTiles = _tileIO.readTiles( TILE_TABLE_NAME, _tileSerializer, tileIndices );
+	    	allData = _dataIO.readData( DATA_TABLE_NAME, _dataSerializer, dataIndices );
+	    	
+	    	Assert.assertTrue( allTiles.size() == 0 );
+	    	Assert.assertTrue( allData.size() == 0 );
+	    	
 	    	System.out.println( "Complete" );
 	
     	} catch (Exception e) {
@@ -130,7 +150,8 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 * Drop table
 	    	 */
 	    	System.out.println("Disabling and dropping table");
-	    	((HBaseAnnotationIO)_io).dropTable(TABLE_NAME);
+	    	((HBasePyramidIO)_tileIO).dropTable(TILE_TABLE_NAME);
+	    	((HBaseAnnotationIO)_dataIO).dropTable(DATA_TABLE_NAME);
 		}
     }
 

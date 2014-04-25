@@ -41,6 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.Delete;
 //import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -331,4 +332,34 @@ public class HBasePyramidIO implements PyramidIO {
 
 		return new String(rawData.get(0).get(METADATA_COLUMN));
 	}
+	
+	@Override
+    public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
+    	
+    	List<String> rowIds = new ArrayList<>();
+        for (TileIndex tile: tiles) {
+            rowIds.add( rowIdFromTileIndex( tile ) );
+        }        
+        deleteRows(tableName, rowIds, TILE_COLUMN);
+    }
+	
+	private void deleteRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
+        
+    	HTable table = getTable(tableName);
+        List<Delete> deletes = new LinkedList<Delete>();
+        for (String rowId: rows) {
+        	Delete delete = new Delete(rowId.getBytes());
+            deletes.add(delete);
+        }
+        table.delete(deletes);
+    }
+	
+	public void dropTable( String tableName ) {
+    	
+    	try {
+    		_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
+    		_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
+        } catch (Exception e) {}
+ 	
+    }
 }

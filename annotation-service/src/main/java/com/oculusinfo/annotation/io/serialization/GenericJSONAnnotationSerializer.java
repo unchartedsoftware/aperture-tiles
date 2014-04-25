@@ -34,13 +34,14 @@ import java.io.UnsupportedEncodingException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.oculusinfo.annotation.*;
 
-public abstract class GenericJSONAnnotationSerializer<T> implements AnnotationSerializer<T> {
+public abstract class GenericJSONAnnotationSerializer<T> implements AnnotationSerializer {
 	
     private static final long serialVersionUID = 2617903534522413550L;
 
-    abstract protected T getValue (Object bin) throws JSONException;
-	abstract protected JSONObject translateToJSON (T value);
+    abstract protected AnnotationData<?> getValue (Object bin) throws JSONException;
+	abstract protected JSONObject translateToJSON (AnnotationData<?> value);
 
 	protected GenericJSONAnnotationSerializer () {
 
@@ -51,7 +52,7 @@ public abstract class GenericJSONAnnotationSerializer<T> implements AnnotationSe
 	}
 
 	@Override
-	public T deserialize (InputStream rawData){
+	public AnnotationData<?> deserialize (InputStream rawData){
 
 		String jsonString = convertStreamToString(rawData);
 		
@@ -83,7 +84,7 @@ public abstract class GenericJSONAnnotationSerializer<T> implements AnnotationSe
 	}
 
 	@Override
-	public void serialize (T data, OutputStream stream) throws IOException {
+	public void serialize (AnnotationData<?> data, OutputStream stream) throws IOException {
 
 		try {
 			  

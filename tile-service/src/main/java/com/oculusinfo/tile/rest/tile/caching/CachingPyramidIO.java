@@ -239,7 +239,10 @@ public class CachingPyramidIO implements PyramidIO {
 		return getBasePyramidIO(pyramidId).readMetaData(pyramidId);
 	}
 
-
+	@Override
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
+		throw new IOException("removeTiles not currently supported for CachingPyramidIO");
+	}
 
 	private class CacheListenerCallback<T> implements CacheRequestCallback<T> {
 		private TileData<T> _tile;
