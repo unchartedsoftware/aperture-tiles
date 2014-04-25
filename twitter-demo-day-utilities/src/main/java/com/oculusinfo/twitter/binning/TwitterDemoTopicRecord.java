@@ -24,7 +24,7 @@
 
 package com.oculusinfo.twitter.binning;
 
-//import java.io.Serializable;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -33,9 +33,8 @@ import java.util.ListIterator;
 
 import com.oculusinfo.binning.util.Pair;
 
-public class TwitterDemoTopicRecord {
-	// TODO do we need make this class serializable?? (as in TwitterDemoRecord
-	// class)
+public class TwitterDemoTopicRecord implements Serializable {
+	private static final long serialVersionUID = 1L;	//NOTE:  using default serialVersion ID
 	
 	private static final int NUM_DAYS = 31;			// days per month
 	private static final int NUM_QUARTERDAYS = 28;	// quarter days per week
@@ -44,16 +43,16 @@ public class TwitterDemoTopicRecord {
 	private String _topic; 							// Twitter topic in original language
 	private String _topicEnglish; 					// Twitter topic in English
 	private int _countMonthly; 						// total number of tweets per month with this topic
-	private List<Integer> _countDaily; 				// tweet count per day for the past month with this topic
-	private List<Integer> _countPer6hrs; 			// tweet count per six hours for last week with this topic
-	private List<Integer> _countPerHour; 			// tweet count per hour for last 24 hrs with this topic
+	private int[] _countDaily; 						// tweet count per day for the past month with this topic
+	private int[] _countPer6hrs; 					// tweet count per six hours for last week with this topic
+	private int[] _countPerHour; 					// tweet count per hour for last 24 hrs with this topic
 	private List<Pair<String, Long>> _recentTweets; // 10 most recent tweets with this topic
 	private long _endTimeSecs;						// end time (in secs) for this data record (so valid time window
 													//    between endTimeSecs and endTimeSecs - 1 month
 
 	public TwitterDemoTopicRecord(String topic, String topicEnglish,
-			int countMonthly, List<Integer> countDaily,
-			List<Integer> countPer6hrs, List<Integer> countPerHour,
+			int countMonthly, int[] countDaily,
+			int[] countPer6hrs, int[] countPerHour,
 			List<Pair<String, Long>> recentTweets, long endTimeSecs) {
 		
 		_topic = topic;
@@ -62,49 +61,28 @@ public class TwitterDemoTopicRecord {
 		_recentTweets = recentTweets;
 		_endTimeSecs = endTimeSecs;
 		
-		if (countDaily.size() == NUM_DAYS) {
-			_countDaily = countDaily;
-		}
-		else if (countDaily.size() > NUM_DAYS) {
+		if (countDaily.length > NUM_DAYS) {
 			throw new IllegalArgumentException("countDaily size cannot be > " + NUM_DAYS);
 		}
 		else {
-			_countDaily = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-										0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-			for (int n=0; n<countDaily.size(); n++) {
-				_countDaily.set(n, countDaily.get(n));
-			}
+			_countDaily = new int[NUM_DAYS];
+			System.arraycopy(countDaily,0,_countDaily,0,_countDaily.length);
 		}
 		
-		if (countPer6hrs.size() == NUM_QUARTERDAYS) {
-			_countPer6hrs = countPer6hrs;
-		}
-		else if (countPer6hrs.size() > NUM_QUARTERDAYS) {
+		if (countPer6hrs.length > NUM_QUARTERDAYS) {
 			throw new IllegalArgumentException("countPer6hrs size cannot be > " + NUM_QUARTERDAYS);
 		}
 		else {
-			_countPer6hrs = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-										0, 0, 0, 0, 0, 0, 0, 0);
-			for (int n=0; n<countPer6hrs.size(); n++) {
-				_countPer6hrs.set(n, countPer6hrs.get(n));
-			}
+			_countPer6hrs = new int[NUM_QUARTERDAYS];
+			System.arraycopy(countPer6hrs,0,_countPer6hrs,0,_countPer6hrs.length);
 		}
 		
-		if (countPerHour.size() == NUM_HOURS) {
-			_countPerHour = countPerHour;
-		}
-		else if (countPerHour.size() > NUM_HOURS) {
+		if (countPerHour.length > NUM_HOURS) {
 			throw new IllegalArgumentException("countPerHour size cannot be > " + NUM_HOURS);
 		}
 		else {
-			_countPerHour = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-										0, 0, 0, 0);
-			for (int n=0; n<countPerHour.size(); n++) {
-				_countPerHour.set(n, countPerHour.get(n));
-			}
+			_countPerHour = new int[NUM_HOURS];
+			System.arraycopy(countPerHour,0,_countPerHour,0,_countPerHour.length);
 		}		
 	}
 
@@ -120,15 +98,15 @@ public class TwitterDemoTopicRecord {
 		return _countMonthly;
 	}
 
-	public List<Integer> getCountDaily() {
+	public int[] getCountDaily() {
 		return _countDaily;
 	}
 
-	public List<Integer> getCountPer6hrs() {
+	public int[] getCountPer6hrs() {
 		return _countPer6hrs;
 	}
 
-	public List<Integer> getCountPerHour() {
+	public int[] getCountPerHour() {
 		return _countPerHour;
 	}
 
@@ -140,8 +118,15 @@ public class TwitterDemoTopicRecord {
 		return _endTimeSecs;
 	}
 
-	// TODO do we need explicit hashcode functions here (e.g., as in
-	// TwitterDemoRecord class)?
+    private int getHash (Object obj) {
+        if (null == obj) return 0;
+        return obj.hashCode();
+    }
+    
+    @Override
+    public int hashCode () {
+        return (getHash(_topic));
+    }
 
 	@Override
 	public boolean equals(Object obj) {
@@ -157,10 +142,10 @@ public class TwitterDemoTopicRecord {
 				&& this._topicEnglish == that._topicEnglish
 				&& this._countMonthly == that._countMonthly
 				&& this._endTimeSecs == that._endTimeSecs
-				&& listsEqual(this._countDaily, that._countDaily)
-				&& listsEqual(this._countPer6hrs, that._countPer6hrs)
-				&& listsEqual(this._countPerHour, that._countPerHour) && listsEqual(
-					this._recentTweets, that._recentTweets));
+				&& arraysEqual(this._countDaily, that._countDaily)
+				&& arraysEqual(this._countPer6hrs, that._countPer6hrs)
+				&& arraysEqual(this._countPerHour, that._countPerHour)
+				&& listsEqual(this._recentTweets, that._recentTweets));
 	}
 
 	private static boolean objectsEqual(Object a, Object b) {
@@ -182,16 +167,40 @@ public class TwitterDemoTopicRecord {
 		}
 		return true;
 	}
+	
+	private static <T> boolean arraysEqual(int[] a, int[] b) {
+		if (null == a)
+			return null == b;
+		if (null == b)
+			return false;
+		if (a.length != b.length)
+			return false;
+		for (int i = 0; i < a.length; ++i) {
+			if (a[i] != b[i])
+				return false;
+		}
+		return true;
+	}	
 
-	private <T> String mkString(List<T> list, String separator) {
+//	private <T> String mkString(List<T> list, String separator) {
+//		String result = "";
+//		for (int i = 0; i < list.size(); ++i) {
+//			if (i > 0)
+//				result = result + separator;
+//			result = result + list.get(i).toString();
+//		}
+//		return result;
+//	}
+	
+	private <T> String mkStringFromArray(int[] array, String separator) {
 		String result = "";
-		for (int i = 0; i < list.size(); ++i) {
+		for (int i = 0; i < array.length; ++i) {
 			if (i > 0)
 				result = result + separator;
-			result = result + list.get(i).toString();
+			result = result + array[i];
 		}
 		return result;
-	}
+	}	
 
 	private static String escapeString(String string) {
 		if (null == string)
@@ -253,9 +262,9 @@ public class TwitterDemoTopicRecord {
 		String result = ("{topic: " + escapeString(_topic) + ", "
 				+ "topicEnglish: " + escapeString(_topicEnglish) + ", "
 				+ "countMonthly: " + _countMonthly + ", " + "countDaily: ["
-				+ mkString(_countDaily, ", ") + "], " + "countPer6hrs: ["
-				+ mkString(_countPer6hrs, ", ") + "], " + "countPerHour: ["
-				+ mkString(_countPerHour, ", ") + "], " + "recent: [");
+				+ mkStringFromArray(_countDaily, ", ") + "], " + "countPer6hrs: ["
+				+ mkStringFromArray(_countPer6hrs, ", ") + "], " + "countPerHour: ["
+				+ mkStringFromArray(_countPerHour, ", ") + "], " + "recent: [");
 		for (int i = 0; i < _recentTweets.size(); ++i) {
 			Pair<String, Long> rt = _recentTweets.get(i);
 			if (i > 0)
@@ -267,19 +276,39 @@ public class TwitterDemoTopicRecord {
 		return result;
 	}
 
-	private static String eatIntList(String from, List<Integer> result) {
+//	private static String eatIntList(String from, List<Integer> result) {
+//		int nextComma = from.indexOf(",");
+//		int nextBracket = from.indexOf("]");
+//		while (nextComma > 0 && nextComma < nextBracket) {
+//			result.add(Integer.parseInt(from.substring(0, nextComma)));
+//			from = from.substring(nextComma + 2);
+//			nextComma = from.indexOf(",");
+//			nextBracket = from.indexOf("]");
+//		}
+//		if (nextBracket > 0)
+//			result.add(Integer.parseInt(from.substring(0, nextBracket)));
+//		return from.substring(nextBracket);
+//	}
+
+	private static String eatIntArray(String from, int[] result) {
 		int nextComma = from.indexOf(",");
 		int nextBracket = from.indexOf("]");
+		int n = 0;
 		while (nextComma > 0 && nextComma < nextBracket) {
-			result.add(Integer.parseInt(from.substring(0, nextComma)));
+			if (n < result.length) {
+				result[n] = Integer.parseInt(from.substring(0, nextComma));
+			}
+			n++;
 			from = from.substring(nextComma + 2);
 			nextComma = from.indexOf(",");
 			nextBracket = from.indexOf("]");
 		}
 		if (nextBracket > 0)
-			result.add(Integer.parseInt(from.substring(0, nextBracket)));
+			if (n < result.length) {
+				result[n] = Integer.parseInt(from.substring(0, nextComma));
+			}
 		return from.substring(nextBracket);
-	}
+	}	
 
 	public static TwitterDemoTopicRecord fromString(String value) {
 		value = eat(value, "{topic: ");
@@ -295,16 +324,16 @@ public class TwitterDemoTopicRecord {
 		int countMonthly = Integer.parseInt(value.substring(0, end));
 
 		value = eat(value.substring(end), ", countDaily: [");
-		List<Integer> countDaily = new ArrayList<>();
-		value = eatIntList(value, countDaily);
+		int[] countDaily = new int[NUM_DAYS];
+		value = eatIntArray(value, countDaily);
 
 		value = eat(value, "], countPer6hrs: [");
-		List<Integer> countPer6hrs = new ArrayList<>();
-		value = eatIntList(value, countPer6hrs);
+		int[] countPer6hrs = new int[NUM_QUARTERDAYS];
+		value = eatIntArray(value, countPer6hrs);
 
 		value = eat(value, "], countPerHour: [");
-		List<Integer> countPerHour = new ArrayList<>();
-		value = eatIntList(value, countPerHour);
+		int[] countPerHour = new int[NUM_HOURS];
+		value = eatIntArray(value, countPerHour);
 
 		value = eat(value, "], recent: [");
 		List<Pair<String, Long>> recentTweets = new ArrayList<>();
@@ -332,14 +361,11 @@ public class TwitterDemoTopicRecord {
 				countDaily, countPer6hrs, countPerHour, recentTweets, endTimeSecs);
 	}
 
-	private static void addInPlace(List<Integer> accumulatedSum,
-			List<Integer> newAddend) {
-		for (int i = 0; i < newAddend.size(); ++i) {
-			if (i >= accumulatedSum.size()) {
-				accumulatedSum.add(newAddend.get(i));
-			} else {
-				accumulatedSum.set(i, accumulatedSum.get(i) + newAddend.get(i));
-			}
+	private static void addArrayInPlace(int[] summed,
+			int[] newdata) {
+		assert(summed.length == newdata.length);
+		for (int i = 0; i < summed.length; ++i) {
+			summed[i] += newdata[i];
 		}
 	}
 
@@ -399,9 +425,13 @@ public class TwitterDemoTopicRecord {
 		String topic = records[0]._topic;
 		String topicEnglish = records[0]._topicEnglish;
 		int countMonthly = records[0]._countMonthly;
-		List<Integer> countDaily = new ArrayList<>(records[0]._countDaily);
-		List<Integer> countPer6hrs = new ArrayList<>(records[0]._countPer6hrs);
-		List<Integer> countPerHour = new ArrayList<>(records[0]._countPerHour);
+		int[] countDaily = new int[NUM_DAYS];
+		System.arraycopy(records[0]._countDaily,0,countDaily,0,records[0]._countDaily.length);
+		int[] countPer6hrs = new int[NUM_QUARTERDAYS];
+		System.arraycopy(records[0]._countPer6hrs,0,countPer6hrs,0,records[0]._countPer6hrs.length);
+		int[] countPerHour = new int[NUM_HOURS];
+		System.arraycopy(records[0]._countPerHour,0,countPerHour,0,records[0]._countPerHour.length);
+
 		LinkedList<Pair<String, Long>> recentTweets = new LinkedList<>(
 				records[0]._recentTweets);
 		long endTimeSecs = records[0]._endTimeSecs;
@@ -411,12 +441,10 @@ public class TwitterDemoTopicRecord {
 				throw new IllegalArgumentException(
 						"Cannot add twitter records for different topics or end times");
 
-			// topic += records[i]._topic;
-			// topicEnglish += records[i]._topicEnglish;
 			countMonthly += records[i]._countMonthly;
-			addInPlace(countDaily, records[i]._countDaily);
-			addInPlace(countPer6hrs, records[i]._countPer6hrs);
-			addInPlace(countPerHour, records[i]._countPerHour);
+			addArrayInPlace(countDaily, records[i]._countDaily);
+			addArrayInPlace(countPer6hrs, records[i]._countPer6hrs);
+			addArrayInPlace(countPerHour, records[i]._countPerHour);
 			addRecentTweetsInPlace(recentTweets, records[i]._recentTweets);
 		}
 		return new TwitterDemoTopicRecord(topic, topicEnglish, countMonthly,
@@ -433,17 +461,21 @@ public class TwitterDemoTopicRecord {
 			TwitterDemoTopicRecord record, Pair<String, Long> newTweet) {
 		if (null == record)
 			return null;
-
+		
 		String topic = record._topic;
 		String topicEnglish = record._topicEnglish;
 		int countMonthly = record._countMonthly;
-		List<Integer> countDaily = new ArrayList<>(record._countDaily);
-		List<Integer> countPer6hrs = new ArrayList<>(record._countPer6hrs);
-		List<Integer> countPerHour = new ArrayList<>(record._countPerHour);
+		int[] countDaily = new int[NUM_DAYS];
+		System.arraycopy(record._countDaily,0,countDaily,0,record._countDaily.length);
+		int[] countPer6hrs = new int[NUM_QUARTERDAYS];
+		System.arraycopy(record._countPer6hrs,0,countPer6hrs,0,record._countPer6hrs.length);
+		int[] countPerHour = new int[NUM_HOURS];
+		System.arraycopy(record._countPerHour,0,countPerHour,0,record._countPerHour.length);
+
 		LinkedList<Pair<String, Long>> recentTweets = new LinkedList<>(
 				record._recentTweets);
-		long endTimeSecs = record._endTimeSecs;
-		
+		long endTimeSecs = record._endTimeSecs;	
+	
 		float secsSinceEnd = (float)(endTimeSecs - newTweet.getSecond());	// time interval between new tweet and endTime
 		
 		if (secsSinceEnd > 2.6784e6) { // 2678400 = 31*24*60*60
@@ -466,25 +498,23 @@ public class TwitterDemoTopicRecord {
 
 			if ((hours >= 0) && (hours < NUM_HOURS)) {
 				//assert (countPerHour.size() == NUM_HOURS);
-				countPerHour.set(hours, countPerHour.get(hours) + 1);
+				countPerHour[hours]++;
 			}
 			if ((quarterDays >= 0) && (quarterDays < NUM_QUARTERDAYS)) {
 				//assert (countPer6hrs.size() == NUM_QUARTERDAYS);
-				countPer6hrs.set(quarterDays, countPer6hrs.get(quarterDays) + 1);
+				countPer6hrs[quarterDays]++;
 			}
 			if ((days >= 0) && (days < NUM_DAYS)) {
 				//assert (countDaily.size() == NUM_DAYS);
-				countDaily.set(days, countDaily.get(days) + 1);
+				countDaily[days]++;
 			}
 		}
-
 		return new TwitterDemoTopicRecord(topic, topicEnglish, countMonthly,
-				countDaily, countPer6hrs, countPerHour, recentTweets, endTimeSecs);
+				countDaily, countPer6hrs, countPerHour, recentTweets, endTimeSecs);		
 	}
 
 	private static TwitterDemoTopicRecord addTweetsToRecord(
-			TwitterDemoTopicRecord record, List<Pair<String, Long>> newTweets,
-			Long endTimeSecs) {
+			TwitterDemoTopicRecord record, List<Pair<String, Long>> newTweets) {
 
 		for (Pair<String, Long> newTweet : newTweets) {
 			record = addTweetToRecord(record, newTweet);
@@ -492,15 +522,11 @@ public class TwitterDemoTopicRecord {
 		return record;
 	}
 
-	private static void minInPlace(List<Integer> accumulatedMin,
-			List<Integer> newMin) {
-		for (int i = 0; i < newMin.size(); ++i) {
-			if (i >= accumulatedMin.size()) {
-				accumulatedMin.add(newMin.get(i));
-			} else {
-				accumulatedMin.set(i,
-						Math.min(accumulatedMin.get(i), newMin.get(i)));
-			}
+	private static void minInPlace(int[] accumulatedMin,
+			int[] newMin) {
+		//assert(accumulatedMin.length == newMin.length);
+		for (int i = 0; i < newMin.length; ++i) {
+			accumulatedMin[i] = Math.min(accumulatedMin[i],newMin[i]);
 		}
 	}
 
@@ -516,9 +542,9 @@ public class TwitterDemoTopicRecord {
 			return null;
 
 		int minCount = Integer.MAX_VALUE;
-		List<Integer> minCountDaily = new ArrayList<>();
-		List<Integer> minCountPer6hrs = new ArrayList<>();
-		List<Integer> minCountPerHour = new ArrayList<>();
+		int[] minCountDaily = new int[NUM_DAYS];
+		int[] minCountPer6hrs = new int[NUM_QUARTERDAYS];
+		int[] minCountPerHour = new int[NUM_HOURS];
 		for (TwitterDemoTopicRecord record : records) {
 			if (null != record) {
 				minCount = Math.min(minCount, record._countMonthly);
@@ -531,16 +557,12 @@ public class TwitterDemoTopicRecord {
 				minCountPer6hrs, minCountPerHour,
 				new ArrayList<Pair<String, Long>>(), 0);
 	}
-
-	private static void maxInPlace(List<Integer> accumulatedMax,
-			List<Integer> newMax) {
-		for (int i = 0; i < newMax.size(); ++i) {
-			if (i >= accumulatedMax.size()) {
-				accumulatedMax.add(newMax.get(i));
-			} else {
-				accumulatedMax.set(i,
-						Math.max(accumulatedMax.get(i), newMax.get(i)));
-			}
+	
+	private static void maxInPlace(int[] accumulatedMax,
+			int[] newMax) {
+		//assert(accumulatedMax.length == newMax.length);
+		for (int i = 0; i < newMax.length; ++i) {
+			accumulatedMax[i] = Math.max(accumulatedMax[i],newMax[i]);
 		}
 	}
 
@@ -553,9 +575,9 @@ public class TwitterDemoTopicRecord {
 	public static TwitterDemoTopicRecord maxOfRecords(
 			TwitterDemoTopicRecord... records) {
 		int maxCount = Integer.MIN_VALUE;
-		List<Integer> maxCountDaily = new ArrayList<>();
-		List<Integer> maxCountPer6hrs = new ArrayList<>();
-		List<Integer> maxCountPerHour = new ArrayList<>();
+		int[] maxCountDaily = new int[NUM_DAYS];
+		int[] maxCountPer6hrs = new int[NUM_QUARTERDAYS];
+		int[] maxCountPerHour = new int[NUM_HOURS];
 		for (TwitterDemoTopicRecord record : records) {
 			maxCount = Math.max(maxCount, record._countMonthly);
 			maxInPlace(maxCountDaily, record._countDaily);
