@@ -54,7 +54,8 @@ import com.google.inject.Inject;
 public class AnnotationResource extends ApertureServerResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationResource.class);
     
-	private AnnotationService _service;
+
+	private AnnotationService 			 _service;
 	
 	@Inject
 	public AnnotationResource( AnnotationService service ) {
@@ -93,55 +94,24 @@ public class AnnotationResource extends ApertureServerResource {
 				
 			} else if ( requestType.equals("filter") ) {
 				
-				UUID uuid = UUID.fromString( data.getString("uuid") );
+				//UUID uuid = UUID.fromString( data.getString("uuid") );
 				JSONObject jsonFilters = data.getJSONObject("filters");
 						
-				Map<String, Integer> filters = new HashMap<>();
-				
-				Iterator<?> priorities = jsonFilters.keys();
-		        while( priorities.hasNext() ) {
-		        	
-		        	String priority = (String)priorities.next();		            
-		            int count = jsonFilters.getInt( priority );
-		            filters.put( priority, count );
-		        }
-		        
-		        _service.setFilter( uuid, layer, filters );
-				
-			} /*else if ( requestType.equals("configure") ) {
-				
-				
-				
-                // Configuration request
-                String layerId = arguments.getString("layer");
-                JSONObject configuration = arguments.getJSONObject("configuration");
-                UUID uuid = _service.configureLayer(layerId, configuration);
-                String host = getRequest().getResourceRef().getPath();
-                host = host.substring(0, host.lastIndexOf("layer"));
+				UUID uuid = _service.configureFilters( layer, jsonFilters );
 
-                // Figure out the number of images per tile
-                PyramidMetaData metaData = _service.getMetaData(layerId);
+                jsonResult.put("uuid", uuid);
 
-                JSONObject result = JsonUtilities.deepClone(metaData.getRawData());
-                result.put("layer", layerId);
-                result.put("id", uuid);
-                result.put("tms", host + "tile/" + uuid.toString() + "/");
-                result.put("apertureservice", "/tile/" + uuid.toString() + "/");
-                try {
-                    LayerConfiguration config = _service.getRenderingConfiguration(uuid, null, null);
-                    TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
-                    if (null != renderer) {
-                        result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metaData));
-                    }
-                } catch (ConfigurationException e) {
-                    // If we have to skip images per tile, it's not a huge deal
-                    LOGGER.info("Couldn't determine images per tile for layer {}", layerId, e);
+			} else if ( requestType.equals("list") ) {
+				
+                List<AnnotationInfo> layers = _service.listAnnotations();
+                JSONArray jsonLayers = new JSONArray();
+                for (int i=0; i<layers.size(); ++i) {
+                    jsonLayers.put(i, layers.get(i).getRawData());
                 }
-                
-                
-                
+                return new JsonRepresentation(jsonLayers);
+			
 			}
-			*/
+			
 			setStatus(Status.SUCCESS_OK);		
 			jsonResult.put("status", "success");
 			return new JsonRepresentation(jsonResult);

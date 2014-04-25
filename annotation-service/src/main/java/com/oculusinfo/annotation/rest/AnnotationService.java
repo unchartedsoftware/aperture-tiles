@@ -27,8 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.json.JSONObject;
+
 import com.oculusinfo.annotation.*;
+import com.oculusinfo.annotation.config.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
+
 
 
 public interface AnnotationService {
@@ -62,9 +68,11 @@ public interface AnnotationService {
 
 	
 	/*
-	 * Set filter for uuid
-	 * 
+	 * Configuration interface 
 	 */
-	public abstract void setFilter( UUID id, String layer, Map<String, Integer> filter );
+	public abstract AnnotationConfiguration getAnnotationConfiguration( String layer );
+	//public abstract UUID configureAnnotationLayer (String layerId, JSONObject configuration);
+	public abstract UUID configureFilters (String layerId, JSONObject filters);
 	
+	public abstract List<AnnotationInfo> listAnnotations();
 }

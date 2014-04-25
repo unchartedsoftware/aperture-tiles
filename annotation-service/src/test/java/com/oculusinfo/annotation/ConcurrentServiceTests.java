@@ -60,7 +60,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     public void setup () { 	
     	    	
     	TilePyramid pyramid = new WebMercatorTilePyramid();
-    	AnnotationIndexer indexer = new AnnotationIndexerImpl( pyramid );
+    	AnnotationIndexer indexer = new AnnotationIndexerImpl();
 
     	try {
     		

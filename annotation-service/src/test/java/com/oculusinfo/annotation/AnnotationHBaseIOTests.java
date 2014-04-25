@@ -69,7 +69,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 		}	
     	
     	_pyramid = new WebMercatorTilePyramid();
-    	_indexer = new AnnotationIndexerImpl( _pyramid );
+    	_indexer = new AnnotationIndexerImpl();
     	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
     	_dataSerializer = new JSONAnnotationDataSerializer();  	
 	
@@ -86,7 +86,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     	
     	
         List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );        
-        List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( NUM_ENTRIES, _indexer );
+        List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( NUM_ENTRIES, _indexer, _pyramid );
 		
         List<TileIndex> tileIndices = tilesToIndices( tiles );
         List<Pair<String, Long>> dataIndices = dataToIndices( annotations );

@@ -98,6 +98,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
 	 * Writes out new metadata for this tile set
 	 * TODO: Implement annotation meta data
 	 */
+    @Override
 	public void writeMetaData (String pyramidId, String metaData) throws IOException {
 		throw new IOException("annotation metadata not supported");
 	}
@@ -107,6 +108,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
 	 * Gets the metadata for this tile set
 	 * TODO: Implement annotation meta data
 	 */
+	@Override
 	public String readMetaData (String pyramidId) throws IOException {
 		throw new IOException("annotation metadata not supported");
 	}
@@ -207,11 +209,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     	}
 	}
 
-    
-
-    
     @Override
-
 	public <T> List<TileData<T>> readTiles (String tableName, TileSerializer<T> serializer,
 	                                        Iterable<TileIndex> tiles) throws IOException {
 
@@ -262,7 +260,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
 		return null;
 	}
 
-   
     @Override
     public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
     	
@@ -283,8 +280,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
     }
 
-    
-    
+
     public HBaseAdmin getAdmin() {
     	return _admin;
     }

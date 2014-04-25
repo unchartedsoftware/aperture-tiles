@@ -22,20 +22,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.index;
+package com.oculusinfo.annotation.init;
 
 import com.google.inject.AbstractModule;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
-import com.oculusinfo.annotation.index.impl.*;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.annotation.config.*;
+import com.oculusinfo.annotation.init.providers.*;
+import com.oculusinfo.tile.init.FactoryProvider;
 
 
-public class AnnotationIndexerModule extends AbstractModule {
+public class StandardAnnotationConfigurationModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		bind(TilePyramid.class).to(WebMercatorTilePyramid.class);
-		bind(AnnotationIndexer.class).to(AnnotationIndexerImpl.class);		
-	}
-	
+    @Override
+    protected void configure() {
+        bind(new TypeLiteral<FactoryProvider<AnnotationConfiguration>>() {}).to(StandardAnnotationConfigurationProvider.class);
+    }
 }

@@ -29,6 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 
+
+
 import com.google.inject.Singleton;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -36,7 +38,7 @@ import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.util.*;
 
@@ -48,21 +50,26 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 	private ConcurrentHashMap< String, AnnotationCache<TileIndex, TileData<Map<String, List<Pair<String,Long>>>>> > _tileCache;
 	private ConcurrentHashMap< String, AnnotationCache<Pair<String,Long>, AnnotationData<?>> > _dataCache;
 
-	/*
+	
 	@Inject
-    public CachedAnnotationServiceImpl( @Named("com.oculusinfo.tile.annotation.config") String annotationConfigurationLocation ) {
-		super( annotationConfigurationLocation );
+    public CachedAnnotationServiceImpl( @Named("com.oculusinfo.annotation.config") String annotationConfigurationLocation,
+    									FactoryProvider<LayerConfiguration> layerConfigurationProvider,
+    									AnnotationIndexer indexer,
+									    AnnotationSerializer<AnnotationData<?>> serializer ) {
+		super( annotationConfigurationLocation, layerConfigurationProvider, indexer, serializer );
 		_tileCache = new ConcurrentHashMap<>();
 		_dataCache = new ConcurrentHashMap<>();
 	}
-	*/
-		
+	
+	/*
+	@Inject
 	public CachedAnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
 		
 		super( io, indexer );
 		_tileCache = new ConcurrentHashMap<>();
 		_dataCache = new ConcurrentHashMap<>();
 	}
+	*/
 	
 	protected AnnotationCache<TileIndex, TileData<Map<String, List<Pair<String,Long>>>>> getLayerTileCache( String layer ) {
 		if ( !_tileCache.containsKey( layer ) ) {

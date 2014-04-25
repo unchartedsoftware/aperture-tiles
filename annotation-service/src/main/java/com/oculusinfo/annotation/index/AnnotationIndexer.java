@@ -32,14 +32,12 @@ public abstract class AnnotationIndexer {
 
 	public static final int NUM_BINS = 8;
 	
-    protected TilePyramid _pyramid;
-    
     public AnnotationIndexer() {
     }
     
-    public abstract List<TileAndBinIndices> getIndices( AnnotationData<?> data );
+    public abstract List<TileAndBinIndices> getIndices( AnnotationData<?> data, TilePyramid pyramid );
   
-    public abstract TileAndBinIndices getIndex( AnnotationData<?> data, int level );
+    public abstract TileAndBinIndices getIndex( AnnotationData<?> data, int level, TilePyramid pyramid );
 
     
 }

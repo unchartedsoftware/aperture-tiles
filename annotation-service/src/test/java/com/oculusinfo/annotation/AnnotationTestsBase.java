@@ -226,14 +226,14 @@ public class AnnotationTestsBase {
 				
 	}
 	
-	protected List<TileData< Map<String, List<Pair<String, Long>>>>> generateTiles( int numEntries, AnnotationIndexer indexer ) {
+	protected List<TileData< Map<String, List<Pair<String, Long>>>>> generateTiles( int numEntries, AnnotationIndexer indexer, TilePyramid pyramid ) {
 		
 		List<AnnotationData<?>> annotations = generateJSONAnnotations( numEntries );
 
 		Map<TileIndex, TileData< Map<String, List<Pair<String, Long>>>>> tiles = new HashMap<>();
 				
 		for ( AnnotationData<?> annotation : annotations ) {
-			List<TileAndBinIndices> indices = indexer.getIndices( annotation );
+			List<TileAndBinIndices> indices = indexer.getIndices( annotation, pyramid );
 			
 			for ( TileAndBinIndices index : indices ) {
 				

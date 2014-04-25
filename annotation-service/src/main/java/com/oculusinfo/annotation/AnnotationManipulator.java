@@ -152,9 +152,74 @@ public class AnnotationManipulator {
     				tile.setBin( binIndex.getX(), binIndex.getY(), null );
     			}
     		}       	
-    	}       	
+    	} 
+    	
     }
 
+    
+    static public void addDataToTiles( List< TileData<Map<String, List<Pair<String,Long>>>>> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
+    	 /*
+    	 * Iterate through all indices, find matching tiles and add data reference, if tile
+    	 * is missing, add it
+    	 */
+    	for ( TileAndBinIndices index : indices ) {			
+			// check all existing tiles for matching index
+    		boolean found = false;
+			for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {				
+				if ( tile.getDefinition().equals( index.getTile() ) ) {
+					// tile exists already, add data to bin
+					AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
+					found = true;
+					break;
+				} 
+			}
+			if ( !found ) {
+				// no tile exists, add tile
+				TileData<Map<String, List<Pair<String,Long>>>> tile = new TileData<>( index.getTile() );				
+				AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
+				tiles.add( tile );    	
+			}
+		}				
+	}
+	
+    
+	
+    static public void removeDataFromTiles( List<TileData<Map<String, List<Pair<String,Long>>>>> modifiedTiles, 
+											List<TileIndex> emptyTiles, 
+											List<TileData<Map<String, List<Pair<String,Long>>>>> tiles,
+											List<BinIndex> indices,
+											AnnotationData<?> data ) {				
+    	/*
+    	 * Iterate through all tiles, removing data reference from bins, any tiles with no bin entries
+    	 * are added to tileToRemove, the rest are added to tilesToWrite
+    	 */
+    	// clear supplied lists
+    	modifiedTiles.clear();
+    	emptyTiles.clear();	
+
+    	Iterator<TileData<Map<String, List<Pair<String,Long>>>>> tileItr = tiles.iterator();
+    	Iterator<BinIndex> indexItr = indices.iterator();
+    	while(tileItr.hasNext() && indexItr.hasNext()) {
+    		TileData<Map<String, List<Pair<String,Long>>>> tile = tileItr.next();
+    		BinIndex index = indexItr.next();
+    	    AnnotationManipulator.removeDataFromTile( tile, index, data );
+    	}
+    	
+    	// determine which tiles need to be re-written and which need to be removed
+		for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {
+			if ( AnnotationManipulator.isTileEmpty( tile ) ) {				
+				// if no data left, flag tile for removal
+				emptyTiles.add( tile.getDefinition() );
+			} else {
+				// flag tile to be written
+				modifiedTiles.add( tile );
+			}
+		}
+		
+	} 
+    
+    
+    
    
     static public List<Pair<String, Long>> getReferencesFromBin( Map<String, List<Pair<String, Long>>> bin, String priority ) {
     	

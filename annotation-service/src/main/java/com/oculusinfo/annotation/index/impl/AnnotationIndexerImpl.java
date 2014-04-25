@@ -29,28 +29,26 @@ import java.util.List;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.binning.*;
-import com.google.inject.Inject;
 
 public class AnnotationIndexerImpl extends AnnotationIndexer {
 
-	@Inject
-    public AnnotationIndexerImpl( TilePyramid pyramid ) {
-    	_pyramid = pyramid;
+    public AnnotationIndexerImpl() {
+    	super();
     }
     
 	@Override
-	public List<TileAndBinIndices> getIndices( AnnotationData<?> data ) {
+	public List<TileAndBinIndices> getIndices( AnnotationData<?> data, TilePyramid pyramid ) {
 		
 		// only generate indices upwards
     	List<TileAndBinIndices> indices = new LinkedList<>();		
 		for (int i=0; i<=data.getLevel(); i++) {
-			indices.add( getIndex( data, i ) );
+			indices.add( getIndex( data, i, pyramid ) );
 		}
 		return indices;
     }
 
     @Override
-    public TileAndBinIndices getIndex( AnnotationData<?> data, int level ) {
+    public TileAndBinIndices getIndex( AnnotationData<?> data, int level, TilePyramid pyramid ) {
     	
     	// fill in defaults if dimensions are missing
     	boolean xExists = data.getX() != -1;
@@ -59,8 +57,8 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
     	double y = ( yExists ) ? data.getY() : 0;
     	
     	// map from raw x and y to tile and bin
-    	TileIndex tile = _pyramid.rootToTile( x, y, level, NUM_BINS );
-		BinIndex bin = _pyramid.rootToBin( x, y, tile );
+    	TileIndex tile = pyramid.rootToTile( x, y, level, NUM_BINS );
+		BinIndex bin = pyramid.rootToBin( x, y, tile );
 
 		// insert -1's for univariate annotations
 		if ( !xExists ) {			
