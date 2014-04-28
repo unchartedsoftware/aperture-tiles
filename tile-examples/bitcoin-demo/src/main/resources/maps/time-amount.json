@@ -9,28 +9,28 @@
 		"",
 		"The MapConfig key specifies configuration of map layer control and base layer properties",
 		"",
-		"The AxisConfig key specifies configuration of the map axes. Each axis can each have the "
+		"The AxisConfig key specifies configuration of the map axes. Each axis can each have the ",
 		"following keys: ",
-		"       title:      			axis title label text"
-		"       repeat:     			whether or not the axis will repeat"
-		"       position:      	 		where to place the axis"
+		"       title:      			axis title label text",
+		"       repeat:     			whether or not the axis will repeat",
+		"       position:      	 		where to place the axis",
 		"       intervalSpec:",
-		"           type:   			type of interval"
-		"           increment:  		fixed / percentage increment of the axis, matches type"
-		"           pivot:  			the fixed value / percentage that all other values are incremented from"
-		"           allowScaleByZoom: 	if the axis should be scaled by the zoom factor"
+		"           type:   			type of interval",
+		"           increment:  		fixed / percentage increment of the axis, matches type",
+		"           pivot:  			the fixed value / percentage that all other values are incremented from",
+		"           allowScaleByZoom: 	if the axis should be scaled by the zoom factor",
 		"       unitSpec:",
-		"           type:       		type of units parse in FormatAxis.js"
-		"           decimals:   		number of decimals"
-		"           allowStepDown: 		if the units can step down if they are below range"
-		"		style:"
-		"      	 	majorMarkerLength:  	the length of the major marker tick mark"
-		"       	majorMarkerWidth:   	the width of the major marker tick mark"
-		"       	majorMarkerColour:  	the color of the major marker tick mark"
-		"       	markerLabelColour: 		the color of the major marker label"
-		"       	axisLabelColour:   		the color of the axis label"
-		"       	fontFamily:         	the font family to use for labels"
-		"      	 	markerLabelFontSize: 	the font size of the marker label"
+		"           type:       		type of units parse in FormatAxis.js",
+		"           decimals:   		number of decimals",
+		"           allowStepDown: 		if the units can step down if they are below range",
+		"		style:",
+		"      	 	majorMarkerLength:  	the length of the major marker tick mark",
+		"       	majorMarkerWidth:   	the width of the major marker tick mark",
+		"       	majorMarkerColour:  	the color of the major marker tick mark",
+		"       	markerLabelColour: 		the color of the major marker label",
+		"       	axisLabelColour:   		the color of the axis label",
+		"       	fontFamily:         	the font family to use for labels",
+		"      	 	markerLabelFontSize: 	the font size of the marker label",
 		"       	axisLabelFontSize:   	the font size of the axis label"
 	],
 
