@@ -267,7 +267,11 @@ public class HBasePyramidIO implements PyramidIO {
 
 	@Override
 	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
-		// Noop
+		try {
+    		initializeForWrite( pyramidId );
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
 	}
 
 	@Override

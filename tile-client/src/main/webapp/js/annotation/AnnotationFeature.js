@@ -138,7 +138,6 @@ define(function (require) {
             // average display lat lon
             viewportPixel = this.map.getViewportPixelFromCoord( xSum/sumCount, ySum/sumCount );
             latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel );
-
             this.annotationsByPriority = annotationsByPriority;
 
             if ( this.olFeature_ === undefined ) {
@@ -158,7 +157,7 @@ define(function (require) {
 
             var count = this.getAnnotationCount(),
                 viewportPixel = this.map.getViewportPixelFromCoord( annotation.x, annotation.y),
-                latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel);
+                latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel );
 
             // re calculate avg position
             this.olFeature_.geometry.x = ((this.olFeature_.geometry.x*count) + latlon.lon) / (count+1);

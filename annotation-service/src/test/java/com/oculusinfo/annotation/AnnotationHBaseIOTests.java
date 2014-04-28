@@ -55,7 +55,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	private PyramidIO _tileIO;
 	
 	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
-	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
+	private AnnotationSerializer _dataSerializer;
 	private TilePyramid _pyramid;
 	private AnnotationIndexer _indexer;
 

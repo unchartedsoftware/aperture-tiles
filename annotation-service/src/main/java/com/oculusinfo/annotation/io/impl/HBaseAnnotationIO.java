@@ -142,7 +142,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     @Override
 	public void initializeForRead (String tableName) {		
     	try {
-    	initializeForWrite( tableName );
+    		initializeForWrite( tableName );
     	} catch (Exception e) {
     		e.printStackTrace();
     	}

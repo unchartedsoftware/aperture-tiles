@@ -42,6 +42,7 @@ import org.json.JSONObject;
 
 public class AnnotationManipulator {
 	
+	public static final int NUM_BINS = 8;
 	
 	static private class ReferenceComparator implements Comparator< Pair<String, Long> > {
 	    @Override
@@ -52,9 +53,7 @@ public class AnnotationManipulator {
 	    }
 	}
 	
-    public static final int NUM_BINS = 8;
 
-    
     static public boolean isTileEmpty( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
     	
     	synchronized( tile ) {
@@ -277,17 +276,19 @@ public class AnnotationManipulator {
 	    	// for each bin
 	    	for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
 	    		
-				// go through filter list get references by priority and by count
-				for (Map.Entry<String, Integer> f : filter.entrySet() ) {
-					
-					String priority = f.getKey();
-					Integer count = f.getValue();
-					
-					List<Pair<String, Long>> references = getReferencesFromBin( bin, priority );
-					
-					// references are sorted, so simply cut the tail off to get the n newest
-					filtered.addAll( references.subList( 0, count < references.size() ? count : references.size() ) );
-				}
+	    		if (bin != null) {
+					// go through filter list get references by priority and by count
+					for (Map.Entry<String, Integer> f : filter.entrySet() ) {
+						
+						String priority = f.getKey();
+						Integer count = f.getValue();
+						
+						List<Pair<String, Long>> references = getReferencesFromBin( bin, priority );
+						
+						// references are sorted, so simply cut the tail off to get the n newest
+						filtered.addAll( references.subList( 0, count < references.size() ? count : references.size() ) );
+					}
+	    		}
 	    	}
 			return filtered;
     	}

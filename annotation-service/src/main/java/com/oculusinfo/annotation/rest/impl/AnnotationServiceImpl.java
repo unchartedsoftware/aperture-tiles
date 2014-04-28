@@ -126,6 +126,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     	try {
     		AnnotationConfiguration config = getAnnotationConfiguration(layer);
     		TilePyramid pyramid = config.produce(TilePyramid.class);
+    		    		
     		/* 
     		 * check in case client generated UUID results in IO collision, if so
     		 * prevent io corruption by throwing an exception, this is so statistically 
@@ -193,9 +194,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		/*
 		 * If user has specified a filter, use it, otherwise pull all annotations in tile 
 		 */
-		if ( id == null ) {
+		if ( id == null ) {			
 			// use default filter
-			filters = _filtersByUuid.get( _defaultFilterUuidById.get( id ) );
+			filters = _filtersByUuid.get( _defaultFilterUuidById.get( layer ) );
 		} else {
 			filters = _filtersByUuid.get( id );
 		}
@@ -261,8 +262,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 					
 		try {
 			AnnotationConfiguration configFactory = new AnnotationConfiguration( _pyramidIOFactoryProvider,
-					_tileSerializerFactoryProvider,
-					_tilePyramidFactoryProvider, null, Collections.singletonList("config") );
+																				 _tileSerializerFactoryProvider,
+																				 _tilePyramidFactoryProvider,
+																				 null, 
+																				 null ); //Collections.singletonList("config") );
 			
 			configFactory.readConfiguration( _annotationLayersById.get(layer).getRawData() );		
 			return configFactory.produce(AnnotationConfiguration.class);
@@ -278,10 +281,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 	@Override
 	public UUID configureFilters (String layerId, JSONObject filters ) {
 
-		
         UUID uuid = UUID.randomUUID();
         _filtersByUuid.put( uuid, getFiltersFromJSON( filters ) );
-
         return uuid;
 	}
 
@@ -340,8 +341,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     	// set default filter
     	UUID uuid = UUID.randomUUID();
     	_defaultFilterUuidById.put( info.getID(), uuid );
-    	// info.getFilterConfiguration() IS RETURNING NULL
-    	_filtersByUuid.put( uuid, getFiltersFromJSON( info.getFilterConfiguration() ) );	
+    	_filtersByUuid.put( uuid, getFiltersFromJSON( info.getFilterConfiguration() ) );
     }
 	
 	private Map<String, Integer> getFiltersFromJSON( JSONObject jsonFilters ) {
@@ -349,7 +349,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 		Map<String, Integer> filters = new HashMap<>();
 		
 		try {
-			System.out.println( "\n\n\n" + jsonFilters.toString(4) + "\n\n\n" );
 			Iterator<?> priorities = jsonFilters.keys();
 	        while( priorities.hasNext() ) {
 	        	
@@ -642,7 +641,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
 			io.initializeForRead( layer, 0, 0, null );		
-			tiles = io.readTiles( layer, serializer, indices );						
+			tiles = io.readTiles( layer, serializer, indices );
 					
 		} catch ( Exception e ) {
 			e.printStackTrace();

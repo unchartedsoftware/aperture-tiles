@@ -54,7 +54,7 @@ require(['./FileLoader',
                 cloneObject,
                 getLayers,
                 pyramidsEqual,
-                //getAnnotationLayers,
+                getAnnotationLayers,
                 uiMediator;
 
             cloneObject = function (base) {
@@ -138,7 +138,7 @@ require(['./FileLoader',
 		        return result;
 	        };
 
-            /*
+
             getAnnotationLayers = function( allLayers, filter ) {
                 var i, validLayers =[];
                 for (i=0; i<allLayers.length; i++) {
@@ -149,7 +149,7 @@ require(['./FileLoader',
                 }
                 return validLayers;
             };
-            */
+
                         
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
@@ -192,7 +192,7 @@ require(['./FileLoader',
 
 				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
-                            /*
+
                             AnnotationLayerFactory.requestLayers(
                                 function( layers ) {
 
@@ -201,7 +201,7 @@ require(['./FileLoader',
 
                                  }
                             );
-                            */
+
 
 				            // Trigger the initial resize event to resize everything
 				            $(window).resize();

@@ -108,7 +108,7 @@ public class AnnotationInfo {
                 }
             }
         }
-        return _pyramidConfiguration;
+        return _filterConfiguration;
     }
     
     

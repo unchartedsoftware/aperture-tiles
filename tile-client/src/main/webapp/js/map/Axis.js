@@ -130,9 +130,11 @@ define(function (require) {
                 that.redraw();
             });
 
+            /* 'mousemove' triggers on zoom, so this is unnecessary
             this.map.on('zoomend', function(event) {
                 that.redraw();
             });
+            */
 
             this.redraw();
         },
@@ -249,7 +251,7 @@ define(function (require) {
                     positionDir = 'left';
                 } else {
                     lengthDim = 'width';
-                    positionDir = 'bottom';
+                    positionDir = 'top';
                 }
 
                 return $('<div class="' + that.id + 'major-marker"'
@@ -299,7 +301,7 @@ define(function (require) {
                         // get label position
                         markerLabelCSS[that.position] = (-markerLabel.width() - (that.style.majorMarkerLength + MARKER_LABEL_SPACING)) + "px";
                         // centre label on tick
-                        markerLabelCSS.bottom = (markers[i].pixel - (markerLabel.height()*0.5)) + "px";
+                        markerLabelCSS.top = (markers[i].pixel - (markerLabel.height()*0.5)) + "px";
                         // get text alignment
                         if (that.position === "left") {
                             markerLabelCSS["text-align"] = "right";

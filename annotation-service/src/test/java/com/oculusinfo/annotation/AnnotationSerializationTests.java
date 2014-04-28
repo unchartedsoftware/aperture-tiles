@@ -50,7 +50,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 	static final boolean VERBOSE = true;
 	
 	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
-	private AnnotationSerializer<AnnotationData<?>> _dataSerializer;
+	private AnnotationSerializer _dataSerializer;
 	private TilePyramid _pyramid;
 	private AnnotationIndexer _indexer;
 	

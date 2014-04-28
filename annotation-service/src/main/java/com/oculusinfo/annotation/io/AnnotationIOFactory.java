@@ -41,12 +41,13 @@ public class AnnotationIOFactory  {
 		
 		try {
 			JSONObject pyramidio = data.getJSONObject("pyramidio");
-			if ( pyramidio.getString(ANNOTATION_IO_TYPE).equals("HBASE_IO_TYPE") ) {
+			String type = pyramidio.getString(ANNOTATION_IO_TYPE);
+			if ( type.equals(HBASE_IO_TYPE) ) {
 				return new HBaseAnnotationIO( pyramidio.getString("hbase.zookeeper.quorum"),
-										  pyramidio.getString("hbase.zookeeper.port"),
-										  pyramidio.getString("hbase.mater"));
+										  	  pyramidio.getString("hbase.zookeeper.port"),
+										  	  pyramidio.getString("hbase.master") );
 			} else {
-				throw new IOException("AnnotationIO type not recognized!");
+				throw new IOException("AnnotationIO type: '" + type + "' not recognized");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

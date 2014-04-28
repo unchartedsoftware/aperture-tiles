@@ -131,5 +131,11 @@ public class TestPyramidIO implements PyramidIO {
 			return null;
 		}
 	}
+	
+	@Override
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
+		throw new IOException("removeTiles not currently supported for TestPyramidIO");
+	}
+
 
 }

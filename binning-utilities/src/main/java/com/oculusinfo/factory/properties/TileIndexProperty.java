@@ -117,7 +117,7 @@ public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 		if (!(that instanceof TileIndexProperty)) return false;
         
 		TileIndexProperty thatP = (TileIndexProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._name.toLowerCase().equals(this._name.toLowerCase());
 	}
 
 	@Override

@@ -24,11 +24,14 @@
 package com.oculusinfo.annotation.config;
 
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 import org.json.JSONObject;
+
+
 
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.io.PyramidIO;
@@ -41,8 +44,8 @@ import com.oculusinfo.tile.init.FactoryProvider;
 public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfiguration> {
 	
 	public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");    
-    public static final List<String> PYRAMID_IO_PATH = Collections.singletonList("pyramidio");
-    public static final List<String> SERIALIZER_PATH = Collections.singletonList("serializer");
+    public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList(Arrays.asList("data","pyramidio"));
+    public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList(Arrays.asList("data","serializer"));
 
 
 	public AnnotationConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,

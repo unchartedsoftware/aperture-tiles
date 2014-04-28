@@ -41,8 +41,6 @@ define(function (require) {
         TILESIZE = 256,
         Map;
 
-
-
     Map = Class.extend({
         ClassName: "Map",
 		
@@ -70,11 +68,7 @@ define(function (require) {
             });
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
-
-			// Create axes
 			this.axes = [];
-
-			this.projection = this.map.olMap_.projection;
 
 	        this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
 
@@ -99,7 +93,9 @@ define(function (require) {
 				$map.height(newHeight);
 				that.updateSize();
 			});
-												
+
+            this.previousZoom = this.map.getZoom();
+
 			// Trigger the initial resize event to resize everything
             $(window).resize();			
         },
@@ -154,6 +150,10 @@ define(function (require) {
         },
 
 
+        getProjectioin: function() {
+            return this.map.olMap_.projection;
+        },
+
         getViewportWidth: function() {
             return this.map.olMap_.viewPortDiv.clientWidth;
         },
@@ -189,11 +189,11 @@ define(function (require) {
          *          map [0,0] is BOTTOM-LEFT
          */
         getMapPixelFromViewportPixel: function(vx, vy) {
-            var minAndMax = this.getMapMinAndMaxInViewportPixels(),
+            var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
                 totalPixelSpan = TILESIZE * Math.pow( 2, this.getZoom() );
             return {
-                x: totalPixelSpan + vx - minAndMax.max.x,
-                y: totalPixelSpan - vy + minAndMax.max.y
+                x: totalPixelSpan + vx - viewportMinMax.max.x,
+                y: totalPixelSpan - vy + viewportMinMax.max.y
             };
         },
 
@@ -204,10 +204,11 @@ define(function (require) {
          *          map [0,0] is BOTTOM-LEFT
          */
         getViewportPixelFromMapPixel: function(mx, my) {
-            var viewportMinMax = this.getMapMinAndMaxInViewportPixels();
+            var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
+                totalPixelSpan = TILESIZE * Math.pow( 2, this.getZoom() );
             return {
                 x: mx + viewportMinMax.min.x,
-                y: my + ( this.getViewportHeight() - viewportMinMax.min.y )
+                y: totalPixelSpan - my + viewportMinMax.max.y //my + ( this.getViewportHeight() - viewportMinMax.min.y )
             };
         },
 
@@ -258,8 +259,8 @@ define(function (require) {
          *          data [0,0] is BOTTOM-LEFT
          */
         getViewportPixelFromCoord: function(x, y) {
-            var coord = this.getMapPixelFromCoord(x, y);
-            return this.getViewportPixelFromMapPixel(coord.x, coord.y);
+            var mapPixel = this.getMapPixelFromCoord(x, y);
+            return this.getViewportPixelFromMapPixel(mapPixel.x, mapPixel.y);
         },
 
 
@@ -394,14 +395,34 @@ define(function (require) {
 
         on: function (eventType, callback) {
 
+            var that = this;
+
             switch (eventType) {
 
                 case 'click':
                 case 'zoomend':
                 case 'mousemove':
+                case 'moveend':
 
                     this.map.olMap_.events.register(eventType, this.map.olMap_, callback);
                     break;
+
+                case 'panend':
+
+                    /*
+                     * ApertureJS 'panend' event is simply an alias to 'moveend' which also triggers
+                     * on 'zoomend'. This intercepts it and ensures 'panend' is not called on a 'zoomend'
+                     * event
+                     */
+                    this.map.olMap_.events.register('moveend', this.map.olMap_, function(e) {
+                        if (that.previousZoom === e.object.zoom ) {
+                            // only process if zoom is same as previous
+                            callback();
+                        }
+                        that.previousZoom = e.object.zoom;
+                    });
+                    break;
+
 
                 default:
 
@@ -418,8 +439,18 @@ define(function (require) {
                 case 'click':
                 case 'zoomend':
                 case 'mousemove':
+                case 'moveend':
 
                     this.map.olMap_.events.unregister(eventType, this.map.olMap_, callback);
+                    break;
+
+                case 'panend':
+
+                    if (callback !== undefined) {
+                        console.log("Error, cannot unregister specified 'panend' event");
+                    } else {
+                        this.map.olMap_.events.unregister(eventType, this.map.olMap_);
+                    }
                     break;
 
                 default:
@@ -436,6 +467,7 @@ define(function (require) {
                 case 'click':
                 case 'zoomend':
                 case 'mousemove':
+                case 'moveend':
 
                     this.map.olMap_.events.triggerEvent(eventType, event);
                     break;

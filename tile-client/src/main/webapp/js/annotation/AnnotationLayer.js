@@ -101,7 +101,7 @@ define(function (require) {
             this.service = new AnnotationService( this.layer );
             this.features = {};
             this.pendingFeature = null;
-
+            this.pendingTileRequests = {};
             this.createLayer();
 
             // set callbacks
@@ -109,7 +109,7 @@ define(function (require) {
             this.map.on('panend', $.proxy( this.onMapUpdate, this ) );
 
             // trigger callback to draw first frame
-            //this.onMapUpdate();
+            this.onMapUpdate();
         },
 
 
@@ -138,8 +138,8 @@ define(function (require) {
 
             // clear feature map
             this.features = {};
-
             this.cancelPendingFeature();
+
             this.onMapUpdate();
         },
 
@@ -148,15 +148,21 @@ define(function (require) {
 
             // determine all tiles in view
             var tiles = this.map.getTilesInView(),
+                tilekey,
                 i;
 
             function createTileKey(tile) {
                 return tile.level + "," + tile.xIndex + "," + tile.yIndex;
             }
 
+            // clear pending tiles
+            this.pendingTileRequests = {};
+
             // request each tile from server
             for (i=0; i<tiles.length; i++ ) {
-                this.service.getAnnotations( createTileKey( tiles[i] ), $.proxy( this.getCallback,this ) );
+                tilekey = createTileKey( tiles[i] );
+                this.pendingTileRequests[tilekey] = true;
+                this.service.getAnnotations( tilekey, $.proxy( this.getCallback, this ) );
             }
 
         },
@@ -187,6 +193,11 @@ define(function (require) {
                 binkey,
                 spec,
                 defunctFeatures = {};
+
+            if (this.pendingTileRequests[tilekey] === undefined ) {
+                // receiving data from old request, ignore it
+                return;
+            }
 
             if ( this.features[ tilekey ] === undefined ) {
                 this.features[ tilekey ] = {};
@@ -481,6 +492,8 @@ define(function (require) {
                             level: that.map.getZoom(),
                             data: {}
                         };
+
+                        console.log( info.x + ', ' + info.y );
 
                         // create temporary feature
                         that.pendingFeature = new AnnotationFeature({
