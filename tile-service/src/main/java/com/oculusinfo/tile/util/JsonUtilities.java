@@ -345,18 +345,32 @@ public class JsonUtilities {
 	}
 
 	public static Properties jsonObjToProperties (JSONObject jsonObj) {
-		Properties properties = new Properties();
-        
+        Properties properties = new Properties();
+	    return jsonObjToProperties(properties, "", jsonObj);
+	}
+	private static Properties jsonObjToProperties (Properties properties, String keyPrefix, JSONObject jsonObj) {
 		Iterator<?> keys = jsonObj.keys();
 		while (keys.hasNext()) {
 			String key = keys.next().toString();
 			Object value = jsonObj.opt(key);
 
-			if (value instanceof String) {
-				properties.setProperty(key, (String) value);
+			if (value instanceof JSONObject) {
+			    jsonObjToProperties(properties, keyPrefix+key+".", (JSONObject) value);
+			} else if (value instanceof JSONArray) {
+			    JSONArray ja = (JSONArray) value;
+			    for (int i=0; i<ja.length(); ++i) {
+			        Object aVal = ja.opt(i);
+			        if (null == aVal) {
+	                    properties.setProperty(keyPrefix+key+"."+i, "null");
+			        } else {
+	                    properties.setProperty(keyPrefix+key+"."+i, aVal.toString());
+			        }
+			    }
+			} else if (null != value) {
+				properties.setProperty(keyPrefix+key, value.toString());
 			}
 		}
-        
+
 		return properties;
 	}
 }

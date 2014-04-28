@@ -133,6 +133,23 @@ define (function (require) {
             };
         },
 
+	    rootToFractionalTile: function (root) {
+            var tileMercator = rootToTileMercator(root.xIndex, root.yIndex, root.level);
+		    return {
+			    'level': root.level,
+			    'xIndex': tileMercator.x,
+			    'yIndex': tileMercator.y
+		    };
+	    },
+
+	    fractionalTileToRoot: function (tile) {
+            return {
+	            level: tile.level,
+	            xIndex: tileToLon(tile.xIndex, tile.level),
+	            yIndex: tileToLat(tile.yIndex, tile.level)
+            };
+	    },
+
         rootToTile: function (lon, lat, level, bins) {
             if (!bins) {
                 bins = 256;

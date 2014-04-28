@@ -251,7 +251,6 @@ define(function (require) {
             return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
         },
 
-
         /**
          * Transforms a point from data coordinates to viewport pixel coordinates
          * NOTE:    viewport [0,0] is TOP-LEFT
@@ -316,6 +315,25 @@ define(function (require) {
             return tileAndBin.bin.x + "," + tileAndBin.bin.y;
         },
 
+	    getCoordFromMap: function (x, y) {
+		    var
+		    // Total map bounds, in meters
+		    mapExtent = this.map.olMap_.getMaxExtent(),
+		    // Pyramider for the total map bounds
+		    mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
+		                                mapExtent.right, mapExtent.top),
+		    tile = mapPyramid.rootToFractionalTile({level: 0, xIndex: x, yIndex: y}),
+		    coords = this.pyramid.fractionalTileToRoot(tile);
+		    return {x: coords.xIndex, y: coords.yIndex};
+	    },
+		    
+
+
+
+	    transformOLGeometryToLonLat: function (geometry) {
+		    return geometry.transform(new OpenLayers.projection("EPSG:900913"),
+		                              new OpenLayers.projection("EPSG:4326"));
+	    },
 
         getOLMap: function() {
             return this.map.olMap_;

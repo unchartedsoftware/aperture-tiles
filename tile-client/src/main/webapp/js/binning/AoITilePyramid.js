@@ -54,6 +54,34 @@ define(function (require) {
         getProjection: "EPSG:4326",
         getTileScheme: "TMS",
 
+	    rootToFractionalTile: function (root) {
+		    var numDivs, tileX, tileY;
+
+            numDivs = 1 << root.level;
+            tileX = numDivs * (root.xIndex - this.minX) / (this.maxX - this.minX);
+            tileY = numDivs * (root.yIndex - this.minY) / (this.maxY - this.minY);
+
+		    return {
+			    'level': root.level,
+			    'xIndex': tileX,
+			    'yIndex': tileY
+		    };
+	    },
+
+	    fractionalTileToRoot: function (tile) {
+            var pow2, tileXSize, tileYSize;
+
+            pow2 = 1 << tile.level;
+            tileXSize = (this.maxX - this.minX) / pow2;
+            tileYSize = (this.maxY - this.minY) / pow2;
+
+		    return {
+			    level: tile.level,
+			    xIndex: this.minX + tileXSize * tile.xIndex,
+			    yIndex: this.minY + tileYSize * tile.yIndex
+		    };
+	    },
+
         rootToTile: function (x, y, level, bins) {
             var numDivs, tileX, tileY;
 

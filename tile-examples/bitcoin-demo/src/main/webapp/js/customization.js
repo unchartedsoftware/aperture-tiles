@@ -38,20 +38,95 @@ define(function (require) {
         customizeMap: function (worldMap) {
             var getDataButton,
                 selectAreaLayer,
-                drawControl;
+                drawControl,
+                onFeatureDrawn,
+                onDataReceived;
 
 	        selectAreaLayer = new OpenLayers.Layer.Vector("Data selection area layer");
 	        worldMap.addOLLayer(selectAreaLayer);
+
+	        onDataReceived = function (data, status) {
+		        console.log(data);
+		        console.log(status);
+	        };
+	        onFeatureDrawn = function (feature) {
+		        var bounds,
+		            dataBounds,
+		            dataRequest;
+
+		        bounds = feature.geometry.getBounds();
+		        selectAreaLayer.removeAllFeatures();
+
+		        dataBounds = {
+			        'lowerLeft': worldMap.getCoordFromMap(bounds.left, bounds.bottom),
+			        'upperRight': worldMap.getCoordFromMap(bounds.right, bounds.top)
+		        };
+		        dataRequest = {
+			        'dataset': {
+				        'oculus.binning': {
+					        'name': 'bitcoin',
+					        'source.location': 'hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions>Datasets_20130410.tsv',
+					        'arsing.separatior': '\t',
+					        'source.partitions': 96,
+					        'parsing': {
+						        'transaction': {
+							        'index': 0,
+							        'fieldType': 'int'
+						        },
+						        'source': {
+							        'index': 1,
+							        'fieldType': 'Int'
+						        },
+						        'destination': {
+							        'index': 2,
+							        'fieldType': 'Int'
+						        },
+						        'time': {
+							        'index': 3,
+							        'fieldType': 'date',
+							        'dateFormat': 'yyyy-MM-dd HH_mm_ss'
+						        },
+						        'amount': {
+							        'index': 4
+						        }
+					        }
+				        }
+			        },
+			        'requestCount': 10,
+			        'query': {
+				        'and': [
+					        {'source': {
+						        'min': dataBounds.lowerLeft.x,
+						        'max': dataBounds.upperRight.x
+					        }},
+					        {'amount': {
+						        'min': dataBounds.lowerLeft.y,
+						        'max': dataBounds.upperRight.y
+					        }}
+				        ]
+			        }
+		        };
+
+		        aperture.io.rest('/data',
+		                         'POST',
+		                         onDataReceived,
+		                         {
+			                         postData: dataRequest,
+			                         contentType: 'application/json'
+		                         });
+	        };
 	        drawControl =
 		        new OpenLayers.Control.DrawFeature(selectAreaLayer,
 		                                           OpenLayers.Handler.RegularPolygon,
 		                                           {
+			                                           featureAdded: onFeatureDrawn,
 			                                           handlerOptions: {
 				                                           sides: 4,
 				                                           irregular: true
 			                                           }
 		                                           }
 		                                          );
+
 	        worldMap.addOLControl(new OpenLayers.Control.MousePosition());
 	        worldMap.addOLControl(drawControl);
 
