@@ -9,47 +9,29 @@
 		"",
 		"The MapConfig key specifies configuration of map layer control and base layer properties",
 		"",
-		"The AxisConfig key specifies configuration of the map axes, and should contain ",
-		"a xAxisConfig and yAxisConfig keys.  Each axis can each have the following keys: ",
-		"       title:      axis label text                     ex. Longitude",
-		"       id:         axis identifier                     ex. map-x-axis or map-y-axis",
-		"       min:        minimum axis value",
-		"       max:        maximum axis value",
+		"The AxisConfig key specifies configuration of the map axes. Each axis can each have the "
+		"following keys: ",
+		"       title:      			axis title label text"
+		"       repeat:     			whether or not the axis will repeat"
+		"       position:      	 		where to place the axis"
 		"       intervalSpec:",
-		"           type:   type of interval                    ex. fixed or percentage",
-		"           value:  fixed / percentage increment of the axis",
-		"                                                       ex. 10",
-		"           pivot:  the fixed value / percentage that all other values are incremented from",
-		"                                                       ex. 0",
-		"           allowScaleByZoom: if the axis should be scaled by the zoom factor",
-		"                                                       ex. false",
-		"           isMercatorProjected: whether or not to project value by mercator projection",
-		"                                                       ex. true",
+		"           type:   			type of interval"
+		"           increment:  		fixed / percentage increment of the axis, matches type"
+		"           pivot:  			the fixed value / percentage that all other values are incremented from"
+		"           allowScaleByZoom: 	if the axis should be scaled by the zoom factor"
 		"       unitSpec:",
-		"           type:       type of units parse in FormatAxis.js",
-		"                                                       ex.degrees, time, decimal, B, M, K",
-		"           decimals:   number of decimals              ex. 2",
-		"           allowStepDown: if the units can step down if they are below range",
-		"                                                       ex. true .001M => 1K",
-		"           repeat:     whether or not the axis will repeat",
-		"                                                       ex. true or false",
-		"       position:       where to place the axis         ex. left, right, top, bottom",
-		"       majorMarkerLength:  the length of the major marker tick mark",
-		"                                                       ex. 10",
-		"       majorMarkerWidth:   the width of the major marker tick mark",
-		"                                                       ex. 1",
-		"       majorMarkerColour:  the color of the major marker tick mark",
-		"                                                       ex. #7E7E7E",
-		"       markerLabelColour: the color of the major marker label",
-		"                                                       ex. #7E7E7E",
-		"       axisLabelColour:   the color of the axis label",
-		"                                                       ex. #7E7E7E",
-		"       fontFamily:         the font family to use for labels",
-		"                                                       ex. Tahoma, Verdana, Segoe, sans-serif",
-		"       markerLabelFontSize: the font size of the marker label",
-		"                                                       ex. 0.75em",
-		"       axisLabelFontSize:   the font size of the axis label",
-		"                                                       ex. 0.95em"
+		"           type:       		type of units parse in FormatAxis.js"
+		"           decimals:   		number of decimals"
+		"           allowStepDown: 		if the units can step down if they are below range"
+		"		style:"
+		"      	 	majorMarkerLength:  	the length of the major marker tick mark"
+		"       	majorMarkerWidth:   	the width of the major marker tick mark"
+		"       	majorMarkerColour:  	the color of the major marker tick mark"
+		"       	markerLabelColour: 		the color of the major marker label"
+		"       	axisLabelColour:   		the color of the axis label"
+		"       	fontFamily:         	the font family to use for labels"
+		"      	 	markerLabelFontSize: 	the font size of the marker label"
+		"       	axisLabelFontSize:   	the font size of the axis label"
 	],
 
 	"id" : "bitcoin time vs. destination",
@@ -116,7 +98,7 @@
 				"allowStepDown" : false
 			},			
 			"style" : {
-				"markerLabelRotation" : -45,
+				"markerLabelRotation" : 0,
 				"majorMarkerLength" : 10,
 				"majorMarkerWidth" : 1,
 				"majorMarkerColour" : "#7E7E7E",

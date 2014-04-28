@@ -106,19 +106,6 @@ public class AnnotationServiceImpl implements AnnotationService {
         readConfigFiles( getConfigurationFiles(annotationConfigurationLocation) );
     }
 
-	
-	/*
-	@Inject
-	public AnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
-		
-		_tileSerializer = new StringLongPairArrayMapJSONSerializer();
-		_dataSerializer = new JSONAnnotationDataSerializer();
-		_uuidFilterMap =  new ConcurrentHashMap<>();
-		_indexer = indexer;
-		_io = io;
-	}
-	*/
-	
 
 	public void writeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
 		
@@ -139,7 +126,8 @@ public class AnnotationServiceImpl implements AnnotationService {
     		addDataToTiles( layer, annotation, pyramid );
     		
     	} catch ( Exception e ) {
-			e.printStackTrace();
+    		e.printStackTrace();
+    		throw new IllegalArgumentException( e.getMessage() );
     	} finally {
     		_lock.writeLock().unlock();
     	}
@@ -179,7 +167,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 			// add it to new tiles
 			addDataToTiles( layer, newAnnotation, pyramid );
     	} catch ( Exception e ) {
-			e.printStackTrace();
+    		e.printStackTrace();
+    		throw new IllegalArgumentException( e.getMessage() );
     	} finally {
     		_lock.writeLock().unlock();
     	}
@@ -209,12 +198,11 @@ public class AnnotationServiceImpl implements AnnotationService {
     		return getDataFromTiles( layer, query, filters, pyramid );
     		
     	} catch ( Exception e ) {
-			e.printStackTrace();
+    		e.printStackTrace();
+    		throw new IllegalArgumentException( e.getMessage() );
     	} finally { 		
     		_lock.readLock().unlock();
     	}
-    	
-    	return null;
 	}
 	
 		
@@ -248,6 +236,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			
 		} catch ( Exception e ) {
 			e.printStackTrace();
+    		throw new IllegalArgumentException( e.getMessage() );
 		}
 	}
 
@@ -358,7 +347,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	        }
 	        
 		} catch (Exception e) {
-			e.printStackTrace();
+    		throw new IllegalArgumentException( e.getMessage() );
 		}
 		return filters;
 	}
@@ -571,7 +560,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			io.writeTiles( layer, null, serializer, tiles );
 					
 		} catch ( Exception e ) {
-			e.printStackTrace();
+			throw new IllegalArgumentException( e.getMessage() );
 		}
 		
 	}
@@ -590,7 +579,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			io.writeData( dataLayer, _dataSerializer, dataList );
 
 		} catch ( Exception e ) {
-			e.printStackTrace();
+			throw new IllegalArgumentException( e.getMessage() );
 		}
 	}
 	
@@ -605,7 +594,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			io.removeTiles( layer, tiles );	
 			
 		} catch ( Exception e ) {
-			e.printStackTrace();
+			throw new IllegalArgumentException( e.getMessage() );
 		}
 
 	}
@@ -623,7 +612,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			io.removeData( dataLayer, dataList );											
 			
 		} catch ( Exception e ) {
-			e.printStackTrace();
+			throw new IllegalArgumentException( e.getMessage() );
 		}
 
 	}
@@ -644,7 +633,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			tiles = io.readTiles( layer, serializer, indices );
 					
 		} catch ( Exception e ) {
-			e.printStackTrace();
+			throw new IllegalArgumentException( e.getMessage() );
 		}
 
 		return tiles;		
@@ -665,7 +654,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			data = io.readData( dataLayer, _dataSerializer, references );			
 			
 		} catch ( Exception e ) {
-			e.printStackTrace();
+			throw new IllegalArgumentException( e.getMessage() );
 		}
 
 		return data;

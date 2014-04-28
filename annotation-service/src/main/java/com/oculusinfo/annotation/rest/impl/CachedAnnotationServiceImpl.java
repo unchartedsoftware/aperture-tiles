@@ -69,16 +69,6 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		_dataCache = new ConcurrentHashMap<>();
 	}
 	
-	/*
-	@Inject
-	public CachedAnnotationServiceImpl( AnnotationIO io, AnnotationIndexer indexer ) {
-		
-		super( io, indexer );
-		_tileCache = new ConcurrentHashMap<>();
-		_dataCache = new ConcurrentHashMap<>();
-	}
-	*/
-	
 	protected AnnotationCache<TileIndex, TileData<Map<String, List<Pair<String,Long>>>>> getLayerTileCache( String layer ) {
 		if ( !_tileCache.containsKey( layer ) ) {
 			_tileCache.put( layer, new ConcurrentLRUCache< TileIndex, TileData<Map<String, List<Pair<String,Long>>>> >( MAX_CACHE_ENTRIES ) );

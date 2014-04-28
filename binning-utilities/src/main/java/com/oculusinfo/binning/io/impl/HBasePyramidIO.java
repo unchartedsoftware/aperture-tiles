@@ -49,6 +49,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Row;
+import org.apache.hadoop.hbase.TableExistsException;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
@@ -223,14 +224,18 @@ public class HBasePyramidIO implements PyramidIO {
 	@Override
 	public void initializeForWrite (String tableName) throws IOException {
 		if (!_admin.tableExists(tableName)) {
-			//            HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
-			HTableDescriptor tableDesc = new HTableDescriptor(tableName);
-            
-			HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
-			tableDesc.addFamily(metadataFamily);
-			HColumnDescriptor tileFamily = new HColumnDescriptor(TILE_FAMILY_NAME);
-			tableDesc.addFamily(tileFamily);
-			_admin.createTable(tableDesc);
+			try {
+				HTableDescriptor tableDesc = new HTableDescriptor(tableName);          
+				HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
+				tableDesc.addFamily(metadataFamily);
+				HColumnDescriptor tileFamily = new HColumnDescriptor(TILE_FAMILY_NAME);
+				tableDesc.addFamily(tileFamily);
+				_admin.createTable(tableDesc);
+			} catch (TableExistsException e) {
+				// swallow table exists exception, with concurrent access the table 
+				// may have been created between test-for-existence and attempt-at-creation
+			}
+			
 		}
 	}
 

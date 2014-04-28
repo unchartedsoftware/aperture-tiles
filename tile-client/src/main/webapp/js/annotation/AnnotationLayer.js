@@ -493,8 +493,6 @@ define(function (require) {
                             data: {}
                         };
 
-                        console.log( info.x + ', ' + info.y );
-
                         // create temporary feature
                         that.pendingFeature = new AnnotationFeature({
                             map: that.map,
