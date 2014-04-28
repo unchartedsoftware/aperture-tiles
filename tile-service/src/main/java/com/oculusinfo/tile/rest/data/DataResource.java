@@ -38,43 +38,43 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 
 public class DataResource extends ApertureServerResource {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataResource.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DataResource.class);
 
 
-    private DataService _service;
+	private DataService _service;
     
-    @Inject
-    public DataResource (DataService service) {
-        _service = service;
-    }
+	@Inject
+	public DataResource (DataService service) {
+		_service = service;
+	}
 
-    @Post("json:json")
-    public Representation dataRequest (String jsonArguments) {
-        try {
-            JSONObject arguments = new JSONObject(jsonArguments);
-            JSONObject dataset = arguments.getJSONObject("dataset");
-            int requestCount = arguments.optInt("requestCount", 0);
-            boolean getCount = arguments.optBoolean("getCount", false);
-            boolean getData = true;
-            JSONObject query = arguments.getJSONObject("query");
+	@Post("json:json")
+	public Representation dataRequest (String jsonArguments) {
+		try {
+			JSONObject arguments = new JSONObject(jsonArguments);
+			JSONObject dataset = arguments.getJSONObject("dataset");
+			int requestCount = arguments.optInt("requestCount", 0);
+			boolean getCount = arguments.optBoolean("getCount", false);
+			boolean getData = true;
+			JSONObject query = arguments.getJSONObject("query");
 
-            if (0 >= requestCount) {
-                getData = false;
-                getCount = true;
-            }
+			if (0 >= requestCount) {
+				getData = false;
+				getCount = true;
+			}
 
-            JSONObject result = _service.getData(dataset, query, getCount, getData, requestCount);
-            // Add in request parameters so the requester can recognize which result matches which request.
-            result.put("dataset", dataset);
-            result.put("requestCount", requestCount);
-            result.put("query", query);
+			JSONObject result = _service.getData(dataset, query, getCount, getData, requestCount);
+			// Add in request parameters so the requester can recognize which result matches which request.
+			result.put("dataset", dataset);
+			result.put("requestCount", requestCount);
+			result.put("query", query);
 
-            return new JsonRepresentation(result);
-        } catch (JSONException e) {
-            LOGGER.warn("Bad data request: {}", jsonArguments, e);
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                                        "Unable to create JSON object from supplied options string",
-                                        e);
-        }
-    }
+			return new JsonRepresentation(result);
+		} catch (JSONException e) {
+			LOGGER.warn("Bad data request: {}", jsonArguments, e);
+			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+			                            "Unable to create JSON object from supplied options string",
+			                            e);
+		}
+	}
 }

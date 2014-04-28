@@ -78,6 +78,21 @@ public class StatTracker {
     }
 
     /**
+     * @return The total value given to the tracker
+     */
+    public double total () {
+        return _sumX;
+    }
+
+    /**
+     * @return The number of data (i.e., number of calls to addStat) given to
+     *         the tracker
+     */
+    public int sampleSize () {
+        return _n;
+    }
+
+    /**
      * @return The mean of all data given to the tracker.
      */
     public double mean () {

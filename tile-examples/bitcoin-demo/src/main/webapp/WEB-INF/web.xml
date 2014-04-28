@@ -34,6 +34,8 @@
       <!-- Sets up the tile-rendering service -->
       com.oculusinfo.tile.rest.TileModule:
 
+      <!-- Set up the spark module -->
+      com.oculusinfo.tile.spark.SparkModule:
 
       <!-- Annotation -->
       com.oculusinfo.annotation.io.HBaseAnnotationIOModule:

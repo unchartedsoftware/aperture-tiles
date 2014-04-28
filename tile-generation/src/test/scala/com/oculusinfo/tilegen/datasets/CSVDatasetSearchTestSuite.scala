@@ -30,6 +30,8 @@ import java.io.File
 import java.io.PrintWriter
 import java.util.Properties
 
+import scala.util.{Try, Success, Failure}
+
 import org.json.JSONObject
 
 import org.scalatest.FunSuite
@@ -41,7 +43,14 @@ import org.apache.spark.SharedSparkContext
 class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	var dataset: CSVDataset = null;
 
-	
+
+	def unwrapTry[T] (attempt: Try[T]): T = {
+		attempt match {
+			case Success(t) => t
+			case Failure(e) => throw e
+		}
+	}
+
 	override def withFixture (test: NoArgTest) = {
 		// Create a 5-column dataset, with the ability to search on any column
 		// Create our raw data
@@ -92,7 +101,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 
 	test("Test simple filtering") {
 		val filter = dataset.getFieldFilterFunction("b", 3, 7)
-		val results = dataset.getFilteredRawData(filter).collect().toSet
+		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(5 === results.size)
 		assert(results.contains(" 2,  3,  8,  0,  9"))
@@ -107,7 +116,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 		val cFilter = dataset.getFieldFilterFunction("c", 2, 7)
 		val dFilter = dataset.getFieldFilterFunction("d", 1, 8)
 		val filter = FilterFunctions.and(bFilter, cFilter, dFilter)
-		val results = dataset.getFilteredRawData(filter).collect().toSet
+		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(2 === results.size)
 		assert(results.contains("10,  4,  7,  7, 11"))
@@ -118,7 +127,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 		val bFilter = dataset.getFieldFilterFunction("b", 8, 9)
 		val cFilter = dataset.getFieldFilterFunction("c", 6, 7)
 		val filter = FilterFunctions.or(bFilter, cFilter)
-		val results = dataset.getFilteredRawData(filter).collect().toSet
+		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(3 === results.size)
 		assert(results.contains(" 0,  8,  6, 10,  7"))
@@ -128,8 +137,8 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 
 	test("Test simple query parsing") {
 		val query = "{\"b\":{\"min\":3, \"max\":7}}"
-		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
-		val results = dataset.getFilteredRawData(filter).collect().toSet
+		val filter = unwrapTry(FilterFunctions.parseQuery(new JSONObject(query), dataset))
+		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(5 === results.size)
 		assert(results.contains(" 2,  3,  8,  0,  9"))
@@ -141,8 +150,8 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 
 	test("Test query or parsing") {
 		val query = "{\"or\":[{\"b\":{\"min\":8,\"max\":9}},{\"c\":{\"min\":6,\"max\":7}}]}"
-		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
-		val results = dataset.getFilteredRawData(filter).collect().toSet
+		val filter = unwrapTry(FilterFunctions.parseQuery(new JSONObject(query), dataset))
+		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(3 === results.size)
 		assert(results.contains(" 0,  8,  6, 10,  7"))
@@ -152,8 +161,8 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 
 	test("Test query and parsing") {
 		val query = "{\"and\":[{\"b\":{\"min\":3,\"max\":7}},{\"c\":{\"min\":2,\"max\":7}}]}"
-		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
-		val results = dataset.getFilteredRawData(filter).collect().toSet
+		val filter = unwrapTry(FilterFunctions.parseQuery(new JSONObject(query), dataset))
+		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(3 === results.size)
 		assert(results.contains("10,  4,  7,  7, 11"))
@@ -174,8 +183,8 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
                  "  ]\n"+
 				 "}")
 
-		val filter = FilterFunctions.parseQuery(new JSONObject(query), dataset)
-		val results = dataset.getFilteredRawData(filter).collect().toSet
+		val filter = unwrapTry(FilterFunctions.parseQuery(new JSONObject(query), dataset))
+		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(5 === results.size)
 		assert(results.contains(" 2,  3,  8,  0,  9"))

@@ -35,6 +35,7 @@ import scala.collection.JavaConverters._
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
+import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.Time
@@ -617,10 +618,10 @@ class CSVDataset (rawProperties: Properties,
 	type STRATEGY_TYPE = CSVStaticProcessingStrategy
 	protected var strategy: STRATEGY_TYPE = null
 
+	type Filter = ValueOrException[List[Double]] => Boolean
 	def getRawData: RDD[String] = strategy.getRawData
 
-	def getFilteredRawData (filterFcn: ValueOrException[List[Double]] => Boolean):
-			RDD[String] = {
+	def getRawFilteredData (filterFcn: Filter):	RDD[String] = {
 		val localProperties = properties
 		getRawData.mapPartitions(iter =>
 			{
@@ -633,11 +634,12 @@ class CSVDataset (rawProperties: Properties,
 			}
 		)
 	}
+	def getRawFilteredJavaData (filterFcn: Filter): JavaRDD[String] =
+		JavaRDD.fromRDD(getRawFilteredData(filterFcn))
 
-	def getFieldFilterFunction (field: String, min: Double, max: Double):
-			ValueOrException[List[Double]] => Boolean = {
+	def getFieldFilterFunction (field: String, min: Double, max: Double): Filter = {
 		val localProperties = properties
-		val filterFcn: ValueOrException[List[Double]] => Boolean =
+		val filterFcn: Filter =
 			valueList => {
 				val index = localProperties.fieldIndices(field)
 				valueList.hasValue && {

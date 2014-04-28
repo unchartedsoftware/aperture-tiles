@@ -36,18 +36,18 @@ import org.json.JSONObject;
  * 
  */
 public interface DataService {
-    /**
-     * Get raw data based on the input arguments.
-     * 
-     * @param dataset A description of the dataset to query
-     * @param query A description of which data are desired.
-     * @param getCount True if a count of the total records matching the query
-     * @param getData True if data records should be retrieved; if false,
-     *            getCount should be true, and matching records are counted but
-     *            not returned.
-     * @param requestCount The maximum number of records to return, if getData
-     *            is true. If getData is false, this parameter is ignored.
-     */
-    JSONObject getData (JSONObject dataset, JSONObject query, boolean getCount,
-                        boolean getData, int requestCount);
+	/**
+	 * Get raw data based on the input arguments.
+	 * 
+	 * @param dataset A description of the dataset to query
+	 * @param query A description of which data are desired.
+	 * @param getCount True if a count of the total records matching the query
+	 * @param getData True if data records should be retrieved; if false,
+	 *            getCount should be true, and matching records are counted but
+	 *            not returned.
+	 * @param requestCount The maximum number of records to return, if getData
+	 *            is true. If getData is false, this parameter is ignored.
+	 */
+	JSONObject getData (JSONObject dataset, JSONObject query, boolean getCount,
+	                    boolean getData, int requestCount);
 }

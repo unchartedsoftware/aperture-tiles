@@ -27,47 +27,64 @@ package com.oculusinfo.tilegen.datasets
 
 
 
+import scala.util.{Try, Success, Failure}
+
 import org.json.JSONObject
+import org.json.JSONException
 
 import com.oculusinfo.tilegen.tiling.ValueOrException
 
 
 
 object FilterFunctions {
-	def and (operands: (ValueOrException[List[Double]] => Boolean)*) = {
-		val result: ValueOrException[List[Double]] => Boolean = value =>
+	type Filter = ValueOrException[List[Double]] => Boolean
+
+	def and (operands: Filter*) = {
+		val result: Filter = value =>
 		operands.map(_(value)).reduce(_ && _)
 
 		result;
 	}
 
-	def or (operands: (ValueOrException[List[Double]] => Boolean)*) = {
-		val result: ValueOrException[List[Double]] => Boolean = value =>
+	def or (operands: Filter*) = {
+		val result: Filter = value =>
 		operands.map(_(value)).reduce(_ || _)
 
 		result;
 	}
 
-	def parseQuery (query: JSONObject, dataset: CSVDataset): ValueOrException[List[Double]] => Boolean = {
-		val names = query.names()
-		if (names.length != 1) throw new IllegalArgumentException("Bad query: Need exactly one key")
-		val name = names.getString(0)
+	def parseQuery (query: JSONObject, dataset: CSVDataset): Try[Filter] =
+		Try({
+			    val names = query.names()
+			    if (names.length != 1)
+				    throw new IllegalArgumentException("Bad query: Need exactly one key")
+			    val name = names.getString(0)
 
-		name match {
-			case "or" => {
-				val subs = query.getJSONArray(name)
-				or(Range(0, subs.length()).map(i => subs.getJSONObject(i)).map(parseQuery(_, dataset)):_*)
-			}
-			case "and" => {
-				val subs = query.getJSONArray(name)
-				and(Range(0, subs.length()).map(i => subs.getJSONObject(i)).map(parseQuery(_, dataset)):_*)
-			}
-			case _ => {
-				val range = query.getJSONObject(name)
-				val min = range.getDouble("min")
-				val max = range.getDouble("max")
-				dataset.getFieldFilterFunction(name, min, max)
-			}
-		}
-	}
+			    name match {
+				    case "or" => {
+					    val subs = query.getJSONArray(name)
+					    or(Range(0, subs.length()).map(i =>
+						       subs.getJSONObject(i)
+					       ).map(parseQuery(_, dataset) match {
+						             case Success(q) => q
+						             case Failure(e) => throw e
+					             }):_*)
+				    }
+				    case "and" => {
+					    val subs = query.getJSONArray(name)
+					    and(Range(0, subs.length()).map(i =>
+						        subs.getJSONObject(i)
+					        ).map(parseQuery(_, dataset) match {
+						              case Success(q) => q
+						              case Failure(e) => throw e
+					              }):_*)
+				    }
+				    case _ => {
+					    val range = query.getJSONObject(name)
+					    val min = range.getDouble("min")
+					    val max = range.getDouble("max")
+					    dataset.getFieldFilterFunction(name, min, max)
+				    }
+			    }
+		    })
 }
