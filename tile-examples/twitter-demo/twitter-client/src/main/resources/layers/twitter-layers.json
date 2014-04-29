@@ -1,0 +1,152 @@
+{
+    "_comment": [
+        "This json configuration file specifies all layers associated with the bitcoin ",
+        "dataset, organized hierarchically according to two things: primarily, ability ",
+        "to go on the same map, and secondarily, by interest to the user.  This means ",
+        "that if two layers can go on the same map, using the same axes, they should fall ",
+        "under the same node in the hierarchy, and that the axes should be noted on the ",
+        "joint parent node under which they both fall.  However, as long as layers that ",
+        "can and should share a map are so grouped, any further organization is completely ",
+        "open, and should be used simply to present the layers to the user in a way that ",
+        "makes sense.",
+        "",
+        "Leaf nodes should all specify actual layers that can be displayed on a map, and ",
+        "all layers that can be so displayed should be leaf nodes.  Non-leaf nodes exist ",
+        "solely to organize and group layers as described above.",
+        ""
+    ],
+    "layers": [
+        {
+            "id": "twitter",
+            "name": "All Twitter Layers",
+            "axes": [
+                {
+        	        "title": "Longitude",
+        	        "id": "map-x-axis",
+        	        "min": -180,
+        	        "max": 180,
+        	        "intervalSpec": {
+            	        "type": "fixed",
+            	        "increment": 60,
+            	        "pivot": 0,
+            	        "allowScaleByZoom": true
+        	        },
+        	        "unitSpec": {
+            	        "type": "degrees",
+            	        "decimals": 2,
+            	        "allowStepDown": false
+        	        },
+
+        	        "position": "bottom",
+        	        "repeat": true,
+                    style: {
+    			        "majorMarkerLength": 10,
+    			        "majorMarkerWidth": 1,
+    			        "majorMarkerColour": "#7E7E7E",
+    			        "markerLabelColour": "#7E7E7E",
+    			        "axisLabelColour": "#7E7E7E",
+    			        "fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+    			        "markerLabelFontSize": "0.75em",
+    			        "axisLabelFontSize": "0.95em"
+                    }
+		        },
+    	        {
+        	        "title": "Latitude",
+        	        "id": "map-y-axis",
+        	        "min": -85.051129,
+        	        "max": 85.051129,
+        	        "intervalSpec": {
+            	        "type": "fixed",
+            	        "increment": 30,
+            	        "pivot": 0,
+            	        "allowScaleByZoom": true
+        	        },
+        	        "unitSpec": {
+            	        "type": "degrees",
+            	        "decimals": 2,
+            	        "allowStepDown": false
+        	        },
+                    "position": "left",
+                    "repeat": false,
+                    style: {
+            	        
+    			        "majorMarkerLength": 10,
+    			        "majorMarkerWidth": 1,
+    			        "majorMarkerColour": "#7E7E7E",
+    			        "markerLabelColour": "#7E7E7E",
+    			        "axisLabelColour": "#7E7E7E",
+    			        "fontFamily": "Tahoma, Verdana, Segoe, sans-serif",
+    			        "markerLabelFontSize": "0.75em",
+    			        "axisLabelFontSize": "0.95em"
+                    }
+    	        }
+            ],
+            "children": [
+                {
+	                "id": "twitter.2014-01-02.longitude.latitude",
+                    "name": "Tweet count heatmap",
+                    "pyramid": {
+                        "type": "WebMercator"
+                    },
+                    "data": {
+                        "pyramidio": {
+                            "type": "hbase",
+                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                            "hbase.zookeeper.port": "2181",
+                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                        }
+                    },
+                    "renderers": [
+                        {
+                            "domain": "server",
+                            "renderer": {
+                                "type": "heatmap",
+                                "ramp": "ware",
+                                "opacity": 0.85
+                            },
+                            "transform": {
+                                "name": "log10"
+                            }
+                        }
+                    ]
+                },
+                {
+		            "id": "twitter.2014-01-02.words.censored",
+                    "name": "Twitter most common words, with sentiment",
+                    "pyramid": {
+                        "type": "WebMercator"
+                    },
+                    "data": {
+                        "pyramidio": {
+                            "type": "hbase",
+                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                            "hbase.zookeeper.port": "2181",
+                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                        },
+                        "serializer": {
+                            "type": "[twitterdemorecord]-a"
+                        }
+                    },
+                    "renderers": [
+                        {
+                            "domain": "client",
+                            "type": "CarouselLayer",
+                            "views": [
+                                {
+                                    "renderer": "TopTextSentimentBars"
+                                },
+                                {
+                                    "renderer": "HashTagsByTime"
+                                },
+                                {
+                                    renderer: "EmptyRenderer"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+

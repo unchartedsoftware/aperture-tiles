@@ -125,7 +125,7 @@ public class CachingPyramidIO implements PyramidIO {
 	/*
 	 * Set up a base pyramid from which to read when we get a cache miss
 	 */
-	void setupBasePyramidIO (String pyramidId, ConfigurableFactory<PyramidIO> factory) {
+	public void setupBasePyramidIO (String pyramidId, ConfigurableFactory<PyramidIO> factory) {
 		if (!_basePyramidIOs.containsKey(pyramidId)) {
 			synchronized (_basePyramidIOs) {
 				if (!_basePyramidIOs.containsKey(pyramidId)) {
@@ -239,7 +239,10 @@ public class CachingPyramidIO implements PyramidIO {
 		return getBasePyramidIO(pyramidId).readMetaData(pyramidId);
 	}
 
-
+	@Override
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
+		throw new IOException("removeTiles not currently supported for CachingPyramidIO");
+	}
 
 	private class CacheListenerCallback<T> implements CacheRequestCallback<T> {
 		private TileData<T> _tile;

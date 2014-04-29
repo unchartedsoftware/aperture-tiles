@@ -22,35 +22,192 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+ /*global OpenLayers */
 
 require(['./FileLoader',
+         './ApertureConfig',
+         './map/MapTracker',
          './map/Map',
+         './layer/AllLayers',
+         './customization',
          './layer/view/server/ServerLayerFactory',
-         './layer/view/client/ClientLayerFactory'
+         './layer/view/client/ClientLayerFactory',
+         './annotation/AnnotationLayerFactory',
+         './layer/controller/LayerControls',
+         './layer/controller/UIMediator'
         ],
 
         function (FileLoader, 
+                  configureAperture,
+                  MapTracker,
         	      Map,
+                  AvailableLayersTracker,
+                  MapCustomization,
                   ServerLayerFactory,
-                  ClientLayerFactory) {
+                  ClientLayerFactory,
+                  AnnotationLayerFactory,
+                  LayerControls,
+                  UIMediator) {
             "use strict";
 
-            var mapFile = "./data/map.json",
-                layersFile = "./data/layers.json";
+            var apertureConfigFile = "./data/aperture-config.json",
+                cloneObject,
+                getLayers,
+                pyramidsEqual,
+                getAnnotationLayers,
+                uiMediator;
 
+            cloneObject = function (base) {
+                var result, key;
+
+                if ($.isArray(base)) {
+                    result = [];
+                } else {
+                    result = {};
+                }
+
+                for (key in base) {
+                    if (base.hasOwnProperty(key)) {
+                        if ("object" === typeof(base[key])) {
+                            result[key] = cloneObject(base[key]);
+                        } else {
+                            result[key] = base[key];
+                        }
+                    }
+                }
+
+                return result;
+            };
+
+	        // Get the layers from a layer tree that match a given filter and 
+	        // pertain to a given domain.
+	        getLayers = function (domain, rootNode, filterFcn) {
+		        // Filter function to filter out all layers not in the desired 
+		        // domain (server or client)
+		        var domainFilterFcn = function (domain) {
+			        return function (layer) {
+				        var accepted = false;
+				        if (filterFcn(layer)) {
+					        layer.renderers.forEach(function (renderer, index, renderers) {
+						        if (domain === renderer.domain) {
+							        accepted = true;
+							        return;
+						        }
+					        });
+				        }
+				        return accepted;
+			        };
+		        };
+
+		        // Run our filter, and on the returned nodes, return a renderer 
+		        // configuration appropriate to that domain.
+		        return AvailableLayersTracker.filterLeafLayers(
+			        rootNode,
+			        domainFilterFcn(domain)
+		        ).map(function (layer, index, layersList) {
+			        // For now, just use the first appropriate configuration we find.
+			        var config;
+
+			        layer.renderers.forEach(function (renderer, index, renderers) {
+				        if (domain === renderer.domain) {
+					        config = cloneObject(renderer);
+					        config.layer = layer.id;
+					        config.name = layer.name;
+					        return;
+				        }
+			        });
+
+			        return config;
+		        });
+	        };
+
+	        pyramidsEqual = function (a, b) {
+		        var result = false;
+		        if (a.type === b.type) {
+			        if ("AreaOfInterest" === a.type) {
+				        if (a.minX === b.minX &&
+				            a.maxX === b.maxX &&
+				            a.minY === b.minY &&
+				            a.maxY === b.maxY) {
+					        result = true;
+				        }
+			        } else {
+				        result = true;
+			        }
+		        }
+		        return result;
+	        };
+
+
+            getAnnotationLayers = function( allLayers, filter ) {
+                var i, validLayers =[];
+                for (i=0; i<allLayers.length; i++) {
+
+                    if ( filter( allLayers[i] ) ) {
+                        validLayers.push( allLayers[i] );
+                    }
+                }
+                return validLayers;
+            };
+
+                        
             // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(mapFile, layersFile, function (jsonDataMap) {
-                // We have all our data now; construct the UI.
-                var worldMap;
+            FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
+	            // First off, configure aperture.
+	            configureAperture(jsonDataMap[apertureConfigFile]);
 
-                // Create world map and axes from json file under mapFile
-                worldMap = new Map("map", jsonDataMap[mapFile]);
+	            // Get our list of maps
+	            MapTracker.requestMaps(function (maps) {
+		            // For now, just use the first map
+		            var mapConfig = maps[0],
+		                worldMap,
+		                mapPyramid;
 
-                // Create client and server layers
-                ClientLayerFactory.createLayers(jsonDataMap[layersFile].ClientLayers, worldMap);
-                ServerLayerFactory.createLayers(jsonDataMap[layersFile].ServerLayers, worldMap);
+		            // Initialize our map...
+		            worldMap = new Map("map", mapConfig);
+                    // ... (set up our map axes) ...
+                    worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
+                    // ... perform any project-specific map customizations ...
+                    MapCustomization.customizeMap(worldMap);
+                    // ... and request relevant data layers
+                    mapPyramid = mapConfig.PyramidConfig;
 
-                // Trigger the initial resize event to resize everything
-                $(window).resize();
+		            AvailableLayersTracker.requestLayers(
+			            function (layers) {
+				            // TODO: Make it so we can pass the pyramid up to the server
+				            // in the layers request, and have it return only portions
+				            // of the layer tree that match that pyramid.
+				            // Eventually, we should let the user choose among them.
+				            var filter = function (layer) {
+                                    return pyramidsEqual(mapPyramid, layer.pyramid);
+                                },
+				                clientLayers = getLayers("client", layers, filter),
+				                serverLayers = getLayers("server", layers, filter);
+
+				            uiMediator = new UIMediator();
+    
+				            // Create client and server layers
+				            ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+				            ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
+
+				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
+
+
+                            AnnotationLayerFactory.requestLayers(
+                                function( layers ) {
+
+                                    var annotationLayers = getAnnotationLayers(layers, filter);
+                                    AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
+
+                                 }
+                            );
+
+
+				            // Trigger the initial resize event to resize everything
+				            $(window).resize();
+			            }
+		            );
+
+	            });
             });
         });

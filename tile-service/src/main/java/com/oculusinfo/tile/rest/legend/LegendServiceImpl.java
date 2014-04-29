@@ -39,6 +39,8 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.LinearCappedValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 
 /**
  * A service that generates an image coloured using the specified
@@ -64,10 +66,29 @@ public class LegendServiceImpl implements LegendService {
 		Graphics2D g = bi.createGraphics();	
 
 		try {
-			IValueTransformer t = config.produce(IValueTransformer.class);
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
-			double levelMax = t.getMaximumValue();
-    		
+			
+			// legend always uses a linear capped value transform - don't use layer config specified transform
+			double levelMax = config.getPropertyValue(ValueTransformerFactory.LAYER_MAXIMUM);
+			
+			double max;
+			if (config.hasPropertyValue(ValueTransformerFactory.TRANSFORM_MAXIMUM)) {
+				max = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
+			}
+			else {
+				max = levelMax;
+			}
+
+			double min;
+			if (config.hasPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM)) {
+				min = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
+			}
+			else {
+				min = config.getPropertyValue(ValueTransformerFactory.LAYER_MINIMUM);
+			}
+			
+			IValueTransformer t = new LinearCappedValueTransformer(min, max, levelMax);
+			
 			int fontHeight = 12;
 			int barHeight = height - fontHeight;
 			int barYOffset = fontHeight/2;

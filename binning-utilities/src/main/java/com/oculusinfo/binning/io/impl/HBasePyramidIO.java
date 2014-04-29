@@ -41,6 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.Delete;
 //import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -48,6 +49,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Row;
+import org.apache.hadoop.hbase.TableExistsException;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
@@ -222,14 +224,18 @@ public class HBasePyramidIO implements PyramidIO {
 	@Override
 	public void initializeForWrite (String tableName) throws IOException {
 		if (!_admin.tableExists(tableName)) {
-			//            HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
-			HTableDescriptor tableDesc = new HTableDescriptor(tableName);
-            
-			HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
-			tableDesc.addFamily(metadataFamily);
-			HColumnDescriptor tileFamily = new HColumnDescriptor(TILE_FAMILY_NAME);
-			tableDesc.addFamily(tileFamily);
-			_admin.createTable(tableDesc);
+			try {
+				HTableDescriptor tableDesc = new HTableDescriptor(tableName);          
+				HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
+				tableDesc.addFamily(metadataFamily);
+				HColumnDescriptor tileFamily = new HColumnDescriptor(TILE_FAMILY_NAME);
+				tableDesc.addFamily(tileFamily);
+				_admin.createTable(tableDesc);
+			} catch (TableExistsException e) {
+				// swallow table exists exception, with concurrent access the table 
+				// may have been created between test-for-existence and attempt-at-creation
+			}
+			
 		}
 	}
 
@@ -266,7 +272,11 @@ public class HBasePyramidIO implements PyramidIO {
 
 	@Override
 	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
-		// Noop
+		try {
+    		initializeForWrite( pyramidId );
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
 	}
 
 	@Override
@@ -331,4 +341,34 @@ public class HBasePyramidIO implements PyramidIO {
 
 		return new String(rawData.get(0).get(METADATA_COLUMN));
 	}
+	
+	@Override
+    public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
+    	
+    	List<String> rowIds = new ArrayList<>();
+        for (TileIndex tile: tiles) {
+            rowIds.add( rowIdFromTileIndex( tile ) );
+        }        
+        deleteRows(tableName, rowIds, TILE_COLUMN);
+    }
+	
+	private void deleteRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
+        
+    	HTable table = getTable(tableName);
+        List<Delete> deletes = new LinkedList<Delete>();
+        for (String rowId: rows) {
+        	Delete delete = new Delete(rowId.getBytes());
+            deletes.add(delete);
+        }
+        table.delete(deletes);
+    }
+	
+	public void dropTable( String tableName ) {
+    	
+    	try {
+    		_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
+    		_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
+        } catch (Exception e) {}
+ 	
+    }
 }

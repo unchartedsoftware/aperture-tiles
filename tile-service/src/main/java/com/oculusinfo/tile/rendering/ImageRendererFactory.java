@@ -38,12 +38,12 @@ import com.oculusinfo.tile.rendering.impl.TopAndBottomTextScoresImageRenderer;
 import com.oculusinfo.tile.rendering.impl.TopTextScoresImageRenderer;
 
 public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRenderer> {
-	private static StringProperty RENDERER_TYPE = new StringProperty("type",
-	                                                                 "The type of renderer that will be used to render the data on the server",
-	                                                                 "heatmap",
-	                                                                 new String[] {"heatmap", "toptextscores", "textscores", "doubleeseries",
-		         "doublestatistics" }
-	                                                                 );
+    public static StringProperty RENDERER_TYPE = new StringProperty("type",
+                                                                    "The type of renderer that will be used to render the data on the server",
+                                                                    "heatmap",
+                                                                    new String[] {
+                                                                      "heatmap", "toptextscores", "textscores",
+                                                                      "doubleeseries", "doublestatistics"                                      });
 
 
 

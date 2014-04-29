@@ -73,7 +73,7 @@ abstract public class ConfigurableFactory<T> {
 	private String                                          _propertyPrefix;
 	private JSONObject                                      _JSONConfigurationSource;
 	private Properties                                      _propertyConfigurationSource;
-
+	private ConfigurableFactory<?>							_parent;
 
 
 	/**
@@ -120,6 +120,10 @@ abstract public class ConfigurableFactory<T> {
 		_propertyPrefix = null;
 		_JSONConfigurationSource = null;
 		_propertyConfigurationSource = null;
+		
+		//NOTE: this should not be set to the parent passed in cause the parent won't necessarily
+		//be created before the children if you're doing a bottom up approach for some reason.
+		_parent = null; 
 	}
 
 	private <PT> void putPropertyValueObject (ConfigurationProperty<PT> property, PropertyValue<PT> value) {
@@ -138,6 +142,13 @@ abstract public class ConfigurableFactory<T> {
 		return (PropertyValue) _properties.get(property);
 	}
 
+	/**
+	 * Get the root node in the tree of configurables.
+	 * @return Returns the root of the configurable factories, or this factory if no parent is set.
+	 */
+	public ConfigurableFactory<?> getRoot() {
+		return (_parent != null)? _parent.getRoot() : this;
+	}
 
 	/**
 	 * Get the root path for configuration information for this factory.
@@ -147,6 +158,14 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	public List<String> getRootPath () {
 		return _rootPath;
+	}
+	
+	/**
+	 * Get the name associated with the factory.
+	 * @return A string name if provided upon construction, or else null if none was provided.
+	 */
+	public String getName() {
+		return _name;
 	}
 
 	/**
@@ -214,6 +233,7 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	protected void addChildFactory (ConfigurableFactory<?> child) {
 		_children.add(child);
+		child._parent = this;
 	}
 
 	/**
@@ -415,8 +435,20 @@ abstract public class ConfigurableFactory<T> {
 	 * information.
 	 */
 	private JSONObject getConfigurationNode (JSONObject rootNode) throws JSONException {
+	    return getLeafNode(rootNode, _rootPath);
+	}
+
+	/**
+     * Get the sub-node of a root node specified by a given path.
+     * 
+     * @param rootNode The root JSON object whose sub-node is desired.
+     * @param path A list of keys to follow from the root node to find the
+     *            desired leaf.
+     * @return The leaf node, or null if any branch along the path is missing.
+     */
+	public static JSONObject getLeafNode (JSONObject rootNode, List<String> path) {
 		JSONObject target = rootNode;
-		for (String pathElt: _rootPath) {
+		for (String pathElt: path) {
 			if (target.has(pathElt)) {
 				try {
 					target = target.getJSONObject(pathElt);
@@ -433,7 +465,7 @@ abstract public class ConfigurableFactory<T> {
 		return target;
 	}
 
-	private <PT> void readProperty (JSONObject factoryNode, ConfigurationProperty<PT> property) throws ConfigurationException {
+	protected <PT> void readProperty (JSONObject factoryNode, ConfigurationProperty<PT> property) throws ConfigurationException {
 		try {
 			if (null != factoryNode) {
 				PropertyValue<PT> valueObj = getPropertyValueObject(property);

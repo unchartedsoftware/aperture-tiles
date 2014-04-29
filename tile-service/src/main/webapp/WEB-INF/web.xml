@@ -29,6 +29,9 @@
 			<!-- For tiling requiring a spark connection
 			     com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
 			-->
+			<!-- LayerConfiguration factory module - override to add custom layer configuration 
+			     parameters -->
+			com.oculusinfo.tile.init.StandardLayerConfigurationModule:
 
 			<!-- For any operation requiring a spark connection (including live
 			     tiling or drill-through to raw data)

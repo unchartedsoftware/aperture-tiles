@@ -25,11 +25,20 @@
       <!-- Pyramid IO factory module - override to add custom PyramidIO 
            implementations -->
       com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+      <!-- LayerConfiguration factory module - override to add custom layer configuration 
+           parameters -->
+      com.oculusinfo.tile.init.StandardLayerConfigurationModule:
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.TileModule
+      com.oculusinfo.tile.rest.TileModule:
+
+      <!-- Sets up the REST interface by which clients can retrieve annotations -->
+      com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+      <!-- Sets up the annotation service -->
+      com.oculusinfo.annotation.rest.AnnotationServiceModule
+
     </param-value>
   </context-param>
 

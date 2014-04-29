@@ -366,6 +366,16 @@ div.index-thumbnail-mask:hover {
 	width: 280px;
 	font-size: 14px;
 }
+.oculus-footer
+{
+	padding-bottom: 60px;
+	background-image: url(../img/footer-symbols.png);
+	background-repeat: no-repeat; 
+	background-position: left bottom; 
+}
+.footer-padding {
+	padding-bottom: 20px;
+}
 a.context-info-title {
 	color: #c40;
 }

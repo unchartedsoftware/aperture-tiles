@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+ * 
+ * Released under the MIT License.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+
+
+package com.oculusinfo.stats.qualitative
+
+/**
+ * @author $mkielo
+ */
+
+
+import org.apache.spark._
+import SparkContext._
+import org.apache.spark.rdd.RDD
+
+/*WILL EVENTUALLY NEED TO UNCOMMENT HADOOP IN POM & SORT OUT VERSION ISSUE*/
+object CountQualities {
+
+  def CountNASave (column: Int, textFile: RDD[Array[String]], sc: SparkContext): Int = {
+    val zeroSet = sc.parallelize(List[Int](0))
+    textFile.map(line => line(column)).filter(_.equals(null)).map(record => 1).union(zeroSet).reduce(_+_)
+  }
+
+  def CountUnique(column: Int, textFile: RDD[Array[String]]) = {
+    textFile.map(line => line(column)).distinct().map(record => 1).reduce(_ + _)
+  }
+}

@@ -98,7 +98,7 @@ define(function (require) {
                 MOST_RECENT_SPACING = 50;
 
             function isVisible(data) {
-                return that.isSelectedView(data) && (that.mouseState.clickState.tilekey === data.tilekey);
+                return that.isSelectedView(data) && that.isVisible(data) && (that.mouseState.clickState.tilekey === data.tilekey);
             }
 
             function getMaxPercentage(data, type) {
@@ -198,6 +198,9 @@ define(function (require) {
                 bar.map('offset-x').from( function(index) {
                     return DETAILS_OFFSET_X + 20 + index*BAR_WIDTH;
                 });
+                bar.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
                 return bar;
             }
 
@@ -214,6 +217,9 @@ define(function (require) {
                 bar.map('width').asValue(1);
                 bar.map('offset-x').asValue(DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
                 bar.map('offset-y').asValue(yOffset-1);
+                bar.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
                 return bar;
             }
 
@@ -227,6 +233,9 @@ define(function (require) {
                 label.map('text-anchor').asValue('start');
                 label.map('font-outline').asValue(that.BLACK_COLOUR);
                 label.map('font-outline-width').asValue(3);
+                label.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
                 return label;
             }
 
@@ -241,6 +250,9 @@ define(function (require) {
             this.detailsBackground.map('offset-y').asValue(DETAILS_OFFSET_Y + 1);
             this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET_X + 1);
             this.detailsBackground.on('click', function() { return true; }); //swallow event
+            this.detailsBackground.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                })
 
             // TITLE LABELS
             this.titleLabels = labelTemplate();
@@ -271,7 +283,6 @@ define(function (require) {
                 }
             });
             this.titleLabels.map('offset-x').asValue(DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER);
-
 
             // TRANSLATE LABEL
             // TODO: IMPLEMENT FUNCTIONALITY WITH GOOGLE TRANSLATE API
@@ -310,6 +321,9 @@ define(function (require) {
             });
             this.summaryLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE - that.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
+            this.summaryLabel.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                });
 
             // POSITIVE TITLE LABEL
             this.positiveLabel = labelTemplate();
@@ -434,6 +448,9 @@ define(function (require) {
                 }
 
             });
+            this.countLabels.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                });
 
             // TIME AXIS LABEL
             this.timeAxisLabel = that.plotLayer.addLayer(aperture.LabelLayer);
@@ -469,6 +486,9 @@ define(function (require) {
             this.timeAxisTicks.map('offset-x').from( function(index) {
                 return DETAILS_OFFSET_X + 24 + 51.5*index;
             });
+            this.timeAxisTicks.map('opacity').from( function() {
+                    return that.mouseState.opacity;
+                });
 
             // MOST RECENT TWEETS LABELS
             this.recentTweetsLabel = labelTemplate();

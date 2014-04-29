@@ -131,4 +131,11 @@ public interface PyramidIO {
 	 *            dependent on the I/O type
 	 */
 	public String readMetaData (String pyramidId) throws IOException;
+	
+	
+	
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException;
+    
+	
+	
 }

@@ -38,18 +38,18 @@ import com.oculusinfo.factory.properties.StringProperty;
 public class TilePyramidFactory extends ConfigurableFactory<TilePyramid> {
 	private StringProperty PYRAMID_TYPE = new StringProperty("type",
 	                                                         "The type of tile pyramid to be created",
-	                                                         "web-mercator",
-	                                                         new String[] {"area-of-interest", "epsg:4326", "web-mercator", "epsg:900913", "epsg:3857"});
-	private DoubleProperty MINIMUM_X = new DoubleProperty("minimum-x-value",
+	                                                         "webmercator",
+	                                                         new String[] {"areaofinterest", "epsg:4326", "webmercator", "epsg:900913", "epsg:3857"});
+	private DoubleProperty MINIMUM_X = new DoubleProperty("minX",
 	                                                      "The lower bound for the X axis in an area-of-interest tile pyramid",
 	                                                      0.0);
-	private DoubleProperty MAXIMUM_X = new DoubleProperty("maximum-x-value",
+	private DoubleProperty MAXIMUM_X = new DoubleProperty("maxX",
 	                                                      "The upper bound for the X axis in an area-of-interest tile pyramid",
 	                                                      0.0);
-	private DoubleProperty MINIMUM_Y = new DoubleProperty("minimum-y-value",
+	private DoubleProperty MINIMUM_Y = new DoubleProperty("minY",
 	                                                      "The lower bound for the Y axis in an area-of-interest tile pyramid",
 	                                                      0.0);
-	private DoubleProperty MAXIMUM_Y = new DoubleProperty("maximum-y-value",
+	private DoubleProperty MAXIMUM_Y = new DoubleProperty("maxY",
 	                                                      "The upper bound for the Y axis in an area-of-interest tile pyramid",
 	                                                      0.0);
 
@@ -72,11 +72,11 @@ public class TilePyramidFactory extends ConfigurableFactory<TilePyramid> {
 
 	@Override
 	protected TilePyramid create () {
-		String pyramidType = getPropertyValue(PYRAMID_TYPE);
+		String pyramidType = getPropertyValue(PYRAMID_TYPE).toLowerCase();
 
-		if ("web-mercator".equals(pyramidType) || "epsg:900913".equals(pyramidType) || "epsg:3857".equals(pyramidType)) {
+		if ("webmercator".equals(pyramidType) || "epsg:900913".equals(pyramidType) || "epsg:3857".equals(pyramidType)) {
 			return new WebMercatorTilePyramid();
-		} else if ("area-of-interest".equals(pyramidType) || "epsg:4326".equals(pyramidType)) {
+		} else if ("areaofinterest".equals(pyramidType) || "epsg:4326".equals(pyramidType)) {
 			double minX = getPropertyValue(MINIMUM_X);
 			double maxX = getPropertyValue(MAXIMUM_X);
 			double minY = getPropertyValue(MINIMUM_Y);

@@ -54,8 +54,9 @@ public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List
 		return TYPE_DESCRIPTOR;
 	}
 
+	
 	@Override
-	public JSONArray translateToJSON (List<Pair<String, Integer>> value) {
+	public Object translateToJSON (List<Pair<String, Integer>> value) {
 		JSONArray outputMap = new JSONArray();
 
 		try {

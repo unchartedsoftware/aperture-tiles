@@ -38,12 +38,18 @@
 		$(function () {
 			$.get("description.html", function (data) {
 				$("#title-description-container").append(data);
+				$("#description").accordion({ collapsible: true, activate: function( event, ui ) {
+					$(window).resize();		
+				}}); 
 			});
 		});
 	</script>
   </head>
   <body>
-	<div id="title-description-container"></div>
+  	<div id="description">
+  		<h3>Description</h3>
+		<div id="title-description-container"></div>
+	</div>
     <div id="map" style="width: 1000px; height: 600px;"> </div>
     <div id="controls-container">
         <div id="layer-controls" class="layer-control"></div>

@@ -33,6 +33,7 @@ import java.lang.UnsupportedOperationException
 import java.io.InputStream
 import java.util.{List => JavaList}
 import java.util.Properties
+import java.io.IOException
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
@@ -105,6 +106,10 @@ class TestPyramidIO extends PyramidIO with Serializable {
 	def readMetaData (pyramidId: String): String = {
 		metaDatas.get(pyramidId).getOrElse(null)
 	}
+	
+	def removeTiles (id: String, tiles: JavaIterable[TileIndex]  ) : Unit =
+		throw new IOException("removeTiles not currently supported for TestPyramidIO")
+	
 }
 
 

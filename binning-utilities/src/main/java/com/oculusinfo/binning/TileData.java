@@ -53,8 +53,9 @@ public class TileData<T> implements Serializable {
 	private TileIndex         _definition;
 	private ArrayList<T>      _data;
 
-
-	private TileData() {
+	// No-argument constructor, really just for use by Kryo, but we call it from
+	// the main constructor just to get rid of the warning.
+	private TileData () {
         
 	}
 	/**
@@ -77,6 +78,7 @@ public class TileData<T> implements Serializable {
 	 * @param defaultValue The default value of each bin
 	 */
 	public TileData (TileIndex definition, T defaultValue) {
+	    this();
 		_definition = definition;
 		_data = new ArrayList<T>(_definition.getXBins()
 		                         * _definition.getYBins());

@@ -31,7 +31,8 @@
 define( function (require) {
     "use strict";
 		
-	var LayerDataLoader = require('./data/LayerDataLoader'),
+	var TileService = require('./data/TileService'),
+        ClientLayer = require('./CarouselLayer'),
 		DataLayer = require('../../DataLayer');	
 		
 	return {
@@ -42,80 +43,94 @@ define( function (require) {
 		 * @param layerJSON	 	layer specification JSON object loaded from layers.json
 		 * @param map			map object from map.js
 		 */
-		createLayers: function(layerJSON, map) {
-			var i = 0;
+		createLayers: function(layerJSON, uiMediator, map) {
+			var i;
 			for (i=0; i<layerJSON.length; i++) {   
-				this.createLayer(layerJSON[i], map);
+				this.createLayer(layerJSON[i], uiMediator, map);
 			}		
 		},
 	
 
-		createLayer: function(layerJSON, map) {
+		createLayer: function(layerJSON, uiMediator, map) {
 
-			var requirements = [],	// this is an array of requirement spec objects. Each entry is used to load the individual requirements	
-				i;
+			var layer = {
+                    views : [],
+                    controller : {}
+                },
+                tasks = [],
+                clientLayer,
+                d,
+                i;
 	
 			// load module func
-			function loadModule(arg, callback) {
+			function loadRequireJsModule(arg, callback) {
 				require([arg], callback);
 			}
 			
 			// get layer info from server func	
 			function getLayerInfoFromServer(arg, callback) {
 				var layerInfoListener = new DataLayer([arg]);
-				layerInfoListener.setRetrievedCallback(callback);
+				layerInfoListener.addRetrievedCallback(callback);
 				layerInfoListener.retrieveLayerInfo();
-			}	
-			
-			// add layer view controller to requirements
-			requirements.push({
-				type : "view-controller",
-				id : layerJSON.type,
-				spec : "./" + layerJSON.type,
-				func : loadModule				
-				});	
-				
-			// add view dependencies to requirements
-			for (i=0; i<layerJSON.views.length; i++) {   
-			
-				// get renderer class from require.js
-				requirements.push({
-					type : "renderer",
-					id : layerJSON.views[i].renderer,
-					spec : "./impl/" + layerJSON.views[i].renderer,
-					func : loadModule
-					});
-				// get data tracker from server
-				requirements.push({
-					type : "data-tracker",
-					id : layerJSON.views[i].layer,
-					spec : layerJSON.views[i],
-					func : getLayerInfoFromServer
-					});				
 			}
-			
-			// send load request to layer data loader, once all requirements are in memory, the
-			// following callback function will execute.
-			LayerDataLoader.get(requirements, function(layerDataMap) {
-			
-				// once everything is in memory, construct layer
-				var spec =  {
-						map: map.map,
-						views: []
-					}, 
-					i;
-			
-				// add views to layer spec object
-				for (i=0; i<layerJSON.views.length; i++) {
-					spec.views.push({
-						renderer: new layerDataMap[layerJSON.views[i].renderer](),
-						dataTracker: layerDataMap[layerJSON.views[i].layer]
-					});
-				}
-				
-				// instantiate layer object
-				return new layerDataMap[layerJSON.type](spec);
-			});	
+
+            function onRetrieveRenderer( index, deferred ){
+                return function( Module ) {
+                    layer.views[index].renderer = new Module();
+                    deferred.resolve();
+                };
+            }
+
+            function onRetrieveLayerInfo( index, deferred ){
+                return function( dataLayer, layerInfo ) {
+                    layer.views[index].dataService = new TileService( layerInfo );
+                    deferred.resolve();
+                };
+            }
+
+            // add view dependencies to requirements
+            for (i=0; i<layerJSON.views.length; i++) {
+
+                layer.views[i] = {};
+
+                d = $.Deferred();
+                tasks.push( d );
+
+                // get renderer class from require.js
+                loadRequireJsModule( "./impl/" + layerJSON.views[i].renderer, onRetrieveRenderer( i ,d ) );
+
+                d = $.Deferred();
+                tasks.push( d );
+
+                // POST request for layerInfo
+                getLayerInfoFromServer( {
+                    request: "configure",
+                    layer:  layerJSON.layer,
+                    configuration: layerJSON.views[i]
+                }, onRetrieveLayerInfo(i, d ) );
+            }
+
+            clientLayer = new ClientLayer(layerJSON.name, map);
+
+            // instantiate layer object
+            uiMediator.addClientLayer( clientLayer );
+
+            $.when.apply( $, tasks ).done( function() {
+
+                // once everything has loaded
+                var views = [],
+                    i;
+
+                // add views to layer spec object
+                for (i=0; i<layerJSON.views.length; i++) {
+                    views.push({
+                        renderer: layer.views[i].renderer,
+                        dataService: layer.views[i].dataService
+                    });
+                }
+
+               clientLayer.setViews( views );
+            });
 
 		}
 
