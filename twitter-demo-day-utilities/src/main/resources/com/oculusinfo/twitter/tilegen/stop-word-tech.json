@@ -1,6 +1,6 @@
 [
-    "amp",
+    "amp", "w/",
     "gt",
-    "http", "https", 
+    "http", "https", "https://t",
     "lt"
 ]
