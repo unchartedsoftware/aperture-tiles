@@ -84,8 +84,17 @@ trait BinDescriptor[PT, BT] extends Serializable {
 	 */
 	def stringToBin (value: String): BT
 
-	/** Return the default value to be used in unoccupied bins, before conversion */
-	def defaultBinValue: PT
+	/**
+     * Return the default value to be used in bins known to have no value, 
+	 * before conversion.
+	 */
+	def defaultProcessedBinValue: PT
+
+	/**
+     * Returns the default value to be used in bins not known to be empty, to 
+     * which data can be aggregated.  Again, value is before conversion.
+	 */
+	def defaultUnprocessedBinValue: PT
 
 	/** Convert the processing value to a binning value */
 	def convert (value: PT): BT
@@ -101,7 +110,8 @@ class StandardDoubleBinDescriptor extends BinDescriptor[Double, JavaDouble] {
 	def defaultMin: JavaDouble = JavaDouble.MAX_VALUE
 	def max (a: JavaDouble, b: JavaDouble): JavaDouble = JavaMath.max(a, b)
 	def defaultMax: JavaDouble = JavaDouble.MIN_VALUE
-	def defaultBinValue: Double = 0.0
+	def defaultProcessedBinValue: Double = 0.0
+	def defaultUnprocessedBinValue: Double = 0.0
 	def stringToBin (value: String): JavaDouble = convert(value.toDouble)
 	def convert (value: Double): JavaDouble = new JavaDouble(value)
 	def getSerializer: TileSerializer[JavaDouble] = new DoubleAvroSerializer(CodecFactory.bzip2Codec())
@@ -114,15 +124,18 @@ class CompatibilityDoubleBinDescriptor extends StandardDoubleBinDescriptor {
 
 class MinimumDoubleBinDescriptor extends StandardDoubleBinDescriptor {
 	override def aggregateBins (a: Double, b: Double): Double = a min b
+	override def defaultUnprocessedBinValue: Double = Double.MaxValue
 }
 
 class MaximumDoubleBinDescriptor extends StandardDoubleBinDescriptor {
 	override def aggregateBins (a: Double, b: Double): Double = a max b
+	override def defaultUnprocessedBinValue: Double = Double.MinValue
 }
 
 class LogDoubleBinDescriptor(logBase: Double = math.exp(1.0)) extends StandardDoubleBinDescriptor {
 	override def aggregateBins (a: Double, b: Double): Double =
 		math.log(math.pow(logBase, a) + math.pow(logBase, b))/math.log(logBase)
+	override def defaultUnprocessedBinValue: Double = Double.NegativeInfinity
 }
 
 class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaList[JavaDouble]] {
@@ -171,7 +184,8 @@ class StandardDoubleArrayBinDescriptor extends BinDescriptor[Seq[Double], JavaLi
 		value.asScala.mkString(",")
 	def stringToBin (value: String): JavaList[JavaDouble] =
 		convert(value.split(",").map(_.toDouble).toSeq)
-	def defaultBinValue: Seq[Double] = Seq[Double]()
+	def defaultProcessedBinValue: Seq[Double] = Seq[Double]()
+	def defaultUnprocessedBinValue: Seq[Double] = Seq[Double]()
 	def convert (value: Seq[Double]): JavaList[JavaDouble] =
 		value.map(v => new JavaDouble(v)).asJava
 	def getSerializer: TileSerializer[JavaList[JavaDouble]] = new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
@@ -244,7 +258,8 @@ class StringScoreBinDescriptor extends BinDescriptor[Map[String, Double],
 
 	def defaultMin: JavaList[Pair[String, JavaDouble]] = _emptyList
 	def defaultMax: JavaList[Pair[String, JavaDouble]] = _emptyList
-	def defaultBinValue: Map[String, Double] = Map[String, Double]()
+	def defaultProcessedBinValue: Map[String, Double] = Map[String, Double]()
+	def defaultUnprocessedBinValue: Map[String, Double] = Map[String, Double]()
 	def convert (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] = {
 		value
 			.mapValues(d => new JavaDouble(d))
