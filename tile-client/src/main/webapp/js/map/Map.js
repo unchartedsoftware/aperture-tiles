@@ -47,6 +47,7 @@ define(function (require) {
         init: function (id, spec) {
 
 			var that = this,
+                i,
 				mapSpecs;
 		
 			mapSpecs = spec.MapConfig;
@@ -66,6 +67,9 @@ define(function (require) {
             this.map = new aperture.geo.Map({ 
 				id: this.id
             });
+
+            this.map.olMap_.removeControl( this.map.olMap_.getControlsByClass('OpenLayers.Control.Zoom')[0] );
+
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
 			this.axes = [];
@@ -91,7 +95,13 @@ define(function (require) {
 					
 				$map.width(newWidth);
 				$map.height(newHeight);
+
 				that.updateSize();
+
+                for (i=0; i<that.axes.length; i++) {
+                    that.axes[i].redraw();
+                }
+
 			});
 
             this.previousZoom = this.map.getZoom();
@@ -109,7 +119,6 @@ define(function (require) {
                 spec = axes[i];
                 spec.parentId = this.id;
                 spec.map = this;
-                spec.olMap = this.map.olMap_;
                 this.axes.push(new Axis(spec));
             }
         },

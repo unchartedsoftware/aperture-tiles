@@ -1,0 +1,52 @@
+@charset "UTF-8";
+
+.top-axis {
+    top: -10px;
+}
+
+.bottom-axis {
+    bottom: -10px;
+}
+
+.left-axis {
+    left: -10px;
+}
+
+.right-axis {
+    right: -10px;
+}
+
+.horizontal-axis-marker {
+    height: 10px;   
+    border-left: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.vertical-axis-marker {
+    width: 10px;
+    border-top: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.axis-marker-label {
+    font-family: Verdana, Arial, sans-serif;
+    font-size:0.75em;
+    color: #7E7E7E;
+}
+
+.horizontal-axis-marker-label {
+    -webkit-transform: rotate(-35deg);
+       -moz-transform: rotate(-35deg);
+        -ms-transform: rotate(-35deg);
+         -o-transform: rotate(-35deg);
+            transform: rotate(-35deg);
+}
+
+.vertical-axis-marker-label {
+}
+
+.axis-title-label {
+    font-family: Verdana, Arial, sans-serif;
+    font-size:0.95em;
+    color : #7E7E7E;
+}

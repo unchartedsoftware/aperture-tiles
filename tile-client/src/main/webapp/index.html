@@ -2,17 +2,22 @@
 <html>
   <head>
     <meta charset="UTF-8">
-	<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+	  <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
     <title>Interactive Map Demo</title>
     
     <link rel="stylesheet" href="css/map.css" />
     <link rel="stylesheet" href="css/slider.css" />
+    <link rel="stylesheet" href="css/annotations.css" />
     <link rel="stylesheet" href="css/layercontrols.css" />
+    <link rel="stylesheet" href="css/overlay.css" />
+    <link rel="stylesheet" href="css/axis.css" />
+    <link rel="stylesheet" href="css/description.css" />
     <link rel="stylesheet"
           href="js/libjs/jquery-ui/1.10.3/themes/custom-theme/jquery-ui-1.10.3.custom.css" />
           
     <!--  provide any css overrides in main.css -->
-	<link rel="stylesheet" href="css/main.css" /> 
+
+	  <link rel="stylesheet" href="css/main.css" /> 
 
     <!-- JQuery includes -->
     <script src="js/libjs/jquery/jquery-1.10.2.dev.js"></script>
@@ -33,28 +38,64 @@
 
     <!-- Require starts off our own project module heirarchy -->
     <script src="js/libjs/require.js" data-main="js/main.js"></script>
-	<script>
-		<!-- Read in description.html file and append to top of page -->
-		$(function () {
-			$.get("description.html", function (data) {
-				$("#title-description-container").append(data);
-				$("#description").accordion({ collapsible: true, activate: function( event, ui ) {
-					$(window).resize();		
-				}}); 
-			});
-		});
-	</script>
+	  <script>
+		  <!-- Read in description.html file and append to top of page -->
+		  $(function () {
+  			$.get("description.html", function (data) {
+  				$("#description-container").append(data);
+          
+          var $desc = $("#description-header");
+          var $controls = $("#layer-controls-header");
+
+  				$desc.accordion({
+              active: false,
+              heightStyle: 'content',
+              collapsible: true
+          });
+
+          $controls.accordion({ 
+              active: false,
+              heightStyle: 'content',
+              collapsible: true
+          });
+                  
+          var isDescOpen = false;
+
+          $desc.click( function(e){
+              var t = $(".ui-accordion-header");
+              if( $(".ui-accordion-header").is(e.target) ) {
+                var widdy = isDescOpen ? '140px' : '98%';
+                $desc.animate({ width: widdy });
+                isDescOpen = !isDescOpen;
+              }
+          });
+          
+          var isControlsOpen = false;
+
+          $controls.click( function(e){
+              if( $(".ui-accordion-header").is(e.target) ) { 
+                var widdy = isControlsOpen ? '140px' : '98%';
+                $controls.animate({ width: widdy });
+                isControlsOpen = !isControlsOpen;
+              }
+          });
+
+  			});
+  		});
+  	</script>
   </head>
   <body>
-  	<div id="description">
+  	<div id="description-header" class="overlay-header" style='right:10px; top:10px;'>
   		<h3>Description</h3>
-		<div id="title-description-container"></div>
-	</div>
-    <div id="map" style="width: 1000px; height: 600px;"> </div>
-    <div id="controls-container">
-        <div id="layer-controls" class="layer-control"></div>
+		  <div id="description-container" class='overlay-container'; ></div>
+	  </div>
+    <div id="map" style="position:fixed;"> </div>
+    
+    <div id="layer-controls-header" class="overlay-header" style='right:10px; bottom:10px;'>
+      <h3>Controls</h3>
+      <div id="layer-controls-container" class="overlay-container"></div>
     </div>
-    <p id="hoverOutput">  </p>
+    
     <br>
   </body>
 </html>

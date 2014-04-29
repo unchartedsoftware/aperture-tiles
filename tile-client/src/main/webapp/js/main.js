@@ -192,7 +192,6 @@ require(['./FileLoader',
 
 				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
-
                             AnnotationLayerFactory.requestLayers(
                                 function( layers ) {
 
@@ -201,7 +200,6 @@ require(['./FileLoader',
 
                                  }
                             );
-
 
 				            // Trigger the initial resize event to resize everything
 				            $(window).resize();

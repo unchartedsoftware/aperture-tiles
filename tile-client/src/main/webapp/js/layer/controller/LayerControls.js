@@ -382,16 +382,16 @@ define(function (require) {
             this.controlsMap = {};
             this.$root = null;
             this.$layerControlsListRoot = null;
-            this.$tileOutlineButton = null;
+            //this.$tileOutlineButton = null;
             this.$layerControlsRoot = null;
 
             // Add the title
-            this.$root = $('#layer-controls');
+            this.$root = $('#layer-controls-container');
 
             this.$layerControlsRoot = $('<div id="layer-controls-root"></div>');
             this.$root.append(this.$layerControlsRoot);
 
-            this.$layerControlsRoot.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
+            //this.$layerControlsRoot.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
 
             // Add the layer control list area
             this.$layerControlsListRoot = $('<div id="layer-control-list"></div>');

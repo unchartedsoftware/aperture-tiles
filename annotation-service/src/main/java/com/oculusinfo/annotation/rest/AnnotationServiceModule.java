@@ -29,8 +29,6 @@ import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.annotation.rest.impl.*;
 import com.oculusinfo.annotation.index.*;
 import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.*;
-import com.oculusinfo.annotation.io.impl.*;
 import com.oculusinfo.annotation.io.serialization.*;
 import com.oculusinfo.annotation.io.serialization.impl.*;
 

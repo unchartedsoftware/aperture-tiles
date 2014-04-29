@@ -22,16 +22,7 @@
 		"       unitSpec:",
 		"           type:       		type of units parse in FormatAxis.js",
 		"           decimals:   		number of decimals",
-		"           allowStepDown: 		if the units can step down if they are below range",
-		"		style:",
-		"      	 	majorMarkerLength:  	the length of the major marker tick mark",
-		"       	majorMarkerWidth:   	the width of the major marker tick mark",
-		"       	majorMarkerColour:  	the color of the major marker tick mark",
-		"       	markerLabelColour: 		the color of the major marker label",
-		"       	axisLabelColour:   		the color of the axis label",
-		"       	fontFamily:         	the font family to use for labels",
-		"      	 	markerLabelFontSize: 	the font size of the marker label",
-		"       	axisLabelFontSize:   	the font size of the axis label"
+		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
 	"id" : "bitcoin time vs. source",
@@ -57,7 +48,8 @@
 	"AxisConfig": [
 		{
 			"title" : "Time",
-			"id" : "time-x-axis",
+			"position" : "bottom",
+			"repeat": false,
 			"intervalSpec" : {
 				"type" : "percentage",
 				"increment" : 20,
@@ -68,24 +60,12 @@
 				"type" : "time",
 				"decimals" : 2,
 				"allowStepDown" : false
-			},
-			"position" : "bottom",
-			"repeat": false,
-			"style" : {
-				"markerLabelRotation" : -45,
-				"majorMarkerLength" : 10,
-				"majorMarkerWidth" : 1,
-				"majorMarkerColour" : "#7E7E7E",
-				"markerLabelColour" : "#7E7E7E",
-				"axisLabelColour" : "#7E7E7E",
-				"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-				"markerLabelFontSize" : "0.75em",
-				"axisLabelFontSize" : "0.95em"
-			}
+			}			
 		},
 		{
 			"title" : "Source",
-			"id" : "source-y-axis",
+			"position" : "left",
+			"repeat" : false,
 			"intervalSpec" : {
 				"type" : "fixed",
 				"increment" : 100000,
@@ -96,19 +76,6 @@
 				"type" : "decimal",
 				"decimals" : 2,
 				"allowStepDown" : false
-			},
-			"position" : "left",
-			"repeat" : false,
-			"style" : {
-				"markerLabelRotation" : 0,
-				"majorMarkerLength" : 10,
-				"majorMarkerWidth" : 1,
-				"majorMarkerColour" : "#7E7E7E",
-				"markerLabelColour" : "#7E7E7E",
-				"axisLabelColour" : "#7E7E7E",
-				"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-				"markerLabelFontSize" : "0.75em",
-				"axisLabelFontSize" : "0.95em"
 			}
 		}
 	]

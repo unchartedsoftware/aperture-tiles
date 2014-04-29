@@ -22,16 +22,7 @@
 		"       unitSpec:",
 		"           type:       		type of units parse in FormatAxis.js",
 		"           decimals:   		number of decimals",
-		"           allowStepDown: 		if the units can step down if they are below range",
-		"		style:",
-		"      	 	majorMarkerLength:  	the length of the major marker tick mark",
-		"       	majorMarkerWidth:   	the width of the major marker tick mark",
-		"       	majorMarkerColour:  	the color of the major marker tick mark",
-		"       	markerLabelColour: 		the color of the major marker label",
-		"       	axisLabelColour:   		the color of the axis label",
-		"       	fontFamily:         	the font family to use for labels",
-		"      	 	markerLabelFontSize: 	the font size of the marker label",
-		"       	axisLabelFontSize:   	the font size of the axis label"
+		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
 	"id" : "bitcoin source vs. amount",
@@ -69,17 +60,6 @@
 				"type" : "decimal",
 				"decimals" : 2,
 				"allowStepDown" : false
-			},			
-			"style" : {
-				"markerLabelRotation" : -45,
-				"majorMarkerLength" : 10,
-				"majorMarkerWidth" : 1,
-				"majorMarkerColour" : "#7E7E7E",
-				"markerLabelColour" : "#7E7E7E",
-				"axisLabelColour" : "#7E7E7E",
-				"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-				"markerLabelFontSize" : "0.75em",
-				"axisLabelFontSize" : "0.95em"
 			}
 		},
 		{
@@ -96,17 +76,6 @@
 				"type" : "decimal",
 				"decimals" : 2,
 				"allowStepDown" : false
-			},			
-			"style" : {
-				"markerLabelRotation" : 0,
-				"majorMarkerLength" : 10,
-				"majorMarkerWidth" : 1,
-				"majorMarkerColour" : "#7E7E7E",
-				"markerLabelColour" : "#7E7E7E",
-				"axisLabelColour" : "#7E7E7E",
-				"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
-				"markerLabelFontSize" : "0.75em",
-				"axisLabelFontSize" : "0.95em"
 			}
 		}
 	]

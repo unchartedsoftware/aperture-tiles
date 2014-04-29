@@ -1,20 +1,15 @@
 @charset "UTF-8";
 
-#controls-container {
-    padding: 10px;
-}
-
-#layer-controls {
-    font: 16px Arial;
-}
-
 .title {
     font-size: 20px;
     margin-bottom: 20px;
 }
 
-.layer-control {
-    width: 50%;
+#layer-controls-root {
+    width: 50%;  
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
     padding-bottom: 13px;
     font-size: 12px;
 }
@@ -53,6 +48,14 @@
 .opacity-slider {
     padding: 0 20px 2px 0;
     width: 30%;
+    color: #7E7E7E;
+}
+
+.control-table {
+    border-spacing: 15px 2px;
+    border-collapse: separate;
+    padding: 2px;
+    white-space: nowrap;
 }
 
 .base-opacity-slider {
@@ -97,8 +100,6 @@
     position:relative;
     margin-top:20px;
 }
-
-
 
 .settings-controls {
    width:100%;

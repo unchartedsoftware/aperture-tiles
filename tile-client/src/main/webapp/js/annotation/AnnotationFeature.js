@@ -49,7 +49,8 @@ define(function (require) {
         ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
         ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
         ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
-        ANNOTATION_ACCORDION_ID = "annotation-accordian-id",
+        ANNOTATION_POPUP_RESIZE_ID = 'annotation-popup-resize-icon',
+        ANNOTATION_ACCORDION_ID = "annotation-accordion-id",
         AnnotationFeature;
 
 
@@ -289,7 +290,6 @@ define(function (require) {
 
             if ( this.isAggregated() ) {
                 // aggregate
-                // MAGICAL FILTER OF MAGIC
                 html = this.getAggregateDisplayPopupHTML();
 
             } else {
@@ -362,6 +362,9 @@ define(function (require) {
                 minWidth: 200,
                 handles: 'se'
             });
+
+            // manually inject id for resize icon for clean css
+            $( "#"+ANNOTATION_POPUP_ID).find(".ui-resizable-handle", ".ui-resizable-se").attr('id', ANNOTATION_POPUP_RESIZE_ID);
 
         },
 

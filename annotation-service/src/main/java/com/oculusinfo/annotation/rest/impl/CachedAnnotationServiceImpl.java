@@ -36,7 +36,6 @@ import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.cache.*;
 import com.oculusinfo.annotation.cache.impl.*;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.io.PyramidIO;
