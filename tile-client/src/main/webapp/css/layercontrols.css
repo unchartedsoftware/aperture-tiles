@@ -10,21 +10,7 @@
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
-    padding-bottom: 13px;
     font-size: 12px;
-}
-
-.settings-link {
-    text-align: right;
-    font-size: 12px;
-    color: #366097;
-}
-
-.settings-link:hover {
-    text-align: right;
-    font-size: 12px;
-    text-decoration: underline;
-    color: #366097;
 }
 
 .toggle {
@@ -101,48 +87,67 @@
     margin-top:20px;
 }
 
-.settings-controls {
-   width:100%;
+
+.settings-controls-root {
+   width: 50%;  
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+    font-size: 12px;
 }
 
-.settings-title-bar {
+.settings-title {
+    position:relative;
     margin-bottom:10px;
     margin-top:10px;
 }
 
-.settings-title {
-    font-size: 16px;
-    font-weight: bold;
+.settings-back-link {
+    position:absolute;
+    right:0px;
+    font-size: 12px;
 }
+
+.settings-ramp-title {
+    font-size: 12px;
+    font-weight: bold;
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
+.settings-ramp-types {
+    height:100%;
+    width:66%;
+    display: inline-block;
+}
+
+
+.settings-ramp-functions {
+    height:100%;
+    width:33%;
+    display: inline-block;
+}
+
+
+.settings-ramp-span-left {
+    width:50%;
+    display: inline-block;
+}
+
+.settings-ramp-span-right {
+    width:50%;
+    display: inline-block;
+}
+
 
 .settings-values label {
     font: 12px Arial;
     margin: 2px 2px 2px 2px;
 }
 
-.settings-ramp-title {
+
+.settings-link {
+    text-align: right;
     font-size: 12px;
-    font-weight: bold;
 }
 
-.settings-ramp-types {
-    float:left;
-}
-
-.settings-ramp-functions {
-    float:left;
-    margin-left:20px;
-}
-
-.settings-back-link {
-    color: #366097;
-    font-size: 12px;
-    margin-left: 30px;
-}
-
-.settings-back-link:hover {
-    text-decoration: underline;
-    color: #366097;
-    font-size: 12px;
-    margin-left: 30px;
-}

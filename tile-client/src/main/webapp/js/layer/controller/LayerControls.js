@@ -105,7 +105,7 @@ define(function (require) {
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
         if ( layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
-            $settings = $('<a>settings</a>');
+            $settings = $('<button>settings</button>');
             $settings.click(function () {
                 showLayerSettings($root, layerState);
             });
@@ -115,7 +115,7 @@ define(function (require) {
         name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
         $layerControlSetRoot.append($('<table style="width:100%"></table>')
             .append($('<tr></tr>')
-                .append($('<td class="layer_labels"></td>')
+                .append($('<td class="layer-labels"></td>')
                     .append($('<span>' + name + '</span>')))
                 .append($('<td class="settings-link"></td>')
                     .append($settings))));
@@ -154,7 +154,7 @@ define(function (require) {
         $subTableRow.append($cell);
 
         $cell.append($('<div class="slider-label">Opacity</div>'));
-        $opacitySlider = $('<div id="' + "opacity_slider_" + name + '"></div>').slider({
+        $opacitySlider = $('<div id="' + "opacity-slider-" + name + '"></div>').slider({
             range: "min",
             min: 0,
             max: OPACITY_RESOLUTION,
@@ -172,7 +172,7 @@ define(function (require) {
             $subTableRow.append($cell);
 
             $cell.append($('<div class="slider-label">Filter</div>'));
-            $filterSlider = $('<div id="' + "filter_slider_" + name + '"></div>');
+            $filterSlider = $('<div id="' + "filter-slider-" + name + '"></div>');
             $filterSlider.slider({
                 range: true,
                 min: 0,
@@ -233,56 +233,75 @@ define(function (require) {
      * @param {object} layerState - The layer state model the panel will read from and update.
      */
     showLayerSettings = function ($parent, layerState) {
-        var $settingsControls, $settingsTitleBar, name, $rampTypes, $rampFunctions, id, oldChildren, $back, rampType;
+        var $settingsControls,
+            $settingsTitleBar,
+            name,
+            span,
+            $leftSpan,
+            $rightSpan,
+            $rampTypes,
+            $rampFunctions,
+            id,
+            oldChildren,
+            $backButton,
+            i;
 
         // Save the main layer controls hierarchy
         oldChildren = replaceChildren($parent, null);
 
-        $settingsControls = $('<div class="settings-controls"></div>');
-
-        $settingsTitleBar = $('<div class="settings-title-bar"></div>');
+        // create root div
+        $settingsControls = $('<div class="settings-controls-root"></div>');
+        // create title div
+        $settingsTitleBar = $('<div class="settings-title"></div>');
+        // add title span to div
+        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + ' Layer Settings</span>'));
         $settingsControls.append($settingsTitleBar);
-
-        $settingsTitleBar.append($('<span class="settings-title">' + layerState.getName() + ' Layer Settings</span>'));
-
-        $back = $('<span class="settings-back-link">back</span>');
-        $settingsTitleBar.append($back);
-        $back.click(function () {
+        // create back button
+        $backButton = $('<button class="settings-back-link">back</button>');
+        $backButton.click(function () {
             replaceChildren($parent, oldChildren);
         });
+        $settingsTitleBar.append($backButton);
 
         // Add the ramp types radio buttons
         $rampTypes = $('<div id="ramp-types" class="settings-ramp-types"/>');
-        $settingsControls.append($rampTypes);
+        // add title to ramp types div
         $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
+        $settingsControls.append($rampTypes);
+        // create left and right columns
+        $leftSpan = $('<span class="settings-ramp-span-left"></span>');
+        $rightSpan = $('<span class="settings-ramp-span-right"></span>');
+        $rampTypes.append($leftSpan);
+        $rampTypes.append($rightSpan);
 
-        for (rampType in LayerState.RAMP_TYPES) {
-            if (LayerState.RAMP_TYPES.hasOwnProperty(rampType)) {
-                name = LayerState.RAMP_TYPES[rampType].name;
-                id = LayerState.RAMP_TYPES[rampType].id;
-                $rampTypes.append($('<div class="settings-values"></div>').append(
-                    $('<input type="radio" name="ramp-types" value="' + id + '">').add(
-                        $('<label for="' + id + '">' + name + '</label>')
-                    )
-                ));
-            }
+        for (i=0; i<LayerState.RAMP_TYPES.length; i++) {
+            // for each ramp type
+            name = LayerState.RAMP_TYPES[i].name;
+            id = LayerState.RAMP_TYPES[i].id;
+            // add half types to left, and half to right
+            span = (i < LayerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
+            span.append($('<div class="settings-values"></div>').append(
+                $('<input type="radio" name="ramp-types" value="' + id + '">').add(
+                    $('<label for="' + id + '">' + name + '</label>')
+                )
+            ));
         }
 
         // Add the ramp function radio buttons
         $rampFunctions = $('<div id="ramp-functions" class="settings-ramp-functions"/>');
+        $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
         $settingsControls.append($rampFunctions);
-        $rampFunctions.append($('<span class="settings-ramp-title">Color Scale</span>'));
-        for (rampType in LayerState.RAMP_FUNCTIONS) {
-            if (LayerState.RAMP_FUNCTIONS.hasOwnProperty(rampType)) {
-                name = LayerState.RAMP_FUNCTIONS[rampType].name;
-                id = LayerState.RAMP_FUNCTIONS[rampType].id;
-                $rampFunctions.append($('<div class="settings-values"></div>').append(
-                    $('<input type="radio" name="ramp-functions" value="' + id + '">').add(
-                        $('<label for="' + id + '">' + name + '</label>')
-                    )
-                ));
-            }
+
+        for (i=0; i<LayerState.RAMP_FUNCTIONS.length; i++) {
+            name = LayerState.RAMP_FUNCTIONS[i].name;
+            id = LayerState.RAMP_FUNCTIONS[i].id;
+            $rampFunctions.append($('<div class="settings-values"></div>').append(
+                $('<input type="radio" name="ramp-functions" value="' + id + '">').add(
+                    $('<label for="' + id + '">' + name + '</label>')
+                )
+            ));
         }
+
         $parent.append($settingsControls);
 
         // Set initial value based on layer state model
