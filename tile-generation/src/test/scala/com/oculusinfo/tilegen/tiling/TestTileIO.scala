@@ -33,6 +33,7 @@ import java.lang.UnsupportedOperationException
 import java.io.InputStream
 import java.util.{List => JavaList}
 import java.util.Properties
+import java.io.IOException
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
