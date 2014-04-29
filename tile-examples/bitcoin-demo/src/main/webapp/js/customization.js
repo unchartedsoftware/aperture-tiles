@@ -65,7 +65,7 @@ define(function (require) {
 			        'dataset': {
 				        'oculus.binning': {
 					        'name': 'bitcoin',
-					        'source.location': 'hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions>Datasets_20130410.tsv',
+					        'source.location': 'hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv',
 					        'arsing.separatior': '\t',
 					        'source.partitions': 96,
 					        'parsing': {
