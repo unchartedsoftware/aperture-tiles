@@ -68,6 +68,7 @@ define(function (require) {
 				id: this.id
             });
 
+            // remove default zoom control
             this.map.olMap_.removeControl( this.map.olMap_.getControlsByClass('OpenLayers.Control.Zoom')[0] );
 
             this.map.olMap_.baseLayer.setOpacity(1);
@@ -159,6 +160,47 @@ define(function (require) {
 
         getViewportHeight: function() {
             return this.map.olMap_.viewPortDiv.clientHeight;
+        },
+
+        /**
+         * Returns the min and max visible viewport pixels
+         * Axes may be covering parts of the map, so this determines the actual visible
+         * bounds
+         */
+        getMinMaxVisibleViewportPixels: function() {
+
+            var bounds ={
+                    min : {
+                        x: 0,
+                        y: 0
+                    },
+                    max : {
+                        x: this.getViewportWidth(),
+                        y: this.getViewportHeight()
+                    }
+            }, i;
+
+            // determine which axes exist
+            for (i=0; i<this.axes.length; i++) {
+
+                switch ( this.axes[i].position ) {
+
+                    case 'top':
+                        bounds.min.y = this.axes[i].getContainerWidth();
+                        break;
+                    case 'bottom':
+                        bounds.max.y = this.getViewportHeight() - this.axes[i].getContainerWidth();
+                        break;
+                    case 'left':
+                        bounds.min.x = this.axes[i].getContainerWidth();
+                        break;
+                    case 'right':
+                        bounds.max.x = this.getViewportWidth() - this.axes[i].getContainerWidth();
+                        break;
+                }
+            }
+
+            return bounds;
         },
 
 

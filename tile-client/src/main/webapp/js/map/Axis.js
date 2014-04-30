@@ -132,11 +132,13 @@ define(function (require) {
 
 
         getContainerWidth: function() {
+            var width;
             if (this.isXAxis) {
-                return this.$container.height();
+                width = this.$container.height();
             } else {
-                return this.$container.width();
+                width = this.$container.width();
             }
+            return width;
         },
 
 
@@ -146,8 +148,7 @@ define(function (require) {
          */
         redraw: function() {
 
-            var axis = {},
-                markers = [],
+            var markers = [],
                 that = this;
 
             /**
@@ -244,13 +245,15 @@ define(function (require) {
                         obj.css("-moz-transform")    ||
                         obj.css("-ms-transform")     ||
                         obj.css("-o-transform")      ||
-                        obj.css("transform") || 'none';
+                        obj.css("transform") || 'none',
+                        values, angle;
+
                     if(matrix !== 'none') {
-                        var values = matrix.split('(')[1].split(')')[0].split(',');
-                        var a = values[0];
-                        var b = values[1];
-                        var angle = Math.atan2(b, a);
-                    } else { var angle = 0; }
+                        values = matrix.split('(')[1].split(')')[0].split(',');
+                        angle = Math.atan2(values[1], values[0]);
+                    } else {
+                        angle = 0;
+                    }
                     return Math.abs(angle);
                 }
 

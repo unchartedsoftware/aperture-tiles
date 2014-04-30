@@ -19,6 +19,7 @@
 .top-axis-container {
     position:absolute;
     overflow: hidden;
+    background: #222222;
     height:150px;
     width:100%;
     top:0px;
@@ -48,6 +49,7 @@
 .right-axis-container {
     position:absolute;
     overflow: hidden;
+    background: #222222;
     width:150px;
     height:100%;
     right:0px;

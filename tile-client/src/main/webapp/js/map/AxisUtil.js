@@ -212,12 +212,13 @@ define({
         function getMinIncrement() {
 
             var minCull,      // exact value of cull point, any value less will be culled from view
-                minIncrement; // the minimum increment that is visible
+                minIncrement, // the minimum increment that is visible
+                minMax = axis.map.getMinMaxVisibleViewportPixels();
 
             if (axis.isXAxis) {
-                minCull = axis.map.getCoordFromViewportPixel( 0, 0 ).x;
+                minCull = axis.map.getCoordFromViewportPixel( minMax.min.x, 0 ).x;
             } else {
-                minCull = axis.map.getCoordFromViewportPixel( 0, axis.map.getViewportHeight() ).y;
+                minCull = axis.map.getCoordFromViewportPixel( 0, minMax.max.y ).y;
             }
             if ( !axis.repeat && minCull < axis.min ) {
                 // prevent roll-over
@@ -244,12 +245,13 @@ define({
         function getMaxIncrement() {
 
             var maxCull,      // exact value of cull point, any value greater will be culled from view
-                maxIncrement; // the minimum increment that is visible
+                maxIncrement, // the minimum increment that is visible
+                minMax = axis.map.getMinMaxVisibleViewportPixels();
 
             if (axis.isXAxis) {
-                maxCull = axis.map.getCoordFromViewportPixel( axis.map.getViewportWidth(), 0 ).x;
+                maxCull = axis.map.getCoordFromViewportPixel( minMax.max.x, 0 ).x;
             } else {
-                maxCull = axis.map.getCoordFromViewportPixel( 0, 0 ).y;
+                maxCull = axis.map.getCoordFromViewportPixel( 0, minMax.min.y ).y;
             }
             if ( !axis.repeat && maxCull > axis.max ) {
                 // prevent roll-over

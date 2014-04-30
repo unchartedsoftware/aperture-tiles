@@ -77,6 +77,38 @@
 				"decimals" : 2,
 				"allowStepDown" : false
 			}
+		},
+		{
+			"title" : "Amount (BTC)",
+            "position" : "right",
+            "repeat" : false,
+			"intervalSpec" : {
+				"type" : "fixed",
+				"increment" : 100000,
+				"pivot" : 0,
+				"allowScaleByZoom" : true,
+			},
+			"unitSpec" : {
+				"type" : "decimal",
+				"decimals" : 2,
+				"allowStepDown" : false
+			}
+		},
+		{
+			"title" : "Source",
+            "position" : "top",
+            "repeat": false,
+			"intervalSpec" : {
+				"type" : "percentage",
+				"increment" : 20,
+				"pivot" : 0,
+				"allowScaleByZoom" : true,
+			},
+			"unitSpec" : {
+				"type" : "decimal",
+				"decimals" : 2,
+				"allowStepDown" : false
+			}
 		}
 	]
 }

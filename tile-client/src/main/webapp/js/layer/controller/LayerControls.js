@@ -105,6 +105,8 @@ define(function (require) {
             $promotionButton,
             $settingsButton,
             $layerControlSetRoot,
+            $layerControlTitleBar,
+            $layerContent,
             className,
             hasFilter,
             name,
@@ -120,13 +122,13 @@ define(function (require) {
         name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
 
         // create title div
-        var $layerControlTitleBar = $('<div class="layer-title"></div>');
+        $layerControlTitleBar = $('<div class="layer-title"></div>');
         // add title span to div
         $layerControlTitleBar.append($('<span class="layer-labels">' + name + '</span>'));
         $layerControlSetRoot.append($layerControlTitleBar);
 
         // create content div
-        var $layerContent = $('<div class="layer-content"></div>');
+        $layerContent = $('<div class="layer-content"></div>');
         $layerControlSetRoot.append($layerContent);
 
         // create settings button
@@ -405,7 +407,7 @@ define(function (require) {
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
         initialize: function (layerStateMap, map) {
-            var layerState, i;
+            var layerState;
 
             // "Private" vars
             this.controlsMap = {};
@@ -439,6 +441,7 @@ define(function (require) {
                 }
             }
 
+            /*
             var $axisControlsContainer = $('<div class="axis-controls-container"></div>');
             this.$layerControlsContainer.append($axisControlsContainer);
 
@@ -461,6 +464,7 @@ define(function (require) {
 
                 $axisContainer.append( $('<span class="layer-labels">' + axis.title + '</span>') );
             }
+            */
 
 
         }
