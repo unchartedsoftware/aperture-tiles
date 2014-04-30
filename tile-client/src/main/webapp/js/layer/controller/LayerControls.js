@@ -96,29 +96,40 @@ define(function (require) {
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
     addLayer = function (sortedLayers, index, $parentElement, $root, controlsMap) {
-        var $cell, $filterSlider,
-            $opacitySlider, $toggleDiv, $toggleBox, $promotionDiv, $promotionButton, $settingsButton, $layerControlSetRoot,
-            className, hasFilter, name, filterRange, id, layerState;
+        var $cell,
+            $filterSlider,
+            $opacitySlider,
+            $toggleDiv,
+            $toggleBox,
+            $promotionDiv,
+            $promotionButton,
+            $settingsButton,
+            $layerControlSetRoot,
+            className,
+            hasFilter,
+            name,
+            filterRange,
+            id,
+            layerState;
 
         layerState = sortedLayers[index];
 
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
-
-
         name = layerState.getName();
         name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
 
-        ////
-
+        // create title div
         var $layerControlTitleBar = $('<div class="layer-title"></div>');
         // add title span to div
         $layerControlTitleBar.append($('<span class="layer-labels">' + name + '</span>'));
         $layerControlSetRoot.append($layerControlTitleBar);
 
+        // create content div
         var $layerContent = $('<div class="layer-content"></div>');
         $layerControlSetRoot.append($layerContent);
 
+        // create settings button
         if ( layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
             $settingsButton = $('<button class="settings-link">settings</button>');
             $settingsButton.click(function () {
@@ -127,7 +138,7 @@ define(function (require) {
             $layerControlTitleBar.append($settingsButton);
         }
 
-        // Add check box
+        // add visibility toggle box
         $toggleDiv = $('<div class="layer-toggle"></div>');
         $toggleBox = $('<input type="checkbox" checked="checked">');
         $toggleDiv.append($toggleBox);
@@ -138,7 +149,7 @@ define(function (require) {
         });
         $layerContent.append($toggleDiv);
 
-        // Add the opacity slider
+        // add opacity slider
         filterRange = layerState.getFilterRange();
         hasFilter = filterRange !== null && filterRange[0] >= 0 && filterRange[1] >= 0;
         className = hasFilter ? "opacity-slider" : "base-opacity-slider";
@@ -158,8 +169,7 @@ define(function (require) {
         });
         $cell.append($opacitySlider);
 
-
-        // Add the filter slider
+        // add filter slider
         if (hasFilter) {
             $cell = $('<div class="filter-slider"></div>');
             $layerContent.append($cell);
@@ -187,7 +197,7 @@ define(function (require) {
             $filterSlider = null;
         }
 
-        // Add the promotion button
+        // add layer promotion button
         if (layerState.getZIndex() !== null && layerState.getZIndex() >= 0) {
             $promotionDiv = $('<div class="promotion-container"></div>');
             $layerContent.append($promotionDiv);
@@ -226,6 +236,7 @@ define(function (require) {
      * @param {object} layerState - The layer state model the panel will read from and update.
      */
     showLayerSettings = function ($parent, layerState) {
+
         var $settingsControls,
             $settingsTitleBar,
             $settingsContent,
@@ -244,13 +255,14 @@ define(function (require) {
         oldChildren = replaceChildren($parent, null);
 
         // create root div
-        $settingsControls = $('<div class="settings-controls-root"></div>');
+        $settingsControls = $('<div class="layer-control-container"></div>');
         // create title div
         $settingsTitleBar = $('<div class="settings-title"></div>');
         // add title span to div
-        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + ' Layer Settings</span>'));
+        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + '</span>'));
         $settingsControls.append($settingsTitleBar);
 
+        // create content div
         $settingsContent = $('<div class="settings-content"></div>');
         $settingsControls.append($settingsContent);
 
@@ -261,8 +273,8 @@ define(function (require) {
         });
         $settingsTitleBar.append($backButton);
 
-        // Add the ramp types radio buttons
-        $rampTypes = $('<div id="ramp-types" class="settings-ramp-types"/>');
+        // add the ramp types radio buttons
+        $rampTypes = $('<div class="settings-ramp-types"/>');
         // add title to ramp types div
         $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
         $settingsContent.append($rampTypes);
@@ -278,24 +290,24 @@ define(function (require) {
             id = LayerState.RAMP_TYPES[i].id;
             // add half types to left, and half to right
             span = (i < LayerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
-            span.append($('<div class="settings-values"></div>').append(
-                $('<input type="radio" name="ramp-types" value="' + id + '">').add(
-                    $('<label for="' + id + '">' + name + '</label>')
+            span.append($('<div class="settings-values"></div>')
+                    .append($('<input type="radio" name="ramp-types" value="' + id + '">')
+                        .add($('<label for="' + id + '">' + name + '</label>')
                 )
             ));
         }
 
         // Add the ramp function radio buttons
-        $rampFunctions = $('<div id="ramp-functions" class="settings-ramp-functions"/>');
+        $rampFunctions = $('<div class="settings-ramp-functions"/>');
         $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
         $settingsContent.append($rampFunctions);
 
         for (i=0; i<LayerState.RAMP_FUNCTIONS.length; i++) {
             name = LayerState.RAMP_FUNCTIONS[i].name;
             id = LayerState.RAMP_FUNCTIONS[i].id;
-            $rampFunctions.append($('<div class="settings-values"></div>').append(
-                $('<input type="radio" name="ramp-functions" value="' + id + '">').add(
-                    $('<label for="' + id + '">' + name + '</label>')
+            $rampFunctions.append($('<div class="settings-values"></div>')
+                            .append($('<input type="radio" name="ramp-functions" value="' + id + '">')
+                                .add($('<label for="' + id + '">' + name + '</label>')
                 )
             ));
         }
@@ -345,10 +357,10 @@ define(function (require) {
      * @param {object} $root  - The root JQuery node of the entire layer control set.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function (layerStateMap, $layerControlsListRoot, $root, controlsMap) {
+    replaceLayers = function (layerStateMap, $layerControlsContainer, $root, controlsMap) {
         var i, key, sortedLayerStateList;
         sortedLayerStateList = sortLayers(layerStateMap);
-        $layerControlsListRoot.empty();
+        $layerControlsContainer.empty();
         // Clear out the controls map
         for (key in controlsMap) {
             if (controlsMap.hasOwnProperty(key)) {
@@ -357,7 +369,7 @@ define(function (require) {
         }
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStateList.length; i += 1) {
-            addLayer(sortedLayerStateList, i, $layerControlsListRoot, $root, controlsMap, sortedLayerStateList);
+            addLayer(sortedLayerStateList, i, $layerControlsContainer, $root, controlsMap, sortedLayerStateList);
         }
     };
 
@@ -392,14 +404,13 @@ define(function (require) {
          *
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
-        initialize: function (layerStateMap) {
-            var layerState;
+        initialize: function (layerStateMap, map) {
+            var layerState, i;
 
             // "Private" vars
             this.controlsMap = {};
             this.$root = null;
-            this.$layerControlsListRoot = null;
-            //this.$tileOutlineButton = null;
+            this.$layerControlsContainer = null;
             this.$layerControlsRoot = null;
 
             // Add the title
@@ -411,27 +422,47 @@ define(function (require) {
             //this.$layerControlsRoot.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
 
             // Add the layer control list area
-            this.$layerControlsListRoot = $('<div id="layer-control-list"></div>');
-            this.$layerControlsRoot.append(this.$layerControlsListRoot);
+            this.$layerControlsContainer = $('<div class="layer-control-container"></div>');
+            this.$layerControlsRoot.append(this.$layerControlsContainer);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers(layerStateMap, this.$layerControlsListRoot, this.$root, this.controlsMap);
+            replaceLayers(layerStateMap, this.$layerControlsContainer, this.$root, this.controlsMap);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
                     layerStateMap[layerState].addListener(makeLayerStateObserver(
                         layerStateMap[layerState],
                         this.controlsMap,
                         layerStateMap,
-                        this.$layerControlsListRoot,
+                        this.$layerControlsContainer,
                         this.$root
                     ));
                 }
             }
-        },
 
-        getLayerControlListDiv: function() {
+            var $axisControlsContainer = $('<div class="axis-controls-container"></div>');
+            this.$layerControlsContainer.append($axisControlsContainer);
 
-            return this.$layerControlsListRoot;
+            for (i=0; i<map.getAxes().length; i++) {
+
+                var axis = map.getAxes()[i];
+                var $axisContainer = $('<div class="axis-container"></div>');
+
+                $axisControlsContainer.append($axisContainer);
+
+                var $toggleDiv = $('<div class="layer-toggle"></div>');
+                var $toggleBox = $('<input type="checkbox" checked="checked">');
+                $toggleDiv.append($toggleBox);
+                // Initialize the button from the model and register event handler.
+                $toggleBox.prop("checked", axis.isEnabled() );
+                $toggleBox.click(function () {
+                    axis.setEnabled( $toggleBox.prop("checked") );
+                });
+                $axisContainer.append($toggleDiv);
+
+                $axisContainer.append( $('<span class="layer-labels">' + axis.title + '</span>') );
+            }
+
+
         }
 
     });

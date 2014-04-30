@@ -1,16 +1,11 @@
 @charset "UTF-8";
 
-.title {
-    font-size: 20px;
-    margin-bottom: 20px;
-}
-
 .layer-labels {
     font-size: 12px;
     text-align: left;
 }
 
-#layer-controls-root {
+.layer-control-container {
     width: 50%;  
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
@@ -124,16 +119,6 @@
 
 
 /* Settings menu styles */
-.settings-controls-root {
-   width: 50%;  
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-    font-size: 12px;
-    min-width:360px;
-    overflow-x:auto;
-}
-
 .settings-title {
     position:relative;
     padding-bottom:10px;

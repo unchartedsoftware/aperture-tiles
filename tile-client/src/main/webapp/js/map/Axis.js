@@ -31,7 +31,6 @@ define(function (require) {
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
         MARKER_LABEL_SPACING = 5,
-        AXIS_LABEL_SPACING = 10,
         Axis;
 
 
@@ -46,7 +45,7 @@ define(function (require) {
             var that = this,
                 temp,
                 defaults = {
-                    title : "",
+                    title : "Default Axis Title",
                     position : "bottom",
                     repeat: false,
                     intervalSpec : {
@@ -63,7 +62,8 @@ define(function (require) {
                     }
                 };
 
-            this.parentId = spec.parentId;
+            this.mapId = spec.mapId;
+            this.$map = $("#" + this.mapId);
 
             // ensure min is < max
             if (spec.min > spec.max) {
@@ -77,7 +77,7 @@ define(function (require) {
             this.map = spec.map;
 
             this.position = spec.position || defaults.position;
-            this.id = spec.id || this.parentId + "-" + this.position + "-axis";
+            this.id = spec.id || this.mapId + "-" + this.position + "-axis";
 
             this.title = spec.title || defaults.title;
 
@@ -101,7 +101,9 @@ define(function (require) {
             this.markerWidthOrHeight = this.isXAxis ? "height" : "width";
             this.leftOrTop = this.isXAxis ? "left" : "top";
             this.horizontalOrVertical = (this.isXAxis) ? 'horizontal' : 'vertical';
-            this.maxLabelLength = 0;
+            this.oppositePosition = (this.position === 'left') ? 'right' :
+                                        (this.position === 'right') ? 'left' :
+                                            (this.position === 'top') ? 'bottom' : 'top';
 
             this.map.on('mousemove', function(event) {
                 that.redraw();
@@ -113,13 +115,34 @@ define(function (require) {
             });
             */
 
+            this.enabled = true;
+
             this.redraw();
+        },
+
+
+        isEnabled: function() {
+            return this.enabled;
+        },
+
+
+        setEnabled: function( enabled ) {
+            this.enabled = enabled;
+        },
+
+
+        getContainerWidth: function() {
+            if (this.isXAxis) {
+                return this.$container.height();
+            } else {
+                return this.$container.width();
+            }
         },
 
 
         /**
          * Checks if the mutable spec attributes have changed, if so, redraws
-         * axis.
+         * that.
          */
         redraw: function() {
 
@@ -158,31 +181,22 @@ define(function (require) {
              */
             function addAxisMainElements() {
 
-                // get parent element
-                axis.parentContainer = $("#" + that.parentId);
+                // create axis container, if already exists, empty it
+                that.$container = $('.'+ that.position +'-axis-container');
 
-                // ensure parent container has a div to add margins for the axes
-                if ( axis.parentContainer.parent('.axis-margin-container').length === 0 ) {
-                   axis.parentContainer.wrap("<div class='axis-margin-container' style='position:relative; width:" + that.axisLength + "px';></div>");
-                }
-                axis.marginContainer = $('.axis-margin-container');
-
-                // get axis container
-                axis.container = $("#"+ that.id);
-                if (axis.container.length === 0) {
-                    // if container does not exist, make it
-                    axis.container = $('<div class="axis-container" id="' + that.id + '"></div>');
+                if ( that.$container.length === 0 ) {
+                    // if container does not exist, create it
+                    that.$container = $('<div class="'+ that.position +'-axis-container">');
+                    that.$map.parent().append(that.$container);
                 } else {
-                    // if the axis exists, clear it out, we need to redraw the markers
-                    axis.container.empty();
+                    // if it already exists, empty it
+                    that.$container.empty();
                 }
 
-                // add axis to parent container
-                axis.parentContainer.append(axis.container);
                 // create the axis title label
-                axis.label = createAxisLabel();
+                that.$label = createAxisLabel();
                 // add axis label to container
-                axis.container.append(axis.label);
+                that.$container.append(that.$label);
             }
 
             /**
@@ -218,10 +232,27 @@ define(function (require) {
                     markerLength,
                     markerWidth,
                     labelLength,
+                    maxLabelLength = 0,
                     labelOffset,
                     markerLabelCSS = {},
                     markerCSS = {},
+                    rotation,
                     i;
+
+                function getRotationRadians(obj) {
+                    var matrix = obj.css("-webkit-transform") ||
+                        obj.css("-moz-transform")    ||
+                        obj.css("-ms-transform")     ||
+                        obj.css("-o-transform")      ||
+                        obj.css("transform") || 'none';
+                    if(matrix !== 'none') {
+                        var values = matrix.split('(')[1].split(')')[0].split(',');
+                        var a = values[0];
+                        var b = values[1];
+                        var angle = Math.atan2(b, a);
+                    } else { var angle = 0; }
+                    return Math.abs(angle);
+                }
 
                 for( i = 0; i < markers.length; i++ ) {
 
@@ -233,22 +264,35 @@ define(function (require) {
 
                     // append marker to axis container
                     // append here to query the width and height
-                    axis.container.append(majorMarker);
-                    axis.container.append(markerLabel);
+                    that.$container.append(majorMarker);
+                    that.$container.append(markerLabel);
+
+                    // get rotation in radians
+                    rotation = getRotationRadians( markerLabel );
+
+                    // get the length of the label, after rotation
+                    if (that.isXAxis) {
+                        // get rotated height of the labels and add half to offset
+                        labelLength = markerLabel.width() * Math.sin(rotation) + markerLabel.height() * Math.cos(rotation);
+                    } else {
+                        labelLength = markerLabel.width() * Math.cos(rotation) + markerLabel.height() * Math.sin(rotation);
+                    }
 
                     // get marker length and width
                     markerLength = majorMarker[that.markerWidthOrHeight]();
                     markerWidth = majorMarker.css("border-"+that.leftOrTop+"-width").replace('px', ''); // strip px suffix
 
                     // get label position
-                    markerLabelCSS[that.position] = (-markerLabel[that.markerWidthOrHeight]() - (markerLength + MARKER_LABEL_SPACING)) + "px";
+                    labelOffset = markerLength + MARKER_LABEL_SPACING;
+                    if (that.isXAxis) {
+                        // if x axis, add half of label length as text is anchored from bottom
+                        labelOffset += labelLength * 0.5;
+                    }
+                    markerLabelCSS[that.oppositePosition] = labelOffset + "px";
 
                     // centre marker and label
                     markerCSS[that.leftOrTop] = (markers[i].pixel - markerWidth*0.5) + "px";
                     markerLabelCSS[that.leftOrTop] = (markers[i].pixel - (markerLabel[that.axisWidthOrHeight]()*0.5)) +"px";
-
-                    // get the length of the label
-                    labelLength = markerLabel[that.markerWidthOrHeight]() + ((that.isXAxis) ? 0 : axis.label.height());
 
                     // get text alignment
                     markerLabelCSS["text-align"] = (that.isXAxis) ? "left" : ((that.position === "left") ? "right" : "left");
@@ -256,29 +300,28 @@ define(function (require) {
                     // set marker css
                     markerLabel.css(markerLabelCSS);
                     majorMarker.css(markerCSS);
+
                     // find max label length to position axis title label
-                    if (that.maxLabelLength < labelLength) {
-                        that.maxLabelLength = labelLength;
+                    if (maxLabelLength < labelLength) {
+                        maxLabelLength = labelLength;
                     }
                 }
 
-                labelOffset = that.maxLabelLength + 20 // for some reason the spacing is a bit off on the
-                            + MARKER_LABEL_SPACING
-                            + markerLength
-                            + AXIS_LABEL_SPACING
-                            + axis.label.height()
-                            + ((that.isXAxis) ? 20 : 0);
+                labelOffset = maxLabelLength + markerLength + MARKER_LABEL_SPACING;
+                if (that.isXAxis) {
+                    // add label height if x axis
+                    labelOffset += that.$label.height();
+                }
 
                 // position axis label
-                axis.label.css( that.position, -labelOffset + 'px' );
-                // add margin space for axis
-                axis.marginContainer.css('margin-' + that.position, labelOffset + 'px');
+                that.$label.css( that.oppositePosition, labelOffset + 'px' );
                 // div container may change size, this updates properties accordingly
                 that.map.updateSize();
             }
 
             // ensure axis length is correct
-            this.axisLength = $("#" + this.parentId).css(this.axisWidthOrHeight).replace('px', ''); // strip px suffix
+
+            this.axisLength = this.$map.css(this.axisWidthOrHeight).replace('px', ''); // strip px suffix
             // generate array of marker labels and pixel locations
             markers = AxisUtil.getMarkers(this);
             // generate the main axis DOM elements

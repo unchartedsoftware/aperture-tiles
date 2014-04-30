@@ -1,19 +1,57 @@
 @charset "UTF-8";
 
 .top-axis {
-    top: -10px;
+    bottom: 0px;
 }
 
 .bottom-axis {
-    bottom: -10px;
+    top: 0px;
 }
 
 .left-axis {
-    left: -10px;
+    right: 0px;
 }
 
 .right-axis {
-    right: -10px;
+    left: 0px;
+}
+
+.top-axis-container {
+    position:absolute;
+    overflow: hidden;
+    height:150px;
+    width:100%;
+    top:0px;
+    left:0px;
+}
+
+.bottom-axis-container {
+    position:absolute;
+    overflow: hidden;
+    background: #222222;
+    height:150px;
+    width:100%;
+    bottom:0px;
+    left:0px;
+}
+
+.left-axis-container {
+    position:absolute;    
+    overflow: hidden;
+    background: #222222;
+    width:150px;
+    height:100%;
+    left:0px;
+    top:0px;
+}
+
+.right-axis-container {
+    position:absolute;
+    overflow: hidden;
+    width:150px;
+    height:100%;
+    right:0px;
+    top:0px;
 }
 
 .horizontal-axis-marker {
@@ -49,4 +87,7 @@
     font-family: Verdana, Arial, sans-serif;
     font-size:0.95em;
     color : #7E7E7E;
+    text-align: center;
+    padding-top:10px;
+    padding-bottom:10px;
 }

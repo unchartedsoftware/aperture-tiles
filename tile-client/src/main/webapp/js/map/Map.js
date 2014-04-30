@@ -78,30 +78,14 @@ define(function (require) {
 
 			// Set resize map callback
 			$(window).resize( function() {
-				var $map = $('#' + that.id),
-					$mapContainer = $map.parent(),
-					offset = $map.offset(),
-					leftOffset = offset.left || 0,
-					topOffset = offset.top || 0,
-					vertical_buffer = parseInt($mapContainer.css("marginBottom"), 10) + topOffset + 24,
-					horizontal_buffer = parseInt($mapContainer.css("marginRight"), 10) + leftOffset + 24,			
-					width = $(window).width(),
-					height = $(window).height(),				
-					newHeight,
-					newWidth;
-
-				newWidth = (width - horizontal_buffer);
-				newHeight = (height - vertical_buffer);
-					
-				$map.width(newWidth);
-				$map.height(newHeight);
-
+                // set map to full extent of window
+				var $map = $('#' + that.id);
+				$map.width( $(window).width() );
+				$map.height( $(window).height() );
 				that.updateSize();
-
                 for (i=0; i<that.axes.length; i++) {
                     that.axes[i].redraw();
                 }
-
 			});
 
             this.previousZoom = this.map.getZoom();
@@ -117,10 +101,15 @@ define(function (require) {
 
             for (i=0; i< axes.length; i++) {
                 spec = axes[i];
-                spec.parentId = this.id;
+                spec.mapId = this.id;
                 spec.map = this;
                 this.axes.push(new Axis(spec));
             }
+        },
+
+
+        getAxes: function() {
+            return this.axes;
         },
 
 
@@ -217,7 +206,7 @@ define(function (require) {
                 totalPixelSpan = TILESIZE * Math.pow( 2, this.getZoom() );
             return {
                 x: mx + viewportMinMax.min.x,
-                y: totalPixelSpan - my + viewportMinMax.max.y //my + ( this.getViewportHeight() - viewportMinMax.min.y )
+                y: totalPixelSpan - my + viewportMinMax.max.y
             };
         },
 
