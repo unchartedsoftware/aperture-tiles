@@ -26,17 +26,17 @@ package com.oculusinfo.tile.rest;
 
 
 import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.caching.CachingTileServiceImpl;
+//import com.oculusinfo.tile.rest.legend.LegendService;
+//import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
+//import com.oculusinfo.tile.rest.tile.TileService;
+//import com.oculusinfo.tile.rest.tile.caching.CachingTileServiceImpl;
 
 
 public class CachingTileModule extends AbstractModule {
 	@Override
 	protected void configure() {
-		bind(TileService.class).to(CachingTileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
+//		bind(TileService.class).to(CachingTileServiceImpl.class);
+//		bind(LegendService.class).to(LegendServiceImpl.class);
 	}
 
 }
