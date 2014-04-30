@@ -5,23 +5,38 @@
     margin-bottom: 20px;
 }
 
+.layer-labels {
+    font-size: 12px;
+    text-align: left;
+}
+
 #layer-controls-root {
     width: 50%;  
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
     font-size: 12px;
+    min-width: 360px;
+    overflow-x:auto;
 }
 
-.toggle {
+.layer-title {
+    position:relative;
+    padding-bottom:10px;
+    padding-top:10px;
+}
+
+.layer-content {
+    position:relative;
+    width:100%;
+    padding-bottom:10px;
+}
+
+.layer-toggle {
     width: 15px;
-    padding: 0 10px 0 0;
     vertical-align: bottom;
-}
-
-.layer-labels {
-    font-size: 12px;
-    text-align: left;
+    display: inline-block;
+    padding-right:20px;
 }
 
 .slider-label {
@@ -32,26 +47,42 @@
 }
 
 .opacity-slider {
-    padding: 0 20px 2px 0;
-    width: 30%;
+    width: calc(30% - 47px);
     color: #7E7E7E;
-}
-
-.control-table {
-    border-spacing: 15px 2px;
-    border-collapse: separate;
-    padding: 2px;
-    white-space: nowrap;
-}
-
-.base-opacity-slider {
-    padding: 0 10px 2px 0;
-    width: 100%;
+    display: inline-block;
+    padding-right:20px;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .filter-slider {
-    padding: 0 10px 2px 0;
-    width: 70%;
+    width: calc(70% - 47px);
+    display: inline-block;
+    padding-right:20px;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.base-opacity-slider {
+    width: calc(100% - 35px);
+    display: inline-block;
+    padding-right:20px;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.promotion-container {
+    vertical-align: bottom;
+    display: inline-block;
+    padding-right:20px;
+    position:relative;
+    bottom: -10px;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .layer-promotion-button {
@@ -59,23 +90,22 @@
     height:32px;
     border:none;
     background: transparent url(../images/PromoteButton.png) no-repeat center top;
-    margin-left:10px;
     position:relative;
-    top:4px;
-
+    display: inline-block;
 }
+
 .layer-promotion-button:hover:enabled {
     border: none;
-    top: 4px;
     background: transparent url(../images/PromoteButton.png) no-repeat center top;
     background-position: 0px -32px;
+    display: inline-block;
 }
 
 .layer-promotion-button:active:enabled {
     border:none;
-    top:5px;
     background:transparent url(../images/PromoteButton.png) no-repeat center top;
-    background-position:0px -32px;
+    background-position: 0px -32px;
+    display: inline-block;
 }
 
 .layer-promotion-button:focus {
@@ -87,7 +117,13 @@
     margin-top:20px;
 }
 
+.settings-link {  
+    float:right;
+    font-size: 12px;
+}
 
+
+/* Settings menu styles */
 .settings-controls-root {
    width: 50%;  
     -webkit-box-sizing: border-box;
@@ -100,13 +136,14 @@
 
 .settings-title {
     position:relative;
-    margin-bottom:10px;
-    margin-top:10px;
+    padding-bottom:10px;
+    padding-top:10px;
 }
 
 .settings-content {
     position:relative;
 }
+
 
 .settings-back-link {
     float:right;
@@ -129,8 +166,7 @@
 .settings-ramp-functions {
     width:33%;
     display: inline-block;
-    position:absolute;
-    top:0px;
+    vertical-align: top;
 }
 
 
@@ -152,9 +188,5 @@
 }
 
 
-.settings-link {
-    
-    text-align: right;
-    font-size: 12px;
-}
+
 

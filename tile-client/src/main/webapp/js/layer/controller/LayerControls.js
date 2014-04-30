@@ -96,62 +96,55 @@ define(function (require) {
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
     addLayer = function (sortedLayers, index, $parentElement, $root, controlsMap) {
-        var $sliderTableRow, $sliderTable, $subTable, $subTableRow, $cell, $filterSlider,
-            $opacitySlider, $enabledCheckbox, $promotionButton, $settings, $layerControlSetRoot,
+        var $cell, $filterSlider,
+            $opacitySlider, $toggleDiv, $toggleBox, $promotionDiv, $promotionButton, $settingsButton, $layerControlSetRoot,
             className, hasFilter, name, filterRange, id, layerState;
 
         layerState = sortedLayers[index];
 
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
 
-        if ( layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
-            $settings = $('<button>settings</button>');
-            $settings.click(function () {
-                showLayerSettings($root, layerState);
-            });
-        }
+
 
         name = layerState.getName();
         name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
-        $layerControlSetRoot.append($('<table style="width:100%"></table>')
-            .append($('<tr></tr>')
-                .append($('<td class="layer-labels"></td>')
-                    .append($('<span>' + name + '</span>')))
-                .append($('<td class="settings-link"></td>')
-                    .append($settings))));
 
-        // Table for checkbox + sliders
-        $sliderTable = $('<table style="width:100%"></table>');
-        $layerControlSetRoot.append($sliderTable);
+        ////
 
-        // Add a table row
-        $sliderTableRow = $('<tr></tr>');
-        $sliderTable.append($sliderTableRow);
+        var $layerControlTitleBar = $('<div class="layer-title"></div>');
+        // add title span to div
+        $layerControlTitleBar.append($('<span class="layer-labels">' + name + '</span>'));
+        $layerControlSetRoot.append($layerControlTitleBar);
 
-        // Add check box to the row
-        $enabledCheckbox = $('<input type="checkbox" checked="checked"></td>');
-        $sliderTableRow.append($('<td class="toggle">').append($enabledCheckbox));
+        var $layerContent = $('<div class="layer-content"></div>');
+        $layerControlSetRoot.append($layerContent);
 
+        if ( layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
+            $settingsButton = $('<button class="settings-link">settings</button>');
+            $settingsButton.click(function () {
+                showLayerSettings($root, layerState);
+            });
+            $layerControlTitleBar.append($settingsButton);
+        }
+
+        // Add check box
+        $toggleDiv = $('<div class="layer-toggle"></div>');
+        $toggleBox = $('<input type="checkbox" checked="checked">');
+        $toggleDiv.append($toggleBox);
         // Initialize the button from the model and register event handler.
-        $enabledCheckbox.prop("checked", layerState.isEnabled());
-        $enabledCheckbox.click(function () {
-            layerState.setEnabled($enabledCheckbox.prop("checked"));
+        $toggleBox.prop("checked", layerState.isEnabled());
+        $toggleBox.click(function () {
+            layerState.setEnabled($toggleBox.prop("checked"));
         });
-
-        // Add sub-table to hold sliders
-        $subTable = $('<table style="width:100%"></table>');
-        $sliderTableRow.append($('<td></td>').append($subTable));
-
-        $subTableRow = $('<tr></tr>');
-        $subTable.append($subTableRow);
+        $layerContent.append($toggleDiv);
 
         // Add the opacity slider
         filterRange = layerState.getFilterRange();
         hasFilter = filterRange !== null && filterRange[0] >= 0 && filterRange[1] >= 0;
         className = hasFilter ? "opacity-slider" : "base-opacity-slider";
 
-        $cell = $('<td class="' + className + '"></td>');
-        $subTableRow.append($cell);
+        $cell = $('<div class="' + className + '"></div>');
+        $layerContent.append($cell);
 
         $cell.append($('<div class="slider-label">Opacity</div>'));
         $opacitySlider = $('<div id="' + "opacity-slider-" + name + '"></div>').slider({
@@ -168,8 +161,8 @@ define(function (require) {
 
         // Add the filter slider
         if (hasFilter) {
-            $cell = $('<td class="filter-slider"></td>');
-            $subTableRow.append($cell);
+            $cell = $('<div class="filter-slider"></div>');
+            $layerContent.append($cell);
 
             $cell.append($('<div class="slider-label">Filter</div>'));
             $filterSlider = $('<div id="' + "filter-slider-" + name + '"></div>');
@@ -196,8 +189,8 @@ define(function (require) {
 
         // Add the promotion button
         if (layerState.getZIndex() !== null && layerState.getZIndex() >= 0) {
-            $cell = $('<td></td>');
-            $subTableRow.append($cell);
+            $promotionDiv = $('<div class="promotion-container"></div>');
+            $layerContent.append($promotionDiv);
             $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
             $promotionButton.click(function () {
                 var nextLayerState, otherZ;
@@ -208,7 +201,7 @@ define(function (require) {
                     layerState.setZIndex(otherZ);
                 }
             });
-            $cell.append($promotionButton);
+            $promotionDiv.append($promotionButton);
         }
 
 
@@ -219,9 +212,9 @@ define(function (require) {
             controlSetRoot: $layerControlSetRoot,
             filterSlider: $filterSlider,
             opacitySlider: $opacitySlider,
-            enabledCheckbox: $enabledCheckbox,
+            enabledCheckbox: $toggleBox,
             promotionButton: $promotionButton,
-            settingsLink: $settings
+            settingsLink: $settingsButton
         };
     };
 
