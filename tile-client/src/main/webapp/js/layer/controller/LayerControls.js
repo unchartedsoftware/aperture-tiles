@@ -235,6 +235,7 @@ define(function (require) {
     showLayerSettings = function ($parent, layerState) {
         var $settingsControls,
             $settingsTitleBar,
+            $settingsContent,
             name,
             span,
             $leftSpan,
@@ -256,6 +257,10 @@ define(function (require) {
         // add title span to div
         $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + ' Layer Settings</span>'));
         $settingsControls.append($settingsTitleBar);
+
+        $settingsContent = $('<div class="settings-content"></div>');
+        $settingsControls.append($settingsContent);
+
         // create back button
         $backButton = $('<button class="settings-back-link">back</button>');
         $backButton.click(function () {
@@ -267,7 +272,7 @@ define(function (require) {
         $rampTypes = $('<div id="ramp-types" class="settings-ramp-types"/>');
         // add title to ramp types div
         $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
-        $settingsControls.append($rampTypes);
+        $settingsContent.append($rampTypes);
         // create left and right columns
         $leftSpan = $('<span class="settings-ramp-span-left"></span>');
         $rightSpan = $('<span class="settings-ramp-span-right"></span>');
@@ -290,7 +295,7 @@ define(function (require) {
         // Add the ramp function radio buttons
         $rampFunctions = $('<div id="ramp-functions" class="settings-ramp-functions"/>');
         $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
-        $settingsControls.append($rampFunctions);
+        $settingsContent.append($rampFunctions);
 
         for (i=0; i<LayerState.RAMP_FUNCTIONS.length; i++) {
             name = LayerState.RAMP_FUNCTIONS[i].name;

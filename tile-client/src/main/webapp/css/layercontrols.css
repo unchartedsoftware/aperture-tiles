@@ -94,6 +94,8 @@
        -moz-box-sizing: border-box;
             box-sizing: border-box;
     font-size: 12px;
+    min-width:360px;
+    overflow-x:auto;
 }
 
 .settings-title {
@@ -102,9 +104,12 @@
     margin-top:10px;
 }
 
+.settings-content {
+    position:relative;
+}
+
 .settings-back-link {
-    position:absolute;
-    right:0px;
+    float:right;
     font-size: 12px;
 }
 
@@ -116,16 +121,16 @@
 }
 
 .settings-ramp-types {
-    height:100%;
     width:66%;
     display: inline-block;
 }
 
 
 .settings-ramp-functions {
-    height:100%;
     width:33%;
     display: inline-block;
+    position:absolute;
+    top:0px;
 }
 
 
@@ -140,13 +145,15 @@
 }
 
 
-.settings-values label {
+.settings-values {
+    min-width:120px;
     font: 12px Arial;
     margin: 2px 2px 2px 2px;
 }
 
 
 .settings-link {
+    
     text-align: right;
     font-size: 12px;
 }
