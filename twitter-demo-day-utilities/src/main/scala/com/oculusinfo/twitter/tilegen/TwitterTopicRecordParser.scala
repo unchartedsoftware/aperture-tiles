@@ -25,8 +25,6 @@
  
 package com.oculusinfo.twitter.tilegen
 
-
-
 import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 
@@ -42,12 +40,6 @@ import com.oculusinfo.binning.util.Pair
 
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
 
-
-//object Sentiment extends Enumeration("negative", "neutral", "positive") {
-//  type SentimentType = Value
-//  val negative, neutral, positive = Value
-//}
-
 private[tilegen]
 class TwitterTopicRecordLine (val createdAt: Date,
                              val userId: String,
@@ -59,31 +51,19 @@ class TwitterTopicRecordLine (val createdAt: Date,
                              val longitude: Double,
                              val country: String,
                              val placeName: String,
-                             val placeType: String) {}
+                             val placeType: String,
+                             val topics: Array[String],
+                             val topicsEng: Array[String]) {}
 
 object TwitterTopicRecordParser {
 }
 
-class TwitterTopicRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
+class TwitterTopicRecordParser (endTimeSecs: Long, timeBins: Int) {
   private val emptyBins = Range(0, timeBins).map(n => new JavaInt(0)).toList.asJava
-
-  def getStopWordList: Set[String] = {
-    val stops = List("stop-word-en", "stop-word-fr", "stop-word-sp", "stop-word-pt", "stop-word-de", "stop-word-tech")
-    stops.map(stop => {
-      val resource = getClass().getResource("/com/oculusinfo/twitter/tilegen/"+stop+".json")
-      val source = scala.io.Source.fromURL(resource)
-      val text = source.mkString
-      val json = JSON.parseFull(text)
-      json match {
-        case Some(a: List[_]) => a.map(_.toString).toSet
-        case _ => Set[String]()
-      }
-    }).reduce(_ union _)
-  }
-
-  private def getBin (time: Long): Int = {
-    math.max(0, math.min(timeBins+1, ((timeBins * (time-startTime)) / (endTime-startTime+1L)).toInt))
-  }
+ 
+//  private def getBin (time: Long): Int = {
+//    math.max(0, math.min(timeBins+1, ((timeBins * (time-startTime)) / (endTime-startTime+1L)).toInt))
+//  }
 
   // South American Twitter Dataset has:
   // Column 1: created_at
@@ -97,6 +77,10 @@ class TwitterTopicRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
   // Column 9: place:country
   // Column 10: place:full_name
   // Column 11: place: place_type
+  
+  // Appended data...
+  // Column 12: topics (original language)
+  // Column 13: topics (English)
 
   private val dateParser = new SimpleDateFormat("EEE MMM dd HH:mm:ss ZZZZ yyyy")
 
@@ -116,49 +100,28 @@ class TwitterTopicRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
                               fields(7).trim.toDouble,
                               fields(8),
                               fields(9),
-                              fields(10))
+                              fields(10),
+                              fields(11).split(","),
+                              fields(12).split(","))
   }
 
-
-  def getRecordsByTag (line: String):
-  Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] =
-    getRecords(recordLine => recordLine.tags)(line)
-
-  def getRecordsByWord (line: String, stopWordList: Set[String]):
-  Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] = {
-    val doubleChars = Set('.', 'e', 'E', ',', '-', '+', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-    getRecords(recordLine => {
-      // For each line:
-      //   Split to words
-      //   for each word:
-      //     Convert to lower case
-      //     Make sure it's not empty
-      //     Make sure it's not simply a number
-      //     Make sure it's not on our stop-words list
-      recordLine.text.split("[^a-zA-Z_0-9']").map(_.toLowerCase).toSet
-	.filter(!_.isEmpty)
-        .filter(_.map(!doubleChars.contains(_)).reduce(_ || _))
-	.filter(!stopWordList.contains(_))
-    })(line)
-  }
-
+  def getRecordsByTopic (line: String):								
+    Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] =
+    	getRecords(recordLine => recordLine.topics)(line)
+  
   private def getRecords (wordFcn: TwitterTopicRecordLine => Iterable[String])
 			 (line: String): Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] = {
     val recordLine = parseLine(line)
-    val time = recordLine.createdAt.getTime()
-    val bin = getBin(time)
-    val empty = emptyBins
-    val full = new ArrayList[JavaInt](emptyBins)
-    full.set(bin, 1)
+    val time = (recordLine.createdAt.getTime()*0.001).toLong	// convert from msec to sec
 
     val textTime = new Pair[String, JavaLong](recordLine.text, time)
     val textTimeList = List[Pair[String, JavaLong]](textTime).asJava
+    val topic1 = recordLine.topics(0)	//1st topic for this line (in case there are multiple keyword topics)
+    val topicEng1 = recordLine.topicsEng(0)
+    
     Seq((recordLine.longitude, recordLine.latitude,
-	 wordFcn(recordLine).map(tag => {
-	   (tag, new TwitterDemoTopicRecord(tag, 1, full,
-				       posCount, posBins, neutCount,
-				       neutBins, negCount, negBins,
-				       textTimeList))
+	 wordFcn(recordLine).map(topic => {
+	   (topic, new TwitterDemoTopicRecord(topic1, topicEng1, textTimeList, endTimeSecs))
 	 }).toMap))
   }
 }

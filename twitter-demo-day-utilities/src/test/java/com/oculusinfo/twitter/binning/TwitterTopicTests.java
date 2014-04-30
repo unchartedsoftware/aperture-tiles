@@ -231,7 +231,8 @@ public class TwitterTopicTests {
 		quarterDays[0] = 1;
 		quarterDays[25] = 2;
 		quarterDays[26] = 3;
-		hours[0] = 1;	
+		hours[0] = 1;
+		hours[6] = 1;
 		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 15, 
 													days, quarterDays, hours,
 													Arrays.asList(new Pair<String, Long>("blah1", _endTimeSecs - 1000L),
@@ -247,7 +248,7 @@ public class TwitterTopicTests {
 		quarterDays[0] = 0;
 		quarterDays[1] = 1;
 		quarterDays[23] = 5;
-		quarterDays[25] = 0;
+		quarterDays[25] = 3;
 		quarterDays[26] = 0;
 		hours[0] = 0;
 		hours[6] = 1;	
@@ -262,9 +263,10 @@ public class TwitterTopicTests {
 		days[5] = 0;
 		days[28] = 0;
 		days[30] = 8;
-		quarterDays[0] = 1;
+		quarterDays[0] = 0;
 		quarterDays[1] = 0;
-		quarterDays[23] = 5;
+		quarterDays[23] = 0;
+		quarterDays[25] = 2;
 		hours[6] = 1;
 		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(null, null, 15,
 													days, quarterDays, hours,
@@ -326,12 +328,11 @@ public class TwitterTopicTests {
 		quarterDays[26] = 3;
 		hours[0] = 1;
 		hours[6] = 1;
-		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(null, null, 15,
+		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(null, null, 17,
 													days, quarterDays, hours,
 													new ArrayList<Pair<String, Long>>(),
 													0);
 
-		//TwitterDemoTopicRecord d = TwitterDemoTopicRecord.maxOfRecords(a, b);
         Assert.assertEquals(c, TwitterDemoTopicRecord.maxOfRecords(a, b));
     }  
     
@@ -354,12 +355,11 @@ public class TwitterTopicTests {
 
         String as = a.toString();
         TwitterDemoTopicRecord b = TwitterDemoTopicRecord.fromString(as);
-        //Assert.assertEquals(a, b);		//TODO -- this assert fails, but all the ones below are OK (??)
         Assert.assertEquals(a.getTopic(), b.getTopic());
         Assert.assertEquals(a.getTopicEnglish(), b.getTopicEnglish());
-        Assert.assertEquals(a.getCountDaily(), b.getCountDaily());
-        Assert.assertEquals(a.getCountPer6hrs(), b.getCountPer6hrs());
-        Assert.assertEquals(a.getCountPerHour(), b.getCountPerHour());
+        Assert.assertTrue(arraysEqual(a.getCountDaily(), b.getCountDaily()));
+        Assert.assertTrue(arraysEqual(a.getCountPer6hrs(), b.getCountPer6hrs()));
+        Assert.assertTrue(arraysEqual(a.getCountPerHour(), b.getCountPerHour()));
         Assert.assertEquals(a.getRecentTweets(), b.getRecentTweets());
         Assert.assertTrue(a.getCountMonthly() == b.getCountMonthly());
         Assert.assertTrue(a.getEndTime() == b.getEndTime());

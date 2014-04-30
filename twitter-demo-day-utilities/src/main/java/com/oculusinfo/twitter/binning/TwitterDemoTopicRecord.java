@@ -83,7 +83,60 @@ public class TwitterDemoTopicRecord implements Serializable {
 		else {
 			_countPerHour = new int[NUM_HOURS];
 			System.arraycopy(countPerHour,0,_countPerHour,0,_countPerHour.length);
-		}		
+		}
+	}
+	
+	// Secondary constructor (for adding 1 new tweet to an empty record)
+	public TwitterDemoTopicRecord(String topic, String topicEnglish,
+			List<Pair<String, Long>> newTweet, long endTimeSecs) {
+		
+		_topic = null;
+		_topicEnglish = null;
+		_countMonthly = 0;
+		_recentTweets = null;
+		_endTimeSecs = 0;
+		_countDaily = null;
+		_countPer6hrs = null;
+		_countPerHour = null;
+		
+		// time interval between new tweet and endTime
+		//assert(newTweet.size()==1);
+		float secsSinceEnd = (float)(endTimeSecs - newTweet.get(0).getSecond());	
+
+		if (secsSinceEnd > 2.6784e6) { // 2678400 = 31*24*60*60
+			// more than 1 month ago disregard this new tweet
+
+		} else if (secsSinceEnd <= 0) {
+			// before endTime so disregard this new tweet
+
+		} else {
+			// new tweet occurred within 1 month from endtime
+			_topic = topic;
+			_topicEnglish = topicEnglish;
+			_countMonthly++;
+			_recentTweets = newTweet;
+			_endTimeSecs = endTimeSecs;
+			_countDaily = new int[NUM_DAYS];
+			_countPer6hrs = new int[NUM_QUARTERDAYS];
+			_countPerHour = new int[NUM_HOURS];
+			
+			int hours = (int)(secsSinceEnd * 2.7778e-4);	//1/3600
+			int quarterDays = (int)(secsSinceEnd * 4.6296e-5); // 1/21600 = 1/60*60*6;
+			int days = (int)(secsSinceEnd * 1.1574e-5); //1/86400 = 1/60*60*24;
+
+			if ((hours >= 0) && (hours < NUM_HOURS)) {
+				//assert (countPerHour.size() == NUM_HOURS);
+				_countPerHour[hours]++;
+			}
+			if ((quarterDays >= 0) && (quarterDays < NUM_QUARTERDAYS)) {
+				//assert (countPer6hrs.size() == NUM_QUARTERDAYS);
+				_countPer6hrs[quarterDays]++;
+			}
+			if ((days >= 0) && (days < NUM_DAYS)) {
+				//assert (countDaily.size() == NUM_DAYS);
+				_countDaily[days]++;
+			}
+		}
 	}
 
 	public String getTopic() {
@@ -293,6 +346,8 @@ public class TwitterDemoTopicRecord implements Serializable {
 	private static String eatIntArray(String from, int[] result) {
 		int nextComma = from.indexOf(",");
 		int nextBracket = from.indexOf("]");
+		
+		//String[] = from.substring(0, nextBracket).split(", ").;
 		int n = 0;
 		while (nextComma > 0 && nextComma < nextBracket) {
 			if (n < result.length) {
@@ -305,7 +360,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 		}
 		if (nextBracket > 0)
 			if (n < result.length) {
-				result[n] = Integer.parseInt(from.substring(0, nextComma));
+				result[n] = Integer.parseInt(from.substring(0, Math.min(nextComma, nextBracket)));
 			}
 		return from.substring(nextBracket);
 	}	
@@ -542,9 +597,14 @@ public class TwitterDemoTopicRecord implements Serializable {
 			return null;
 
 		int minCount = Integer.MAX_VALUE;
-		int[] minCountDaily = new int[NUM_DAYS];
-		int[] minCountPer6hrs = new int[NUM_QUARTERDAYS];
-		int[] minCountPerHour = new int[NUM_HOURS];
+		//int[] minCountDaily = new int[NUM_DAYS];
+		//int[] minCountPer6hrs = new int[NUM_QUARTERDAYS];
+		//int[] minCountPerHour = new int[NUM_HOURS];
+		int[] minCountDaily = records[0]._countDaily.clone();
+		int[] minCountPer6hrs = records[0]._countPer6hrs.clone();
+		int[] minCountPerHour = records[0]._countPerHour.clone();
+		//minCountDaily
+		//System.arraycopy(countDaily,0,_countDaily,0,_countDaily.length);
 		for (TwitterDemoTopicRecord record : records) {
 			if (null != record) {
 				minCount = Math.min(minCount, record._countMonthly);
