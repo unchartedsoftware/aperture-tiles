@@ -234,6 +234,8 @@ define({
 
             minIncrement = pivot;
 
+            // because the marker increments go from min to max, we need to ensure that the
+            // marker type is correct for the first thick, this is set with 'startingMarkerTypeIndex'
             if (pivot < minCull) {
                 // cull above pivot
                 while (minIncrement < minCull) {
@@ -244,7 +246,7 @@ define({
                 // cull below pivot
                 while (minIncrement-subIncrement >= minCull) {
                     minIncrement -= subIncrement;
-                    startingMarkerTypeIndex++;
+                    startingMarkerTypeIndex--;
                 }
             }
 
@@ -291,8 +293,13 @@ define({
                     medium: [],
                     small: []
                 },
-                i = startingMarkerTypeIndex % that.MARKER_TYPE_ORDER.length,
+                i = mod(startingMarkerTypeIndex, that.MARKER_TYPE_ORDER.length),
                 value;
+
+            function mod(val, n) {
+                // this modulos works correctly for negative numbers
+                return ((val%n)+n)%n;
+            }
 
             for (value = start; value <= end; value+=subIncrement) {
 
