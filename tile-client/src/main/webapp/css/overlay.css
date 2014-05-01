@@ -7,13 +7,22 @@
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+    -webkit-filter:invert(100%);
+         -o-filter:invert(100%);
+        -ms-filter:"invert(100%)";
+            filter:invert(100%);
 }
 
 .overlay-container {
     position:relative;
     height:200px; 
     overflow-y:auto;
+    overflow-x:hidden;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+    -webkit-filter:invert(100%);
+         -o-filter:invert(100%);
+        -ms-filter:"invert(100%)";
+            filter:invert(100%);
 }

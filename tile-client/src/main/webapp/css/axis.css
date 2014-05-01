@@ -16,54 +16,122 @@
     left: 0px;
 }
 
+.top-axis-header {
+    position:absolute;
+    background: #222222;
+    width:100%;
+    height:32px;
+    top:0px;
+    left:0px;
+    z-index:1001;
+}
+
+.bottom-axis-header {
+    position:absolute;
+    background: #222222;
+    width:100%;
+    height:32px;
+    bottom:0px;
+    left:0px;
+    z-index:1001;
+}
+
+.left-axis-header {
+    position:absolute;
+    background: #222222;   
+    height:100%;
+    width:32px;
+    left:0px;
+    top:0px;
+    z-index:1001;
+}
+
+.right-axis-header {
+    position:absolute;
+    background: #222222;
+    height:100%;
+    width:32px;
+    right:0px;
+    top:0px;
+    z-index:1001;
+}
+
 .top-axis-container {
     position:absolute;
-    overflow: hidden;
-    background: #222222;
+    background: #111111;
     height:150px;
     width:100%;
     top:0px;
     left:0px;
+    z-index:1000;
+    overflow:hidden;
 }
 
 .bottom-axis-container {
     position:absolute;
-    overflow: hidden;
-    background: #222222;
+    background: #111111;
     height:150px;
     width:100%;
     bottom:0px;
     left:0px;
+    z-index:1000;
+    overflow:hidden;
 }
 
 .left-axis-container {
     position:absolute;    
-    overflow: hidden;
-    background: #222222;
+    background: #111111;
     width:150px;
     height:100%;
     left:0px;
     top:0px;
+    z-index:1000;
+    overflow:hidden;
 }
 
 .right-axis-container {
     position:absolute;
-    overflow: hidden;
-    background: #222222;
+    background: #111111;
     width:150px;
     height:100%;
     right:0px;
     top:0px;
+    z-index:1000;
+    overflow:hidden;
 }
 
-.horizontal-axis-marker {
+.large-horizontal-axis-marker {
     height: 10px;   
     border-left: 1px solid #7E7E7E;
     color: #7E7E7E;
 }
 
-.vertical-axis-marker {
+.medium-horizontal-axis-marker {
+    height: 6px;   
+    border-left: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.small-horizontal-axis-marker {
+    height: 4px;   
+    border-left: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.large-vertical-axis-marker {
     width: 10px;
+    border-top: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.medium-vertical-axis-marker {
+    width: 6px;
+    border-top: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.small-vertical-axis-marker {
+    width: 4px;
     border-top: 1px solid #7E7E7E;
     color: #7E7E7E;
 }
@@ -88,8 +156,8 @@
 .axis-title-label {
     font-family: Verdana, Arial, sans-serif;
     font-size:0.95em;
+    white-space: nowrap;
     color : #7E7E7E;
-    text-align: center;
-    padding-top:10px;
-    padding-bottom:10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }

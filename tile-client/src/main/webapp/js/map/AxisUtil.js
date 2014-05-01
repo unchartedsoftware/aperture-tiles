@@ -25,6 +25,8 @@
 
 define({
 
+    MARKER_TYPE_ORDER : ['large', 'small', 'medium', 'small'],
+
     /**
      * Formats axis marker label text
      *
@@ -33,8 +35,10 @@ define({
      */
     formatText : function(value, unitSpec){
         "use strict";
+
         function formatNumber (value, decimals) {
-            return parseFloat(value).toFixed(decimals);
+            var func = (value < 0) ? 'ceil' : 'floor';
+            return (Math[func](value * 100) / 100).toFixed(decimals);
         }
 
         function formatThousand (value, decimals, allowStepDown) {
@@ -110,7 +114,7 @@ define({
         }
 
         function formatDegrees(value, decimals){
-            return parseFloat(value.toFixed(decimals)) + "\u00b0";
+            return formatNumber(value, decimals) + "\u00b0";
         }
 
         if (unitSpec){
@@ -196,6 +200,8 @@ define({
         // number and zoom level
         var that = this,
             increment,
+            subIncrement,
+            startingMarkerTypeIndex = 0,
             pivot;
 
         function getPixelPosition( value ) {
@@ -220,6 +226,7 @@ define({
             } else {
                 minCull = axis.map.getCoordFromViewportPixel( 0, minMax.max.y ).y;
             }
+
             if ( !axis.repeat && minCull < axis.min ) {
                 // prevent roll-over
                 minCull = axis.min;
@@ -230,12 +237,14 @@ define({
             if (pivot < minCull) {
                 // cull above pivot
                 while (minIncrement < minCull) {
-                    minIncrement += increment;
+                    minIncrement += subIncrement;
+                    startingMarkerTypeIndex++;
                 }
             } else {
                 // cull below pivot
-                while (minIncrement-increment >= minCull) {
-                    minIncrement -= increment;
+                while (minIncrement-subIncrement >= minCull) {
+                    minIncrement -= subIncrement;
+                    startingMarkerTypeIndex++;
                 }
             }
 
@@ -263,12 +272,12 @@ define({
             if (pivot > maxCull) {
                 // cull below pivot
                 while (maxIncrement > maxCull) {
-                    maxIncrement -= increment;
+                    maxIncrement -= subIncrement;
                 }
             } else {
-                // cull above pivot
-                while (maxIncrement+increment <= maxCull) {
-                    maxIncrement += increment;
+                // cull above pivot, floor here to prevent accumulated precision errors truncating last 'tick'
+                while ( Math.floor(maxIncrement+subIncrement) <= maxCull) {
+                    maxIncrement += subIncrement;
                 }
             }
 
@@ -277,31 +286,25 @@ define({
 
         function fillArrayByIncrement(start, end) {
 
-            var markers = [],
-                i,
-                rawValue,// raw value along axis, used for pixel position
-                roundedValue;   // value rounded to n decimals
+            var markers = {
+                    large: [],
+                    medium: [],
+                    small: []
+                },
+                i = startingMarkerTypeIndex % that.MARKER_TYPE_ORDER.length,
+                value;
 
-            for (i = start; i <= end; i+=increment) {
-                // differentiate between the raw and rounded value, calculate pixel position
-                // from raw value or else marks are noticeably non-uniform at high zoom levels
-                rawValue = i;
-                roundedValue = i;
+            for (value = start; value <= end; value+=subIncrement) {
 
-                if (i % 1 !== 0) {
-                    // round to proper decimal place, toFixed converts to string, so convert back
-                    roundedValue = parseFloat( (Math.round(i * 100) / 100).toFixed(axis.unitSpec.decimals) );
-                }
-
-                markers.push({
-                    label : that.getMarkerRollover(axis, roundedValue),
-                    pixel : getPixelPosition(rawValue)
+                markers[that.MARKER_TYPE_ORDER[i]].push({
+                    label : that.getMarkerRollover(axis, value),
+                    pixel : getPixelPosition(value)
                 });
+                i = (i + 1) % that.MARKER_TYPE_ORDER.length;
             }
 
             return markers;
         }
-
 
         switch (axis.intervalSpec.type.toLowerCase()) {
 
@@ -329,6 +332,8 @@ define({
             increment = increment/Math.pow(2, Math.max( axis.map.getZoom()-1, 0 ) );
         }
 
+        // get sub increment for small / medium label-less ticks
+        subIncrement = increment / that.MARKER_TYPE_ORDER.length;
         // add all points between minimum visible value and maximum visible value
         return fillArrayByIncrement( getMinIncrement(), getMaxIncrement() );
     }

@@ -27,7 +27,10 @@
 
 /* invert colour of jQuery accordian header */
 #annotation-accordion-id .ui-accordion-icons {
-    -webkit-filter: invert(100%);
+    -webkit-filter:invert(100%);                    
+         -o-filter:invert(100%); 
+        -ms-filter:"invert(100%)";
+            filter:invert(100%); 
     font-family: Verdana, Arial, sans-serif;
     font-size: 12px;
 }
@@ -42,7 +45,10 @@
 
 /* invert colour of jQuery resizable handle */
 #annotation-popup-resize-icon {
-    -webkit-filter: invert(100%);
+    -webkit-filter:invert(100%);                    
+         -o-filter:invert(100%); 
+        -ms-filter:"invert(100%)";
+            filter:invert(100%);   
 }
 
 .annotation {
@@ -94,9 +100,9 @@
 
 .annotation-button {
     margin-top:10px;
-    -webkit-border-radius: 5;
-    -moz-border-radius: 5;
-    border-radius: 5px;
+    -webkit-border-radius: 5px;
+       -moz-border-radius: 5px;
+            border-radius: 5px;
     color: #7E7E7E;
     background: #222222;
     padding: 5px 8px 5px 8px;

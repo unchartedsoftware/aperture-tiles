@@ -47,7 +47,6 @@ define(function (require) {
         init: function (id, spec) {
 
 			var that = this,
-                i,
 				mapSpecs;
 		
 			mapSpecs = spec.MapConfig;
@@ -84,9 +83,7 @@ define(function (require) {
 				$map.width( $(window).width() );
 				$map.height( $(window).height() );
 				that.updateSize();
-                for (i=0; i<that.axes.length; i++) {
-                    that.axes[i].redraw();
-                }
+                that.redrawAxes();
 			});
 
             this.previousZoom = this.map.getZoom();
@@ -105,6 +102,14 @@ define(function (require) {
                 spec.mapId = this.id;
                 spec.map = this;
                 this.axes.push(new Axis(spec));
+            }
+        },
+
+
+        redrawAxes: function() {
+            var i;
+            for (i=0; i<this.axes.length; i++) {
+                this.axes[i].redraw();
             }
         },
 
@@ -183,20 +188,23 @@ define(function (require) {
             // determine which axes exist
             for (i=0; i<this.axes.length; i++) {
 
-                switch ( this.axes[i].position ) {
+                if (this.axes[i].isEnabled()) {
 
-                    case 'top':
-                        bounds.min.y = this.axes[i].getContainerWidth();
-                        break;
-                    case 'bottom':
-                        bounds.max.y = this.getViewportHeight() - this.axes[i].getContainerWidth();
-                        break;
-                    case 'left':
-                        bounds.min.x = this.axes[i].getContainerWidth();
-                        break;
-                    case 'right':
-                        bounds.max.x = this.getViewportWidth() - this.axes[i].getContainerWidth();
-                        break;
+                    switch ( this.axes[i].position ) {
+
+                        case 'top':
+                            bounds.min.y = this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'bottom':
+                            bounds.max.y = this.getViewportHeight() - this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'left':
+                            bounds.min.x = this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'right':
+                            bounds.max.x = this.getViewportWidth() - this.axes[i].getMaxContainerWidth();
+                            break;
+                    }
                 }
             }
 
