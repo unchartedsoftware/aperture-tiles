@@ -376,7 +376,7 @@ public class LayerServiceImpl implements LayerService {
 			    JSONArray configurations = contents.getJSONArray("layers");
     			for (int i=0; i<configurations.length(); ++i) {
     		        LayerInfo info = new LayerInfo(configurations.getJSONObject(i));
-    				addConfiguration(info);
+    				addTopLevelConfiguration(info);
     			}
 	    	} catch (FileNotFoundException e) {
 	    		LOGGER.error("Cannot find layer configuration file {} ", file, e);
@@ -388,11 +388,17 @@ public class LayerServiceImpl implements LayerService {
 		debugConfiguration();
     }
 
-    private void addConfiguration (LayerInfo info) {
+    private void addTopLevelConfiguration (LayerInfo info) {
+        // Only add the top-level layer to the layers list...
     	_layers.add(info);
+    	// But add it and all sub-layers to the layersById map
+    	storeLayerById(info);
+    }
+
+    private void storeLayerById (LayerInfo info) {
     	_layersById.put(info.getID(), info);
     	for (LayerInfo child: info.getChildren()) {
-    	    addConfiguration(child);
+    	    storeLayerById(child);
     	}
     }
 
