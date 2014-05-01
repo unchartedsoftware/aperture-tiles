@@ -72,7 +72,7 @@ class LiveTileGenerator[PT: ClassManifest,
 
 		val tile = if (densityStrip) new DensityStripData[BT](targetTile)
 		else new TileData[BT](targetTile)
-		val defaultBinValue = binDescriptor.convert(binDescriptor.defaultBinValue)
+		val defaultBinValue = binDescriptor.convert(binDescriptor.defaultProcessedBinValue)
 		for (x <- 0 until numXBins) {
 			for (y <- 0 until numYBins) {
 				tile.setBin(x, y, defaultBinValue)

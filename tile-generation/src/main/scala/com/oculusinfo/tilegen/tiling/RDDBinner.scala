@@ -255,7 +255,7 @@ class RDDBinner {
 				val yLimit = index.getYBins()
 				val tile = if (densityStripLocal) new DensityStripData[BT](index)
 				else new TileData[BT](index)
-				val defaultBinValue = binDesc.convert(binDesc.defaultBinValue)
+				val defaultBinValue = binDesc.convert(binDesc.defaultProcessedBinValue)
 
 				for (x <- 0 until xLimit) {
 					for (y <- 0 until yLimit) {

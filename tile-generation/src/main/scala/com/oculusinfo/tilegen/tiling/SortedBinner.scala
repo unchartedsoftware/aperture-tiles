@@ -136,15 +136,20 @@ class SortedBinner {
 			c
 		}
 
-		val convert: TileData[PT] => TileData[BT] = input => {
+		val convertAndClean: TileData[PT] => TileData[BT] = input => {
 			val index = input.getDefinition()
 			val xLimit = index.getXBins()
 			val yLimit = index.getYBins()
+			val defaultRawBin = binDesc.defaultUnprocessedBinValue
+			val defaultCookedBin = binDesc.defaultProcessedBinValue
 
 			val output = new TileData[BT](index)
 			for (x <- 0 until xLimit) {
 				for (y <- 0 until yLimit) {
-					output.setBin(x, y, binDesc.convert(input.getBin(x, y)))
+					var inputBin = input.getBin(x, y)
+					if (inputBin == defaultRawBin)
+						inputBin = defaultCookedBin
+					output.setBin(x, y, binDesc.convert(inputBin))
 				}
 			}
 			output
@@ -164,6 +169,7 @@ class SortedBinner {
 								val tileIndex = tbv._1._1
 								val bin = tbv._1._2
 								val value = tbv._2
+								val defaultRawBin = binDesc.defaultUnprocessedBinValue
 
 								if (!partitionResults.contains(tileIndex)) {
 									// New tile - make a new, blank tile slate
@@ -173,7 +179,7 @@ class SortedBinner {
 									val tile = new TileData[PT](tileIndex)
 									for (x <- 0 until xLimit) {
 										for (y <- 0 until yLimit) {
-											tile.setBin(x, y, binDesc.defaultBinValue)
+											tile.setBin(x, y, defaultRawBin)
 										}
 									}
 									partitionResults(tileIndex) = tile
@@ -195,13 +201,13 @@ class SortedBinner {
 		if (consolidationPartitions.isEmpty) {
 			// Combine any tiles that happen to show up in multiple partitions
 			tiledByPartition.reduceByKey(combineTiles(_, _))
-			// Transform to our bin type
-				.map(indexAndTile => convert(indexAndTile._2))
+			// Transform to our bin type, and put in the proper zeros
+				.map(indexAndTile => convertAndClean(indexAndTile._2))
 		} else {
 			// Combine any tiles that happen to show up in multiple partitions
 			tiledByPartition.reduceByKey(combineTiles(_, _), consolidationPartitions.get)
-			// Transform to our bin type
-				.map(indexAndTile => convert(indexAndTile._2))
+			// Transform to our bin type, and put in the proper zeros
+				.map(indexAndTile => convertAndClean(indexAndTile._2))
 		}
 	}
 }

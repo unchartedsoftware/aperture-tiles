@@ -1,0 +1,113 @@
+{
+	"_comment" : [
+		"This json configuration file specifies properties of a cross-plot tile-based application",
+		"",
+		"The PyramidConfig key specifies the transformation applied to the data to show it on the ",
+		"map.  This is the central identifying key that is used to match maps with layers and ",
+		"annotations.  Only layers and annotations whose pyramids exactly match a map's can be shown ",
+		"on it.",
+		"",
+		"The MapConfig key specifies configuration of map layer control and base layer properties",
+		"",
+		"The AxisConfig key specifies configuration of the map axes. Each axis can each have the ",
+		"following keys: ",
+		"       title:      			axis title label text",
+		"       repeat:     			whether or not the axis will repeat",
+		"       position:      	 		where to place the axis",
+		"       intervalSpec:",
+		"           type:   			type of interval",
+		"           increment:  		fixed / percentage increment of the axis, matches type",
+		"           pivot:  			the fixed value / percentage that all other values are incremented from",
+		"           allowScaleByZoom: 	if the axis should be scaled by the zoom factor",
+		"       unitSpec:",
+		"           type:       		type of units parse in FormatAxis.js",
+		"           decimals:   		number of decimals",
+		"           allowStepDown: 		if the units can step down if they are below range",
+		"		style:",
+		"      	 	majorMarkerLength:  	the length of the major marker tick mark",
+		"       	majorMarkerWidth:   	the width of the major marker tick mark",
+		"       	majorMarkerColour:  	the color of the major marker tick mark",
+		"       	markerLabelColour: 		the color of the major marker label",
+		"       	axisLabelColour:   		the color of the axis label",
+		"       	fontFamily:         	the font family to use for labels",
+		"      	 	markerLabelFontSize: 	the font size of the marker label",
+		"       	axisLabelFontSize:   	the font size of the axis label"
+	],
+
+	"id" : "bitcoin time vs. amount",
+	"description" : "A plot of the number of transactions at a given time which involved a given amount of bitcoins.",
+
+	"PyramidConfig": {
+		"type" : "AreaOfInterest",
+		"minX" : -2,
+		"maxX" : 2,
+		"minY" : -2,
+		"maxY" : 2
+	},
+
+	"MapConfig" : {
+		"options" : {
+			"numZoomLevels" : 18,
+			"projection" : "EPSG:900913",
+			"displayProjection" : "EPSG:4326"
+		},
+		"baseLayer" : {}
+	},
+
+	"AxisConfig": [
+		{
+			"title" : "X",
+			"position" : "bottom",
+            "repeat": false,
+			"intervalSpec" : {
+				"type" : "percentage",
+				"increment" : 20,
+				"pivot" : 0,
+				"allowScaleByZoom" : true,
+			},
+			"unitSpec" : {
+				"type" : "time",
+				"decimals" : 2,
+				"allowStepDown" : false
+			},			
+			"style" : {
+				"markerLabelRotation" : -45,
+				"majorMarkerLength" : 10,
+				"majorMarkerWidth" : 1,
+				"majorMarkerColour" : "#7E7E7E",
+				"markerLabelColour" : "#7E7E7E",
+				"axisLabelColour" : "#7E7E7E",
+				"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+				"markerLabelFontSize" : "0.75em",
+				"axisLabelFontSize" : "0.95em"
+			}
+		},
+		{
+			"title" : "Y",
+			"position" : "left",
+            "repeat" : false,
+			"intervalSpec" : {
+				"type" : "percentage",
+				"increment" : 20,
+				"pivot" : 0,
+				"allowScaleByZoom" : true,
+			},
+			"unitSpec" : {
+				"type" : "decimal",
+				"decimals" : 2,
+				"allowStepDown" : false
+			},			
+			"style" : {
+				"markerLabelRotation" : 0,
+				"majorMarkerLength" : 10,
+				"majorMarkerWidth" : 1,
+				"majorMarkerColour" : "#7E7E7E",
+				"markerLabelColour" : "#7E7E7E",
+				"axisLabelColour" : "#7E7E7E",
+				"fontFamily" : "Tahoma, Verdana, Segoe, sans-serif",
+				"markerLabelFontSize" : "0.75em",
+				"axisLabelFontSize" : "0.95em"
+			}
+		}
+	]
+}

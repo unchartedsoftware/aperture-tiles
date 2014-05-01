@@ -346,17 +346,41 @@ public class JsonUtilities {
 
 	public static Properties jsonObjToProperties (JSONObject jsonObj) {
 		Properties properties = new Properties();
-        
-		Iterator<?> keys = jsonObj.keys();
-		while (keys.hasNext()) {
-			String key = keys.next().toString();
-			Object value = jsonObj.opt(key);
 
-			if (value instanceof String) {
-				properties.setProperty(key, (String) value);
+		addProperties(jsonObj, properties, null);
+
+		return properties;
+	}
+
+	private static void addProperties (JSONObject object, Properties properties, String keyBase) {
+		Iterator<?> keys = object.keys();
+		while (keys.hasNext()) {
+			String specificKey = keys.next().toString();
+			Object value = object.opt(specificKey);
+			String key = (null == keyBase ? "" : keyBase+".") + specificKey;
+
+			if (value instanceof JSONObject) {
+				addProperties((JSONObject) value, properties, key);
+			} else if (value instanceof JSONArray) {
+				addProperties((JSONArray) value, properties, key);
+			} else if (null != value) {
+				properties.setProperty(key, value.toString());
 			}
 		}
-        
-		return properties;
+	}
+
+	private static void addProperties (JSONArray array, Properties properties, String keyBase) {
+		for (int i=0; i<array.length(); ++i) {
+			String key = (null == keyBase ? "" : keyBase+".")+i;
+			Object value = array.opt(i);
+
+			if (value instanceof JSONObject) {
+				addProperties((JSONObject) value, properties, key);
+			} else if (value instanceof JSONArray) {
+				addProperties((JSONArray) value, properties, key);
+			} else if (null != value) {
+				properties.setProperty(key, value.toString());
+			}
+		}
 	}
 }

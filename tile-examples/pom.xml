@@ -18,6 +18,7 @@
   <modules>
 	<module>demo-website</module>
 	<module>bitcoin-demo</module>
+	<module>julia-demo</module>
 	<module>twitter-demo</module>
 	<module>twitter-heatmap</module>
 	<module>summary-statistics</module>

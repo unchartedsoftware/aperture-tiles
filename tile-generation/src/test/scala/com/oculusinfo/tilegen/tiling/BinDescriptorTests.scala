@@ -51,7 +51,8 @@ class BinDescriptorTestSuite extends FunSuite {
 
 	test("Standard Double Bin Descriptor") {
 		val bd = new StandardDoubleBinDescriptor
-		assert(0.0 === bd.defaultBinValue)
+		assert(0.0 === bd.defaultProcessedBinValue)
+		assert(0.0 === bd.defaultUnprocessedBinValue)
 		assert(1.0 === bd.min(new JavaDouble(1.0),
 		                      new JavaDouble(2.0)).doubleValue)
 		assert(2.0 === bd.max(new JavaDouble(1.0),
@@ -66,7 +67,8 @@ class BinDescriptorTestSuite extends FunSuite {
 
 	test("Minimum Double Bin Descriptor") {
 		val bd = new MinimumDoubleBinDescriptor
-		assert(0.0 === bd.defaultBinValue)
+		assert(0.0 === bd.defaultProcessedBinValue)
+		assert(Double.MaxValue === bd.defaultUnprocessedBinValue)
 		assert(1.0 === bd.min(new JavaDouble(1.0),
 		                      new JavaDouble(2.0)).doubleValue)
 		assert(2.0 === bd.max(new JavaDouble(1.0),
@@ -78,7 +80,8 @@ class BinDescriptorTestSuite extends FunSuite {
 
 	test("Maximum Double Bin Descriptor") {
 		val bd = new MaximumDoubleBinDescriptor
-		assert(0.0 === bd.defaultBinValue)
+		assert(0.0 === bd.defaultProcessedBinValue)
+		assert(Double.MinValue === bd.defaultUnprocessedBinValue)
 		assert(1.0 === bd.min(new JavaDouble(1.0),
 		                      new JavaDouble(2.0)).doubleValue)
 		assert(2.0 === bd.max(new JavaDouble(1.0),
