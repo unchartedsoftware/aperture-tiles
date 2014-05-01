@@ -293,13 +293,12 @@ define({
                     medium: [],
                     small: []
                 },
+                mod = function(val, n) {
+                    // this modulos works correctly for negative numbers
+                    return ((val%n)+n)%n;
+                },
                 i = mod(startingMarkerTypeIndex, that.MARKER_TYPE_ORDER.length),
                 value;
-
-            function mod(val, n) {
-                // this modulos works correctly for negative numbers
-                return ((val%n)+n)%n;
-            }
 
             for (value = start; value <= end; value+=subIncrement) {
 
