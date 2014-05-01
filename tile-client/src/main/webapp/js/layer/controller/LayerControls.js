@@ -406,27 +406,22 @@ define(function (require) {
          *
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
-        initialize: function (layerStateMap, map) {
+        initialize: function (layerStateMap) {
             var layerState;
 
             // "Private" vars
             this.controlsMap = {};
             this.$root = null;
             this.$layerControlsContainer = null;
-            this.$layerControlsRoot = null;
 
             // Add the title
             this.$root = $('#layer-controls-container');
-
-            this.$layerControlsRoot = $('<div id="layer-controls-root"></div>');
             this.$root.append(this.$layerControlsRoot);
-
-            //this.$layerControlsRoot.append($('<div id="layer-control-title" class="title">Layer Controls</div>'));
 
             // Add the layer control list area
             this.$layerControlsContainer = $('<div class="layer-control-container"></div>');
-            this.$layerControlsRoot.append(this.$layerControlsContainer);
 
+            this.$root.append(this.$layerControlsContainer);
             // Add layers visuals and register listeners against the model
             replaceLayers(layerStateMap, this.$layerControlsContainer, this.$root, this.controlsMap);
             for (layerState in layerStateMap) {
@@ -440,33 +435,6 @@ define(function (require) {
                     ));
                 }
             }
-
-            /*
-            var $axisControlsContainer = $('<div class="axis-controls-container"></div>');
-            this.$layerControlsContainer.append($axisControlsContainer);
-
-            for (i=0; i<map.getAxes().length; i++) {
-
-                var axis = map.getAxes()[i];
-                var $axisContainer = $('<div class="axis-container"></div>');
-
-                $axisControlsContainer.append($axisContainer);
-
-                var $toggleDiv = $('<div class="layer-toggle"></div>');
-                var $toggleBox = $('<input type="checkbox" checked="checked">');
-                $toggleDiv.append($toggleBox);
-                // Initialize the button from the model and register event handler.
-                $toggleBox.prop("checked", axis.isEnabled() );
-                $toggleBox.click(function () {
-                    axis.setEnabled( $toggleBox.prop("checked") );
-                });
-                $axisContainer.append($toggleDiv);
-
-                $axisContainer.append( $('<span class="layer-labels">' + axis.title + '</span>') );
-            }
-            */
-
-
         }
 
     });

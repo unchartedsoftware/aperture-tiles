@@ -61,9 +61,16 @@
           var isDescOpen = false;
 
           $desc.click( function(e){
-              var t = $(".ui-accordion-header");
+
               if( $(".ui-accordion-header").is(e.target) ) {
-                var widdy = isDescOpen ? '140px' : '98%';
+
+                if (isControlsOpen) {
+                  $('#description-container').css('overflow-y', 'hidden');
+                } else {
+                  $('#description-container').css('overflow-y', 'auto');
+                }
+
+                var widdy = isDescOpen ? '140px' : '50%';
                 $desc.animate({ width: widdy });
                 isDescOpen = !isDescOpen;
               }
@@ -72,12 +79,20 @@
           var isControlsOpen = false;
 
           $controls.click( function(e){
-              if( $(".ui-accordion-header").is(e.target) ) { 
-                var widdy = isControlsOpen ? '140px' : '98%';
+
+              if( $(".ui-accordion-header").is(e.target) ) {
+
+                if (isControlsOpen) {
+                  $('#layer-controls-container').css('overflow-y', 'hidden');
+                } else {
+                  $('#layer-controls-container').css('overflow-y', 'auto');
+                }
+                var widdy = isControlsOpen ? '140px' : '50%';
                 $controls.animate({ width: widdy });
                 isControlsOpen = !isControlsOpen;
               }
           });
+
 
   			});
   		});

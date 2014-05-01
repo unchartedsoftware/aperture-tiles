@@ -84,7 +84,7 @@
 			"repeat" : true,
 			"intervalSpec" : {
 				"type" : "value",
-				"increment" : 60,
+				"increment" : 120,
 				"pivot" : 0,
 				"allowScaleByZoom" : true
 			},
@@ -100,7 +100,7 @@
 			"repeat" : false,
 			"intervalSpec" : {
 				"type" : "value",
-				"increment" : 30,
+				"increment" : 60,
 				"pivot" : 0,
 				"allowScaleByZoom" : true
 			},
