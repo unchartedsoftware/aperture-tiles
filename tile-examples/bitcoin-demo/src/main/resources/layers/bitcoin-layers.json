@@ -30,6 +30,37 @@
 						"minY" : 0,
 						"maxY" : 500000
 					},
+                    "rawdata": {
+                        "oculus.binning": {
+                            "name": "bitcoin",
+                            "source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Tra\
+nsactions_Datasets_20130410.tsv",
+                            "parsing.separator": "\t",
+                            "source.partitions": 96,
+                            "parsing": {
+                                "transaction": {
+                                    "index": 0,
+                                    "fieldType": "int"
+                                },
+                                "source": {
+                                    "index": 1,
+                                    "fieldType": "Int"
+                                },
+                                "destination": {
+                                    "index": 2,
+                                    "fieldType": "Int"
+                                },
+                                "time": {
+                                    "index": 3,
+                                    "fieldType": "date",
+                                    "dateFormat": "yyyy-MM-dd HH:mm:ss"
+                                },
+                                "amount": {
+                                    "index": 4
+                                }
+                            }
+                        }
+                    },
 					"data" : {
 						"pyramidio" : {
 							"type" : "hbase",
@@ -62,6 +93,68 @@
 						"minY" : 0,
 						"maxY" : 500000
 					},
+                    "rawdata": {
+                        "oculus.binning": {
+                            "name": "bitcoin",
+                            "source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Tra\
+nsactions_Datasets_20130410.tsv",
+                            "parsing.separator": "\t",
+                            "source.partitions": 96,
+                            "parsing": {
+                                "transaction": {
+                                    "index": 0,
+                                    "fieldType": "int"
+                                },
+                                "source": {
+                                    "index": 1,
+                                    "fieldType": "Int"
+                                },
+                                "destination": {
+                                    "index": 2,
+                                    "fieldType": "Int"
+                                },
+                                "time": {
+                                    "index": 3,
+                                    "fieldType": "date",
+                                    "dateFormat": "yyyy-MM-dd HH:mm:ss"
+                                },
+                                "amount": {
+                                    "index": 4
+                                }
+                            }
+                        }
+                    },
+                    "rawdata": {
+                        "oculus.binning": {
+                            "name": "bitcoin",
+                            "source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Tra\
+nsactions_Datasets_20130410.tsv",
+                            "parsing.separator": "\t",
+                            "source.partitions": 96,
+                            "parsing": {
+                                "transaction": {
+                                    "index": 0,
+                                    "fieldType": "int"
+                                },
+                                "source": {
+                                    "index": 1,
+                                    "fieldType": "Int"
+                                },
+                                "destination": {
+                                    "index": 2,
+                                    "fieldType": "Int"
+                                },
+                                "time": {
+                                    "index": 3,
+                                    "fieldType": "date",
+                                    "dateFormat": "yyyy-MM-dd HH:mm:ss"
+                                },
+                                "amount": {
+                                    "index": 4
+                                }
+                            }
+                        }
+                    },
 					"data" : {
 						"pyramidio" : {
 							"type" : "hbase",
@@ -94,6 +187,37 @@
 						"minY" : 0,
 						"maxY" : 6336769
 					},
+                    "rawdata": {
+                        "oculus.binning": {
+                            "name": "bitcoin",
+                            "source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Tra\
+nsactions_Datasets_20130410.tsv",
+                            "parsing.separator": "\t",
+                            "source.partitions": 96,
+                            "parsing": {
+                                "transaction": {
+                                    "index": 0,
+                                    "fieldType": "int"
+                                },
+                                "source": {
+                                    "index": 1,
+                                    "fieldType": "Int"
+                                },
+                                "destination": {
+                                    "index": 2,
+                                    "fieldType": "Int"
+                                },
+                                "time": {
+                                    "index": 3,
+                                    "fieldType": "date",
+                                    "dateFormat": "yyyy-MM-dd HH:mm:ss"
+                                },
+                                "amount": {
+                                    "index": 4
+                                }
+                            }
+                        }
+                    },
 					"data" : {
 						"pyramidio" : {
 							"type" : "hbase",

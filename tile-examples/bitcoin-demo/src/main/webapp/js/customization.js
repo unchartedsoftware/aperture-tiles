@@ -32,10 +32,15 @@
 define(function (require) {
     "use strict";
 
-    var FileLoader = require('./FileLoader');
+    var FileLoader = require('./FileLoader'),
+        worldMap;
 
     return {
-        customizeMap: function (worldMap) {
+        customizeMap: function (map) {
+	        worldMap = map;
+        },
+
+	    customizeLayers: function (clientLayers, serverLayers) {
             var getDataButton,
                 selectAreaLayer,
                 drawControl,
