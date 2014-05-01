@@ -53,6 +53,8 @@ import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
 
+import com.oculusinfo.tilegen.util.ArgumentParser
+
 
 
 /**
@@ -189,10 +191,11 @@ class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrap
 			.filter(_.startsWith("oculus.binning.parsing."))
 			.filter(_.endsWith(".index"))
 
+
 		val orderedProps = indexProps.map(prop => (prop, properties.getProperty(prop).toInt))
 			.sortBy(_._2).map(_._1)
 
-		indexProps.map(property =>
+		orderedProps.map(property =>
 			property.substring("oculus.binning.parsing.".length, property.length-".index".length)
 		)
 	}
@@ -614,11 +617,13 @@ class CSVDataset (rawProperties: Properties,
                   tileWidth: Int,
                   tileHeight: Int)
 		extends CSVDatasetBase(rawProperties, tileWidth, tileHeight) {
+	// Just some Filter type aliases from Queries.scala
+	import com.oculusinfo.tilegen.datasets.FilterAware._
+
 
 	type STRATEGY_TYPE = CSVStaticProcessingStrategy
 	protected var strategy: STRATEGY_TYPE = null
 
-	type Filter = ValueOrException[List[Double]] => Boolean
 	def getRawData: RDD[String] = strategy.getRawData
 
 	def getRawFilteredData (filterFcn: Filter):	RDD[String] = {
@@ -639,15 +644,16 @@ class CSVDataset (rawProperties: Properties,
 
 	def getFieldFilterFunction (field: String, min: Double, max: Double): Filter = {
 		val localProperties = properties
-		val filterFcn: Filter =
-			valueList => {
+		new FilterFunction with Serializable {
+			def apply (valueList: ValueOrException[List[Double]]): Boolean = {
 				val index = localProperties.fieldIndices(field)
 				valueList.hasValue && {
 					val value = (valueList.get)(index)
 					min <= value && value <= max
 				}
 			}
-		filterFcn
+			override def toString: String = "%s Range[%.4f, %.4f]".format(field, min, max)
+		}
 	}
 
 	def initialize (sc: SparkContext, cacheRaw: Boolean, cacheProcessed: Boolean): Unit =
@@ -693,5 +699,44 @@ class StreamingCSVDataset (rawProperties: Properties,
 		} else {
 			strategy.processWithTime(fcn, completionCallback)
 		}
+	}
+}
+
+
+object CSVDatasetTest {
+	def main (args: Array[String]): Unit = {
+		val argParser = new ArgumentParser(args)
+		val jobName = "CSV Dataset test"
+		val sc = argParser.getSparkConnector().getSparkContext(jobName)
+
+		val datasetProps = new java.util.Properties()
+		datasetProps.setProperty("oculus.binning.source.location",
+		                         "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv")
+		datasetProps.setProperty("oculus.binning.source.partitions", "96")
+		datasetProps.setProperty("oculus.binning.name", "bitcoin")
+		datasetProps.setProperty("oculus.binning.parsing.separator", "\t")
+		datasetProps.setProperty("oculus.binning.parsing.amount.index", "4")
+		datasetProps.setProperty("oculus.binning.parsing.time.index", "3")
+		datasetProps.setProperty("oculus.binning.parsing.time.fieldType", "date")
+		datasetProps.setProperty("oculus.binning.parsing.time.dateFormat", "yyyy-MM-dd HH:mm:ss")
+		datasetProps.setProperty("oculus.binning.parsing.source.index", "2")
+		datasetProps.setProperty("oculus.binning.parsing.source.fieldType", "int")
+		datasetProps.setProperty("oculus.binning.parsing.destination.index", "2")
+		datasetProps.setProperty("oculus.binning.parsing.destination.fieldType", "int")
+		datasetProps.setProperty("oculus.binning.parsing.transaction.index", "2")
+		datasetProps.setProperty("oculus.binning.parsing.transaction.fieldType", "Iint")
+		val dataset = new com.oculusinfo.tilegen.datasets.CSVDataset(datasetProps, 1, 1)
+		dataset.initialize(sc, true, false)
+		val rawData = dataset.getRawData
+		val props = new com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper(datasetProps)
+		val parsedData = rawData.mapPartitions(iter =>
+			{
+				val parser = new com.oculusinfo.tilegen.datasets.CSVRecordParser(props)
+				parser.parseRecords(iter, props.fields:_*)
+			}
+		)
+		val sourcefilter = dataset.getFieldFilterFunction("source", 1000, 2000)
+		val destfilter = dataset.getFieldFilterFunction("destination", 1000, 2000)
+		println(dataset.getRawFilteredData(destfilter).count)
 	}
 }

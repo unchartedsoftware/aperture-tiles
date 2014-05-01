@@ -66,7 +66,7 @@ define(function (require) {
 				        'oculus.binning': {
 					        'name': 'bitcoin',
 					        'source.location': 'hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv',
-					        'arsing.separatior': '\t',
+					        'parsing.separator': '\t',
 					        'source.partitions': 96,
 					        'parsing': {
 						        'transaction': {
@@ -84,7 +84,7 @@ define(function (require) {
 						        'time': {
 							        'index': 3,
 							        'fieldType': 'date',
-							        'dateFormat': 'yyyy-MM-dd HH_mm_ss'
+							        'dateFormat': 'yyyy-MM-dd HH:mm:ss'
 						        },
 						        'amount': {
 							        'index': 4
