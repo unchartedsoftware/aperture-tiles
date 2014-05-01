@@ -16,19 +16,28 @@
 
       <!-- Pyramid factory module - override to add custom TilePyramids -->
       com.oculusinfo.tile.init.TilePyramidFactoryModule:
-      <!-- Renderer factory module - override to add custom server-side renderers. -->
+      <!-- Renderer factory module - override to add custom server-side 
+           renderers. -->
       com.oculusinfo.tile.init.ImageRendererFactoryModule:
-      <!-- Serialization factory module - override to add custom tile serializers -->
+      <!-- Serialization factory module - override to add custom tile 
+           serializers -->
       com.oculusinfo.tile.init.TileSerializationFactoryModule:
-      <!-- Pyramid IO factory module - override to add custom PyramidIO implementations -->
-      com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
-      <!-- And, of course, we need spark itself. -->
-      com.oculusinfo.tile.spark.SparkModule:
+      <!-- Pyramid IO factory module - override to add custom PyramidIO 
+           implementations -->
+      com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+      <!-- LayerConfiguration factory module - override to add custom layer configuration 
+           parameters -->
+      com.oculusinfo.tile.init.CachingLayerConfigurationModule:
 
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.CachingTileModule
+      com.oculusinfo.tile.rest.TileModule
+
+      <!-- Sets up the REST interface by which clients can retrieve annotations -->
+      com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+      <!-- Sets up the annotation service -->
+      com.oculusinfo.annotation.rest.AnnotationServiceModule
     </param-value>
   </context-param>
 

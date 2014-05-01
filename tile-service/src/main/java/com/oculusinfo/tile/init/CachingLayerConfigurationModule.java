@@ -22,21 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
-
+package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
-//import com.oculusinfo.tile.rest.legend.LegendService;
-//import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-//import com.oculusinfo.tile.rest.tile.TileService;
-//import com.oculusinfo.tile.rest.tile.caching.CachingTileServiceImpl;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 
+public class CachingLayerConfigurationModule extends AbstractModule {
 
-public class CachingTileModule extends AbstractModule {
-	@Override
-	protected void configure() {
-//		bind(TileService.class).to(CachingTileServiceImpl.class);
-//		bind(LegendService.class).to(LegendServiceImpl.class);
-	}
-
+    @Override
+    protected void configure() {
+        bind(new TypeLiteral<FactoryProvider<LayerConfiguration>>() {}).to(CachingLayerConfigurationProvider.class);
+    }
 }
