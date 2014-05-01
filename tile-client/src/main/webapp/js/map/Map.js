@@ -66,6 +66,10 @@ define(function (require) {
             this.map = new aperture.geo.Map({ 
 				id: this.id
             });
+
+            // remove default zoom control
+            this.map.olMap_.removeControl( this.map.olMap_.getControlsByClass('OpenLayers.Control.Zoom')[0] );
+
             this.map.olMap_.baseLayer.setOpacity(1);
             this.map.all().redraw();
 			this.axes = [];
@@ -74,24 +78,12 @@ define(function (require) {
 
 			// Set resize map callback
 			$(window).resize( function() {
-				var $map = $('#' + that.id),
-					$mapContainer = $map.parent(),
-					offset = $map.offset(),
-					leftOffset = offset.left || 0,
-					topOffset = offset.top || 0,
-					vertical_buffer = parseInt($mapContainer.css("marginBottom"), 10) + topOffset + 24,
-					horizontal_buffer = parseInt($mapContainer.css("marginRight"), 10) + leftOffset + 24,			
-					width = $(window).width(),
-					height = $(window).height(),				
-					newHeight,
-					newWidth;
-
-				newWidth = (width - horizontal_buffer);
-				newHeight = (height - vertical_buffer);
-					
-				$map.width(newWidth);
-				$map.height(newHeight);
+                // set map to full extent of window
+				var $map = $('#' + that.id);
+				$map.width( $(window).width() );
+				$map.height( $(window).height() );
 				that.updateSize();
+                that.redrawAxes();
 			});
 
             this.previousZoom = this.map.getZoom();
@@ -107,11 +99,23 @@ define(function (require) {
 
             for (i=0; i< axes.length; i++) {
                 spec = axes[i];
-                spec.parentId = this.id;
+                spec.mapId = this.id;
                 spec.map = this;
-                spec.olMap = this.map.olMap_;
                 this.axes.push(new Axis(spec));
             }
+        },
+
+
+        redrawAxes: function() {
+            var i;
+            for (i=0; i<this.axes.length; i++) {
+                this.axes[i].redraw();
+            }
+        },
+
+
+        getAxes: function() {
+            return this.axes;
         },
 
 
@@ -163,6 +167,50 @@ define(function (require) {
             return this.map.olMap_.viewPortDiv.clientHeight;
         },
 
+        /**
+         * Returns the min and max visible viewport pixels
+         * Axes may be covering parts of the map, so this determines the actual visible
+         * bounds
+         */
+        getMinMaxVisibleViewportPixels: function() {
+
+            var bounds ={
+                    min : {
+                        x: 0,
+                        y: 0
+                    },
+                    max : {
+                        x: this.getViewportWidth(),
+                        y: this.getViewportHeight()
+                    }
+            }, i;
+
+            // determine which axes exist
+            for (i=0; i<this.axes.length; i++) {
+
+                if (this.axes[i].isEnabled()) {
+
+                    switch ( this.axes[i].position ) {
+
+                        case 'top':
+                            bounds.min.y = this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'bottom':
+                            bounds.max.y = this.getViewportHeight() - this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'left':
+                            bounds.min.x = this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'right':
+                            bounds.max.x = this.getViewportWidth() - this.axes[i].getMaxContainerWidth();
+                            break;
+                    }
+                }
+            }
+
+            return bounds;
+        },
+
 
         /**
          * Returns the maps min and max pixels in viewport pixels
@@ -208,7 +256,7 @@ define(function (require) {
                 totalPixelSpan = TILESIZE * Math.pow( 2, this.getZoom() );
             return {
                 x: mx + viewportMinMax.min.x,
-                y: totalPixelSpan - my + viewportMinMax.max.y //my + ( this.getViewportHeight() - viewportMinMax.min.y )
+                y: totalPixelSpan - my + viewportMinMax.max.y
             };
         },
 

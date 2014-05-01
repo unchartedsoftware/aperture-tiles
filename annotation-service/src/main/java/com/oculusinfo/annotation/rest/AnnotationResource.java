@@ -24,10 +24,8 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.UUID;
 
 import oculus.aperture.common.rest.ApertureServerResource;

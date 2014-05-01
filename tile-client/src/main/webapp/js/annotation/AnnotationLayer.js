@@ -66,14 +66,6 @@ define(function (require) {
         'cursor': 'pointer'
     }, { context: annotationContext });
 
-    highlightStyle = new OpenLayers.Style({
-        externalGraphic: "./images/marker-green.png",
-        graphicWidth: 24,
-        graphicHeight: 24,
-        graphicYOffset: -23,
-        'cursor': 'pointer'
-    });
-
     selectStyle = new OpenLayers.Style({
         externalGraphic: "./images/marker-blue.png",
         graphicWidth: 24,
@@ -87,6 +79,13 @@ define(function (require) {
         'cursor': 'pointer'
     });
 
+    highlightStyle = new OpenLayers.Style({
+        externalGraphic: "./images/marker-green.png",
+        graphicWidth: 24,
+        graphicHeight: 24,
+        graphicYOffset: -23,
+        'cursor': 'pointer'
+    });
 
     AnnotationLayer = Class.extend({
 
@@ -122,6 +121,7 @@ define(function (require) {
             // un-select all features
             this.highlightControl.unselectAll();
             this.selectControl.unselectAll();
+            this.dragControl.outFeature();
 
             // for each tile
             for (tilekey in this.features) {
@@ -613,7 +613,6 @@ define(function (require) {
                     // centre popup on feature when dragging
                     feature.attributes.feature.centrePopup( OpenLayers.LonLat.fromString( feature.geometry.toShortString() ) );
                 }
-
 
             });
 

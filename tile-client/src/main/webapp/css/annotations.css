@@ -1,0 +1,131 @@
+@charset "UTF-8";
+
+/* open layers id given to the popup */
+#annotation-ol-container {
+    background-color: #222222 !important;
+    border-radius:10px;
+}
+
+#annotation-popup-id {
+    background-color: #222222; 
+    background-image: none;
+    border: 0px solid #7E7E7E;
+    color: #7E7E7E; 
+    overflow:hidden;
+    width:256px;
+    height:192px;
+}
+
+#annotation-accordion-id {
+    width:100%; 
+    height: calc(100% - 25px);
+    background-color: #222222; 
+    background-image: none;
+    color: #7E7E7E; 
+    overflow:auto;
+}
+
+/* invert colour of jQuery accordian header */
+#annotation-accordion-id .ui-accordion-icons {
+    -webkit-filter:invert(100%);                    
+         -o-filter:invert(100%); 
+        -ms-filter:"invert(100%)";
+            filter:invert(100%); 
+    font-family: Verdana, Arial, sans-serif;
+    font-size: 12px;
+}
+
+#annotation-accordion-id .ui-accordion-content {
+    border: 0px solid #7E7E7E;
+    background-color: #222222;
+    background-image: none;
+    font-family: Verdana, Arial, sans-serif;
+    color: #7E7E7E;    
+}
+
+/* invert colour of jQuery resizable handle */
+#annotation-popup-resize-icon {
+    -webkit-filter:invert(100%);                    
+         -o-filter:invert(100%); 
+        -ms-filter:"invert(100%)";
+            filter:invert(100%);   
+}
+
+.annotation {
+    background-color: #222222;
+    color: #7E7E7E;
+    font-size: 12px;
+}
+
+.annotation-label {
+    float:left;
+    width:90px;
+}
+
+.annotation-content-container {
+    padding-top:15px; 
+    padding-left:15px; 
+    height:calc(100% - 25px);
+}
+
+.annotation-attribute {
+    white-space: nowrap;
+    font-weight:bold; 
+    padding-bottom:10px;
+}
+
+.annotation-input {
+    border: 1px solid #7E7E7E;
+    width: calc(100% - 108px)
+}
+
+.annotation-textarea {
+    border: 1px solid #7E7E7E;
+    width: calc(100% - 22px);
+    height: calc(100% - 110px);
+    max-width: 384px;
+    max-height: 256px;
+    font-family: inherit;
+    font-size: inherit;  
+    resize:none;
+}
+
+.annotation-text-div {
+    width: calc(100% - 17px);
+    height: calc(100% - 73px);
+    max-width: 384px;
+    max-height: 256px;
+    overflow: auto;
+}
+
+.annotation-button {
+    margin-top:10px;
+    -webkit-border-radius: 5px;
+       -moz-border-radius: 5px;
+            border-radius: 5px;
+    color: #7E7E7E;
+    background: #222222;
+    padding: 5px 8px 5px 8px;
+    border: solid #7E7E7E 1px;
+    text-decoration: none;
+}
+
+.annotation-button-right {
+    float:right;
+}
+
+.annotation-button-left {
+    margin-left:15px;
+    float:left;
+}
+
+.annotation-button:hover {
+    background: #333333;
+}
+
+#annotation-popup-edit {
+    position:absolute; 
+    right:0px; 
+    outline-width:0;
+}
+

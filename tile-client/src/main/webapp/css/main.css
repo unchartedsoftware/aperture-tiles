@@ -1,3 +1,7 @@
-#description { 
-	margin-bottom: 15px; 
+@charset "UTF-8";
+
+body {
+    font-family: Verdana, Arial, sans-serif;
+    background-color: black; 
+    color: #7E7E7E;
 }

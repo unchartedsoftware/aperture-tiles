@@ -286,24 +286,25 @@ define(function (require) {
     /**
      * Valid ramp type strings.
      */
-    LayerState.RAMP_TYPES = {
-        WARE: { id: "ware", name: "Ware"},
-        INV_WARE: {id: "inv-ware", name: "Inverse Ware"},
-        BR: {id: "br", name: "Blue/Red"},
-        INV_BR: {id: "inv-br", name: "Inverse Blue/Red"},
-        GREY: {id: "grey", name: "Grey"},
-        INV_GREY: {id: "inv-grey", name: "Inverse Grey"},
-        FLAT: {id: "flat", name: "Flat"},
-        SINGLE_GRADIENT: {id: "single-gradient", name: "Single Gradient"}
-    };
+    LayerState.RAMP_TYPES = [
+        {id: "ware", name: "Ware"},
+        {id: "inv-ware", name: "Inverse Ware"},
+        {id: "br", name: "Blue/Red"},
+        {id: "inv-br", name: "Inverse Blue/Red"},
+        {id: "grey", name: "Grey"},
+        {id: "inv-grey", name: "Inverse Grey"},
+        {id: "flat", name: "Flat"},
+        {id: "single-gradient", name: "Single Gradient"}
+    ];
+
 
     /**
      * Valid ramp function strings.
      */
-    LayerState.RAMP_FUNCTIONS = {
-        LINEAR: {id: "linear", name: "Linear"},
-        LOG10: {id: "log10", name: "Log 10"}
-    };
+    LayerState.RAMP_FUNCTIONS = [
+        {id: "linear", name: "Linear"},
+        {id: "log10", name: "Log 10"}
+    ];
 
 
     return LayerState;
