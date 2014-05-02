@@ -42,6 +42,7 @@ define(function (require) {
 
     var Class = require('../../class'),
         LayerState = require('../model/LayerState'),
+        OverlayButton = require('../../ui/OverlayButton'),
         LayerControls,
         addLayer,
         showLayerSettings,
@@ -91,11 +92,9 @@ define(function (require) {
      *
      * @param $parentElement - The parent element in the document tree to add the controls to.
      *
-     * @param $root - The root control element.
-     *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (sortedLayers, index, $parentElement, $root, controlsMap) {
+    addLayer = function (sortedLayers, index, $parentElement, controlsMap) {
         var $cell,
             $filterSlider,
             $opacitySlider,
@@ -135,7 +134,7 @@ define(function (require) {
         if ( layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
             $settingsButton = $('<button class="settings-link">settings</button>');
             $settingsButton.click(function () {
-                showLayerSettings($root, layerState);
+                showLayerSettings($parentElement, layerState);
             });
             $layerControlTitleBar.append($settingsButton);
         }
@@ -239,8 +238,7 @@ define(function (require) {
      */
     showLayerSettings = function ($parent, layerState) {
 
-        var $settingsControls,
-            $settingsTitleBar,
+        var $settingsTitleBar,
             $settingsContent,
             name,
             span,
@@ -256,17 +254,15 @@ define(function (require) {
         // Save the main layer controls hierarchy
         oldChildren = replaceChildren($parent, null);
 
-        // create root div
-        $settingsControls = $('<div class="layer-control-container"></div>');
         // create title div
         $settingsTitleBar = $('<div class="settings-title"></div>');
         // add title span to div
         $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + '</span>'));
-        $settingsControls.append($settingsTitleBar);
+        $parent.append($settingsTitleBar);
 
         // create content div
         $settingsContent = $('<div class="settings-content"></div>');
-        $settingsControls.append($settingsContent);
+        $parent.append($settingsContent);
 
         // create back button
         $backButton = $('<button class="settings-back-link">back</button>');
@@ -314,7 +310,7 @@ define(function (require) {
             ));
         }
 
-        $parent.append($settingsControls);
+        //$parent.append($settingsControls);
 
         // Set initial value based on layer state model
         $('input[name="ramp-types"][value="' + layerState.getRampType() + '"]').prop('checked', true);
@@ -333,7 +329,7 @@ define(function (require) {
     /**
      * Creates an observer to handle layer state changes, and update the controls based on them.
      */
-    makeLayerStateObserver = function (layerState, controlsMap, layerStateMap, $layersControlListRoot, $root) {
+    makeLayerStateObserver = function (layerState, controlsMap, layerStateMap, $layersControlListRoot) {
         return function (fieldName) {
             if (fieldName === "enabled") {
                 controlsMap[layerState.getId()].enabledCheckbox.prop("checked", layerState.isEnabled());
@@ -345,7 +341,7 @@ define(function (require) {
             } else if (fieldName === "rampImageUrl") {
                 controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
             } else if (fieldName === "zIndex") {
-                replaceLayers(sortLayers(layerStateMap), $layersControlListRoot, $root, controlsMap);
+                replaceLayers(sortLayers(layerStateMap), $layersControlListRoot, controlsMap);
             }
         };
     };
@@ -356,10 +352,9 @@ define(function (require) {
      *
      * @param {object} layerStateMap - A hash map of LayerState objects.
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
-     * @param {object} $root  - The root JQuery node of the entire layer control set.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function (layerStateMap, $layerControlsContainer, $root, controlsMap) {
+    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap) {
         var i, key, sortedLayerStateList;
         sortedLayerStateList = sortLayers(layerStateMap);
         $layerControlsContainer.empty();
@@ -371,7 +366,7 @@ define(function (require) {
         }
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStateList.length; i += 1) {
-            addLayer(sortedLayerStateList, i, $layerControlsContainer, $root, controlsMap, sortedLayerStateList);
+            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, sortedLayerStateList);
         }
     };
 
@@ -407,31 +402,37 @@ define(function (require) {
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
         initialize: function (layerStateMap) {
-            var layerState;
+            var layerState, overlay;
 
             // "Private" vars
             this.controlsMap = {};
-            this.$root = null;
             this.$layerControlsContainer = null;
 
+            // create the container
+            overlay = new OverlayButton({
+                id:'layer-controls',
+                active: false,
+                activeWidth: '50%',
+                text: 'Controls',
+                css: {
+                    right: '10px',
+                    bottom: '42px'
+                }
+            });
+
             // Add the title
-            this.$root = $('#layer-controls-container');
-            this.$root.append(this.$layerControlsRoot);
+            this.$layerControlsContainer = overlay.getContainer();
+            this.$layerControlsContainer.addClass('layer-controls-container');
 
-            // Add the layer control list area
-            this.$layerControlsContainer = $('<div class="layer-control-container"></div>');
-
-            this.$root.append(this.$layerControlsContainer);
             // Add layers visuals and register listeners against the model
-            replaceLayers(layerStateMap, this.$layerControlsContainer, this.$root, this.controlsMap);
+            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
                     layerStateMap[layerState].addListener(makeLayerStateObserver(
                         layerStateMap[layerState],
                         this.controlsMap,
                         layerStateMap,
-                        this.$layerControlsContainer,
-                        this.$root
+                        this.$layerControlsContainer
                     ));
                 }
             }

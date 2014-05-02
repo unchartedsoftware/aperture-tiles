@@ -30,34 +30,16 @@
 /**
  * This module defines a TileService class that is to be injected into a
  * TileTracker instance. This class is responsible for RESTful requests
- * from the server along with caching requested tiles
+ * from the server
  */
 define(function (require) {
     "use strict";
 
+
+
     var Class = require('../../../../class'),
-        WebPyramid = require('../../../../binning/WebTilePyramid'),
-        AoITilePyramid = require('../../../../binning/AoITilePyramid'),
-        getArrayLength,
         TileService;
 
-    /*
-     * Get the length of this array property, if it is an array property.
-     * If not, return false;
-     */
-    getArrayLength = function (binData) {
-        var length = $(binData).length,
-            i;
-        if (0 === length) {
-            return 0;
-        }
-        for (i=0; i<length; ++i) {
-            if (!binData[i]) {
-                return false;
-            }
-        }
-        return length;
-    };
 
 
     TileService = Class.extend({
@@ -66,15 +48,15 @@ define(function (require) {
         /**
          * Construct a TileService
          */
-        init: function (layerInfo) {
+        init: function (layerInfo, tilepyramid) {
 
-            // All the data we've received, put in one object, keyed by
-            // tile key (as defined by the createTileKey method).
+            // current tile data
             this.data = {};
-            this.dataStatus = {};
-            this.referenceCount = {};
-            this.memoryQueue = [];
-            this.getCallbacks = {};
+            // tiles flagged as actively requested and waiting on
+            this.waitingOnTile = {};
+            // callbacks
+            this.dataCallback = {};
+            // layer info
             this.layerInfo = layerInfo;
 
             // The relative position within each bin at which visuals will 
@@ -82,22 +64,7 @@ define(function (require) {
             this.position = {x: 'minX', y: 'centerY'}; //{x: 'centerX', y: 'centerY'};
 
             // set tile pyramid type
-            switch (this.layerInfo.projection) {
-
-                case 'EPSG:900913':
-                    // web mercator projection
-                    this.tilePyramid = new WebPyramid();
-                    break;
-                //case 'EPSG:4326':
-                default:
-                    // linear projection
-                    this.tilePyramid = new AoITilePyramid(this.layerInfo.bounds[0],
-                                                          this.layerInfo.bounds[1],
-                                                          this.layerInfo.bounds[2],
-                                                          this.layerInfo.bounds[3]);
-                    break;
-            }
-
+            this.tilePyramid = tilepyramid;
         },
 
 
@@ -136,52 +103,6 @@ define(function (require) {
         },
 
 
-        requestTiles: function(visibleTiles, tileSetBounds, callback) {
-
-            var activeTiles = [],
-                defunctTiles = {},
-                neededTiles = [],
-                i, tile, tileKey;
-
-            // Copy out all keys from the current data.  As we go through
-            // making new requests, we won't bother with tiles we've
-            // already received, but we'll remove them from the defunct
-            // list.  When we're done requesting data, we'll then know
-            // which tiles are defunct, and can be removed from the data
-            // set.
-            for (i=0; i<this.tiles.length; ++i) {
-                defunctTiles[this.tiles[i]] = true;
-            }
-
-            // Go through, seeing what we need.
-            for (i=0; i<visibleTiles.length; ++i) {
-                tile = visibleTiles[i];
-                tileKey = this.createTileKey(tile);
-
-                if (defunctTiles[tileKey]) {
-                    // Already have the data, remove from defunct list
-                    delete defunctTiles[tileKey];
-                } else {
-                    // New data.  Mark for fetch.
-                    neededTiles.push(tileKey);
-                }
-                // And mark tile it as meaningful
-                activeTiles.push(tileKey);
-            }
-
-            // Update our internal lists
-            this.tiles = activeTiles;
-            // Remove all old defunct tiles references
-            for (tileKey in defunctTiles) {
-                if (defunctTiles.hasOwnProperty(tileKey)) {
-                    this.dataService.removeReference(tileKey);
-                }
-            }
-            // Request needed tiles from dataService
-            this.dataService.getDataFromServer(neededTiles, tileSetBounds, callback);
-        },
-
-
         /**
          * Create a universal unique key for a given tile
          *
@@ -205,81 +126,13 @@ define(function (require) {
 
 
         /**
-         * Increment reference count for specific tile data
-         *
-         * @param tilekey tile identification key for data
+         * Clears unneeded data from memory
          */
-        addReference: function(tilekey) {
+        releaseData: function(tilekey) {
 
-            if (this.referenceCount[tilekey] === undefined) {
-                this.referenceCount[tilekey] = 0;
-            }
-
-            // ensure fresh requests cause tile to be pushed onto the back of queue
-            if (this.memoryQueue.indexOf(tilekey) !== -1) {
-                this.memoryQueue.splice(this.memoryQueue.indexOf(tilekey), 1);
-            }
-            this.memoryQueue.push(tilekey);
-
-            this.referenceCount[tilekey]++;
-        },
-
-
-        /**
-         * Decrement reference count for specific tile data, if reference count hits 0,
-         * call memory management function
-         *
-         * @param tilekey tile identification key for data
-         */
-        removeReference: function(tilekey) {
-
-            this.referenceCount[tilekey]--;
-            if (this.referenceCount[tilekey] === 0) {
-                this.memoryManagement();
-            }
-
-        },
-
-
-        /**
-         * Returns current reference count of a tile
-         *
-         * @param tilekey tile identification key for data
-         */
-        getReferenceCount: function(tilekey) {
-            if (this.referenceCount[tilekey] === undefined) {
-                return 0;
-            }
-            return this.referenceCount[tilekey];
-        },
-
-
-        /**
-         * Manages how defunct tile data is de-allocated, once max number
-         * of in memory tiles is reached, de-allocates tiles that were
-         * used longest ago. Current max tile count is 100
-         */
-        memoryManagement: function() {
-
-            var i = 0,
-                tilekey,
-                MAX_NUMBER_OF_ENTRIES = 1000;
-
-            while (this.memoryQueue.length > MAX_NUMBER_OF_ENTRIES) {
-
-                // while over limit of tiles in memory,
-                // iterate from last used tile to most recent and remove them if
-                // reference counts are 0
-                tilekey = this.memoryQueue[i];
-                if (this.getReferenceCount(tilekey) === 0) {
-                    delete this.data[tilekey];
-                    delete this.dataStatus[tilekey];
-                    delete this.referenceCount[tilekey];
-                    this.memoryQueue.splice(i, 1);
-                }
-                i++;
-            }
-
+            delete this.data[tilekey];
+            delete this.waitingOnTile[tilekey];
+            delete this.dataCallback[tilekey];
         },
 
 
@@ -291,7 +144,7 @@ define(function (require) {
          * @param requestedTiles array of requested tilekeys
          * @param callback callback function
          */
-        getDataFromServer: function(requestedTiles, tileSetBounds, callback) {
+        requestData: function(requestedTiles, tileSetBounds, callback) {
             var i;
             // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
@@ -339,12 +192,12 @@ define(function (require) {
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10);
 
-            if (this.dataStatus[tilekey] === undefined) {
+            // ensure we only send a request once
+            if (this.waitingOnTile[tilekey] === undefined) {
 
-                // flag tile as loading, add callback to list
-                this.dataStatus[tilekey] = "loading";
-                this.getCallbacks[tilekey] = [];
-                this.getCallbacks[tilekey].push(callback);
+                // flag tile as loading and stash callback
+                this.waitingOnTile[tilekey] = true;
+                this.dataCallback[tilekey] = callback;
 
                 // request data from server
                 aperture.io.rest(
@@ -358,20 +211,7 @@ define(function (require) {
                     // Add in the list of all needed tiles
                     tileSetBounds
                 );
-                this.addReference(tilekey);
-
-            } else {
-
-				
-                this.addReference(tilekey);
-                if (this.dataStatus[tilekey] === "loaded") {
-                    return true;
-                }
-                // waiting on tile from server, add to callback list
-                this.getCallbacks[tilekey].push(callback);
             }
-
-            return false;
         },
 
 
@@ -384,23 +224,18 @@ define(function (require) {
         getCallback: function(tileData) {
 
             // create tile key: "level, xIndex, yIndex"
-            var tilekey = this.createTileKey(tileData.index),
-                i;
+            var tilekey = this.createTileKey(tileData.index);
 
-            this.data[tilekey] = this.transformTileToBins(tileData.tile, tilekey);
-            this.dataStatus[tilekey] = "loaded"; // flag as loaded
+            // ensure we still need the tile
+            if (this.waitingOnTile[tilekey] === true) {
 
-            if (this.data[tilekey].length > 0) {
-                if (this.getCallbacks[tilekey] === undefined) {
-                    console.log('ERROR: Received tile out of sync from server... ');
-                    return;
-                }
-                for (i =0; i <this.getCallbacks[tilekey].length; i++ ) {
-                    this.getCallbacks[tilekey][i](this.data[tilekey]);
-                }
+                this.data[tilekey] = this.transformTileToBins(tileData.tile, tilekey);
+                this.dataCallback[tilekey]( tileData );
+
+                // clear callbacks and 'waiting on' status
+                delete this.waitingOnTile[tilekey];
+                delete this.dataCallback[tilekey];
             }
-
-            delete this.getCallbacks[tilekey];
         },
 
 
@@ -510,7 +345,8 @@ define(function (require) {
                             latitude: binRect[this.position.y],
                             visible: true,
                             bin: tileData.values[binNum],
-                            tilekey: tileKey
+                            tilekey: tileKey,
+                            layerId: this.layerInfo.layer
                         };
                         results.push( binData );
                         ++binNum;
@@ -518,90 +354,8 @@ define(function (require) {
                 }
             }
             return results;
-        },
-
-
-        //////////////////////////////////////////////////////////////////////
-        // Section: Aperture Interpretation
-        // Methods to interpret the data for Aperture drawing methods
-        //
-
-        /**
-         * Get the total number of data points about which aperture will
-         * care
-         */
-        getCount: function () {
-
-            return this.tilesWithData.length * this.xBinCount * this.yBinCount;
-        },
-
-        /**
-         * Calculates the number of values in the nth data point.
-         */
-        getNumValues: function (n) {
-
-            var binsPerTile = this.xBinCount * this.yBinCount,
-                tileNum = Math.floor(n / binsPerTile),
-                tileKey = this.tilesWithData[tileNum],
-                tileData = this.data[tileKey],
-                indexInTile = tileNum * binsPerTile,
-                binData = tileData.values[indexInTile],
-                length = getArrayLength(binData);
-
-            if (false === length) {
-                return 1;
-            }
-            return length;
-        },
-
-        /**
-         * Calculates the ith value of the nth data point
-         */
-        getValue: function (n, i) {
-
-            var binsPerTile = this.xBinCount * this.yBinCount,
-                tileNum = Math.floor(n / binsPerTile),
-                tileKey = this.tilesWithData[tileNum],
-                tileData = this.data[tileKey],
-                indexInTile = tileNum * binsPerTile,
-                binData = tileData.values[indexInTile],
-                length = getArrayLength(binData);
-
-            if (false === length) {
-                return binData;
-            }
-            if (i < length) {
-                return binData[i];
-            }
-            return null;
-        },
-
-        /**
-         * Calculates the location of the nth data point.
-         * This returns a rectangle object, with minX, minY, maxX, maxY,
-         * centerX, and centerY values; it is up to the user to choose
-         * which to use.
-         */
-        getLocation: function (n) {
-
-            var binsPerTile = this.xBinCount * this.yBinCount,
-                tileNum = Math.floor(n / binsPerTile),
-                tileKey = this.tilesWithData[tileNum],
-                tileData = this.data[tileKey],
-                indexInTile = tileNum * binsPerTile,
-                bin = {
-                    x: indexInTile % this.xBinCount,
-                    y: Math.floor(indexInTile / this.xBinCount)
-                },
-                tile = {
-                    xIndex:    tileData.xIndex,
-                    yIndex:    tileData.yIndex,
-                    level:     tileData.level,
-                    xBinCount: tileData.xBinCount,
-                    yBinCount: tileData.yBinCount
-                };
-            return this.tilePyramid.getBinBounds(tile, bin);
         }
+
     });
 
     return TileService;

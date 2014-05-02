@@ -65,13 +65,111 @@ define(function (require) {
             function horizontalSlide() {
                 that.setEnabled( !that.isEnabled() );
                 that.$container.animate({width: 'toggle'});
+                that.$containerBorder.animate({width: 'toggle'});
                 that.map.redrawAxes();
             }
             function verticalSlide() {
                 that.setEnabled( !that.isEnabled() );
                 that.$container.animate({height: 'toggle'});
+                that.$containerBorder.animate({height: 'toggle'});
                 that.map.redrawAxes();
             }
+            function generateBorder ( $elem ) {
+
+                // standard css borders will cause an ugly overlap, this creates a separate element that is hidden
+                // behind to ensure that the borders are created properly
+                var $border = $('<div class="'+ that.position +'-axis-border">'),
+                    elemCSS = {
+                        position : $elem.css('position'),
+                        'border-style' : $elem.css('border-style'),
+                        'border-color' : $elem.css('border-color'),
+                        'border-width' : $elem.css('border-width'),
+                        width : $elem.css('width'),
+                        height : $elem.css('height'),
+                        top : $elem.css('top'),
+                        left : $elem.css('left'),
+                        right : $elem.css('right'),
+                        bottom : $elem.css('bottom'),
+                        'z-index' : $elem.css('z-index') - 1
+                    };
+                that.$div.append($border);
+                $border.css(elemCSS);
+
+                if (that.isXAxis) {
+                    $border.height( parseInt(elemCSS.height, 10) - parseInt(elemCSS['border-width'], 10) );
+                    $border.css('width', '100%');
+                } else {
+                    $border.width(  parseInt(elemCSS.width, 10) - parseInt(elemCSS['border-width'], 10) );
+                    $border.css('height', '100%');
+                }
+
+                // remove border from original element since we created a new one
+                $elem.css('border-style', 'none');
+
+                return $border;
+            }
+            /**
+             * Creates and returns the axis label element with proper CSS
+             */
+            function generateTitle() {
+
+                var rotation = "",
+                    transformOrigin ="";
+
+                if (!that.isXAxis) {
+                    if (that.position === "left") {
+                        rotation = "rotate(" + (-90) + "deg)";
+                        transformOrigin = "top left";
+                    } else {
+                        rotation = "rotate(" + 90 + "deg)";
+                        transformOrigin = "bottom left";
+                    }
+                }
+
+                return $('<span class="axis-title-label"'
+                    + 'style="position:absolute;'
+                    + '-webkit-transform: ' + rotation + ";"
+                    + '-moz-transform: ' + rotation + ";"
+                    + '-ms-transform: ' + rotation + ";"
+                    + '-o-transform: ' + rotation + ";"
+                    + 'transform: ' + rotation + ";"
+                    + '-webkit-transform-origin: ' + transformOrigin + ";"
+                    + '-moz-transform-origin: ' + transformOrigin + ";"
+                    + '-ms-transform-origin: ' + transformOrigin + ";"
+                    + '-o-transform-origin: ' + transformOrigin + ";"
+                    + 'transform-origin: ' + transformOrigin + ";"
+                    + '">' + that.title + '</div>');
+            }
+            function generateElements() {
+
+                // create axis header and container
+                that.$div = $('<div class="'+ that.position +'-axis"></div>');
+                that.$header = $('<div class="'+ that.position +'-axis-header">');
+                that.$container = $('<div class="'+ that.position +'-axis-container">');
+
+                // set enable / disable callbacks
+                if (that.isXAxis) {
+                    that.$header.click(verticalSlide);
+                    that.$container.click(verticalSlide);
+                } else {
+                    that.$header.click(horizontalSlide);
+                    that.$container.click(horizontalSlide);
+                }
+
+                // append axis div to map parent, and other elements tot hat div
+                that.$map.parent().append(that.$div);
+                that.$div.append(that.$container);
+                that.$div.append(that.$header);
+
+                // generate borders
+                that.$headerBorder = generateBorder(that.$header);
+                that.$containerBorder = generateBorder(that.$container);
+
+                // create new title
+                that.$title = generateTitle();
+                that.$header.append(that.$title);
+            }
+
 
             this.mapId = spec.mapId;
             this.$map = $("#" + this.mapId);
@@ -111,7 +209,7 @@ define(function (require) {
                                             (this.position === 'top') ? 'bottom' : 'top';
 
             this.map.on('mousemove', function(event) {
-                that.redraw();
+                that.redraw( event.xy.x, event.xy.y );
             });
 
             /* 'mousemove' triggers on zoom, so this is unnecessary
@@ -120,21 +218,8 @@ define(function (require) {
             });
             */
 
-            // create axis header and container
-            this.$header = $('<div class="'+ that.position +'-axis-header">');
-            this.$container = $('<div class="'+ that.position +'-axis-container">');
+            generateElements();
 
-            // set enable / disable callbacks
-            if (this.isXAxis) {
-                this.$header.click(verticalSlide);
-                this.$container.click(verticalSlide);
-            } else {
-                this.$header.click(horizontalSlide);
-                this.$container.click(horizontalSlide);
-            }
-
-            this.$map.parent().append(this.$container);
-            this.$map.parent().append(this.$header);
             this.enabled = true;
             this.containerWidth = 0;
             this.redraw();
@@ -169,7 +254,7 @@ define(function (require) {
          * Checks if the mutable spec attributes have changed, if so, redraws
          * that.
          */
-        redraw: function() {
+        redraw: function( vx, vy ) {
 
             var markers = [],
                 that = this;
@@ -179,65 +264,24 @@ define(function (require) {
             }
 
             /**
-             * Creates and returns the axis label element with proper CSS
-             */
-            function createAxisLabel() {
-
-                var rotation = "",
-                    transformOrigin ="";
-
-                if (!that.isXAxis) {
-                    if (that.position === "left") {
-                        rotation = "rotate(" + (-90) + "deg)";
-                        transformOrigin = "top left";
-                    } else {
-                        rotation = "rotate(" + 90 + "deg)";
-                        transformOrigin = "bottom left";
-                    }
-                }
-
-                return $('<span class="axis-title-label"'
-                    + 'style="position:absolute;'
-                    //+ that.leftOrTop + ':' + (that.axisLength*0.5) + 'px;'
-
-                    + '-webkit-transform: ' + rotation + ";"
-                    + '-moz-transform: ' + rotation + ";"
-                    + '-ms-transform: ' + rotation + ";"
-                    + '-o-transform: ' + rotation + ";"
-                    + 'transform: ' + rotation + ";"
-
-                    + '-webkit-transform-origin: ' + transformOrigin + ";"
-                    + '-moz-transform-origin: ' + transformOrigin + ";"
-                    + '-ms-transform-origin: ' + transformOrigin + ";"
-                    + '-o-transform-origin: ' + transformOrigin + ";"
-                    + 'transform-origin: ' + transformOrigin + ";"
-
-                    + '">' + that.title + '</div>');
-            }
-
-            /**
              * Creates the axis main div elements with proper CSS
              */
-            function clearMainElements() {
+            function setupMainElements() {
 
                 // empty elements
                 that.$container.empty();
-                that.$header.empty();
-
-                that.$title = createAxisLabel();
-                that.$header.append(that.$title);
-
-                // position header title AFTER it is appended so we can account for its
-                // width
+                // add position offset for vertical axes
                 if (!that.isXAxis) {
                     if (that.position === 'left') {
-                        that.$title.css(that.leftOrTop, that.$title.width()*0.5 + that.axisLength*0.5);
+                        that.$title.css(that.leftOrTop, that.axisLength + "px");
                     } else {
-                        that.$title.css(that.leftOrTop, -that.$title.width()*0.5 + that.axisLength*0.5);
+                        that.$title.css(that.leftOrTop, -that.axisLength + "px");
                     }
-                } else {
-                    that.$title.css(that.leftOrTop, that.axisLength*0.5);
                 }
+                // add padding for hover hit box
+                that.$title.css('padding-left', (that.axisLength*0.5 - that.$title.width()*0.5) + "px");
+                that.$title.css('padding-right', (that.axisLength*0.5 - that.$title.width()*0.5) + "px" );
+
             }
 
             /**
@@ -384,8 +428,6 @@ define(function (require) {
                         }
                     }
                 }
-
-
                 // div container may change size, this updates properties accordingly
                 that.map.updateSize();
             }
@@ -394,9 +436,9 @@ define(function (require) {
 
             this.axisLength = this.$map.css(this.axisWidthOrHeight).replace('px', ''); // strip px suffix
             // generate array of marker labels and pixel locations
-            markers = AxisUtil.getMarkers(this);
+            markers = AxisUtil.getMarkers(this, vx, vy);
             // generate the main axis DOM elements
-            clearMainElements();
+            setupMainElements();
             // add each marker to correct pixel location in axis DOM elements
             addAxisMarkerElements();
         }

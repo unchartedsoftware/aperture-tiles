@@ -56,17 +56,17 @@ define(function (require) {
 			} else {
 				this.id = id + "-" + idIncrement++;
 			}        
-            this.mouseState = null;
+            this.clientState = null;
         },
 
 
         getOpacity: function() {
-            return this.mouseState.opacity;
+            return this.clientState.opacity;
         },
 
 
         isVisible: function(data) {
-            return this.mouseState.isVisible;
+            return this.clientState.isVisible;
         },
 
 
@@ -76,7 +76,7 @@ define(function (require) {
          * @param data aperturejs node data object
          */
         isSelectedView: function(data) {
-            return data.renderer[this.id] === true;
+            return data.rendererId === this.id;
         },
 
 
@@ -84,10 +84,10 @@ define(function (require) {
          * Attaches a mouse state object to be shared by the render layer. A ViewController has
          * primary ownership of this object. It is too be shared with each render layer so that
          * mouse events can be handled across each layer
-         * @param mouseState the mouse state object
+         * @param clientState the mouse state object
          */
-        attachMouseState: function(mouseState) {
-            this.mouseState = mouseState;
+        attachClientState: function(clientState) {
+            this.clientState = clientState;
         },
 
 

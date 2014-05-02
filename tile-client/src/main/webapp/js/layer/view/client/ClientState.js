@@ -26,7 +26,7 @@
 /*global OpenLayers*/
 
 /**
- * This module defines a MouseState class which is to be held by a ViewController and shared with the individual client
+ * This module defines a ClientState class which is to be held by a ViewController and shared with the individual client
  * render layers. This is to guarantee that interface states can be shared / integrated between separate client layers
  */
 define(function (require) {
@@ -35,11 +35,11 @@ define(function (require) {
 
 
     var Class = require('../../../class'),
-        MouseState;
+        ClientState;
 
 
 
-    MouseState = Class.extend({
+    ClientState = Class.extend({
 
         /**
          * Construct a mouse state
@@ -119,5 +119,5 @@ define(function (require) {
 
      });
 
-    return MouseState;
+    return ClientState;
 });

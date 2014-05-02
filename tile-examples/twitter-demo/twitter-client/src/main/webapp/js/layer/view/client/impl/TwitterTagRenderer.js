@@ -100,8 +100,8 @@ define(function (require) {
          * @param tilekey the tilekey of the respective tile
          */
         isHovered: function (tag, tilekey) {
-            var hoverTilekey = this.mouseState.hoverState.tilekey,
-                hoverTag = this.mouseState.hoverState.userData.tag;
+            var hoverTilekey = this.clientState.hoverState.tilekey,
+                hoverTag = this.clientState.hoverState.userData.tag;
 
             return hoverTag === tag && hoverTilekey === tilekey;
 
@@ -114,8 +114,8 @@ define(function (require) {
          * @param tilekey the tilekey of the respective tile
          */
         isClicked: function (tag, tilekey) {
-            var clickTilekey = this.mouseState.clickState.tilekey,
-                clickTag = this.mouseState.clickState.userData.tag;
+            var clickTilekey = this.clientState.clickState.tilekey,
+                clickTag = this.clientState.clickState.userData.tag;
 
             return clickTag === tag && clickTilekey === tilekey;
 
@@ -139,10 +139,10 @@ define(function (require) {
          */
         shouldBeGreyedOut: function (tag, tilekey) {
 
-            var hoverTilekey = this.mouseState.hoverState.tilekey,
-                hoverTag = this.mouseState.hoverState.userData.tag,
-                clickTilekey = this.mouseState.clickState.tilekey,
-                clickTag = this.mouseState.clickState.userData.tag;
+            var hoverTilekey = this.clientState.hoverState.tilekey,
+                hoverTag = this.clientState.hoverState.userData.tag,
+                clickTilekey = this.clientState.clickState.tilekey,
+                clickTag = this.clientState.clickState.userData.tag;
 
             if ( // nothing is hovered or clicked on
                  (clickTilekey === '' && hoverTilekey === '') ||
@@ -161,8 +161,8 @@ define(function (require) {
          * @param tag the twitter data tag string
          */
         matchingTagIsSelected: function (tag) {
-            return (this.mouseState.hoverState.userData.tag === tag ||
-                    this.mouseState.clickState.userData.tag === tag)
+            return (this.clientState.hoverState.userData.tag === tag ||
+                    this.clientState.clickState.userData.tag === tag)
         },
 
 

@@ -26,7 +26,7 @@
 /*global OpenLayers*/
 
 /**
- * This module defines a CarouselLayer class which inherits from a ViewController and provides a user
+ * This module defines a CarouselLayer class which inherits from a ClientLayer and provides a user
  * interface and event handler for switching between views for individual tiles
  */
 define(function (require) {
@@ -34,12 +34,12 @@ define(function (require) {
 
 
 
-    var ViewController = require('./ViewController'),
+    var ClientLayer = require('./ClientLayer'),
         CarouselLayer;
 
 
 
-    CarouselLayer = ViewController.extend({
+    CarouselLayer = ClientLayer.extend({
 
         /**
          * Construct a carousel
@@ -48,7 +48,7 @@ define(function (require) {
 
             var that = this;
 
-            // call base class ViewController constructor
+            // call base class ClientLayer constructor
             this._super(id, map);
             this.previousMouse = {};
             this.selectedTileInfo = {};
@@ -72,8 +72,11 @@ define(function (require) {
 
             this._super(views);
 
-            // create the carousel UI
-            this.createUI();
+            if (this.views.length > 1) {
+                // create the carousel UI
+                this.createUI();
+            }
+
         },
 
 
@@ -156,7 +159,7 @@ define(function (require) {
             });
 
             viewSelectionLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.isVisible;
             });
 
             viewSelectionLayer.map('opacity').from( function() {
@@ -224,7 +227,7 @@ define(function (require) {
             });
 
             viewIndexLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.isVisible;
             });
 
             viewIndexLayer.map('opacity').from( function() {
@@ -282,7 +285,7 @@ define(function (require) {
             });
 
             outlineLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.mouseState.isVisible;
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.isVisible;
             });
 
             outlineLayer.map('opacity').from( function() {

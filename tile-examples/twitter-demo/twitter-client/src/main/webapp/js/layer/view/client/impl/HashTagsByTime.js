@@ -67,7 +67,7 @@ define(function (require) {
 
 
         onClick: function(event, index) {
-            this.mouseState.setClickState(event.data.tilekey, {
+            this.clientState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[index].tag,
                 index : index
             });
@@ -79,7 +79,7 @@ define(function (require) {
 
 
         onHover: function(event, index, id) {
-            this.mouseState.setHoverState(event.data.tilekey, {
+            this.clientState.setHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[index].tag,
                 index : index,
                 id : id
@@ -89,7 +89,7 @@ define(function (require) {
 
 
         onHoverOff: function(event) {
-            this.mouseState.clearHoverState();
+            this.clientState.clearHoverState();
             this.redrawLayers(event.data);
         },
 
@@ -130,7 +130,7 @@ define(function (require) {
             this.createLabels();
             this.createCountSummaries();
             this.detailsOnDemand = new DetailsOnDemand(this.id);
-            this.detailsOnDemand.attachMouseState(this.mouseState);
+            this.detailsOnDemand.attachClientState(this.clientState);
             this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
@@ -215,7 +215,7 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.bars.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
 
         },
@@ -232,8 +232,8 @@ define(function (require) {
             this.summaryLabel.map('font-outline-width').asValue(3);
             this.summaryLabel.map('visible').from(function(){
                 return that.isSelectedView(this) &&
-                    that.mouseState.hoverState.tilekey === this.tilekey &&
-                    that.mouseState.hoverState.userData.id === 'hashTagsByTimeCountSummary';
+                    that.clientState.hoverState.tilekey === this.tilekey &&
+                    that.clientState.hoverState.userData.id === 'hashTagsByTimeCountSummary';
             });
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
@@ -243,7 +243,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.hoverState.userData.index;
+                var tagIndex = that.clientState.hoverState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;
@@ -256,7 +256,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
         },
 
@@ -320,7 +320,7 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.tagLabels.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
 
         }

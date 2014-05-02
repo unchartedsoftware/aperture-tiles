@@ -23,7 +23,10 @@
     height:32px;
     top:0px;
     left:0px;
-    z-index:1001;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .bottom-axis-header {
@@ -33,17 +36,23 @@
     height:32px;
     bottom:0px;
     left:0px;
-    z-index:1001;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .left-axis-header {
     position:absolute;
-    background: #222222;   
+    background: #222222;
     height:100%;
     width:32px;
     left:0px;
     top:0px;
-    z-index:1001;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .right-axis-header {
@@ -53,7 +62,10 @@
     width:32px;
     right:0px;
     top:0px;
-    z-index:1001;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .top-axis-container {
@@ -152,7 +164,27 @@
     font-family: Verdana, Arial, sans-serif;
     font-size:0.95em;
     white-space: nowrap;
-    color : #7E7E7E;
+    color : #D3D3D3;
     padding-top: 5px;
     padding-bottom: 5px;
+    padding-left:50%;
+    padding-right:50%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.axis-title-label:hover {
+    font-family: Verdana, Arial, sans-serif;
+    font-size:0.95em;
+    white-space: nowrap;
+    color : #FFFFFF;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left:50%;
+    padding-right:50%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+    cursor: pointer;
 }

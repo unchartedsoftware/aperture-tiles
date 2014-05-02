@@ -192,8 +192,10 @@ define({
      * labels and pixel locations
      *
      * @param axis      axis object
+     * @param vx        viewport x pixel of mouse
+     * @param vy        viewport y pixel of mouse
      */
-    getMarkers : function(axis) {
+    getMarkers : function(axis, vx, vy) {
         "use strict";
 
         // generates all increments between min and max using specified interval
@@ -340,7 +342,9 @@ define({
 
         // get sub increment for small / medium label-less ticks
         subIncrement = increment / that.MARKER_TYPE_ORDER.length;
+
         // add all points between minimum visible value and maximum visible value
-        return fillArrayByIncrement( getMinIncrement(), getMaxIncrement() );
+        return fillArrayByIncrement( getMinIncrement(), getMaxIncrement());
+
     }
 });

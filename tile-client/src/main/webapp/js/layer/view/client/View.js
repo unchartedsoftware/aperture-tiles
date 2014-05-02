@@ -38,7 +38,7 @@ define(function (require) {
 
 
 
-    var Class = require('../class'),
+    var Class = require('../../../class'),
         TileTracker;
 
 
@@ -49,12 +49,44 @@ define(function (require) {
         /**
          * Construct a TileTracker
          */
-        init: function (dataService) {
+        init: function ( spec ) {
 
-            this.dataService = dataService;
+            this.renderer = spec.renderer;
+            this.renderer.attachClientState(spec.clientState);    // attach the shared client state
+            this.renderer.createLayer(spec.mapNodeLayer);   // create the render layer
+            this.dataService = spec.dataService;
             this.tiles = [];
         },
 
+
+        getRendererId: function() {
+            return this.renderer.id;
+        },
+
+
+        getLayerId: function() {
+            return this.dataService.layerInfo.layer;
+        },
+
+        /** add views renderer id to node data
+         *
+         * @param data      data to add renderer id to
+         */
+        addRendererIdToData: function( data ) {
+            var i;
+            if ( $.isArray( data ) ) {
+                for (i=0; i<data.length; i++ ) {
+                    data[i].rendererId = this.getRendererId();
+                }
+            } else {
+                for (i in data) {
+                    if (data.hasOwnProperty(i)) {
+                        data[i].rendererId = this.getRendererId();
+                    }
+                }
+            }
+            return data;
+        },
 
         /**
          * Given a list of tiles, determines which are already tracked, which need to be
@@ -101,73 +133,68 @@ define(function (require) {
             // Remove all old defunct tiles references
             for (tileKey in defunctTiles) {
                 if (defunctTiles.hasOwnProperty(tileKey)) {
-                    this.dataService.removeReference(tileKey);
+                    this.dataService.releaseData(tileKey);
                 }
             }
             // Request needed tiles from dataService
-            this.dataService.getDataFromServer(neededTiles, tileSetBounds, callback);
+            this.dataService.requestData(neededTiles, tileSetBounds, callback);
         },
 
 
-        /**
-         * Given another TileTracker and tilekey, swaps the tiles. This function ensures that
-         * if the dataService is shared between trackers, the data will not be de-allocated
-         * from memory during the swap.
-         * @param newTracker the tracker to gain ownership of the tile
-         * @param tilekey the tile identification key
-         * @param callback the callback function after the swap is complete
-         */
-        swapTileWith: function(newTracker, tilekey, callback) {
+        swapTileWith: function (otherTracker, tilekey) {
+            otherTracker.tiles.push(tilekey);
+            otherTracker.dataService.data[tilekey] = this.dataService.data[tilekey];
 
-            // in order to prevent data de-allocation between releasing this trackers tile
-            // and requesting the other trackers tile, this function adds an artificial
-            // reference count increment/decrement
+            this.tiles.splice(this.tiles.indexOf(tilekey), 1);
+            this.dataService.releaseData(tilekey);
+        },
+
+
+        releaseTile: function(tilekey) {
+
             if (this.tiles.indexOf(tilekey) === -1) {
                 // this tracker does not have requested tile, this function should not
                 // have been called, return
                 return;
             }
-            // prematurely increment reference in case other tracker shares data
-            newTracker.dataService.addReference(tilekey);
-            // release tile, this decrements reference. If data is shared, the data
-            // reference count now set to 1, preventing unnecessary de-allocation
+            // remove tile from tracked list
             this.tiles.splice(this.tiles.indexOf(tilekey), 1);
-            this.dataService.removeReference(tilekey);
-            // request tile, incrementing reference count again, value is now 2
-            newTracker.requestTile(tilekey, callback);
-            // remove extra reference, resulting in proper count of 1
-            newTracker.dataService.removeReference(tilekey);
+            // release data
+            this.dataService.releaseData(tilekey);
         },
 
 
-        /**
-         * Request a tile from the dataService
-         * @param tilekey the tile identification key
-         * @param callback the callback function after the tile is received
-         */
         requestTile: function(tilekey, callback) {
             if (this.tiles.indexOf(tilekey) === -1) {
                 this.tiles.push(tilekey);
             }
-            this.dataService.getDataFromServer([tilekey], {}, callback);
+            this.dataService.requestData([tilekey], {}, callback);
         },
 
+
+        getTileData: function(tilekey) {
+            this.dataService.data[tilekey].rendererId = this.getRendererId();
+            return this.dataService.data[tilekey];
+        },
 
         /**
          * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
          */
         getDataArray: function ( tilekeys ) {
 
+            var data;
             // if tilekeys are specified, return those
             if ( tilekeys !== undefined ) {
                 if ( !$.isArray( tilekeys ) ) {
                     // only one tilekey specified, wrap in array
                     tilekeys = [tilekeys];
                 }
-                return this.dataService.getDataArray(tilekeys);
+                data =  this.dataService.getDataArray(tilekeys);
+            } else {
+                // otherwise, return all tiles currently tracked
+                data =  this.dataService.getDataArray(this.tiles);
             }
-            // otherwise, return all tiles currently tracked
-            return this.dataService.getDataArray(this.tiles);
+            return this.addRendererIdToData( data );
 
         },
 
@@ -177,16 +204,19 @@ define(function (require) {
          */
         getDataObject: function ( tilekeys ) {
 
+            var data;
             // if tilekeys are specified, return those
             if ( tilekeys !== undefined ) {
                 if ( !$.isArray( tilekeys ) ) {
                     // only one tilekey specified, wrap in array
                     tilekeys = [tilekeys];
                 }
-                return this.dataService.getDataObject(tilekeys);
+                data = this.dataService.getDataObject(tilekeys);
+            } else {
+                // otherwise, return all tiles currently tracked
+                data = this.dataService.getDataObject(this.tiles);
             }
-            // otherwise, return all tiles currently tracked
-            return this.dataService.getDataObject(this.tiles);
+            return this.addRendererIdToData( data );
 
         }
 

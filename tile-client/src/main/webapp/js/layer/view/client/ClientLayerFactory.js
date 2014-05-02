@@ -83,7 +83,7 @@ define( function (require) {
 
             function onRetrieveLayerInfo( index, deferred ){
                 return function( dataLayer, layerInfo ) {
-                    layer.views[index].dataService = new TileService( layerInfo );
+                    layer.views[index].dataService = new TileService( layerInfo, map.getPyramid() );
                     deferred.resolve();
                 };
             }

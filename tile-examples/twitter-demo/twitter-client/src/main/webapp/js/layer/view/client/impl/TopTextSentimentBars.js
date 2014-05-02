@@ -82,7 +82,7 @@ define(function (require) {
 
 
         onClick: function(event) {
-            this.mouseState.setClickState(event.data.tilekey, {
+            this.clientState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index :  event.index[0]
             });
@@ -94,7 +94,7 @@ define(function (require) {
 
 
         onHover: function(event, id) {
-            this.mouseState.setHoverState(event.data.tilekey, {
+            this.clientState.setHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index :  event.index[0],
                 id : id
@@ -104,7 +104,7 @@ define(function (require) {
 
 
         onHoverOff: function(event) {
-            this.mouseState.clearHoverState();
+            this.clientState.clearHoverState();
             this.redrawLayers(event.data);
         },
 
@@ -121,7 +121,7 @@ define(function (require) {
             this.createLabels();
             this.createCountSummaries();
             this.detailsOnDemand = new DetailsOnDemand(this.id);
-            this.detailsOnDemand.attachMouseState(this.mouseState);
+            this.detailsOnDemand.attachClientState(this.clientState);
             this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
@@ -143,9 +143,9 @@ define(function (require) {
                 bar.map('fill').from( function(index) {
 
                     if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                        if ( that.mouseState.hoverState.userData.id !== undefined &&
-                             that.mouseState.hoverState.userData.id === id &&
-                             that.mouseState.hoverState.userData.index === index) {
+                        if ( that.clientState.hoverState.userData.id !== undefined &&
+                             that.clientState.hoverState.userData.id === id &&
+                             that.clientState.hoverState.userData.index === index) {
                             return selectedColour;
                         }
                         return normalColour;
@@ -182,7 +182,7 @@ define(function (require) {
                     return that.getYOffset(this, index) + 6;
                 });
                 bar.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
                 return bar;
             }
@@ -229,14 +229,14 @@ define(function (require) {
             this.summaryLabel.map('font-outline-width').asValue(3);
             this.summaryLabel.map('visible').from(function(){
                 return that.isSelectedView(this) && that.isVisible(this) &&
-                        that.mouseState.hoverState.tilekey === this.tilekey &&
-                        (that.mouseState.hoverState.userData.id === 'topTextSentimentBarsPositive' ||
-                         that.mouseState.hoverState.userData.id === 'topTextSentimentBarsNeutral' ||
-                         that.mouseState.hoverState.userData.id === 'topTextSentimentBarsNegative' ||
-                         that.mouseState.hoverState.userData.id === 'topTextSentimentBarsAll');
+                        that.clientState.hoverState.tilekey === this.tilekey &&
+                        (that.clientState.hoverState.userData.id === 'topTextSentimentBarsPositive' ||
+                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsNeutral' ||
+                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsNegative' ||
+                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsAll');
             });
             this.summaryLabel.map('fill').from( function(index) {
-                var id = that.mouseState.hoverState.userData.id;
+                var id = that.clientState.hoverState.userData.id;
                 switch(index) {
                     case 0:
                         if (id === 'topTextSentimentBarsPositive' || id === 'topTextSentimentBarsAll') {
@@ -259,7 +259,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.hoverState.userData.index;
+                var tagIndex = that.clientState.hoverState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;
@@ -272,7 +272,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
         },
 
@@ -341,7 +341,7 @@ define(function (require) {
             this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabel.map('font-outline-width').asValue(3);
             this.tagLabel.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
         }
 

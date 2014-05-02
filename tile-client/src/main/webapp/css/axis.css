@@ -24,6 +24,9 @@
     top:0px;
     left:0px;
     z-index:1001;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .bottom-axis-header {
@@ -34,6 +37,9 @@
     bottom:0px;
     left:0px;
     z-index:1001;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .left-axis-header {
@@ -44,6 +50,9 @@
     left:0px;
     top:0px;
     z-index:1001;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .right-axis-header {
@@ -54,12 +63,15 @@
     right:0px;
     top:0px;
     z-index:1001;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .top-axis-container {
     position:absolute;
     background: #111111;
-    height:150px;
+    height:130px;
     width:100%;
     top:0px;
     left:0px;
@@ -70,7 +82,7 @@
 .bottom-axis-container {
     position:absolute;
     background: #111111;
-    height:150px;
+    height:130px;
     width:100%;
     bottom:0px;
     left:0px;
@@ -81,7 +93,7 @@
 .left-axis-container {
     position:absolute;    
     background: #111111;
-    width:150px;
+    width:130px;
     height:100%;
     left:0px;
     top:0px;
@@ -92,7 +104,7 @@
 .right-axis-container {
     position:absolute;
     background: #111111;
-    width:150px;
+    width:130px;
     height:100%;
     right:0px;
     top:0px;
@@ -157,7 +169,27 @@
     font-family: Verdana, Arial, sans-serif;
     font-size:0.95em;
     white-space: nowrap;
-    color : #7E7E7E;
+    color : #D3D3D3;
     padding-top: 5px;
     padding-bottom: 5px;
+    padding-left:50%;
+    padding-right:50%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.axis-title-label:hover {
+    font-family: Verdana, Arial, sans-serif;
+    font-size:0.95em;
+    white-space: nowrap;
+    color : #FFFFFF;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left:50%;
+    padding-right:50%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+    cursor: pointer;
 }

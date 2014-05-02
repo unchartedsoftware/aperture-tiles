@@ -5,26 +5,27 @@
     text-align: left;
 }
 
-.layer-control-container {
+.layer-controls-container {
     width: 100%;
+    max-height:512px; 
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
     font-size: 12px;
-    min-width: 360px;
+    min-width: 400px;
     overflow-x:auto;
 }
 
 .layer-title {
     position:relative;
-    padding-bottom:10px;
+    padding-bottom:5px;
     padding-top:10px;
 }
 
 .layer-content {
     position:relative;
     width:100%;
-    padding-bottom:10px;
+    padding-bottom:5px;
 }
 
 .layer-toggle {

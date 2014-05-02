@@ -26,6 +26,7 @@
 
 require(['./FileLoader',
          './ApertureConfig',
+         './ui/OverlayButton',
          './map/MapTracker',
          './map/Map',
          './layer/AllLayers',
@@ -39,6 +40,7 @@ require(['./FileLoader',
 
         function (FileLoader, 
                   configureAperture,
+                  OverlayButton,
                   MapTracker,
         	      Map,
                   AvailableLayersTracker,
@@ -150,11 +152,30 @@ require(['./FileLoader',
                 return validLayers;
             };
 
+            // Create description element
+            $.get("description.html", function (data) {
+                // create the overlay container
+                new OverlayButton({
+                    id:'description',
+                    active: false,
+                    activeWidth: '50%',
+                    text: 'Description',
+                    css: {
+                        right: '10px',
+                        top: '10px'
+                    }
+                }).append(data);
+                // append description html
+
+            });
                         
             // Load all our UI configuration data before trying to bring up the ui
             FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
+
 	            // First off, configure aperture.
 	            configureAperture(jsonDataMap[apertureConfigFile]);
+
+
 
 	            // Get our list of maps
 	            MapTracker.requestMaps(function (maps) {

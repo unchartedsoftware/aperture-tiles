@@ -51,7 +51,7 @@ define(function (require) {
         getExclusiveCountPercentage: function(data, index, type) {
 
             var attrib = type + 'ByTime',
-                tagIndex = this.mouseState.clickState.userData.index,
+                tagIndex = this.clientState.clickState.userData.index,
                 count = data.bin.value[tagIndex].count;
             if (count === 0) {
                 return 0;
@@ -61,7 +61,7 @@ define(function (require) {
 
 
         onHover: function(event, id) {
-            this.mouseState.setHoverState(event.data.tilekey, {
+            this.clientState.setHoverState(event.data.tilekey, {
                 index :  event.index[0],
                 id: id
             });
@@ -69,7 +69,7 @@ define(function (require) {
 
 
         onHoverOff: function(event) {
-            this.mouseState.clearHoverState();
+            this.clientState.clearHoverState();
         },
 
 
@@ -98,14 +98,14 @@ define(function (require) {
                 MOST_RECENT_SPACING = 50;
 
             function isVisible(data) {
-                return that.isSelectedView(data) && that.isVisible(data) && (that.mouseState.clickState.tilekey === data.tilekey);
+                return that.isSelectedView(data) && that.isVisible(data) && (that.clientState.clickState.tilekey === data.tilekey);
             }
 
             function getMaxPercentage(data, type) {
                 var i,
                     percent,
                     maxPercent = 0,
-                    tagIndex = that.mouseState.clickState.userData.index,
+                    tagIndex = that.clientState.clickState.userData.index,
                     count = data.bin.value[tagIndex].count;
                 if (count === 0) {
                     return 0;
@@ -169,7 +169,7 @@ define(function (require) {
             }
 
             function getRecentTweetsCount(data) {
-                var length = data.bin.value[that.mouseState.clickState.userData.index].recent.length;
+                var length = data.bin.value[that.clientState.clickState.userData.index].recent.length;
                 if (length === undefined || length === 0 || isNaN(length)) {
                     return 0;
                 }
@@ -182,10 +182,10 @@ define(function (require) {
                 bar.on('click', function() { return true; }); //swallow event
                 bar.map('visible').from(function(){return isVisible(this)});
                 bar.map('fill').from( function(index) {
-                    if ( that.mouseState.hoverState.userData !== undefined &&
-                        (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
-                         that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative') &&
-                         that.mouseState.hoverState.userData.index === index) {
+                    if ( that.clientState.hoverState.userData !== undefined &&
+                        (that.clientState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                         that.clientState.hoverState.userData.id === 'detailsOnDemandNegative') &&
+                         that.clientState.hoverState.userData.index === index) {
                         return selectedColour;
                     }
                     return defaultColour;
@@ -199,7 +199,7 @@ define(function (require) {
                     return DETAILS_OFFSET_X + 20 + index*BAR_WIDTH;
                 });
                 bar.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
                 return bar;
             }
@@ -218,7 +218,7 @@ define(function (require) {
                 bar.map('offset-x').asValue(DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
                 bar.map('offset-y').asValue(yOffset-1);
                 bar.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
                 return bar;
             }
@@ -234,7 +234,7 @@ define(function (require) {
                 label.map('font-outline').asValue(that.BLACK_COLOUR);
                 label.map('font-outline-width').asValue(3);
                 label.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
                 return label;
             }
@@ -251,7 +251,7 @@ define(function (require) {
             this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET_X + 1);
             this.detailsBackground.on('click', function() { return true; }); //swallow event
             this.detailsBackground.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 })
 
             // TITLE LABELS
@@ -260,7 +260,7 @@ define(function (require) {
             this.titleLabels.map('text').from(function(index) {
                 switch (index) {
                     case 0:
-                        var str = that.filterText(that.mouseState.clickState.userData.tag);
+                        var str = that.filterText(that.clientState.clickState.userData.tag);
                         if (str.length > 15) {
                             str = str.substr(0,15) + "...";
                         }
@@ -309,7 +309,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.clickState.userData.index;
+                var tagIndex = that.clientState.clickState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;
@@ -322,7 +322,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE - that.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 });
 
             // POSITIVE TITLE LABEL
@@ -395,10 +395,10 @@ define(function (require) {
             this.countLabels.map('font-size').asValue(12);
             this.countLabels.map('visible').from(function(){
                 return isVisible(this) &&
-                     that.mouseState.hoverState.userData.id !== undefined &&
-                    (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
-                     that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative') &&
-                     that.mouseState.hoverState.tilekey === this.tilekey;
+                     that.clientState.hoverState.userData.id !== undefined &&
+                    (that.clientState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                     that.clientState.hoverState.userData.id === 'detailsOnDemandNegative') &&
+                     that.clientState.hoverState.tilekey === this.tilekey;
             });
 
             this.countLabels.map('fill').asValue(this.WHITE_COLOUR);
@@ -411,12 +411,12 @@ define(function (require) {
                            "negative:\n" +
                            "total: "
                 } else {
-                    if (that.mouseState.hoverState.userData.index !== undefined) {
-                        tagIndex = that.mouseState.clickState.userData.index;
-                        timeIndex = that.mouseState.hoverState.userData.index;
-                        if (that.mouseState.hoverState.userData.id !== undefined &&
-                           (that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive' ||
-                            that.mouseState.hoverState.userData.id === 'detailsOnDemandNegative')) {
+                    if (that.clientState.hoverState.userData.index !== undefined) {
+                        tagIndex = that.clientState.clickState.userData.index;
+                        timeIndex = that.clientState.hoverState.userData.index;
+                        if (that.clientState.hoverState.userData.id !== undefined &&
+                           (that.clientState.hoverState.userData.id === 'detailsOnDemandPositive' ||
+                            that.clientState.hoverState.userData.id === 'detailsOnDemandNegative')) {
                             positive =  this.bin.value[tagIndex].positiveByTime[timeIndex];
                             neutral =  this.bin.value[tagIndex].neutralByTime[timeIndex];
                             negative =  this.bin.value[tagIndex].negativeByTime[timeIndex];
@@ -433,23 +433,23 @@ define(function (require) {
             this.countLabels.map('font-outline').asValue(this.BLACK_COLOUR);
             this.countLabels.map('font-outline-width').asValue(3);
             this.countLabels.map('offset-y').from( function() {
-                if (that.mouseState.hoverState.userData.id !== undefined &&
-                    that.mouseState.hoverState.userData.id === 'detailsOnDemandPositive') {
+                if (that.clientState.hoverState.userData.id !== undefined &&
+                    that.clientState.hoverState.userData.id === 'detailsOnDemandPositive') {
                     return BAR_CENTRE_LINE - 30;
                 }
                 return BAR_CENTRE_LINE + 30;
             });
             this.countLabels.map('offset-x').from( function(index) {
-                if (that.mouseState.hoverState.userData !== undefined) {
+                if (that.clientState.hoverState.userData !== undefined) {
                     if (index === 1) {
-                        return DETAILS_OFFSET_X + that.mouseState.hoverState.userData.index*BAR_WIDTH + 94;
+                        return DETAILS_OFFSET_X + that.clientState.hoverState.userData.index*BAR_WIDTH + 94;
                     }
-                    return DETAILS_OFFSET_X + that.mouseState.hoverState.userData.index*BAR_WIDTH + 40;
+                    return DETAILS_OFFSET_X + that.clientState.hoverState.userData.index*BAR_WIDTH + 40;
                 }
 
             });
             this.countLabels.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 });
 
             // TIME AXIS LABEL
@@ -487,7 +487,7 @@ define(function (require) {
                 return DETAILS_OFFSET_X + 24 + 51.5*index;
             });
             this.timeAxisTicks.map('opacity').from( function() {
-                    return that.mouseState.opacity;
+                    return that.clientState.opacity;
                 });
 
             // MOST RECENT TWEETS LABELS
@@ -497,9 +497,9 @@ define(function (require) {
                 return getRecentTweetsCount(this);
             });
             this.recentTweetsLabel.map('fill').from( function(index) {
-                if (that.mouseState.hoverState.userData !== undefined &&
-                    that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
-                    that.mouseState.hoverState.userData.index === index) {
+                if (that.clientState.hoverState.userData !== undefined &&
+                    that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.clientState.hoverState.userData.index === index) {
                     return that.YELLOW_COLOUR;
                 } else {
                     return that.WHITE_COLOUR;
@@ -507,12 +507,12 @@ define(function (require) {
             });
             this.recentTweetsLabel.map('font-size').asValue(10);
             this.recentTweetsLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.clickState.userData.index,
+                var tagIndex = that.clientState.clickState.userData.index,
                     filteredText = that.filterText(this.bin.value[tagIndex].recent[index].tweet);
 
-                if (that.mouseState.hoverState.userData !== undefined &&
-                    that.mouseState.hoverState.userData.id === 'detailsOnDemandRecent' &&
-                    that.mouseState.hoverState.userData.index === index) {
+                if (that.clientState.hoverState.userData !== undefined &&
+                    that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.clientState.hoverState.userData.index === index) {
                     return formatText(filteredText, 70);
                 }
                 return formatText(filteredText);
