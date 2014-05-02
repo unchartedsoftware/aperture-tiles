@@ -103,4 +103,38 @@ public class TwitterDemoSerializationTests {
         TwitterDemoRecord recordOut = tileOut.getBin(0, 0).get(0);
         Assert.assertEquals(recordIn, recordOut);
     }
+
+    // Test serialization for 'Demo Day' Twitter Topic Records
+    @Test
+    public void testTopicSerialization () throws Exception {
+		TwitterDemoTopicRecord recordIn = new TwitterDemoTopicRecord("abc", "def",
+				Arrays.asList(new Pair<String, Long>("ghi", 9999L)), 10000);
+		TwitterTopicAvroSerializer serializer = new TwitterTopicAvroSerializer(CodecFactory.nullCodec());
+		
+		TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
+		TileData<List<TwitterDemoTopicRecord>> tileIn = new TileData<>(index, Arrays.asList(Arrays.asList(recordIn)));
+		serializer.serialize(tileIn, pyramid, baos);
+		baos.flush();
+		baos.close();
+		
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		TileData<List<TwitterDemoTopicRecord>> tileOut = serializer.deserialize(index, bais);
+		
+		Assert.assertEquals(1, tileOut.getBin(0, 0).size());
+		TwitterDemoTopicRecord recordOut = tileOut.getBin(0, 0).get(0);
+		
+		Assert.assertEquals(recordIn, recordOut);		
+//	      Assert.assertEquals(recordIn.getTopic(), recordOut.getTopic());
+//	      Assert.assertEquals(recordIn.getTopicEnglish(), recordOut.getTopicEnglish());
+//	      Assert.assertEquals(recordIn.getCountDaily(), recordOut.getCountDaily());
+//	      Assert.assertEquals(recordIn.getCountPer6hrs(), recordOut.getCountPer6hrs());
+//	      Assert.assertEquals(recordIn.getCountPerHour(), recordOut.getCountPerHour());
+//	      Assert.assertEquals(recordIn.getRecentTweets(), recordOut.getRecentTweets());
+//	      Assert.assertTrue(recordIn.getCountMonthly() == recordOut.getCountMonthly());
+//	      Assert.assertTrue(recordIn.getEndTime() == recordOut.getEndTime());
+        
+    }
+    
 }

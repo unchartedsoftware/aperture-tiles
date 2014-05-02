@@ -58,12 +58,7 @@ class TwitterTopicRecordLine (val createdAt: Date,
 object TwitterTopicRecordParser {
 }
 
-class TwitterTopicRecordParser (endTimeSecs: Long, timeBins: Int) {
-  private val emptyBins = Range(0, timeBins).map(n => new JavaInt(0)).toList.asJava
- 
-//  private def getBin (time: Long): Int = {
-//    math.max(0, math.min(timeBins+1, ((timeBins * (time-startTime)) / (endTime-startTime+1L)).toInt))
-//  }
+class TwitterTopicRecordParser (endTimeSecs: Long) {
 
   // South American Twitter Dataset has:
   // Column 1: created_at
@@ -82,8 +77,9 @@ class TwitterTopicRecordParser (endTimeSecs: Long, timeBins: Int) {
   // Column 12: topics (original language)
   // Column 13: topics (English)
 
-  private val dateParser = new SimpleDateFormat("EEE MMM dd HH:mm:ss ZZZZ yyyy")
-
+  //private val dateParser = new SimpleDateFormat("EEE MMM dd HH:mm:ss ZZZZ yyyy")
+  private val dateParser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")	  
+  
   private def splitTags (tagsList: String): Array[String] =
     tagsList.split("#").filter(!_.isEmpty)
 
@@ -106,22 +102,27 @@ class TwitterTopicRecordParser (endTimeSecs: Long, timeBins: Int) {
   }
 
   def getRecordsByTopic (line: String):								
-    Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] =
-    	getRecords(recordLine => recordLine.topics)(line)
-  
-  private def getRecords (wordFcn: TwitterTopicRecordLine => Iterable[String])
-			 (line: String): Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] = {
+    Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] = {
     val recordLine = parseLine(line)
     val time = (recordLine.createdAt.getTime()*0.001).toLong	// convert from msec to sec
-
-    val textTime = new Pair[String, JavaLong](recordLine.text, time)
-    val textTimeList = List[Pair[String, JavaLong]](textTime).asJava
-    val topic1 = recordLine.topics(0)	//1st topic for this line (in case there are multiple keyword topics)
-    val topicEng1 = recordLine.topicsEng(0)
     
-    Seq((recordLine.longitude, recordLine.latitude,
-	 wordFcn(recordLine).map(topic => {
-	   (topic, new TwitterDemoTopicRecord(topic1, topicEng1, textTimeList, endTimeSecs))
-	 }).toMap))
-  }
+    if ((endTimeSecs - time > 0L) && (endTimeSecs - time <= 2678400L)) {
+    	// tweet time is valid time interva (i.e., within 1 month prior to endTime)    
+	    val textTime = new Pair[String, JavaLong](recordLine.text, time)
+	
+	    val newRecordsMap =
+	    	recordLine.topics
+	    	          .zip(recordLine.topicsEng)		// Combine raw topic and translation
+	                  .map{case (raw: String, english: String) => {
+	                    	 							// Change topic/translation pair to a topic record
+	    	val textTimeList = List[Pair[String, JavaLong]](textTime).asJava
+	    	(raw -> new TwitterDemoTopicRecord(raw, english, textTimeList, endTimeSecs))
+	    }}.toMap
+	
+	    Seq((recordLine.longitude, recordLine.latitude, newRecordsMap))
+    } else {
+    	// tweet time is invalid, so disregard
+    	Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])]()
+    }
+  }    	  	
 }

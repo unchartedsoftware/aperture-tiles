@@ -54,9 +54,9 @@ object TwitterTopicBinner {
     val source = argParser.getString("source", "The source location at which to find twitter data")
     val dateParser = new SimpleDateFormat("yyyy/MM/dd.HH:mm:ss.zzzz")
     //Note:  don't need a start time for this binning project.  Start time is assumed to be 31 days prior to end time.
-    //val startTime = dateParser.parse(argParser.getString("start", "The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.zzzz"))
-    val endTime = dateParser.parse(argParser.getString("end", "The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.zzzz"))
-    val bins = argParser.getInt("bins", "The number of time bins into which to divide the time range?", Some(1))
+    //val startTime = dateParser.parse(argParser.getString("start", "The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz"))
+    val endTime = dateParser.parse(argParser.getString("end", "The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz"))
+    //val bins = argParser.getInt("bins", "The number of time bins into which to divide the time range?", Some(1))
     //val stopWordList = new TwitterTopicRecordParser(0L, 1L, 1).getStopWordList	//don't need to use stop-words for this demo
 
     val levelSets = argParser.getString("levels", "The level sets (;-separated) of ,-separated levels to bin.").split(";").map(_.split(",").map(_.toInt))
@@ -83,18 +83,15 @@ object TwitterTopicBinner {
     val endTimeSecs = endTime.getTime()/1000;	// convert time from msec to sec 
     val topicMatcher = new TopicMatcher
     val topicsMap = topicMatcher.getKeywordList(topicList)	// get pre-extracted topics 
-  
+    
     // append topics to end of data entries
-    val rawDataWithTopics = topicMatcher.appendTopicsToData(sc, rawData, topicsMap)    
+    val rawDataWithTopics = topicMatcher.appendTopicsToData(sc, rawData, topicsMap, endTimeSecs)  
    
     val data = rawDataWithTopics.mapPartitions(i => {     
-      val recordParser = new TwitterTopicRecordParser(endTimeSecs, bins)
+      val recordParser = new TwitterTopicRecordParser(endTimeSecs)
       i.flatMap(line => {
     	  try {
-    	      //val N = recordParser.getNumTopics(line)	//TODO ... to handle multiple topics per line??
-    	      //for (n 1 to N) {
-    	      //	  recordParser.getRecordsByTopic(line, n)
-    	      //}
+    	    
     		  recordParser.getRecordsByTopic(line)
     		  
     	  } catch {

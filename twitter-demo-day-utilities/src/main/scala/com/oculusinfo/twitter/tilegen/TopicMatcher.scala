@@ -25,6 +25,7 @@
 
 package com.oculusinfo.twitter.tilegen
 
+import java.text.SimpleDateFormat
 import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.ArrayList
@@ -36,6 +37,8 @@ import org.apache.spark.rdd.RDD
 
 class TopicMatcher {
   
+//  private val dateParser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")	
+  
   // create a map of twitter keywords (key) and their English translations (value)
   def getKeywordList(keywordFile: String): Map[String, String] = {
     
@@ -45,18 +48,20 @@ class TopicMatcher {
       var topicsMap:Map[String,String] = Map() // = Map[String, String]
       for (line <- source.getLines) {	// iterate through all lines in txt file
     	  // split line by tabs (0th element is original topic, 1st is English topic, and 2nd is topic count)
-    	  val lineArray = line.split("\t")	  
-    	  topicsMap += (lineArray(0) -> lineArray(1))	// store original topic as map key, and translated topic as value
+    	  val lineArray = line.split("\t")
+    	  if (lineArray.length > 1)
+    		  topicsMap += (lineArray(0) -> lineArray(1))	// store original topic as map key, and translated topic as value
       }
       return topicsMap
   }
   
   
-  def appendTopicsToData(sc: SparkContext, raw: RDD[String], topicsMap:  Map[String, String]): RDD[String] = {
+  def appendTopicsToData(sc: SparkContext, raw: RDD[String], topicsMap:  Map[String, String], endTimeSecs: Long): RDD[String] = {
 		
 	val bTopics = sc.broadcast(topicsMap)	// broadcast topics list to all workers
-    
+	
 	raw.map(line => {
+	     
 		val tabbedData = line.split("\t")		// separate data by tabs (output is array of strings)
 		var tweet = ""
 		try {
@@ -64,25 +69,34 @@ class TopicMatcher {
 		} catch {
 			case _: Throwable => "| |"
 		}
-
+		
 		// exclude | | on either side of twitter message and convert to lower case
 		tweet = tweet.substring(1, tweet.length()-1).toLowerCase()
 		// remove puncuation
 		tweet = tweet.replace(","," ").replace("."," ").replace("!"," ").replace("?"," ");
 		val words = tweet.split(" ")	//split into words
 		
-		val foundTopics = topicsMap.filterKeys(words.contains(_))	// find matches with keyword list (returns a map with matching keywords)
+		val foundTopics = (bTopics.value).filterKeys(words.contains(_))		// find matches with keyword list (returns a map with matching keywords)
 		
-		var topics = ""		// build a string of found topics and translated topics (comma separated)
-		var topicsEnglish = ""
-		foundTopics.keys.foreach { n =>
-			topics += n + ","
-			topicsEnglish += foundTopics(n) + ","
-		} 
-
-		// remove all whitespace at end of line and append found topics to end
-		line.replaceFirst("\\s+$", "")	+ "\t" + topics + "\t" + topicsEnglish
+		
+		if (foundTopics.size == 0) {
+			line.substring(0,0) // replace with an empty string if no topic matches have been found
+		}
+		else {
+			var topics = ""		// build a string of found topics and translated topics (comma separated)
+			var topicsEnglish = ""
+			foundTopics.keys.foreach { n =>
+				topics += n + ","
+				topicsEnglish += foundTopics(n) + ","
+			}
+			
+			// remove all whitespace at end of line and append found topics to end
+			line.replaceFirst("\\s+$", "").concat("\t" + topics + "\t" + topicsEnglish)	  
+		}		  
+	}).filter(line => {	// discard empty lines
+	  !(line.isEmpty)
 	})
+	
   }
   
   

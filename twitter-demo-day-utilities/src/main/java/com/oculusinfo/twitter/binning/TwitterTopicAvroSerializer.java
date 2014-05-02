@@ -51,7 +51,7 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
     static {
         Map<String, String> map = new HashMap<String, String>();
         map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "twitter demo record array");
+        map.put("data-type", "twitter topic record array");
         META = Collections.unmodifiableMap(map);
     }
 
@@ -68,7 +68,7 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
 
     @Override
     protected String getEntrySchemaFile () {
-        return "twitterDemoEntry.avsc";
+        return "twitterTopicEntry.avsc";
     }
 
     private List<Pair<String, Long>> recentListTOJava (GenericRecord entry) {
@@ -88,9 +88,9 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
         return new TwitterDemoTopicRecord(entry.get("topic").toString(),
         								entry.get("topicEnglish").toString(),
         								(Integer)entry.get("countMonthly"),
-        								(int[])entry.get("countDaily"),
-        								(int[])entry.get("countPer6hrs"),
-        								(int[])entry.get("countPerHour"),
+        								(List<Integer>)entry.get("countDaily"),
+        								(List<Integer>)entry.get("countPer6hrs"),
+        								(List<Integer>)entry.get("countPerHour"),
         								recentListTOJava(entry),
         								(Long)entry.get("endTimeSecs"));
     }
@@ -120,7 +120,7 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
             avroEntry.put("countDaily", rawEntry.getCountDaily());
             avroEntry.put("countPer6hrs", rawEntry.getCountPer6hrs());
             avroEntry.put("countPerHour", rawEntry.getCountPerHour());
-            avroEntry.put("recent",
+            avroEntry.put("recentTweets",
                           recentListToAvro(entrySchema,
                                            rawEntry.getRecentTweets()));
             avroEntry.put("endTimeSecs", rawEntry.getEndTime());

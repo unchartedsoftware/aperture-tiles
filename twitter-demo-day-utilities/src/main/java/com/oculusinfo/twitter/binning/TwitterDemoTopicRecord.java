@@ -43,16 +43,16 @@ public class TwitterDemoTopicRecord implements Serializable {
 	private String _topic; 							// Twitter topic in original language
 	private String _topicEnglish; 					// Twitter topic in English
 	private int _countMonthly; 						// total number of tweets per month with this topic
-	private int[] _countDaily; 						// tweet count per day for the past month with this topic
-	private int[] _countPer6hrs; 					// tweet count per six hours for last week with this topic
-	private int[] _countPerHour; 					// tweet count per hour for last 24 hrs with this topic
+	private List<Integer> _countDaily; 				// tweet count per day for the past month with this topic
+	private List<Integer> _countPer6hrs; 			// tweet count per six hours for last week with this topic
+	private List<Integer> _countPerHour; 			// tweet count per hour for last 24 hrs with this topic
 	private List<Pair<String, Long>> _recentTweets; // 10 most recent tweets with this topic
 	private long _endTimeSecs;						// end time (in secs) for this data record (so valid time window
 													//    between endTimeSecs and endTimeSecs - 1 month
 
 	public TwitterDemoTopicRecord(String topic, String topicEnglish,
-			int countMonthly, int[] countDaily,
-			int[] countPer6hrs, int[] countPerHour,
+			int countMonthly, List<Integer> countDaily,
+			List<Integer> countPer6hrs, List<Integer> countPerHour,
 			List<Pair<String, Long>> recentTweets, long endTimeSecs) {
 		
 		_topic = topic;
@@ -60,30 +60,18 @@ public class TwitterDemoTopicRecord implements Serializable {
 		_countMonthly = countMonthly;
 		_recentTweets = recentTweets;
 		_endTimeSecs = endTimeSecs;
-		
-		if (countDaily.length > NUM_DAYS) {
+				
+		if (countDaily.size() > NUM_DAYS) {
 			throw new IllegalArgumentException("countDaily size cannot be > " + NUM_DAYS);
 		}
-		else {
-			_countDaily = new int[NUM_DAYS];
-			System.arraycopy(countDaily,0,_countDaily,0,_countDaily.length);
-		}
-		
-		if (countPer6hrs.length > NUM_QUARTERDAYS) {
+		else if (countPer6hrs.size() > NUM_QUARTERDAYS) {
 			throw new IllegalArgumentException("countPer6hrs size cannot be > " + NUM_QUARTERDAYS);
 		}
-		else {
-			_countPer6hrs = new int[NUM_QUARTERDAYS];
-			System.arraycopy(countPer6hrs,0,_countPer6hrs,0,_countPer6hrs.length);
-		}
-		
-		if (countPerHour.length > NUM_HOURS) {
+		else if (countPerHour.size() > NUM_HOURS) {
 			throw new IllegalArgumentException("countPerHour size cannot be > " + NUM_HOURS);
 		}
-		else {
-			_countPerHour = new int[NUM_HOURS];
-			System.arraycopy(countPerHour,0,_countPerHour,0,_countPerHour.length);
-		}
+				
+		initTopicArrays(countDaily, countPer6hrs, countPerHour);		
 	}
 	
 	// Secondary constructor (for adding 1 new tweet to an empty record)
@@ -113,28 +101,53 @@ public class TwitterDemoTopicRecord implements Serializable {
 			// new tweet occurred within 1 month from endtime
 			_topic = topic;
 			_topicEnglish = topicEnglish;
-			_countMonthly++;
+			_countMonthly=1;
 			_recentTweets = newTweet;
 			_endTimeSecs = endTimeSecs;
-			_countDaily = new int[NUM_DAYS];
-			_countPer6hrs = new int[NUM_QUARTERDAYS];
-			_countPerHour = new int[NUM_HOURS];
-			
+			initTopicArrays(null, null, null);
+
 			int hours = (int)(secsSinceEnd * 2.7778e-4);	//1/3600
 			int quarterDays = (int)(secsSinceEnd * 4.6296e-5); // 1/21600 = 1/60*60*6;
 			int days = (int)(secsSinceEnd * 1.1574e-5); //1/86400 = 1/60*60*24;
 
 			if ((hours >= 0) && (hours < NUM_HOURS)) {
-				//assert (countPerHour.size() == NUM_HOURS);
-				_countPerHour[hours]++;
+				_countPer6hrs.set(hours, 1);
 			}
 			if ((quarterDays >= 0) && (quarterDays < NUM_QUARTERDAYS)) {
-				//assert (countPer6hrs.size() == NUM_QUARTERDAYS);
-				_countPer6hrs[quarterDays]++;
+				_countPer6hrs.set(quarterDays, 1);
 			}
 			if ((days >= 0) && (days < NUM_DAYS)) {
-				//assert (countDaily.size() == NUM_DAYS);
-				_countDaily[days]++;
+				_countDaily.set(days, 1);
+			}
+		}
+	}
+	
+	private void initTopicArrays(List<Integer> countDaily, List<Integer> countPer6hrs, List<Integer> countPerHour) {
+	
+		_countDaily = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+									0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+									0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		if (countDaily != null) {
+			for (int n=0; n<countDaily.size(); n++) {
+				_countDaily.set(n, countDaily.get(n));
+			}
+		}
+
+		_countPer6hrs = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+									  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 	  0, 0, 0, 0, 0, 0, 0, 0);
+		if (countPer6hrs != null) {
+			for (int n=0; n<countPer6hrs.size(); n++) {
+				_countPer6hrs.set(n, countPer6hrs.get(n));
+			}
+		}
+		
+		_countPerHour = Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+									  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+									  0, 0, 0, 0);
+		if (countPerHour != null) {
+			for (int n=0; n<countPerHour.size(); n++) {
+				_countPerHour.set(n, countPerHour.get(n));
 			}
 		}
 	}
@@ -151,15 +164,15 @@ public class TwitterDemoTopicRecord implements Serializable {
 		return _countMonthly;
 	}
 
-	public int[] getCountDaily() {
+	public List<Integer> getCountDaily() {
 		return _countDaily;
 	}
 
-	public int[] getCountPer6hrs() {
+	public List<Integer> getCountPer6hrs() {
 		return _countPer6hrs;
 	}
 
-	public int[] getCountPerHour() {
+	public List<Integer> getCountPerHour() {
 		return _countPerHour;
 	}
 
@@ -191,14 +204,20 @@ public class TwitterDemoTopicRecord implements Serializable {
 			return false;
 
 		TwitterDemoTopicRecord that = (TwitterDemoTopicRecord) obj;
-		return (this._topic == that._topic
-				&& this._topicEnglish == that._topicEnglish
-				&& this._countMonthly == that._countMonthly
-				&& this._endTimeSecs == that._endTimeSecs
-				&& arraysEqual(this._countDaily, that._countDaily)
-				&& arraysEqual(this._countPer6hrs, that._countPer6hrs)
-				&& arraysEqual(this._countPerHour, that._countPerHour)
-				&& listsEqual(this._recentTweets, that._recentTweets));
+		
+		if ((this.getTopic()!= null) && (!this.getTopic().equals(that.getTopic()))) {
+			return false;
+		}
+		if ((this.getTopicEnglish()!= null) && (!this.getTopicEnglish().equals(that.getTopicEnglish()))) {
+			return false;
+		}
+							
+		return (this.getCountMonthly() == that.getCountMonthly()
+				&& this.getEndTime() == that.getEndTime()
+				&& listsEqual(this.getCountDaily(), that.getCountDaily())
+				&& listsEqual(this.getCountPer6hrs(), that.getCountPer6hrs())
+				&& listsEqual(this.getCountPerHour(), that.getCountPerHour())
+				&& listsEqual(this.getRecentTweets(), that.getRecentTweets()));
 	}
 
 	private static boolean objectsEqual(Object a, Object b) {
@@ -221,40 +240,16 @@ public class TwitterDemoTopicRecord implements Serializable {
 		return true;
 	}
 	
-	private static <T> boolean arraysEqual(int[] a, int[] b) {
-		if (null == a)
-			return null == b;
-		if (null == b)
-			return false;
-		if (a.length != b.length)
-			return false;
-		for (int i = 0; i < a.length; ++i) {
-			if (a[i] != b[i])
-				return false;
-		}
-		return true;
-	}	
-
-//	private <T> String mkString(List<T> list, String separator) {
-//		String result = "";
-//		for (int i = 0; i < list.size(); ++i) {
-//			if (i > 0)
-//				result = result + separator;
-//			result = result + list.get(i).toString();
-//		}
-//		return result;
-//	}
-	
-	private <T> String mkStringFromArray(int[] array, String separator) {
+	private <T> String mkString(List<T> list, String separator) {
 		String result = "";
-		for (int i = 0; i < array.length; ++i) {
+		for (int i = 0; i < list.size(); ++i) {
 			if (i > 0)
 				result = result + separator;
-			result = result + array[i];
+			result = result + list.get(i).toString();
 		}
 		return result;
-	}	
-
+	}
+	
 	private static String escapeString(String string) {
 		if (null == string)
 			return "null";
@@ -315,9 +310,9 @@ public class TwitterDemoTopicRecord implements Serializable {
 		String result = ("{topic: " + escapeString(_topic) + ", "
 				+ "topicEnglish: " + escapeString(_topicEnglish) + ", "
 				+ "countMonthly: " + _countMonthly + ", " + "countDaily: ["
-				+ mkStringFromArray(_countDaily, ", ") + "], " + "countPer6hrs: ["
-				+ mkStringFromArray(_countPer6hrs, ", ") + "], " + "countPerHour: ["
-				+ mkStringFromArray(_countPerHour, ", ") + "], " + "recent: [");
+				+ mkString(_countDaily, ", ") + "], " + "countPer6hrs: ["
+				+ mkString(_countPer6hrs, ", ") + "], " + "countPerHour: ["
+				+ mkString(_countPerHour, ", ") + "], " + "recent: [");
 		for (int i = 0; i < _recentTweets.size(); ++i) {
 			Pair<String, Long> rt = _recentTweets.get(i);
 			if (i > 0)
@@ -329,41 +324,19 @@ public class TwitterDemoTopicRecord implements Serializable {
 		return result;
 	}
 
-//	private static String eatIntList(String from, List<Integer> result) {
-//		int nextComma = from.indexOf(",");
-//		int nextBracket = from.indexOf("]");
-//		while (nextComma > 0 && nextComma < nextBracket) {
-//			result.add(Integer.parseInt(from.substring(0, nextComma)));
-//			from = from.substring(nextComma + 2);
-//			nextComma = from.indexOf(",");
-//			nextBracket = from.indexOf("]");
-//		}
-//		if (nextBracket > 0)
-//			result.add(Integer.parseInt(from.substring(0, nextBracket)));
-//		return from.substring(nextBracket);
-//	}
-
-	private static String eatIntArray(String from, int[] result) {
+	private static String eatIntList(String from, List<Integer> result) {
 		int nextComma = from.indexOf(",");
 		int nextBracket = from.indexOf("]");
-		
-		//String[] = from.substring(0, nextBracket).split(", ").;
-		int n = 0;
 		while (nextComma > 0 && nextComma < nextBracket) {
-			if (n < result.length) {
-				result[n] = Integer.parseInt(from.substring(0, nextComma));
-			}
-			n++;
+			result.add(Integer.parseInt(from.substring(0, nextComma)));
 			from = from.substring(nextComma + 2);
 			nextComma = from.indexOf(",");
 			nextBracket = from.indexOf("]");
 		}
 		if (nextBracket > 0)
-			if (n < result.length) {
-				result[n] = Integer.parseInt(from.substring(0, Math.min(nextComma, nextBracket)));
-			}
+			result.add(Integer.parseInt(from.substring(0, nextBracket)));
 		return from.substring(nextBracket);
-	}	
+	}
 
 	public static TwitterDemoTopicRecord fromString(String value) {
 		value = eat(value, "{topic: ");
@@ -379,16 +352,16 @@ public class TwitterDemoTopicRecord implements Serializable {
 		int countMonthly = Integer.parseInt(value.substring(0, end));
 
 		value = eat(value.substring(end), ", countDaily: [");
-		int[] countDaily = new int[NUM_DAYS];
-		value = eatIntArray(value, countDaily);
+		List<Integer>countDaily = new ArrayList<>();
+		value = eatIntList(value, countDaily);
 
 		value = eat(value, "], countPer6hrs: [");
-		int[] countPer6hrs = new int[NUM_QUARTERDAYS];
-		value = eatIntArray(value, countPer6hrs);
+		List<Integer>countPer6hrs = new ArrayList<>();
+		value = eatIntList(value, countPer6hrs);
 
 		value = eat(value, "], countPerHour: [");
-		int[] countPerHour = new int[NUM_HOURS];
-		value = eatIntArray(value, countPerHour);
+		List<Integer>countPerHour = new ArrayList<>();
+		value = eatIntList(value, countPerHour);
 
 		value = eat(value, "], recent: [");
 		List<Pair<String, Long>> recentTweets = new ArrayList<>();
@@ -415,12 +388,15 @@ public class TwitterDemoTopicRecord implements Serializable {
 		return new TwitterDemoTopicRecord(topic, topicEnglish, countMonthly,
 				countDaily, countPer6hrs, countPerHour, recentTweets, endTimeSecs);
 	}
-
-	private static void addArrayInPlace(int[] summed,
-			int[] newdata) {
-		assert(summed.length == newdata.length);
-		for (int i = 0; i < summed.length; ++i) {
-			summed[i] += newdata[i];
+	
+	private static void addInPlace(List<Integer> accumulatedSum,
+			List<Integer> newAddend) {
+		for (int i = 0; i < newAddend.size(); ++i) {
+			if (i >= accumulatedSum.size()) {
+				accumulatedSum.add(newAddend.get(i));
+			} else {
+				accumulatedSum.set(i, accumulatedSum.get(i) + newAddend.get(i));
+			}
 		}
 	}
 
@@ -480,13 +456,9 @@ public class TwitterDemoTopicRecord implements Serializable {
 		String topic = records[0]._topic;
 		String topicEnglish = records[0]._topicEnglish;
 		int countMonthly = records[0]._countMonthly;
-		int[] countDaily = new int[NUM_DAYS];
-		System.arraycopy(records[0]._countDaily,0,countDaily,0,records[0]._countDaily.length);
-		int[] countPer6hrs = new int[NUM_QUARTERDAYS];
-		System.arraycopy(records[0]._countPer6hrs,0,countPer6hrs,0,records[0]._countPer6hrs.length);
-		int[] countPerHour = new int[NUM_HOURS];
-		System.arraycopy(records[0]._countPerHour,0,countPerHour,0,records[0]._countPerHour.length);
-
+		List<Integer> countDaily = new ArrayList<>(records[0]._countDaily);
+		List<Integer> countPer6hrs = new ArrayList<>(records[0]._countPer6hrs);
+		List<Integer> countPerHour = new ArrayList<>(records[0]._countPerHour);
 		LinkedList<Pair<String, Long>> recentTweets = new LinkedList<>(
 				records[0]._recentTweets);
 		long endTimeSecs = records[0]._endTimeSecs;
@@ -497,9 +469,9 @@ public class TwitterDemoTopicRecord implements Serializable {
 						"Cannot add twitter records for different topics or end times");
 
 			countMonthly += records[i]._countMonthly;
-			addArrayInPlace(countDaily, records[i]._countDaily);
-			addArrayInPlace(countPer6hrs, records[i]._countPer6hrs);
-			addArrayInPlace(countPerHour, records[i]._countPerHour);
+			addInPlace(countDaily, records[i]._countDaily);
+			addInPlace(countPer6hrs, records[i]._countPer6hrs);
+			addInPlace(countPerHour, records[i]._countPerHour);
 			addRecentTweetsInPlace(recentTweets, records[i]._recentTweets);
 		}
 		return new TwitterDemoTopicRecord(topic, topicEnglish, countMonthly,
@@ -520,12 +492,9 @@ public class TwitterDemoTopicRecord implements Serializable {
 		String topic = record._topic;
 		String topicEnglish = record._topicEnglish;
 		int countMonthly = record._countMonthly;
-		int[] countDaily = new int[NUM_DAYS];
-		System.arraycopy(record._countDaily,0,countDaily,0,record._countDaily.length);
-		int[] countPer6hrs = new int[NUM_QUARTERDAYS];
-		System.arraycopy(record._countPer6hrs,0,countPer6hrs,0,record._countPer6hrs.length);
-		int[] countPerHour = new int[NUM_HOURS];
-		System.arraycopy(record._countPerHour,0,countPerHour,0,record._countPerHour.length);
+		List<Integer> countDaily = new ArrayList<>(record._countDaily);
+		List<Integer> countPer6hrs = new ArrayList<>(record._countPer6hrs);
+		List<Integer> countPerHour = new ArrayList<>(record._countPerHour);
 
 		LinkedList<Pair<String, Long>> recentTweets = new LinkedList<>(
 				record._recentTweets);
@@ -552,16 +521,13 @@ public class TwitterDemoTopicRecord implements Serializable {
 			int days = (int)(secsSinceEnd * 1.1574e-5); //1/86400 = 1/60*60*24;
 
 			if ((hours >= 0) && (hours < NUM_HOURS)) {
-				//assert (countPerHour.size() == NUM_HOURS);
-				countPerHour[hours]++;
+				countPerHour.set(hours, countPerHour.get(hours) + 1);
 			}
 			if ((quarterDays >= 0) && (quarterDays < NUM_QUARTERDAYS)) {
-				//assert (countPer6hrs.size() == NUM_QUARTERDAYS);
-				countPer6hrs[quarterDays]++;
+				countPer6hrs.set(quarterDays, countPer6hrs.get(quarterDays) + 1);
 			}
 			if ((days >= 0) && (days < NUM_DAYS)) {
-				//assert (countDaily.size() == NUM_DAYS);
-				countDaily[days]++;
+				countDaily.set(days, countDaily.get(days) + 1);
 			}
 		}
 		return new TwitterDemoTopicRecord(topic, topicEnglish, countMonthly,
@@ -577,11 +543,15 @@ public class TwitterDemoTopicRecord implements Serializable {
 		return record;
 	}
 
-	private static void minInPlace(int[] accumulatedMin,
-			int[] newMin) {
-		//assert(accumulatedMin.length == newMin.length);
-		for (int i = 0; i < newMin.length; ++i) {
-			accumulatedMin[i] = Math.min(accumulatedMin[i],newMin[i]);
+	private static void minInPlace(List<Integer> accumulatedMin,
+			List<Integer> newMin) {
+		for (int i = 0; i < newMin.size(); ++i) {
+			if (i >= accumulatedMin.size()) {
+				accumulatedMin.add(newMin.get(i));
+			} else {
+				accumulatedMin.set(i,
+						Math.min(accumulatedMin.get(i), newMin.get(i)));
+			}
 		}
 	}
 
@@ -597,14 +567,10 @@ public class TwitterDemoTopicRecord implements Serializable {
 			return null;
 
 		int minCount = Integer.MAX_VALUE;
-		//int[] minCountDaily = new int[NUM_DAYS];
-		//int[] minCountPer6hrs = new int[NUM_QUARTERDAYS];
-		//int[] minCountPerHour = new int[NUM_HOURS];
-		int[] minCountDaily = records[0]._countDaily.clone();
-		int[] minCountPer6hrs = records[0]._countPer6hrs.clone();
-		int[] minCountPerHour = records[0]._countPerHour.clone();
-		//minCountDaily
-		//System.arraycopy(countDaily,0,_countDaily,0,_countDaily.length);
+		List<Integer> minCountDaily = new ArrayList<>();
+		List<Integer> minCountPer6hrs = new ArrayList<>();
+		List<Integer> minCountPerHour = new ArrayList<>();
+
 		for (TwitterDemoTopicRecord record : records) {
 			if (null != record) {
 				minCount = Math.min(minCount, record._countMonthly);
@@ -618,11 +584,15 @@ public class TwitterDemoTopicRecord implements Serializable {
 				new ArrayList<Pair<String, Long>>(), 0);
 	}
 	
-	private static void maxInPlace(int[] accumulatedMax,
-			int[] newMax) {
-		//assert(accumulatedMax.length == newMax.length);
-		for (int i = 0; i < newMax.length; ++i) {
-			accumulatedMax[i] = Math.max(accumulatedMax[i],newMax[i]);
+	private static void maxInPlace(List<Integer> accumulatedMax,
+			List<Integer> newMax) {
+		for (int i = 0; i < newMax.size(); ++i) {
+			if (i >= accumulatedMax.size()) {
+				accumulatedMax.add(newMax.get(i));
+			} else {
+				accumulatedMax.set(i,
+						Math.max(accumulatedMax.get(i), newMax.get(i)));
+			}
 		}
 	}
 
@@ -635,9 +605,9 @@ public class TwitterDemoTopicRecord implements Serializable {
 	public static TwitterDemoTopicRecord maxOfRecords(
 			TwitterDemoTopicRecord... records) {
 		int maxCount = Integer.MIN_VALUE;
-		int[] maxCountDaily = new int[NUM_DAYS];
-		int[] maxCountPer6hrs = new int[NUM_QUARTERDAYS];
-		int[] maxCountPerHour = new int[NUM_HOURS];
+		List<Integer> maxCountDaily = new ArrayList<>();
+		List<Integer> maxCountPer6hrs = new ArrayList<>();
+		List<Integer> maxCountPerHour = new ArrayList<>();
 		for (TwitterDemoTopicRecord record : records) {
 			maxCount = Math.max(maxCount, record._countMonthly);
 			maxInPlace(maxCountDaily, record._countDaily);
