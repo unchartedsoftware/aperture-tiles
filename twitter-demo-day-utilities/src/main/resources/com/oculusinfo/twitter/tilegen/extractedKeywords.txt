@@ -998,4 +998,3 @@ crl	crl	40722
 ae	ae	40688
 haga	then	40588
 ajuda	help	40485
-
