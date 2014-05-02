@@ -90,8 +90,14 @@ class TopicMatcher {
 				topicsEnglish += foundTopics(n) + ","
 			}
 			
-			// remove all whitespace at end of line and append found topics to end
-			line.replaceFirst("\\s+$", "").concat("\t" + topics + "\t" + topicsEnglish)	  
+			// remove all whitespace at end of line and append found topics to end...
+			//(NO! Don't remove whitespace at end, because many records have tabs with empty fields at
+			//end of the line for country, full_name, place_type, etc. ... and we still need to keep these
+			//fields even if they are empty otherwise the record will be classified as 'bad' during record parsing!)
+			//line.replaceFirst("\\s+$", "").concat("\t" + topics + "\t" + topicsEnglish)	
+			
+			//append found topics to end
+			line.concat("\t" + topics + "\t" + topicsEnglish)
 		}		  
 	}).filter(line => {	// discard empty lines
 	  !(line.isEmpty)
