@@ -97,7 +97,8 @@ extends BinDescriptor[Map[String, TwitterDemoTopicRecord], JavaList[TwitterDemoT
 	  result
   }
 
-  def defaultBinValue: Map[String, TwitterDemoTopicRecord] = Map[String, TwitterDemoTopicRecord]()
+  def defaultProcessedBinValue: Map[String, TwitterDemoTopicRecord] = Map[String, TwitterDemoTopicRecord]()
+  def defaultUnprocessedBinValue: Map[String, TwitterDemoTopicRecord] = Map[String, TwitterDemoTopicRecord]()
 
   def convert (value: Map[String, TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] =
     value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
