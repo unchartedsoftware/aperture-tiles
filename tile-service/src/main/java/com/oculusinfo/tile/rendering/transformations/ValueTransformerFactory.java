@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rendering.transformations;
 import java.util.List;
 
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 
@@ -70,10 +71,22 @@ public class ValueTransformerFactory extends ConfigurableFactory<IValueTransform
 		addProperty(LAYER_MINIMUM);
 	}
 
+	private double _layerMaximum;
+	private double _layerMinimum;
 	// Extrema are calculated properties; we must allow a way to set them.
 	public void setExtrema (double min, double max) {
-		setPropertyValue(LAYER_MAXIMUM, max);
-		setPropertyValue(LAYER_MINIMUM, min);
+		_layerMaximum = max;
+		_layerMinimum = min;
+	}
+
+	@Override
+	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
+		if (LAYER_MAXIMUM.equals(property)) {
+			return property.getType().cast(_layerMaximum);
+		} else if (LAYER_MINIMUM.equals(property)) {
+			return property.getType().cast(_layerMinimum);
+		}
+		return super.getPropertyValue(property);
 	}
 
 	@Override

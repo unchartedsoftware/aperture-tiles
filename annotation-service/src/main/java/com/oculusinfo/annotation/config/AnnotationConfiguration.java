@@ -27,13 +27,10 @@ package com.oculusinfo.annotation.config;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import org.json.JSONObject;
 
-
-
-import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -79,10 +76,4 @@ public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfi
 	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
 		super.readConfiguration(rootNode);
 	}
-
-	@Override
-	public void readConfiguration (Properties properties) throws ConfigurationException {
-		super.readConfiguration(properties);
-	}
-
 }

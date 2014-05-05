@@ -29,8 +29,6 @@ import java.util.List;
 import org.json.JSONObject;
 
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.JSONProperty;
 
 /**
@@ -67,13 +65,5 @@ public class RequestParamsFactory extends ConfigurableFactory<RequestParams> {
 	@Override
 	protected RequestParams create() {
 		return new RequestParamsImpl(getPropertyValue(REQUEST_PARAMS));
-	}
-
-	@Override
-	protected <PT> void readProperty(JSONObject factoryNode, ConfigurationProperty<PT> property) throws ConfigurationException {
-		//we only care about the QUERY_PARAMS property, and we want to store all the properties that were passed to us
-		if (REQUEST_PARAMS.equals(property)) {
-			setPropertyValue(REQUEST_PARAMS, factoryNode);
-		}
 	}
 }

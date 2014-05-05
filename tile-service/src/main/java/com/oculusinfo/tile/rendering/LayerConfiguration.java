@@ -25,11 +25,12 @@ package com.oculusinfo.tile.rendering;
 
 
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
+import java.util.Set;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
@@ -60,11 +62,11 @@ import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
-    public static final List<String>          RENDERER_PATH   = Collections.singletonList("renderer");
-    public static final List<String>          PYRAMID_IO_PATH = Collections.singletonList("pyramidio");
-    public static final List<String>          SERIALIZER_PATH = Collections.singletonList("serializer");
+	public static final List<String>          RENDERER_PATH   = Collections.singletonList("renderer");
+	public static final List<String>          PYRAMID_IO_PATH = Collections.singletonList("pyramidio");
+	public static final List<String>          SERIALIZER_PATH = Collections.singletonList("serializer");
 
-    public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
+	public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
 		         "The ID of the layer; exact format depends on how the layer is stored.",
 		         null);
 	public static final StringProperty        SHORT_NAME      = new StringProperty("name",
@@ -111,9 +113,21 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		         "For server use only, on a tile-by-tile basis",
 		         null);
 
+	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
+		Collections.unmodifiableSet(new HashSet<>(Arrays.asList((ConfigurationProperty<?>) RANGE_MIN,
+		                                                        (ConfigurationProperty<?>) RANGE_MAX,
+		                                                        (ConfigurationProperty<?>) SHORT_NAME,
+		                                                        (ConfigurationProperty<?>) TILE_COORDINATE,
+		                                                        (ConfigurationProperty<?>) LEVEL_MAXIMUMS,
+		                                                        (ConfigurationProperty<?>) LEVEL_MINIMUMS
+		                                                        )));
 
 
-	private ValueTransformerFactory _transformFactory;
+	// Some local properties it doesn't get from the configuration
+	private ValueTransformerFactory              _transformFactory;
+	private TileIndex                            _tileCoordinate;
+	private String                               _levelMinimum;
+	private String                               _levelMaximum;
 
 	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
@@ -161,65 +175,67 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	}
 
 	@Override
-	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
-		super.readConfiguration(rootNode);
-
-		calculateDerivedProperties();
-	}
-
-	@Override
-	public void readConfiguration (Properties properties) throws ConfigurationException {
-		super.readConfiguration(properties);
-
-		calculateDerivedProperties();
-	}
-
-	private void calculateDerivedProperties () {
-		List<Integer> legendRange = getPropertyValue(LayerConfiguration.LEGEND_RANGE);
-		if (null != legendRange && !legendRange.isEmpty()) {
-			setPropertyValue(RANGE_MIN,  legendRange.get(0));
-			setPropertyValue(RANGE_MAX,  legendRange.get(1));
+	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
+		if (LOCAL_PROPERTIES.contains(property)) {
+			if (RANGE_MIN.equals(property)) {
+				List<Integer> legendRange = getPropertyValue(LayerConfiguration.LEGEND_RANGE);
+				if (null != legendRange && legendRange.size()>0)
+					return property.getType().cast(legendRange.get(0));
+			} else if (RANGE_MAX.equals(property)) {
+				List<Integer> legendRange = getPropertyValue(LayerConfiguration.LEGEND_RANGE);
+				if (null != legendRange && legendRange.size()>1)
+					return property.getType().cast(legendRange.get(1));
+			} else if (SHORT_NAME.equals(property)) {
+				// Only override this if it isn't explicitly set - effectively this is a dynamic default
+				if (!hasPropertyValue(SHORT_NAME)) {
+					return property.getType().cast(getPropertyValue(LAYER_NAME));
+				}
+			} else if (TILE_COORDINATE.equals(property)) {
+				return property.getType().cast(_tileCoordinate);
+			} else if (LEVEL_MAXIMUMS.equals(property)) {
+				return property.getType().cast(_levelMaximum);
+			} else if (LEVEL_MINIMUMS.equals(property)) {
+				return property.getType().cast(_levelMinimum);
+			}
 		}
 
-		if (!hasPropertyValue(SHORT_NAME)) {
-			setPropertyValue(SHORT_NAME, getPropertyValue(LAYER_NAME));
-		}
+		return super.getPropertyValue(property);
 	}
 
 	public void setLevelProperties (TileIndex tileIndex,
 	                                String levelMinimum,
 	                                String levelMaximum) {
-		setPropertyValue(TILE_COORDINATE, tileIndex);
-		setPropertyValue(LEVEL_MAXIMUMS, levelMaximum);
-		setPropertyValue(LEVEL_MINIMUMS, levelMinimum);
+		_tileCoordinate = tileIndex;
+		_levelMaximum = levelMaximum;
+		_levelMinimum = levelMinimum;
 
 		try {
 			TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
 			if (null != renderer) {
-			    Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
-			    _transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+				Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
+				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
 			}
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
 		}
 	}
 
-    /*
-     * This is a placeholder for the caching configuration to override; it does
-     * nothing in this version.
-     * 
-     * Theoretically, it allows for a hook point for extending classes to make
-     * last-minute preparations before actually rendering a tile, whether to
-     * JSON or an image.
-     * 
-     * @param layer The layer to be rendered.
-     * @param tile The tile to be rendered
-     * @param tileSet Any other tiles that will need to be rendered along with
-     *            this one.
-     */
+	/*
+	 * This is a placeholder for the caching configuration to override; it does
+	 * nothing in this version.
+	 * 
+	 * Theoretically, it allows for a hook point for extending classes to make
+	 * last-minute preparations before actually rendering a tile, whether to
+	 * JSON or an image.
+	 * 
+	 * @param layer The layer to be rendered.
+	 * @param tile The tile to be rendered
+	 * @param tileSet Any other tiles that will need to be rendered along with
+	 *            this one.
+	 */
 	public void prepareForRendering (String layer,
 	                                 TileIndex tile,
 	                                 Iterable<TileIndex> tileSet) {
-        // NOOP
+		// NOOP
 	}
 }

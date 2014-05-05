@@ -28,15 +28,14 @@ package com.oculusinfo.factory;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.oculusinfo.factory.properties.ListProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -53,27 +52,19 @@ import com.oculusinfo.factory.properties.ListProperty;
  * @author nkronenfeld
  */
 abstract public class ConfigurableFactory<T> {
-	private static class PropertyValue<PT> {
-		PT _value;
-		boolean _default;
-		PropertyValue () {
-			_default = true;
-			_value = null;
-		}
-	}
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableFactory.class);
 
 
 
-	private String                                          _name;
-	private Class<T>                                        _factoryType;
-	private List<String>                                    _rootPath;
-	private Map<ConfigurationProperty<?>, PropertyValue<?>> _properties;
-	private List<ConfigurableFactory<?>>                    _children;
-	private boolean                                         _configured;
-	private String                                          _propertyPrefix;
-	private JSONObject                                      _JSONConfigurationSource;
-	private Properties                                      _propertyConfigurationSource;
-	private ConfigurableFactory<?>							_parent;
+	private String                        _name;
+	private Class<T>                      _factoryType;
+	private List<String>                  _rootPath;
+	private List<ConfigurableFactory<?>>  _children;
+	private boolean                       _configured;
+	private JSONObject                    _configurationNode;
+	private Set<ConfigurationProperty<?>> _properties;
+	private ConfigurableFactory<?>        _parent;
+
 
 
 	/**
@@ -114,32 +105,13 @@ abstract public class ConfigurableFactory<T> {
 			rootPath.addAll(path);
 		}
 		_rootPath = Collections.unmodifiableList(rootPath);
-		_properties = new HashMap<>();
 		_children = new ArrayList<>();
 		_configured = false;
-		_propertyPrefix = null;
-		_JSONConfigurationSource = null;
-		_propertyConfigurationSource = null;
+		_properties = new HashSet<>();
 		
 		//NOTE: this should not be set to the parent passed in cause the parent won't necessarily
 		//be created before the children if you're doing a bottom up approach for some reason.
 		_parent = null; 
-	}
-
-	private <PT> void putPropertyValueObject (ConfigurationProperty<PT> property, PropertyValue<PT> value) {
-		_properties.put(property, value);
-	}
-
-	// We only ever allow putting PropertyValue objects that match type to their
-	// property into the _properties object, so this method encapsulates getting
-	// them out with the same matching generic. The warning suppression is
-	// allowed because this object is the only one allowed to put them in (in
-	// the above put... method. Besides, it's
-	// the only one that even knows about them), so since it is guaranteed safe,
-	// the extraction also should be.
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private <PT> PropertyValue<PT> getPropertyValueObject (ConfigurationProperty<PT> property) {
-		return (PropertyValue) _properties.get(property);
 	}
 
 	/**
@@ -172,7 +144,7 @@ abstract public class ConfigurableFactory<T> {
 	 * List out all properties directly expected by this factory.
 	 */
 	protected Iterable<ConfigurationProperty<?>> getProperties () {
-		return _properties.keySet();
+		return _properties;
 	}
 
 	/**
@@ -181,7 +153,7 @@ abstract public class ConfigurableFactory<T> {
 	 * @param property
 	 */
 	protected <PT> void addProperty (ConfigurationProperty<PT> property) {
-		putPropertyValueObject(property, new PropertyValue<PT>());
+		_properties.add(property);
 	}
 
 	/**
@@ -191,7 +163,7 @@ abstract public class ConfigurableFactory<T> {
 	 * @return True if the property is listed and non-default in the factory.
 	 */
 	public boolean hasPropertyValue (ConfigurationProperty<?> property) {
-		return _properties.containsKey(property) && !_properties.get(property)._default;
+		return (_configured && null != _configurationNode && _configurationNode.has(property.getName()));
 	}
 
 	/**
@@ -201,30 +173,21 @@ abstract public class ConfigurableFactory<T> {
 	 * readConfiguration (either version).
 	 */
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
-		PropertyValue<PT> value = getPropertyValueObject(property);
-		if (null == value || value._default) {
+		if (!hasPropertyValue(property))
 			return property.getDefaultValue();
-		} else {
-			return value._value;
+
+		try {
+			return property.unencodeJSON(new JSONNode(_configurationNode, property.getName()));
+		} catch (JSONException e) {
+			// Must not have been there.  Ignore, leaving as default.
+		} catch (ConfigurationException e) {
+			// Error within configuration.
+			// Use default, but also warn about it.
+			LOGGER.warn("Error reading property {} from configuration {}", property, _configurationNode);
 		}
+		return property.getDefaultValue();
 	}
 
-	/**
-	 * Sets the value of a property directly.
-	 * <em>This should be used very sparingly</em> - the general intention is
-	 * that properties are read from a configuration file. This method is so
-	 * that factorys can create "derived" property values, and is essentially an
-	 * end-run around the normal rules.
-	 */
-	protected <PT> void setPropertyValue (ConfigurationProperty<PT> property, PT value) {
-		PropertyValue<PT> valueObj = getPropertyValueObject(property);
-		if (null == valueObj) {
-			valueObj = new PropertyValue<PT>();
-			putPropertyValueObject(property, valueObj);
-		}
-		valueObj._value = value;
-		valueObj._default = false;
-	}
 
 	/**
 	 * Add a child factory, to be used by this factory.
@@ -304,98 +267,6 @@ abstract public class ConfigurableFactory<T> {
 
 
 	// /////////////////////////////////////////////////////////////////////////
-	// Section: Reading from and writing to a properties file
-	//
-
-	/**
-	 * Initialize needed construction values from a properties list.
-	 * 
-	 * @param properties The properties list from which to configure this
-	 *            factory.
-	 * @throws ConfigurationException If something goes wrong in configuration,
-	 *             or if configuration is called twice.
-	 */
-	public void readConfiguration (Properties properties) throws ConfigurationException {
-		if (_configured) {
-			throw new ConfigurationException("Attempt to configure factory "+this+" twice");
-		}
-
-		for (ConfigurationProperty<?> property: _properties.keySet()) {
-			readProperty(properties, property);
-		}
-		for (ConfigurableFactory<?> child: _children) {
-			child.readConfiguration(properties);
-		}
-
-		_propertyConfigurationSource = properties;
-		_configured = true;
-	}
-
-	/*
-	 * Get the fully qualified name of the given property
-	 * 
-	 * @param property The property of interest
-	 * 
-	 * @return The fully qualified name, including the path of this factory, and
-	 * the property itself.
-	 */
-	private String getPropertyName (ConfigurationProperty<?> property) {
-		if (null == _propertyPrefix) {
-			String prefix = "";
-			for (String pathElt: _rootPath)
-				prefix = prefix + pathElt + ".";
-			_propertyPrefix = prefix;
-		}
-
-		return _propertyPrefix + "." + property.getName();
-	}
-
-	private <PT> void readProperty (Properties properties, ConfigurationProperty<PT> property) throws ConfigurationException {
-		if (property instanceof ListProperty)
-			readListProperty(properties, (ListProperty<?>) property);
-		else
-			readUnaryProperty(properties, property);
-	}
-
-	private <PT> void readUnaryProperty (Properties properties, ConfigurationProperty<PT> property) throws ConfigurationException {
-		String key = getPropertyName(property);
-		if (properties.containsKey(key)) {
-			PropertyValue<PT> value = getPropertyValueObject(property);
-			value._value = property.unencode(properties.getProperty(getPropertyName(property)));
-			value._default = false;
-		}
-	}
-
-	private <PT> void readListProperty (Properties properties, ListProperty<PT> property) throws ConfigurationException {
-		String baseKey = getPropertyName(property);
-		List<String> entryPropertyNames = new ArrayList<>();
-		int index = 0;
-		while (properties.containsKey(baseKey+"."+index)) {
-			entryPropertyNames.add(baseKey+"."+index);
-			++index;
-		}
-		if (0 == index) {
-			if (properties.containsKey(baseKey)) {
-				// Singleton value; just use the one
-				entryPropertyNames.add(baseKey);
-				++index;
-			}
-		}
-
-		if (index > 0) {
-			PropertyValue<List<PT>> valueObj = getPropertyValueObject(property);
-			List<PT> value = new ArrayList<>(index);
-			for (String entryPropertyName: entryPropertyNames) {
-				value.add(property.unencodeEntry(properties.getProperty(entryPropertyName)));
-			}
-			valueObj._value = value;
-			valueObj._default = false;
-		}
-	}
-
-
-
-	// /////////////////////////////////////////////////////////////////////////
 	// Section: Reading from and writing to a JSON file
 	//
 
@@ -413,15 +284,10 @@ abstract public class ConfigurableFactory<T> {
 		}
 
 		try {
-			JSONObject factoryNode = getConfigurationNode(rootNode);
-			for (ConfigurationProperty<?> property: _properties.keySet()) {
-				readProperty(factoryNode, property);
-			}
+			_configurationNode = getConfigurationNode(rootNode);
 			for (ConfigurableFactory<?> child: _children) {
 				child.readConfiguration(rootNode);
 			}
-
-			_JSONConfigurationSource = factoryNode;
 			_configured = true;
 		} catch (JSONException e) {
 			throw new ConfigurationException("Error configuring factory "+this.getClass().getName(), e);
@@ -435,17 +301,17 @@ abstract public class ConfigurableFactory<T> {
 	 * information.
 	 */
 	private JSONObject getConfigurationNode (JSONObject rootNode) throws JSONException {
-	    return getLeafNode(rootNode, _rootPath);
+		return getLeafNode(rootNode, _rootPath);
 	}
 
 	/**
-     * Get the sub-node of a root node specified by a given path.
-     * 
-     * @param rootNode The root JSON object whose sub-node is desired.
-     * @param path A list of keys to follow from the root node to find the
-     *            desired leaf.
-     * @return The leaf node, or null if any branch along the path is missing.
-     */
+	 * Get the sub-node of a root node specified by a given path.
+	 * 
+	 * @param rootNode The root JSON object whose sub-node is desired.
+	 * @param path A list of keys to follow from the root node to find the
+	 *            desired leaf.
+	 * @return The leaf node, or null if any branch along the path is missing.
+	 */
 	public static JSONObject getLeafNode (JSONObject rootNode, List<String> path) {
 		JSONObject target = rootNode;
 		for (String pathElt: path) {
@@ -465,19 +331,6 @@ abstract public class ConfigurableFactory<T> {
 		return target;
 	}
 
-	protected <PT> void readProperty (JSONObject factoryNode, ConfigurationProperty<PT> property) throws ConfigurationException {
-		try {
-			if (null != factoryNode) {
-				PropertyValue<PT> valueObj = getPropertyValueObject(property);
-				valueObj._value = property.unencodeJSON(new JSONNode(factoryNode, property.getName()));
-				valueObj._default = false;
-			}
-		} catch (JSONException e) {
-			// Must not have been there.  Ignore, leaving as default.
-		}
-	}
-
-
 
 
 	public void writeConfigurationInformation (PrintStream stream) {
@@ -485,11 +338,16 @@ abstract public class ConfigurableFactory<T> {
 	}
 
 	private <PT> void writePropertyValue (PrintStream stream, String prefix, ConfigurationProperty<PT> property) {
-		PropertyValue<PT> value = getPropertyValueObject(property);
-		if (value._default) {
+		if (hasPropertyValue(property)) {
 			stream.println(prefix+property.getName()+": "+property.encode(property.getDefaultValue())+" (DEFAULT)");
 		} else {
-			stream.println(prefix+property.getName()+": "+property.encode(value._value));
+			PT value;
+			try {
+				value = property.unencodeJSON(new JSONNode(_configurationNode, property.getName()));
+				stream.println(prefix+property.getName()+": "+property.encode(value));
+			} catch (JSONException|ConfigurationException e) {
+				stream.println(prefix+property.getName()+": "+property.encode(property.getDefaultValue())+" (DEFAULT - read error)");
+			}
 		}
 	}
 
@@ -508,7 +366,7 @@ abstract public class ConfigurableFactory<T> {
 	public void writeConfigurationInformation (PrintStream stream, String prefix) {
 		stream.println(prefix+"Configuration for "+this.getClass().getSimpleName()+" (node name "+_name+", path: "+mkString(_rootPath, ", ")+"):");
 		prefix = prefix + "  ";
-		for (ConfigurationProperty<?> property: _properties.keySet()) {
+		for (ConfigurationProperty<?> property: _properties) {
 			writePropertyValue(stream, prefix, property);
 		}
 		stream.println();
@@ -525,8 +383,7 @@ abstract public class ConfigurableFactory<T> {
 	 * for each configuration stream (JSON or Property at the moment).
 	 */
 	public Object debugConfiguration () {
-		if (null != _JSONConfigurationSource) return _JSONConfigurationSource;
-		if (null != _propertyConfigurationSource) return _propertyConfigurationSource;
+		if (null != _configurationNode) return _configurationNode;
 		return null;
 	}
 }
