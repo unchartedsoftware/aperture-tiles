@@ -363,6 +363,7 @@ abstract public class ConfigurableFactory<T> {
 		}
 		return result;
 	}
+
 	public void writeConfigurationInformation (PrintStream stream, String prefix) {
 		stream.println(prefix+"Configuration for "+this.getClass().getSimpleName()+" (node name "+_name+", path: "+mkString(_rootPath, ", ")+"):");
 		prefix = prefix + "  ";
@@ -376,14 +377,19 @@ abstract public class ConfigurableFactory<T> {
 	}
 
 	/**
-	 * Return the object with which this was configured. This returns a
-	 * bare-typed Object so that (a) no one uses this for anything meaningful,
-	 * just for printing out configurations to a debug stream or the like, and
-	 * (b) so that we can get away with just one such function, rather than one
-	 * for each configuration stream (JSON or Property at the moment).
+	 * Get the JSON object used to configure this factory.
+	 * 
+	 * @return The configuring JSON object, or null if this factory has not yet
+	 *         been configured.
 	 */
-	public Object debugConfiguration () {
-		if (null != _configurationNode) return _configurationNode;
-		return null;
+	protected JSONObject getConfigurationNode () {
+		return _configurationNode;
+	}
+
+	/**
+	 * Gets the class of object produced by this factory.
+	 */
+	protected Class<? extends T> getFactoryType () {
+		return _factoryType;
 	}
 }

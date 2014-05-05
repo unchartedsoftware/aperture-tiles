@@ -31,22 +31,23 @@ import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.factory.properties.StringProperty;
 
 
-public class HBasePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+public class HBasePyramidIOFactory extends SharedInstanceFactory<PyramidIO> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(HBasePyramidIOFactory.class);
 
 	
 	public static StringProperty HBASE_ZOOKEEPER_QUORUM = new StringProperty("hbase.zookeeper.quorum",
-			"Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
-			null);
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
+		   null);
 	public static StringProperty HBASE_ZOKEEPER_PORT    = new StringProperty("hbase.zookeeper.port",
-			"Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.",
-			"2181");
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.",
+		   "2181");
 	public static StringProperty HBASE_MASTER           = new StringProperty("hbase.master",
-			"Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
-			null);
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
+		   null);
 	
 	public HBasePyramidIOFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
 		super(factoryName, PyramidIO.class, parent, path);
@@ -57,7 +58,7 @@ public class HBasePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	}
 
 	@Override
-	protected PyramidIO create() {
+	protected PyramidIO createInstance () {
 		try {
 			String quorum = getPropertyValue(HBASE_ZOOKEEPER_QUORUM);
 			String port = getPropertyValue(HBASE_ZOKEEPER_PORT);
@@ -69,6 +70,4 @@ public class HBasePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		}
 		return null;
 	}
-	
-
 }

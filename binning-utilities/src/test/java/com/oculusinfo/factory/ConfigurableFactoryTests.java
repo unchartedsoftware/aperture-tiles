@@ -55,6 +55,10 @@ public class ConfigurableFactoryTests {
 			result._string = getPropertyValue(STRING_PROP);
 			return result;
 		}
+		@Override
+		public JSONObject getConfigurationNode () {
+			return super.getConfigurationNode();
+		}
 	}
 
 	@Test
@@ -77,5 +81,16 @@ public class ConfigurableFactoryTests {
 		Assert.assertEquals(3, result._int);
 		Assert.assertEquals(4.2, result._double, 1E-12);
 		Assert.assertEquals("abc", result._string);
+	}
+
+	@Test
+	public void testConfigurationNode () throws Exception {
+		TestFactory factory = new TestFactory();
+		JSONObject configuration = new JSONObject("{'int':3, 'double': 4.2, 'string': 'abc'}");
+
+		Assert.assertNull(factory.getConfigurationNode());
+
+		factory.readConfiguration(configuration);
+		Assert.assertEquals(configuration, factory.getConfigurationNode());
 	}
 }
