@@ -24,6 +24,8 @@
  */
 package com.oculusinfo.tile.util;
 
+import java.util.Properties;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -103,5 +105,20 @@ public class JSONUtilitiesTests {
         Assert.assertEquals(3, result.getJSONArray("e").getInt(3));
         Assert.assertEquals(3.3, result.getJSONArray("e").getDouble(5), 1E-12);
         Assert.assertEquals("bb3", result.getJSONArray("e").getJSONObject(6).getString("b1"));
+    }
+    
+    @Test
+    public void testPropertyClass () throws Exception {
+        JSONObject base = new JSONObject("{a: 'a', b: {c: 'c', d:['a', 'a1', 1, 2, 1.1, 2.2]}}");
+        Properties props = JsonUtilities.jsonObjToProperties(base);
+        Assert.assertEquals("a", props.getProperty("a"));
+        Assert.assertEquals("c", props.getProperty("b.c"));
+        Assert.assertEquals("a", props.getProperty("b.d.0"));
+        Assert.assertEquals("a1", props.getProperty("b.d.1"));
+        Assert.assertEquals("1", props.getProperty("b.d.2"));
+        Assert.assertEquals("2", props.getProperty("b.d.3"));
+        Assert.assertEquals("1.1", props.getProperty("b.d.4"));
+        Assert.assertEquals("2.2", props.getProperty("b.d.5"));
+        Assert.assertEquals(Properties.class, props.getClass());
     }
 }
