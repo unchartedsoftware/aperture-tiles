@@ -30,26 +30,30 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Double => JavaDouble}
 import java.text.SimpleDateFormat
 import java.util.Properties
+
 import scala.collection.JavaConverters._
+
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
+import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
+import org.apache.spark.streaming.Time
+
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.tiling.BinDescriptor
-import com.oculusinfo.tilegen.tiling.DataSource
-import com.oculusinfo.tilegen.tiling.FieldExtractor
-import com.oculusinfo.tilegen.tiling.RecordParser
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
-import org.apache.spark.streaming.Time
 import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
+
+import com.oculusinfo.tilegen.util.ArgumentParser
 
 
 
@@ -182,12 +186,19 @@ import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
  * Simple class to add standard field interpretation to a properties wrapper
  */
 class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrapper(properties) {
-	val fields =
-		properties.stringPropertyNames.asScala.toSeq
+	val fields = {
+		val indexProps = properties.stringPropertyNames.asScala.toSeq
 			.filter(_.startsWith("oculus.binning.parsing."))
-			.filter(_.endsWith(".index")).map(property =>
+			.filter(_.endsWith(".index"))
+
+
+		val orderedProps = indexProps.map(prop => (prop, properties.getProperty(prop).toInt))
+			.sortBy(_._2).map(_._1)
+
+		orderedProps.map(property =>
 			property.substring("oculus.binning.parsing.".length, property.length-".index".length)
 		)
+	}
 	val fieldIndices =
 		Range(0, fields.size).map(n => (fields(n) -> n)).toMap
 }
@@ -196,15 +207,27 @@ class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrap
  * A simple data source for binning of generic CSV data based on a
  * property-style configuration file
  */
-class CSVDataSource (properties: CSVRecordPropertiesWrapper) extends DataSource {
+class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 	def getDataFiles: Seq[String] = properties.getStringPropSeq(
 		"oculus.binning.source.location",
 		"The hdfs file name from which to get the CSV data.  Either a directory, all "+
 			"of whose contents should be part of this dataset, or a single file.")
 
-	override def getIdealPartitions: Option[Int] = properties.getIntOption(
+	def getIdealPartitions: Option[Int] = properties.getIntOption(
 		"oculus.binning.source.partitions",
 		"The number of partitions to use when reducing data, if needed")
+
+	/**
+	 * Actually retrieve the data.
+	 * This can be overridden if the data is not a simple file or set of files,
+	 * but normally shouldn't be touched.
+	 */
+	def getData (sc: SparkContext): RDD[String] =
+		if (getIdealPartitions.isDefined) {
+			getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
+		} else {
+			getDataFiles.map(sc.textFile(_)).reduce(_ union _)
+		}
 }
 
 
@@ -212,9 +235,8 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) extends DataSource 
 /**
  * A simple parser that splits a record according to a given separator
  */
-class CSVRecordParser (properties: CSVRecordPropertiesWrapper) extends RecordParser[List[Double]] {
-	
-	def parseRecords (raw: Iterator[String], variables: String*): Iterator[ValueOrException[List[Double]]] = {
+class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
+	def parseRecords (raw: Iterator[String], variables: String*): Iterator[(String, ValueOrException[List[Double]])] = {
 		// This method generally is only called on workers, therefore properties can't really be documented here.
 
 		// Get some simple parsing info we'll need
@@ -282,35 +304,37 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) extends RecordPar
 			{
 				val columns = splitString(s, separator)
 				try {
-					new ValueOrException(
-						Some(properties.fields.toList.map(field =>
-							     {
-								     val fieldType = getFieldType(field)
-								     var value = if ("constant" == fieldType ||
-									                     "zero" == fieldType) 0.0
-								     else {
-									     val fieldIndex =
-										     properties.getIntOption("oculus.binning.parsing."+
-											                             field+".index",
-										                             "").get
-									     parseValue(columns(fieldIndex.toInt), field, fieldType)
-								     }
-								     val fieldScaling =
-									     properties.getString("oculus.binning.parsing."+field+
-										                          ".fieldScaling", "", Some(""))
-								     if ("log" == fieldScaling) {
-									     val base =
-										     properties.getDouble("oculus.binning.parsing."+
-											                          field+".fieldBase",
-										                          "", Some(math.exp(1.0)))
-									     value = math.log(value)/math.log(base)
-								     }
-								     value
-							     }
-						     )),
-						None)
+					(s,
+					 new ValueOrException(
+						 Some(properties.fields.toList.map(field =>
+							      {
+								      val fieldType = getFieldType(field)
+								      var value = if ("constant" == fieldType ||
+									                      "zero" == fieldType) 0.0
+								      else {
+									      val fieldIndex =
+										      properties.getIntOption("oculus.binning.parsing."+
+											                              field+".index",
+										                              "").get
+									      parseValue(columns(fieldIndex.toInt), field, fieldType)
+								      }
+								      val fieldScaling =
+									      properties.getString("oculus.binning.parsing."+field+
+										                           ".fieldScaling", "", Some(""))
+								      if ("log" == fieldScaling) {
+									      val base =
+										      properties.getDouble("oculus.binning.parsing."+
+											                           field+".fieldBase",
+										                           "", Some(math.exp(1.0)))
+									      value = math.log(value)/math.log(base)
+								      }
+								      value
+							      }
+						      )),
+						 None)
+					)
 				} catch {
-					case e: Exception => new ValueOrException(None, Some(e))
+					case e: Exception => (s, new ValueOrException(None, Some(e)))
 				}
 			}
 		)
@@ -319,7 +343,7 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) extends RecordPar
 
 
 
-class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldExtractor[List[Double]] {
+class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) {
 	def getValidFieldList: List[String] = List()
 	def isValidField (field: String): Boolean = true
 	def isConstantField (field: String): Boolean = {
@@ -338,8 +362,8 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) extends FieldEx
 		else if ("zero" == field) new ValueOrException(Some(0.0), None)
 		else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
 
-	override def getTilePyramid (xField: String, minX: Double, maxX: Double,
-	                             yField: String, minY: Double, maxY: Double): TilePyramid = {
+	def getTilePyramid (xField: String, minX: Double, maxX: Double,
+	                    yField: String, minY: Double, maxY: Double): TilePyramid = {
 		val projection = properties.getString("oculus.binning.projection",
 		                                      "The type of tile pyramid to use",
 		                                      Some("EPSG:4326"))
@@ -377,12 +401,13 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 		extends Dataset[Double, JavaDouble] {
 	def manifest = implicitly[ClassManifest[Double]]
 
-	private val properties = new CSVRecordPropertiesWrapper(rawProperties)
+	protected val properties = new CSVRecordPropertiesWrapper(rawProperties)
 
 	private val description = properties.getStringOption("oculus.binning.description",
 	                                                     "The description to put in the tile metadata")
-	private val xVar = properties.getStringOption("oculus.binning.xField",
-	                                              "The field to use for the X axis of tiles produced").get
+	private val xVar = properties.getString("oculus.binning.xField",
+	                                        "The field to use for the X axis of tiles produced",
+	                                        Some(CSVDatasetBase.ZERO_STR))
 	private val yVar = properties.getString("oculus.binning.yField",
 	                                        "The field to use for the Y axis of tiles produced",
 	                                        Some(CSVDatasetBase.ZERO_STR))
@@ -517,36 +542,68 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 	override def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
 
 
-	class CSVStaticProcessingStrategy (sc: SparkContext, cache: Boolean)
-			extends StaticProcessingStrategy[Double](sc, cache) {
-		protected def getData: RDD[(Double, Double, Double)] = {
-			val source = new CSVDataSource(properties)
-			val parser = new CSVRecordParser(properties)
-			val extractor = new CSVFieldExtractor(properties)
+	class CSVStaticProcessingStrategy (sc: SparkContext,
+	                                   cacheRaw: Boolean,
+	                                   cacheProcessed: Boolean)
+			extends StaticProcessingStrategy[Double](sc) {
+		// This is a weird initialization problem that requires some
+		// documentation to explain.
+		// What we really want here is for rawData to be initialized in the
+		// getData method, below.  However, this method is called from
+		// StaticProcessingStrategy.rdd, which is called during the our
+		// parent's <init> call - which happens before we event get to this
+		// line.  So when we get here, if we assigned rawData directly in
+		// getData, this line below, having to assign rawData some value,
+		// would overwrite it.
+		// We could just say rawData = rawData (that does work, I checked),
+		// but that seemed semantically too confusing to abide. So instead,
+		// getData sets rawData2, which can the be assigned to rawData before
+		// it gets written in its own initialization (since initialization
+		// lines are run in order).
+		private var rawData: RDD[String] = rawData2
+		private var rawData2: RDD[String] = null;
 
+		def getRawData = rawData
+
+		def getData: RDD[(Double, Double, Double)] = {
+			val localProperties = properties
 			val localXVar = xVar
 			val localYVar = yVar
 			val localZVar = zVar
 
-			val rawData = source.getData(sc)
-			val data = rawData.mapPartitions(iter =>
-				// Parse the records from the raw data
-				parser.parseRecords(iter, localXVar, localYVar)
+			rawData2 = {
+				val source = new CSVDataSource(properties)
+				val data = source.getData(sc);
+				if (cacheRaw)
+					data.persist(StorageLevel.MEMORY_AND_DISK)
+				data
+			}
+
+			val data = rawData2.mapPartitions(iter =>
+				{
+					val parser = new CSVRecordParser(localProperties)
+					// Parse the records from the raw data
+					parser.parseRecords(iter, localXVar, localYVar).map(_._2)
+				}
 			).filter(r =>
 				// Filter out unsuccessful parsings
 				r.hasValue
 			).map(_.get).mapPartitions(iter =>
-				iter.map(t => (extractor.getFieldValue(localXVar)(t),
-				               extractor.getFieldValue(localYVar)(t),
-				               extractor.getFieldValue(localZVar)(t)))
+				{
+					val extractor = new CSVFieldExtractor(localProperties)
+
+					iter.map(t => (extractor.getFieldValue(localXVar)(t),
+					               extractor.getFieldValue(localYVar)(t),
+					               extractor.getFieldValue(localZVar)(t)))
+				}
 			).filter(record =>
 				record._1.hasValue && record._2.hasValue && record._3.hasValue
 			).map(record =>
 				(record._1.get, record._2.get, record._3.get)
 			)
 
-			if (cache)
-				data.cache
+			if (cacheProcessed)
+				data.persist(StorageLevel.MEMORY_AND_DISK)
 
 			data
 		}
@@ -560,15 +617,49 @@ class CSVDataset (rawProperties: Properties,
                   tileWidth: Int,
                   tileHeight: Int)
 		extends CSVDatasetBase(rawProperties, tileWidth, tileHeight) {
+	// Just some Filter type aliases from Queries.scala
+	import com.oculusinfo.tilegen.datasets.FilterAware._
 
-	type STRATEGY_TYPE = ProcessingStrategy[Double]
+
+	type STRATEGY_TYPE = CSVStaticProcessingStrategy
 	protected var strategy: STRATEGY_TYPE = null
-	
-	def initialize (sc: SparkContext, cache: Boolean): Unit =
-		initialize(new CSVStaticProcessingStrategy(sc, cache))
+
+	def getRawData: RDD[String] = strategy.getRawData
+
+	def getRawFilteredData (filterFcn: Filter):	RDD[String] = {
+		val localProperties = properties
+		getRawData.mapPartitions(iter =>
+			{
+				val parser = new CSVRecordParser(localProperties)
+				// Parse the records from the raw data, parsing all fields
+				// The funny end syntax tells scala to treat fields as a varargs
+				parser.parseRecords(iter, localProperties.fields:_*)
+					.filter {case (record, fields) => filterFcn(fields)}
+					.map(_._1)
+			}
+		)
+	}
+	def getRawFilteredJavaData (filterFcn: Filter): JavaRDD[String] =
+		JavaRDD.fromRDD(getRawFilteredData(filterFcn))
+
+	def getFieldFilterFunction (field: String, min: Double, max: Double): Filter = {
+		val localProperties = properties
+		new FilterFunction with Serializable {
+			def apply (valueList: ValueOrException[List[Double]]): Boolean = {
+				val index = localProperties.fieldIndices(field)
+				valueList.hasValue && {
+					val value = (valueList.get)(index)
+					min <= value && value <= max
+				}
+			}
+			override def toString: String = "%s Range[%.4f, %.4f]".format(field, min, max)
+		}
+	}
+
+	def initialize (sc: SparkContext, cacheRaw: Boolean, cacheProcessed: Boolean): Unit =
+		initialize(new CSVStaticProcessingStrategy(sc, cacheRaw, cacheProcessed))
 	
 }
-
 
 object StreamingCSVDataset {
 
@@ -609,5 +700,43 @@ class StreamingCSVDataset (rawProperties: Properties,
 			strategy.processWithTime(fcn, completionCallback)
 		}
 	}
+}
 
+
+object CSVDatasetTest {
+	def main (args: Array[String]): Unit = {
+		val argParser = new ArgumentParser(args)
+		val jobName = "CSV Dataset test"
+		val sc = argParser.getSparkConnector().getSparkContext(jobName)
+
+		val datasetProps = new java.util.Properties()
+		datasetProps.setProperty("oculus.binning.source.location",
+		                         "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv")
+		datasetProps.setProperty("oculus.binning.source.partitions", "96")
+		datasetProps.setProperty("oculus.binning.name", "bitcoin")
+		datasetProps.setProperty("oculus.binning.parsing.separator", "\t")
+		datasetProps.setProperty("oculus.binning.parsing.amount.index", "4")
+		datasetProps.setProperty("oculus.binning.parsing.time.index", "3")
+		datasetProps.setProperty("oculus.binning.parsing.time.fieldType", "date")
+		datasetProps.setProperty("oculus.binning.parsing.time.dateFormat", "yyyy-MM-dd HH:mm:ss")
+		datasetProps.setProperty("oculus.binning.parsing.source.index", "2")
+		datasetProps.setProperty("oculus.binning.parsing.source.fieldType", "int")
+		datasetProps.setProperty("oculus.binning.parsing.destination.index", "2")
+		datasetProps.setProperty("oculus.binning.parsing.destination.fieldType", "int")
+		datasetProps.setProperty("oculus.binning.parsing.transaction.index", "2")
+		datasetProps.setProperty("oculus.binning.parsing.transaction.fieldType", "Iint")
+		val dataset = new com.oculusinfo.tilegen.datasets.CSVDataset(datasetProps, 1, 1)
+		dataset.initialize(sc, true, false)
+		val rawData = dataset.getRawData
+		val props = new com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper(datasetProps)
+		val parsedData = rawData.mapPartitions(iter =>
+			{
+				val parser = new com.oculusinfo.tilegen.datasets.CSVRecordParser(props)
+				parser.parseRecords(iter, props.fields:_*)
+			}
+		)
+		val sourcefilter = dataset.getFieldFilterFunction("source", 1000, 2000)
+		val destfilter = dataset.getFieldFilterFunction("destination", 1000, 2000)
+		println(dataset.getRawFilteredData(destfilter).count)
+	}
 }

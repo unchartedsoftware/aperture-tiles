@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- /*global OpenLayers */
+/*global OpenLayers */
 
 require(['./FileLoader',
          './ApertureConfig',
@@ -42,44 +42,44 @@ require(['./FileLoader',
                   configureAperture,
                   OverlayButton,
                   MapTracker,
-        	      Map,
+                  Map,
                   AvailableLayersTracker,
-                  MapCustomization,
+                  UICustomization,
                   ServerLayerFactory,
                   ClientLayerFactory,
                   AnnotationLayerFactory,
                   LayerControls,
                   UIMediator) {
-            "use strict";
+	        "use strict";
 
-            var apertureConfigFile = "./data/aperture-config.json",
-                cloneObject,
-                getLayers,
-                pyramidsEqual,
-                getAnnotationLayers,
-                uiMediator;
+	        var apertureConfigFile = "./data/aperture-config.json",
+	            cloneObject,
+	            getLayers,
+	            pyramidsEqual,
+	            getAnnotationLayers,
+	            uiMediator;
 
-            cloneObject = function (base) {
-                var result, key;
+	        cloneObject = function (base) {
+		        var result, key;
 
-                if ($.isArray(base)) {
-                    result = [];
-                } else {
-                    result = {};
-                }
+		        if ($.isArray(base)) {
+			        result = [];
+		        } else {
+			        result = {};
+		        }
 
-                for (key in base) {
-                    if (base.hasOwnProperty(key)) {
-                        if ("object" === typeof(base[key])) {
-                            result[key] = cloneObject(base[key]);
-                        } else {
-                            result[key] = base[key];
-                        }
-                    }
-                }
+		        for (key in base) {
+			        if (base.hasOwnProperty(key)) {
+				        if ("object" === typeof(base[key])) {
+					        result[key] = cloneObject(base[key]);
+				        } else {
+					        result[key] = base[key];
+				        }
+			        }
+		        }
 
-                return result;
-            };
+		        return result;
+	        };
 
 	        // Get the layers from a layer tree that match a given filter and 
 	        // pertain to a given domain.
@@ -141,92 +141,98 @@ require(['./FileLoader',
 	        };
 
 
-            getAnnotationLayers = function( allLayers, filter ) {
-                var i, validLayers =[];
-                for (i=0; i<allLayers.length; i++) {
+	        getAnnotationLayers = function( allLayers, filter ) {
+		        var i, validLayers =[];
+		        for (i=0; i<allLayers.length; i++) {
 
-                    if ( filter( allLayers[i] ) ) {
-                        validLayers.push( allLayers[i] );
-                    }
-                }
-                return validLayers;
-            };
+			        if ( filter( allLayers[i] ) ) {
+				        validLayers.push( allLayers[i] );
+			        }
+		        }
+		        return validLayers;
+	        };
 
-            // Create description element
-            $.get("description.html", function (data) {
-                // create the overlay container
-                new OverlayButton({
-                    id:'description',
-                    active: false,
-                    activeWidth: '50%',
-                    text: 'Description',
-                    css: {
-                        right: '10px',
-                        top: '10px'
-                    }
-                }).append(data);
-                // append description html
+	        // Create description element
+	        $.get("description.html", function (data) {
+		        // create the overlay container
+		        new OverlayButton({
+			        id:'description',
+			        active: false,
+			        activeWidth: '50%',
+			        text: 'Description',
+			        css: {
+				        right: '10px',
+				        top: '10px'
+			        }
+		        }).append(data);
+		        // append description html
 
-            });
-                        
-            // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
+	        });
+	        
+	        // Load all our UI configuration data before trying to bring up the ui
+	        FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
 
-	            // First off, configure aperture.
-	            configureAperture(jsonDataMap[apertureConfigFile]);
+		        // First off, configure aperture.
+		        configureAperture(jsonDataMap[apertureConfigFile]);
 
 
 
-	            // Get our list of maps
-	            MapTracker.requestMaps(function (maps) {
-		            // For now, just use the first map
-		            var mapConfig = maps[0],
-		                worldMap,
-		                mapPyramid;
+		        // Get our list of maps
+		        MapTracker.requestMaps(function (maps) {
+			        // For now, just use the first map
+			        var mapConfig = maps[0],
+			            worldMap,
+			            mapPyramid;
 
-		            // Initialize our map...
-		            worldMap = new Map("map", mapConfig);
-                    // ... (set up our map axes) ...
-                    worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
-                    // ... perform any project-specific map customizations ...
-                    MapCustomization.customizeMap(worldMap);
-                    // ... and request relevant data layers
-                    mapPyramid = mapConfig.PyramidConfig;
+			        // Initialize our map...
+			        worldMap = new Map("map", mapConfig);
+			        // ... (set up our map axes) ...
+			        worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
+			        // ... perform any project-specific map customizations ...
+			        if (UICustomization.customizeMap) {
+				        UICustomization.customizeMap(worldMap);
+			        }
+			        // ... and request relevant data layers
+			        mapPyramid = mapConfig.PyramidConfig;
 
-		            AvailableLayersTracker.requestLayers(
-			            function (layers) {
-				            // TODO: Make it so we can pass the pyramid up to the server
-				            // in the layers request, and have it return only portions
-				            // of the layer tree that match that pyramid.
-				            // Eventually, we should let the user choose among them.
-				            var filter = function (layer) {
-                                    return pyramidsEqual(mapPyramid, layer.pyramid);
-                                },
-				                clientLayers = getLayers("client", layers, filter),
-				                serverLayers = getLayers("server", layers, filter);
+			        AvailableLayersTracker.requestLayers(
+				        function (layers) {
+					        // TODO: Make it so we can pass the pyramid up to the server
+					        // in the layers request, and have it return only portions
+					        // of the layer tree that match that pyramid.
+					        // Eventually, we should let the user choose among them.
+					        var filter = function (layer) {
+						        return pyramidsEqual(mapPyramid, layer.pyramid);
+					        },
+					            clientLayers = getLayers("client", layers, filter),
+					            serverLayers = getLayers("server", layers, filter);
 
-				            uiMediator = new UIMediator();
-    
-				            // Create client and server layers
-				            ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
-				            ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
+					        if (UICustomization.customizeLayers) {
+						        UICustomization.customizeLayers(layers);
+					        }
 
-				            new LayerControls().initialize( uiMediator.getLayerStateMap() );
+					        uiMediator = new UIMediator();
+					        
+					        // Create client and server layers
+					        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+					        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
 
-                            AnnotationLayerFactory.requestLayers(
-                                function( layers ) {
+					        new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
-                                    var annotationLayers = getAnnotationLayers(layers, filter);
-                                    AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
+					        AnnotationLayerFactory.requestLayers(
+						        function( layers ) {
 
-                                 }
-                            );
+							        var annotationLayers = getAnnotationLayers(layers, filter);
+							        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-				            // Trigger the initial resize event to resize everything
-				            $(window).resize();
-			            }
-		            );
+						        }
+					        );
 
-	            });
-            });
+					        // Trigger the initial resize event to resize everything
+					        $(window).resize();
+				        }
+			        );
+
+		        });
+	        });
         });

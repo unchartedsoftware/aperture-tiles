@@ -25,23 +25,46 @@
 
 
 define(function (require) {
-    "use strict";
+	"use strict";
 
-    var AoIPyramid = require('./AoITilePyramid'),
-        WebMercatorPyramid = require('./WebTilePyramid');
+	var AoIPyramid = require('./AoITilePyramid'),
+	    WebMercatorPyramid = require('./WebTilePyramid');
 
-    return {
-        createPyramid: function (specification) {
-	        var pyramid;
-	        if ("AreaOfInterest" === specification.type) {
-		        pyramid = new AoIPyramid(specification.minX,
-		                                 specification.minY,
-		                                 specification.maxX,
-		                                 specification.maxY);
-	        } else if ("WebMercator" === specification.type) {
-		        pyramid = new WebMercatorPyramid();
-	        }
-	        return pyramid;
-        }
-    };
+	return {
+		createPyramid: function (specification) {
+			var pyramid;
+			if ("AreaOfInterest" === specification.type) {
+				pyramid = new AoIPyramid(specification.minX,
+				                         specification.minY,
+				                         specification.maxX,
+				                         specification.maxY);
+			} else if ("WebMercator" === specification.type) {
+				pyramid = new WebMercatorPyramid();
+			}
+			return pyramid;
+		},
+		// Check if two pyramid specs represent the same pyramid
+		pyramidsEqual: function (pyramidA, pyramidB) {
+			if (pyramidA && pyramidA.ClassName) {
+				pyramidA = pyramidA.toJSON();
+			}
+			if (pyramidB && pyramidB.ClassName) {
+				pyramidB = pyramidB.toJSON();
+			}
+			var result = false;
+			if (pyramidA && pyramidA.type && pyramidB && pyramidB.type) {
+				if ("AreaOfInterest" === pyramidA.type) {
+					result = ("AreaOfInterest" === pyramidB.type &&
+					          pyramidA.minX === pyramidB.minX &&
+					          pyramidA.maxX === pyramidB.maxX &&
+					          pyramidA.minY === pyramidB.minY &&
+					          pyramidA.maxY === pyramidB.maxY);
+				} else if ("WebMercator" === pyramidA.type) {
+					result = ("WebMercator" === pyramidB.type);
+				}
+			}
+
+			return result;
+		}
+	};
 });

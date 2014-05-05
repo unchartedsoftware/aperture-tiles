@@ -35,7 +35,41 @@
 							"type" : "hbase",
 							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
 							"hbase.zookeeper.port" : "2181",
-							"hbase.master" : "hadoop-s1.oculus.local:60000"
+							"hbase.master" : "hadoop-s1.oculus.local:60000",
+							"data": {
+								"oculus": {
+									"binning": {
+										"name": "bitcoin",
+										"source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv",
+										"parsing.separator": "\t",
+										"source.partitions": 96,
+										"xField": "source",
+										"yField": "amount",
+										"parsing": {
+											"transaction": {
+												"index": 0,
+												"fieldType": "int"
+											},
+											"source": {
+												"index": 1,
+												"fieldType": "Int"
+											},
+											"destination": {
+												"index": 2,
+												"fieldType": "Int"
+											},
+											"time": {
+												"index": 3,
+												"fieldType": "date",
+												"dateFormat": "yyyy-MM-dd HH:mm:ss"
+											},
+											"amount": {
+												"index": 4
+											}
+										}
+									}
+								}
+							},
 						}
 					},
 					"renderers" : [
@@ -67,7 +101,41 @@
 							"type" : "hbase",
 							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
 							"hbase.zookeeper.port" : "2181",
-							"hbase.master" : "hadoop-s1.oculus.local:60000"
+							"hbase.master" : "hadoop-s1.oculus.local:60000",
+							"data": {
+								"oculus": {
+									"binning": {
+										"name": "bitcoin",
+										"source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv",
+										"parsing.separator": "\t",
+										"source.partitions": 96,
+										"xField": "time",
+										"yField": "amount",
+										"parsing": {
+											"transaction": {
+												"index": 0,
+												"fieldType": "int"
+											},
+											"source": {
+												"index": 1,
+												"fieldType": "Int"
+											},
+											"destination": {
+												"index": 2,
+												"fieldType": "Int"
+											},
+											"time": {
+												"index": 3,
+												"fieldType": "date",
+												"dateFormat": "yyyy-MM-dd HH:mm:ss"
+											},
+											"amount": {
+												"index": 4
+											}
+										}
+									}
+								}
+							},
 						}
 					},
 					"renderers" : [
@@ -99,7 +167,41 @@
 							"type" : "hbase",
 							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
 							"hbase.zookeeper.port" : "2181",
-							"hbase.master" : "hadoop-s1.oculus.local:60000"
+							"hbase.master" : "hadoop-s1.oculus.local:60000",
+							"data": {
+								"oculus": {
+									"binning": {
+										"name": "bitcoin",
+										"source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv",
+										"parsing.separator": "\t",
+										"source.partitions": 96,
+										"xField": "time",
+										"yField": "destination",
+										"parsing": {
+											"transaction": {
+												"index": 0,
+												"fieldType": "int"
+											},
+											"source": {
+												"index": 1,
+												"fieldType": "Int"
+											},
+											"destination": {
+												"index": 2,
+												"fieldType": "Int"
+											},
+											"time": {
+												"index": 3,
+												"fieldType": "date",
+												"dateFormat": "yyyy-MM-dd HH:mm:ss"
+											},
+											"amount": {
+												"index": 4
+											}
+										}
+									}
+								}
+							},
 						}
 					},
 					"renderers" : [
@@ -131,7 +233,41 @@
 							"type" : "hbase",
 							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
 							"hbase.zookeeper.port" : "2181",
-							"hbase.master" : "hadoop-s1.oculus.local:60000"
+							"hbase.master" : "hadoop-s1.oculus.local:60000",
+							"data": {
+								"oculus": {
+									"binning": {
+										"name": "bitcoin",
+										"source.location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv",
+										"parsing.separator": "\t",
+										"source.partitions": 96,
+										"xField": "time",
+										"yField": "source",
+										"parsing": {
+											"transaction": {
+												"index": 0,
+												"fieldType": "int"
+											},
+											"source": {
+												"index": 1,
+												"fieldType": "Int"
+											},
+											"destination": {
+												"index": 2,
+												"fieldType": "Int"
+											},
+											"time": {
+												"index": 3,
+												"fieldType": "date",
+												"dateFormat": "yyyy-MM-dd HH:mm:ss"
+											},
+											"amount": {
+												"index": 4
+											}
+										}
+									}
+								}
+							}
 						}
 					},
 					"renderers" : [

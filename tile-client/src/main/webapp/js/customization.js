@@ -32,12 +32,8 @@
  * Default implementation is a no-op.
  */
 define(function (require) {
-    "use strict";
+	"use strict";
 
-    return {
-        customizeMap: function (worldMap) {
-            // NO-OP by default
-            return undefined;
-        }
-    };
+	return {
+	};
 });

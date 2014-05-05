@@ -46,10 +46,10 @@
 	},
 
 	"AxisConfig": [
-		 {
+		{
 			"title" : "Time",
-            "position" : "bottom",
-            "repeat": false,
+			"position" : "bottom",
+			"repeat": false,
 			"intervalSpec" : {
 				"type" : "percentage",
 				"increment" : 20,
@@ -64,11 +64,11 @@
 		},
 		{
 			"title" : "Destination",
-            "position" : "left",
-            "repeat" : false,
+			"position" : "left",
+			"repeat" : false,
 			"intervalSpec" : {
-				"type" : "fixed",
-				"increment" : 100000,
+				"type" : "percentage",
+				"increment" : 20,
 				"pivot" : 0,
 				"allowScaleByZoom" : true,
 			},
