@@ -36,12 +36,12 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand;
+        DetailsOnDemandSentiment;
 
 
 
-    DetailsOnDemand = TwitterTagRenderer.extend({
-        ClassName: "DetailsOnDemand",
+    DetailsOnDemandSentiment = TwitterTagRenderer.extend({
+        ClassName: "DetailsOnDemandSentiment",
 
         init: function(id) {
             this._super(id, true);
@@ -210,7 +210,7 @@ define(function (require) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
                 bar.on('click', function() { return true; }); //swallow event
                 bar.map('visible').from(function(){return isVisible(this)});
-                bar.map('fill').asValue('#666666');
+                bar.map('fill').asValue(that.GREY_COLOUR);
                 bar.map('orientation').asValue('horizontal');
                 bar.map('bar-count').asValue(24)
                 bar.map('length').asValue(that.TILE_SIZE - that.HORIZONTAL_BUFFER*2);
@@ -344,7 +344,7 @@ define(function (require) {
             this.negativeLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2);
 
             // AXIS CENTRE LINE
-            this.line1 = lineTemplate('#FFFFFF', BAR_CENTRE_LINE);
+            this.line1 = lineTemplate(this.WHITE_COLOUR, BAR_CENTRE_LINE);
 
             // NEGATIVE BAR
             this.detailsNegativeBar = barTemplate(this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
@@ -546,5 +546,5 @@ define(function (require) {
 
     });
 
-    return DetailsOnDemand;
+    return DetailsOnDemandSentiment;
 });

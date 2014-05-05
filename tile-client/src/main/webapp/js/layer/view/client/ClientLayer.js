@@ -231,9 +231,6 @@ define(function (require) {
         },
 
 
-
-
-
         /**
          * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
          * the layers
@@ -242,13 +239,12 @@ define(function (require) {
             var i,
                 data = [];
 
-            for (i=0; i< this.views.length; i++ ) {
+            for (i=0; i< this.views.length || i< 1; i++ ) {
                 $.merge(data, this.views[i].getDataArray() );
             }
 
             this.mapNodeLayer.all([]).redraw(); // temporary aperture.js bug workaround
             this.mapNodeLayer.all(data).redraw();
-
         }
 
 

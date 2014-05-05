@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand = require('./DetailsOnDemand'),
+        DetailsOnDemand = require('./DetailsOnDemandSentiment'),
         HashTagsByTime;
 
 
@@ -176,9 +176,9 @@ define(function (require) {
                     return that.blendSentimentColours(positiveCount, negativeCount);
                 }
                 if (that.shouldBeGreyedOut(this.bin.value[tagIndex].tag, this.tilekey)) {
-                    return '#666666';
+                    return that.GREY_COLOUR;
                 }
-                return "#FFFFFF";
+                return that.WHITE_COLOUR;
             });
             this.bars.map('bar-count').from( function() {
                 return 24 * that.getCount(this);
@@ -273,7 +273,7 @@ define(function (require) {
 
             this.tagLabels.map('fill').from( function(index) {
                 if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
-                    return '#666666';
+                    return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
             });

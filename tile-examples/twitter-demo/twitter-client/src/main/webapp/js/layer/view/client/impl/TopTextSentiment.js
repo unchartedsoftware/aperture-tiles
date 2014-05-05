@@ -36,13 +36,13 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand = require('./DetailsOnDemand'),
-        TopTextSentimentBars;
+        DetailsOnDemand = require('./DetailsOnDemandSentiment'),
+        TopTextSentiment;
 
 
 
-    TopTextSentimentBars = TwitterTagRenderer.extend({
-        ClassName: "TopTextSentimentBars",
+    TopTextSentiment = TwitterTagRenderer.extend({
+        ClassName: "TopTextSentiment",
 
         init: function() {
             this._super("top-text-sentiment");
@@ -207,7 +207,7 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('topTextSentimentBarsPositive', this.WHITE_COLOUR, '#666666', this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
+            this.positiveBar = barTemplate('topTextSentimentBarsPositive', this.WHITE_COLOUR, this.GREY_COLOUR, this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -290,7 +290,7 @@ define(function (require) {
             this.tagLabel.map('fill').from( function(index) {
 
                 if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
-                    return '#666666';
+                    return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
             });
@@ -347,5 +347,5 @@ define(function (require) {
 
     });
 
-    return TopTextSentimentBars;
+    return TopTextSentiment;
 });
