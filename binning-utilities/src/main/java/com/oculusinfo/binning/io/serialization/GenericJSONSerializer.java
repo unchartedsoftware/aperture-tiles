@@ -24,7 +24,6 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -38,9 +37,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.TileData;
 
 
 public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {

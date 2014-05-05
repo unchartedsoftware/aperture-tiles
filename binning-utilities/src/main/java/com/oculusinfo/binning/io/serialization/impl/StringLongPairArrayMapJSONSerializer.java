@@ -26,16 +26,12 @@ package com.oculusinfo.binning.io.serialization.impl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.LinkedHashMap;
 
-import org.apache.avro.file.CodecFactory;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-
 
 import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
 import com.oculusinfo.binning.util.Pair;

@@ -30,9 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.spark.SparkContextProvider;
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
 
