@@ -97,11 +97,13 @@ public class DataServiceImpl implements DataService {
 
 
 
-	private SparkContext _context;
+	@Inject(optional = true)
+    private SparkContextProvider _contextProvider = null;
+    private SparkContext         _context         = null; ;
 
-	@Inject
-	public DataServiceImpl (SparkContextProvider sparkSource) {
-		_context = sparkSource.getSparkContext();
+	public DataServiceImpl () {
+	    if (null != _contextProvider)
+	        _context = _contextProvider.getSparkContext();
 	}
 
 
@@ -110,7 +112,10 @@ public class DataServiceImpl implements DataService {
 	public JSONObject getData (JSONObject datasetDescription,
 	                           JSONObject query, boolean getCount,
 	                           boolean getData, int requestCount) {
-		long startTime = System.currentTimeMillis();
+	    if (null == _context)
+	        return null;
+
+	    long startTime = System.currentTimeMillis();
 
 		JSONObject result = new JSONObject();
 

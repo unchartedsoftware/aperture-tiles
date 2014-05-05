@@ -64,6 +64,9 @@ public class DataResource extends ApertureServerResource {
 			}
 
 			JSONObject result = _service.getData(dataset, query, getCount, getData, requestCount);
+			if (null == result)
+			    throw new ResourceException(Status.SERVER_ERROR_SERVICE_UNAVAILABLE, "Data service is unavailable");
+
 			// Add in request parameters so the requester can recognize which result matches which request.
 			result.put("dataset", dataset);
 			result.put("requestCount", requestCount);
