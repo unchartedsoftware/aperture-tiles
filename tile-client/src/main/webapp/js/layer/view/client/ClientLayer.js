@@ -238,7 +238,7 @@ define(function (require) {
          * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
          * the layers
          */
-        updateAndRedrawViews: function() {
+        updateAndRedrawViews: function( tile ) {
             var i,
                 data = [];
 

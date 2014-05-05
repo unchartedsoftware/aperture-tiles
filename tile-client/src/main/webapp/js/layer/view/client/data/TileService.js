@@ -229,8 +229,13 @@ define(function (require) {
             // ensure we still need the tile
             if (this.waitingOnTile[tilekey] === true) {
 
+                // convert tile data into data by bin
                 this.data[tilekey] = this.transformTileToBins(tileData.tile, tilekey);
-                this.dataCallback[tilekey]( tileData );
+
+                if (tileData.tile !== undefined) {
+                    // only call callback function if the tile actually has data associated with it
+                    this.dataCallback[tilekey]( this.data[tilekey] );
+                }
 
                 // clear callbacks and 'waiting on' status
                 delete this.waitingOnTile[tilekey];
