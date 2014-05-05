@@ -173,7 +173,7 @@ require(['./FileLoader',
 				                serverLayers = getLayers("server", layers, filter);
 
 				            if (UICustomization.customizeLayers) {
-					            UICustomization.customizeLayers(clientLayers, serverLayers);
+					            UICustomization.customizeLayers(layers);
 				            }
 
 				            uiMediator = new UIMediator();

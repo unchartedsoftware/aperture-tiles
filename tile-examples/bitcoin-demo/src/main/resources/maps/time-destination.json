@@ -105,8 +105,8 @@
             "position" : "left",
             "repeat" : false,
 			"intervalSpec" : {
-				"type" : "fixed",
-				"increment" : 100000,
+				"type" : "percentage",
+				"increment" : 20,
 				"pivot" : 0,
 				"allowScaleByZoom" : true,
 			},

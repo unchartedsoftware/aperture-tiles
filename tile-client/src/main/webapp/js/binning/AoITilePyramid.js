@@ -157,7 +157,16 @@ define(function (require) {
                     centerY: bottom + binYSize * (adjustedY + 0.5),
                     width: binXSize,
                     height: binYSize};
-        }
+        },
+		toJSON: function () {
+			return {
+				"type": "AreaOfInterest",
+				"minX": this.minX,
+				"maxX": this.maxX,
+				"minY": this.minY,
+				"maxY": this.maxY
+			};
+		}
     });
 
     return AoITilePyramid;

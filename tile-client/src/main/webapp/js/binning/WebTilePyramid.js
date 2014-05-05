@@ -227,7 +227,13 @@ define (function (require) {
                 width:   (east-west),
                 height:  (north-south)
             };
-        }
+        },
+
+		toJSON: function () {
+			return {
+				"type": "WebMercator"
+			};
+		}
     });
 
     return WebMercatorTilePyramid;
