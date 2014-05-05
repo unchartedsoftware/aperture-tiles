@@ -62,6 +62,7 @@ define(function (require) {
             this.NEUTRAL_SELECTED_COLOUR = '#000000';
             this.BLACK_COLOUR = '#000000';
             this.WHITE_COLOUR = '#FFFFFF';
+            this.GREY_COLOUR = '#666666';
             this.LIGHT_GREY_COLOUR = '#999999';
             this.YELLOW_COLOUR = '#F5F56F';
             this.HORIZONTAL_BUFFER = 14;
