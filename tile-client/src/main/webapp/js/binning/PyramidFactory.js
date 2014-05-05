@@ -42,6 +42,29 @@ define(function (require) {
 		        pyramid = new WebMercatorPyramid();
 	        }
 	        return pyramid;
-        }
+        },
+		// Check if two pyramid specs represent the same pyramid
+		pyramidsEqual: function (pyramidA, pyramidB) {
+			if (pyramidA && pyramidA.ClassName) {
+				pyramidA = pyramidA.toJSON();
+			}
+			if (pyramidB && pyramidB.ClassName) {
+				pyramidB = pyramidB.toJSON();
+			}
+			var result = false;
+			if (pyramidA && pyramidA.type && pyramidB && pyramidB.type) {
+				if ("AreaOfInterest" === pyramidA.type) {
+					result = ("AreaOfInterest" === pyramidB.type &&
+							  pyramidA.minX === pyramidB.minX &&
+							  pyramidA.maxX === pyramidB.maxX &&
+							  pyramidA.minY === pyramidB.minY &&
+							  pyramidA.maxY === pyramidB.maxY);
+				} else if ("WebMercator" === pyramidA.type) {
+					result = ("WebMercator" === pyramidB.type);
+				}
+			}
+
+			return result;
+		}
     };
 });

@@ -38,6 +38,7 @@ import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.oculusinfo.tile.ServletLifecycleListener;
 import com.oculusinfo.tile.TileServiceConfiguration;
@@ -69,6 +70,7 @@ import com.oculusinfo.tile.TileServiceConfiguration;
  * 
  * @author nkronenfeld
  */
+@Singleton
 public class SparkContextProviderImpl implements SparkContextProvider {
 	private String   _master;
 	private String   _jobName;

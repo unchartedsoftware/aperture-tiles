@@ -118,6 +118,21 @@ public class DataServiceImpl implements DataService {
 		Properties datasetProps = JsonUtilities.jsonObjToProperties(datasetDescription);
 		// Width and height are irrelevant for record queries, so we just set them to 1.
 		CSVDataset dataset = new CSVDataset(datasetProps, 1, 1);
+
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		System.out.println("Data request");
+		System.out.println("\tDataset: "+datasetDescription);
+		System.out.println("\tQuery: "+query);
+		System.out.println("\tcount?: "+getCount);
+		System.out.println("\tdata?: "+getData);
+		System.out.println("\t# requested: "+requestCount);
+		System.out.println("\tSpark context: "+_context);
+		System.out.println();
+		System.out.println();
+		System.out.println();
+
 		dataset.initialize(_context, true, false);
 
 		// Create our query filter
@@ -128,6 +143,10 @@ public class DataServiceImpl implements DataService {
 			return null;
 		}
 		Function1<ValueOrException<List<Object>>, Object> filter = filterAttempt.get();
+		System.out.println("\tQuery function: "+filter);
+		System.out.println();
+		System.out.println();
+		System.out.println();
 
 		// Query Spark for our data
 		JavaRDD<String> filteredData = dataset.getRawFilteredJavaData(filter);
@@ -178,6 +197,13 @@ public class DataServiceImpl implements DataService {
 		if (0 == ((int) _timingStats.get(TimingStats.TotalRequests).total()) % 10) {
 			debugTimingStats(System.out);
 		}
+
+		System.out.println("Completed data request. Results:");
+		System.out.println(result.toString());
+		System.out.println();
+		System.out.println();
+		System.out.println();
+
         
 		return result;
 	}

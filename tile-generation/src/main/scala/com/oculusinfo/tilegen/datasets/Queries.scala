@@ -35,23 +35,42 @@ import org.json.JSONException
 import com.oculusinfo.tilegen.tiling.ValueOrException
 
 
+// There's probably a better way, but the point of having this FilterAware 
+// object, and immediately importing its contents, is to have the Filter 
+// type alias available everywhere in this file.
+object FilterAware {
+	type Filter = ValueOrException[List[Double]] => Boolean
+	type FilterFunction = Function1[ValueOrException[List[Double]], Boolean]
+}
+import com.oculusinfo.tilegen.datasets.FilterAware._
+
+
+
+// Encapsulate the Or function so it will work nicely with toString
+class OrFunction(operands: Filter*)
+		extends FilterFunction
+		with Serializable {
+	def apply (value: ValueOrException[List[Double]]): Boolean =
+		operands.map(_(value)).reduce(_ || _)
+	override def toString: String = operands.mkString("or(", ", ", ")")
+}
+
+// Encapsulates the And function we can use toString nicely on it.
+class AndFunction(operands: Filter*)
+		extends FilterFunction
+		with Serializable {
+	def apply (value: ValueOrException[List[Double]]): Boolean =
+		operands.map(_(value)).reduce(_ && _)
+	override def toString: String = operands.mkString("and(", ", ", ")")
+}
+
+
 
 object FilterFunctions {
-	type Filter = ValueOrException[List[Double]] => Boolean
 
-	def and (operands: Filter*) = {
-		val result: Filter = value =>
-		operands.map(_(value)).reduce(_ && _)
+	def and (operands: Filter*): Filter = new AndFunction(operands:_*)
 
-		result;
-	}
-
-	def or (operands: Filter*) = {
-		val result: Filter = value =>
-		operands.map(_(value)).reduce(_ || _)
-
-		result;
-	}
+	def or (operands: Filter*): Filter = new OrFunction(operands:_*)
 
 	def parseQuery (query: JSONObject, dataset: CSVDataset): Try[Filter] =
 		Try({

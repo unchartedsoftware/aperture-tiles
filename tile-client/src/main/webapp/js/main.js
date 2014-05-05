@@ -42,7 +42,7 @@ require(['./FileLoader',
                   MapTracker,
         	      Map,
                   AvailableLayersTracker,
-                  MapCustomization,
+                  UICustomization,
                   ServerLayerFactory,
                   ClientLayerFactory,
                   AnnotationLayerFactory,
@@ -154,7 +154,9 @@ require(['./FileLoader',
                     // ... (set up our map axes) ...
                     worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
                     // ... perform any project-specific map cusomizations ...
-                    MapCustomization.customizeMap(worldMap);
+		            if (UICustomization.customizeMap) {
+			            UICustomization.customizeMap(worldMap);
+		            }
                     // ... and request relevant data layers
                     mapPyramid = mapConfig.PyramidConfig;
 
@@ -169,6 +171,10 @@ require(['./FileLoader',
                                 },
 				                clientLayers = getLayers("client", layers, filter),
 				                serverLayers = getLayers("server", layers, filter);
+
+				            if (UICustomization.customizeLayers) {
+					            UICustomization.customizeLayers(layers);
+				            }
 
 				            uiMediator = new UIMediator();
     

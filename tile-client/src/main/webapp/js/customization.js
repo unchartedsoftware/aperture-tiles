@@ -35,9 +35,5 @@ define(function (require) {
     "use strict";
 
     return {
-        customizeMap: function (worldMap) {
-            // NO-OP by default
-            return undefined;
-        }
     };
 });
