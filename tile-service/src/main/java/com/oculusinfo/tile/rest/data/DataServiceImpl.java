@@ -44,6 +44,8 @@ import scala.util.Failure;
 import scala.util.Try;
 
 import com.google.inject.Inject;
+
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.math.statistics.StatTracker;
 import com.oculusinfo.tile.spark.SparkContextProvider;
 import com.oculusinfo.tile.util.JsonUtilities;
@@ -97,32 +99,44 @@ public class DataServiceImpl implements DataService {
 
 
 
-	@Inject(optional = true)
-    private SparkContextProvider _contextProvider = null;
-    private SparkContext         _context         = null; ;
+	@Inject(optional=true)
+	private SparkContextProvider _contextProvider = null;
+	private SparkContext         _context         = null;
 
-	public DataServiceImpl () {
-	    if (null != _contextProvider)
-	        _context = _contextProvider.getSparkContext();
+
+
+	private SparkContext getContext () {
+		if (null == _context) {
+			if (null != _contextProvider) {
+				_context = _contextProvider.getSparkContext();
+			}
+		}
+		return _context;
 	}
-
 
 
 	@Override
 	public JSONObject getData (JSONObject datasetDescription,
 	                           JSONObject query, boolean getCount,
 	                           boolean getData, int requestCount) {
-	    if (null == _context)
-	        return null;
+		SparkContext sc = getContext();
+		if (null == sc)
+			return null;
 
-	    long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 
 		JSONObject result = new JSONObject();
 
 		// Create our dataset
-		Properties datasetProps = JsonUtilities.jsonObjToProperties(datasetDescription);
-		// Width and height are irrelevant for record queries, so we just set them to 1.
-		CSVDataset dataset = new CSVDataset(datasetProps, 1, 1);
+		DatasetFactory factory = new DatasetFactory(null, null);
+		CSVDataset dataset;
+		try {
+			factory.readConfiguration(datasetDescription);
+			dataset = factory.produce(CSVDataset.class);
+		} catch (ConfigurationException e) {
+			LOGGER.warn("Error creating dataset for raw data search", e);
+			return null;
+		}
 
 		System.out.println();
 		System.out.println();
@@ -133,12 +147,12 @@ public class DataServiceImpl implements DataService {
 		System.out.println("\tcount?: "+getCount);
 		System.out.println("\tdata?: "+getData);
 		System.out.println("\t# requested: "+requestCount);
-		System.out.println("\tSpark context: "+_context);
+		System.out.println("\tSpark context: "+sc);
 		System.out.println();
 		System.out.println();
 		System.out.println();
 
-		dataset.initialize(_context, true, false);
+		dataset.initialize(sc, true, false);
 
 		// Create our query filter
 		Try<Function1<ValueOrException<List<Object>>, Object>> filterAttempt =
