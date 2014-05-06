@@ -41,7 +41,7 @@
   "p", "part", "parted", "parting", "parts", "per", "perhaps", "place", 
   "places", "point", "pointed", "pointing", "points", "possible", "present", 
   "presented", "presenting", "presents", "problem", "problems", "put", 
-  "puts", 
+  "puts", "td",
   "q", "quite", 
   "r", "rather", "really", "right", "room", "rooms", 
   "s", "said", "same", "saw", "say", "says", "second", "seconds", "see", 
@@ -63,5 +63,5 @@
   "x", 
   "y", "year", "years", "yes", "yet", "you", "you'd", "you'll", "you're", "you've", "young", "younger", "youngest", 
   "your", "yours", 
-  "z", "hahaha"
+  "z", "hahaha", "hahahaha"
 ]

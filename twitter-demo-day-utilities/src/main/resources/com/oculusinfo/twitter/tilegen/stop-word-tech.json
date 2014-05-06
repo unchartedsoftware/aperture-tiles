@@ -1,6 +1,6 @@
 [
     "amp", "w/",
-    "gt",
-    "http", "https", "https://t",
+    "gt", "rt", "&amp;",
+    "http", "https", "https://t","&lt;3","https //t",
     "lt"
 ]
