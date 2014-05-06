@@ -18,6 +18,18 @@
   <url>http://github.com/oculusinfo/aperture-tiles</url>
   <description>A root project containing all the pieces of the Aperture Tiles system</description>
 
+  <scm>
+	<url>https://github.com/oculusinfo/aperture-tiles</url>
+	<connection>scm:git:https://github.com/oculusinfo/aperture-tiles.git</connection>
+  </scm>
+  <licenses>
+  	<license>
+	  <name>The MIT License (MIT)</name>
+	  <url>http://opensource.org/licenses/MIT</url>
+	  <distribution>repo</distribution>
+	</license>
+  </licenses>
+	
   <repositories>
     <repository>
       <id>cloudera-releases</id>
