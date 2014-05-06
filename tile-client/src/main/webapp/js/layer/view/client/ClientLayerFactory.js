@@ -76,7 +76,7 @@ define( function (require) {
 
             function onRetrieveRenderer( index, deferred ){
                 return function( Module ) {
-                    layer.views[index].renderer = new Module();
+                    layer.views[index].renderer = new Module(map);
                     deferred.resolve();
                 };
             }

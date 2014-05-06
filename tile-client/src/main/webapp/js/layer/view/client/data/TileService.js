@@ -95,8 +95,8 @@ define(function (require) {
 
             for(i=0; i<tilekeys.length; i++) {
                 // if data exists in tile
-                if ( this.data[ tilekeys[i] ] !== undefined ) {
-                    allData[ tilekeys[i] ] = this.data[ tilekeys[i] ];
+                if ( this.data[ tilekeys[i] ] !== undefined && this.data[ tilekeys[i] ].length > 0 ) {
+                    allData[ tilekeys[i] ] = this.data[ tilekeys[i] ][0];
                 }
             }
             return allData;

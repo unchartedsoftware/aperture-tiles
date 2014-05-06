@@ -236,7 +236,8 @@ define(function (require) {
          * the layers
          */
         updateAndRedrawViews: function( tile ) {
-            var i,
+            var that = this,
+                i,
                 data = [];
 
             for (i=0; i< this.views.length || i< 1; i++ ) {
@@ -244,7 +245,19 @@ define(function (require) {
             }
 
             this.mapNodeLayer.all([]).redraw(); // temporary aperture.js bug workaround
-            this.mapNodeLayer.all(data).redraw();
+            this.mapNodeLayer.all(data);
+
+            /*
+            // send selected node to top
+            this.mapNodeLayer.all().where( function(data) {
+                return data.tilekey === that.clientState.clickState.tilekey;
+            }).toFront();
+
+            this.mapNodeLayer.all().where('tilekey', this.clientState.clickState.tilekey).toFront();
+            */
+            this.mapNodeLayer.all().redraw();
+
+
         }
 
 

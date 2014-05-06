@@ -13264,8 +13264,22 @@ function(ns) {
 			if( this.olMap_.getProjection() !== apiProjection.projCode ) {
 				center.transform(apiProjection, this.olMap_.projection);
 			}
-			this.olMap_.setCenter( center, zoom );
+            this.olMap_.setCenter( center, zoom );
 		},
+
+        /**
+         * Smoothly pans the map to a given center point in lon/lat.
+         * Always accepts center as lon/lat, regardless of map's projection.
+         * @param lat latitude to zoom to.
+         * @param lon longitude to zoom to.
+         */
+        panTo : function( lat, lon ) {
+            var center = new OpenLayers.LonLat(lon,lat);
+            if( this.olMap_.getProjection() !== apiProjection.projCode ) {
+                center.transform(apiProjection, this.olMap_.projection);
+            }
+            this.olMap_.panTo( center );
+        },
 
 		/**
 		 * Sets visible extents of the map in lat/lon (regardless of current coordinate

@@ -43,8 +43,19 @@ define(function (require) {
     DetailsOnDemandSentiment = TwitterTagRenderer.extend({
         ClassName: "DetailsOnDemandSentiment",
 
-        init: function(id) {
-            this._super(id, true);
+        init: function(id, map) {
+            this._super(id, map, true);
+        },
+
+
+        panMapToCenter: function(data) {
+
+            var viewportPixel, panCoord;
+
+            viewportPixel = this.map.getViewportPixelFromCoord( data.longitude, data.latitude );
+            panCoord = this.map.getCoordFromViewportPixel( viewportPixel.x + this.TILE_SIZE/2 + this.X_CENTRE_OFFSET, 
+                                                           viewportPixel.y + this.TILE_SIZE/2 + this.Y_CENTRE_OFFSET );           
+            this.map.map.panTo( panCoord.y, panCoord.x );
         },
 
 
