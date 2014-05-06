@@ -1,0 +1,148 @@
+{
+    "Data Set": "Bitcoin",
+    "Display Width": 768,
+    "Display Height": 768,
+    "Plots": [
+        {
+            "Title": "Destination ID vs. Amount",
+            "Layers": [{
+                "Layer" : "Bitcoin.destination.amount",
+                "Type" : "tile"
+            }],
+            "X Axis": "Destination ID",
+            "Y Axis": "Amount (BTC)",
+            "X Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            }
+        },
+        {
+            "Title": "Source ID vs. Amount",
+            "Layers": [{
+                "Layer" : "bitcoin.source.amount",
+                "Type" : "tile"
+            }],
+            "X Axis": "Source ID",
+            "Y Axis": "Amount (BTC)",
+            "X Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2
+            }
+        },
+        {
+            "Title": "Source ID vs. Destination ID (transaction count)",
+            "Layers": [{
+                "Layer" : "bitcoin.refac.source.destination",
+                "Type" : "tile"
+            }],
+            "X Axis": "Source ID",
+            "Y Axis": "Destination ID",
+            "X Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            }
+        },
+        {
+            "Title": "Source ID vs. Destination ID (total amount transferred)",
+            "Layers": [{
+                "Layer" : "bitcoin.refac.source.destination.amount",
+                "Type" : "tile"
+            }],
+            "X Axis": "Source ID",
+            "Y Axis": "Destination ID",
+            "X Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            }
+        },
+        {
+            "Title": "Time vs. Source ID (transaction count)",
+            "Layers": [{
+                "Layer" : "Bitcoin.time.source",
+                "Type" : "tile"
+            }],
+            "X Axis": "Time",
+            "Y Axis": "Source ID",
+            "X Axis Label": {
+                "type": "time"
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            }
+        },
+        {
+            "Title": "Time vs. Source ID (total amount transfered)",
+            "Layers": [{
+                "Layer" : "bitcoin.refac.time.source.amount",
+                "Type" : "tile"
+            }],
+            "X Axis": "Time",
+            "Y Axis": "Source ID",
+            "X Axis Label": {
+                "type": "time"
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            }
+        },
+        {
+            "Title": "Time vs. Amount",
+            "Layers": [{
+                "Layer" : "Bitcoin.time.amount",
+                "Type" : "tile"
+            }],
+            "X Axis": "Time",
+            "Y Axis": "Amount (BTC)",
+            "X Axis Label": {
+                "type": "time"
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2
+            }
+        },
+        {
+            "Title": "Time vs. Log10(Amount)",
+            "Layers": [{
+                "Layer" : "Bitcoin.time.logamount",
+                "Type" : "tile"
+            }],
+            "X Axis": "Time",
+            "Y Axis": "Log10(Amount)",
+            "X Axis Label": {
+                "type": "time"
+            },
+            "Y Axis Label": {
+                "type": "decimal",
+                "decimals": 2
+            }
+        }
+    ]
+}
