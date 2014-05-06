@@ -67,9 +67,6 @@ define(function (require) {
 				id: this.id
 			});
 
-			// remove default zoom control
-			this.map.olMap_.removeControl( this.map.olMap_.getControlsByClass('OpenLayers.Control.Zoom')[0] );
-
 			/*
 			 this.tileManager = new OpenLayers.TileManager();
 			 this.tileManager.addMap(this.map.olMap_);

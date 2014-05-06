@@ -15,3 +15,8 @@
     height: 100%;
 }
 
+div.olControlZoom {
+	right: 10px !important;
+	top: 60px !important;
+	left:auto !important;
+}
