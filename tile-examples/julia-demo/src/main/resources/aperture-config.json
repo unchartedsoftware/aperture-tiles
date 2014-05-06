@@ -1,5 +1,5 @@
 {
-	"_comment" : [
+	"_comment": [
 		"The json configuration file ApertureJS configuration options such as ",
 		"logging and REST endpoints:",
 		"    aperture.log:  see ApertureJS documentation for details on configuring logging",
@@ -14,6 +14,6 @@
 	},
 	"aperture.io" : {
 		"rpcEndpoint" : "/aperture/rpc",
-		"restEndpoint" : "/twitter-heatmap/rest"
+		"restEndpoint" : "/${project.build.finalName}/rest"
 	}
 }
