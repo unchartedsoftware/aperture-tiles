@@ -110,7 +110,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
     @Test
     public void testTileJSONSerialization () throws Exception {
     	
-    	List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( NUM_ENTRIES, _indexer, _pyramid );
+    	List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
 		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
 
 		if (VERBOSE) {

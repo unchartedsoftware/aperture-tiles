@@ -159,7 +159,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     @Override
     public List<AnnotationData<?>> readData (String tableName, 
 								          AnnotationSerializer serializer,
-								          List<Pair<String,Long>> references) throws IOException {
+								          Iterable<Pair<String,Long>> references) throws IOException {
 
     	List<byte[]> rowIds = new ArrayList<byte[]>();
         for (Pair<String,Long> reference: references) {
