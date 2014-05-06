@@ -1,0 +1,222 @@
+{
+    "Data Set": "Twitter Dataset 1",
+    "Display Width": 768,
+    "Display Height": 768,
+    "Plots": [
+        {
+            "Title" : "Time vs. Hashtag",
+            "Layers": [
+                {
+                    "Layer": "tweets.time.id",
+                    "Type": "tile"
+                }
+            ],
+            "X Axis": "Time",
+            "Y Axis": "Hashtag (Sorted by first occurence)",
+            "X Axis Label": {
+                "type": "time"
+            },
+            "Y Axis Label": {
+                "type": "M",
+                "decimals": 2,
+                "allowStepDown": true
+            }
+        },
+        {
+            "Title": "Tweet Locations",
+            "Layers": [
+                {
+                    "Layer": "twitter.lon.lat",
+                    "Type": "tile",
+                    "Opacity" : 0.85
+                }
+            ],
+            "X Axis": "Longitude",
+            "Y Axis": "Latitude",
+            "baseLayer": [
+                {
+                    "Google": {
+                        "options": {
+                            "name": "Google Black",
+                            "type": "styled",
+                            "style": [
+                                {
+                                    "stylers": [
+                                        {
+                                            "invert_lightness": true
+                                        },
+                                        {
+                                            "saturation": -100
+                                        },
+                                        {
+                                            "visibility": "simplified"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "landscape.natural.landcover",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "road",
+                                    "stylers": [
+                                        {
+                                            "visibility": "on"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "landscape.man_made",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "transit",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "poi",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "transit",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "administrative.country",
+                                    "elementType": "geometry",
+                                    "stylers": [
+                                        {
+                                            "visibility": "on"
+                                        },
+                                        {
+                                            "lightness": -56
+                                        }
+                                    ]
+                                },
+                                {
+                                    "elementType": "labels",
+                                    "stylers": [
+                                        {
+                                            "visibility": "on"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Google": {
+                        "options": {
+                            "name": "Google Gray",
+                            "type": "styled",
+                            "style": [
+                                {
+                                    "stylers": [
+                                        {
+                                            "invert_lightness": false
+                                        },
+                                        {
+                                            "saturation": -100
+                                        },
+                                        {
+                                            "visibility": "simplified"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "landscape.natural.landcover",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "road",
+                                    "stylers": [
+                                        {
+                                            "visibility": "on"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "landscape.man_made",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "transit",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "poi",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "transit",
+                                    "stylers": [
+                                        {
+                                            "visibility": "off"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "featureType": "administrative.country",
+                                    "elementType": "geometry",
+                                    "stylers": [
+                                        {
+                                            "visibility": "on"
+                                        },
+                                        {
+                                            "lightness": -56
+                                        }
+                                    ]
+                                },
+                                {
+                                    "elementType": "labels",
+                                    "stylers": [
+                                        {
+                                            "visibility": "on"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+     ]
+}
