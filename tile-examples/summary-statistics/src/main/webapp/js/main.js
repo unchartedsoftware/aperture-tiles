@@ -53,11 +53,6 @@ require(['./FileLoader',
                 dataset: datasetName
             });
             summaryBuilder.start();
-	        
-			$(window).resize( function() {
-
-			});
-
 		});
 	}
 );

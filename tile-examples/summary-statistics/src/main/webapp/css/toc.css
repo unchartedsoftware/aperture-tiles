@@ -18,6 +18,7 @@ rgb(252, 249, 207)  Pale Yellow (from luminance scale)
 header {
 	border-bottom: solid 1px GRAY;
 	margin: 0 0 0 15px;
+	background-color : rgb(204,204,204);
 }
 header h1 {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;

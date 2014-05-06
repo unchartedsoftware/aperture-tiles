@@ -12981,7 +12981,7 @@ function esriMaps() {
 		init: function(spec, mappings) {
 			this.robId = "MapNodeLayer";
 			aperture.PlotLayer.prototype.init.call(this, spec, mappings);
-			
+
 			if (mappings && mappings.map) {
 				this.canvas_.esriMap_ = mappings.map;
 			}
@@ -13518,6 +13518,9 @@ function openLayersMaps() {
 			if ( !this.canvas_ ) {
 				throw new Error('Map layer must be constructed by a parent layer through an addLayer call');
 			}
+			if (this.canvas_.olMap_ === undefined) {
+				this.canvas_.olMap_ = spec.parent.olMap_;
+			}
 		},
 
 		/**
@@ -13666,7 +13669,7 @@ function openLayersMaps() {
                 [spec.url],
                 spec.options
 			);
-			
+
 			this.canvas_.olMap_.addLayer(this.olLayer_);
 		}		
 	});

@@ -25,12 +25,15 @@
   define( function(require) {
     "use strict"
 
+	var PlotAxis = require('./plotaxis');
+	 
     return function (options) {
+    	
         var Y_TILE_FUNC_PASSTHROUGH = function(yValue){return yValue;}; // NO-OP
         var Y_TILE_FUNC_ZERO_CLAMP = function (yInput){ return 0; }; // Y always zero, for density strips.
-
         var yFunction = Y_TILE_FUNC_PASSTHROUGH;
-
+		var uuid; 
+		
         var _mapState = {
             options : options,
             extents : null,
@@ -197,18 +200,20 @@
             var maxMapBounds = overlayLayerBounds.mapBounds;
             var maxDataBounds = overlayLayerBounds.dataBounds;
 
-            var geoViewBounds = _mapState.canvas.olMap_.getExtent();
-            var leftData = linearRemap(geoViewBounds.left, maxMapBounds[0], maxMapBounds[2], maxDataBounds.left, maxDataBounds.right);
-            var rightData = linearRemap(geoViewBounds.right, maxMapBounds[0], maxMapBounds[2], maxDataBounds.left, maxDataBounds.right);
-            var bottomData = linearRemap(geoViewBounds.bottom, maxMapBounds[1], maxMapBounds[3], maxDataBounds.bottom, maxDataBounds.top);
-            var topData = linearRemap(geoViewBounds.top, maxMapBounds[1], maxMapBounds[3], maxDataBounds.bottom, maxDataBounds.top);
-
-            return {
-                left: leftData,
-                right: rightData,
-                bottom: bottomData,
-                top: topData
-            };
+            if(maxMapBounds && maxDataBounds){
+	            var geoViewBounds = _mapState.canvas.olMap_.getExtent();
+	            var leftData = linearRemap(geoViewBounds.left, maxMapBounds[0], maxMapBounds[2], maxDataBounds.left, maxDataBounds.right);
+	            var rightData = linearRemap(geoViewBounds.right, maxMapBounds[0], maxMapBounds[2], maxDataBounds.left, maxDataBounds.right);
+	            var bottomData = linearRemap(geoViewBounds.bottom, maxMapBounds[1], maxMapBounds[3], maxDataBounds.bottom, maxDataBounds.top);
+	            var topData = linearRemap(geoViewBounds.top, maxMapBounds[1], maxMapBounds[3], maxDataBounds.bottom, maxDataBounds.top);
+	
+	            return {
+	                left: leftData,
+	                right: rightData,
+	                bottom: bottomData,
+	                top: topData
+	            };
+            }
         },
 
         linearRemap = function(x, oMin, oMax, nMin, nMax){
@@ -272,6 +277,14 @@
             if(options.baseLayer){
                 mapSpec.baseLayer = options.baseLayer[0];
             }
+            
+            aperture.config.provide({
+				// Set the map configuration
+				'aperture.map' : {
+					'defaultMapConfig' : mapSpec
+				}
+			});
+            
             _mapState.canvas = new aperture.geo.Map(mapSpec);
 
             _mapState.canvas.olMap_.events.register('mousemove', _mapState.canvas.olMap_, function (e) {
@@ -307,34 +320,35 @@
             // tile layers. If not type is present, default to
             // to type "tile".
             if (layerSpec['Type'] == 'tile' ||layerSpec['Type'] == null){
+
                 var layerInfo = _mapState.overlayInfoMap[layerSpec['Layer']];
                 var olBounds = new OpenLayers.Bounds.fromArray(layerInfo.bounds);
-
+				
                 // TODO: Just move the Y-value logic to the server side. Assume zero-Y-bounds means
-                var overlayLayer = _mapState.canvas.addLayer(aperture.geo.MapTileLayer.TMS, {},
-                    {
-                        'name': "Aperture TMS",
-                        'url': layerInfo.tms,
-                        'options': {
-                            'layername': layerInfo.layer,
-                            'type': 'png',
-                            'version': '1.0.0',
-                            'maxExtent' : olBounds,
-                            transparent: true,
-                            getURL: function(bounds){
-                                var res = this.map.getResolution();
-                                var x = Math.round((bounds.left - this.maxExtent.left) / (res * this.tileSize.w));
-                                var y = Math.round((bounds.bottom - this.maxExtent.bottom) / (res * this.tileSize.h));
-                                var z = this.map.getZoom();
+				var overlayLayer = _mapState.canvas.addLayer(aperture.geo.MapTileLayer.TMS, {},
+					{
+						'name': "Aperture TMS",
+						'url': layerInfo.tms,
+						'options': {
+							'layername': layerInfo.layer,
+							'type': 'png',
+							'version': '1.0.0',
+							'maxExtent' : olBounds,
+							transparent: true,
+							getURL: function(bounds){
+								var res = this.map.getResolution();
+								var x = Math.round((bounds.left - this.maxExtent.left) / (res * this.tileSize.w));
+								var y = Math.round((bounds.bottom - this.maxExtent.bottom) / (res * this.tileSize.h));
+								var z = this.map.getZoom();
 
-                                y = yFunction(y);
-                                if (x >= 0 && y >= 0) {
-                                    return this.url + this.version + "/" + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type;
-                                }
-                            }
-                        }
-                    }
-                );
+								y = yFunction(y);
+								if (x >= 0 && y >= 0) {
+									return this.url + this.version + "/" + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type;
+								}
+							}
+						}
+					}
+				);
 
                 // Assign the layer opacity if there is one.
                 // Does Aperture support this mapping?
@@ -351,16 +365,16 @@
         },
 
         addDataOverlay = function (layerSpec, colourScaleType, colourRampType, legendRange, isFirstInit, callback) {
-
+			
             var onNewLayerResource = function( layerInfo, statusInfo ) {
-
+			
+            	uuid = layerInfo.id
+				
                 if(!statusInfo.success){
-                    console.log("DEBUG: Failed to configure tile service");
                     return;
                 }
-                console.log("DEBUG: Successfully configured tile service");
-                var overlayLayerInfo = layerInfo;
-                overlayLayerInfo.dataBounds = {
+
+                layerInfo.dataBounds = {
                     left:   layerInfo.bounds[0],
                     bottom: layerInfo.bounds[1],
                     right:  layerInfo.bounds[2],
@@ -369,7 +383,7 @@
                     getCenterY: function(){(this.top - this.bottom)/2}
                 };
                 // Cache the layer info.
-                _mapState.overlayInfoMap[layerInfo.layer] = overlayLayerInfo;
+                _mapState.overlayInfoMap[layerInfo.layer] = layerInfo;
 
                 // HACK: Override!
                 layerInfo.bounds = [-20037500,
@@ -383,14 +397,16 @@
                 }
             };
 
-            var postData = {
-                         request: "configure",
-                         layer: layerSpec['Layer'],
-                         configuration: layerSpec['Config']
-                     };
-
-            console.log("DEBUG: Sending configuration request for layer '" + layerSpec['Layer'] + "'");
-
+			var config = layerSpec['Config'];			
+				config.legendrange = _mapState.legendRange;				
+				config.renderer  = {
+					ramp: colourRampType,
+					opacity: 1.0
+				};
+				config.transform = {
+					name: colourScaleType
+				};
+			
             aperture.io.rest(
                 '/layer',
                 'POST',
@@ -399,24 +415,11 @@
                      postData: {
                          request: "configure",
                          layer: layerSpec['Layer'],
-                         configuration: layerSpec['Config']
+                         configuration: config
                      },
                      contentType: 'application/json'
                 }
             );
-
-                /*
-                {
-                    postData: {
-                        'transform': colourScaleType,
-                        'ramp': colourRampType,
-                        'layer': layerSpec['Layer'] ,
-                        'legendRange': legendRange
-                    },
-                    contentType: 'application/json'
-                });
-                */
-            
         },
 
         getAxisSpec = function(type){
@@ -425,8 +428,7 @@
             }
 
             var mapExtent = getRemappedExtent();
-            //console.log("pixelBounds X range: " + map.olMap_.minPx.x + " to " + map.olMap_.maxPx.x);
-            //console.log("pixelBounds Y range: " + map.olMap_.minPx.y + " to " + map.olMap_.maxPx.y);
+
             var tilesTotalPixelSpan = {
                 x: 256*Math.pow(2,_mapState.canvas.olMap_.getZoom()),
                 y: _mapState.canvas.olMap_.viewPortDiv.clientHeight
@@ -672,7 +674,7 @@
             var mapZoom = _mapState.canvas.getZoom();
             for (var layerName in _mapState.overlayInfoMap){
                 var overlayInfo = _mapState.overlayInfoMap[layerName];
-                maxRange = Math.max(maxRange, overlayInfo.meta.levelMaxFreq[String(mapZoom)]);
+                maxRange = Math.max(maxRange, overlayInfo.meta.levelMaximums[String(mapZoom)]);
             }
             var range = {
                 min: 0,
@@ -760,7 +762,8 @@
                         'layer': layerName,
                         'level': _mapState.canvas.getZoom(),
                         'width': w,
-                        'height': h
+                        'height': h,
+						'id': uuid
                     }
                 }
             );
@@ -874,7 +877,6 @@
                 if (layerSpec['Type'] == 'tile' || layerSpec['Type'] == null){
                     var colorData = getColorData();
                     var legendRange = null;
-
                     if (_mapState.options.components.legend.rangeSliderDivId){
                         legendRange = $('#' + _mapState.options.components.legend.rangeSliderDivId).slider("option", "values");
                     }

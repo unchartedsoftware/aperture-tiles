@@ -22,33 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-var AxisUtil = {
-    getMarkerPositions :  function (zoomLevel, min, max, intervals){
-        var _decimalPlace = 2;
-
-        function fillArrayByIncrement(start, end, increment){
-            var markerData = [];
-
-            var count = 0;
-            for( var i=start, l=end; i<=l;) {
-                var value = i;
-                if (i % 1 != 0){
-                    value = parseFloat(Math.round(i * 100) / 100).toFixed(_decimalPlace);
-                }
-                markerData[count] = value;
-                i = i + increment;
-                count++;
-            }
-
-            return markerData;
-        }
-
-        var markerData;
-
-        var baseIncrement = (max-min)/intervals;
-        var increment = baseIncrement/Math.pow(2,Math.max(zoomLevel-1,0));
-        markerData = fillArrayByIncrement(min, max, increment);
-
-        return markerData;
-    }
-};
+define( function(require) {
+    "use strict"
+	
+	return {
+	    getMarkerPositions :  function (zoomLevel, min, max, intervals){
+	        var _decimalPlace = 2;
+	
+	        function fillArrayByIncrement(start, end, increment){
+	            var markerData = [];
+	
+	            var count = 0;
+	            for( var i=start, l=end; i<=l;) {
+	                var value = i;
+	                if (i % 1 != 0){
+	                    value = parseFloat(Math.round(i * 100) / 100).toFixed(_decimalPlace);
+	                }
+	                markerData[count] = value;
+	                i = i + increment;
+	                count++;
+	            }
+	
+	            return markerData;
+	        }
+	
+	        var markerData;
+	
+	        var baseIncrement = (max-min)/intervals;
+	        var increment = baseIncrement/Math.pow(2,Math.max(zoomLevel-1,0));
+	        markerData = fillArrayByIncrement(min, max, increment);
+	
+	        return markerData;
+	    }
+	};
+});
