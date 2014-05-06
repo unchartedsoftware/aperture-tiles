@@ -47,40 +47,47 @@ define(function (require) {
          * Constructs a twitter tag render layer object
          * @param id the id string for the render layer
          */
-        init: function(id, avoidIncrement) {
-            this._super(id, avoidIncrement);
+        init: function(id, map, avoidIncrement) {
+            this._super(id, map, avoidIncrement);
+
+
             this.Y_SPACING = 10;
-            this.VALUE_COUNT = 10;
+
             this.TILE_SIZE = 256;
-            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;  // x offset required to centre on tile
-            this.Y_CENTRE_OFFSET = 0;
+            this.MAX_NUM_VALUES = 10;   // default, over-ride this based on the renderer
+            
+            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;  // x offset required to centre on tile x-axis
+            this.Y_CENTRE_OFFSET = 0;                   // y offset required to centre on tile y-axis
             this.POSITIVE_COLOUR = '#09CFFF';
             this.POSITIVE_SELECTED_COLOUR  = '#069CCC';
             this.NEGATIVE_COLOUR = '#D33CFF';
             this.NEGATIVE_SELECTED_COLOUR = '#A009CC';
             this.NEUTRAL_COLOUR = '#222222';
             this.NEUTRAL_SELECTED_COLOUR = '#000000';
+
             this.BLACK_COLOUR = '#000000';
-            this.WHITE_COLOUR = '#FFFFFF';
+            this.DARK_GREY_COLOUR = '#222222';
+            this.GREY_COLOUR = '#666666';
             this.LIGHT_GREY_COLOUR = '#999999';
+            this.WHITE_COLOUR = '#FFFFFF';
+                       
             this.YELLOW_COLOUR = '#F5F56F';
             this.HORIZONTAL_BUFFER = 14;
-            this.VERTICAL_BUFFER = 24;
+            this.VERTICAL_BUFFER = 24;           
+
             this.FILTER_WORDS = [/s+h+i+t+/, /f+u+c+k+/, /n+i+g+g+/];
         },
 
 
         /**
-         * Returns the number of values in the bin, capped by the VALUE_COUNT constant
+         * Returns the number of values in the bin, capped by the MAX_NUM_VALUES constant
          * @param data the aperturejs node data object
          */
         getCount: function(data) {
-            if (data.bin.value.length === undefined ||
-                data.bin.value.length === 0 ||
-                isNaN(data.bin.value.length)) {
+            if (data.bin.value === undefined || !$.isArray(data.bin.value) ) {
                 return 0;
             }
-            return (data.bin.value.length > this.VALUE_COUNT) ? this.VALUE_COUNT : data.bin.value.length;
+            return (data.bin.value.length > this.MAX_NUM_VALUES) ? this.MAX_NUM_VALUES : data.bin.value.length;
         },
 
 
@@ -100,8 +107,8 @@ define(function (require) {
          * @param tilekey the tilekey of the respective tile
          */
         isHovered: function (tag, tilekey) {
-            var hoverTilekey = this.mouseState.hoverState.tilekey,
-                hoverTag = this.mouseState.hoverState.userData.tag;
+            var hoverTilekey = this.clientState.hoverState.tilekey,
+                hoverTag = this.clientState.hoverState.userData.tag;
 
             return hoverTag === tag && hoverTilekey === tilekey;
 
@@ -114,8 +121,8 @@ define(function (require) {
          * @param tilekey the tilekey of the respective tile
          */
         isClicked: function (tag, tilekey) {
-            var clickTilekey = this.mouseState.clickState.tilekey,
-                clickTag = this.mouseState.clickState.userData.tag;
+            var clickTilekey = this.clientState.clickState.tilekey,
+                clickTag = this.clientState.clickState.userData.tag;
 
             return clickTag === tag && clickTilekey === tilekey;
 
@@ -139,10 +146,10 @@ define(function (require) {
          */
         shouldBeGreyedOut: function (tag, tilekey) {
 
-            var hoverTilekey = this.mouseState.hoverState.tilekey,
-                hoverTag = this.mouseState.hoverState.userData.tag,
-                clickTilekey = this.mouseState.clickState.tilekey,
-                clickTag = this.mouseState.clickState.userData.tag;
+            var hoverTilekey = this.clientState.hoverState.tilekey,
+                hoverTag = this.clientState.hoverState.userData.tag,
+                clickTilekey = this.clientState.clickState.tilekey,
+                clickTag = this.clientState.clickState.userData.tag;
 
             if ( // nothing is hovered or clicked on
                  (clickTilekey === '' && hoverTilekey === '') ||
@@ -161,8 +168,8 @@ define(function (require) {
          * @param tag the twitter data tag string
          */
         matchingTagIsSelected: function (tag) {
-            return (this.mouseState.hoverState.userData.tag === tag ||
-                    this.mouseState.clickState.userData.tag === tag)
+            return (this.clientState.hoverState.userData.tag === tag ||
+                    this.clientState.clickState.userData.tag === tag)
         },
 
 

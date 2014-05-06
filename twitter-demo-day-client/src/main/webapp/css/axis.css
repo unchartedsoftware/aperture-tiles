@@ -1,0 +1,190 @@
+@charset "UTF-8";
+
+.top-axis {
+    bottom: 0px;
+}
+
+.bottom-axis {
+    top: 0px;
+}
+
+.left-axis {
+    right: 0px;
+}
+
+.right-axis {
+    left: 0px;
+}
+
+.top-axis-header {
+    position:absolute;
+    background: #222222;
+    width:100%;
+    height:32px;
+    top:0px;
+    left:0px;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.bottom-axis-header {
+    position:absolute;
+    background: #222222;
+    width:100%;
+    height:32px;
+    bottom:0px;
+    left:0px;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.left-axis-header {
+    position:absolute;
+    background: #222222;
+    height:100%;
+    width:32px;
+    left:0px;
+    top:0px;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.right-axis-header {
+    position:absolute;
+    background: #222222;
+    height:100%;
+    width:32px;
+    right:0px;
+    top:0px;
+    z-index:1002;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.top-axis-container {
+    position:absolute;
+    background: #111111;
+    height:100px;
+    width:100%;
+    top:0px;
+    left:0px;
+    z-index:1000;
+    overflow:hidden;
+}
+
+.bottom-axis-container {
+    position:absolute;
+    background: #111111;
+    height:100px;
+    width:100%;
+    bottom:0px;
+    left:0px;
+    z-index:1000;
+    overflow:hidden;
+}
+
+.left-axis-container {
+    position:absolute;    
+    background: #111111;
+    width:100px;
+    height:100%;
+    left:0px;
+    top:0px;
+    z-index:1000;
+    overflow:hidden;
+}
+
+.right-axis-container {
+    position:absolute;
+    background: #111111;
+    width:100px;
+    height:100%;
+    right:0px;
+    top:0px;
+    z-index:1000;
+    overflow:hidden;
+}
+
+.large-horizontal-axis-marker {
+    height: 10px;   
+    border-left: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.medium-horizontal-axis-marker {
+    height: 6px;   
+    border-left: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.small-horizontal-axis-marker {
+    height: 4px;   
+    border-left: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.large-vertical-axis-marker {
+    width: 10px;
+    border-top: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.medium-vertical-axis-marker {
+    width: 6px;
+    border-top: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.small-vertical-axis-marker {
+    width: 4px;
+    border-top: 1px solid #7E7E7E;
+    color: #7E7E7E;
+}
+
+.axis-marker-label {
+    font-family: Verdana, Arial, sans-serif;
+    font-size:0.75em;
+    color: #7E7E7E;
+}
+
+.horizontal-axis-marker-label {
+}
+
+.vertical-axis-marker-label {
+}
+
+.axis-title-label {
+    font-family: Verdana, Arial, sans-serif;
+    font-size:0.95em;
+    white-space: nowrap;
+    color : #D3D3D3;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left:50%;
+    padding-right:50%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.axis-title-label:hover {
+    font-family: Verdana, Arial, sans-serif;
+    font-size:0.95em;
+    white-space: nowrap;
+    color : #FFFFFF;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left:50%;
+    padding-right:50%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+    cursor: pointer;
+}

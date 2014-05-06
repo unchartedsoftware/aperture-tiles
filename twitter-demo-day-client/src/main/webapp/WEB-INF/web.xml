@@ -12,7 +12,7 @@
     <param-name>guice-modules</param-name>
     <param-value>
       <!-- A :-separated list of modules, so there must be a : after all but 
-	   the last module listed. -->
+     the last module listed. -->
 
       <!-- Pyramid factory module - override to add custom TilePyramids -->
       com.oculusinfo.tile.init.TilePyramidFactoryModule:
@@ -28,11 +28,16 @@
       <!-- LayerConfiguration factory module - override to add custom layer configuration 
            parameters -->
       com.oculusinfo.tile.init.StandardLayerConfigurationModule:
-      
+
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.TileModule
+      com.oculusinfo.tile.rest.TileModule:
+
+      <!-- Sets up the REST interface by which clients can retrieve annotations -->
+      com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+      <!-- Sets up the annotation service -->
+      com.oculusinfo.annotation.rest.AnnotationServiceModule
     </param-value>
   </context-param>
 

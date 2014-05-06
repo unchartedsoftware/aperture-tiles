@@ -36,39 +36,46 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand = require('./DetailsOnDemand'),
-        HashTagsByTime;
+        //DetailsOnDemand = require('./DetailsOnDemand'),
+        TagsByTimeTranslate;
 
 
-    HashTagsByTime = TwitterTagRenderer.extend({
-        ClassName: "HashTagsByTime",
+    TagsByTimeTranslate = TwitterTagRenderer.extend({
+        ClassName: "TagsByTimeTranslate",
 
         init: function() {
-            this._super("hash-tag-by-time");
-            this.VALUE_COUNT = 10;
+            this._super("tags-by-time-translate");
+            this.MAX_NUM_VALUES = 10;
             this.Y_SPACING = 18;
         },
 
 
+        getTotalDaysInMonth: function(data) {
+            return data.bin.value[0].countDaily.length;
+        },
+
+
         getTotalCountPercentage: function(data, index) {
-            var tagIndex = Math.floor(index / 24);
-            if (data.bin.value[tagIndex].count === 0) {
+            var numDays = this.getTotalDaysInMonth(data),
+                tagIndex = Math.floor(index / numDays);
+                
+            if (data.bin.value[tagIndex].countMonthly === 0) {
                 return 0;
             }
-            return data.bin.value[tagIndex].countByTime[index % 24] / data.bin.value[tagIndex].count;
+            return data.bin.value[tagIndex].countDaily[index % numDays] / data.bin.value[tagIndex].countMonthly;
         },
 
 
         redrawLayers: function(data) {
             this.tagLabels.all().where(data).redraw();
             this.bars.all().where(data).redraw();
-            this.summaryLabel.all().where(data).redraw();
+            //this.summaryLabel.all().where(data).redraw();
         },
 
 
         onClick: function(event, index) {
-            this.mouseState.setClickState(event.data.tilekey, {
-                tag : event.data.bin.value[index].tag,
+            this.clientState.setClickState(event.data.tilekey, {
+                tag : event.data.bin.value[index].topic,
                 index : index
             });
             // send this node to the front
@@ -79,8 +86,8 @@ define(function (require) {
 
 
         onHover: function(event, index, id) {
-            this.mouseState.setHoverState(event.data.tilekey, {
-                tag : event.data.bin.value[index].tag,
+            this.clientState.setHoverState(event.data.tilekey, {
+                tag : event.data.bin.value[index].topic,
                 index : index,
                 id : id
             });
@@ -89,32 +96,8 @@ define(function (require) {
 
 
         onHoverOff: function(event) {
-            this.mouseState.clearHoverState();
+            this.clientState.clearHoverState();
             this.redrawLayers(event.data);
-        },
-
-
-        blendSentimentColours: function(positiveCount, negativeCount) {
-            var totalCount,
-                negWeight, negRGB,
-                posWeight, posRGB,
-                finalRGB = {};
-
-            totalCount = positiveCount + negativeCount;
-
-            if (totalCount === 0) {
-                return this.NEUTRAL_COLOUR;
-            }
-
-            negRGB = this.hexToRgb(this.NEGATIVE_COLOUR);
-            posRGB = this.hexToRgb(this.POSITIVE_COLOUR);
-            negWeight = negativeCount/totalCount;
-            posWeight = positiveCount/totalCount;
-
-            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight);
-            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight);
-            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight);
-            return this.rgbToHex(finalRGB.r, finalRGB.g, finalRGB.b);
         },
 
 
@@ -128,10 +111,10 @@ define(function (require) {
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
-            this.createCountSummaries();
-            this.detailsOnDemand = new DetailsOnDemand(this.id);
-            this.detailsOnDemand.attachMouseState(this.mouseState);
-            this.detailsOnDemand.createLayer(this.plotLayer);
+            //this.createCountSummaries();
+            //this.detailsOnDemand = new DetailsOnDemand(this.id);
+            //this.detailsOnDemand.attachClientState(this.clientState);
+            //this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
 
@@ -143,15 +126,17 @@ define(function (require) {
             function getMaxPercentage(data, index) {
                 var i,
                     percent,
-                    tagIndex = Math.floor(index/24),
+                    numDays = that.getTotalDaysInMonth(data),
+                    tagIndex = Math.floor(index/numDays),
+                   
                     maxPercent = 0,
-                    count = data.bin.value[tagIndex].count;
+                    count = data.bin.value[tagIndex].countMonthly;
                 if (count === 0) {
                     return 0;
                 }
-                for (i=0; i<24; i++) {
+                for (i=0; i<numDays; i++) {
                     // get maximum percent
-                    percent = data.bin.value[tagIndex].countByTime[i] / count;
+                    percent = data.bin.value[tagIndex].countDaily[i] / count;
                     if (percent > maxPercent) {
                         maxPercent = percent;
                     }
@@ -163,25 +148,21 @@ define(function (require) {
             this.bars.map('orientation').asValue('vertical');
             this.bars.map('width').asValue(3);
             this.bars.map('visible').from( function() {
-                return that.isSelectedView(this);
+                return that.isSelectedView(this) && that.isVisible(this);
             });
             this.bars.map('fill').from( function(index) {
-                var tagIndex = Math.floor(index/24),
-                    positiveCount,
-                    negativeCount;
-                if (that.matchingTagIsSelected(this.bin.value[tagIndex].tag)){
-                    // get counts
-                    positiveCount = this.bin.value[tagIndex].positiveByTime[index % 24];
-                    negativeCount = this.bin.value[tagIndex].negativeByTime[index % 24];
-                    return that.blendSentimentColours(positiveCount, negativeCount);
+
+                var numDays = that.getTotalDaysInMonth(this),
+                    tagIndex = Math.floor(index/numDays);
+
+                if (that.shouldBeGreyedOut(this.bin.value[tagIndex].topic, this.tilekey)) {
+                    return that.GREY_COLOUR;
                 }
-                if (that.shouldBeGreyedOut(this.bin.value[tagIndex].tag, this.tilekey)) {
-                    return '#666666';
-                }
-                return "#FFFFFF";
+
+                return that.WHITE_COLOUR;
             });
             this.bars.map('bar-count').from( function() {
-                return 24 * that.getCount(this);
+                return that.getTotalDaysInMonth(this) * that.getCount(this);
             });
             this.bars.map('offset-y').from(function(index) {
                 var maxPercentage = getMaxPercentage(this, index);
@@ -189,10 +170,10 @@ define(function (require) {
                     return 0;
                 }
                 return -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
-                       that.getYOffset(this, Math.floor(index/24));
+                       that.getYOffset(this, Math.floor(index/that.getTotalDaysInMonth(this)));
             });
             this.bars.map('offset-x').from(function (index) {
-                return that.X_CENTRE_OFFSET - 90 + ((index % 24) * 4);
+                return that.X_CENTRE_OFFSET - 90 + ((index % that.getTotalDaysInMonth(this)) * 4);
             });
             this.bars.map('length').from(function (index) {
                 var maxPercentage = getMaxPercentage(this, index);
@@ -203,21 +184,25 @@ define(function (require) {
             });
 
             this.bars.on('click', function(event) {
-                that.onClick(event, Math.floor(event.index[0]/24));
+                that.onClick(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(this)));
                 return true; // swallow event
             });
 
             this.bars.on('mousemove', function(event) {
-                that.onHover(event, Math.floor(event.index[0]/24), 'hashTagsByTimeCountSummary');
+                that.onHover(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(this)), 'tagsByTimeTranslateCountSummary');
             });
 
             this.bars.on('mouseout', function(event) {
                 that.onHoverOff(event);
             });
+            this.bars.map('opacity').from( function() {
+                    return that.clientState.opacity;
+                })
 
         },
 
 
+        /*
         createCountSummaries: function () {
 
             var that = this;
@@ -229,8 +214,8 @@ define(function (require) {
             this.summaryLabel.map('font-outline-width').asValue(3);
             this.summaryLabel.map('visible').from(function(){
                 return that.isSelectedView(this) &&
-                    that.mouseState.hoverState.tilekey === this.tilekey &&
-                    that.mouseState.hoverState.userData.id === 'hashTagsByTimeCountSummary';
+                    that.clientState.hoverState.tilekey === this.tilekey &&
+                    that.clientState.hoverState.userData.id === 'tagsByTimeTranslateCountSummary';
             });
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
@@ -240,7 +225,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.mouseState.hoverState.userData.index;
+                var tagIndex = that.clientState.hoverState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;
@@ -252,7 +237,11 @@ define(function (require) {
             });
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
+            this.summaryLabel.map('opacity').from( function() {
+                    return that.clientState.opacity;
+                })
         },
+        */
 
 
         createLabels: function () {
@@ -262,12 +251,12 @@ define(function (require) {
             this.tagLabels = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabels.map('visible').from(function() {
-                return that.isSelectedView(this);
+                return that.isSelectedView(this) && that.isVisible(this);
             });
 
             this.tagLabels.map('fill').from( function(index) {
-                if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
-                    return '#666666';
+                if (that.shouldBeGreyedOut(this.bin.value[index].topic, this.tilekey)) {
+                    return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
             });
@@ -277,7 +266,7 @@ define(function (require) {
             });
 
             this.tagLabels.map('text').from(function (index) {
-                var str = that.filterText(this.bin.value[index].tag);
+                var str = that.filterText(this.bin.value[index].topic);
                 if (str.length > 9) {
                     str = str.substr(0,9) + "...";
                 }
@@ -285,7 +274,7 @@ define(function (require) {
             });
 
             this.tagLabels.map('font-size').from( function(index) {
-                if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
+                if (that.isHoveredOrClicked(this.bin.value[index].topic, this.tilekey)) {
                     return 14;
                 }
                 return 12;
@@ -300,24 +289,27 @@ define(function (require) {
             this.tagLabels.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabels.map('font-outline-width').asValue(3);
 
-            this.tagLabels.on('mouseup', function(event) {
+            this.tagLabels.on('click', function(event) {
                 that.onClick(event, event.index[0]);
-                //return true; // swallow event
+                return true; // swallow event
             });
 
             this.tagLabels.on('mousemove', function(event) {
-                that.onHover(event, event.index[0], 'hashTagsByTimeCountSummary');
+                that.onHover(event, event.index[0], 'tagsByTimeTranslateCountSummary');
                 return true;  // swallow event, for some reason mousemove on labels needs to swallow this or else it processes a mouseout
             });
 
             this.tagLabels.on('mouseout', function(event) {
                 that.onHoverOff(event);
             });
+            this.tagLabels.map('opacity').from( function() {
+                    return that.clientState.opacity;
+                })
 
         }
 
 
     });
 
-    return HashTagsByTime;
+    return TagsByTimeTranslate;
 });
