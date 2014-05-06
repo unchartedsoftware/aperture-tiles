@@ -128,7 +128,7 @@ public class DataServiceImpl implements DataService {
 		JSONObject result = new JSONObject();
 
 		// Create our dataset
-		DatasetFactory factory = new DatasetFactory(null, null);
+		DatasetFactory factory = new DatasetFactory(sc, null, null);
 		CSVDataset dataset;
 		try {
 			factory.readConfiguration(datasetDescription);
@@ -151,8 +151,6 @@ public class DataServiceImpl implements DataService {
 		System.out.println();
 		System.out.println();
 		System.out.println();
-
-		dataset.initialize(sc, true, false);
 
 		// Create our query filter
 		Try<Function1<ValueOrException<List<Object>>, Object>> filterAttempt =

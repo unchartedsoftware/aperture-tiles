@@ -28,6 +28,8 @@ package com.oculusinfo.tile.rest.data;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.spark.SparkContext;
+
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.tile.util.JsonUtilities;
@@ -43,19 +45,25 @@ import com.oculusinfo.tilegen.datasets.CSVDataset;
  *  @author nkronenfeld
  */
 public class DatasetFactory extends SharedInstanceFactory<CSVDataset> {
-	protected DatasetFactory (ConfigurableFactory<?> parent, List<String> path) {
-		this(null, parent, path);
+	private SparkContext _context;
+	protected DatasetFactory (SparkContext context, ConfigurableFactory<?> parent, List<String> path) {
+		this(context, null, parent, path);
 	}
 
-	protected DatasetFactory (String name, 
+	protected DatasetFactory (SparkContext context, String name, 
 	                          ConfigurableFactory<?> parent, List<String> path) {
 		super(name, CSVDataset.class, parent, path);
+		_context = context;
 	}
 
 	@Override
 	protected CSVDataset createInstance () {
 		Properties datasetProps = JsonUtilities.jsonObjToProperties(getConfigurationNode());
 		// Width and height are irrelevant for record queries, so we just set them to 1.
-		return new CSVDataset(datasetProps, 1, 1);
+		CSVDataset dataset = new CSVDataset(datasetProps, 1, 1);
+		dataset.initialize(_context, true, false);
+
+
+		return dataset;
 	}
 }
