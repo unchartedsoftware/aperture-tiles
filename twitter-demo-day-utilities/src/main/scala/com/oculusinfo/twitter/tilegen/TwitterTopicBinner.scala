@@ -48,7 +48,7 @@ object TwitterTopicBinner {
     argParser.debug
 
     val jars = 
-      Seq(new MavenReference("com.oculusinfo", "twitter-utilities", "0.3-SNAPSHOT")
+      Seq(new MavenReference("com.oculusinfo", "twitter-demo-day-utilities", "0.3-SNAPSHOT")
       ) union SparkConnector.getDefaultLibrariesFromMaven
     val sc = argParser.getSparkConnector(jars).getSparkContext("Twitter demo data tiling")
     val source = argParser.getString("source", "The source location at which to find twitter data")

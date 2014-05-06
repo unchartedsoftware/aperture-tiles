@@ -570,6 +570,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 		List<Integer> minCountDaily = new ArrayList<>();
 		List<Integer> minCountPer6hrs = new ArrayList<>();
 		List<Integer> minCountPerHour = new ArrayList<>();
+		long minEndTime = Long.MAX_VALUE;
 
 		for (TwitterDemoTopicRecord record : records) {
 			if (null != record) {
@@ -577,11 +578,12 @@ public class TwitterDemoTopicRecord implements Serializable {
 				minInPlace(minCountDaily, record._countDaily);
 				minInPlace(minCountPer6hrs, record._countPer6hrs);
 				minInPlace(minCountPerHour, record._countPerHour);
+				minEndTime = Math.min(minEndTime, record._endTimeSecs);
 			}
 		}
 		return new TwitterDemoTopicRecord(null, null, minCount, minCountDaily,
 				minCountPer6hrs, minCountPerHour,
-				new ArrayList<Pair<String, Long>>(), 0);
+				new ArrayList<Pair<String, Long>>(), minEndTime);
 	}
 	
 	private static void maxInPlace(List<Integer> accumulatedMax,
@@ -608,15 +610,18 @@ public class TwitterDemoTopicRecord implements Serializable {
 		List<Integer> maxCountDaily = new ArrayList<>();
 		List<Integer> maxCountPer6hrs = new ArrayList<>();
 		List<Integer> maxCountPerHour = new ArrayList<>();
+		long maxEndTime = Long.MIN_VALUE;
+
 		for (TwitterDemoTopicRecord record : records) {
 			maxCount = Math.max(maxCount, record._countMonthly);
 			maxInPlace(maxCountDaily, record._countDaily);
 			maxInPlace(maxCountPer6hrs, record._countPer6hrs);
 			maxInPlace(maxCountPerHour, record._countPerHour);
+			maxEndTime = Math.max(maxEndTime, record._endTimeSecs);
 		}
 		return new TwitterDemoTopicRecord(null, null, maxCount, maxCountDaily,
 				maxCountPer6hrs, maxCountPerHour,
-				new ArrayList<Pair<String, Long>>(), 0);
+				new ArrayList<Pair<String, Long>>(), maxEndTime);
 	}
 
 }
