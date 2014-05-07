@@ -540,6 +540,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 
 	class CSVStaticProcessingStrategy (sc: SparkContext,
 	                                   cacheRaw: Boolean,
+	                                   cacheFilterable: Boolean,
 	                                   cacheProcessed: Boolean)
 			extends StaticProcessingStrategy[Double](sc) {
 		// This is a weird initialization problem that requires some
@@ -557,9 +558,26 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 		// it gets written in its own initialization (since initialization
 		// lines are run in order).
 		private var rawData: RDD[String] = rawData2
-		private var rawData2: RDD[String] = null;
+		private var rawData2: RDD[String] = null
+
+		private lazy val filterableData: RDD[(String, List[Double])] = {
+			val localProperties = properties
+			val data = rawData.mapPartitions(iter =>
+				{
+					val parser = new CSVRecordParser(localProperties)
+					// Parse the records from the raw data, parsing all fields
+					// The funny end syntax tells scala to treat fields as a varargs
+					parser.parseRecords(iter, localProperties.fields:_*)
+						.filter(_._2.isSuccess).map{case (record, fields) => (record, fields.get)}
+				}
+			)
+			if (cacheFilterable)
+				data.persist(StorageLevel.MEMORY_AND_DISK)
+			data
+		}
 
 		def getRawData = rawData
+		def getFilterableData = filterableData
 
 		def getData: RDD[(Double, Double, Double)] = {
 			val localProperties = properties
@@ -623,17 +641,9 @@ class CSVDataset (rawProperties: Properties,
 	def getRawData: RDD[String] = strategy.getRawData
 
 	def getRawFilteredData (filterFcn: Filter):	RDD[String] = {
-		val localProperties = properties
-		getRawData.mapPartitions(iter =>
-			{
-				val parser = new CSVRecordParser(localProperties)
-				// Parse the records from the raw data, parsing all fields
-				// The funny end syntax tells scala to treat fields as a varargs
-				parser.parseRecords(iter, localProperties.fields:_*)
-					.filter {case (record, fields) => filterFcn(fields)}
-					.map(_._1)
-			}
-		)
+		strategy.getFilterableData
+			.filter{ case (record, fields) => filterFcn(fields)}
+			.map(_._1)
 	}
 	def getRawFilteredJavaData (filterFcn: Filter): JavaRDD[String] =
 		JavaRDD.fromRDD(getRawFilteredData(filterFcn))
@@ -641,19 +651,20 @@ class CSVDataset (rawProperties: Properties,
 	def getFieldFilterFunction (field: String, min: Double, max: Double): Filter = {
 		val localProperties = properties
 		new FilterFunction with Serializable {
-			def apply (valueList: Try[List[Double]]): Boolean = {
+			def apply (valueList: List[Double]): Boolean = {
 				val index = localProperties.fieldIndices(field)
-				valueList.isSuccess && {
-					val value = (valueList.get)(index)
-					min <= value && value <= max
-				}
+				val value = valueList(index)
+				min <= value && value <= max
 			}
 			override def toString: String = "%s Range[%.4f, %.4f]".format(field, min, max)
 		}
 	}
 
-	def initialize (sc: SparkContext, cacheRaw: Boolean, cacheProcessed: Boolean): Unit =
-		initialize(new CSVStaticProcessingStrategy(sc, cacheRaw, cacheProcessed))
+	def initialize (sc: SparkContext,
+	                cacheRaw: Boolean,
+	                cacheFilterable: Boolean,
+	                cacheProcessed: Boolean): Unit =
+		initialize(new CSVStaticProcessingStrategy(sc, cacheRaw, cacheFilterable, cacheProcessed))
 	
 }
 
@@ -722,7 +733,7 @@ object CSVDatasetTest {
 		datasetProps.setProperty("oculus.binning.parsing.transaction.index", "2")
 		datasetProps.setProperty("oculus.binning.parsing.transaction.fieldType", "Iint")
 		val dataset = new com.oculusinfo.tilegen.datasets.CSVDataset(datasetProps, 1, 1)
-		dataset.initialize(sc, true, false)
+		dataset.initialize(sc, false, true, false)
 		val rawData = dataset.getRawData
 		val props = new com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper(datasetProps)
 		val parsedData = rawData.mapPartitions(iter =>

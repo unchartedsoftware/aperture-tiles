@@ -231,11 +231,12 @@ object DatasetFactory {
 	def createDataset (sc: SparkContext,
 	                   dataDescription: Properties,
 	                   cacheRaw: Boolean,
+	                   cacheFilterable: Boolean,
 	                   cacheProcessed: Boolean,
 	                   tileWidth: Int = 256,
 	                   tileHeight: Int = 256): Dataset[_, _] = {
 		val dataset = new CSVDataset(dataDescription, tileWidth, tileHeight)
-		dataset.initialize(sc, cacheRaw, cacheProcessed)
+		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
 		dataset
 	}
 }

@@ -61,7 +61,7 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset> {
 		Properties datasetProps = JsonUtilities.jsonObjToProperties(getConfigurationNode());
 		// Width and height are irrelevant for record queries, so we just set them to 1.
 		CSVDataset dataset = new CSVDataset(datasetProps, 1, 1);
-		dataset.initialize(_context, true, false);
+		dataset.initialize(_context, false, true, false);
 
 
 		return dataset;

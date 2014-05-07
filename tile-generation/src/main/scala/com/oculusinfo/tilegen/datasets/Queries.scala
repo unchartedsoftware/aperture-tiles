@@ -38,8 +38,8 @@ import org.json.JSONException
 // object, and immediately importing its contents, is to have the Filter
 // type alias available everywhere in this file.
 object FilterAware {
-	type Filter = Try[List[Double]] => Boolean
-	type FilterFunction = Function1[Try[List[Double]], Boolean]
+	type Filter = List[Double] => Boolean
+	type FilterFunction = Function1[List[Double], Boolean]
 }
 import com.oculusinfo.tilegen.datasets.FilterAware._
 
@@ -49,7 +49,7 @@ import com.oculusinfo.tilegen.datasets.FilterAware._
 class OrFunction(operands: Filter*)
 		extends FilterFunction
 		with Serializable {
-	def apply (value: Try[List[Double]]): Boolean =
+	def apply (value: List[Double]): Boolean =
 		operands.map(_(value)).reduce(_ || _)
 	override def toString: String = operands.mkString("or(", ", ", ")")
 }
@@ -58,7 +58,7 @@ class OrFunction(operands: Filter*)
 class AndFunction(operands: Filter*)
 		extends FilterFunction
 		with Serializable {
-	def apply (value: Try[List[Double]]): Boolean =
+	def apply (value: List[Double]): Boolean =
 		operands.map(_(value)).reduce(_ && _)
 	override def toString: String = operands.mkString("and(", ", ", ")")
 }
@@ -75,7 +75,8 @@ object FilterFunctions {
 		Try({
 			    val names = query.names()
 			    if (names.length != 1)
-				    throw new IllegalArgumentException("Bad query: Need exactly one key")
+
+			    throw new IllegalArgumentException("Bad query: Need exactly one key")
 			    val name = names.getString(0)
 
 			    name match {

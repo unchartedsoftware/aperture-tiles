@@ -88,7 +88,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 
 			// Put our dataset together
 			dataset = new CSVDataset(readProps, 1, 1);
-			dataset.initialize(sc, true, false)
+			dataset.initialize(sc, false, true, false)
 
 			test()
 		} catch {
