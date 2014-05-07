@@ -175,8 +175,6 @@ require(['./FileLoader',
 		        // First off, configure aperture.
 		        configureAperture(jsonDataMap[apertureConfigFile]);
 
-
-
 		        // Get our list of maps
 		        MapTracker.requestMaps(function (maps) {
 			        // For now, just use the first map
