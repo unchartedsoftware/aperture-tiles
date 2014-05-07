@@ -78,7 +78,7 @@ body {
 .show-toc {
     position: absolute;
     top: 5px;
-    right: 260px;
+    right: 20px;
     height: 20px;
     width: 170px;
     font-size: 0.75em;

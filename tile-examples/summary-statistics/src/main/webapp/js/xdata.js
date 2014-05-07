@@ -964,19 +964,6 @@ var XDataMap = function (options){
             yFunction = Y_TILE_FUNC_ZERO_CLAMP;
         }
 
-        var showControls = $('<div id="change-opacity"></div>');
-        showControls.addClass('show-controls');
-        $('#summary-header').append(showControls);
-
-        var showButton = $("<button>Show Controls</button>")
-            .button()
-            .click(function( event ) {
-                event.preventDefault();
-                $('#dialog-controls').dialog();
-            });
-
-        showControls.append(showButton);
-
         // Sequentially add overlay layers to ensure ordering
         // is preserved for multi-layer plots.
         addDataOverlay(options.layerList[0], _mapState.defaultLook, _mapState.defaultRamp, null, true, onLayerProcessed);

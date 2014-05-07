@@ -177,14 +177,6 @@ var SummaryBuilder = function(summaryBuilderOptions){
         }
     });
 
-    $( "#dialog-controls").dialog({
-        resizeable: false,
-        width: 370,
-        height: "auto",
-        position: {my: "right top", at: "right top", of: window}
-    });
-    $('#accordion').accordion();
-
     var generateJsonTables = function(jsonFile, onComplete) {
         if(jsonFile === null || jsonFile.length === 0){
             return;
@@ -543,19 +535,6 @@ var SummaryBuilder = function(summaryBuilderOptions){
     	
         var tableJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/tables.json';
         var plotJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/plots.json';
-
-        var showControls = $('<div id="show-controls"></div>');
-        showControls.addClass('show-controls');
-        $('#summary-header').append(showControls);
-
-        var showButton = $("<button>Show Controls</button>")
-            .button()
-            .click(function( event ) {
-                event.preventDefault();
-                $('#dialog-controls').dialog();
-            });
-
-        showControls.append(showButton);
 
         var showTOC = $('<div id="show-showTOC"></div>');
         showTOC.addClass('show-toc');
