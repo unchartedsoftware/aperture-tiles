@@ -51,7 +51,6 @@ import com.oculusinfo.tile.spark.SparkContextProvider;
 import com.oculusinfo.tile.util.JsonUtilities;
 import com.oculusinfo.tilegen.datasets.CSVDataset;
 import com.oculusinfo.tilegen.datasets.FilterFunctions;
-import com.oculusinfo.tilegen.tiling.ValueOrException;
 
 
 
@@ -153,13 +152,13 @@ public class DataServiceImpl implements DataService {
 		System.out.println();
 
 		// Create our query filter
-		Try<Function1<ValueOrException<List<Object>>, Object>> filterAttempt =
+		Try<Function1<Try<List<Object>>, Object>> filterAttempt =
 			FilterFunctions.parseQuery(query, dataset);
 		if (filterAttempt.isFailure()) {
 			LOGGER.warn("Bad query {}", query, ((Failure<?>)filterAttempt).exception());
 			return null;
 		}
-		Function1<ValueOrException<List<Object>>, Object> filter = filterAttempt.get();
+		Function1<Try<List<Object>>, Object> filter = filterAttempt.get();
 		System.out.println("\tQuery function: "+filter);
 		System.out.println();
 		System.out.println();

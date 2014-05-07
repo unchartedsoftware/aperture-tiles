@@ -39,6 +39,7 @@ import java.awt.geom.Rectangle2D
 
 
 import scala.collection.mutable.{Map => MutableMap}
+import scala.util.{Try, Success, Failure}
 
 
 
@@ -74,9 +75,9 @@ class RDDBinner {
 	 */
 	def binAndWriteData[IT: ClassManifest, OT: ClassManifest, BT] (
 		data: RDD[IT],
-		ptFcn: Iterator[IT] => Iterator[(ValueOrException[Double],
-		                                 ValueOrException[Double],
-		                                 ValueOrException[OT])],
+		ptFcn: Iterator[IT] => Iterator[(Try[Double],
+		                                 Try[Double],
+		                                 Try[OT])],
 		binDesc: BinDescriptor[OT, BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
@@ -108,7 +109,7 @@ class RDDBinner {
 				println("Initial partition processing")
 				ptFcn(iter)
 			}
-		).filter(record => record._1.hasValue && record._2.hasValue && record._3.hasValue)
+		).filter(record => record._1.isSuccess && record._2.isSuccess && record._3.isSuccess)
 			.map(record =>(record._1.get, record._2.get, record._3.get))
 
 		// Cache this, we'll use it at least once for each level set

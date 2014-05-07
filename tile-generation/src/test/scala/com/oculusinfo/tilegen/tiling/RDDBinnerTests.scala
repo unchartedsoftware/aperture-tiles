@@ -30,6 +30,7 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble}
 
 import scala.collection.JavaConverters._
+import scala.util.{Try, Success, Failure}
 
 import org.scalatest.FunSuite
 
@@ -53,13 +54,13 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		val pyramidId = "simple test"
 
 		val toBinnerForm: Iterator[(Double, Double, Double)] =>
-		Iterator[(ValueOrException[Double],
-		          ValueOrException[Double],
-		          ValueOrException[Double])] = records =>
+		Iterator[(Try[Double],
+		          Try[Double],
+		          Try[Double])] = records =>
 		records.map(record =>
-			(new ValueOrException(Some(record._1), None),
-			 new ValueOrException(Some(record._2), None),
-			 new ValueOrException(Some(record._3), None))
+			(Try(record._1),
+			 Try(record._2),
+			 Try(record._3))
 		)
 		
 		binner.binAndWriteData(data,

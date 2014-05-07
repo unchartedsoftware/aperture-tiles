@@ -59,7 +59,6 @@ import com.oculusinfo.tilegen.tiling.StringScoreBinDescriptor;
 import com.oculusinfo.tilegen.tiling.TileIO;
 import com.oculusinfo.tilegen.tiling.TileSeriesToImagesConverter;
 import com.oculusinfo.tilegen.tiling.TileToImageConverter;
-import com.oculusinfo.tilegen.tiling.ValueOrException;
 import com.oculusinfo.tilegen.util.PropertiesWrapper;
 import com.oculusinfo.tilegen.util.Rectangle;
 
@@ -100,7 +99,6 @@ public class TileRegistrator implements KryoRegistrator {
 		kryo.register(TileToImageConverter.class);
 		kryo.register(SingleTileToImageConverter.class);
 		kryo.register(TileSeriesToImagesConverter.class);
-		kryo.register(ValueOrException.class) ;
 
 		// com.oculusinfo.tilegen.util
 		kryo.register(PropertiesWrapper.class);

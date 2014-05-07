@@ -32,15 +32,14 @@ import scala.util.{Try, Success, Failure}
 import org.json.JSONObject
 import org.json.JSONException
 
-import com.oculusinfo.tilegen.tiling.ValueOrException
 
 
 // There's probably a better way, but the point of having this FilterAware
 // object, and immediately importing its contents, is to have the Filter
 // type alias available everywhere in this file.
 object FilterAware {
-	type Filter = ValueOrException[List[Double]] => Boolean
-	type FilterFunction = Function1[ValueOrException[List[Double]], Boolean]
+	type Filter = Try[List[Double]] => Boolean
+	type FilterFunction = Function1[Try[List[Double]], Boolean]
 }
 import com.oculusinfo.tilegen.datasets.FilterAware._
 
@@ -50,7 +49,7 @@ import com.oculusinfo.tilegen.datasets.FilterAware._
 class OrFunction(operands: Filter*)
 		extends FilterFunction
 		with Serializable {
-	def apply (value: ValueOrException[List[Double]]): Boolean =
+	def apply (value: Try[List[Double]]): Boolean =
 		operands.map(_(value)).reduce(_ || _)
 	override def toString: String = operands.mkString("or(", ", ", ")")
 }
@@ -59,7 +58,7 @@ class OrFunction(operands: Filter*)
 class AndFunction(operands: Filter*)
 		extends FilterFunction
 		with Serializable {
-	def apply (value: ValueOrException[List[Double]]): Boolean =
+	def apply (value: Try[List[Double]]): Boolean =
 		operands.map(_(value)).reduce(_ && _)
 	override def toString: String = operands.mkString("and(", ", ", ")")
 }

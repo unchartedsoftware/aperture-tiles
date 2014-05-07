@@ -27,12 +27,13 @@ package com.oculusinfo.tilegen.examples.datagen
 
 
 
+import scala.util.{Try, Success, Failure}
+
 import com.oculusinfo.tilegen.tiling.DataSource
 import com.oculusinfo.tilegen.tiling.FieldExtractor
 import com.oculusinfo.tilegen.tiling.GenericSeriesBinner
 import com.oculusinfo.tilegen.tiling.LocalTileIO
 import com.oculusinfo.tilegen.tiling.RecordParser
-import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
 
@@ -144,15 +145,14 @@ class TestSeriesDataSource (fileName: String) extends DataSource with Serializab
 
 class TestSeriesRecordParser extends RecordParser[TestSeriesRecord] {
 	def parseRecords (raw: Iterator[String],
-	                  Variables: String*): Iterator[ValueOrException[TestSeriesRecord]] =
+	                  Variables: String*): Iterator[Try[TestSeriesRecord]] =
 		raw.map(line =>
 			{
 				val fields = line.split('\t')
-				new ValueOrException(Some(new TestSeriesRecord(fields(0).toDouble,
-				                                               fields(1).toDouble,
-				                                               fields(2).toDouble,
-				                                               fields(3).toDouble)),
-				                     None)
+				Try(new TestSeriesRecord(fields(0).toDouble,
+				                         fields(1).toDouble,
+				                         fields(2).toDouble,
+				                         fields(3).toDouble))
 			}
 		)
 }
@@ -166,10 +166,10 @@ class TestSeriesFieldExtractor extends FieldExtractor[TestSeriesRecord] {
 	def isConstantField (field: String) = false
 	def getFieldValue (field: String)(record: TestSeriesRecord) =
 		field match {
-			case "x" => new ValueOrException(Some(record.x), None)
-			case "y" => new ValueOrException(Some(record.y), None)
-			case "z" => new ValueOrException(Some(record.z), None)
-			case "w" => new ValueOrException(Some(record.w), None)
-			case _ => new ValueOrException(None, Some(new Exception("Unknown field "+field)))
+			case "x" => Try(record.x)
+			case "y" => Try(record.y)
+			case "z" => Try(record.z)
+			case "w" => Try(record.w)
+			case _ => Try(throw new Exception("Unknown field "+field))
 		}
 }

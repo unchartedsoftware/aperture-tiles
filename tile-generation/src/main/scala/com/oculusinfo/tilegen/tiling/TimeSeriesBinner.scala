@@ -31,7 +31,10 @@ import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 import java.awt.geom.Point2D
 
+
 import scala.collection.JavaConversions._
+import scala.util.{Try, Success, Failure}
+
 
 import org.apache.spark._
 import org.apache.spark.SparkContext._
@@ -54,14 +57,14 @@ class GenericSeriesBinner[T: ClassManifest] (source: DataSource,
                                              extractor: FieldExtractor[T]) extends Serializable {
 	// Extract just the coordinates
 	private def extractCoordinates (data: RDD[T],
-	                                coordFcns: Seq[T => ValueOrException[Double]]):
+	                                coordFcns: Seq[T => Try[Double]]):
 			RDD[Seq[Double]] = {
 		data.map(record =>
 			// Extract our variables
 			coordFcns.map(f => f(record))
 		).filter(coords =>
 			// Filter out missing values
-			coords.map(_.hasValue).fold(true)(_ && _)
+			coords.map(_.isSuccess).fold(true)(_ && _)
 		).map(coords =>
 			// Get the actual values, removing the exception-passing structure
 			coords.map(_.get)
@@ -129,10 +132,10 @@ class GenericSeriesBinner[T: ClassManifest] (source: DataSource,
 		val data = rawData.mapPartitions(iter =>
 			// Parse the records from the raw data
 			localParser.parseRecords(iter, xVar, yVar, zVar, resultVar)
-		).filter(_.hasValue).map(_.get).map(record =>
+		).filter(_.isSuccess).map(_.get).map(record =>
 			// Pull out the relevant variables
 			variables.map(variable => localExtractor.getFieldValue(variable)(record))
-		).filter(_.map(_.hasValue).fold(true)(_ && _)).map(_.map(_.get))
+		).filter(_.map(_.isSuccess).fold(true)(_ && _)).map(_.map(_.get))
 		data.cache
 		println("Data parsed and cached")
 

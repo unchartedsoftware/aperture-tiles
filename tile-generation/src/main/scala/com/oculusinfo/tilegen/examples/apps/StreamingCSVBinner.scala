@@ -40,7 +40,6 @@ import com.oculusinfo.tilegen.datasets.DatasetFactory
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
@@ -198,13 +197,13 @@ object StreamingCSVBinner {
 			parser.parseRecords(iter, localXVar, localYVar).map(_._2)
 		).filter(r =>
 			// Filter out unsuccessful parsings
-			r.hasValue
+			r.isSuccess
 		).map(_.get).mapPartitions(iter =>
 			iter.map(t => (extractor.getFieldValue(localXVar)(t),
 			               extractor.getFieldValue(localYVar)(t),
 			               extractor.getFieldValue(localZVar)(t)))
 		).filter(record =>
-			record._1.hasValue && record._2.hasValue && record._3.hasValue
+			record._1.isSuccess && record._2.isSuccess && record._3.isSuccess
 		).map(record =>
 			(record._1.get, record._2.get, record._3.get)
 		)

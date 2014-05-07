@@ -29,6 +29,7 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
 
+import scala.util.{Try, Success, Failure}
 
 import org.apache.spark._
 import org.apache.spark.SparkContext._
@@ -105,7 +106,7 @@ class ObjectifiedBinner[T: ClassManifest] (name: String,
 			val localExtractor = extractor // localized to avoid the need for serialization
 			val resultFcn = if ("count" == resultField) {
 				// No result field was passed in - just count instances
-				t: T => new ValueOrException(Some(1.0), None)
+				t: T => Try(1.0)
 			} else {
 				// The user passed in a field as the third argument - use it as a
 				// result field (but convert to a java double, because that's what
@@ -161,14 +162,14 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
 	var execute: Boolean = true
 
 	private def getAxisBounds (data: RDD[T],
-	                           xCoordFcn: T => ValueOrException[Double],
-	                           yCoordFcn: T => ValueOrException[Double]): (Double, Double, Double, Double) = {
+	                           xCoordFcn: T => Try[Double],
+	                           yCoordFcn: T => Try[Double]): (Double, Double, Double, Double) = {
 		val coordinates = data.map(r =>
 			// Extract our axis variables
 			(xCoordFcn(r), yCoordFcn(r))
 		).filter(coordPair =>
 			// Filter out unsuccessful field extractions
-			coordPair._1.hasValue && coordPair._2.hasValue
+			coordPair._1.isSuccess && coordPair._2.isSuccess
 		).map(coordPair =>
 			(coordPair._1.get, coordPair._2.get)
 		)
@@ -218,7 +219,7 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
 	               xVar: String,
 	               yVar: String,
 	               resultField: String,
-	               resultFcn: T => ValueOrException[Double],
+	               resultFcn: T => Try[Double],
 	               levelSets: Seq[Seq[Int]],
 	               consolidationPartitions: Option[Int]): Unit = {
 		// localize all fields so binner doesn't need to be serializable
@@ -245,7 +246,7 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
 			localParser.parseRecords(iter, xVar, yVar)
 		).filter(r =>
 			// Filter out unsuccessful parsings
-			r.hasValue
+			r.isSuccess
 		).map(_.get)
 
 		val (minX, maxX, minY, maxY) =
@@ -363,7 +364,7 @@ abstract class RecordParser[T: ClassManifest] extends Serializable {
 	 * @param variables
 	 *        The variables to be extracted
 	 */
-	def parseRecords (raw: Iterator[String], Variables: String*): Iterator[ValueOrException[T]]
+	def parseRecords (raw: Iterator[String], Variables: String*): Iterator[Try[T]]
 }
 
 
@@ -392,7 +393,7 @@ abstract class FieldExtractor[T: ClassManifest] extends Serializable {
 	 * Determine the value of a single axis variable of a single record.  The
 	 * results of this are undefined if isValidField(field) is false.
 	 */
-	def getFieldValue (field: String)(record: T): ValueOrException[Double]
+	def getFieldValue (field: String)(record: T): Try[Double]
 
 
 	/**

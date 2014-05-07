@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat
 import java.util.Properties
 
 import scala.collection.JavaConverters._
+import scala.util.{Try, Success, Failure}
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
@@ -47,7 +48,6 @@ import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
-import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
@@ -236,7 +236,7 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
  * A simple parser that splits a record according to a given separator
  */
 class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
-	def parseRecords (raw: Iterator[String], variables: String*): Iterator[(String, ValueOrException[List[Double]])] = {
+	def parseRecords (raw: Iterator[String], variables: String*): Iterator[(String, Try[List[Double]])] = {
 		// This method generally is only called on workers, therefore properties can't really be documented here.
 
 		// Get some simple parsing info we'll need
@@ -303,39 +303,35 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 		raw.map(s =>
 			{
 				val columns = splitString(s, separator)
-				try {
-					(s,
-					 new ValueOrException(
-						 Some(properties.fields.toList.map(field =>
-							      {
-								      val fieldType = getFieldType(field)
-								      var value = if ("constant" == fieldType ||
-									                      "zero" == fieldType) 0.0
-								      else {
-									      val fieldIndex =
-										      properties.getIntOption("oculus.binning.parsing."+
-											                              field+".index",
-										                              "").get
-									      parseValue(columns(fieldIndex.toInt), field, fieldType)
-								      }
-								      val fieldScaling =
-									      properties.getString("oculus.binning.parsing."+field+
-										                           ".fieldScaling", "", Some(""))
-								      if ("log" == fieldScaling) {
-									      val base =
-										      properties.getDouble("oculus.binning.parsing."+
-											                           field+".fieldBase",
-										                           "", Some(math.exp(1.0)))
-									      value = math.log(value)/math.log(base)
-								      }
-								      value
-							      }
-						      )),
-						 None)
-					)
-				} catch {
-					case e: Exception => (s, new ValueOrException(None, Some(e)))
-				}
+				(s,
+				 Try(
+					 properties.fields.toList.map(field =>
+						 {
+							 val fieldType = getFieldType(field)
+							 var value = if ("constant" == fieldType ||
+								                 "zero" == fieldType) 0.0
+							 else {
+								 val fieldIndex =
+									 properties.getIntOption("oculus.binning.parsing."+
+										                         field+".index",
+									                         "").get
+								 parseValue(columns(fieldIndex.toInt), field, fieldType)
+							 }
+							 val fieldScaling =
+								 properties.getString("oculus.binning.parsing."+field+
+									                      ".fieldScaling", "", Some(""))
+							 if ("log" == fieldScaling) {
+								 val base =
+									 properties.getDouble("oculus.binning.parsing."+
+										                      field+".fieldBase",
+									                      "", Some(math.exp(1.0)))
+								 value = math.log(value)/math.log(base)
+							 }
+							 value
+						 }
+					 )
+				 )
+				)
 			}
 		)
 	}
@@ -357,10 +353,10 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) {
 		("constant" == fieldType || "zero" == fieldType)
 	}
 
-	def getFieldValue (field: String)(record: List[Double]) : ValueOrException[Double] =
-		if ("count" == field) new ValueOrException(Some(1.0), None)
-		else if ("zero" == field) new ValueOrException(Some(0.0), None)
-		else new ValueOrException(Some(record(properties.fieldIndices(field))), None)
+	def getFieldValue (field: String)(record: List[Double]) : Try[Double] =
+		if ("count" == field) Try(1.0)
+		else if ("zero" == field) Try(0.0)
+		else Try(record(properties.fieldIndices(field)))
 
 	def getTilePyramid (xField: String, minX: Double, maxX: Double,
 	                    yField: String, minY: Double, maxY: Double): TilePyramid = {
@@ -587,7 +583,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 				}
 			).filter(r =>
 				// Filter out unsuccessful parsings
-				r.hasValue
+				r.isSuccess
 			).map(_.get).mapPartitions(iter =>
 				{
 					val extractor = new CSVFieldExtractor(localProperties)
@@ -597,7 +593,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 					               extractor.getFieldValue(localZVar)(t)))
 				}
 			).filter(record =>
-				record._1.hasValue && record._2.hasValue && record._3.hasValue
+				record._1.isSuccess && record._2.isSuccess && record._3.isSuccess
 			).map(record =>
 				(record._1.get, record._2.get, record._3.get)
 			)
@@ -645,9 +641,9 @@ class CSVDataset (rawProperties: Properties,
 	def getFieldFilterFunction (field: String, min: Double, max: Double): Filter = {
 		val localProperties = properties
 		new FilterFunction with Serializable {
-			def apply (valueList: ValueOrException[List[Double]]): Boolean = {
+			def apply (valueList: Try[List[Double]]): Boolean = {
 				val index = localProperties.fieldIndices(field)
-				valueList.hasValue && {
+				valueList.isSuccess && {
 					val value = (valueList.get)(index)
 					min <= value && value <= max
 				}
