@@ -237,6 +237,7 @@ define(function (require) {
          */
         updateAndRedrawViews: function( tile ) {
             var i,
+                that = this,
                 data = [];
 
             for (i=0; i< this.views.length || i< 1; i++ ) {
@@ -245,6 +246,10 @@ define(function (require) {
 
             this.mapNodeLayer.all([]).redraw(); // temporary aperture.js bug workaround
             this.mapNodeLayer.all(data).redraw();
+            // bring selected node to the front, this allows any renderings to stay above other nodes
+            this.mapNodeLayer.all().where( function() {
+                return this.tilekey === that.clientState.clickState.tilekey;
+            } ).toFront().redraw();
         }
 
 
