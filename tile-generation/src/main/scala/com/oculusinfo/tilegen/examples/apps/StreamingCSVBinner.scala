@@ -37,8 +37,8 @@ import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.StandardCartesianIndexing
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -317,7 +317,7 @@ object StreamingCSVBinner {
 						println("processing level: " + levels)
 						val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
 						val tiles = binner.processDataByLevel(rdd,
-						                                      StandardCartesianIndexing.ptFcn,
+						                                      new CartesianIndexScheme,
 						                                      dataset.getBinDescriptor,
 						                                      dataset.getTilePyramid,
 						                                      levels,

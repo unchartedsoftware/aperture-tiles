@@ -56,8 +56,33 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 
 
 
-object StandardCartesianIndexing extends Serializable {
-	def ptFcn (coordinates: (Double, Double)): (Double, Double) = coordinates
+trait IndexScheme[T] {
+	def toCartesian (t: T): (Double, Double)
+}
+
+class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializable {
+	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
+}
+
+class IPV4ZCurveIndexScheme extends IndexScheme[Array[Byte]] {
+	def toCartesian (ipAddress: Array[Byte]): (Double, Double) = {
+		def getXDigit (byte: Byte): Long =
+			(((byte & 0x40) >> 3) |
+				 ((byte & 0x10) >> 2) |
+				 ((byte & 0x04) >> 1) |
+				 ((byte & 0x01))).toLong
+
+		def getYDigit (byte: Byte): Long =
+			(((byte & 0x80) >> 4) |
+				 ((byte & 0x20) >> 3) |
+				 ((byte & 0x08) >> 2) |
+				 ((byte & 0x02) >> 1)).toLong
+
+		ipAddress.map(byte => (getXDigit(byte), getYDigit(byte)))
+			.foldLeft((0.0, 0.0))((a, b) =>
+			(16.0*a._1+b._1, 16.0*a._2+b._2)
+		)
+	}
 }
 
 /**
@@ -75,14 +100,17 @@ class RDDBinner {
 	 * Fully process a dataset of input records into output tiles written out
 	 * somewhere
 	 * 
-	 * @param IT The input record type
-	 * @param OT The output bin type
+	 * @param RT The raw input record type
+	 * @param IT The coordinate type
+	 * @param PT The processing bin type
+	 * @param BT The output bin type
 	 */
-	def binAndWriteData[IT: ClassManifest, OT: ClassManifest, BT] (
-		data: RDD[IT],
-		coordFcn: IT => Try[(Double, Double)],
-		valueFcn: IT => Try[OT],
-		binDesc: BinDescriptor[OT, BT],
+	def binAndWriteData[RT: ClassManifest, IT: ClassManifest, PT: ClassManifest, BT] (
+		data: RDD[RT],
+		indexFcn: RT => Try[IT],
+		valueFcn: RT => Try[PT],
+		indexScheme: IndexScheme[IT],
+		binDesc: BinDescriptor[PT, BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
 		writeLocation: String,
@@ -111,7 +139,7 @@ class RDDBinner {
 		val bareData = data.mapPartitions(iter =>
 			{
 				println("Initial partition processing")
-				iter.map(i => (coordFcn(i), valueFcn(i)))
+				iter.map(i => (indexFcn(i), valueFcn(i)))
 			}
 		).filter(record => record._1.isSuccess && record._2.isSuccess)
 			.map(record =>(record._1.get, record._2.get))
@@ -124,7 +152,7 @@ class RDDBinner {
 				val levelStartTime = System.currentTimeMillis()
 				// For each level set, process the bare data into tiles...
 				var tiles = processDataByLevel(bareData,
-				                               StandardCartesianIndexing.ptFcn,
+				                               indexScheme,
 				                               binDesc,
 				                               tileScheme,
 				                               levels,
@@ -140,6 +168,8 @@ class RDDBinner {
 				}
 			}
 		)
+
+		bareData.unpersist(false)
 
 		if (debug) {
 			val endTime = System.currentTimeMillis()
@@ -157,8 +187,8 @@ class RDDBinner {
 	 * but minimal, data into an RDD of tiles on the given levels.
 	 *
 	 * @param data The data to be processed
-	 * @param coordinateFromIndex A function that can take an index in the data
-     *        and convert it into a cartesian pair for binning.
+	 * @param indexScheme A conversion scheme for converting from the index type 
+	 *        to one we can use.
 	 * @param binDesc A description of how raw values are to be aggregated into
 	 *                bin values
 	 * @param tileScheme A description of how raw values are transformed to bin
@@ -177,7 +207,7 @@ class RDDBinner {
 	 */
 	def processDataByLevel[IT: ClassManifest,
 	                       PT: ClassManifest, BT] (data: RDD[(IT, PT)],
-	                                               coordinateFromIndex: IT => (Double, Double),
+	                                               indexScheme: IndexScheme[IT],
 	                                               binDesc: BinDescriptor[PT, BT],
 	                                               tileScheme: TilePyramid,
 	                                               levels: Seq[Int],
@@ -187,7 +217,7 @@ class RDDBinner {
 			RDD[TileData[BT]] = {
 		val mapOverLevels: IT => TraversableOnce[(TileIndex, BinIndex)] =
 			index => {
-				val (x, y) = coordinateFromIndex(index)
+				val (x, y) = indexScheme.toCartesian(index)
 				levels.map(level =>
 					{
 						val tile = tileScheme.rootToTile(x, y, level, bins)

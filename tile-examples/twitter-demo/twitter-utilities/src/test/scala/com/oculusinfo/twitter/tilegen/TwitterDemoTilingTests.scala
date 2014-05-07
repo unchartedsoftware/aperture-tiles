@@ -40,8 +40,8 @@ import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.StandardCartesianIndexing
 import com.oculusinfo.tilegen.tiling.TestPyramidIO
 import com.oculusinfo.tilegen.tiling.TestTileIO
 
@@ -215,7 +215,7 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
     val tilePyramid = new WebMercatorTilePyramid
     val binner = new RDDBinner
     val binDesc = new TwitterDemoBinDescriptor
-    val tiles = binner.processDataByLevel(data, StandardCartesianIndexing.ptFcn,
+    val tiles = binner.processDataByLevel(data, new CartesianIndexScheme,
                                           binDesc, tilePyramid, List(0, 1), bins=1).collect
     assert(5 === tiles.size)
     val recordsByTile = tiles.map(tile => (tile.getDefinition,
@@ -426,7 +426,7 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
     val tio = new TestTileIO
 
     Range(0, 4).map(level => {
-      val tiles = binner.processDataByLevel(data, StandardCartesianIndexing.ptFcn,
+      val tiles = binner.processDataByLevel(data, new CartesianIndexScheme,
                                             binDesc, tilePyramid, List(level), bins=1)
 
       tio.writeTileSet(tilePyramid, "abc", tiles, binDesc)

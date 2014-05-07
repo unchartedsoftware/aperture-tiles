@@ -59,6 +59,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		binner.binAndWriteData(data,
 		                       coordFcn,
 		                       valueFcn,
+		                       new CartesianIndexScheme,
 		                       new StandardDoubleBinDescriptor,
 		                       pyramid,
 		                       None,
