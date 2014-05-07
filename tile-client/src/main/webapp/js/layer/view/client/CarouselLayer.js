@@ -134,10 +134,12 @@ define(function (require) {
 
             viewSelectionLayer.on('mousemove', function(event) {
                 hover.add(event.data.tilekey);
+                viewSelectionLayer.all().where(event.data).redraw();
             });
 
-            viewSelectionLayer.on('mouseout', function() {
+            viewSelectionLayer.on('mouseout', function(event) {
                 hover.clear();
+                viewSelectionLayer.all().where(event.data).redraw();
             });
 
             viewSelectionLayer.on('click', function(event) {
@@ -211,10 +213,12 @@ define(function (require) {
 
             viewIndexLayer.on('mousemove', function(event) {
                 hover.add(event.data.tilekey);
+                viewIndexLayer.all().where(event.data).redraw();
             });
 
-            viewIndexLayer.on('mouseout', function() {
+            viewIndexLayer.on('mouseout', function(event) {
                 hover.clear();
+                viewIndexLayer.all().where(event.data).redraw();
             });
 
             viewIndexLayer.on('click', function(event) {
@@ -310,26 +314,40 @@ define(function (require) {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
             };
-			
-			this.redrawUI();
-        },
-		
-		
-		/**
-		 *	Redraws the carousel specific layers
-		 */
-		redrawUI: function() {
-			
-			var i;
-			
-			this.outline.all().redraw();
-            this.leftButton.all().redraw();
-            this.rightButton.all().redraw();
-            for (i=0; i<this.indexButtons.length; i++) {
-                this.indexButtons[i].all().redraw();
+
+            this.clientState.setCarouselTile(tilekey);
+
+            if ( this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey ) {
+                // only redraw if hovering over a new tile
+                this.redrawUI();
             }
-			
-		},
+
+        },
+
+
+        /**
+         *	Redraws the carousel specific layers
+         */
+        redrawUI: function() {
+
+            var that = this,
+                i;
+
+            // only redraw previous tile, and current tile
+            function currentOrPreviousTilekey() {
+                return this.tilekey === that.selectedTileInfo.previouskey ||
+                    this.tilekey === that.selectedTileInfo.tilekey;
+            }
+
+            this.outline.all().where(currentOrPreviousTilekey).redraw();
+            this.leftButton.all().where(currentOrPreviousTilekey).redraw();
+            this.rightButton.all().where(currentOrPreviousTilekey).redraw();
+            for (i=0; i<this.indexButtons.length; i++) {
+                this.indexButtons[i].all().where(currentOrPreviousTilekey).redraw();
+            }
+            this.mapNodeLayer.all().where(currentOrPreviousTilekey).redraw();
+
+        },
 
         /**
          * Maps a tilekey to its current view index. If none is specified, use default
