@@ -1,26 +1,24 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
 <html>
     <head>
         <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+
         <title>Distributed Tile Demo</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width">
-
-        <link rel="shortcut icon" href="img/aperture-16x16.ico">
-
-        <script src="js/libjs/modernizr-2.6.2.min.js"></script>
 
         <!-- Styles for summary panel -->
+        <link rel="shortcut icon" href="img/aperture-16x16.ico">
+        <link rel="stylesheet" href="css/plotaxis.css">
+        <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/summary.css">
+        <link rel="stylesheet" href="css/toc.css">
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet"
           	  href="js/libjs/jquery-ui/1.10.3/themes/custom-theme/jquery-ui-1.10.3.custom.css" />
 
         <!-- Scripts for the summary panel -->
+
+        <script src="js/libjs/modernizr-2.6.2.min.js"></script>
 
         <!-- JQuery includes -->
     	<script src="js/libjs/jquery/jquery-1.10.2.dev.js"></script>
@@ -32,11 +30,11 @@
         <script src="js/libjs/jquery/jquery-url-vars.js"></script>
 
 		<!-- Aperture includes -->
-    	<script src="js/libjs/aperture/js-dependencies/proj4js.js"></script>
-    	<script src="js/libjs/aperture/js-dependencies/OpenLayers.debug.js"></script>
-    	<script src="js/libjs/aperture/js-dependencies/raphael.js"></script>
-    	<script src="js/libjs/aperture/js/aperture.js"></script>
-        
+        <script src="js/libjs/aperture/js-dependencies/proj4js.js"></script>
+        <script src="js/libjs/aperture/js-dependencies/OpenLayers.debug.js"></script>
+        <script src="js/libjs/aperture/js-dependencies/raphael.js"></script>
+        <script src="js/libjs/aperture/js/aperture.js"></script>
+
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
         
         <!-- two pane window splitter plugin for JQuery -->
@@ -44,12 +42,8 @@
         
         <!-- Require starts off our own project module heirarchy -->
         <script src="js/libjs/require.js" data-main="js/main.js"></script>
+        
 
-        <link rel="stylesheet" href="css/plotaxis.css">
-
-        <link rel="stylesheet" href="css/main.css">
-        <link rel="stylesheet" href="css/summary.css">
-        <link rel="stylesheet" href="css/toc.css">
     </head>
     <body>
         <!-- Add your site or application content here -->
@@ -84,28 +78,6 @@
                 <div id="debug-req"></div>
             </div>
         </div>
-<!--    </div>-->
-    <!-- Scripts for the summary panel (right-side pane) -->
-    <script src="js/axisUtil.js"></script>
-    <script src="js/plotaxis.js"></script>
-    <script src="js/plotlink.js"></script>
-    <script src="js/xdata.js"></script>
-    <script src="js/summary.js"></script>
-    <script>
-        $(document).ready(function() {
 
-            var dataDirectory = $.getUrlVar('dataDir');
-            var datasetName = $.getUrlVar('dataset');
-            if(!dataDirectory){
-                dataDirectory = "./data";
-            }
-
-            var summaryBuilder = new SummaryBuilder({
-                dataDir: dataDirectory,
-                dataset: datasetName
-            });
-            summaryBuilder.start();
-        });
-    </script>
     </body>
 </html>
