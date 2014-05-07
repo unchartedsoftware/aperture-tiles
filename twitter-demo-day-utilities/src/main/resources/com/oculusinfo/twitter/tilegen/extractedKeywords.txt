@@ -59,7 +59,6 @@ celular	cellular	231302
 merda	shit	229787
 saudade	longing	222413
 vcs	vcs	222012
-pai	father	221607
 house	house	213738
 amigos	people	213188
 sos	sos	211226
@@ -77,14 +76,13 @@ cama	bed	191671
 foda	foda	191525
 acordei	i woke up	190074
 sdds	sdds	187416
-indo	indo	182613
 favor	favor	181571
 oi	hi	180644
 cabeça	head	180612
 twitter	twitter	180551
 wpp	wpp	179216
 ganas	forward	178660
-sp 	sp	178014
+sp	sp	178014
 espero	i hope	177324
 gosto	taste	176492
 boca	mouth	175930
@@ -131,20 +129,20 @@ carnaval	carnival	145225
 xd	xd	145114
 mulher	woman	144186
 brasil	brazil	141785
-@justinbieber	@justinbieber	141168
+justinbieber	justinbieber	141168
 pena	penalty	140640
 sueño	dream	139516
 sexta	sixth	139249
 voltar	return	138242
 mil	thousand	138172
-rs 	rs	138127
+rs	rs	138127
 pior	worse	137093
 chega	arrives	136590
 academia	academy	136447
 hola	hello	136199
 triste	sad	136134
 desse	of this	135989
-#kca	#kca	135478
+kca	kca	135478
 sol	sun	135235
 mds	mds	134708
 venezuela	venezuela	133989
@@ -163,7 +161,6 @@ mina	mine	126108
 praia	beach	125460
 verdad	truth	125400
 verdade	truth	125210
-kkkkkkkk	kkkkkkkk	125000
 extraño	strange	123929
 rua	street	123216
 publicar	publish	122929
@@ -203,7 +200,7 @@ menina	girl	109187
 sinto	feel	109124
 veces	times	108867
 personas	people	107890
-mg 	mg	107310
+mg	mg	107310
 serio	serious	107240
 colégio	college	107063
 povo	people	106456
@@ -225,7 +222,6 @@ bar	bar	101163
 ruim	wide	101042
 fácil	easy	100331
 hablar	talk	98990
-kkkkkkkkk	kkkkkkkkk	98748
 perder	lose	98590
 esperar	wait	98232
 sigo	i follow	98100
@@ -323,7 +319,7 @@ pizza	pizza	73084
 minas	mines	73076
 pais	parents	73036
 snap	snap	72977
-df 	df	72610
+df	df	72610
 dinheiro	money	72579
 culpa	fault	72392
 club	club	72284
@@ -335,7 +331,7 @@ olhar	look	71651
 home	home	71646
 chorando	crying	71577
 acredito	believe	71518
- brasília	bras㮬ia	71411
+brasília	brasília	71411
 nose	nose	71354
 lucas	lucas	71308
 happy	happy	71107
@@ -343,8 +339,8 @@ gobierno	government	70989
 internacional	international	70713
 video	video	70576
 hermoso	beautiful	70425
-cê	c㪉70362
- belém	bethlehem	70351
+cê	cê	70362
+belém	bethlehem	70351
 carro	car	70326
 praça	square	70258
 alma	soul	70109
@@ -355,7 +351,7 @@ humor	humor	69696
 baby	baby	69605
 day	day	68766
 levantar	lift	68538
-rj 	rj	68199
+rj	rj	68199
 universidad	university	68151
 gata	ready	68061
 ouvindo	listening	67953
@@ -363,7 +359,6 @@ gato	cat	67673
 perdi	lost	67653
 pé	foot	67573
 gnt	gnt	67481
-jajajaj	jajajaja	67409
 primeira	first	67261
 chile	chili	67243
 errado	wrong	67231
@@ -375,14 +370,14 @@ menino	boy	66336
 obrigado	thank you	66328
 irmã	sister	66296
 chocolate	chocolate	66216
- rio	river	66129
+rio	river	66129
 horizonte	horizon	66080
 nd	nd	66062
- pic  	peak	66053
+pic	peak	66053
 tira	strip	65948
 mala	bad	65917
 pueblo	people	65909
-pr 	pr	65866
+pr	pr	65866
 meninas	girls	65758
 chata	barge	65745
 nacional	national	65666
@@ -424,7 +419,7 @@ cima	top	62731
 tentar	try	62598
 gorda	fat woman	62536
 mão	hand	62354
-pa 	however,	62295
+pa	however,	62295
 melhores	top	62053
 vieja	old woman	61983
 life	life	61963
@@ -466,7 +461,7 @@ cantando	singing	58952
 bjs	bjs	58861
 comi	committee	58682
 región	region	58657
- porto	port	58525
+porto	port	58525
 responder	reply	58461
 forte	strong	58427
 perfeito	perfect	58380
@@ -482,7 +477,7 @@ rico	rich	57965
 entiendo	i understand	57808
 universidade	university	57640
 galera	galley	57542
- belo	beautiful	57448
+belo	beautiful	57448
 rápido	fast	57256
 família	family	57204
 pedro	pedro	57168
@@ -525,18 +520,18 @@ tw	tw	53871
 roupa	clothes	53702
 agua	water	53644
 marcelo	marcelo	53600
- recife	reef	53511
+recife	reef	53511
 nota	note	53485
 dejar	leave	53352
 madrugada	morning	53291
 puto	fucking	53227
 suerte	luck	53032
 primer	first	53024
-sc 	sc	52783
+sc	sc	52783
 pase	pass	52667
 amizade	friendship	52558
 vó	hooves	52458
-#trndnl	#trndnl	52197
+trndnl	trndnl	52197
 llega	arrives	52133
 vergonha	shame	51887
 aparece	appears	51826
@@ -548,13 +543,13 @@ desculpa	excuse	51707
 valeu	worth	51672
 acorda	grant	51419
 gay	gay	51372
-paulo 	london	51337
+paulo	london	51337
 bonita	pretty	51287
 fuerte	strong	51191
 leva	leads	51088
 corpo	body	51088
 filha	daughter	51054
- fortaleza	fortress	50985
+fortaleza	fortress	50985
 apaixonada	love	50875
 acuerdo	agreement	50720
 seguindo	following	50707
@@ -577,7 +572,6 @@ feio	ugly	49355
 sentido	sense	49336
 lluvia	rain	49312
 talvez	maybe	49230
-hahahah	hahahah	49210
 feira	fair	49165
 louco	crazy	49021
 abraço	hug	48998
@@ -634,7 +628,7 @@ lembra	remember	45885
 mês	month	45836
 afim	related	45766
 via	via	45701
-rn 	rn	45641
+rn	rn	45641
 gordo	fat	45623
 amores	loves	45590
 almoçar	lunch	45484
@@ -664,7 +658,7 @@ beber	drink	43821
 acordo	agreement	43729
 precisando	specifying	43676
 carlos	carlos	43510
- curitiba	curitiba	43374
+curitiba	curitiba	43374
 nomas	call	43331
 medio	medium	43278
 lpm	lpm	43177
@@ -676,7 +670,6 @@ mo	mo	42930
 pienso	feed	42903
 tentando	trying	42762
 olhando	looking	42696
-"eu	&quot;their	42521
 mereço	deserve	42487
 tomei	tomei	42455
 vista	view	42411
@@ -687,14 +680,12 @@ facultad	faculty	42133
 amém	amen	42076
 dejo	i leave	42067
 copa	cup	42005
-&lt;/3	&lt;/3	41980
 querida	mistress	41973
- salvador	savior	41887
+salvador	savior	41887
 concha	shell	41869
 desejo	desire	41830
 anjo	angel	41758
 aulas	classrooms	41724
-kkkkkkkkkkkkk	kampala	41669
 mlk	mlk	41664
 sp	sp	41632
 quinta	farm	41616
@@ -730,7 +721,7 @@ bloco	block	40122
 cala	creek	40114
 llegue	reaches	40049
 duda	doubt	40042
- manaus	manaus	39944
+manaus	manaus	39944
 deixou	left	39886
 vs	vs	39880
 mato	bush	39847
@@ -746,7 +737,7 @@ azul	blue	39540
 llama	flame	39402
 creer	believe	39394
 costa	coast	39136
-@fdelrinconcnn	@fdelrinconcnn	39114
+fdelrinconcnn	fdelrinconcnn	39114
 colombia	colombia	39077
 viajar	travel	39028
 morta	dead	38961
@@ -771,7 +762,7 @@ chorei	cried	38490
 cola	cola	38452
 pedo	fart	38430
 cheiro	smell	38383
-house 	house	38354
+house	house	38354
 pego	caught	38290
 porq	porq	38265
 condomínio	condominium	38235
@@ -804,11 +795,11 @@ usa	usa	37043
 bate	bat	37008
 compra	purchase	36950
 señor	mr.	36864
-pará 	stop	36830
-bahia 	bahia	36697
+pará	stop	36830
+bahia	bahia	36697
 acontecer	happen	36687
 criança	child	36675
-@nicolasmaduro	@ nicolasmaduro	36666
+nicolasmaduro	nicolasmaduro	36666
 realidad	reality	36623
 night	night	36602
 leve	slight	36542
@@ -829,7 +820,7 @@ chicas	girls	36164
 paro	arrest	36155
 bronca	anger	36121
 rica	rich	36115
-metropolitana 	metropolitan	36084
+metropolitana	metropolitan	36084
 prof	prof	36077
 raro	rare	36015
 chora	cries	36012
@@ -896,7 +887,7 @@ ideia	idea	33807
 sexo	sex	33807
 demi	half	33800
 role	role	33792
- san	san	33777
+san	san	33777
 negra	black	33758
 músicas	songs	33736
 bb	bb	33733
@@ -950,7 +941,7 @@ ciúmes	jealousy	32098
 paga	pay	32089
 pura	pure	32049
 química	chemistry	32000
-#love	#love	31985
+love	love	31985
 adianta	advance	31983
 palavra	word	31924
 hrs	hrs	31901
@@ -963,12 +954,11 @@ imposible	impossible	31801
 deitada	lying	31791
 caminho	path	31750
 manos	hands	31738
-@luansantana	@ luansantana	31736
+luansantana	luansantana	31736
 escuchando	listening	31721
 lembrei	remembered	31708
 eterno	eternal	31692
 ahh	ahh	31612
-"a	"a	31608
 playa	beach	31560
 canal	channel	31533
 app	app	31530
@@ -994,7 +984,17 @@ gana	desire	31026
 etc	etc.	31010
 pros	pros	30993
 fuder	fuder	30984
-#voteluan	#voteluan	30978
+voteluan	voteluan	30978
 dedo	finger	30897
 busca	search	30860
 mora	blackberry	30851
+culo	ass	30825
+mandando	commanding	30818
+cair	fall	30806
+felicidades	congrats	30774
+briga	fight	30768
+pasando	passing	30718
+impossível	impossible	30673
+rapido	rapid	30625
+quede	stay	30581
+canción	song	30547
