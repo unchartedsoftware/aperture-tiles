@@ -44,9 +44,9 @@ define(function (require) {
     TopTextSentiment = TwitterTagRenderer.extend({
         ClassName: "TopTextSentiment",
 
-        init: function() {
-            this._super("top-text-sentiment");
-            this.VALUE_COUNT = 5;
+        init: function(map) {
+            this._super("top-text-sentiment", map);
+            this.MAX_NUM_VALUES = 5;
             this.Y_SPACING = 36;
         },
 
@@ -82,10 +82,14 @@ define(function (require) {
 
 
         onClick: function(event) {
+
             this.clientState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index :  event.index[0]
             });
+
+            // pan map to center
+            this.detailsOnDemand.panMapToCenter(event.data);
             // send this node to the front
             this.plotLayer.all().where(event.data).toFront();
             // redraw all nodes
@@ -120,7 +124,7 @@ define(function (require) {
             this.createBars();
             this.createLabels();
             this.createCountSummaries();
-            this.detailsOnDemand = new DetailsOnDemand(this.id);
+            this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
             this.detailsOnDemand.attachClientState(this.clientState);
             this.detailsOnDemand.createLayer(this.plotLayer);
         },
@@ -143,8 +147,7 @@ define(function (require) {
                 bar.map('fill').from( function(index) {
 
                     if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                        if ( that.clientState.hoverState.userData.id !== undefined &&
-                             that.clientState.hoverState.userData.id === id &&
+                        if ( that.clientState.hoverState.userData.id === id &&
                              that.clientState.hoverState.userData.index === index) {
                             return selectedColour;
                         }
@@ -188,7 +191,7 @@ define(function (require) {
             }
 
             // negative bar
-            this.negativeBar = barTemplate('topTextSentimentBarsNegative', '#777777', '#222222', this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
+            this.negativeBar = barTemplate('topTextSentimentBarsNegative', this.GREY_COLOUR, this.DARK_GREY_COLOUR, this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -198,7 +201,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('topTextSentimentBarsNeutral', '#222222', this.BLACK_COLOUR, this.NEUTRAL_COLOUR, this.NEUTRAL_SELECTED_COLOUR );
+            this.neutralBar = barTemplate('topTextSentimentBarsNeutral', this.DARK_GREY_COLOUR, this.BLACK_COLOUR, this.NEUTRAL_COLOUR, this.NEUTRAL_SELECTED_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -279,7 +282,8 @@ define(function (require) {
 
         createLabels: function () {
 
-            var that = this;
+            var that = this,
+                MAX_LABEL_CHAR_COUNT = 9;;
 
             this.tagLabel = this.plotLayer.addLayer(aperture.LabelLayer);
 
@@ -295,9 +299,10 @@ define(function (require) {
                 return that.WHITE_COLOUR;
             });
 
-            this.tagLabel.on('mouseup', function(event) {
+            this.tagLabel.on('click', function(event) {
                 that.onClick(event);
-                //return true; // swallow event
+                return true; // swallow event
+                //that.onClick(event);
             });
 
             this.tagLabel.on('mousemove', function(event) {
@@ -315,8 +320,8 @@ define(function (require) {
 
             this.tagLabel.map('text').from(function (index) {
                 var str = that.filterText(this.bin.value[index].tag);
-                if (str.length > 12) {
-                    str = str.substr(0,12) + "...";
+                if (str.length > MAX_LABEL_CHAR_COUNT) {
+                    str = str.substr(0, MAX_LABEL_CHAR_COUNT) + "...";
                 }
                 return str;
             });

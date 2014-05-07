@@ -48,7 +48,7 @@ public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "test.annotations";
 	static final double   EPSILON = 0.001;
-	static final int      NUM_ENTRIES = 50;
+	static final int      NUM_ENTRIES = 100;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 
@@ -226,9 +226,7 @@ public class AnnotationTestsBase {
 				
 	}
 	
-	protected List<TileData< Map<String, List<Pair<String, Long>>>>> generateTiles( int numEntries, AnnotationIndexer indexer, TilePyramid pyramid ) {
-		
-		List<AnnotationData<?>> annotations = generateJSONAnnotations( numEntries );
+	protected List<TileData< Map<String, List<Pair<String, Long>>>>> generateTiles( List<AnnotationData<?>> annotations, AnnotationIndexer indexer, TilePyramid pyramid ) {
 
 		Map<TileIndex, TileData< Map<String, List<Pair<String, Long>>>>> tiles = new HashMap<>();
 				

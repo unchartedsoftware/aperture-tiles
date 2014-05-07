@@ -61,6 +61,20 @@ public class FileSystemPyramidIO implements PyramidIO {
 	public Object getRootPath () {
 		return _rootPath;
 	}
+	
+	private File getLevelDir (String basePath, TileIndex tile) {
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/",
+		                              _rootPath + basePath,
+		                              tile.getLevel() ));
+	}
+	
+	private File getXDir (String basePath, TileIndex tile) {
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/%d/",
+		                              _rootPath + basePath,
+		                              tile.getLevel(), tile.getX() ));
+	}
 
 	private File getTileFile (String basePath, TileIndex tile) {
 		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
@@ -151,8 +165,23 @@ public class FileSystemPyramidIO implements PyramidIO {
 	}
 	
 	@Override
-	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
-		throw new IOException("removeTiles not currently supported for FileSystemPyramidIO");
+	public void removeTiles (String basePath, Iterable<TileIndex> tiles ) throws IOException {		
+		for (TileIndex tile: tiles) {
+			// delete tile
+			File tileFile = getTileFile(basePath, tile);
+			tileFile.delete();
+			// if x directory is empty, delete it as well
+			File xDir = getXDir(basePath, tile);
+			if ( xDir.isDirectory() && xDir.list().length == 0 ) {
+				xDir.delete();
+			}
+			// if level directory is empty, delete it as well
+			File levelDir = getLevelDir(basePath, tile);
+			if ( levelDir.isDirectory() && levelDir.list().length == 0 ) {
+				levelDir.delete();
+			}
+
+		}
 	}
     
 }

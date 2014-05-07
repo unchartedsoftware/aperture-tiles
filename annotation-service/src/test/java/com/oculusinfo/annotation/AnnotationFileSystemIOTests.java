@@ -45,10 +45,12 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
 import com.oculusinfo.binning.util.Pair;
 
-public class AnnotationHBaseIOTests extends AnnotationTestsBase {
+public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
 	
-	private static final String  TILE_TABLE_NAME = "annotation.hbase.test";
-	private static final String  DATA_TABLE_NAME = TILE_TABLE_NAME + ".data";
+	private static final String  ROOT_PATH = "C:\\Users\\kbirk\\Desktop\\";
+	private static final String  BASE_PATH = "annotations\\";
+	private static final String  TILE_EXT = "json";
+	private static final String  DATA_EXT = "json";
 	private static final boolean VERBOSE = false;
 
 	private AnnotationIO _dataIO;
@@ -63,13 +65,10 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     @Before
     public void setup () {
     	try {
-    		_dataIO = new HBaseAnnotationIO("hadoop-s1.oculus.local",
-										"2181",
-									    "hadoop-s1.oculus.local:60000");
     		
-    		_tileIO = new HBasePyramidIO("hadoop-s1.oculus.local",
-										 "2181",
-									     "hadoop-s1.oculus.local:60000");
+    		_dataIO = new FileSystemAnnotationIO(ROOT_PATH, DATA_EXT);   		
+    		_tileIO = new FileSystemPyramidIO(ROOT_PATH, TILE_EXT);
+    		
     	} catch (Exception e) {
     		
 			System.out.println("Error: " + e.getMessage());
@@ -103,25 +102,19 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
         
     	try {
     		
-	        /*
-	    	 *  Create Table
-	    	 */
-			System.out.println("Creating table");
-	    	_tileIO.initializeForWrite( TILE_TABLE_NAME );
-	    	_dataIO.initializeForWrite( DATA_TABLE_NAME );
-	        /*
+    		/*
 	    	 *  Write annotations
 	    	 */ 	
-	    	System.out.println("Writing "+NUM_ENTRIES+" to table");	
-	    	_tileIO.writeTiles(TILE_TABLE_NAME, _pyramid, _tileSerializer, tiles );
-	    	_dataIO.writeData(DATA_TABLE_NAME, _dataSerializer, annotations );
+	    	System.out.println("Writing "+NUM_ENTRIES+" to file system");	
+	    	_tileIO.writeTiles(BASE_PATH, _pyramid, _tileSerializer, tiles );
+	    	_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
 	        
 	    	/*
 	    	 *  Read and check all annotations
 	    	 */
 	    	System.out.println( "Reading all annotations" );
-	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _tileIO.readTiles( TILE_TABLE_NAME, _tileSerializer, tileIndices );
-	    	List<AnnotationData<?>> allData = _dataIO.readData( DATA_TABLE_NAME, _dataSerializer, dataIndices );
+	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
+	    	List<AnnotationData<?>> allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
 	    	if (VERBOSE) printTiles( allTiles );
 	    	if (VERBOSE) printData( allData );
 	    	
@@ -129,29 +122,23 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	Assert.assertTrue( compareTiles( allTiles, tiles, true ) );
 	    	Assert.assertTrue( compareData( allData, annotations, true ) );
 	    	
-	    	System.out.println("Removing "+NUM_ENTRIES+" from table");	
-	    	_tileIO.removeTiles(TILE_TABLE_NAME, tileIndices );
-	    	_dataIO.removeData(DATA_TABLE_NAME, dataIndices );
+	    	System.out.println("Removing "+NUM_ENTRIES+" from file system");	
+	    	_tileIO.removeTiles(BASE_PATH, tileIndices );
+	    	_dataIO.removeData(BASE_PATH, dataIndices );
 	       
-	    	allTiles = _tileIO.readTiles( TILE_TABLE_NAME, _tileSerializer, tileIndices );
-	    	allData = _dataIO.readData( DATA_TABLE_NAME, _dataSerializer, dataIndices );
+	    	allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
+	    	allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
 	    	
 	    	Assert.assertTrue( allTiles.size() == 0 );
 	    	Assert.assertTrue( allData.size() == 0 );
 	    	
 	    	System.out.println( "Complete" );
+	    	
 	
     	} catch (Exception e) {
     		
 			System.out.println("Error: " + e.getMessage());
 			
-		} finally {
-			/*
-	    	 * Drop table
-	    	 */
-	    	System.out.println("Disabling and dropping table");
-	    	((HBasePyramidIO)_tileIO).dropTable(TILE_TABLE_NAME);
-	    	((HBaseAnnotationIO)_dataIO).dropTable(DATA_TABLE_NAME);
 		}
     }
 

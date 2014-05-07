@@ -48,7 +48,7 @@ public interface AnnotationIO {
     public void initializeForRead (String tableName);
     public List<AnnotationData<?>> readData (String id, 
 								             AnnotationSerializer serializer,
-								             List<Pair<String,Long>> references) throws IOException;
+								             Iterable<Pair<String,Long>> references) throws IOException;
  
     /*
      * Delete

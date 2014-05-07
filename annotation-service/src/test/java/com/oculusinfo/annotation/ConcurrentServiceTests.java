@@ -39,13 +39,10 @@ import org.junit.Before;
 
 import com.oculusinfo.annotation.impl.*;
 import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.index.impl.*;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.rest.*;
-import com.oculusinfo.annotation.rest.impl.*;
 import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
 
 
 public class ConcurrentServiceTests extends AnnotationTestsBase {
@@ -58,15 +55,8 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 
     @Before
     public void setup () { 	
-    	    	
-    	TilePyramid pyramid = new WebMercatorTilePyramid();
-    	AnnotationIndexer indexer = new AnnotationIndexerImpl();
-
+    	
     	try {
-    		
-    		_io = new HBaseAnnotationIO("hadoop-s1.oculus.local", 
-    									"2181", 
-    									"hadoop-s1.oculus.local:60000");
     		
     		_service = null; //new CachedAnnotationServiceImpl( _io, indexer );
     		
@@ -231,11 +221,9 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	}
 	
 	
-	@Test
+	//@Test
 	public void concurrentTest() {
 		
-		
-		/*
 		try {
 
 			long start = System.currentTimeMillis();
@@ -282,7 +270,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	    	System.out.println("Disabling and dropping table");
 	    	((HBaseAnnotationIO)_io).dropTable(TEST_LAYER_NAME);
 		}
-		*/
+		
 		
 	}
 	

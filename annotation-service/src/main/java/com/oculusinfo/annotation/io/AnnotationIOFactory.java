@@ -28,13 +28,15 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 import com.oculusinfo.annotation.rest.AnnotationInfo;
-import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
+import com.oculusinfo.annotation.io.impl.*;
 
 
 public class AnnotationIOFactory  {
 
 	public static String ANNOTATION_IO_TYPE = new String("type");
 	public static String HBASE_IO_TYPE = new String("hbase");
+	public static String FILESYSTEM_IO_TYPE = new String("file-system");
+	
 	static public AnnotationIO produce( AnnotationInfo info ) throws IOException {
 
 		JSONObject data = info.getDataConfiguration();
@@ -43,9 +45,15 @@ public class AnnotationIOFactory  {
 			JSONObject pyramidio = data.getJSONObject("pyramidio");
 			String type = pyramidio.getString(ANNOTATION_IO_TYPE);
 			if ( type.equals(HBASE_IO_TYPE) ) {
+				
 				return new HBaseAnnotationIO( pyramidio.getString("hbase.zookeeper.quorum"),
 										  	  pyramidio.getString("hbase.zookeeper.port"),
 										  	  pyramidio.getString("hbase.master") );
+				
+			} else if ( type.equals(FILESYSTEM_IO_TYPE) ) {
+				
+				return new FileSystemAnnotationIO( pyramidio.getString("root.path"),
+											  	   pyramidio.getString("extension") );			
 			} else {
 				throw new IOException("AnnotationIO type: '" + type + "' not recognized");
 			}
