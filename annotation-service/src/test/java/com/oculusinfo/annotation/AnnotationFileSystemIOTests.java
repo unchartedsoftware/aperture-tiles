@@ -48,7 +48,7 @@ import com.oculusinfo.binning.util.Pair;
 public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
 	
 	private static final String  ROOT_PATH = "C:\\Users\\kbirk\\Desktop\\";
-	private static final String  BASE_PATH = "annotations\\";
+	private static final String  BASE_PATH = "filesystem-annotations-test\\";
 	private static final String  TILE_EXT = "json";
 	private static final String  DATA_EXT = "json";
 	private static final boolean VERBOSE = false;
