@@ -102,7 +102,7 @@ class TwitterTopicRecordParser (endTimeSecs: Long) {
   }
 
   def getRecordsByTopic (line: String):								
-    Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])] = {
+    Seq[((Double, Double), Map[String, TwitterDemoTopicRecord])] = {
     val recordLine = parseLine(line)
     val time = (recordLine.createdAt.getTime()*0.001).toLong	// convert from msec to sec
     
@@ -119,10 +119,10 @@ class TwitterTopicRecordParser (endTimeSecs: Long) {
 	    	(raw -> new TwitterDemoTopicRecord(raw, english, textTimeList, endTimeSecs))
 	    }}.toMap
 	
-	    Seq((recordLine.longitude, recordLine.latitude, newRecordsMap))
+	    Seq(((recordLine.longitude, recordLine.latitude), newRecordsMap))
     } else {
     	// tweet time is invalid, so disregard
-    	Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])]()
+    	Seq[((Double, Double), Map[String, TwitterDemoTopicRecord])]()
     }
   }    	  	
 }

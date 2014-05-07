@@ -133,12 +133,12 @@ class TwitterDemoParserTestSuite extends FunSuite {
     val records1 = recordParser.getRecordsByTag("Wed Jan 01 12:00:00 +0000 2014\tuid\tuname\ttid\tTweet Text\t#abc#def#ghi#\t2.0\t1.0\tCanada\tToronto\tcity\tPositive\t50.0")
     assert(1 === records1.size)
     records1.foreach(records => {
-      assert(1.0 === records._1)
-      assert(2.0 === records._2)
-      assert(3 === records._3.size)
-      assert(List("abc", "def", "ghi") === records._3.map(_._1).toList.sorted)
-      assert(List("abc", "def", "ghi") === records._3.map(_._2.getTag()).toList.sorted)
-      records._3.map(_._2).foreach(record => {
+      assert(1.0 === records._1._1)
+      assert(2.0 === records._1._2)
+      assert(3 === records._2.size)
+      assert(List("abc", "def", "ghi") === records._2.map(_._1).toList.sorted)
+      assert(List("abc", "def", "ghi") === records._2.map(_._2.getTag()).toList.sorted)
+      records._2.map(_._2).foreach(record => {
 	assert(1 === record.getCount())
 	assert(1 === record.getPositiveCount())
 	assert(0 === record.getNeutralCount())
@@ -156,9 +156,9 @@ class TwitterDemoParserTestSuite extends FunSuite {
     val records2 = recordParser.getRecordsByTag("Wed Jan 02 12:00:00 +0000 2014\tuid\tuname\ttid\tTweet Text\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0")
     assert(1 === records2.size)
     records2.foreach(records => {
-      assert(List("abc", "def", "ghi") === records._3.map(_._1).toList.sorted)
-      assert(List("abc", "def", "ghi") === records._3.map(_._2.getTag()).toList.sorted)
-      records._3.map(_._2).foreach(record => {
+      assert(List("abc", "def", "ghi") === records._2.map(_._1).toList.sorted)
+      assert(List("abc", "def", "ghi") === records._2.map(_._2.getTag()).toList.sorted)
+      records._2.map(_._2).foreach(record => {
 	assert(List(0, 1, 0) === record.getCountBins().asScala.toList)
 	assert(List(0, 1, 0) === record.getPositiveCountBins().asScala.toList)
 	assert(List(0, 0, 0) === record.getNeutralCountBins().asScala.toList)
@@ -170,9 +170,9 @@ class TwitterDemoParserTestSuite extends FunSuite {
     val records3 = recordParser.getRecordsByTag("Wed Jan 03 12:00:00 +0000 2014\tuid\tuname\ttid\tTweet Text\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0")
     assert(1 === records3.size)
     records3.foreach(records => {
-      assert(List("abc", "def", "ghi") === records._3.map(_._1).toList.sorted)
-      assert(List("abc", "def", "ghi") === records._3.map(_._2.getTag()).toList.sorted)
-      records._3.map(_._2).foreach(record => {
+      assert(List("abc", "def", "ghi") === records._2.map(_._1).toList.sorted)
+      assert(List("abc", "def", "ghi") === records._2.map(_._2.getTag()).toList.sorted)
+      records._2.map(_._2).foreach(record => {
 	assert(List(0, 0, 1) === record.getCountBins().asScala.toList)
 	assert(List(0, 0, 1) === record.getPositiveCountBins().asScala.toList)
 	assert(List(0, 0, 0) === record.getNeutralCountBins().asScala.toList)
@@ -187,8 +187,8 @@ class TwitterDemoParserTestSuite extends FunSuite {
     val records = recordParser.getRecordsByWord("Wed Jan 02 12:00:00 +0000 2014\tuid\tuname\ttid\tHad we known about Moliere, \"Parts of places possible\" might never have seen the light of day four quatre cuatro, 123 456 1 2 3 4 5 6 1.2 1,000 1E-4 you're abc123 http https &amp; &lt; &gt;\t#abc#def#ghi#\t0.0\t0.0\tCanada\tToronto\tcity\tPositive\t50.0", recordParser.getStopWordList)
     assert(1 === records.size)
     records.foreach(record => {
-      assert(List("abc123", "day", "light", "moliere", "seen") === record._3.map(_._1).toList.sorted)
-      assert(List("abc123", "day", "light", "moliere", "seen") === record._3.map(_._2.getTag()).toList.sorted)
+      assert(List("abc123", "day", "light", "moliere", "seen") === record._2.map(_._1).toList.sorted)
+      assert(List("abc123", "day", "light", "moliere", "seen") === record._2.map(_._2.getTag()).toList.sorted)
     })
   }
 }

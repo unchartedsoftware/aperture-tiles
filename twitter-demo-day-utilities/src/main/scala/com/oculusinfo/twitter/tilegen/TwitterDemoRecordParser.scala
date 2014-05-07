@@ -130,11 +130,11 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
 
 
   def getRecordsByTag (line: String):
-  Seq[(Double, Double, Map[String, TwitterDemoRecord])] =
+  Seq[((Double, Double), Map[String, TwitterDemoRecord])] =
     getRecords(recordLine => recordLine.tags)(line)
 
   def getRecordsByWord (line: String, stopWordList: Set[String]):
-  Seq[(Double, Double, Map[String, TwitterDemoRecord])] = {
+  Seq[((Double, Double), Map[String, TwitterDemoRecord])] = {
     val doubleChars = Set('.', 'e', 'E', ',', '-', '+', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     getRecords(recordLine => {
       // For each line:
@@ -152,7 +152,7 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
   }
 
   private def getRecords (wordFcn: TwitterDemoRecordLine => Iterable[String])
-			 (line: String): Seq[(Double, Double, Map[String, TwitterDemoRecord])] = {
+			 (line: String): Seq[((Double, Double), Map[String, TwitterDemoRecord])] = {
     val recordLine = parseLine(line)
     val time = recordLine.createdAt.getTime()
     val bin = getBin(time)
@@ -170,7 +170,7 @@ class TwitterDemoRecordParser (startTime: Long, endTime: Long, timeBins: Int) {
 
     val textTime = new Pair[String, JavaLong](recordLine.text, time)
     val textTimeList = List[Pair[String, JavaLong]](textTime).asJava
-    Seq((recordLine.longitude, recordLine.latitude,
+    Seq(((recordLine.longitude, recordLine.latitude),
 	 wordFcn(recordLine).map(tag => {
 	   (tag, new TwitterDemoRecord(tag, 1, full,
 				       posCount, posBins, neutCount,

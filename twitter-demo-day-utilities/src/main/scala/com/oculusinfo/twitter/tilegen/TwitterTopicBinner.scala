@@ -35,6 +35,7 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.spark.MavenReference
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.StandardCartesianIndexing
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.util.ArgumentParser
 
@@ -96,7 +97,7 @@ object TwitterTopicBinner {
     		  
     	  } catch {
     		  // Just ignore bad records, there aren't many
-    	  	case _: Throwable => Seq[(Double, Double, Map[String, TwitterDemoTopicRecord])]()
+    	  	case _: Throwable => Seq[((Double, Double), Map[String, TwitterDemoTopicRecord])]()
     	  }
       })
     })
@@ -108,7 +109,8 @@ object TwitterTopicBinner {
       println()
       println("Starting binning levels "+levelSet.mkString("[", ",", "]")+" at "+new Date())
       val startTime = System.currentTimeMillis
-      val tiles = binner.processDataByLevel(data, binDesc, tilePyramid, levelSet, bins=1)
+      val tiles = binner.processDataByLevel(data, StandardCartesianIndexing.ptFcn,
+                                            binDesc, tilePyramid, levelSet, bins=1)
       tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc, 
 			  pyramidName, pyramidDescription)
       val endTime = System.currentTimeMillis()
