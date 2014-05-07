@@ -41,10 +41,10 @@ class TopicMatcher {
   
   // create a map of twitter keywords (key) and their English translations (value)
   def getKeywordList(keywordFile: String): Map[String, String] = {
-    
+
       //val resource = getClass().getResource("/com/oculusinfo/twitter/tilegen/extractedKeywords.txt")
-	  val resource = getClass().getResource(keywordFile)
-      val source = scala.io.Source.fromURL(resource)
+      val resource = getClass().getResource(keywordFile)
+      val source = scala.io.Source.fromURL(resource, "UTF-8")	// need to make sure reading in topics as UTF-8
       var topicsMap:Map[String,String] = Map() // = Map[String, String]
       for (line <- source.getLines) {	// iterate through all lines in txt file
     	  // split line by tabs (0th element is original topic, 1st is English topic, and 2nd is topic count)
@@ -77,7 +77,6 @@ class TopicMatcher {
 		val words = tweet.split(" ")	//split into words
 		
 		val foundTopics = (bTopics.value).filterKeys(words.contains(_))		// find matches with keyword list (returns a map with matching keywords)
-		
 		
 		if (foundTopics.size == 0) {
 			line.substring(0,0) // replace with an empty string if no topic matches have been found
