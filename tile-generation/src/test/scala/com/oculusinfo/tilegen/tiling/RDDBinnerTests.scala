@@ -45,7 +45,7 @@ import com.oculusinfo.binning.TileIndex
 class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 	test("Simple binning") {
 		val data = sc.parallelize(Range(0, 8)).map(n =>
-			(n.toDouble, (7-n).toDouble, 1.0)
+			((n.toDouble, (7-n).toDouble), 1.0)
 		)
 
 		val binner = new RDDBinner
@@ -53,18 +53,12 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
 		val pyramidId = "simple test"
 
-		val toBinnerForm: Iterator[(Double, Double, Double)] =>
-		Iterator[(Try[Double],
-		          Try[Double],
-		          Try[Double])] = records =>
-		records.map(record =>
-			(Try(record._1),
-			 Try(record._2),
-			 Try(record._3))
-		)
+		val coordFcn: (((Double, Double), Double)) => Try[(Double, Double)] = record => Try(record._1)
+		val valueFcn: (((Double, Double), Double)) => Try[Double] = record => Try(record._2)
 		
 		binner.binAndWriteData(data,
-		                       toBinnerForm,
+		                       coordFcn,
+		                       valueFcn,
 		                       new StandardDoubleBinDescriptor,
 		                       pyramid,
 		                       None,

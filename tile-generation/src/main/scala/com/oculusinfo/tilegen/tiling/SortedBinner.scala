@@ -238,20 +238,22 @@ object SortedBinnerTest {
 		}
 	}
 	
-	def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit = {
+	def processDataset[PT: ClassManifest, BT] (dataset: Dataset[(Double, Double), PT, BT],
+	                                           tileIO: TileIO): Unit = {
 		val binner = new SortedBinner
 		binner.debug = true
 		dataset.getLevels.map(levels =>
 			{
-				val procFcn: RDD[(Double, Double, BT)] => Unit = rdd =>
+				val procFcn: RDD[((Double, Double), PT)] => Unit = rdd =>
 				{
 					val bins = (dataset.getNumXBins max dataset.getNumYBins)
-					val tiles = binner.processDataByLevel(rdd,
-					                                      dataset.getBinDescriptor,
-					                                      dataset.getTilePyramid,
-					                                      levels,
-					                                      bins,
-					                                      dataset.getConsolidationPartitions)
+					val tiles = binner.processDataByLevel(
+						rdd.map(r => (r._1._1, r._1._2, r._2)),
+						dataset.getBinDescriptor,
+						dataset.getTilePyramid,
+						levels,
+						bins,
+						dataset.getConsolidationPartitions)
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,
 					                    tiles,
@@ -268,7 +270,8 @@ object SortedBinnerTest {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit =
+	def processDatasetGeneric[PT, BT] (dataset: Dataset[(Double, Double), PT, BT],
+	                                   tileIO: TileIO): Unit =
 		processDataset(dataset, tileIO)(dataset.binTypeManifest)
 
 

@@ -394,7 +394,7 @@ object CSVDatasetBase {
 abstract class CSVDatasetBase (rawProperties: Properties,
                                tileWidth: Int,
                                tileHeight: Int)
-		extends Dataset[Double, JavaDouble] {
+		extends Dataset[(Double, Double), Double, JavaDouble] {
 	def manifest = implicitly[ClassManifest[Double]]
 
 	protected val properties = new CSVRecordPropertiesWrapper(rawProperties)
@@ -452,7 +452,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 	def getLevels = levels
 
 	private def getAxisBounds (): (Double, Double, Double, Double) = {
-		val coordinates = transformRDD(_.map(record => (record._1, record._2)))
+		val coordinates = transformRDD(_.map(_._1))
 
 		// Figure out our axis bounds
 		val minXAccum = coordinates.context.accumulator(Double.MaxValue)(new DoubleMinAccumulatorParam)
@@ -542,7 +542,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 	                                   cacheRaw: Boolean,
 	                                   cacheFilterable: Boolean,
 	                                   cacheProcessed: Boolean)
-			extends StaticProcessingStrategy[Double](sc) {
+			extends StaticProcessingStrategy[(Double, Double), Double](sc) {
 		// This is a weird initialization problem that requires some
 		// documentation to explain.
 		// What we really want here is for rawData to be initialized in the
@@ -579,7 +579,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 		def getRawData = rawData
 		def getFilterableData = filterableData
 
-		def getData: RDD[(Double, Double, Double)] = {
+		def getData: RDD[((Double, Double), Double)] = {
 			val localProperties = properties
 			val localXVar = xVar
 			val localYVar = yVar
@@ -613,7 +613,7 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 			).filter(record =>
 				record._1.isSuccess && record._2.isSuccess && record._3.isSuccess
 			).map(record =>
-				(record._1.get, record._2.get, record._3.get)
+				((record._1.get, record._2.get), record._3.get)
 			)
 
 			if (cacheProcessed)
@@ -694,12 +694,12 @@ class StreamingCSVDataset (rawProperties: Properties,
                            tileWidth: Int,
                            tileHeight: Int)
 		extends CSVDatasetBase(StreamingCSVDataset.removeAutoBounds(rawProperties),
-		                       tileWidth, tileHeight) with StreamingProcessor[Double]  {
+		                       tileWidth, tileHeight) with StreamingProcessor[(Double, Double), Double]  {
 	
-	type STRATEGY_TYPE = StreamingProcessingStrategy[Double]
+	type STRATEGY_TYPE = StreamingProcessingStrategy[(Double, Double), Double]
 	protected var strategy: STRATEGY_TYPE = null
 	
-	def processWithTime[OUTPUT] (fcn: Time => RDD[(Double, Double, Double)] => OUTPUT,
+	def processWithTime[OUTPUT] (fcn: Time => RDD[((Double, Double), Double)] => OUTPUT,
 	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized dataset "+getName)

@@ -218,20 +218,19 @@ class BoundsTestSuite extends FunSuite {
 	}
 
 
-	def assertTBVSetsEquivalent (label: String, bins: Int,
-	                             actual: TraversableOnce[((TileIndex, BinIndex), Double)],
-	                             expected: Set[(Int, Int, Int, Int, Int, Double)]): Unit = {
+	def assertTBSetsEquivalent (label: String, bins: Int,
+	                            actual: TraversableOnce[(TileIndex, BinIndex)],
+	                            expected: Set[(Int, Int, Int, Int, Int)]): Unit = {
 		actual.foreach(indices =>
 			{
-				assert(bins === indices._1._1.getXBins())
-				assert(bins === indices._1._1.getYBins())
+				assert(bins === indices._1.getXBins())
+				assert(bins === indices._1.getYBins())
 			}
 		)
 		val expectedSet = expected.map(datum =>
 			{
-				((new TileIndex(datum._1, datum._2, datum._3, bins, bins),
-				  new BinIndex(datum._4, datum._5)),
-				 datum._6)
+				(new TileIndex(datum._1, datum._2, datum._3, bins, bins),
+				 new BinIndex(datum._4, datum._5))
 			}
 		)
 
@@ -260,30 +259,30 @@ class BoundsTestSuite extends FunSuite {
 		val bins = 4
 		val spreaderFcn = b1.getSpreaderFunction[Double](pyramid, bins)
 
-		assertTBVSetsEquivalent("0, 0", bins,
-		                        spreaderFcn(0, 0, 3.14159),
-		                        Set((2, 0, 0, 0, 3, 3.14159),
-		                            (3, 0, 0, 0, 3, 3.14159),
-		                            (4, 0, 0, 0, 3, 3.14159)))
+		assertTBSetsEquivalent("0, 0", bins,
+		                       spreaderFcn((0, 0)),
+		                       Set((2, 0, 0, 0, 3),
+		                           (3, 0, 0, 0, 3),
+		                           (4, 0, 0, 0, 3)))
 
-		assertTBVSetsEquivalent("2, 2", bins,
-		                        spreaderFcn(2, 2, 2.71828),
-		                        Set((4, 2, 2, 0, 3, 2.71828),
-		                            (3, 1, 1, 0, 3, 2.71828),
-		                            (2, 0, 0, 2, 1, 2.71828)))
+		assertTBSetsEquivalent("2, 2", bins,
+		                       spreaderFcn((2, 2)),
+		                       Set((4, 2, 2, 0, 3),
+		                           (3, 1, 1, 0, 3),
+		                           (2, 0, 0, 2, 1)))
 
-		assertTBVSetsEquivalent("2.25, 1.25", bins,
-		                        spreaderFcn(2.25, 1.25, 1.41421),
-		                        Set((3, 1, 0, 0, 1, 1.41421),
-		                            (2, 0, 0, 2, 2, 1.41421)))
+		assertTBSetsEquivalent("2.25, 1.25", bins,
+		                       spreaderFcn((2.25, 1.25)),
+		                       Set((3, 1, 0, 0, 1),
+		                           (2, 0, 0, 2, 2)))
 
-		assertTBVSetsEquivalent("6.5, 1.5", bins,
-		                        spreaderFcn(6.5, 1.5, 1.73205),
-		                        Set((2, 1, 0, 2, 2, 1.73205)))
+		assertTBSetsEquivalent("6.5, 1.5", bins,
+		                       spreaderFcn((6.5, 1.5)),
+		                       Set((2, 1, 0, 2, 2)))
 
-		assertTBVSetsEquivalent("9, 9", bins,
-		                        spreaderFcn(9.0, 9.0, 2.23607),
-		                        Set[(Int, Int, Int, Int, Int, Double)]())
+		assertTBSetsEquivalent("9, 9", bins,
+		                       spreaderFcn((9.0, 9.0)),
+		                        Set[(Int, Int, Int, Int, Int)]())
 	}
 
 	test("Spreading function - serialization") {
@@ -297,9 +296,9 @@ class BoundsTestSuite extends FunSuite {
 			b.getSpreaderFunction[Double](pyramid, bins)
 		}
 
-		assertTBVSetsEquivalent("initial", 4,
-		                        initialSpreaderFcn(0, 0, 3.14159),
-		                        Set((1, 0, 0, 0, 3, 3.14159)))
+		assertTBSetsEquivalent("initial", 4,
+		                       initialSpreaderFcn((0, 0)),
+		                        Set((1, 0, 0, 0, 3)))
 
 		// Try serializing and deserializing it
 		val baos = new ByteArrayOutputStream()
@@ -316,12 +315,12 @@ class BoundsTestSuite extends FunSuite {
 		val ois = new ObjectInputStream(bais)
 
 		def getStreamedSpreaderFcn[T] =
-			ois.readObject.asInstanceOf[(Double, Double, T) => TraversableOnce[((TileIndex, BinIndex), T)]]
+			ois.readObject.asInstanceOf[((Double, Double)) => TraversableOnce[(TileIndex, BinIndex)]]
 		val streamedSpreaderFcn = getStreamedSpreaderFcn[Double]
 
-		assertTBVSetsEquivalent("serialized", 4,
-		                        streamedSpreaderFcn(0, 0, 3.14159),
-		                        Set((1, 0, 0, 0, 3, 3.14159)))
+		assertTBSetsEquivalent("serialized", 4,
+		                       streamedSpreaderFcn((0, 0)),
+		                       Set((1, 0, 0, 0, 3)))
 	}
 }
 

@@ -38,6 +38,7 @@ import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
 import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.StandardCartesianIndexing
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -173,9 +174,10 @@ class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingConte
  * A streaming strategy that takes a given preparsed dstream and then windows it
  * up over the given window and slide durations.
  */
-class WindowedProcessingStrategy(stream: DStream[(Double, Double, Double)], windowDurSec: Int, slideDurSec: Int)
-		extends StreamingProcessingStrategy[Double] {
-	protected def getData: DStream[(Double, Double, Double)] = stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
+class WindowedProcessingStrategy(stream: DStream[((Double, Double), Double)], windowDurSec: Int, slideDurSec: Int)
+		extends StreamingProcessingStrategy[(Double, Double), Double] {
+	protected def getData: DStream[((Double, Double), Double)] =
+		stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
 }
 
 
@@ -186,7 +188,10 @@ object StreamingCSVBinner {
 	 * DStream[(Double, Double, Double)]. All data is cached at the end so that
 	 * any windowed operations after will start from here.
 	 */
-	def getParsedStream(properties: PropertiesWrapper, source: StreamingCSVDataSource, parser: CSVRecordParser, extractor: CSVFieldExtractor): DStream[(Double, Double, Double)] = {
+	def getParsedStream(properties: PropertiesWrapper,
+	                    source: StreamingCSVDataSource,
+	                    parser: CSVRecordParser,
+	                    extractor: CSVFieldExtractor): DStream[((Double, Double), Double)] = {
 		val localXVar = properties.getStringOption("oculus.binning.xField", "The field to use for the X axis of tiles produced").get
 		val localYVar = properties.getString("oculus.binning.yField", "The field to use for the Y axis of tiles produced", Some("zero"))
 		val localZVar = properties.getString("oculus.binning.valueField", "The field to use for the value to tile", Some("count"))
@@ -205,7 +210,7 @@ object StreamingCSVBinner {
 		).filter(record =>
 			record._1.isSuccess && record._2.isSuccess && record._3.isSuccess
 		).map(record =>
-			(record._1.get, record._2.get, record._3.get)
+			((record._1.get, record._2.get), record._3.get)
 		)
 
 		data.cache
@@ -296,21 +301,23 @@ object StreamingCSVBinner {
 	/**
 	 * The actual processing function for the streaming dataset. This bins up the data and then writes it out.
 	 */
-	def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT], job: (String, Int), tileIO: TileIO): Unit = {
+	def processDataset[PT: ClassManifest, BT] (dataset: Dataset[(Double, Double), PT, BT] with StreamingProcessor[(Double, Double), PT],
+	                                           job: (String, Int), tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 		
 		//go through each of the level sets and process them
 		dataset.getLevels.map(levels =>
 			{
-				val procFcn:  Time => RDD[(Double, Double, BT)] => Unit =
-					(time: Time) => (rdd: RDD[(Double, Double, BT)]) =>
+				val procFcn:  Time => RDD[((Double, Double), PT)] => Unit =
+					(time: Time) => (rdd: RDD[((Double, Double), PT)]) =>
 				{
 					if (rdd.count > 0) {
 						val stime = System.currentTimeMillis()
 						println("processing level: " + levels)
 						val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
 						val tiles = binner.processDataByLevel(rdd,
+						                                      StandardCartesianIndexing.ptFcn,
 						                                      dataset.getBinDescriptor,
 						                                      dataset.getTilePyramid,
 						                                      levels,
@@ -339,7 +346,7 @@ object StreamingCSVBinner {
 		)
 	}
 	
-	def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT], tileIO: TileIO, job: (String, Int)): Unit =
+	def processDatasetGeneric[PT, BT] (dataset: Dataset[(Double, Double), PT, BT] with StreamingProcessor[(Double, Double), PT], tileIO: TileIO, job: (String, Int)): Unit =
 		processDataset(dataset, job, tileIO)(dataset.binTypeManifest)
 	
 	

@@ -30,6 +30,7 @@ package com.oculusinfo.tilegen.tiling
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 
 
@@ -55,6 +56,10 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 
 
 
+object StandardCartesianIndexing extends Serializable {
+	def ptFcn (coordinates: (Double, Double)): (Double, Double) = coordinates
+}
+
 /**
  * This class is the basis of all (or, at least, nearly all) of the
  * other binning classes.  This takes an RDD of data and transforms it
@@ -75,9 +80,8 @@ class RDDBinner {
 	 */
 	def binAndWriteData[IT: ClassManifest, OT: ClassManifest, BT] (
 		data: RDD[IT],
-		ptFcn: Iterator[IT] => Iterator[(Try[Double],
-		                                 Try[Double],
-		                                 Try[OT])],
+		coordFcn: IT => Try[(Double, Double)],
+		valueFcn: IT => Try[OT],
 		binDesc: BinDescriptor[OT, BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
@@ -107,20 +111,25 @@ class RDDBinner {
 		val bareData = data.mapPartitions(iter =>
 			{
 				println("Initial partition processing")
-				ptFcn(iter)
+				iter.map(i => (coordFcn(i), valueFcn(i)))
 			}
-		).filter(record => record._1.isSuccess && record._2.isSuccess && record._3.isSuccess)
-			.map(record =>(record._1.get, record._2.get, record._3.get))
+		).filter(record => record._1.isSuccess && record._2.isSuccess)
+			.map(record =>(record._1.get, record._2.get))
 
 		// Cache this, we'll use it at least once for each level set
-		bareData.cache()
+		bareData.persist(StorageLevel.MEMORY_AND_DISK)
 
 		levelSets.foreach(levels =>
 			{
 				val levelStartTime = System.currentTimeMillis()
 				// For each level set, process the bare data into tiles...
-				var tiles = processDataByLevel(bareData, binDesc, tileScheme,levels,
-				                               bins, consolidationPartitions)
+				var tiles = processDataByLevel(bareData,
+				                               StandardCartesianIndexing.ptFcn,
+				                               binDesc,
+				                               tileScheme,
+				                               levels,
+				                               bins,
+				                               consolidationPartitions)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
 				                    binDesc, name, description)
@@ -148,6 +157,8 @@ class RDDBinner {
 	 * but minimal, data into an RDD of tiles on the given levels.
 	 *
 	 * @param data The data to be processed
+	 * @param coordinateFromIndex A function that can take an index in the data
+     *        and convert it into a cartesian pair for binning.
 	 * @param binDesc A description of how raw values are to be aggregated into
 	 *                bin values
 	 * @param tileScheme A description of how raw values are transformed to bin
@@ -158,8 +169,15 @@ class RDDBinner {
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
+	 * 
+	 * @param IT the index type, convertable to a cartesian pair with the 
+     *           coordinateFromIndex function
+	 * @param PT The bin type, when processing and aggregating
+     * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processDataByLevel[PT: ClassManifest, BT] (data: RDD[(Double, Double, PT)],
+	def processDataByLevel[IT: ClassManifest,
+	                       PT: ClassManifest, BT] (data: RDD[(IT, PT)],
+	                                               coordinateFromIndex: IT => (Double, Double),
 	                                               binDesc: BinDescriptor[PT, BT],
 	                                               tileScheme: TilePyramid,
 	                                               levels: Seq[Int],
@@ -167,16 +185,18 @@ class RDDBinner {
 	                                               consolidationPartitions: Option[Int] = None,
 	                                               isDensityStrip: Boolean = false):
 			RDD[TileData[BT]] = {
-		val mapOverLevels: (Double, Double, PT) => TraversableOnce[((TileIndex, BinIndex), PT)] =
-			(x, y, value) => {
+		val mapOverLevels: IT => TraversableOnce[(TileIndex, BinIndex)] =
+			index => {
+				val (x, y) = coordinateFromIndex(index)
 				levels.map(level =>
 					{
 						val tile = tileScheme.rootToTile(x, y, level, bins)
 						val bin = tileScheme.rootToBin(x, y, tile)
-						((tile, bin), value)
+						(tile, bin)
 					}
 				)
 			}
+
 		processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip)
 	}
 
@@ -197,10 +217,15 @@ class RDDBinner {
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
+	 * 
+	 * @param IT The index type, convertable to tile and bin
+	 * @param PT The bin type, when processing and aggregating
+     * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processData[PT: ClassManifest, BT] (data: RDD[(Double, Double, PT)],
+	def processData[IT: ClassManifest,
+	                PT: ClassManifest, BT] (data: RDD[(IT, PT)],
 	                                        binDesc: BinDescriptor[PT, BT],
-	                                        datumToTiles: (Double, Double, PT) => TraversableOnce[((TileIndex, BinIndex), PT)],
+	                                        indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
 	                                        bins: Int = 256,
 	                                        consolidationPartitions: Option[Int] = None,
 	                                        isDensityStrip: Boolean = false):
@@ -212,7 +237,7 @@ class RDDBinner {
 					MutableMap[(TileIndex, BinIndex), PT]()
 
 				// Map each data point in this partition into its bins
-				iter.flatMap(record => datumToTiles(record._1, record._2, record._3))
+				iter.flatMap(record => indexToTiles(record._1).map(tbi => (tbi, record._2)))
 				// And combine bins within this partition
 					.foreach(tbv =>
 					{

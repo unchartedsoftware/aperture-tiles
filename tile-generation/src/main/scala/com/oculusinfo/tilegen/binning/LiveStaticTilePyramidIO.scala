@@ -65,7 +65,7 @@ import com.oculusinfo.tilegen.util.Rectangle
  * This class reads and caches a data set for live queries of its tiles
  */
 class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
-	private val datasets = MutableMap[String, Dataset[_, _]]()
+	private val datasets = MutableMap[String, Dataset[(Double, Double), _, _]]()
 	private val metaData = MutableMap[String, TileMetaData]()
 
 
@@ -151,7 +151,7 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 				    tiles.isEmpty) {
 				null
 			} else {
-				val dataset = datasets(pyramidId).asInstanceOf[Dataset[PT, BT]]
+				val dataset = datasets(pyramidId).asInstanceOf[Dataset[(Double, Double), PT, BT]]
 
 				val pyramid = dataset.getTilePyramid
 				val bins = tiles.head.getXBins()
@@ -167,8 +167,8 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 
 				val results = dataset.transformRDD[TileData[BT]](
 					rdd => {
-						binner.processData(rdd, binDescriptor,
-						                   spreaderFcn, bins)
+						binner.processData[(Double, Double), PT, BT](rdd, binDescriptor,
+						                                             spreaderFcn, bins)
 					}
 				).map(tile =>
 					// Get the min and max for each tile while we're still distributed

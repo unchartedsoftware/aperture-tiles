@@ -274,13 +274,13 @@ class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
 		
 		if (execute) {
 			println("Running binner")
-			val getSearchRecords = (iter: Iterator[T]) => {
-				iter.map(t => (localExtractor.getFieldValue(xVar)(t),
-				               localExtractor.getFieldValue(yVar)(t),
-				               resultFcn(t)))
-			}
+			val getCoordinates: T => Try[(Double, Double)] = t => Try(
+				(localExtractor.getFieldValue(xVar)(t).get,
+				 localExtractor.getFieldValue(yVar)(t).get)
+			)
 			binner.binAndWriteData(data,
-			                       getSearchRecords,
+			                       getCoordinates,
+			                       resultFcn,
 			                       new StandardDoubleBinDescriptor,
 			                       pyramider,
 			                       consolidationPartitions,

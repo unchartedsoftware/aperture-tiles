@@ -81,22 +81,22 @@ class Bounds (val level: Int,
 	 * @param bins The number of bins per tile in each axis
 	 */
 	def getSpreaderFunction[T] (pyramid: TilePyramid, bins: Int = 256) :
-			(Double, Double, T) => TraversableOnce[((TileIndex, BinIndex), T)] =
+			((Double, Double)) => TraversableOnce[(TileIndex, BinIndex)] =
 		getSpreaderFunctionInternal[T](pyramid, bins)
 
 	private def getSpreaderFunctionInternal[T] (pyramid: TilePyramid, bins: Int = 256) :
-			(Double, Double, T) => Seq[((TileIndex, BinIndex), T)] = {
+			((Double, Double)) => Seq[(TileIndex, BinIndex)] = {
 		val ourAreaBounds = getLocalAreaBounds(pyramid, bins)
 		val continuedSpreaderFcn = next.map(_.getSpreaderFunctionInternal[T](pyramid, bins))
 		val localLevel = level
-		
-		(x, y, value) => {
-			val optionRest = continuedSpreaderFcn.map(_(x, y, value))
-			val rest = if (optionRest.isDefined) optionRest.get else Seq[((TileIndex, BinIndex), T)]()
-			if (ourAreaBounds.contains(x, y)) {
-				val tile = pyramid.rootToTile(x, y, localLevel, bins)
-				val bin = pyramid.rootToBin(x, y, tile)
-				((tile, bin), value) +: rest
+
+		(coords) => {
+			val optionRest = continuedSpreaderFcn.map(_(coords))
+			val rest = if (optionRest.isDefined) optionRest.get else Seq[(TileIndex, BinIndex)]()
+			if (ourAreaBounds.contains(coords._1, coords._2)) {
+				val tile = pyramid.rootToTile(coords._1, coords._2, localLevel, bins)
+				val bin = pyramid.rootToBin(coords._1, coords._2, tile)
+				(tile, bin) +: rest
 			} else {
 				rest
 			}

@@ -41,6 +41,7 @@ import org.apache.spark.SharedSparkContext
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.StandardCartesianIndexing
 import com.oculusinfo.tilegen.tiling.TestPyramidIO
 import com.oculusinfo.tilegen.tiling.TestTileIO
 
@@ -119,10 +120,10 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
 
     assert(1 === records.size)
     var record = records(0)
-    assert(0.0 === record._1)
-    assert(0.0 === record._2)
+    assert(0.0 === record._1._1)
+    assert(0.0 === record._1._2)
 
-    var tags = record._3.toList.sortBy(_._1)
+    var tags = record._2.toList.sortBy(_._1)
     assert(6 === tags.size)
     assert(List("abc", "bcd", "cde", "def", "fgh", "ghi") === tags.map(_._1))
     assert(List("abc", "bcd", "cde", "def", "fgh", "ghi") === tags.map(_._2.getTag()))
@@ -147,10 +148,10 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
     records = localParser.getRecordsByTag(line)
     assert(1 === records.size)
     record = records(0)
-    assert(0.0 === record._1)
-    assert(0.0 === record._2)
+    assert(0.0 === record._1._1)
+    assert(0.0 === record._1._2)
 
-    tags = record._3.toList.sortBy(_._1)
+    tags = record._2.toList.sortBy(_._1)
     assert(2 === tags.size)
     assert(List("fgh", "ghi") === tags.map(_._1))
     assert(List("fgh", "ghi") === tags.map(_._2.getTag()))
@@ -176,20 +177,20 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
   test("Test record binning") {
     import Sentiment._
     val specs = List(( 5, 0, "a", "this is the first tweet      #abc #bcd"),
-		     ( 9, 0, "b", "this is the second tweet     #bcd #cde"),
-		     (10, 0, "c", "this is the third tweet      #cde #def"),
-		     ( 8, 0, "d", "this is the fourth tweet     #def #efg"),
-		     ( 5, 0, "e", "this is the fifth tweet      #efg #fgh"),
-		     ( 3, 0, "a", "this is the sixth tweet      #fgh #ghi"),
-		     ( 4, 0, "b", "this is the seventh tweet    #ghi #hij"),
-		     ( 5, 0, "c", "this is the eighth tweet     #hij #ijk"),
-		     ( 7, 0, "d", "this is the ninth tweet      #ijk #jkl"),
-		     ( 8, 0, "e", "this is the tenth tweet      #jkl #klm"),
-		     ( 2, 0, "a", "this is the eleventh tweet   #klm #lmn"),
-		     ( 1, 0, "b", "this is the twelvth tweet    #lmn #mno"),
-		     ( 1, 0, "c", "this is the thirteenth tweet #mno #nop"),
-		     (10, 0, "d", "this is the fourteenth tweet #nop #opq"),
-		     ( 6, 0, "e", "this is the fifteenth tweet  #opq #pqr"))
+                     ( 9, 0, "b", "this is the second tweet     #bcd #cde"),
+                     (10, 0, "c", "this is the third tweet      #cde #def"),
+                     ( 8, 0, "d", "this is the fourth tweet     #def #efg"),
+                     ( 5, 0, "e", "this is the fifth tweet      #efg #fgh"),
+                     ( 3, 0, "a", "this is the sixth tweet      #fgh #ghi"),
+                     ( 4, 0, "b", "this is the seventh tweet    #ghi #hij"),
+                     ( 5, 0, "c", "this is the eighth tweet     #hij #ijk"),
+                     ( 7, 0, "d", "this is the ninth tweet      #ijk #jkl"),
+                     ( 8, 0, "e", "this is the tenth tweet      #jkl #klm"),
+                     ( 2, 0, "a", "this is the eleventh tweet   #klm #lmn"),
+                     ( 1, 0, "b", "this is the twelvth tweet    #lmn #mno"),
+                     ( 1, 0, "c", "this is the thirteenth tweet #mno #nop"),
+                     (10, 0, "d", "this is the fourteenth tweet #nop #opq"),
+                     ( 6, 0, "e", "this is the fifteenth tweet  #opq #pqr"))
 
     val localData = specs.flatMap(spec => {
       val ll = Range(0, spec._1).map(n => createRecord(0+spec._2, spec._3, spec._4,
@@ -214,7 +215,8 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
     val tilePyramid = new WebMercatorTilePyramid
     val binner = new RDDBinner
     val binDesc = new TwitterDemoBinDescriptor
-    val tiles = binner.processDataByLevel(data, binDesc, tilePyramid, List(0, 1), bins=1).collect
+    val tiles = binner.processDataByLevel(data, StandardCartesianIndexing.ptFcn,
+                                          binDesc, tilePyramid, List(0, 1), bins=1).collect
     assert(5 === tiles.size)
     val recordsByTile = tiles.map(tile => (tile.getDefinition,
 					   tile.getBin(0, 0).asScala.toList)).toMap
@@ -424,7 +426,8 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
     val tio = new TestTileIO
 
     Range(0, 4).map(level => {
-      val tiles = binner.processDataByLevel(data, binDesc, tilePyramid, List(level), bins=1)
+      val tiles = binner.processDataByLevel(data, StandardCartesianIndexing.ptFcn,
+                                            binDesc, tilePyramid, List(level), bins=1)
 
       tio.writeTileSet(tilePyramid, "abc", tiles, binDesc)
     })
