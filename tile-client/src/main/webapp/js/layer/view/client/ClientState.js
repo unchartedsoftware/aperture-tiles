@@ -64,6 +64,9 @@ define(function (require) {
                     yIndex : -1
             };
 
+            // holds the state of the current active carousel tile
+            this.carouselTilekey = "";
+
             this.isVisible = true;
             this.opacity = 1.0;
         },
@@ -86,6 +89,12 @@ define(function (require) {
             this.clickState.level = parseInt(splitKey[0], 10);
             this.clickState.xIndex = parseInt(splitKey[1], 10);
             this.clickState.yIndex = parseInt(splitKey[2], 10);
+        },
+
+
+        setCarouselTile: function(tilekey) {
+            // holds the state of the current active carousel tile
+            this.carouselTilekey = tilekey;
         },
 
 
