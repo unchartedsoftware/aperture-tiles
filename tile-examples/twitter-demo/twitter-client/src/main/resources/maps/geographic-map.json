@@ -25,8 +25,8 @@
 		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
-	"id" : "bitcoin source vs. amount",
-	"description" : "A plot indicating in how many transactions a given bitcoin source spent a given amount of bitcoins.",
+	"id" : "Geographic-Google-Map",
+	"description" : "A geographic Google map base lyaer using web mercator projection",
 
 	"PyramidConfig" : {
 		"type" : "WebMercator"
