@@ -337,6 +337,8 @@ class CategoryValueBinDescriptor(categoryNames: List[String]) extends BinDescrip
 
 	def defaultMin: JavaList[Pair[String, JavaDouble]] = _emptyList
 	def defaultMax: JavaList[Pair[String, JavaDouble]] = _emptyList
+	def defaultProcessedBinValue: List[Double] = null    // TODO added to fix build
+	def defaultUnprocessedBinValue: List[Double] = null  // TODO added to fix build 
 	def defaultBinValue: List[Double] = List[Double]()
 	def convert (value: List[Double]): JavaList[Pair[String, JavaDouble]] = {
 		Range(0, value.length min categoryNames.length).map(i => {
