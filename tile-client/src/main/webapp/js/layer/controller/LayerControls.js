@@ -310,8 +310,6 @@ define(function (require) {
             ));
         }
 
-        //$parent.append($settingsControls);
-
         // Set initial value based on layer state model
         $('input[name="ramp-types"][value="' + layerState.getRampType() + '"]').prop('checked', true);
         $('input[name="ramp-functions"][value="' + layerState.getRampFunction() + '"]').prop('checked', true);
