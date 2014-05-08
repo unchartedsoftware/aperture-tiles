@@ -191,7 +191,7 @@ define(function (require) {
             function barTemplate( defaultColour, selectedColour ) {
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
                 bar.on('click', function() { return true; }); //swallow event
-                bar.map('visible').from(function(){return isVisible(this)});
+                bar.map('visible').from(function(){return isVisible(this); });
                 bar.map('fill').from( function(index) {
                     if ( that.clientState.hoverState.userData !== undefined &&
                         (that.clientState.hoverState.userData.id === 'detailsOnDemandPositive' ||
@@ -220,10 +220,10 @@ define(function (require) {
 
                 var bar = that.plotLayer.addLayer(aperture.BarLayer);
                 bar.on('click', function() { return true; }); //swallow event
-                bar.map('visible').from(function(){return isVisible(this)});
+                bar.map('visible').from(function(){return isVisible(this); });
                 bar.map('fill').asValue(that.GREY_COLOUR);
                 bar.map('orientation').asValue('horizontal');
-                bar.map('bar-count').asValue(24)
+                bar.map('bar-count').asValue(1);
                 bar.map('length').asValue(that.TILE_SIZE - that.HORIZONTAL_BUFFER*2);
                 bar.map('width').asValue(1);
                 bar.map('offset-x').asValue(DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
@@ -238,7 +238,7 @@ define(function (require) {
             function labelTemplate() {
                 var label = that.plotLayer.addLayer(aperture.LabelLayer);
                 label.on('click', function() { return true; }); //swallow event
-                label.map('visible').from(function(){return isVisible(this)});
+                label.map('visible').from(function(){return isVisible(this); });
                 label.map('fill').asValue(that.WHITE_COLOUR);
                 label.map('label-count').asValue(1);
                 label.map('text-anchor').asValue('start');
@@ -484,6 +484,8 @@ define(function (require) {
             this.timeAxisLabel.map('offset-x').from(function(index) {
                 return DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2 + 50*index;
             });
+            this.timeAxisLabel.map('opacity').from( function() { return that.clientState.opacity; });
+
             this.timeAxisTicks = that.plotLayer.addLayer(aperture.BarLayer);
             this.timeAxisTicks.map('visible').from(function(){return isVisible(this)});
             this.timeAxisTicks.map('orientation').asValue('vertical');

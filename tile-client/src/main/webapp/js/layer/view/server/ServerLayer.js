@@ -179,28 +179,9 @@ define(function (require) {
          * from the server.
          */
         useLayerInfo: function (dataListener, layerInfo) {
-            var layer, ufrIndex; //, layerSpecs, i, axis;
+            var layer, ufrIndex;
 
             layer = layerInfo.layer;
-            //layerSpecs = dataListener.layerSpecs[layer];
-
-            /*
-            if ( layerSpecs.axis !== undefined && layerSpecs.axis.length > 0 ) {
-                for (i=0; i< layerSpecs.axis.length; i++) {
-                    axis = layerSpecs.axis[i];
-                    // add axis to map
-                    axis.projection = layerInfo.projection;
-                    if ( axis.position === 'top' || axis.position === 'bottom' ) {
-                        axis.min = layerInfo.dataBounds.left;
-                        axis.max = layerInfo.dataBounds.right;
-                    } else {
-                        axis.min = layerInfo.dataBounds.bottom;
-                        axis.max = layerInfo.dataBounds.top;
-                    }
-                    this.map.addAxis( axis );
-                }
-            }
-            */
 
             // Wait until all requests have been fulfilled
             ufrIndex = this.unfulfilledRequests.indexOf(layer);
