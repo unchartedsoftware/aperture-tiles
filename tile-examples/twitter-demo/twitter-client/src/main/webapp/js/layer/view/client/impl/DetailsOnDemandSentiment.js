@@ -210,7 +210,7 @@ define(function (require) {
                     return DETAILS_OFFSET_X + 20 + index*BAR_WIDTH;
                 });
                 bar.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return bar;
             }
@@ -229,7 +229,7 @@ define(function (require) {
                 bar.map('offset-x').asValue(DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
                 bar.map('offset-y').asValue(yOffset-1);
                 bar.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return bar;
             }
@@ -245,7 +245,7 @@ define(function (require) {
                 label.map('font-outline').asValue(that.BLACK_COLOUR);
                 label.map('font-outline-width').asValue(3);
                 label.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return label;
             }
@@ -262,7 +262,7 @@ define(function (require) {
             this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET_X + 1);
             this.detailsBackground.on('click', function() { return true; }); //swallow event
             this.detailsBackground.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
 
             // TITLE LABELS
@@ -333,7 +333,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE - that.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 });
 
             // POSITIVE TITLE LABEL
@@ -460,7 +460,7 @@ define(function (require) {
 
             });
             this.countLabels.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 });
 
             // TIME AXIS LABEL
@@ -484,7 +484,7 @@ define(function (require) {
             this.timeAxisLabel.map('offset-x').from(function(index) {
                 return DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2 + 50*index;
             });
-            this.timeAxisLabel.map('opacity').from( function() { return that.clientState.opacity; });
+            this.timeAxisLabel.map('opacity').from( function() { return that.getOpacity(); });
 
             this.timeAxisTicks = that.plotLayer.addLayer(aperture.BarLayer);
             this.timeAxisTicks.map('visible').from(function(){return isVisible(this)});
@@ -500,7 +500,7 @@ define(function (require) {
                 return DETAILS_OFFSET_X + 24 + 51.5*index;
             });
             this.timeAxisTicks.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 });
 
             // MOST RECENT TWEETS LABELS

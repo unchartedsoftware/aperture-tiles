@@ -220,7 +220,7 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.bars.map('opacity').from( function() {
-                return that.clientState.opacity;
+                return that.getOpacity();
             })
 
         },
@@ -261,7 +261,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
         },
 
@@ -327,7 +327,7 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.tagLabels.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
 
         }

@@ -63,12 +63,12 @@ define(function (require) {
 
 
         getOpacity: function() {
-            return this.clientState.opacity;
+            return this.clientState.getSharedState('opacity');
         },
 
 
-        isVisible: function(data) {
-            return this.clientState.isVisible;
+        isVisible: function() {
+            return this.clientState.getSharedState('isVisible');
         },
 
 

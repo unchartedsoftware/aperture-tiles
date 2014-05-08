@@ -185,7 +185,7 @@ define(function (require) {
                     return that.getYOffset(this, index) + 6;
                 });
                 bar.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return bar;
             }
@@ -275,7 +275,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
         },
 
@@ -346,7 +346,7 @@ define(function (require) {
             this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabel.map('font-outline-width').asValue(3);
             this.tagLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
         }
 
