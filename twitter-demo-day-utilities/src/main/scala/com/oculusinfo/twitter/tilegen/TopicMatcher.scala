@@ -72,8 +72,9 @@ class TopicMatcher {
 		
 		// exclude | | on either side of twitter message and convert to lower case
 		tweet = tweet.substring(1, tweet.length()-1).toLowerCase()
-		// remove puncuation
-		tweet = tweet.replace(","," ").replace("."," ").replace("!"," ").replace("?"," ");
+		// remove punctuation
+		tweet = tweet.replace(","," ").replace("."," ").replace("!"," ").replace("?"," ").replace(":", " ").replace("("," ").
+	    							replace(")"," ").replace("["," ").replace("]"," ").replace("\""," ").replace("@", " ").replace("#"," ");
 		val words = tweet.split(" ")	//split into words
 		
 		val foundTopics = (bTopics.value).filterKeys(words.contains(_))		// find matches with keyword list (returns a map with matching keywords)
