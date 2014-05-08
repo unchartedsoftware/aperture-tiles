@@ -58,9 +58,6 @@ require(['./FileLoader',
 
 			});
 
-	        // Trigger the initial resize event to resize everything
-	        $(window).resize();
-
 		});
 	}
 );

@@ -6,17 +6,27 @@
     "Input": "output/SummaryStats/Bitcoin",
     "Summaries": [
         {
-            "Type" : "Qualitative",
-            "Fields" : [
+            "Type": "Qualitative",
+            "Fields": [
                 {
                     "Field Alias": "Source Edge ID",
                     "Name": "source_edge_id",
                     "Most Frequent": [
-                        {"25": 8196276},
-                        {"1374": 1344435},
-                        {"11": 532334},
-                        {"645014": 297437},
-                        {"29": 234864}
+                        {
+                            "25": 8196276
+                        },
+                        {
+                            "1374": 1344435
+                        },
+                        {
+                            "11": 532334
+                        },
+                        {
+                            "645014": 297437
+                        },
+                        {
+                            "29": 234864
+                        }
                     ],
                     "# N.A.": {
                         "Count": {
@@ -42,339 +52,35 @@
                             "Unit": "%"
                         }
                     },
-                    "Density Strip" : {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.source.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "M",
-                            "decimals" : 2,
-                            "allowStepDown" : true
-                        }
-                    }
-                },
-                {
-                    "Field Alias": "Destination Edge ID",
-                    "Name": "dest_edge_id",
-                    "Most Frequent": [
-                        {"25": 8215313},
-                        {"11": 776918},
-                        {"1374": 684021},
-                        {"74": 473016},
-                        {"29": 470445}
-                    ],
-                    "# N.A.": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 0,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.0,
-                            "Unit": "%"
-                        }
-                    },
-                    "# Unique": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 6277509,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 16.83,
-                            "Unit": "%"
-                        }
-                    },
                     "Density Strip": {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.destination.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "M",
-                            "decimals" : 2,
-                            "allowStepDown" : true
-                        }
-                    }
-                },
-                {
-                    "Field Alias": "Transaction ID",
-                    "Name": "id",
-                    "Most Frequent": [
-                        {"276604": 3075},
-                        {"276600": 3075},
-                        {"4854": 2872},
-                        {"55932": 2827},
-                        {"393535": 2793}
-                    ],
-                    "# N.A.": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 0,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.0,
-                            "Unit": "%"
-                        }
-                    },
-                    "# Unique": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 1583551,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 42.47,
-                            "Unit": "%"
-                        }
-                    },
-                    "Density Strip": {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.transaction.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "M",
-                            "decimals" : 2,
-                            "allowStepDown" : true
+                        "Layers": [
+                            {
+                                "Layer": "bitcoin.source.zero",
+                                "Type": "tile",
+                                "Config": {
+                                    "layer": "bitcoin.source.zero",
+                                    "domain": "server",
+                                    "name": "Source Edge ID"
+                                }
+                            }
+                        ],
+                        "X Axis Label": {
+                            "type": "M",
+                            "decimals": 2,
+                            "allowStepDown": true
                         }
                     }
                 }
             ]
         },
         {
-            "Type" : "Numerical",
-            "Fields" : [
-                {
-                    "Field Alias": "Amount (BTC)",
-                    "Name": "amount_btc",
-                    "Minimum": 0.0,
-                    "1st Quartile": 0.0013506000395864248,
-                    "Mean": 37.31116292002425,
-                    "Median": 0.04863480105996132,
-                    "3rd Quartile": 0.9944999814033508,
-                    "Maximum": 500000,
-                    "# N.A.": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 0,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.0,
-                            "Unit": "%"
-                        }
-                    },
-                    "# Unique": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 10456152,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 28.04,
-                            "Unit": "%"
-                        }
-                    },
-                    "Density Strip": {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.amount.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "M",
-                            "decimals" : 2,
-                            "allowStepDown" : true
-                        }
-                    }
-                },
-                {
-                    "Field Alias": "Source Edge ID",
-                    "Name": "source_edge_id",
-                    "Minimum": 1.0,
-                    "1st Quartile": 25.0,
-                    "Mean": 1395001.6227109665,
-                    "Median": 199609.0,
-                    "3rd Quartile": 1692437.0,
-                    "Maximum": 6336768.0,
-                    "# N.A.": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 0,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.0,
-                            "Unit": "%"
-                        }
-                    },
-                    "# Unique": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 5386938,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 14.45,
-                            "Unit": "%"
-                        }
-                    },
-                    "Density Strip": {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.source.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "M",
-                            "decimals" : 2,
-                            "allowStepDown" : true
-                        }
-                    }
-                },
-                {
-                    "Field Alias": "Destination Edge ID",
-                    "Name": "dest_edge_id",
-                    "Minimum": 1.0,
-                    "1st Quartile": 25.0,
-                    "Mean": 906412.5070829184,
-                    "Median": 86406.0,
-                    "3rd Quartile": 777151.0,
-                    "Maximum": 6336768.0,
-                    "# N.A.": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 0,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.0,
-                            "Unit": "%"
-                        }
-                    },
-                    "# Unique": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 6277509,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 16.84,
-                            "Unit": "%"
-                        }
-                    },
-                    "Density Strip": {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.destination.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "M",
-                            "decimals" : 2,
-                            "allowStepDown" : true
-                        }
-                    }
-                },
-                {
-                    "Field Alias": "Transaction ID",
-                    "Name": "transaction_id",
-                    "Minimum": 1.0,
-                    "1st Quartile": 1321468.0,
-                    "Mean": 6943042.312604567,
-                    "Median": 5510597.0,
-                    "3rd Quartile": 9999377.0,
-                    "Maximum": 1.5898625E7,
-                    "# N.A.": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 0,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.0,
-                            "Unit": "%"
-                        }
-                    },
-                    "# Unique": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 15835511,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 42.47,
-                            "Unit": "%"
-                        }
-                    },
-                    "Density Strip": {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.transaction.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "M",
-                            "decimals" : 2,
-                            "allowStepDown" : true
-                        }
-                    }
-                }
+            "Type": "Numerical",
+            "Fields": [
             ]
         },
         {
-            "Type" : "Date",
-            "Fields" : [
-                {
-                    "Field Alias": "Date/Time",
-                    "Name": "datetime",
-                    "Minimum": "2009-01-03T12:15:05.000Z",
-                    "Maximum": "2013-04-10T14:22:50.000Z",
-                    "# N.A.": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 0,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.0,
-                            "Unit": "%"
-                        }
-                    },
-                    "# Unique": {
-                        "Count": {
-                            "Type": "integer",
-                            "Value": 229268,
-                            "Unit": ""
-                        },
-                        "Percent": {
-                            "Type": "float",
-                            "Value": 0.62,
-                            "Unit": "%"
-                        }
-                    },
-                    "Density Strip": {
-                        "Layers" : [{
-                            "Layer" : "bitcoin.new.time.zero",
-                            "Type" : "tile"
-                        }],
-                        "X Axis Label" : {
-                            "type" : "time"
-                        }
-                    }
-                }
+            "Type": "Date",
+            "Fields": [
             ]
         }
     ]

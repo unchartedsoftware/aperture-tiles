@@ -355,8 +355,10 @@
             var onNewLayerResource = function( layerInfo, statusInfo ) {
 
                 if(!statusInfo.success){
+                    console.log("DEBUG: Failed to configure tile service");
                     return;
                 }
+                console.log("DEBUG: Successfully configured tile service");
                 var overlayLayerInfo = layerInfo;
                 overlayLayerInfo.dataBounds = {
                     left:   layerInfo.bounds[0],
@@ -369,25 +371,41 @@
                 // Cache the layer info.
                 _mapState.overlayInfoMap[layerInfo.layer] = overlayLayerInfo;
 
-                // HACK: Override! {
+                // HACK: Override!
                 layerInfo.bounds = [-20037500,
-                    -20037500,
-                    20037500,
-                    20037500];
+                                    -20037500,
+                                    20037500,
+                                    20037500];
                 layerInfo.projection = "EPSG:900913";
-                // } end HACK: Override!
-    //            layerInfo.bounds = [-180, -90, 180, 90];
-    //            layerInfo.projection = "EPSG:4326";
 
                 if (callback){
                     callback();
                 }
             };
 
+            var postData = {
+                         request: "configure",
+                         layer: layerSpec['Layer'],
+                         configuration: layerSpec['Config']
+                     };
+
+            console.log("DEBUG: Sending configuration request for layer '" + layerSpec['Layer'] + "'");
+
             aperture.io.rest(
                 '/layer',
                 'POST',
                 onNewLayerResource,
+                {
+                     postData: {
+                         request: "configure",
+                         layer: layerSpec['Layer'],
+                         configuration: layerSpec['Config']
+                     },
+                     contentType: 'application/json'
+                }
+            );
+
+                /*
                 {
                     postData: {
                         'transform': colourScaleType,
@@ -396,8 +414,9 @@
                         'legendRange': legendRange
                     },
                     contentType: 'application/json'
-                }
-            );
+                });
+                */
+            
         },
 
         getAxisSpec = function(type){
@@ -766,10 +785,10 @@
             createAxes();
         },
 
-    // TODO: Hack for now. Need a way for handling legends for multiple overlays.
-    // If there are multiple overlays, we assume that the visibility for all layers
-    // is initially set to TRUE and do not render any legends. Legends will appear
-    // when only 1 overlay layer is visible.
+        // TODO: Hack for now. Need a way for handling legends for multiple overlays.
+        // If there are multiple overlays, we assume that the visibility for all layers
+        // is initially set to TRUE and do not render any legends. Legends will appear
+        // when only 1 overlay layer is visible.
         hasSingleLayerVisible = function(){
             // Check layer visibility list.
             var visibleCount = 0;
