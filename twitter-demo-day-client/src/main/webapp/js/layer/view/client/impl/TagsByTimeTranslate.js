@@ -35,24 +35,21 @@ define(function (require) {
 
 
 
-    var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        //DetailsOnDemand = require('./DetailsOnDemand'),
+    var TwitterTagRenderer = require('./TwitterTagRenderer'),   
+        DetailsOnDemand = require('./DetailsOnDemandTranslate'),
         TagsByTimeTranslate;
 
 
     TagsByTimeTranslate = TwitterTagRenderer.extend({
         ClassName: "TagsByTimeTranslate",
 
-        init: function() {
-            this._super("tags-by-time-translate");
+        init: function(map) {
+            this._super("tags-by-time-translate", map);
             this.MAX_NUM_VALUES = 10;
             this.Y_SPACING = 18;
         },
 
 
-        getTotalDaysInMonth: function(data) {
-            return data.bin.value[0].countDaily.length;
-        },
 
 
         getTotalCountPercentage: function(data, index) {
@@ -112,9 +109,9 @@ define(function (require) {
             this.createBars();
             this.createLabels();
             //this.createCountSummaries();
-            //this.detailsOnDemand = new DetailsOnDemand(this.id);
-            //this.detailsOnDemand.attachClientState(this.clientState);
-            //this.detailsOnDemand.createLayer(this.plotLayer);
+            this.detailsOnDemand = new DetailsOnDemand(this.id, map);
+            this.detailsOnDemand.attachClientState(this.clientState);
+            this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
 
@@ -127,10 +124,10 @@ define(function (require) {
                 var i,
                     percent,
                     numDays = that.getTotalDaysInMonth(data),
-                    tagIndex = Math.floor(index/numDays),
-                   
+                    tagIndex = Math.floor(index/numDays),                 
                     maxPercent = 0,
                     count = data.bin.value[tagIndex].countMonthly;
+
                 if (count === 0) {
                     return 0;
                 }
@@ -155,10 +152,12 @@ define(function (require) {
                 var numDays = that.getTotalDaysInMonth(this),
                     tagIndex = Math.floor(index/numDays);
 
+                if (that.matchingTagIsSelected(this.bin.value[tagIndex].topic)){
+                    return that.POSITIVE_COLOUR;
+                }
                 if (that.shouldBeGreyedOut(this.bin.value[tagIndex].topic, this.tilekey)) {
                     return that.GREY_COLOUR;
                 }
-
                 return that.WHITE_COLOUR;
             });
             this.bars.map('bar-count').from( function() {
@@ -184,12 +183,12 @@ define(function (require) {
             });
 
             this.bars.on('click', function(event) {
-                that.onClick(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(this)));
+                that.onClick(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(event.data)));
                 return true; // swallow event
             });
 
             this.bars.on('mousemove', function(event) {
-                that.onHover(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(this)), 'tagsByTimeTranslateCountSummary');
+                that.onHover(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(event.data)), 'tagsByTimeTranslateCountSummary');
             });
 
             this.bars.on('mouseout', function(event) {
@@ -284,7 +283,7 @@ define(function (require) {
                 return that.getYOffset(this, index) - 5;
             });
 
-            this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 16);
+            this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 48);
             this.tagLabels.map('text-anchor').asValue('start');
             this.tagLabels.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabels.map('font-outline-width').asValue(3);

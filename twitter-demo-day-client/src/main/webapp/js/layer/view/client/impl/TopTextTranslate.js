@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        //DetailsOnDemand = require('./DetailsOnDemand'),
+        DetailsOnDemand = require('./DetailsOnDemandTranslate'),
         TopTextTranslate;
 
 
@@ -44,10 +44,29 @@ define(function (require) {
     TopTextTranslate = TwitterTagRenderer.extend({
         ClassName: "TopTextTranslate",
 
-        init: function() {
-            this._super("top-text-translate");
+        init: function(map) {
+            this._super("top-text-translate", map);
             this.MAX_NUM_VALUES = 5;
             this.Y_SPACING = 36;
+            this.translatedTiles = {};
+        },
+
+
+        isTileTranslated: function( tilekey ) {
+            if (this.translatedTiles[tilekey] === undefined) {
+                return false;
+            } else {
+                return true;
+            }
+        },
+
+
+        toggleTileTranslation: function( tilekey ) {
+            if (this.translatedTiles[tilekey] === undefined) {
+                this.translatedTiles[tilekey] = true;
+            } else {
+                delete this.translatedTiles[tilekey];
+            }
         },
 
 
@@ -77,6 +96,7 @@ define(function (require) {
             //this.negativeBar.all().where(data).redraw();
             //this.positiveBar.all().where(data).redraw();
             this.tagLabel.all().where(data).redraw();
+            this.translateLabel.all().where(data).redraw();
             //this.summaryLabel.all().where(data).redraw();
         },
 
@@ -119,10 +139,11 @@ define(function (require) {
             this.plotLayer = mapNodeLayer;
             //this.createBars();
             this.createLabels();
+            this.createTranslateLabel();
             //this.createCountSummaries();
-            //this.detailsOnDemand = new DetailsOnDemand(this.id);
-            //this.detailsOnDemand.attachClientState(this.clientState);
-            //this.detailsOnDemand.createLayer(this.plotLayer);
+            this.detailsOnDemand = new DetailsOnDemand(this.id, map);
+            this.detailsOnDemand.attachClientState(this.clientState);
+            this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
 
@@ -163,7 +184,8 @@ define(function (require) {
             });
 
             this.tagLabel.map('text').from(function (index) {
-                var str = that.filterText(this.bin.value[index].topic);
+                var topic = (that.isTileTranslated(this.tilekey)) ? this.bin.value[index].topicEnglish : this.bin.value[index].topic,
+                    str = that.filterText(topic);
                 if (str.length > 12) {
                     str = str.substr(0,12) + "...";
                 }
@@ -192,6 +214,67 @@ define(function (require) {
             this.tagLabel.map('opacity').from( function() {
                     return that.clientState.opacity;
                 })
+        },
+
+
+        createTranslateLabel: function () {
+
+            var that = this,
+                isHoveredOn = false;
+
+            this.translateLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+
+            this.translateLabel.map('visible').from(function() {
+                return that.isSelectedView(this) && that.isVisible(this) && that.clientState.carouselTilekey === this.tilekey;
+            });
+
+            this.translateLabel.map('fill').from( function() {
+
+                if (that.isTileTranslated(this.tilekey)) {
+                    return that.WHITE_COLOUR;
+                }
+                return that.LIGHT_GREY_COLOUR;
+            });
+
+            this.translateLabel.on('click', function(event) {
+                that.toggleTileTranslation(event.data.tilekey)
+                that.translateLabel.all().where(event.data).redraw();
+                that.tagLabel.all().where(event.data).redraw();
+                return true; // swallow event
+            });
+
+            this.translateLabel.on('mousemove', function(event) {
+                isHoveredOn = true;
+                that.translateLabel.all().where(event.data).redraw();
+                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+            });
+
+            this.translateLabel.on('mouseout', function(event) {
+                isHoveredOn = false;
+                that.translateLabel.all().where(event.data).redraw();
+            });
+
+            this.translateLabel.map('label-count').asValue(1);
+
+            this.translateLabel.map('text').asValue('translate');
+
+            this.translateLabel.map('font-size').from(function () {
+                var FONT_SIZE = 16;
+                if (isHoveredOn) {
+                    return FONT_SIZE + 2;
+                }
+                return FONT_SIZE;
+
+            });
+            this.translateLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET + this.TILE_SIZE / 3);
+            this.translateLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET - 100);          
+            this.translateLabel.map('text-anchor').asValue('left');
+            this.translateLabel.map('text-anchor-y').asValue('start');
+            this.translateLabel.map('font-outline').asValue(this.BLACK_COLOUR);
+            this.translateLabel.map('font-outline-width').asValue(3);
+            this.translateLabel.map('opacity').from( function() {
+                return that.clientState.opacity;
+            })
         }
 
     });

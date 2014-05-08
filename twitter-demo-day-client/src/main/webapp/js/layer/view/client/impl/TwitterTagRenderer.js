@@ -91,6 +91,11 @@ define(function (require) {
         },
 
 
+        
+        getTotalDaysInMonth: function(data) {
+            return data.bin.value[0].countDaily.length;
+        },
+
         /**
          * Returns a y offset for a given index
          * @param data the aperturejs node data object

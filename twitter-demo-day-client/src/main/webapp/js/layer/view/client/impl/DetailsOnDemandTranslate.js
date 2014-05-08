@@ -36,29 +36,96 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand;
+        DetailsOnDemandTranslate;
 
 
 
-    DetailsOnDemand = TwitterTagRenderer.extend({
-        ClassName: "DetailsOnDemand",
+    DetailsOnDemandTranslate = TwitterTagRenderer.extend({
+        ClassName: "DetailsOnDemandTranslate",
 
-        init: function(id) {
-            this._super(id, true);
+        init: function(id, map) {
+            this._super(id, map, true);
+            this.DETAILS_OFFSET_X = this.X_CENTRE_OFFSET + this.TILE_SIZE/2;
+            this.DETAILS_OFFSET_Y = -this.TILE_SIZE/2;
+            this.MOST_RECENT = this.DETAILS_OFFSET_Y + this.TILE_SIZE + this.VERTICAL_BUFFER,
+            this.MOST_RECENT_SPACING = 50;
+            this.MAX_NUM_RECENT_TWEETS = 4;
+            this.BAR_LINE_SPACING = 80;
+            this.MONTH_LINE_Y = this.DETAILS_OFFSET_Y + 64;
+            this.WEEK_LINE_Y = this.MONTH_LINE_Y + this.BAR_LINE_SPACING ;
+            this.DAY_LINE_Y = this.MONTH_LINE_Y + this.BAR_LINE_SPACING * 2;
+            this.MAX_BAR_LENGTH = 20;
         },
 
 
-        getExclusiveCountPercentage: function(data, index, type) {
+        getParentCount: function(data, type) {
 
-            var attrib = type + 'ByTime',
+            var tagIndex = this.clientState.clickState.userData.index,
+                i, length, count = 0;
+
+            switch(type) {
+
+                case 'Daily':
+
+                    count = data.bin.value[tagIndex].countMonthly;
+                    break;
+
+                case 'Per6hrs':
+
+                    length = this.getTotalDaysInMonth(data);
+                    for (i = 0; i<7; i++) {
+                        count += data.bin.value[tagIndex].countDaily[length - 1 - i];
+                    }                  
+                    break;
+
+                case 'PerHour':
+                default:
+
+                    length = this.getTotalDaysInMonth(data);
+                    count = data.bin.value[tagIndex].countDaily[length - 1]; 
+                    break;
+            } 
+
+            if (count === 0 && type !== 'PerHour') {
+                console.log(count);
+            }
+
+            return count;
+        },
+
+
+        getCountPercentage: function(data, index, type) {
+
+            var attrib = 'count' + type,
                 tagIndex = this.clientState.clickState.userData.index,
-                count = data.bin.value[tagIndex].count;
+                count = this.getParentCount(data, type);
             if (count === 0) {
                 return 0;
             }
             return data.bin.value[tagIndex][attrib][index] / count;
         },
 
+
+         getMaxPercentage: function(data, type) {
+            var i,
+                percent,
+                maxPercent = 0,
+                tagIndex = this.clientState.clickState.userData.index,
+                count = this.getParentCount(data, type);
+            if (count === 0) {
+                return 0;
+            }
+
+            for (i=0; i<data.bin.value[tagIndex]['count' + type].length; i++) {
+                // get maximum percent
+                percent = data.bin.value[tagIndex]['count' + type][i] / count;
+                if (percent > maxPercent) {
+                    maxPercent = percent;
+                }
+            }
+            
+            return maxPercent;
+        },
 
         onHover: function(event, id) {
             this.clientState.setHoverState(event.data.tilekey, {
@@ -73,6 +140,13 @@ define(function (require) {
         },
 
 
+        isDoDVisible: function(data) {
+            var that = this;
+            return that.isSelectedView(data) && 
+                   that.isVisible(data) && 
+                   (that.clientState.clickState.tilekey === data.tilekey);
+        },
+
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
@@ -82,14 +156,450 @@ define(function (require) {
             // TODO: currently doesnt not render correctly if on its on PlotLayer...
             this.plotLayer = nodeLayer;
             this.createDetailsOnDemand();
+            
         },
 
 
-        createDetailsOnDemand: function() {
+        createBackgroundPanel: function() {
+
+            var that = this;
+            this.detailsBackground = this.plotLayer.addLayer(aperture.BarLayer);
+            this.detailsBackground.map('visible').from(function(){return that.isDoDVisible(this)});
+            this.detailsBackground.map('fill').asValue('#111111');
+            this.detailsBackground.map('orientation').asValue('horizontal');
+            this.detailsBackground.map('bar-count').asValue(1);
+            this.detailsBackground.map('width').asValue(this.TILE_SIZE*2 - 2);
+            this.detailsBackground.map('length').asValue(this.TILE_SIZE - 2);
+            this.detailsBackground.map('offset-y').asValue(this.DETAILS_OFFSET_Y + 1);
+            this.detailsBackground.map('offset-x').asValue(this.DETAILS_OFFSET_X + 1);
+            this.detailsBackground.on('click', function() { return true; }); //swallow event
+            this.detailsBackground.map('opacity').from( function() {
+                    return that.clientState.opacity;
+                })
+        },
+
+
+        createTitleLabels: function() {
+
+            var that = this;
+
+            this.titleLabels = this.createLabel(this.WHITE_COLOUR);
+            this.titleLabels.map('label-count').asValue(4);
+            this.titleLabels.map('text').from(function(index) {
+                switch (index) {
+                    case 0:
+                        return "Last Month";
+                    case 1:
+                        return "Last Week";
+                    case 2:
+                        return "Last 24 hours";
+                    default:
+                        return "Most Recent";
+                }
+            });
+            this.titleLabels.map('font-size').asValue(20);
+            this.titleLabels.map('offset-y').from(function(index) {
+                switch(index) {
+                    case 0:
+                        return that.MONTH_LINE_Y - that.VERTICAL_BUFFER - that.MAX_BAR_LENGTH;
+                    case 1:
+                        return that.WEEK_LINE_Y - that.VERTICAL_BUFFER - that.MAX_BAR_LENGTH;
+                    case 2:
+                        return that.DAY_LINE_Y - that.VERTICAL_BUFFER - that.MAX_BAR_LENGTH;
+                    default:
+                        return that.MOST_RECENT;
+                }
+            });
+            this.titleLabels.map('offset-x').asValue(this.DETAILS_OFFSET_X + this.HORIZONTAL_BUFFER);
+        },
+
+
+        createPartitionBar:  function(colour, yOffset) {
 
             var that = this,
-                DETAILS_OFFSET_X = that.X_CENTRE_OFFSET + this.TILE_SIZE/2,
-                DETAILS_OFFSET_Y = -this.TILE_SIZE/2,
+                bar = that.plotLayer.addLayer(aperture.BarLayer);
+
+            bar.on('click', function() { return true; }); //swallow event
+            bar.map('visible').from(function(){ return that.isDoDVisible(this); });
+            bar.map('fill').asValue(colour);
+            bar.map('orientation').asValue('horizontal');
+            bar.map('bar-count').asValue(1)
+            bar.map('length').asValue(that.TILE_SIZE - that.HORIZONTAL_BUFFER*2);
+            bar.map('width').asValue(1);
+            bar.map('offset-x').asValue(that.DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
+            bar.map('offset-y').asValue(yOffset-1);
+            bar.map('opacity').from( function() { return that.clientState.opacity; });
+            return bar;
+        },
+
+
+        createAxis: function(type) {
+
+            var that = this,
+                AXIS_OFFSET = 2,
+                MONTH_X_SPACING = 50,
+                WEEK_X_SPACING = 35,
+                DAY_X_SPACING = 50,
+                TICK_LENGTH = 6,
+                TICK_WIDTH = 3,
+                LABEL_TICK_OFFSET = 10,
+                labels, ticks;
+
+            // TIME AXIS LABELS
+            labels = that.plotLayer.addLayer(aperture.LabelLayer);
+            labels.on('click', function() { return true; }); //swallow event
+            labels.map('visible').from(function(){return that.isDoDVisible(this); });
+            labels.map('fill').asValue(this.WHITE_COLOUR);
+            labels.map('text-anchor').asValue('middle');
+            labels.map('font-outline').asValue(this.BLACK_COLOUR);
+            labels.map('font-outline-width').asValue(3);
+            labels.map('opacity').from( function() { return that.clientState.opacity; });
+
+            // TIME AXIS TICKS
+            ticks = that.plotLayer.addLayer(aperture.BarLayer);
+            ticks.map('visible').from(function(){return that.isDoDVisible(this); });
+            ticks.map('orientation').asValue('vertical');
+            ticks.map('fill').asValue(this.WHITE_COLOUR);
+            ticks.map('length').asValue(TICK_LENGTH);
+            ticks.map('width').asValue(TICK_WIDTH);           
+            ticks.map('stroke').asValue(this.BLACK_COLOUR);
+            ticks.map('stroke-width').asValue(1);
+            ticks.map('opacity').from( function() { return that.clientState.opacity; });
+
+            switch (type) {
+
+                case 'month':
+
+                    labels.map('offset-y').asValue(that.MONTH_LINE_Y + AXIS_OFFSET + LABEL_TICK_OFFSET);
+                    labels.map('offset-x').from(function(index) {
+                        return that.DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2 + MONTH_X_SPACING*index;
+                    });
+                    labels.map('label-count').asValue(5);
+                    labels.map('text').from(function(index) {
+                        switch (index) {
+                            case 1: return "Apr 01";
+                            case 2: return "Apr 07";
+                            case 3: return "Apr 14";
+                            case 4: return "Apr 21";
+                            default: return "Apr 28";
+                        }
+                    });
+                    this.monthAxisLabels = labels; 
+
+                    ticks.map('bar-count').asValue(5);
+                    ticks.map('offset-y').asValue(that.MONTH_LINE_Y + AXIS_OFFSET);
+                    ticks.map('offset-x').from( function(index) {
+                        return that.DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2 + MONTH_X_SPACING*index + 1.5;
+                    });
+                    this.monthAxisTicks = ticks;
+                    break;
+
+                case 'week':
+
+                    labels.map('offset-y').asValue(that.WEEK_LINE_Y + AXIS_OFFSET + LABEL_TICK_OFFSET);
+                    labels.map('offset-x').from(function(index) {
+                        return that.DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER * 1.5 + WEEK_X_SPACING*index;
+                    });
+                    labels.map('label-count').asValue(7);
+                    labels.map('text').from(function(index) {
+                        switch (index) {
+                            case 1: return "Mo";
+                            case 2: return "Tu";
+                            case 3: return "We";
+                            case 4: return "Th";
+                            case 5: return "Fr";
+                            case 6: return "Sa";
+                            case 7: return "Su";
+                            default: return "12am";
+                        }
+                    });
+                    this.weekAxisLabels = labels; 
+
+                    ticks.map('bar-count').asValue(7);
+                    ticks.map('offset-y').asValue(that.WEEK_LINE_Y + AXIS_OFFSET);
+                    ticks.map('offset-x').from( function(index) {
+                        return that.DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER * 1.5 + WEEK_X_SPACING*index + 1.5;
+                    });
+                    this.weekAxisTicks = ticks;
+                    break;
+
+                case 'day':
+                default: 
+
+                    labels.map('offset-y').asValue(that.DAY_LINE_Y + AXIS_OFFSET + LABEL_TICK_OFFSET);
+                    labels.map('offset-x').from(function(index) {
+                        return that.DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2 + DAY_X_SPACING*index;
+                    });
+                    labels.map('label-count').asValue(5);
+                    labels.map('text').from(function(index) {
+                        switch (index) {
+                            case 1: return "6am";
+                            case 2: return "12pm";
+                            case 3: return "6pm";
+                            default: return "12am";
+                        }
+                    });
+                    this.dayAxisLabels = labels; 
+
+                    ticks.map('bar-count').asValue(5);
+                    ticks.map('offset-y').asValue(that.DAY_LINE_Y + AXIS_OFFSET);
+                    ticks.map('offset-x').from( function(index) {
+                        return that.DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER*2 + DAY_X_SPACING*index + 1.5;
+                    });
+                    this.dayAxisTicks = ticks;
+                    break;
+            }
+
+
+        },
+
+
+        createGraphBars: function( defaultColour, selectedColour ) {
+
+            var that = this,
+                bar = that.plotLayer.addLayer(aperture.BarLayer);
+
+            bar.on('click', function() { return true; }); //swallow event
+            bar.map('visible').from(function(){return that.isDoDVisible(this); });
+            bar.map('fill').from( function(index) {
+                /*if ( that.clientState.hoverState.userData !== undefined &&
+                     that.clientState.hoverState.userData.index === index) {
+                    return selectedColour;
+                }*/
+                return defaultColour;
+            });
+            bar.map('orientation').asValue('vertical');                   
+            bar.map('stroke').asValue(that.BLACK_COLOUR);
+            bar.map('stroke-width').asValue(2);            
+            bar.map('opacity').from( function() { return that.clientState.opacity; })
+            return bar;
+        },
+
+
+        createBarChart: function(type) {
+
+            var that = this,
+                MONTH_LINE_Y = that.DETAILS_OFFSET_Y + 64,
+                WEEK_LINE_Y = that.DETAILS_OFFSET_Y + 128,
+                DAY_LINE_Y = that.DETAILS_OFFSET_Y + 192,
+                bars;
+
+            bars = this.createGraphBars(this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
+
+            switch (type) {
+
+                case 'month':
+
+                    bars.map('bar-count').from(function() {
+                        return that.getTotalDaysInMonth(this)
+                    });
+                    bars.map('offset-y').from(function (index) {
+                        var maxPercentage = that.getMaxPercentage(this, 'Daily');
+                        if (maxPercentage === 0) { return 0; }
+                        return that.MONTH_LINE_Y-((that.getCountPercentage(this, index, 'Daily') / maxPercentage) * that.MAX_BAR_LENGTH)-2;
+                    });
+                    bars.map('length').from(function (index) {
+                        var maxPercentage = that.getMaxPercentage(this, 'Daily');
+                        if (maxPercentage === 0) { return 0; }
+                        return (that.getCountPercentage(this, index, 'Daily') / maxPercentage) * that.MAX_BAR_LENGTH;
+                    });
+                    bars.map('offset-x').from( function(index) {
+                        return that.DETAILS_OFFSET_X + 18 + index* ((that.TILE_SIZE - 20) / that.getTotalDaysInMonth(this));
+                    });
+                    bars.map('width').from(function() {
+                        return (that.TILE_SIZE - 20) / that.getTotalDaysInMonth(this);
+                    });
+                    this.monthBars = bars;
+                    this.monthBarLine = this.createPartitionBar(this.GREY_COLOUR, this.MONTH_LINE_Y);
+                    break;
+
+                case 'week':
+
+                    bars.map('bar-count').asValue(28);
+                    bars.map('offset-y').from(function (index) {
+                        var maxPercentage = that.getMaxPercentage(this, 'Per6hrs');
+                        if (maxPercentage === 0) { return 0; }
+                        return that.WEEK_LINE_Y-((that.getCountPercentage(this, index, 'Per6hrs') / maxPercentage) * that.MAX_BAR_LENGTH)-2;
+                    });
+                    bars.map('length').from(function (index) {
+                        var maxPercentage = that.getMaxPercentage(this, 'Per6hrs');
+                        if (maxPercentage === 0) { return 0; }
+                        return (that.getCountPercentage(this, index, 'Per6hrs') / maxPercentage) * that.MAX_BAR_LENGTH;
+                    });
+                    bars.map('offset-x').from( function(index) {
+                        return that.DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER + 2 + index*8;
+                    });
+                    bars.map('width').asValue(8);
+                    this.weekBars = bars;
+                    this.weekBarLine = this.createPartitionBar(this.GREY_COLOUR, this.WEEK_LINE_Y);
+                    break;
+
+                case 'day':
+                default: 
+
+                    bars.map('bar-count').asValue(24);
+                    bars.map('offset-y').from(function (index) {
+                        var maxPercentage = that.getMaxPercentage(this, 'PerHour');
+                        if (maxPercentage === 0) { return 0; }
+                        return that.DAY_LINE_Y-((that.getCountPercentage(this, index, 'PerHour') / maxPercentage) * that.MAX_BAR_LENGTH)-2;
+                    });
+                    bars.map('length').from(function (index) {
+                        var maxPercentage = that.getMaxPercentage(this, 'PerHour');
+                        if (maxPercentage === 0) { return 0; }
+                        return (that.getCountPercentage(this, index, 'PerHour') / maxPercentage) * that.MAX_BAR_LENGTH;
+                    });
+                     bars.map('offset-x').from( function(index) {
+                        return that.DETAILS_OFFSET_X + 20 + index*9;
+                    });
+                    bars.map('width').asValue(9);
+                    this.dayBars = bars;
+                    this.dayBarLine = this.createPartitionBar(this.GREY_COLOUR, this.DAY_LINE_Y);
+                    break;
+
+            }
+        },
+
+
+        createLabel : function(colour) {
+
+            var that = this,
+                label = that.plotLayer.addLayer(aperture.LabelLayer);
+
+            label.on('click', function() { return true; }); //swallow event
+            label.map('visible').from(function(){return that.isDoDVisible(this)});
+            label.map('fill').asValue(colour);
+            label.map('label-count').asValue(1);
+            label.map('text-anchor').asValue('start');
+            label.map('font-outline').asValue(that.BLACK_COLOUR);
+            label.map('font-outline-width').asValue(3);
+            label.map('opacity').from( function() { return that.clientState.opacity; });
+            return label;
+        },
+
+
+        formatRecentTweetText: function(str, charPerLine) {
+            var CHAR_PER_LINE = charPerLine || 35,
+                MAX_NUM_LINES = 3,
+                strArray = str.substring(1, str.length - 2).split(" "),
+                formatted = '',
+                spaceLeft = CHAR_PER_LINE,
+                i,
+                lineCount = 0;
+
+            for (i=0; i<strArray.length; i++) {
+
+                while (strArray[i].length > spaceLeft) {
+
+                    // if past maximum amount of lines, truncate
+                    if (lineCount === MAX_NUM_LINES-1) {
+                        // strip space if is als character of string
+                        if (formatted[formatted.length-1] === ' ') {
+                            formatted = formatted.substring(0, formatted.length - 1);
+                        }
+                        return formatted += strArray[i].substr(0, spaceLeft-3) + "..."
+                    }
+
+                    if (strArray[i].length < CHAR_PER_LINE) {
+                        // can fit in next line, put new line
+                        formatted += "\n";
+                    } else {
+                        // cannot fit in next line, hyphenate word
+                        formatted += strArray[i].substr(0, spaceLeft);
+                        strArray[i] = strArray[i].substr(spaceLeft);
+                        if (spaceLeft > 0) {
+                            formatted += "-\n";
+                        }
+                    }
+                    spaceLeft = CHAR_PER_LINE;
+                    lineCount++;
+                }
+                formatted += strArray[i] + ' ';
+                spaceLeft -= strArray[i].length+1;
+            }
+            return formatted;
+        },
+
+
+        getRecentTweetsCount: function(data) {
+            var length = data.bin.value[this.clientState.clickState.userData.index].recentTweets.length;
+            if (length === undefined || isNaN(length)) {
+                return 0;
+            }
+            return (length > this.MAX_NUM_RECENT_TWEETS) ? this.MAX_NUM_RECENT_TWEETS : length;
+        },
+
+
+        createMostRecentTweets: function() {
+
+            var that= this;
+
+            // MOST RECENT TWEETS LABELS
+            this.recentTweetsLabels = this.createLabel(that.WHITE_COLOUR);
+            this.recentTweetsLabels.map('visible').from(function(){return that.isDoDVisible(this); });
+            this.recentTweetsLabels.map('label-count').from( function() {
+                return that.getRecentTweetsCount(this);
+            });
+            this.recentTweetsLabels.map('fill').from( function(index) {
+                if (that.clientState.hoverState.userData !== undefined &&
+                    that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.clientState.hoverState.userData.index === index) {
+                    return that.YELLOW_COLOUR;
+                } else {
+                    return that.WHITE_COLOUR;
+                }
+            });
+            this.recentTweetsLabels.map('font-size').asValue(10);
+            this.recentTweetsLabels.map('text').from( function(index) {
+                var tagIndex = that.clientState.clickState.userData.index,
+                    filteredText = that.filterText(this.bin.value[tagIndex].recentTweets[index].tweet);
+
+                if (that.clientState.hoverState.userData !== undefined &&
+                    that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                    that.clientState.hoverState.userData.index === index) {
+                    return that.formatRecentTweetText(filteredText, 70);
+                }
+                return that.formatRecentTweetText(filteredText);
+            });
+            this.recentTweetsLabels.map('offset-y').from( function(index) {
+                return that.MOST_RECENT + 45 + (index * that.MOST_RECENT_SPACING);
+            });
+            this.recentTweetsLabels.map('offset-x').asValue(this.DETAILS_OFFSET_X + this.TILE_SIZE/2);
+            this.recentTweetsLabels.map('width').asValue(200);
+            this.recentTweetsLabels.map('text-anchor').asValue('middle');
+            this.recentTweetsLabels.on('mousemove', function(event) {
+                that.onHover(event, 'detailsOnDemandRecent');
+                that.recentTweetsLabels.all().where(event.data).redraw();
+                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+            });
+            this.recentTweetsLabels.on('mouseout', function(event) {
+                that.onHoverOff(event);
+                that.recentTweetsLabels.all().where(event.data).redraw();
+            });
+
+            // MOST RECENT TWEETS LINES
+            this.recentTweetsLines = this.createPartitionBar(this.GREY_COLOUR, 0);
+            this.recentTweetsLines.map('bar-count').from( function() {
+                return that.getRecentTweetsCount(this);
+            });
+            this.recentTweetsLines.map('offset-y').from( function(index) {
+                return that.MOST_RECENT + 20 + that.MOST_RECENT_SPACING*index;
+            });
+        },
+
+        createDetailsOnDemand: function() {
+
+            this.createBackgroundPanel();
+            this.createBarChart('month');
+            this.createBarChart('week');
+            this.createBarChart('day');
+            this.createAxis('month');
+            this.createAxis('week');
+            this.createAxis('day');
+            this.createTitleLabels();
+            this.createMostRecentTweets();
+
+/*
+            var that = this,
                 BAR_CENTRE_LINE = DETAILS_OFFSET_Y + this.TILE_SIZE/2 + 30,
                 BAR_LENGTH = 50,
                 BAR_WIDTH = 9,
@@ -212,7 +722,7 @@ define(function (require) {
                 bar.map('visible').from(function(){return isVisible(this)});
                 bar.map('fill').asValue(that.GREY_COLOUR);
                 bar.map('orientation').asValue('horizontal');
-                bar.map('bar-count').asValue(24)
+                bar.map('bar-count').asValue(1)
                 bar.map('length').asValue(that.TILE_SIZE - that.HORIZONTAL_BUFFER*2);
                 bar.map('width').asValue(1);
                 bar.map('offset-x').asValue(DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
@@ -283,18 +793,6 @@ define(function (require) {
                 }
             });
             this.titleLabels.map('offset-x').asValue(DETAILS_OFFSET_X + that.HORIZONTAL_BUFFER);
-
-            // TRANSLATE LABEL
-            // TODO: IMPLEMENT FUNCTIONALITY WITH GOOGLE TRANSLATE API
-            /*
-            this.translateLabel = labelTemplate();
-            this.translateLabel.map('visible').from(function(){return isVisible(this)});
-            this.translateLabel.map('fill').asValue('#999999');
-            this.translateLabel.map('font-size').asValue(16);
-            this.translateLabel.map('text').asValue('translate');
-            this.translateLabel.map('offset-y').asValue(DETAILS_OFFSET_Y + 48);
-            this.translateLabel.map('offset-x').asValue(DETAILS_OFFSET_X + 28);
-            */
 
             // COUNT SUMMARY LABELS
             this.summaryLabel = labelTemplate();
@@ -540,11 +1038,12 @@ define(function (require) {
             });
             this.recentTweetsLines.map('offset-y').from( function(index) {
                 return MOST_RECENT + 20 + MOST_RECENT_SPACING*index;
-            });
+            });*/
         }
+        
 
 
     });
 
-    return DetailsOnDemand;
+    return DetailsOnDemandTranslate;
 });
