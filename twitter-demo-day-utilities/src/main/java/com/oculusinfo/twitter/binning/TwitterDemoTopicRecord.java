@@ -111,7 +111,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 			int days = (int)(secsSinceEnd * 1.1574e-5); //1/86400 = 1/60*60*24;
 
 			if ((hours >= 0) && (hours < NUM_HOURS)) {
-				_countPer6hrs.set(hours, 1);
+				_countPerHour.set(hours, 1);
 			}
 			if ((quarterDays >= 0) && (quarterDays < NUM_QUARTERDAYS)) {
 				_countPer6hrs.set(quarterDays, 1);
