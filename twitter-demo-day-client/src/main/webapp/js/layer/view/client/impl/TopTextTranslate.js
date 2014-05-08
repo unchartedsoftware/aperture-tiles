@@ -143,7 +143,7 @@ define(function (require) {
             this.createLabels();
             this.createTranslateLabel();
             //this.createCountSummaries();
-            this.detailsOnDemand = new DetailsOnDemand(this.id, map);
+            this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
             this.detailsOnDemand.attachClientState(this.clientState);
             this.detailsOnDemand.createLayer(this.plotLayer);
         },
@@ -214,8 +214,8 @@ define(function (require) {
             this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabel.map('font-outline-width').asValue(3);
             this.tagLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
-                })
+                return that.getOpacity();
+            })
         },
 
 
@@ -227,7 +227,9 @@ define(function (require) {
             this.translateLabel = this.plotLayer.addLayer(aperture.LabelLayer);
 
             this.translateLabel.map('visible').from(function() {
-                return that.isSelectedView(this) && that.isVisible(this) && that.clientState.carouselTilekey === this.tilekey;
+                return that.isSelectedView(this) && 
+                       that.isVisible(this) && 
+                       that.clientState.getSharedState('activeCarouselTile') === this.tilekey;
             });
 
             this.translateLabel.map('fill').from( function() {
@@ -275,7 +277,7 @@ define(function (require) {
             this.translateLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.translateLabel.map('font-outline-width').asValue(3);
             this.translateLabel.map('opacity').from( function() {
-                return that.clientState.opacity;
+                return that.getOpacity();
             })
         }
 

@@ -185,7 +185,7 @@ define(function (require) {
             this.detailsBackground.map('offset-x').asValue(this.DETAILS_OFFSET_X + 1);
             this.detailsBackground.on('click', function() { return true; }); //swallow event
             this.detailsBackground.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
         },
 
@@ -239,7 +239,7 @@ define(function (require) {
             bar.map('width').asValue(1);
             bar.map('offset-x').asValue(that.DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
             bar.map('offset-y').asValue(yOffset-1);
-            bar.map('opacity').from( function() { return that.clientState.opacity; });
+            bar.map('opacity').from( function() { return that.getOpacity(); });
             return bar;
         },
 
@@ -264,7 +264,7 @@ define(function (require) {
             labels.map('text-anchor').asValue('middle');
             labels.map('font-outline').asValue(this.BLACK_COLOUR);
             labels.map('font-outline-width').asValue(3);
-            labels.map('opacity').from( function() { return that.clientState.opacity; });
+            labels.map('opacity').from( function() { return that.getOpacity(); });
 
             // TIME AXIS TICKS
             ticks = that.plotLayer.addLayer(aperture.BarLayer);
@@ -275,7 +275,7 @@ define(function (require) {
             ticks.map('width').asValue(TICK_WIDTH);           
             ticks.map('stroke').asValue(this.BLACK_COLOUR);
             ticks.map('stroke-width').asValue(1);
-            ticks.map('opacity').from( function() { return that.clientState.opacity; });
+            ticks.map('opacity').from( function() { return that.getOpacity(); });
 
             switch (type) {
 
@@ -382,8 +382,38 @@ define(function (require) {
             bar.map('orientation').asValue('vertical');                   
             bar.map('stroke').asValue(that.BLACK_COLOUR);
             bar.map('stroke-width').asValue(2);            
-            bar.map('opacity').from( function() { return that.clientState.opacity; })
+            bar.map('opacity').from( function() { return that.getOpacity(); })
             return bar;
+        },
+
+
+        createBarCountLabels: function() {
+
+            var that = this,
+                X_OFFSET = 128;
+
+            this.barTotals = this.createLabel(that.POSITIVE_COLOUR);
+            this.barTotals.map('label-count').asValue(3);
+            this.barTotals.map('text').from(function(index) {
+                switch (index) {
+                    case 0: return that.getParentCount(this, 'Daily') + " tweets";
+                    case 1: return that.getParentCount(this,'Per6hrs') + " tweets";
+                    default: return that.getParentCount(this,'PerHour') + " tweets";
+                }
+            });
+            this.barTotals.map('font-size').asValue(12);
+            this.barTotals.map('offset-y').from(function(index) {
+                switch(index) {
+                    case 0:
+                        return that.MONTH_LINE_Y - that.VERTICAL_BUFFER - that.MAX_BAR_LENGTH;
+                    case 1:
+                        return that.WEEK_LINE_Y - that.VERTICAL_BUFFER - that.MAX_BAR_LENGTH;
+                    default:
+                        return that.DAY_LINE_Y - that.VERTICAL_BUFFER - that.MAX_BAR_LENGTH;
+                }
+            });
+            this.barTotals.map('offset-x').asValue(this.DETAILS_OFFSET_X + this.HORIZONTAL_BUFFER + X_OFFSET);
+
         },
 
 
@@ -466,8 +496,9 @@ define(function (require) {
                     this.dayBars = bars;
                     this.dayBarLine = this.createPartitionBar(this.GREY_COLOUR, this.DAY_LINE_Y);
                     break;
-
             }
+
+
         },
 
 
@@ -483,7 +514,7 @@ define(function (require) {
             label.map('text-anchor').asValue('start');
             label.map('font-outline').asValue(that.BLACK_COLOUR);
             label.map('font-outline-width').asValue(3);
-            label.map('opacity').from( function() { return that.clientState.opacity; });
+            label.map('opacity').from( function() { return that.getOpacity(); });
             return label;
         },
 
@@ -607,6 +638,7 @@ define(function (require) {
             this.createAxis('week');
             this.createAxis('day');
             this.createTitleLabels();
+            this.createBarCountLabels();
             this.createMostRecentTweets();
 
 /*
@@ -720,7 +752,7 @@ define(function (require) {
                     return DETAILS_OFFSET_X + 20 + index*BAR_WIDTH;
                 });
                 bar.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return bar;
             }
@@ -739,7 +771,7 @@ define(function (require) {
                 bar.map('offset-x').asValue(DETAILS_OFFSET_X+that.HORIZONTAL_BUFFER);
                 bar.map('offset-y').asValue(yOffset-1);
                 bar.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return bar;
             }
@@ -755,7 +787,7 @@ define(function (require) {
                 label.map('font-outline').asValue(that.BLACK_COLOUR);
                 label.map('font-outline-width').asValue(3);
                 label.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return label;
             }
@@ -772,7 +804,7 @@ define(function (require) {
             this.detailsBackground.map('offset-x').asValue(DETAILS_OFFSET_X + 1);
             this.detailsBackground.on('click', function() { return true; }); //swallow event
             this.detailsBackground.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
 
             // TITLE LABELS
@@ -831,7 +863,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(DETAILS_OFFSET_X + that.TILE_SIZE - that.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 });
 
             // POSITIVE TITLE LABEL
@@ -958,7 +990,7 @@ define(function (require) {
 
             });
             this.countLabels.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 });
 
             // TIME AXIS LABEL
@@ -996,7 +1028,7 @@ define(function (require) {
                 return DETAILS_OFFSET_X + 24 + 51.5*index;
             });
             this.timeAxisTicks.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 });
 
             // MOST RECENT TWEETS LABELS
