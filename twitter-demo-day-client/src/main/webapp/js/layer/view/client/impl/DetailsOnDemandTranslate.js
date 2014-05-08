@@ -58,6 +58,17 @@ define(function (require) {
         },
 
 
+        panMapToCenter: function(data) {
+
+            var viewportPixel, panCoord;
+
+            viewportPixel = this.map.getViewportPixelFromCoord( data.longitude, data.latitude );
+            panCoord = this.map.getCoordFromViewportPixel( viewportPixel.x + this.TILE_SIZE/2 + this.X_CENTRE_OFFSET, 
+                                                           viewportPixel.y + this.TILE_SIZE/2 + this.Y_CENTRE_OFFSET );           
+            this.map.map.panTo( panCoord.y, panCoord.x );
+        },
+        
+
         getParentCount: function(data, type) {
 
             var tagIndex = this.clientState.clickState.userData.index,

@@ -106,6 +106,8 @@ define(function (require) {
                 tag : event.data.bin.value[event.index[0]].topic,
                 index :  event.index[0]
             });
+            // pan map to center
+            this.detailsOnDemand.panMapToCenter(event.data);
             // send this node to the front
             this.plotLayer.all().where(event.data).toFront();
             // redraw all nodes
