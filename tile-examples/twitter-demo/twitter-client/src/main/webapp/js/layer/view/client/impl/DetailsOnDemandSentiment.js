@@ -352,12 +352,12 @@ define(function (require) {
                 mousemove : function(event) {
                     that.onHover(event, 'detailsOnDemandPositive');
                     that.detailsPositiveBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
+                    that.countLabels.all().where(event.data).redraw();
                 },
                 mouseout : function(event) {
                     that.onHoverOff(event);
                     that.detailsPositiveBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
+                    that.countLabels.all().where(event.data).redraw();
                 }
             });
 
@@ -380,12 +380,12 @@ define(function (require) {
                 mousemove : function(event) {
                     that.onHover(event, 'detailsOnDemandNegative');
                     that.detailsNegativeBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
+                    that.countLabels.all().where(event.data).redraw();
                 },
                 mouseout :  function(event) {
                     that.onHoverOff(event);
                     that.detailsNegativeBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
+                    that.countLabels.all().where(event.data).redraw();
                 }
             });
         },

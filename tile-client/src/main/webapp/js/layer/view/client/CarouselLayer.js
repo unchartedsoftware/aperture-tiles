@@ -72,11 +72,8 @@ define(function (require) {
 
             this._super(views);
 
-            if (this.views.length > 1) {
-                // create the carousel UI
-                this.createUI();
-            }
-
+            // create the carousel UI
+            this.createUI();
         },
 
 
@@ -94,13 +91,17 @@ define(function (require) {
 
             // tile outline layer
             this.outline = this.createTileOutlineLayer();
-            // left and right view buttons
-            this.leftButton = this.createViewSelectionLayer('left');
-            this.rightButton = this.createViewSelectionLayer('right');
-            // index dots
-            this.indexButtons = [];
-            for (i=0, j=-positionFactor; j<=positionFactor; i++, j++) {
-                this.indexButtons.push(this.createViewIndexLayer(i, j));
+
+            if (this.views.length > 1) {
+                // only create carousel ui if there is more than 1 view
+                // left and right view buttons
+                this.leftButton = this.createViewSelectionLayer('left');
+                this.rightButton = this.createViewSelectionLayer('right');
+                // index dots
+                this.indexButtons = [];
+                for (i=0, j=-positionFactor; j<=positionFactor; i++, j++) {
+                    this.indexButtons.push(this.createViewIndexLayer(i, j));
+                }
             }
         },
 
@@ -336,14 +337,17 @@ define(function (require) {
             // only redraw previous tile, and current tile
             function currentOrPreviousTilekey() {
                 return this.tilekey === that.selectedTileInfo.previouskey ||
-                    this.tilekey === that.selectedTileInfo.tilekey;
+                       this.tilekey === that.selectedTileInfo.tilekey;
             }
 
             this.outline.all().where(currentOrPreviousTilekey).redraw();
-            this.leftButton.all().where(currentOrPreviousTilekey).redraw();
-            this.rightButton.all().where(currentOrPreviousTilekey).redraw();
-            for (i=0; i<this.indexButtons.length; i++) {
-                this.indexButtons[i].all().where(currentOrPreviousTilekey).redraw();
+            if (this.views.length > 1) {
+                // only draw carousel ui if there is more than 1 view
+                this.leftButton.all().where(currentOrPreviousTilekey).redraw();
+                this.rightButton.all().where(currentOrPreviousTilekey).redraw();
+                for (i=0; i<this.indexButtons.length; i++) {
+                    this.indexButtons[i].all().where(currentOrPreviousTilekey).redraw();
+                }
             }
             this.mapNodeLayer.all().where(currentOrPreviousTilekey).redraw();
 
