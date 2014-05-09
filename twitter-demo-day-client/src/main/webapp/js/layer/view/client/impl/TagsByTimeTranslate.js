@@ -155,7 +155,7 @@ define(function (require) {
                     tagIndex = Math.floor(index/numDays);
 
                 if (that.matchingTagIsSelected(this.bin.value[tagIndex].topic)){
-                    return that.POSITIVE_COLOUR;
+                    return that.BLUE_COLOUR;
                 }
                 if (that.shouldBeGreyedOut(this.bin.value[tagIndex].topic, this.tilekey)) {
                     return that.GREY_COLOUR;
@@ -220,7 +220,7 @@ define(function (require) {
             });
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
-                    case 0: return that.POSITIVE_COLOUR;
+                    case 0: return that.BLUE_COLOUR;
                     case 1: return that.WHITE_COLOUR;
                     default: return that.NEGATIVE_COLOUR;
                 }
