@@ -72,6 +72,10 @@ define(function (require) {
 
         getParentCount: function(data, type) {
 
+            /*
+             *  Array counts are inverted, 0 index is most recent
+             */
+
             var tagIndex = this.clientState.clickState.userData.index,
                 i, length, count = 0;
 
@@ -86,15 +90,13 @@ define(function (require) {
 
                     length = this.getTotalDaysInMonth(data);
                     for (i = 0; i<7; i++) {
-                        count += data.bin.value[tagIndex].countDaily[length - 1 - i];
+                        count += data.bin.value[tagIndex].countDaily[i];
                     }                  
                     break;
 
                 case 'PerHour':
-                default:
 
-                    length = this.getTotalDaysInMonth(data);
-                    count = data.bin.value[tagIndex].countDaily[length - 1]; 
+                    count = data.bin.value[tagIndex].countDaily[0]; 
                     break;
             }
             return count;
@@ -103,13 +105,18 @@ define(function (require) {
 
         getCountPercentage: function(data, index, type) {
 
+            /*
+             *  Array counts are inverted, 0 index is most recent
+             */
+
             var attrib = 'count' + type,
                 tagIndex = this.clientState.clickState.userData.index,
-                count = this.getParentCount(data, type);
+                count = this.getParentCount(data, type),
+                length = data.bin.value[tagIndex][attrib].length;
             if (count === 0) {
                 return 0;
             }
-            return data.bin.value[tagIndex][attrib][index] / count;
+            return data.bin.value[tagIndex][attrib][length - 1 - index] / count;
         },
 
 
