@@ -71,7 +71,7 @@ object FilterFunctions {
 
 	def or (operands: Filter*): Filter = new OrFunction(operands:_*)
 
-	def parseQuery (query: JSONObject, dataset: CSVDataset): Try[Filter] =
+	def parseQuery (query: JSONObject, dataset: CSVDataset[_]): Try[Filter] =
 		Try({
 			    val names = query.names()
 			    if (names.length != 1)

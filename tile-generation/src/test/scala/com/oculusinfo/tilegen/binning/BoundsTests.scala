@@ -260,28 +260,28 @@ class BoundsTestSuite extends FunSuite {
 		val spreaderFcn = b1.getSpreaderFunction[Double](pyramid, bins)
 
 		assertTBSetsEquivalent("0, 0", bins,
-		                       spreaderFcn((0, 0)),
+		                       spreaderFcn(0, 0),
 		                       Set((2, 0, 0, 0, 3),
 		                           (3, 0, 0, 0, 3),
 		                           (4, 0, 0, 0, 3)))
 
 		assertTBSetsEquivalent("2, 2", bins,
-		                       spreaderFcn((2, 2)),
+		                       spreaderFcn(2, 2),
 		                       Set((4, 2, 2, 0, 3),
 		                           (3, 1, 1, 0, 3),
 		                           (2, 0, 0, 2, 1)))
 
 		assertTBSetsEquivalent("2.25, 1.25", bins,
-		                       spreaderFcn((2.25, 1.25)),
+		                       spreaderFcn(2.25, 1.25),
 		                       Set((3, 1, 0, 0, 1),
 		                           (2, 0, 0, 2, 2)))
 
 		assertTBSetsEquivalent("6.5, 1.5", bins,
-		                       spreaderFcn((6.5, 1.5)),
+		                       spreaderFcn(6.5, 1.5),
 		                       Set((2, 1, 0, 2, 2)))
 
 		assertTBSetsEquivalent("9, 9", bins,
-		                       spreaderFcn((9.0, 9.0)),
+		                       spreaderFcn(9.0, 9.0),
 		                        Set[(Int, Int, Int, Int, Int)]())
 	}
 
@@ -297,7 +297,7 @@ class BoundsTestSuite extends FunSuite {
 		}
 
 		assertTBSetsEquivalent("initial", 4,
-		                       initialSpreaderFcn((0, 0)),
+		                       initialSpreaderFcn(0, 0),
 		                        Set((1, 0, 0, 0, 3)))
 
 		// Try serializing and deserializing it
@@ -315,11 +315,11 @@ class BoundsTestSuite extends FunSuite {
 		val ois = new ObjectInputStream(bais)
 
 		def getStreamedSpreaderFcn[T] =
-			ois.readObject.asInstanceOf[((Double, Double)) => TraversableOnce[(TileIndex, BinIndex)]]
+			ois.readObject.asInstanceOf[(Double, Double) => TraversableOnce[(TileIndex, BinIndex)]]
 		val streamedSpreaderFcn = getStreamedSpreaderFcn[Double]
 
 		assertTBSetsEquivalent("serialized", 4,
-		                       streamedSpreaderFcn((0, 0)),
+		                       streamedSpreaderFcn(0, 0),
 		                       Set((1, 0, 0, 0, 3)))
 	}
 }

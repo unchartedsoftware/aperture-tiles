@@ -38,6 +38,7 @@ import org.apache.spark.streaming.dstream.DStream
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.tilegen.tiling.BinDescriptor
+import com.oculusinfo.tilegen.tiling.IndexScheme
 import com.oculusinfo.tilegen.tiling.TileMetaData
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import org.apache.spark.streaming.Time
@@ -52,6 +53,7 @@ import org.apache.spark.streaming.Time
  * place that needs raw data to be binned.
  */
 abstract class Dataset[IT: ClassManifest, PT: ClassManifest, BT] {
+	val indexTypeManifest = implicitly[ClassManifest[IT]]
 	val binTypeManifest = implicitly[ClassManifest[PT]]
 	var _debug = true;
 
@@ -77,6 +79,8 @@ abstract class Dataset[IT: ClassManifest, PT: ClassManifest, BT] {
 	def getConsolidationPartitions: Option[Int] = None
 	
 	def isDensityStrip: Boolean = false
+
+	def getIndexScheme: IndexScheme[IT]
 
 	/**
 	 * Get a bin descriptor that can be used to bin this data
@@ -218,14 +222,32 @@ abstract class StreamingProcessingStrategy[IT: ClassManifest, PT: ClassManifest]
 
 
 object DatasetFactory {
+	private def getDataset[T: ClassManifest] (indexer: CSVIndexExtractor[T],
+	                                          properties: CSVRecordPropertiesWrapper,
+	                                          tileWidth: Int,
+	                                          tileHeight: Int): CSVDataset[T] =
+		new CSVDataset(indexer, properties, tileWidth, tileHeight)
+
+	private def getDatasetGeneric[T] (indexer: CSVIndexExtractor[T],
+	                                  properties: CSVRecordPropertiesWrapper,
+	                                  tileWidth: Int,
+	                                  tileHeight: Int): CSVDataset[T] =
+		getDataset(indexer, properties, tileWidth, tileHeight)(indexer.indexTypeManifest)
+
 	def createDataset (sc: SparkContext,
 	                   dataDescription: Properties,
 	                   cacheRaw: Boolean,
 	                   cacheFilterable: Boolean,
 	                   cacheProcessed: Boolean,
 	                   tileWidth: Int = 256,
-	                   tileHeight: Int = 256): Dataset[(Double, Double), _, _] = {
-		val dataset = new CSVDataset(dataDescription, tileWidth, tileHeight)
+	                   tileHeight: Int = 256): Dataset[_, _, _] = {
+		// Wrapp parameters more usefully
+		val properties = new CSVRecordPropertiesWrapper(dataDescription)
+
+		// Determine indexing information
+		val indexer = CSVIndexExtractor.fromProperties(properties)
+
+		val dataset:CSVDataset[_] = getDatasetGeneric(indexer, properties, tileWidth, tileHeight)
 		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
 		dataset
 	}

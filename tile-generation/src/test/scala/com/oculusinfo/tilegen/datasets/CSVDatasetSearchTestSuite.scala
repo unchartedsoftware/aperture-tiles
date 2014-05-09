@@ -41,7 +41,7 @@ import org.apache.spark.SharedSparkContext
 
 
 class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
-	var dataset: CSVDataset = null;
+	var dataset: CSVDataset[(Double, Double)] = null;
 
 
 	def unwrapTry[T] (attempt: Try[T]): T = {
@@ -85,9 +85,11 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 			readProps.setProperty("oculus.binning.parsing.c.index", "2")
 			readProps.setProperty("oculus.binning.parsing.d.index", "3")
 			readProps.setProperty("oculus.binning.parsing.e.index", "4")
+			val csvProps = new CSVRecordPropertiesWrapper(readProps);
+			val csvIndexer = new CartesianIndexExtractor("x", "y")
 
 			// Put our dataset together
-			dataset = new CSVDataset(readProps, 1, 1);
+			dataset = new CSVDataset(csvIndexer, csvProps, 1, 1);
 			dataset.initialize(sc, false, true, false)
 
 			test()

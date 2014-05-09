@@ -64,7 +64,7 @@ class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializab
 	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
 }
 
-class IPV4ZCurveIndexScheme extends IndexScheme[Array[Byte]] {
+class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
 	def toCartesian (ipAddress: Array[Byte]): (Double, Double) = {
 		def getXDigit (byte: Byte): Long =
 			(((byte & 0x40) >> 3) |

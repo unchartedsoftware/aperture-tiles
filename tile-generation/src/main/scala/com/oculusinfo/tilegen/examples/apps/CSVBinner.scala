@@ -30,7 +30,6 @@ package com.oculusinfo.tilegen.examples.apps
 import java.io.FileInputStream
 import java.util.Properties
 import scala.collection.JavaConverters._
-import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.oculusinfo.tilegen.spark.SparkConnector
@@ -118,17 +117,19 @@ object CSVBinner {
 		}
 	}
 	
-	def processDataset[PT: ClassManifest, BT] (dataset: Dataset[(Double, Double), PT, BT],
-	                                           tileIO: TileIO): Unit = {
+	def processDataset[IT: ClassManifest,
+	                   PT: ClassManifest, 
+	                   BT] (dataset: Dataset[IT, PT, BT],
+	                        tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 		dataset.getLevels.map(levels =>
 			{
-				val procFcn: RDD[((Double, Double), PT)] => Unit =
+				val procFcn: RDD[(IT, PT)] => Unit =
 					rdd =>
 				{
 					val tiles = binner.processDataByLevel(rdd,
-					                                      new CartesianIndexScheme,
+					                                      dataset.getIndexScheme,
 					                                      dataset.getBinDescriptor,
 					                                      dataset.getTilePyramid,
 					                                      levels,
@@ -151,9 +152,9 @@ object CSVBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[PT, BT] (dataset: Dataset[(Double, Double), PT, BT],
-	                                   tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.binTypeManifest)
+	def processDatasetGeneric[IT, PT, BT] (dataset: Dataset[IT, PT, BT],
+	                                       tileIO: TileIO): Unit =
+		processDataset(dataset, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
 
 	
 	def main (args: Array[String]): Unit = {

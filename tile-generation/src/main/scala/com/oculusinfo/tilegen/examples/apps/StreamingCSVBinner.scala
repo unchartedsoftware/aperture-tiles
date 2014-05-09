@@ -29,55 +29,59 @@ package com.oculusinfo.tilegen.examples.apps
 
 import java.io.FileInputStream
 import java.util.Properties
+import java.io.File
+import java.io.IOException
+import java.io.ObjectInputStream
+import java.io.FilenameFilter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Calendar
+
 import scala.collection.JavaConverters._
-import org.apache.spark._
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.util.PropertiesWrapper
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+import scala.util.{Try, Success, Failure}
+
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
-import org.apache.spark.streaming.StreamingContext
-import com.oculusinfo.tilegen.datasets.ProcessingStrategy
-import org.apache.spark.streaming.Seconds
+
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.LongWritable
 import org.apache.hadoop.io.Text
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
-import java.text.SimpleDateFormat
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
-import java.util.Date
+
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.Time
-import com.oculusinfo.tilegen.datasets.StreamingProcessor
-import java.util.Calendar
-import com.oculusinfo.tilegen.datasets.StreamingCSVDataset
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.datasets.CSVRecordParser
-import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
-import com.oculusinfo.tilegen.tiling.TileIO
 import org.apache.spark.streaming.dstream.FileInputDStream
 import org.apache.spark.streaming.dstream.InputDStream
-import scala.collection.mutable.HashSet
-import java.io.File
-import org.apache.spark.rdd.UnionRDD
-import java.io.IOException
-import java.io.ObjectInputStream
-import scala.collection.mutable.HashMap
-import java.io.FilenameFilter
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.dstream.LocalFileInputDStream
+
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.binning.impl.AOITilePyramid
+
+import com.oculusinfo.tilegen.spark.SparkConnector
+import com.oculusinfo.tilegen.spark.GeneralSparkConnector
+import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
+import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
+import com.oculusinfo.tilegen.datasets.CSVRecordParser
+import com.oculusinfo.tilegen.datasets.Dataset
+import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
+import com.oculusinfo.tilegen.datasets.StreamingProcessor
+import com.oculusinfo.tilegen.datasets.StreamingCSVDataset
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.HBaseTileIO
+import com.oculusinfo.tilegen.tiling.LocalTileIO
+import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
+import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.util.PropertiesWrapper
+
 
 
 
@@ -174,9 +178,11 @@ class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingConte
  * A streaming strategy that takes a given preparsed dstream and then windows it
  * up over the given window and slide durations.
  */
-class WindowedProcessingStrategy(stream: DStream[((Double, Double), Double)], windowDurSec: Int, slideDurSec: Int)
-		extends StreamingProcessingStrategy[(Double, Double), Double] {
-	protected def getData: DStream[((Double, Double), Double)] =
+class WindowedProcessingStrategy[IT: ClassManifest] (stream: DStream[(IT, Double)],
+                                                     windowDurSec: Int,
+                                                     slideDurSec: Int)
+		extends StreamingProcessingStrategy[IT, Double] {
+	protected def getData: DStream[(IT, Double)] =
 		stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
 }
 
@@ -188,29 +194,55 @@ object StreamingCSVBinner {
 	 * DStream[(Double, Double, Double)]. All data is cached at the end so that
 	 * any windowed operations after will start from here.
 	 */
-	def getParsedStream(properties: PropertiesWrapper,
-	                    source: StreamingCSVDataSource,
-	                    parser: CSVRecordParser,
-	                    extractor: CSVFieldExtractor): DStream[((Double, Double), Double)] = {
-		val localXVar = properties.getStringOption("oculus.binning.xField", "The field to use for the X axis of tiles produced").get
-		val localYVar = properties.getString("oculus.binning.yField", "The field to use for the Y axis of tiles produced", Some("zero"))
+	def getParsedStream[IT: ClassManifest] (properties: CSVRecordPropertiesWrapper,
+	                                        source: StreamingCSVDataSource,
+	                                        indexer: CSVIndexExtractor[IT]): DStream[(IT, Double)] = {
 		val localZVar = properties.getString("oculus.binning.valueField", "The field to use for the value to tile", Some("count"))
 
 		val strm = source.getDataStream
 		val data = strm.mapPartitions(iter =>
-			// Parse the records from the raw data
-			parser.parseRecords(iter, localXVar, localYVar).map(_._2)
+			{
+				// Parse the records from the raw data
+				val parser = new CSVRecordParser(properties)
+				// determine which fields we need
+				val fields = if ("count" == localZVar) {
+					indexer.fields
+				} else {
+					indexer.fields :+ localZVar
+				}
+				parser.parseRecords(iter, fields:_*)
+					.map(_._2) // We don't need the original record (in _1)
+			}
 		).filter(r =>
 			// Filter out unsuccessful parsings
 			r.isSuccess
 		).map(_.get).mapPartitions(iter =>
-			iter.map(t => (extractor.getFieldValue(localXVar)(t),
-			               extractor.getFieldValue(localYVar)(t),
-			               extractor.getFieldValue(localZVar)(t)))
+			{
+				val extractor = new CSVFieldExtractor(properties)
+
+				iter.map(t =>
+					{
+						// Determine our index value
+						val indexValue = Try(
+							{
+								val indexFields = indexer.fields
+								val fieldValues = indexFields.map(field =>
+									(field -> extractor.getFieldValue(field)(t))
+								).map{case (k, v) => (k, v.get)}.toMap
+								indexer.calculateIndex(fieldValues)
+							}
+						)
+
+						// Determine and add in our binnable value
+						(indexValue,
+						 extractor.getFieldValue(localZVar)(t))
+					}
+				)
+			}
 		).filter(record =>
-			record._1.isSuccess && record._2.isSuccess && record._3.isSuccess
+			record._1.isSuccess && record._2.isSuccess
 		).map(record =>
-			((record._1.get, record._2.get), record._3.get)
+			(record._1.get, record._2.get)
 		)
 
 		data.cache
@@ -301,23 +333,24 @@ object StreamingCSVBinner {
 	/**
 	 * The actual processing function for the streaming dataset. This bins up the data and then writes it out.
 	 */
-	def processDataset[PT: ClassManifest, BT] (dataset: Dataset[(Double, Double), PT, BT] with StreamingProcessor[(Double, Double), PT],
-	                                           job: (String, Int), tileIO: TileIO): Unit = {
+	def processDataset[IT: ClassManifest, PT: ClassManifest, BT]
+		(dataset: Dataset[IT, PT, BT] with StreamingProcessor[IT, PT],
+		 job: (String, Int), tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 		
 		//go through each of the level sets and process them
 		dataset.getLevels.map(levels =>
 			{
-				val procFcn:  Time => RDD[((Double, Double), PT)] => Unit =
-					(time: Time) => (rdd: RDD[((Double, Double), PT)]) =>
+				val procFcn:  Time => RDD[(IT, PT)] => Unit =
+					(time: Time) => (rdd: RDD[(IT, PT)]) =>
 				{
 					if (rdd.count > 0) {
 						val stime = System.currentTimeMillis()
 						println("processing level: " + levels)
 						val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
 						val tiles = binner.processDataByLevel(rdd,
-						                                      new CartesianIndexScheme,
+						                                      dataset.getIndexScheme,
 						                                      dataset.getBinDescriptor,
 						                                      dataset.getTilePyramid,
 						                                      levels,
@@ -332,7 +365,8 @@ object StreamingCSVBinner {
 						
 						//grab the final processing time and print out some time stats
 						val ftime = System.currentTimeMillis()
-						val timeInfo = new StringBuilder().append("Levels ").append(levels).append(" for job ").append(jobName).append(" finished\n")
+						val timeInfo = new StringBuilder().append("Levels ").append(levels)
+							.append(" for job ").append(jobName).append(" finished\n")
 							.append("  Preprocessing: ").append((stime - time.milliseconds)).append("ms\n")
 							.append("  Processing: ").append((ftime - stime)).append("ms\n")
 							.append("  Total: ").append((ftime - time.milliseconds)).append("ms\n")
@@ -346,10 +380,46 @@ object StreamingCSVBinner {
 		)
 	}
 	
-	def processDatasetGeneric[PT, BT] (dataset: Dataset[(Double, Double), PT, BT] with StreamingProcessor[(Double, Double), PT], tileIO: TileIO, job: (String, Int)): Unit =
-		processDataset(dataset, job, tileIO)(dataset.binTypeManifest)
+	def processDatasetGeneric[IT: ClassManifest, PT, BT]
+		(dataset: Dataset[IT, PT, BT] with StreamingProcessor[IT, PT],
+		 tileIO: TileIO,
+		 job: (String, Int)): Unit =
+		processDataset(dataset, job, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
 	
 	
+	def processIndex[IT: ClassManifest] (ssc: StreamingContext,
+	                                     tileIO: TileIO,
+	                                     batchJobs: Seq[(String, Int)],
+	                                     properties: CSVRecordPropertiesWrapper,
+	                                     indexer: CSVIndexExtractor[IT]) = {
+		val source = new StreamingCSVDataSource(properties, ssc)
+
+		//preparse the stream before we start to process the actual data
+		val parsedStream = getParsedStream(properties, source, indexer)
+			
+		//loop through each batch job, setup each streaming window, and process it
+		batchJobs.foreach{job =>
+			//grab the actual preparsed dstream
+			val windowDurTimeSec = job._2
+			val slideDurTimeSec = job._2
+
+			//create a the windowed strategy for the job
+			val strategy = new WindowedProcessingStrategy(parsedStream, windowDurTimeSec, slideDurTimeSec)
+
+			val dataset = new StreamingCSVDataset(indexer, properties, 256, 256)(indexer.indexTypeManifest)
+			dataset.initialize(strategy)
+
+			processDatasetGeneric(dataset, tileIO, job)
+		}
+	}
+
+	def processIndexGeneric[IT] (ssc: StreamingContext,
+	                             tileIO: TileIO,
+	                             batchJobs: Seq[(String, Int)],
+	                             properties: CSVRecordPropertiesWrapper,
+	                             indexer: CSVIndexExtractor[IT]) =
+		processIndex(ssc, tileIO, batchJobs, properties, indexer)(indexer.indexTypeManifest)
+
 	def main (args: Array[String]): Unit = {
 		Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
 		Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
@@ -391,32 +461,14 @@ object StreamingCSVBinner {
 			propStream.close()
 			
 			val properties = new CSVRecordPropertiesWrapper(props)
-			val source = new StreamingCSVDataSource(properties, ssc)
-			val parser = new CSVRecordParser(properties)
-			val extractor = new CSVFieldExtractor(properties)
+			val indexer = CSVIndexExtractor.fromProperties(properties)
 
-			//preparse the stream before we start to process the actual data
-			val parsedStream = getParsedStream(properties, source, parser, extractor)
-			
-			//loop through each batch job, setup each streaming window, and process it
-			batchJobs.foreach{job =>
-				//grab the actual preparsed dstream
-				val windowDurTimeSec = job._2
-				val slideDurTimeSec = job._2
-				
-				//create a the windowed strategy for the job
-				val strategy = new WindowedProcessingStrategy(parsedStream, windowDurTimeSec, slideDurTimeSec)
-				
-				val dataset = new StreamingCSVDataset(props, 256, 256)
-				dataset.initialize(strategy)
-
-				processDatasetGeneric(dataset, tileIO, job)
-			}
+			processIndexGeneric(ssc, tileIO, batchJobs, properties, indexer)
 
 			argIdx = argIdx + 1
 		}
 		
 		ssc.start
-		
 	}
+
 }

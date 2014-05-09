@@ -75,7 +75,9 @@ class SortedBinner {
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
 	 */
-	def processDataByLevel[PT: ClassManifest, BT] (data: RDD[(Double, Double, PT)],
+	def processDataByLevel[IT: ClassManifest,
+	                       PT: ClassManifest, BT] (data: RDD[(IT, PT)],
+	                                               indexScheme: IndexScheme[IT],
 	                                               binDesc: BinDescriptor[PT, BT],
 	                                               tileScheme: TilePyramid,
 	                                               levels: Seq[Int],
@@ -83,8 +85,9 @@ class SortedBinner {
 	                                               consolidationPartitions: Option[Int] = None,
 	                                               isDensityStrip: Boolean = false):
 			RDD[TileData[BT]] = {
-		val mapOverLevels: (Double, Double, PT) => TraversableOnce[((TileIndex, BinIndex), PT)] =
-			(x, y, value) => {
+		val mapOverLevels: (IT, PT) => TraversableOnce[((TileIndex, BinIndex), PT)] =
+			(key, value) => {
+				val (x, y) = indexScheme.toCartesian(key)
 				levels.map(level =>
 					{
 						val tile = tileScheme.rootToTile(x, y, level, bins)
@@ -114,9 +117,10 @@ class SortedBinner {
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
 	 */
-	def processData[PT: ClassManifest, BT] (data: RDD[(Double, Double, PT)],
+	def processData[IT: ClassManifest,
+	                PT: ClassManifest, BT] (data: RDD[(IT, PT)],
 	                                        binDesc: BinDescriptor[PT, BT],
-	                                        datumToTiles: (Double, Double, PT) => TraversableOnce[((TileIndex, BinIndex), PT)],
+	                                        datumToTiles: (IT, PT) => TraversableOnce[((TileIndex, BinIndex), PT)],
 	                                        bins: Int = 256,
 	                                        consolidationPartitions: Option[Int] = None,
 	                                        isDensityStrip: Boolean = false):
@@ -164,7 +168,7 @@ class SortedBinner {
 
 				iter.foreach(record =>
 					{
-						datumToTiles(record._1, record._2, record._3).foreach(tbv =>
+						datumToTiles(record._1, record._2).foreach(tbv =>
 							{
 								val tileIndex = tbv._1._1
 								val bin = tbv._1._2
@@ -238,17 +242,19 @@ object SortedBinnerTest {
 		}
 	}
 	
-	def processDataset[PT: ClassManifest, BT] (dataset: Dataset[(Double, Double), PT, BT],
+	def processDataset[IT: ClassManifest,
+	                   PT: ClassManifest, BT] (dataset: Dataset[IT, PT, BT],
 	                                           tileIO: TileIO): Unit = {
 		val binner = new SortedBinner
 		binner.debug = true
 		dataset.getLevels.map(levels =>
 			{
-				val procFcn: RDD[((Double, Double), PT)] => Unit = rdd =>
+				val procFcn: RDD[(IT, PT)] => Unit = rdd =>
 				{
 					val bins = (dataset.getNumXBins max dataset.getNumYBins)
 					val tiles = binner.processDataByLevel(
-						rdd.map(r => (r._1._1, r._1._2, r._2)),
+						rdd,
+						dataset.getIndexScheme,
 						dataset.getBinDescriptor,
 						dataset.getTilePyramid,
 						levels,
@@ -270,9 +276,9 @@ object SortedBinnerTest {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[PT, BT] (dataset: Dataset[(Double, Double), PT, BT],
+	def processDatasetGeneric[IT, PT, BT] (dataset: Dataset[IT, PT, BT],
 	                                   tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.binTypeManifest)
+		processDataset(dataset, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
 
 
 	def main (args: Array[String]): Unit = {

@@ -66,6 +66,7 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext {
 
 			val readProps = new Properties()
 			readProps.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
+			readProps.setProperty("oculus.binning.projection.autobounds", "false")
 			readProps.setProperty("oculus.binning.projection.minx", "0.0")
 			readProps.setProperty("oculus.binning.projection.maxx", "7.9999")
 			readProps.setProperty("oculus.binning.projection.miny", "0.0")

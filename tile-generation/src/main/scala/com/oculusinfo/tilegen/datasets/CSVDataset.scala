@@ -47,13 +47,16 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.tiling.BinDescriptor
+import com.oculusinfo.tilegen.tiling.IndexScheme
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
-import com.oculusinfo.tilegen.util.PropertiesWrapper
 import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
 
 import com.oculusinfo.tilegen.util.ArgumentParser
+import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 
@@ -78,6 +81,25 @@ import com.oculusinfo.tilegen.util.ArgumentParser
  *  oculus.binning.source.partitions
  *      The number of partitions into which to break up each source file
  * 
+ *  oculus.binning.index.type
+ *      The type of index to use in the data.  Currently suppoted options are 
+ *      cartesian (the default) and ipv4.
+ * 
+ *  oculus.binning.xField
+ *      The field to use as the X axis value (if a cartesian index is used)
+ * 
+ *  oculus.binning.yField
+ *      The field to use as the Y axis value (if a cartesian index is used).  
+ *      Defaults to zero (i.e., a density strip of x data)
+ * 
+ * oculus.binning.ipv4Field
+ *      The field from which to get the ipv4 address (if an ipv4 index is 
+ *      used).  The field type for this field must be "ipv4".
+ * 
+ *  oculus.binning.valueField
+ *      The field to use as the bin value
+ *      Default is to count entries only
+ *
  *  oculus.binning.projection
  *      The type of projection to use when binning data.  Possible values are:
  *          EPSG:4326 - bin linearly over the whole range of values found (default)
@@ -97,17 +119,6 @@ import com.oculusinfo.tilegen.util.ArgumentParser
  *      oculus.binning.projection.autobounds is false.  In that case, these four
  *      Properties are used as the axis bounds in the tile projection.
  * 
- *  oculus.binning.xField
- *      The field to use as the X axis value
- * 
- *  oculus.binning.yField
- *      The field to use as the Y axis value.  Defaults to zero (i.e., a
- *      density strip of x data)
- * 
- *  oculus.binning.valueField
- *      The field to use as the bin value
- *      Default is to count entries only
- *
  *  oculus.binning.levels.<order>
  *      This is an array property - i.e., if one wants to bin levels in three groups,
  *      then one should have oculus.binning.levels.0, oculus.binning.levels.1, and
@@ -143,6 +154,8 @@ import com.oculusinfo.tilegen.util.ArgumentParser
  *              column doesn't actually have to exist)
  *          int - treat the column as containing integers
  *          long - treat the column as containing double-precision integers
+ *          ipv4 - treat the column as an IP address.  It will be treated as a 
+ *              4-digit base 256 number, and just turned into a double
  *          date - treat the column as containing a date.  The date will be
  *              parsed and transformed into milliseconds since the
  *              standard java start date (using SimpleDateFormatter).
@@ -181,6 +194,87 @@ import com.oculusinfo.tilegen.util.ArgumentParser
  *               to e
  * 
  */
+
+object CSVIndexExtractor {
+	def fromProperties (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
+		val indexType = properties.getString("oculus.binning.index.type",
+		                                     "The type of index to use in the data.  Currently "+
+			                                     "suppoted options are cartesian (the default) "+
+			                                     "and ipv4.",
+		                                     Some("cartesian"))
+
+		indexType match {
+			case "cartesian" => {
+				val xVar = properties.getString("oculus.binning.xField",
+				                                "The field to use for the X axis of tiles produced",
+				                                Some(CSVDatasetBase.ZERO_STR))
+				val yVar = properties.getString("oculus.binning.yField",
+				                                "The field to use for the Y axis of tiles produced",
+				                                Some(CSVDatasetBase.ZERO_STR))
+				new CartesianIndexExtractor(xVar, yVar)
+			}
+			case "ipv4" => {
+				val ipVar = properties.getString("oculus.binning.ipv4Field",
+				                                 "The field from which to get the ipv4 address.  "+
+					                                 "Field type must be \"ipv4\".",
+				                                 None)
+				new IPv4IndexExtractor(ipVar)
+			}
+		}
+	}
+}
+abstract class CSVIndexExtractor[T: ClassManifest] extends Serializable {
+	val indexTypeManifest = implicitly[ClassManifest[T]]
+
+	// The fields this extractor needs
+	def fields: Array[String]
+
+	// The name of the indexing scheme - usually refering to the fields it 
+	// uses - for use in table naming.
+	def name: String
+
+	// A description of the data set axes
+	def description: String
+
+	// The index scheme the binner needs to know what to do with the index
+	// values we generate
+	def indexScheme: IndexScheme[T]
+
+	// Get the index value from the field values
+	def calculateIndex (fieldValues: Map[String, Double]): T
+
+	// Indicate if the index implies a density strip
+	def isDensityStrip: Boolean
+}
+
+class CartesianIndexExtractor(xVar: String, yVar: String) extends CSVIndexExtractor[(Double, Double)] {
+	private val scheme = new CartesianIndexScheme
+
+	def fields = Array(xVar, yVar)
+	def name = xVar + "." + yVar
+	def description = xVar + " vs. " + yVar
+	def indexScheme = scheme
+	def calculateIndex (fieldValues: Map[String, Double]): (Double, Double) =
+		(fieldValues(xVar), fieldValues(yVar))
+	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+}
+
+class IPv4IndexExtractor (ipField: String) extends CSVIndexExtractor[Array[Byte]] {
+	private val scheme = new IPv4ZCurveIndexScheme
+
+	def fields = Array(ipField)
+	def name = ipField
+	def description = ipField
+	def indexScheme = scheme
+	def calculateIndex (fieldValues: Map[String, Double]): Array[Byte] = {
+		val address = fieldValues(ipField).round.toLong
+		Array(((address & 0xff000000L) >> 24).toByte,
+		      ((address & 0xff0000L) >> 16).toByte,
+		      ((address & 0xff00L) >> 8).toByte,
+		      ((address & 0xff)).toByte)
+	}
+	val isDensityStrip = false
+}
 
 /*
  * Simple class to add standard field interpretation to a properties wrapper
@@ -276,6 +370,8 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 				value.toLong.toDouble
 			} else if ("date" == parseType) {
 				dateFormats(field).parse(value).getTime()
+			} else if ("ipv4" == parseType) {
+				value.split("\\.").map(_.toLong).foldLeft(0L)((a, b) => (256L*a+b)).toDouble
 			} else if ("propertyMap" == parseType) {
 				val property = properties.getStringOption("oculus.binning.parsing."+field+".property", "").get
 				val propType = getFieldType(field, "propertyType")
@@ -358,7 +454,8 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) {
 		else if ("zero" == field) Try(0.0)
 		else Try(record(properties.fieldIndices(field)))
 
-	def getTilePyramid (xField: String, minX: Double, maxX: Double,
+	def getTilePyramid (autoBounds: Boolean,
+	                    xField: String, minX: Double, maxX: Double,
 	                    yField: String, minY: Double, maxY: Double): TilePyramid = {
 		val projection = properties.getString("oculus.binning.projection",
 		                                      "The type of tile pyramid to use",
@@ -366,10 +463,6 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) {
 		if ("EPSG:900913" == projection) {
 			new WebMercatorTilePyramid()
 		} else {
-			val autoBounds = properties.getBoolean("oculus.binning.projection.autobounds",
-			                                       "Whether to calculate pyramid bounds "+
-				                                       "automatically or not",
-			                                       Some(true))
 			if (autoBounds) {
 				new AOITilePyramid(minX, minY, maxX, maxY)
 			} else {
@@ -391,22 +484,16 @@ object CSVDatasetBase {
 	val ZERO_STR = "zero"
 }
 
-abstract class CSVDatasetBase (rawProperties: Properties,
-                               tileWidth: Int,
-                               tileHeight: Int)
-		extends Dataset[(Double, Double), Double, JavaDouble] {
+abstract class CSVDatasetBase[IT: ClassManifest]
+	(indexer: CSVIndexExtractor[IT],
+	 properties: CSVRecordPropertiesWrapper,
+	 tileWidth: Int,
+	 tileHeight: Int)
+		extends Dataset[IT, Double, JavaDouble] {
 	def manifest = implicitly[ClassManifest[Double]]
-
-	protected val properties = new CSVRecordPropertiesWrapper(rawProperties)
 
 	private val description = properties.getStringOption("oculus.binning.description",
 	                                                     "The description to put in the tile metadata")
-	private val xVar = properties.getString("oculus.binning.xField",
-	                                        "The field to use for the X axis of tiles produced",
-	                                        Some(CSVDatasetBase.ZERO_STR))
-	private val yVar = properties.getString("oculus.binning.yField",
-	                                        "The field to use for the Y axis of tiles produced",
-	                                        Some(CSVDatasetBase.ZERO_STR))
 	private val zVar = properties.getString("oculus.binning.valueField",
 	                                        "The field to use for the value to tile",
 	                                        Some("count"))
@@ -442,17 +529,21 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 		val pyramidName = if (prefix.isDefined) prefix.get+"."+name
 		else name
 
-		pyramidName+"."+xVar+"."+yVar+(if ("count".equals(zVar)) "" else "."+zVar)
+		pyramidName+"."+indexer.name+(if ("count".equals(zVar)) "" else "."+zVar)
 	}
 
 	def getDescription =
 		description.getOrElse(
-			"Binned "+getName+" data showing "+xVar+" vs. "+yVar)
+			"Binned "+getName+" data showing "+indexer.description)
 
 	def getLevels = levels
 
 	private def getAxisBounds (): (Double, Double, Double, Double) = {
-		val coordinates = transformRDD(_.map(_._1))
+		val localIndexer = indexer
+		val cartesianConversion = localIndexer.indexScheme.toCartesian(_)
+		val toCartesian: RDD[(IT, Double)] => RDD[(Double, Double)] =
+			rdd => rdd.map(_._1).map(cartesianConversion)
+		val coordinates = transformRDD(toCartesian)
 
 		// Figure out our axis bounds
 		val minXAccum = coordinates.context.accumulator(Double.MaxValue)(new DoubleMinAccumulatorParam)
@@ -494,14 +585,18 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 		(minX, adjustedMaxX, minY, adjustedMaxY)
 	}
 
+	protected def allowAutoBounds = true
 	private lazy val axisBounds = getAxisBounds()
 
 	def getTilePyramid = {
 		val extractor = new CSVFieldExtractor(properties)
-		val autoBounds = properties.getBoolean("oculus.binning.projection.autobounds",
-		                                       "If true, calculate tile pyramid bounds automatically; "+
-			                                       "if false, use values given by properties",
-		                                       Some(true)).get
+		val autoBounds = (
+			allowAutoBounds &&
+				properties.getBoolean("oculus.binning.projection.autobounds",
+				                      "If true, calculate tile pyramid bounds automatically; "+
+					                      "if false, use values given by properties",
+				                      Some(true)).get
+		)
 		val (minX, maxX, minY, maxY) =
 			if (autoBounds) {
 				axisBounds
@@ -509,13 +604,15 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 				(0.0, 0.0, 0.0, 0.0)
 			}
 
-		extractor.getTilePyramid("", minX, maxX, "", minY, maxY)
+		extractor.getTilePyramid(autoBounds, "", minX, maxX, "", minY, maxY)
 	}
 
 	override def getNumXBins = tileWidth
 	override def getNumYBins = tileHeight
 	override def getConsolidationPartitions: Option[Int] = consolidationPartitions
 
+	def getIndexScheme = indexer.indexScheme
+ 
 	def getBinDescriptor: BinDescriptor[Double, JavaDouble] = {
 		val fieldAggregation = properties.getString("oculus.binning.parsing." + zVar + ".fieldAggregation",
 		                                            "The way to aggregate the value field when binning",
@@ -535,14 +632,14 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 			new StandardDoubleBinDescriptor
 	}
 
-	override def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+	override def isDensityStrip = indexer.isDensityStrip
 
 
 	class CSVStaticProcessingStrategy (sc: SparkContext,
 	                                   cacheRaw: Boolean,
 	                                   cacheFilterable: Boolean,
 	                                   cacheProcessed: Boolean)
-			extends StaticProcessingStrategy[(Double, Double), Double](sc) {
+			extends StaticProcessingStrategy[IT, Double](sc) {
 		// This is a weird initialization problem that requires some
 		// documentation to explain.
 		// What we really want here is for rawData to be initialized in the
@@ -579,10 +676,9 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 		def getRawData = rawData
 		def getFilterableData = filterableData
 
-		def getData: RDD[((Double, Double), Double)] = {
+		def getData: RDD[(IT, Double)] = {
 			val localProperties = properties
-			val localXVar = xVar
-			val localYVar = yVar
+			val localIndexer = indexer
 			val localZVar = zVar
 
 			rawData2 = {
@@ -596,8 +692,16 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 			val data = rawData2.mapPartitions(iter =>
 				{
 					val parser = new CSVRecordParser(localProperties)
+					// Determine which fields we need
+					val fields = if ("count" == localZVar) {
+						localIndexer.fields
+					} else {
+						localIndexer.fields :+ localZVar
+					}
+
 					// Parse the records from the raw data
-					parser.parseRecords(iter, localXVar, localYVar).map(_._2)
+					parser.parseRecords(iter, fields:_*)
+						.map(_._2) // We don't need the original record (in _1)
 				}
 			).filter(r =>
 				// Filter out unsuccessful parsings
@@ -606,14 +710,29 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 				{
 					val extractor = new CSVFieldExtractor(localProperties)
 
-					iter.map(t => (extractor.getFieldValue(localXVar)(t),
-					               extractor.getFieldValue(localYVar)(t),
-					               extractor.getFieldValue(localZVar)(t)))
+					iter.map(t =>
+						{
+							// Determine our index value
+							val indexValue = Try(
+								{
+									val indexFields = localIndexer.fields
+									val fieldValues = indexFields.map(field =>
+										(field -> extractor.getFieldValue(field)(t))
+									).map{case (k, v) => (k, v.get)}.toMap
+									localIndexer.calculateIndex(fieldValues)
+								}
+							)
+
+							// Determine and add in our binnable value
+							(indexValue,
+							 extractor.getFieldValue(localZVar)(t))
+						}
+					)
 				}
 			).filter(record =>
-				record._1.isSuccess && record._2.isSuccess && record._3.isSuccess
+				record._1.isSuccess && record._2.isSuccess
 			).map(record =>
-				((record._1.get, record._2.get), record._3.get)
+				(record._1.get, record._2.get)
 			)
 
 			if (cacheProcessed)
@@ -627,10 +746,11 @@ abstract class CSVDatasetBase (rawProperties: Properties,
 /**
  * Handles basic RDD's using a ProcessingStrategy. 
  */
-class CSVDataset (rawProperties: Properties,
-                  tileWidth: Int,
-                  tileHeight: Int)
-		extends CSVDatasetBase(rawProperties, tileWidth, tileHeight) {
+class CSVDataset[IT: ClassManifest] (indexer: CSVIndexExtractor[IT],
+                                     properties: CSVRecordPropertiesWrapper,
+                                     tileWidth: Int,
+                                     tileHeight: Int)
+		extends CSVDatasetBase[IT](indexer, properties, tileWidth, tileHeight) {
 	// Just some Filter type aliases from Queries.scala
 	import com.oculusinfo.tilegen.datasets.FilterAware._
 
@@ -668,18 +788,6 @@ class CSVDataset (rawProperties: Properties,
 	
 }
 
-object StreamingCSVDataset {
-
-	/**
-	 * Helper function to set autobounds to true for streaming datasets, since
-	 * it doesn't make sense to use it if the data is being streamed in.
-	 */
-	def removeAutoBounds(rawProperties: Properties) : Properties = {
-		rawProperties.setProperty("oculus.binning.projection.autobounds", "false")
-		rawProperties
-	}
-	
-}
 
 /**
  * The streaming version of the CSVDataset. This will use a StreamingProcessingStrategy
@@ -690,60 +798,24 @@ object StreamingCSVDataset {
  * for the case where the stream is windowed. In this case the stream must be
  * preparsed and then a new strategy created for each window.  
  */
-class StreamingCSVDataset (rawProperties: Properties,
-                           tileWidth: Int,
-                           tileHeight: Int)
-		extends CSVDatasetBase(StreamingCSVDataset.removeAutoBounds(rawProperties),
-		                       tileWidth, tileHeight) with StreamingProcessor[(Double, Double), Double]  {
+class StreamingCSVDataset[IT: ClassManifest] (indexer: CSVIndexExtractor[IT],
+                                              properties: CSVRecordPropertiesWrapper,
+                                              tileWidth: Int,
+                                              tileHeight: Int)
+		extends CSVDatasetBase[IT](indexer, properties,
+		                       tileWidth, tileHeight) with StreamingProcessor[IT, Double]  {
 	
-	type STRATEGY_TYPE = StreamingProcessingStrategy[(Double, Double), Double]
+	type STRATEGY_TYPE = StreamingProcessingStrategy[IT, Double]
 	protected var strategy: STRATEGY_TYPE = null
 	
-	def processWithTime[OUTPUT] (fcn: Time => RDD[((Double, Double), Double)] => OUTPUT,
+	override protected def allowAutoBounds = false
+
+	def processWithTime[OUTPUT] (fcn: Time => RDD[(IT, Double)] => OUTPUT,
 	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized dataset "+getName)
 		} else {
 			strategy.processWithTime(fcn, completionCallback)
 		}
-	}
-}
-
-
-object CSVDatasetTest {
-	def main (args: Array[String]): Unit = {
-		val argParser = new ArgumentParser(args)
-		val jobName = "CSV Dataset test"
-		val sc = argParser.getSparkConnector().getSparkContext(jobName)
-
-		val datasetProps = new java.util.Properties()
-		datasetProps.setProperty("oculus.binning.source.location",
-		                         "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv")
-		datasetProps.setProperty("oculus.binning.source.partitions", "96")
-		datasetProps.setProperty("oculus.binning.name", "bitcoin")
-		datasetProps.setProperty("oculus.binning.parsing.separator", "\t")
-		datasetProps.setProperty("oculus.binning.parsing.amount.index", "4")
-		datasetProps.setProperty("oculus.binning.parsing.time.index", "3")
-		datasetProps.setProperty("oculus.binning.parsing.time.fieldType", "date")
-		datasetProps.setProperty("oculus.binning.parsing.time.dateFormat", "yyyy-MM-dd HH:mm:ss")
-		datasetProps.setProperty("oculus.binning.parsing.source.index", "2")
-		datasetProps.setProperty("oculus.binning.parsing.source.fieldType", "int")
-		datasetProps.setProperty("oculus.binning.parsing.destination.index", "2")
-		datasetProps.setProperty("oculus.binning.parsing.destination.fieldType", "int")
-		datasetProps.setProperty("oculus.binning.parsing.transaction.index", "2")
-		datasetProps.setProperty("oculus.binning.parsing.transaction.fieldType", "Iint")
-		val dataset = new com.oculusinfo.tilegen.datasets.CSVDataset(datasetProps, 1, 1)
-		dataset.initialize(sc, false, true, false)
-		val rawData = dataset.getRawData
-		val props = new com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper(datasetProps)
-		val parsedData = rawData.mapPartitions(iter =>
-			{
-				val parser = new com.oculusinfo.tilegen.datasets.CSVRecordParser(props)
-				parser.parseRecords(iter, props.fields:_*)
-			}
-		)
-		val sourcefilter = dataset.getFieldFilterFunction("source", 1000, 2000)
-		val destfilter = dataset.getFieldFilterFunction("destination", 1000, 2000)
-		println(dataset.getRawFilteredData(destfilter).count)
 	}
 }

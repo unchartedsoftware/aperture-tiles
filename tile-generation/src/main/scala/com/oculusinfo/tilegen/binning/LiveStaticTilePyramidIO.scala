@@ -43,6 +43,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
+import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
@@ -65,7 +66,7 @@ import com.oculusinfo.tilegen.util.Rectangle
  * This class reads and caches a data set for live queries of its tiles
  */
 class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
-	private val datasets = MutableMap[String, Dataset[(Double, Double), _, _]]()
+	private val datasets = MutableMap[String, Dataset[_, _, _]]()
 	private val metaData = MutableMap[String, TileMetaData]()
 
 
@@ -144,31 +145,39 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	                   serializer: TileSerializer[BT],
 	                   javaTiles: JavaIterable[TileIndex]):
 			JavaList[TileData[BT]] = {
-		def inner[PT: ClassManifest]: JavaList[TileData[BT]] = {
+		def inner[IT: ClassManifest, PT: ClassManifest]: JavaList[TileData[BT]] = {
 			val tiles: Iterable[TileIndex] = javaTiles.asScala
 
 			if (!datasets.contains(pyramidId) ||
 				    tiles.isEmpty) {
 				null
 			} else {
-				val dataset = datasets(pyramidId).asInstanceOf[Dataset[(Double, Double), PT, BT]]
-
+				val dataset = datasets(pyramidId).asInstanceOf[Dataset[IT, PT, BT]]
+				val indexScheme = dataset.getIndexScheme
+				val binDescriptor = dataset.getBinDescriptor
 				val pyramid = dataset.getTilePyramid
+
 				val bins = tiles.head.getXBins()
 				val bounds = tilesToBounds(pyramid, tiles)
 
 				val boundsTest = bounds.getSerializableContainmentTest(pyramid,
 				                                                       bins)
-				val spreaderFcn = bounds.getSpreaderFunction[PT](pyramid, bins);
-				val binDescriptor = dataset.getBinDescriptor
+				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, bins)
+				val spreaderFcn: IT => TraversableOnce[(TileIndex, BinIndex)] =
+					index => {
+						val cartesianIndex = indexScheme.toCartesian(index)
+
+						val spread = cartesianSpreaderFcn(cartesianIndex._1, cartesianIndex._2)
+						spread
+					}
 
 				val binner = new RDDBinner
 				binner.debug = true
 
 				val results = dataset.transformRDD[TileData[BT]](
 					rdd => {
-						binner.processData[(Double, Double), PT, BT](rdd, binDescriptor,
-						                                             spreaderFcn, bins)
+						binner.processData[IT, PT, BT](rdd, binDescriptor,
+						                               spreaderFcn, bins)
 					}
 				).map(tile =>
 					// Get the min and max for each tile while we're still distributed
@@ -185,7 +194,6 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 						(tile, min, max)
 					}
 				).collect
-
 
 				// Update metadata for these levels
 				val datasetMetaData = getMetaData(pyramidId).get

@@ -31,10 +31,10 @@ import org.scalatest.FunSuite
 
 
 
-class IPV4TileIndexTestSuite extends FunSuite {
+class IPv4TileIndexTestSuite extends FunSuite {
 	test("Test indexing") {
 		val ipv4 = Array[Byte](171.toByte, 172.toByte, 167.toByte, 176.toByte)
-		val indexer = new IPV4ZCurveIndexScheme
+		val indexer = new IPv4ZCurveIndexScheme
 		val cartesian = indexer.toCartesian(ipv4)
 
 		assert(0x1234L === cartesian._1)
