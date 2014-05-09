@@ -133,13 +133,14 @@ define(function (require) {
         },
 
         setOpacity: function( opacity ) {
-            this.clientState.opacity = opacity;
+
+            this.clientState.setSharedState('opacity', opacity);
             this.mapNodeLayer.all().redraw();
         },
 
 
         setVisibility: function( visible ) {
-            this.clientState.isVisible = visible;
+            this.clientState.setSharedState('isVisible', visible);
             this.mapNodeLayer.all().redraw();
         },
 

@@ -46,29 +46,12 @@ define(function (require) {
          */
         init: function () {
 
-			// holds the state of mouse hovers
-            this.hoverState = {
-                    userData : {},
-                    tilekey : '',
-                    level : -1,
-                    xIndex : -1,
-                    yIndex : -1
-            };
-
-			// holds the state of mouse clicks
-            this.clickState = {
-                    userData : {},
-                    tilekey : '',
-                    level : -1,
-                    xIndex : -1,
-                    yIndex : -1
-            };
-
-            // holds the state of the current active carousel tile
-            this.carouselTilekey = "";
-
-            this.isVisible = true;
-            this.opacity = 1.0;
+            // holds the state of mouse clicks
+            this.clearClickState();
+            // holds the state of mouse hovers
+            this.clearHoverState();
+            // holds any
+            this.clearSharedState();
         },
 
 
@@ -92,9 +75,16 @@ define(function (require) {
         },
 
 
-        setCarouselTile: function(tilekey) {
-            // holds the state of the current active carousel tile
-            this.carouselTilekey = tilekey;
+        setSharedState: function(key, value) {
+            this.sharedState[key] = value;
+        },
+
+
+        getSharedState: function(key) {
+            if ( this.sharedState[key] !== undefined) {
+                return this.sharedState[key];
+            }
+            return "";
         },
 
 
@@ -122,6 +112,14 @@ define(function (require) {
                 level : -1,
                 xIndex : -1,
                 yIndex : -1
+            };
+        },
+
+
+        clearSharedState: function() {
+            this.sharedState = {
+                isVisible : true,
+                opacity : 1.0
             };
         }
 		

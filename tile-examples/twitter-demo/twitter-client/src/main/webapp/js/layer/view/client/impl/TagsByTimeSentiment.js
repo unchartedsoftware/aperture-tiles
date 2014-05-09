@@ -126,11 +126,11 @@ define(function (require) {
             totalCount = positiveCount + negativeCount;
 
             if (totalCount === 0) {
-                return this.NEUTRAL_COLOUR;
+                return this.DARK_GREY_COLOUR;
             }
 
-            negRGB = this.hexToRgb(this.NEGATIVE_COLOUR);
-            posRGB = this.hexToRgb(this.POSITIVE_COLOUR);
+            negRGB = this.hexToRgb(this.PURPLE_COLOUR);
+            posRGB = this.hexToRgb(this.BLUE_COLOUR);
             negWeight = negativeCount/totalCount;
             posWeight = positiveCount/totalCount;
 
@@ -220,7 +220,7 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.bars.map('opacity').from( function() {
-                return that.clientState.opacity;
+                return that.getOpacity();
             })
 
         },
@@ -242,9 +242,9 @@ define(function (require) {
             });
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
-                    case 0: return that.POSITIVE_COLOUR;
+                    case 0: return that.BLUE_COLOUR;
                     case 1: return that.WHITE_COLOUR;
-                    default: return that.NEGATIVE_COLOUR;
+                    default: return that.PURPLE_COLOUR;
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
@@ -261,7 +261,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
         },
 
@@ -327,7 +327,7 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.tagLabels.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
 
         }

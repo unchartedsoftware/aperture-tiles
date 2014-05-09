@@ -36,13 +36,13 @@ import com.oculusinfo.factory.properties.JSONProperty;
  * track of the key/value pairs passed through a data request like 'GET'. All
  * parameters passed to this object through {@link #readConfiguration(JSONObject)}
  * will be treated as query parameters. This makes it easy to pass in a configuration
- * that has a 'query' path containing all of the values for the query.
+ * that has a 'request' path containing all of the values for the query.
  *  
  * <pre><code>
  * JSONObject configData = new JSONObject();
- * configData.put("query", resource.getRequest().getResourceRef().getQueryAsForm().getValuesMap());
+ * configData.put("request", resource.getRequest().getResourceRef().getQueryAsForm().getValuesMap());
  * 
- * RequestParamsFactory configFactory = new RequestParamsFactory(null, null, Collections.singletonList("query"));
+ * RequestParamsFactory configFactory = new RequestParamsFactory(null, null, Collections.singletonList("request"));
  * configFactory.readConfiguration(configData);
  * </code></pre>
  * 
@@ -51,7 +51,7 @@ import com.oculusinfo.factory.properties.JSONProperty;
  */
 public class RequestParamsFactory extends ConfigurableFactory<RequestParams> {
 
-	public static JSONProperty REQUEST_PARAMS = new JSONProperty("query", "The key/value pairs passed from a 'GET' request", null);
+	public static JSONProperty REQUEST_PARAMS = new JSONProperty("request", "The key/value pairs passed from a 'GET' request", null);
 	
 	public RequestParamsFactory(ConfigurableFactory<?> parent, List<String> path) {
 		this(null, parent, path);
@@ -61,7 +61,7 @@ public class RequestParamsFactory extends ConfigurableFactory<RequestParams> {
 		super(factoryName, RequestParams.class, parent, path);
 		addProperty(REQUEST_PARAMS);
 	}
-	
+
 	@Override
 	protected RequestParams create() {
 		return new RequestParamsImpl(getPropertyValue(REQUEST_PARAMS));

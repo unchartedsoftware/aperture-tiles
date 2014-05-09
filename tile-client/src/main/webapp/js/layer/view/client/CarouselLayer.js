@@ -161,7 +161,7 @@ define(function (require) {
             });
 
             viewSelectionLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.isVisible;
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.getSharedState('isVisible');
             });
 
             viewSelectionLayer.map('opacity').from( function() {
@@ -231,7 +231,7 @@ define(function (require) {
             });
 
             viewIndexLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.isVisible;
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.getSharedState('isVisible');
             });
 
             viewIndexLayer.map('opacity').from( function() {
@@ -289,7 +289,7 @@ define(function (require) {
             });
 
             outlineLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.isVisible;
+                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.getSharedState('isVisible');
             });
 
             outlineLayer.map('opacity').from( function() {
@@ -315,7 +315,7 @@ define(function (require) {
                 tilekey : tilekey
             };
 
-            this.clientState.setCarouselTile(tilekey);
+            this.clientState.setSharedState('activeCarouselTile', tilekey);
 
             if ( this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey ) {
                 // only redraw if hovering over a new tile

@@ -185,13 +185,13 @@ define(function (require) {
                     return that.getYOffset(this, index) + 6;
                 });
                 bar.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
                 return bar;
             }
 
             // negative bar
-            this.negativeBar = barTemplate('topTextSentimentBarsNegative', this.GREY_COLOUR, this.DARK_GREY_COLOUR, this.NEGATIVE_COLOUR, this.NEGATIVE_SELECTED_COLOUR);
+            this.negativeBar = barTemplate('topTextSentimentBarsNegative', this.GREY_COLOUR, this.DARK_GREY_COLOUR, this.PURPLE_COLOUR, this.DARK_PURPLE_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -201,7 +201,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('topTextSentimentBarsNeutral', this.DARK_GREY_COLOUR, this.BLACK_COLOUR, this.NEUTRAL_COLOUR, this.NEUTRAL_SELECTED_COLOUR );
+            this.neutralBar = barTemplate('topTextSentimentBarsNeutral', this.DARK_GREY_COLOUR, this.BLACK_COLOUR, this.DARK_GREY_COLOUR, this.BLACK_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -210,7 +210,7 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('topTextSentimentBarsPositive', this.WHITE_COLOUR, this.GREY_COLOUR, this.POSITIVE_COLOUR, this.POSITIVE_SELECTED_COLOUR);
+            this.positiveBar = barTemplate('topTextSentimentBarsPositive', this.WHITE_COLOUR, this.GREY_COLOUR, this.BLUE_COLOUR, this.DARK_BLUE_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -243,7 +243,7 @@ define(function (require) {
                 switch(index) {
                     case 0:
                         if (id === 'topTextSentimentBarsPositive' || id === 'topTextSentimentBarsAll') {
-                            return that.POSITIVE_COLOUR
+                            return that.BLUE_COLOUR
                         } else {
                             return that.LIGHT_GREY_COLOUR;
                         }
@@ -255,7 +255,7 @@ define(function (require) {
                         }
                     default:
                         if (id === 'topTextSentimentBarsNegative' || id === 'topTextSentimentBarsAll') {
-                            return that.NEGATIVE_COLOUR;
+                            return that.PURPLE_COLOUR;
                         } else {
                             return that.LIGHT_GREY_COLOUR;
                         }
@@ -275,7 +275,7 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
         },
 
@@ -346,7 +346,7 @@ define(function (require) {
             this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabel.map('font-outline-width').asValue(3);
             this.tagLabel.map('opacity').from( function() {
-                    return that.clientState.opacity;
+                    return that.getOpacity();
                 })
         }
 

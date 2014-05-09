@@ -41,6 +41,8 @@ define(function (require) {
 	    TILESIZE = 256,
 	    Map;
 
+
+
 	Map = Class.extend({
 		ClassName: "Map",
 		

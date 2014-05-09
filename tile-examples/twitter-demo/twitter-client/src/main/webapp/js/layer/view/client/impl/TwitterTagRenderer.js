@@ -49,32 +49,10 @@ define(function (require) {
          */
         init: function(id, map, avoidIncrement) {
             this._super(id, map, avoidIncrement);
-
-
             this.Y_SPACING = 10;
-
-            this.TILE_SIZE = 256;
             this.MAX_NUM_VALUES = 10;   // default, over-ride this based on the renderer
-            
-            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;  // x offset required to centre on tile x-axis
-            this.Y_CENTRE_OFFSET = 0;                   // y offset required to centre on tile y-axis
-            this.POSITIVE_COLOUR = '#09CFFF';
-            this.POSITIVE_SELECTED_COLOUR  = '#069CCC';
-            this.NEGATIVE_COLOUR = '#D33CFF';
-            this.NEGATIVE_SELECTED_COLOUR = '#A009CC';
-            this.NEUTRAL_COLOUR = '#222222';
-            this.NEUTRAL_SELECTED_COLOUR = '#000000';
-
-            this.BLACK_COLOUR = '#000000';
-            this.DARK_GREY_COLOUR = '#222222';
-            this.GREY_COLOUR = '#666666';
-            this.LIGHT_GREY_COLOUR = '#999999';
-            this.WHITE_COLOUR = '#FFFFFF';
-                       
-            this.YELLOW_COLOUR = '#F5F56F';
             this.HORIZONTAL_BUFFER = 14;
             this.VERTICAL_BUFFER = 24;           
-
             this.FILTER_WORDS = [/s+h+i+t+/, /f+u+c+k+/, /n+i+g+g+/];
         },
 

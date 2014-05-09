@@ -243,7 +243,7 @@ public class LayerServiceImpl implements LayerService {
 			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
 			
 			//add another factory that will handle query params
-			RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.singletonList("request"));
+			RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.<String>emptyList());
 			rootFactory.addChildFactory(queryParamsFactory);
 			
 			//add the layer configuration factory under the path 'config'

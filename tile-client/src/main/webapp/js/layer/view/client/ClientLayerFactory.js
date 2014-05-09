@@ -103,11 +103,7 @@ define( function (require) {
                 tasks.push( d );
 
                 // POST request for layerInfo
-                getLayerInfoFromServer( {
-                    request: "configure",
-                    layer:  layerJSON.layer,
-                    configuration: layerJSON.views[i]
-                }, onRetrieveLayerInfo(i, d ) );
+                getLayerInfoFromServer({ layer: layerJSON.layer }, onRetrieveLayerInfo(i, d ) );
             }
 
             clientLayer = new ClientLayer(layerJSON.name, map);
