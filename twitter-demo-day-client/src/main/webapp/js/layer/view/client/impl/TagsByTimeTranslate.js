@@ -40,6 +40,7 @@ define(function (require) {
         TagsByTimeTranslate;
 
 
+
     TagsByTimeTranslate = TwitterTagRenderer.extend({
         ClassName: "TagsByTimeTranslate",
 
@@ -50,8 +51,6 @@ define(function (require) {
         },
 
 
-
-
         getTotalCountPercentage: function(data, index) {
             var numDays = this.getTotalDaysInMonth(data),
                 tagIndex = Math.floor(index / numDays);
@@ -59,7 +58,7 @@ define(function (require) {
             if (data.bin.value[tagIndex].countMonthly === 0) {
                 return 0;
             }
-            return data.bin.value[tagIndex].countDaily[index % numDays] / data.bin.value[tagIndex].countMonthly;
+            return data.bin.value[tagIndex].countDaily[numDays - 1 - (index % numDays)] / data.bin.value[tagIndex].countMonthly;
         },
 
 
