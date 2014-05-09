@@ -26,17 +26,12 @@
 package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
-
 import java.io.File
-
 import scala.collection.JavaConversions._
-
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-
 import org.apache.avro.file.CodecFactory
-
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
@@ -48,9 +43,9 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
-
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+import com.oculusinfo.binning.io.impl.SQLitePyramidIO
 
 
 
@@ -253,6 +248,14 @@ class LocalTileIO (extension: String) extends TileIO {
 		new FileSystemPyramidIO("", extension)
 }
 
+
+/**
+ * Read and write tiles from the sqlite db
+ */
+class SqliteTileIO (path: String) extends TileIO {
+	def getPyramidIO : PyramidIO =
+		new SQLitePyramidIO(path)
+}
 
 
 
