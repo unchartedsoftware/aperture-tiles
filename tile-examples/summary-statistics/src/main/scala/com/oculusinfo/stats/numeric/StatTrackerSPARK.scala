@@ -111,14 +111,6 @@ class StatTracker(val count: Long, val sumX: Double, val sumXX: Double, val min:
     max
   }
 
-  //figure out the option on min/max stuff
-  /*  def normalizeValue(value: Double): Double = {
-    if (2 > count){
-      //none?
-    }
-    (value - min) / (max - min)
-  }*/
-
   def getPopulationVariance(): Double = {
     val mean = getMean()
     (sumXX / count) - mean * mean

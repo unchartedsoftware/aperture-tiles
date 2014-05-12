@@ -34,7 +34,6 @@ import org.apache.spark.rdd.RDD
  * @author $mkielo
  */
 
-/*WILL EVENTUALLY NEED TO UNCOMMENT HADOOP IN POM & SORT OUT VERSION ISSUE*/
 
 object Frequency {
 
@@ -42,24 +41,10 @@ object Frequency {
     textFile.map(line => (line(column), 1)).reduceByKey(_ + _, 1)
   }
 
-    //make sure this works for non-string type values. ex numeric
   def getFrequency(column: Int, textFile: RDD[Array[String]], key: String) = {
     textFile.map(line => line(column)).filter(_.equals(key)).map(record => 1).reduce(_ + _)
   }
 
-//Finds the n least frequent results in a dataset
-// give a sorted flag. For now it assumes sorted
-//  def LeastFrequent(returnNum: Int, column: Int, textFile: RDD[Array[String]], sorted: Boolean): Array[(Int, String)] = { //make sorted default to false if not specified. make the function work if not specified
-//
-//    val freqTable = FrequencyTable(column, textFile).map(_.swap).sortByKey()
-//    val tieCheck = freqTable.take((returnNum + 1))
-//    //include this in output dont just print
-//    if (tieCheck(returnNum)._1 == tieCheck(returnNum - 1)._1) {
-//      println("Warning: Not all results with frequency " + tieCheck(returnNum)._1 + " are shown") // Do something better than print
-//    }
-//
-//    freqTable.take(returnNum)
-//  }
 
    def MostFrequent(returnNum: Int, column: Int, textFile: RDD[Array[String]], sorted: Boolean): Array[(Int, String)] = { //make sorted default to false if not specified. make the function work if not specified
 
@@ -90,6 +75,5 @@ object Frequency {
       freqTable.take(returnNum + tieNum)}
    }
    
- // def FrequencyRange(sorted: Boolean) = {} //make sorted default to false if not specified. make the function work if not specified
 
 }

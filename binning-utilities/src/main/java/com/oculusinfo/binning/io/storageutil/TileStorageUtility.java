@@ -219,6 +219,11 @@ public class TileStorageUtility {
 		return outputlevels;
 	}
 	
+/*	private static void fixMetadata(List<Integer> levels, String metaPath){
+		int maxLevel = Collections.max(levels);
+		int minLevel = Collections.min(levels);
+		
+	} */
 
 	// This is supressing the warning for using non-generic versions of
 	// generified types; this is done here to match the two property-read
