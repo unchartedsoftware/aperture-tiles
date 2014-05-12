@@ -97,6 +97,10 @@ define(function (require) {
 		},
 
 
+        getElement:  function() {
+            return $("#" + this.id);
+        },
+
 		setAxisSpecs: function (axes) {
 
 			var i, spec;
@@ -316,27 +320,46 @@ define(function (require) {
 
 
 		/**
-		 * Returns the tile and bin index corresponding to the given map pixel coordinate
-		 */
-		getTileAndBinFromMapPixel: function(mx, my, xBinCount, yBinCount) {
-			var tileIndexX = Math.floor(mx / TILESIZE),
-			    tileIndexY = Math.floor(my / TILESIZE),
-			    tilePixelX = mx % TILESIZE,
-			    tilePixelY = my % TILESIZE;
-			return {
-				tile: {
-					level : this.getZoom(),
-					xIndex : tileIndexX,
-					yIndex : tileIndexY,
-					xBinCount : xBinCount,
-					yBinCount : yBinCount
-				},
-				bin: {
-					x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
-					y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
-				}
-			};
-		},
+         * Returns the tile and bin index corresponding to the given map pixel coordinate
+         */
+        getTileAndBinFromMapPixel: function(mx, my, xBinCount, yBinCount) {
+            var tileIndexX = Math.floor(mx / TILESIZE),
+                tileIndexY = Math.floor(my / TILESIZE),
+                tilePixelX = mx % TILESIZE,
+                tilePixelY = my % TILESIZE;
+            return {
+                tile: {
+                    level : this.getZoom(),
+                    xIndex : tileIndexX,
+                    yIndex : tileIndexY,
+                    xBinCount : xBinCount,
+                    yBinCount : yBinCount
+                },
+                bin: {
+                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
+                    y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
+                }
+            };
+        },
+
+
+        /**
+         * Returns the top left pixel location in viewport coord from a tile index
+         */
+        getTopLeftViewportPixelForTile: function(tx, ty) {
+
+            var mx = tx * TILESIZE,
+                my = ty * TILESIZE + TILESIZE,
+                pixel;
+
+            // transform map coord to viewport coord
+            pixel = this.getViewportPixelFromMapPixel(mx, my);
+
+            return {
+                x : Math.round(pixel.x),
+                y : Math.round(pixel.y)
+            };
+        },
 
 
 		/**
@@ -357,31 +380,29 @@ define(function (require) {
 		},
 
 
-		getTileKeyFromViewportPixel: function(mx, my) {
-			var tileAndBin = this.getTileAndBinFromViewportPixel( mx, my, 1, 1);
+		getTileKeyFromViewportPixel: function(vx, vy) {
+			var tileAndBin = this.getTileAndBinFromViewportPixel(vx, vy, 1, 1);
 			return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
 		},
 
 
-		getBinKeyFromViewportPixel: function(mx, my, xBinCount, yBinCount) {
-			var tileAndBin = this.getTileAndBinFromViewportPixel( mx, my, xBinCount, yBinCount );
+		getBinKeyFromViewportPixel: function(vx, vy, xBinCount, yBinCount) {
+			var tileAndBin = this.getTileAndBinFromViewportPixel( vx, vy, xBinCount, yBinCount );
 			return tileAndBin.bin.x + "," + tileAndBin.bin.y;
 		},
+
 
 		getCoordFromMap: function (x, y) {
 			var
 			// Total map bounds, in meters
 			mapExtent = this.map.olMap_.getMaxExtent(),
-			// Pyramider for the total map bounds
+			// Pyramid for the total map bounds
 			mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
 			                            mapExtent.right, mapExtent.top),
 			tile = mapPyramid.rootToFractionalTile({level: 0, xIndex: x, yIndex: y}),
 			coords = this.pyramid.fractionalTileToRoot(tile);
 			return {x: coords.xIndex, y: coords.yIndex};
 		},
-		
-
-
 
 		transformOLGeometryToLonLat: function (geometry) {
 			return geometry.transform(new OpenLayers.projection("EPSG:900913"),
@@ -473,9 +494,9 @@ define(function (require) {
 			case 'zoomend':
 			case 'mousemove':
 			case 'moveend':
-
-				this.map.olMap_.events.register(eventType, this.map.olMap_, callback);
-				break;
+            case 'move':
+				this.map.olMap_.events.register(eventType, this.map.olMap_, callback );
+                break;
 
 			case 'panend':
 
@@ -485,6 +506,7 @@ define(function (require) {
 				 * event
 				 */
 				this.map.olMap_.events.register('moveend', this.map.olMap_, function(e) {
+
 					if (that.previousZoom === e.object.zoom ) {
 						// only process if zoom is same as previous
 						callback();
@@ -510,6 +532,7 @@ define(function (require) {
 			case 'zoomend':
 			case 'mousemove':
 			case 'moveend':
+            case 'move':
 
 				this.map.olMap_.events.unregister(eventType, this.map.olMap_, callback);
 				break;
@@ -538,6 +561,7 @@ define(function (require) {
 			case 'zoomend':
 			case 'mousemove':
 			case 'moveend':
+            case 'move':
 
 				this.map.olMap_.events.triggerEvent(eventType, event);
 				break;
