@@ -66,7 +66,13 @@ define(function (require) {
 
 			// Initialize the map
 			this.map = new aperture.geo.Map({ 
-				id: this.id
+				id: this.id,
+                options: {
+                    controls: [
+                        new OpenLayers.Control.Navigation({documentDrag: true}),
+                        new OpenLayers.Control.Zoom()
+                    ]
+                }
 			});
 
 			/*
