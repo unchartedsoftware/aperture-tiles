@@ -125,11 +125,25 @@ define(function (require) {
                 xCenter: (layerInfo.bounds[0] + layerInfo.bounds[2])/2,
                 yCenter: (layerInfo.bounds[1] + layerInfo.bounds[3])/2
             };
-            this.layerInfos[layerInfo.layer] = layerInfo;
-            // The old code here overrode the bounds and projection to whole-
-            // world spherical mercator bounds in meters.  Is this strictly 
-            // necessary?
+	        // Check to see if we have any previous info on this layer.
+	        // If we do, this is a change of configuration; we need to tell
+	        // the server we're done with the old configuration.
+	        if (this.layerInfos[layerInfo.layer] &&
+	            this.layerInfos[layerInfo.layer].id) {
+		        aperture.io.rest('/layer',
+		                         'POST',
+		                         $.proxy(this.onLayerInfoRetrieved, this),
+		                         {
+			                         postData: {
+				                         request: "unconfigure",
+                                         configuration: this.layerInfos[layerInfo.layer].id
+                                     },
+                                     contentType: 'application/json'
+                                 }
+                                );
+	        }
 
+            this.layerInfos[layerInfo.layer] = layerInfo;
             // Notify our user that we have new layer information
             if (this.onInfoRetrieved && this.onInfoRetrieved.length > 0) {
                 this.onInfoRetrieved.forEach($.proxy(function (callback, index, array) {
