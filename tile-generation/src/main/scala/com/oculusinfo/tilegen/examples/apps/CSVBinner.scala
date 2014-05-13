@@ -43,6 +43,7 @@ import com.oculusinfo.tilegen.tiling.LocalTileIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.tiling.SqliteTileIO
 
 
 
@@ -106,6 +107,14 @@ object CSVBinner {
 				val master = properties.getStringOption("hbase.master",
 				                                        "The HBase master").get
 				new HBaseTileIO(quorum, port, master)
+			}
+			case "sqlite" => {
+				val path =
+					properties.getString("oculus.tileio.sqlite.path",
+					                     "The path to the database",
+					                     Some(""))
+				new SqliteTileIO(path)
+				
 			}
 			case _ => {
 				val extension =

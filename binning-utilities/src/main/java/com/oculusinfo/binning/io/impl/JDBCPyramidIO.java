@@ -212,23 +212,48 @@ public class JDBCPyramidIO implements PyramidIO {
 
 	}
 
+	protected boolean metaDataExistsFor(String pyramidId) {
+		String metadata = null;
+		try {
+			metadata = readMetaData(pyramidId);
+		} catch (IOException e) {
+			metadata = null;
+		}
+		return metadata != null;
+	}
+	
 	@Override
 	public void writeMetaData(String pyramidId, String metaData)
 		throws IOException {
 		Statement stmt = null;
 		try {
 			StringBuilder sb = new StringBuilder();
-			sb.append("INSERT INTO ");
-			sb.append(TABLE_METADATA);
-			sb.append(" (");
-			sb.append(COL_PYRAMID_ID);
-			sb.append(", ");
-			sb.append(COL_METADATA);
-			sb.append(") VALUES('");
-			sb.append(toTableName(pyramidId));
-			sb.append("','");
-			sb.append(metaData);
-			sb.append("')");
+			if (metaDataExistsFor(pyramidId)) {
+				sb.append("UPDATE ");
+				sb.append(TABLE_METADATA);
+				sb.append(" SET ");
+				sb.append(COL_METADATA);
+				sb.append(" = '");
+				sb.append(metaData);
+				sb.append("' WHERE ");
+				sb.append(COL_PYRAMID_ID);
+				sb.append(" = '");
+				sb.append(toTableName(pyramidId));
+				sb.append("';");
+			}
+			else {
+				sb.append("INSERT INTO ");
+				sb.append(TABLE_METADATA);
+				sb.append(" (");
+				sb.append(COL_PYRAMID_ID);
+				sb.append(", ");
+				sb.append(COL_METADATA);
+				sb.append(") VALUES('");
+				sb.append(toTableName(pyramidId));
+				sb.append("','");
+				sb.append(metaData);
+				sb.append("')");
+			}
 			
 			stmt = _connection.createStatement();
 			stmt.execute(sb.toString());
