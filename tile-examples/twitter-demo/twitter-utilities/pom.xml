@@ -20,6 +20,20 @@
       <version>${project.version}</version>
       <classifier>classes</classifier>
     </dependency>
+
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>tile-generation</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${dependency-scala-version}</artifactId>
+      <version>1.9.1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <pluginRepositories>
