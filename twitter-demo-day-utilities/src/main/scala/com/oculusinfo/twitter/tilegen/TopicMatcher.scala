@@ -66,12 +66,12 @@ class TopicMatcher {
 		var tweet = ""
 		try {
 			tweet = tabbedData(4)	// get 5th element
+			// exclude | | on either side of twitter message and convert to lower case
+			tweet = tweet.substring(1, tweet.length()-1).toLowerCase()
 		} catch {
-			case _: Throwable => "| |"
+			case _: Throwable => " "
 		}
 		
-		// exclude | | on either side of twitter message and convert to lower case
-		tweet = tweet.substring(1, tweet.length()-1).toLowerCase()
 		// remove punctuation
 		tweet = tweet.replace(","," ").replace("."," ").replace("!"," ").replace("?"," ").replace(":", " ").replace("("," ").
 	    							replace(")"," ").replace("["," ").replace("]"," ").replace("\""," ").replace("@", " ").replace("#"," ");
