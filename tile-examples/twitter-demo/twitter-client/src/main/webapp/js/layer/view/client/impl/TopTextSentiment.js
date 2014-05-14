@@ -52,10 +52,7 @@ define(function (require) {
 
 
         getCountPercentage: function(data, index, type) {
-            if (data.bin.value[index].count === 0) {
-                return 0;
-            }
-            return data.bin.value[index][type] / data.bin.value[index].count;
+            return (data.bin.value[index][type] / data.bin.value[index].count) || 0;
         },
 
 
@@ -66,18 +63,7 @@ define(function (require) {
             for (i=0; i<n; i++) {
                 sum += data.bin.value[i].count;
             }
-            if (sum === 0) {
-                return 0;
-            }
-            return data.bin.value[index].count/sum;
-        },
-
-
-        redrawLayers: function(data) {
-            this.negativeBar.all().where(data).redraw();
-            this.positiveBar.all().where(data).redraw();
-            this.tagLabel.all().where(data).redraw();
-            this.summaryLabel.all().where(data).redraw();
+            return (data.bin.value[index].count/sum) || 0;
         },
 
 
@@ -85,7 +71,7 @@ define(function (require) {
 
             this.clientState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
-                index :  event.index[0]
+                index : event.index[0]
             });
 
             // pan map to center
@@ -98,18 +84,19 @@ define(function (require) {
 
 
         onHover: function(event, id) {
+
             this.clientState.setHoverState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index :  event.index[0],
                 id : id
             });
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
         onHoverOff: function(event) {
             this.clientState.clearHoverState();
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
@@ -168,6 +155,7 @@ define(function (require) {
 
                 bar.on('mousemove', function(event) {
                     that.onHover(event, id);
+                    return true; //swallow event
                 });
 
                 bar.on('mouseout', function(event) {
@@ -302,12 +290,11 @@ define(function (require) {
             this.tagLabel.on('click', function(event) {
                 that.onClick(event);
                 return true; // swallow event
-                //that.onClick(event);
             });
 
             this.tagLabel.on('mousemove', function(event) {
                 that.onHover(event, 'topTextSentimentBarsAll');
-                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+                return true; // swallow event
             });
 
             this.tagLabel.on('mouseout', function(event) {

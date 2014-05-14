@@ -81,7 +81,6 @@ define(function (require) {
 			 */
 
 			this.map.olMap_.baseLayer.setOpacity(1);
-			this.map.all().redraw();
 			this.axes = [];
 
 			this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
@@ -167,10 +166,6 @@ define(function (require) {
 			return {'params': this.getTileIterator().toTileBounds()};
 		},
 
-
-		getProjectioin: function() {
-			return this.map.olMap_.projection;
-		},
 
 		getViewportWidth: function() {
 			return this.map.olMap_.viewPortDiv.clientWidth;
@@ -313,6 +308,7 @@ define(function (require) {
 			var mapPixel = this.getMapPixelFromViewportPixel(vx, vy);
 			return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
 		},
+
 
 		/**
 		 * Transforms a point from data coordinates to viewport pixel coordinates

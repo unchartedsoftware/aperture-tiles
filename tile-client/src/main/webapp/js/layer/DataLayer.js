@@ -33,6 +33,8 @@
 define(function (require) {
     "use strict";
 
+
+
     var Class = require('../class'),
         DataLayer;
 
@@ -40,6 +42,7 @@ define(function (require) {
 
     DataLayer = Class.extend({
         ClassName: "DataLayer",
+
         init: function (layerSpecs) {
             var i, layer;
 
@@ -61,7 +64,6 @@ define(function (require) {
         },
 
 
-
         /**
          * Set the callback function to be called when data is requested from
          * the server
@@ -69,6 +71,7 @@ define(function (require) {
         setRequestCallback: function (callback) {
             this.onInfoRequested = callback;
         },
+
 
         /**
          * Set the callback function to be called when data is retrieved from 
@@ -87,13 +90,13 @@ define(function (require) {
         },
 
 
-
         /**
          * Get all currently known layer infos
          */
         getLayersInformation: function () {
             return this.layerInfos;
         },
+
 
         /**
          * Get the specification for the given layer
@@ -145,6 +148,7 @@ define(function (require) {
                 }, this));
             }
         },
+
 
         /**
          * Get basic information about this layer from the server

@@ -43,21 +43,21 @@ define({
         "use strict";
         var newObj, key, value;
 
-	// Make sure we have something to do
+	    // Make sure we have something to do
         if (0 === depth) { return obj; }
-	if (!("object" === typeof obj)) { return obj; }
+	    if (!("object" === typeof obj)) { return obj; }
 
         // Default to a depth of 1 (but note above that an explicit 0 is a no-op)
         if (!depth) { depth = 1; }
 
-	// Make the appropriate type of return object
-	if (Array.isArray(obj)) {
-	    newObj = [];
-	} else {
-	    newObj = {};
-	}
+        // Make the appropriate type of return object
+        if (Array.isArray(obj)) {
+            newObj = [];
+        } else {
+            newObj = {};
+        }
 
-	// Loop over all keys, downcasing as necessary
+	    // Loop over all keys, downcaseing as necessary
         for (key in obj) {
             if (obj.hasOwnProperty(key)) {
                 // Recurse into the value to downcase it if needed
@@ -80,7 +80,7 @@ define({
 
     /**
      * Fetch a set of JSON files, returning each one to the provided callback 
-     * function as it is reterned.
+     * function as it is returned.
      *
      * @param ... All arguments but the last are names of the files to load.
      * @param callback The last argument is a callback that is called after

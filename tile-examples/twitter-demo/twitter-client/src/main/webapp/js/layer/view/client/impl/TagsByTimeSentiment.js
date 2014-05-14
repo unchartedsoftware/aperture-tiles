@@ -53,11 +53,9 @@ define(function (require) {
 
 
         getTotalCountPercentage: function(data, index) {
-            var tagIndex = Math.floor(index / NUM_HOURS_IN_DAY);
-            if (data.bin.value[tagIndex].count === 0) {
-                return 0;
-            }
-            return data.bin.value[tagIndex].countByTime[index % NUM_HOURS_IN_DAY] / data.bin.value[tagIndex].count;
+            var tagIndex = Math.floor(index / NUM_HOURS_IN_DAY),
+                countByTime = data.bin.value[tagIndex].countByTime[index % NUM_HOURS_IN_DAY];
+            return (countByTime / data.bin.value[tagIndex].count) || 0;
         },
 
 
@@ -67,23 +65,14 @@ define(function (require) {
                 tagIndex = Math.floor(index/NUM_HOURS_IN_DAY),
                 maxPercent = 0,
                 count = data.bin.value[tagIndex].count;
-            if (count === 0) {
-                return 0;
-            }
+
             for (i=0; i<NUM_HOURS_IN_DAY; i++) {
-                percent = data.bin.value[tagIndex].countByTime[i] / count;
+                percent = (data.bin.value[tagIndex].countByTime[i] / count) || 0;
                 if (percent > maxPercent) {
                     maxPercent = percent;
                 }
             }
             return maxPercent;
-        },
-
-
-        redrawLayers: function(data) {
-            this.tagLabels.all().where(data).redraw();
-            this.bars.all().where(data).redraw();
-            this.summaryLabel.all().where(data).redraw();
         },
 
 
@@ -107,13 +96,13 @@ define(function (require) {
                 index : index,
                 id : id
             });
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
         onHoverOff: function(event) {
             this.clientState.clearHoverState();
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
@@ -214,6 +203,7 @@ define(function (require) {
 
             this.bars.on('mousemove', function(event) {
                 that.onHover(event, Math.floor(event.index[0]/NUM_HOURS_IN_DAY), 'tagsByTimeSentimentCountSummary');
+                return true; // swallow event
             });
 
             this.bars.on('mouseout', function(event) {
@@ -315,12 +305,11 @@ define(function (require) {
             this.tagLabels.on('click', function(event) {
                 that.onClick(event, event.index[0]);
                 return true; // swallow event
-                //that.onClick(event, event.index[0]);
             });
 
             this.tagLabels.on('mousemove', function(event) {
                 that.onHover(event, event.index[0], 'tagsByTimeSentimentCountSummary');
-                return true;  // swallow event, for some reason mousemove on labels needs to swallow this or else it processes a mouseout
+                return true;  // swallow event
             });
 
             this.tagLabels.on('mouseout', function(event) {

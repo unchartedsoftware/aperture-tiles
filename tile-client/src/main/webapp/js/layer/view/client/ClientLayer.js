@@ -99,8 +99,8 @@ define(function (require) {
                 that.mapNodeLayer.map('longitude').from('longitude');
                 that.mapNodeLayer.map('latitude').from('latitude');
                 // Necessary so that aperture won't place labels and texts willy-nilly
-                that.mapNodeLayer.map('width').asValue(1);
-                that.mapNodeLayer.map('height').asValue(1);
+                //that.mapNodeLayer.map('width').asValue(1);
+                //that.mapNodeLayer.map('height').asValue(1);
             }
 
             // initialize attributes
@@ -245,12 +245,13 @@ define(function (require) {
                 $.merge(data, this.views[i].getDataArray() );
             }
 
-            this.mapNodeLayer.all([]).redraw(); // temporary aperture.js bug workaround
-            this.mapNodeLayer.all(data).redraw();
-            // bring selected node to the front, this allows any renderings to stay above other nodes
+            // pull selected node to the front
             this.mapNodeLayer.all().where( function() {
                 return this.tilekey === that.clientState.clickState.tilekey;
-            } ).toFront().redraw();
+            }).toFront();
+
+            // redraw new tile
+            this.mapNodeLayer.all(data).where(tile).redraw();
         }
 
 
