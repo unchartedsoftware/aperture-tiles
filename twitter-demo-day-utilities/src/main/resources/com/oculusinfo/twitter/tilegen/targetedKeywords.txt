@@ -27,13 +27,11 @@ capitalista	capitalist
 capitalistas	capitalists
 capitalists	capitalists
 capriles	Capriles
-caracas	Caracas
 caracazo	Caracazo
 censorship	censorship
 censura	censorship
 chávez	Chávez
 chacín	Chacín
-chacao	Chacao
 chacin	Chacin
 chavez	Chavez
 che	Che
@@ -44,7 +42,6 @@ citizens	citizens
 ciudadano	citizen
 ciudadanos	citizens
 colectivos	Colectivos
-columbia	Columbia
 conferenciadepaz	Peace Conference
 contenda	strife
 corrupção	corruption
@@ -53,8 +50,6 @@ corrupt	corrupt
 corruption	corruption
 corrupto	corrupt
 coup	coup
-cristóbal	cristóbal
-cristobal	cristobal
 dead	dead
 death	death
 deaths	deaths
@@ -141,7 +136,7 @@ levantamiento	uprising
 lucha	strife
 machado	Machado
 mídia	media
-maduro	maduro
+maduro	Maduro
 manifestação	demonstration
 manifestações	demonstrations
 manifestantes	protestors
@@ -224,7 +219,6 @@ sosvzla	SOS Vzla
 spear	spear
 speculation	speculation
 strife	strife
-táchira	táchira
 tensão	tension
 tensión	tension
 tension	tension
