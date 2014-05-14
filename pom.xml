@@ -108,7 +108,7 @@
     <aperture-version>1.0.4</aperture-version>
     <dependency-scala-version>2.10</dependency-scala-version>
 	<scala-version>2.10.3</scala-version>
-    <spark-version>0.9.0-incubating</spark-version>
+    <spark-version>0.9.1</spark-version>
   </properties>
  
   <build>
