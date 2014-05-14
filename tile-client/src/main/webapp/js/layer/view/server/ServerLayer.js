@@ -38,38 +38,11 @@ define(function (require) {
 
     var Class = require('../../../class'),
         DataLayer = require('../../DataLayer'),
-
         ServerRenderedMapLayer,
-        minRect,
-        computeAggregateInfo,
         forEachLayer,
         Y_TILE_FUNC_PASSTHROUGH,
         Y_TILE_FUNC_ZERO_CLAMP;
 
-
-
-    /*
-     * Private function to calculate the minimum of two rectangles, defined 
-     * with left, right, top, bottom, xCenter, and yCenter properties
-     */
-    minRect = function (a, b) {
-        var result;
-        if (!a) {
-            result = b;
-        } else if (!b) {
-            result = a;
-        } else {
-            result = {
-                top:    Math.max(   a.top,    b.top),
-                left:   Math.min(  a.left,   b.left),
-                right:  Math.max( a.right,  b.right),
-                bottom: Math.min(a.bottom, b.bottom)
-            };
-        }
-        result.xCenter = (result.left + result.right)/2;
-        result.yCenter = (result.top + result.bottom)/2;
-        return result;
-    };
 
     /*
      * Private function to execute another function on each layer.
@@ -89,33 +62,6 @@ define(function (require) {
         }
     };
 
-    /*
-     * Private function to recompute properties derived from the set of all 
-     * layer information.
-     */
-    computeAggregateInfo = function (mapLayer) {
-        var mapBounds, dataBounds, maxZoom;
-
-        if (!mapLayer.collectedMapBounds) {
-            mapBounds = null;
-            dataBounds = null;
-            maxZoom = null;
-
-            forEachLayer(mapLayer, function (layer, layerInfo) {
-                mapBounds = minRect(mapBounds, layerInfo.bounds);
-                dataBounds = minRect(dataBounds, layerInfo.dataBounds);
-                if (maxZoom) {
-                    maxZoom = Math.max(maxZoom, layerInfo.maxzoom);
-                } else {
-                    maxZoom = layerInfo.maxZoom;
-                }
-            });
-
-            mapLayer.collectedMapBounds = mapBounds;
-            mapLayer.collectedDataBounds = dataBounds;
-            mapLayer.maxZoom = maxZoom;
-        }
-    };
 
     /*
      * Y transformation function for non-density strips
@@ -123,6 +69,7 @@ define(function (require) {
     Y_TILE_FUNC_PASSTHROUGH = function (yInput) {
         return yInput;
     };
+
 
     /*
      * Y transformation function for density strips
@@ -135,7 +82,7 @@ define(function (require) {
     ServerRenderedMapLayer = Class.extend({
         ClassName: "ServerRenderedMapLayer",
         init: function (layerSpec, map) {
-            this.unfulfilledRequests = [];
+            this.pendingLayerRequests = [];
             // The collected map bounds of all our map layers
             this.collectedMapBounds = null;
             // The collected data bounds of all our map layers
@@ -147,7 +94,7 @@ define(function (require) {
             this.mapLayer = {};
 
             // The map to which we render
-            this.map = map; //null;
+            this.map = map;
 
             this.dataListener = new DataLayer(layerSpec);
             this.dataListener.setRequestCallback($.proxy(this.requestLayerInfo,
@@ -170,8 +117,7 @@ define(function (require) {
          */
         requestLayerInfo: function (dataListener, layerSpec) {
             // Record the layer being requested
-            this.unfulfilledRequests[this.unfulfilledRequests.length] =
-                layerSpec.layer;
+            this.pendingLayerRequests[this.pendingLayerRequests.length] = layerSpec.layer;
         },
 
         /*
@@ -179,47 +125,19 @@ define(function (require) {
          * from the server.
          */
         useLayerInfo: function (dataListener, layerInfo) {
-            var layer, ufrIndex;
 
-            layer = layerInfo.layer;
+            var index = this.pendingLayerRequests.indexOf(layerInfo.layer);
 
             // Wait until all requests have been fulfilled
-            ufrIndex = this.unfulfilledRequests.indexOf(layer);
-            if (ufrIndex > -1) {
-                this.unfulfilledRequests.splice(ufrIndex, 1);
+            if (index > -1) {
+                this.pendingLayerRequests.splice(index, 1);
             }
-            if (this.unfulfilledRequests.length > 0) {
+            if (this.pendingLayerRequests.length > 0) {
                 return;
             }
 
             // We've got everything - create our map layers.
             this.updateLayers();
-        },
-
-
-
-        /**
-         * Get the minimal data rectangle containing all layers
-         */
-        getBoundingMapRectangle: function () {
-            computeAggregateInfo();
-            return this.collectedMapBounds();
-        },
-
-        /**
-         * Get the minimal data rectangle containing all layers
-         */
-        getBoundingDataRectangle: function () {
-            computeAggregateInfo();
-            return this.collectedDataBounds();
-        },
-
-        /**
-         * Get the maximum zoom level of all layers
-         */
-        getMaximumZoom: function () {
-            computeAggregateInfo();
-            return this.maxZoom;
         },
 
 
@@ -231,6 +149,7 @@ define(function (require) {
 
             this.updateLayers();
         },
+
 
         /**
          * Get a list of server rendered sub-layers we control.
@@ -245,6 +164,7 @@ define(function (require) {
             return ids;
         },
 
+
         getSubLayerSpecsById: function () {
             var layerInfoById = {};
 
@@ -254,6 +174,7 @@ define(function (require) {
 
             return layerInfoById;
         },
+
 
         /**
          * Get the opacity of a given sub-layer
@@ -318,6 +239,7 @@ define(function (require) {
             return enabled;
         },
 
+
         /**
          * Updates the ramp type associated with the layer.  Results in a POST
          * to the server.
@@ -339,6 +261,7 @@ define(function (require) {
             this.dataListener.retrieveLayerInfo();
         },
 
+
         /**
          * @param {string} subLayerId - The ID of the sub layer to query.
          * @returns {string} ramp - The type of the ramp applied to the layer.
@@ -350,6 +273,7 @@ define(function (require) {
             }
             return layerSpec.renderer.ramp;
         },
+
 
         /**
          * Updates the ramp function associated with the layer.  Results in a POST
@@ -372,6 +296,7 @@ define(function (require) {
             this.dataListener.retrieveLayerInfo();
         },
 
+
         /**
          * @param {string} subLayerId - The ID of the sub layer to query.
          * @returns {string}  The ramp function for the layer.
@@ -383,6 +308,7 @@ define(function (require) {
             }
             return layerSpec.transform.name;
         },
+
 
         /**
          * Updates the filter range for the layer.  Results in a POST to the server.
@@ -398,6 +324,7 @@ define(function (require) {
             this.dataListener.retrieveLayerInfo();
         },
 
+
         /**
          * @param {string} subLayerId - The ID of the sub layer to update.
          * @returns {Array} filterRange - A two element array with values in the range [0.0, 1.0],
@@ -408,6 +335,7 @@ define(function (require) {
             return layerSpec.legendrange;
         },
 
+
         /**
          * @param {string} subLayerId - The ID of the sublayer to update.
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
@@ -417,6 +345,7 @@ define(function (require) {
             this.map.setLayerIndex(olLayer, zIndex);
         },
 
+
         /**
          * @param {string} subLayerId - The ID of the sublayer to query.
          * @returns {number} - The z-order value of the layer, where 0 is front.
@@ -425,6 +354,7 @@ define(function (require) {
             var olLayer = this.mapLayer[subLayerId].olLayer_;
             return this.map.getLayerIndex(olLayer);
         },
+
 
         /**
          * Update all our openlayers layers on our map.
@@ -455,7 +385,7 @@ define(function (require) {
                     // down value results in the intended tile bounds ending at the
                     // border of the map
                     olBounds = new OpenLayers.Bounds(-20037500, -20037500,
-                                                      20037500, 20037500);
+                                                      20037500,  20037500);
 
                     // Adjust y function if we're displaying a density strip
                     if (layerSpec.isDensityStrip) {
@@ -523,7 +453,7 @@ define(function (require) {
                     );
 
 					// manually set z index of this layer to 0, so it is behind client layers
-                    // Note: this does not seem to actually affect the zindex value in the DOM
+                    // Note: this does not seem to actually affect the z-index value in the DOM
                     // but does prevent them from overlapping client layers. In the future it 
                     // may be worth implementing a more sophisticated system to allow proper 
                     // client-server inclusive ordering

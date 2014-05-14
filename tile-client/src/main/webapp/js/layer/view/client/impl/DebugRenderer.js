@@ -54,22 +54,35 @@ define(function (require) {
 		
         createLayer: function(nodeLayer) {
 
-			var that = this;
-		
-            this.labelLayer = nodeLayer.addLayer(aperture.LabelLayer);			
+			var that = this,
+                hoveredTilekey = "";
+
+            this.plotLayer = nodeLayer;
+            this.labelLayer = this.plotLayer.addLayer(aperture.LabelLayer);
 			this.labelLayer.map('label-count').asValue(1);
-			this.labelLayer.map('text').from(function() {
-                return this.tilekey;
-            });
+			this.labelLayer.map('text').from(function() { return this.tilekey; });
 			this.labelLayer.map('offset-x').asValue(10);
 			this.labelLayer.map('offset-y').asValue(118);
 			this.labelLayer.map('text-anchor').asValue('start');
-            this.labelLayer.map('fill').asValue('#FFFFFF');
+            this.labelLayer.map('fill').from(function() {
+                return hoveredTilekey === this.tilekey ? that.BLUE_COLOUR : that.WHITE_COLOUR;
+            });
             this.labelLayer.map('font-outline').asValue('#000000');
             this.labelLayer.map('font-outline-width').asValue(3);
             this.labelLayer.map('visible').from(function(){
                 return that.isSelectedView(this);
 			});
+
+            this.labelLayer.on('mousemove', function(event) {
+                hoveredTilekey = event.data.tilekey;
+                that.plotLayer.all().where(event.data).redraw();
+                return true;
+            });
+
+            this.labelLayer.on('mouseout', function(event) {
+                hoveredTilekey = "";
+                that.plotLayer.all().where(event.data).redraw();
+            });
 
         }
 

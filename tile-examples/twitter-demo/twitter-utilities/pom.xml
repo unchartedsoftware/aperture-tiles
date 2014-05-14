@@ -16,26 +16,11 @@
   <dependencies>
     <dependency>
       <groupId>com.oculusinfo</groupId>
-      <artifactId>binning-utilities</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>asm</artifactId>
-          <groupId>asm</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
-      <artifactId>tile-generation</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
       <artifactId>tile-service</artifactId>
       <version>${project.version}</version>
       <classifier>classes</classifier>
     </dependency>
+
     <dependency>
       <groupId>com.oculusinfo</groupId>
       <artifactId>tile-generation</artifactId>
@@ -43,13 +28,6 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>${scala-version}</version>
-    </dependency>
-
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${dependency-scala-version}</artifactId>
@@ -57,20 +35,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <repositories>
-    <repository>
-      <id>scala</id>
-      <name>Scala Tools</name>
-      <url>http://scala-tools.org/repo-releases/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 
   <pluginRepositories>
     <pluginRepository>

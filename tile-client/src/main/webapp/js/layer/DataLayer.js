@@ -33,6 +33,8 @@
 define(function (require) {
     "use strict";
 
+
+
     var Class = require('../class'),
         DataLayer;
 
@@ -40,6 +42,7 @@ define(function (require) {
 
     DataLayer = Class.extend({
         ClassName: "DataLayer",
+
         init: function (layerSpecs) {
             var i, layer;
 
@@ -61,7 +64,6 @@ define(function (require) {
         },
 
 
-
         /**
          * Set the callback function to be called when data is requested from
          * the server
@@ -69,6 +71,7 @@ define(function (require) {
         setRequestCallback: function (callback) {
             this.onInfoRequested = callback;
         },
+
 
         /**
          * Set the callback function to be called when data is retrieved from 
@@ -87,13 +90,13 @@ define(function (require) {
         },
 
 
-
         /**
          * Get all currently known layer infos
          */
         getLayersInformation: function () {
             return this.layerInfos;
         },
+
 
         /**
          * Get the specification for the given layer
@@ -102,6 +105,13 @@ define(function (require) {
             return this.layerSpecs[layer];
         },
 
+
+        onUnconfigRetrieved: function (layerInfo, statusInfo) {
+
+            if (!statusInfo.success) {
+                return;
+            }
+        },
 
 
         /**
@@ -112,24 +122,25 @@ define(function (require) {
                 return;
             }
 
-            // Clear out our collected bounds, so they will be recalculated 
-            // next time anyone asks.
-            this.collectedBounds = null;
+	        // Check to see if we have any previous info on this layer.
+	        // If we do, this is a change of configuration; we need to tell
+	        // the server we're done with the old configuration.
+	        if (this.layerInfos[layerInfo.layer] &&
+	            this.layerInfos[layerInfo.layer].id) {
+		        aperture.io.rest('/layer',
+		                         'POST',
+		                         $.proxy(this.onUnconfigRetrieved, this),
+		                         {
+			                         postData: {
+				                         request: "unconfigure",
+                                         configuration: this.layerInfos[layerInfo.layer].id
+                                     },
+                                     contentType: 'application/json'
+                                 }
+                                );
+	        }
 
-            // Put the bounds in a more useful form
-            layerInfo.dataBounds = {
-                left: layerInfo.bounds[0],
-                bottom: layerInfo.bounds[1],
-                right: layerInfo.bounds[2],
-                top: layerInfo.bounds[3],
-                xCenter: (layerInfo.bounds[0] + layerInfo.bounds[2])/2,
-                yCenter: (layerInfo.bounds[1] + layerInfo.bounds[3])/2
-            };
             this.layerInfos[layerInfo.layer] = layerInfo;
-            // The old code here overrode the bounds and projection to whole-
-            // world spherical mercator bounds in meters.  Is this strictly 
-            // necessary?
-
             // Notify our user that we have new layer information
             if (this.onInfoRetrieved && this.onInfoRetrieved.length > 0) {
                 this.onInfoRetrieved.forEach($.proxy(function (callback, index, array) {
@@ -137,6 +148,7 @@ define(function (require) {
                 }, this));
             }
         },
+
 
         /**
          * Get basic information about this layer from the server

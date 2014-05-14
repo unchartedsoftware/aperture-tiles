@@ -48,6 +48,17 @@ define(function (require) {
 
             var that = this;
 
+            // constants
+            this.OUTLINE_CLASS = 'carousel-ui-outline';
+            this.DOT_CONTAINER_CLASS = "carousel-ui-dot-container";
+            this.DOT_CLASS = 'carousel-ui-dot';
+            this.DOT_CLASS_DEFAULT = 'carousel-ui-dot-default';
+            this.DOT_CLASS_SELECTED = 'carousel-ui-dot-selected';
+            this.DOT_ID_PREFIX = 'carousel-ui-id-';
+            this.CHEVRON_CLASS = "carousel-ui-chevron";
+            this.CHEVRON_CLASS_LEFT = "carousel-ui-chevron-left";
+            this.CHEVRON_CLASS_RIGHT = "carousel-ui-chevron-right";
+
             // call base class ClientLayer constructor
             this._super(id, map);
             this.previousMouse = {};
@@ -61,7 +72,8 @@ define(function (require) {
                 that.previousMouse.y = event.xy.y;
             });
 
-            this.map.on('zoomend', function() {
+            // update carousel if map is moving and mouse isn't
+            this.map.on('move', function(event) {
                 var tilekey = that.map.getTileKeyFromViewportPixel( that.previousMouse.x, that.previousMouse.y );
                 that.updateSelectedTile(tilekey);
             });
@@ -71,232 +83,110 @@ define(function (require) {
         setViews: function( views ) {
 
             this._super(views);
-
-            if (this.views.length > 1) {
-                // create the carousel UI
-                this.createUI();
-            }
-
+            // create the carousel UI
+            this.createUI();
         },
 
 
         /**
-         * Construct the user interface aperture.iconlayers
+         * Construct the user interface html elements
          */
         createUI: function() {
 
-            var positionFactor = (this.views.length - 1) / 2,
-                i, j;
-
-            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently does not render correctly if on its own PlotLayer...
-            this.plotLayer = this.mapNodeLayer;
-
             // tile outline layer
-            this.outline = this.createTileOutlineLayer();
-            // left and right view buttons
-            this.leftButton = this.createViewSelectionLayer('left');
-            this.rightButton = this.createViewSelectionLayer('right');
-            // index dots
-            this.indexButtons = [];
-            for (i=0, j=-positionFactor; j<=positionFactor; i++, j++) {
-                this.indexButtons.push(this.createViewIndexLayer(i, j));
+            this.createTileOutline();
+
+            if (this.views.length > 1) {
+                // only create carousel ui if there is more than 1 view
+                // left and right view buttons
+                this.createChevrons();
+                // index dots
+                this.createIndexDots();
             }
         },
 
 
-        /**
-         * Construct aperture.iconlayers for the left/right view panning buttons
-         */
-        createViewSelectionLayer: function(position) {
+        changeViewIndex: function(tilekey, prevIndex, newIndex) {
 
-            var that = this,
-                icon = (position === 'left') ? "./images/chevron_L.png" : "./images/chevron_R.png",
-                x = (position === 'left') ? 0.03 : 0.47, // -0.22 : 0.22,
-                y = 0,
-                hover = new aperture.Set('tilekey'), // separate tiles by tile key for hovering
-                viewSelectionLayer;
+            if (prevIndex === newIndex) {
+                return;
+            }
 
-            viewSelectionLayer = this.plotLayer.addLayer(aperture.IconLayer);
+            this.$dots[prevIndex].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
+            this.$dots[newIndex].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
 
-            viewSelectionLayer.map('width').asValue(15).filter(hover.scale(1.2));
-            viewSelectionLayer.map('height').asValue(42).filter(hover.scale(1.5));
-            viewSelectionLayer.map('anchor-x').asValue(0.5);
-            viewSelectionLayer.map('anchor-y').asValue(0.5);
-            viewSelectionLayer.map('url').asValue(icon);
-            viewSelectionLayer.map('icon-count').asValue(1);
-            viewSelectionLayer.map('x').from(function(){
-                return x/Math.pow(2, that.map.getZoom()-1);
-            });
-            viewSelectionLayer.map('y').from(function(){
-                return y/Math.pow(2, that.map.getZoom()-1);
-            });
-
-            viewSelectionLayer.on('mousemove', function(event) {
-                hover.add(event.data.tilekey);
-                viewSelectionLayer.all().where(event.data).redraw();
-            });
-
-            viewSelectionLayer.on('mouseout', function(event) {
-                hover.clear();
-                viewSelectionLayer.all().where(event.data).redraw();
-            });
-
-            viewSelectionLayer.on('click', function(event) {
-				var tilekey = event.data.tilekey,
-                    mod = function (m, n) {
-                        return ((m % n) + n) % n;
-                    },
-                    inc = (position === 'left') ? -1 : 1,
-                    oldIndex = that.getTileViewIndex(tilekey),
-                    newIndex = mod(oldIndex + inc, that.views.length);
-
-                if (event.source.button !== 0) {
-                    // not left click, abort
-                    return;
-                }
-
-                that.onTileViewChange(tilekey, newIndex);
-                return true; // swallow event
-            });
-
-            viewSelectionLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.getSharedState('isVisible');
-            });
-
-            viewSelectionLayer.map('opacity').from( function() {
-                return that.opacity;
-            });
-
-            return viewSelectionLayer;
+            this.onTileViewChange(tilekey, newIndex);
         },
 
 
         /**
-         * Construct aperture.iconlayers for the index dots representing each view
+         * Construct the elements for left/right view panning buttons
          */
-        createViewIndexLayer: function(viewIndex, spacingFactor) {
+        createChevrons: function() {
 
             var that = this,
-                noSelectIcon = "./images/no_select.png",
-                selectIcon = "./images/select.png",
-                spacing = 0.04,
-                hover = new aperture.Set('tilekey'), // separate tiles by bin key for hovering
-                viewIndexLayer;
+                incIndex = function(inc) {
+                    var tilekey = that.selectedTileInfo.tilekey,
+                        prevIndex = that.getTileViewIndex(tilekey),
+                        mod = function (m, n) {
+                            return ((m % n) + n) % n;
+                        },
+                        newIndex = mod(prevIndex + inc, that.views.length);
+                    that.changeViewIndex(tilekey, prevIndex, newIndex);
+                };
 
-            viewIndexLayer = this.plotLayer.addLayer(aperture.IconLayer);
+            this.$leftChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_LEFT+"'></div>");
+            this.$leftChevron.click( function() { incIndex(-1); });
+            this.$outline.append(this.$leftChevron);
 
-            viewIndexLayer.map('width').asValue(12).filter(hover.scale(1.4));
-            viewIndexLayer.map('height').asValue(12).filter(hover.scale(1.4));
-            viewIndexLayer.map('anchor-x').asValue(0.5);
-            viewIndexLayer.map('anchor-y').asValue(0.5);
-            viewIndexLayer.map('icon-count').asValue(1);
-            viewIndexLayer.map('x').from(function() {
-                var zoomFactor = Math.pow(2, that.map.getZoom()-1);
-                return (0.25/zoomFactor) + (spacingFactor*spacing/zoomFactor);
-            });
-            viewIndexLayer.map('y').from(function(){
-                return 0.2/Math.pow(2, that.map.getZoom()-1);
-            });
-
-            viewIndexLayer.map('url').from(function() {
-                var id = that.getTileViewIndex(this.tilekey),
-                    url;
-                if ( id !== viewIndex ) {
-                    url = noSelectIcon;
-                } else {
-                    url = selectIcon;
-                }
-                return url;
-            });
-
-
-            viewIndexLayer.on('mousemove', function(event) {
-                hover.add(event.data.tilekey);
-                viewIndexLayer.all().where(event.data).redraw();
-            });
-
-            viewIndexLayer.on('mouseout', function(event) {
-                hover.clear();
-                viewIndexLayer.all().where(event.data).redraw();
-            });
-
-            viewIndexLayer.on('click', function(event) {
-				if (event.source.button !== 0) {
-                    // not left click, abort
-                    return true;
-                }
-                that.onTileViewChange(event.data.tilekey, viewIndex);
-                return true; // swallow event
-            });
-
-            viewIndexLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.getSharedState('isVisible');
-            });
-
-            viewIndexLayer.map('opacity').from( function() {
-                return that.opacity;
-            });
-
-            return viewIndexLayer;
+            this.$rightChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_RIGHT+"'></div>");
+            this.$rightChevron.click( function() { incIndex(1); });
+            this.$outline.append(this.$rightChevron);
         },
 
 
         /**
-         * Construct aperture.barLayers for the tile outline during mouse hover
+         * Construct the elements for the index dots representing each view
          */
-        createTileOutlineLayer: function() {
+        createIndexDots: function() {
 
             var that = this,
-                OUTLINE_THICKNESS = 1,
-                outlineLayer;
+                indexClass,
+                $indexContainer,
+                i;
 
-            outlineLayer = this.plotLayer.addLayer(aperture.BarLayer);
-            outlineLayer.map('fill').asValue('#FFFFFF');
-            outlineLayer.map('orientation').asValue('vertical');
-            outlineLayer.map('bar-count').asValue(4);
-            outlineLayer.map('length').from(function(index) {
-                switch(index){
-                    case 0: return 256;
-                    case 1: return OUTLINE_THICKNESS;
-                    case 2: return 256;
-                    default: return OUTLINE_THICKNESS;
-                }
-            });
-            outlineLayer.map('width').from(function(index) {
-                switch(index){
-                    case 0: return OUTLINE_THICKNESS;
-                    case 1: return 256;
-                    case 2: return OUTLINE_THICKNESS;
-                    default: return 256;
-                }
-            });
-            outlineLayer.map('offset-x').from( function(index) {
-                switch(index){
-                    case 0: return 0;
-                    case 1: return 0;
-                    case 2: return 256 - (OUTLINE_THICKNESS-1);
-                    default: return 0;
-                }
-            });
-            outlineLayer.map('offset-y').from( function(index) {
-                switch(index){
-                    case 0: return -128;
-                    case 1: return 128 - (OUTLINE_THICKNESS-1);
-                    case 2: return -128;
-                    default: return -128;
-                }
-            });
+            function generateDotCallback(index) {
+                return function(){
+                    var tilekey = that.selectedTileInfo.tilekey,
+                        prevIndex = that.getTileViewIndex(tilekey);
+                    that.changeViewIndex(tilekey, prevIndex, index);
+                };
+            }
 
-            outlineLayer.map('visible').from( function() {
-                return (this.tilekey === that.selectedTileInfo.tilekey) && that.clientState.getSharedState('isVisible');
-            });
+            $indexContainer = $("<div class='"+this.DOT_CONTAINER_CLASS+"'></div>");
+            this.$outline.append($indexContainer);
 
-            outlineLayer.map('opacity').from( function() {
-                return that.opacity;
-            });
+            this.$dots = [];
 
-            return outlineLayer;
+            for (i=0; i < this.views.length; i++) {
+
+                indexClass = (this.defaultViewIndex === i) ? this.DOT_CLASS_SELECTED : this.DOT_CLASS_DEFAULT;
+
+                this.$dots[i] = $("<div id='" + this.DOT_ID_PREFIX +i+"' class='" + this.DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
+                this.$dots[i].click( generateDotCallback(i) );
+                $indexContainer.append(this.$dots[i] );
+            }
+            $indexContainer.css('left', this.map.getTileSize()/2 - $indexContainer.width()/2 );
+        },
+
+
+        /**
+         * Construct the tile outline to indicate the current tile selected
+         */
+        createTileOutline: function() {
+
+            this.$outline = $("<div class='" +this.OUTLINE_CLASS +"'></div>");
+            this.map.getElement().append(this.$outline);
         },
 
 
@@ -309,19 +199,12 @@ define(function (require) {
             if (this.views === undefined || this.views.length === 0) {
                 return;
             }
-
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
                 tilekey : tilekey
             };
-
             this.clientState.setSharedState('activeCarouselTile', tilekey);
-
-            if ( this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey ) {
-                // only redraw if hovering over a new tile
-                this.redrawUI();
-            }
-
+            this.redrawUI();
         },
 
 
@@ -331,39 +214,46 @@ define(function (require) {
         redrawUI: function() {
 
             var that = this,
-                i;
+                tilekey = this.selectedTileInfo.tilekey,
+                parsedValues = tilekey.split(','),
+                xIndex = parseInt(parsedValues[1], 10),
+                yIndex = parseInt(parsedValues[2], 10),
+                topLeft = this.map.getTopLeftViewportPixelForTile(xIndex, yIndex),
+                prevActiveView = this.getTileViewIndex(this.selectedTileInfo.previouskey),
+                activeViewForTile = this.getTileViewIndex(tilekey);
 
-            // only redraw previous tile, and current tile
             function currentOrPreviousTilekey() {
+                // only redraw previous tile, and current tile
                 return this.tilekey === that.selectedTileInfo.previouskey ||
-                    this.tilekey === that.selectedTileInfo.tilekey;
+                       this.tilekey === that.selectedTileInfo.tilekey;
             }
 
-            this.outline.all().where(currentOrPreviousTilekey).redraw();
-            this.leftButton.all().where(currentOrPreviousTilekey).redraw();
-            this.rightButton.all().where(currentOrPreviousTilekey).redraw();
-            for (i=0; i<this.indexButtons.length; i++) {
-                this.indexButtons[i].all().where(currentOrPreviousTilekey).redraw();
-            }
-            this.mapNodeLayer.all().where(currentOrPreviousTilekey).redraw();
+            // move carousel tile
+            this.$outline.css('left', topLeft.x);
+            this.$outline.css('top', topLeft.y);
 
-        },
-
-        /**
-         * Maps a tilekey to its current view index. If none is specified, use default
-         * @param tilekey tile identification key of the form: "level,x,y"
-         */
-        getTileViewIndex: function(tilekey) {
-            // given a tile key "level + "," + xIndex + "," + yIndex"
-            // return the view index
-            var viewIndex;
-            if (this.tileViewMap[tilekey] === undefined) {
-                viewIndex = this.defaultViewIndex ;
+            if (this.clientState.areDetailsOverTile(xIndex, yIndex)) {
+                this.$outline.css('visibility', 'hidden');
             } else {
-                viewIndex = this.tileViewMap[tilekey];
+                this.$outline.css('visibility', 'visible');
             }
-            return viewIndex;
+
+            // if over new tile
+            if ( this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey ) {
+
+                // if more than 1 view and different dot display is needed
+                if (this.views.length > 1 && prevActiveView !== activeViewForTile ) {
+                    // if active view is different we need to update the dots
+                    this.$dots[prevActiveView].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
+                    this.$dots[activeViewForTile].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
+                }
+
+                // only redraw if hovering over a new tile
+                this.mapNodeLayer.all().where(currentOrPreviousTilekey).redraw();
+            }
         }
+
+
 
      });
 

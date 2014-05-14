@@ -51,6 +51,134 @@
 							}
 						}
 					]
+				},
+				{
+					"id" : "bitcoin.destination.zero",
+					"name" : "Destination Edge ID",
+					"pyramid" : {
+						"type" : "AreaOfInterest",
+						"minX" : 1.0,
+						"maxX" : 6336769,
+						"minY" : 0,
+						"maxY" : 0
+					},
+					"data" : {
+						"pyramidio" : {
+							"type" : "hbase",
+							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
+							"hbase.zookeeper.port" : "2181",
+							"hbase.master" : "hadoop-s1.oculus.local:60000"							
+						}
+					},
+					"renderers" : [
+						{
+							"domain" : "server",
+							"renderer" : {
+								"type" : "heatmap",
+								"ramp" : "ware",
+								"opacity" : 0.85
+							},
+							"transform" : {
+								"name" : "log10"
+							}
+						}
+					]
+				},
+				{
+					"id" : "bitcoin.transaction.zero",
+					"name" : "Transaction ID",
+					"pyramid" : {
+						"type" : "AreaOfInterest",
+						"minX" : 1.0,
+						"maxX" : 6336769,
+						"minY" : 0,
+						"maxY" : 0
+					},
+					"data" : {
+						"pyramidio" : {
+							"type" : "hbase",
+							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
+							"hbase.zookeeper.port" : "2181",
+							"hbase.master" : "hadoop-s1.oculus.local:60000"							
+						}
+					},
+					"renderers" : [
+						{
+							"domain" : "server",
+							"renderer" : {
+								"type" : "heatmap",
+								"ramp" : "ware",
+								"opacity" : 0.85
+							},
+							"transform" : {
+								"name" : "log10"
+							}
+						}
+					]
+				},
+				{
+					"id" : "bitcoin.time.zero",
+					"name" : "Date/Time",
+					"pyramid" : {
+						"type" : "AreaOfInterest",
+						"minX" : 1.0,
+						"maxX" : 6336769,
+						"minY" : 0,
+						"maxY" : 0
+					},
+					"data" : {
+						"pyramidio" : {
+							"type" : "hbase",
+							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
+							"hbase.zookeeper.port" : "2181",
+							"hbase.master" : "hadoop-s1.oculus.local:60000"							
+						}
+					},
+					"renderers" : [
+						{
+							"domain" : "server",
+							"renderer" : {
+								"type" : "heatmap",
+								"ramp" : "ware",
+								"opacity" : 0.85
+							},
+							"transform" : {
+								"name" : "log10"
+							}
+						}
+					]
+				},
+				{
+					"id" : "bitcoin.amount.zero",
+					"name" : "Amount (BTC)",
+					"pyramid" : {
+						"type" : "AreaOfInterest",
+						"minX" : 1.0,
+						"maxX" : 6336769,
+						"minY" : 0,
+						"maxY" : 0
+					},
+					"data" : {
+						"pyramidio" : {
+							"type" : "hbase",
+							"hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
+							"hbase.zookeeper.port" : "2181",
+							"hbase.master" : "hadoop-s1.oculus.local:60000"							
+						}
+					},
+					"renderers" : [
+						{
+							"domain" : "server",
+							"renderer" : {
+								"type" : "heatmap",
+								"ramp" : "ware",
+								"opacity" : 0.85
+							},
+							"transform" : {
+								"name" : "log10"
+							}
+						}
+					]
 				}
 			]
 		}

@@ -70,7 +70,7 @@ body {
 .show-controls {
     position: absolute;
     top: 5px;
-    right: 100px;
+    right: 180px;
     height: 20px;
     width: 150px;
     font-size: 0.75em;
@@ -99,7 +99,7 @@ body {
     font-size: .7em;
     font-weight: normal;
     top: 5px;
-    left: 400px;
+    left: 210px;
     height: 35px;
 }
 
@@ -256,14 +256,14 @@ table {
     width: 15px;
     height: 80px;
     top: 0px;
-    right: -75px;
+    left: 685px;
     border-color: #948f96;
     border-width: 1px;
     border-style: solid;
 }
 .strip-legend-axis {
     position: absolute;
-    width: 100px;
+    width: 50px;
     bottom: 0px;
     left: 0px;
 }
@@ -317,7 +317,7 @@ th {
 .plot-zoom-slider {
     position: absolute;
     width: 100px;
-    top: -25px;
+    top: -85px;
     left: 100px;
 }
 
@@ -341,8 +341,8 @@ th {
 
 .plot-legend-range {
     position: absolute;
-    top: 0px;
-    right: -20px;
+    top: -81px;
+    right: -25px;
 }
 
 .base-layer-opacity {
@@ -394,8 +394,7 @@ body div.ui-slider-range.ui-widget-header {
     vertical-align: text-top;
     text-align: left;
     width : 320px;
-    padding : 10px 5px
-;
+    padding : 10px 5px;
 }
 
 .plotlink-loupe {

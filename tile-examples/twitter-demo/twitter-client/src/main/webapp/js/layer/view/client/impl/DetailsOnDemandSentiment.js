@@ -123,11 +123,13 @@ define(function (require) {
                 index :  event.index[0],
                 id: id
             });
+            this.plotLayer.all().where([event.data]).redraw();
         },
 
 
         onHoverOff: function(event) {
             this.clientState.clearHoverState();
+            this.plotLayer.all().where([event.data]).redraw();
         },
 
 
@@ -256,12 +258,10 @@ define(function (require) {
             this.recentTweetsLabels.map('text-anchor').asValue('middle');
             this.recentTweetsLabels.on('mousemove', function(event) {
                 that.onHover(event, 'detailsOnDemandRecent');
-                that.recentTweetsLabels.all().where(event.data).redraw();
-                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+                return true; // swallow event
             });
             this.recentTweetsLabels.on('mouseout', function(event) {
                 that.onHoverOff(event);
-                that.recentTweetsLabels.all().where(event.data).redraw();
             });
 
             // MOST RECENT TWEETS LINES
@@ -304,7 +304,7 @@ define(function (require) {
             this.negativeLabel.map('offset-x').asValue(this.PARTITION_BAR_OFFSET_X);
 
             // AXIS CENTRE LINE
-            this.axisLine = this.createPartitionLine( {
+            this.axisLine = this.createPartitionLine({
                 colour : this.GREY_COLOUR,
                 length : this.PARTITION_BAR_LENGTH,
                 x : this.PARTITION_BAR_OFFSET_X,
@@ -351,13 +351,9 @@ define(function (require) {
                 countFunc : function() { return 24; },
                 mousemove : function(event) {
                     that.onHover(event, 'detailsOnDemandPositive');
-                    that.detailsPositiveBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
                 },
                 mouseout : function(event) {
                     that.onHoverOff(event);
-                    that.detailsPositiveBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
                 }
             });
 
@@ -379,13 +375,9 @@ define(function (require) {
                 countFunc : function() { return 24; },
                 mousemove : function(event) {
                     that.onHover(event, 'detailsOnDemandNegative');
-                    that.detailsNegativeBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
                 },
                 mouseout :  function(event) {
                     that.onHoverOff(event);
-                    that.detailsNegativeBar.all().where(event.data).redraw();
-                    that.countLabels.all().redraw();
                 }
             });
         },
@@ -487,7 +479,6 @@ define(function (require) {
         createDetailsOnDemand: function() {
 
             var that = this;
-
             this.createBackgroundPanel();
             this.createTitleLabels();
             this.createBarGraph();

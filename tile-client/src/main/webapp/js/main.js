@@ -29,6 +29,7 @@ require(['./FileLoader',
          './ui/OverlayButton',
          './map/MapTracker',
          './map/Map',
+         './binning/PyramidFactory',
          './layer/AllLayers',
          './customization',
          './layer/view/server/ServerLayerFactory',
@@ -43,6 +44,7 @@ require(['./FileLoader',
                   OverlayButton,
                   MapTracker,
                   Map,
+                  PyramidFactory,
                   AvailableLayersTracker,
                   UICustomization,
                   ServerLayerFactory,
@@ -55,7 +57,6 @@ require(['./FileLoader',
 	        var apertureConfigFile = "./data/aperture-config.json",
 	            cloneObject,
 	            getLayers,
-	            pyramidsEqual,
 	            getAnnotationLayers,
 	            uiMediator;
 
@@ -123,24 +124,6 @@ require(['./FileLoader',
 		        });
 	        };
 
-	        pyramidsEqual = function (a, b) {
-		        var result = false;
-		        if (a.type === b.type) {
-			        if ("AreaOfInterest" === a.type) {
-				        if (a.minX === b.minX &&
-				            a.maxX === b.maxX &&
-				            a.minY === b.minY &&
-				            a.maxY === b.maxY) {
-					        result = true;
-				        }
-			        } else {
-				        result = true;
-			        }
-		        }
-		        return result;
-	        };
-
-
 	        getAnnotationLayers = function( allLayers, filter ) {
 		        var i, validLayers =[];
 		        for (i=0; i<allLayers.length; i++) {
@@ -200,7 +183,7 @@ require(['./FileLoader',
 					        // of the layer tree that match that pyramid.
 					        // Eventually, we should let the user choose among them.
 					        var filter = function (layer) {
-						        return pyramidsEqual(mapPyramid, layer.pyramid);
+						        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
 					        },
 					            clientLayers = getLayers("client", layers, filter),
 					            serverLayers = getLayers("server", layers, filter);

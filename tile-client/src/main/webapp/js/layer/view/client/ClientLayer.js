@@ -99,8 +99,8 @@ define(function (require) {
                 that.mapNodeLayer.map('longitude').from('longitude');
                 that.mapNodeLayer.map('latitude').from('latitude');
                 // Necessary so that aperture won't place labels and texts willy-nilly
-                that.mapNodeLayer.map('width').asValue(1);
-                that.mapNodeLayer.map('height').asValue(1);
+                //that.mapNodeLayer.map('width').asValue(1);
+                //that.mapNodeLayer.map('height').asValue(1);
             }
 
             // initialize attributes
@@ -145,8 +145,8 @@ define(function (require) {
         },
 
         /**
-         * Returns the view index for the specified tile key
-         * @param tilekey 		tile identification key of the form: "level,x,y"
+         * Maps a tilekey to its current view index. If none is specified, use default
+         * @param tilekey tile identification key of the form: "level,x,y"
          */
         getTileViewIndex: function(tilekey) {
             // given a tile key "level + "," + xIndex + "," + yIndex"
@@ -183,8 +183,8 @@ define(function (require) {
             if (oldView.getLayerId() === newView.getLayerId()) {
                 // if both views share the same type of data source, swap tile data
                 oldView.swapTileWith(newView, tilekey);
-                this.updateAndRedrawViews();
-                this.mapNodeLayer.all().where( newView.getTileData(tilekey) ).redraw();
+                this.updateAndRedrawViews( newView.getTileData(tilekey) );
+
             } else {
                 // otherwise, release and request
                 oldView.releaseTile( tilekey );
@@ -226,8 +226,8 @@ define(function (require) {
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
                 this.views[i].filterAndRequestTiles(tilesByView[i],
-                                                                this.map.getTileSetBoundsInView(),
-                                                                $.proxy(this.updateAndRedrawViews, this));
+                                                    this.map.getTileSetBoundsInView(),
+                                                    $.proxy(this.updateAndRedrawViews, this));
             }
         },
 
@@ -245,12 +245,13 @@ define(function (require) {
                 $.merge(data, this.views[i].getDataArray() );
             }
 
-            this.mapNodeLayer.all([]).redraw(); // temporary aperture.js bug workaround
-            this.mapNodeLayer.all(data).redraw();
-            // bring selected node to the front, this allows any renderings to stay above other nodes
+            // pull selected node to the front
             this.mapNodeLayer.all().where( function() {
                 return this.tilekey === that.clientState.clickState.tilekey;
-            } ).toFront().redraw();
+            }).toFront();
+
+            // redraw new tile
+            this.mapNodeLayer.all(data).where(tile).redraw();
         }
 
 

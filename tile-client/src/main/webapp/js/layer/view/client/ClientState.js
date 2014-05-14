@@ -75,6 +75,13 @@ define(function (require) {
         },
 
 
+        areDetailsOverTile: function(xIndex, yIndex) {
+            return this.clickState.xIndex+1 === xIndex &&
+                 ( this.clickState.yIndex === yIndex ||
+                     this.clickState.yIndex-1 === yIndex);
+        },
+
+
         setSharedState: function(key, value) {
             this.sharedState[key] = value;
         },

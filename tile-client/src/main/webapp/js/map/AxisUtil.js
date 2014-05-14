@@ -195,7 +195,7 @@ define({
      * @param vx        viewport x pixel of mouse
      * @param vy        viewport y pixel of mouse
      */
-    getMarkers : function(axis, vx, vy) {
+    getMarkers : function(axis) {
         "use strict";
 
         // generates all increments between min and max using specified interval
