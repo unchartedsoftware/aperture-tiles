@@ -103,6 +103,13 @@ define(function (require) {
         },
 
 
+        onUnconfigRetrieved: function (layerInfo, statusInfo) {
+
+            if (!statusInfo.success) {
+                return;
+            }
+        },
+
 
         /**
          * Called when the server returns layer data to us
@@ -112,19 +119,6 @@ define(function (require) {
                 return;
             }
 
-            // Clear out our collected bounds, so they will be recalculated 
-            // next time anyone asks.
-            this.collectedBounds = null;
-
-            // Put the bounds in a more useful form
-            layerInfo.dataBounds = {
-                left: layerInfo.bounds[0],
-                bottom: layerInfo.bounds[1],
-                right: layerInfo.bounds[2],
-                top: layerInfo.bounds[3],
-                xCenter: (layerInfo.bounds[0] + layerInfo.bounds[2])/2,
-                yCenter: (layerInfo.bounds[1] + layerInfo.bounds[3])/2
-            };
 	        // Check to see if we have any previous info on this layer.
 	        // If we do, this is a change of configuration; we need to tell
 	        // the server we're done with the old configuration.
@@ -132,7 +126,7 @@ define(function (require) {
 	            this.layerInfos[layerInfo.layer].id) {
 		        aperture.io.rest('/layer',
 		                         'POST',
-		                         $.proxy(this.onLayerInfoRetrieved, this),
+		                         $.proxy(this.onUnconfigRetrieved, this),
 		                         {
 			                         postData: {
 				                         request: "unconfigure",
