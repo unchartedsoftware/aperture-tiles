@@ -146,11 +146,13 @@ define(function (require) {
                 index :  event.index[0],
                 id: id
             });
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
         onHoverOff: function(event) {
             this.clientState.clearHoverState();
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
@@ -486,12 +488,10 @@ define(function (require) {
             this.recentTweetsLabels.map('text-anchor').asValue('middle');
             this.recentTweetsLabels.on('mousemove', function(event) {
                 that.onHover(event, 'detailsOnDemandRecent');
-                that.recentTweetsLabels.all().where(event.data).redraw();
-                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+                return true; // swallow event
             });
             this.recentTweetsLabels.on('mouseout', function(event) {
                 that.onHoverOff(event);
-                that.recentTweetsLabels.all().where(event.data).redraw();
             });
 
             // MOST RECENT TWEETS LINES

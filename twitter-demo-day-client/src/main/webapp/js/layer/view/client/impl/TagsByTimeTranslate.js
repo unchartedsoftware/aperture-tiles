@@ -53,19 +53,10 @@ define(function (require) {
 
         getTotalCountPercentage: function(data, index) {
             var numDays = this.getTotalDaysInMonth(data),
-                tagIndex = Math.floor(index / numDays);
-                
-            if (data.bin.value[tagIndex].countMonthly === 0) {
-                return 0;
-            }
-            return data.bin.value[tagIndex].countDaily[numDays - 1 - (index % numDays)] / data.bin.value[tagIndex].countMonthly;
-        },
+                tagIndex = Math.floor(index / numDays),
+                dailycount = data.bin.value[tagIndex].countDaily[numDays - 1 - (index % numDays)];
 
-
-        redrawLayers: function(data) {
-            this.tagLabels.all().where(data).redraw();
-            this.bars.all().where(data).redraw();
-            //this.summaryLabel.all().where(data).redraw();
+            return (dailycount / data.bin.value[tagIndex].countMonthly) || 0;
         },
 
 
@@ -89,13 +80,13 @@ define(function (require) {
                 index : index,
                 id : id
             });
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
         onHoverOff: function(event) {
             this.clientState.clearHoverState();
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
@@ -109,7 +100,6 @@ define(function (require) {
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
-            //this.createCountSummaries();
             this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
             this.detailsOnDemand.attachClientState(this.clientState);
             this.detailsOnDemand.createLayer(this.plotLayer);
@@ -129,12 +119,9 @@ define(function (require) {
                     maxPercent = 0,
                     count = data.bin.value[tagIndex].countMonthly;
 
-                if (count === 0) {
-                    return 0;
-                }
                 for (i=0; i<numDays; i++) {
                     // get maximum percent
-                    percent = data.bin.value[tagIndex].countDaily[i] / count;
+                    percent = (data.bin.value[tagIndex].countDaily[i] / count) || 0;
                     if (percent > maxPercent) {
                         maxPercent = percent;
                     }
@@ -190,6 +177,7 @@ define(function (require) {
 
             this.bars.on('mousemove', function(event) {
                 that.onHover(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(event.data)), 'tagsByTimeTranslateCountSummary');
+                return true; // swallow event
             });
 
             this.bars.on('mouseout', function(event) {
@@ -296,7 +284,7 @@ define(function (require) {
 
             this.tagLabels.on('mousemove', function(event) {
                 that.onHover(event, event.index[0], 'tagsByTimeTranslateCountSummary');
-                return true;  // swallow event, for some reason mousemove on labels needs to swallow this or else it processes a mouseout
+                return true;  // swallow event
             });
 
             this.tagLabels.on('mouseout', function(event) {

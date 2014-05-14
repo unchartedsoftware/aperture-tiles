@@ -49,7 +49,7 @@
                     ]
                 },               
                 {
-                    "id": "twittertopics.L12.march.2014-05-08",
+                    "id": "twittertopicstargeted.L12.march.2014-05-14",
                     "name": "Twitter most common words",
                     "pyramid": {
                         "type": "WebMercator"

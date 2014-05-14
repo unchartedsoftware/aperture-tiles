@@ -71,10 +71,7 @@ define(function (require) {
 
 
         getCountPercentage: function(data, index, type) {
-            if (data.bin.value[index].countMonthly === 0) {
-                return 0;
-            }
-            return data.bin.value[index][type] / data.bin.value[index].countMonthly;
+            return (data.bin.value[index][type] / data.bin.value[index].countMonthly) || 0;
         },
 
 
@@ -85,21 +82,8 @@ define(function (require) {
             for (i=0; i<n; i++) {
                 sum += data.bin.value[i].countMonthly;
             }
-            if (sum === 0) {
-                return 0;
-            }
-            return data.bin.value[index].countMonthly/sum;
+            return (data.bin.value[index].countMonthly/sum) || 0;
         },
-
-
-        redrawLayers: function(data) {
-            //this.negativeBar.all().where(data).redraw();
-            //this.positiveBar.all().where(data).redraw();
-            this.tagLabel.all().where(data).redraw();
-            this.translateLabel.all().where(data).redraw();
-            //this.summaryLabel.all().where(data).redraw();
-        },
-
 
         onClick: function(event) {
             this.clientState.setClickState(event.data.tilekey, {
@@ -121,13 +105,13 @@ define(function (require) {
                 index :  event.index[0],
                 id : id
             });
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
         onHoverOff: function(event) {
             this.clientState.clearHoverState();
-            this.redrawLayers(event.data);
+            this.plotLayer.all().where(event.data).redraw();
         },
 
 
@@ -139,10 +123,8 @@ define(function (require) {
             // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
             // TODO: currently does not render correctly if on its own PlotLayer...
             this.plotLayer = mapNodeLayer;
-            //this.createBars();
             this.createLabels();
             this.createTranslateLabel();
-            //this.createCountSummaries();
             this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
             this.detailsOnDemand.attachClientState(this.clientState);
             this.detailsOnDemand.createLayer(this.plotLayer);
@@ -174,7 +156,7 @@ define(function (require) {
 
             this.tagLabel.on('mousemove', function(event) {
                 that.onHover(event, 'topTextSentimentBarsAll');
-                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+                return true; // swallow event
             });
 
             this.tagLabel.on('mouseout', function(event) {
@@ -241,21 +223,20 @@ define(function (require) {
             });
 
             this.translateLabel.on('click', function(event) {
-                that.toggleTileTranslation(event.data.tilekey)
-                that.translateLabel.all().where(event.data).redraw();
-                that.tagLabel.all().where(event.data).redraw();
+                that.toggleTileTranslation(event.data.tilekey);
+                that.plotLayer.all().where(event.data).redraw();
                 return true; // swallow event
             });
 
             this.translateLabel.on('mousemove', function(event) {
                 isHoveredOn = true;
-                that.translateLabel.all().where(event.data).redraw();
-                return true; // swallow event, for some reason 'mousemove' on labels needs to swallow this or else it processes a mouseout
+                that.plotLayer.all().where(event.data).redraw();
+                return true; // swallow event
             });
 
             this.translateLabel.on('mouseout', function(event) {
                 isHoveredOn = false;
-                that.translateLabel.all().where(event.data).redraw();
+                that.plotLayer.all().where(event.data).redraw();
             });
 
             this.translateLabel.map('label-count').asValue(1);
