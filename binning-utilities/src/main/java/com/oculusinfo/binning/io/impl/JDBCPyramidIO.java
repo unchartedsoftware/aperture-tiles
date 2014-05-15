@@ -86,13 +86,20 @@ public class JDBCPyramidIO implements PyramidIO {
 				sb.append(toTableName(pyramidId));
 				sb.append(" (");
 				sb.append(COL_ZOOM_LVL);
-				sb.append(" INTEGER, ");
+				sb.append(" INTEGER NOT NULL, ");
 				sb.append(COL_TILE_COLUMN);
-				sb.append(" INTEGER, ");
+				sb.append(" INTEGER NOT NULL, ");
 				sb.append(COL_TILE_ROW);
-				sb.append(" INTEGER, ");
+				sb.append(" INTEGER NOT NULL, ");
 				sb.append(COL_TILE_DATA);
-				sb.append(" BLOB)");
+				sb.append(" BLOB,");
+				sb.append(" CONSTRAINT pk_TileIndex PRIMARY KEY (");
+				sb.append(COL_ZOOM_LVL);
+				sb.append(",");
+				sb.append(COL_TILE_COLUMN);
+				sb.append(",");
+				sb.append(COL_TILE_ROW);
+				sb.append("))");
 				
 				stmt = _connection.createStatement();
 				stmt.executeUpdate(sb.toString());
