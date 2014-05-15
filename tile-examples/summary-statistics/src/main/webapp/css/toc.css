@@ -16,8 +16,6 @@ rgb(252, 249, 207)  Pale Yellow (from luminance scale)
     background-color : rgb(204,204,204);
 }
 header {
-	border-bottom: solid 1px GRAY;
-	margin: 0 0 0 15px;
 	background-color : rgb(204,204,204);
 }
 header h1 {
@@ -34,7 +32,6 @@ header h2 {
 }
 section {
 	background-color: white;
-	width: 300px;
 	padding: 15px;
 	border: solid 1px GRAY;
 	margin: 15px;

@@ -158,7 +158,7 @@ define(function (require) {
                     that.$container.click(horizontalSlide);
                 }
 
-                // append axis div to map parent, and other elements tot hat div
+                // append axis div to map parent, and other elements to that div
                 that.$map.parent().append(that.$div);
                 that.$div.append(that.$container);
                 that.$div.append(that.$header);

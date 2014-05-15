@@ -9,7 +9,12 @@
                 {
                     "Layer": "twitter.2014-01-02.longitude.latitude",
                     "Type": "tile",
-                    "Opacity" : 0.85
+                    "Opacity" : 0.85,
+                	"Config" : {
+	                    "layer": "twitter.2014-01-02.longitude.latitude",
+	                    "domain": "server",
+	                    "name": "Tweet Locations"
+                	}
                 }
             ],
             "X Axis": "Longitude",
