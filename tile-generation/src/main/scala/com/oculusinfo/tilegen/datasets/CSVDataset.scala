@@ -30,17 +30,14 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Double => JavaDouble}
 import java.text.SimpleDateFormat
 import java.util.Properties
-
 import scala.collection.JavaConverters._
 import scala.util.{Try, Success, Failure}
-
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.Time
-
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
@@ -54,9 +51,11 @@ import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
-
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.tiling.TimeRangeCartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.TimeIndexScheme
+import java.util.TimeZone
 
 
 
@@ -239,12 +238,20 @@ abstract class CSVIndexExtractor[T: ClassManifest] extends Serializable {
 	// The index scheme the binner needs to know what to do with the index
 	// values we generate
 	def indexScheme: IndexScheme[T]
-
+	
 	// Get the index value from the field values
 	def calculateIndex (fieldValues: Map[String, Double]): T
 
 	// Indicate if the index implies a density strip
 	def isDensityStrip: Boolean
+}
+
+abstract class TimeRangeCSVIndexExtractor[T: ClassManifest] extends CSVIndexExtractor[T] {
+	// The time based index scheme the binner needs to know what to do with the index
+	// values we generate
+	def timeIndexScheme: TimeIndexScheme[T]
+	
+	def msPerTimeRange: Double
 }
 
 class CartesianIndexExtractor(xVar: String, yVar: String) extends CSVIndexExtractor[(Double, Double)] {
@@ -275,6 +282,27 @@ class IPv4IndexExtractor (ipField: String) extends CSVIndexExtractor[Array[Byte]
 	}
 	val isDensityStrip = false
 }
+
+class TimeRangeCartesianIndexExtractor(timeVar: String, xVar: String, yVar: String, startDate: Double, secsPerPeriod: Double) extends TimeRangeCSVIndexExtractor[(Double, Double, Double)] {
+	private val scheme = new TimeRangeCartesianIndexScheme
+
+	def msPerTimeRange = secsPerPeriod * 1000
+	
+	/**
+	 * Floors the date value to the last time period
+	 */
+	def floorDate(d: Double) = Math.floor((d - startDate) / msPerTimeRange) * msPerTimeRange + startDate
+	
+	def fields = Array(timeVar, xVar, yVar)
+	def name = xVar + "." + yVar
+	def description = xVar + " vs. " + yVar
+	def indexScheme = scheme
+	def timeIndexScheme = scheme
+	def calculateIndex (fieldValues: Map[String, Double]): (Double, Double, Double) = 
+		(floorDate(fieldValues(timeVar)), fieldValues(xVar), fieldValues(yVar))
+	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+}
+
 
 /*
  * Simple class to add standard field interpretation to a properties wrapper
@@ -339,12 +367,13 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 
 		val dateFormats = properties.fields.filter(field =>
 			"date" == properties.getString("oculus.binning.parsing."+field+".fieldType", "", Some(""))
-		).map(field =>
-			(field ->
-				 new SimpleDateFormat(properties.getString(
+		).map(field => {
+			val format = new SimpleDateFormat(properties.getString(
 					                      "oculus.binning.parsing."+field+".dateFormat",
-					                      "", Some("yyMMddHHmm"))))
-		).toMap
+					                      "", Some("yyMMddHHmm")))
+			format.setTimeZone(TimeZone.getTimeZone("GMT"))
+			(field -> format)
+		}).toMap
 
 
 
@@ -399,6 +428,7 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 		raw.map(s =>
 			{
 				val columns = splitString(s, separator)
+
 				(s,
 				 Try(
 					 properties.fields.toList.map(field =>
@@ -819,3 +849,4 @@ class StreamingCSVDataset[IT: ClassManifest] (indexer: CSVIndexExtractor[IT],
 		}
 	}
 }
+
