@@ -27,9 +27,12 @@ package com.oculusinfo.binning.io.storageutil;
 
 
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -107,28 +110,17 @@ public class TileStorageUtility {
 	}
 
 
-//	   public DoubleAvroSerializer (CodecFactory compressionCodec) {
-//	       super(compressionCodec, TYPE_DESCRIPTOR);
-//	   }    
-//	   public TwitterDemoAvroSerializer () {
-//	       super(CodecFactory.bzip2Codec(), TYPE_DESCRIPTOR);
-//	   }
-
 	// We have no possible way of checking this cast; all we can do is trust the
 	// user who set up our parameters.
 	@SuppressWarnings("unchecked")
 	private static <T> TileSerializer<T> getTileSerializer (Properties properties) {
-		// String serializerClassName = properties.getProperty("serializer", "com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer");
-		
-		//String serializerClassName = "com.oculusinfo.binning.io.serialization.impl.TwitterDemoAvroSerializer";
-		//String className2 = TwitterDemoAvroSerializer.class.getName();
+		String serializerClassName = properties.getProperty("serializer", "com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer");
+
 		try {
-			// Class<?> serializerClass = Class.forName(serializerClassName);
-			// return (TileSerializer<T>) serializerClass.getConstructor().newInstance();
-			return (TileSerializer<T>) new DoubleAvroSerializer(CodecFactory.bzip2Codec());	
-//		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
-//				IllegalArgumentException | InvocationTargetException | NoSuchMethodException |
-			
+			Class<?> c = Class.forName(serializerClassName);
+			Constructor<?> cons = c.getConstructor(CodecFactory.class);
+			return (TileSerializer<T>) cons.newInstance(CodecFactory.bzip2Codec());
+
 		} catch (Exception e) {
             	LOGGER.log(Level.WARNING,
                     "Exception Found", e);
@@ -268,6 +260,21 @@ public class TileStorageUtility {
 				fromObject.readMetaData(
 						fromPyramidID));
 
+		String toPath = prop.getProperty("to.path");
+		
+		File folder = new File(toPath + toPyramidID);
+		File jsonFile = new File(toPath + toPyramidID + "/metadata.json");
+		
+		if (!folder.exists()) {
+			folder.mkdirs();
+			jsonFile.createNewFile();
+		}
+		
+		else if (!jsonFile.exists()) {
+
+			jsonFile.createNewFile();
+		}
+		
 		// block size 
 		Integer blocksize = getBlockSize(prop);
 		

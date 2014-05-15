@@ -1,3 +1,28 @@
+  /*
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+ *
+ * Released under the MIT License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+
 package com.oculusinfo.stats.util
 
 import org.json.JSONWriter
@@ -111,11 +136,14 @@ object JSONwriter {
       val alias = r._1
       val name = r._2
 
-      val min = r._4("max")
-      val q1 = r._4("max")
-      val mean = r._4("max")
-      val median = r._4("max")
-      val q3 = r._4("max")
+      val quartiles = r._4("quartiles").asInstanceOf[(Double, Double, Double)]
+      
+      val mean = r._4("mean")
+      val min = r._4("min")
+      val q1 = quartiles._1
+      
+      val median = quartiles._2
+      val q3 = quartiles._3
       val max = r._4("max")
       
       val na = new JSONObject
@@ -173,6 +201,70 @@ object JSONwriter {
  def JSONdate(date: Array[(String, String, String, Map[String, Any])], totalRecords: Int): JSONObject = { 
   val dateSummary = new JSONObject  
   dateSummary.put("Type","Date")
+
+  val dateList = new JSONArray
+
+    date.foreach(r => {
+
+      val field = new JSONObject
+
+      val alias = r._1
+      val name = r._2
+
+      val quartiles = r._4("quartiles").asInstanceOf[(Double, Double, Double)]
+      
+      val mean = r._4("mean")
+      val min = r._4("min")
+      val q1 = quartiles._1
+      
+      val median = quartiles._2
+      val q3 = quartiles._3
+      val max = r._4("max")
+      
+      val na = new JSONObject
+      val naCount = new JSONObject
+      naCount.put("Type", "integer")
+      naCount.put("Value", r._4("countNA"))
+      naCount.put("Unit", "")
+      
+      val naPercent = new JSONObject
+      naPercent.put("Type","float")
+      //not safe
+      val naPercentVal = r._4("countNA").asInstanceOf[String].toInt / totalRecords
+      naPercent.put("Value", naPercentVal)
+      naPercent.put("Unit","%")
+      
+      na.put("Count",naCount)
+      na.put("Percent", naPercent)
+        
+      
+      val unique = new JSONObject
+      val uniqueCount = new JSONObject
+      uniqueCount.put("Type", "integer")
+      uniqueCount.put("Value", r._4("countUnique"))
+      uniqueCount.put("Unit", "")
+      
+      val uniquePercent = new JSONObject
+      uniquePercent.put("Type","float")
+      //not safe
+      val uniquePercentVal = r._4("countUnique").asInstanceOf[String].toInt / (totalRecords - r._4("countNA").asInstanceOf[String].toInt)
+      uniquePercent.put("Value", uniquePercentVal)
+      uniquePercent.put("Unit","%")
+       
+      unique.put("Count",uniqueCount)
+      unique.put("Percent", uniquePercent)
+
+      
+      field.put("Field Alias", alias)
+      field.put("Name", name)
+//      field.put("Most Frequent", frequencies)
+      field.put("# N.A.", na)
+      field.put("# Unique", unique)
+      
+      dateList.put(field)
+    })
+    
+    dateSummary.put("Fields", dateList)
   
   dateSummary
  }
@@ -238,8 +330,8 @@ object JSONwriter {
   
   
   val file = new PrintWriter(new File("output/" + title.replace(" ", "-") + "-tables.json"))
-  val testStr = myjson.toString.getBytes
-  file.write(myjson.toString)
+
+  file.write(myjson.toString(4))
   file.close()
 
  }
