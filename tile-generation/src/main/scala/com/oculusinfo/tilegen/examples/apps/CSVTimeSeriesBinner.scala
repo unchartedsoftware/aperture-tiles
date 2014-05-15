@@ -67,6 +67,9 @@ import java.util.Date
 import org.apache.spark.storage.StorageLevel
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.IndexScheme
+import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CartesianIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVDatasetBase
 
 
 /*
@@ -301,6 +304,16 @@ class TimeSeriesDataset (rawProperties: Properties,
 	override def getNumYBins = tileHeight
 	override def getConsolidationPartitions: Option[Int] = consolidationPartitions
 
+	def getIndexScheme = {
+		val xVar = properties.getString("oculus.binning.xField",
+		                                "The field to use for the X axis of tiles produced",
+		                                Some(CSVDatasetBase.ZERO_STR))
+		val yVar = properties.getString("oculus.binning.yField",
+		                                "The field to use for the Y axis of tiles produced",
+		                                Some(CSVDatasetBase.ZERO_STR))
+		(new CartesianIndexExtractor(xVar, yVar)).indexScheme
+	}
+	
 	def getCategories: List[String] = {
 		println("--- categories are: ")
 		categories.foreach(str => println("\t" + str))
