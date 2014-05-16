@@ -162,6 +162,100 @@ public class TwitterTopicTests {
 	}
 	
 
+	//---- construct a new record with a tweet before the beginning of its valid time range
+	@Test
+	public void testConstructRecordBeforeBeginning() {	
+		
+		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (2678400L+1)); // 1 month + 1 sec from end time
+		
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
+		Assert.assertEquals(a.getCountMonthly(), 0);
+		Assert.assertEquals(a.getCountDaily(), null);
+		Assert.assertEquals(a.getCountPer6hrs(), null);
+		Assert.assertEquals(a.getCountPerHour(), null);
+	}
+	
+	//---- construct a new record with a tweet after the end time
+	@Test
+	public void testConstructRecordAfterEnd() {	
+		
+		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs + 1L); // 1 sec after end time
+
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
+		Assert.assertEquals(a.getCountMonthly(), 0);
+		Assert.assertEquals(a.getCountDaily(), null);
+		Assert.assertEquals(a.getCountPer6hrs(), null);
+		Assert.assertEquals(a.getCountPerHour(), null);
+	}	
+	
+	//---- construct a new record with a tweet so it increments monthly count per day, but not quarter-daily or hourly
+	@Test
+	public void testConstructRecordMonthly() {	
+		
+		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (2678400L-1)); // 1 month - 1 sec from end time
+		
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
+		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
+		Assert.assertTrue(a.getCountDaily().get(30) == _sampleRecord.getCountDaily().get(30)+1);	// check count for last day of month
+		for (int n=0; n<30; n++) {
+			Assert.assertTrue(a.getCountDaily().get(n) == _sampleRecord.getCountDaily().get(n));
+		}
+		Assert.assertEquals(a.getCountPer6hrs(), _sampleRecord.getCountPer6hrs());
+		Assert.assertEquals(a.getCountPerHour(), _sampleRecord.getCountPerHour());
+	}
+	
+	
+	//---- construct a new record with a tweet so it increments monthly count per day and quarter-daily, but not hourly
+	@Test
+	public void testConstructRecordQuarterDaily() {	
+		
+		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (604800L-1)); // 7 days - 1 sec from end time
+	
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
+		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
+		for (int n=0; n<31; n++) {
+			if (n!=6)
+				Assert.assertTrue(a.getCountDaily().get(n) == _sampleRecord.getCountDaily().get(n));
+			else
+				Assert.assertTrue(a.getCountDaily().get(n) == _sampleRecord.getCountDaily().get(n)+1);	// check count for 7 days from end			
+		}
+		for (int n=0; n<28; n++) {
+			if (n!=27)
+				Assert.assertTrue(a.getCountPer6hrs().get(n) == _sampleRecord.getCountPer6hrs().get(n));
+			else
+				Assert.assertTrue(a.getCountPer6hrs().get(n) == _sampleRecord.getCountPer6hrs().get(n)+1);	// check last quarter-daily count			
+		}		
+		Assert.assertEquals(a.getCountPerHour(), _sampleRecord.getCountPerHour());
+	}	
+
+	//---- construct a new record with a tweet so it increments monthly count per day, quarter-daily, and hourly
+	@Test
+	public void testConstructRecordHourly() {	
+		
+		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L); // 1 sec prior to end time
+	
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
+		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
+		for (int n=0; n<31; n++) {
+			if (n!=0)
+				Assert.assertTrue(a.getCountDaily().get(n) == _sampleRecord.getCountDaily().get(n));
+			else
+				Assert.assertTrue(a.getCountDaily().get(n) == _sampleRecord.getCountDaily().get(n)+1);		
+		}
+		for (int n=0; n<28; n++) {
+			if (n!=0)
+				Assert.assertTrue(a.getCountPer6hrs().get(n) == _sampleRecord.getCountPer6hrs().get(n));
+			else
+				Assert.assertTrue(a.getCountPer6hrs().get(n) == _sampleRecord.getCountPer6hrs().get(n)+1);			
+		}
+		for (int n=0; n<24; n++) {
+			if (n!=0)
+				Assert.assertTrue(a.getCountPerHour().get(n) == _sampleRecord.getCountPerHour().get(n));
+			else
+				Assert.assertTrue(a.getCountPerHour().get(n) == _sampleRecord.getCountPerHour().get(n)+1);			
+		}
+	}
+	
 	//---- Adding two records
 	@Test
     public void testRecordAggregation () {
@@ -285,7 +379,7 @@ public class TwitterTopicTests {
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
 													new ArrayList<Pair<String, Long>>(),
-													0);
+													_endTimeSecs);
 		
         Assert.assertEquals(c, TwitterDemoTopicRecord.minOfRecords(a, b));
     }	
@@ -335,7 +429,7 @@ public class TwitterTopicTests {
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
 													new ArrayList<Pair<String, Long>>(),
-													0);
+													_endTimeSecs);
 		TwitterDemoTopicRecord d = TwitterDemoTopicRecord.maxOfRecords(a, b);
         Assert.assertEquals(c, TwitterDemoTopicRecord.maxOfRecords(a, b));
     }  
