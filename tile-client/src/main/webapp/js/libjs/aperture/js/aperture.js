@@ -6020,10 +6020,11 @@ function(namespace) {
 	        	font['font-size'] = fontSize;
 
 	        	dim = this.getFontSize( g, word, font );
-	        	 // add little buffers
-	        	dim.height += 4;
+	        	// add horizontal buffer
 	        	dim.width += 4;
-
+	        	// downsize vertical buffer as it always is too much
+	        	dim.height -= dim.height * 0.25;
+	        	
 	        	pos = {
 					radius : 1,
 					radiusInc : 2,

@@ -64,12 +64,12 @@ define(function (require) {
             this.previousMouse = {};
             this.selectedTileInfo = {};
 
-            // add mouse move and zoom callbacks
-            this.map.on('mousemove', function(event) {
-                var tilekey = that.map.getTileKeyFromViewportPixel(event.xy.x, event.xy.y);
+            // put mouse move callback on global document
+            $(document).mousemove(function(event) {
+                var tilekey = that.map.getTileKeyFromViewportPixel(event.pageX, event.pageY);
                 that.updateSelectedTile(tilekey);
-                that.previousMouse.x = event.xy.x;
-                that.previousMouse.y = event.xy.y;
+                that.previousMouse.x = event.pageX;
+                that.previousMouse.y = event.pageY;
             });
 
             // update carousel if map is moving and mouse isn't
