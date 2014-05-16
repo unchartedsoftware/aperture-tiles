@@ -47,6 +47,7 @@ define(function (require) {
                     title : "Default Axis Title",
                     position : "bottom",
                     repeat: false,
+                    isOpen : true,
                     intervalSpec : {
                         type: "percentage", // or "fixed"
                         increment: 10,
@@ -183,6 +184,7 @@ define(function (require) {
             this.id = spec.id || this.mapId + "-" + this.position + "-axis";
 
             this.title = spec.title || defaults.title;
+            this.isOpen = spec.isOpen || defaults.isOpen;
 
             spec.intervalSpec = spec.intervalSpec || {};
             this.intervalSpec = {};

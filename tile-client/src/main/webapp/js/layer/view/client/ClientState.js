@@ -82,6 +82,12 @@ define(function (require) {
         },
 
 
+        removeSharedState: function(key) {
+            if (this.sharedState[key] !== undefined) {
+                delete this.sharedState[key];
+            }
+        },
+
         setSharedState: function(key, value) {
             this.sharedState[key] = value;
         },

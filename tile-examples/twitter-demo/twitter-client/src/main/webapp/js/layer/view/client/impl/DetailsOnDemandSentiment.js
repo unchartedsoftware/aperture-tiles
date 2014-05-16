@@ -223,6 +223,11 @@ define(function (require) {
                     isVisibleFunc : function() { return that.areDetailsVisible(this); }
                 };
 
+            function isHoveredOver(index) {
+                return (that.clientState.hoverState.userData !== undefined &&
+                        that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                        that.clientState.hoverState.userData.index === index);
+            }
 
             // MOST RECENT TWEETS LABELS
             this.recentTweetsLabels = this.createLabel(that.WHITE_COLOUR);
@@ -243,18 +248,19 @@ define(function (require) {
                 var tagIndex = that.clientState.clickState.userData.index,
                     filteredText = that.filterText(this.bin.value[tagIndex].recent[index].tweet);
 
-                if (that.clientState.hoverState.userData !== undefined &
-                    that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
-                    that.clientState.hoverState.userData.index === index) {
-                    return that.separateTextIntoLines(filteredText, 70, 3);
-                }
-                return that.separateTextIntoLines(filteredText, 35, 3);
+                return filteredText;
             });
+
             this.recentTweetsLabels.map('offset-y').from( function(index) {
                 return that.MOST_RECENT + 45 + (index * that.MOST_RECENT_SPACING);
             });
             this.recentTweetsLabels.map('offset-x').asValue(this.DETAILS_OFFSET_X + this.TILE_SIZE/2);
-            this.recentTweetsLabels.map('width').asValue(200);
+
+            this.recentTweetsLabels.map('max-width').asValue(that.TILE_SIZE - that.HORIZONTAL_BUFFER*2);
+            this.recentTweetsLabels.map('max-height').from(function(index) {
+                return isHoveredOver(index) ? 'none' : that.MOST_RECENT_SPACING;
+            });
+            
             this.recentTweetsLabels.map('text-anchor').asValue('middle');
             this.recentTweetsLabels.on('mousemove', function(event) {
                 that.onHover(event, 'detailsOnDemandRecent');

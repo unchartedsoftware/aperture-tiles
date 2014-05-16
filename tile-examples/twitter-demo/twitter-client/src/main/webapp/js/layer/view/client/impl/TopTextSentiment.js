@@ -50,6 +50,15 @@ define(function (require) {
             this.Y_SPACING = 36;
         },
 
+        getTotalCount : function(data, index) {
+            var i,
+                sum = 0,
+                n = this.getCount(data);
+            for (i=0; i<n; i++) {
+                sum += data.bin.value[i].count;
+            }
+            return sum;
+        },
 
         getCountPercentage: function(data, index, type) {
             return (data.bin.value[index][type] / data.bin.value[index].count) || 0;
@@ -73,7 +82,6 @@ define(function (require) {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index : event.index[0]
             });
-
             // pan map to center
             this.detailsOnDemand.panMapToCenter(event.data);
             // send this node to the front
@@ -130,6 +138,8 @@ define(function (require) {
                 bar.map('visible').from( function() {
                     return that.isSelectedView(this) && that.isVisible(this);
                 });
+
+                bar.map('cursor').asValue('pointer');
 
                 bar.map('fill').from( function(index) {
 
@@ -271,7 +281,7 @@ define(function (require) {
         createLabels: function () {
 
             var that = this,
-                MAX_LABEL_CHAR_COUNT = 9;;
+                MAX_LABEL_CHAR_COUNT = 9;
 
             this.tagLabel = this.plotLayer.addLayer(aperture.LabelLayer);
 
@@ -286,6 +296,8 @@ define(function (require) {
                 }
                 return that.WHITE_COLOUR;
             });
+
+            this.tagLabel.map('cursor').asValue('pointer');
 
             this.tagLabel.on('click', function(event) {
                 that.onClick(event);
@@ -315,15 +327,23 @@ define(function (require) {
 
             this.tagLabel.map('font-size').from(function (index) {
                 var MAX_FONT_SIZE = 28,
-                    FONT_SCALE_FACTOR = 60,
-                    size = (that.getTotalCountPercentage(this, index) * FONT_SCALE_FACTOR) + 10;
-                    size = (size > MAX_FONT_SIZE) ? MAX_FONT_SIZE : size;
+                    MIN_FONT_SIZE = 12,
+                    FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,                  
+                    sum = that.getTotalCount(this, index),
+                    perc = that.getTotalCountPercentage(this, index),
+                    scale = Math.log(sum),
+                    size = ( perc * FONT_RANGE * scale) + (MIN_FONT_SIZE * perc);
+                    size = Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
+                    //FONT_SCALE_FACTOR = 5,
+                    //size = (that.getTotalCountPercentage(this, index) * FONT_SCALE_FACTOR * scale) + 8;
+                    //size = (size > MAX_FONT_SIZE) ? MAX_FONT_SIZE : size;
+
                 if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
                     return size + 2;
                 }
                 return size;
-
             });
+
             this.tagLabel.map('offset-y').from(function (index) {
                 return that.getYOffset(this, index) + 10;
             });
@@ -333,8 +353,9 @@ define(function (require) {
             this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabel.map('font-outline-width').asValue(3);
             this.tagLabel.map('opacity').from( function() {
-                    return that.getOpacity();
-                })
+                return that.getOpacity();
+            })
+
         }
 
     });

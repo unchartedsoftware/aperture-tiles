@@ -174,6 +174,8 @@ define(function (require) {
                 }
                 return that.WHITE_COLOUR;
             });
+            this.bars.map('cursor').asValue('pointer');
+
             this.bars.map('bar-count').from( function() {
                 return NUM_HOURS_IN_DAY * that.getCount(this);
             });
@@ -277,6 +279,8 @@ define(function (require) {
             this.tagLabels.map('label-count').from(function() {
                 return that.getCount(this);
             });
+
+            this.tagLabels.map('cursor').asValue('pointer');
 
             this.tagLabels.map('text').from(function (index) {
                 var str = that.filterText(this.bin.value[index].tag);
