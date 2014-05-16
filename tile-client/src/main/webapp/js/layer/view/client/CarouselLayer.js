@@ -136,11 +136,11 @@ define(function (require) {
                 };
 
             this.$leftChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_LEFT+"'></div>");
-            this.$leftChevron.click( function() { incIndex(-1); });
+            this.$leftChevron.click( function() { incIndex(-1); return true; });
             this.$outline.append(this.$leftChevron);
 
             this.$rightChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_RIGHT+"'></div>");
-            this.$rightChevron.click( function() { incIndex(1); });
+            this.$rightChevron.click( function() { incIndex(1); return true; });
             this.$outline.append(this.$rightChevron);
         },
 
@@ -160,6 +160,7 @@ define(function (require) {
                     var tilekey = that.selectedTileInfo.tilekey,
                         prevIndex = that.getTileViewIndex(tilekey);
                     that.changeViewIndex(tilekey, prevIndex, index);
+                    return true;
                 };
             }
 

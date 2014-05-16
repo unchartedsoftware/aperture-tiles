@@ -5455,22 +5455,34 @@ function(namespace) {
 
 		formatText : function( g, maxWidth, maxHeight, str, font ) {
 
-			var widthLeftOnLine = maxWidth,
-				formatted = "",
-				ELLIPSIS = "...",
-				ELLIPSIS_WIDTH = this.getFontSize( g, ELLIPSIS, font ).width,
-				HYPHEN_WIDTH = this.getFontSize( g, "-", font ).width,
-				SPACE_WIDTH = this.getFontSize( g, "- -", font ).width - 2*HYPHEN_WIDTH,				
-				LINE_HEIGHT = this.getFontSize( g, str, font ).height,
-				numLinesLeft = Math.floor( maxHeight / LINE_HEIGHT ),
-				strArray = str.split(" ");
+			function strHash(str) {
+				var hash = 0, i, chr, len;
+			 	if (str.length == 0) return hash;
+			 	for (i = 0, len = str.length; i < len; i++) {
+				    chr   = str.charCodeAt(i);
+				    hash  = ((hash << 5) - hash) + chr;
+				    hash |= 0; // Convert to 32bit integer
+				}
+				return hash;
+			}
 
-			// see if we already created the cloud
-			var hash = str + "-" + maxWidth + "-" + maxHeight + "-" +font['font-size'];
+			// see if we already formatted the string
+			var hash = strHash(str) + "-" + strHash(maxWidth + "-" + maxHeight + "-" +font['font-size']);
 	        var cacheEntry = this.getFromCache(hash);
 	        if ( cacheEntry !== null ) {
 	        	return cacheEntry;
 	        }
+
+	        // compute some constants only after checking cache
+	        var widthLeftOnLine = maxWidth,
+				formatted = "",
+				ELLIPSIS = "...",
+				ELLIPSIS_WIDTH = this.getFontSize( g, ELLIPSIS, font ).width,
+				HYPHEN_WIDTH = this.getFontSize( g, "-", font ).width,
+				SPACE_WIDTH = this.getFontSize( g, "- -", font ).width - 2*HYPHEN_WIDTH,
+				LINE_HEIGHT = this.getFontSize( g, str, font ).height,
+				numLinesLeft = Math.floor( maxHeight / LINE_HEIGHT ),
+				strArray = str.split(" ");
 
 			for (var j = 0; j<strArray.length; j++) {
 
@@ -5906,11 +5918,11 @@ function(namespace) {
 				return ( a.x + a.width/2 > b.x+b.width/2 ||
 					     a.x - a.width/2 < b.x-b.width/2 ||
 					     a.y + a.height/2 > b.y+b.height/2 ||
-					     a.y + a.height/2 > b.y+b.height/2 );
+					     a.y - a.height/2 < b.y-b.height/2 );
 			}
 
         	for (w=0; w<c.length; w++) {
-        		if ( boxTest( box, c[w] ) ) {
+        		if ( c[w] !== null && boxTest( box, c[w] ) ) {
         			return { 
         				result : true,
         			    type: 'word' 
@@ -5951,7 +5963,17 @@ function(namespace) {
 
         generateCloud : function( g, words, frequencies, itemCount, font, bb ) {
 
-        	
+        	function strHash(str) {
+				var hash = 0, i, chr, len;
+			 	if (str.length == 0) return hash;
+			 	for (i = 0, len = str.length; i < len; i++) {
+				    chr   = str.charCodeAt(i);
+				    hash  = ((hash << 5) - hash) + chr;
+				    hash |= 0; // Convert to 32bit integer
+				}
+				return hash;
+			}
+
 	        // Assemble into ordered list
 	        var wordCounts = [];
 	        var hash = "";
@@ -5964,6 +5986,7 @@ function(namespace) {
 	        }
 	        hash += font.maxFontSize +":"+ font.minFontSize;
 
+	        hash = strHash(hash);
 	        // see if we already created the cloud
 	        var cloud = this.getFromCache(hash);
 	        if ( cloud !== null ) {
@@ -6013,7 +6036,7 @@ function(namespace) {
 				var borderCollisions = 0,
 					intersection;
 
-	        	while( borderCollisions < 20 ) {
+	        	while( true ) {
 
 	        		// increment spiral
 	        		pos = this.spiralPosition(pos);
@@ -6022,20 +6045,28 @@ function(namespace) {
 
 	        		if ( intersection.result === false ) {
 
-	        			cloud.push( {
+	        			cloud[j] = {
 	        				word: word,
 	        				fontSize: fontSize,
 	        				x:pos.x,
 	        				y:pos.y,
 	        				width: dim.width,
 	        				height: dim.height
-	        			});
+	        			};
 	        			break;
 
 	        		} else {
 
 	        			if ( intersection.type === 'border' ) {
+	        				// if we hit border, extend arc length
+	        				pos.arcLength = pos.radius;
 	        				borderCollisions++;
+	        				if ( borderCollisions > 20 ) {
+	        					// bail
+	        					cloud[j] = null;
+	        					break;
+	        				}
+	        				
 	        			}
 	        		}
 	        	}
@@ -6111,18 +6142,8 @@ function(namespace) {
 				
 					var label = labels[index];
 					
-					if (cloud[index] === undefined) {
-						
-						if (label) {
-							g.remove(label.back);
-							g.remove(label.front);
-							labels[index] = null;
-						}
-						
-						continue;
-					}
-
-					if (!visible){
+					// if not visible, or cloud word could not fit
+					if (!visible || cloud[index] === null ){
 						if (label) {
 							g.remove(label.back);
 							g.remove(label.front);

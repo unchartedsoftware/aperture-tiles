@@ -163,7 +163,7 @@ define(function (require) {
                 var tagIndex = Math.floor(index/NUM_HOURS_IN_DAY),
                     positiveCount,
                     negativeCount;
-                if (that.matchingTagIsSelected(this.bin.value[tagIndex].tag)){
+                if (that.matchingTagIsSelected(this.bin.value[tagIndex].tag, this.tilekey)){
                     // get counts
                     positiveCount = this.bin.value[tagIndex].positiveByTime[index % NUM_HOURS_IN_DAY];
                     negativeCount = this.bin.value[tagIndex].negativeByTime[index % NUM_HOURS_IN_DAY];
