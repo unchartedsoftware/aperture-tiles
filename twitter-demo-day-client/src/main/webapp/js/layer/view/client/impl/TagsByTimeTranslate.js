@@ -139,12 +139,13 @@ define(function (require) {
             this.bars.map('fill').from( function(index) {
 
                 var numDays = that.getTotalDaysInMonth(this),
-                    tagIndex = Math.floor(index/numDays);
+                    tagIndex = Math.floor(index/numDays),
+                    topic = this.bin.value[tagIndex].topic;
 
-                if (that.matchingTagIsSelected(this.bin.value[tagIndex].topic)){
+                if (that.matchingTagIsSelected(topic, this.tilekey)){
                     return that.BLUE_COLOUR;
                 }
-                if (that.shouldBeGreyedOut(this.bin.value[tagIndex].topic, this.tilekey)) {
+                if (that.shouldBeGreyedOut(topic, this.tilekey)) {
                     return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
@@ -257,7 +258,7 @@ define(function (require) {
             });
 
             this.tagLabels.map('text').from(function (index) {
-                var str = (that.isTileTranslated(this.tilekey)) ? this.bin.value[index].topicEnglish : this.bin.value[index].topic;
+                var str = that.getTopic(this, index);
                 if (str.length > 9) {
                     str = str.substr(0,9) + "...";
                 }

@@ -69,7 +69,7 @@ define(function (require) {
         onClick: function(event) {
             this.clientState.setClickState(event.data.tilekey, {
                 tag : event.data.bin.value[event.index[0]].topic,
-                index :  event.index[0]
+                index : event.index[0]
             });
             // pan map to center
             this.detailsOnDemand.panMapToCenter(event.data);
@@ -82,7 +82,7 @@ define(function (require) {
 
         onHover: function(event, id) {
             this.clientState.setHoverState(event.data.tilekey, {
-                tag : event.data.bin.value[event.index[0]].topic,
+                tag :  event.data.bin.value[event.index[0]].topic,
                 index :  event.index[0],
                 id : id
             });
@@ -126,13 +126,14 @@ define(function (require) {
             });
 
             this.wordCloudLabel.map('fill').from(function(index) {
-                if (that.matchingTagIsSelected(this.bin.value[index].topic)){
+
+                if (that.matchingTagIsSelected(this.bin.value[index].topic, this.tilekey)){
                     return that.BLUE_COLOUR;
                 }
                 if (that.shouldBeGreyedOut(this.bin.value[index].topic, this.tilekey)) {
                     return that.GREY_COLOUR;
                 }
-                return that.WHITE_COLOUR;             
+                return that.WHITE_COLOUR;
             });
 
 
@@ -164,7 +165,7 @@ define(function (require) {
                     word,
                     i;
                 for (i=0; i<numWords; i++) {
-                    word = (that.isTileTranslated(this.tilekey)) ? this.bin.value[i].topicEnglish : this.bin.value[i].topic;               
+                    word = that.getTopic(this, i);
                     word = (word.length > MAX_LABEL_CHAR_COUNT) ? word.substr(0, MAX_LABEL_CHAR_COUNT) + "..." : word;
                     wordList.push( word );
                 }
@@ -186,7 +187,7 @@ define(function (require) {
             });
 
             this.wordCloudLabel.map('min-font-size').asValue(12);
-            this.wordCloudLabel.map('max-font-size').asValue(40);
+            this.wordCloudLabel.map('max-font-size').asValue(36);
 
         }
 

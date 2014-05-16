@@ -225,12 +225,17 @@ define(function (require) {
         },
 
 
+        getTopic: function (data, index) {
+            return (this.isTileTranslated(data.tilekey)) ? data.bin.value[index].topicEnglish : data.bin.value[index].topic;                                   
+        },
+
         /**
          * Returns true if the current tag is hovered over or clicked anywhere
          * @param tag the twitter data tag string
          */
-        matchingTagIsSelected: function (tag) {
-            return (this.clientState.hoverState.userData.tag === tag ||
+        matchingTagIsSelected: function (tag, tilekey) {
+            return ((this.clientState.hoverState.tilekey === tilekey &&
+                    this.clientState.hoverState.userData.tag === tag) ||
                     this.clientState.clickState.userData.tag === tag)
         },
 
