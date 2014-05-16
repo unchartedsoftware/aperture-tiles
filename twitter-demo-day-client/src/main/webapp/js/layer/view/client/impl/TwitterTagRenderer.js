@@ -69,6 +69,31 @@ define(function (require) {
         },
 
 
+        isTileTranslated: function( tilekey ) {
+            var translationState = this.clientState.getSharedState( 'translate-' + tilekey );
+            if ( translationState === "" ) {
+                return false;
+            } else {
+                return translationState;
+            }
+        },
+
+
+        toggleTileTranslation: function( tilekey ) {
+            var translationState = this.clientState.getSharedState( 'translate-' + tilekey );
+            if ( translationState === "" ) {
+                this.clientState.setSharedState('translate-' + tilekey, true );
+            } else {
+                if (translationState === true) {
+                    this.clientState.removeSharedState('translate-' + tilekey);
+                } else {
+                    this.clientState.setSharedState('translate-' + tilekey, false );
+                }
+               
+            }
+        },
+
+
         getMonth: function(data) {
 
             var month = new Date( data.bin.value[0].endTimeSecs * 1000 ).getMonth();
@@ -209,6 +234,69 @@ define(function (require) {
                     this.clientState.clickState.userData.tag === tag)
         },
 
+
+        createTranslateLabel: function () {
+
+            var that = this,
+                isHoveredOn = false;
+
+            this.translateLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+
+            this.translateLabel.map('visible').from(function() {
+                return that.isSelectedView(this) && 
+                       that.isVisible(this) && 
+                       that.clientState.getSharedState('activeCarouselTile') === this.tilekey;
+            });
+
+            this.translateLabel.map('fill').from( function() {
+
+                if (that.isTileTranslated(this.tilekey)) {
+                    return that.WHITE_COLOUR;
+                }
+                return that.LIGHT_GREY_COLOUR;
+            });
+
+            this.translateLabel.map('cursor').asValue('pointer');
+
+            this.translateLabel.on('click', function(event) {
+                that.toggleTileTranslation(event.data.tilekey);
+                that.plotLayer.all().where(event.data).redraw();
+                return true; // swallow event
+            });
+
+            this.translateLabel.on('mousemove', function(event) {
+                isHoveredOn = true;
+                that.plotLayer.all().where(event.data).redraw();
+                return true; // swallow event
+            });
+
+            this.translateLabel.on('mouseout', function(event) {
+                isHoveredOn = false;
+                that.plotLayer.all().where(event.data).redraw();
+            });
+
+            this.translateLabel.map('label-count').asValue(1);
+
+            this.translateLabel.map('text').asValue('translate');
+
+            this.translateLabel.map('font-size').from(function () {
+                var FONT_SIZE = 16;
+                if (isHoveredOn) {
+                    return FONT_SIZE + 2;
+                }
+                return FONT_SIZE;
+
+            });
+            this.translateLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET + this.TILE_SIZE / 3);
+            this.translateLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET - 100);          
+            this.translateLabel.map('text-anchor').asValue('left');
+            this.translateLabel.map('text-anchor-y').asValue('start');
+            this.translateLabel.map('font-outline').asValue(this.BLACK_COLOUR);
+            this.translateLabel.map('font-outline-width').asValue(3);
+            this.translateLabel.map('opacity').from( function() {
+                return that.getOpacity();
+            })
+        },
 
         /**
          * Filters any word in the filtered words list, replacing all inner letters with *

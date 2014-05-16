@@ -51,25 +51,6 @@ define(function (require) {
             this.translatedTiles = {};
         },
 
-
-        isTileTranslated: function( tilekey ) {
-            if (this.translatedTiles[tilekey] === undefined) {
-                return false;
-            } else {
-                return true;
-            }
-        },
-
-
-        toggleTileTranslation: function( tilekey ) {
-            if (this.translatedTiles[tilekey] === undefined) {
-                this.translatedTiles[tilekey] = true;
-            } else {
-                delete this.translatedTiles[tilekey];
-            }
-        },
-
-
         getCountPercentage: function(data, index, type) {
             return (data.bin.value[index][type] / data.bin.value[index].countMonthly) || 0;
         },
@@ -133,133 +114,80 @@ define(function (require) {
 
         createLabels: function () {
 
-            var that = this;
 
-            this.tagLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            var that = this,
+                MAX_LABEL_CHAR_COUNT = 9;
 
-            this.tagLabel.map('visible').from(function() {
+
+            this.wordCloudLabel = this.plotLayer.addLayer(aperture.WordCloudLayer);
+
+            this.wordCloudLabel.map('visible').from(function() {
                 return that.isSelectedView(this) && that.isVisible(this);
             });
 
-            this.tagLabel.map('fill').from( function(index) {
-
+            this.wordCloudLabel.map('fill').from(function(index) {
+                if (that.matchingTagIsSelected(this.bin.value[index].topic)){
+                    return that.BLUE_COLOUR;
+                }
                 if (that.shouldBeGreyedOut(this.bin.value[index].topic, this.tilekey)) {
                     return that.GREY_COLOUR;
                 }
-                return that.WHITE_COLOUR;
+                return that.WHITE_COLOUR;             
             });
 
-            this.tagLabel.on('click', function(event) {
+
+            this.wordCloudLabel.on('click', function(event) {
                 that.onClick(event);
                 return true; // swallow event
             });
 
-            this.tagLabel.on('mousemove', function(event) {
+            this.wordCloudLabel.on('mousemove', function(event) {
                 that.onHover(event, 'topTextSentimentBarsAll');
                 return true; // swallow event
             });
 
-            this.tagLabel.on('mouseout', function(event) {
+            this.wordCloudLabel.on('mouseout', function(event) {
                 that.onHoverOff(event);
             });
 
-            this.tagLabel.map('label-count').from(function() {
-                return that.getCount(this);
-            });
+            this.wordCloudLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
+            this.wordCloudLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET);
+            this.wordCloudLabel.map('cursor').asValue('pointer');
+            this.wordCloudLabel.map('font-outline').asValue(this.BLACK_COLOUR);
+            this.wordCloudLabel.map('font-outline-width').asValue(3);
+            this.wordCloudLabel.map('width').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER*2);
+            this.wordCloudLabel.map('height').asValue(this.TILE_SIZE - this.VERTICAL_BUFFER*2);
 
-            this.tagLabel.map('text').from(function (index) {
-                var topic = (that.isTileTranslated(this.tilekey)) ? this.bin.value[index].topicEnglish : this.bin.value[index].topic,
-                    str = that.filterText(topic);
-                if (str.length > 12) {
-                    str = str.substr(0,12) + "...";
+            this.wordCloudLabel.map('words').from(function() {
+                var numWords = this.bin.value.length,
+                    wordList = [],
+                    word,
+                    i;
+                for (i=0; i<numWords; i++) {
+                    word = (that.isTileTranslated(this.tilekey)) ? this.bin.value[i].topicEnglish : this.bin.value[i].topic;               
+                    word = (word.length > MAX_LABEL_CHAR_COUNT) ? word.substr(0, MAX_LABEL_CHAR_COUNT) + "..." : word;
+                    wordList.push( word );
                 }
-                return str;
+                return wordList;
             });
 
-            this.tagLabel.map('font-size').from(function (index) {
-                var MAX_FONT_SIZE = 28,
-                    FONT_SCALE_FACTOR = 60,
-                    size = (that.getTotalCountPercentage(this, index) * FONT_SCALE_FACTOR) + 10;
-                    size = (size > MAX_FONT_SIZE) ? MAX_FONT_SIZE : size;
-                if (that.isHoveredOrClicked(this.bin.value[index].topic, this.tilekey)) {
-                    return size + 2;
+            this.wordCloudLabel.map('frequencies').from(function() {
+                var numWords = this.bin.value.length,
+                    frequencies = [],
+                    i;
+                for (i=0; i<numWords; i++) {      
+                    frequencies.push( this.bin.value[i].countMonthly );
                 }
-                return size;
+                return frequencies;
+            });
 
-            });
-            this.tagLabel.map('offset-y').from(function (index) {
-                return that.getYOffset(this, index) + 10;
-            });
-            this.tagLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
-            this.tagLabel.map('text-anchor').asValue('middle');
-            this.tagLabel.map('text-anchor-y').asValue('start');
-            this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
-            this.tagLabel.map('font-outline-width').asValue(3);
-            this.tagLabel.map('opacity').from( function() {
+            this.wordCloudLabel.map('opacity').from( function() {
                 return that.getOpacity();
-            })
-        },
-
-
-        createTranslateLabel: function () {
-
-            var that = this,
-                isHoveredOn = false;
-
-            this.translateLabel = this.plotLayer.addLayer(aperture.LabelLayer);
-
-            this.translateLabel.map('visible').from(function() {
-                return that.isSelectedView(this) && 
-                       that.isVisible(this) && 
-                       that.clientState.getSharedState('activeCarouselTile') === this.tilekey;
             });
 
-            this.translateLabel.map('fill').from( function() {
+            this.wordCloudLabel.map('min-font-size').asValue(12);
+            this.wordCloudLabel.map('max-font-size').asValue(40);
 
-                if (that.isTileTranslated(this.tilekey)) {
-                    return that.WHITE_COLOUR;
-                }
-                return that.LIGHT_GREY_COLOUR;
-            });
-
-            this.translateLabel.on('click', function(event) {
-                that.toggleTileTranslation(event.data.tilekey);
-                that.plotLayer.all().where(event.data).redraw();
-                return true; // swallow event
-            });
-
-            this.translateLabel.on('mousemove', function(event) {
-                isHoveredOn = true;
-                that.plotLayer.all().where(event.data).redraw();
-                return true; // swallow event
-            });
-
-            this.translateLabel.on('mouseout', function(event) {
-                isHoveredOn = false;
-                that.plotLayer.all().where(event.data).redraw();
-            });
-
-            this.translateLabel.map('label-count').asValue(1);
-
-            this.translateLabel.map('text').asValue('translate');
-
-            this.translateLabel.map('font-size').from(function () {
-                var FONT_SIZE = 16;
-                if (isHoveredOn) {
-                    return FONT_SIZE + 2;
-                }
-                return FONT_SIZE;
-
-            });
-            this.translateLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET + this.TILE_SIZE / 3);
-            this.translateLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET - 100);          
-            this.translateLabel.map('text-anchor').asValue('left');
-            this.translateLabel.map('text-anchor-y').asValue('start');
-            this.translateLabel.map('font-outline').asValue(this.BLACK_COLOUR);
-            this.translateLabel.map('font-outline-width').asValue(3);
-            this.translateLabel.map('opacity').from( function() {
-                return that.getOpacity();
-            })
         }
 
     });

@@ -390,49 +390,6 @@ define(function (require) {
         },
 
 
-        formatRecentTweetText: function(str, charPerLine) {
-            var CHAR_PER_LINE = charPerLine || 35,
-                MAX_NUM_LINES = 3,
-                strArray = str.substring(1, str.length - 2).split(" "),
-                formatted = '',
-                spaceLeft = CHAR_PER_LINE,
-                i,
-                lineCount = 0;
-
-            for (i=0; i<strArray.length; i++) {
-
-                while (strArray[i].length > spaceLeft) {
-
-                    // if past maximum amount of lines, truncate
-                    if (lineCount === MAX_NUM_LINES-1) {
-                        // strip space if is als character of string
-                        if (formatted[formatted.length-1] === ' ') {
-                            formatted = formatted.substring(0, formatted.length - 1);
-                        }
-                        return formatted += strArray[i].substr(0, spaceLeft-3) + "..."
-                    }
-
-                    if (strArray[i].length < CHAR_PER_LINE) {
-                        // can fit in next line, put new line
-                        formatted += "\n";
-                    } else {
-                        // cannot fit in next line, hyphenate word
-                        formatted += strArray[i].substr(0, spaceLeft);
-                        strArray[i] = strArray[i].substr(spaceLeft);
-                        if (spaceLeft > 0) {
-                            formatted += "-\n";
-                        }
-                    }
-                    spaceLeft = CHAR_PER_LINE;
-                    lineCount++;
-                }
-                formatted += strArray[i] + ' ';
-                spaceLeft -= strArray[i].length+1;
-            }
-            return formatted;
-        },
-
-
         getRecentTweetsCount: function(data) {
             var length = data.bin.value[this.clientState.clickState.userData.index].recentTweets.length || 0;
             return (length > this.MAX_NUM_RECENT_TWEETS) ? this.MAX_NUM_RECENT_TWEETS : length;
@@ -450,7 +407,11 @@ define(function (require) {
                     isVisibleFunc : function() { return that.areDetailsVisible(this); }
                 };
 
-
+            function isHoveredOver(index) {
+                return (that.clientState.hoverState.userData !== undefined &&
+                        that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
+                        that.clientState.hoverState.userData.index === index);
+            }
 
             // MOST RECENT TWEETS LABELS
             this.recentTweetsLabels = this.createLabel(that.WHITE_COLOUR);
@@ -468,17 +429,17 @@ define(function (require) {
                 }
             });
             this.recentTweetsLabels.map('font-size').asValue(10);
+
+            this.recentTweetsLabels.map('max-width').asValue(that.TILE_SIZE - that.HORIZONTAL_BUFFER*2);
+            this.recentTweetsLabels.map('max-height').from(function(index) {
+                return isHoveredOver(index) ? 'none' : that.MOST_RECENT_SPACING;
+            });
+
+
             this.recentTweetsLabels.map('text').from( function(index) {
                 var tagIndex = that.clientState.clickState.userData.index,
-                    tweet = this.bin.value[tagIndex].recentTweets[index].tweet,
-                    filteredText = that.filterText(tweet.substring(1, tweet.length - 2) );
-
-                if (that.clientState.hoverState.userData !== undefined &&
-                    that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
-                    that.clientState.hoverState.userData.index === index) {
-                    return that.separateTextIntoLines(filteredText, 70, 3);
-                }
-                return that.separateTextIntoLines(filteredText, 35, 3);
+                    tweet = this.bin.value[tagIndex].recentTweets[index].tweet;
+                    return that.filterText(tweet.substring(1, tweet.length - 2) );
             });
             this.recentTweetsLabels.map('offset-y').from( function(index) {
                 return that.MOST_RECENT + 45 + (index * that.MOST_RECENT_SPACING);

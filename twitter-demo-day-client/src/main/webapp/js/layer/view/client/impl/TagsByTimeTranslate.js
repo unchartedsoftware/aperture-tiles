@@ -100,6 +100,7 @@ define(function (require) {
             this.plotLayer = mapNodeLayer;
             this.createBars();
             this.createLabels();
+            this.createTranslateLabel();
             this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
             this.detailsOnDemand.attachClientState(this.clientState);
             this.detailsOnDemand.createLayer(this.plotLayer);
@@ -148,6 +149,8 @@ define(function (require) {
                 }
                 return that.WHITE_COLOUR;
             });
+            this.bars.map('cursor').asValue('pointer');
+
             this.bars.map('bar-count').from( function() {
                 return that.getTotalDaysInMonth(this) * that.getCount(this);
             });
@@ -160,7 +163,7 @@ define(function (require) {
                        that.getYOffset(this, Math.floor(index/that.getTotalDaysInMonth(this)));
             });
             this.bars.map('offset-x').from(function (index) {
-                return that.X_CENTRE_OFFSET - 90 + ((index % that.getTotalDaysInMonth(this)) * 4);
+                return that.X_CENTRE_OFFSET - 100 + ((index % that.getTotalDaysInMonth(this)) * 4);
             });
             this.bars.map('length').from(function (index) {
                 var maxPercentage = getMaxPercentage(this, index);
@@ -254,12 +257,14 @@ define(function (require) {
             });
 
             this.tagLabels.map('text').from(function (index) {
-                var str = that.filterText(this.bin.value[index].topic);
+                var str = (that.isTileTranslated(this.tilekey)) ? this.bin.value[index].topicEnglish : this.bin.value[index].topic;
                 if (str.length > 9) {
                     str = str.substr(0,9) + "...";
                 }
                 return str;
             });
+
+            this.tagLabels.map('cursor').asValue('pointer');
 
             this.tagLabels.map('font-size').from( function(index) {
                 if (that.isHoveredOrClicked(this.bin.value[index].topic, this.tilekey)) {
@@ -272,7 +277,7 @@ define(function (require) {
                 return that.getYOffset(this, index) - 5;
             });
 
-            this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 48);
+            this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 38);
             this.tagLabels.map('text-anchor').asValue('start');
             this.tagLabels.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabels.map('font-outline-width').asValue(3);
