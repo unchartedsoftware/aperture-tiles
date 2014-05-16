@@ -60,7 +60,8 @@ define(function (require) {
                         decimals: 2,
                         allowStepDown: true
                     }
-                };
+                },
+                isOpen = (spec.isOpen !== undefined) ? spec.isOpen : defaults.isOpen;
 
             // enable / disable functions
             function horizontalSlide() {
@@ -184,7 +185,6 @@ define(function (require) {
             this.id = spec.id || this.mapId + "-" + this.position + "-axis";
 
             this.title = spec.title || defaults.title;
-            this.isOpen = spec.isOpen || defaults.isOpen;
 
             spec.intervalSpec = spec.intervalSpec || {};
             this.intervalSpec = {};
@@ -222,6 +222,12 @@ define(function (require) {
             this.containerWidth = 0;
 
             this.redraw();
+
+            if ( !isOpen ) {
+                // trigger close and skip animation;
+                this.$header.click();
+                this.$container.finish();
+            }
         },
 
 
