@@ -34,7 +34,7 @@
 
 	"MapConfig" : {
 		"options" : {
-			"numZoomLevels" : 19,
+			"numZoomLevels" : 12,
 			"projection" : "EPSG:900913",
 			"displayProjection" : "EPSG:4326",
 			"units" : "m",

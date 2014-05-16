@@ -13,7 +13,8 @@
         "Leaf nodes should all specify actual layers that can be displayed on a map, and ",
         "all layers that can be so displayed should be leaf nodes.  Non-leaf nodes exist ",
         "solely to organize and group layers as described above.",
-        ""
+        "",
+        "NOTE: Local tile sets are stored at //kraken/xdata/data/twitter/tiles/2014.02-0.4.SA" 
     ],
     "layers": [
         {
@@ -26,12 +27,11 @@
                     "pyramid": {
                         "type": "WebMercator"
                     },
-                    "data": {
-                        "pyramidio": {
-                            "type": "hbase",
-                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
-                            "hbase.zookeeper.port": "2181",
-                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                    "data" : {
+                        "pyramidio" : {
+                            "type" : "zip",
+                            "root.path" : "/twitter-heatmap.zip",
+                            "extension" : "avro"
                         }
                     },
                     "renderers": [
@@ -55,11 +55,10 @@
                         "type": "WebMercator"
                     },
                     "data": {
-                        "pyramidio": {
-                            "type": "hbase",
-                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
-                            "hbase.zookeeper.port": "2181",
-                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                        "pyramidio" : {
+                            "type" : "zip",
+                            "root.path" : "/twitter-curated-topics.zip",
+                            "extension" : "avro"
                         },
                         "serializer": {
                             "type": "[twitterdemorecord]-a"
