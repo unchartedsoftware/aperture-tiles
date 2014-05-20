@@ -85,6 +85,19 @@ class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
 	}
 }
 
+trait TimeIndexScheme[T] extends IndexScheme[T] {
+	def extractTime (t: T): Double
+}
+
+/**
+ * Assumes the coords coming in are (Date, X, Y), so this just throws away the date field.
+ */
+class TimeRangeCartesianIndexScheme extends TimeIndexScheme[(Double, Double, Double)] with Serializable {
+	def toCartesian (coords: (Double, Double, Double)): (Double, Double) = (coords._2, coords._3)
+	def extractTime (coords: (Double, Double, Double)): Double = coords._1
+}
+
+
 /**
  * This class is the basis of all (or, at least, nearly all) of the
  * other binning classes.  This takes an RDD of data and transforms it

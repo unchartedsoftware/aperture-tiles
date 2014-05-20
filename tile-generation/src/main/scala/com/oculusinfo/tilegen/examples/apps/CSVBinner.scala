@@ -44,6 +44,7 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.tiling.SqliteTileIO
+import scala.collection.immutable.List
 
 
 
@@ -184,28 +185,82 @@ object CSVBinner {
 			stream.close()
 			argIdx = argIdx + 1
 		}
-		val defaultProperties = new PropertiesWrapper(defProps)
-		val connector = defaultProperties.getSparkConnector()
+		
+		val startIdx = argIdx;
+		
+		val sensors = List(
+				"others",
+				"android",
+				"iphone"
+		)
+
+		val connectorProperties = new PropertiesWrapper(defProps)
+		val connector = connectorProperties.getSparkConnector()
 		val sc = connector.getSparkContext("Pyramid Binning")
+
+		sensors.foreach{sensor =>
+			defProps.setProperty("oculus.tileio.sqlite.path", "c:/projects/insight/aperture-tiles/tile-generation/temp/" + sensor + ".db")
+			println("--- opening db @: " + defProps.getProperty("oculus.tileio.sqlite.path"));
+		
+		val defaultProperties = new PropertiesWrapper(defProps)
 		val tileIO = getTileIO(defaultProperties)
 
+		val categories = List(
+				"2014-03-03",
+				"2014-03-04",
+				"2014-03-05",
+				"2014-03-06",
+				"2014-03-07",
+				"2014-03-08",
+				"2014-03-09",
+				"2014-03-10",
+				"2014-03-11",
+				"2014-03-12",
+				"2014-03-13",
+				"2014-03-14",
+				"2014-03-15",
+				"2014-03-16",
+				"2014-03-17",
+				"2014-03-18",
+				"2014-03-19",
+				"2014-03-20",
+				"2014-03-21",
+				"2014-03-22",
+				"2014-03-23",
+				"2014-03-24",
+				"2014-03-25",
+				"2014-03-26",
+				"2014-03-27",
+				"2014-03-28",
+				"2014-03-29",
+				"2014-03-30",
+				"2014-03-31",
+				"2014-04-01"
+		)
+		
 		// Run for each real properties file
 		val startTime = System.currentTimeMillis()
+		argIdx = startIdx;
 		while (argIdx < args.size) {
-			val fileStartTime = System.currentTimeMillis()
-			val props = new Properties(defProps)
-			val propStream = new FileInputStream(args(argIdx))
-			props.load(propStream)
-			propStream.close()
-
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true), tileIO)
-
-			val fileEndTime = System.currentTimeMillis()
-			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
-
+			categories.foreach{category =>
+				val fileStartTime = System.currentTimeMillis()
+				val props = new Properties(defProps)
+				val propStream = new FileInputStream(args(argIdx))
+				props.load(propStream)
+				propStream.close()
+	
+				props.setProperty("oculus.binning.name", category)
+				props.setProperty("oculus.binning.source.location", props.getProperty("oculus.binning.source.location") + sensor + "/" + sensor + "_" + category + "-00-00-00.csv")
+				
+				processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true, 128, 128), tileIO)
+	
+				val fileEndTime = System.currentTimeMillis()
+				println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
+			}
 			argIdx = argIdx + 1
 		}
 		val endTime = System.currentTimeMillis()
 		println("Finished binning all sets in "+((endTime-startTime)/60000.0)+" minutes")
+		}
 	}
 }
