@@ -70,6 +70,11 @@ import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.binning.TilePyramid
 
 
+/**
+ * The CSVTimeRangeBinner is meant to read in a csv file and parse it similarily to
+ * the CSVBinner, however this one is capable of using a date column to split the
+ * produced pyramids into a set of pyramids that represent discrete time ranges.
+ */
 
 /*
  * The following properties control how the application runs:
@@ -105,9 +110,40 @@ import com.oculusinfo.binning.TilePyramid
  *  oculus.tileio.type
  *      The way in which tiles are written - either hbase (to write to hbase,
  *      see hbase. properties above to specify where) or file  to write to the
- *      local file system
+ *      local file system, or sqlite to write to a simple database.
  *      Default is hbase
  *
+ *	oculus.tileio.sqlite.path
+ * 		If 'oculus.tileio.type=sqlite' then the database can be found using this
+ *   	file location.
+ * 
+ *	oculus.binning.pyramidNameFormat
+ * 		Each pyramid will use have a name that represents its date. The name format
+ *   	is a SimpleDateFormat string that will transform the pyramid's date.
+ * 
+ *	oculus.binning.timeField
+ * 		Specifies which field the indexer should use to find the time field data.
+ *   	eg. 
+ *    	if:		oculus.binning.timeField=time
+ *   	then:	oculus.binning.parsing.time.index=0
+ *     			oculus.binning.parsing.time.fieldType=date
+ *       		oculus.binning.parsing.time.dateFormat=yyyy-MM-dd HH:mm:ss
+ *     
+ * 
+ * 	oculus.binning.timeRange.dateFormat
+ *  	The SimpleDateFormat string to interpret oculus.binning.timeRange.startDate 
+ * 
+ * 	oculus.binning.timeRange.startDate
+ *  	This is the earliest date that should be considered valid data from the source.
+ *   	Any data found prior to the startDate will be dropped.
+ *  
+ *  oculus.binning.timeRange.secondsPerRange
+ *  	The number of seconds in each time range. Each time range will be a multiple of
+ *   	secondsPerRange seconds after oculus.binning.timeRange.startDate. 
+ *  
+ *  oculus.binning.tileWidth
+ *  oculus.binning.tileHeight
+ *  	Specifies the tile width and height. Default is 256.
  */
 
 
