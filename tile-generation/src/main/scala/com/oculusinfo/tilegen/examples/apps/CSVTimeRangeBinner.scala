@@ -63,6 +63,11 @@ import java.text.SimpleDateFormat
 import com.oculusinfo.tilegen.datasets.TimeRangeCartesianIndexExtractor
 import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
 import java.util.TimeZone
+import com.oculusinfo.tilegen.tiling.TileMetaData
+import com.oculusinfo.tilegen.tiling.LevelMinMaxAccumulableParam
+import org.apache.spark.Accumulable
+import com.oculusinfo.tilegen.tiling.BinDescriptor
+import com.oculusinfo.binning.TilePyramid
 
 
 
@@ -339,6 +344,17 @@ object CSVTimeRangeBinner {
 			new TimeRangeCartesianIndexExtractor(timeVar, xVar, yVar, startDate, secsPerRange)
 	}
 	
+	def writeBaseMetaData[BT](tileIO: TileIO,
+							pyramider: TilePyramid,
+							baseLocation: String,
+							minsMaxes: Map[Int, (BT, BT)],
+							tileSize: Int,
+							name: String,
+							description: String): Unit = {
+		val metaData = tileIO.combineMetaData(pyramider, baseLocation, minsMaxes, tileSize, name, description)
+		tileIO.writeMetaData(baseLocation, metaData)
+	}
+	
 	
 	def processDataset[IT: ClassManifest,
 	                   PT: ClassManifest, 
@@ -351,6 +367,30 @@ object CSVTimeRangeBinner {
 			{
 				val localIndexer = dataset.getTimeRangeIndexer
 				
+				//local function to combine all of the min/max data
+				val combineMetaData: Array[(TileMetaData, Map[Int, (BT, BT)])] => Map[Int, (BT, BT)] =
+					metadatas =>
+				{
+					val binDesc = dataset.getBinDescriptor
+					
+					// Set up some accumulators to figure out needed metadata
+					val minMaxAccumulable = new LevelMinMaxAccumulableParam[BT](binDesc.min,
+					                                                            binDesc.defaultMin,
+					                                                            binDesc.max,
+					                                                            binDesc.defaultMax)
+					val minMaxAccum = new Accumulable(minMaxAccumulable.zero(Map()), minMaxAccumulable)
+					
+					//merge the metadata together
+					metadatas.foreach(metadata => {
+						metadata._2.foreach(levelMinMax => {
+							minMaxAccum += (levelMinMax._1 -> levelMinMax._2._1)	//add in mapping for level -> min
+							minMaxAccum += (levelMinMax._1 -> levelMinMax._2._2)	//add in mapping for level -> max
+						})
+					})
+				
+					minMaxAccum.value
+				}
+
 				val procFcn: RDD[(IT, PT)] => Unit =
 					rdd =>
 				{
@@ -359,7 +399,7 @@ object CSVTimeRangeBinner {
 						localIndexer.timeIndexScheme.extractTime(record._1)
 					}).distinct.collect()
 		
-					timeRanges.map(startTime =>{
+					val rangeMetadatas = timeRanges.map(startTime =>{
 						val timeRangeRdd = rdd.filter(record => {
 							val curTime = localIndexer.timeIndexScheme.extractTime(record._1)
 							curTime >= startTime && curTime < (startTime + localIndexer.msPerTimeRange)
@@ -379,14 +419,22 @@ object CSVTimeRangeBinner {
 						                                      (dataset.getNumXBins max dataset.getNumYBins),
 						                                      dataset.getConsolidationPartitions,
 						                                      dataset.isDensityStrip)
-						tileIO.writeTileSet(dataset.getTilePyramid,
+						val levelMinMaxes = tileIO.writeTileSet(dataset.getTilePyramid,
 						                    name,
 						                    tiles,
 						                    dataset.getBinDescriptor,
 						                    name,
 						                    dataset.getDescription)
+						(tileIO.readMetaData(name).get, levelMinMaxes)
 					})
-					                    
+					
+					writeBaseMetaData(tileIO,
+								dataset.getTilePyramid,
+								dataset.getName,
+								combineMetaData(rangeMetadatas),
+								dataset.getNumXBins,
+								dataset.getName,
+								dataset.getDescription)
 				}
 				dataset.process(procFcn, None)
 			}
