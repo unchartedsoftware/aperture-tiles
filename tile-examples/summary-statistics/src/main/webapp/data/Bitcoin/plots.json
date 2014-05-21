@@ -7,7 +7,12 @@
             "Title": "Source ID vs. Amount",
             "Layers": [{
                 "Layer" : "bitcoin.source.amount",
-                "Type" : "tile"
+                "Type" : "tile",
+                "Config" : {
+                    "layer": "bitcoin.source.amount",
+                    "domain": "server",
+                    "name": "Source ID vs. Amount"
+                }
             }],
             "X Axis": "Source ID",
             "Y Axis": "Amount",
@@ -24,7 +29,12 @@
             "Title": "Time vs. Destination ID",
             "Layers": [{
                 "Layer" : "bitcoin.time.destination",
-                "Type" : "tile"
+                "Type" : "tile",
+                "Config" : {
+                    "layer": "bitcoin.time.destination",
+                    "domain": "server",
+                    "name": "Time vs. Destination ID"
+                }
             }],
             "X Axis": "Time",
             "Y Axis": "Destination ID",
@@ -42,7 +52,12 @@
             "Title": "Time vs. Source ID",
             "Layers": [{
                 "Layer" : "bitcoin.time.source",
-                "Type" : "tile"
+                "Type" : "tile",
+                "Config" : {
+                    "layer": "bitcoin.time.source",
+                    "domain": "server",
+                    "name": "Time vs. Source ID"
+                }
             }],
             "X Axis": "Time",
             "Y Axis": "Source ID",
@@ -60,7 +75,12 @@
             "Title": "Time vs. Amount",
             "Layers": [{
                 "Layer" : "bitcoin.time.amount",
-                "Type" : "tile"
+                "Type" : "tile",
+                "Config" : {
+                    "layer": "bitcoin.time.amount",
+                    "domain": "server",
+                    "name": "Time vs. Amount"
+                }
             }],
             "X Axis": "Time",
             "Y Axis": "Amount (BTC)",

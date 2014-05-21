@@ -106,8 +106,8 @@
                     isFirst = false;
                 }
                 else {
-                    for (var i=0; i < layerInfo.bounds.length; i ++){
-                        joinMapBounds(layerInfo.bounds, maxMapBounds, i, (i<2)?'<':'>');
+                    for (var j=0; j < layerInfo.bounds.length; j ++){
+                        joinMapBounds(layerInfo.bounds, maxMapBounds, j, (j<2)?'<':'>');
                     }
                     joinDataBounds(layerInfo.dataBounds, maxDataBounds);
                 }
@@ -122,18 +122,21 @@
             }
         };
 
-        var getLayerSpec = function(layerList, layerName){
+        /*var getLayerSpec = function(layerList, layerName){
             for (var i=0; i < layerList.length; i++){
                 if (layerList[i].Layer === layerName){
                     return layerList[i];
                 }
             }
             return null;
-        };
+        };*/
 
         var baseLayerSwitch = function(evt){
             var baseLayerIndex = $('input[name="base"]:checked').val();
             var baseLayerRef = _mapState.baseLayerList[baseLayerIndex];
+            if (baseLayerRef && baseLayerRef.name === 'Google 8'){
+                baseLayerRef.name = 'Google Black';
+            }
             _mapState.canvas.olMap_.setBaseLayer(baseLayerRef);
             _mapState.canvas.all().redraw();
         };
@@ -181,12 +184,17 @@
             if ( _mapState.baseLayerList.length > 0){
                 toc.append('Base Layers:</br>');
                 toc.append('<form action="">');
-                for (var i=0; i < _mapState.baseLayerList.length; i++){
+                var _length = 2;
+                if (!_mapState.isStartComplete){
+                    _length = 1;
+                }
+                for (i=0; i < _mapState.baseLayerList.length - _length; i++){
                     var baseLayer = _mapState.baseLayerList[i];
+                    var _name = baseLayer.options.name == undefined ? baseLayer.name : baseLayer.options.name;
                     if (i==0){
-                        toc.append('<input type="radio" name="base" checked="checked" value='+i+'>' + baseLayer.options.name + '<br>');
+                        toc.append('<input type="radio" name="base" checked="checked" value='+i+'>' + _name + '<br>');
                     } else {
-                        toc.append('<input type="radio" name="base" value='+i+'>' + baseLayer.name + '<br>');
+                        toc.append('<input type="radio" name="base" value='+i+'>' + _name + '<br>');
                     }
                 }
                 toc.append('</form>');
@@ -368,7 +376,7 @@
 			
             var onNewLayerResource = function( layerInfo, statusInfo ) {
 			
-            	uuid = layerInfo.id
+            	uuid = layerInfo.id;
 				
                 if(!statusInfo.success){
                     return;
@@ -427,7 +435,7 @@
                 return;
             }
 
-            var mapExtent = getRemappedExtent();
+            //var mapExtent = getRemappedExtent();
 
             var tilesTotalPixelSpan = {
                 x: 256*Math.pow(2,_mapState.canvas.olMap_.getZoom()),
@@ -435,7 +443,7 @@
             };
 
             var overlayBounds = joinLayerInfo(_mapState.overlayInfoMap);
-            var spec = {
+            return {
                 map : {
                     divId : _mapState.options.components.map.divId,
                     zoom : _mapState.canvas.olMap_.getZoom(),
@@ -471,7 +479,6 @@
                     offset : _mapState.options.components[type].titleOffset
                 }
             };
-            return spec;
         },
       
 
@@ -526,10 +533,11 @@
         generateScaleSlider = function (legendAxisParentId) {
 
             var legendAxisParent = $('#'+legendAxisParentId);
+            var divClassName = legendAxisParent[0].className;
             var uniqueSliderDivId = legendAxisParentId + "-rangeSlider";
             _mapState.options.components.legend.rangeSliderDivId = uniqueSliderDivId;
             var slider = $('<div id= "'+ uniqueSliderDivId +'" ></div>');
-            slider.addClass('plot-legend-range');
+            slider.addClass(divClassName + '-range');
 
             var legendStyleClass = options.components.legend.styleClass;
             var h = $("."+legendStyleClass).css("height").replace('px', '');
@@ -556,7 +564,7 @@
             var legendAxisParent = $('#'+legendAxisParentId);
             var uniqueBaseLayerOpacitySliderDivId = legendAxisParentId + "-baseLayerOpacitySlider";
             _mapState.options.components.legend.baseLayerSliderDivId = uniqueBaseLayerOpacitySliderDivId;
-            var baseLayerSlider = $('<div id= "'+ uniqueBaseLayerOpacitySliderDivId +'" > <span style="position:absolute; text-align:right; font-size: 0.7em; right: 20px; top:25px">Base Layer Opacity</span></div>');
+            var baseLayerSlider = $('<div id= "'+ uniqueBaseLayerOpacitySliderDivId +'" > <span style="position:absolute; text-align:right; font-size: 0.7em; right: 20px; top:25px; color:#7E7E7E;">Base Layer Opacity</span></div>');
             baseLayerSlider.addClass('base-layer-opacity');
             legendAxisParent.append(baseLayerSlider);
 
@@ -579,7 +587,7 @@
             var legendAxisParent = $('#'+legendAxisParentId);
             var uniqueSliderDivId = legendAxisParentId + "-overlayLayerOpacitySlider";
             _mapState.options.components.legend.overlaySliderDivId = uniqueSliderDivId;
-            var slider = $('<div id= "'+ uniqueSliderDivId +'" > <span style="position:absolute; font-size: 0.7em; left: 20px; top:25px">Data Layer Opacity</span></div>');
+            var slider = $('<div id= "'+ uniqueSliderDivId +'" > <span style="position:absolute; font-size: 0.7em; left: 20px; top:25px; color:#7E7E7E;">Data Layer Opacity</span></div>');
             slider.addClass('overlay-layer-opacity');
             legendAxisParent.append(slider);
 
@@ -767,6 +775,24 @@
                     }
                 }
             );
+
+            if("plot-legend" === legendStyleClass) {
+                //should only have one layer, clear the others
+                updateBaseLayerList();
+            }
+        },
+
+        updateBaseLayerList = function(){
+            var i;
+            if(_mapState.baseLayerList.length > 0) {
+                var _newBaseLayerList = [];
+                _newBaseLayerList.push(_mapState.baseLayerList[_mapState.baseLayerList.length - 2]);
+                _newBaseLayerList.push(_mapState.baseLayerList[_mapState.baseLayerList.length - 1]);
+                for (i=0; i< _mapState.baseLayerList.length; i++) {
+                    _mapState.canvas.remove( _mapState.baseLayerList[i] );
+                }
+                  _mapState.baseLayerList = _newBaseLayerList;
+            }
         },
 
         clearAllMarkers = function(){
@@ -921,29 +947,24 @@
             // This assumes that all possible base layers are Google layers
             if (options.baseLayer){
                 if (options.baseLayer.length > 1){
-                    for (var i = 0; i < options.baseLayer.length; i++) {
+                    _mapState.baseLayerList.push(_mapState.canvas.olMap_.baseLayer);
+                    // Skip the first layer, as it's already set up as the base layer at this point.
+                    for (var i = 1; i < options.baseLayer.length; i++) {
+                        var mappity =  new OpenLayers.Layer.Google(
+                            options.baseLayer[i].Google.options.name, {type: 'customStyle'});
 
-                        // Skip the first layer, as it's already set up as the base layer at this point.
-                        if (i==0){
-                            var base = _mapState.canvas.olMap_.baseLayer;
-                            _mapState.baseLayerList.push(base);
-                        } else {
-                            var mappity =  new OpenLayers.Layer.Google(
-                                options.baseLayer[i].Google.options.name, {type: 'customStyle'});
+                        var styledMapOptions = {
+                            name: "Styled Map"
+                        };
 
-                            var styledMapOptions = {
-                                name: "Styled Map"
-                            };
+                        var styledMapType = new google.maps.StyledMapType(options.baseLayer[i].Google.options.style, styledMapOptions);
 
-                            var styledMapType = new google.maps.StyledMapType(options.baseLayer[i].Google.options.style, styledMapOptions);
+                        _mapState.canvas.olMap_.addLayer(mappity);
 
-                            _mapState.canvas.olMap_.addLayer(mappity);
+                        mappity.mapObject.mapTypes.set('customStyle', styledMapType);
+                        mappity.mapObject.setMapTypeId('customStyle');
 
-                            mappity.mapObject.mapTypes.set('customStyle', styledMapType);
-                            mappity.mapObject.setMapTypeId('customStyle');
-
-                            _mapState.baseLayerList.push(mappity);
-                        }
+                        _mapState.baseLayerList.push(mappity);
                     }
                 }
             }
@@ -1007,7 +1028,7 @@
 
         this.getParentDivId = function(){
             return _mapState.options.components.map.parentId;
-        }
+        };
 
         this.options = _mapState.options;
 

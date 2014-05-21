@@ -11,10 +11,10 @@
         <link rel="stylesheet" href="css/plotaxis.css">
         <link rel="stylesheet" href="css/main.css">
         <link rel="stylesheet" href="css/summary.css">
-        <link rel="stylesheet" href="css/toc.css">
+		<link rel="stylesheet" href="css/toc.css">
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet"
-          	  href="js/libjs/jquery-ui/1.10.3/themes/custom-theme/jquery-ui-1.10.3.custom.css" />
+          	  href="js/libjs/jquery-ui/1.10.3/themes/custom-theme/jquery-ui-1.10.3.custom.css">
 
         <!-- Scripts for the summary panel -->
 
@@ -28,6 +28,8 @@
         <!-- For pretty formatting of numbers -->
         <script src="js/libjs/jquery-number-format/jquery.number.min.js"></script>
         <script src="js/libjs/jquery/jquery-url-vars.js"></script>
+		<!-- Splitter plugin for panes -->
+		<script src="js/libjs/jquery.layout-latest.min.js"></script>
 
 		<!-- Aperture includes -->
         <script src="js/libjs/aperture/js-dependencies/proj4js.js"></script>
@@ -37,22 +39,17 @@
 
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
         
-        <!-- two pane window splitter plugin for JQuery -->
-        <script src="js/libjs/splitter.js"></script>
-        
         <!-- Require starts off our own project module heirarchy -->
         <script src="js/libjs/require.js" data-main="js/main.js"></script>
         
 
     </head>
     <body>
-        <!-- Add your site or application content here -->
-        <header>
-            <h2>XDATA Summer Workshop 2014</h2>
-            <h1>Tukey Plot Data Reports</h1>
-        </header>
-
         <div id="container" style="height: 100%; width: 100%;">
+			<header id="head">
+				<h2>XDATA Summer Workshop 2014</h2>
+				<h1>Tukey Plot Data Reports</h1>
+			</header>
             <div id="toc"></div>
 
             <div id="summary">

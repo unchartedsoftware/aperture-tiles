@@ -95,7 +95,6 @@
             }
             else if (event.type == 'tabscreate'){
                 tabLayerId = ui.panel.attr('id').replace('tab-plot-', '');
-                console.log('tabscreate: ' + tabLayerId);
             }
             if (!_summaryState.layerInfoMap[tabLayerId]){
                 return;
@@ -424,7 +423,7 @@
                     $('div.expandedDensityStrip').css("height", expandedStripHeight);
                 }
 
-                if($("div.elipsisDialog").length > 0){
+                /*if($("div.elipsisDialog").length > 0){
                     $("div.elipsisDialog").dialog({
                         autoOpen: false,
                         resizeable: true,
@@ -446,7 +445,7 @@
                            // evt.stopPropagation();
                            // evt.stopImmediatePropagation();
                         });
-                }
+                }*/
 
                 $("#tabs-tables").tabs();
                 $("tr.parent")
@@ -534,14 +533,23 @@
 
         this.start = function(){
 
+            //setup the ui layout
             var tocPane = $('#toc');
             tocPane.load('toc.html #toc-contents');
-            $('#container').splitter({
-                sizeLeft: 385,  //TODO: un-hardcode this.
-                dock: "left",
-                dockSpeed: 200
+            tocPane.addClass('ui-layout-west');
+            $('#head').addClass('ui-layout-north');
+            $('#summary').addClass('ui-layout-center');
+            var layout = $('#container').layout({applyDemoStyles: true, north:{size:140}, west:{size:230}});
+            layout.panes.west.css({
+                background:  "rgb(204,204,204)"
             });
-            
+            layout.panes.north.css({
+                background:  "rgb(204,204,204)"
+            });
+            layout.panes.center.css({
+                background:  "rgb(204,204,204)"
+            });
+
             if(!summaryBuilderOptions.dataset){
             	$('#summary').html('<h2>No dataset selected.</h2>');
             	return;
@@ -563,26 +571,7 @@
 				});
 
 			showControls.append(showButton);
-		
-            var showTOC = $('<div id="show-showTOC"></div>');
-            showTOC.addClass('show-toc');
-            $('#summary-header').append(showTOC);
 
-            var buttonLabel = _summaryState.tocVisible?'Hide Dataset Index':'Show Dataset Index';
-            var showTOCButton = $('<button><span id="indexLabel">' + buttonLabel + '</span></button>')
-                .button()
-                .click(function( event ) {
-                    event.preventDefault();
-                    var splitter = $('#container');
-                    _summaryState.tocVisible = !_summaryState.tocVisible;
-                    _summaryState.tocVisible? splitter.trigger('undock.splitter1') : splitter.trigger('dock.splitter1');
-                   
-                    var buttonLabel = _summaryState.tocVisible?'Hide Dataset Index':'Show Dataset Index';
-                    $('#indexLabel').text(buttonLabel);
-                });
-
-            showTOC.append(showTOCButton);
-			
             generateJsonTables(tableJsonFile, function(){
                 var len = _densityStrips.length;
                 var xDataMaps = [];
