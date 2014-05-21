@@ -27,10 +27,10 @@
 require(['./FileLoader',
          './ApertureConfig',
          './ui/OverlayButton',
-         './map/MapTracker',
+         './map/MapService',
          './map/Map',
          './binning/PyramidFactory',
-         './layer/AllLayers',
+         './layer/LayerService',
          './customization',
          './layer/view/server/ServerLayerFactory',
          './layer/view/client/ClientLayerFactory',
@@ -42,10 +42,10 @@ require(['./FileLoader',
         function (FileLoader, 
                   configureAperture,
                   OverlayButton,
-                  MapTracker,
+                  MapService,
                   Map,
                   PyramidFactory,
-                  AvailableLayersTracker,
+                  LayerService,
                   UICustomization,
                   ServerLayerFactory,
                   ClientLayerFactory,
@@ -104,7 +104,7 @@ require(['./FileLoader',
 
 		        // Run our filter, and on the returned nodes, return a renderer 
 		        // configuration appropriate to that domain.
-		        return AvailableLayersTracker.filterLeafLayers(
+		        return LayerService.filterLeafLayers(
 			        rootNode,
 			        domainFilterFcn(domain)
 		        ).map(function (layer, index, layersList) {
@@ -159,7 +159,7 @@ require(['./FileLoader',
 		        configureAperture(jsonDataMap[apertureConfigFile]);
 
 		        // Get our list of maps
-		        MapTracker.requestMaps(function (maps) {
+		        MapService.requestMaps(function (maps) {
 			        // For now, just use the first map
 			        var mapConfig = maps[0],
 			            worldMap,
@@ -168,7 +168,7 @@ require(['./FileLoader',
 			        // Initialize our map...
 			        worldMap = new Map("map", mapConfig);
 			        // ... (set up our map axes) ...
-			        worldMap.setAxisSpecs(MapTracker.getAxisConfig(mapConfig));
+			        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 			        // ... perform any project-specific map customizations ...
 			        if (UICustomization.customizeMap) {
 				        UICustomization.customizeMap(worldMap);
@@ -176,7 +176,7 @@ require(['./FileLoader',
 			        // ... and request relevant data layers
 			        mapPyramid = mapConfig.PyramidConfig;
 
-			        AvailableLayersTracker.requestLayers(
+			        LayerService.requestLayers(
 				        function (layers) {
 					        // TODO: Make it so we can pass the pyramid up to the server
 					        // in the layers request, and have it return only portions

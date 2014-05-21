@@ -261,6 +261,12 @@ define({
                 maxIncrement, // the minimum increment that is visible
                 minMax = axis.map.getMinMaxVisibleViewportPixels();
 
+            function roundToDecimals( num ) {
+                var numDec = axis.unitSpec.decimals || 2,
+                    pow10 = Math.pow(10, numDec);
+                return Math.round( num * pow10) / pow10;
+            }
+
             if (axis.isXAxis) {
                 maxCull = axis.map.getCoordFromViewportPixel( minMax.max.x, 0 ).x;
             } else {
@@ -279,8 +285,9 @@ define({
                     maxIncrement -= subIncrement;
                 }
             } else {
-                // cull above pivot, floor here to prevent accumulated precision errors truncating last 'tick'
-                while ( Math.floor(maxIncrement+subIncrement) <= maxCull) {
+                // cull above pivot
+                // NOTE: rounding here to prevent accumulated precision errors that truncate last axis 'tick'
+                while ( roundToDecimals(maxIncrement+subIncrement) <= maxCull) { //Math.floor(maxIncrement+subIncrement) <= maxCull) {
                     maxIncrement += subIncrement;
                 }
             }

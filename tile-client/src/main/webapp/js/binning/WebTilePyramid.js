@@ -160,7 +160,7 @@ define (function (require) {
 			return {
 				level:     level,
 				xIndex:    Math.floor(tileMercator.x),
-				yIndex:    Math.floor(tileMercator.y),
+				yIndex:    Math.ceil(tileMercator.y),
 				xBinCount: bins,
 				yBinCount: bins
 			};
@@ -177,8 +177,8 @@ define (function (require) {
 
 		getTileBounds: function (tile) {
 			var level = tile.level,
-			    north = tileToLat(tile.yIndex+1, level),
-			    south = tileToLat(tile.yIndex, level),
+			    north = tileToLat(tile.yIndex, level),
+			    south = tileToLat(tile.yIndex-1, level),
 			    east  = tileToLon(tile.xIndex+1, level),
 			    west  = tileToLon(tile.xIndex, level),
 			    // as mercator latitude cannot be linearly interpolated, convert the gudermannian

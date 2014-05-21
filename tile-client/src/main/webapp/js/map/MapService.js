@@ -32,8 +32,10 @@ define(function (require) {
     "use strict";
 
 	return {
+
 		maps: 0,
 		callbacks: [],
+
 		requestMaps: function (callback) {
 			if (this.maps) {
 				callback(this.maps);

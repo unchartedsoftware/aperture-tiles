@@ -31,7 +31,7 @@
 define(function (require) {
     "use strict";
 
-    var AllLayers,
+    var LayerService,
         visitLayers,
         leafLayerFilter,
         axisLayerFilter;
@@ -74,7 +74,7 @@ define(function (require) {
         return result;
     };
 
-    AllLayers = {
+    LayerService = {
 	    layers: 0,
 	    callbacks: [],
 
@@ -142,5 +142,5 @@ define(function (require) {
         filterAxisLayers: axisLayerFilter
     };
 
-    return AllLayers;
+    return LayerService;
 });
