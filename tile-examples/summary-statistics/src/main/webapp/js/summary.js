@@ -477,7 +477,7 @@
             .error(function(jqXHR, textStatus, errorThrown){
                 console.error("Error reading summary JSON at " + jsonFile + ": " + errorThrown );
             });
-        }; //end generateJsonTables
+        };
 
         var generateJsonPlots = function(onComplete){
             //if(jsonFile === null){
