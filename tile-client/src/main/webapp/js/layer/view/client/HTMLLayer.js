@@ -361,7 +361,6 @@ define(function (require) {
 
             var i,
                 key,
-                node,
                 index,
                 defunctNodesById = {},
                 defunctNodesArray = [],
@@ -399,7 +398,7 @@ define(function (require) {
                 if ( exists ) {
                     // remove from tracking list
                     if (this.idKey_) {
-                        delete defunctNodesById[ key ] = true;
+                        delete defunctNodesById[ key ];
                     } else {
                         defunctNodesArray.splice(i, 1);
                     }
@@ -415,8 +414,8 @@ define(function (require) {
                         index = this.nodes_.indexOf( defunctNodesArray[i] );
                         this.nodes_.splice(index, 1);
                         // destroy and delete from map
-                        this.destroyNode( nodesById_[key] );
-                        delete nodesById_[key];
+                        this.destroyNode( this.nodesById_[key] );
+                        delete this.nodesById_[key];
                     }
                 }
             } else {
