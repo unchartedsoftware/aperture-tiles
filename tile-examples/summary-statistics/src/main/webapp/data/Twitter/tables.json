@@ -1041,7 +1041,8 @@
 						"Layers" : [
 							{
 								"Layer": "tweets.1.time.zero",
-								"Type": "tile"
+								"Type": "tile",
+								"Config":""
 							}
 						],
 						"X Axis Label" : {

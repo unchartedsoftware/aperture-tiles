@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
   define( function(require) {
-    "use strict"
+    "use strict";
 
 	var PlotAxis = require('./plotaxis');
 	 
@@ -373,61 +373,68 @@
         },
 
         addDataOverlay = function (layerSpec, colourScaleType, colourRampType, legendRange, isFirstInit, callback) {
-			
-            var onNewLayerResource = function( layerInfo, statusInfo ) {
-			
-            	uuid = layerInfo.id;
-				
-                if(!statusInfo.success){
+
+            var onNewLayerResource = function (layerInfo, statusInfo) {
+
+                uuid = layerInfo.id;
+
+                if (!statusInfo.success) {
                     return;
                 }
 
                 layerInfo.dataBounds = {
-                    left:   layerInfo.bounds[0],
+                    left: layerInfo.bounds[0],
                     bottom: layerInfo.bounds[1],
-                    right:  layerInfo.bounds[2],
-                    top:    layerInfo.bounds[3],
-                    getCenterX: function(){(this.right - this.left)/2},
-                    getCenterY: function(){(this.top - this.bottom)/2}
+                    right: layerInfo.bounds[2],
+                    top: layerInfo.bounds[3],
+                    getCenterX: function () {
+                        (this.right - this.left) / 2
+                    },
+                    getCenterY: function () {
+                        (this.top - this.bottom) / 2
+                    }
                 };
                 // Cache the layer info.
                 _mapState.overlayInfoMap[layerInfo.layer] = layerInfo;
 
                 // HACK: Override!
                 layerInfo.bounds = [-20037500,
-                                    -20037500,
-                                    20037500,
-                                    20037500];
+                    -20037500,
+                    20037500,
+                    20037500];
                 layerInfo.projection = "EPSG:900913";
 
-                if (callback){
+                if (callback) {
                     callback();
                 }
             };
 
-			var config = layerSpec['Config'];			
-				config.legendrange = _mapState.legendRange;				
-				config.renderer  = {
-					ramp: colourRampType,
-					opacity: 1.0
-				};
-				config.transform = {
-					name: colourScaleType
-				};
-			
-            aperture.io.rest(
-                '/layer',
-                'POST',
-                onNewLayerResource,
-                {
-                     postData: {
-                         request: "configure",
-                         layer: layerSpec['Layer'],
-                         configuration: config
-                     },
-                     contentType: 'application/json'
-                }
-            );
+            var config = layerSpec['Config'];
+
+            if(config) {
+                config.legendrange = _mapState.legendRange;
+                config.renderer = {
+                    ramp: colourRampType,
+                    opacity: 1.0
+                };
+                config.transform = {
+                    name: colourScaleType
+                };
+
+                aperture.io.rest(
+                    '/layer',
+                    'POST',
+                    onNewLayerResource,
+                    {
+                        postData: {
+                            request: "configure",
+                            layer: layerSpec['Layer'],
+                            configuration: config
+                        },
+                        contentType: 'application/json'
+                    }
+                );
+            }
         },
 
         getAxisSpec = function(type){

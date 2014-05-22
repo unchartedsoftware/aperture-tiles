@@ -1,0 +1,22 @@
+@charset "UTF-8";
+
+.olTileImage {
+    border-left: 1px solid rgba(255, 255, 255, .5);
+    border-top: 1px solid rgba(255, 255, 255, .5);
+}
+
+.olMap {
+    position:relative;
+    top: 0px;
+    right: 0px;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+div.olControlZoom {
+	right: 10px !important;
+	top: 60px !important;
+	left:auto !important;
+}
