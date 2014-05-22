@@ -37,12 +37,12 @@ define(function (require) {
 
     var Class = require('../../../class'),
         uid = 0,
-        HTMLLayer;
+        HtmlLayer;
 
 
 
-    HTMLLayer = Class.extend({
-        ClassName: "HTMLLayer",
+    HtmlLayer = Class.extend({
+        ClassName: "HtmlLayer",
 
         /**
          * Constructs a client render layer object
@@ -115,16 +115,22 @@ define(function (require) {
         },
 
 
-        /**
-         * Add styling to html
-         * @param attribute
-         * @param value
-         */
         css : function( attribute, value ) {
             if ( $.isPlainObject(attribute) ) {
                 $.extend(this.css_, attribute);
             } else {
                 this.css_[attribute] = value;
+            }
+        },
+
+
+        destroyNode: function( node ) {
+
+            if (node.$elem) {
+                node.$elem.remove();
+            }
+            if (node.$parent) {
+                node.$parent.remove();
             }
         },
 
@@ -197,6 +203,7 @@ define(function (require) {
             return found;
         },
 
+
         createNode: function( data ) {
 
             var parentNode,
@@ -252,12 +259,8 @@ define(function (require) {
                 return;
             }
 
-            /*
+
             // only root will execute the following code
-            for (i=0; i<this.nodes_.length; i++) {
-                this.positionNode( this.nodes_[i] );
-            }
-            */
             pos = this.map_.getViewportPixelFromMapPixel( 0, this.map_.getMapHeight() );
             this.$root_.css({
                 top: pos.y + "px",
@@ -331,7 +334,7 @@ define(function (require) {
             for (i=0; i<data.length; i++) {
 
                 if (this.idKey_) {
-                    // if id attribute is specified, use that to cehck duplicates
+                    // if id attribute is specified, use that to check duplicates
                     key = data[i][this.idKey_];
                     exists = this.ids_[key] !== undefined;
                 } else {
@@ -354,6 +357,94 @@ define(function (require) {
         },
 
 
+        intersect : function( data, idKey ) {
+
+            var i,
+                key,
+                node,
+                index,
+                defunctNodesById = {},
+                defunctNodesArray = [],
+                exists;
+
+            if (this.parent_) {
+                this.parent_.union(data);
+                return;
+            }
+
+            // keep list of current nodes, to track which ones are not in the new set
+            for (i=0; i<this.nodes_.length; ++i) {
+
+                if (this.idKey_) {
+                    key = data[i][this.idKey_];
+                    defunctNodesById[ key ] = true;
+                } else {
+                    defunctNodesArray.push( this.findNodeFromData( data[i] ) );
+                }
+
+            }
+
+            // only root will execute the following code
+            for (i=0; i<data.length; i++) {
+
+                if (this.idKey_) {
+                    // if id attribute is specified, use that to check duplicates
+                    key = data[i][this.idKey_];
+                    exists = this.ids_[key] !== undefined;
+                } else {
+                    // otherwise test object reference
+                    exists = this.doesNodeExist( data[i] );
+                }
+
+                if ( exists ) {
+                    // remove from tracking list
+                    if (this.idKey_) {
+                        delete defunctNodesById[ key ] = true;
+                    } else {
+                        defunctNodesArray.splice(i, 1);
+                    }
+                }
+            }
+
+            // destroy and remove all remaining nodes
+            if (this.idKey_) {
+                // id is specified
+                for (key in defunctNodesById) {
+                    if (defunctNodesById.hasOwnProperty(key)) {
+                        // remove from array
+                        index = this.nodes_.indexOf( defunctNodesArray[i] );
+                        this.nodes_.splice(index, 1);
+                        // destroy and delete from map
+                        this.destroyNode( nodesById_[key] );
+                        delete nodesById_[key];
+                    }
+                }
+            } else {
+                // no id specified
+                for (i=0; i<defunctNodesArray.length; i++) {
+                    // remove from array
+                    index = this.nodes_.indexOf( defunctNodesArray[i] );
+                    this.destroyNode( this.nodes_[index] );
+                    this.nodes_.splice(index, 1);
+                }
+            }
+
+            this.update();
+            return this;
+        },
+
+
+        findNodeFromData: function(data) {
+
+            var i;
+            for (i=0; i<this.nodes_.length; i++) {
+                if ( this.nodes_[i].data === data ) {
+                    return this.nodes_[i];
+                }
+            }
+            return null;
+        },
+
         doesNodeExist: function(data) {
 
             var i;
@@ -366,20 +457,6 @@ define(function (require) {
         },
 
 
-        /*
-        difference : function( data, idKey ) {
-
-            return this;
-        },
-
-
-        intersect : function( data, idKey ) {
-
-            return this;
-        },
-        */
-
-
         redraw: function( data ) {
             return true;
         }
@@ -387,5 +464,5 @@ define(function (require) {
 
     });
 
-    return HTMLLayer;
+    return HtmlLayer;
 });

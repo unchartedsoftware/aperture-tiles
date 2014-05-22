@@ -36,13 +36,13 @@ define(function (require) {
 
 
     var ClientRenderer = require('../ClientRenderer'),
-        HtmlLayer = require('../HTMLLayer'),
-        HTMLRenderer;
+        HtmlLayer = require('../HtmlLayer'),
+        HtmlRenderer;
 
 
 
-    HTMLRenderer = ClientRenderer.extend({
-        ClassName: "HTMLRenderer",
+    HtmlRenderer = ClientRenderer.extend({
+        ClassName: "HtmlRenderer",
 
         /**
          * Constructs a client render layer object
@@ -50,8 +50,7 @@ define(function (require) {
          */
         init: function( map) {
 
-            this._super('html', map);
-
+            this._super(map);
 
             this.layers = [];
 
@@ -60,35 +59,11 @@ define(function (require) {
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey',
-                html: '<div></div>',
+                html: '<div class="test-renderer"></div>',
                 css: {
-                    position: 'absolute',
-                    left: 100,
-                    top: 100,
-                    'background-color': '#7722AA',
-                    width: '56px',
-                    height: '56px',
-                    'z-index': 9999
+                    'z-index' : 1000
                 }
             }));
-
-            this.layers.push( new HtmlLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey',
-                html: function () {
-                    return '<div>' + this.tilekey + '</div>';
-                },
-                css: {
-                    position: 'absolute',
-                    left: '10px',
-                    top: '230px',
-                    'z-index': 9999,
-                    color: 'white'
-                }
-            }));
-
 
         },
 
@@ -102,5 +77,5 @@ define(function (require) {
 
     });
 
-    return HTMLRenderer;
+    return HtmlRenderer;
 });

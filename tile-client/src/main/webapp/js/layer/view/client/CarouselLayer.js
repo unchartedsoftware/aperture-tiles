@@ -214,8 +214,7 @@ define(function (require) {
          */
         redrawUI: function() {
 
-            var that = this,
-                tilekey = this.selectedTileInfo.tilekey,
+            var tilekey = this.selectedTileInfo.tilekey,
                 parsedValues = tilekey.split(','),
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10),
@@ -223,21 +222,11 @@ define(function (require) {
                 prevActiveView = this.getTileViewIndex(this.selectedTileInfo.previouskey),
                 activeViewForTile = this.getTileViewIndex(tilekey);
 
-            function currentOrPreviousTilekey() {
-                // only redraw previous tile, and current tile
-                return this.tilekey === that.selectedTileInfo.previouskey ||
-                       this.tilekey === that.selectedTileInfo.tilekey;
-            }
-
-            // move carousel tile
-            this.$outline.css('left', topLeft.x);
-            this.$outline.css('top', topLeft.y);
-
-            if (this.clientState.areDetailsOverTile(xIndex, yIndex)) {
-                this.$outline.css('visibility', 'hidden');
-            } else {
-                this.$outline.css('visibility', 'visible');
-            }
+            // re-position carousel tile
+            this.$outline.css({
+                left: topLeft.x,
+                top: topLeft.y
+            });
 
             // if over new tile
             if ( this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey ) {
@@ -248,9 +237,6 @@ define(function (require) {
                     this.$dots[prevActiveView].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
                     this.$dots[activeViewForTile].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
                 }
-
-                // only redraw if hovering over a new tile
-                this.mapNodeLayer.all().where(currentOrPreviousTilekey).redraw();
             }
         }
 

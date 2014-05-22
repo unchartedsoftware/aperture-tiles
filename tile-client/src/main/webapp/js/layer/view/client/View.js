@@ -53,14 +53,8 @@ define(function (require) {
 
             this.renderer = spec.renderer;
             this.renderer.attachClientState(spec.clientState);    // attach the shared client state
-            this.renderer.createLayer(spec.mapNodeLayer);   // create the render layer
             this.dataService = spec.dataService;
             this.tiles = [];
-        },
-
-
-        getRendererId: function() {
-            return this.renderer.id;
         },
 
 
@@ -68,25 +62,6 @@ define(function (require) {
             return this.dataService.layerInfo.layer;
         },
 
-        /** add views renderer id to node data
-         *
-         * @param data      data to add renderer id to
-         */
-        addRendererIdToData: function( data ) {
-            var i;
-            if ( $.isArray( data ) ) {
-                for (i=0; i<data.length; i++ ) {
-                    data[i].rendererId = this.getRendererId();
-                }
-            } else {
-                for (i in data) {
-                    if (data.hasOwnProperty(i)) {
-                        data[i].rendererId = this.getRendererId();
-                    }
-                }
-            }
-            return data;
-        },
 
         /**
          * Given a list of tiles, determines which are already tracked, which need to be
@@ -173,12 +148,17 @@ define(function (require) {
 
 
         getTileData: function(tilekey) {
-            this.dataService.data[tilekey].rendererId = this.getRendererId();
             return this.dataService.data[tilekey];
         },
 
+
+        redraw: function( tilekey ) {
+            this.renderer.redraw( this.getDataArray() );
+        },
+
+
         /**
-         * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
+         * Returns the data of the tiles in an array
          */
         getDataArray: function ( tilekeys ) {
 
@@ -194,13 +174,12 @@ define(function (require) {
                 // otherwise, return all tiles currently tracked
                 data =  this.dataService.getDataArray(this.tiles);
             }
-            return this.addRendererIdToData( data );
-
+            return data;
         },
 
 
         /**
-         * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
+         * Returns the data of the tiles as an object keyed by tilekey
          */
         getDataObject: function ( tilekeys ) {
 
@@ -216,7 +195,7 @@ define(function (require) {
                 // otherwise, return all tiles currently tracked
                 data = this.dataService.getDataObject(this.tiles);
             }
-            return this.addRendererIdToData( data );
+            return data;
 
         }
 

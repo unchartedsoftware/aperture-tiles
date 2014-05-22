@@ -43,8 +43,7 @@ define(function (require) {
     var Class = require('../../../class'),
         View  = require('./View'),
         ClientState   = require('./ClientState'),
-		mapNodeLayer = {},
-		clientState = new ClientState(),	// global mouse state
+		clientState = new ClientState(),	// global client state
         ClientLayer;
 
 
@@ -63,7 +62,7 @@ define(function (require) {
 		 *							}]
 		 *
          */
-        init: function ( id, map) {
+        init: function ( id, map ) {
 
             var that = this;
 
@@ -76,31 +75,18 @@ define(function (require) {
                 that.map.on('click', function() {
 					// if click event has not been swallowed yet, clear mouse state and redraw
 					that.clientState.clearClickState();
-					that.mapNodeLayer.all().redraw();
+                    that.updateAndRedrawViews();
 				});
 
                 that.map.on('zoomend', function() {
 					// clear click mouse state on zoom and call map update function
                     that.clientState.clearClickState();
-                    that.onMapUpdate();
                 });
 
-                that.map.on('panend', function() {
+                that.map.on('move', function() {
 					// cal map update on pan end
                     that.onMapUpdate();
                 });
-				
-				// ensure only one mapNodeLayer is made for each unique map
-				if (mapNodeLayer[that.map.getUid()] === undefined) {
-					mapNodeLayer[that.map.getUid()] = that.map.addApertureLayer(aperture.geo.MapNodeLayer);
-				}
-
-                that.mapNodeLayer = mapNodeLayer[that.map.getUid()];
-                that.mapNodeLayer.map('longitude').from('longitude');
-                that.mapNodeLayer.map('latitude').from('latitude');
-                // Necessary so that aperture won't place labels and texts willy-nilly
-                //that.mapNodeLayer.map('width').asValue(1);
-                //that.mapNodeLayer.map('height').asValue(1);
             }
 
             // initialize attributes
@@ -124,7 +110,6 @@ define(function (require) {
             // add views
             for (i = 0; i < viewSpecs.length; i++) {
                 viewSpecs[i].clientState = that.clientState;
-                viewSpecs[i].mapNodeLayer = that.mapNodeLayer;
                 that.views.push( new View( viewSpecs[i] ) );
             }
 
@@ -135,14 +120,15 @@ define(function (require) {
         setOpacity: function( opacity ) {
 
             this.clientState.setSharedState('opacity', opacity);
-            this.mapNodeLayer.all().redraw();
+            this.updateAndRedrawViews();
         },
 
 
         setVisibility: function( visible ) {
             this.clientState.setSharedState('isVisible', visible);
-            this.mapNodeLayer.all().redraw();
+            this.updateAndRedrawViews();
         },
+
 
         /**
          * Maps a tilekey to its current view index. If none is specified, use default
@@ -178,7 +164,8 @@ define(function (require) {
             if (oldView.getLayerId() === newView.getLayerId()) {
                 // if both views share the same type of data source, swap tile data
                 oldView.swapTileWith(newView, tilekey);
-                this.updateAndRedrawViews( newView.getTileData(tilekey) );
+                // redraw immediately
+                this.updateAndRedrawViews();
 
             } else {
                 // otherwise release and request new data
@@ -235,22 +222,12 @@ define(function (require) {
          * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
          * the layers
          */
-        updateAndRedrawViews: function( tile ) {
-            var i,
-                that = this,
-                data = [];
+        updateAndRedrawViews: function( tilekey ) {
 
+            var i;
             for (i=0; i< this.views.length || i< 1; i++ ) {
-                $.merge(data, this.views[i].getDataArray() );
+                this.views[i].redraw( tilekey );
             }
-
-            // pull selected node to the front
-            this.mapNodeLayer.all().where( function() {
-                return this.tilekey === that.clientState.clickState.tilekey;
-            }).toFront();
-
-            // redraw new tile
-            this.mapNodeLayer.all(data).where(tile).redraw();
         }
 
 
