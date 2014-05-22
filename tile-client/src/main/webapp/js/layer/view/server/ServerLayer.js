@@ -418,7 +418,7 @@ define(function (require) {
 
                                     if (x >= 0 && y >= 0) {
 
-                                        viewBounds = that.map.getTileSetBoundsInView().params;
+                                        viewBounds = that.map.getTileBoundsInView(); //.params;
                                         
                                         fullUrl = (this.url + this.version + "/" +
                                                    this.layername + "/" + 
