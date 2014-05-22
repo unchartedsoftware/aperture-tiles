@@ -52,10 +52,10 @@
         };
 
         // Clear the layer control of all checkboxes.
-        var resetLayerControl = function(){
-            var layerControl = $("div[id='layer-control']");
-            layerControl.empty();
-        };
+        //var resetLayerControl = function(){
+        //    var layerControl = $("div[id='layer-control']");
+        //    layerControl.empty();
+        //};
 
         var resetLegend = function(tabLayerId){
             var dataPlot = _summaryState.plotMap[tabLayerId];
@@ -80,13 +80,14 @@
         var constructPlot = function(event, ui){
             var tabLayerId = null;
             if (event.type == 'tabsbeforeactivate'){
+                //console.log("tabsbeforeactivate*********");
                 // Clear the layer control (if present)
-                resetLayerControl();
+                //resetLayerControl();
                 
                 // Check if this is from a tab switch.
                 var panelId = ui.newPanel.attr('id');
                 if (ui.newTab.text() != _summaryState.tabLabel && panelId.indexOf('tab-plot-') < 0){
-                    return;
+                   return;
                 }
                 if (panelId == 'tabs-plots'){
                     var activeTabId = $('#tabs-plots').tabs('option', 'active');
@@ -97,10 +98,11 @@
                 }
                 //console.log('activate: ' + tabLayerId);
                 // Reset the legend.
-                resetLegend(tabLayerId);
+                //resetLegend(tabLayerId);
 
             }
             else if (event.type == 'tabscreate'){
+               // console.log("tabscreate*********");
                 tabLayerId = ui.panel.attr('id').replace('tab-plot-', '');
             }
             if (!_summaryState.layerInfoMap[tabLayerId]){
@@ -112,6 +114,7 @@
                 return;
             }
             if ($("div[id='"+ _summaryState.layerInfoMap[tabLayerId].plotDiv +"']").is(':empty')){
+                console.log("isEmpty is true");
                 var plotInfo = _summaryState.layerInfoMap[tabLayerId];
                 var options = {
 
@@ -171,32 +174,35 @@
                     }
                 };
                 if(_summaryState.layerInfoMap[tabLayerId].baseLayer){
+                    console.log("is baseLayer");
                     options.baseLayer = _summaryState.layerInfoMap[tabLayerId].baseLayer;
                 }
 
-                var dataPlot = new XDataMap(options);
-                dataPlot.start(null);
-                _summaryState.plotMap[tabLayerId] = dataPlot;
+                //var dataPlot = new XDataMap(options);
+                //dataPlot.start(null);
+                //_summaryState.plotMap[tabLayerId] = dataPlot;
             }
             else {
+                console.log("else createLayerControl");
                 _summaryState.plotMap[tabLayerId].createLayerControl();
             }
         };
 
         $( "#tabs-major").tabs({
             beforeActivate : function(event, ui){
+                //console.log("beforeActivate construct plot");
                 constructPlot(event, ui);
             }
         });
 		
-		$( "#dialog-controls").dialog({
+		/*$( "#dialog-controls").dialog({
 			autoOpen:false,
 			resizeable: false,
 			width: 370,
 			height: "auto",
 			position: {my: "right top", at: "right top", of: window}
 		});
-		$('#accordion').accordion({ heightStyle: "content", autoHeight: false });
+		$('#accordion').accordion({ heightStyle: "content", autoHeight: false });*/
 
         var generateJsonTables = function(jsonFile, onComplete) {
             if(jsonFile === null || jsonFile.length === 0){
@@ -534,9 +540,9 @@
                         // (i.e. in a plot 'tab' vs. in a density strip table line.)
                         // Use the 'plot-size' class on the parent and the actual plot map will be 100% filled into that.
                         // class. (summary.css)
-                        //plotParent.addClass('plot-parent');
+                        plotVisual.addClass('plot-parent');
                         plotVisual.addClass('plot'); // in crossplot.css
-                        //plotParent.addClass('plot-size');
+                        plotVisual.addClass('plot-size');
                         plotVisual.css({width:"100%",height:"100%"});
                         plotVisual.html("here is the plot: " + mapID);
                         plotTab.append(plotVisual);
@@ -587,7 +593,7 @@
             var tableJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/tables.json';
             //var plotJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/plots.json';
 
-			var showControls = $('<div id="show-controls"></div>');
+			/*var showControls = $('<div id="show-controls"></div>');
 			showControls.addClass('show-controls');
 			$('#summary-header').append(showControls);
 
@@ -599,9 +605,10 @@
 						$('#accordion').accordion({ autoHeight: false });
 				});
 
-			showControls.append(showButton);
+			showControls.append(showButton);*/
 
             generateJsonTables(tableJsonFile, function(){
+                console.log("generateJsonTables called");
                 var len = _densityStrips.length;
                 var xDataMaps = [];
                 for(var i = 0; i < len; i++){
@@ -677,22 +684,27 @@
                     xDataMaps[i].start(startupCallback);
                 }
 
-            });
+            });//end generateJsonTables call
 
             generateJsonPlots(function(){
                 $("#tabs-plots").tabs({
                     create : function(event, ui){
+                        console.log('create: some random layer');
                         if(!ui.panel.attr('id'))
+                       // console.log("returning from create");
                             return;
 
                         var layerName = ui.panel.attr('id').replace('tab-plot-', '');
                         console.log('create: ' + layerName);
                     },
                     beforeActivate : function(event, ui){
+                        console.log('generateJsonPlots: ');
                         if(!ui.newPanel.attr('id'))
+                        //    console.log("returning from beforeActivate");
                             return;
 
                         var layerName = ui.newPanel.attr('id').replace('tab-plot-', '');
+                        //console.log('generateJsonPlots: ' + layerName);
                         constructPlot(event, ui);
                     }
                 });
