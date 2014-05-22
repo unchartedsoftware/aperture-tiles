@@ -116,7 +116,7 @@ define(function (require) {
 
 
             var that = this,
-                MAX_LABEL_CHAR_COUNT = 9;
+                MAX_LABEL_CHAR_COUNT = 12;
 
 
             this.wordCloudLabel = this.plotLayer.addLayer(aperture.WordCloudLayer);
@@ -186,8 +186,8 @@ define(function (require) {
                 return that.getOpacity();
             });
 
-            this.wordCloudLabel.map('min-font-size').asValue(12);
-            this.wordCloudLabel.map('max-font-size').asValue(36);
+            this.wordCloudLabel.map('min-font-size').asValue(9);
+            this.wordCloudLabel.map('max-font-size').asValue(32);
 
         }
 
