@@ -286,12 +286,14 @@
                 mapSpec.baseLayer = options.baseLayer[0];
             }
             
+			/*
             aperture.config.provide({
 				// Set the map configuration
 				'aperture.map' : {
 					'defaultMapConfig' : mapSpec
 				}
 			});
+			*/
             
             _mapState.canvas = new aperture.geo.Map(mapSpec);
 

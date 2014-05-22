@@ -61,7 +61,7 @@ define(function (require) {
 
             // The relative position within each bin at which visuals will 
             // be drawn
-            this.position = {x: 'minX', y: 'centerY'}; //{x: 'centerX', y: 'centerY'};
+            this.position = {x: 'minX', y: 'centerY'};
 
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
@@ -209,7 +209,7 @@ define(function (require) {
                      'GET',
                     $.proxy(this.getCallback, this),
                     // Add in the list of all needed tiles
-                    tileSetBounds
+                    {'params': tileSetBounds }
                 );
             }
         },

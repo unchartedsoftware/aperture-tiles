@@ -30,6 +30,15 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
+        AXIS_BORDER_CLASS_SUFFIX = "-axis-border",
+        AXIS_TITLE_CLASS = "axis-title-label",
+        AXIS_DIV_CLASS_SUFFIX = "-axis",
+        AXIS_HEADER_CLASS_SUFFIX = "-axis-header",
+        AXIS_CONTAINER_CLASS_SUFFIX = "-axis-container",
+        AXIS_LABEL_CLASS = "axis-marker-label",
+        AXIS_POSITIONED_LABEL_CLASS_SUFFIX = "-axis-marker-label" ,
+        AXIS_MARKER_SUFFIX = "-axis-marker",
+        AXIS_POSITION_SUFFIX = "-axis",
         Axis;
 
 
@@ -79,7 +88,7 @@ define(function (require) {
 
                 // standard css borders will cause an ugly overlap, this creates a separate element that is hidden
                 // behind to ensure that the borders, if specified, are styled nicely
-                var $border = $('<div class="'+ that.position +'-axis-border">'),
+                var $border = $('<div class="'+ that.position + AXIS_BORDER_CLASS_SUFFIX + '">'),
                     elemCSS = {
                         position : $elem.css('position'),
                         'border-style' : $elem.css('border-style'),
@@ -124,7 +133,7 @@ define(function (require) {
                         transformOrigin = "bottom left";
                     }
                 }
-                return $('<span class="axis-title-label"'
+                return $('<span class="'+AXIS_TITLE_CLASS+'"'
                     + 'style="position:absolute;'
                     + '-webkit-transform: ' + rotation + ";"
                     + '-moz-transform: ' + rotation + ";"
@@ -141,9 +150,9 @@ define(function (require) {
             function generateElements() {
 
                 // create axis header and container
-                that.$div = $('<div class="'+ that.position +'-axis"></div>');
-                that.$header = $('<div class="'+ that.position +'-axis-header">');
-                that.$container = $('<div class="'+ that.position +'-axis-container">');
+                that.$div = $('<div class="'+ that.position + AXIS_DIV_CLASS_SUFFIX + '"></div>');
+                that.$header = $('<div class="'+ that.position + AXIS_HEADER_CLASS_SUFFIX + '">');
+                that.$container = $('<div class="'+ that.position + AXIS_CONTAINER_CLASS_SUFFIX + '">');
                 // set enable / disable callbacks
                 if (that.isXAxis) {
                     that.$header.click(verticalSlide);
@@ -271,10 +280,10 @@ define(function (require) {
              */
             function createDummyMarkerLabelHTML(marker) {
 
-                return '<div class="axis-marker-label ' + that.horizontalOrVertical + '-axis-marker-label"'
-                     + 'style="position:absolute;">'
-                    + AxisUtil.formatText( marker.label, that.unitSpec )
-                    +'</div>';
+                return '<div class="' + AXIS_LABEL_CLASS + ' ' + that.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
+                       + 'style="position:absolute;">'
+                       + AxisUtil.formatText( marker.label, that.unitSpec )
+                       + '</div>';
             }
 
             /**
@@ -297,7 +306,7 @@ define(function (require) {
                         + SPACING_BETWEEN_MARKER_AND_LABEL;
                 }
 
-                return '<div class="axis-marker-label ' + that.horizontalOrVertical + '-axis-marker-label"'
+                return '<div class="' + AXIS_LABEL_CLASS + ' ' + that.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
                     + 'style="position:absolute;'
                     + 'text-align: center; '    // center text horizontally
                     + 'width: ' + that.MAX_LABEL_WIDTH + 'px;'
@@ -314,9 +323,7 @@ define(function (require) {
              */
             function createLargeMarkerHTML(marker) {
 
-                var axisClass = (that.isXAxis) ? 'horizontal' : 'vertical';
-
-                return '<div class="large-' + axisClass + '-axis-marker ' + that.position + '-axis"'
+                return '<div class="large-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
                        + 'style="position:absolute;'
                        + that.leftOrTop + ":" + (marker.pixel - that.LARGE_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';
@@ -327,9 +334,7 @@ define(function (require) {
              */
             function createMediumMarkerHTML(marker) {
 
-                var axisClass = (that.isXAxis) ? 'horizontal' : 'vertical';
-
-                return '<div class="medium-' + axisClass + '-axis-marker ' + that.position + '-axis"'
+                return '<div class="medium-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
                        + 'style="position:absolute;'
                        + that.leftOrTop + ":" + (marker.pixel - that.MEDIUM_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';
@@ -341,9 +346,7 @@ define(function (require) {
              */
             function createSmallMarkerHTML(marker) {
 
-                var axisClass = (that.isXAxis) ? 'horizontal' : 'vertical';
-
-                return '<div class="small-' + axisClass + '-axis-marker ' + that.position + '-axis"'
+                return '<div class="small-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
                        + 'style="position:absolute;'
                        + that.leftOrTop + ":" + (marker.pixel - that.SMALL_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';

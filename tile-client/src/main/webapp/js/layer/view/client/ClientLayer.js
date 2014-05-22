@@ -225,7 +225,7 @@ define(function (require) {
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
                 this.views[i].filterAndRequestTiles(tilesByView[i],
-                                                    this.map.getTileSetBoundsInView(),
+                                                    this.map.getTileBoundsInView(),
                                                     $.proxy(this.updateAndRedrawViews, this));
             }
         },

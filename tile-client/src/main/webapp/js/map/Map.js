@@ -151,14 +151,32 @@ define(function (require) {
 
 
 		getTilesInView: function() {
+            var tiles = this.getTileIterator().getRest(),
+                culledTiles = [],
+                maxTileIndex = Math.pow(2, this.getZoom() ),
+                tile,
+                i;
 
-			return this.getTileIterator().getRest();
+            for (i=0; i<tiles.length; i++) {
+                tile = tiles[i];
+                if ( tile.xIndex >= 0 && tile.yIndex >= 0 &&
+                     tile.xIndex < maxTileIndex && tile.yIndex < maxTileIndex ) {
+                     culledTiles.push( tile );
+                }
+            }
+
+			return culledTiles;
 		},
 
 
-		getTileSetBoundsInView: function() {
-
-			return {'params': this.getTileIterator().toTileBounds() };
+		getTileBoundsInView: function() {
+		    var bounds = this.getTileIterator().toTileBounds(),
+		        maxTileIndex = Math.pow(2, this.getZoom() ) - 1;
+            bounds.minX = Math.max( 0, bounds.minX );
+            bounds.minY = Math.max( 0, bounds.minY );
+            bounds.maxX = Math.min( maxTileIndex, bounds.maxX );
+            bounds.maxY = Math.min( maxTileIndex , bounds.maxY );
+			return bounds;
 		},
 
 

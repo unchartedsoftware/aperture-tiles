@@ -87,7 +87,7 @@ define(function (require) {
 
 			numDivs = 1 << level;
 			tileX = Math.floor(numDivs * (x - this.minX) / (this.maxX - this.minX));
-			tileY = Math.ceil(numDivs * (y - this.minY) / (this.maxY - this.minY));
+			tileY = Math.floor(numDivs * (y - this.minY) / (this.maxY - this.minY));
 
 			if (!bins) {
 				bins = 256;
