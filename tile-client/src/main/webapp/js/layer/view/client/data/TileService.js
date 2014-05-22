@@ -61,7 +61,7 @@ define(function (require) {
 
             // The relative position within each bin at which visuals will 
             // be drawn
-            this.position = {x: 'minX', y: 'centerY'}
+            this.position = {x: 'minX', y: 'centerY'};
 
             // set tile pyramid type
             this.tilePyramid = tilepyramid;

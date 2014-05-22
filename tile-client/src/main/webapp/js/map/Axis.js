@@ -30,7 +30,6 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
-        AXIS_CLASS = "axis",
         AXIS_BORDER_CLASS_SUFFIX = "-axis-border",
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
