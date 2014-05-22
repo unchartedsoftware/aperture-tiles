@@ -30,7 +30,6 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
-        MARKER_LABEL_SPACING = 5,
         Axis;
 
 
@@ -49,7 +48,7 @@ define(function (require) {
                     repeat: false,
                     isOpen : true,
                     intervalSpec : {
-                        type: "percentage", // or "fixed"
+                        type: "percentage",
                         increment: 10,
                         pivot: 0,
                         allowScaleByZoom: true
@@ -79,7 +78,7 @@ define(function (require) {
             function generateBorder ( $elem ) {
 
                 // standard css borders will cause an ugly overlap, this creates a separate element that is hidden
-                // behind to ensure that the borders are created properly
+                // behind to ensure that the borders, if specified, are styled nicely
                 var $border = $('<div class="'+ that.position +'-axis-border">'),
                     elemCSS = {
                         position : $elem.css('position'),
@@ -104,7 +103,6 @@ define(function (require) {
                     $border.width(  parseInt(elemCSS.width, 10) - parseInt(elemCSS['border-width'], 10) );
                     $border.css('height', '100%');
                 }
-
                 // remove border from original element since we created a new one
                 $elem.css('border-style', 'none');
 
@@ -117,7 +115,6 @@ define(function (require) {
 
                 var rotation = "",
                     transformOrigin ="";
-
                 if (!that.isXAxis) {
                     if (that.position === "left") {
                         rotation = "rotate(" + (-90) + "deg)";
@@ -127,7 +124,6 @@ define(function (require) {
                         transformOrigin = "bottom left";
                     }
                 }
-
                 return $('<span class="axis-title-label"'
                     + 'style="position:absolute;'
                     + '-webkit-transform: ' + rotation + ";"
@@ -148,7 +144,6 @@ define(function (require) {
                 that.$div = $('<div class="'+ that.position +'-axis"></div>');
                 that.$header = $('<div class="'+ that.position +'-axis-header">');
                 that.$container = $('<div class="'+ that.position +'-axis-container">');
-
                 // set enable / disable callbacks
                 if (that.isXAxis) {
                     that.$header.click(verticalSlide);
@@ -157,16 +152,13 @@ define(function (require) {
                     that.$header.click(horizontalSlide);
                     that.$container.click(horizontalSlide);
                 }
-
                 // append axis div to map parent, and other elements to that div
                 that.$map.parent().append(that.$div);
                 that.$div.append(that.$container);
                 that.$div.append(that.$header);
-
                 // generate borders
                 that.$headerBorder = generateBorder(that.$header);
                 that.$containerBorder = generateBorder(that.$container);
-
                 // create new title
                 that.$title = generateTitle();
                 that.$header.append(that.$title);
@@ -175,7 +167,6 @@ define(function (require) {
             this.mapId = spec.mapId;
             this.$map = $("#" + this.mapId);
 
-            // ensure min is < max
             this.min = spec.min;
             this.max = spec.max;
             this.repeat = spec.repeat || defaults.repeat;
@@ -214,22 +205,20 @@ define(function (require) {
             this.map.on('move', function() {
                 that.redraw();
             });
-
             // generate the core html elements
             generateElements();
-
+            // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
             this.enabled = true;
-
             // get axis container widths
             this.containerWidth = (this.isXAxis) ? this.$container.height() : this.$container.width();
-
-            this.redraw();
-
+            // check if axis starts open or closed
             if ( !isOpen ) {
                 // trigger close and skip animation;
                 this.$header.click();
                 this.$container.finish();
             }
+            // draw initial axis
+            this.redraw();
         },
 
 
@@ -276,23 +265,48 @@ define(function (require) {
             }
 
             /**
+             * Creates and returns a dummy marker label element to measure. This function
+             * is used for measauring, as the real label func sizes the labels to the current
+             * max measurements
+             */
+            function createDummyMarkerLabelHTML(marker) {
+
+                return '<div class="axis-marker-label ' + that.horizontalOrVertical + '-axis-marker-label"'
+                     + 'style="position:absolute;">'
+                    + AxisUtil.formatText( marker.label, that.unitSpec )
+                    +'</div>';
+            }
+
+            /**
              * Creates and returns a marker label element with proper CSS
              */
             function createMarkerLabelHTML(marker) {
 
+                var SPACING_BETWEEN_MARKER_AND_LABEL = 5,
+                    primaryPosition,
+                    secondaryPosition;
+
+                if (that.isXAxis) {
+                    // if x axis, add half of label length as text is anchored from bottom
+                    primaryPosition = marker.pixel - that.MAX_LABEL_UNROTATED_WIDTH*0.5;
+                    secondaryPosition =  that.LARGE_MARKER_LENGTH
+                        + SPACING_BETWEEN_MARKER_AND_LABEL;
+                } else {
+                    primaryPosition = marker.pixel - that.MAX_LABEL_HEIGHT*0.5;
+                    secondaryPosition =  that.LARGE_MARKER_LENGTH
+                        + SPACING_BETWEEN_MARKER_AND_LABEL;
+                }
+
                 return '<div class="axis-marker-label ' + that.horizontalOrVertical + '-axis-marker-label"'
                     + 'style="position:absolute;'
-                    + that.leftOrTop +":" + marker.pixel + 'px;">'
+                    + 'text-align: center; '    // center text horizontally
+                    + 'width: ' + that.MAX_LABEL_WIDTH + 'px;'
+                    + 'height: ' + that.MAX_LABEL_HEIGHT + 'px;'
+                    + 'line-height: ' + that.MAX_LABEL_HEIGHT + 'px;'   // center text vertically
+                    + that.leftOrTop + ":" + primaryPosition + 'px;'
+                    + that.oppositePosition + ":" + secondaryPosition + 'px;">'
                     + AxisUtil.formatText( marker.label, that.unitSpec )
                     +'</div>';
-
-                /*
-                return $('<div class="axis-marker-label-root" style="position:absolute;">'
-                           + '<div class="axis-marker-label ' + that.horizontalOrVertical + '-axis-marker-label">'
-                           + AxisUtil.formatText( marker.label, that.unitSpec )
-                           + '</div>'
-                        +'</div>');
-                */
             }
 
             /**
@@ -304,7 +318,7 @@ define(function (require) {
 
                 return '<div class="large-' + axisClass + '-axis-marker ' + that.position + '-axis"'
                        + 'style="position:absolute;'
-                       + that.leftOrTop + ":" + (marker.pixel - (that.LARGE_MARKER_WIDTH*0.5)) + 'px;">'
+                       + that.leftOrTop + ":" + (marker.pixel - that.LARGE_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';
             }
 
@@ -317,7 +331,7 @@ define(function (require) {
 
                 return '<div class="medium-' + axisClass + '-axis-marker ' + that.position + '-axis"'
                        + 'style="position:absolute;'
-                       + that.leftOrTop + ":" + (marker.pixel - (that.MEDIUM_MARKER_WIDTH*0.5)) + 'px;">'
+                       + that.leftOrTop + ":" + (marker.pixel - that.MEDIUM_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';
             }
 
@@ -331,7 +345,7 @@ define(function (require) {
 
                 return '<div class="small-' + axisClass + '-axis-marker ' + that.position + '-axis"'
                        + 'style="position:absolute;'
-                       + that.leftOrTop + ":" + (marker.pixel - (that.SMALL_MARKER_WIDTH*0.5)) + 'px;">'
+                       + that.leftOrTop + ":" + (marker.pixel - that.SMALL_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';
             }
 
@@ -342,44 +356,74 @@ define(function (require) {
              */
             function calcElementDimensions() {
 
-                var $temp,
-                    matrix, values, angle;
+                var $temp;
 
+                function measureLabelRotation( $label ) {
+
+                    var matrix, values, angle;
+                    matrix = $label.css("-webkit-transform") ||
+                             $label.css("-moz-transform")    ||
+                             $label.css("-ms-transform")     ||
+                             $label.css("-o-transform")      ||
+                             $label.css("transform") || 'none';
+                    if(matrix !== 'none') {
+                        values = matrix.split('(')[1].split(')')[0].split(',');
+                        angle = Math.atan2(values[1], values[0]);
+                    } else {
+                        angle = 0;
+                    }
+                    that.ROTATION_RADIANS = Math.abs(angle);
+                }
+
+                function measureLabelMaxDimensions( $label ) {
+
+                    var sinW = $label.width() * Math.sin(that.ROTATION_RADIANS),
+                        sinH = $label.height() * Math.sin(that.ROTATION_RADIANS),
+                        cosW = $label.width() * Math.cos(that.ROTATION_RADIANS),
+                        cosH = $label.height() * Math.cos(that.ROTATION_RADIANS);
+
+                    that.MAX_LABEL_WIDTH = Math.max( sinH + cosW, that.MAX_LABEL_WIDTH );
+                    that.MAX_LABEL_HEIGHT = Math.max( cosH + sinW, that.MAX_LABEL_HEIGHT );
+                    that.MAX_LABEL_UNROTATED_WIDTH = $label.width();
+                }
+
+                // initialized all measurements to zero
                 that.LARGE_MARKER_LENGTH = 0;
-                that.LARGE_MARKER_WIDTH = 0;
-                that.MEDIUM_MARKER_WIDTH = 0;
-                that.MEDIUM_MARKER_WIDTH = 0;
+                that.LARGE_MARKER_HALF_WIDTH = 0;
+                that.MEDIUM_MARKER_HALF_WIDTH = 0;
+                that.SMALL_MARKER_HALF_WIDTH = 0;
+                that.MAX_LABEL_WIDTH = 0;
+                that.MAX_LABEL_HEIGHT = 0;
+                that.MAX_LABEL_UNROTATED_WIDTH = 0;
                 that.ROTATION_RADIANS = 0;
 
+                // measure large markers
                 $temp = $(createLargeMarkerHTML({pixel:0})).hide().appendTo(that.$container);
-                that.LARGE_MARKER_LENGTH = $temp[that.markerWidthOrHeight](); //).replace('px', ''); // strip px suffix
-                that.LARGE_MARKER_WIDTH = $temp.css("border-"+that.leftOrTop+"-width").replace('px', ''); // strip px suffix
+                that.LARGE_MARKER_LENGTH = $temp[that.markerWidthOrHeight]();
+                that.LARGE_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]()*0.5 );
                 $temp.remove();
-
+                // measure medium markers
                 $temp = $(createMediumMarkerHTML({pixel:0})).hide().appendTo(that.$container);
-                that.MEDIUM_MARKER_WIDTH = $temp.css("border-"+that.leftOrTop+"-width").replace('px', ''); // strip px suffix
+                that.MEDIUM_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]() * 0.5);
                 $temp.remove();
-
+                // measure small markers
                 $temp = $(createSmallMarkerHTML({pixel:0})).hide().appendTo(that.$container);
-                that.SMALL_MARKER_WIDTH = $temp.css("border-"+that.leftOrTop+"-width").replace('px', ''); // strip px suffix
+                that.SMALL_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]() * 0.5);
                 $temp.remove();
 
-                $temp = $(createMarkerLabelHTML({label:'temp'})).hide().appendTo(that.$container);
-                matrix = $temp.css("-webkit-transform") ||
-                    $temp.css("-moz-transform")    ||
-                    $temp.css("-ms-transform")     ||
-                    $temp.css("-o-transform")      ||
-                    $temp.css("transform") || 'none';
+                // label measurements
+                $temp = $(createDummyMarkerLabelHTML({pixel:0, label:that.max })).appendTo(that.$container);
+                // get angle first, it is used in label measurements
+                measureLabelRotation( $temp );
+                // measure max label
+                measureLabelMaxDimensions( $temp );
+                $temp.remove();
+                // measure min label
+                $temp = $(createDummyMarkerLabelHTML({pixel:0, label:that.min})).appendTo(that.$container);
+                measureLabelMaxDimensions( $temp );
                 $temp.remove();
 
-                if(matrix !== 'none') {
-                    values = matrix.split('(')[1].split(')')[0].split(',');
-                    angle = Math.atan2(values[1], values[0]);
-                } else {
-                    angle = 0;
-                }
-                that.ROTATION_RADIANS = Math.abs(angle);
-
+                // set flag so these do not need to be calculated again
                 that.elementDimensionsCalculated = true;
             }
 
@@ -399,11 +443,9 @@ define(function (require) {
                     calcElementDimensions();
                 }
 
-                // generate markers first, as they can be submitted in
-                // a single .innerHTML call
+                // iterate through markers, by marker type
                 for ( markerSize in markers ) {
                     if (markers.hasOwnProperty(markerSize)) {
-
                         for (i = 0; i < markers[markerSize].length; i++) {
 
                             marker = markers[markerSize][i];
@@ -412,7 +454,6 @@ define(function (require) {
                                 case 'large':
                                     markersHTML += createLargeMarkerHTML(marker);
                                     markersHTML += createMarkerLabelHTML(marker);
-                                    //largeMarkers.push( marker );
                                     break;
                                 case 'medium':
                                     markersHTML += createMediumMarkerHTML(marker);
@@ -425,41 +466,8 @@ define(function (require) {
                         }
                     }
                 }
-
-                // append all markers at once
+                // append all markers and labels at once
                 that.$container[0].innerHTML = markersHTML;
-
-                that.$container.find('.axis-marker-label').each( function() {
-
-                    var $label = $(this),
-                        labelLength,
-                        labelOffset,
-                        labelCSS = {};
-
-                    // get the length of the label, after rotation
-                    if (that.isXAxis) {
-                        // get rotated height of the labels and add half to offset
-                        labelLength = $label.width() * Math.sin(that.ROTATION_RADIANS)
-                                    + $label.height() * Math.cos(that.ROTATION_RADIANS);
-                    } else {
-                        labelLength = $label.width() * Math.cos(that.ROTATION_RADIANS)
-                                    + $label.height() * Math.sin(that.ROTATION_RADIANS);
-                    }
-
-                    // get label position
-                    labelOffset = that.LARGE_MARKER_LENGTH + MARKER_LABEL_SPACING;
-                    if (that.isXAxis) {
-                        // if x axis, add half of label length as text is anchored from bottom
-                        labelOffset += labelLength * 0.5;
-                    }
-
-                    // set marker label position
-                    labelCSS[that.oppositePosition] = labelOffset + "px";
-                    labelCSS[that.leftOrTop] = ($label.position()[that.leftOrTop] - $label[that.axisWidthOrHeight]()*0.5) +"px";
-
-                    // set marker css
-                    $label.css( labelCSS );
-                });
             }
 
             // always update title position (in case of window resize)
@@ -470,7 +478,7 @@ define(function (require) {
                 return;
             }
 
-            // empty elements
+            // empty elements of axis container
             that.$container.empty();
             // generate array of marker labels and pixel locations
             markers = AxisUtil.getMarkers(this);
