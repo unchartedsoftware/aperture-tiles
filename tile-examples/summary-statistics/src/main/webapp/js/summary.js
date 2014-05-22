@@ -515,17 +515,18 @@
 
                         // Cache the tab id for this layer.
                         _summaryState.tabLayerMap[plotId] = tabLayerId;
-                        _summaryState.layerInfoMap[tabLayerId] = pv;
+                        //_summaryState.layerInfoMap[tabLayerId] = pv;
 
                         plotId++;
                         var plotTabDiv = "tab-plot-" + tabLayerId;
-                        var plotParentDiv = "parent-plot-" + tabLayerId;
+                        //var plotDiv = "parent-plot-" + tabLayerId;
                         var plotDiv = "plot-" + tabLayerId;
+                        //var plotLegendDiv = "plot-legend-" + tabLayerId;
 
                         $('#tabs-plots ul').append('<li><a href="#'+ plotTabDiv +'">'+mapID+'</a></li>');
 
                         var plotTab = $('<div id="' + plotTabDiv + '">');
-                        var plotParent = $('<div id="' + plotParentDiv + '">');
+                        //var plotParent = $('<div id="' + plotParentDiv + '">');
                         var plotVisual = $('<div id="' + plotDiv + '"></div>');
 
                         // Ok, Explanation for plotParent:
@@ -547,11 +548,13 @@
                         plotTab.append(plotVisual);
                         //plotParent.append(plotVisual);
 
-
+                        //var legend = $('<div id="'+ plotLegendDiv +'"></div>');
+                        //legend.addClass('plot-legend');
+                        //plotTab.append(legend);
 
                         $('#tabs-plots').append(plotTab);
 
-                        pv.plotParentDiv = plotParentDiv;
+                        //pv.plotParentDiv = plotParentDiv;
                         pv.plotDiv = plotDiv;
                         //pv.plotLegendDiv = plotLegendDiv;
                     });
@@ -684,7 +687,6 @@
             });//end generateJsonTables call
 
             generateJsonPlots(function(){
-                console.log("generateJsonPlots____________ called");
                 $("#tabs-plots").tabs({
                     create : function(event, ui){
                         console.log('create: some random layer');
