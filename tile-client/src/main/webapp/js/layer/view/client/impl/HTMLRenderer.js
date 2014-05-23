@@ -59,7 +59,37 @@ define(function (require) {
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey',
-                html: '<div class="test-renderer"></div>',
+                html: '<div class="test-renderer">'
+
+                      +'<div class="test-0">'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'</div>'
+
+                      +'<div class="test-1">'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'</div>'
+
+                      +'<div class="test-2">'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'</div>'
+
+                      +'<div class="test-3">'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'<div class="test-renderer-block"></div>'
+                      +'</div>'
+
+                      +'</div>',
                 css: {
                     'z-index' : 1000
                 }

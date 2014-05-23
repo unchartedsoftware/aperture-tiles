@@ -1,34 +1,72 @@
 
+
 div.test-renderer {
+	position:absolute;
+
+	/*
+	background-color: #22FFAA;
+	opacity: 0.5;
+	top: 32px;
+    left: 32px;
+	width: 192px;
+	height: 192px;
+	-webkit-transition: -webkit-transform 0.2s ease-in-out;
+       -moz-transition: -moz-transform 0.2s ease-in-out;
+       	-ms-transition: -ms-transform 0.2s ease-in-out;
+            transition: transform 0.2s ease-in-out;
+    */
+}
+
+
+div.test-renderer-block {
 	position:relative;
 	background-color: #22FFAA;
-	top: 96px;
-    left: 96px;
-	width: 64px;
-	height: 64px;
-	-webkit-transition: -webkit-transform 0.5s ease-in-out;
-       -moz-transition: -moz-transform 0.5s ease-in-out;
-       	-ms-transition: -ms-transform 0.5s ease-in-out;
-            transition: transform 0.5s ease-in-out;
+	opacity: 0.5;
+	margin: 10px 0 0 10px;
+	width: 54px;
+	height: 54px;
+	-webkit-transition: -webkit-transform 0.2s ease-in-out;
+       -moz-transition: -moz-transform 0.2s ease-in-out;
+       	-ms-transition: -ms-transform 0.2s ease-in-out;
+            transition: transform 0.2s ease-in-out;
+}
+
+div.test-0 {
+	position:absolute;
+	left:0px;
+}
+
+div.test-1 {
+	position:absolute;
+	left:64px;
+}
+
+div.test-2 {
+	position:absolute;
+	left:128px;
+}
+
+div.test-3 {
+	position:absolute;
+	left:192px;
 }
 
 
-div.test-renderer:hover {
+div.test-renderer-block:hover {
 	cursor: pointer;
 	background-color: #7700FF;
-    -webkit-transform: scale(2) rotate(-180deg);
-       -moz-transform: scale(2) rotate(-180deg);
-        -ms-transform: scale(2) rotate(-180deg);
-            transform: scale(2) rotate(-180deg);
+    -webkit-transform: scale(1.1666) rotate(-90deg);
+       -moz-transform: scale(1.1666) rotate(-90deg);
+        -ms-transform: scale(1.1666) rotate(-90deg);
+            transform: scale(1.1666) rotate(-90deg);
 }
 
 
-
-div.test-renderer:active {
+div.test-renderer-block:active {
 	cursor: pointer;
 	background-color: #2288FF;
-	-webkit-transform: scale(4) rotate(180deg);
-       -moz-transform: scale(4) rotate(180deg);
-        -ms-transform: scale(4) rotate(180deg);
-            transform: scale(4) rotate(180deg);
+	-webkit-transform: scale(1.333) rotate(90deg);
+       -moz-transform: scale(1.333) rotate(90deg);
+        -ms-transform: scale(1.333) rotate(90deg);
+            transform: scale(1.333) rotate(90deg);
 }

@@ -5,7 +5,7 @@
     width:257px;
     height:257px;
     pointer-events: none;
-    z-index: 999;
+    z-index: 9999;
     border: 1px solid rgba(255, 255, 255, .5);
     -webkit-box-shadow: 0 0 10px #ccc;
        -moz-box-shadow: 0 0 10px #ccc;      
@@ -21,6 +21,7 @@
     top: calc(50% - 25px);
     height:50px;
     width:20px;
+    z-index: 9999;
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition: -moz-transform .1s ease-in-out;
             transition: transform .1s ease-in-out;
@@ -54,6 +55,7 @@
     width:10px;
     height:10px;
     margin: 4px;
+    z-index: 9999;
     -webkit-transition: -webkit-transform .1s ease-in-out;
 }
 

@@ -69,7 +69,7 @@ define(function (require) {
 				id: this.id,
                 options: {
                     controls: [
-                        new OpenLayers.Control.Navigation({documentDrag: true}),
+                        new OpenLayers.Control.Navigation({ documentDrag: true }),
                         new OpenLayers.Control.Zoom()
                     ]
                 }
@@ -100,6 +100,41 @@ define(function (require) {
         getElement:  function() {
             return $("#" + this.id);
         },
+
+
+        getEventHandlingDOMElement: function() {
+            return $('.olMapViewport')[0];
+        },
+
+
+        /**
+         * Allows the given DOMElement or jQuery object events to propagate through
+         * and interact with the underlying Map
+         */
+        enableEventToMapPropagation: function( elem ) {
+
+            var //that = this,
+                domElement = (elem instanceof jQuery) ? elem[0] : elem;
+
+            function propagateEvent( event ) {
+                var newEvent = new event.constructor(event.type, event),
+                    below;
+                $(elem).css('pointer-events', 'none');
+                below =  document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
+                if (below) {
+                    below.dispatchEvent(newEvent);
+                }
+                $(elem).css('pointer-events', 'all');
+            }
+
+            domElement.onmousedown = propagateEvent;
+            domElement.onmouseup = propagateEvent;
+            domElement.onmousemove = propagateEvent;
+            domElement.onwheel = propagateEvent;
+            domElement.onmousewheel = propagateEvent;
+            domElement.onscroll = propagateEvent;
+        },
+
 
 		setAxisSpecs: function (axes) {
 

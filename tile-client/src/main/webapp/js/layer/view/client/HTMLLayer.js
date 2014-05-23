@@ -236,6 +236,12 @@ define(function (require) {
         updateNode: function( node ) {
 
             var html;
+
+            if (node.redraw === undefined) {
+                // node does not need to be redrawn
+                return;
+            }
+
             // clear out root container
             if (node.$elem) {
                 node.$elem.remove();
@@ -246,6 +252,11 @@ define(function (require) {
             node.$elem = $(html);
             node.$elem.css( this.evalCss(node) );
             node.$parent.append( node.$elem );
+            // allow events to propagate through to map
+            this.map_.enableEventToMapPropagation( node.$elem );
+
+            delete node.redraw;
+
         },
 
 
@@ -258,7 +269,6 @@ define(function (require) {
                 this.parent_.onMapUpdate();
                 return;
             }
-
 
             // only root will execute the following code
             pos = this.map_.getViewportPixelFromMapPixel( 0, this.map_.getMapHeight() );
@@ -290,6 +300,93 @@ define(function (require) {
          * chain of updates throughout entire hierarchy
          */
         all: function( data ) {
+
+            var i,
+                key,
+                index,
+                node,
+                defunctNodesById = {},
+                defunctNodesArray = [],
+                newData = [],
+                exists;
+
+            if (this.parent_) {
+                return this.parent_.all(data);
+            }
+
+            // keep list of current nodes, to track which ones are not in the new set
+            for (i=0; i<this.nodes_.length; ++i) {
+                if (this.idKey_) {
+                    key = this.nodes_[i].data[this.idKey_];
+                    defunctNodesById[ key ] = true;
+                } else {
+                    defunctNodesArray.push( this.findNodeFromData( this.nodes_[i] ) );
+                }
+            }
+
+            // only root will execute the following code
+            for (i=0; i<data.length; i++) {
+
+                if (this.idKey_) {
+                    // if id attribute is specified, use that to check duplicates
+                    key = data[i][this.idKey_];
+                    exists = this.nodesById_[key] !== undefined;
+                } else {
+                    // otherwise test object reference
+                    exists = this.doesNodeExist( data[i] );
+                }
+
+                if ( exists ) {
+                    // remove from tracking list
+                    if (this.idKey_) {
+                        delete defunctNodesById[ key ];
+                    } else {
+                        defunctNodesArray.splice(i, 1);
+                    }
+                } else {
+                    // new data
+                    newData.push(data[i]);
+                }
+            }
+
+            // destroy and remove all remaining nodes
+            if (this.idKey_) {
+                // id is specified
+                for (key in defunctNodesById) {
+                    if (defunctNodesById.hasOwnProperty(key)) {
+                        // remove from array
+                        index = this.nodes_.indexOf( this.nodesById_[key] );
+                        this.nodes_.splice(index, 1);
+                        // destroy and delete from map
+                        this.destroyNode( this.nodesById_[key] );
+                        delete this.nodesById_[key];
+                    }
+                }
+            } else {
+                // no id specified
+                for (i=0; i<defunctNodesArray.length; i++) {
+                    // remove from array
+                    index = this.nodes_.indexOf( defunctNodesArray[i] );
+                    this.destroyNode( this.nodes_[index] );
+                    this.nodes_.splice(index, 1);
+                }
+            }
+
+            // create nodes for new data
+            for (i=0; i<newData.length; i++) {
+                node = this.createNode(newData[i]);
+                node.redraw = true;
+                this.nodes_.push( node );
+                if (this.idKey_) {
+                    key = newData[i][this.idKey_];
+                    this.nodesById_[key] = node;
+                }
+            }
+
+            this.update();
+            return this;
+
+            /*
             var i,
                 node,
                 key;
@@ -312,6 +409,7 @@ define(function (require) {
                 }
             }
             this.update();
+            */
         },
 
         /**
@@ -326,8 +424,7 @@ define(function (require) {
                 exists;
 
             if (this.parent_) {
-                this.parent_.union(data);
-                return;
+                return this.parent_.union(data);
             }
 
             // only root will execute the following code
@@ -336,7 +433,7 @@ define(function (require) {
                 if (this.idKey_) {
                     // if id attribute is specified, use that to check duplicates
                     key = data[i][this.idKey_];
-                    exists = this.ids_[key] !== undefined;
+                    exists = this.nodesById_[key] !== undefined;
                 } else {
                     // otherwise test object reference
                     exists = this.doesNodeExist( data[i] );
@@ -354,6 +451,7 @@ define(function (require) {
                 }
             }
             this.update();
+            return this;
         },
 
 
@@ -367,8 +465,7 @@ define(function (require) {
                 exists;
 
             if (this.parent_) {
-                this.parent_.union(data);
-                return;
+                return this.parent_.union(data);
             }
 
             // keep list of current nodes, to track which ones are not in the new set
@@ -389,7 +486,7 @@ define(function (require) {
                 if (this.idKey_) {
                     // if id attribute is specified, use that to check duplicates
                     key = data[i][this.idKey_];
-                    exists = this.ids_[key] !== undefined;
+                    exists = this.nodesById_[key] !== undefined;
                 } else {
                     // otherwise test object reference
                     exists = this.doesNodeExist( data[i] );

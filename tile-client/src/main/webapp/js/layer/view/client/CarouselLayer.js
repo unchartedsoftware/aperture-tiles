@@ -142,6 +142,10 @@ define(function (require) {
             this.$rightChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_RIGHT+"'></div>");
             this.$rightChevron.click( function() { incIndex(1); return true; });
             this.$outline.append(this.$rightChevron);
+
+            this.map.enableEventToMapPropagation( this.$leftChevron );
+            this.map.enableEventToMapPropagation( this.$rightChevron );
+
         },
 
 
@@ -175,7 +179,8 @@ define(function (require) {
 
                 this.$dots[i] = $("<div id='" + this.DOT_ID_PREFIX +i+"' class='" + this.DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
                 this.$dots[i].click( generateDotCallback(i) );
-                $indexContainer.append(this.$dots[i] );
+                $indexContainer.append( this.$dots[i] );
+                this.map.enableEventToMapPropagation( this.$dots[i] );
             }
             $indexContainer.css('left', this.map.getTileSize()/2 - $indexContainer.width()/2 );
         },
