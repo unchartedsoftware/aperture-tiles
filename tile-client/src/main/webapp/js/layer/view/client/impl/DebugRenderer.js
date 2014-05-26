@@ -41,6 +41,7 @@ define(function (require) {
 	
     var ClientRenderer = require('../ClientRenderer'),
         HtmlLayer = require('../HtmlLayer'),
+        ClientNodeLayer = require('../ClientNodeLayer'),
         DebugRenderer;
 
 		
@@ -50,16 +51,15 @@ define(function (require) {
 		
         init: function (map) {
             this._super(map);
-            this.createLayer();
-        },
 
-        createLayer: function() {
-
-            this.layer = new HtmlLayer({
+            this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
-                idKey: 'tilekey',
+                idKey: 'tilekey'
+            });
+
+            this.nodeLayer.addLayer( new HtmlLayer({
                 html: function () {
                     return '<div>' + this.tilekey + '</div>';
                 },
@@ -70,12 +70,12 @@ define(function (require) {
                     top: '230px',
                     'z-index' : 1000
                 }
-            });
+            }));
 
         },
 
-        redraw: function(data) {
-            this.layer.all(data);
+        redraw: function( allData, tilekeys ) {
+            this.nodeLayer.all( allData ).where( tilekeys ).redraw();
         }
 
     });

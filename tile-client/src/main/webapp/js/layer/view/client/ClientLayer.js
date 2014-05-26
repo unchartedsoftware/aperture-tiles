@@ -75,7 +75,6 @@ define(function (require) {
                 that.map.on('click', function() {
 					// if click event has not been swallowed yet, clear mouse state and redraw
 					that.clientState.clearClickState();
-                    that.updateAndRedrawViews();
 				});
 
                 that.map.on('zoomend', function() {
@@ -160,22 +159,8 @@ define(function (require) {
 
             // map tile to new view
             this.tileViewMap[tilekey] = newViewIndex;
-
-            if (oldView.getLayerId() === newView.getLayerId()) {
-                // if both views share the same type of data source, swap tile data
-                oldView.swapTileWith(newView, tilekey);
-                // redraw immediately
-                this.updateAndRedrawViews();
-
-            } else {
-                // otherwise release and request new data
-                if (tilekey === this.clientState.clickState.tilekey) {
-                    // if same tile as clicked tile, un-select elements from this view
-                    this.clientState.clearClickState();
-                }
-                oldView.releaseTile( tilekey );
-                newView.requestTile( tilekey, $.proxy(this.updateAndRedrawViews, this));
-            }
+            // swap tile between views
+            oldView.swapTileWith(newView, tilekey);
         },
 
 
@@ -188,9 +173,10 @@ define(function (require) {
             var i,
                 tiles,
                 viewIndex,
-                tilesByView = [];
+                tilesByView = [],
+                tileViewBounds;
 
-            if (this.views === undefined || this.views.length === 0) {
+            if (this.views.length === 0) {
                 return;
             }
 
@@ -200,36 +186,21 @@ define(function (require) {
 
             // determine all tiles in view
             tiles = this.map.getTilesInView();
+            tileViewBounds = this.map.getTileBoundsInView();
 
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
-                viewIndex = this.getTileViewIndex(tiles[i].level+','+
-                                                  tiles[i].xIndex+','+
-                                                  tiles[i].yIndex);
-                tilesByView[viewIndex].push(tiles[i]);
+                viewIndex = this.getTileViewIndex( tiles[i].level+','+
+                                                   tiles[i].xIndex+','+
+                                                   tiles[i].yIndex );
+                tilesByView[viewIndex].push( tiles[i] );
             }
 
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].filterAndRequestTiles(tilesByView[i],
-                                                    this.map.getTileBoundsInView(),
-                                                    $.proxy(this.updateAndRedrawViews, this));
-            }
-        },
-
-
-        /**
-         * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
-         * the layers
-         */
-        updateAndRedrawViews: function( tilekey ) {
-
-            var i;
-            for (i=0; i< this.views.length || i< 1; i++ ) {
-                this.views[i].redraw( tilekey );
+                this.views[i].updateTiles( tilesByView[i], tileViewBounds );
             }
         }
-
 
      });
 

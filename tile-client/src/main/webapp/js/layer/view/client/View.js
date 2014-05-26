@@ -70,19 +70,15 @@ define(function (require) {
          * @param visibleTiles an array of all visible tiles that will need to be displayed
          * @param callback tile receive callback function
          */
-        filterAndRequestTiles: function(visibleTiles, tileSetBounds, callback) {
+        updateTiles: function( visibleTiles, tileSetBounds ) {
 
             var activeTiles = [],
                 defunctTiles = {},
                 neededTiles = [],
                 i, tile, tileKey;
 
-            // Copy out all keys from the current data.  As we go through
-            // making new requests, we won't bother with tiles we've
-            // already received, but we'll remove them from the defunct
-            // list.  When we're done requesting data, we'll then know
-            // which tiles are defunct, and can be removed from the data
-            // set.
+            // keep track of current tiles to ensure we know
+            // which ones no longer exist
             for (i=0; i<this.tiles.length; ++i) {
                 defunctTiles[this.tiles[i]] = true;
             }
@@ -112,48 +108,71 @@ define(function (require) {
                 }
             }
             // Request needed tiles from dataService
-            this.dataService.requestData(neededTiles, tileSetBounds, callback);
+            this.dataService.requestData( neededTiles, tileSetBounds, $.proxy( this.redraw, this) );
         },
 
 
-        swapTileWith: function (otherTracker, tilekey) {
-            otherTracker.tiles.push(tilekey);
-            otherTracker.dataService.data[tilekey] = this.dataService.data[tilekey];
+        swapTileWith: function( newView, tilekey ) {
 
-            this.tiles.splice(this.tiles.indexOf(tilekey), 1);
-            this.dataService.releaseData(tilekey);
+            if ( this.getLayerId() === newView.getLayerId() ) {
+
+                // if both views share the same type of data source, swap tile data
+                // give tile to new view
+                newView.giveTile( tilekey,this.dataService.data[tilekey] );
+                newView.redraw( tilekey );
+
+            } else {
+                // otherwise release and request new data
+                if (tilekey === this.renderer.clientState.clickState.tilekey) {
+                    // if same tile as clicked tile, un-select elements from this view
+                    this.renderer.clientState.clearClickState();
+                }
+                newView.requestTile( tilekey );
+            }
+            this.releaseTile( tilekey ); // release tile from this view
+            this.redraw( tilekey );      // redraw tile
+
         },
 
 
         releaseTile: function(tilekey) {
 
             if (this.tiles.indexOf(tilekey) === -1) {
-                // this tracker does not have requested tile, this function should not
+                // this view does not have requested tile, this function should not
                 // have been called, return
                 return;
             }
-            // remove tile from tracked list
-            this.tiles.splice(this.tiles.indexOf(tilekey), 1);
-            // release data
-            this.dataService.releaseData(tilekey);
+            this.tiles.splice(this.tiles.indexOf(tilekey), 1); // remove tile from tracked list
+            this.dataService.releaseData(tilekey); // release data
         },
 
 
         requestTile: function(tilekey, callback) {
-            if (this.tiles.indexOf(tilekey) === -1) {
-                this.tiles.push(tilekey);
+
+            if (this.tiles.indexOf(tilekey) !== -1) {
+                // this view already has the requested tile, this function should not
+                // have been called, return
+                return;
             }
-            this.dataService.requestData([tilekey], {}, callback);
+            this.tiles.push(tilekey); // add tile
+            this.dataService.requestData( [tilekey], {}, $.proxy( this.redraw, this ) ); // request data
         },
 
 
-        getTileData: function(tilekey) {
-            return this.dataService.data[tilekey];
+        giveTile: function( tilekey, data ) {
+
+            if (this.tiles.indexOf(tilekey) !== -1) {
+                // this view already has the gifted tile, this function should not
+                // have been called, return
+                return;
+            }
+            this.tiles.push(tilekey); // add tile
+            this.dataService.data[tilekey] = data; // set data
         },
 
 
-        redraw: function( tilekey ) {
-            this.renderer.redraw( this.getDataArray() );
+        redraw: function( tilekeys ) {
+            this.renderer.redraw( this.getDataArray(), tilekeys );
         },
 
 
@@ -162,19 +181,12 @@ define(function (require) {
          */
         getDataArray: function ( tilekeys ) {
 
-            var data;
-            // if tilekeys are specified, return those
-            if ( tilekeys !== undefined ) {
-                if ( !$.isArray( tilekeys ) ) {
-                    // only one tilekey specified, wrap in array
-                    tilekeys = [tilekeys];
-                }
-                data =  this.dataService.getDataArray(tilekeys);
-            } else {
-                // otherwise, return all tiles currently tracked
-                data =  this.dataService.getDataArray(this.tiles);
+            if (tilekeys === undefined) {
+                tilekeys = this.tiles;
+            } else if ( !$.isArray( tilekeys ) ) {
+                tilekeys = [tilekeys];
             }
-            return data;
+            return this.dataService.getDataArray(tilekeys);
         },
 
 
@@ -183,20 +195,12 @@ define(function (require) {
          */
         getDataObject: function ( tilekeys ) {
 
-            var data;
-            // if tilekeys are specified, return those
-            if ( tilekeys !== undefined ) {
-                if ( !$.isArray( tilekeys ) ) {
-                    // only one tilekey specified, wrap in array
-                    tilekeys = [tilekeys];
-                }
-                data = this.dataService.getDataObject(tilekeys);
-            } else {
-                // otherwise, return all tiles currently tracked
-                data = this.dataService.getDataObject(this.tiles);
+            if (tilekeys === undefined) {
+                tilekeys = this.tiles;
+            } else if ( !$.isArray( tilekeys ) ) {
+                tilekeys = [tilekeys];
             }
-            return data;
-
+            return this.dataService.getDataObject(tilekeys);
         }
 
     });

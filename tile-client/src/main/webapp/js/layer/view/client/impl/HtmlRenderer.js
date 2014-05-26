@@ -37,6 +37,7 @@ define(function (require) {
 
     var ClientRenderer = require('../ClientRenderer'),
         HtmlLayer = require('../HtmlLayer'),
+        ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlRenderer;
 
 
@@ -52,104 +53,118 @@ define(function (require) {
 
             this._super(map);
 
-            this.layers = [];
-
-            this.layers.push( new HtmlLayer({
+            this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
-                idKey: 'tilekey',
-                html: '<div class="test-renderer">'
+                idKey: 'tilekey'
+            });
 
-                      +'<div class="test-0">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+            function getCount(data) {
+                return Math.min( data.bin.value.length, 5 );
+            }
 
-                      +'<div class="test-1">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+            function getTotalCount(data, index) {
+                var i,
+                    sum = 0,
+                    n = getCount(data);
+                for (i=0; i<n; i++) {
+                    sum += data.bin.value[i].count;
+                }
+                return sum;
+            }
 
-                      +'<div class="test-2">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+            function getTotalCountPercentage(data, index) {
+                var i,
+                    sum = 0,
+                    n = getCount(data);
+                for (i=0; i<n; i++) {
+                    sum += data.bin.value[i].count;
+                }
+                return (data.bin.value[index].count/sum) || 0;
+            }
 
-                      +'<div class="test-3">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+            function getFontSize( data, index ) {
+                var MAX_FONT_SIZE = 48,
+                    MIN_FONT_SIZE = 32,
+                    FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
+                    sum = getTotalCount(data, index),
+                    perc = getTotalCountPercentage(data, index),
+                    scale = Math.log(sum),
+                    size = ( perc * FONT_RANGE * scale) + (MIN_FONT_SIZE * perc);
 
-                      +'<div class="test-4">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+                return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
+            }
 
-                      +'<div class="test-5">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+            function getYOffset(data, index) {
+                return 108 - 36 * (((getCount(data) - 1) / 2) - index);
+            }
 
-                      +'<div class="test-6">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+            this.nodeLayer.addLayer( new HtmlLayer({
 
-                      +'<div class="test-7">'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'<div class="test-renderer-block"></div>'
-                      +'</div>'
+                html: function() {
 
-                      +'</div>',
+                    /*
+                    var html,
+                        $html = '<div></div>',
+                        $bar,
+                        $label,
+                        i,
+                        count = getCount( this );
+
+                    for (i=0; i<count; i++) {
+
+                        // bar
+                        html = '<div class="sentiment-bars"';
+                        html += 'style=" position:absolute; top:' +  (getYOffset(i) + 40) + 'px;';
+                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
+                        html += "</div>";
+
+                        $bar = $(html);
+
+                        // label
+                        html = '<div class="sentiment-labels"';
+                        html += 'style=" position:absolute; top:' +  getYOffset(i) + 'px;';
+                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
+                        html += this.bin.value[i].tag;
+                        html += "</div>";
+
+                        $label = $(html);
+
+                        $bar.hover( function() {
+                            $bar.addClass('hover');
+                            $label.addClass('hover');
+                        }, function() {
+                            $bar.removeClass('hover');
+                            $label.removeClass('hover');
+                        });
+                    }
+                    */
+
+
+                    var html = '',
+                        i,
+                        count = getCount( this );
+
+                    for (i=0; i<count; i++) {
+
+                        html += '<div class="sentiment-bars"';
+                        html += 'style=" position:absolute; top:' +  (getYOffset(this, i) + 40) + 'px;';
+                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
+                        html += "</div>";
+                    }
+
+                    for (i=0; i<count; i++) {
+                        html += '<div class="sentiment-labels"';
+                        html += 'style=" position:absolute; top:' +  getYOffset(this, i) + 'px;';
+                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
+                        html += this.bin.value[i].tag;
+                        html += "</div>";
+                    }
+
+                    return html;
+
+                },
                 css: {
                     'z-index' : 1000
                 }
@@ -157,11 +172,9 @@ define(function (require) {
 
         },
 
-        redraw: function( data ) {
-            var i;
-            for (i=0; i< this.layers.length; i++) {
-                this.layers[i].all(data);
-            }
+        redraw: function( allData, tilekeys ) {
+
+            this.nodeLayer.all( allData ).where( tilekeys ).redraw();
         }
 
 

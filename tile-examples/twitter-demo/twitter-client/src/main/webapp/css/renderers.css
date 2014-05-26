@@ -1,80 +1,60 @@
 
 
-div.test-renderer {
-	position:relative;
+.sentiment-labels {
+	text-align: center;
+	width: 200px;
+	overflow:hidden;
+	left: 28px;
+	font-size: 2em;
+	color: #FFFFFF;
+	text-shadow:
+    -2px -2px 1px #000,
+    2px -2px 1px #000,
+    -2px 2px 1px #000,
+    2px 2px 1px #000; 
+	-webkit-transform: scale(0.667);
+       -moz-transform: scale(0.667);
+        -ms-transform: scale(0.667);
+            transform: scale(0.667);
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
 }
 
 
-div.test-renderer-block {
-	position:relative;
-	background-color: #22FFAA;
-	opacity: 0.5;
-	margin: 5px 0 0 5px;
-	width: 27px;
-	height: 27px;
-	-webkit-transition: -webkit-transform 0.2s ease-in-out;
-       -moz-transition:    -moz-transform 0.2s ease-in-out;
-       	-ms-transition:     -ms-transform 0.2s ease-in-out;
-            transition:         transform 0.2s ease-in-out;
-}
-
-div.test-0 {
-	position:absolute;
-	left:0px;
-}
-
-div.test-1 {
-	position:absolute;
-	left:32px;
-}
-
-div.test-2 {
-	position:absolute;
-	left:64px;
-}
-
-div.test-3 {
-	position:absolute;
-	left:96px;
-}
-
-div.test-4 {
-	position:absolute;
-	left:128px;
-}
-
-div.test-5 {
-	position:absolute;
-	left:160px;
-}
-
-div.test-6 {
-	position:absolute;
-	left:192px;
-}
-
-div.test-7 {
-	position:absolute;
-	left:224px;
+.sentiment-labels:hover {
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
 }
 
 
-div.test-renderer-block:hover {
-	cursor: pointer;
-	background-color: #7700FF;
-    -webkit-transform: scale(1.5) rotate(-90deg);
-       -moz-transform: scale(1.5) rotate(-90deg);
-        -ms-transform: scale(1.5) rotate(-90deg);
-            transform: scale(1.5) rotate(-90deg);
+.sentiment-bars {
+	width: 150px;
+	height: 9px;
+	left: 53px;
+	border: 2px solid #000000;
+	background-color: #FFFFFF;
+	-webkit-transform: scale(0.667);
+       -moz-transform: scale(0.667);
+        -ms-transform: scale(0.667);
+            transform: scale(0.667);
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
 }
 
 
-div.test-renderer-block:active {
-	cursor: pointer;
-	background-color: #2288FF;
-	-webkit-transform: scale(1.9) rotate(90deg);
-       -moz-transform: scale(1.9) rotate(90deg);
-        -ms-transform: scale(1.9) rotate(90deg);
-            transform: scale(1.9) rotate(90deg);
+.sentiment-bars:hover {
+	
+	left: 53px;
+	background-color: #09CFFF;
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
 }
 
