@@ -146,9 +146,14 @@ public class LayerServiceImpl implements LayerService {
         List<JSONObject> rendererConfigs = info.getRendererConfigurations();
         JSONObject rendererConfig = null;
         if (0 == rendererConfigs.size()) {
-            throw new IllegalArgumentException("No configurations found for layer "+layerId);
-        }
-        if (1 == rendererConfigs.size()) {
+        	// Default to client rendering if none specified.
+            LOGGER.info("No renderer configuration found for layer " + layerId + ".  Defaulting to client.");
+            try {
+				rendererConfig = new JSONObject().put("domain", "client");
+			} catch (JSONException e) {
+				LOGGER.error("Malformed default renderer config", e);
+			}
+        } else if (1 == rendererConfigs.size()) {
             // Only one possible base configuration (the usual case, at the moment)
             rendererConfig = rendererConfigs.get(0);
         } else if (null == rendererType) {

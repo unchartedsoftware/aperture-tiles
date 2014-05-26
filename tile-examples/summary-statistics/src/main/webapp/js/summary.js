@@ -32,10 +32,8 @@
         AvailableLayersTracker = require('./layer/AllLayers'),
         Map = require('./map/Map'),
         UIMediator = require('./layer/controller/UIMediator'),
-        //ClientLayerFactory = require('./layer/view/client/ClientLayerFactory'),
         ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
-        LayerControls = require('./layer/controller/LayerControls'),
-        maps = [];
+        LayerControls = require('./layer/controller/LayerControls');
 
     return function(summaryBuilderOptions) {
 
@@ -49,24 +47,24 @@
                 plotMap : {},
                 tocVisible : true
             },
-            datasetLowerCase = summaryBuilderOptions.dataset.toLowerCase();
+            datasetLowerCase = summaryBuilderOptions.dataset ? summaryBuilderOptions.dataset.toLowerCase() : null;
 
         var makeSafeIdForJQuery = function (inputString){
             return inputString.replace(/\./g, '_dot_');
         };
 
         // Clear the layer control of all checkboxes.
-        var resetLayerControl = function(){
+        /*var resetLayerControl = function(){
             var layerControl = $("div[id='layer-control']");
             layerControl.empty();
-        };
+        };*/
 
-        var resetLegend = function(tabLayerId){
+        /*var resetLegend = function(tabLayerId){
             var dataPlot = _summaryState.plotMap[tabLayerId];
             if (dataPlot != null){
                 dataPlot.updateLegend();
             }
-        };
+        };*/
 
         // Create the layerId by concatenating the layer names together;
         var getTabLayerId = function(id){
@@ -85,30 +83,23 @@
             var tabLayerId = null;
             console.log("construct plot fired");
             if (event.type == 'tabsbeforeactivate'){
-                //console.log("tabsbeforeactivate*********");
-                // Clear the layer control (if present)
-                //resetLayerControl();
-                
+
                 // Check if this is from a tab switch.
                 var panelId = ui.newPanel.attr('id');
                 if (ui.newTab.text() != _summaryState.tabLabel && panelId.indexOf('tab-plot-') < 0){
                    return;
                 }
                 if (panelId == 'tabs-plots'){
-                	$('#tabs-plots').tabs({active: 1});
-                    var activeTabId = $('#tabs-plots').tabs('option', 'active');
+
+                	var $tabs = $('#tabs-plots').tabs({active: true});
+                    var activeTabId = $tabs.tabs('option', 'active');
                     tabLayerId =  _summaryState.tabLayerMap[activeTabId];
                 }
                 else {
                     tabLayerId = panelId.replace('tab-plot-', '');
                 }
-                //console.log('activate: ' + tabLayerId);
-                // Reset the legend.
-                //resetLegend(tabLayerId);
-
             }
             else if (event.type == 'tabscreate'){
-               // console.log("tabscreate*********");
                 tabLayerId = ui.panel.attr('id').replace('tab-plot-', '');
             }
             if (!_summaryState.layerInfoMap[tabLayerId]){
@@ -183,10 +174,6 @@
                     console.log("is baseLayer");
                     options.baseLayer = _summaryState.layerInfoMap[tabLayerId].baseLayer;
                 }
-
-                //var dataPlot = new XDataMap(options);
-                //dataPlot.start(null);
-                //_summaryState.plotMap[tabLayerId] = dataPlot;
             }
             else {
                 console.log("else createLayerControl");
@@ -196,7 +183,6 @@
 
         $( "#tabs-major").tabs({
             beforeActivate : function(event, ui){
-                //console.log("beforeActivate construct plot");
                 constructPlot(event, ui);
             }
         });
@@ -494,11 +480,9 @@
                     //iterate over each of the cross plots, generate the map, and container div
                     $.each(maps, function (pk, pv) {
                         // Initialize our maps...
-                        var mapID = pv["id"],
-                            tabLayerId = getTabLayerId(pv["id"]),
+                        var tabLayerId = getTabLayerId(pv["id"]),
                             layer = getLayer(layers, pv["id"]),
                             mapConfig = getMapConfig(maps, pv["id"]);
-
 
                         //something is wrong with the map
                         if (typeof mapConfig === 'undefined') {
@@ -522,15 +506,15 @@
                         if(layer) {
                             $plotVisual.append(getMap(plotDiv, mapConfig, layer));
                         }
-                        //pv.plotDiv = plotDiv;
                     });
 
                     $('#tabs-plots ul').each(function () {
                         var $active, $content, $links = $(this).find('a');
                         $active = $($links.filter('[href="' + location.hash + '"]')[0] || $links[0]);
                         $active.addClass('active');
-
-                        $content = $($active[0].hash);
+                        if($active[0]) {
+                            $content = $($active[0].hash);
+                        }
 
                         // Hide the remaining content
                         $links.not($active).each(function () {
@@ -557,10 +541,6 @@
                     });
                 });
             });
-            onComplete();
-            //})
-            //.error(function(jqXHR, textStatus, errorThrown){
-            //    console.error("Error reading summary JSON at " + jsonFile + ": " + errorThrown );
         };
 
         var getMapConfig = function(maps, mapID){
@@ -568,12 +548,9 @@
                 i,
                 length = maps.length,
                 mapConfig;
-            //mapID = mapID.replace(datasetLowerCase,'').trim();
 
             for(i=0; i<length; i++){
                 if (maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase) != -1){
-                    //var idx = maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase);
-                    //maps[i].id = maps[i].id.replace(datasetLowerCase,'').trim();
                     result.push(maps[i]);
                 }
             }
@@ -620,17 +597,15 @@
              // ... (set up our map axes) ...
              worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
-            //if(mapConfig.id !== 'Geographic-Google-Map') {
-                layerConfig = [
-                    {
-                        "layer": layer["id"],
-                        "domain": layer.renderers[0].domain,
-                        "name": layer.name,
-                        "renderer": layer.renderers[0].renderer,
-                        "transform": layer.renderers[0].transform
-                    }
-                ];
-
+            layerConfig = [
+                {
+                    "layer": layer["id"],
+                    "domain": layer.renderers[0].domain,
+                    "name": layer.name,
+                    "renderer": layer.renderers[0].renderer,
+                    "transform": layer.renderers[0].transform
+                }
+            ];
 
              uiMediator = new UIMediator();
 
@@ -639,10 +614,7 @@
              ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
 
              new LayerControls().initialize( uiMediator.getLayerStateMap() );
-            }
-             // Trigger the initial resize event to resize everything
-             //$(window).resize();
-        //};
+        };
 
         this.start = function(){
 
