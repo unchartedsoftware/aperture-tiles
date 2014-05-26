@@ -29,25 +29,27 @@
     	PlotLink = require('./plotlink'),
         MapService = require('./map/MapService'),
         LayerService = require('./layer/LayerService'),
+        AvailableLayersTracker = require('./layer/AllLayers'),
         Map = require('./map/Map'),
-        uiMediator = require('./layer/controller/UIMediator'),
+        UIMediator = require('./layer/controller/UIMediator'),
+        //ClientLayerFactory = require('./layer/view/client/ClientLayerFactory'),
+        ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
+        LayerControls = require('./layer/controller/LayerControls'),
         maps = [];
-
-
 
     return function(summaryBuilderOptions) {
 
-        var _densityStrips = [];
-
-        var _summaryState = {
-            tabLayerMap : {},
-            layerInfoMap : {},
-            tabLabel : 'Cross Plots',
-            plot : {},
-            charLimitCount : 40,
-            plotMap : {},
-            tocVisible : true
-        };
+        var _densityStrips = [],
+            _summaryState = {
+                tabLayerMap : {},
+                layerInfoMap : {},
+                tabLabel : 'Cross Plots',
+                plot : {},
+                charLimitCount : 40,
+                plotMap : {},
+                tocVisible : true
+            },
+            datasetLowerCase = summaryBuilderOptions.dataset.toLowerCase();
 
         var makeSafeIdForJQuery = function (inputString){
             return inputString.replace(/\./g, '_dot_');
@@ -484,66 +486,42 @@
         };
 
         var generateJsonPlots = function(onComplete){
-            var datasetLowerCase = summaryBuilderOptions.dataset.toLowerCase(),
-                jsonLayersFile ='../classes/layers/' + datasetLowerCase + '-layers.json',
-                mapConfigs = {};
-
-            /*LayerService.requestLayers(function(layers){
-                var layer = $.each(layers, function(pk, pv){
-                    if(pv.id === datasetLowerCase){
-                        var count = pv.children.length,
-                            idx;
-                        for(idx = 0; idx<count; idx++){
-                            mapConfigs[datasetLowerCase + ' ' + pv.children[idx].name.toLowerCase()] = pv.children[idx];
-                        }
-                    }
-                });*/
-            //});
-            //$.getJSON(jsonLayersFile, function (layers) {
-                //console.log(layers);
+            AvailableLayersTracker.requestLayers(function (layers) {
                 MapService.requestMaps(function (maps) {
-                    // For now, just use the first map
                     var mapConfig,
                         plotId = 0;
+
+                    //iterate over each of the cross plots, generate the map, and container div
                     $.each(maps, function (pk, pv) {
                         // Initialize our maps...
                         var mapID = pv["id"],
-                            tabLayerId = getTabLayerId(mapID),
-                            mapConfig;
+                            tabLayerId = getTabLayerId(pv["id"]),
+                            layer = getLayer(layers, pv["id"]),
+                            mapConfig = getMapConfig(maps, pv["id"]);
 
-                        $.each(maps, function(sk, sv){
-                            if(sv.id === mapID) {
-                                mapConfig = sv;
-                            }
-                        });
 
                         //something is wrong with the map
-                        if(typeof mapConfig === 'undefined'){
+                        if (typeof mapConfig === 'undefined') {
                             return;
                         }
-                        //mapConfig['PyramidConfig'] = mapConfigs[mapID].pyramid;
-                        //mapConfig['MapConfig'] = '';
-
-                        // Cache the tab id for this layer.
-                        //_summaryState.tabLayerMap[plotId] = tabLayerId;
-                        //_summaryState.layerInfoMap[tabLayerId] = pv;
 
                         plotId++;
                         var plotTabDiv = "tab-plot-" + tabLayerId;
                         var plotDiv = "plot-" + tabLayerId;
 
-                        $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID + '</a></li>');
+                        $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + pv["id"].replace(datasetLowerCase,'').trim() + '</a></li>');
                         var $plotTab = $('<div id="' + plotTabDiv + '">');
                         var $plotVisual = $('<div id="' + plotDiv + '"></div>');
 
                         $plotVisual.addClass('plot-parent plot plot-size'); // plot in crossplot.css
                         $plotVisual.css({width: "100%", height: "100%"});
-
-                        $plotVisual.append(getMap(plotDiv, mapConfig));
                         $plotTab.append($plotVisual);
-
                         $('#tabs-plots').append($plotTab);
 
+                        //add map after the containing div has been added
+                        if(layer) {
+                            $plotVisual.append(getMap(plotDiv, mapConfig, layer));
+                        }
                         //pv.plotDiv = plotDiv;
                     });
 
@@ -578,33 +556,93 @@
                         });
                     });
                 });
-            //});
+            });
             onComplete();
             //})
             //.error(function(jqXHR, textStatus, errorThrown){
             //    console.error("Error reading summary JSON at " + jsonFile + ": " + errorThrown );
         };
 
-        var getMap = function(mapID, mapConfig){
+        var getMapConfig = function(maps, mapID){
+            var result = [],
+                i,
+                length = maps.length,
+                mapConfig;
+            //mapID = mapID.replace(datasetLowerCase,'').trim();
 
-             var worldMap = new Map(mapID, mapConfig);
-            //mapID should be the div of the container
+            for(i=0; i<length; i++){
+                if (maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase) != -1){
+                    //var idx = maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase);
+                    //maps[i].id = maps[i].id.replace(datasetLowerCase,'').trim();
+                    result.push(maps[i]);
+                }
+            }
+
+            $.each(result, function (pk, pv) {
+                if (pv.id === mapID) {
+                    mapConfig = pv;
+                }
+            });
+
+            return mapConfig;
+        };
+
+        var getLayer = function(layers, mapID){
+            var layerArray,
+                layer;
+
+            mapID = mapID.toLowerCase();
+
+            //find the right collection of layers
+            $.each(layers, function(pk, pv){
+                if (pv.id === datasetLowerCase) {
+                    layerArray = pv;
+                }
+            });
+
+            if(layerArray) {
+                $.each(layerArray.children, function (pk, pv) {
+                    //if mapID contains pv.name
+                    var name = pv.name.toLowerCase().trim();
+                    if (mapID.indexOf(name) != -1)
+                        layer = pv;
+                });
+            }
+            //the dataset didn't exist in the layers array if layer is undefined;
+            return layer;
+        };
+
+        var getMap = function(mapID, mapConfig, layer){
+             var worldMap = new Map(mapID, mapConfig),
+                 uiMediator,
+                 layerConfig;
+
              // ... (set up our map axes) ...
              worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
-             //layer = 'Config:'
+            //if(mapConfig.id !== 'Geographic-Google-Map') {
+                layerConfig = [
+                    {
+                        "layer": layer["id"],
+                        "domain": layer.renderers[0].domain,
+                        "name": layer.name,
+                        "renderer": layer.renderers[0].renderer,
+                        "transform": layer.renderers[0].transform
+                    }
+                ];
+
 
              uiMediator = new UIMediator();
 
-             // Create server layer
-             ServerLayerFactory.createLayers(layer, uiMediator, worldMap);
+            // Create client and server layers
+             //ClientLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
+             ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
 
              new LayerControls().initialize( uiMediator.getLayerStateMap() );
-
+            }
              // Trigger the initial resize event to resize everything
              //$(window).resize();
-
-        };
+        //};
 
         this.start = function(){
 

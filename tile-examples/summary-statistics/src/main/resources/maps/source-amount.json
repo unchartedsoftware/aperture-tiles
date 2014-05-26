@@ -25,15 +25,15 @@
 		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
-	"id" : "bitcoin time vs. amount",
-	"description" : "Bitcoin Time vs. Amount of Transaction",
+	"id" : "bitcoin Source ID vs. Amount",
+	"description" : "Source ID vs. Amount",
 
 	"PyramidConfig": {
 		"type" : "AreaOfInterest",
 		"minX" : 1230958800000,
 		"maxX" : 1365566400000,
 		"minY" : 0,
-		"maxY" : 500000
+		"maxY" : 6336769
 	},
 
 	"MapConfig" : {
@@ -44,10 +44,10 @@
 		},
 		"baseLayer" : {}
 	},
-
+	
 	"AxisConfig": [
 		{
-			"title" : "Time",
+			"title" : "Source ID",
 			"position" : "bottom",
             "repeat": false,
 			"intervalSpec" : {
@@ -57,13 +57,13 @@
 				"allowScaleByZoom" : true,
 			},
 			"unitSpec" : {
-				"type" : "time",
+				"type" : "M",
 				"decimals" : 2,
-				"allowStepDown" : false
+				"allowStepDown" : true
 			}
 		},
 		{
-			"title" : "Amount (BTC)",
+			"title" : "Amount",
 			"position" : "left",
             "repeat" : false,
 			"intervalSpec" : {

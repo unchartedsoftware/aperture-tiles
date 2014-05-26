@@ -58,7 +58,23 @@ require(['./FileLoader',
 	            cloneObject,
 	            getLayers,
 	            getAnnotationLayers,
-	            uiMediator;
+	            uiMediator,
+	            getURLParameter;
+
+	        getURLParameter = function (key) {
+		        var url = window.location.search.substring(1),
+		            urlVars = url.split('&'),
+		            i, varKey,
+		            result = 0;
+		        for (i=0; i<urlVars.length; ++i) {
+			        varKey = urlVars[i].split('=');
+			        if (key === varKey[0]) {
+				        result = varKey[1];
+				        break;
+			        }
+		        }
+		        return result;
+	        };
 
 	        cloneObject = function (base) {
 		        var result, key;
@@ -161,11 +177,40 @@ require(['./FileLoader',
 		        // Get our list of maps
 		        MapService.requestMaps(function (maps) {
 			        // For now, just use the first map
-			        var mapConfig = maps[0],
+			        var currentMap,
+			            mapConfig,
 			            worldMap,
-			            mapPyramid;
+			            mapPyramid,
+			            mapsButton,
+			            mapButton,
+			            i;
+
+			        // Initialize our map choice panel
+			        if (maps.length > 1) {
+				        // ... first, create the panel
+				        mapsButton = new OverlayButton({
+					        id: 'maps',
+					        active: false,
+					        activeWidth: '25%',
+					        text: 'Maps',
+					        css: { left: '10px', top: '10px' }
+				        });
+				        // ... Next, insert contents
+				        for (i=0; i<maps.length; ++i) {
+					        mapButton = $('<a/>').attr({
+						        href: '?map='+i
+					        });
+					        mapButton.append(maps[i].description+'<br>');
+					        mapButton.appendTo(mapsButton.getContainer());
+				        }
+			        }
 
 			        // Initialize our map...
+			        currentMap = getURLParameter('map');
+			        if (!currentMap || !maps[currentMap]) {
+				        currentMap = 0;
+			        }
+			        mapConfig = maps[currentMap];
 			        worldMap = new Map("map", mapConfig);
 			        // ... (set up our map axes) ...
 			        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));

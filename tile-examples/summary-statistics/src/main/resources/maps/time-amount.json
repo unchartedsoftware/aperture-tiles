@@ -25,7 +25,7 @@
 		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
-	"id" : "bitcoin time vs. amount",
+	"id" : "bitcoin Time vs. Amount",
 	"description" : "A plot of the number of transactions at a given time which involved a given amount of bitcoins.",
 
 	"PyramidConfig": {
@@ -44,7 +44,7 @@
 		},
 		"baseLayer" : {}
 	},
-
+	
 	"AxisConfig": [
 		{
 			"title" : "Time",

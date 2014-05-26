@@ -61,7 +61,7 @@ require(['./FileLoader',
 	            getAnnotationLayers,
 	            uiMediator;
 
-	        cloneObject = function (base) {
+             cloneObject = function (base) {
 		        var result, key;
 
 		        if ($.isArray(base)) {
@@ -79,51 +79,8 @@ require(['./FileLoader',
 				        }
 			        }
 		        }
-
 		        return result;
 	        };
-
-	        // Get the layers from a layer tree that match a given filter and 
-	        // pertain to a given domain.
-	        /*getLayers = function (domain, rootNode, filterFcn) {
-		        // Filter function to filter out all layers not in the desired 
-		        // domain (server or client)
-		        var domainFilterFcn = function (domain) {
-			        return function (layer) {
-				        var accepted = false;
-				        if (filterFcn(layer)) {
-					        layer.renderers.forEach(function (renderer, index, renderers) {
-						        if (domain === renderer.domain) {
-							        accepted = true;
-							        return;
-						        }
-					        });
-				        }
-				        return accepted;
-			        };
-		        };
-
-		        // Run our filter, and on the returned nodes, return a renderer 
-		        // configuration appropriate to that domain.
-		        return LayerService.filterLeafLayers(
-			        rootNode,
-			        domainFilterFcn(domain)
-		        ).map(function (layer, index, layersList) {
-			        // For now, just use the first appropriate configuration we find.
-			        var config;
-
-			        layer.renderers.forEach(function (renderer, index, renderers) {
-				        if (domain === renderer.domain) {
-					        config = cloneObject(renderer);
-					        config.layer = layer.id;
-					        config.name = layer.name;
-					        return;
-				        }
-			        });
-
-			        return config;
-		        });
-	        };*/
 
 	        // Load all our UI configuration data before trying to bring up the ui
 	        FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
@@ -142,34 +99,6 @@ require(['./FileLoader',
 					dataset: datasetName
 				});
 				summaryBuilder.start();
-
-				/*
-		        // Get our list of maps
-		        MapService.requestMaps(function (maps) {
-			        // For now, just use the first map
-			        var mapConfig = // repecitve map // maps[0],
-			            worldMap;
-
-			        // Initialize our map...
-                        var mapID = "div for map"
-			        worldMap = new Map(mapID, mapConfig);
-			        // ... (set up our map axes) ...
-			        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
-
-
-                    layer = 'Config:'
-
-                    uiMediator = new UIMediator();
-
-                    // Create server layer
-                    ServerLayerFactory.createLayers(layer, uiMediator, worldMap);
-
-                    new LayerControls().initialize( uiMediator.getLayerStateMap() );
-
-                    // Trigger the initial resize event to resize everything
-                    $(window).resize();
-
-		        });*/
 			});
     }
 );
