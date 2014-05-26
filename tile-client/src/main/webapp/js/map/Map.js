@@ -288,12 +288,12 @@ define(function (require) {
 		getMapMinAndMaxInViewportPixels: function() {
 			return {
 				min : {
-					x: this.map.olMap_.minPx.x,
-					y: this.map.olMap_.maxPx.y
+					x: Math.round( this.map.olMap_.minPx.x ),
+					y: Math.round( this.map.olMap_.maxPx.y )
 				},
 				max : {
-					x: this.map.olMap_.maxPx.x,
-					y: this.map.olMap_.minPx.y
+					x: Math.round( this.map.olMap_.maxPx.x ),
+					y: Math.round( this.map.olMap_.minPx.y )
 				}
 			};
 		},
@@ -417,8 +417,8 @@ define(function (require) {
             pixel = this.getViewportPixelFromMapPixel(mx, my);
 
             return {
-                x : Math.round(pixel.x),
-                y : Math.round(pixel.y)
+                x : pixel.x,
+                y : pixel.y
             };
         },
 
