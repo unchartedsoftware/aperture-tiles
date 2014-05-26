@@ -1,20 +1,7 @@
 
 
 div.test-renderer {
-	position:absolute;
-
-	/*
-	background-color: #22FFAA;
-	opacity: 0.5;
-	top: 32px;
-    left: 32px;
-	width: 192px;
-	height: 192px;
-	-webkit-transition: -webkit-transform 0.2s ease-in-out;
-       -moz-transition: -moz-transform 0.2s ease-in-out;
-       	-ms-transition: -ms-transform 0.2s ease-in-out;
-            transition: transform 0.2s ease-in-out;
-    */
+	position:relative;
 }
 
 
@@ -22,13 +9,13 @@ div.test-renderer-block {
 	position:relative;
 	background-color: #22FFAA;
 	opacity: 0.5;
-	margin: 10px 0 0 10px;
-	width: 54px;
-	height: 54px;
+	margin: 5px 0 0 5px;
+	width: 27px;
+	height: 27px;
 	-webkit-transition: -webkit-transform 0.2s ease-in-out;
-       -moz-transition: -moz-transform 0.2s ease-in-out;
-       	-ms-transition: -ms-transform 0.2s ease-in-out;
-            transition: transform 0.2s ease-in-out;
+       -moz-transition:    -moz-transform 0.2s ease-in-out;
+       	-ms-transition:     -ms-transform 0.2s ease-in-out;
+            transition:         transform 0.2s ease-in-out;
 }
 
 div.test-0 {
@@ -38,35 +25,56 @@ div.test-0 {
 
 div.test-1 {
 	position:absolute;
-	left:64px;
+	left:32px;
 }
 
 div.test-2 {
 	position:absolute;
-	left:128px;
+	left:64px;
 }
 
 div.test-3 {
 	position:absolute;
+	left:96px;
+}
+
+div.test-4 {
+	position:absolute;
+	left:128px;
+}
+
+div.test-5 {
+	position:absolute;
+	left:160px;
+}
+
+div.test-6 {
+	position:absolute;
 	left:192px;
+}
+
+div.test-7 {
+	position:absolute;
+	left:224px;
 }
 
 
 div.test-renderer-block:hover {
 	cursor: pointer;
 	background-color: #7700FF;
-    -webkit-transform: scale(1.1666) rotate(-90deg);
-       -moz-transform: scale(1.1666) rotate(-90deg);
-        -ms-transform: scale(1.1666) rotate(-90deg);
-            transform: scale(1.1666) rotate(-90deg);
+    -webkit-transform: scale(1.5) rotate(-90deg);
+       -moz-transform: scale(1.5) rotate(-90deg);
+        -ms-transform: scale(1.5) rotate(-90deg);
+            transform: scale(1.5) rotate(-90deg);
 }
 
 
 div.test-renderer-block:active {
 	cursor: pointer;
 	background-color: #2288FF;
-	-webkit-transform: scale(1.333) rotate(90deg);
-       -moz-transform: scale(1.333) rotate(90deg);
-        -ms-transform: scale(1.333) rotate(90deg);
-            transform: scale(1.333) rotate(90deg);
+	-webkit-transform: scale(1.9) rotate(90deg);
+       -moz-transform: scale(1.9) rotate(90deg);
+        -ms-transform: scale(1.9) rotate(90deg);
+            transform: scale(1.9) rotate(90deg);
 }
+
