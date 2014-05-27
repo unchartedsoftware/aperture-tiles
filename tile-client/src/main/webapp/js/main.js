@@ -250,7 +250,7 @@ require(['./FileLoader',
 				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
 				        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
 
-				        new LayerControls().initialize( uiMediator.getLayerStateMap() );
+				        new LayerControls().initialize( 'layer-controls', uiMediator.getLayerStateMap() );
 
 				        // Annotation layers
 				        annotationLayers = getAnnotationLayers(annotationLayers, filter);
