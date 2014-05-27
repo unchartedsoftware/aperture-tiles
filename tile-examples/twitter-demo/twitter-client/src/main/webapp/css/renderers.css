@@ -32,10 +32,10 @@
 	height: 100%;
 	color: #FFFFFF;
 	text-shadow:
-	    -2px -2px 1px #000,
-	     2px -2px 1px #000,
-	    -2px  2px 1px #000,
-	     2px  2px 1px #000; 	
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000; 	
 }
 
 .sentiment-summaries {
@@ -49,6 +49,7 @@
 	left: 53px;
 	bottom: 0px;
 	border: 2px solid #000000;
+	box-shadow: 1px 1px 5px #000;
 }
 
 .sentiment-bars-positive {
@@ -67,9 +68,11 @@
 	background-color: #222222;
 }
 
+/*
 .top-text-sentiments:hover .sentiment-bars-neutral {
 	background-color: #000000;
 }
+*/
 
 .sentiment-bars-negative {
 	height:100%;
