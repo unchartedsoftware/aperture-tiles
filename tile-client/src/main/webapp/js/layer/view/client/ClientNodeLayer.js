@@ -89,7 +89,7 @@ define(function (require) {
         createNodeRoot : function(data) {
             var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] ),
                 nodeId = data[this.idKey_] || "";
-            return $('<div id="'+nodeId+'" class="tile-root" style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; width: 256px; height:256px;"></div>');
+            return $('<div id="'+nodeId+'" class="tile-root" style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; width: 256px; height:256px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
         },
 
 

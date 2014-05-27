@@ -106,6 +106,16 @@ define(function (require) {
                 return 98 - 36 * (((getCount(data) - 1) / 2) - index);
             }
 
+            function trimLabelText(data, index) {
+                var MAX_LABEL_CHAR_COUNT = 9,
+                    str = data.bin.value[index].tag;
+                if (str.length > MAX_LABEL_CHAR_COUNT) {
+                    str = str.substr(0, MAX_LABEL_CHAR_COUNT) + "...";
+                }
+                return str;
+            }
+
+
             this.nodeLayer.addLayer( new HtmlLayer({
 
                 html: function() {
@@ -117,27 +127,34 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
 
-                        html += '<div class="top-text-sentiments" style="position:absolute; top:' +  getYOffset(this, i) + 'px">';
+                        html += '<div class="top-text-sentiments" style=" top:' +  getYOffset(this, i) + 'px">';
 
                         positivePerc = getSentimentPercentage( this, i, 'positive')*100;
                         neutralPerc = getSentimentPercentage( this, i, 'neutral')*100;
                         negativePerc = getSentimentPercentage( this, i, 'negative')*100;
 
                         // bar
-                        html += '<div class="sentiment-bars" style=" position:absolute; top:40px;">';
-                        html += '<div class="sentiment-bars-negative" style="width:'+negativePerc+'%;"></div>';
-                        html += '<div class="sentiment-bars-neutral" style="width:'+neutralPerc+'%;"></div>';
-                        html += '<div class="sentiment-bars-positive" style="width:'+positivePerc+'%;"></div>';
+                        html += '<div class="sentiment-bars">';
+                        html +=     '<div class="sentiment-bars-negative" style="width:'+negativePerc+'%;"></div>';
+                        html +=     '<div class="sentiment-bars-neutral"  style="width:'+neutralPerc+'%;"></div>';
+                        html +=     '<div class="sentiment-bars-positive" style="width:'+positivePerc+'%;"></div>';
                         html += "</div>";
 
                         // label
                         html += '<div class="sentiment-labels"';
-                        html += 'style=" position:absolute;';
-                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
-                        html += this.bin.value[i].tag;
+                        html += 'style="font-size:' + getFontSize(this, i) +'px; ">';
+                        html += trimLabelText( this, i );
                         html += "</div>";
 
                         html += '</div>';
+
+                        /*
+                        if (!$html) {
+                            $html = $(html);
+                        } else {
+                            $html.after($(html));
+                        }
+                        */
                     }
 
                     return html;
