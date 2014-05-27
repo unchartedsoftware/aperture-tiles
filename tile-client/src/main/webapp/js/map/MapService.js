@@ -37,7 +37,8 @@ define(function (require) {
 		requestMaps: function () {
             if (!mapDeferred) {
                 mapDeferred = $.Deferred();
-                aperture.io.rest('/maps', 'GET',
+                aperture.io.rest('/maps',
+                                 'GET',
                                  function (maps, status) {
                                      if (status.success) {
                                          mapDeferred.resolve(maps);
