@@ -26,7 +26,7 @@
 	],
 
 	"id" : "bitcoin time vs. amount",
-	"description" : "A plot of the number of transactions at a given time which involved a given amount of bitcoins.",
+	"description" : "Bitcoin Time vs. Amount of Transaction",
 
 	"PyramidConfig": {
 		"type" : "AreaOfInterest",

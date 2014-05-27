@@ -75,11 +75,6 @@ define(function (require) {
                 }
 			});
 
-			/*
-			 this.tileManager = new OpenLayers.TileManager();
-			 this.tileManager.addMap(this.map.olMap_);
-			 */
-
 			this.map.olMap_.baseLayer.setOpacity(1);
 			this.axes = [];
 
@@ -88,7 +83,7 @@ define(function (require) {
 			// Set resize map callback
 			$(window).resize( function() {
 				// set map to full extent of window
-				var $map = $('#' + that.id);
+				var $map = that.getElement();
 				$map.width( $(window).width() );
 				$map.height( $(window).height() );
 				that.updateSize();
@@ -144,7 +139,7 @@ define(function (require) {
 			    bounds = this.map.olMap_.getExtent(),
 			    // Total map bounds, in meters
 			    mapExtent = this.map.olMap_.getMaxExtent(),
-			    // Pyramider for the total map bounds
+			    // Pyramid for the total map bounds
 			    mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
 			                                mapExtent.right, mapExtent.top);
 
@@ -156,16 +151,45 @@ define(function (require) {
 
 
 		getTilesInView: function() {
+            var tiles = this.getTileIterator().getRest(),
+                culledTiles = [],
+                maxTileIndex = Math.pow(2, this.getZoom() ),
+                tile,
+                i;
 
-			return this.getTileIterator().getRest();
+            for (i=0; i<tiles.length; i++) {
+                tile = tiles[i];
+                if ( tile.xIndex >= 0 && tile.yIndex >= 0 &&
+                     tile.xIndex < maxTileIndex && tile.yIndex < maxTileIndex ) {
+                     culledTiles.push( tile );
+                }
+            }
+
+			return culledTiles;
 		},
 
 
-		getTileSetBoundsInView: function() {
-
-			return {'params': this.getTileIterator().toTileBounds()};
+		getTileBoundsInView: function() {
+		    var bounds = this.getTileIterator().toTileBounds(),
+		        maxTileIndex = Math.pow(2, this.getZoom() ) - 1;
+            bounds.minX = Math.max( 0, bounds.minX );
+            bounds.minY = Math.max( 0, bounds.minY );
+            bounds.maxX = Math.min( maxTileIndex, bounds.maxX );
+            bounds.maxY = Math.min( maxTileIndex , bounds.maxY );
+			return bounds;
 		},
 
+
+        getMapWidth: function() {
+
+            return this.getTileSize() * Math.pow( 2, this.getZoom() );
+        },
+
+
+        getMapHeight: function() {
+
+            return this.getTileSize() * Math.pow( 2, this.getZoom() );
+        },
 
 		getViewportWidth: function() {
 			return this.map.olMap_.viewPortDiv.clientWidth;
@@ -247,7 +271,7 @@ define(function (require) {
 		 */
 		getMapPixelFromViewportPixel: function(vx, vy) {
 			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
-			    totalPixelSpan = TILESIZE * Math.pow( 2, this.getZoom() );
+			    totalPixelSpan = this.getMapWidth();
 			return {
 				x: totalPixelSpan + vx - viewportMinMax.max.x,
 				y: totalPixelSpan - vy + viewportMinMax.max.y
@@ -262,7 +286,7 @@ define(function (require) {
 		 */
 		getViewportPixelFromMapPixel: function(mx, my) {
 			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
-			    totalPixelSpan = TILESIZE * Math.pow( 2, this.getZoom() );
+			    totalPixelSpan = this.getMapWidth();
 			return {
 				x: mx + viewportMinMax.min.x,
 				y: totalPixelSpan - my + viewportMinMax.max.y

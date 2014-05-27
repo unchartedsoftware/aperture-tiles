@@ -6,3 +6,4 @@
 target
 update.sh
 phantomjs.exe
+*.iml

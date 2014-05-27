@@ -38,12 +38,12 @@ import org.apache.spark.rdd.RDD
 /*WILL EVENTUALLY NEED TO UNCOMMENT HADOOP IN POM & SORT OUT VERSION ISSUE*/
 object CountQualities {
 
-  def CountNASave (column: Int, textFile: RDD[Array[String]], sc: SparkContext): Int = {
+  def CountNASave (textFile: RDD[String], sc: SparkContext): Int = {
     val zeroSet = sc.parallelize(List[Int](0))
-    textFile.map(line => line(column)).filter(_.equals(null)).map(record => 1).union(zeroSet).reduce(_+_)
+    textFile.filter(_.equals(null)).map(record => 1).union(zeroSet).reduce(_+_)
   }
 
-  def CountUnique(column: Int, textFile: RDD[Array[String]]) = {
-    textFile.map(line => line(column)).distinct().map(record => 1).reduce(_ + _)
+  def CountUnique(textFile: RDD[String]) = {
+    textFile.distinct().map(record => 1).reduce(_ + _)
   }
 }

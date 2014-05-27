@@ -37,18 +37,18 @@ import org.apache.spark.rdd.RDD
 
 object Frequency {
 
-  def FrequencyTable(column: Int, textFile: RDD[Array[String]]) = {
-    textFile.map(line => (line(column), 1)).reduceByKey(_ + _, 1)
+  def FrequencyTable(textFile: RDD[String]) = {
+    textFile.map(line => (line, 1)).reduceByKey(_ + _, 1)
   }
 
-  def getFrequency(column: Int, textFile: RDD[Array[String]], key: String) = {
-    textFile.map(line => line(column)).filter(_.equals(key)).map(record => 1).reduce(_ + _)
+  def getFrequency(textFile: RDD[String], key: String) = {
+    textFile.filter(_.equals(key)).map(record => 1).reduce(_ + _)
   }
 
 
-   def MostFrequent(returnNum: Int, column: Int, textFile: RDD[Array[String]], sorted: Boolean): Array[(Int, String)] = { //make sorted default to false if not specified. make the function work if not specified
+   def MostFrequent(returnNum: Int, textFile: RDD[String], sorted: Boolean): Array[(Int, String)] = { //make sorted default to false if not specified. make the function work if not specified
 
-    val freqTable = FrequencyTable(column, textFile).map(_.swap).sortByKey(false) 
+    val freqTable = FrequencyTable(textFile).map(_.swap).sortByKey(false) 
     val tieCheck = freqTable.take(100 + returnNum)
     val rowCount = tieCheck.length
     var tieNum = 0 

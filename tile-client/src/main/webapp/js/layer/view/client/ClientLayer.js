@@ -175,18 +175,17 @@ define(function (require) {
             // map tile to new view
             this.tileViewMap[tilekey] = newViewIndex;
 
-            // un-select elements from this view
-            if (tilekey === this.clientState.clickState.tilekey) {
-				this.clientState.clearClickState();
-            }
-
             if (oldView.getLayerId() === newView.getLayerId()) {
                 // if both views share the same type of data source, swap tile data
                 oldView.swapTileWith(newView, tilekey);
                 this.updateAndRedrawViews( newView.getTileData(tilekey) );
 
             } else {
-                // otherwise, release and request
+                // otherwise release and request new data
+                if (tilekey === this.clientState.clickState.tilekey) {
+                    // if same tile as clicked tile, un-select elements from this view
+                    this.clientState.clearClickState();
+                }
                 oldView.releaseTile( tilekey );
                 newView.requestTile( tilekey, $.proxy(this.updateAndRedrawViews, this));
             }
@@ -226,7 +225,7 @@ define(function (require) {
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
                 this.views[i].filterAndRequestTiles(tilesByView[i],
-                                                    this.map.getTileSetBoundsInView(),
+                                                    this.map.getTileBoundsInView(),
                                                     $.proxy(this.updateAndRedrawViews, this));
             }
         },

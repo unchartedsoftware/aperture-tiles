@@ -64,12 +64,12 @@ define(function (require) {
             this.previousMouse = {};
             this.selectedTileInfo = {};
 
-            // add mouse move and zoom callbacks
-            this.map.on('mousemove', function(event) {
-                var tilekey = that.map.getTileKeyFromViewportPixel(event.xy.x, event.xy.y);
+            // put mouse move callback on global document
+            $(document).mousemove(function(event) {
+                var tilekey = that.map.getTileKeyFromViewportPixel(event.pageX, event.pageY);
                 that.updateSelectedTile(tilekey);
-                that.previousMouse.x = event.xy.x;
-                that.previousMouse.y = event.xy.y;
+                that.previousMouse.x = event.pageX;
+                that.previousMouse.y = event.pageY;
             });
 
             // update carousel if map is moving and mouse isn't
@@ -136,11 +136,11 @@ define(function (require) {
                 };
 
             this.$leftChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_LEFT+"'></div>");
-            this.$leftChevron.click( function() { incIndex(-1); });
+            this.$leftChevron.click( function() { incIndex(-1); return true; });
             this.$outline.append(this.$leftChevron);
 
             this.$rightChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_RIGHT+"'></div>");
-            this.$rightChevron.click( function() { incIndex(1); });
+            this.$rightChevron.click( function() { incIndex(1); return true; });
             this.$outline.append(this.$rightChevron);
         },
 
@@ -160,6 +160,7 @@ define(function (require) {
                     var tilekey = that.selectedTileInfo.tilekey,
                         prevIndex = that.getTileViewIndex(tilekey);
                     that.changeViewIndex(tilekey, prevIndex, index);
+                    return true;
                 };
             }
 

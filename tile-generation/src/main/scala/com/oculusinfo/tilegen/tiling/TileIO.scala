@@ -128,7 +128,7 @@ trait TileIO extends Serializable {
 	                          data: RDD[TileData[BT]],
 	                          binDesc: BinDescriptor[PT, BT],
 	                          name: String = "unknown",
-	                          description: String = "unknown"): Unit = {
+	                          description: String = "unknown"): Map[Int, (BT, BT)] = {
 		// Do any needed initialization
 		getPyramidIO.initializeForWrite(baseLocation)
 
@@ -171,35 +171,51 @@ trait TileIO extends Serializable {
 
 		// Calculate overall tile set characteristics
 		val sampleTile = data.first.getDefinition()
-		val tileSize = sampleTile.getXBins()
-		val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
-
-		val projection = pyramider.getProjection()
-		val scheme = pyramider.getTileScheme()
 		val minMax = minMaxAccum.value
-		val oldMetaData = readMetaData(baseLocation)
 
 		println("Calculating metadata")
 		println("Input tiles: "+tileCount)
+		
+		val metaData = combineMetaData(pyramider, baseLocation, minMax, sampleTile.getXBins, name, description)
+		writeMetaData(baseLocation, metaData)
 
+		//return the min/maxes so the data isn't lost from converting it to a string in TileMetaData
+		minMax
+	}
+	
+	/**
+	 * Takes a map of levels to (mins, maxes) and combines them with the current metadata
+	 * that already exists, or creates a new one if none exists.
+	 */
+	def combineMetaData[BT](pyramider: TilePyramid,
+	                          baseLocation: String,
+	                          minsMaxes: Map[Int, (BT, BT)],
+	                          tileSize: Int,
+	                          name: String = "unknown",
+	                          description: String = "unknown"): TileMetaData = {
+		val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
+		val projection = pyramider.getProjection()
+		val scheme = pyramider.getTileScheme()
+		val oldMetaData = readMetaData(baseLocation)
+		
 		var metaData = oldMetaData match {
 			case None => {
 				new TileMetaData(name, description, tileSize, scheme, projection,
-				                 minMax.keys.min, minMax.keys.max,
+				                 minsMaxes.keys.min, minsMaxes.keys.max,
 				                 bounds,
-				                 minMax.map(p => (p._1, p._2._1.toString)).toList.sortBy(_._1),
-				                 minMax.map(p => (p._1, p._2._2.toString)).toList.sortBy(_._1))
+				                 minsMaxes.map(p => (p._1, p._2._1.toString)).toList.sortBy(_._1),
+				                 minsMaxes.map(p => (p._1, p._2._2.toString)).toList.sortBy(_._1))
 			}
 			case Some(metaData) => {
 				var newMetaData = metaData
-				minMax.foreach(mm =>
+				minsMaxes.foreach(mm =>
 					newMetaData = newMetaData.addLevel(mm._1, mm._2._1.toString, mm._2._2.toString)
 				)
 				newMetaData
 			}
 		}
 
-		writeMetaData(baseLocation, metaData)
+		metaData
 	}
 
 	def readMetaData (baseLocation: String): Option[TileMetaData] = {
@@ -208,6 +224,7 @@ trait TileIO extends Serializable {
 
 	def writeMetaData (baseLocation: String, metaData: TileMetaData): Unit =
 		getPyramidIO.writeMetaData(baseLocation, metaData.toString)
+		
 }
 
 class LevelMinMaxAccumulableParam[T] (minFcn: (T, T) => T, defaultMin: T,

@@ -146,7 +146,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 	                                   data: RDD[TileData[BT]],
 	                                   binDesc: BinDescriptor[PT, BT],
 	                                   name: String = "unknown",
-	                                   description: String = "unknown"): Unit = {
+	                                   description: String = "unknown"): Map[Int, (BT, BT)] = {
 		val pyramidIO = getPyramidIO
 
 		// We need some TableOutputFormat constants in here.
@@ -216,40 +216,15 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// Don't alter metadata if there was no data added.
 		// Ideally, we'd still alter levels, but that's stored in our min/max list,
 		// so since we have no min/max info for levels with no data, we just don't store them.
+		val minMax = minMaxAccum.value
 		if (tileCount.value > 0) {
-			val oldMetaData = readMetaData(baseLocation)
-
 			val sampleTile = data.first.getDefinition()
 			val tileSize = sampleTile.getXBins()
-
-			val scheme = pyramider.getTileScheme()
-			val projection = pyramider.getProjection()
-			val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
-
-			val minMax = minMaxAccum.value
-
-			var metaData = oldMetaData match {
-				case None => {
-					new TileMetaData(name, description, tileSize, scheme, projection,
-					                 minMax.keys.min, minMax.keys.max,
-					                 bounds,
-					                 minMax.map(p =>
-						                 (p._1, p._2._1.toString)).toList.sortBy(_._1),
-					                 minMax.map(p =>
-						                 (p._1, p._2._2.toString)).toList.sortBy(_._1))
-				}
-				case Some(metaData) => {
-					var newMetaData = metaData
-					minMax.foreach(mm =>
-						newMetaData = newMetaData.addLevel(mm._1,
-						                                   mm._2._1.toString,
-						                                   mm._2._2.toString)
-					)
-					newMetaData
-				}
-			}
+			val metaData = combineMetaData(pyramider, baseLocation, minMax, tileSize, name, description)
 			writeMetaData(baseLocation, metaData)
 		}
+		
+		minMax
 	}
 }
 

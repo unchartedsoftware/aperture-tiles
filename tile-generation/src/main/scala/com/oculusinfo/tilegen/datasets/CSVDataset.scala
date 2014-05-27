@@ -30,18 +30,15 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Double => JavaDouble}
 import java.text.SimpleDateFormat
 import java.util.Properties
-
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
-
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.Time
-
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
@@ -55,9 +52,12 @@ import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MaximumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.MinimumDoubleBinDescriptor
 import com.oculusinfo.tilegen.tiling.LogDoubleBinDescriptor
-
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.tiling.TimeRangeCartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.TimeIndexScheme
+import com.oculusinfo.tilegen.tiling.LineSegmentIndexScheme
+import java.util.TimeZone
 
 
 
@@ -240,12 +240,20 @@ abstract class CSVIndexExtractor[T: ClassTag] extends Serializable {
 	// The index scheme the binner needs to know what to do with the index
 	// values we generate
 	def indexScheme: IndexScheme[T]
-
+	
 	// Get the index value from the field values
 	def calculateIndex (fieldValues: Map[String, Double]): T
 
 	// Indicate if the index implies a density strip
 	def isDensityStrip: Boolean
+}
+
+abstract class TimeRangeCSVIndexExtractor[T: ClassManifest] extends CSVIndexExtractor[T] {
+	// The time based index scheme the binner needs to know what to do with the index
+	// values we generate
+	def timeIndexScheme: TimeIndexScheme[T]
+	
+	def msPerTimeRange: Double
 }
 
 class CartesianIndexExtractor(xVar: String, yVar: String) extends CSVIndexExtractor[(Double, Double)] {
@@ -257,6 +265,18 @@ class CartesianIndexExtractor(xVar: String, yVar: String) extends CSVIndexExtrac
 	def indexScheme = scheme
 	def calculateIndex (fieldValues: Map[String, Double]): (Double, Double) =
 		(fieldValues(xVar), fieldValues(yVar))
+	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+}
+
+class LineSegmentIndexExtractor(xVar: String, yVar: String, xVar2: String, yVar2: String) extends CSVIndexExtractor[(Double, Double, Double, Double)] {
+	private val scheme = new LineSegmentIndexScheme
+
+	def fields = Array(xVar, yVar, xVar2, yVar2)
+	def name = xVar + "." + yVar + "." + xVar2 + "." + yVar2
+	def description = xVar + " vs. " + yVar + "and" + xVar2 + "vs" + yVar2
+	def indexScheme = scheme
+	def calculateIndex(fieldValues: Map[String, Double]): (Double, Double, Double, Double) =
+		(fieldValues(xVar), fieldValues(yVar), fieldValues(xVar2), fieldValues(yVar2))
 	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
 }
 
@@ -276,6 +296,27 @@ class IPv4IndexExtractor (ipField: String) extends CSVIndexExtractor[Array[Byte]
 	}
 	val isDensityStrip = false
 }
+
+class TimeRangeCartesianIndexExtractor(timeVar: String, xVar: String, yVar: String, startDate: Double, secsPerPeriod: Double) extends TimeRangeCSVIndexExtractor[(Double, Double, Double)] {
+	private val scheme = new TimeRangeCartesianIndexScheme
+
+	def msPerTimeRange = secsPerPeriod * 1000
+	
+	/**
+	 * Floors the date value to the last time period
+	 */
+	def floorDate(d: Double) = Math.floor((d - startDate) / msPerTimeRange) * msPerTimeRange + startDate
+	
+	def fields = Array(timeVar, xVar, yVar)
+	def name = xVar + "." + yVar
+	def description = xVar + " vs. " + yVar
+	def indexScheme = scheme
+	def timeIndexScheme = scheme
+	def calculateIndex (fieldValues: Map[String, Double]): (Double, Double, Double) = 
+		(floorDate(fieldValues(timeVar)), fieldValues(xVar), fieldValues(yVar))
+	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+}
+
 
 /*
  * Simple class to add standard field interpretation to a properties wrapper
@@ -331,7 +372,50 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
  * A simple parser that splits a record according to a given separator
  */
 class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
-	def parseRecords (raw: Iterator[String], variables: String*): Iterator[(String, Try[List[Double]])] = {
+
+	// A quick couple of inline functions to make our lives easier
+	// Split a string (but do so efficiently if the separator is a single character)
+	def splitString(input: String, separator: String): Array[String] =
+		if (1 == separator.length) input.split(separator.charAt(0))
+		else input.split(separator)
+
+	def getFieldType(field: String, suffix: String = "fieldType"): String = {
+		properties.getString("oculus.binning.parsing." + field + "." + suffix,
+			"",
+			Some(if ("constant" == field || "zero" == field) "constant"
+			else ""))
+	}
+
+	// Convert a string to a double value according to field semantics
+	def parseValue(value: String, field: String, parseType: String, dateFormats: Map[String, SimpleDateFormat]): Double = {
+		if ("int" == parseType) {
+			value.toInt.toDouble
+		} else if ("long" == parseType) {
+			value.toLong.toDouble
+		} else if ("date" == parseType) {
+			dateFormats(field).parse(value).getTime()
+		} else if ("ipv4" == parseType) {
+			value.split("\\.").map(_.toLong).foldLeft(0L)((a, b) => (256L * a + b)).toDouble
+		} else if ("propertyMap" == parseType) {
+			val property = properties.getStringOption("oculus.binning.parsing." + field + ".property", "").get
+			val propType = getFieldType(field, "propertyType")
+			val propSep = properties.getStringOption("oculus.binning.parsing." + field +
+				".propertySeparator", "").get
+			val valueSep = properties.getStringOption("oculus.binning.parsing." + field +
+				".propertyValueSeparator", "").get
+
+			val kvPairs = splitString(value, propSep)
+			val propPairs = kvPairs.map(splitString(_, valueSep))
+
+			val propValue = propPairs.filter(kv => property.trim == kv(0).trim).map(kv =>
+				if (kv.size > 1) kv(1) else "").takeRight(1)(0)
+			parseValue(propValue, field, propType, dateFormats)
+		} else {
+			value.toDouble
+		}
+	}
+
+	def parseRecords(raw: Iterator[String], variables: String*): Iterator[(String, Try[List[Double]])] = {
 		// This method generally is only called on workers, therefore properties can't really be documented here.
 
 		// Get some simple parsing info we'll need
@@ -339,98 +423,111 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 			"oculus.binning.parsing.separator", "", Some("\t"))
 
 		val dateFormats = properties.fields.filter(field =>
-			"date" == properties.getString("oculus.binning.parsing."+field+".fieldType", "", Some(""))
-		).map(field =>
-			(field ->
-				 new SimpleDateFormat(properties.getString(
-					                      "oculus.binning.parsing."+field+".dateFormat",
-					                      "", Some("yyMMddHHmm"))))
-		).toMap
-
-
-
-
-		// A quick couple of inline functions to make our lives easier
-		// Split a string (but do so efficiently if the separator is a single character)
-		def splitString (input: String, separator: String): Array[String] =
-			if (1 == separator.length) input.split(separator.charAt(0))
-			else input.split(separator)
-
-		def getFieldType (field: String, suffix: String = "fieldType"): String = {
-			properties.getString("oculus.binning.parsing."+field+"."+suffix,
-			                     "",
-			                     Some(if ("constant" == field || "zero" == field) "constant"
-			                          else ""))
-		}
-
-		// Convert a string to a double value according to field semantics
-		def parseValue (value: String, field: String, parseType: String): Double = {
-			if ("int" == parseType) {
-				value.toInt.toDouble
-			} else if ("long" == parseType) {
-				value.toLong.toDouble
-			} else if ("date" == parseType) {
-				dateFormats(field).parse(value).getTime()
-			} else if ("ipv4" == parseType) {
-				value.split("\\.").map(_.toLong).foldLeft(0L)((a, b) => (256L*a+b)).toDouble
-			} else if ("propertyMap" == parseType) {
-				val property = properties.getStringOption("oculus.binning.parsing."+field+".property", "").get
-				val propType = getFieldType(field, "propertyType")
-				val propSep = properties.getStringOption("oculus.binning.parsing."+field+
-					                                         ".propertySeparator", "").get
-				val valueSep = properties.getStringOption("oculus.binning.parsing."+field+
-					                                          ".propertyValueSeparator", "").get
-
-				val kvPairs = splitString(value, propSep)
-				val propPairs = kvPairs.map(splitString(_, valueSep))
-
-				val propValue = propPairs.filter(kv => property.trim == kv(0).trim).map(kv =>
-					if (kv.size>1) kv(1) else ""
-				).takeRight(1)(0)
-				parseValue(propValue, field, propType)
-			} else {
-				value.toDouble
-			}
-		}
-
-
-
-
+			"date" == properties.getString("oculus.binning.parsing." + field + ".fieldType", "", Some(""))).map(field => {
+			val format = new SimpleDateFormat(properties.getString(
+				"oculus.binning.parsing." + field + ".dateFormat",
+				"", Some("yyMMddHHmm")))
+			format.setTimeZone(TimeZone.getTimeZone("GMT"))
+			(field -> format)
+		}).toMap
 
 		raw.map(s =>
 			{
 				val columns = splitString(s, separator)
+
 				(s,
-				 Try(
-					 properties.fields.toList.map(field =>
-						 {
-							 val fieldType = getFieldType(field)
-							 var value = if ("constant" == fieldType ||
-								                 "zero" == fieldType) 0.0
-							 else {
-								 val fieldIndex =
-									 properties.getIntOption("oculus.binning.parsing."+
-										                         field+".index",
-									                         "").get
-								 parseValue(columns(fieldIndex.toInt), field, fieldType)
-							 }
-							 val fieldScaling =
-								 properties.getString("oculus.binning.parsing."+field+
-									                      ".fieldScaling", "", Some(""))
-							 if ("log" == fieldScaling) {
-								 val base =
-									 properties.getDouble("oculus.binning.parsing."+
-										                      field+".fieldBase",
-									                      "", Some(math.exp(1.0)))
-								 value = math.log(value)/math.log(base)
-							 }
-							 value
-						 }
-					 )
-				 )
+					Try(
+						properties.fields.toList.map(field =>
+							{
+								val fieldType = getFieldType(field)
+								var value = if ("constant" == fieldType ||
+									"zero" == fieldType) 0.0
+								else {
+									val fieldIndex =
+										properties.getIntOption("oculus.binning.parsing." +
+											field + ".index",
+											"").get
+									parseValue(columns(fieldIndex.toInt), field, fieldType, dateFormats)
+								}
+								val fieldScaling =
+									properties.getString("oculus.binning.parsing." + field +
+										".fieldScaling", "", Some(""))
+								if ("log" == fieldScaling) {
+									val base =
+										properties.getDouble("oculus.binning.parsing." +
+											field + ".fieldBase",
+											"", Some(math.exp(1.0)))
+									value = math.log(value) / math.log(base)
+								}
+								value
+							})))
+			})
+	}
+}
+
+/**
+ * Custom record parser for use with graph data				//TODO -- should this be moved to CSVGraphBinner.scala?
+ */
+class GraphRecordParser(properties: CSVRecordPropertiesWrapper) extends CSVRecordParser(properties) {
+
+	def parseGraphRecords(raw: Iterator[String], variables: String*): Iterator[(String, Try[List[Double]])] = {
+		// This method generally is only called on workers, therefore properties can't really be documented here.
+
+		val graphDataType = properties.getString("oculus.binning.graph.data","", Some("nodes"))	// to choose if parsing nodes or edges
+		val graphFieldID = if (graphDataType=="nodes") "node" else "edge"
+		
+		// Get some simple parsing info we'll need
+		val separator = properties.getString(
+			"oculus.binning.parsing.separator", "", Some("\t"))
+
+		val dateFormats = properties.fields.filter(field =>
+			"date" == properties.getString("oculus.binning.parsing." + field + ".fieldType", "", Some(""))).map(field => {
+			val format = new SimpleDateFormat(properties.getString(
+				"oculus.binning.parsing." + field + ".dateFormat",
+				"", Some("yyMMddHHmm")))
+			format.setTimeZone(TimeZone.getTimeZone("GMT"))
+			(field -> format)
+		}).toMap
+
+		raw.map(s =>
+			{
+				val columns = splitString(s, separator)
+
+				(s,
+					Try(
+						// Only parse lines that have 1st column = graphFieldID, else disregard
+						if (columns(0) == graphFieldID) {	
+							properties.fields.toList.map(field =>
+								{
+									val fieldType = getFieldType(field)
+									var value = if ("constant" == fieldType ||
+										"zero" == fieldType) 0.0
+									else {
+										val fieldIndex =
+											properties.getIntOption("oculus.binning.parsing." +
+												field + ".index",
+												"").get
+										parseValue(columns(fieldIndex.toInt), field, fieldType, dateFormats)
+									}
+									val fieldScaling =
+										properties.getString("oculus.binning.parsing." + field +
+											".fieldScaling", "", Some(""))
+									if ("log" == fieldScaling) {
+										val base =
+											properties.getDouble("oculus.binning.parsing." +
+												field + ".fieldBase",
+												"", Some(math.exp(1.0)))
+										value = math.log(value) / math.log(base)
+									}
+									value
+								})
+						}
+						else {
+							List[Double]()
+						}
+					)
 				)
-			}
-		)
+			})
 	}
 }
 
@@ -820,3 +917,4 @@ class StreamingCSVDataset[IT: ClassTag] (indexer: CSVIndexExtractor[IT],
 		}
 	}
 }
+

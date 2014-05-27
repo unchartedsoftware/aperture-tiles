@@ -31,10 +31,11 @@
 define(function (require) {
     "use strict";
 
-    var AllLayers,
+    var LayerService,
         visitLayers,
         leafLayerFilter,
-        axisLayerFilter;
+        axisLayerFilter,
+        layersDeferred;
 
     visitLayers = function (layers, fcn) {
         var i;
@@ -74,10 +75,7 @@ define(function (require) {
         return result;
     };
 
-    AllLayers = {
-	    layers: 0,
-	    callbacks: [],
-
+    LayerService = {
         /**
          * Request layers from the server, sending them to the listed callback 
          * function when they are received.
@@ -85,13 +83,17 @@ define(function (require) {
          * @param callback A function taking a hierarchical layers description.
          */
         requestLayers: function (callback) {
-            if (this.layers) {
-                callback(this.layers);
-            } else {
-                this.callbacks.push(callback);
+	        if (!layersDeferred) {
+		        layersDeferred = $.Deferred();
                 aperture.io.rest('/layer',
                                  'POST',
-                                 $.proxy(this.onLayersListRetrieved, this),
+                                 function (layers, status) {
+	                                 if (status.success) {
+		                                 layersDeferred.resolve(layers);
+	                                 } else {
+		                                 layersDeferred.fail(status);
+	                                 }
+                                 },
                                  {
                                      postData: {
                                          request: "list"
@@ -100,18 +102,7 @@ define(function (require) {
                                  }
                                 );
             }
-        },
-
-        onLayersListRetrieved: function (layers, statusInfo) {
-            if (!statusInfo.success) {
-                return;
-            }
-	        this.layers = layers;
-            var callbacks = this.callbacks;
-            this.callbacks = [];
-            callbacks.forEach(function(callback) {
-                callback(layers);
-                    });
+	        return layersDeferred;
         },
 
         /**
@@ -142,5 +133,5 @@ define(function (require) {
         filterAxisLayers: axisLayerFilter
     };
 
-    return AllLayers;
+    return LayerService;
 });

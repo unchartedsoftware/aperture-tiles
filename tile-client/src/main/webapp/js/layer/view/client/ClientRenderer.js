@@ -294,7 +294,7 @@ define(function (require) {
 
                     // if past maximum amount of lines, truncate
                     if (lineCount === MAX_NUM_LINES-1) {
-                        // strip space if is als character of string
+                        // strip space if is last character of string
                         if (formatted[formatted.length-1] === ' ') {
                             formatted = formatted.substring(0, formatted.length - 1);
                         }

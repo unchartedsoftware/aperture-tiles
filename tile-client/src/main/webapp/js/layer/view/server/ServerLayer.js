@@ -38,7 +38,7 @@ define(function (require) {
 
     var Class = require('../../../class'),
         DataLayer = require('../../DataLayer'),
-        ServerRenderedMapLayer,
+        ServerLayer,
         forEachLayer,
         Y_TILE_FUNC_PASSTHROUGH,
         Y_TILE_FUNC_ZERO_CLAMP;
@@ -47,17 +47,17 @@ define(function (require) {
     /*
      * Private function to execute another function on each layer.
      */
-    forEachLayer = function (mapLayer, fcn) {
+    forEachLayer = function (layers, fcn) {
         var layerInfos, layer;
 
-        if (!mapLayer) { return; }
-        if (!mapLayer.dataListener) { return; }
+        if (!layers) { return; }
+        if (!layers.dataListener) { return; }
 
-        layerInfos = mapLayer.dataListener.getLayersInformation();
+        layerInfos = layers.dataListener.getLayersInformation();
         if (!layerInfos) { return; }
         for (layer in layerInfos) {
             if (layerInfos.hasOwnProperty(layer)) {
-                $.proxy(fcn, mapLayer)(layer, layerInfos[layer]);
+                $.proxy(fcn, layers)(layer, layerInfos[layer]);
             }
         }
     };
@@ -79,29 +79,18 @@ define(function (require) {
     };
 
 
-    ServerRenderedMapLayer = Class.extend({
-        ClassName: "ServerRenderedMapLayer",
+    ServerLayer = Class.extend({
+        ClassName: "ServerLayer",
         init: function (layerSpec, map) {
-            this.pendingLayerRequests = [];
-            // The collected map bounds of all our map layers
-            this.collectedMapBounds = null;
-            // The collected data bounds of all our map layers
-            this.collectedDataBounds = null;
-            // The maximum zoom level of all our layers
-            this.maxZoom = null;
 
-            // The openlayer layers we put on the map, indexed by layer name.
-            this.mapLayer = {};
-
-            // The map to which we render
             this.map = map;
+            this.pendingLayerRequests = [];
+            this.layers = {};
 
+            // send initial post to configure server
             this.dataListener = new DataLayer(layerSpec);
-            this.dataListener.setRequestCallback($.proxy(this.requestLayerInfo,
-                                                         this));
-            this.dataListener.addRetrievedCallback($.proxy(this.useLayerInfo,
-                                                           this));
-
+            this.dataListener.setRequestCallback( $.proxy(this.requestLayerInfo, this));
+            this.dataListener.addRetrievedCallback( $.proxy(this.useLayerInfo, this));
             this.dataListener.retrieveLayerInfo();
         },
 
@@ -180,7 +169,7 @@ define(function (require) {
          * Get the opacity of a given sub-layer
          */
         getSubLayerOpacity: function (subLayerId) {
-            var layer = this.mapLayer[subLayerId],
+            var layer = this.layers[subLayerId],
                 opacity = NaN;
 
             if (layer) {
@@ -194,7 +183,7 @@ define(function (require) {
          * Set the opacity of a given sub-layer
          */
         setSubLayerOpacity: function (subLayerId, opacity) {
-            var layer = this.mapLayer[subLayerId];
+            var layer = this.layers[subLayerId];
             if (layer) {
                 layer.olLayer_.setOpacity(opacity);
             }
@@ -205,7 +194,7 @@ define(function (require) {
          * Set the visibility of a given sub-layer
          */
         setSubLayerVisibility: function (subLayerId, visibility) {
-            var layer = this.mapLayer[subLayerId];
+            var layer = this.layers[subLayerId];
             if (layer) {
                 layer.olLayer_.setVisibility(visibility);
             }
@@ -219,7 +208,7 @@ define(function (require) {
          * @param {boolean} enabled - TRUE if the sub layer should be enabled, false otherwise.
          */
         setSubLayerEnabled: function (subLayerId, enabled) {
-            var layer = this.mapLayer[subLayerId];
+            var layer = this.layers[subLayerId];
             if (layer) {
                 layer.olLayer_.setVisibility(enabled);
             }
@@ -230,7 +219,7 @@ define(function (require) {
          * @returns {boolean} - TRUE if the sublayer is enabled, false otherwise.
          */
         getSubLayerEnabled: function (subLayerId) {
-            var layer = this.mapLayer[subLayerId], enabled;
+            var layer = this.layers[subLayerId], enabled;
             enabled = false;
 
             if (layer) {
@@ -341,7 +330,7 @@ define(function (require) {
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
         setSubLayerZIndex: function (subLayerId, zIndex) {
-            var olLayer = this.mapLayer[subLayerId].olLayer_;
+            var olLayer = this.layers[subLayerId].olLayer_;
             this.map.setLayerIndex(olLayer, zIndex);
         },
 
@@ -351,7 +340,7 @@ define(function (require) {
          * @returns {number} - The z-order value of the layer, where 0 is front.
          */
         getSubLayerZIndex: function (subLayerId) {
-            var olLayer = this.mapLayer[subLayerId].olLayer_;
+            var olLayer = this.layers[subLayerId].olLayer_;
             return this.map.getLayerIndex(olLayer);
         },
 
@@ -373,9 +362,9 @@ define(function (require) {
                     yFunction;
                 if (!layerInfo) {
                     // No info; remove layer for now
-                    if (this.mapLayer[layer]) {
-                        this.map.map.remove(this.mapLayer[layer]);
-                        this.mapLayer[layer] = null;
+                    if (this.layers[layer]) {
+                        this.map.map.remove(this.layers[layer]);
+                        this.layers[layer] = null;
                     }
                 } else {
                     // The bounds of the full OpenLayers map, used to determine 
@@ -395,14 +384,14 @@ define(function (require) {
                     }
 
                     // Remove any old version of this layer
-                    if (this.mapLayer[layer]) {
-                        //this.map.map.removeLayer(this.mapLayer[layer]);
-                        this.mapLayer[layer].remove();
-                        this.mapLayer[layer] = null;
+                    if (this.layers[layer]) {
+                        //this.map.map.removeLayer(this.layers[layer]);
+                        this.layers[layer].remove();
+                        this.layers[layer] = null;
                     }
 
                     // Add the new layer
-                    this.mapLayer[layer] = this.map.addApertureLayer(
+                    this.layers[layer] = this.map.addApertureLayer(
                         aperture.geo.MapTileLayer.TMS, {},
                         {
                             'name': 'Aperture Tile Layers',
@@ -429,7 +418,7 @@ define(function (require) {
 
                                     if (x >= 0 && y >= 0) {
 
-                                        viewBounds = that.map.getTileSetBoundsInView().params;
+                                        viewBounds = that.map.getTileBoundsInView(); //.params;
                                         
                                         fullUrl = (this.url + this.version + "/" +
                                                    this.layername + "/" + 
@@ -457,17 +446,17 @@ define(function (require) {
                     // but does prevent them from overlapping client layers. In the future it 
                     // may be worth implementing a more sophisticated system to allow proper 
                     // client-server inclusive ordering
-					this.map.setLayerIndex( this.mapLayer[layer].olLayer_, 0 );
+					this.map.setLayerIndex( this.layers[layer].olLayer_, 0 );
 
                     // Apparently we can't set opacity through options, so we 
                     // hand-set it now
                     if (layerSpec && layerSpec.Opacity) {
-                        this.mapLayer[layer].olLayer_.setOpacity(layerSpec.Opacity);
+                        this.layers[layer].olLayer_.setOpacity(layerSpec.Opacity);
                     }
                 }
             });
         }
     });
 
-    return ServerRenderedMapLayer;
+    return ServerLayer;
 });

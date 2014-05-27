@@ -26,7 +26,7 @@
 	],
 
 	"id" : "bitcoin source vs. amount",
-	"description" : "A plot indicating in how many transactions a given bitcoin source spent a given amount of bitcoins.",
+	"description" : "Bitcoin Source ID vs. Amount of Transaction",
 
 	"PyramidConfig": {
 		"type" : "AreaOfInterest",

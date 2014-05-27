@@ -35,7 +35,7 @@
       com.oculusinfo.tile.rest.TileModule:
 
       <!-- Set up the spark module -->
-      com.oculusinfo.tile.spark.SparkModule:
+<!--       com.oculusinfo.tile.spark.SparkModule: -->
 
       <!-- Sets up the REST interface by which clients can retrieve annotations -->
       com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
