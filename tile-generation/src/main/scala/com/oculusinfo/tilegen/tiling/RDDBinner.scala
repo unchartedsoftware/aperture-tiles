@@ -64,6 +64,12 @@ class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializab
 	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
 }
 
+class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable { 
+//class LineSegmentIndexScheme extends Serializable {
+	def toCartesianEndpoints (coords: (Double, Double, Double, Double)): (Double, Double, Double, Double) = coords
+	def toCartesian (coords: (Double, Double, Double, Double)): (Double, Double) = (coords._1, coords._2)
+}	//TODO -- should LineSegmentIndexScheme be in linesegmentBinner?? ... or a new RDDLineBinner ??
+
 class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
 	def toCartesian (ipAddress: Array[Byte]): (Double, Double) = {
 		def getXDigit (byte: Byte): Long =
