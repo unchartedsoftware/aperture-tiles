@@ -59,7 +59,8 @@ require(['./FileLoader',
 	            getLayers,
 	            getAnnotationLayers,
 	            uiMediator,
-	            getURLParameter;
+	            getURLParameter,
+	            filesDeferred, mapsDeferred, layersDeferred, annotationsDeferred;
 
 	        getURLParameter = function (key) {
 		        var url = window.location.search.substring(1),
@@ -169,95 +170,95 @@ require(['./FileLoader',
 	        });
 
 	        // Load all our UI configuration data before trying to bring up the ui
-            FileLoader.loadJSONData(apertureConfigFile).done(function (jsonDataMap) {
+	        filesDeferred = FileLoader.loadJSONData(apertureConfigFile);
+	        filesDeferred.done(function (jsonDataMap) {
 		        // First off, configure aperture.
 		        configureAperture(jsonDataMap[apertureConfigFile]);
 
-		        // Get our list of maps
-		        MapService.requestMaps(function (maps) {
-			        // For now, just use the first map
-			        var currentMap,
-			            mapConfig,
-			            worldMap,
-			            mapPyramid,
-			            mapsButton,
-			            mapButton,
-			            i;
+		        // Get our list of maps and layers
+		        mapsDeferred = MapService.requestMaps();
+		        layersDeferred = LayerService.requestLayers();
+		        annotationsDeferred = AnnotationLayerFactory.requestLayers();
 
-			        // Initialize our map choice panel
-			        if (maps.length > 1) {
-				        // ... first, create the panel
-				        mapsButton = new OverlayButton({
-					        id: 'maps',
-					        active: false,
-					        activeWidth: '25%',
-					        text: 'Maps',
-					        css: { left: '10px', top: '10px' }
-				        });
-				        // ... Next, insert contents
-				        for (i=0; i<maps.length; ++i) {
-					        mapButton = $('<a/>').attr({
-						        href: '?map='+i
+		        $.when(mapsDeferred, layersDeferred, annotationsDeferred).done(
+			        function (maps, layers, annotationLayers) {
+				        // For now, just use the first map
+				        var currentMap,
+				            mapConfig,
+				            worldMap,
+				            mapPyramid,
+				            mapsButton,
+				            mapButton,
+				            i,
+				            filter,
+				            clientLayers,
+				            serverLayers;
+
+				        // Initialize our map choice panel
+				        if (maps.length > 1) {
+					        // ... first, create the panel
+					        mapsButton = new OverlayButton({
+						        id: 'maps',
+						        active: false,
+						        activeWidth: '25%',
+						        text: 'Maps',
+						        css: { left: '10px', top: '10px' }
 					        });
-					        mapButton.append(maps[i].description+'<br>');
-					        mapButton.appendTo(mapsButton.getContainer());
-				        }
-			        }
-
-			        // Initialize our map...
-			        currentMap = getURLParameter('map');
-			        if (!currentMap || !maps[currentMap]) {
-				        currentMap = 0;
-			        }
-			        mapConfig = maps[currentMap];
-			        worldMap = new Map("map", mapConfig);
-			        // ... (set up our map axes) ...
-			        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
-			        // ... perform any project-specific map customizations ...
-			        if (UICustomization.customizeMap) {
-				        UICustomization.customizeMap(worldMap);
-			        }
-			        // ... and request relevant data layers
-			        mapPyramid = mapConfig.PyramidConfig;
-
-			        LayerService.requestLayers(
-				        function (layers) {
-					        // TODO: Make it so we can pass the pyramid up to the server
-					        // in the layers request, and have it return only portions
-					        // of the layer tree that match that pyramid.
-					        // Eventually, we should let the user choose among them.
-					        var filter = function (layer) {
-						        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
-					        },
-					            clientLayers = getLayers("client", layers, filter),
-					            serverLayers = getLayers("server", layers, filter);
-
-					        if (UICustomization.customizeLayers) {
-						        UICustomization.customizeLayers(layers);
+					        // ... Next, insert contents
+					        for (i=0; i<maps.length; ++i) {
+						        mapButton = $('<a/>').attr({
+							        href: '?map='+i
+						        });
+						        mapButton.append(maps[i].description+'<br>');
+						        mapButton.appendTo(mapsButton.getContainer());
 					        }
-
-					        uiMediator = new UIMediator();
-					        
-					        // Create client and server layers
-					        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
-					        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
-
-					        new LayerControls().initialize( uiMediator.getLayerStateMap() );
-
-					        AnnotationLayerFactory.requestLayers(
-						        function( layers ) {
-
-							        var annotationLayers = getAnnotationLayers(layers, filter);
-							        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
-
-						        }
-					        );
-
-					        // Trigger the initial resize event to resize everything
-					        $(window).resize();
 				        }
-			        );
 
-		        });
+				        // Initialize our map...
+				        currentMap = getURLParameter('map');
+				        if (!currentMap || !maps[currentMap]) {
+					        currentMap = 0;
+				        }
+				        mapConfig = maps[currentMap];
+				        worldMap = new Map("map", mapConfig);
+				        // ... (set up our map axes) ...
+				        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
+				        // ... perform any project-specific map customizations ...
+				        if (UICustomization.customizeMap) {
+					        UICustomization.customizeMap(worldMap);
+				        }
+				        // ... and request relevant data layers
+				        mapPyramid = mapConfig.PyramidConfig;
+
+				        // TODO: Make it so we can pass the pyramid up to the server
+				        // in the layers request, and have it return only portions
+				        // of the layer tree that match that pyramid.
+				        // Eventually, we should let the user choose among them.
+				        filter = function (layer) {
+					        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
+				        };
+				        clientLayers = getLayers("client", layers, filter);
+				        serverLayers = getLayers("server", layers, filter);
+
+				        if (UICustomization.customizeLayers) {
+					        UICustomization.customizeLayers(layers);
+				        }
+
+				        uiMediator = new UIMediator();
+
+				        // Create client and server layers
+				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+				        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
+
+				        new LayerControls().initialize( uiMediator.getLayerStateMap() );
+
+				        // Annotation layers
+				        annotationLayers = getAnnotationLayers(annotationLayers, filter);
+				        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
+			        }
+		        );
+
+		        // Trigger the initial resize event to resize everything
+		        $(window).resize();
 	        });
         });
