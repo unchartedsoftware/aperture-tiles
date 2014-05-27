@@ -33,6 +33,7 @@ import java.awt.geom.Point2D
 
 
 import scala.collection.JavaConversions._
+import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
 
@@ -52,9 +53,9 @@ import com.oculusinfo.tilegen.util.MissingArgumentException
 
 
 
-class GenericSeriesBinner[T: ClassManifest] (source: DataSource,
-                                             parser: RecordParser[T],
-                                             extractor: FieldExtractor[T]) extends Serializable {
+class GenericSeriesBinner[T: ClassTag] (source: DataSource,
+                                        parser: RecordParser[T],
+                                        extractor: FieldExtractor[T]) extends Serializable {
 	// Extract just the coordinates
 	private def extractCoordinates (data: RDD[T],
 	                                coordFcns: Seq[T => Try[Double]]):
@@ -233,7 +234,7 @@ class GenericSeriesBinner[T: ClassManifest] (source: DataSource,
 		)
 	}
 
-	def getNumSplits[T: ClassManifest] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
+	def getNumSplits[T: ClassTag] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
 		val curSize = dataSet.partitions.size
 		val result = curSize max requestedPartitions.getOrElse(0)
 		result

@@ -40,6 +40,7 @@ import java.util.Calendar
 import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
+import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
 import org.apache.log4j.Logger
@@ -178,9 +179,9 @@ class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingConte
  * A streaming strategy that takes a given preparsed dstream and then windows it
  * up over the given window and slide durations.
  */
-class WindowedProcessingStrategy[IT: ClassManifest] (stream: DStream[(IT, Double)],
-                                                     windowDurSec: Int,
-                                                     slideDurSec: Int)
+class WindowedProcessingStrategy[IT: ClassTag] (stream: DStream[(IT, Double)],
+                                                windowDurSec: Int,
+                                                slideDurSec: Int)
 		extends StreamingProcessingStrategy[IT, Double] {
 	protected def getData: DStream[(IT, Double)] =
 		stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
@@ -194,9 +195,9 @@ object StreamingCSVBinner {
 	 * DStream[(Double, Double, Double)]. All data is cached at the end so that
 	 * any windowed operations after will start from here.
 	 */
-	def getParsedStream[IT: ClassManifest] (properties: CSVRecordPropertiesWrapper,
-	                                        source: StreamingCSVDataSource,
-	                                        indexer: CSVIndexExtractor[IT]): DStream[(IT, Double)] = {
+	def getParsedStream[IT: ClassTag] (properties: CSVRecordPropertiesWrapper,
+	                                   source: StreamingCSVDataSource,
+	                                   indexer: CSVIndexExtractor[IT]): DStream[(IT, Double)] = {
 		val localZVar = properties.getString("oculus.binning.valueField", "The field to use for the value to tile", Some("count"))
 
 		val strm = source.getDataStream
@@ -333,7 +334,7 @@ object StreamingCSVBinner {
 	/**
 	 * The actual processing function for the streaming dataset. This bins up the data and then writes it out.
 	 */
-	def processDataset[IT: ClassManifest, PT: ClassManifest, BT]
+	def processDataset[IT: ClassTag, PT: ClassTag, BT]
 		(dataset: Dataset[IT, PT, BT] with StreamingProcessor[IT, PT],
 		 job: (String, Int), tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
@@ -380,18 +381,18 @@ object StreamingCSVBinner {
 		)
 	}
 	
-	def processDatasetGeneric[IT: ClassManifest, PT, BT]
+	def processDatasetGeneric[IT: ClassTag, PT, BT]
 		(dataset: Dataset[IT, PT, BT] with StreamingProcessor[IT, PT],
 		 tileIO: TileIO,
 		 job: (String, Int)): Unit =
 		processDataset(dataset, job, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
 	
 	
-	def processIndex[IT: ClassManifest] (ssc: StreamingContext,
-	                                     tileIO: TileIO,
-	                                     batchJobs: Seq[(String, Int)],
-	                                     properties: CSVRecordPropertiesWrapper,
-	                                     indexer: CSVIndexExtractor[IT]) = {
+	def processIndex[IT: ClassTag] (ssc: StreamingContext,
+	                                tileIO: TileIO,
+	                                batchJobs: Seq[(String, Int)],
+	                                properties: CSVRecordPropertiesWrapper,
+	                                indexer: CSVIndexExtractor[IT]) = {
 		val source = new StreamingCSVDataSource(properties, ssc)
 
 		//preparse the stream before we start to process the actual data

@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat
 import java.util.Properties
 
 import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
 import org.apache.spark.SparkContext
@@ -223,8 +224,8 @@ object CSVIndexExtractor {
 		}
 	}
 }
-abstract class CSVIndexExtractor[T: ClassManifest] extends Serializable {
-	val indexTypeManifest = implicitly[ClassManifest[T]]
+abstract class CSVIndexExtractor[T: ClassTag] extends Serializable {
+	val indexTypeManifest = implicitly[ClassTag[T]]
 
 	// The fields this extractor needs
 	def fields: Array[String]
@@ -484,13 +485,13 @@ object CSVDatasetBase {
 	val ZERO_STR = "zero"
 }
 
-abstract class CSVDatasetBase[IT: ClassManifest]
+abstract class CSVDatasetBase[IT: ClassTag]
 	(indexer: CSVIndexExtractor[IT],
 	 properties: CSVRecordPropertiesWrapper,
 	 tileWidth: Int,
 	 tileHeight: Int)
 		extends Dataset[IT, Double, JavaDouble] {
-	def manifest = implicitly[ClassManifest[Double]]
+	def manifest = implicitly[ClassTag[Double]]
 
 	private val description = properties.getStringOption("oculus.binning.description",
 	                                                     "The description to put in the tile metadata")
@@ -746,10 +747,10 @@ abstract class CSVDatasetBase[IT: ClassManifest]
 /**
  * Handles basic RDD's using a ProcessingStrategy. 
  */
-class CSVDataset[IT: ClassManifest] (indexer: CSVIndexExtractor[IT],
-                                     properties: CSVRecordPropertiesWrapper,
-                                     tileWidth: Int,
-                                     tileHeight: Int)
+class CSVDataset[IT: ClassTag] (indexer: CSVIndexExtractor[IT],
+                                properties: CSVRecordPropertiesWrapper,
+                                tileWidth: Int,
+                                tileHeight: Int)
 		extends CSVDatasetBase[IT](indexer, properties, tileWidth, tileHeight) {
 	// Just some Filter type aliases from Queries.scala
 	import com.oculusinfo.tilegen.datasets.FilterAware._
@@ -798,10 +799,10 @@ class CSVDataset[IT: ClassManifest] (indexer: CSVIndexExtractor[IT],
  * for the case where the stream is windowed. In this case the stream must be
  * preparsed and then a new strategy created for each window.  
  */
-class StreamingCSVDataset[IT: ClassManifest] (indexer: CSVIndexExtractor[IT],
-                                              properties: CSVRecordPropertiesWrapper,
-                                              tileWidth: Int,
-                                              tileHeight: Int)
+class StreamingCSVDataset[IT: ClassTag] (indexer: CSVIndexExtractor[IT],
+                                         properties: CSVRecordPropertiesWrapper,
+                                         tileWidth: Int,
+                                         tileHeight: Int)
 		extends CSVDatasetBase[IT](indexer, properties,
 		                       tileWidth, tileHeight) with StreamingProcessor[IT, Double]  {
 	
