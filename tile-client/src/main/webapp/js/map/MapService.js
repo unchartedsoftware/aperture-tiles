@@ -31,34 +31,26 @@
 define(function (require) {
     "use strict";
 
+    var mapDeferred;
+
 	return {
-
-		maps: 0,
-		callbacks: [],
-
-		requestMaps: function (callback) {
-			if (this.maps) {
-				callback(this.maps);
-			} else {
-                this.callbacks.push(callback);
+		requestMaps: function () {
+            if (!mapDeferred) {
+                mapDeferred = $.Deferred();
                 aperture.io.rest('/maps',
                                  'GET',
-                                 $.proxy(this.onMapListRetrieved, this),
-                                 {}
-                                );
-			}
-		},
-		onMapListRetrieved: function (maps, status) {
-            if (!status.success) {
-                return;
+                                 function (maps, status) {
+                                     if (status.success) {
+                                         mapDeferred.resolve(maps);
+                                     } else {
+                                         mapDeferred.fail(status);
+                                     }
+                                 },
+                                 {});
             }
-			this.maps = maps;
-            var callbacks = this.callbacks;
-            this.callbacks = [];
-            callbacks.forEach(function(callback) {
-                callback(maps);
-                    });
+            return mapDeferred;
 		},
+
 		getAxisConfig: function (mapConfig) {
 			var axisConfig, pyramidConfig, i;
 

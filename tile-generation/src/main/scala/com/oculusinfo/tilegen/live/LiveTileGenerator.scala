@@ -27,11 +27,13 @@ package com.oculusinfo.tilegen.live
 
 
 
+import java.awt.geom.Point2D
+
+import scala.reflect.ClassTag
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-
-import java.awt.geom.Point2D
 
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
@@ -44,12 +46,12 @@ import com.oculusinfo.tilegen.tiling.BinDescriptor
 
 
 
-class LiveTileGenerator[PT: ClassManifest,
-                        BT: ClassManifest] (data: RDD[(Double, Double, PT)],
-                                            pyramidScheme: TilePyramid,
-                                            binDescriptor: BinDescriptor[PT, BT],
-                                            numXBins: Int = 256,
-                                            numYBins: Int = 256) {
+class LiveTileGenerator[PT: ClassTag,
+                        BT: ClassTag] (data: RDD[(Double, Double, PT)],
+                                       pyramidScheme: TilePyramid,
+                                       binDescriptor: BinDescriptor[PT, BT],
+                                       numXBins: Int = 256,
+                                       numYBins: Int = 256) {
 	var densityStrip: Boolean = false
 
 	def getTile (tileLevel: Int, tileX: Int, tileY: Int): TileData[BT] = {

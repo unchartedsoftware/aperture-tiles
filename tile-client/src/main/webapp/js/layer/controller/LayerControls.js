@@ -399,7 +399,7 @@ define(function (require) {
          *
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
-        initialize: function (layerStateMap) {
+        initialize: function ( controlsId, layerStateMap) {
             var layerState, overlay;
 
             // "Private" vars
@@ -408,7 +408,7 @@ define(function (require) {
 
             // create the container
             overlay = new OverlayButton({
-                id:'layer-controls',
+                id: controlsId,
                 active: false,
                 activeWidth: '50%',
                 text: 'Controls',

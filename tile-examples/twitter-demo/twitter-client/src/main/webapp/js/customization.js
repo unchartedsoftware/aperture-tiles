@@ -32,32 +32,31 @@
 define(function (require) {
     "use strict";
 
-    var FileLoader = require('./FileLoader');
-
     return {
         customizeMap: function (worldMap) {
-            var majorCitiesFile = "./data/majorCities.json";
 
-            FileLoader.loadJSONData(majorCitiesFile, function (jsonDataMap) {
-                var majorCitiesDropDown;
+            var majorCities,
+                $majorCitiesDropDown,
+                majorCitiesFile = "/data/majorCities.json";
+
+            $.get("./data/majorCities.json", function(majorCities) {
 
                 // Add major cities entries to zoom select box
-                majorCitiesDropDown = $("#select-city-zoom");
-                $.each(jsonDataMap[majorCitiesFile], function(key) {
-                    majorCitiesDropDown.append(
+                $majorCitiesDropDown = $("#select-city-zoom");
+                $.each(majorCities, function(key) {
+                    $majorCitiesDropDown.append(
                         $('<option></option>').val(key).html(this.text)
                     );
                 });
                 // Set city zoom callback function
-                majorCitiesDropDown.change( function() {
-                    var majorCitiesMap = jsonDataMap[majorCitiesFile];
-                    worldMap.map.zoomTo( majorCitiesMap[this.value].lat,
-                                         majorCitiesMap[this.value].long, 8);
+                $majorCitiesDropDown.change( function() {
+                    worldMap.map.zoomTo( majorCities[this.value].lat,
+                                         majorCities[this.value].long, 8);
                 });
 
                 // Zoom to the area of the world with the data.
                 worldMap.map.zoomTo( 40, -95, 4 );
-            });
+            }, "json");
         }
     };
 });

@@ -30,11 +30,12 @@ package com.oculusinfo.tilegen.tiling
 import java.io.FileInputStream
 import java.util.Properties
 
+import scala.collection.mutable.{Map => MutableMap}
+import scala.reflect.ClassTag
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-
-import scala.collection.mutable.{Map => MutableMap}
 
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
@@ -75,15 +76,15 @@ class SortedBinner {
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
 	 */
-	def processDataByLevel[IT: ClassManifest,
-	                       PT: ClassManifest, BT] (data: RDD[(IT, PT)],
-	                                               indexScheme: IndexScheme[IT],
-	                                               binDesc: BinDescriptor[PT, BT],
-	                                               tileScheme: TilePyramid,
-	                                               levels: Seq[Int],
-	                                               bins: Int = 256,
-	                                               consolidationPartitions: Option[Int] = None,
-	                                               isDensityStrip: Boolean = false):
+	def processDataByLevel[IT: ClassTag,
+	                       PT: ClassTag, BT] (data: RDD[(IT, PT)],
+	                                          indexScheme: IndexScheme[IT],
+	                                          binDesc: BinDescriptor[PT, BT],
+	                                          tileScheme: TilePyramid,
+	                                          levels: Seq[Int],
+	                                          bins: Int = 256,
+	                                          consolidationPartitions: Option[Int] = None,
+	                                          isDensityStrip: Boolean = false):
 			RDD[TileData[BT]] = {
 		val mapOverLevels: (IT, PT) => TraversableOnce[((TileIndex, BinIndex), PT)] =
 			(key, value) => {
@@ -117,13 +118,13 @@ class SortedBinner {
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
 	 */
-	def processData[IT: ClassManifest,
-	                PT: ClassManifest, BT] (data: RDD[(IT, PT)],
-	                                        binDesc: BinDescriptor[PT, BT],
-	                                        datumToTiles: (IT, PT) => TraversableOnce[((TileIndex, BinIndex), PT)],
-	                                        bins: Int = 256,
-	                                        consolidationPartitions: Option[Int] = None,
-	                                        isDensityStrip: Boolean = false):
+	def processData[IT: ClassTag,
+	                PT: ClassTag, BT] (data: RDD[(IT, PT)],
+	                                   binDesc: BinDescriptor[PT, BT],
+	                                   datumToTiles: (IT, PT) => TraversableOnce[((TileIndex, BinIndex), PT)],
+	                                   bins: Int = 256,
+	                                   consolidationPartitions: Option[Int] = None,
+	                                   isDensityStrip: Boolean = false):
 			RDD[TileData[BT]] = {
 		// Combine two tiles, assuming they have the same tile index
 		val combineTiles: (TileData[PT], TileData[PT]) => TileData[PT] = (a, b) => {
@@ -242,9 +243,9 @@ object SortedBinnerTest {
 		}
 	}
 	
-	def processDataset[IT: ClassManifest,
-	                   PT: ClassManifest, BT] (dataset: Dataset[IT, PT, BT],
-	                                           tileIO: TileIO): Unit = {
+	def processDataset[IT: ClassTag,
+	                   PT: ClassTag, BT] (dataset: Dataset[IT, PT, BT],
+	                                      tileIO: TileIO): Unit = {
 		val binner = new SortedBinner
 		binner.debug = true
 		dataset.getLevels.map(levels =>
