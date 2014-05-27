@@ -27,6 +27,8 @@ package com.oculusinfo.tilegen.tiling
 
 
 
+import scala.reflect.ClassTag
+
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
@@ -70,9 +72,9 @@ object TileSortingTest {
 }
 
 class TileSorter {
-	def sortDatasetByTile[T: ClassManifest] (data: RDD[T],
-	                                         pyramid: TilePyramid,
-	                                         coordFcn: T => (Double, Double)):
+	def sortDatasetByTile[T: ClassTag] (data: RDD[T],
+	                                    pyramid: TilePyramid,
+	                                    coordFcn: T => (Double, Double)):
 			RDD[T] = {
 		val comparator = new PyramidComparator(pyramid)
 		data.map(r =>

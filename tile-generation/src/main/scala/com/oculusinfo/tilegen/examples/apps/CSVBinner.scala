@@ -29,9 +29,13 @@ package com.oculusinfo.tilegen.examples.apps
 
 import java.io.FileInputStream
 import java.util.Properties
+
 import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
+
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.datasets.Dataset
@@ -126,8 +130,8 @@ object CSVBinner {
 		}
 	}
 	
-	def processDataset[IT: ClassManifest,
-	                   PT: ClassManifest, 
+	def processDataset[IT: ClassTag,
+	                   PT: ClassTag, 
 	                   BT] (dataset: Dataset[IT, PT, BT],
 	                        tileIO: TileIO): Unit = {
 		val binner = new RDDBinner

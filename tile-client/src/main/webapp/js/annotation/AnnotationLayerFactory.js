@@ -28,7 +28,8 @@
 define( function (require) {
     "use strict";
 		
-    var AnnotationLayer = require('./AnnotationLayer');
+    var AnnotationLayer = require('./AnnotationLayer'),
+        annotationDeferred;
 
 	return {
 	
@@ -57,23 +58,24 @@ define( function (require) {
          * Receive all annotation layers from server
          * @param callback     the callback that is called upon receiving data from server
          */
-        requestLayers: function( callback ) {
+        requestLayers: function() {
+	        if (!annotationDeferred) {
+		        annotationDeferred = $.Deferred();
 
-            // Request the layer information
-            aperture.io.rest('/annotation',
-                'POST',
-                callback,
-                {
-                    postData: {
-                        "type": "list"
-                    },
-                    contentType: 'application/json'
-                });
-
+		        // Request the layer information
+		        aperture.io.rest('/annotation',
+		                         'POST',
+		                         function (layers) {
+			                         annotationDeferred.resolve(layers);
+		                         },
+		                         {
+			                         postData: {
+				                         "type": "list"
+			                         },
+			                         contentType: 'application/json'
+		                         });
+	        }
+	        return annotationDeferred;
         }
-
-
     };	
-	
-
 });

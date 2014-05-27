@@ -30,18 +30,22 @@ package com.oculusinfo.tilegen.datasets
 
 
 import java.util.Properties
+
 import scala.collection.mutable.MutableList
+import scala.reflect.ClassTag
+
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.streaming.Time
+
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.IndexScheme
 import com.oculusinfo.tilegen.tiling.TileMetaData
 import com.oculusinfo.tilegen.tiling.BinDescriptor
-import org.apache.spark.streaming.Time
 
 
 
@@ -52,9 +56,9 @@ import org.apache.spark.streaming.Time
  * simple property files, which can be passed into a binning process from any
  * place that needs raw data to be binned.
  */
-abstract class Dataset[IT: ClassManifest, PT: ClassManifest, BT] {
-	val indexTypeManifest = implicitly[ClassManifest[IT]]
-	val binTypeManifest = implicitly[ClassManifest[PT]]
+abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
+	val indexTypeManifest = implicitly[ClassTag[IT]]
+	val binTypeManifest = implicitly[ClassTag[PT]]
 	var _debug = true;
 
 
@@ -132,7 +136,7 @@ abstract class Dataset[IT: ClassManifest, PT: ClassManifest, BT] {
 		}
 	}
 
-	def transformRDD[OUTPUT_TYPE: ClassManifest]
+	def transformRDD[OUTPUT_TYPE: ClassTag]
 		(fcn: (RDD[(IT, PT)]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized dataset "+getName)
@@ -140,7 +144,7 @@ abstract class Dataset[IT: ClassManifest, PT: ClassManifest, BT] {
 			strategy.transformRDD[OUTPUT_TYPE](fcn)
 		}
 
-	def transformDStream[OUTPUT_TYPE: ClassManifest]
+	def transformDStream[OUTPUT_TYPE: ClassTag]
 		(fcn: (RDD[(IT, PT)]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized dataset "+getName)
@@ -154,18 +158,18 @@ trait StreamingProcessor[IT, PT] {
 	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit
 }
 
-abstract class ProcessingStrategy[IT: ClassManifest, PT: ClassManifest] {
+abstract class ProcessingStrategy[IT: ClassTag, PT: ClassTag] {
 	def process[OUTPUT] (fcn: RDD[(IT, PT)] => OUTPUT,
 	                     completionCallback: Option[OUTPUT => Unit]): Unit
 
-	def transformRDD[OUTPUT_TYPE: ClassManifest]
+	def transformRDD[OUTPUT_TYPE: ClassTag]
 		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
 
-	def transformDStream[OUTPUT_TYPE: ClassManifest]
+	def transformDStream[OUTPUT_TYPE: ClassTag]
 		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
 }
 
-abstract class StaticProcessingStrategy[IT: ClassManifest, PT: ClassManifest] (sc: SparkContext)
+abstract class StaticProcessingStrategy[IT: ClassTag, PT: ClassTag] (sc: SparkContext)
 		extends ProcessingStrategy[IT, PT] {
 	private val rdd = getData
 
@@ -177,16 +181,16 @@ abstract class StaticProcessingStrategy[IT: ClassManifest, PT: ClassManifest] (s
 		completionCallback.map(_(result))
 	}
 
-	final def transformRDD[OUTPUT_TYPE: ClassManifest]
+	final def transformRDD[OUTPUT_TYPE: ClassTag]
 		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 		fcn(rdd)
 
-	final def transformDStream[OUTPUT_TYPE: ClassManifest]
+	final def transformDStream[OUTPUT_TYPE: ClassTag]
 		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 		throw new Exception("Attempt to call DStream transform on RDD processor")
 }
 
-abstract class StreamingProcessingStrategy[IT: ClassManifest, PT: ClassManifest]
+abstract class StreamingProcessingStrategy[IT: ClassTag, PT: ClassTag]
 		extends ProcessingStrategy[IT, PT] {
 	private val dstream = getData
 
@@ -200,21 +204,21 @@ abstract class StreamingProcessingStrategy[IT: ClassManifest, PT: ClassManifest]
 
 	def process[OUTPUT] (fcn: RDD[(IT, PT)] => OUTPUT,
 	                     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
-		dstream.foreach(internalProcess(_, fcn, completionCallback))
+		dstream.foreachRDD(internalProcess(_, fcn, completionCallback))
 	}
 
 	def processWithTime[OUTPUT] (fcn: Time => RDD[(IT, PT)] => OUTPUT,
 	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
-		dstream.foreach{(rdd, time) =>
+		dstream.foreachRDD{(rdd, time) =>
 			internalProcess(rdd, fcn(time), completionCallback.map(_(time)))
 		}
 	}
 	
-	final def transformRDD[OUTPUT_TYPE: ClassManifest]
+	final def transformRDD[OUTPUT_TYPE: ClassTag]
 		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 		throw new Exception("Attempt to call RDD transform on DStream processor")
 
-	final def transformDStream[OUTPUT_TYPE: ClassManifest]
+	final def transformDStream[OUTPUT_TYPE: ClassTag]
 		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 		dstream.transform(fcn)
 }
@@ -222,10 +226,10 @@ abstract class StreamingProcessingStrategy[IT: ClassManifest, PT: ClassManifest]
 
 
 object DatasetFactory {
-	private def getDataset[T: ClassManifest] (indexer: CSVIndexExtractor[T],
-	                                          properties: CSVRecordPropertiesWrapper,
-	                                          tileWidth: Int,
-	                                          tileHeight: Int): CSVDataset[T] =
+	private def getDataset[T: ClassTag] (indexer: CSVIndexExtractor[T],
+	                                     properties: CSVRecordPropertiesWrapper,
+	                                     tileWidth: Int,
+	                                     tileHeight: Int): CSVDataset[T] =
 		new CSVDataset(indexer, properties, tileWidth, tileHeight)
 
 	private def getDatasetGeneric[T] (indexer: CSVIndexExtractor[T],

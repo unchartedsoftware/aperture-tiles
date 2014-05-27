@@ -29,7 +29,6 @@
     	PlotLink = require('./plotlink'),
         MapService = require('./map/MapService'),
         LayerService = require('./layer/LayerService'),
-        AvailableLayersTracker = require('./layer/AllLayers'),
         Map = require('./map/Map'),
         UIMediator = require('./layer/controller/UIMediator'),
         ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
@@ -81,7 +80,6 @@
 
         var constructPlot = function(event, ui){
             var tabLayerId = null;
-            console.log("construct plot fired");
             if (event.type == 'tabsbeforeactivate'){
 
                 // Check if this is from a tab switch.
@@ -471,121 +469,123 @@
             });
         };
 
-        var generateJsonPlots = function(onComplete){
-            AvailableLayersTracker.requestLayers(function (layers) {
-                MapService.requestMaps(function (maps) {
-                    var mapConfig,
-                        plotId = 0;
+        var generateJsonPlots = function(){
 
-                    //iterate over each of the cross plots, generate the map, and container div
-                    $.each(maps, function (pk, pv) {
-                        // Initialize our maps...
-                        // mapID is conditional on the map being a bitcoin or a twitter map.
-                        var mapID,
-                            tabLayerId,
-                            layerConfig,
-                            mapConfig;
+            var layerDeferreds = LayerService.requestLayers();
+            var mapDeferreds = MapService.requestMaps();
 
-                        // bitcoin
-                        if (datasetLowerCase === 'bitcoin') {
+            $.when( mapDeferreds, layerDeferreds).done( function( maps, layers ) {
 
-                            //not a bitcoin map
-                            if(!pv["id"] || pv["id"].toLowerCase().trim().indexOf(datasetLowerCase) == -1){
-                                return;
-                            }
-                            mapID = pv["id"];
-                            tabLayerId = getTabLayerId(mapID);
-                            layerConfig = getLayer(layers, mapID);
-                            mapConfig = getBitcoinMapConfig(maps, mapID);
+                var plotId = 0;
 
+                //iterate over each of the cross plots, generate the map, and container div
+                $.each(maps, function (pk, pv) {
+                    // Initialize our maps...
+                    // mapID is conditional on the map being a bitcoin or a twitter map.
+                    var mapID,
+                        tabLayerId,
+                        layerConfig,
+                        mapConfig;
 
-                        } else { // twitter
-                            var layer;
-                            for(var i = 0; i < layers.length; i++){
-                                if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
-                                    for (var j = 0; j < layers[i]["children"].length; j++) {
-                                        mapID = layers[i]["children"][j].name;
-                                        layer = layers[i]["children"][j];
-                                        tabLayerId = getTabLayerId(mapID);
-                                        layerConfig = getLayer(layer, mapID);
-                                        mapConfig = pv;//getTwitterMapConfig(layer);
+                    // bitcoin
+                    if (datasetLowerCase === 'bitcoin') {
 
-                                        plotId++;
-                                        var plotTabDiv = "tab-plot-" + tabLayerId;
-                                        var plotDiv = "plot-" + tabLayerId;
-
-                                        $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
-                                        var $plotTab = $('<div id="' + plotTabDiv + '">');
-                                        var $plotVisual = $('<div id="' + plotDiv + '"></div>');
-
-                                        $plotVisual.addClass('plot-parent plot plot-size'); // plot in crossplot.css
-                                        $plotVisual.css({width: "100%", height: "100%"});
-                                        $plotTab.append($plotVisual);
-                                        $('#tabs-plots').append($plotTab);
-
-                                        //add map after the containing div has been added
-
-                                        $plotVisual.append(getMap(plotDiv, mapConfig, layerConfig));
-                                    }
-                                }
-                            }
-                            //continue the "maps" for each loop after setting up twitter
-                            return true;
-                        }
-
-                        //something is wrong with the map
-                        if (typeof mapConfig === 'undefined') {
+                        //not a bitcoin map
+                        if(!pv["id"] || pv["id"].toLowerCase().trim().indexOf(datasetLowerCase) == -1){
                             return;
                         }
+                        mapID = pv["id"];
+                        tabLayerId = getTabLayerId(mapID);
+                        layerConfig = getLayer(layers, mapID);
+                        mapConfig = getBitcoinMapConfig(maps, mapID);
 
-                        plotId++;
-                        var plotTabDiv = "tab-plot-" + tabLayerId;
-                        var plotDiv = "plot-" + tabLayerId;
 
-                        $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
-                        var $plotTab = $('<div id="' + plotTabDiv + '">');
-                        var $plotVisual = $('<div id="' + plotDiv + '"></div>');
+                    } else { // twitter
+                        var layer;
+                        for(var i = 0; i < layers.length; i++){
+                            if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
+                                for (var j = 0; j < layers[i]["children"].length; j++) {
+                                    mapID = layers[i]["children"][j].name;
+                                    layer = layers[i]["children"][j];
+                                    tabLayerId = getTabLayerId(mapID);
+                                    layerConfig = getLayer(layer, mapID);
+                                    mapConfig = pv;//getTwitterMapConfig(layer);
 
-                        $plotVisual.addClass('plot-parent plot plot-size'); // plot in crossplot.css
-                        $plotVisual.css({width: "100%", height: "100%"});
-                        $plotTab.append($plotVisual);
-                        $('#tabs-plots').append($plotTab);
+                                    plotId++;
+                                    var plotTabDiv = "tab-plot-" + tabLayerId;
+                                    var plotDiv = "plot-" + tabLayerId;
 
-                        //add map after the containing div has been added
+                                    $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
+                                    var $plotTab = $('<div id="' + plotTabDiv + '">');
+                                    var $plotVisual = $('<div id="' + plotDiv + '"></div>');
 
-                        $plotVisual.append(getMap(plotDiv, mapConfig, layerConfig));
+                                    $plotVisual.addClass('plot-parent plot plot-size'); // plot in crossplot.css
+                                    $plotVisual.css({width: "100%", height: "100%"});
+                                    $plotTab.append($plotVisual);
+                                    $('#tabs-plots').append($plotTab);
+
+                                    //add map after the containing div has been added
+
+                                    $plotVisual.append(getMap(plotDiv, mapConfig, layerConfig));
+                                }
+                            }
+                        }
+                        //continue the "maps" for each loop after setting up twitter
+                        return true;
+                    }
+
+                    //something is wrong with the map
+                    if (typeof mapConfig === 'undefined') {
+                        return;
+                    }
+
+                    plotId++;
+                    var plotTabDiv = "tab-plot-" + tabLayerId;
+                    var plotDiv = "plot-" + tabLayerId;
+
+                    $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
+                    var $plotTab = $('<div id="' + plotTabDiv + '">');
+                    var $plotVisual = $('<div id="' + plotDiv + '"></div>');
+
+                    $plotVisual.addClass('plot-parent plot plot-size'); // plot in crossplot.css
+                    $plotVisual.css({width: "100%", height: "100%"});
+                    $plotTab.append($plotVisual);
+                    $('#tabs-plots').append($plotTab);
+
+                    //add map after the containing div has been added
+
+                    $plotVisual.append(getMap(plotDiv, mapConfig, layerConfig));
+                });
+
+                $('#tabs-plots ul').each(function () {
+                    var $active, $content, $links = $(this).find('a');
+                    $active = $($links.filter('[href="' + location.hash + '"]')[0] || $links[0]);
+                    $active.addClass('active');
+                    if($active[0]) {
+                        $content = $($active[0].hash);
+                    }
+
+                    // Hide the remaining content
+                    $links.not($active).each(function () {
+                        $(this.hash).hide();
                     });
 
-                    $('#tabs-plots ul').each(function () {
-                        var $active, $content, $links = $(this).find('a');
-                        $active = $($links.filter('[href="' + location.hash + '"]')[0] || $links[0]);
+                    // Bind the click event handler
+                    $(this).on('click', 'a', function (e) {
+                        // Make the old tab inactive.
+                        $active.removeClass('active');
+                        $content.hide();
+
+                        // Update the variables with the new link and content
+                        $active = $(this);
+                        $content = $(this.hash);
+
+                        // Make the tab active.
                         $active.addClass('active');
-                        if($active[0]) {
-                            $content = $($active[0].hash);
-                        }
+                        $content.show();
 
-                        // Hide the remaining content
-                        $links.not($active).each(function () {
-                            $(this.hash).hide();
-                        });
-
-                        // Bind the click event handler
-                        $(this).on('click', 'a', function (e) {
-                            // Make the old tab inactive.
-                            $active.removeClass('active');
-                            $content.hide();
-
-                            // Update the variables with the new link and content
-                            $active = $(this);
-                            $content = $(this.hash);
-
-                            // Make the tab active.
-                            $active.addClass('active');
-                            $content.show();
-
-                            // Prevent the anchor's default click action
-                            e.preventDefault();
-                        });
+                        // Prevent the anchor's default click action
+                        e.preventDefault();
                     });
                 });
             });
@@ -611,11 +611,6 @@
             });
 
             return mapConfig;
-        };
-
-        var getTwitterMapConfig = function (layer){
-            var mapConfig;
-
         };
 
         var getLayer = function(layers, mapID){
@@ -679,7 +674,7 @@
             worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
             uiMediator = new UIMediator();
-            if(layerConfig["domain"]==='server') {
+            if(layerConfig[0]["domain"]==='server') {
                 // Create client and server layers
                 //ClientLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
                 ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);

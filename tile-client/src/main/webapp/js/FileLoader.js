@@ -78,60 +78,45 @@ define({
         return newObj;
     },
 
+    loadJSONDatum: function (file) {
+        "use strict";
+        var result = $.Deferred();
+        $.get(file, function (contents) {
+            result.resolve(contents);
+        }, "json");
+        return result;
+    },
+
     /**
      * Fetch a set of JSON files, returning each one to the provided callback 
      * function as it is returned.
      *
      * @param ... All arguments but the last are names of the files to load.
-     * @param callback The last argument is a callback that is called after
-     *        all the files are loaded.  It is called with a single argument -
-     *        an object with the file names as properties, and the loaded 
-     *        JSON objects as their values.
      */
-    loadJSONData: function (dummyFileArgs, dummyCallbackArg) {
+    loadJSONData: function () {
         "use strict";
-        var i, files, file, fileCallback, callback, leftToLoad, result;
-        result = {};
+        var result, fileDeferreds, fileMap, addToMap, i;
 
-        if (arguments.length < 1) { return; }
-        files = Array.prototype.slice.call(arguments, 0);
-        callback = files.pop();
-        if (!("function" === typeof callback)) { return; }
-        // We have a valid callback.  See if we have any valid files to load.
-        if (files.length < 1) {
-            callback({});
-            return;
-        }
-
-        // Save a copy of the files we need to load so we can tell when 
-        // we're done.
-        leftToLoad = files.slice(0);
-
-        // Set up what to do when we recieve each piece of data.
-        fileCallback = function (file) {
-            return function (data) {
-                // If failed, data should be undefined
-
-                var index = leftToLoad.indexOf(file);
-                // Make sure not to double-process any data.
-                if (-1 === index) { return; }
-
-                // Remove this file from the list of ones remaining
-                leftToLoad.splice(index, 1);
-                // Add the data to our return object
-                result[file] = data;
-
-                // See if we're done, and if we are, use our callback parameter
-                if (leftToLoad.length < 1) {
-                    callback(result);
-                }
+        result = $.Deferred();
+        fileDeferreds = [];
+        fileMap = {};
+        addToMap = function (file) {
+            return function (contents) {
+                fileMap[file] = contents;
             };
         };
 
         // Request all our data.
-        for (i=0; i<files.length; ++i) {
-            file = files[i];
-            $.get(file, fileCallback(file), "json").fail(fileCallback(file));
+        for (i=0; i<arguments.length; ++i) {
+            fileDeferreds[i] = this.loadJSONDatum(arguments[i]).then(addToMap(arguments[i]));
         }
+
+        $.when.apply(this, fileDeferreds).done(function () {
+            result.resolve(fileMap);
+        }).fail(function () {
+            result.fail();
+        });
+
+        return result;
     }
 });

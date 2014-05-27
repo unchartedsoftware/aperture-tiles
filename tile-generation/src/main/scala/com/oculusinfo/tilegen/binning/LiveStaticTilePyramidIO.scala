@@ -38,6 +38,7 @@ import java.util.Properties
 import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
 import scala.collection.mutable.{Map => MutableMap}
+import scala.reflect.ClassTag
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
@@ -145,7 +146,7 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	                   serializer: TileSerializer[BT],
 	                   javaTiles: JavaIterable[TileIndex]):
 			JavaList[TileData[BT]] = {
-		def inner[IT: ClassManifest, PT: ClassManifest]: JavaList[TileData[BT]] = {
+		def inner[IT: ClassTag, PT: ClassTag]: JavaList[TileData[BT]] = {
 			val tiles: Iterable[TileIndex] = javaTiles.asScala
 
 			if (!datasets.contains(pyramidId) ||

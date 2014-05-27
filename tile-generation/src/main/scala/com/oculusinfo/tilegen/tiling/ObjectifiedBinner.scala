@@ -29,6 +29,7 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
 
+import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
 import org.apache.spark._
@@ -69,11 +70,11 @@ import com.oculusinfo.binning.impl.AOITilePyramid
  *        A helper class to extract numeric information from records, so that
  *        the results can actually be binned.
  */
-class ObjectifiedBinner[T: ClassManifest] (name: String,
-                                           whoami: String,
-                                           source: DataSource,
-                                           parser: RecordParser[T],
-                                           extractor: FieldExtractor[T])
+class ObjectifiedBinner[T: ClassTag] (name: String,
+                                      whoami: String,
+                                      source: DataSource,
+                                      parser: RecordParser[T],
+                                      extractor: FieldExtractor[T])
 		extends ObjectifiedBinnerBase[T](source, parser, extractor) {
 	def usage: Unit = {
 		println("Usage: "+this.getClass().getName()+" <x-axis variable> <y-axis variable> <levels...>")
@@ -151,9 +152,9 @@ class ObjectifiedBinner[T: ClassManifest] (name: String,
 	}
 }
 
-class ObjectifiedBinnerBase[T: ClassManifest] (source: DataSource,
-                                               parser: RecordParser[T],
-                                               extractor: FieldExtractor[T]) {
+class ObjectifiedBinnerBase[T: ClassTag] (source: DataSource,
+                                          parser: RecordParser[T],
+                                          extractor: FieldExtractor[T]) {
 	// Set to true to get user-readable output describing what is binned in the log
 	var debug: Boolean = false
 	// Set to false to avoid actual execution of binning; with debug set to true and
@@ -352,7 +353,7 @@ trait DataSource {
  * A helper class to parse raw data lines into useful records.  This does need
  * to be serializable.
  */
-abstract class RecordParser[T: ClassManifest] extends Serializable {
+abstract class RecordParser[T: ClassTag] extends Serializable {
 	/**
 	 * Parse a partition a raw data file into instances of the record type we
 	 * want.
@@ -374,7 +375,7 @@ abstract class RecordParser[T: ClassManifest] extends Serializable {
  * A helper class to extract numeric information from records, so that the
  * results can actually be binned.  This does need to be serializable.
  */
-abstract class FieldExtractor[T: ClassManifest] extends Serializable {
+abstract class FieldExtractor[T: ClassTag] extends Serializable {
 	/**
 	 * Used only for telling the user what possibilities are allowed, so these
 	 * strings can include comments and explanations

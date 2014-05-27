@@ -24,8 +24,7 @@
  */
 /*global OpenLayers */
 
-require(['./FileLoader',
-        './ApertureConfig',
+require(['./ApertureConfig',
         './ui/OverlayButton',
         './map/MapService',
         './map/Map',
@@ -39,8 +38,7 @@ require(['./FileLoader',
         './layer/controller/UIMediator',
         './summary'],
 
-    function (FileLoader,
-              configureAperture,
+    function (configureAperture,
               OverlayButton,
               MapService,
               Map,
@@ -55,38 +53,17 @@ require(['./FileLoader',
               SummaryBuilder) {
         "use strict";
 
-	        var apertureConfigFile = "./data/aperture-config.json",
-	            cloneObject,
+	        var apertureConfigUrl = "data/aperture-config.json",
 	            getLayers,
 	            getAnnotationLayers,
 	            uiMediator;
 
-             cloneObject = function (base) {
-		        var result, key;
-
-		        if ($.isArray(base)) {
-			        result = [];
-		        } else {
-			        result = {};
-		        }
-
-		        for (key in base) {
-			        if (base.hasOwnProperty(key)) {
-				        if ("object" === typeof(base[key])) {
-					        result[key] = cloneObject(base[key]);
-				        } else {
-					        result[key] = base[key];
-				        }
-			        }
-		        }
-		        return result;
-	        };
 
 	        // Load all our UI configuration data before trying to bring up the ui
-	        FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
-
+	        $.get( apertureConfigUrl, function( apertureConfig ) {
+	        	
 		        // First off, configure aperture.
-		        configureAperture(jsonDataMap[apertureConfigFile]);
+		        configureAperture( apertureConfig );
 				
 				var dataDirectory = $.getUrlVar('dataDir');
 				var datasetName = $.getUrlVar('dataset');
@@ -99,6 +76,6 @@ require(['./FileLoader',
 					dataset: datasetName
 				});
 				summaryBuilder.start();
-			});
+			}, 'json');
     }
 );
