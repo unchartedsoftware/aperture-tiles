@@ -145,46 +145,41 @@ public class LayerServiceImpl implements LayerService {
         // Figure out which renderer config to use
         List<JSONObject> rendererConfigs = info.getRendererConfigurations();
         JSONObject rendererConfig = null;
-        if (0 == rendererConfigs.size()) {
-        	// Default to client rendering if none specified.
-            LOGGER.info("No renderer configuration found for layer " + layerId + ".  Defaulting to client.");
-            try {
-				rendererConfig = new JSONObject().put("domain", "client");
-			} catch (JSONException e) {
-				LOGGER.error("Malformed default renderer config", e);
-			}
-        } else if (1 == rendererConfigs.size()) {
-            // Only one possible base configuration (the usual case, at the moment)
-            rendererConfig = rendererConfigs.get(0);
-        } else if (null == rendererType) {
-            if (choiceIsError) {
-                throw new IllegalArgumentException("No way to choose between "+rendererConfigs.size()+" configurations - no renderer given");
-            }
-            // Just pick the first one - we're not actually rendering, so it shouldn't matter.
-            rendererConfig = rendererConfigs.get(0);
-        } else {
-            for (JSONObject config: rendererConfigs) {
-                try {
-                    ImageRendererFactory baseFactory = new ImageRendererFactory(null, null);
-                    baseFactory.readConfiguration(ConfigurableFactory.getLeafNode(config,
-                                                                                  LayerConfiguration.RENDERER_PATH));
-                    String configType = baseFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
-                    if (rendererType.equals(configType)) {
-                        rendererConfig =  config;
-                        break;
-                    }
-                } catch (ConfigurationException e) {
-                    LOGGER.warn("Could not determine renderer from configuration {}", config, e);
+        if (rendererConfigs.size() != 0) {
+        	if (1 == rendererConfigs.size()) {
+                // Only one possible base configuration
+                rendererConfig = rendererConfigs.get(0);
+            } else if (null == rendererType) {
+                if (choiceIsError) {
+                    throw new IllegalArgumentException("No way to choose between "+rendererConfigs.size()+" configurations - no renderer given");
                 }
+                // Just pick the first one - we're not actually rendering, so it shouldn't matter.
+                rendererConfig = rendererConfigs.get(0);
+            } else {
+                for (JSONObject config: rendererConfigs) {
+                    try {
+                        ImageRendererFactory baseFactory = new ImageRendererFactory(null, null);
+                        baseFactory.readConfiguration(ConfigurableFactory.getLeafNode(config,
+                                                                                      LayerConfiguration.RENDERER_PATH));
+                        String configType = baseFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
+                        if (rendererType.equals(configType)) {
+                            rendererConfig =  config;
+                            break;
+                        }
+                    } catch (ConfigurationException e) {
+                        LOGGER.warn("Could not determine renderer from configuration {}", config, e);
+                    }
+                }
+                throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
             }
-            throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
-        }
-
+        } 
         // Combine the renderer configuration with the data configuration
         JSONObject dataConfig = info.getDataConfiguration();
-        JSONObject totalConfig = JsonUtilities.deepClone(dataConfig);
+        JSONObject totalConfig = JsonUtilities.deepClone(dataConfig);        
         try {
-            totalConfig.put("renderer", JsonUtilities.deepClone(rendererConfig));
+        	if (rendererConfig != null) {
+        		totalConfig.put("renderer", JsonUtilities.deepClone(rendererConfig));        		
+        	}
         } catch (JSONException e) {
             LOGGER.warn("Attempt to combine renderer and data configurations failed for layer {}", layerId, e);
         }

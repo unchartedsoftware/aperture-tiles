@@ -50,7 +50,7 @@
             datasetLowerCase = summaryBuilderOptions.dataset ? summaryBuilderOptions.dataset.toLowerCase() : null;
 
         var makeSafeIdForJQuery = function (inputString){
-            return inputString.replace(/\./g, '_dot_');
+            return inputString.replace(/\./g, '_dot_').replace(/\,/g, '');
         };
 
         // Clear the layer control of all checkboxes.
@@ -76,7 +76,7 @@
             }
             return tabLayerId;*/
             var resultId = id.replace(/\./g, '');
-            return resultId.replace(/\ /g, '_');
+            return resultId.replace(/\ /g, '_').replace(/\,/g, '');
         };
 
         var constructPlot = function(event, ui){
@@ -428,7 +428,7 @@
                     $('div.expandedDensityStrip').css("height", expandedStripHeight);
                 }
 
-                /*if($("div.elipsisDialog").length > 0){
+                if($("div.elipsisDialog").length > 0){
                     $("div.elipsisDialog").dialog({
                         autoOpen: false,
                         resizeable: true,
@@ -450,7 +450,7 @@
                            // evt.stopPropagation();
                            // evt.stopImmediatePropagation();
                         });
-                }*/
+                }
 
                 $("#tabs-tables").tabs();
                 $("tr.parent")
@@ -480,9 +480,58 @@
                     //iterate over each of the cross plots, generate the map, and container div
                     $.each(maps, function (pk, pv) {
                         // Initialize our maps...
-                        var tabLayerId = getTabLayerId(pv["id"]),
-                            layer = getLayer(layers, pv["id"]),
-                            mapConfig = getMapConfig(maps, pv["id"]);
+                        // mapID is conditional on the map being a bitcoin or a twitter map.
+                        var mapID,
+                            tabLayerId,
+                            layerConfig,
+                            mapConfig;
+
+                        // bitcoin
+                        if (datasetLowerCase === 'bitcoin') {
+
+                            //not a bitcoin map
+                            if(!pv["id"] || pv["id"].toLowerCase().trim().indexOf(datasetLowerCase) == -1){
+                                return;
+                            }
+                            mapID = pv["id"];
+                            tabLayerId = getTabLayerId(mapID);
+                            layerConfig = getLayer(layers, mapID);
+                            mapConfig = getBitcoinMapConfig(maps, mapID);
+
+
+                        } else { // twitter
+                            var layer;
+                            for(var i = 0; i < layers.length; i++){
+                                if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
+                                    for (var j = 0; j < layers[i]["children"].length; j++) {
+                                        mapID = layers[i]["children"][j].name;
+                                        layer = layers[i]["children"][j];
+                                        tabLayerId = getTabLayerId(mapID);
+                                        layerConfig = getLayer(layer, mapID);
+                                        mapConfig = pv;//getTwitterMapConfig(layer);
+
+                                        plotId++;
+                                        var plotTabDiv = "tab-plot-" + tabLayerId;
+                                        var plotDiv = "plot-" + tabLayerId;
+
+                                        $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
+                                        var $plotTab = $('<div id="' + plotTabDiv + '">');
+                                        var $plotVisual = $('<div id="' + plotDiv + '"></div>');
+
+                                        $plotVisual.addClass('plot-parent plot plot-size'); // plot in crossplot.css
+                                        $plotVisual.css({width: "100%", height: "100%"});
+                                        $plotTab.append($plotVisual);
+                                        $('#tabs-plots').append($plotTab);
+
+                                        //add map after the containing div has been added
+
+                                        $plotVisual.append(getMap(plotDiv, mapConfig, layerConfig));
+                                    }
+                                }
+                            }
+                            //continue the "maps" for each loop after setting up twitter
+                            return true;
+                        }
 
                         //something is wrong with the map
                         if (typeof mapConfig === 'undefined') {
@@ -493,7 +542,7 @@
                         var plotTabDiv = "tab-plot-" + tabLayerId;
                         var plotDiv = "plot-" + tabLayerId;
 
-                        $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + pv["id"].replace(datasetLowerCase,'').trim() + '</a></li>');
+                        $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
                         var $plotTab = $('<div id="' + plotTabDiv + '">');
                         var $plotVisual = $('<div id="' + plotDiv + '"></div>');
 
@@ -503,9 +552,8 @@
                         $('#tabs-plots').append($plotTab);
 
                         //add map after the containing div has been added
-                        if(layer) {
-                            $plotVisual.append(getMap(plotDiv, mapConfig, layer));
-                        }
+
+                        $plotVisual.append(getMap(plotDiv, mapConfig, layerConfig));
                     });
 
                     $('#tabs-plots ul').each(function () {
@@ -543,14 +591,15 @@
             });
         };
 
-        var getMapConfig = function(maps, mapID){
+        var getBitcoinMapConfig = function(maps, mapID){
+
             var result = [],
                 i,
                 length = maps.length,
                 mapConfig;
 
             for(i=0; i<length; i++){
-                if (maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase) != -1){
+                if (maps[i].id && maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase) != -1){
                     result.push(maps[i]);
                 }
             }
@@ -564,6 +613,11 @@
             return mapConfig;
         };
 
+        var getTwitterMapConfig = function (layer){
+            var mapConfig;
+
+        };
+
         var getLayer = function(layers, mapID){
             var layerArray,
                 layer;
@@ -571,49 +625,69 @@
             mapID = mapID.toLowerCase();
 
             //find the right collection of layers
-            $.each(layers, function(pk, pv){
+            $.each(layers, function (pk, pv) {
                 if (pv.id === datasetLowerCase) {
                     layerArray = pv;
                 }
             });
 
-            if(layerArray) {
-                $.each(layerArray.children, function (pk, pv) {
-                    //if mapID contains pv.name
-                    var name = pv.name.toLowerCase().trim();
-                    if (mapID.indexOf(name) != -1)
-                        layer = pv;
-                });
+            // bitcoin
+            if (datasetLowerCase === 'bitcoin') {
+
+                if (layerArray) {
+                    $.each(layerArray.children, function (pk, pv) {
+                        //if mapID contains pv.name
+                        var name = pv.name.toLowerCase().trim();
+                        if (mapID.indexOf(name) != -1)
+                            layer = pv;
+                    });
+                }
+
+                return [
+                    {
+                        "layer": layer["id"],
+                        "domain": layer.renderers[0].domain,
+                        "name": layer.name,
+                        "renderer": layer.renderers[0].renderer,
+                        "transform": layer.renderers[0].transform
+                    }
+                ];
+                //the dataset didn't exist in the layers array if layer is undefined;
+            } else { // twitter
+                layer = layers;
+
+                return [
+                    {
+                        "layer": layer["id"],
+                        "domain": layer.renderers[0].domain,
+                        "name": layer.name,
+                        "renderer": layer.renderers[0].renderer,
+                        "transform": layer.renderers[0].transform
+                    }
+                ];
+
             }
-            //the dataset didn't exist in the layers array if layer is undefined;
-            return layer;
+            //return layer;
+
         };
 
-        var getMap = function(mapID, mapConfig, layer){
-             var worldMap = new Map(mapID, mapConfig),
-                 uiMediator,
-                 layerConfig;
+        var getMap = function(mapID, mapConfig, layerConfig){
+            var worldMap = new Map(mapID, mapConfig),
+                uiMediator;
 
-             // ... (set up our map axes) ...
-             worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
+            // ... (set up our map axes) ...
+            worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
-            layerConfig = [
-                {
-                    "layer": layer["id"],
-                    "domain": layer.renderers[0].domain,
-                    "name": layer.name,
-                    "renderer": layer.renderers[0].renderer,
-                    "transform": layer.renderers[0].transform
-                }
-            ];
+            uiMediator = new UIMediator();
+            if(layerConfig["domain"]==='server') {
+                // Create client and server layers
+                //ClientLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
+                ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
+            }
 
-             uiMediator = new UIMediator();
+            new LayerControls().initialize( uiMediator.getLayerStateMap() );
 
-            // Create client and server layers
-             //ClientLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
-             ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
 
-             new LayerControls().initialize( uiMediator.getLayerStateMap() );
         };
 
         this.start = function(){
@@ -658,7 +732,6 @@
             showControls.append(showButton);
 
             generateJsonTables(tableJsonFile, function(){
-                console.log("generateJsonTables called");
                 var len = _densityStrips.length;
                 var xDataMaps = [];
                 for(var i = 0; i < len; i++){
