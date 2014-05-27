@@ -51,6 +51,8 @@ define(function (require) {
          */
         init: function( map) {
 
+            var SCALE = 1.5;
+
             this._super(map);
 
             this.nodeLayer = new ClientNodeLayer({
@@ -62,6 +64,10 @@ define(function (require) {
 
             function getCount(data) {
                 return Math.min( data.bin.value.length, 5 );
+            }
+
+            function getSentimentPercentage(data, index, type) {
+                return (data.bin.value[index][type] / data.bin.value[index].count) || 0;
             }
 
             function getTotalCount(data, index) {
@@ -85,8 +91,8 @@ define(function (require) {
             }
 
             function getFontSize( data, index ) {
-                var MAX_FONT_SIZE = 48,
-                    MIN_FONT_SIZE = 32,
+                var MAX_FONT_SIZE = 28 * SCALE,
+                    MIN_FONT_SIZE = 12 * SCALE,
                     FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
                     sum = getTotalCount(data, index),
                     perc = getTotalCountPercentage(data, index),
@@ -97,73 +103,44 @@ define(function (require) {
             }
 
             function getYOffset(data, index) {
-                return 108 - 36 * (((getCount(data) - 1) / 2) - index);
+                return 98 - 36 * (((getCount(data) - 1) / 2) - index);
             }
 
             this.nodeLayer.addLayer( new HtmlLayer({
 
                 html: function() {
 
-                    /*
-                    var html,
-                        $html = '<div></div>',
-                        $bar,
-                        $label,
-                        i,
-                        count = getCount( this );
-
-                    for (i=0; i<count; i++) {
-
-                        // bar
-                        html = '<div class="sentiment-bars"';
-                        html += 'style=" position:absolute; top:' +  (getYOffset(i) + 40) + 'px;';
-                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
-                        html += "</div>";
-
-                        $bar = $(html);
-
-                        // label
-                        html = '<div class="sentiment-labels"';
-                        html += 'style=" position:absolute; top:' +  getYOffset(i) + 'px;';
-                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
-                        html += this.bin.value[i].tag;
-                        html += "</div>";
-
-                        $label = $(html);
-
-                        $bar.hover( function() {
-                            $bar.addClass('hover');
-                            $label.addClass('hover');
-                        }, function() {
-                            $bar.removeClass('hover');
-                            $label.removeClass('hover');
-                        });
-                    }
-                    */
-
-
                     var html = '',
                         i,
+                        positivePerc, neutralPerc, negativePerc,
                         count = getCount( this );
 
                     for (i=0; i<count; i++) {
 
-                        html += '<div class="sentiment-bars"';
-                        html += 'style=" position:absolute; top:' +  (getYOffset(this, i) + 40) + 'px;';
-                        html += 'font-size:' + getFontSize(this, i) +'px; ">';
-                        html += "</div>";
-                    }
+                        html += '<div class="top-text-sentiments" style="position:absolute; top:' +  getYOffset(this, i) + 'px">';
 
-                    for (i=0; i<count; i++) {
+                        positivePerc = getSentimentPercentage( this, i, 'positive')*100;
+                        neutralPerc = getSentimentPercentage( this, i, 'neutral')*100;
+                        negativePerc = getSentimentPercentage( this, i, 'negative')*100;
+
+                        // bar
+                        html += '<div class="sentiment-bars" style=" position:absolute; top:40px;">';
+                        html += '<div class="sentiment-bars-negative" style="width:'+negativePerc+'%;"></div>';
+                        html += '<div class="sentiment-bars-neutral" style="width:'+neutralPerc+'%;"></div>';
+                        html += '<div class="sentiment-bars-positive" style="width:'+positivePerc+'%;"></div>';
+                        html += "</div>";
+
+                        // label
                         html += '<div class="sentiment-labels"';
-                        html += 'style=" position:absolute; top:' +  getYOffset(this, i) + 'px;';
+                        html += 'style=" position:absolute;';
                         html += 'font-size:' + getFontSize(this, i) +'px; ">';
                         html += this.bin.value[i].tag;
                         html += "</div>";
+
+                        html += '</div>';
                     }
 
                     return html;
-
                 },
                 css: {
                     'z-index' : 1000
