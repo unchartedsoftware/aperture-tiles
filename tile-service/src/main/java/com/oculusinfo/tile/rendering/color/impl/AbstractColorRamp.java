@@ -28,9 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.color.FixedPoint;
-import com.oculusinfo.tile.util.JsonUtilities;
 
 public abstract class AbstractColorRamp implements ColorRamp {
 	private boolean isInverted;

@@ -31,7 +31,7 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
-import com.oculusinfo.tile.util.JsonUtilities;
+import com.oculusinfo.binning.util.JsonUtilities;
 
 /**
  * 
