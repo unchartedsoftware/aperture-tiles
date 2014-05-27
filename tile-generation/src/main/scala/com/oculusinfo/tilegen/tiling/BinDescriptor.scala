@@ -56,15 +56,34 @@ import com.oculusinfo.binning.util.Pair
 trait BinDescriptor[PT, BT] extends Serializable {
 	/** Compose two bin values into one */
 	def aggregateBins (a: PT, b: PT): PT
+
+	/**
+     * Return the default value to be used in bins known to have no value, 
+	 * before conversion.
+	 */
+	def defaultProcessedBinValue: PT
+
+	/**
+     * Returns the default value to be used in bins not known to be empty, to 
+     * which data can be aggregated.  Again, value is before conversion.
+	 */
+	def defaultUnprocessedBinValue: PT
+
+	/** Convert the processing value to a binning value */
+	def convert (value: PT): BT
+
 	/** Determine the minimum of two bin values */
 	def min (a: BT, b: BT): BT
+
 	/**
 	 * Return the value used as the beginning of a fold operation over bins to
 	 * find the minimum bin value.
 	 */
 	def defaultMin: BT
+
 	/** Determine the maximum of two bin values */
 	def max (a: BT, b: BT): BT
+
 	/**
 	 * Return the value used as the beginning of a fold operation over bins to
 	 * find the maximum bin value.
@@ -83,21 +102,6 @@ trait BinDescriptor[PT, BT] extends Serializable {
 	 * metadata of a tile tree.
 	 */
 	def stringToBin (value: String): BT
-
-	/**
-     * Return the default value to be used in bins known to have no value, 
-	 * before conversion.
-	 */
-	def defaultProcessedBinValue: PT
-
-	/**
-     * Returns the default value to be used in bins not known to be empty, to 
-     * which data can be aggregated.  Again, value is before conversion.
-	 */
-	def defaultUnprocessedBinValue: PT
-
-	/** Convert the processing value to a binning value */
-	def convert (value: PT): BT
 
 	/** Get the type of serializer to be used for tiles with this kind of bin */
 	def getSerializer: TileSerializer[BT]
