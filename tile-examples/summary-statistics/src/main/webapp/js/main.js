@@ -25,57 +25,31 @@
 /*global OpenLayers */
 
 require(['./ApertureConfig',
-        './ui/OverlayButton',
-        './map/MapService',
-        './map/Map',
-        './binning/PyramidFactory',
-        './layer/LayerService',
-        './customization',
-        './layer/view/server/ServerLayerFactory',
-        './layer/view/client/ClientLayerFactory',
-        './annotation/AnnotationLayerFactory',
-        './layer/controller/LayerControls',
-        './layer/controller/UIMediator',
         './summary'],
 
     function (configureAperture,
-              OverlayButton,
-              MapService,
-              Map,
-              PyramidFactory,
-              LayerService,
-              UICustomization,
-              ServerLayerFactory,
-              ClientLayerFactory,
-              AnnotationLayerFactory,
-              LayerControls,
-              UIMediator,
               SummaryBuilder) {
         "use strict";
 
-	        var apertureConfigUrl = "data/aperture-config.json",
-	            getLayers,
-	            getAnnotationLayers,
-	            uiMediator;
+        var apertureConfigUrl = "data/aperture-config.json";
 
+        // Load all our UI configuration data before trying to bring up the ui
+        $.get( apertureConfigUrl, function( apertureConfig ) {
 
-	        // Load all our UI configuration data before trying to bring up the ui
-	        $.get( apertureConfigUrl, function( apertureConfig ) {
-	        	
-		        // First off, configure aperture.
-		        configureAperture( apertureConfig );
-				
-				var dataDirectory = $.getUrlVar('dataDir');
-				var datasetName = $.getUrlVar('dataset');
-				if(!dataDirectory){
-					dataDirectory = "./data";
-				}
+            // First off, configure aperture.
+            configureAperture( apertureConfig );
 
-				var summaryBuilder = new SummaryBuilder({
-					dataDir: dataDirectory,
-					dataset: datasetName
-				});
-				summaryBuilder.start();
-			}, 'json');
+            var dataDirectory = $.getUrlVar('dataDir');
+            var datasetName = $.getUrlVar('dataset');
+            if(!dataDirectory){
+                dataDirectory = "./data";
+            }
+
+            var summaryBuilder = new SummaryBuilder({
+                dataDir: dataDirectory,
+                dataset: datasetName
+            });
+            summaryBuilder.start();
+        }, 'json');
     }
 );
