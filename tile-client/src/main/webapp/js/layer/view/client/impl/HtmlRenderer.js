@@ -160,7 +160,7 @@ define(function (require) {
                     return html;
                 },
                 css: {
-                    'z-index' : 1000
+                    'z-index' : 749
                 }
             }));
 

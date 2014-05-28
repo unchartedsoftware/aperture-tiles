@@ -27,11 +27,16 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
 import java.io.File
+
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+import scala.util.{Try, Success, Failure}
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.avro.file.CodecFactory
+
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
@@ -43,6 +48,8 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
+import com.oculusinfo.binning.util.PyramidMetaData
+import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO
@@ -179,7 +186,8 @@ trait TileIO extends Serializable {
 		val metaData = combineMetaData(pyramider, baseLocation, minMax, sampleTile.getXBins, name, description)
 		writeMetaData(baseLocation, metaData)
 
-		//return the min/maxes so the data isn't lost from converting it to a string in TileMetaData
+		// Return the min/maxes so the data isn't lost from converting it to a 
+		// string in PyramidMetaData
 		minMax
 	}
 	
@@ -188,23 +196,25 @@ trait TileIO extends Serializable {
 	 * that already exists, or creates a new one if none exists.
 	 */
 	def combineMetaData[BT](pyramider: TilePyramid,
-	                          baseLocation: String,
-	                          minsMaxes: Map[Int, (BT, BT)],
-	                          tileSize: Int,
-	                          name: String = "unknown",
-	                          description: String = "unknown"): TileMetaData = {
+	                        baseLocation: String,
+	                        minsMaxes: Map[Int, (BT, BT)],
+	                        tileSize: Int,
+	                        name: String = "unknown",
+	                        description: String = "unknown"): PyramidMetaData = {
 		val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
 		val projection = pyramider.getProjection()
 		val scheme = pyramider.getTileScheme()
 		val oldMetaData = readMetaData(baseLocation)
-		
+
 		var metaData = oldMetaData match {
 			case None => {
-				new TileMetaData(name, description, tileSize, scheme, projection,
-				                 minsMaxes.keys.min, minsMaxes.keys.max,
-				                 bounds,
-				                 minsMaxes.map(p => (p._1, p._2._1.toString)).toList.sortBy(_._1),
-				                 minsMaxes.map(p => (p._1, p._2._2.toString)).toList.sortBy(_._1))
+				new PyramidMetaData(name, description, tileSize, scheme, projection,
+				                    minsMaxes.keys.min, minsMaxes.keys.max,
+				                    bounds,
+				                    minsMaxes.map(p => new Pair[Integer, String](p._1, p._2._1.toString)).toList
+					                    .sortBy(_.getFirst).asJava,
+				                    minsMaxes.map(p => new Pair[Integer, String](p._1, p._2._2.toString)).toList
+					                    .sortBy(_.getFirst).asJava)
 			}
 			case Some(metaData) => {
 				var newMetaData = metaData
@@ -218,11 +228,14 @@ trait TileIO extends Serializable {
 		metaData
 	}
 
-	def readMetaData (baseLocation: String): Option[TileMetaData] = {
-		TileMetaData.parse(getPyramidIO.readMetaData(baseLocation))
-	}
+	def readMetaData (baseLocation: String): Option[PyramidMetaData] =
+		try {
+			Some(new PyramidMetaData(getPyramidIO.readMetaData(baseLocation)))
+		} catch {
+		  case e: Exception => None
+		}
 
-	def writeMetaData (baseLocation: String, metaData: TileMetaData): Unit =
+	def writeMetaData (baseLocation: String, metaData: PyramidMetaData): Unit =
 		getPyramidIO.writeMetaData(baseLocation, metaData.toString)
 		
 }
@@ -399,34 +412,32 @@ object TestTableEquality {
 
 		def testEquality[T] (description: String, a: T, b: T): Unit =
 			if (!a.equals(b)) println(description+" differ") else println(description+" match")
-		testEquality("Tile sizes",    metaData1.tileSize,   metaData2.tileSize)
-		testEquality("Schemes",       metaData1.scheme,     metaData2.scheme)
-		testEquality("Projections",   metaData1.projection, metaData2.projection)
-		testEquality("Minimum zooms", metaData1.minZoom,    metaData2.minZoom)
-		testEquality("Maximum zooms", metaData1.maxZoom,    metaData2.maxZoom)
-		testEquality("Bounds",        metaData1.bounds,     metaData2.bounds)
+		testEquality("Tile sizes",    metaData1.getTileSize(),   metaData2.getTileSize())
+		testEquality("Schemes",       metaData1.getScheme(),     metaData2.getScheme())
+		testEquality("Projections",   metaData1.getProjection(), metaData2.getProjection())
+		testEquality("Minimum zooms", metaData1.getMinZoom(),    metaData2.getMinZoom())
+		testEquality("Maximum zooms", metaData1.getMaxZoom(),    metaData2.getMaxZoom())
+		testEquality("Bounds",        metaData1.getBounds(),     metaData2.getBounds())
 		testEquality("Number of minimum entries",
-		             metaData1.levelMins.size, metaData2.levelMins.size)
-		Range(0, metaData1.levelMins.size min metaData2.levelMins.size).foreach(n =>
+		             metaData1.getLevelMinimums().size, metaData2.getLevelMinimums().size)
+		val minLvls = (metaData1.getLevelMinimums.keySet.asScala
+			               union metaData2.getLevelMinimums.keySet.asScala)
+		minLvls.map(level =>
 			{
-				testEquality("Min frequency entry "+n+" level",
-				             metaData1.levelMins(n)._1,
-				             metaData2.levelMins(n)._1)
-				testEquality("Min frequency entry "+n+" frequency",
-				             metaData1.levelMins(n)._2,
-				             metaData2.levelMins(n)._2)
+				testEquality("Minimum entry for level "+level,
+				             metaData1.getLevelMinimum(level),
+				             metaData2.getLevelMinimum(level))
 			}
 		)
 		testEquality("Number of maximum entries",
-		             metaData1.levelMaxes.size, metaData2.levelMaxes.size)
-		Range(0, metaData1.levelMaxes.size min metaData2.levelMaxes.size).foreach(n =>
+		             metaData1.getLevelMaximums.size, metaData2.getLevelMaximums.size)
+		val maxLvls = (metaData1.getLevelMaximums.keySet.asScala
+			               union metaData2.getLevelMaximums.keySet.asScala)
+		maxLvls.map(level =>
 			{
-				testEquality("Maximum entry "+n+" level",
-				             metaData1.levelMaxes(n)._1,
-				             metaData2.levelMaxes(n)._1)
-				testEquality("Maximum entry "+n+" value",
-				             metaData1.levelMaxes(n)._2,
-				             metaData2.levelMaxes(n)._2)
+				testEquality("Maximum entry for level "+level,
+				             metaData1.getLevelMaximum(level),
+				             metaData2.getLevelMaximum(level))
 			}
 		)
 		println("Tile differences:")

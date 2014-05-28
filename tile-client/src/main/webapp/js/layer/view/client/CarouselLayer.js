@@ -41,6 +41,8 @@ define(function (require) {
 
     CarouselLayer = ClientLayer.extend({
 
+        Z_INDEX_OFFSET : 1000,
+
         /**
          * Construct a carousel
          */
@@ -48,8 +50,10 @@ define(function (require) {
 
             var that = this;
 
+            this._super(id, map);
+
             // constants
-            this.OUTLINE_CLASS = 'carousel-ui-outline';
+            this.CAROUSEL_CLASS = 'carousel-ui-pane';
             this.DOT_CONTAINER_CLASS = "carousel-ui-dot-container";
             this.DOT_CLASS = 'carousel-ui-dot';
             this.DOT_CLASS_DEFAULT = 'carousel-ui-dot-default';
@@ -59,17 +63,19 @@ define(function (require) {
             this.CHEVRON_CLASS_LEFT = "carousel-ui-chevron-left";
             this.CHEVRON_CLASS_RIGHT = "carousel-ui-chevron-right";
 
+            this.Z_INDEX = this.map.getZIndex() + this.Z_INDEX_OFFSET;
+
             // call base class ClientLayer constructor
-            this._super(id, map);
+
             this.previousMouse = {};
             this.selectedTileInfo = {};
 
             // put mouse move callback on global document
-            $(document).mousemove(function(event) {
-                var tilekey = that.map.getTileKeyFromViewportPixel(event.pageX, event.pageY);
+            this.map.on('mousemove', function(event) {
+                var tilekey = that.map.getTileKeyFromViewportPixel(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
-                that.previousMouse.x = event.pageX;
-                that.previousMouse.y = event.pageY;
+                that.previousMouse.x = event.xy.x;
+                that.previousMouse.y = event.xy.y;
             });
 
             // update carousel if map is moving and mouse isn't
@@ -191,7 +197,7 @@ define(function (require) {
          */
         createTileOutline: function() {
 
-            this.$outline = $("<div class='" +this.OUTLINE_CLASS +"'></div>");
+            this.$outline = $('<div class="' +this.CAROUSEL_CLASS +'" style="z-index:'+this.Z_INDEX+';"></div>');
             this.map.getElement().append(this.$outline);
         },
 

@@ -32,7 +32,7 @@ import org.apache.spark.SparkContext;
 
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.SharedInstanceFactory;
-import com.oculusinfo.tile.util.JsonUtilities;
+import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.tilegen.datasets.CSVDataset;
 
 

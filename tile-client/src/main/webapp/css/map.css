@@ -6,15 +6,20 @@
 }
 
 .olMap {
-    position:fixed;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
+    position:relative;
+    overflow:hidden;
+    top: 100px;
+    left: 100px;
+    width: calc( 100% - 200px);
+    height: calc( 100% - 200px);
 }
 
 div.olControlZoom {
 	right: 10px !important;
 	top: 60px !important;
 	left:auto !important;
+}
+
+.olLayerGoogleV3 {
+    visibility:hidden; !important;
 }

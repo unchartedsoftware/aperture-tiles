@@ -51,8 +51,8 @@ addToSparkClasspath com.oculusinfo tile-generation 0.3-SNAPSHOT
 
 # framework-related jars
 addToSparkClasspath org.apache.hbase hbase 0.94.15-cdh4.6.0
-
 addToSparkClasspath org.scala-lang scala-library 2.10.3
+addToSparkClasspath org.json json 20090211
 
 
 
