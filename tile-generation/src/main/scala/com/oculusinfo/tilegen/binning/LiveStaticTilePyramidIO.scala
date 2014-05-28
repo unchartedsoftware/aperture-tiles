@@ -32,6 +32,7 @@ package com.oculusinfo.tilegen.binning
 import java.io.InputStream
 import java.io.IOException
 import java.lang.{Iterable => JavaIterable}
+import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
@@ -39,6 +40,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
+import scala.util.{Try, Success, Failure}
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
@@ -51,13 +53,14 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.binning.util.PyramidMetaData
 
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
-import com.oculusinfo.tilegen.tiling.TileMetaData
 import com.oculusinfo.tilegen.util.Rectangle
 
 
@@ -68,7 +71,7 @@ import com.oculusinfo.tilegen.util.Rectangle
  */
 class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	private val datasets = MutableMap[String, Dataset[_, _, _]]()
-	private val metaData = MutableMap[String, TileMetaData]()
+	private val metaData = MutableMap[String, PyramidMetaData]()
 
 
 	def initializeForWrite (pyramidId: String): Unit = {
@@ -200,12 +203,12 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 				val datasetMetaData = getMetaData(pyramidId).get
 
 				val mins = MutableMap[Int, BT]()
-				datasetMetaData.levelMins.foreach{case (level, min) =>
+				datasetMetaData.getLevelMinimums().asScala.foreach{case (level, min) =>
 					mins(level) = binDescriptor.stringToBin(min)
 				}
 
 				val maxs = MutableMap[Int, BT]()
-				datasetMetaData.levelMaxes.foreach{case (level, max) =>
+				datasetMetaData.getLevelMaximums().asScala.foreach{case (level, max) =>
 					maxs(level) = binDescriptor.stringToBin(max)
 				}
 
@@ -221,22 +224,22 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 					}
 				}
 
-				def convertAndSort (extrema: Seq[(Int, BT)]): Seq[(Int, String)] =
+				def convertAndSort (extrema: Seq[(Int, BT)]): JavaList[Pair[JavaInt, String]] =
 					extrema.map{case (a, b) =>
-						(a, binDescriptor.binToString(b))
-					}.sortBy(_._1)
+						new Pair[JavaInt, String](new JavaInt(a), binDescriptor.binToString(b))
+					}.sortBy(_.getFirst()).asJava
 
 				val newDatasetMetaData =
-					new TileMetaData(datasetMetaData.name,
-					                 datasetMetaData.description,
-					                 datasetMetaData.tileSize,
-					                 datasetMetaData.scheme,
-					                 datasetMetaData.projection,
-					                 datasetMetaData.minZoom,
-					                 datasetMetaData.maxZoom,
-					                 datasetMetaData.bounds,
-					                 convertAndSort(mins.toSeq),
-					                 convertAndSort(maxs.toSeq))
+					new PyramidMetaData(datasetMetaData.getName(),
+					                    datasetMetaData.getDescription(),
+					                    datasetMetaData.getTileSize(),
+					                    datasetMetaData.getScheme(),
+					                    datasetMetaData.getProjection(),
+					                    datasetMetaData.getMinZoom(),
+					                    datasetMetaData.getMaxZoom(),
+					                    datasetMetaData.getBounds(),
+					                    convertAndSort(mins.toSeq),
+					                    convertAndSort(maxs.toSeq))
 				metaData(pyramidId) = newDatasetMetaData
 
 				// Finally, return our tiles
@@ -252,7 +255,7 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 		null
 	}
 
-	private def getMetaData (pyramidId: String): Option[TileMetaData] = {
+	private def getMetaData (pyramidId: String): Option[PyramidMetaData] = {
 		if (!metaData.contains(pyramidId) || null == metaData(pyramidId))
 			if (datasets.contains(pyramidId))
 				metaData(pyramidId) = datasets(pyramidId).createMetaData(pyramidId)

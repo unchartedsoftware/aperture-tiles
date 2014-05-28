@@ -36,6 +36,7 @@ import javax.imageio.ImageIO
 
 
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 
 
@@ -56,6 +57,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
+import com.oculusinfo.binning.util.PyramidMetaData
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
@@ -89,7 +91,7 @@ object TileToTextConverter {
 						new WebMercatorTilePyramid()
 					}
 					case "EPSG:4326" => {
-						val bounds = metaData.bounds
+						val bounds = metaData.getBounds()
 						new AOITilePyramid(bounds.getMinX(), bounds.getMinY(),
 						                   bounds.getMaxX(), bounds.getMaxY())
 					}
@@ -170,7 +172,7 @@ object TileToImageConverter {
 						new WebMercatorTilePyramid()
 					}
 					case "EPSG:4326" => {
-						val bounds = metaData.bounds
+						val bounds = metaData.getBounds()
 						new AOITilePyramid(bounds.getMinX(), bounds.getMinY(),
 						                   bounds.getMaxX(), bounds.getMaxY())
 					}
@@ -249,9 +251,9 @@ object TileToImageConverter {
 	                        destination: String,
 	                        scale: (Double, JavaDouble, Double) => Int,
 	                        levels: Seq[Int],
-	                        metaData: TileMetaData): Unit = {
-		val levelMins = metaData.levelMins.map(p => (p._1 -> p._2.toDouble)).toMap
-		val levelMaxes = metaData.levelMaxes.map(p => (p._1 -> p._2.toDouble)).toMap
+	                        metaData: PyramidMetaData): Unit = {
+		val levelMins = metaData.getLevelMinimums.asScala.map(p => (p._1 -> p._2.toDouble))
+		val levelMaxes = metaData.getLevelMaximums.asScala.map(p => (p._1 -> p._2.toDouble))
 		def colorFcn (tile: TileIndex, bin: BinIndex, image: Int, value: Option[JavaDouble]): Int = {
 			val level = tile.getLevel()
 			val min = levelMins(level)
@@ -272,11 +274,11 @@ object TileToImageConverter {
 	                        destination: String,
 	                        scale: (Double, JavaDouble, Double) => Int,
 	                        levels: Seq[Int],
-	                        metaData: TileMetaData): Unit = {
-		val levelMins = metaData.levelMins.map(p =>
+	                        metaData: PyramidMetaData): Unit = {
+		val levelMins = metaData.getLevelMinimums.asScala.map(p =>
 			(p._1 -> p._2.drop("list(".size).dropRight(")".size).split(",").map(_.trim.toDouble))
 		).toMap
-		val levelMaxes = metaData.levelMaxes.map(p =>
+		val levelMaxes = metaData.getLevelMaximums.asScala.map(p =>
 			(p._1 -> p._2.drop("list(".size).dropRight(")".size).split(",").map(_.trim.toDouble))
 		).toMap
 
