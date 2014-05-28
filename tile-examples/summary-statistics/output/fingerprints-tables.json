@@ -1,0 +1,26 @@
+{
+    "Sample Size": 1,
+    "Summaries": [
+        {
+            "Fields": [{
+                "Field Alias": "fp",
+                "Name": "fp"
+            }],
+            "Type": "Qualitative"
+        },
+        {
+            "Fields": [],
+            "Type": "Numerical"
+        },
+        {
+            "Fields": [],
+            "Type": "Date"
+        },
+        {
+            "Fields": [],
+            "Type": "Text"
+        }
+    ],
+    "Title": "fingerprints",
+    "Total Records": 1
+}

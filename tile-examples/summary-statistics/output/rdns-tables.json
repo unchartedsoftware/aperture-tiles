@@ -1,1 +1,128 @@
-{"Total Bytes":0,"Total Records":1000,"Sample Size":1000,"Summaries":[{"Fields":[{"Name":"ip","# Unique":{"Count":{"Value":"1000","Type":"integer","Unit":""},"Percent":{"Value":1,"Type":"float","Unit":"%"}},"# N.A.":{"Count":{"Value":"0","Type":"integer","Unit":""},"Percent":{"Value":0,"Type":"float","Unit":"%"}},"Field Alias":"ip","Most Frequent":["({\"178.84.90.129\":1},{\"124.50.187.68\":1},{\"77.126.103.25\":1},{\"46.151.203.116\":1},{\"60.163.131.236\":1})"]}],"Type":"Qualitative"},{"Fields":[],"Type":"Numerical"},{"Type":"Date"},{"Type":"Text"}],"Title":"rdns"}
+{
+    "Sample Size": 49720453,
+    "Summaries": [
+        {
+            "Fields": [
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "16759510"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 33.707476478542944
+                        }
+                    },
+                    "Field Alias": "ip",
+                    "Most Frequent": [
+                        {"1.253.11.141": 11},
+                        {"1.253.11.141": 11},
+                        {"1.19.243.16": 11},
+                        {"1.28.190.236": 11},
+                        {"1.187.192.21": 11}
+                    ],
+                    "Name": "ip"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "3028807"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 6.091672173622392
+                        }
+                    },
+                    "Field Alias": "rdnsresult",
+                    "Most Frequent": [
+                        {"(2)": 4655679},
+                        {"(2)": 4655679},
+                        {"(67)": 55368},
+                        {"(66)": 664},
+                        {"(70)": 198}
+                    ],
+                    "Name": "rdnsresult"
+                }
+            ],
+            "Type": "Qualitative"
+        },
+        {
+            "Fields": [{
+                "# N.A.": {
+                    "Count": {
+                        "Type": "integer",
+                        "Unit": "",
+                        "Value": "0"
+                    },
+                    "Percent": {
+                        "Type": "float",
+                        "Unit": "%",
+                        "Value": 0
+                    }
+                },
+                "# Unique": {
+                    "Count": {
+                        "Type": "integer",
+                        "Unit": "",
+                        "Value": "1408"
+                    },
+                    "Percent": {
+                        "Type": "float",
+                        "Unit": "%",
+                        "Value": 0.002831832606191259
+                    }
+                },
+                "1st Quartile": 1.3369905E9,
+                "3rd Quartile": 1.3470003E9,
+                "Field Alias": "timestamp",
+                "Maximum": "1.3516713E9",
+                "Mean": "1.3431579097938607E9",
+                "Median": 1.3460751E9,
+                "Minimum": "1.3366917E9",
+                "Name": "timestamp"
+            }],
+            "Type": "Numerical"
+        },
+        {
+            "Fields": [],
+            "Type": "Date"
+        },
+        {
+            "Fields": [],
+            "Type": "Text"
+        }
+    ],
+    "Title": "rdns",
+    "Total Bytes": 0,
+    "Total Records": 49720453
+}

@@ -36,8 +36,8 @@ import java.io.FileOutputStream
 object JSONwriter {
   
   
-  //json output for qual
-  def JSONqualitative(qualitative: Array[(String, String, String, Map[String, Any])], totalRecords: Int): JSONObject = {
+  //json output for qu
+  def JSONqualitative(qualitative: Array[(String, String, String, Map[String, Any])], totalRecords: Long): JSONObject = {
     
       val qualSummary = new JSONObject
       
@@ -50,27 +50,43 @@ object JSONwriter {
       val alias = r._1
       val name = r._2
       //not safe
-      val freqs = r._4("mostFrequent").asInstanceOf[Array[(String, Int)]]
-      val frequencies = new JSONArray
 
-      val mf1 = new JSONObject
-      mf1.put(freqs(0)._1, freqs(0)._2)
-      val mf2 = new JSONObject
-      mf2.put(freqs(1)._1, freqs(1)._2)
-      val mf3 = new JSONObject
-      mf3.put(freqs(2)._1, freqs(2)._2)
-      val mf4 = new JSONObject
-      mf4.put(freqs(3)._1, freqs(3)._2)
-      val mf5 = new JSONObject
-      mf5.put(freqs(4)._1, freqs(4)._2)
+      if (r._4.contains("mostFrequent")) {
+        val freqs = r._4("mostFrequent").asInstanceOf[Array[(String, Int)]]
+        val frequencies = new JSONArray
 
-      frequencies.put(mf2)
-      frequencies.put(mf2)
-      frequencies.put(mf3)
-      frequencies.put(mf4)
-      frequencies.put(mf5)
-                      
+        if (freqs.size > 0) {
+          val mf1 = new JSONObject
+          mf1.put(freqs(0)._1, freqs(0)._2)
+          frequencies.put(mf1)
+        }
+        if (freqs.size > 1) {
+          val mf2 = new JSONObject
+          mf2.put(freqs(1)._1, freqs(1)._2)
+          frequencies.put(mf2)
+        }
+        if (freqs.size > 2) {
+          val mf3 = new JSONObject
+          mf3.put(freqs(2)._1, freqs(2)._2)
+          frequencies.put(mf3)
+        }
+        if (freqs.size > 3) {
+          val mf4 = new JSONObject
+          mf4.put(freqs(3)._1, freqs(3)._2)
+          frequencies.put(mf4)
+        }
+        if (freqs.size > 4) {
+          val mf5 = new JSONObject
+          mf5.put(freqs(4)._1, freqs(4)._2)
+          frequencies.put(mf5)
+        }
+
+     
+      field.put("Most Frequent", frequencies)
+      }                
       
+      
+      if(r._4.contains("countNA")){
       val na = new JSONObject
       val naCount = new JSONObject
       naCount.put("Type", "integer")
@@ -80,14 +96,16 @@ object JSONwriter {
       val naPercent = new JSONObject
       naPercent.put("Type","float")
       //not safe
-      val naPercentVal = r._4("countNA").asInstanceOf[String].toInt / totalRecords
+      val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalRecords.toDouble
       naPercent.put("Value", naPercentVal)
       naPercent.put("Unit","%")
       
       na.put("Count",naCount)
       na.put("Percent", naPercent)
-        
+      field.put("# N.A.", na)
+      }  
       
+      if(r._4.contains("countUnique")){
       val unique = new JSONObject
       val uniqueCount = new JSONObject
       uniqueCount.put("Type", "integer")
@@ -97,19 +115,18 @@ object JSONwriter {
       val uniquePercent = new JSONObject
       uniquePercent.put("Type","float")
       //not safe
-      val uniquePercentVal = r._4("countUnique").asInstanceOf[String].toInt / (totalRecords - r._4("countNA").asInstanceOf[String].toInt)
+      val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
       uniquePercent.put("Value", uniquePercentVal)
       uniquePercent.put("Unit","%")
        
       unique.put("Count",uniqueCount)
       unique.put("Percent", uniquePercent)
-
+      
+      field.put("# Unique", unique)
+      }
       
       field.put("Field Alias", alias)
       field.put("Name", name)
-      field.put("Most Frequent", frequencies)
-      field.put("# N.A.", na)
-      field.put("# Unique", unique)
       
       qualList.put(field)
     })
@@ -121,7 +138,7 @@ object JSONwriter {
   }
   
   
-  def JSONnumeric(numerical: Array[(String, String, String, Map[String, Any])], totalRecords: Int): JSONObject = {
+  def JSONnumeric(numerical: Array[(String, String, String, Map[String, Any])], totalRecords: Long): JSONObject = {
   //json output for numeric
   val numericSummary = new JSONObject
   numericSummary.put("Type","Numerical")
@@ -136,33 +153,57 @@ object JSONwriter {
       val alias = r._1
       val name = r._2
 
+      if(r._4.contains("quartiles")){
+        
       val quartiles = r._4("quartiles").asInstanceOf[(Double, Double, Double)]
       
-      val mean = r._4("mean")
-      val min = r._4("min")
       val q1 = quartiles._1
-      
       val median = quartiles._2
       val q3 = quartiles._3
-      val max = r._4("max")
       
+      field.put("1st Quartile", q1)
+      field.put("Median", median)
+      field.put("3rd Quartile", q3)
+     }
+      
+     if(r._4.contains("mean")){
+      val mean = r._4("mean")
+      field.put("Mean", mean)
+     }
+     
+     if(r._4.contains("min")){
+      val min = r._4("min")
+      field.put("Minimum", min)
+     }
+      
+     if(r._4.contains("max")){
+      val max = r._4("max")
+      field.put("Maximum", max)
+     }
+     
+     if(r._4.contains("countNA")){
       val na = new JSONObject
       val naCount = new JSONObject
       naCount.put("Type", "integer")
       naCount.put("Value", r._4("countNA"))
       naCount.put("Unit", "")
-      
+     
+     
       val naPercent = new JSONObject
       naPercent.put("Type","float")
       //not safe
-      val naPercentVal = r._4("countNA").asInstanceOf[String].toInt / totalRecords
+      val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalRecords.toDouble
       naPercent.put("Value", naPercentVal)
       naPercent.put("Unit","%")
       
       na.put("Count",naCount)
       na.put("Percent", naPercent)
-        
       
+      field.put("# N.A.", na)
+     }
+     
+     
+      if(r._4.contains("countUnique")){
       val unique = new JSONObject
       val uniqueCount = new JSONObject
       uniqueCount.put("Type", "integer")
@@ -172,19 +213,21 @@ object JSONwriter {
       val uniquePercent = new JSONObject
       uniquePercent.put("Type","float")
       //not safe
-      val uniquePercentVal = r._4("countUnique").asInstanceOf[String].toInt / (totalRecords - r._4("countNA").asInstanceOf[String].toInt)
+      val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
       uniquePercent.put("Value", uniquePercentVal)
       uniquePercent.put("Unit","%")
        
       unique.put("Count",uniqueCount)
       unique.put("Percent", uniquePercent)
-
+      
+      field.put("# Unique", unique)
+      }
       
       field.put("Field Alias", alias)
       field.put("Name", name)
 //      field.put("Most Frequent", frequencies)
-      field.put("# N.A.", na)
-      field.put("# Unique", unique)
+      
+      
       
       numericList.put(field)
     })
@@ -198,7 +241,7 @@ object JSONwriter {
   
   
   
- def JSONdate(date: Array[(String, String, String, Map[String, Any])], totalRecords: Int): JSONObject = { 
+ def JSONdate(date: Array[(String, String, String, Map[String, Any])], totalRecords: Long): JSONObject = { 
   val dateSummary = new JSONObject  
   dateSummary.put("Type","Date")
 
@@ -211,33 +254,57 @@ object JSONwriter {
       val alias = r._1
       val name = r._2
 
+      if(r._4.contains("quartiles")){
+        
       val quartiles = r._4("quartiles").asInstanceOf[(Double, Double, Double)]
       
-      val mean = r._4("mean")
-      val min = r._4("min")
       val q1 = quartiles._1
-      
       val median = quartiles._2
       val q3 = quartiles._3
-      val max = r._4("max")
       
+      field.put("1st Quartile", q1)
+      field.put("Median", median)
+      field.put("3rd Quartile", q3)
+     }
+      
+     if(r._4.contains("mean")){
+      val mean = r._4("mean")
+      field.put("Mean", mean)
+     }
+     
+     if(r._4.contains("min")){
+      val min = r._4("min")
+      field.put("Minimum", min)
+     }
+      
+     if(r._4.contains("max")){
+      val max = r._4("max")
+      field.put("Maximum", max)
+     }
+     
+     if(r._4.contains("countNA")){
       val na = new JSONObject
       val naCount = new JSONObject
       naCount.put("Type", "integer")
       naCount.put("Value", r._4("countNA"))
       naCount.put("Unit", "")
-      
+     
+     
       val naPercent = new JSONObject
       naPercent.put("Type","float")
       //not safe
-      val naPercentVal = r._4("countNA").asInstanceOf[String].toInt / totalRecords
+      val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalRecords.toDouble
       naPercent.put("Value", naPercentVal)
       naPercent.put("Unit","%")
       
       na.put("Count",naCount)
       na.put("Percent", naPercent)
-        
       
+      field.put("# N.A.", na)
+     }
+     
+     
+      if(r._4.contains("countUnique")){
       val unique = new JSONObject
       val uniqueCount = new JSONObject
       uniqueCount.put("Type", "integer")
@@ -247,75 +314,47 @@ object JSONwriter {
       val uniquePercent = new JSONObject
       uniquePercent.put("Type","float")
       //not safe
-      val uniquePercentVal = r._4("countUnique").asInstanceOf[String].toInt / (totalRecords - r._4("countNA").asInstanceOf[String].toInt)
+      val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
       uniquePercent.put("Value", uniquePercentVal)
       uniquePercent.put("Unit","%")
        
       unique.put("Count",uniqueCount)
       unique.put("Percent", uniquePercent)
-
+      
+      field.put("# Unique", unique)
+      }
       
       field.put("Field Alias", alias)
       field.put("Name", name)
 //      field.put("Most Frequent", frequencies)
-      field.put("# N.A.", na)
-      field.put("# Unique", unique)
+      
+      
       
       dateList.put(field)
     })
     
     dateSummary.put("Fields", dateList)
-  
-  dateSummary
+    dateSummary
  }
-//  
-////  "Field Alias": "Created At", 
-////                    "Name": "created_at", 
-////                    "Minimum": "2012-02-07 10:35:11", 
-////                    "Maximum": "2013-05-30 07:40:20", 
-////                    "# N.A.": {
-////                        "Count": {
-////                            "Type": "integer", 
-////                            "Value": 0, 
-////                            "Unit": ""
-////                        }, 
-////                        "Percent": {
-////                            "Type": "float", 
-////                            "Value": 0.0, 
-////                            "Unit": "%"
-////                        }
-////                    }, 
-////                    "# Unique": {
-////                        "Count": {
-////                            "Type": "integer", 
-////                            "Value": 19641444, 
-////                            "Unit": ""
-////                        }, 
-////                        "Percent": {
-////                            "Type": "float", 
-////                            "Value": 6.0, 
-////                            "Unit": "%"
-////                        }
-////                    }, 
-////                    "Density Strip": ""
-//  
-//  
+
  
  //json output for text
- def JSONtext(text: Array[(String, String, String, Map[String, Any])], totalRecords: Int): JSONObject = { 
+ def JSONtext(text: Array[(String, String, String, Map[String, Any])], totalRecords: Long): JSONObject = { 
   val textSummary = new JSONObject  
   textSummary.put("Type","Text")
+  val textList = new JSONArray
   
+  textSummary.put("Fields", textList)
   textSummary
  } 
   
- def JSONoutput(title: String, totalRecords: Int, totalBytes: Int, samp: Int,
+ def JSONoutput(title: String, totalRecords: Long, totalBytes: Long, samp: Long,
 		 		qualSummary: JSONObject, numericSummary: JSONObject, dateSummary: JSONObject, textSummary: JSONObject){
  
   val myjson= new JSONObject
   myjson.put("Title",title)
   myjson.put("Total Records",totalRecords)
-  myjson.put("Total Bytes",totalBytes)
+
   myjson.put("Sample Size",samp)
   
   val sumList = new JSONArray

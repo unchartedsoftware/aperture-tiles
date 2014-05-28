@@ -80,7 +80,7 @@ object Quartiles {
 
   def getAllQuartiles(data: RDD[String], sorted: Boolean) = {
 
-    val numericData = data.map(r => r.toDouble)
+    val numericData = data.filter(r => !r.equals("")).map(r => r.toDouble)
 
     val sortedRDD = if (!sorted) { numericData.map(r => (r, 1)).sortByKey().map(r => r._1) } else numericData
     val size = sortedRDD.count
