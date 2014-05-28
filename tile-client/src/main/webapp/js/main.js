@@ -54,7 +54,7 @@ require(['./FileLoader',
                   UIMediator) {
 	        "use strict";
 
-	        var apertureConfigFile = "./data/aperture-config.json",
+	        var apertureConfigFile = "data/aperture-config.json",
 	            cloneObject,
 	            getLayers,
 	            getAnnotationLayers,
@@ -153,27 +153,29 @@ require(['./FileLoader',
 	        };
 
 	        // Create description element
-	        $.get("description.html", function (data) {
+	        $.get("description.html", function (descriptionHtml) {
 		        // create the overlay container
 		        new OverlayButton({
-			        id:'description',
+			        id:'description-header',
 			        active: false,
 			        activeWidth: '50%',
-			        text: 'Description',
-			        css: {
-				        right: '10px',
-				        top: '10px'
-			        }
-		        }).append(data);
-		        // append description html
-
+			        text: 'Description'
+		        }); //.append( '<div id="description-content">'+descriptionHtml+'</div>' ); // append description html
 	        });
 
+	        new OverlayButton({
+                id:'layer-controls-header',
+                active: false,
+                activeWidth: '50%',
+                text: 'Controls'
+            }); //.append( '<div id="layer-controls-content"></div>' ); // append controls content div
+
+
 	        // Load all our UI configuration data before trying to bring up the ui
-	        filesDeferred = FileLoader.loadJSONData(apertureConfigFile);
-	        filesDeferred.done(function (jsonDataMap) {
+	        $.get( apertureConfigFile, function( apertureConfig ) {
+
 		        // First off, configure aperture.
-		        configureAperture(jsonDataMap[apertureConfigFile]);
+		        configureAperture( apertureConfig );
 
 		        // Get our list of maps and layers
 		        mapsDeferred = MapService.requestMaps();
@@ -201,8 +203,7 @@ require(['./FileLoader',
 						        id: 'maps',
 						        active: false,
 						        activeWidth: '25%',
-						        text: 'Maps',
-						        css: { left: '10px', top: '10px' }
+						        text: 'Maps'
 					        });
 					        // ... Next, insert contents
 					        for (i=0; i<maps.length; ++i) {
@@ -210,7 +211,7 @@ require(['./FileLoader',
 							        href: '?map='+i
 						        });
 						        mapButton.append(maps[i].description+'<br>');
-						        mapButton.appendTo(mapsButton.getContainer());
+						        mapButton.appendTo(mapsButton.getContent());
 					        }
 				        }
 
@@ -250,15 +251,19 @@ require(['./FileLoader',
 				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
 				        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
 
-				        new LayerControls().initialize( 'layer-controls', uiMediator.getLayerStateMap() );
+				        new LayerControls().initialize( 'layer-controls-content', uiMediator.getLayerStateMap() );
 
 				        // Annotation layers
 				        annotationLayers = getAnnotationLayers(annotationLayers, filter);
 				        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
+
+				        worldMap.on('mousemove', function(e) {
+				            var pixel = worldMap.getViewportPixel
+				        });
 			        }
 		        );
 
 		        // Trigger the initial resize event to resize everything
 		        $(window).resize();
-	        });
+	        }, 'json');
         });

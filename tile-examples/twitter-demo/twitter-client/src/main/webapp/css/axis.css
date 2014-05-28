@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 .top-axis {
-    bottom: 0px;
+    bottom: 0px;   
 }
 
 .bottom-axis {
@@ -68,7 +68,7 @@
             box-sizing: border-box;
 }
 
-.top-axis-container {
+.top-axis-content {
     position:absolute;
     background: #111111;
     height:100px;
@@ -79,7 +79,7 @@
     overflow:hidden;
 }
 
-.bottom-axis-container {
+.bottom-axis-content {
     position:absolute;
     background: #111111;
     height:100px;
@@ -90,7 +90,7 @@
     overflow:hidden;
 }
 
-.left-axis-container {
+.left-axis-content {
     position:absolute;    
     background: #111111;
     width:100px;
@@ -101,7 +101,7 @@
     overflow:hidden;
 }
 
-.right-axis-container {
+.right-axis-content {
     position:absolute;
     background: #111111;
     width:100px;

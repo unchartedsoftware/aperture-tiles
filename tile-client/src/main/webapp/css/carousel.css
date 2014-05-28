@@ -1,11 +1,10 @@
 @charset "UTF-8";
 
-.carousel-ui-outline {
+.carousel-ui-pane {
     position: absolute;
     width:257px;
     height:257px;
     pointer-events: none;
-    z-index: 999;
     border: 1px solid rgba(255, 255, 255, .5);
     -webkit-box-shadow: 0 0 10px #ccc;
        -moz-box-shadow: 0 0 10px #ccc;      
@@ -22,8 +21,8 @@
     height:50px;
     width:20px;
     -webkit-transition: -webkit-transform .1s ease-in-out;
-       -moz-transition: -moz-transform .1s ease-in-out;
-            transition: transform .1s ease-in-out;
+       -moz-transition:    -moz-transform .1s ease-in-out;
+            transition:         transform .1s ease-in-out;
 }
 
 .carousel-ui-chevron-left {
@@ -38,23 +37,25 @@
 
 .carousel-ui-chevron:hover {
     cursor: pointer;
-    -webkit-transform: scale(1.2);  
+    -webkit-transform: scale(1.4);  
 }
 
 .carousel-ui-dot-container {
     position: absolute;
+    pointer-events: all;  
     bottom: 16px;
     margin: 0 auto;
 }
 
 .carousel-ui-dot {
     position: relative;
-    pointer-events: all;  
     float:left;
     width:10px;
     height:10px;
     margin: 4px;
     -webkit-transition: -webkit-transform .1s ease-in-out;
+       -moz-transition:    -moz-transform .1s ease-in-out;
+            transition:         transform .1s ease-in-out;
 }
 
 .carousel-ui-dot:hover {
