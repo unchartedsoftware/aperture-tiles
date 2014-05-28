@@ -59,7 +59,7 @@ object analyze{
   }
   
     
-def tableResults (table: RDD[Array[String]], tableTests: String, writer: PrintWriter): Map[String, String] = {
+def tableResults (table: RDD[String], tableTests: String, writer: PrintWriter): Map[String, String] = {
 	val tests: Array[String] = tableTests.split(",")
     val sc = table.context
   
@@ -169,7 +169,7 @@ def quantitativeResults (table: RDD[String], field: String, fieldAlias: String, 
 			|| (tests.contains("popstd"))
 			|| (tests.contains("sampvar"))
 			|| (tests.contains("sampstd"))) {
-			table.foreach(r => { statTracker += r.toDouble })  	
+			table.foreach(r => {if(!r.equals("")){statTracker += r.toDouble }})  	
 		}
 
 val resultMap = collection.mutable.Map.empty[String, Any]
@@ -339,9 +339,9 @@ writer.write("\n\n")
 }
 
 
-	def customAnalytic(table: RDD[Array[String]], field: String, index: Int, customAnalytic: String, customVars: String, customOutput: PrintWriter){
+	def customAnalytic(table: RDD[Array[String]], field: String, index: Int, customAnalytic: String, customVars: String, customOutput: PrintWriter, partitionNum: String){
   //make it so I dont need to directly hard code import the analytic
-		Fingerprints.run(table, field, index, customVars, customOutput)
+		Fingerprints.run(table, field, index, customVars, customOutput, partitionNum)
 	}
 }
 

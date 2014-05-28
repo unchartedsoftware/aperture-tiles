@@ -1,0 +1,21 @@
+{
+    "Sample Size": 1000,
+    "Summaries": [
+        {
+            "Fields": [],
+            "Type": "Qualitative"
+        },
+        {
+            "Fields": [],
+            "Type": "Numerical"
+        },
+        {
+            "Fields": [],
+            "Type": "Date"
+        },
+        {"Type": "Text"}
+    ],
+    "Title": "rdns",
+    "Total Bytes": 0,
+    "Total Records": 1000
+}

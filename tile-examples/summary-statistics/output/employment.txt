@@ -1,0 +1,223 @@
+Total record count: 27435
+Total record count: 27435
+
+Field: deparment
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 26
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Buenos Aires,12033)
+(Capital Federal,11143)
+(Córdoba,1421)
+(Santa Fe,712)
+(Mendoza,287)
+
+Field: datePosted
+Fieldtype: Qualitative
+Running tests: countna, countunique, quartiles, min, max, mean
+WARNING Test: min could not be run on quantitative field type
+WARNING Test: max could not be run on quantitative field type
+WARNING Test: mean could not be run on quantitative field type
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 96
+
+Field: longitude
+Fieldtype: Numerical
+Running tests: countna, countunique, quartiles, min, max, mean
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 996Test: Quartiles, Result: 
+Quartile 1: -58.7377548
+Quartile 2: -58.4054528
+ Quartile 3: -58.3815931
+Test: min, Result: -58.908329
+Test: max, Result: 120.894339
+Test: mean, Result: -60.210698964287666
+
+Field: latitude
+Fieldtype: Numerical
+Running tests: countna, countunique, quartiles, min, max, mean
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 998Test: Quartiles, Result: 
+Quartile 1: -34.6037232
+Quartile 2: -34.6037232
+ Quartile 3: -34.4948079
+Test: min, Result: -34.59869
+Test: max, Result: 51.5190124
+Test: mean, Result: -32.63553820740646
+
+Field: start
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 942
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Inmediato,15015)
+(inmediato,5837)
+(A convenir,797)
+(-,631)
+(a convenir,435)
+
+Field: title
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 22535
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Analista Contable,63)
+(Ayudante de cocina,57)
+(Vendedor,55)
+(Recepcionista,55)
+(Cocinero,47)
+
+Field: url
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 27435
+Test: MostFrequent, Result as (value,frequency) pairs:
+(http://www.computrabajo.com.ar/bt-ofrd-gestioncompartida-100072.htm,1)
+(http://www.computrabajo.com.ar/bt-ofrd-sanmartin07-493212.htm,1)
+(http://www.computrabajo.com.ar/bt-ofrd-kaizenrh-371696.htm,1)
+(http://www.computrabajo.com.ar/bt-ofrd-epidataconsulting-3609740.htm,1)
+(http://www.computrabajo.com.ar/bt-ofrd-elbosque20866-464620.htm,1)
+(FREQUENCY INFO: There are atleast 100 other values with the frequency: ,1)
+
+Field: dateFirstSeen
+Fieldtype: Qualitative
+Running tests: countna, countunique, quartiles, min, max, mean
+WARNING Test: min could not be run on quantitative field type
+WARNING Test: max could not be run on quantitative field type
+WARNING Test: mean could not be run on quantitative field type
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 9
+
+Field: phone
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 1688
+Test: MostFrequent, Result as (value,frequency) pairs:
+(,23303)
+(-,499)
+(43726000,137)
+(4372-6000,78)
+(.,74)
+
+Field: duration
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 1848
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Indeterminado,3823)
+(Indeterminada,2371)
+(indeterminado,1534)
+(Efectivo,1363)
+(Permanente,1130)
+
+Field: salary
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 3506
+Test: MostFrequent, Result as (value,frequency) pairs:
+(A convenir,10383)
+(a convenir,5136)
+(A Convenir,1224)
+(-,889)
+(A definir,261)
+
+Field: dateLastSeen
+Fieldtype: Qualitative
+Running tests: countna, countunique, quartiles, min, max, mean
+WARNING Test: min could not be run on quantitative field type
+WARNING Test: max could not be run on quantitative field type
+WARNING Test: mean could not be run on quantitative field type
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 1
+
+Field: contact
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 5753
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Recursos Humanos,1146)
+(,1067)
+(Quintana Gustavo,927)
+(Adecco,373)
+(A quien corresponda,294)
+
+Field: location
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 2842
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Capital Federal,6823)
+(Córdoba,711)
+(Microcentro,596)
+(Rosario,451)
+(Capital,446)
+
+Field: fax
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 511
+Test: MostFrequent, Result as (value,frequency) pairs:
+(,25426)
+(-,562)
+(.,75)
+(*,73)
+(12,61)
+
+Field: translatedLocation
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 981
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Buenos Aires, Argentina,10188)
+(C�rdoba, Argentina,1181)
+(Rosario, Santa Fe, Argentina,462)
+(Pilar, Buenos Aires, Argentina,454)
+(Norte, Berisso, Buenos Aires, Argentina,366)
+
+Field: applications
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 13249
+Test: MostFrequent, Result as (value,frequency) pairs:
+(envíar currículum por correo electrónico,892)
+(Enviar CV por correo electrónico,559)
+(Enviar curriculum por correo electrónico,438)
+(mail,410)
+(por mail,355)
+
+Field: company
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 5681
+Test: MostFrequent, Result as (value,frequency) pairs:
+(SENSI s.r.l.,939)
+(Adecco Argentina S.A.,484)
+(Consultora TGA,285)
+(Grupo Gestión,284)
+(Solución Eventual,271)
+
+Field: jobType
+Fieldtype: Qualitative
+Running tests: countna, countunique, mostfrequent
+Test: CountNA, Result: 0
+Test: CountUnique, Result: 51
+Test: MostFrequent, Result as (value,frequency) pairs:
+(Tiempo Completo,22333)
+(Medio Tiempo,1445)
+(Tiempo Completo, Medio Tiempo,970)
+(Por Horas,739)
+(Tiempo Completo, Medio Tiempo, Por Horas,244)
+

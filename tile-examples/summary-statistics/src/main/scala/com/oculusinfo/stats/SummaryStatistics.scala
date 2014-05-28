@@ -37,6 +37,7 @@ import com.oculusinfo.stats.util.JSONwriter
 import com.oculusinfo.stats.customAnalytics.Fingerprints
 import org.apache.spark.AccumulableParam
 import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.json.JSONArray
 import org.json.JSONException
@@ -56,6 +57,7 @@ object SummaryStatistics {
     val propertiesFile = "config.properties"
     val prop = new Properties()
 
+
     prop.load(new FileInputStream(propertiesFile))
 
     // Extract all fields identified in the properties file
@@ -64,25 +66,51 @@ object SummaryStatistics {
       .filter(_.endsWith(".index"))
       .map(property => property.substring("oculus.binning.parsing.".length, property.length - ".index".length))
 
-    val inputLocation = prop.getProperty("oculus.binning.source.location")
-    val title = prop.getProperty("oculus.binning.name")
-    val delimiter = prop.getProperty("oculus.binning.parsing.separator")
-    val outputLocation = prop.getProperty("oculus.binning.output.location")
-    val writer = new PrintWriter(new File(outputLocation))
+    val inputLocation = prop.getProperty("oculus.binning.source.location", "No input location specified")
+    val title = prop.getProperty("oculus.binning.name", "No Title Specified")
+    val delimiter = prop.getProperty("oculus.binning.parsing.separator", "\t")
+    val outputLocation = prop.getProperty("oculus.binning.output.location", "/output/summarystatsOutput")
+    
 
     val sparkMaster = prop.getProperty("spark.connection.url", "local")
     val sparkHome = prop.getProperty("spark.connection.home", "/opt/spark")
 
-    val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, Seq("target/summary-statistics-0.3-SNAPSHOT.jar"))
-    val textFile = sc.textFile(inputLocation)
+//val conf = new SparkConf().setMaster(sparkMaster).setAppName("Summary Stats").set("spark.connection.url", sparkHome).set("spark.shuffle.consolidate.files", "true").set("spark.shuffle.spill", "false")
 
+    val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, Seq("target/summary-statistics-0.3-SNAPSHOT-classes.jar", "/home/bigdata/.m2/repository/org/json/json/20090211/json-20090211.jar"))
+
+    
+  
+val rawPartitions = prop.getProperty("partitions", "")
+
+val partitions = rawPartitions.split(",")
+    
+    
+    
+for(i <- partitions){
+
+//val sc = new SparkContext(conf)
+
+  val writer = new PrintWriter(new File(outputLocation + i + ".txt"))
+  val textFile = sc.textFile(inputLocation + i).repartition(384)
+
+
+val tableTests = prop.getProperty("oculus.binning.table.tests","none")
+
+
+
+ val tableTestResults = analyze.tableResults(textFile, tableTests.toLowerCase, writer)
     val table = textFile.map(record => (record.split(delimiter))).cache()
 
-    val tableTests = prop.getProperty("oculus.binning.table.tests")
+
 
     //analyze dataset at a high level. count total records etc.
-    val tableTestResults = analyze.tableResults(table, tableTests.toLowerCase, writer)
+    
 
+
+ println("KIELOKIELOKIELO: " + fields.size)
+      
+  
     // Run custom analysis analysis on each field. Custom analysis is not included in the output JSON file
     fields.foreach(field => {
 
@@ -90,15 +118,15 @@ object SummaryStatistics {
       val fieldType = prop.getProperty("oculus.binning.parsing." + field + ".fieldType")
       val customAnalytics = prop.getProperty("oculus.binning.parsing." + field + ".custom.analytics", "")
 
-      if (customAnalytics != "") {
+      if (!customAnalytics.isEmpty) {
         //allows user to specify variables for the custom analytic
         val customVariables = prop.getProperty("oculus.binning.parsing." + field + ".custom.variables", "")
         val customOutput = prop.getProperty("oculus.binning.parsing." + field + ".custom.output", "")
         if (customOutput == "") {
-          util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, writer)
+          util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, writer, i)
         } else {
           val customWriter = new PrintWriter(new File(customOutput))
-          util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, customWriter)
+          util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, customWriter, i)
         }
       }
     })
@@ -125,7 +153,7 @@ object SummaryStatistics {
           date.getTime.toString
         })
         util.analyze.quantitativeResults(dateColumn, field, fieldAlias, fieldType, testList, writer, dateFormat)
-        } else if (fieldType == "numeric") {
+        } else if (fieldType == "numerical") {
         	util.analyze.quantitativeResults(column, field, fieldAlias, fieldType, testList, writer, "")
       } else {
         	util.analyze.qualitativeResults(column, field, fieldAlias, fieldType, testList, writer, "")
@@ -136,21 +164,34 @@ object SummaryStatistics {
     val qualitative = fieldTestResults.map(r => { if (r._3 == "qualitative") { r } else { ("delete4269", "d", "d", Map(("d" -> "d"))) } }).filter(!_.toString.equals("(delete4269,d,d,Map(d -> d))")).toArray
     val numerical = fieldTestResults.map(r => { if (r._3 == "numerical") { r } else { ("delete4269", "d", "d", Map(("d" -> "d"))) } }).filter(!_.toString.equals("(delete4269,d,d,Map(d -> d))")).toArray
     val date = fieldTestResults.map(r => { if (r._3 == "date") { r } else { ("delete4269", "d", "d", Map(("d" -> "d"))) } }).filter(!_.toString.equals("(delete4269,d,d,Map(d -> d))")).toArray
+
+
     val text = fieldTestResults.map(r => { if (r._3 == "text") { r } else { ("delete4269", "d", "d", Map(("d" -> "d"))) } }).filter(!_.toString.equals("(delete4269,d,d,Map(d -> d))")).toArray
 
-    val totalRecords = tableTestResults("totalRecords").toInt
+    val totalRecords = if (tableTestResults.contains("totalRecords")) {
+      tableTestResults("totalRecords").toLong
+    } else {
+      1L
+    }
+
 
     val qualSummary = JSONwriter.JSONqualitative(qualitative, totalRecords)
     val numericSummary = JSONwriter.JSONnumeric(numerical, totalRecords)
     val dateSummary = JSONwriter.JSONdate(date, totalRecords)
     val textSummary = JSONwriter.JSONtext(text, totalRecords)
 
-    val totalBytes = 0
+    val totalBytes = 0L
     val sampleRecords = totalRecords
 
     JSONwriter.JSONoutput(title, totalRecords, totalBytes, sampleRecords, qualSummary, numericSummary, dateSummary, textSummary)
 
+
+
+
     writer.close()
-  }
+
+
 }
-                                               
+  }
+}                                 
+
