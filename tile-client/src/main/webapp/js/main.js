@@ -60,7 +60,7 @@ require(['./FileLoader',
 	            getAnnotationLayers,
 	            uiMediator,
 	            getURLParameter,
-	            filesDeferred, mapsDeferred, layersDeferred, annotationsDeferred;
+	            mapsDeferred, layersDeferred, annotationsDeferred;
 
 	        getURLParameter = function (key) {
 		        var url = window.location.search.substring(1),
@@ -156,19 +156,21 @@ require(['./FileLoader',
 	        $.get("description.html", function (descriptionHtml) {
 		        // create the overlay container
 		        new OverlayButton({
-			        id:'description-header',
+			        containerId:'description',
+			        headerId:'description-header',
+			        contentId:'description-content',
 			        active: false,
-			        activeWidth: '50%',
-			        text: 'Description'
-		        }); //.append( '<div id="description-content">'+descriptionHtml+'</div>' ); // append description html
+			        activeWidth: '50%'
+		        }).append(descriptionHtml); // append description html
 	        });
 
-	        new OverlayButton({
-                id:'layer-controls-header',
+            new OverlayButton({
+                containerId:'layer-controls',
+                headerId:'layer-controls-header',
+                contentId:'layer-controls-content',
                 active: false,
-                activeWidth: '50%',
-                text: 'Controls'
-            }); //.append( '<div id="layer-controls-content"></div>' ); // append controls content div
+                activeWidth: '50%'
+            }).append('');
 
 
 	        // Load all our UI configuration data before trying to bring up the ui
@@ -257,9 +259,6 @@ require(['./FileLoader',
 				        annotationLayers = getAnnotationLayers(annotationLayers, filter);
 				        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-				        worldMap.on('mousemove', function(e) {
-				            var pixel = worldMap.getViewportPixel
-				        });
 			        }
 		        );
 

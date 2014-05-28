@@ -52,56 +52,61 @@ define(function (require) {
 
             var that = this;
 
-            this.id = spec.id;
+            this.headerId = spec.headerId;
+            this.contentId = spec.contentId;
             this.active = spec.active || false;
 
+            this.$container = $('#'+this.containerId);
+            this.$container.addClass("overlay-container");
+            this.$header = $('#'+this.headerId);
+            this.$header.addClass("overlay-header");
+            this.$content = $('#'+this.contentId);
+            this.$content.addClass("overlay-content");
 
-            // create header
-            this.$header = $('<div id="' + spec.id + '" class="overlay-header"><h3>'+spec.text+'</h3></div>');
-            this.$header.css(spec.css || "");
-            $('body').append(this.$header);
-
-            // create container
-            this.$container = $('<div id="'+ spec.id + '-container" class="overlay-container"> </div>');
-            this.$header.append(this.$container);
-
-            this.$header.accordion({
-                active: this.active,
-                heightStyle: 'content',
-                collapsible: true
-            });
-
-            this.activeWidth = spec.activeWidth || '50%';
-            this.inactiveWidth = spec.inactiveWidth || this.$header.css('width');
+            this.openWidth = 500;
+            this.closedWidth = 140;
 
             this.$header.click( function(e){
 
-                var newWidth = that.active ? that.inactiveWidth : that.activeWidth,
-                    maxWidth = that.$header.css('max-width');
+                if (that.active) {
 
-                if (newWidth > maxWidth) {
-                    newWidth = maxWidth;
-                }
-
-                // ensure click event is only processed on the actual accordion header
-                if( $(".ui-accordion-header").is(e.target) ||
-                    $(".ui-accordion-header-icon").is(e.target) ) {
-
-                    // set overflow hidden while animating
-                    that.$container.css('overflow-y', 'hidden');
-
-                    that.$header.animate({
-                        width: newWidth
+                    that.$content.animate({
+                        height: 'toggle'
                     }, {
+                        duration: 600,
                         complete: function() {
-                            // on animation finish, allow scrollbar
-                            that.$container.css('overflow-y', 'auto');
+                            that.$header.animate({
+                                 width: "-=500"
+                            });
                         }
                     });
-                    that.active = !that.active;
+
+                } else {
+                    that.$header.animate({
+                        width: "+=500"
+                    },{
+                        complete: function() {
+                            that.$content.animate({
+                                height: 'toggle'
+                            }, 600);
+                        }
+                    });
                 }
+
+                that.active = !that.active;
+                console.log("click");
             });
 
+            if (!this.active) {
+                // trigger close and skip animation;
+                this.active  = !this.active;
+                this.$header.click();
+                this.$content.finish();
+                this.$header.finish();
+                console.log("hue");
+            }
+
+            return this.$content;
         },
 
 
@@ -110,13 +115,13 @@ define(function (require) {
         },
 
 
-        getContainer: function() {
-            return this.$container;
+        getContent: function() {
+            return this.$content;
         },
 
 
         append: function( element ) {
-            this.$container.append( element );
+            this.$content.append( element );
         }
 
     });

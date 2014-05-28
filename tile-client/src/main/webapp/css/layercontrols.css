@@ -1,19 +1,30 @@
 @charset "UTF-8";
 
-.layer-labels {
-    font-size: 12px;
-    text-align: left;
+#layer-controls {
+    position: fixed;
+    right: 10px;
+    bottom: 42px;
 }
 
-.layer-controls-container {
-    width: 100%;
-    max-height:512px; 
+#layer-controls-header {
+    position: relative;
+    width: 612px;
+}
+
+#layer-controls-content {
+    position: relative;
+    background-color: #FFFFFF;
+    width:612px;
+    height: 210px;
+    font-size: 12px;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+}
+
+.layer-labels {
     font-size: 12px;
-    min-width: 400px;
-    overflow-x:auto;
+    text-align: left;
 }
 
 .layer-title {
@@ -129,6 +140,7 @@
 
 .settings-content {
     position:relative;
+    padding-bottom:12px;
 }
 
 

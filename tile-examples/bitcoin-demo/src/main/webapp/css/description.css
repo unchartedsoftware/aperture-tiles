@@ -1,5 +1,14 @@
 @charset "UTF-8";
 
-#description-container {
+#description-header {
+	position: fixed;
+	width: 140px;
+	right: 10px;
+	top: 10px;
+}
+
+
+
+#description-content {
     height:234px;
 }

@@ -175,16 +175,6 @@
 }
 
 .axis-title-label:hover {
-    font-family: Verdana, Arial, sans-serif;
-    font-size:0.95em;
-    white-space: nowrap;
     color : #FFFFFF;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left:50%;
-    padding-right:50%;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
     cursor: pointer;
 }

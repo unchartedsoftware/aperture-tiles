@@ -96,9 +96,9 @@ define(function (require) {
         getZIndex: function() {
             var indices = OpenLayers.Map.Z_INDEX_BASE,
                 key, maxZ = 0;
-            for (var key in indices) {
+            for (key in indices) {
                 if (indices.hasOwnProperty(key)) {
-                    maxZ = Math.max( maxZ, indices[key])
+                    maxZ = Math.max( maxZ, indices[key] );
                 }
             }
             return maxZ;
