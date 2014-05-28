@@ -61,7 +61,7 @@ define(function (require) {
 
             // The relative position within each bin at which visuals will 
             // be drawn
-            this.position = {x: 'minX', y: 'centerY'};
+            this.position = {x: 'minX', y: 'centerY'}; //maxY
 
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
@@ -95,8 +95,9 @@ define(function (require) {
 
             for(i=0; i<tilekeys.length; i++) {
                 // if data exists in tile
-                if ( this.data[ tilekeys[i] ] !== undefined && this.data[ tilekeys[i] ].length > 0 ) {
-                    allData[ tilekeys[i] ] = this.data[ tilekeys[i] ][0];
+                if ( this.data[ tilekeys[i] ] !== undefined &&
+                     this.data[ tilekeys[i] ].length > 0 ) {
+                    allData[ tilekeys[i] ] = this.data[ tilekeys[i] ];
                 }
             }
             return allData;
@@ -234,65 +235,12 @@ define(function (require) {
 
                 if (tileData.tile !== undefined) {
                     // only call callback function if the tile actually has data associated with it
-                    this.dataCallback[tilekey]( this.data[tilekey] );
+                    this.dataCallback[tilekey]( [tilekey] );
                 }
 
                 // clear callbacks and 'waiting on' status
                 delete this.waitingOnTile[tilekey];
                 delete this.dataCallback[tilekey];
-            }
-        },
-
-
-        /**
-         * Set the position of visuals on this layer relative to the tile
-         * location.
-         *
-         * @param position One of ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW',
-         *                 'Center'], indicating the corner, side center, or
-         *                 tile center, as appropriate.
-         */
-        setPosition: function (position) {
-            var stdpos = position.toLowerCase();
-
-            switch (stdpos) {
-                case 'n':
-                case 'north':
-                    this.position = {x: 'centerX', y: 'maxY'};
-                    break;
-                case 'ne':
-                case 'northeast':
-                    this.position = {x: 'maxX', y: 'maxY'};
-                    break;
-                case 'e':
-                case 'east':
-                    this.position = {x: 'maxX', y: 'centerY'};
-                    break;
-                case 'se':
-                case 'southeast':
-                    this.position = {x: 'maxX', y: 'minY'};
-                    break;
-                case 's':
-                case 'south':
-                    this.position = {x: 'centerX', y: 'minY'};
-                    break;
-                case 'sw':
-                case 'southwest':
-                    this.position = {x: 'minX', y: 'minY'};
-                    break;
-                case 'w':
-                case 'west':
-                    this.position = {x: 'minX', y: 'centerY'};
-                    break;
-                case 'nw':
-                case 'northwest':
-                    this.position = {x: 'minX', y: 'maxY'};
-                    break;
-                case 'c':
-                case 'center':
-                case 'centre':
-                    this.position = {x: 'centerX', y: 'centerY'};
-                    break;
             }
         },
 
@@ -350,8 +298,8 @@ define(function (require) {
                             latitude: binRect[this.position.y],
                             visible: true,
                             bin: tileData.values[binNum],
-                            tilekey: tileKey,
-                            layerId: this.layerInfo.layer
+                            tilekey: tileKey
+                            //layerId: this.layerInfo.layer
                         };
                         results.push( binData );
                         ++binNum;

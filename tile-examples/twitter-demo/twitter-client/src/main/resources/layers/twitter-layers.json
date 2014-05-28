@@ -68,7 +68,6 @@
                     "renderers": [
                         {
                             "domain": "client",
-                            "type": "CarouselLayer",
                             "views": [
                                 {
                                     "renderer": "TopTextSentiment"
