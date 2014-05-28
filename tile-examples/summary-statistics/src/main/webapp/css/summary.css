@@ -247,11 +247,6 @@ th {
     background-color: #fff;
 }
 
-.plot-size {
-    width : 85%;
-    height : 85%;
-}
-
 .plot-parent {
     position: absolute;
     left: 150px;

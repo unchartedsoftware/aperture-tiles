@@ -46,7 +46,7 @@ import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.util.JsonUtilities;
+import com.oculusinfo.binning.util.JsonUtilities;
 
 
 
