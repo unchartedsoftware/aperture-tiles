@@ -41,6 +41,8 @@ define(function (require) {
 
     CarouselLayer = ClientLayer.extend({
 
+        Z_INDEX_OFFSET : 1000,
+
         /**
          * Construct a carousel
          */
@@ -48,8 +50,10 @@ define(function (require) {
 
             var that = this;
 
+            this._super(id, map);
+
             // constants
-            this.OUTLINE_CLASS = 'carousel-ui-outline';
+            this.CAROUSEL_CLASS = 'carousel-ui-pane';
             this.DOT_CONTAINER_CLASS = "carousel-ui-dot-container";
             this.DOT_CLASS = 'carousel-ui-dot';
             this.DOT_CLASS_DEFAULT = 'carousel-ui-dot-default';
@@ -59,17 +63,19 @@ define(function (require) {
             this.CHEVRON_CLASS_LEFT = "carousel-ui-chevron-left";
             this.CHEVRON_CLASS_RIGHT = "carousel-ui-chevron-right";
 
+            this.Z_INDEX = this.map.getZIndex() + this.Z_INDEX_OFFSET;
+
             // call base class ClientLayer constructor
-            this._super(id, map);
+
             this.previousMouse = {};
             this.selectedTileInfo = {};
 
             // put mouse move callback on global document
-            $(document).mousemove(function(event) {
-                var tilekey = that.map.getTileKeyFromViewportPixel(event.pageX, event.pageY);
+            this.map.on('mousemove', function(event) {
+                var tilekey = that.map.getTileKeyFromViewportPixel(event.xy.x, event.xy.y);
                 that.updateSelectedTile(tilekey);
-                that.previousMouse.x = event.pageX;
-                that.previousMouse.y = event.pageY;
+                that.previousMouse.x = event.xy.x;
+                that.previousMouse.y = event.xy.y;
             });
 
             // update carousel if map is moving and mouse isn't
@@ -142,6 +148,10 @@ define(function (require) {
             this.$rightChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_RIGHT+"'></div>");
             this.$rightChevron.click( function() { incIndex(1); return true; });
             this.$outline.append(this.$rightChevron);
+
+            this.map.enableEventToMapPropagation( this.$leftChevron );
+            this.map.enableEventToMapPropagation( this.$rightChevron );
+
         },
 
 
@@ -175,7 +185,8 @@ define(function (require) {
 
                 this.$dots[i] = $("<div id='" + this.DOT_ID_PREFIX +i+"' class='" + this.DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
                 this.$dots[i].click( generateDotCallback(i) );
-                $indexContainer.append(this.$dots[i] );
+                $indexContainer.append( this.$dots[i] );
+                this.map.enableEventToMapPropagation( this.$dots[i] );
             }
             $indexContainer.css('left', this.map.getTileSize()/2 - $indexContainer.width()/2 );
         },
@@ -186,7 +197,7 @@ define(function (require) {
          */
         createTileOutline: function() {
 
-            this.$outline = $("<div class='" +this.OUTLINE_CLASS +"'></div>");
+            this.$outline = $('<div class="' +this.CAROUSEL_CLASS +'" style="z-index:'+this.Z_INDEX+';"></div>');
             this.map.getElement().append(this.$outline);
         },
 
@@ -214,8 +225,7 @@ define(function (require) {
          */
         redrawUI: function() {
 
-            var that = this,
-                tilekey = this.selectedTileInfo.tilekey,
+            var tilekey = this.selectedTileInfo.tilekey,
                 parsedValues = tilekey.split(','),
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10),
@@ -223,21 +233,11 @@ define(function (require) {
                 prevActiveView = this.getTileViewIndex(this.selectedTileInfo.previouskey),
                 activeViewForTile = this.getTileViewIndex(tilekey);
 
-            function currentOrPreviousTilekey() {
-                // only redraw previous tile, and current tile
-                return this.tilekey === that.selectedTileInfo.previouskey ||
-                       this.tilekey === that.selectedTileInfo.tilekey;
-            }
-
-            // move carousel tile
-            this.$outline.css('left', topLeft.x);
-            this.$outline.css('top', topLeft.y);
-
-            if (this.clientState.areDetailsOverTile(xIndex, yIndex)) {
-                this.$outline.css('visibility', 'hidden');
-            } else {
-                this.$outline.css('visibility', 'visible');
-            }
+            // re-position carousel tile
+            this.$outline.css({
+                left: topLeft.x,
+                top: topLeft.y
+            });
 
             // if over new tile
             if ( this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey ) {
@@ -248,9 +248,6 @@ define(function (require) {
                     this.$dots[prevActiveView].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
                     this.$dots[activeViewForTile].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
                 }
-
-                // only redraw if hovering over a new tile
-                this.mapNodeLayer.all().where(currentOrPreviousTilekey).redraw();
             }
         }
 

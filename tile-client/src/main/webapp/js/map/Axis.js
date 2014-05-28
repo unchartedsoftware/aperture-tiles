@@ -34,7 +34,7 @@ define(function (require) {
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
         AXIS_HEADER_CLASS_SUFFIX = "-axis-header",
-        AXIS_CONTAINER_CLASS_SUFFIX = "-axis-container",
+        AXIS_CONTENT_CLASS_SUFFIX = "-axis-content",
         AXIS_LABEL_CLASS = "axis-marker-label",
         AXIS_POSITIONED_LABEL_CLASS_SUFFIX = "-axis-marker-label" ,
         AXIS_MARKER_SUFFIX = "-axis-marker",
@@ -44,6 +44,10 @@ define(function (require) {
 
 
     Axis = Class.extend({
+
+
+        Z_INDEX_OFFSET : 2000,
+
         /**
          * Construct an axis
          * @param spec Axis specification object:
@@ -74,14 +78,14 @@ define(function (require) {
             // enable / disable functions
             function horizontalSlide() {
                 that.setEnabled( !that.isEnabled() );
-                that.$container.animate({width: 'toggle'});
-                that.$containerBorder.animate({width: 'toggle'});
+                that.$content.animate({width: 'toggle'});
+                that.$contentBorder.animate({width: 'toggle'});
                 that.map.redrawAxes();
             }
             function verticalSlide() {
                 that.setEnabled( !that.isEnabled() );
-                that.$container.animate({height: 'toggle'});
-                that.$containerBorder.animate({height: 'toggle'});
+                that.$content.animate({height: 'toggle'});
+                that.$contentBorder.animate({height: 'toggle'});
                 that.map.redrawAxes();
             }
             function generateBorder ( $elem ) {
@@ -151,23 +155,23 @@ define(function (require) {
 
                 // create axis header and container
                 that.$div = $('<div class="'+ that.position + AXIS_DIV_CLASS_SUFFIX + '"></div>');
-                that.$header = $('<div class="'+ that.position + AXIS_HEADER_CLASS_SUFFIX + '">');
-                that.$container = $('<div class="'+ that.position + AXIS_CONTAINER_CLASS_SUFFIX + '">');
+                that.$header = $('<div class="'+ that.position + AXIS_HEADER_CLASS_SUFFIX + '"  style="z-index:'+(that.Z_INDEX+1)+';">');
+                that.$content = $('<div class="'+ that.position + AXIS_CONTENT_CLASS_SUFFIX + '"  style="z-index:'+that.Z_INDEX+';">');
                 // set enable / disable callbacks
                 if (that.isXAxis) {
                     that.$header.click(verticalSlide);
-                    that.$container.click(verticalSlide);
+                    that.$content.click(verticalSlide);
                 } else {
                     that.$header.click(horizontalSlide);
-                    that.$container.click(horizontalSlide);
+                    that.$content.click(horizontalSlide);
                 }
-                // append axis div to map parent, and other elements to that div
-                that.$map.parent().append(that.$div);
-                that.$div.append(that.$container);
+                // append axis div to map, and other elements to that div
+                that.$map.append(that.$div);
+                that.$div.append(that.$content);
                 that.$div.append(that.$header);
                 // generate borders
                 that.$headerBorder = generateBorder(that.$header);
-                that.$containerBorder = generateBorder(that.$container);
+                that.$contentBorder = generateBorder(that.$content);
                 // create new title
                 that.$title = generateTitle();
                 that.$header.append(that.$title);
@@ -180,6 +184,8 @@ define(function (require) {
             this.max = spec.max;
             this.repeat = spec.repeat || defaults.repeat;
             this.map = spec.map;
+
+            this.Z_INDEX = this.Z_INDEX_OFFSET + this.map.getZIndex();
 
             this.position = spec.position || defaults.position;
             this.id = spec.id || this.mapId + "-" + this.position + "-axis";
@@ -219,12 +225,12 @@ define(function (require) {
             // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
             this.enabled = true;
             // get axis container widths
-            this.containerWidth = (this.isXAxis) ? this.$container.height() : this.$container.width();
+            this.containerWidth = (this.isXAxis) ? this.$content.height() : this.$content.width();
             // check if axis starts open or closed
             if ( !isOpen ) {
                 // trigger close and skip animation;
                 this.$header.click();
-                this.$container.finish();
+                this.$content.finish();
             }
             // draw initial axis
             this.redraw();
@@ -259,7 +265,7 @@ define(function (require) {
 
                 // update axis length
                 var axisLength = that.$map.css(that.axisWidthOrHeight).replace('px', ''); // strip px suffix
-
+                
                 // add position offset for vertical axes
                 if (!that.isXAxis) {
                     if (that.position === 'left') {
@@ -401,28 +407,28 @@ define(function (require) {
                 that.ROTATION_RADIANS = 0;
 
                 // measure large markers
-                $temp = $(createLargeMarkerHTML({pixel:0})).hide().appendTo(that.$container);
+                $temp = $(createLargeMarkerHTML({pixel:0})).hide().appendTo(that.$content);
                 that.LARGE_MARKER_LENGTH = $temp[that.markerWidthOrHeight]();
                 that.LARGE_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]()*0.5 );
                 $temp.remove();
                 // measure medium markers
-                $temp = $(createMediumMarkerHTML({pixel:0})).hide().appendTo(that.$container);
+                $temp = $(createMediumMarkerHTML({pixel:0})).hide().appendTo(that.$content);
                 that.MEDIUM_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]() * 0.5);
                 $temp.remove();
                 // measure small markers
-                $temp = $(createSmallMarkerHTML({pixel:0})).hide().appendTo(that.$container);
+                $temp = $(createSmallMarkerHTML({pixel:0})).hide().appendTo(that.$content);
                 that.SMALL_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]() * 0.5);
                 $temp.remove();
 
                 // label measurements
-                $temp = $(createDummyMarkerLabelHTML({pixel:0, label:that.max })).appendTo(that.$container);
+                $temp = $(createDummyMarkerLabelHTML({pixel:0, label:that.max })).appendTo(that.$content);
                 // get angle first, it is used in label measurements
                 measureLabelRotation( $temp );
                 // measure max label
                 measureLabelMaxDimensions( $temp );
                 $temp.remove();
                 // measure min label
-                $temp = $(createDummyMarkerLabelHTML({pixel:0, label:that.min})).appendTo(that.$container);
+                $temp = $(createDummyMarkerLabelHTML({pixel:0, label:that.min})).appendTo(that.$content);
                 measureLabelMaxDimensions( $temp );
                 $temp.remove();
 
@@ -470,7 +476,7 @@ define(function (require) {
                     }
                 }
                 // append all markers and labels at once
-                that.$container[0].innerHTML = markersHTML;
+                that.$content[0].innerHTML = markersHTML;
             }
 
             // always update title position (in case of window resize)
@@ -482,7 +488,7 @@ define(function (require) {
             }
 
             // empty elements of axis container
-            that.$container.empty();
+            that.$content.empty();
             // generate array of marker labels and pixel locations
             markers = AxisUtil.getMarkers(this);
             // add each marker to correct pixel location in axis DOM elements

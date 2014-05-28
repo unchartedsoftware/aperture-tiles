@@ -50,6 +50,7 @@
 			"title" : "Source ID",
 			"position" : "bottom",
             "repeat": false,
+			"isOpen" : false,
 			"intervalSpec" : {
 				"type" : "percentage",
 				"increment" : 20,
@@ -57,7 +58,7 @@
 				"allowScaleByZoom" : true,
 			},
 			"unitSpec" : {
-				"type" : "M",
+				"type" : "time",
 				"decimals" : 2,
 				"allowStepDown" : true
 			}
@@ -66,9 +67,10 @@
 			"title" : "Amount",
 			"position" : "left",
             "repeat" : false,
+			"isOpen" : false,
 			"intervalSpec" : {
-				"type" : "fixed",
-				"increment" : 100000,
+				"type" : "value",
+				"increment" : 1000000,
 				"pivot" : 0,
 				"allowScaleByZoom" : true,
 			},

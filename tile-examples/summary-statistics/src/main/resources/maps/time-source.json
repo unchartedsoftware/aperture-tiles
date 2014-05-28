@@ -50,9 +50,10 @@
 			"title" : "Time",
 			"position" : "bottom",
             "repeat": false,
+			"isOpen" : false,
 			"intervalSpec" : {
-				"type" : "time",
-				"increment" : 1,
+				"type" : "percentage",
+				"increment" : 10,
 				"pivot" : 0,
 				"allowScaleByZoom" : true,
 			},
@@ -66,14 +67,15 @@
 			"title" : "Source ID",
 			"position" : "left",
             "repeat" : false,
+			"isOpen" : false,
 			"intervalSpec" : {
-				"type" : "M",
-				"increment" : 100000,
+				"type" : "value",
+				"increment" : 1000000,
 				"pivot" : 0,
 				"allowScaleByZoom" : true,
 			},
 			"unitSpec" : {
-				"type" : "M",
+				"type" : "decimal",
 				"decimals" : 2,
 				"allowStepDown" : true
 			}

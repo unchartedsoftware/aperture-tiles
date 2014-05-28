@@ -69,7 +69,7 @@ define(function (require) {
 				id: this.id,
                 options: {
                     controls: [
-                        new OpenLayers.Control.Navigation({documentDrag: true}),
+                        new OpenLayers.Control.Navigation({ documentDrag: true }),
                         new OpenLayers.Control.Zoom()
                     ]
                 }
@@ -80,15 +80,11 @@ define(function (require) {
 
 			this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
 
-			// Set resize map callback
-			$(window).resize( function() {
-				// set map to full extent of window
-				var $map = that.getElement();
-				$map.width( $(window).width() );
-				$map.height( $(window).height() );
-				that.updateSize();
-				that.redrawAxes();
-			});
+            $(window).resize( function() {
+                // set map to full extent of window
+                that.updateSize();
+
+            });
 
 			this.previousZoom = this.map.getZoom();
 
@@ -97,9 +93,59 @@ define(function (require) {
 		},
 
 
-        getElement:  function() {
-            return $("#" + this.id);
+        getZIndex: function() {
+            var indices = OpenLayers.Map.Z_INDEX_BASE,
+                key, maxZ = 0;
+            for (key in indices) {
+                if (indices.hasOwnProperty(key)) {
+                    maxZ = Math.max( maxZ, indices[key]);
+                }
+            }
+            return maxZ;
         },
+
+
+        getElement:  function() {
+            if (!this.$map) {
+                this.$map = $("#" + this.id);
+            }
+            return this.$map;
+        },
+
+
+        getEventHandlingDOMElement: function() {
+            return $('.olMapViewport')[0];
+        },
+
+
+        /**
+         * Allows the given DOMElement or jQuery object events to propagate through
+         * and interact with the underlying Map
+         */
+        enableEventToMapPropagation: function( elem ) {
+
+            var //that = this,
+                domElement = (elem instanceof jQuery) ? elem[0] : elem;
+
+            function propagateEvent( event ) {
+                var newEvent = new event.constructor(event.type, event),
+                    below;
+                $(elem).css('pointer-events', 'none');
+                below =  document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
+                if (below) {
+                    below.dispatchEvent(newEvent);
+                }
+                $(elem).css('pointer-events', 'all');
+            }
+
+            domElement.onmousedown = propagateEvent;
+            domElement.onmouseup = propagateEvent;
+            domElement.onmousemove = propagateEvent;
+            domElement.onwheel = propagateEvent;
+            domElement.onmousewheel = propagateEvent;
+            domElement.onscroll = propagateEvent;
+        },
+
 
 		setAxisSpecs: function (axes) {
 
@@ -142,7 +188,6 @@ define(function (require) {
 			    // Pyramid for the total map bounds
 			    mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
 			                                mapExtent.right, mapExtent.top);
-
 			// determine all tiles in view
 			return new TileIterator( mapPyramid, level,
 			                         bounds.left, bounds.bottom,
@@ -156,7 +201,6 @@ define(function (require) {
                 maxTileIndex = Math.pow(2, this.getZoom() ),
                 tile,
                 i;
-
             for (i=0; i<tiles.length; i++) {
                 tile = tiles[i];
                 if ( tile.xIndex >= 0 && tile.yIndex >= 0 &&
@@ -164,7 +208,6 @@ define(function (require) {
                      culledTiles.push( tile );
                 }
             }
-
 			return culledTiles;
 		},
 
@@ -181,20 +224,16 @@ define(function (require) {
 
 
         getMapWidth: function() {
-
             return this.getTileSize() * Math.pow( 2, this.getZoom() );
         },
 
-
         getMapHeight: function() {
-
             return this.getTileSize() * Math.pow( 2, this.getZoom() );
         },
 
 		getViewportWidth: function() {
 			return this.map.olMap_.viewPortDiv.clientWidth;
 		},
-
 
 		getViewportHeight: function() {
 			return this.map.olMap_.viewPortDiv.clientHeight;
@@ -207,16 +246,16 @@ define(function (require) {
 		 */
 		getMinMaxVisibleViewportPixels: function() {
 
-			var bounds ={
-				min : {
-					x: 0,
-					y: 0
-				},
-				max : {
-					x: this.getViewportWidth(),
-					y: this.getViewportHeight()
-				}
-			}, i;
+			var bounds = {
+                    min : {
+                         x: 0,
+                         y: 0
+                     },
+                     max : {
+                         x: this.getViewportWidth(),
+                         y: this.getViewportHeight()
+                     }
+                }, i;
 
 			// determine which axes exist
 			for (i=0; i<this.axes.length; i++) {
@@ -225,22 +264,21 @@ define(function (require) {
 
 					switch ( this.axes[i].position ) {
 
-					case 'top':
-						bounds.min.y = this.axes[i].getMaxContainerWidth();
-						break;
-					case 'bottom':
-						bounds.max.y = this.getViewportHeight() - this.axes[i].getMaxContainerWidth();
-						break;
-					case 'left':
-						bounds.min.x = this.axes[i].getMaxContainerWidth();
-						break;
-					case 'right':
-						bounds.max.x = this.getViewportWidth() - this.axes[i].getMaxContainerWidth();
-						break;
+                        case 'top':
+                            bounds.min.y = this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'bottom':
+                            bounds.max.y = this.getViewportHeight() - this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'left':
+                            bounds.min.x = this.axes[i].getMaxContainerWidth();
+                            break;
+                        case 'right':
+                            bounds.max.x = this.getViewportWidth() - this.axes[i].getMaxContainerWidth();
+                            break;
 					}
 				}
 			}
-
 			return bounds;
 		},
 
@@ -253,12 +291,12 @@ define(function (require) {
 		getMapMinAndMaxInViewportPixels: function() {
 			return {
 				min : {
-					x: this.map.olMap_.minPx.x,
-					y: this.map.olMap_.maxPx.y
+					x: Math.round( this.map.olMap_.minPx.x ),
+					y: Math.round( this.map.olMap_.maxPx.y )
 				},
 				max : {
-					x: this.map.olMap_.maxPx.x,
-					y: this.map.olMap_.minPx.y
+					x: Math.round( this.map.olMap_.maxPx.x ),
+					y: Math.round( this.map.olMap_.minPx.y )
 				}
 			};
 		},
@@ -271,7 +309,8 @@ define(function (require) {
 		 */
 		getMapPixelFromViewportPixel: function(vx, vy) {
 			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
-			    totalPixelSpan = this.getMapWidth();
+			    totalPixelSpan = this.getMapWidth(); // take into account any padding or margins
+
 			return {
 				x: totalPixelSpan + vx - viewportMinMax.max.x,
 				y: totalPixelSpan - vy + viewportMinMax.max.y
@@ -287,6 +326,7 @@ define(function (require) {
 		getViewportPixelFromMapPixel: function(mx, my) {
 			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
 			    totalPixelSpan = this.getMapWidth();
+
 			return {
 				x: mx + viewportMinMax.min.x,
 				y: totalPixelSpan - my + viewportMinMax.max.y
@@ -382,8 +422,8 @@ define(function (require) {
             pixel = this.getViewportPixelFromMapPixel(mx, my);
 
             return {
-                x : Math.round(pixel.x),
-                y : Math.round(pixel.y)
+                x : pixel.x,
+                y : pixel.y
             };
         },
 
@@ -499,9 +539,9 @@ define(function (require) {
 			this.map.olMap_.zoomToExtent(extent, findClosestZoomLvl);
 		},
 
-
 		updateSize: function() {
 			this.map.olMap_.updateSize();
+            this.redrawAxes();
 		},
 
 
