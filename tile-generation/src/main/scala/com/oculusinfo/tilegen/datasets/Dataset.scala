@@ -29,6 +29,8 @@ package com.oculusinfo.tilegen.datasets
 
 
 
+import java.lang.{Integer => JavaInt}
+import java.util.ArrayList
 import java.util.Properties
 
 import scala.collection.mutable.MutableList
@@ -42,9 +44,10 @@ import org.apache.spark.streaming.Time
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.binning.util.PyramidMetaData
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.IndexScheme
-import com.oculusinfo.tilegen.tiling.TileMetaData
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 
 
@@ -94,22 +97,22 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
 	/**
 	 * Creates a blank metadata describing this dataset
 	 */
-	def createMetaData (pyramidId: String): TileMetaData = {
+	def createMetaData (pyramidId: String): PyramidMetaData = {
 		val tileSize = (getNumXBins max getNumYBins)
 		val tilePyramid = getTilePyramid
 		val fullBounds = tilePyramid.getTileBounds(
 			new TileIndex(0, 0, 0, getNumXBins, getNumYBins)
 		)
-		new TileMetaData(pyramidId,
-		                 getDescription,
-		                 tileSize,
-		                 tilePyramid.getTileScheme(),
-		                 tilePyramid.getProjection(),
-		                 0,
-		                 scala.Int.MaxValue,
-		                 fullBounds,
-		                 MutableList[(Int, String)](),
-		                 MutableList[(Int, String)]())
+		new PyramidMetaData(pyramidId,
+		                    getDescription,
+		                    tileSize,
+		                    tilePyramid.getTileScheme(),
+		                    tilePyramid.getProjection(),
+		                    0,
+		                    scala.Int.MaxValue,
+		                    fullBounds,
+		                    new ArrayList[Pair[JavaInt, String]](),
+		                    new ArrayList[Pair[JavaInt, String]]())
 	}
 
 

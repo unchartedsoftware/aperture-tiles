@@ -28,46 +28,49 @@ package com.oculusinfo.tilegen.examples.apps
 
 
 import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Properties
+import java.util.TimeZone
+
 import scala.collection.JavaConverters._
+import scala.collection.immutable.List
+import scala.util.Try
+
+import org.apache.spark.Accumulable
+import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
+import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
+
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.io.PyramidIO
+import com.oculusinfo.binning.util.PyramidMetaData
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
+import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVDatasetBase
+import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
+import com.oculusinfo.tilegen.datasets.CSVRecordParser
+import com.oculusinfo.tilegen.datasets.CSVDataSource
+import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
+import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.TimeRangeCartesianIndexExtractor
+import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.tiling.SqliteTileIO
-import scala.collection.immutable.List
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
-import org.apache.spark.SparkContext
-import com.oculusinfo.tilegen.datasets.CSVDatasetBase
-import org.apache.spark.api.java.JavaRDD
-import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
-import org.apache.spark.storage.StorageLevel
-import com.oculusinfo.tilegen.datasets.CSVRecordParser
-import com.oculusinfo.tilegen.datasets.CSVDataSource
-import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
-import scala.util.Try
-import java.util.Date
 import com.oculusinfo.tilegen.tiling.IndexScheme
-import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
-import java.text.SimpleDateFormat
-import com.oculusinfo.tilegen.datasets.TimeRangeCartesianIndexExtractor
-import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
-import java.util.TimeZone
-import com.oculusinfo.tilegen.tiling.TileMetaData
 import com.oculusinfo.tilegen.tiling.LevelMinMaxAccumulableParam
-import org.apache.spark.Accumulable
 import com.oculusinfo.tilegen.tiling.BinDescriptor
-import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 /**
@@ -404,7 +407,7 @@ object CSVTimeRangeBinner {
 				val localIndexer = dataset.getTimeRangeIndexer
 				
 				//local function to combine all of the min/max data
-				val combineMetaData: Array[(TileMetaData, Map[Int, (BT, BT)])] => Map[Int, (BT, BT)] =
+				val combineMetaData: Array[(PyramidMetaData, Map[Int, (BT, BT)])] => Map[Int, (BT, BT)] =
 					metadatas =>
 				{
 					val binDesc = dataset.getBinDescriptor

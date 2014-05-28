@@ -448,7 +448,7 @@
             });
         };
 
-        var generateJsonPlots = function(){
+        var generateJsonPlots = function(){//onComplete){
             var layerDeferreds = LayerService.requestLayers(),
                 mapDeferreds = MapService.requestMaps();
 
@@ -493,7 +493,9 @@
                         $(window).resize();
                     });
                 });
+                //onComplete();
             });
+
         };
 
         /**
@@ -700,9 +702,7 @@
             generateJsonPlots(function(){
                 $("#tabs-plots").tabs({
                     create : function(event, ui) {
-                        //console.log('create: some random layer');
                         if (!ui.panel.attr('id')) {
-                            //console.log("returning from create");
                             return;
                         }
                         var layerName = ui.panel.attr('id').replace('tab-plot-', '');

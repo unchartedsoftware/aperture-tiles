@@ -65,7 +65,6 @@ addJarToSpark com.oculusinfo tile-service 0.3-SNAPSHOT classes
 
 # framework-related jars
 addJarToSpark org.apache.hbase hbase 0.94.15-cdh4.6.0
-
 addJarToSpark org.scala-lang scala-library 2.10.3
 addJarToSpark org.json json 20090211
 
