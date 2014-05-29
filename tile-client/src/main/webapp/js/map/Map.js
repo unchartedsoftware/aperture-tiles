@@ -98,7 +98,7 @@ define(function (require) {
                 key, maxZ = 0;
             for (key in indices) {
                 if (indices.hasOwnProperty(key)) {
-                    maxZ = Math.max( maxZ, indices[key]);
+                    maxZ = Math.max( maxZ, indices[key] );
                 }
             }
             return maxZ;
@@ -255,8 +255,8 @@ define(function (require) {
                          x: this.getViewportWidth(),
                          y: this.getViewportHeight()
                      }
-                }, i;
-
+                };
+            /*, i;
 			// determine which axes exist
 			for (i=0; i<this.axes.length; i++) {
 
@@ -278,7 +278,7 @@ define(function (require) {
                             break;
 					}
 				}
-			}
+			}*/
 			return bounds;
 		},
 

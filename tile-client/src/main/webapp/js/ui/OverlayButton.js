@@ -51,73 +51,75 @@ define(function (require) {
         init: function ( spec ) {
 
             var that = this;
-
             this.id = spec.id;
+
+            this.$container = $('#'+this.id);
+            this.$container.addClass('overlay-container');
+            this.$header = $('<div id="' + this.id + '-header" class="overlay-header">'+spec.header+'</div>');
+            this.$content = $('<div id="' + this.id + '-content" class="overlay-content">'+spec.content+'</div>');
+
+            this.$container.append(this.$header);
+            this.$container.append(this.$content);
+            this.activeWidth = this.$container.width();
+            this.inactiveWidth = this.$header.width();
             this.active = spec.active || false;
-
-
-            // create header
-            this.$header = $('<div id="' + spec.id + '" class="overlay-header"><h3>'+spec.text+'</h3></div>');
-            this.$header.css(spec.css || "");
-            $('body').append(this.$header);
-
-            // create container
-            this.$container = $('<div id="'+ spec.id + '-container" class="overlay-container"> </div>');
-            this.$header.append(this.$container);
-
-            this.$header.accordion({
-                active: this.active,
-                heightStyle: 'content',
-                collapsible: true
-            });
-
-            this.activeWidth = spec.activeWidth || '50%';
-            this.inactiveWidth = spec.inactiveWidth || this.$header.css('width');
 
             this.$header.click( function(e){
 
-                var newWidth = that.active ? that.inactiveWidth : that.activeWidth,
-                    maxWidth = that.$header.css('max-width');
+                var deltaWidth = that.activeWidth - that.inactiveWidth;
 
-                if (newWidth > maxWidth) {
-                    newWidth = maxWidth;
-                }
-
-                // ensure click event is only processed on the actual accordion header
-                if( $(".ui-accordion-header").is(e.target) ||
-                    $(".ui-accordion-header-icon").is(e.target) ) {
-
-                    // set overflow hidden while animating
-                    that.$container.css('overflow-y', 'hidden');
-
-                    that.$header.animate({
-                        width: newWidth
-                    }, {
+                if (that.active) {
+                    // close
+                    that.$content.animate({
+                            height: 'toggle'
+                        }, {
                         complete: function() {
-                            // on animation finish, allow scrollbar
-                            that.$container.css('overflow-y', 'auto');
+                            that.$header.animate({
+                                 width: "-="+deltaWidth
+                            });
                         }
                     });
-                    that.active = !that.active;
+
+                } else {
+                    // open
+                    that.$header.animate({
+                            width: "+="+deltaWidth
+                        },{
+                        complete: function() {
+                            that.$content.animate({
+                                height: 'toggle'
+                            });
+                        }
+                    });
                 }
+
+                that.active = !that.active;
             });
 
+            if (!this.active) {
+                // trigger close and skip animation;
+                //this.active  = !this.active;
+                that.$content.animate({height: 'toggle'});
+                this.$content.finish();
+            }
+
+            return this.$content;
         },
 
 
-        getHeader: function() {
+        getHeaderElement: function() {
             return this.$header;
         },
 
 
-        getContainer: function() {
+        getContentElement: function() {
             return this.$container;
         },
 
-
-        append: function( element ) {
-            this.$container.append( element );
+        getContainerElement: function() {
+            return this.$content;
         }
+
 
     });
 

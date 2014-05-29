@@ -42,7 +42,6 @@ define(function (require) {
 
     var Class = require('../../class'),
         LayerState = require('../model/LayerState'),
-        OverlayButton = require('../../ui/OverlayButton'),
         LayerControls,
         addLayer,
         showLayerSettings,
@@ -400,27 +399,13 @@ define(function (require) {
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
         initialize: function ( controlsId, layerStateMap) {
-            var layerState, overlay;
+            var layerState;
 
             // "Private" vars
             this.controlsMap = {};
-            this.$layerControlsContainer = null;
-
-            // create the container
-            overlay = new OverlayButton({
-                id: controlsId,
-                active: false,
-                activeWidth: '50%',
-                text: 'Controls',
-                css: {
-                    right: '10px',
-                    bottom: '42px'
-                }
-            });
 
             // Add the title
-            this.$layerControlsContainer = overlay.getContainer();
-            this.$layerControlsContainer.addClass('layer-controls-container');
+            this.$layerControlsContainer = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
             replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap);
