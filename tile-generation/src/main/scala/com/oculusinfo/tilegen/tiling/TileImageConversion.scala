@@ -57,7 +57,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
-import com.oculusinfo.binning.util.PyramidMetaData
+import com.oculusinfo.binning.metadata.PyramidMetaData
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException

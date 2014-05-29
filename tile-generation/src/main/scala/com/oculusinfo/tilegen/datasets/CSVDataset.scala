@@ -272,8 +272,8 @@ class LineSegmentIndexExtractor(xVar: String, yVar: String, xVar2: String, yVar2
 	private val scheme = new LineSegmentIndexScheme
 
 	def fields = Array(xVar, yVar, xVar2, yVar2)
-	def name = xVar + "." + yVar + "." + xVar2 + "." + yVar2
-	def description = xVar + " vs. " + yVar + "and" + xVar2 + "vs" + yVar2
+	def name =  xVar + "." + yVar  //xVar + "." + yVar + "." + xVar2 + "." + yVar2
+	def description = xVar + " vs. " + yVar  //xVar + " vs. " + yVar + "and" + xVar2 + "vs" + yVar2
 	def indexScheme = scheme
 	def calculateIndex(fieldValues: Map[String, Double]): (Double, Double, Double, Double) =
 		(fieldValues(xVar), fieldValues(yVar), fieldValues(xVar2), fieldValues(yVar2))

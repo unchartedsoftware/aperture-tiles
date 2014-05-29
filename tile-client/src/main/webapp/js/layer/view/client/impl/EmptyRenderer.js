@@ -47,13 +47,14 @@ define(function (require) {
     EmptyRenderer = ClientRenderer.extend({
         ClassName: "EmptyRenderer",
 		
-        init: function (map) {
-            this._super(map);
-        },
-
-
-        redraw: function() {
-            return true;
+        init: function () {
+            this._super('empty');
+        },		
+		
+		
+        createLayer: function(nodeLayer) {
+            // noop
+            return undefined;
         }
 
     });

@@ -59,17 +59,16 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 
 trait IndexScheme[T] {
 	def toCartesian (t: T): (Double, Double)
+	
+	//TODO -- toCartesianEndpoints is only used for RDDLineBinner 
+	//so ideally this should be moved to LineSegmentIndexScheme in RDDLineBinner?
+	def toCartesianEndpoints (t: T): (Double, Double, Double, Double)
 }
 
 class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializable {
 	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
+	def toCartesianEndpoints (coords: (Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._1, coords._2, coords._2) 	//TODO -- redundant, see note above
 }
-
-class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable { 
-//class LineSegmentIndexScheme extends Serializable {
-	def toCartesianEndpoints (coords: (Double, Double, Double, Double)): (Double, Double, Double, Double) = coords
-	def toCartesian (coords: (Double, Double, Double, Double)): (Double, Double) = (coords._1, coords._2)
-}	//TODO -- should LineSegmentIndexScheme be in linesegmentBinner?? ... or a new RDDLineBinner ??
 
 class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
 	def toCartesian (ipAddress: Array[Byte]): (Double, Double) = {
@@ -90,6 +89,7 @@ class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
 			(16.0*a._1+b._1, 16.0*a._2+b._2)
 		)
 	}
+	def toCartesianEndpoints (ipAddress: Array[Byte]): (Double, Double, Double, Double) = (0, 0, 0, 0) 	//TODO -- redundant, see note above
 }
 
 trait TimeIndexScheme[T] extends IndexScheme[T] {
@@ -102,6 +102,7 @@ trait TimeIndexScheme[T] extends IndexScheme[T] {
 class TimeRangeCartesianIndexScheme extends TimeIndexScheme[(Double, Double, Double)] with Serializable {
 	def toCartesian (coords: (Double, Double, Double)): (Double, Double) = (coords._2, coords._3)
 	def extractTime (coords: (Double, Double, Double)): Double = coords._1
+	def toCartesianEndpoints (coords: (Double, Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._2, coords._3, coords._3) 	//TODO -- redundant, see note above
 }
 
 

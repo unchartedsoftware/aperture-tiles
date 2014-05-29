@@ -43,7 +43,8 @@ define(function (require) {
     var Class = require('../../../class'),
         View  = require('./View'),
         ClientState   = require('./ClientState'),
-		clientState = new ClientState(),	// global client state
+		mapNodeLayer = {},
+		clientState = new ClientState(),	// global mouse state
         ClientLayer;
 
 
@@ -62,7 +63,7 @@ define(function (require) {
 		 *							}]
 		 *
          */
-        init: function ( id, map ) {
+        init: function ( id, map) {
 
             var that = this;
 
@@ -75,17 +76,31 @@ define(function (require) {
                 that.map.on('click', function() {
 					// if click event has not been swallowed yet, clear mouse state and redraw
 					that.clientState.clearClickState();
+					that.mapNodeLayer.all().redraw();
 				});
 
                 that.map.on('zoomend', function() {
 					// clear click mouse state on zoom and call map update function
                     that.clientState.clearClickState();
+                    that.onMapUpdate();
                 });
 
-                that.map.on('move', function() {
+                that.map.on('panend', function() {
 					// cal map update on pan end
                     that.onMapUpdate();
                 });
+				
+				// ensure only one mapNodeLayer is made for each unique map
+				if (mapNodeLayer[that.map.getUid()] === undefined) {
+					mapNodeLayer[that.map.getUid()] = that.map.addApertureLayer(aperture.geo.MapNodeLayer);
+				}
+
+                that.mapNodeLayer = mapNodeLayer[that.map.getUid()];
+                that.mapNodeLayer.map('longitude').from('longitude');
+                that.mapNodeLayer.map('latitude').from('latitude');
+                // Necessary so that aperture won't place labels and texts willy-nilly
+                //that.mapNodeLayer.map('width').asValue(1);
+                //that.mapNodeLayer.map('height').asValue(1);
             }
 
             // initialize attributes
@@ -109,6 +124,7 @@ define(function (require) {
             // add views
             for (i = 0; i < viewSpecs.length; i++) {
                 viewSpecs[i].clientState = that.clientState;
+                viewSpecs[i].mapNodeLayer = that.mapNodeLayer;
                 that.views.push( new View( viewSpecs[i] ) );
             }
 
@@ -119,15 +135,14 @@ define(function (require) {
         setOpacity: function( opacity ) {
 
             this.clientState.setSharedState('opacity', opacity);
-            this.updateAndRedrawViews();
+            this.mapNodeLayer.all().redraw();
         },
 
 
         setVisibility: function( visible ) {
             this.clientState.setSharedState('isVisible', visible);
-            this.updateAndRedrawViews();
+            this.mapNodeLayer.all().redraw();
         },
-
 
         /**
          * Maps a tilekey to its current view index. If none is specified, use default
@@ -159,8 +174,21 @@ define(function (require) {
 
             // map tile to new view
             this.tileViewMap[tilekey] = newViewIndex;
-            // swap tile between views
-            oldView.swapTileWith(newView, tilekey);
+
+            if (oldView.getLayerId() === newView.getLayerId()) {
+                // if both views share the same type of data source, swap tile data
+                oldView.swapTileWith(newView, tilekey);
+                this.updateAndRedrawViews( newView.getTileData(tilekey) );
+
+            } else {
+                // otherwise release and request new data
+                if (tilekey === this.clientState.clickState.tilekey) {
+                    // if same tile as clicked tile, un-select elements from this view
+                    this.clientState.clearClickState();
+                }
+                oldView.releaseTile( tilekey );
+                newView.requestTile( tilekey, $.proxy(this.updateAndRedrawViews, this));
+            }
         },
 
 
@@ -173,10 +201,9 @@ define(function (require) {
             var i,
                 tiles,
                 viewIndex,
-                tilesByView = [],
-                tileViewBounds;
+                tilesByView = [];
 
-            if (this.views.length === 0) {
+            if (this.views === undefined || this.views.length === 0) {
                 return;
             }
 
@@ -186,21 +213,46 @@ define(function (require) {
 
             // determine all tiles in view
             tiles = this.map.getTilesInView();
-            tileViewBounds = this.map.getTileBoundsInView();
 
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
-                viewIndex = this.getTileViewIndex( tiles[i].level+','+
-                                                   tiles[i].xIndex+','+
-                                                   tiles[i].yIndex );
-                tilesByView[viewIndex].push( tiles[i] );
+                viewIndex = this.getTileViewIndex(tiles[i].level+','+
+                                                  tiles[i].xIndex+','+
+                                                  tiles[i].yIndex);
+                tilesByView[viewIndex].push(tiles[i]);
             }
 
             for (i=0; i<this.views.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].updateTiles( tilesByView[i], tileViewBounds );
+                this.views[i].filterAndRequestTiles(tilesByView[i],
+                                                    this.map.getTileBoundsInView(),
+                                                    $.proxy(this.updateAndRedrawViews, this));
             }
+        },
+
+
+        /**
+         * Called upon receiving a tile. Updates the nodeLayer for each view and redraws
+         * the layers
+         */
+        updateAndRedrawViews: function( tile ) {
+            var i,
+                that = this,
+                data = [];
+
+            for (i=0; i< this.views.length || i< 1; i++ ) {
+                $.merge(data, this.views[i].getDataArray() );
+            }
+
+            // pull selected node to the front
+            this.mapNodeLayer.all().where( function() {
+                return this.tilekey === that.clientState.clickState.tilekey;
+            }).toFront();
+
+            // redraw new tile
+            this.mapNodeLayer.all(data).where(tile).redraw();
         }
+
 
      });
 

@@ -70,10 +70,13 @@
                             "domain": "client",
                             "views": [
                                 {
-                                    "renderer": "HtmlRenderer"
+                                    "renderer": "TopTextSentiment"
                                 },
                                 {
-                                    "renderer": "DebugRenderer"
+                                    "renderer": "TagsByTimeSentiment"
+                                },
+                                {
+                                    "renderer": "EmptyRenderer"
                                 }
                             ]
                         }

@@ -36,8 +36,7 @@ require(['./FileLoader',
         var apertureConfigFile = "./data/aperture-config.json";
 
         // Load all our UI configuration data before trying to bring up the ui
-        FileLoader.loadJSONData(apertureConfigFile, function (jsonDataMap) {
-
+        FileLoader.loadJSONData(apertureConfigFile).done(function (jsonDataMap) {
 
             // First off, configure aperture.
             configureAperture(jsonDataMap[apertureConfigFile]);

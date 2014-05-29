@@ -1,0 +1,667 @@
+{
+    "Sample Size": 27435,
+    "Summaries": [
+        {
+            "Fields": [
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "2842"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 10.359030435574995
+                        }
+                    },
+                    "Field Alias": "location",
+                    "Most Frequent": [
+                        {"Capital Federal": 6823},
+                        {"Córdoba": 711},
+                        {"Microcentro": 596},
+                        {"Rosario": 451},
+                        {"Capital": 446}
+                    ],
+                    "Name": "location"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "26"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0.09476945507563332
+                        }
+                    },
+                    "Field Alias": "deparment",
+                    "Most Frequent": [
+                        {"Buenos Aires": 12033},
+                        {"Capital Federal": 11143},
+                        {"Córdoba": 1421},
+                        {"Santa Fe": 712},
+                        {"Mendoza": 287}
+                    ],
+                    "Name": "deparment"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "13249"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 48.292327319117916
+                        }
+                    },
+                    "Field Alias": "applications",
+                    "Most Frequent": [
+                        {"envíar currículum por correo electrónico": 892},
+                        {"Enviar CV por correo electrónico": 559},
+                        {"Enviar curriculum por correo electrónico": 438},
+                        {"mail": 410},
+                        {"por mail": 355}
+                    ],
+                    "Name": "applications"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "511"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 1.8625842901403318
+                        }
+                    },
+                    "Field Alias": "fax",
+                    "Most Frequent": [
+                        {"": 25426},
+                        {"-": 562},
+                        {".": 75},
+                        {"*": 73},
+                        {"12": 61}
+                    ],
+                    "Name": "fax"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "27435"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 100
+                        }
+                    },
+                    "Field Alias": "url",
+                    "Most Frequent": [
+                        {"http://www.computrabajo.com.ar/bt-ofrd-gestioncompartida-100072.htm": 1},
+                        {"http://www.computrabajo.com.ar/bt-ofrd-sanmartin07-493212.htm": 1},
+                        {"http://www.computrabajo.com.ar/bt-ofrd-kaizenrh-371696.htm": 1},
+                        {"http://www.computrabajo.com.ar/bt-ofrd-epidataconsulting-3609740.htm": 1},
+                        {"http://www.computrabajo.com.ar/bt-ofrd-elbosque20866-464620.htm": 1}
+                    ],
+                    "Name": "url"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "981"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 3.5757244395844725
+                        }
+                    },
+                    "Field Alias": "translatedLocation",
+                    "Most Frequent": [
+                        {"Buenos Aires, Argentina": 10188},
+                        {"C�rdoba, Argentina": 1181},
+                        {"Rosario, Santa Fe, Argentina": 462},
+                        {"Pilar, Buenos Aires, Argentina": 454},
+                        {"Norte, Berisso, Buenos Aires, Argentina": 366}
+                    ],
+                    "Name": "translatedLocation"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "9"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0.03280481137233461
+                        }
+                    },
+                    "Field Alias": "dateFirstSeen",
+                    "Name": "dateFirstSeen"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "5753"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 20.969564425004556
+                        }
+                    },
+                    "Field Alias": "contact",
+                    "Most Frequent": [
+                        {"Recursos Humanos": 1146},
+                        {"": 1067},
+                        {"Quintana Gustavo": 927},
+                        {"Adecco": 373},
+                        {"A quien corresponda": 294}
+                    ],
+                    "Name": "contact"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "1688"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 6.152724621833425
+                        }
+                    },
+                    "Field Alias": "phone",
+                    "Most Frequent": [
+                        {"": 23303},
+                        {"-": 499},
+                        {"43726000": 137},
+                        {"4372-6000": 78},
+                        {".": 74}
+                    ],
+                    "Name": "phone"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "942"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 3.4335702569710222
+                        }
+                    },
+                    "Field Alias": "start",
+                    "Most Frequent": [
+                        {"Inmediato": 15015},
+                        {"inmediato": 5837},
+                        {"A convenir": 797},
+                        {"-": 631},
+                        {"a convenir": 435}
+                    ],
+                    "Name": "start"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "1"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0.003644979041370512
+                        }
+                    },
+                    "Field Alias": "dateLastSeen",
+                    "Name": "dateLastSeen"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "5681"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 20.70712593402588
+                        }
+                    },
+                    "Field Alias": "company",
+                    "Most Frequent": [
+                        {"SENSI s.r.l.": 939},
+                        {"Adecco Argentina S.A.": 484},
+                        {"Consultora TGA": 285},
+                        {"Grupo Gestión": 284},
+                        {"Solución Eventual": 271}
+                    ],
+                    "Name": "company"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "3506"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 12.779296519045015
+                        }
+                    },
+                    "Field Alias": "salary",
+                    "Most Frequent": [
+                        {"A convenir": 10383},
+                        {"a convenir": 5136},
+                        {"A Convenir": 1224},
+                        {"-": 889},
+                        {"A definir": 261}
+                    ],
+                    "Name": "salary"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "51"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0.1858939311098961
+                        }
+                    },
+                    "Field Alias": "jobType",
+                    "Most Frequent": [
+                        {"Tiempo Completo": 22333},
+                        {"Medio Tiempo": 1445},
+                        {"Tiempo Completo, Medio Tiempo": 970},
+                        {"Por Horas": 739},
+                        {"Tiempo Completo, Medio Tiempo, Por Horas": 244}
+                    ],
+                    "Name": "jobType"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "96"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0.34991798797156914
+                        }
+                    },
+                    "Field Alias": "datePosted",
+                    "Name": "datePosted"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "22535"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 82.13960269728449
+                        }
+                    },
+                    "Field Alias": "title",
+                    "Most Frequent": [
+                        {"Analista Contable": 63},
+                        {"Ayudante de cocina": 57},
+                        {"Vendedor": 55},
+                        {"Recepcionista": 55},
+                        {"Cocinero": 47}
+                    ],
+                    "Name": "title"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "1848"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 6.735921268452707
+                        }
+                    },
+                    "Field Alias": "duration",
+                    "Most Frequent": [
+                        {"Indeterminado": 3823},
+                        {"Indeterminada": 2371},
+                        {"indeterminado": 1534},
+                        {"Efectivo": 1363},
+                        {"Permanente": 1130}
+                    ],
+                    "Name": "duration"
+                }
+            ],
+            "Type": "Qualitative"
+        },
+        {
+            "Fields": [
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "996"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 3.63039912520503
+                        }
+                    },
+                    "1st Quartile": -58.7377548,
+                    "3rd Quartile": -58.3815931,
+                    "Field Alias": "longitude",
+                    "Maximum": "120.894339",
+                    "Mean": "-60.210698964287666",
+                    "Median": -58.4054528,
+                    "Minimum": "-58.908329",
+                    "Name": "longitude"
+                },
+                {
+                    "# N.A.": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "0"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 0
+                        }
+                    },
+                    "# Unique": {
+                        "Count": {
+                            "Type": "integer",
+                            "Unit": "",
+                            "Value": "998"
+                        },
+                        "Percent": {
+                            "Type": "float",
+                            "Unit": "%",
+                            "Value": 3.6376890832877713
+                        }
+                    },
+                    "1st Quartile": -34.6037232,
+                    "3rd Quartile": -34.4948079,
+                    "Field Alias": "latitude",
+                    "Maximum": "51.5190124",
+                    "Mean": "-32.63553820740646",
+                    "Median": -34.6037232,
+                    "Minimum": "-34.59869",
+                    "Name": "latitude"
+                }
+            ],
+            "Type": "Numerical"
+        },
+        {
+            "Fields": [],
+            "Type": "Date"
+        },
+        {
+            "Fields": [],
+            "Type": "Text"
+        }
+    ],
+    "Title": "employment",
+    "Total Records": 27435
+}

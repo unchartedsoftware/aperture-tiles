@@ -32,7 +32,7 @@ import java.util.UUID;
 import org.json.JSONObject;
 
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 
 

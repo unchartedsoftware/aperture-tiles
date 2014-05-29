@@ -491,8 +491,10 @@ def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weigh
 //}
 
 // distributed version
- def run(table: RDD[Array[String]], field: String, index: Int, customVars: String, writer: PrintWriter){
-	val startTime = System.currentTimeMillis
+
+ def run(table: RDD[Array[String]], field: String, index: Int, customVars: String, writer: PrintWriter, partitionNum: String){
+	   
+   val startTime = System.currentTimeMillis
 	
    	val logwriter = new PrintWriter(new File("output/logs.txt"))
    	val sc = table.context	
@@ -506,21 +508,19 @@ def scorer(fingerprint: String, refDB: List[(String, Map[String,String])], weigh
 	val t4 = System.currentTimeMillis - startTime
 	val t5 = System.currentTimeMillis - startTime
  
-	val results = table.map(line => line(index)).map(r => {
- 	  	val a = scorer(r, refBroadcast.value, weightBroadcast.value)
+	val newTable = table.map(r => {
+ 	  	val a = scorer(r(index), refBroadcast.value, weightBroadcast.value)
  		var outString = a._1.toString + ","  
 		a._2.foreach(test => {
  	   	 outString += test._2.toString + ","
  	    	})
-		outString
- 	  }).collect()
- 	  
+	      r(0) + "\t" + r(1) + "\t" + r(2) + "\t" + outString
+ 	  })
+ 	
+        println(newTable.toDebugString)  
+ 	newTable.saveAsTextFile(customVars + partitionNum)
 
 	val t6 = System.currentTimeMillis - startTime  	
-
-	results.foreach(result => {
-		writer.write(result + "\n")
-	})
 
 	val t7 = System.currentTimeMillis - startTime
  	writer.close
