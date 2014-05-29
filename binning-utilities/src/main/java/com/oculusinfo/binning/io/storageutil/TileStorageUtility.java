@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,7 +57,7 @@ import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
-import com.oculusinfo.binning.util.PyramidMetaData;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
 
 /**
  * @TODO Document this

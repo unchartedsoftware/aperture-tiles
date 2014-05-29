@@ -44,8 +44,8 @@ import org.apache.spark.streaming.Time
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
-import com.oculusinfo.binning.util.PyramidMetaData
 import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.IndexScheme
 import com.oculusinfo.tilegen.tiling.BinDescriptor
