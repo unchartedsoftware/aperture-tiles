@@ -153,21 +153,20 @@ require(['./FileLoader',
 	        };
 
 	        // Create description element
-	        $.get("description.html", function (data) {
-                // create the overlay container
-                new OverlayButton({
-                    id:'description',
-                    active: false,
-                    activeWidth: '50%',
-                    text: 'Description',
-                    css: {
-                        right: '10px',
-                        top: '10px'
-                    }
-                }).append(data);
-                // append description html
+	        $.get("description.html", function (descriptionHtml) {
+		        // create the overlay container
+		        new OverlayButton({
+		            id:'description',
+                    header: 'Description',
+                    content: descriptionHtml
+		        }).getContentElement().append(''); // jslint...
+	        });
 
-            });
+            new OverlayButton({
+                id:'layer-controls',
+                header: 'Controls',
+                content: ''
+            }).getContentElement().append(''); // jslint...
 
 	        // Load all our UI configuration data before trying to bring up the ui
 	        $.get( apertureConfigFile, function( apertureConfig ) {
@@ -187,7 +186,7 @@ require(['./FileLoader',
 				            mapConfig,
 				            worldMap,
 				            mapPyramid,
-				            mapsButton,
+				            mapsOverlay,
 				            mapButton,
 				            i,
 				            filter,
@@ -196,25 +195,22 @@ require(['./FileLoader',
 
 				        // Initialize our map choice panel
 				        if (maps.length > 1) {
+
 					        // ... first, create the panel
-					        mapsButton = new OverlayButton({
-						        id: 'maps',
-						        active: false,
-						        activeWidth: '25%',
-						        text: 'Maps',
-                                css: {
-                                    left: '10px',
-                                    top: '10px'
-                                }
-					        });
-					        // ... Next, insert contents
-					        for (i=0; i<maps.length; ++i) {
-						        mapButton = $('<a/>').attr({
-							        href: '?map='+i
-						        });
-						        mapButton.append(maps[i].description+'<br>');
-						        mapButton.appendTo(mapsButton.getContainer());
-					        }
+					        mapsOverlay = new OverlayButton({
+                                id:'maps',
+                                header: 'Maps',
+                                content: ''
+                            });
+
+                            // ... Next, insert contents
+                            for (i=0; i<maps.length; ++i) {
+                                mapButton = $('<a/>').attr({
+                                    href: '?map='+i
+                                });
+                                mapButton.append(maps[i].description+'<br>');
+                                mapsOverlay.getContentElement.append( mapButton );
+                            }
 				        }
 
 				        // Initialize our map...
@@ -258,6 +254,7 @@ require(['./FileLoader',
 				        // Annotation layers
 				        annotationLayers = getAnnotationLayers(annotationLayers, filter);
 				        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
+
 			        }
 		        );
 

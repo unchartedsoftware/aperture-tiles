@@ -30,13 +30,15 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
-        AXIS_BORDER_CLASS_SUFFIX = "-axis-border",
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
+        AXIS_HEADER_CLASS = "axis-header",
         AXIS_HEADER_CLASS_SUFFIX = "-axis-header",
+        AXIS_CONTENT_CLASS = "axis-content",
         AXIS_CONTENT_CLASS_SUFFIX = "-axis-content",
         AXIS_LABEL_CLASS = "axis-marker-label",
         AXIS_POSITIONED_LABEL_CLASS_SUFFIX = "-axis-marker-label" ,
+        AXIS_MARKER_CLASS = "axis-marker",
         AXIS_MARKER_SUFFIX = "-axis-marker",
         AXIS_POSITION_SUFFIX = "-axis",
         Axis;
@@ -79,47 +81,12 @@ define(function (require) {
             function horizontalSlide() {
                 that.setEnabled( !that.isEnabled() );
                 that.$content.animate({width: 'toggle'});
-                that.$contentBorder.animate({width: 'toggle'});
                 that.map.redrawAxes();
             }
             function verticalSlide() {
                 that.setEnabled( !that.isEnabled() );
                 that.$content.animate({height: 'toggle'});
-                that.$contentBorder.animate({height: 'toggle'});
                 that.map.redrawAxes();
-            }
-            function generateBorder ( $elem ) {
-
-                // standard css borders will cause an ugly overlap, this creates a separate element that is hidden
-                // behind to ensure that the borders, if specified, are styled nicely
-                var $border = $('<div class="'+ that.position + AXIS_BORDER_CLASS_SUFFIX + '">'),
-                    elemCSS = {
-                        position : $elem.css('position'),
-                        'border-style' : $elem.css('border-style'),
-                        'border-color' : $elem.css('border-color'),
-                        'border-width' : $elem.css('border-width'),
-                        width : $elem.css('width'),
-                        height : $elem.css('height'),
-                        top : $elem.css('top'),
-                        left : $elem.css('left'),
-                        right : $elem.css('right'),
-                        bottom : $elem.css('bottom'),
-                        'z-index' : $elem.css('z-index') - 1
-                    };
-                that.$div.append($border);
-                $border.css(elemCSS);
-
-                if (that.isXAxis) {
-                    $border.height( parseInt(elemCSS.height, 10) - parseInt(elemCSS['border-width'], 10) );
-                    $border.css('width', '100%');
-                } else {
-                    $border.width(  parseInt(elemCSS.width, 10) - parseInt(elemCSS['border-width'], 10) );
-                    $border.css('height', '100%');
-                }
-                // remove border from original element since we created a new one
-                $elem.css('border-style', 'none');
-
-                return $border;
             }
             /**
              * Creates and returns the axis label element with proper CSS
@@ -153,10 +120,24 @@ define(function (require) {
             }
             function generateElements() {
 
+                var marginLeft = 0,
+                    marginRight = 0,
+                    marginTop = 0,
+                    marginBottom = 0;
+
+                // add margins in case other axis exist
+                if (that.isXAxis) {
+                    marginLeft = $('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
+                    marginRight = $('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
+                } else {
+                    marginTop = $('.top' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
+                    marginBottom = $('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
+                }
+
                 // create axis header and container
                 that.$div = $('<div class="'+ that.position + AXIS_DIV_CLASS_SUFFIX + '"></div>');
-                that.$header = $('<div class="'+ that.position + AXIS_HEADER_CLASS_SUFFIX + '"  style="z-index:'+(that.Z_INDEX+1)+';">');
-                that.$content = $('<div class="'+ that.position + AXIS_CONTENT_CLASS_SUFFIX + '"  style="z-index:'+that.Z_INDEX+';">');
+                that.$header = $('<div class="'+ AXIS_HEADER_CLASS + " " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"  style="z-index:'+(that.Z_INDEX+1)+'; margin-left:'+marginLeft+'px; margin-right:'+marginRight+'px; margin-bottom:'+marginBottom+'px; margin-top:'+marginTop+'px;">');
+                that.$content = $('<div class="'+ AXIS_CONTENT_CLASS + " " + that.position + AXIS_CONTENT_CLASS_SUFFIX + '"  style="z-index:'+that.Z_INDEX+';">');
                 // set enable / disable callbacks
                 if (that.isXAxis) {
                     that.$header.click(verticalSlide);
@@ -169,9 +150,6 @@ define(function (require) {
                 that.$map.append(that.$div);
                 that.$div.append(that.$content);
                 that.$div.append(that.$header);
-                // generate borders
-                that.$headerBorder = generateBorder(that.$header);
-                that.$contentBorder = generateBorder(that.$content);
                 // create new title
                 that.$title = generateTitle();
                 that.$header.append(that.$title);
@@ -329,7 +307,7 @@ define(function (require) {
              */
             function createLargeMarkerHTML(marker) {
 
-                return '<div class="large-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+                return '<div class="' + AXIS_MARKER_CLASS + ' large-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
                        + 'style="position:absolute;'
                        + that.leftOrTop + ":" + (marker.pixel - that.LARGE_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';
@@ -340,7 +318,7 @@ define(function (require) {
              */
             function createMediumMarkerHTML(marker) {
 
-                return '<div class="medium-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+                return '<div class="' + AXIS_MARKER_CLASS + ' medium-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
                        + 'style="position:absolute;'
                        + that.leftOrTop + ":" + (marker.pixel - that.MEDIUM_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';
@@ -352,7 +330,7 @@ define(function (require) {
              */
             function createSmallMarkerHTML(marker) {
 
-                return '<div class="small-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+                return '<div class="' + AXIS_MARKER_CLASS + ' small-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
                        + 'style="position:absolute;'
                        + that.leftOrTop + ":" + (marker.pixel - that.SMALL_MARKER_HALF_WIDTH) + 'px;">'
                        + '</div>';

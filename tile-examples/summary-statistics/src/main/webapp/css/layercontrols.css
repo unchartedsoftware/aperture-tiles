@@ -1,12 +1,13 @@
 @charset "UTF-8";
 
-#layer-controls {
-    position: fixed;
+.layer-controls {
+    position: absolute;
     right: 10px;
     bottom: 42px;
 }
 
-#layer-controls-header {
+.layer-controls-header {
+
     position: relative;
     height:32px;
     width: 100px;
@@ -22,11 +23,11 @@
          1px  1px 1px #000;
 }
 
-#layer-controls-header:hover {   
+.layer-controls-header:hover {   
     color: #FFFFFF;
 }
 
-#layer-controls-content {
+.layer-controls-content {
     position: relative;
     background-color: #FFF;
     color: #000;

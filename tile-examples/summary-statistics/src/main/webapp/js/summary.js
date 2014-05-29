@@ -33,7 +33,8 @@
         UIMediator = require('./layer/controller/UIMediator'),
         ClientLayerFactory = require('./layer/view/client/ClientLayerFactory'),
         ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
-        LayerControls = require('./layer/controller/LayerControls');
+        LayerControls = require('./layer/controller/LayerControls'),
+        OverlayButton = require('./ui/OverlayButton');
 
     return function(summaryBuilderOptions) {
 
@@ -388,11 +389,7 @@
                 $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
                 var $plotTab = $('<div id="' + plotTabDiv + '">');
                 var $plotVisual = $('<div id="' + plotDiv + '"></div>');
-                var $plotControls = $('<div id="' + plotControls + '">');
-
-                $plotVisual.css({width: "100%", height: "100%"});
                 $plotTab.append($plotVisual);
-                $plotTab.append($plotControls);
                 $('#tabs-plots').append($plotTab);
 
                 //add map after the containing div has been added
@@ -415,7 +412,20 @@
                     ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
                 }
 
-                new LayerControls().initialize(plotControls, uiMediator.getLayerStateMap());
+                //create the controls
+                var $plotControls = $('<div id="' + plotControls + '">');
+                $plotVisual.append($plotControls);
+                var controlsButton = new OverlayButton({
+                    id: plotControls,
+                    header: 'Controls',
+                    content: ''
+                });
+
+                controlsButton.getHeaderElement().addClass('layer-controls-header');
+                controlsButton.getContentElement().addClass('layer-controls-content');
+                controlsButton.getContainerElement().addClass('layer-controls');
+
+                new LayerControls().initialize(plotControls + '-content', uiMediator.getLayerStateMap());
             };
 
             var layerDeferreds = LayerService.requestLayers(),
