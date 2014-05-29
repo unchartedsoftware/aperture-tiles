@@ -60,15 +60,17 @@ define(function (require) {
 
             this.$container.append(this.$header);
             this.$container.append(this.$content);
-            this.activeWidth = this.$container.width();
-            this.inactiveWidth = this.$header.width();
+            
             this.active = false;
 
             this.$header.click( function(e){
 
-                var deltaWidth = that.activeWidth - that.inactiveWidth;
+                var deltaWidth;
 
                 if (that.active) {
+                	
+                	deltaWidth = that.activeWidth - that.inactiveWidth;
+                    
                     // close
                     that.$content.animate({
                             height: 'toggle'
@@ -81,6 +83,12 @@ define(function (require) {
                     });
 
                 } else {
+                	
+                	that.inactiveWidth = that.$header.outerWidth();
+                	that.activeWidth = that.$content.outerWidth();
+                	
+                	deltaWidth = that.activeWidth - that.inactiveWidth;
+                	
                     // open
                     that.$header.animate({
                             width: "+="+deltaWidth
@@ -96,7 +104,8 @@ define(function (require) {
                 that.active = !that.active;
             });
 
-            this.$content.animate({height: 'toggle'});
+            // trigger close and skip animation;
+        	this.$content.animate({height: 'toggle'});
             this.$content.finish();
         },
 
@@ -107,11 +116,11 @@ define(function (require) {
 
 
         getContentElement: function() {
-            return this.$container;
+            return this.$content;
         },
 
         getContainerElement: function() {
-            return this.$content;
+            return this.$container;
         }
 
 

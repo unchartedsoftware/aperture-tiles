@@ -23,173 +23,41 @@
  * SOFTWARE.
  */
  define( function(require) {
-    "use strict"
+    "use strict";
 
     var XDataMap = require('./xdata'),
-    	PlotLink = require('./plotlink');
+    	PlotLink = require('./plotlink'),
+        Map = require('./map/Map'),
+        MapService = require('./map/MapService'),
+        LayerService = require('./layer/LayerService'),
+        UIMediator = require('./layer/controller/UIMediator'),
+        ClientLayerFactory = require('./layer/view/client/ClientLayerFactory'),
+        ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
+        LayerControls = require('./layer/controller/LayerControls'),
+        OverlayButton = require('./ui/OverlayButton');
 
     return function(summaryBuilderOptions) {
 
-        var _densityStrips = [];
-
-        var _summaryState = {
-            tabLayerMap : {},
-            layerInfoMap : {},
-            tabLabel : 'Cross Plots',
-            plot : {},
-            charLimitCount : 40,
-            plotMap : {},
-            tocVisible : true
-        };
+        var _densityStrips = [],
+            _summaryState = {
+                tabLayerMap : {},
+                layerInfoMap : {},
+                tabLabel : 'Cross Plots',
+                plot : {},
+                charLimitCount : 40,
+                plotMap : {},
+                tocVisible : true
+            },
+            datasetLowerCase = summaryBuilderOptions.dataset ? summaryBuilderOptions.dataset.toLowerCase() : null;
 
         var makeSafeIdForJQuery = function (inputString){
-            return inputString.replace(/\./g, '_dot_');
-        };
-
-        // Clear the layer control of all checkboxes.
-        var resetLayerControl = function(){
-            var layerControl = $("div[id='layer-control']");
-            layerControl.empty();
-        };
-
-        var resetLegend = function(tabLayerId){
-            var dataPlot = _summaryState.plotMap[tabLayerId];
-            if (dataPlot != null){
-                dataPlot.updateLegend();
-            }
+            return inputString.replace(/\./g, '_dot_').replace(/\,/g, '');
         };
 
         // Create the layerId by concatenating the layer names together;
-        var getTabLayerId = function(layerList){
-            var tabLayerId = '';
-            for (var i=0; i < layerList.length; i++){
-                // JQuery lookups will get confused with periods as part of the DIV ids.
-                var layer = layerList[i].Layer.replace(/\./g, '_dot_');
-                tabLayerId += (i>0?'_':'') + layer;
-            }
-            return tabLayerId;
+        var getTabLayerId = function(id){
+            return id.replace(/\ /g, '_').replace(/\,/g, '').replace(/\./g, '');
         };
-
-        var constructPlot = function(event, ui){
-            var tabLayerId = null;
-            if (event.type == 'tabsbeforeactivate'){
-                // Clear the layer control (if present)
-                resetLayerControl();
-                
-                // Check if this is from a tab switch.
-                var panelId = ui.newPanel.attr('id');
-                if (ui.newTab.text() != _summaryState.tabLabel && panelId.indexOf('tab-plot-') < 0){
-                    return;
-                }
-                if (panelId == 'tabs-plots'){
-                    var activeTabId = $('#tabs-plots').tabs('option', 'active');
-                    tabLayerId =  _summaryState.tabLayerMap[activeTabId];
-                }
-                else {
-                    tabLayerId = panelId.replace('tab-plot-', '');
-                }
-                //console.log('activate: ' + tabLayerId);
-                // Reset the legend.
-                resetLegend(tabLayerId);
-
-            }
-            else if (event.type == 'tabscreate'){
-                tabLayerId = ui.panel.attr('id').replace('tab-plot-', '');
-            }
-            if (!_summaryState.layerInfoMap[tabLayerId]){
-                return;
-            }
-
-            if (_summaryState.layerInfoMap[tabLayerId].plotDiv == null){
-                console.error("Unable to find matching layer DIV.");
-                return;
-            }
-            if ($("div[id='"+ _summaryState.layerInfoMap[tabLayerId].plotDiv +"']").is(':empty')){
-                var plotInfo = _summaryState.layerInfoMap[tabLayerId];
-                var options = {
-
-                    layerList : plotInfo.Layers,
-                    //goTo : {"x":128, "y":128, "zoom":2},
-                    goTo : {x: 0, y: 0, zoom:1},
-                    hasBackgroundToggle : true,
-                    hasLayerControl : true,
-                    hideAxis : false,
-                    debug : false,
-                    components : {
-                        map : {
-                            "divId" : plotInfo.plotDiv,
-                            "parentId" : plotInfo.plotParentDiv,
-                            "layers" : plotInfo.Layers,
-                            "baseLayer" : {
-                                "opacity" : plotInfo.baseLayer?plotInfo.baseLayer.Opacity:1
-                            }
-                        },
-                        legend : {
-                            "divId" : plotInfo.plotLegendDiv,
-                            "styleClass" : "plot-legend",
-                            "axis" : {
-                                "styleClass" : "plot-legend-axis"
-                            }
-                        },
-                        controls : {
-                            "colorScaleInputName" : "colourScale",
-                            "colorRampInputName" : "colourRamp",
-                            "colorBackgroundInputName" : "bg"
-                        },
-                        xaxis : {
-                            parentId : plotInfo.plotParentDiv, //'tab-' + plotInfo.plotDiv,
-                            divId : 'xaxis_' + plotInfo.plotDiv,
-                            intervals : 6,
-                            title : plotInfo['X Axis'],
-                            labelSpec : plotInfo['X Axis Label'],
-                            titleOffset : 65
-                        },
-                        yaxis : {
-                            parentId : plotInfo.plotParentDiv, //l'tab-' + plotInfo.plotDiv,
-                            divId : 'yaxis_' + plotInfo.plotDiv,
-                            intervals : 6,
-                            title : plotInfo['Y Axis'],
-                            labelSpec : plotInfo['Y Axis Label'],
-                            titleOffset : 100
-                        },
-                        baseOpacitySlider : {
-                            enabled : true
-                        },
-                        dataOpacitySlider : {
-                            enabled : true
-                        },
-                        zoomLevelSlider : {
-                            enabled :  false
-                        }
-                    }
-                };
-                if(_summaryState.layerInfoMap[tabLayerId].baseLayer){
-                    options.baseLayer = _summaryState.layerInfoMap[tabLayerId].baseLayer;
-                }
-
-                var dataPlot = new XDataMap(options);
-                dataPlot.start(null);
-                _summaryState.plotMap[tabLayerId] = dataPlot;
-            }
-            else {
-                _summaryState.plotMap[tabLayerId].createLayerControl();
-            }
-        };
-
-        $( "#tabs-major").tabs({
-            beforeActivate : function(event, ui){
-                constructPlot(event, ui);
-            }
-        });
-		
-		$( "#dialog-controls").dialog({
-			autoOpen:false,
-			resizeable: false,
-			width: 370,
-			height: "auto",
-			position: {my: "right top", at: "right top", of: window}
-		});
-		$('#accordion').accordion({ heightStyle: "content", autoHeight: false });
 
         var generateJsonTables = function(jsonFile, onComplete) {
             if(jsonFile === null || jsonFile.length === 0){
@@ -303,7 +171,7 @@
                                     $.each(v, function(vk, vv){
                                         $.each(vv, function(vvk, vvv){    // Assumes array of objects.
                                             var vvValue = vvv;
-                                            var temp = "";
+                                            //var temp = "";
                                             if((typeof vvValue) == "number"){
                                                 vvValue = $.number(vvValue);
                                             }
@@ -423,7 +291,7 @@
                     $('div.expandedDensityStrip').css("height", expandedStripHeight);
                 }
 
-                /*if($("div.elipsisDialog").length > 0){
+                if($("div.elipsisDialog").length > 0){
                     $("div.elipsisDialog").dialog({
                         autoOpen: false,
                         resizeable: true,
@@ -445,7 +313,7 @@
                            // evt.stopPropagation();
                            // evt.stopImmediatePropagation();
                         });
-                }*/
+                }
 
                 $("#tabs-tables").tabs();
                 $("tr.parent")
@@ -466,68 +334,146 @@
             });
         };
 
-        var generateJsonPlots = function(jsonFile ,onComplete){
-            if(jsonFile === null){
-                return;
-            }
+        var generateJsonPlots = function(onComplete){
 
-            $.getJSON(jsonFile , function(data) {
+            /**
+             * getBitcoinMapConfig relies on each map returned from MapService.requestMaps id to contain the
+             * string 'bitcoin' it filters the maps by the UrlVar dataset and the mapID provided.
+             */
+            var getBitcoinMapConfig = function(maps, mapID){
+                var length = maps.length;
+                for(var i=0; i<length; i++){
+                    if (maps[i]["id"]
+                        && maps[i]["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1
+                        && maps[i]["id"] === mapID){
+                        return maps[i];
+                    }
+                }
+            };
 
-                var plotId = 0;
-                $.each(data["Plots"], function(pk, pv){
-                    var layerList = pv["Layers"];
-                    var tabLayerId = getTabLayerId(layerList);
+            var getLayer = function(layers, mapID){
+                var layer;
+                // bitcoin
+                if (datasetLowerCase === 'bitcoin') {
+                    mapID = mapID.toLowerCase();
+                    $.each(layers, function (pk, pv) {
+                        if (pv.id === datasetLowerCase) {
+                            $.each(pv.children, function (k, v) {
+                                //if mapID contains v.name
+                                if (mapID.indexOf(v.name.toLowerCase().trim()) != -1) {
+                                    layer = v;
+                                }
+                            });
+                        }
+                    });
+                } else { // twitter
+                    layer = layers;
+                }
+                return [{
+                    "layer": layer["id"],
+                    "domain": layer.renderers[0].domain,
+                    "name": layer.name,
+                    "renderer": layer.renderers[0].renderer,
+                    "transform": layer.renderers[0].transform
+                }];
+            };
 
-                    // Cache the tab id for this layer.
-                    _summaryState.tabLayerMap[plotId] = tabLayerId;
-                    _summaryState.layerInfoMap[tabLayerId] = pv;
+            var generateMap = function(mapID, mapConfig,layerConfig, layer){
+                var tabLayerId = getTabLayerId(mapID),
+                    plotTabDiv = "tab-plot-" + tabLayerId,
+                    plotDiv = "plot-" + tabLayerId,
+                    plotControls = plotDiv + '-controls',
+                    uiMediator,
+                    worldMap;
 
-                    plotId++;
-                    var plotTabDiv = "tab-plot-" + tabLayerId;
-                    var plotParentDiv = "parent-plot-" + tabLayerId;
-                    var plotDiv = "plot-" + tabLayerId;
-                    var plotLegendDiv = "plot-legend-" + tabLayerId;
+                $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
+                var $plotTab = $('<div id="' + plotTabDiv + '">');
+                var $plotVisual = $('<div id="' + plotDiv + '"></div>');
+                $plotTab.append($plotVisual);
+                $('#tabs-plots').append($plotTab);
 
-                    $('#tabs-plots ul').append('<li><a href="#'+ plotTabDiv +'">'+pv["Title"]+'</a></li>');
+                //add map after the containing div has been added
+                worldMap = new Map(plotDiv, mapConfig);
+                // ... (set up our map axes) ...
+                worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
-                    var plotTab = $('<div id="' + plotTabDiv + '">');
-                    var plotParent = $('<div id="' + plotParentDiv + '">');
-                    var plotVisual = $('<div id="' + plotDiv + '"></div>');
+                uiMediator = new UIMediator();
+                if (layerConfig[0]["domain"] === 'server') {
+                    ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
+                } else {
+                    var clientLayers = [{
+                        "domain" : layer["renderers"][0]["domain"],
+                        "layer" : layer["id"],
+                        "name" : layer["name"],
+                        "type" : layer["renderers"][0]["type"],
+                        "views" : layer["renderers"][0]["views"]
+                    }];
 
-                    // Ok, Explanation for plotParent:
-                    // We want axes to be absolutely positioned as subelements of the map,
-                    // but in OpenLayers the map div actually encompasses the size of the required set of tiles - i.e. bigger.
-                    // You'd have to use the OpenLayers' map.viewPortDiv as the parent. BUT, it is making sure that things (i.e.
-                    // portions of tile outside the viewport) are clipped. So can't put the axes abutting the viewPortDiv
-                    // because they get hidden. SO. The PlotParent is a div of the exact size as the viewport that contains the Plot.
-                    // This makes the axes draw on top for sure. AND we want to position the axes with css files as much as possible
-                    // in a generic way - so have the parent be any random container means the css is specific to that container
-                    // (i.e. in a plot 'tab' vs. in a density strip table line.)
-                    // Use the 'plot-size' class on the parent and the actual plot map will be 100% filled into that.
-                    // class. (summary.css)
-                    plotParent.addClass('plot-parent');
-                    plotVisual.addClass('plot'); // in crossplot.css
-                    plotParent.addClass('plot-size');
-                    plotVisual.css({width:"100%",height:"100%"});
+                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+                }
 
-                    plotTab.append(plotParent);
-                    plotParent.append(plotVisual);
+                //create the controls
+                var $plotControls = $('<div id="' + plotControls + '">');
+                $plotVisual.append($plotControls);
+                var controlsButton = new OverlayButton({
+                    id: plotControls,
+                    header: 'Controls',
+                    content: ''
+                });
 
-                    var legend = $('<div id="'+ plotLegendDiv +'"></div>');
-    				legend.addClass('plot-legend');
-                    plotTab.append(legend);
+                controlsButton.getHeaderElement().addClass('layer-controls-header');
+                controlsButton.getContentElement().addClass('layer-controls-content');
+                controlsButton.getContainerElement().addClass('layer-controls');
 
-                    $('#tabs-plots').append(plotTab);
+                new LayerControls().initialize(plotControls + '-content', uiMediator.getLayerStateMap());
+            };
 
-                    pv.plotParentDiv = plotParentDiv;
-                    pv.plotDiv = plotDiv;
-                    pv.plotLegendDiv = plotLegendDiv;
+            var layerDeferreds = LayerService.requestLayers(),
+                mapDeferreds = MapService.requestMaps();
+
+            $.when( mapDeferreds, layerDeferreds).done( function( maps, layers ) {
+                var plotId = 0,
+                    twitterComplete = false;
+
+                //iterate over each of the cross plots, generate the map, and container div
+                $.each(maps, function (pk, pv) {
+                    // Initialize our maps...
+                    var mapID,
+                        layerConfig,
+                        mapConfig;
+
+                    if (datasetLowerCase === 'bitcoin' && pv["id"]
+                        && pv["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1) {
+                            mapID = pv["id"];
+                            layerConfig = getLayer(layers, mapID);
+                            mapConfig = getBitcoinMapConfig(maps, mapID);
+                            plotId++;
+                            generateMap(mapID, mapConfig, layerConfig);
+                    } else if (datasetLowerCase === 'twitter' && !twitterComplete){
+                        var layer;
+                        twitterComplete = true;
+                        for(var i = 0; i < layers.length; i++){
+                            if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
+                                for (var j = 0; j < layers[i]["children"].length; j++) {
+                                    mapID = layers[i]["children"][j].name;
+                                    layer = layers[i]["children"][j];
+                                    layerConfig = getLayer(layer, mapID);
+                                    mapConfig = pv;
+                                    plotId++;
+                                    generateMap(mapID, mapConfig, layerConfig, layer);
+                                }
+                            }
+                        }
+                    }
+                });
+
+                $('#tabs-plots ul').each(function () {
+                    $(this).click( function (e){
+                        $(window).resize();
+                    });
                 });
 
                 onComplete();
-            })
-            .error(function(jqXHR, textStatus, errorThrown){
-                console.error("Error reading summary JSON at " + jsonFile + ": " + errorThrown );
             });
         };
 
@@ -539,7 +485,7 @@
             tocPane.addClass('ui-layout-west');
             $('#head').addClass('ui-layout-north');
             $('#summary').addClass('ui-layout-center');
-            var layout = $('#container').layout({applyDemoStyles: true, north:{size:140}, west:{size:230}});
+            var layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:230}});
             layout.panes.west.css({
                 background:  "rgb(204,204,204)"
             });
@@ -554,23 +500,40 @@
             	$('#summary').html('<h2>No dataset selected.</h2>');
             	return;
             }
+
+            $( "#tabs-major").tabs();
+
+            $( "#dialog-controls").dialog({
+                autoOpen:false,
+                resizeable: false,
+                width: 370,
+                height: "auto",
+                position: {my: "right top", at: "right top", of: window}
+            });
+
+            $('#accordion').accordion({ heightStyle: "content", autoHeight: false });
         	
             var tableJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/tables.json';
-            var plotJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/plots.json';
 
-			var showControls = $('<div id="show-controls"></div>');
-			showControls.addClass('show-controls');
-			$('#summary-header').append(showControls);
+            //create and add the controls button to the Tables tab
+            var showControls = $('<div id="show-controls"></div>');
+            showControls.addClass('show-controls');
+            $('#tabs-tables').append(showControls);
 
-			var showButton = $("<button>Show Controls</button>")
-				.button()
-				.click(function( event ) {
-					event.preventDefault();
-						$( "#dialog-controls").dialog("open");
-						$('#accordion').accordion({ autoHeight: false });
-				});
+            var showButton = $("<button>Controls</button>")
+                .button()
+                .click(function( event ) {
+                    event.preventDefault();
+                    $( '#dialog-controls' ).dialog( 'open' );
+                    $( '#accordion' ).accordion({ autoHeight: false });
+                });
 
-			showControls.append(showButton);
+            showControls.append(showButton);
+
+            //when table controls is open, and Cross Plots (or Tables) is clicked, close the dialog
+            $( '#tabs-major li' ).click(function( event ) {
+                $( '#dialog-controls').dialog( 'close' );
+            });
 
             generateJsonTables(tableJsonFile, function(){
                 var len = _densityStrips.length;
@@ -647,29 +610,11 @@
 
                     xDataMaps[i].start(startupCallback);
                 }
-
             });
 
-            generateJsonPlots(plotJsonFile, function(){
-                $("#tabs-plots").tabs({
-                    create : function(event, ui){
-                        if(!ui.panel.attr('id'))
-                            return;
-
-                        var layerName = ui.panel.attr('id').replace('tab-plot-', '');
-                        console.log('create: ' + layerName);
-                    },
-                    beforeActivate : function(event, ui){
-                        if(!ui.newPanel.attr('id'))
-                            return;
-
-                        var layerName = ui.newPanel.attr('id').replace('tab-plot-', '');
-                        constructPlot(event, ui);
-                    }
-                });
+            generateJsonPlots(function(onComplete){
+                $("#tabs-plots").tabs();
             });
-      
         };
     };
 });
-

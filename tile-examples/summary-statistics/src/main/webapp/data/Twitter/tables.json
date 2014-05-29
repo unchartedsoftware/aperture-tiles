@@ -1037,7 +1037,18 @@
                             "Unit": "%"
                         }
                     }, 
-                    "Density Strip": ""
+                    "Density Strip": {
+						"Layers" : [
+							{
+								"Layer": "tweets.1.time.zero",
+								"Type": "tile",
+								"Config":""
+							}
+						],
+						"X Axis Label" : {
+						    "type" : "time"
+						}
+					}
                 }
             ]
         }, 

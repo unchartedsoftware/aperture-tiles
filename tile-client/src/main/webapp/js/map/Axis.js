@@ -244,7 +244,7 @@ define(function (require) {
 
                 // update axis length
                 var axisLength = that.$map.css(that.axisWidthOrHeight).replace('px', ''); // strip px suffix
-
+                
                 // add position offset for vertical axes
                 if (!that.isXAxis) {
                     if (that.position === 'left') {

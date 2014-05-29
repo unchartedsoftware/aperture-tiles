@@ -276,7 +276,7 @@
 						}
 					]
 				},
-								{
+				{
 					"id" : "bitcoin.time.source",
 					"name" : "Time vs. Source",
 					"pyramid" : {

@@ -24,22 +24,20 @@
  */
 /*global OpenLayers */
 
-require(['./FileLoader',
-        './ApertureConfig',
+require(['./ApertureConfig',
         './summary'],
 
-    function (FileLoader,
-              configureAperture,
+    function (configureAperture,
               SummaryBuilder) {
         "use strict";
 
-        var apertureConfigFile = "./data/aperture-config.json";
+        var apertureConfigUrl = "data/aperture-config.json";
 
         // Load all our UI configuration data before trying to bring up the ui
-        FileLoader.loadJSONData(apertureConfigFile).done(function (jsonDataMap) {
+        $.get( apertureConfigUrl, function( apertureConfig ) {
 
             // First off, configure aperture.
-            configureAperture(jsonDataMap[apertureConfigFile]);
+            configureAperture( apertureConfig );
 
             var dataDirectory = $.getUrlVar('dataDir');
             var datasetName = $.getUrlVar('dataset');
@@ -52,6 +50,6 @@ require(['./FileLoader',
                 dataset: datasetName
             });
             summaryBuilder.start();
-        });
+        }, 'json');
     }
 );
