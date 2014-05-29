@@ -1,7 +1,7 @@
 
 
 .greyed {
-	-webkit-filter: grayscale(1) brightness(50%) blur(1px);
+	-webkit-filter: grayscale(1) brightness(50%);
 }
 
 
