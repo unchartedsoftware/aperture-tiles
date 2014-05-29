@@ -8,19 +8,31 @@
 
 #layer-controls-header {
     position: relative;
-    width: 612px;
+    height:32px;
+    width: 100px;
+    vertical-align: middle;
+    text-align:center;
+    line-height: 32px;
+    background-color: #222222;
+    color: #D3D3D3;
+    text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000;
+}
+
+#layer-controls-header:hover {   
+    color: #FFFFFF;
 }
 
 #layer-controls-content {
     position: relative;
     background-color: #FFF;
     color: #000;
-    width:612px;
+    width: 612px;
     height: 210px;
     font-size: 12px;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
 }
 
 .layer-labels {

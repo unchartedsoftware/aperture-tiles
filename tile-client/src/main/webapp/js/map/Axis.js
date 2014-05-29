@@ -30,7 +30,6 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
-        AXIS_BORDER_CLASS_SUFFIX = "-axis-border",
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
         AXIS_HEADER_CLASS = "axis-header",
@@ -82,48 +81,12 @@ define(function (require) {
             function horizontalSlide() {
                 that.setEnabled( !that.isEnabled() );
                 that.$content.animate({width: 'toggle'});
-                //that.$contentBorder.animate({width: 'toggle'});
                 that.map.redrawAxes();
             }
             function verticalSlide() {
                 that.setEnabled( !that.isEnabled() );
                 that.$content.animate({height: 'toggle'});
-                //that.$contentBorder.animate({height: 'toggle'});
                 that.map.redrawAxes();
-            }
-            function generateBorder ( $elem ) {
-                /*
-                // standard css borders will cause an ugly overlap, this creates a separate element that is hidden
-                // behind to ensure that the borders, if specified, are styled nicely
-                var $border = $('<div class="'+ that.position + AXIS_BORDER_CLASS_SUFFIX + '">'),
-                    elemCSS = {
-                        position : $elem.css('position'),
-                        'border-style' : $elem.css('border-style'),
-                        'border-color' : $elem.css('border-color'),
-                        'border-width' : $elem.css('border-width'),
-                        width : $elem.css('width'),
-                        height : $elem.css('height'),
-                        top : $elem.css('top'),
-                        left : $elem.css('left'),
-                        right : $elem.css('right'),
-                        bottom : $elem.css('bottom'),
-                        'z-index' : $elem.css('z-index') - 1
-                    };
-                that.$div.append($border);
-                $border.css(elemCSS);
-
-                if (that.isXAxis) {
-                    $border.height( parseInt(elemCSS.height, 10) - parseInt(elemCSS['border-width'], 10) );
-                    $border.css('width', '100%');
-                } else {
-                    $border.width(  parseInt(elemCSS.width, 10) - parseInt(elemCSS['border-width'], 10) );
-                    $border.css('height', '100%');
-                }
-                // remove border from original element since we created a new one
-                $elem.css('border-style', 'none');
-
-                return $border;
-                */
             }
             /**
              * Creates and returns the axis label element with proper CSS
@@ -162,16 +125,14 @@ define(function (require) {
                     marginTop = 0,
                     marginBottom = 0;
 
+                // add margins in case other axis exist
                 if (that.isXAxis) {
                     marginLeft = $('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
                     marginRight = $('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
-                }
-
-                if (!that.isXAxis) {
+                } else {
                     marginTop = $('.top' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
                     marginBottom = $('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
                 }
-
 
                 // create axis header and container
                 that.$div = $('<div class="'+ that.position + AXIS_DIV_CLASS_SUFFIX + '"></div>');
@@ -189,9 +150,6 @@ define(function (require) {
                 that.$map.append(that.$div);
                 that.$div.append(that.$content);
                 that.$div.append(that.$header);
-                // generate borders
-                that.$headerBorder = generateBorder(that.$header);
-                that.$contentBorder = generateBorder(that.$content);
                 // create new title
                 that.$title = generateTitle();
                 that.$header.append(that.$title);

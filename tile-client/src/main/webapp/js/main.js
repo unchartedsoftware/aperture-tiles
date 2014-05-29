@@ -156,23 +156,19 @@ require(['./FileLoader',
 	        $.get("description.html", function (descriptionHtml) {
 		        // create the overlay container
 		        new OverlayButton({
-			        containerId:'description',
-			        headerId:'description-header',
-			        contentId:'description-content',
-			        active: false,
-
-			        activeWidth: '50%'
-		        }).append(descriptionHtml); // append description html
+		            id:'description',
+                    active: false,
+                    header: 'Description',
+                    content: descriptionHtml
+		        }).getContentElement().append(''); // jslint...
 	        });
 
             new OverlayButton({
-                containerId:'layer-controls',
-                headerId:'layer-controls-header',
-                contentId:'layer-controls-content',
+                id:'layer-controls',
                 active: false,
-                activeWidth: '50%'
-            }).append('');
-
+                header: 'Controls',
+                content: ''
+            }).getContentElement().append(''); // jslint...
 
 	        // Load all our UI configuration data before trying to bring up the ui
 	        $.get( apertureConfigFile, function( apertureConfig ) {
@@ -192,7 +188,7 @@ require(['./FileLoader',
 				            mapConfig,
 				            worldMap,
 				            mapPyramid,
-				            mapsButton,
+				            mapsOverlay,
 				            mapButton,
 				            i,
 				            filter,
@@ -201,21 +197,23 @@ require(['./FileLoader',
 
 				        // Initialize our map choice panel
 				        if (maps.length > 1) {
+
 					        // ... first, create the panel
-					        mapsButton = new OverlayButton({
-						        id: 'maps',
-						        active: false,
-						        activeWidth: '25%',
-						        text: 'Maps'
-					        });
-					        // ... Next, insert contents
-					        for (i=0; i<maps.length; ++i) {
-						        mapButton = $('<a/>').attr({
-							        href: '?map='+i
-						        });
-						        mapButton.append(maps[i].description+'<br>');
-						        mapButton.appendTo(mapsButton.getContent());
-					        }
+					        mapsOverlay = new OverlayButton({
+                                id:'maps',
+                                active: false,
+                                header: 'Maps',
+                                content: ''
+                            });
+
+                            // ... Next, insert contents
+                            for (i=0; i<maps.length; ++i) {
+                                mapButton = $('<a/>').attr({
+                                    href: '?map='+i
+                                });
+                                mapButton.append(maps[i].description+'<br>');
+                                mapsOverlay.getContentElement.append( mapButton );
+                            }
 				        }
 
 				        // Initialize our map...

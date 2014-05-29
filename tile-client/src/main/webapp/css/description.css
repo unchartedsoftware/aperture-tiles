@@ -7,13 +7,28 @@
 }
 
 #description-header {
-	position: relative;
-	width: 612px;
+	position: relative;   
+	height: 32px;
+	width: 100px;
+	vertical-align: middle;
+    text-align:center;
+	line-height: 32px;
+	background-color: #222222;
+    color: #D3D3D3;
+    text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000;
+}
+
+#description-header:hover {   
+ 	color: #FFFFFF;
 }
 
 #description-content {
 	position: relative;
-	background-color: #FFFFFF;
+	background-color: #FFF;
 	color: #000;
 	width: 612px;
 }

@@ -255,8 +255,8 @@ define(function (require) {
                          x: this.getViewportWidth(),
                          y: this.getViewportHeight()
                      }
-                }, i;
-            /*
+                };
+            /*, i;
 			// determine which axes exist
 			for (i=0; i<this.axes.length; i++) {
 

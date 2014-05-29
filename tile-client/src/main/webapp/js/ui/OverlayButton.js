@@ -51,39 +51,39 @@ define(function (require) {
         init: function ( spec ) {
 
             var that = this;
-            this.containerId = spec.containerId;
-            this.headerId = spec.headerId;
-            this.contentId = spec.contentId;
+            this.id = spec.id;
 
+            this.$container = $('#'+this.id);
+            this.$container.addClass('overlay-container');
+            this.$header = $('<div id="' + this.id + '-header" class="overlay-header">'+spec.header+'</div>');
+            this.$content = $('<div id="' + this.id + '-content" class="overlay-content">'+spec.content+'</div>');
+
+            this.$container.append(this.$header);
+            this.$container.append(this.$content);
+            this.activeWidth = this.$container.width();
+            this.inactiveWidth = this.$header.width();
             this.active = spec.active || false;
-
-            this.$container = $('#'+this.containerId);
-            this.$container.addClass("overlay-container");
-            this.$header = $('#'+this.headerId);
-            this.$header.addClass("overlay-header");
-            this.$content = $('#'+this.contentId);
-            this.$content.addClass("overlay-content");
-
-            this.openWidth = 500;
-            this.closedWidth = 140;
 
             this.$header.click( function(e){
 
-                if (that.active) {
+                var deltaWidth = that.activeWidth - that.inactiveWidth;
 
+                if (that.active) {
+                    // close
                     that.$content.animate({
                             height: 'toggle'
                         }, {
                         complete: function() {
                             that.$header.animate({
-                                 width: "-=500"
+                                 width: "-="+deltaWidth
                             });
                         }
                     });
 
                 } else {
+                    // open
                     that.$header.animate({
-                            width: "+=500"
+                            width: "+="+deltaWidth
                         },{
                         complete: function() {
                             that.$content.animate({
@@ -94,35 +94,32 @@ define(function (require) {
                 }
 
                 that.active = !that.active;
-                console.log("click");
             });
 
             if (!this.active) {
                 // trigger close and skip animation;
-                this.active  = !this.active;
-                this.$header.click();
+                //this.active  = !this.active;
+                that.$content.animate({height: 'toggle'});
                 this.$content.finish();
-                this.$header.finish();
-                console.log("hue");
             }
 
             return this.$content;
         },
 
 
-        getHeader: function() {
+        getHeaderElement: function() {
             return this.$header;
         },
 
 
-        getContent: function() {
-            return this.$content;
+        getContentElement: function() {
+            return this.$container;
         },
 
-
-        append: function( element ) {
-            this.$content.append( element );
+        getContainerElement: function() {
+            return this.$content;
         }
+
 
     });
 

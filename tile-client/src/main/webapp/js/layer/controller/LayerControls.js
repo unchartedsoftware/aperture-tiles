@@ -406,7 +406,6 @@ define(function (require) {
 
             // Add the title
             this.$layerControlsContainer = $('#'+controlsId);
-            //this.$layerControlsContainer.addClass('layer-controls-container');
 
             // Add layers visuals and register listeners against the model
             replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap);
