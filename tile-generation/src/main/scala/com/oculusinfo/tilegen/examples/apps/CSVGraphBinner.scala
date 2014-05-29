@@ -38,6 +38,7 @@ import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.RDDLineBinner
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -342,7 +343,7 @@ object CSVGraphBinner {
 	                        tileIO: TileIO): Unit = {
 
 		if (_graphDataType == "edges") {
-			val binner = new RDDBinner	//TODO -- put in RDDLineBinner
+			val binner = new RDDLineBinner
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
