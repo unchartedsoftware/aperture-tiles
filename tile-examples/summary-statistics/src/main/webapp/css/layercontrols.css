@@ -1,6 +1,7 @@
 @charset "UTF-8";
 
 .layer-controls {
+	z-index: 1000;
     position: absolute;
     right: 10px;
     bottom: 42px;
