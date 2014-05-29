@@ -36,7 +36,6 @@ define(function (require) {
 
 
     var Class = require('../../../class'),
-		idIncrement = 0,
         ClientRenderer;
 
 
@@ -48,20 +47,12 @@ define(function (require) {
          * Constructs a client render layer object
          * @param id the id string for the render layer
          */
-        init: function(id, map, avoidIncrement) {
-			// ensure each render layer has a unique id for view controller to maintain visibility correctly
-			id = id || "renderer-id";
-			if (avoidIncrement) {
-				this.id = id;	// don't increment id, used for nested renderers such as DetailsOnDemand
-			} else {
-				this.id = id + "-" + idIncrement++;
-			}
+        init: function(map) {
+
             this.map = map;
             this.clientState = null;
 
             this.TILE_SIZE = 256;
-            this.X_CENTRE_OFFSET = this.TILE_SIZE / 2;  // x offset required to centre on tile x-axis
-            this.Y_CENTRE_OFFSET = 0;                   // y offset required to centre on tile y-axis
 
             this.BLACK_COLOUR = '#000000';
             this.DARK_GREY_COLOUR = '#222222';
@@ -91,17 +82,6 @@ define(function (require) {
             return this.clientState.getSharedState('isVisible');
         },
 
-
-        /**
-         * Returns true if the layer is selected for the respective tile by the view controller,
-         * the data.renderer attribute is assigned by the TileTracker
-         * @param data aperturejs node data object
-         */
-        isSelectedView: function(data) {
-            return data.rendererId === this.id;
-        },
-
-
         /**
          * Attaches a mouse state object to be shared by the render layer. A ViewController has
          * primary ownership of this object. It is too be shared with each render layer so that
@@ -110,15 +90,6 @@ define(function (require) {
          */
         attachClientState: function(clientState) {
             this.clientState = clientState;
-        },
-
-
-        /**
-         * Empty function to create the layer, must be overloaded
-         * @param nodeLayer the aperturejs.geo.mapnodelayer
-         */
-        createLayer: function (nodeLayer) {
-			console.log('Warning createLayer function in client renderer has not been overloaded');
         },
 
 
@@ -180,146 +151,9 @@ define(function (require) {
         },
 
 
-        createPartitionLine: function( spec ) {
-
-            var that = this,
-                bar = this.plotLayer.addLayer(aperture.BarLayer);
-
-            bar.on('click', function() { return true; }); //swallow event
-            bar.map('visible').from(spec.isVisibleFunc);
-            bar.map('fill').asValue(spec.colour);
-            bar.map('orientation').asValue('horizontal');
-            bar.map('bar-count').asValue(1);
-            bar.map('length').asValue(spec.length);
-            bar.map('width').asValue(1);
-            bar.map('offset-x').asValue(spec.x - 1);
-            bar.map('offset-y').asValue(spec.y - 1);
-            bar.map('opacity').from( function() { return that.getOpacity(); });
-            return bar;
-        },
-
-
-        createBarChartAxis: function( spec ) {
-
-            var that = this,
-                AXIS_OFFSET = 2,    // offset borders
-                TICK_LENGTH = 6,
-                TICK_WIDTH = 3,
-                X_SPACING = spec.length / (spec.numIncs-1),
-                LABEL_TICK_OFFSET = 10,
-                labels, ticks;
-
-            // axis labels
-            labels = this.plotLayer.addLayer(aperture.LabelLayer);
-            labels.on('click', function() { return true; }); //swallow event
-            labels.map('label-count').asValue(spec.numIncs);
-            labels.map('visible').from(spec.isVisibleFunc);
-            labels.map('fill').asValue( this.WHITE_COLOUR );
-            labels.map('text-anchor').asValue('middle');
-            labels.map('font-outline').asValue(this.BLACK_COLOUR);
-            labels.map('font-outline-width').asValue(3);
-            labels.map('opacity').from( function() { return that.getOpacity(); });
-            labels.map('offset-x').from(function(index) { return spec.x + X_SPACING*index; });
-            labels.map('offset-y').asValue( spec.y + AXIS_OFFSET + LABEL_TICK_OFFSET);
-            labels.map('text').from(spec.labelFunc);
-
-            // axis markers
-            ticks = this.plotLayer.addLayer(aperture.BarLayer);
-            ticks.map('visible').from(spec.isVisibleFunc);
-            ticks.map('orientation').asValue('vertical');
-            ticks.map('fill').asValue( this.WHITE_COLOUR );
-            ticks.map('length').asValue(TICK_LENGTH);
-            ticks.map('width').asValue(TICK_WIDTH);
-            ticks.map('stroke').asValue(this.BLACK_COLOUR);
-            ticks.map('stroke-width').asValue(1);
-            ticks.map('opacity').from( function() { return that.getOpacity(); });
-            ticks.map('bar-count').asValue(spec.numIncs);
-            ticks.map('offset-x').from( function(index) { return spec.x - AXIS_OFFSET + X_SPACING*index; });
-            ticks.map('offset-y').asValue(spec.y  + AXIS_OFFSET);
-
-            return {
-                labels : labels,
-                markers : ticks
-            };
-        },
-
-        createBarSeries: function( spec ) {
-
-            var that = this,
-                bars;
-
-            bars = this.plotLayer.addLayer(aperture.BarLayer);
-            bars.on('click', function() { return true; }); //swallow event
-            bars.map('visible').from(spec.isVisibleFunc);
-            bars.map('fill').from( spec.colourFunc );
-            bars.map('orientation').asValue('vertical');
-            bars.map('stroke').asValue(that.BLACK_COLOUR);
-            bars.map('stroke-width').asValue(2);
-            bars.map('opacity').from( function() { return that.getOpacity(); });
-            bars.map('bar-count').from(spec.countFunc);
-            bars.map('offset-x').from( spec.xFunc );
-            bars.map('offset-y').from( spec.yFunc );
-            bars.map('length').from( spec.heightFunc );
-            bars.map('width').from(function() { return spec.length / $.proxy( spec.countFunc, this )(); });
-
-            if (spec.mousemove !== undefined) {
-                bars.on('mousemove', spec.mousemove );
-            }
-
-            if (spec.mouseout !== undefined) {
-                bars.on('mouseout', spec.mouseout );
-            }
-
-            return bars;
-        },
-
-
-        /**
-         * Helper function for break text up into multiple lines
-         * @param str the text to format
-         * @param charPerLine number of characters allowed per line
-         * @param maxNumLines maximum number of alines, rest of text is truncated with '...' appended
-         */
-        separateTextIntoLines: function(str, charPerLine, maxNumLines) {
-            var CHAR_PER_LINE = charPerLine || 35,
-                MAX_NUM_LINES = maxNumLines || 3,
-                strArray = str.split(" "),
-                formatted = '',
-                spaceLeft = CHAR_PER_LINE,
-                i,
-                lineCount = 0;
-
-            for (i=0; i<strArray.length; i++) {
-                while (strArray[i].length > spaceLeft) {
-
-                    // if past maximum amount of lines, truncate
-                    if (lineCount === MAX_NUM_LINES-1) {
-                        // strip space if is last character of string
-                        if (formatted[formatted.length-1] === ' ') {
-                            formatted = formatted.substring(0, formatted.length - 1);
-                        }
-                        return formatted + strArray[i].substr(0, spaceLeft-3) + "...";
-                    }
-                    if (strArray[i].length < CHAR_PER_LINE) {
-                        // can fit in next line, put new line
-                        formatted += "\n";
-                    } else {
-                        // cannot fit in next line, hyphenate word
-                        formatted += strArray[i].substr(0, spaceLeft);
-                        strArray[i] = strArray[i].substr(spaceLeft);
-                        if (spaceLeft > 0) {
-                            formatted += "-\n";
-                        }
-                    }
-                    spaceLeft = CHAR_PER_LINE;
-                    lineCount++;
-                }
-                formatted += strArray[i] + ' ';
-                spaceLeft -= strArray[i].length+1;
-            }
-            return formatted;
+        redraw: function() {
+            return true;
         }
-
 
     });
 
