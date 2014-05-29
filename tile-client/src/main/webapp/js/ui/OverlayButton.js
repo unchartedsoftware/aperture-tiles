@@ -51,9 +51,10 @@ define(function (require) {
         init: function ( spec ) {
 
             var that = this;
-
+            this.containerId = spec.containerId;
             this.headerId = spec.headerId;
             this.contentId = spec.contentId;
+
             this.active = spec.active || false;
 
             this.$container = $('#'+this.containerId);
@@ -71,9 +72,8 @@ define(function (require) {
                 if (that.active) {
 
                     that.$content.animate({
-                        height: 'toggle'
-                    }, {
-                        duration: 600,
+                            height: 'toggle'
+                        }, {
                         complete: function() {
                             that.$header.animate({
                                  width: "-=500"
@@ -83,12 +83,12 @@ define(function (require) {
 
                 } else {
                     that.$header.animate({
-                        width: "+=500"
-                    },{
+                            width: "+=500"
+                        },{
                         complete: function() {
                             that.$content.animate({
                                 height: 'toggle'
-                            }, 600);
+                            });
                         }
                     });
                 }

@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 .top-axis {
-    bottom: 0px;
+    bottom: 0px;   
 }
 
 .bottom-axis {
@@ -16,150 +16,131 @@
     left: 0px;
 }
 
-.top-axis-header {
+.axis-header {
     position:absolute;
-    background: #222222;
+    background: #222222; 
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.top-axis-header {  
     width:100%;
     height:32px;
     top:0px;
     left:0px;
-    z-index:1001;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
+    box-shadow: 1px 6px 5px -5px #000;
 }
 
 .bottom-axis-header {
-    position:absolute;
-    background: #222222;
     width:100%;
     height:32px;
     bottom:0px;
     left:0px;
-    z-index:1001;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
+    box-shadow: 1px -6px 5px -5px #000;
 }
 
 .left-axis-header {
-    position:absolute;
-    background: #222222;   
-    height:100%;
+    height:auto;
     width:32px;
     left:0px;
     top:0px;
-    z-index:1001;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
+    bottom:0px;
+    box-shadow: 6px 1px 5px -5px #000;
 }
 
 .right-axis-header {
-    position:absolute;
-    background: #222222;
     height:100%;
     width:32px;
     right:0px;
     top:0px;
-    z-index:1001;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
+    box-shadow: -6px 1px 5px -5px #000;
 }
 
-.top-axis-content {
+.axis-content {
     position:absolute;
     background: #111111;
+    overflow:hidden;
+}
+
+.top-axis-content {    
     height:130px;
     width:100%;
     top:0px;
     left:0px;
-    z-index:1000;
-    overflow:hidden;
+    box-shadow: 0px 5px 15px  #000;
 }
 
 .bottom-axis-content {
-    position:absolute;
-    background: #111111;
     height:130px;
     width:100%;
     bottom:0px;
     left:0px;
-    z-index:1000;
-    overflow:hidden;
+    box-shadow: 0px -5px 15px #000;
 }
 
 .left-axis-content {
-    position:absolute;    
-    background: #111111;
     width:130px;
     height:100%;
     left:0px;
     top:0px;
-    z-index:1000;
-    overflow:hidden;
+    box-shadow: 5px 0px 15px #000;
 }
 
 .right-axis-content {
-    position:absolute;
-    background: #111111;
     width:130px;
     height:100%;
     right:0px;
     top:0px;
-    z-index:1000;
-    overflow:hidden;
+    box-shadow: -5px 0px 15px #000;
+}
+
+.axis-marker {
+    background-color: #D3D3D3; 
 }
 
 .large-horizontal-axis-marker {
     height: 10px;
     width: 1px;
-    background-color: #7E7E7E;
 }
 
 .medium-horizontal-axis-marker {
     height: 6px;   
     width: 1px;
-    background-color: #7E7E7E;
 }
 
 .small-horizontal-axis-marker {
     height: 4px;
     width: 1px;
-    background-color: #7E7E7E;
 }
 
 .large-vertical-axis-marker {
     width: 10px;
     height: 1px;
-    background-color: #7E7E7E;
 }
 
 .medium-vertical-axis-marker {
     width: 6px;
     height: 1px;
-    background-color: #7E7E7E;
 }
 
 .small-vertical-axis-marker {
     width: 4px;
     height: 1px;
-    background-color: #7E7E7E;
 }
 
 .axis-marker-label {
+    text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000; 
     font-family: Verdana, Arial, sans-serif;
-    font-size:0.75em;
-    color: #7E7E7E;
+    font-size:0.8em;
+    color : #D3D3D3;
 }
 
 .horizontal-axis-marker-label {
-    -webkit-transform: rotate(-35deg);
-       -moz-transform: rotate(-35deg);
-        -ms-transform: rotate(-35deg);
-         -o-transform: rotate(-35deg);
-            transform: rotate(-35deg);
 }
 
 .vertical-axis-marker-label {
@@ -174,6 +155,11 @@
     padding-bottom: 5px;
     padding-left:50%;
     padding-right:50%;
+    text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;

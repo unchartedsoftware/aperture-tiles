@@ -7,9 +7,7 @@ html, body
 }
 
 body {
-    /* remove default body margins */
     margin: 0;
-
     font-family: Verdana, Arial, sans-serif;
     background-color: black; 
     color: #7E7E7E;

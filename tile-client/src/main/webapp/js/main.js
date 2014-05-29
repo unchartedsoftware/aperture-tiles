@@ -160,6 +160,7 @@ require(['./FileLoader',
 			        headerId:'description-header',
 			        contentId:'description-content',
 			        active: false,
+
 			        activeWidth: '50%'
 		        }).append(descriptionHtml); // append description html
 	        });

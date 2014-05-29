@@ -256,7 +256,7 @@ define(function (require) {
                          y: this.getViewportHeight()
                      }
                 }, i;
-
+            /*
 			// determine which axes exist
 			for (i=0; i<this.axes.length; i++) {
 
@@ -278,7 +278,7 @@ define(function (require) {
                             break;
 					}
 				}
-			}
+			}*/
 			return bounds;
 		},
 
