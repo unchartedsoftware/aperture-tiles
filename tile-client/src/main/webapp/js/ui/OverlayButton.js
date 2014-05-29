@@ -36,21 +36,21 @@ define(function (require) {
     OverlayButton = Class.extend({
         /**
          * Construct an overlay button
-         * @param spec the ispecification object
+         * @param spec the specification object
          *
          *      {
          *          id : the element id
-         *          active : whether or not it starts activated, default is false
-         *          activeWidth : width of overlay when active, default from div .css
-         *          inactiveWidth: width of overlay when inactive, default to '50%'
-         *          text: text on overlay button
-         *          css: css object to be passed to button
+         *          header: the header html
+         *          content: the content html
          *      }
          *
          */
         init: function ( spec ) {
 
-            var that = this;
+            var that = this,
+                openOverlay,
+                closeOverlay;
+
             this.id = spec.id;
 
             this.$container = $('#'+this.id);
@@ -60,51 +60,65 @@ define(function (require) {
 
             this.$container.append(this.$header);
             this.$container.append(this.$content);
-            
-            this.active = false;
 
-            this.$header.click( function(e){
+            openOverlay = function () {
 
                 var deltaWidth;
 
-                if (that.active) {
-                	
-                	deltaWidth = that.activeWidth - that.inactiveWidth;
-                    
-                    // close
-                    that.$content.animate({
-                            height: 'toggle'
-                        }, {
+                // measure elements
+                that.inactiveWidth = that.$header.outerWidth();
+                that.activeWidth = that.$content.outerWidth();
+
+                deltaWidth = that.activeWidth - that.inactiveWidth;
+
+                 // disable click until animation is complete
+                that.$header.off('click');
+                that.$header.animate({
+                        // open header
+                        width: "+="+deltaWidth
+                    },
+                    {
+                        complete: function() {
+                            // open content
+                            that.$content.animate({
+                                height: 'toggle'
+                            },
+                            {
+                                complete: function() {
+                                    // re-enable click, but switch to close callback
+                                    that.$header.click( closeOverlay );
+                                }
+                            });
+                        }
+                    });
+            };
+
+            closeOverlay = function() {
+
+                var deltaWidth = that.activeWidth - that.inactiveWidth;
+                // disable click until animation is complete
+                that.$header.off('click');
+                that.$content.animate({
+                        height: 'toggle'
+                    },
+                    {
                         complete: function() {
                             that.$header.animate({
                                  width: "-="+deltaWidth
+                            },
+                            {
+                                complete: function() {
+                                    // re-enable click, but switch to open callback
+                                    that.$header.click( openOverlay );
+                                }
                             });
                         }
                     });
+            };
 
-                } else {
-                	
-                	that.inactiveWidth = that.$header.outerWidth();
-                	that.activeWidth = that.$content.outerWidth();
-                	
-                	deltaWidth = that.activeWidth - that.inactiveWidth;
-                	
-                    // open
-                    that.$header.animate({
-                            width: "+="+deltaWidth
-                        },{
-                        complete: function() {
-                            that.$content.animate({
-                                height: 'toggle'
-                            });
-                        }
-                    });
-                }
+            this.$header.click( openOverlay );
 
-                that.active = !that.active;
-            });
-
-            // trigger close and skip animation;
+            // begin with content closed, skip animation;
         	this.$content.animate({height: 'toggle'});
             this.$content.finish();
         },

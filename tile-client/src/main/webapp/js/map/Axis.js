@@ -127,11 +127,11 @@ define(function (require) {
 
                 // add margins in case other axis exist
                 if (that.isXAxis) {
-                    marginLeft = $('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
-                    marginRight = $('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
+                    marginLeft = that.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
+                    marginRight = that.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
                 } else {
-                    marginTop = $('.top' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
-                    marginBottom = $('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
+                    marginTop = that.$map.find('.top' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
+                    marginBottom = that.$map.find('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
                 }
 
                 // create axis header and container
@@ -156,12 +156,13 @@ define(function (require) {
             }
 
             this.mapId = spec.mapId;
-            this.$map = $("#" + this.mapId);
+            this.map = spec.map;
+            this.$map = this.map.getElement();
 
             this.min = spec.min;
             this.max = spec.max;
             this.repeat = spec.repeat || defaults.repeat;
-            this.map = spec.map;
+
 
             this.Z_INDEX = this.Z_INDEX_OFFSET + this.map.getZIndex();
 
