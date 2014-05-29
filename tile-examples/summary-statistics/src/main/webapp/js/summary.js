@@ -490,6 +490,7 @@
             	$('#summary').html('<h2>No dataset selected.</h2>');
             	return;
             }
+
             $( "#tabs-major").tabs();
 
             $( "#dialog-controls").dialog({
@@ -513,11 +514,16 @@
                 .button()
                 .click(function( event ) {
                     event.preventDefault();
-                    $( "#dialog-controls").dialog("open");
-                    $('#accordion').accordion({ autoHeight: false });
+                    $( '#dialog-controls' ).dialog( 'open' );
+                    $( '#accordion' ).accordion({ autoHeight: false });
                 });
 
             showControls.append(showButton);
+
+            //when table controls is open, and Cross Plots (or Tables) is clicked, close the dialog
+            $( '#tabs-major li' ).click(function( event ) {
+                $( '#dialog-controls').dialog( 'close' );
+            });
 
             generateJsonTables(tableJsonFile, function(){
                 var len = _densityStrips.length;
