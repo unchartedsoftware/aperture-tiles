@@ -1,5 +1,6 @@
 @charset "UTF-8";
 
+
 .olTileImage {
     border-left: 1px solid rgba(255, 255, 255, .5);
     border-top: 1px solid rgba(255, 255, 255, .5);
@@ -8,7 +9,7 @@
 .olMap {
     position:relative;
     overflow:hidden;
-	background-color : #000 ;
+	background-color: black;
     top: 0px;
     left: 0px;
     width: 100%;
@@ -19,4 +20,7 @@ div.olControlZoom {
 	right: 10px !important;
 	top: 60px !important;
 	left:auto !important;
+}
+div.olMap{
+	background-color: black !important;
 }

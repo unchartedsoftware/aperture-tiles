@@ -26,8 +26,8 @@ package com.oculusinfo.tile.rendering;
 
 import java.awt.image.BufferedImage;
 
+import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.binning.util.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 
 /**

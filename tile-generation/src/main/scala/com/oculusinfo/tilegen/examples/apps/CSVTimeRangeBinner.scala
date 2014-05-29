@@ -46,7 +46,7 @@ import org.apache.spark.storage.StorageLevel
 
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.binning.util.PyramidMetaData
+import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.datasets.Dataset
@@ -151,11 +151,11 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 class CSVTimeRangeProcessingStrategy[IT: ClassManifest] (sc: SparkContext,
-                                   cacheRaw: Boolean,
-                                   cacheFilterable: Boolean,
-                                   cacheProcessed: Boolean,
-                                   properties: CSVRecordPropertiesWrapper,
-                                   indexer: TimeRangeCSVIndexExtractor[IT])
+                                                         cacheRaw: Boolean,
+                                                         cacheFilterable: Boolean,
+                                                         cacheProcessed: Boolean,
+                                                         properties: CSVRecordPropertiesWrapper,
+                                                         indexer: TimeRangeCSVIndexExtractor[IT])
 		extends StaticProcessingStrategy[IT, Double](sc) {
 	// This is a weird initialization problem that requires some
 	// documentation to explain.
@@ -257,16 +257,16 @@ class CSVTimeRangeProcessingStrategy[IT: ClassManifest] (sc: SparkContext,
 		if (cacheProcessed)
 			data.persist(StorageLevel.MEMORY_AND_DISK)
 
-//		//get the unique time ranges
-//		val timeRangeNames = data.map(record => {
-//			record._1
-//		}).map(localIndexer.timeIndexScheme.extractTime(_)).distinct.map(time => {
-//			val dateFormat = new SimpleDateFormat(pyramidNameFormat)
-//			dateFormat.format(new Date(Math.round(time)))
-//		}).collect()
-//		
-//		timeRanges ++ timeRangeNames
-			
+		//		//get the unique time ranges
+		//		val timeRangeNames = data.map(record => {
+		//			record._1
+		//		}).map(localIndexer.timeIndexScheme.extractTime(_)).distinct.map(time => {
+		//			val dateFormat = new SimpleDateFormat(pyramidNameFormat)
+		//			dateFormat.format(new Date(Math.round(time)))
+		//		}).collect()
+		//
+		//		timeRanges ++ timeRangeNames
+		
 		data
 	}
 }
@@ -280,9 +280,9 @@ trait TimeRangeDataset[IT] {
  * Handles basic RDD's using a ProcessingStrategy. 
  */
 class CSVTimeRangeDataset[IT: ClassManifest] (indexer: TimeRangeCSVIndexExtractor[IT],
-                                     properties: CSVRecordPropertiesWrapper,
-                                     tileWidth: Int,
-                                     tileHeight: Int)
+                                              properties: CSVRecordPropertiesWrapper,
+                                              tileWidth: Int,
+                                              tileHeight: Int)
 		extends CSVDatasetBase[IT](indexer, properties, tileWidth, tileHeight) with TimeRangeDataset[IT] {
 	// Just some Filter type aliases from Queries.scala
 	import com.oculusinfo.tilegen.datasets.FilterAware._
@@ -359,44 +359,44 @@ object CSVTimeRangeBinner {
 	}
 	
 	private def createIndexExtractor(properties: CSVRecordPropertiesWrapper): TimeRangeCSVIndexExtractor[_] = {
-			val xVar = properties.getString("oculus.binning.xField",
-			                                "The field to use for the X axis of tiles produced",
-			                                Some(CSVDatasetBase.ZERO_STR))
-			val yVar = properties.getString("oculus.binning.yField",
-			                                "The field to use for the Y axis of tiles produced",
-			                                Some(CSVDatasetBase.ZERO_STR))
-			val timeVar = properties.getString("oculus.binning.timeField",
-			                                "The field to use for the time axis of tiles produced",
-			                                Some(CSVDatasetBase.ZERO_STR))
-			                                
-            val startDateFormat = new SimpleDateFormat(properties.getString("oculus.binning.timeRange.dateFormat",
-	                                			"The parsing format to use for 'oculus.binning.timeRange.startDate'",
-	                                			Some("yyMMddHHmm")))
-	                                			
-			val startDate = startDateFormat.parse(properties.getString("oculus.binning.timeRange.startDate",
-												"The initial date to base the time ranges on.",
-												Some(""))).getTime()
-												
-			val secsPerRange = properties.getDouble("oculus.binning.timeRange.secondsPerRange",
-												"The number of seconds each range should represent",
-												Some(60 * 60 * 24))
-			new TimeRangeCartesianIndexExtractor(timeVar, xVar, yVar, startDate, secsPerRange)
+		val xVar = properties.getString("oculus.binning.xField",
+		                                "The field to use for the X axis of tiles produced",
+		                                Some(CSVDatasetBase.ZERO_STR))
+		val yVar = properties.getString("oculus.binning.yField",
+		                                "The field to use for the Y axis of tiles produced",
+		                                Some(CSVDatasetBase.ZERO_STR))
+		val timeVar = properties.getString("oculus.binning.timeField",
+		                                   "The field to use for the time axis of tiles produced",
+		                                   Some(CSVDatasetBase.ZERO_STR))
+		
+		val startDateFormat = new SimpleDateFormat(properties.getString("oculus.binning.timeRange.dateFormat",
+		                                                                "The parsing format to use for 'oculus.binning.timeRange.startDate'",
+		                                                                Some("yyMMddHHmm")))
+		
+		val startDate = startDateFormat.parse(properties.getString("oculus.binning.timeRange.startDate",
+		                                                           "The initial date to base the time ranges on.",
+		                                                           Some(""))).getTime()
+		
+		val secsPerRange = properties.getDouble("oculus.binning.timeRange.secondsPerRange",
+		                                        "The number of seconds each range should represent",
+		                                        Some(60 * 60 * 24))
+		new TimeRangeCartesianIndexExtractor(timeVar, xVar, yVar, startDate, secsPerRange)
 	}
 	
 	def writeBaseMetaData[BT](tileIO: TileIO,
-							pyramider: TilePyramid,
-							baseLocation: String,
-							minsMaxes: Map[Int, (BT, BT)],
-							tileSize: Int,
-							name: String,
-							description: String): Unit = {
+	                          pyramider: TilePyramid,
+	                          baseLocation: String,
+	                          minsMaxes: Map[Int, (BT, BT)],
+	                          tileSize: Int,
+	                          name: String,
+	                          description: String): Unit = {
 		val metaData = tileIO.combineMetaData(pyramider, baseLocation, minsMaxes, tileSize, name, description)
 		tileIO.writeMetaData(baseLocation, metaData)
 	}
 	
 	
 	def processDataset[IT: ClassManifest,
-	                   PT: ClassManifest, 
+	                   PT: ClassManifest,
 	                   BT] (dataset: Dataset[IT, PT, BT] with TimeRangeDataset[IT],
 	                        tileIO: TileIO,
 	                        properties: CSVRecordPropertiesWrapper): Unit = {
@@ -421,12 +421,12 @@ object CSVTimeRangeBinner {
 					
 					//merge the metadata together
 					metadatas.foreach(metadata => {
-						metadata._2.foreach(levelMinMax => {
-							minMaxAccum += (levelMinMax._1 -> levelMinMax._2._1)	//add in mapping for level -> min
-							minMaxAccum += (levelMinMax._1 -> levelMinMax._2._2)	//add in mapping for level -> max
-						})
-					})
-				
+						                  metadata._2.foreach(levelMinMax => {
+							                                      minMaxAccum += (levelMinMax._1 -> levelMinMax._2._1)	//add in mapping for level -> min
+							                                      minMaxAccum += (levelMinMax._1 -> levelMinMax._2._2)	//add in mapping for level -> max
+						                                      })
+					                  })
+					
 					minMaxAccum.value
 				}
 
@@ -435,45 +435,45 @@ object CSVTimeRangeBinner {
 				{
 					//get the unique time ranges
 					val timeRanges = rdd.map(record => {
-						localIndexer.timeIndexScheme.extractTime(record._1)
-					}).distinct.collect()
-		
-					val rangeMetadatas = timeRanges.map(startTime =>{
-						val timeRangeRdd = rdd.filter(record => {
-							val curTime = localIndexer.timeIndexScheme.extractTime(record._1)
-							curTime >= startTime && curTime < (startTime + localIndexer.msPerTimeRange)
-						})
+						                         localIndexer.timeIndexScheme.extractTime(record._1)
+					                         }).distinct.collect()
 					
-						val dateFormatString = properties.getString("oculus.binning.pyramidNameFormat", "The output name format to use for each pyramid", Some(""))
-						val dateFormat = new SimpleDateFormat(dateFormatString)
-						dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
-						val name = dateFormat.format(new Date(Math.round(startTime)))
+					val rangeMetadatas = timeRanges.map(startTime =>{
+						                                    val timeRangeRdd = rdd.filter(record => {
+							                                                                  val curTime = localIndexer.timeIndexScheme.extractTime(record._1)
+							                                                                  curTime >= startTime && curTime < (startTime + localIndexer.msPerTimeRange)
+						                                                                  })
+						                                    
+						                                    val dateFormatString = properties.getString("oculus.binning.pyramidNameFormat", "The output name format to use for each pyramid", Some(""))
+						                                    val dateFormat = new SimpleDateFormat(dateFormatString)
+						                                    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
+						                                    val name = dateFormat.format(new Date(Math.round(startTime)))
 
-						
-						val tiles = binner.processDataByLevel(timeRangeRdd,
-						                                      dataset.getIndexScheme,
-						                                      dataset.getBinDescriptor,
-						                                      dataset.getTilePyramid,
-						                                      levels,
-						                                      (dataset.getNumXBins max dataset.getNumYBins),
-						                                      dataset.getConsolidationPartitions,
-						                                      dataset.isDensityStrip)
-						val levelMinMaxes = tileIO.writeTileSet(dataset.getTilePyramid,
-						                    name,
-						                    tiles,
-						                    dataset.getBinDescriptor,
-						                    name,
-						                    dataset.getDescription)
-						(tileIO.readMetaData(name).get, levelMinMaxes)
-					})
+						                                    
+						                                    val tiles = binner.processDataByLevel(timeRangeRdd,
+							    dataset.getIndexScheme,
+							    dataset.getBinDescriptor,
+							    dataset.getTilePyramid,
+							    levels,
+							    (dataset.getNumXBins max dataset.getNumYBins),
+							    dataset.getConsolidationPartitions,
+							    dataset.isDensityStrip)
+						                                    val levelMinMaxes = tileIO.writeTileSet(dataset.getTilePyramid,
+							      name,
+							      tiles,
+							      dataset.getBinDescriptor,
+							      name,
+							      dataset.getDescription)
+						                                    (tileIO.readMetaData(name).get, levelMinMaxes)
+					                                    })
 					
 					writeBaseMetaData(tileIO,
-								dataset.getTilePyramid,
-								dataset.getName,
-								combineMetaData(rangeMetadatas),
-								dataset.getNumXBins,
-								dataset.getName,
-								dataset.getDescription)
+					                  dataset.getTilePyramid,
+					                  dataset.getName,
+					                  combineMetaData(rangeMetadatas),
+					                  dataset.getNumXBins,
+					                  dataset.getName,
+					                  dataset.getDescription)
 				}
 				dataset.process(procFcn, None)
 			}
@@ -489,7 +489,7 @@ object CSVTimeRangeBinner {
 	                                       properties: CSVRecordPropertiesWrapper): Unit =
 		processDataset(dataset, tileIO, properties)(dataset.indexTypeManifest, dataset.binTypeManifest)
 
-		
+	
 	private def getDataset[T: ClassManifest] (indexer: TimeRangeCSVIndexExtractor[T],
 	                                          properties: CSVRecordPropertiesWrapper,
 	                                          tileWidth: Int,
@@ -505,17 +505,17 @@ object CSVTimeRangeBinner {
 	def getTypedDataset[IT]: Dataset[IT, _, _] with TimeRangeDataset[IT] = {
 		return null
 	}
-		
+	
 	def createDataset (sc: SparkContext,
 	                   properties: CSVRecordPropertiesWrapper,
 	                   cacheRaw: Boolean,
 	                   cacheFilterable: Boolean,
 	                   cacheProcessed: Boolean
-                   ): CSVTimeRangeDataset[_] = {
+	): CSVTimeRangeDataset[_] = {
 		// Wrap parameters more usefully
 		val tileWidth = properties.getInt("oculus.binning.tileWidth", "The number of bins wide in each tile", Some(256))
 		val tileHeight = properties.getInt("oculus.binning.tileHeight", "The number of bins high in each tile", Some(256))
-			
+		
 		// Determine indexing information
 		val indexer = createIndexExtractor(properties)
 
@@ -523,7 +523,7 @@ object CSVTimeRangeBinner {
 		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
 		dataset
 	}
-		
+	
 	
 	def main (args: Array[String]): Unit = {
 		if (args.size<1) {

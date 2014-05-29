@@ -494,14 +494,14 @@
         generateZoomLevelSlider = function (parentId) {
             var overlayLayerBounds = joinLayerInfo(_mapState.overlayInfoMap);
             var mapZoom = _mapState.canvas.getZoom();
-            var zoomSliderParent = $('#'+parentId);
+            var zoomSliderGrandParent = $('#'+parentId+'-parent');
             var uniqueSliderDivId = parentId + "-zoomLevelSlider";
             _mapState.options.components.zoomLevelSlider.zoomLevelSliderDivId = uniqueSliderDivId;
             var slider = $('<div id= "'+ uniqueSliderDivId +'" > <span style="position:absolute; left: -95px; top: -3px; width: 100px; font-size: 1.0em;">Zoom Level:</span> </div>');
             slider.addClass('plot-zoom-slider');
             var zoomControl = _mapState.canvas.olMap_.controls[1];
             _mapState.canvas.olMap_.removeControl(zoomControl);
-            zoomSliderParent.append(slider);
+            zoomSliderGrandParent.append(slider);
 
             slider.slider({
 

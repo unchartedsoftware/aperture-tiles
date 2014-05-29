@@ -48,7 +48,7 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
-import com.oculusinfo.binning.util.PyramidMetaData
+import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
@@ -186,7 +186,7 @@ trait TileIO extends Serializable {
 		val metaData = combineMetaData(pyramider, baseLocation, minMax, sampleTile.getXBins, name, description)
 		writeMetaData(baseLocation, metaData)
 
-		// Return the min/maxes so the data isn't lost from converting it to a 
+		// Return the min/maxes so the data isn't lost from converting it to a
 		// string in PyramidMetaData
 		minMax
 	}
@@ -232,12 +232,12 @@ trait TileIO extends Serializable {
 		try {
 			Some(new PyramidMetaData(getPyramidIO.readMetaData(baseLocation)))
 		} catch {
-		  case e: Exception => None
+			case e: Exception => None
 		}
 
 	def writeMetaData (baseLocation: String, metaData: PyramidMetaData): Unit =
 		getPyramidIO.writeMetaData(baseLocation, metaData.toString)
-		
+	
 }
 
 class LevelMinMaxAccumulableParam[T] (minFcn: (T, T) => T, defaultMin: T,
