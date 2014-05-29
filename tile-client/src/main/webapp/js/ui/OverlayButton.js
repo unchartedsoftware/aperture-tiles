@@ -62,7 +62,7 @@ define(function (require) {
             this.$container.append(this.$content);
             this.activeWidth = this.$container.width();
             this.inactiveWidth = this.$header.width();
-            this.active = spec.active || false;
+            this.active = false;
 
             this.$header.click( function(e){
 
@@ -96,14 +96,8 @@ define(function (require) {
                 that.active = !that.active;
             });
 
-            if (!this.active) {
-                // trigger close and skip animation;
-                //this.active  = !this.active;
-                that.$content.animate({height: 'toggle'});
-                this.$content.finish();
-            }
-
-            return this.$content;
+            this.$content.animate({height: 'toggle'});
+            this.$content.finish();
         },
 
 

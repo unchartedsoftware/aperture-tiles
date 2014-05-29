@@ -157,7 +157,6 @@ require(['./FileLoader',
 		        // create the overlay container
 		        new OverlayButton({
 		            id:'description',
-                    active: false,
                     header: 'Description',
                     content: descriptionHtml
 		        }).getContentElement().append(''); // jslint...
@@ -165,7 +164,6 @@ require(['./FileLoader',
 
             new OverlayButton({
                 id:'layer-controls',
-                active: false,
                 header: 'Controls',
                 content: ''
             }).getContentElement().append(''); // jslint...
@@ -201,7 +199,6 @@ require(['./FileLoader',
 					        // ... first, create the panel
 					        mapsOverlay = new OverlayButton({
                                 id:'maps',
-                                active: false,
                                 header: 'Maps',
                                 content: ''
                             });

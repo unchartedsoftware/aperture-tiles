@@ -1,5 +1,11 @@
 
 
+.greyed {
+	-webkit-filter: grayscale(1) brightness(50%) blur(1px);
+}
+
+
+
 .top-text-sentiments {
 	position:absolute;
 	width: 100%;

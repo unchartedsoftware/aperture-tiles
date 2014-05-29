@@ -51,7 +51,8 @@ define(function (require) {
          */
         init: function( map) {
 
-            var SCALE = 1.5;
+            var that = this,
+                SCALE = 1.5;
 
             this._super(map);
 
@@ -121,6 +122,7 @@ define(function (require) {
                 html: function() {
 
                     var html = '',
+                        $html, // $('<div></div>'),
                         i,
                         positivePerc, neutralPerc, negativePerc,
                         count = getCount( this );
@@ -148,16 +150,38 @@ define(function (require) {
 
                         html += '</div>';
 
-                        /*
+                        //$html.append(html);
+
                         if (!$html) {
                             $html = $(html);
                         } else {
-                            $html.after($(html));
+                            $html.after(html);
                         }
-                        */
+                        //*/
                     }
 
-                    return html;
+                    $html = $(html);
+
+
+                    $html.click( function(event) {
+                        var label = $(this).find(".sentiment-labels").text();
+
+                        $(".top-text-sentiments").filter( function() {
+                            return $(this).find(".sentiment-labels").text() !== label;
+                        }).addClass('greyed');
+
+                        $(".top-text-sentiments").filter( function() {
+                            return $(this).find(".sentiment-labels").text() === label;
+                        }).removeClass('greyed');
+
+                        event.stopPropagation();
+                    });
+
+                    that.map.on( 'click', function() {
+                        $(".top-text-sentiments").removeClass('greyed');
+                    });
+
+                    return $html;
                 },
                 css: {
                     'z-index' : 749

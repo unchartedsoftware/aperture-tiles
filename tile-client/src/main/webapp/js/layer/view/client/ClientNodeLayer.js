@@ -82,7 +82,7 @@ define(function (require) {
 
         createLayerRoot : function() {
             var pos = this.map_.getViewportPixelFromMapPixel( 0, this.map_.getMapHeight() );
-            return $('<div class="aperture-client-layer" style="position:absolute; left:'+pos.x+'px; top:' +pos.y+ 'px; width=0px; height=0px"></div>');
+            return $('<div class="client-layer" style="position:absolute; left:'+pos.x+'px; top:' +pos.y+ 'px; width=0px; height=0px"></div>');
         },
 
 
