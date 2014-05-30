@@ -29,6 +29,17 @@ body {
     width: 150px;
     font-size: 0.75em;
 }
+
+#summary{
+
+}
+
+#summary h2 {
+	font-family: Verdana, Arial, sans-serif;
+	font-size: 16px;
+	font-weight: normal;
+}
+
 #summary-header-title {
     position: absolute;
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
@@ -57,6 +68,7 @@ body {
 }
 
 #tabs-major {
+	border-left: 1px solid rgb(170,170,170);
     padding: 0px;
     border-width: 0px;
     height: 100%;
@@ -72,12 +84,12 @@ body {
 #tabs-major .ui-tabs-panel {
     background-color: white;
     border-width: 0px 1px 1px 1px;
-    height: 90%;
+    height: 85%;
 }
 
 .table-sub-tab {
     width: 90%;
-    height: 90%;
+    height: 85%;
     overflow: scroll;
 }
 
@@ -127,8 +139,9 @@ body {
     font-weight: bold;
 }
 
-#tabs-tables {
-    width: 99%;
+#tabs-tables , #tabs-plots{
+	border-left: 1px solid rgb(170,170,170);
+    width: 95%;
 }
 
 #tabs-plots .ui-tabs-panel {

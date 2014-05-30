@@ -491,9 +491,9 @@
             tocPane.addClass('ui-layout-west');
             $('#head').addClass('ui-layout-north');
             $summaryDiv.addClass('ui-layout-center');
-            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:230}});
+            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:178}});
             layout.panes.west.css({
-                background:  "rgb(204,204,204)"
+                background:  "rgb(204,204,204)",
             });
             layout.panes.north.css({
                 background:  "rgb(204,204,204)"
