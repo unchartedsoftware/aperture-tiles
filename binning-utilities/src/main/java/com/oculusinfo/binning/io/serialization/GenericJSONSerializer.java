@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -74,10 +75,22 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 			for (int i = 0; i < bins.length(); i++) {
 				values.add(getValue(bins.get(i)));
 			}
-			
+
+
 			TileIndex tileIndex = new TileIndex(level, x, y, xBins, yBins);
-			return new TileData<T>( tileIndex, values);
+			TileData<T> tile = new TileData<T>( tileIndex, values);
 			
+			if (json.has("meta")) {
+				JSONObject metaData = json.getJSONObject("meta");
+				String[] keys = JSONObject.getNames(metaData);
+				if (null != keys) {
+					for (String key: keys) {
+						tile.setMetaData(key, metaData.getString(key));
+					}
+				}
+			}
+
+			return tile;
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -112,7 +125,7 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 			jsonEntry.put("xIndex", tileIndex.getX() );
 			jsonEntry.put("yIndex", tileIndex.getY() );			
 			jsonEntry.put("xBinCount", tileIndex.getXBins() );
-			jsonEntry.put("yBinCount", tileIndex.getYBins() );			
+			jsonEntry.put("yBinCount", tileIndex.getYBins() );
 			
 			JSONArray bins = new JSONArray();
 			for (T value: tile.getData()) {
@@ -126,6 +139,17 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 			
 			jsonEntry.put("bins", bins);
 
+			JSONObject metaData = new JSONObject();
+			Collection<String> keys = tile.getMetaDataProperties();
+			if (null != keys) {
+				for (String key: keys) {
+					String value = tile.getMetaData(key);
+					if (null != value)
+						metaData.put(key, value);
+				}
+			}
+			jsonEntry.put("meta", metaData);
+
 			OutputStreamWriter writer = new OutputStreamWriter(stream, "UTF-8");
 			writer.write(jsonEntry.toString());
 			writer.close();
@@ -133,7 +157,5 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-
 	}
-
 }

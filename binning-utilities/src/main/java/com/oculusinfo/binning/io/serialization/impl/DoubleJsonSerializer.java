@@ -24,28 +24,18 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
-import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
-public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>> {
-	private static final long serialVersionUID = -7445619308538292627L;
-	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(List.class,
-		   new TypeDescriptor(Pair.class,
-		                      new TypeDescriptor(String.class),
-		                      new TypeDescriptor(Integer.class)));
+public class DoubleJsonSerializer extends GenericJSONSerializer<Double> {
+	private static final long serialVersionUID = -9050739153280154898L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);
 
 
 
-	public StringIntPairArrayJSONSerializer() {
+	public DoubleJsonSerializer () {
 		super();
 	}
 
@@ -54,39 +44,13 @@ public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List
 		return TYPE_DESCRIPTOR;
 	}
 
-	
 	@Override
-	public Object translateToJSON (List<Pair<String, Integer>> value) {
-		JSONArray outputMap = new JSONArray();
-
-		try {
-			for (Pair<String, Integer> pair: value) {
-				JSONObject entryObj = new JSONObject();
-				entryObj.put(pair.getFirst(), pair.getSecond());
-				outputMap.put(entryObj);
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return outputMap;
+	protected Double getValue (Object bin) throws JSONException {
+		return ((Number) bin).doubleValue();
 	}
 
 	@Override
-	protected List<Pair<String, Integer>> getValue(Object obj) throws JSONException {
-		JSONArray bin = (JSONArray) obj;
-	
-		List<Pair<String, Integer>> result = new ArrayList<Pair<String,Integer>>(); 
-
-		for (int j=0; j < bin.length(); j++){
-			JSONObject entry = bin.getJSONObject(j);
-			@SuppressWarnings("unchecked")
-			Iterator<String> keys = entry.keys();
-			while (keys.hasNext()){
-				String key = keys.next();
-				result.add(new Pair<String, Integer>(key, entry.getInt(key)));
-			}
-		}
-		
-		return result;
+	protected Object translateToJSON (Double value) {
+		return value;
 	}
 }
