@@ -76,7 +76,7 @@ object SummaryStatistics {
     val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, Seq("target/summary-statistics-0.3-SNAPSHOT-classes.jar", "/home/bigdata/.m2/repository/org/json/json/20090211/json-20090211.jar"))
     
       val writer = new PrintWriter(new File(outputLocation))
-      val textFile = if(partitions.equals("none")){sc.textFile(inputLocation + i)} else {(sc.textFile(inputLocation + i).repartition(partitions.toInt)}
+      val textFile = if(partitions.equals("none")){sc.textFile(inputLocation)} else {sc.textFile(inputLocation).repartition(partitions.toInt)}
 
       //analyze dataset at a high level. count total records etc.
       val tableTests = prop.getProperty("oculus.binning.table.tests", "none")
@@ -96,10 +96,10 @@ object SummaryStatistics {
           val customVariables = prop.getProperty("oculus.binning.parsing." + field + ".custom.variables", "")
           val customOutput = prop.getProperty("oculus.binning.parsing." + field + ".custom.output", "")
           if (customOutput == "") {
-            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, writer, i)
+            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, writer)
           } else {
             val customWriter = new PrintWriter(new File(customOutput))
-            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, customWriter, i)
+            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, customWriter)
           }
         }
       })
@@ -158,7 +158,7 @@ object SummaryStatistics {
 
       writer.close()
 
-    }
+    
   }
 }                                 
 

@@ -333,9 +333,9 @@ object analyze {
 
   }
 
-  def customAnalytic(table: RDD[Array[String]], field: String, index: Int, customAnalytic: String, customVars: String, customOutput: PrintWriter, partitionNum: String) {
+  def customAnalytic(table: RDD[Array[String]], field: String, index: Int, customAnalytic: String, customVars: String, customOutput: PrintWriter) {
     //make it so I dont need to directly hard code import the analytic
-    Fingerprints.run(table, field, index, customVars, customOutput, partitionNum)
+    Fingerprints.run(table, field, index, customVars, customOutput, 1.toString)
   }
 }
 
