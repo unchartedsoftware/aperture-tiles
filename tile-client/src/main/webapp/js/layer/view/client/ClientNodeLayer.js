@@ -58,12 +58,12 @@ define(function (require) {
             this.map_.on('move', $.proxy( this.onMapUpdate, this ));
 
             this.layers_ = [];
+            this.subset_ = [];
         },
 
 
         removeLayer : function( layer ) {
 
-            // remove layer
             var index = this.layers_.indexOf( layer );
             if ( index !== -1 ) {
                 this.layers_.nodeLayer_ = null;
@@ -74,7 +74,6 @@ define(function (require) {
 
         addLayer : function( layer ) {
 
-            // add layer
             layer.nodeLayer_ = this;
             this.layers_.push( layer );
         },
@@ -116,6 +115,22 @@ define(function (require) {
         },
 
 
+        removeNodeById: function( key ) {
+            var node = this.nodesById_[ key ],
+                index = this.nodes_.indexOf( node );
+            this.destroyNode( node );
+            this.nodes_.splice(index, 1);
+            delete this.nodesById_[ key ];
+        },
+
+
+        removeNode: function( node ) {
+            var index = this.nodes_.indexOf( node );
+            this.destroyNode( this.nodes_[index] );
+            this.nodes_.splice( index, 1 );
+        },
+
+
         onMapUpdate: function() {
             var pos;
             // only root will execute the following code
@@ -129,178 +144,281 @@ define(function (require) {
 
         all: function( data ) {
 
-            var i,
-                key,
-                index,
+            var that = this,
+                nodes = this.nodes_,
+                idKey = this.idKey_,
+                i,
                 node,
-                defunctNodesById = {},
-                defunctNodesArray = [],
                 newData = [],
                 newNodes = [],
                 exists;
 
-            // keep list of current nodes, to track which ones are not in the new set
-            for (i=0; i<this.nodes_.length; ++i) {
-                if (this.idKey_) {
-                    key = this.nodes_[i].data[this.idKey_];
-                    defunctNodesById[ key ] = true;
-                } else {
-                    defunctNodesArray.push( this.findNodeFromData( this.nodes_[i].data ) );
-                }
-            }
+            function allByKey() {
 
-            // only root will execute the following code
-            for (i=0; i<data.length; i++) {
+                var key,
+                    nodesById = that.nodesById_,
+                    defunctNodesById = {};
 
-                if (this.idKey_) {
-                    // if id attribute is specified, use that to check duplicates
-                    key = data[i][this.idKey_];
-                    exists = this.nodesById_[key] !== undefined;
-                } else {
-                    // otherwise test object reference
-                    exists = this.doesNodeExist( data[i] );
+                // keep list of current nodes, to track which ones are not in the new set
+                for (i=0; i<nodes.length; ++i) {
+                    defunctNodesById[ nodes[i].data[idKey] ] = true;
                 }
 
-                if ( exists ) {
-                    // remove from tracking list
-                    if (this.idKey_) {
+                // only root will execute the following code
+                for (i=0; i<data.length; i++) {
+
+                    key = data[i][idKey];
+                    exists = nodesById[key] !== undefined;
+
+                    if ( exists ) {
+                        // remove from tracking list
                         delete defunctNodesById[ key ];
                     } else {
-                        index = defunctNodesArray.indexOf(  this.findNodeFromData( data[i] ) );
-                        defunctNodesArray.splice(index, 1);
+                        // new data
+                        newData.push( data[i] );
                     }
-                } else {
-                    // new data
-                    newData.push(data[i]);
+                }
+
+                // destroy and remove all remaining nodes
+                for (key in defunctNodesById) {
+                    if (defunctNodesById.hasOwnProperty( key )) {
+
+                        that.removeNodeById( key );
+                    }
+                }
+
+                // create nodes for new data
+                for (i=0; i<newData.length; i++) {
+                    node = that.createNode( newData[i] );
+                    nodes.push( node );
+                    newNodes.push( node );
+                    key = newData[i][idKey];
+                    nodesById[ key ] = node;
                 }
             }
 
-            // destroy and remove all remaining nodes
-            if (this.idKey_) {
-                // id is specified
-                for (key in defunctNodesById) {
-                    if (defunctNodesById.hasOwnProperty(key)) {
-                        // remove from array
-                        index = this.nodes_.indexOf( this.nodesById_[key] );
-                        this.nodes_.splice(index, 1);
-                        // destroy and delete from map
-                        this.destroyNode( this.nodesById_[key] );
-                        delete this.nodesById_[key];
+            function allNoKey() {
+
+                var defunctNodesArray = [],
+                    index;
+
+                // keep list of current nodes, to track which ones are not in the new set
+                for (i=0; i<nodes.length; ++i) {
+                    defunctNodesArray.push( that.findNodeFromData( nodes[i].data ) );
+                }
+
+                // only root will execute the following code
+                for (i=0; i<data.length; i++) {
+
+                    exists = that.doesNodeExist( data[i] );
+
+                    if ( exists ) {
+                        // remove from tracking list
+                        index = defunctNodesArray.indexOf(  that.findNodeFromData( data[i] ) );
+                        defunctNodesArray.splice(index, 1);
+                    } else {
+                        // new data
+                        newData.push( data[i] );
                     }
                 }
-            } else {
-                // no id specified
+
+                // destroy and remove all remaining nodes
                 for (i=0; i<defunctNodesArray.length; i++) {
                     // remove from array
-                    index = this.nodes_.indexOf( defunctNodesArray[i] );
-                    this.destroyNode( this.nodes_[index] );
-                    this.nodes_.splice(index, 1);
+                    that.removeNode( defunctNodesArray[i] );
+                }
+
+                // create nodes for new data
+                for (i=0; i<newData.length; i++) {
+                    node = that.createNode( newData[i] );
+                    nodes.push( node );
+                    newNodes.push( node );
                 }
             }
 
-            // create nodes for new data
-            for (i=0; i<newData.length; i++) {
-                node = this.createNode( newData[i] );
-                this.nodes_.push( node );
-                newNodes.push( node );
-                if (this.idKey_) {
-                    key = newData[i][this.idKey_];
-                    this.nodesById_[key] = node;
-                }
+            if ( idKey ) {
+                allByKey();
+            } else {
+                allNoKey();
             }
-            this.subSet = this.nodes_;
+
+            this.subset_ = newNodes;
             return this;
         },
 
 
         join : function( data ) {
 
-            var i,
-                key,
-                node,
-                newNodes = [],
-                exists;
+             var that = this,
+                 nodes = this.nodes_,
+                 nodesById = this.nodesById_,
+                 idKey = this.idKey_,
+                 i,
+                 key,
+                 node,
+                 newNodes = [],
+                 exists;
 
-            // only root will execute the following code
-            for (i=0; i<data.length; i++) {
+            function joinByKey() {
 
-                if (this.idKey_) {
-                    // if id attribute is specified, use that to check duplicates
-                    key = data[i][this.idKey_];
-                    exists = this.nodesById_[key] !== undefined;
-                } else {
-                    // otherwise test object reference
-                    exists = this.doesNodeExist( data[i] );
-                }
+                for (i=0; i<data.length; i++) {
 
-                if ( !exists ) {
+                    key = data[i][idKey];
+                    exists = nodesById[key] !== undefined;
 
-                    node = this.createNode( data[i] );
-                    this.nodes_.push( node );
-                    newNodes.push( node );
-                    if (this.idKey_) {
-                        this.nodesById_[key] = node;
+                    if ( !exists ) {
+                        node = that.createNode( data[i] );
+                        nodes.push( node );
+                        newNodes.push( node );
+                        nodesById[ key ] = node;
                     }
                 }
             }
-            this.subSet = this.nodes_;
+
+            function joinNoKey() {
+
+                for (i=0; i<data.length; i++) {
+
+                    exists = that.doesNodeExist( data[i] );
+
+                    if ( !exists ) {
+                        node = that.createNode( data[i] );
+                        nodes.push( node );
+                        newNodes.push( node );
+                    }
+                }
+            }
+
+            if ( idKey ) {
+                joinByKey();
+            } else {
+                joinNoKey();
+            }
+
+            this.subset_ = newNodes;
+            return this;
+        },
+
+
+        remove : function( data ) {
+
+            var that = this,
+                idKey = this.idKey_,
+                key,
+                i;
+
+            // remove by data
+            function removeByData() {
+                for (i=0; i<data.length; i++) {
+                    that.removeNode( that.findNodeFromData( data[i] ) );
+                }
+            }
+
+            // remove by data, by id
+            function removeByDataId() {
+
+                for (i=0; i<data.length; i++) {
+                    key = data[i][ idKey ];
+                    that.removeNodeById( key );
+                }
+
+            }
+
+            // remove by ids
+            function removeById() {
+
+                for (i=0; i<data.length; i++) {
+                    key = data[i];
+                    that.removeNodeById( key );
+                }
+
+            }
+
+            // wrap in array if it already isn't
+            if ( !$.isArray( data ) ) {
+                data = [ data ];
+            }
+
+            switch ( typeof data[0] ) {
+                case 'object':
+                    if (idKey) {
+                        removeByDataId();
+                    } else {
+                        removeByData();
+                    }
+                    break;
+                case 'string':
+                    removeById();
+                    break;
+            }
+
             return this;
         },
 
 
         where: function( idEval ) {
 
-            var node,
+            var that = this,
+                nodes = this.nodes_,
+                nodesById = this.nodesById_,
+                subset = [],
+                node,
                 i;
 
-            this.subSet_ = [];
-
-            if ( $.isFunction( idEval ) ) {
-                // eval by function
-                for (i=0; i<this.nodes_.length; i++) {
-                    if ( idEval( this.nodes_.data ) ) {
-                        this.subSet_.push( this.nodes_ );
-                    }
-                }
-
-            } else if ($.isPlainObject( idEval )) {
-                // eval by data match
-                node = this.findNodeFromData( idEval );
-                if (node) {
-                    this.subSet_.push( node );
-                }
-
-            } else {
-
-                // eval by id
-                if (this.idKey_) {
-                    if ( $.isArray( idEval ) ) {
-
-                        for (i=0; i<idEval.length; i++) {
-
-                            node = this.nodesById_[ idEval[i] ];
-                            if (node) {
-                                this.subSet_.push( node );
-                            }
-                        }
-                    } else {
-                        node = this.nodesById_[ idEval ];
-                        if (node) {
-                            this.subSet_.push( node );
-                        }
+            function whereById() {
+                for (i=0; i<idEval.length; i++) {
+                    node = nodesById[ idEval[i] ];
+                    if (node) {
+                        subset.push( node );
                     }
                 }
             }
+
+            function whereByFunction() {
+                for (i=0; i<nodes.length; i++) {
+                    if ( idEval( nodes[i].data ) ) {
+                        subset.push( nodes[i] );
+                    }
+                }
+            }
+
+            function whereByData() {
+                for (i=0; i<idEval.length; i++) {
+                    node = that.findNodeFromData( idEval[i] );
+                    if (node) {
+                        subset.push( node );
+                    }
+                }
+            }
+
+            // wrap in array if it already isn't
+            if ( !$.isArray( idEval ) ) {
+                idEval = [ idEval ];
+            }
+
+            switch ( typeof idEval[0] ) {
+                case 'object':
+                    whereByData();
+                    break;
+                case 'function':
+                    whereByFunction();
+                    break;
+                case 'string':
+                    whereById();
+                    break;
+            }
+
+            this.subset_ = subset;
             return this;
         },
 
 
         findNodeFromData: function(data) {
-
-            var i;
-            for (i=0; i<this.nodes_.length; i++) {
-                if ( this.nodes_[i].data === data ) {
-                    return this.nodes_[i];
+            var nodes = this.nodes_,
+                i;
+            for (i=0; i<nodes.length; i++) {
+                if ( nodes[i].data === data ) {
+                    return nodes[i];
                 }
             }
             return null;
@@ -308,26 +426,21 @@ define(function (require) {
 
 
         doesNodeExist: function(data) {
-
-            var i;
-            for (i=0; i<this.nodes_.length; i++) {
-                if ( this.nodes_[i].data === data ) {
-                    return true;
-                }
-            }
-            return false;
+            return this.findNodeFromData( data ) !== null;
         },
 
 
         redraw: function() {
-            var i;
+            var subset = this.subset_,
+                layers = this.layers_,
+                i;
 
-            for (i=0; i<this.subSet_.length; i++) {
-                this.subSet_[i].$root.empty();
+            for (i=0; i<subset.length; i++) {
+                subset[i].$root.empty();
             }
 
-            for (i=0; i<this.layers_.length; i++) {
-                this.layers_[i].redraw( this.subSet_ );
+            for (i=0; i<layers.length; i++) {
+                layers[i].redraw( subset );
             }
         }
 

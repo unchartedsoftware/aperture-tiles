@@ -75,7 +75,7 @@ define(function (require) {
             var activeTiles = [],
                 defunctTiles = {},
                 neededTiles = [],
-                i, tile, tileKey;
+                i, tile, tilekey;
 
             // keep track of current tiles to ensure we know
             // which ones no longer exist
@@ -86,25 +86,25 @@ define(function (require) {
             // Go through, seeing what we need.
             for (i=0; i<visibleTiles.length; ++i) {
                 tile = visibleTiles[i];
-                tileKey = this.dataService.createTileKey(tile);
+                tilekey = this.dataService.createTileKey(tile);
 
-                if (defunctTiles[tileKey]) {
+                if (defunctTiles[tilekey]) {
                     // Already have the data, remove from defunct list
-                    delete defunctTiles[tileKey];
+                    delete defunctTiles[tilekey];
                 } else {
                     // New data.  Mark for fetch.
-                    neededTiles.push(tileKey);
+                    neededTiles.push(tilekey);
                 }
                 // And mark tile it as meaningful
-                activeTiles.push(tileKey);
+                activeTiles.push(tilekey);
             }
 
             // Update our internal lists
             this.tiles = activeTiles;
             // Remove all old defunct tiles references
-            for (tileKey in defunctTiles) {
-                if (defunctTiles.hasOwnProperty(tileKey)) {
-                    this.dataService.releaseData(tileKey);
+            for (tilekey in defunctTiles) {
+                if (defunctTiles.hasOwnProperty(tilekey)) {
+                    this.dataService.releaseData(tilekey);
                 }
             }
             // Request needed tiles from dataService
@@ -118,7 +118,7 @@ define(function (require) {
 
                 // if both views share the same type of data source, swap tile data
                 // give tile to new view
-                newView.giveTile( tilekey,this.dataService.data[tilekey] );
+                newView.giveTile( tilekey, this.dataService.data[tilekey] );
                 newView.redraw( tilekey );
 
             } else {
@@ -171,8 +171,8 @@ define(function (require) {
         },
 
 
-        redraw: function( tilekeys ) {
-            this.renderer.redraw( this.getDataArray(), tilekeys );
+        redraw: function( tilekey ) {
+            this.renderer.redraw( this.getDataArray() );
         },
 
 
@@ -181,12 +181,12 @@ define(function (require) {
          */
         getDataArray: function ( tilekeys ) {
 
-            if (tilekeys === undefined) {
+            if ( tilekeys === undefined ) {
                 tilekeys = this.tiles;
             } else if ( !$.isArray( tilekeys ) ) {
-                tilekeys = [tilekeys];
+                tilekeys = [ tilekeys ];
             }
-            return this.dataService.getDataArray(tilekeys);
+            return this.dataService.getDataArray( tilekeys );
         },
 
 
@@ -195,12 +195,12 @@ define(function (require) {
          */
         getDataObject: function ( tilekeys ) {
 
-            if (tilekeys === undefined) {
+            if ( tilekeys === undefined ) {
                 tilekeys = this.tiles;
             } else if ( !$.isArray( tilekeys ) ) {
-                tilekeys = [tilekeys];
+                tilekeys = [ tilekeys ];
             }
-            return this.dataService.getDataObject(tilekeys);
+            return this.dataService.getDataObject( tilekeys );
         }
 
     });

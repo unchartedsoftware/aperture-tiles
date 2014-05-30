@@ -107,14 +107,20 @@ define(function (require) {
 
         setOpacity: function( opacity ) {
 
-            this.clientState.setSharedState('opacity', opacity);
-            this.updateAndRedrawViews();
+            //this.clientState.setSharedState('opacity', opacity);
+            var i;
+            for (i=0; i<this.views.length; ++i) {
+                this.views[i].renderer.setOpacity( opacity );
+            }
         },
 
 
         setVisibility: function( visible ) {
-            this.clientState.setSharedState('isVisible', visible);
-            this.updateAndRedrawViews();
+            //this.clientState.setSharedState('isVisible', visible);
+            var i;
+            for (i=0; i<this.views.length; ++i) {
+                this.views[i].renderer.setVisibility( visible );
+            }
         },
 
 

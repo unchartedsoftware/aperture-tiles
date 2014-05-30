@@ -51,6 +51,13 @@ define(function (require) {
             this._super(map);
         },
 
+        setOpacity: function( opacity ) {
+            return true;
+        },
+
+        setVisibility: function( visible ) {
+            return true;
+        },
 
         redraw: function() {
             return true;

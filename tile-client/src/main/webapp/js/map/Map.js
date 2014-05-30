@@ -48,21 +48,17 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
-			var that = this,
-			    mapSpecs;
-			
-			mapSpecs = spec.MapConfig;
-
+            // Set the map configuration
 			aperture.config.provide({
-				// Set the map configuration
 				'aperture.map' : {
-					'defaultMapConfig' : mapSpecs
+					'defaultMapConfig' : spec.MapConfig
 				}
 			});
-			
-			
+
 			// Map div id
 			this.id = id;
+            this.axes = [];
+            this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
 
 			// Initialize the map
 			this.map = new aperture.geo.Map({ 
@@ -75,21 +71,14 @@ define(function (require) {
                 }
 			});
 
-			this.map.olMap_.baseLayer.setOpacity(1);
-			this.axes = [];
+			// initialize previous zoom
+            this.previousZoom = this.map.getZoom();
 
-			this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
-
-            $(window).resize( function() {
-                // set map to full extent of window
-                that.updateSize();
-
-            });
-
-			this.previousZoom = this.map.getZoom();
+            // set resize callback
+            $(window).resize( $.proxy(this.updateSize, this) );
 
 			// Trigger the initial resize event to resize everything
-			$(window).resize();			
+			$(window).resize();
 		},
 
 

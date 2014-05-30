@@ -163,7 +163,7 @@ define(function (require) {
 
                     that.clientState.setClickState('tag', tag );
 
-                    that.map.panToCoord( data.longitude, data.latitude  );
+                    //that.map.panToCoord( data.longitude, data.latitude  );
 
                     event.stopPropagation();
                 };
@@ -269,9 +269,17 @@ define(function (require) {
 
         },
 
-        redraw: function( allData, tilekeys ) {
+        setOpacity: function( opacity ) {
+            this.nodeLayer.$root_.css( 'opacity', opacity );
+        },
 
-            this.nodeLayer.all( allData ).where( tilekeys ).redraw();
+        setVisibility: function( visible ) {
+            var visibility = visible ? 'visible' : 'hidden';
+            this.nodeLayer.$root_.css( 'visibility', visibility );
+        },
+
+        redraw: function( data ) {
+            this.nodeLayer.all( data ).redraw();
         }
 
 

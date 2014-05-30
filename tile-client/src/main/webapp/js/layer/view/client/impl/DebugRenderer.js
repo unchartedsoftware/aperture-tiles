@@ -74,8 +74,17 @@ define(function (require) {
 
         },
 
-        redraw: function( allData, tilekeys ) {
-            this.nodeLayer.all( allData ).where( tilekeys ).redraw();
+        setOpacity: function( opacity ) {
+            this.nodeLayer.$root_.css( 'opacity', opacity );
+        },
+
+        setVisibility: function( visible ) {
+            var visibility = visible ? 'visible' : 'hidden';
+            this.nodeLayer.$root_.css( 'visibility', visibility );
+        },
+
+        redraw: function( data ) {
+            this.nodeLayer.all( data ).redraw();
         }
 
     });
