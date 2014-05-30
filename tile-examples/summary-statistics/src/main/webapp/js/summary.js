@@ -398,6 +398,9 @@
                 // ... (set up our map axes) ...
                 worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
+                if(datasetLowerCase === 'twitter') {
+                    worldMap.map.zoomTo( 40, -95, 4 );
+                }
                 uiMediator = new UIMediator();
                 if (layerConfig[0]["domain"] === 'server') {
                     ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
