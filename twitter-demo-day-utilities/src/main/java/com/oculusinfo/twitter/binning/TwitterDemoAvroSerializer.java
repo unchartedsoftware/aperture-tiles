@@ -27,11 +27,7 @@ package com.oculusinfo.twitter.binning;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -48,23 +44,8 @@ extends GenericAvroArraySerializer<TwitterDemoRecord> {
     private static final long serialVersionUID = -3141583853288128394L;
     private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(TwitterDemoRecord.class);
 
-    public static final Map<String, String> META;
-    static {
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "twitter demo record array");
-        META = Collections.unmodifiableMap(map);
-    }
-
-
-
     public TwitterDemoAvroSerializer (CodecFactory compressionCodec) {
         super(compressionCodec, TYPE_DESCRIPTOR);
-    }
-
-    @Override
-    protected Map<String, String> getTileMetaData () {
-        return META;
     }
 
     @Override
