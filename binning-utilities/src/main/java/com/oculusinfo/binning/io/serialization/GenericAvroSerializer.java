@@ -123,13 +123,15 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 			}
 			TileIndex newTileIndex = new TileIndex(level, xIndex, yIndex, xBins, yBins);
 			TileData<T> newTile = new TileData<T>(newTileIndex, data);
-			for (Object key: meta.keySet()) {
-				if (null != key) {
-					Object value = meta.get(key);
-					if (null != value) {
-						newTile.setMetaData(key.toString(), value.toString());
-					}
-				}
+			if (null != meta) {
+    			for (Object key: meta.keySet()) {
+    				if (null != key) {
+    					Object value = meta.get(key);
+    					if (null != value) {
+    						newTile.setMetaData(key.toString(), value.toString());
+    					}
+    				}
+    			}
 			}
 			return newTile;
 		} finally {
