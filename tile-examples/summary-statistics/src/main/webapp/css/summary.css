@@ -195,6 +195,14 @@ table {
     display : inline-block;
 }
 
+#tabs-tables .olTileImage {
+	border: none;
+}
+
+#tabs-plots .olMap {
+	background-color: black !important;
+}
+
 .strip-legend {
     position: absolute;
     width: 15px;
