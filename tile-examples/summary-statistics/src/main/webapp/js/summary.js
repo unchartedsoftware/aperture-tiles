@@ -69,37 +69,41 @@
                 $('#summary-header-title').append(data["Title"]);
                 document.title = data["Title"];
 
-                var records = data["Total Records"];
-                var samples = data["Sample Size"];
-                var percent = (samples/records)*100;
+                var records = data["Total Records"],
+                    samples = data["Sample Size"],
+                    percent = (samples/records)*100,
+                    $tabsTablesUl = $('#tabs-tables ul'),
+                    $expandedDensityStripSize,
+                    $elipsisDialog,
+                    elipsisNum = 0;
+
                 $('#summary-header-records').append('Sample Size: ' + $.number(samples) + ' records (' + $.number(percent, 1) + '% of dataset)');
 
-                var elipsisNum = 0;
-
                 $.each(data["Summaries"], function(sk, sv) {
-                    var tbl_body = "";
-                    var tbl_header = "";
-                    var isFirstPass = true;
+                    var tbl_body = "",
+                        tbl_header = "",
+                        isFirstPass = true,
+                        tabType = sv["Type"],
+                        tabId = "tab-table-" + tabType,
+                        tableId = "table-" + tabType,
+                        tableTab,
+                        emptyTable,
+                        rowIndex = 0,
+                        _axisMap = {};
 
-                    var tabType = sv["Type"];
-                    var tabId = "tab-table-" + tabType;
-                    var tableId = "table-" + tabType;
-
-                    $('#tabs-tables ul').append('<li><a href="#'+ tabId +'">'+ tabType +'</a></li>');
-                    var tableTab = $('<div id="'+ tabId +'"></div>');
+                    $tabsTablesUl.append('<li><a href="#'+ tabId +'">'+ tabType +'</a></li>');
+                    tableTab = $('<div id="'+ tabId +'"></div>');
                     tableTab.addClass('table-sub-tab');
                     $('#tabs-tables').append(tableTab);
-                    var emptyTable = $('<table id="'+ tableId +'"><tbody></tbody></table>');
+                    emptyTable = $('<table id="'+ tableId +'"><tbody></tbody></table>');
                     tableTab.append(emptyTable);
 
-                    var rowIndex = 0;
-
-                    var _axisMap = {};
                     $.each(sv["Fields"], function(fk, fv) {
-                        var tbl_row = "";
-                        var columnCount = 0;
-                        var layerList = null;
-                        var divId = null;
+                        var tbl_row = "",
+                            columnCount = 0,
+                            layerList = null,
+                            divId = null,
+                            parentRowID;
 
                         $.each(fv, function(k, v){
                             columnCount++;
@@ -113,44 +117,46 @@
                             }
                             else if(k === "Density Strip" && v.Layers != null){ // name of a tiled dataset
                                 // Density Strips should only ever have 1 layer.
+                                var layerName,
+                                    cell = $('<td></td>'),
+                                    stripParent  = $('<div></div>'),
+                                    stripParentId,
+                                    strip = $('<div></div>'),
+                                    btnImg = $('<img>'),
+                                    cssSize;
+
                                 layerList = v.Layers;
-                                var layerName = layerList[0].Layer;
+                                layerName = layerList[0].Layer;
                                 divId = tabType + "-" + makeSafeIdForJQuery(layerName);
 
                                 // todo: read from css.
-                                var cssSize = {
+                                cssSize = {
                                     height: 22,
                                     width : 256
                                 };
 
-                                var cell = $('<td></td>');
-                                var stripParent = $('<div></div>');
-                                var stripParentId = divId + "-parent";
-                                stripParent.attr('id', stripParentId);
-                                stripParent.css("height", cssSize.height+"px");
-                                stripParent.css("width", (cssSize.width+30)+"px");
-                                stripParent.css("position", "relative");
+                                stripParentId = divId + "-parent";
+                                stripParent
+                                    .attr('id', stripParentId)
+                                    .css({
+                                        'height' : cssSize.height+'px',
+                                        'width' : (cssSize.width+30)+'px',
+                                        'position' : 'relative'
+                                    });
 
-                                var strip = $('<div></div>');
-                                strip.attr('id', divId);
-    //                            strip.addClass('miniStrip');
-    //                            var miniStripWidth = $('div.miniStrip').css("width").replace('px', '');
-    //                            var miniStripHeight = $('div.miniStrip').css("height").replace('px', '');
-                                strip.css(cssSize);
-                                strip.addClass('densityStrip');
-
+                                strip
+                                    .attr('id', divId)
+                                    .css(cssSize)
+                                    .addClass('densityStrip');
                                 stripParent.append(strip);
 
-                                var btnImg = $('<img>');
-                                btnImg.attr('src', 'img/expandIcon.png');
-                                btnImg.addClass('stripExpandBtn');
-                                cell.append(btnImg);
-                                cell.append(stripParent);
-
+                                btnImg
+                                    .attr('src', 'img/expandIcon.png')
+                                    .addClass('stripExpandBtn');
+                                cell
+                                    .append(btnImg)
+                                    .append(stripParent);
                                 tbl_row += cell[0].outerHTML;
-
-    //                            tbl_row += '<td><div id="' + divId + '" class="densityStrip" style="height:22px;width:256px;"></div></td>';
-
                                 _densityStrips.push({
                                     "Layers" : layerList,
                                     "parentDiv" : stripParentId,
@@ -168,10 +174,12 @@
                                 }
                                 else if(Object.prototype.toString.call( value ) === '[object Array]'){
                                     value = "";
+                                    var rowHtml = '',
+                                        tokens = value.split(/<br \/>/g);
+
                                     $.each(v, function(vk, vv){
                                         $.each(vv, function(vvk, vvv){    // Assumes array of objects.
                                             var vvValue = vvv;
-                                            //var temp = "";
                                             if((typeof vvValue) == "number"){
                                                 vvValue = $.number(vvValue);
                                             }
@@ -179,18 +187,16 @@
 
                                         });
                                     });
-                                    var rowHtml = '';
-                                    var tokens = value.split(/<br \/>/g);
                                     if (tokens.length > 0){
-                                        var hasEllipse = false;
-                                        for (var i=0; i < tokens.length; i++){
+                                        var hasEllipse = false,
+                                            i = 0;
+                                        for (i; i < tokens.length; i++){
+                                            var token = tokens[i];
                                             if (i>0){
                                                 rowHtml += '</br>';
                                             }
-                                            var token = tokens[i];
                                             if(token.length > _summaryState.charLimitCount){
-                                                var trunc = token.substring(0, _summaryState.charLimitCount-10) + '...';
-                                                rowHtml += trunc;
+                                                rowHtml += token.substring(0, _summaryState.charLimitCount-10) + '...';
                                                 hasEllipse = true;
                                             }
                                             else {
@@ -198,9 +204,8 @@
                                             }
                                         }
                                         if (hasEllipse){
-                                            var temp = rowHtml;
                                             rowHtml = '<div id="'+ elipsisNum +'-elipsisDialog" class="elipsisDialog"><p>'+ value +'</p></div>' +
-                                                temp + '<button id="'+ elipsisNum +'-elipsisButton" class="elipsisButton">...</button>';
+                                                rowHtml + '<button id="'+ elipsisNum +'-elipsisButton" class="elipsisButton">...</button>';
 
                                             elipsisNum++;
                                         }
@@ -214,7 +219,7 @@
                                     value = "";
                                     $.each(v, function(vk, vv){
                                         if((typeof vv) == 'object' && vv["Type"]){   // A typed value.
-                                            var decimalPlaces = 2
+                                            var decimalPlaces = 2;
                                             if(vv["Type"] == "integer"){
                                                 decimalPlaces = 0;
                                             }
@@ -234,19 +239,23 @@
                                 }
                             }
                         });
-                        isFirstPass = false;
 
-                        var parentRowID = tabType + "-" + rowIndex;
+                        isFirstPass = false;
+                        parentRowID = tabType + "-" + rowIndex;
 
                         // If layerList is populated, we need to setup a LARGE density strip.
                         if(layerList){
+                            var largeDivId = divId + "-large",
+                                parentDivId = largeDivId + "-parent",
+                                legend = $('<div></div>'),
+                                legendDivId = largeDivId+'-legend',
+                                layerName = layerList[0].Layer;
+
                             tbl_body += '<tr class="parent stripRow hoverableRow" id="'+ parentRowID +'">'+tbl_row+'</tr>';
-                            var largeDivId = divId + "-large";
-                            var parentDivId = largeDivId + "-parent";
-                            var legend = $('<div></div>');
-                            var legendDivId = largeDivId+'-legend';
-                            legend.attr('id', legendDivId);
-                            legend.addClass('strip-legend');
+
+                            legend
+                                .attr('id', legendDivId)
+                                .addClass('strip-legend');
 
                             tbl_body += '<tr class="child-'+ parentRowID +' stripExpansion"><td colspan="'+ columnCount +'">' +
                                             '<div id="'+parentDivId+'" class="expandedDensityStrip-parent expandedDensityStrip-size" >' +
@@ -255,9 +264,7 @@
                                             '</div>' +
                                         '</td></tr>';
 
-                            // Construct a new layer spec object
-                            // with the layer name.
-                            var layerName = layerList[0].Layer;
+                            // Construct a new layer spec object with the layer name.
                             _densityStrips.push({
                                 "Layers" : [{
                                     "Layer" : layerName,
@@ -274,25 +281,21 @@
                         } else {
                             tbl_body += '<tr class="stripRow">'+tbl_row+'</tr>';
                         }
-
                         rowIndex++;
                         layerName = null;
                     }); // end row
-
                     $("#" + tableId + " tbody").html("<tr>"+tbl_header+"</tr>" + tbl_body);
                 });
-
-                if($('div.expandedDensityStrip-size').length > 0){
+                $expandedDensityStripSize = $('div.expandedDensityStrip-size');
+                if($expandedDensityStripSize.length > 0){
                     // workaround - very annoying OpenLayers bug where you can't define the map size
                     // via class-based css.
-                    var expandedStripWidth = $('div.expandedDensityStrip-size').css("width").replace('px', '');
-                    var expandedStripHeight = $('div.expandedDensityStrip-size').css("height").replace('px', '');
-                    $('div.expandedDensityStrip').css("width", expandedStripWidth);
-                    $('div.expandedDensityStrip').css("height", expandedStripHeight);
+                    $expandedDensityStripSize.css("width", $expandedDensityStripSize.css("width").replace('px', ''));
+                    $expandedDensityStripSize.css("height", $expandedDensityStripSize.css("height").replace('px', ''));
                 }
-
-                if($("div.elipsisDialog").length > 0){
-                    $("div.elipsisDialog").dialog({
+                $elipsisDialog = $("div.elipsisDialog");
+                if($elipsisDialog.length > 0){
+                    $elipsisDialog.dialog({
                         autoOpen: false,
                         resizeable: true,
                         width: 500,
@@ -302,19 +305,12 @@
                     $( "button.elipsisButton" )
                         .button()
                         .click(function(evt) {
-
-
-                            var dialogId = (this.id.replace('-elipsisButton','')) + '-elipsisDialog'
+                            var dialogId = (this.id.replace('-elipsisButton','')) + '-elipsisDialog';
                             $( "#"+ dialogId ).dialog( "open" );
-
                             if (evt.stopPropagation)    evt.stopPropagation();
                             if (evt.cancelBubble!=null) evt.cancelBubble = true;
-                          //  evt.preventDefault();
-                           // evt.stopPropagation();
-                           // evt.stopImmediatePropagation();
                         });
                 }
-
                 $("#tabs-tables").tabs();
                 $("tr.parent")
                     .css("cursor", "pointer")
@@ -324,7 +320,7 @@
                         $(this).toggleClass("stripRow");
                         $(this).toggleClass("expandedStripRow");
                         $(this).find('.stripExpandBtn').attr('src',
-                            $(this).hasClass('expandedStripRow')?'img/collapseIcon.png':'img/expandIcon.png');
+                        $(this).hasClass('expandedStripRow')?'img/collapseIcon.png':'img/expandIcon.png');
                     });
                 $("tr.stripExpansion").hide().children("td");
                 onComplete();
@@ -334,15 +330,18 @@
             });
         };
 
-        var generateJsonPlots = function(onComplete){
-
+        var generateJsonPlots = function(){
+            var layerDeferreds = LayerService.requestLayers(),
+                mapDeferreds = MapService.requestMaps(),
+                $tabsPlotsUl = $('#tabs-plots ul');
             /**
              * getBitcoinMapConfig relies on each map returned from MapService.requestMaps id to contain the
              * string 'bitcoin' it filters the maps by the UrlVar dataset and the mapID provided.
              */
             var getBitcoinMapConfig = function(maps, mapID){
-                var length = maps.length;
-                for(var i=0; i<length; i++){
+                var length = maps.length,
+                    i=0;
+                for(i; i<length; i++){
                     if (maps[i]["id"]
                         && maps[i]["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1
                         && maps[i]["id"] === mapID){
@@ -381,14 +380,16 @@
             var generateMap = function(mapID, mapConfig,layerConfig, layer){
                 var tabLayerId = getTabLayerId(mapID),
                     plotTabDiv = "tab-plot-" + tabLayerId,
+                    $plotTab = $('<div id="' + plotTabDiv + '">'),
                     plotDiv = "plot-" + tabLayerId,
+                    $plotVisual = $('<div id="' + plotDiv + '"></div>'),
                     plotControls = plotDiv + '-controls',
                     uiMediator,
-                    worldMap;
+                    worldMap,
+                    $plotControls,
+                    controlsButton;
 
-                $('#tabs-plots ul').append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
-                var $plotTab = $('<div id="' + plotTabDiv + '">');
-                var $plotVisual = $('<div id="' + plotDiv + '"></div>');
+                $tabsPlotsUl.append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
                 $plotTab.append($plotVisual);
                 $('#tabs-plots').append($plotTab);
 
@@ -413,9 +414,9 @@
                 }
 
                 //create the controls
-                var $plotControls = $('<div id="' + plotControls + '">');
+                $plotControls = $('<div id="' + plotControls + '">');
                 $plotVisual.append($plotControls);
-                var controlsButton = new OverlayButton({
+                controlsButton = new OverlayButton({
                     id: plotControls,
                     header: 'Controls',
                     content: ''
@@ -427,9 +428,6 @@
 
                 new LayerControls().initialize(plotControls + '-content', uiMediator.getLayerStateMap());
             };
-
-            var layerDeferreds = LayerService.requestLayers(),
-                mapDeferreds = MapService.requestMaps();
 
             $.when( mapDeferreds, layerDeferreds).done( function( maps, layers ) {
                 var plotId = 0,
@@ -450,11 +448,13 @@
                             plotId++;
                             generateMap(mapID, mapConfig, layerConfig);
                     } else if (datasetLowerCase === 'twitter' && !twitterComplete){
-                        var layer;
+                        var layer,
+                            i = 0,
+                            j;
                         twitterComplete = true;
-                        for(var i = 0; i < layers.length; i++){
+                        for(i; i < layers.length; i++){
                             if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
-                                for (var j = 0; j < layers[i]["children"].length; j++) {
+                                for (j = 0; j < layers[i]["children"].length; j++) {
                                     mapID = layers[i]["children"][j].name;
                                     layer = layers[i]["children"][j];
                                     layerConfig = getLayer(layer, mapID);
@@ -467,25 +467,31 @@
                     }
                 });
 
-                $('#tabs-plots ul').each(function () {
-                    $(this).click( function (e){
+                $tabsPlotsUl.each(function () {
+                    $(this).click( function (){
                         $(window).resize();
                     });
                 });
 
-                onComplete();
+                $("#tabs-plots").tabs();
             });
         };
 
         this.start = function(){
 
             //setup the ui layout
-            var tocPane = $('#toc');
+            var tocPane = $('#toc'),
+                $summaryDiv = $('#summary'),
+                layout,
+                tableJsonFile,
+                showControls,
+                showButton;
+
             tocPane.load('toc.html #toc-contents');
             tocPane.addClass('ui-layout-west');
             $('#head').addClass('ui-layout-north');
-            $('#summary').addClass('ui-layout-center');
-            var layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:230}});
+            $summaryDiv.addClass('ui-layout-center');
+            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:230}});
             layout.panes.west.css({
                 background:  "rgb(204,204,204)"
             });
@@ -497,7 +503,7 @@
             });
 
             if(!summaryBuilderOptions.dataset){
-            	$('#summary').html('<h2>No dataset selected.</h2>');
+                $summaryDiv.html('<h2>No dataset selected.</h2>');
             	return;
             }
 
@@ -513,14 +519,14 @@
 
             $('#accordion').accordion({ heightStyle: "content", autoHeight: false });
         	
-            var tableJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/tables.json';
+            tableJsonFile = summaryBuilderOptions.dataDir + '/' + summaryBuilderOptions.dataset + '/tables.json';
 
             //create and add the controls button to the Tables tab
-            var showControls = $('<div id="show-controls"></div>');
+            showControls = $('<div id="show-controls"></div>');
             showControls.addClass('show-controls');
             $('#tabs-tables').append(showControls);
 
-            var showButton = $("<button>Controls</button>")
+            showButton = $("<button>Controls</button>")
                 .button()
                 .click(function( event ) {
                     event.preventDefault();
@@ -536,10 +542,12 @@
             });
 
             generateJsonTables(tableJsonFile, function(){
-                var len = _densityStrips.length;
-                var xDataMaps = [];
-                for(var i = 0; i < len; i++){
-                    var options = {
+                var len = _densityStrips.length,
+                    xDataMaps = [],
+                    i = 0;
+                for(i; i < len; i++){
+                    var startupCallback = null,
+                        options = {
                         isDensityStrip : true,
                         layerList : _densityStrips[i].Layers,
                         goTo : _densityStrips[i].goTo,
@@ -591,8 +599,6 @@
                         console.error("Could not start map with missing div for " + _densityStrips[i]["layer"]);
                     }
 
-                    var startupCallback = null;
-
                     // We know the array is populated [mini, full-size, mini, full-size, ...]
                     if(_densityStrips[i]["profile"] === "mini") {
                         startupCallback = null;
@@ -612,9 +618,7 @@
                 }
             });
 
-            generateJsonPlots(function(onComplete){
-                $("#tabs-plots").tabs();
-            });
+            generateJsonPlots();
         };
     };
 });
