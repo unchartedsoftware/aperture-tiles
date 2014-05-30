@@ -29,47 +29,52 @@ package com.oculusinfo.tilegen.examples.apps
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Properties
+
 import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
+import scala.reflect.ClassTag
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.datasets.CSVDataset
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.tiling.BinDescriptor
-import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
-import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
-import com.oculusinfo.tilegen.tiling.FieldExtractor
-import com.oculusinfo.tilegen.tiling.CategoryValueBinDescriptor
-import com.oculusinfo.binning.util.Pair
-import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
-import com.oculusinfo.tilegen.datasets.CSVDataSource
-import com.oculusinfo.tilegen.datasets.CSVRecordParser
+import org.apache.spark.storage.StorageLevel
+import org.apache.spark.streaming.dstream.DStream
+
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.tilegen.datasets.ProcessingStrategy
-import org.apache.spark.streaming.dstream.DStream
-import com.oculusinfo.tilegen.tiling.RecordParser
-import java.text.SimpleDateFormat
-import java.util.Date
-import org.apache.spark.storage.StorageLevel
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.IndexScheme
-import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.binning.io.PyramidIO
+import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.datasets.CartesianIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVDataset
 import com.oculusinfo.tilegen.datasets.CSVDatasetBase
+import com.oculusinfo.tilegen.datasets.CSVDataSource
+import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVRecordParser
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
+import com.oculusinfo.tilegen.datasets.Dataset
+import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.datasets.ProcessingStrategy
+import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
+import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
+import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
+import com.oculusinfo.tilegen.spark.GeneralSparkConnector
+import com.oculusinfo.tilegen.spark.SparkConnector
+import com.oculusinfo.tilegen.tiling.BinDescriptor
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.CategoryValueBinDescriptor
+import com.oculusinfo.tilegen.tiling.FieldExtractor
+import com.oculusinfo.tilegen.tiling.HBaseTileIO
+import com.oculusinfo.tilegen.tiling.IndexScheme
+import com.oculusinfo.tilegen.tiling.LocalTileIO
+import com.oculusinfo.tilegen.tiling.RecordParser
+import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 /*
@@ -178,7 +183,7 @@ class TimeSeriesDataset (rawProperties: Properties,
                                tileWidth: Int,
                                tileHeight: Int)
 		extends Dataset[(Double, Double), List[Double], JavaList[Pair[String, JavaDouble]]] {
-	def manifest = implicitly[ClassManifest[Double]]
+	def manifest = implicitly[ClassTag[Double]]
 
 	private val properties = new CSVRecordPropertiesWrapper(rawProperties)
 
@@ -326,7 +331,7 @@ class TimeSeriesDataset (rawProperties: Properties,
 
 	override def isDensityStrip = yVar == "zero"
 
-	abstract class StaticCategoryListProcessingStrategy[IT: ClassManifest, PT: ClassManifest] (sc: SparkContext, cache: Boolean)
+	abstract class StaticCategoryListProcessingStrategy[IT: ClassTag, PT: ClassTag] (sc: SparkContext, cache: Boolean)
 			extends ProcessingStrategy[IT, PT] {
 		private var res: (List[String], RDD[(IT, PT)]) = null;
 		private val catsAndRecords = {
@@ -351,11 +356,11 @@ class TimeSeriesDataset (rawProperties: Properties,
 			completionCallback.map(_(result))
 		}
 	
-		final def transformRDD[OUTPUT_TYPE: ClassManifest]
+		final def transformRDD[OUTPUT_TYPE: ClassTag]
 			(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 			fcn(rdd)
 	
-		final def transformDStream[OUTPUT_TYPE: ClassManifest]
+		final def transformDStream[OUTPUT_TYPE: ClassTag]
 			(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 			throw new Exception("Attempt to call DStream transform on RDD processor")
 		
@@ -496,7 +501,7 @@ object CSVTimeSeriesBinner {
 	
 	
 	
-	def processDataset[PT: ClassManifest, BT] (dataset: Dataset[(Double, Double), PT, BT], tileIO: TileIO): Unit = {
+	def processDataset[PT: ClassTag, BT] (dataset: Dataset[(Double, Double), PT, BT], tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 		dataset.getLevels.map(levels =>

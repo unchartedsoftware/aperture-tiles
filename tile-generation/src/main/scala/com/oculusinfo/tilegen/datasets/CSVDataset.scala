@@ -248,7 +248,7 @@ abstract class CSVIndexExtractor[T: ClassTag] extends Serializable {
 	def isDensityStrip: Boolean
 }
 
-abstract class TimeRangeCSVIndexExtractor[T: ClassManifest] extends CSVIndexExtractor[T] {
+abstract class TimeRangeCSVIndexExtractor[T: ClassTag] extends CSVIndexExtractor[T] {
 	// The time based index scheme the binner needs to know what to do with the index
 	// values we generate
 	def timeIndexScheme: TimeIndexScheme[T]
