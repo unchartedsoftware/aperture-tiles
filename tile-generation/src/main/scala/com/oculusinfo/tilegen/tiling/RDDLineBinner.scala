@@ -306,10 +306,11 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 		val densityStripLocal = isDensityStrip
 		
 		// Do reduceByKey to account for duplicate lines at a given level (not really necessary, but might speed things up?)
-		val reduced1 = data.reduceByKey(binDesc.aggregateBins(_, _),
-		                               getNumSplits(consolidationPartitions, data))                              
+		//val reduced1 = data.reduceByKey(binDesc.aggregateBins(_, _),
+		//                               getNumSplits(consolidationPartitions, data))                              
 		// Draw lines (based on endpoint bins), and convert all results from universal bins to tile,bin coords
-		val reduced2 = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
+		//val reduced2 = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
+		val reduced2 = data.flatMap(p => {
 			endpointsToLineBins(p._1._1, p._1._2).map(bin => {
 				val tb = uniBinToTileBin(p._1._3, bin)
 				((tb.getTile(), tb.getBin()), p._2)
