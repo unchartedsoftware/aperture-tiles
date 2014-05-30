@@ -22,25 +22,21 @@
  * SOFTWARE.
  */
 
-
-
 package com.oculusinfo.stats.numeric
 
 /**
  * @author $mkielo
  */
 
-
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 
+class StatTracker(val count: Long, val sumX: Double, val sumXX: Double, val min: Option[Double], val max: Option[Double]) extends Serializable {
 
-class StatTracker(val count: Long, val sumX: Double, val sumXX: Double, val min: Option[Double], val max: Option[Double]) extends Serializable{
-
-    /**
-    * Add a new datum to the series tracked. Statistics on this datum are stored,
-    * but the datum itself is forgotten.
-    **/
+  /**
+   * Add a new datum to the series tracked. Statistics on this datum are stored,
+   * but the datum itself is forgotten.
+   */
   def addStat(value: Double): StatTracker = {
     val newCount = count + 1
     val newSumX = sumX + value
@@ -59,15 +55,14 @@ class StatTracker(val count: Long, val sumX: Double, val sumXX: Double, val min:
     new StatTracker(newCount, newSumX, newSumXX, newMin, newMax)
   }
 
-
-    /**
-    * Add a two tracked series. Statistics on this datum are stored,
-    * but the datum itself is forgotten.
-    **/
+  /**
+   * Add a two tracked series. Statistics on this datum are stored,
+   * but the datum itself is forgotten.
+   */
   def addStats(values: StatTracker): StatTracker = {
     val newCount = count + values.getCount()
     val newSumX = sumX + values.getSum()
-    val newSumXX = sumXX + values.getSumXX()// * values.getSum()
+    val newSumXX = sumXX + values.getSumXX() // * values.getSum()
 
     val newMin = (min, values.min) match {
       case (None, None) => None
@@ -86,11 +81,10 @@ class StatTracker(val count: Long, val sumX: Double, val sumXX: Double, val min:
     new StatTracker(newCount, newSumX, newSumXX, newMin, newMax)
   }
 
-  
   def getSum(): Double = {
     sumX
   }
-  
+
   def getSumXX(): Double = {
     sumXX
   }

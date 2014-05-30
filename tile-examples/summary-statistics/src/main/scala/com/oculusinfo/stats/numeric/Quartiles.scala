@@ -87,8 +87,6 @@ object Quartiles {
 
     val countPartitions = (partitions: Int, iter: Iterator[Any]) => List((partitions, iter.count(Any => true))).iterator
 
-    //median is at odd position
-
     val first = getQuartile(sortedRDD, size, countPartitions, 1)
     val second = getQuartile(sortedRDD, size, countPartitions, 2)
     val third = getQuartile(sortedRDD, size, countPartitions, 3)
