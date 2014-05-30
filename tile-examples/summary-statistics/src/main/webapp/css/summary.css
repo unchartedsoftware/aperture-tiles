@@ -1,5 +1,4 @@
 @charset "UTF-8";
-
 /*html5 display rule*/
 address, article, aside, canvas, details, figcaption, figure, footer, header, hgroup, nav, menu, nav, section, summary {
     display: block;
@@ -16,11 +15,9 @@ body {
     width: 100%;
     height: 100%;
 }
-
 #browser_recommend {
     margin-left : 15px;
 }
-
 .show-controls {
     position: absolute;
     top: 5px;
@@ -29,17 +26,13 @@ body {
     width: 150px;
     font-size: 0.75em;
 }
-
 #summary{
-
 }
-
 #summary h2 {
 	font-family: Verdana, Arial, sans-serif;
 	font-size: 16px;
 	font-weight: normal;
 }
-
 #summary-header-title {
     position: absolute;
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
@@ -50,7 +43,6 @@ body {
     margin-top: 5px;
     color: rgb(252, 249, 207);
 }
-
 #summary-header-records {
     position: relative;
     font-size: .7em;
@@ -59,14 +51,12 @@ body {
     left: 350px;
     height: 35px;
 }
-
 .ui-front {
     z-index:1000000 !important; /* The default is 100. !important overrides the default jqueryUI setting. Need to draw dialogs OVER openlayers. */
 }
 .ui-dialog-title {
     font-size: 0.8em;
 }
-
 #tabs-major {
 	border-left: 1px solid rgb(170,170,170);
     padding: 0px;
@@ -80,24 +70,23 @@ body {
     -moz-border-radius: 0px;
     -webkit-border-radius: 0px;
     border-radius: 0px;
+	width: 100%;
+	padding: 0ps;
 }
 #tabs-major .ui-tabs-panel {
     background-color: white;
     border-width: 0px 1px 1px 1px;
     height: 85%;
 }
-
 .table-sub-tab {
     width: 90%;
     height: 85%;
     overflow: scroll;
 }
-
 .sub-tabs {
     background: transparent;
     border: none;
 }
-
 .sub-tabs .ui-widget-header {
     background: transparent;
     border: none;
@@ -105,12 +94,10 @@ body {
     -moz-border-radius: 0px;
     -webkit-border-radius: 0px;
     border-radius: 0px;
-
 }
 .sub-tabs .ui-tabs-nav .ui-state-default {
     background: transparent;
     border: none;
-
 }
 .sub-tabs .ui-tabs-nav .ui-state-active {
     background: transparent url(../img/uiTabsArrow.png) no-repeat bottom center;
@@ -123,7 +110,6 @@ body {
 .sub-tabs .ui-tabs-nav .ui-state-active a {
     color: #38629e;
 }
-
 #dialog-controls {
     top:0px;
     right:0px;
@@ -134,20 +120,17 @@ body {
     border-color: #948f96;
     font-size: 0.8em;
 }
-
 #layer-control {
     font-weight: bold;
 }
-
 #tabs-tables , #tabs-plots{
 	border-left: 1px solid rgb(170,170,170);
     width: 95%;
+	padding: 0px;
 }
-
 #tabs-plots .ui-tabs-panel {
     height: 90%;
 }
-
 table {
     border-top-width: 2px;
     border-top-style: solid;
@@ -207,15 +190,12 @@ table {
     border-color: #948f96;
     display : inline-block;
 }
-
 #tabs-tables .olTileImage {
 	border: none;
 }
-
 #tabs-plots .olMap {
 	background-color: black !important;
 }
-
 .strip-legend {
     position: absolute;
     width: 15px;
@@ -232,24 +212,20 @@ table {
     bottom: 0px;
     left: 0px;
 }
-
 .expandedDensityStrip-size {
     width: 600px;
     height: 65px;
 }
-
 .expandedDensityStrip-parent {
     position: absolute;
     margin-right: 20px;
     top: 35px;
 }
-
 .expandedDensityStrip {
     border-style: solid;
     border-width: 1px;
     border-color: #948f96;
 }
-
 td {
     position: relative;
     text-align: right;
@@ -263,24 +239,20 @@ th {
     border-bottom-color: black;
     background-color: #fff;
 }
-
 .plot-parent {
     position: absolute;
     left: 150px;
     padding: 0px;
 }
-
 .plot {
     position: absolute;
 }
-
 .plot-zoom-slider {
     position: relative;
     width: 100px;
     top: -85px;
     left: 100px;
 }
-
 .plot-legend {
     position: absolute;
     width: 40px;
@@ -298,33 +270,27 @@ th {
     bottom: 0px;
     left: 0px;
 }
-
 .plot-legend-range {
     top: -200px;
     right: -60px;
 }
-
 .strip-legend-range {
     top: -81px;
     right: -25px;
 }
-
 .base-layer-opacity {
     top: -168px;
     left: -5px;
     color: #7E7E7E;
 }
-
 .overlay-layer-opacity {
     top: -270px;
     left: 25px;
     color: #7E7E7E;
 }
-
 body div.ui-slider-range.ui-widget-header {
     background:gray;
 }
-
 .customZoom {
     z-index: 1001;
     position: relative;
@@ -356,7 +322,6 @@ body div.ui-slider-range.ui-widget-header {
     width : 320px;
     padding : 10px 5px;
 }
-
 .plotlink-loupe {
     position : absolute;
     border-width : 2px;

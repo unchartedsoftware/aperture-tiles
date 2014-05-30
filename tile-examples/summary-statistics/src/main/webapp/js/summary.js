@@ -537,8 +537,10 @@
             showControls.append(showButton);
 
             //when table controls is open, and Cross Plots (or Tables) is clicked, close the dialog
+            //also trigger the first resize
             $( '#tabs-major li' ).click(function( event ) {
                 $( '#dialog-controls').dialog( 'close' );
+                $('#tabs-plots li').first().click();//hack - without this, the left-axis and map don't render properly
             });
 
             generateJsonTables(tableJsonFile, function(){
