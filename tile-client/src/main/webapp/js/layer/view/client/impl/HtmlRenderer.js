@@ -27,7 +27,7 @@
 /*global OpenLayers */
 
 /**
- * This module defines the base class for a client render layer. Must be 
+ * This module defines the base class for a client render layer. Must be
  * inherited from for any functionality.
  */
 define(function (require) {
@@ -63,122 +63,201 @@ define(function (require) {
                 idKey: 'tilekey'
             });
 
-            function getCount(data) {
-                return Math.min( data.bin.value.length, 5 );
+            /*
+                Return the count of node entries, clamped at 5
+            */
+            function getCount( value ) {
+                return Math.min( value.length, 5 );
             }
 
-            function getSentimentPercentage(data, index, type) {
-                return (data.bin.value[index][type] / data.bin.value[index].count) || 0;
+
+            /*
+                Return the relative percentages of positive, neutral, and negative tweets
+            */
+            function getSentimentPercentages( value, index ) {
+                return {
+                    positive : ( value[index].positive / value[index].count )*100 || 0,
+                    neutral : ( value[index].neutral / value[index].count )*100 || 0,
+                    negative : ( value[index].negative / value[index].count )*100 || 0
+                };
             }
 
-            function getTotalCount(data, index) {
+            /*
+                Returns the total count of all tweets in a node
+            */
+            function getTotalCount(value, index) {
                 var i,
                     sum = 0,
-                    n = getCount(data);
+                    n = getCount( value );
                 for (i=0; i<n; i++) {
-                    sum += data.bin.value[i].count;
+                    sum += value[i].count;
                 }
                 return sum;
             }
 
-            function getTotalCountPercentage(data, index) {
-                var i,
-                    sum = 0,
-                    n = getCount(data);
-                for (i=0; i<n; i++) {
-                    sum += data.bin.value[i].count;
-                }
-                return (data.bin.value[index].count/sum) || 0;
+            /*
+                Returns the percentage of tweets in a node for the respective tag
+            */
+            function getTotalCountPercentage( value, index ) {
+                return ( value[index].count / getTotalCount( value, index ) ) || 0;
             }
 
-            function getFontSize( data, index ) {
+            /*
+                Returns a font size based on the percentage of tweets relative to the total count
+            */
+            function getFontSize( value, index ) {
                 var MAX_FONT_SIZE = 28 * SCALE,
                     MIN_FONT_SIZE = 12 * SCALE,
                     FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
-                    sum = getTotalCount(data, index),
-                    perc = getTotalCountPercentage(data, index),
-                    scale = Math.log(sum),
-                    size = ( perc * FONT_RANGE * scale) + (MIN_FONT_SIZE * perc);
-
+                    sum = getTotalCount( value, index ),
+                    percentage = getTotalCountPercentage( value, index ),
+                    scale = Math.log( sum ),
+                    size = ( percentage * FONT_RANGE * scale ) + ( MIN_FONT_SIZE * percentage );
                 return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
             }
 
-            function getYOffset(data, index) {
-                return 98 - 36 * (((getCount(data) - 1) / 2) - index);
+            /*
+                Returns a y offset to position tag entry relative to centre of tile
+            */
+            function getYOffset( value, index ) {
+                return 98 - ( (( getCount( value ) - 1) / 2 ) - index ) * 36;
             }
 
-            function trimLabelText(data, index) {
+            /*
+                Returns a trimmed string based on character limit
+            */
+            function trimLabelText( value, index ) {
                 var MAX_LABEL_CHAR_COUNT = 9,
-                    str = data.bin.value[index].tag;
+                    str = value[index].tag;
                 if (str.length > MAX_LABEL_CHAR_COUNT) {
                     str = str.substr(0, MAX_LABEL_CHAR_COUNT) + "...";
                 }
                 return str;
             }
 
+            /*
+                if user has clicked a tag entry, ensure newly created nodes are styled accordingly
+            */
+            function injectClasses( $elem, tag ) {
+                var selectedTag = that.clientState.getClickState('tag');
+                if ( selectedTag ) {
+                    if ( selectedTag !== tag ) {
+                        $elem.addClass('greyed');
+                    } else {
+                        $elem.addClass('clicked');
+                    }
+                }
+            }
+
+            function onClick( data ) {
+                return function( event ) {
+                    var tag = $(this).find(".sentiment-labels").text();
+
+                    $(".top-text-sentiments").filter( function() {
+                        return $(this).find(".sentiment-labels").text() !== tag;
+                    }).addClass('greyed').removeClass('clicked');
+
+                    $(".top-text-sentiments").filter( function() {
+                        return $(this).find(".sentiment-labels").text() === tag;
+                    }).removeClass('greyed').addClass('clicked');
+
+                    that.clientState.setClickState('tag', tag );
+
+                    that.map.panToCoord( data.longitude, data.latitude  );
+
+                    event.stopPropagation();
+                };
+            }
+
+            function onMouseover( $summaries, value, index ) {
+                return function( event ) {
+                    $summaries.find(".positive-summaries").text( "+" + value[index].positive );
+                    $summaries.find(".neutral-summaries").text( value[index].neutral );
+                    $summaries.find(".negative-summaries").text("-" + value[index].negative );
+                };
+            }
+
+            function onMouseout( $elem, $summaries ) {
+                return function( event ) {
+                    $summaries.find(".positive-summaries").text( "" );
+                    $summaries.find(".neutral-summaries").text( "" );
+                    $summaries.find(".negative-summaries").text( "" );
+                    $elem.off('click');
+                };
+            }
+
+            function onMousedown( $elem, data ) {
+                return function( event ) {
+                    $elem.click( onClick( data ) );
+                };
+            }
+
+            function onMousemove( $elem ) {
+                return function( event ) {
+                    $elem.off('click');
+                };
+            }
 
             this.nodeLayer.addLayer( new HtmlLayer({
 
                 html: function() {
 
                     var html = '',
-                        $html, // $('<div></div>'),
+                        $html = $(''),
+                        $elem,
+                        $summaries,
+                        value = this.bin.value,
                         i,
-                        positivePerc, neutralPerc, negativePerc,
-                        count = getCount( this );
+                        tag,
+                        percentages,
+                        count = getCount( value );
+
+                    // create count summaries
+                    html = '<div class="sentiment-summaries">';
+                    html +=     '<div class="positive-summaries"></div>';
+                    html +=     '<div class="neutral-summaries"></div>';
+                    html +=     '<div class="negative-summaries"></div>';
+                    html += '</div>';
+                    $summaries = $(html);
+
+                    $html = $html.add( $summaries );
 
                     for (i=0; i<count; i++) {
 
-                        html += '<div class="top-text-sentiments" style=" top:' +  getYOffset(this, i) + 'px">';
+                        tag = trimLabelText( value, i );
+                        percentages = getSentimentPercentages( value, i );
 
-                        positivePerc = getSentimentPercentage( this, i, 'positive')*100;
-                        neutralPerc = getSentimentPercentage( this, i, 'neutral')*100;
-                        negativePerc = getSentimentPercentage( this, i, 'negative')*100;
+                        html = '<div class="top-text-sentiments" style=" top:' +  getYOffset( value, i ) + 'px;">';
 
-                        // bar
+                        // create sentiment bars
                         html += '<div class="sentiment-bars">';
-                        html +=     '<div class="sentiment-bars-negative" style="width:'+negativePerc+'%;"></div>';
-                        html +=     '<div class="sentiment-bars-neutral"  style="width:'+neutralPerc+'%;"></div>';
-                        html +=     '<div class="sentiment-bars-positive" style="width:'+positivePerc+'%;"></div>';
+                        html +=     '<div class="sentiment-bars-negative" style="width:'+percentages.negative+'%;"></div>';
+                        html +=     '<div class="sentiment-bars-neutral"  style="width:'+percentages.neutral+'%;"></div>';
+                        html +=     '<div class="sentiment-bars-positive" style="width:'+percentages.positive+'%;"></div>';
                         html += "</div>";
 
-                        // label
-                        html += '<div class="sentiment-labels"';
-                        html += 'style="font-size:' + getFontSize(this, i) +'px; ">';
-                        html += trimLabelText( this, i );
-                        html += "</div>";
+                        // create tag label
+                        html += '<div class="sentiment-labels" style="font-size:' + getFontSize( value, i ) +'px; ">'+tag+'</div>';
 
                         html += '</div>';
 
-                        //$html.append(html);
+                        $elem = $(html);
 
-                        if (!$html) {
-                            $html = $(html);
-                        } else {
-                            $html.after(html);
-                        }
-                        //*/
+                        // bind event handlers
+                        $elem.mouseover( onMouseover( $summaries, value, i ) );
+                        $elem.mouseout( onMouseout( $elem, $summaries ) );
+                        $elem.mousedown( onMousedown( $elem, this ) );
+                        $elem.mousemove( onMousemove( $elem ) );
+
+                        injectClasses( $elem, tag );
+
+                        $html = $html.add( $elem );
                     }
-
-                    $html = $(html);
-
-
-                    $html.click( function(event) {
-                        var label = $(this).find(".sentiment-labels").text();
-
-                        $(".top-text-sentiments").filter( function() {
-                            return $(this).find(".sentiment-labels").text() !== label;
-                        }).addClass('greyed');
-
-                        $(".top-text-sentiments").filter( function() {
-                            return $(this).find(".sentiment-labels").text() === label;
-                        }).removeClass('greyed');
-
-                        event.stopPropagation();
-                    });
 
                     that.map.on( 'click', function() {
                         $(".top-text-sentiments").removeClass('greyed');
+                        $(".top-text-sentiments").removeClass('clicked');
+                        that.clientState.removeClickState('tag');
                     });
 
                     return $html;

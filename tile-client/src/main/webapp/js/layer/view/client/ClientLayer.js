@@ -71,17 +71,6 @@ define(function (require) {
                 // add map and zoom/pan event handlers
                 that.map = map;
 
-                // mouse event handlers
-                that.map.on('click', function() {
-					// if click event has not been swallowed yet, clear mouse state and redraw
-					that.clientState.clearClickState();
-				});
-
-                that.map.on('zoomend', function() {
-					// clear click mouse state on zoom and call map update function
-                    that.clientState.clearClickState();
-                });
-
                 that.map.on('move', function() {
 					// cal map update on pan end
                     that.onMapUpdate();

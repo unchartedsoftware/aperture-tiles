@@ -550,6 +550,17 @@ define(function (require) {
 		},
 
 
+        panToCoord: function( x, y ) {
+
+            var tilesize = this.getTileSize()/2,
+                viewportPixel = this.getViewportPixelFromCoord( x, y ),
+                panCoord = this.getCoordFromViewportPixel( viewportPixel.x + tilesize,
+                                                           viewportPixel.y + tilesize );
+            this.map.olMap_.panDuration = 25;
+            this.map.panTo( panCoord.y, panCoord.x );
+        },
+
+
 		on: function (eventType, callback) {
 
 			var that = this;

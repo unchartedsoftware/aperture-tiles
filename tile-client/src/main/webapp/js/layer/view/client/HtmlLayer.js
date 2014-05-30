@@ -100,7 +100,10 @@ define(function (require) {
             $elem.css( this.evalCss( node.data ) );
 
             // append to tile root
-            node.$root.append( $elem );
+            $elem.each( function() {
+                node.$root.append( $(this) );
+            });
+
 
         },
 

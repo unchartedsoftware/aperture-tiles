@@ -6,6 +6,7 @@
 
 
 
+
 .top-text-sentiments {
 	position:absolute;
 	width: 100%;
@@ -27,6 +28,12 @@
             transform: scale(1.0);
 }
 
+.clicked {
+	-webkit-transform: scale(0.833);
+       -moz-transform: scale(0.833);
+        -ms-transform: scale(0.833);
+            transform: scale(0.833);
+}
 
 .sentiment-labels {
 	position:absolute;
@@ -46,6 +53,27 @@
 
 .sentiment-summaries {
 	position:absolute;
+	top: 10px;
+	right: 10px;
+	text-align: right;
+
+	font-size: 0.8em;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+}
+
+.positive-summaries {
+	color: #09CFFF;
+}
+
+.neutral-summaries {
+	color: #FFFFFF;
+}
+.negative-summaries {
+	color: #D33CFF;
 }
 
 .sentiment-bars {
