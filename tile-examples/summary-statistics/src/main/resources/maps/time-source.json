@@ -26,9 +26,9 @@
 	],
 
 	"id" : "bitcoin Time vs. Source ID",
-	"description" : "A plot of bitcoin Time vs. Source ID.",
+	"description" : "Bitcion Time vs. Source ID",
 
-	"PyramidConfig": {
+	"PyramidConfig" : {
 		"type" : "AreaOfInterest",
 		"minX" : 1230958800000,
 		"maxX" : 1365566400000,
@@ -53,7 +53,7 @@
 			"isOpen" : false,
 			"intervalSpec" : {
 				"type" : "percentage",
-				"increment" : 10,
+				"increment" : 20,
 				"pivot" : 0,
 				"allowScaleByZoom" : true,
 			},
@@ -75,7 +75,7 @@
 				"allowScaleByZoom" : true,
 			},
 			"unitSpec" : {
-				"type" : "decimal",
+				"type" : "M",
 				"decimals" : 2,
 				"allowStepDown" : true
 			}

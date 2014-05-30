@@ -26,7 +26,7 @@
 	],
 
 	"id" : "Geographic-Google-Map",
-	"description" : "A geographic Google map base lyaer using web mercator projection",
+	"description" : "A geographic Google map base layer using web mercator projection",
 
 	"PyramidConfig" : {
 		"type" : "WebMercator"

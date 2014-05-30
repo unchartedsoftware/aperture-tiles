@@ -34,6 +34,7 @@
         ClientLayerFactory = require('./layer/view/client/ClientLayerFactory'),
         ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
         LayerControls = require('./layer/controller/LayerControls'),
+        PyramidFactory = require('./binning/PyramidFactory'),
         OverlayButton = require('./ui/OverlayButton');
 
     return function(summaryBuilderOptions) {
@@ -65,19 +66,19 @@
             }
 
             $.getJSON(jsonFile , function(data) {
-
-                $('#summary-header-title').append(data["Title"]);
-                document.title = data["Title"];
-
                 var records = data["Total Records"],
                     samples = data["Sample Size"],
                     percent = (samples/records)*100,
                     $tabsTablesUl = $('#tabs-tables ul'),
                     $expandedDensityStripSize,
                     $elipsisDialog,
-                    elipsisNum = 0;
+                    elipsisNum = 0,
+                    $summaryHeader = $('<div id="summary-header"></div>');
 
-                $('#summary-header-records').append('Sample Size: ' + $.number(samples) + ' records (' + $.number(percent, 1) + '% of dataset)');
+                document.title = data["Title"];
+                $summaryHeader.append('<div id="summary-header-records"> Sample Size: ' + $.number(samples) + ' records (' + $.number(percent, 1) + '% of dataset)</div>');
+                $summaryHeader.append('<div id="summary-header-title">' + data["Title"] + '</div>');
+                $( 'header' ).append($summaryHeader);
 
                 $.each(data["Summaries"], function(sk, sv) {
                     var tbl_body = "",
@@ -350,16 +351,15 @@
                 }
             };
 
-            var getLayer = function(layers, mapID){
+            var getLayer = function(layers, pyramidConfig){
                 var layer;
                 // bitcoin
                 if (datasetLowerCase === 'bitcoin') {
-                    mapID = mapID.toLowerCase();
                     $.each(layers, function (pk, pv) {
                         if (pv.id === datasetLowerCase) {
                             $.each(pv.children, function (k, v) {
                                 //if mapID contains v.name
-                                if (mapID.indexOf(v.name.toLowerCase().trim()) != -1) {
+                                if (PyramidFactory.pyramidsEqual(v['pyramid'], pyramidConfig)){
                                     layer = v;
                                 }
                             });
@@ -446,7 +446,7 @@
                     if (datasetLowerCase === 'bitcoin' && pv["id"]
                         && pv["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1) {
                             mapID = pv["id"];
-                            layerConfig = getLayer(layers, mapID);
+                            layerConfig = getLayer(layers, pv["PyramidConfig"]);
                             mapConfig = getBitcoinMapConfig(maps, mapID);
                             plotId++;
                             generateMap(mapID, mapConfig, layerConfig);
@@ -492,11 +492,11 @@
 
             tocPane.load('toc.html #toc-contents');
             tocPane.addClass('ui-layout-west');
-            $('#head').addClass('ui-layout-north');
+            $('header').addClass('ui-layout-north');
             $summaryDiv.addClass('ui-layout-center');
             layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:178}});
             layout.panes.west.css({
-                background:  "rgb(204,204,204)",
+                background:  "rgb(204,204,204)"
             });
             layout.panes.north.css({
                 background:  "rgb(204,204,204)"

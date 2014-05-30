@@ -16,7 +16,7 @@ body {
     height: 100%;
 }
 #browser_recommend {
-    margin-left : 15px;
+    /*margin-left : 15px;*/
 }
 .show-controls {
     position: absolute;
@@ -26,30 +26,32 @@ body {
     width: 150px;
     font-size: 0.75em;
 }
-#summary{
-}
 #summary h2 {
 	font-family: Verdana, Arial, sans-serif;
 	font-size: 16px;
 	font-weight: normal;
 }
+#head {
+	width:30%;
+	margin: none;
+}
+#summary-header {
+	position: absolute;
+	left: 400px;
+	top: 28px;
+	width: 50%;
+	float: right;
+}
 #summary-header-title {
-    position: absolute;
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
-    font-size: 1.2em;
+    font-size: 1.5em;
     font-weight: bold;
-    left: 10px;
-    height: 35px;
-    margin-top: 5px;
     color: rgb(252, 249, 207);
 }
 #summary-header-records {
-    position: relative;
-    font-size: .7em;
+	font-size: .9em;
     font-weight: normal;
-    top: 13px;
-    left: 350px;
-    height: 35px;
+	color: rgb(245, 245, 245);
 }
 .ui-front {
     z-index:1000000 !important; /* The default is 100. !important overrides the default jqueryUI setting. Need to draw dialogs OVER openlayers. */
@@ -58,7 +60,7 @@ body {
     font-size: 0.8em;
 }
 #tabs-major {
-	border-left: 1px solid rgb(170,170,170);
+	
     padding: 0px;
     border-width: 0px;
     height: 100%;
@@ -71,7 +73,7 @@ body {
     -webkit-border-radius: 0px;
     border-radius: 0px;
 	width: 100%;
-	padding: 0ps;
+	padding: 0ps;	
 }
 #tabs-major .ui-tabs-panel {
     background-color: white;
@@ -124,7 +126,7 @@ body {
     font-weight: bold;
 }
 #tabs-tables , #tabs-plots{
-	border-left: 1px solid rgb(170,170,170);
+	
     width: 95%;
 	padding: 0px;
 }

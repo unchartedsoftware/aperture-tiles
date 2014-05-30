@@ -26,7 +26,7 @@
 	],
 
 	"id" : "bitcoin Time vs. Destination",
-	"description" : "Time vs. Destination",
+	"description" : "Bitcoin Time vs. Destination ID",
 
 	"PyramidConfig": {
 		"type" : "AreaOfInterest",
@@ -75,7 +75,7 @@
 				"allowScaleByZoom" : true,
 			},
 			"unitSpec" : {
-				"type" : "decimal",
+				"type" : "M",
 				"decimals" : 2,
 				"allowStepDown" : true
 			}

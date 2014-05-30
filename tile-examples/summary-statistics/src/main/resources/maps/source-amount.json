@@ -26,14 +26,14 @@
 	],
 
 	"id" : "bitcoin Source ID vs. Amount",
-	"description" : "Source ID vs. Amount",
+	"description" : "Bitcoin Source ID vs. Amount of Transaction",
 
 	"PyramidConfig": {
 		"type" : "AreaOfInterest",
-		"minX" : 1230958800000,
-		"maxX" : 1365566400000,
+		"minX" : 1.0,
+		"maxX" : 6336769,
 		"minY" : 0,
-		"maxY" : 6336769
+		"maxY" : 500000
 	},
 
 	"MapConfig" : {
@@ -70,7 +70,7 @@
 			"isOpen" : false,
 			"intervalSpec" : {
 				"type" : "value",
-				"increment" : 1000000,
+				"increment" : 100000,
 				"pivot" : 0,
 				"allowScaleByZoom" : true,
 			},
