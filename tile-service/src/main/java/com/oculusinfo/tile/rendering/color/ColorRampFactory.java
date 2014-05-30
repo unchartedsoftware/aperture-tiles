@@ -47,7 +47,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	public static final StringProperty           RAMP_TYPE = new StringProperty("ramp",
 		      "The desired type of color ramp",
 		      "ware",
-		      new String[] {"br", "ware", "inv-ware", "grey", "inv-grey", "flat", "simple-gradient", "hue"});
+		      new String[] {"br", "ware", "inv-ware", "grey", "inv-grey", "flat", "single-gradient", "hue"});
 	public static final DoubleProperty           OPACITY   = new DoubleProperty("opacity", "The opacity with which a layer is displayed.", 1.0);
 	public static final BooleanProperty          INVERTED  = new BooleanProperty("inverted", "Whether this scale is inverted from its normal direction or not", false);
 	public static final StringProperty           COLOR1     = new StringProperty("from", "A standard HTML description of the primary color for this ramp.  Used by flat and single-gradient ramp types.", "0xffffff");
