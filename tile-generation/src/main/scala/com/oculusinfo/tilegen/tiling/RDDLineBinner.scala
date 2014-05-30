@@ -27,24 +27,28 @@ package com.oculusinfo.tilegen.tiling
 
 
 
+import java.awt.geom.Point2D
+import java.awt.geom.Rectangle2D
+
+import scala.collection.TraversableOnce
+import scala.collection.mutable.{Map => MutableMap}
+import scala.reflect.ClassTag
+import scala.util.{Try, Success, Failure}
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import java.awt.geom.Point2D
-import java.awt.geom.Rectangle2D
-import scala.collection.mutable.{Map => MutableMap}
-import scala.util.{Try, Success, Failure}
+
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import scala.collection.TraversableOnce
 
 
 class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable { 
@@ -77,7 +81,7 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 	 * @param PT The processing bin type
 	 * @param BT The output bin type
 	 */
-	def binAndWriteData[RT: ClassManifest, IT: ClassManifest, PT: ClassManifest, BT] (
+	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag, BT] (
 		data: RDD[RT],
 		indexFcn: RT => Try[IT],
 		valueFcn: RT => Try[PT],
@@ -177,15 +181,15 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 	 * @param PT The bin type, when processing and aggregating
      * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processDataByLevel[IT: ClassManifest,
-	                       PT: ClassManifest, BT] (data: RDD[(IT, PT)],
-	                                               indexScheme: IndexScheme[IT],
-	                                               binDesc: BinDescriptor[PT, BT],
-	                                               tileScheme: TilePyramid,
-	                                               levels: Seq[Int],
-	                                               bins: Int = 256,
-	                                               consolidationPartitions: Option[Int] = None,
-	                                               isDensityStrip: Boolean = false):
+	def processDataByLevel[IT: ClassTag,
+	                       PT: ClassTag, BT] (data: RDD[(IT, PT)],
+	                                          indexScheme: IndexScheme[IT],
+	                                          binDesc: BinDescriptor[PT, BT],
+	                                          tileScheme: TilePyramid,
+	                                          levels: Seq[Int],
+	                                          bins: Int = 256,
+	                                          consolidationPartitions: Option[Int] = None,
+	                                          isDensityStrip: Boolean = false):
 	        RDD[TileData[BT]] = {
 				
 		val tileBinToUniBin = {
@@ -249,13 +253,13 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 	 * @param PT The bin type, when processing and aggregating
      * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processData[IT: ClassManifest,
-	                PT: ClassManifest, BT] (data: RDD[(IT, PT)],
-	                                        binDesc: BinDescriptor[PT, BT],
-	                                        indexToUniversalBins: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)],
-	                                        bins: Int = 256,
-	                                        consolidationPartitions: Option[Int] = None,
-	                                        isDensityStrip: Boolean = false):
+	def processData[IT: ClassTag,
+	                PT: ClassTag, BT] (data: RDD[(IT, PT)],
+	                                   binDesc: BinDescriptor[PT, BT],
+	                                   indexToUniversalBins: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)],
+	                                   bins: Int = 256,
+	                                   consolidationPartitions: Option[Int] = None,
+	                                   isDensityStrip: Boolean = false):
 			RDD[TileData[BT]] = {
 		// We first bin data in each partition into its associated bins
 		val partitionBins = data.mapPartitions(iter =>
@@ -289,11 +293,11 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 
 
 
-	private def consolidate[PT: ClassManifest, BT] (data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
-	                                                binDesc: BinDescriptor[PT, BT],
-	                                                consolidationPartitions: Option[Int],
-	                                                isDensityStrip: Boolean,
-	                                                bins: Int = 256):
+	private def consolidate[PT: ClassTag, BT] (data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
+	                                           binDesc: BinDescriptor[PT, BT],
+	                                           consolidationPartitions: Option[Int],
+	                                           isDensityStrip: Boolean,
+	                                           bins: Int = 256):
 			RDD[TileData[BT]] = {
 		
 	    val uniBinToTileBin = {
@@ -355,7 +359,7 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 	}
 
 
-	def getNumSplits[T: ClassManifest] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
+	def getNumSplits[T: ClassTag] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
 		val curSize = dataSet.partitions.size
 		val result = curSize max requestedPartitions.getOrElse(0)
 		result

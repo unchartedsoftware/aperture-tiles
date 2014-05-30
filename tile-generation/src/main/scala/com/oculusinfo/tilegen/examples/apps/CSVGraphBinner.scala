@@ -29,36 +29,40 @@ package com.oculusinfo.tilegen.examples.apps
 
 import java.io.FileInputStream
 import java.util.Properties
+
 import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
+import scala.util.Try
+
+import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.RDDLineBinner
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.tiling.SqliteTileIO
-import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
-import com.oculusinfo.tilegen.datasets.CSVDatasetBase
-import com.oculusinfo.tilegen.datasets.CartesianIndexExtractor
-import org.apache.spark.SparkContext
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.datasets.CSVDataset
-import com.oculusinfo.tilegen.datasets.LineSegmentIndexExtractor
-import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
+import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.storage.StorageLevel
-import com.oculusinfo.tilegen.datasets.GraphRecordParser
+
+import com.oculusinfo.binning.io.PyramidIO
+import com.oculusinfo.tilegen.datasets.CartesianIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVDataset
+import com.oculusinfo.tilegen.datasets.CSVDatasetBase
 import com.oculusinfo.tilegen.datasets.CSVDataSource
 import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
-import scala.util.Try
-import org.apache.spark.api.java.JavaRDD
+import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
+import com.oculusinfo.tilegen.datasets.Dataset
+import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.datasets.GraphRecordParser
+import com.oculusinfo.tilegen.datasets.LineSegmentIndexExtractor
+import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
+import com.oculusinfo.tilegen.spark.GeneralSparkConnector
+import com.oculusinfo.tilegen.spark.SparkConnector
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.HBaseTileIO
+import com.oculusinfo.tilegen.tiling.LocalTileIO
+import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.RDDLineBinner
+import com.oculusinfo.tilegen.tiling.SqliteTileIO
+import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 /*
@@ -101,12 +105,12 @@ import org.apache.spark.api.java.JavaRDD
  */
 
 
-class CSVGraphProcessingStrategy[IT: ClassManifest] (sc: SparkContext,
-	                                   cacheRaw: Boolean,
-	                                   cacheFilterable: Boolean,
-	                                   cacheProcessed: Boolean,
-	                                   properties: CSVRecordPropertiesWrapper,
-	                                   indexer: CSVIndexExtractor[IT])
+class CSVGraphProcessingStrategy[IT: ClassTag] (sc: SparkContext,
+                                                cacheRaw: Boolean,
+                                                cacheFilterable: Boolean,
+                                                cacheProcessed: Boolean,
+                                                properties: CSVRecordPropertiesWrapper,
+                                                indexer: CSVIndexExtractor[IT])
 			extends StaticProcessingStrategy[IT, Double](sc) {
 	
 	// This is a weird initialization problem that requires some
@@ -216,10 +220,10 @@ class CSVGraphProcessingStrategy[IT: ClassManifest] (sc: SparkContext,
 /**
  * Handles basic RDD's using a ProcessingStrategy. 
  */
-class CSVGraphDataset[IT: ClassManifest](indexer:  CSVIndexExtractor[IT],
-                                     properties: CSVRecordPropertiesWrapper,
-                                     tileWidth: Int,
-                                     tileHeight: Int)
+class CSVGraphDataset[IT: ClassTag](indexer:  CSVIndexExtractor[IT],
+                                    properties: CSVRecordPropertiesWrapper,
+                                    tileWidth: Int,
+                                    tileHeight: Int)
 		extends CSVDatasetBase[IT](indexer, properties, tileWidth, tileHeight) {
 	// Just some Filter type aliases from Queries.scala
 	import com.oculusinfo.tilegen.datasets.FilterAware._
@@ -337,8 +341,8 @@ object CSVGraphBinner {
 		}			
 	}	
 	
-	def processDataset[IT: ClassManifest,
-	                   PT: ClassManifest, 
+	def processDataset[IT: ClassTag,
+	                   PT: ClassTag, 
 	                   BT] (dataset: Dataset[IT, PT, BT],
 	                        tileIO: TileIO): Unit = {
 
@@ -407,10 +411,10 @@ object CSVGraphBinner {
 		processDataset(dataset, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
 
 		
-	private def getDataset[T: ClassManifest] (indexer: CSVIndexExtractor[T],
-	                                          properties: CSVRecordPropertiesWrapper,
-	                                          tileWidth: Int,
-	                                          tileHeight: Int): CSVGraphDataset[T] =
+	private def getDataset[T: ClassTag] (indexer: CSVIndexExtractor[T],
+	                                     properties: CSVRecordPropertiesWrapper,
+	                                     tileWidth: Int,
+	                                     tileHeight: Int): CSVGraphDataset[T] =
 		new CSVGraphDataset(indexer, properties, tileWidth, tileHeight)		
 
 	

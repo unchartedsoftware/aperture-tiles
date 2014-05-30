@@ -35,6 +35,7 @@ import java.util.TimeZone
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.List
+import scala.reflect.ClassTag
 import scala.util.Try
 
 import org.apache.spark.Accumulable
@@ -47,29 +48,28 @@ import org.apache.spark.storage.StorageLevel
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
 import com.oculusinfo.tilegen.datasets.CSVDatasetBase
-import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
-import com.oculusinfo.tilegen.datasets.CSVRecordParser
 import com.oculusinfo.tilegen.datasets.CSVDataSource
 import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
-import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVRecordParser
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
+import com.oculusinfo.tilegen.datasets.Dataset
+import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
 import com.oculusinfo.tilegen.datasets.TimeRangeCartesianIndexExtractor
 import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
+import com.oculusinfo.tilegen.spark.GeneralSparkConnector
+import com.oculusinfo.tilegen.spark.SparkConnector
+import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.tiling.SqliteTileIO
 import com.oculusinfo.tilegen.tiling.IndexScheme
 import com.oculusinfo.tilegen.tiling.LevelMinMaxAccumulableParam
-import com.oculusinfo.tilegen.tiling.BinDescriptor
+import com.oculusinfo.tilegen.tiling.LocalTileIO
+import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.SqliteTileIO
+import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
@@ -150,12 +150,12 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  */
 
 
-class CSVTimeRangeProcessingStrategy[IT: ClassManifest] (sc: SparkContext,
-                                                         cacheRaw: Boolean,
-                                                         cacheFilterable: Boolean,
-                                                         cacheProcessed: Boolean,
-                                                         properties: CSVRecordPropertiesWrapper,
-                                                         indexer: TimeRangeCSVIndexExtractor[IT])
+class CSVTimeRangeProcessingStrategy[IT: ClassTag] (sc: SparkContext,
+                                                    cacheRaw: Boolean,
+                                                    cacheFilterable: Boolean,
+                                                    cacheProcessed: Boolean,
+                                                    properties: CSVRecordPropertiesWrapper,
+                                                    indexer: TimeRangeCSVIndexExtractor[IT])
 		extends StaticProcessingStrategy[IT, Double](sc) {
 	// This is a weird initialization problem that requires some
 	// documentation to explain.
@@ -279,10 +279,10 @@ trait TimeRangeDataset[IT] {
 /**
  * Handles basic RDD's using a ProcessingStrategy. 
  */
-class CSVTimeRangeDataset[IT: ClassManifest] (indexer: TimeRangeCSVIndexExtractor[IT],
-                                              properties: CSVRecordPropertiesWrapper,
-                                              tileWidth: Int,
-                                              tileHeight: Int)
+class CSVTimeRangeDataset[IT: ClassTag] (indexer: TimeRangeCSVIndexExtractor[IT],
+                                         properties: CSVRecordPropertiesWrapper,
+                                         tileWidth: Int,
+                                         tileHeight: Int)
 		extends CSVDatasetBase[IT](indexer, properties, tileWidth, tileHeight) with TimeRangeDataset[IT] {
 	// Just some Filter type aliases from Queries.scala
 	import com.oculusinfo.tilegen.datasets.FilterAware._
@@ -395,8 +395,8 @@ object CSVTimeRangeBinner {
 	}
 	
 	
-	def processDataset[IT: ClassManifest,
-	                   PT: ClassManifest,
+	def processDataset[IT: ClassTag,
+	                   PT: ClassTag,
 	                   BT] (dataset: Dataset[IT, PT, BT] with TimeRangeDataset[IT],
 	                        tileIO: TileIO,
 	                        properties: CSVRecordPropertiesWrapper): Unit = {
@@ -490,10 +490,10 @@ object CSVTimeRangeBinner {
 		processDataset(dataset, tileIO, properties)(dataset.indexTypeManifest, dataset.binTypeManifest)
 
 	
-	private def getDataset[T: ClassManifest] (indexer: TimeRangeCSVIndexExtractor[T],
-	                                          properties: CSVRecordPropertiesWrapper,
-	                                          tileWidth: Int,
-	                                          tileHeight: Int): CSVTimeRangeDataset[T] =
+	private def getDataset[T: ClassTag] (indexer: TimeRangeCSVIndexExtractor[T],
+	                                     properties: CSVRecordPropertiesWrapper,
+	                                     tileWidth: Int,
+	                                     tileHeight: Int): CSVTimeRangeDataset[T] =
 		new CSVTimeRangeDataset(indexer, properties, tileWidth, tileHeight)
 
 	private def getDatasetGeneric[T] (indexer: TimeRangeCSVIndexExtractor[T],
