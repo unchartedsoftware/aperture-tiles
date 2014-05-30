@@ -151,6 +151,7 @@ define(function (require) {
 
             function onClick( data ) {
                 return function( event ) {
+
                     var tag = $(this).find(".sentiment-labels").text();
 
                     $(".top-text-sentiments").filter( function() {
@@ -163,7 +164,7 @@ define(function (require) {
 
                     that.clientState.setClickState('tag', tag );
 
-                    //that.map.panToCoord( data.longitude, data.latitude  );
+                    that.map.panToCoord( data.longitude, data.latitude  );
 
                     event.stopPropagation();
                 };

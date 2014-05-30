@@ -4,13 +4,11 @@
 	-webkit-filter: grayscale(1) brightness(50%);
 }
 
-
-
-
 .top-text-sentiments {
 	position:absolute;
-	width: 100%;
+	width: 200px;
 	height: 50px;
+	left: 28px;
 	-webkit-transform: scale(0.667);
        -moz-transform: scale(0.667);
         -ms-transform: scale(0.667);
@@ -22,6 +20,7 @@
 }
 
 .top-text-sentiments:hover {
+	cursor: pointer;
 	-webkit-transform: scale(1.0);
        -moz-transform: scale(1.0);
         -ms-transform: scale(1.0);
@@ -80,7 +79,7 @@
 	position:absolute;
 	width: 150px;
 	height: 9px;
-	left: 53px;
+	left: 25px;
 	bottom: 0px;
 	border: 2px solid #000000;
 	box-shadow: 1px 1px 5px #000;

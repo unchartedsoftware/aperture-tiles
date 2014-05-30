@@ -237,25 +237,26 @@ define(function (require) {
          */
         redraw: function() {
 
-            var markers = [],
+            var markersBySize = [],
                 that = this;
 
             function updateTitle() {
 
                 // update axis length
-                var axisLength = that.$map.css(that.axisWidthOrHeight).replace('px', ''); // strip px suffix
+                var $title = that.$title,
+                    axisLength = that.$map.css( that.axisWidthOrHeight ).replace('px', ''); // strip px suffix
                 
                 // add position offset for vertical axes
                 if (!that.isXAxis) {
                     if (that.position === 'left') {
-                        that.$title.css(that.leftOrTop, axisLength + "px");
+                        $title.css(that.leftOrTop, axisLength + "px");
                     } else {
-                        that.$title.css(that.leftOrTop, -that.$title.width()*0.5 + "px");
+                        $title.css(that.leftOrTop, -$title.width()*0.5 + "px");
                     }
                 }
                 // add padding for hover hit box
-                that.$title.css('padding-left', (axisLength*0.5 - that.$title.width()*0.5) + "px");
-                that.$title.css('padding-right', (axisLength*0.5 - that.$title.width()*0.5) + "px" );
+                $title.css('padding-left', (axisLength*0.5 - $title.width()*0.5) + "px");
+                $title.css('padding-right', (axisLength*0.5 - $title.width()*0.5) + "px" );
             }
 
             /**
@@ -422,6 +423,7 @@ define(function (require) {
             function addAxisMarkerElements() {
 
                 var marker,
+                    markers,
                     markerSize,
                     markersHTML = "",
                     i;
@@ -432,11 +434,14 @@ define(function (require) {
                 }
 
                 // iterate through markers, by marker type
-                for ( markerSize in markers ) {
-                    if (markers.hasOwnProperty(markerSize)) {
-                        for (i = 0; i < markers[markerSize].length; i++) {
+                for ( markerSize in markersBySize ) {
+                    if (markersBySize.hasOwnProperty(markerSize)) {
 
-                            marker = markers[markerSize][i];
+                        markers = markersBySize[markerSize];
+
+                        for (i = 0; i < markers.length; i++) {
+
+                            marker = markers[i];
 
                             switch (markerSize) {
                                 case 'large':
@@ -469,7 +474,7 @@ define(function (require) {
             // empty elements of axis container
             that.$content.empty();
             // generate array of marker labels and pixel locations
-            markers = AxisUtil.getMarkers(this);
+            markersBySize = AxisUtil.getMarkers(this);
             // add each marker to correct pixel location in axis DOM elements
             addAxisMarkerElements();
         }

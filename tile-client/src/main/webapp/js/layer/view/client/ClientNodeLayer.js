@@ -64,10 +64,11 @@ define(function (require) {
 
         removeLayer : function( layer ) {
 
-            var index = this.layers_.indexOf( layer );
+            var layers = this.layers_,
+                index = layers.indexOf( layer );
             if ( index !== -1 ) {
-                this.layers_.nodeLayer_ = null;
-                this.layers_.splice( layer );
+                layers.nodeLayer_ = null;
+                layers.splice( layer );
             }
         },
 
@@ -116,25 +117,30 @@ define(function (require) {
 
 
         removeNodeById: function( key ) {
-            var node = this.nodesById_[ key ],
-                index = this.nodes_.indexOf( node );
+            var nodes = this.nodes_,
+                nodesById = this.nodesById_,
+                node = nodesById[ key ],
+                index = nodes.indexOf( node );
+
             this.destroyNode( node );
-            this.nodes_.splice(index, 1);
-            delete this.nodesById_[ key ];
+            nodes.splice(index, 1);
+            delete nodesById[ key ];
         },
 
 
         removeNode: function( node ) {
-            var index = this.nodes_.indexOf( node );
-            this.destroyNode( this.nodes_[index] );
-            this.nodes_.splice( index, 1 );
+            var nodes = this.nodes_,
+                index = nodes.indexOf( node );
+
+            this.destroyNode( nodes[index] );
+            nodes.splice( index, 1 );
         },
 
 
         onMapUpdate: function() {
-            var pos;
-            // only root will execute the following code
-            pos = this.map_.getViewportPixelFromMapPixel( 0, this.map_.getMapHeight() );
+            var map = this.map_,
+                pos;
+            pos = map.getViewportPixelFromMapPixel( 0, map.getMapHeight() );
             this.$root_.css({
                 top: pos.y + "px",
                 left: pos.x + "px"
@@ -150,8 +156,7 @@ define(function (require) {
                 i,
                 node,
                 newData = [],
-                newNodes = [],
-                exists;
+                newNodes = [];
 
             function allByKey() {
 
@@ -168,9 +173,8 @@ define(function (require) {
                 for (i=0; i<data.length; i++) {
 
                     key = data[i][idKey];
-                    exists = nodesById[key] !== undefined;
 
-                    if ( exists ) {
+                    if ( nodesById[key] !== undefined ) {
                         // remove from tracking list
                         delete defunctNodesById[ key ];
                     } else {
@@ -210,9 +214,7 @@ define(function (require) {
                 // only root will execute the following code
                 for (i=0; i<data.length; i++) {
 
-                    exists = that.doesNodeExist( data[i] );
-
-                    if ( exists ) {
+                    if ( that.doesNodeExist( data[i] ) ) {
                         // remove from tracking list
                         index = defunctNodesArray.indexOf(  that.findNodeFromData( data[i] ) );
                         defunctNodesArray.splice(index, 1);
@@ -256,17 +258,15 @@ define(function (require) {
                  i,
                  key,
                  node,
-                 newNodes = [],
-                 exists;
+                 newNodes = [];
 
             function joinByKey() {
 
                 for (i=0; i<data.length; i++) {
 
                     key = data[i][idKey];
-                    exists = nodesById[key] !== undefined;
 
-                    if ( !exists ) {
+                    if ( nodesById[key] === undefined ) {
                         node = that.createNode( data[i] );
                         nodes.push( node );
                         newNodes.push( node );
@@ -279,9 +279,7 @@ define(function (require) {
 
                 for (i=0; i<data.length; i++) {
 
-                    exists = that.doesNodeExist( data[i] );
-
-                    if ( !exists ) {
+                    if ( that.doesNodeExist( data[i] ) ) {
                         node = that.createNode( data[i] );
                         nodes.push( node );
                         newNodes.push( node );

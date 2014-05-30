@@ -48,6 +48,8 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
+            var that = this;
+
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
@@ -74,9 +76,13 @@ define(function (require) {
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
 
+            //on map update, store mapkey for memoization
+            this.on('move', function() {
+                that.mapkey = that.getMapkey();
+            });
+
             // set resize callback
             $(window).resize( $.proxy(this.updateSize, this) );
-
 			// Trigger the initial resize event to resize everything
 			$(window).resize();
 		},
@@ -226,51 +232,15 @@ define(function (require) {
 
 		getViewportHeight: function() {
 			return this.map.olMap_.viewPortDiv.clientHeight;
-		},
+        },
 
-		/**
-		 * Returns the min and max visible viewport pixels
-		 * Axes may be covering parts of the map, so this determines the actual visible
-		 * bounds
-		 */
-		getMinMaxVisibleViewportPixels: function() {
-
-			var bounds = {
-                    min : {
-                         x: 0,
-                         y: 0
-                     },
-                     max : {
-                         x: this.getViewportWidth(),
-                         y: this.getViewportHeight()
-                     }
-                };
-            /*, i;
-			// determine which axes exist
-			for (i=0; i<this.axes.length; i++) {
-
-				if (this.axes[i].isEnabled()) {
-
-					switch ( this.axes[i].position ) {
-
-                        case 'top':
-                            bounds.min.y = this.axes[i].getMaxContainerWidth();
-                            break;
-                        case 'bottom':
-                            bounds.max.y = this.getViewportHeight() - this.axes[i].getMaxContainerWidth();
-                            break;
-                        case 'left':
-                            bounds.min.x = this.axes[i].getMaxContainerWidth();
-                            break;
-                        case 'right':
-                            bounds.max.x = this.getViewportWidth() - this.axes[i].getMaxContainerWidth();
-                            break;
-					}
-				}
-			}*/
-			return bounds;
-		},
-
+        getMapkey : function() {
+            var minMax = this.getMapMinAndMaxInViewportPixels();
+            return minMax.min.x + ":"
+                 + minMax.max.x + ","
+                 + minMax.min.y + ":"
+                 + minMax.max.y;
+        },
 
 		/**
 		 * Returns the maps min and max pixels in viewport pixels
@@ -278,16 +248,18 @@ define(function (require) {
 		 *          map [0,0] is BOTTOM-LEFT
 		 */
 		getMapMinAndMaxInViewportPixels: function() {
-			return {
-				min : {
-					x: Math.round( this.map.olMap_.minPx.x ),
-					y: Math.round( this.map.olMap_.maxPx.y )
-				},
-				max : {
-					x: Math.round( this.map.olMap_.maxPx.x ),
-					y: Math.round( this.map.olMap_.minPx.y )
-				}
-			};
+
+		    var olMap = this.map.olMap_;
+		    return {
+                min : {
+                    x: Math.round( olMap.minPx.x ),
+                    y: Math.round( olMap.maxPx.y )
+                },
+                max : {
+                    x: Math.round( olMap.maxPx.x ),
+                    y: Math.round( olMap.minPx.y )
+                }
+            };
 		},
 
 
@@ -378,6 +350,7 @@ define(function (require) {
          * Returns the tile and bin index corresponding to the given map pixel coordinate
          */
         getTileAndBinFromMapPixel: function(mx, my, xBinCount, yBinCount) {
+
             var tileIndexX = Math.floor(mx / TILESIZE),
                 tileIndexY = Math.floor(my / TILESIZE),
                 tilePixelX = mx % TILESIZE,
@@ -395,6 +368,7 @@ define(function (require) {
                     y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
                 }
             };
+
         },
 
 
