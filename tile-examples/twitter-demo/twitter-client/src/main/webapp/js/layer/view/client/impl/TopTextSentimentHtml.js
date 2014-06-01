@@ -36,14 +36,15 @@ define(function (require) {
 
 
     var ClientRenderer = require('../ClientRenderer'),
-        HtmlLayer = require('../HtmlLayer'),
         ClientNodeLayer = require('../ClientNodeLayer'),
-        HtmlRenderer;
+        HtmlLayer = require('../HtmlLayer'),
+        TwitterUtil = require('./TwitterUtil'),
+        TopTextSentimentHtml;
 
 
 
-    HtmlRenderer = ClientRenderer.extend({
-        ClassName: "HtmlRenderer",
+    TopTextSentimentHtml = ClientRenderer.extend({
+        ClassName: "TopTextSentimentHtml",
 
         /**
          * Constructs a client render layer object
@@ -51,8 +52,7 @@ define(function (require) {
          */
         init: function( map) {
 
-            var that = this,
-                SCALE = 1.5;
+            var that = this;
 
             this._super(map);
 
@@ -63,78 +63,18 @@ define(function (require) {
                 idKey: 'tilekey'
             });
 
-            /*
-                Return the count of node entries, clamped at 5
-            */
-            function getCount( value ) {
-                return Math.min( value.length, 5 );
-            }
+            this.createLayer();
 
+            this.map.on( 'click', function() {
+                $(".top-text-sentiments").removeClass('greyed');
+                $(".top-text-sentiments").removeClass('clicked');
+                that.clientState.removeClickState('tag');
+            });
+        },
 
-            /*
-                Return the relative percentages of positive, neutral, and negative tweets
-            */
-            function getSentimentPercentages( value, index ) {
-                return {
-                    positive : ( value[index].positive / value[index].count )*100 || 0,
-                    neutral : ( value[index].neutral / value[index].count )*100 || 0,
-                    negative : ( value[index].negative / value[index].count )*100 || 0
-                };
-            }
+        createLayer : function() {
 
-            /*
-                Returns the total count of all tweets in a node
-            */
-            function getTotalCount(value, index) {
-                var i,
-                    sum = 0,
-                    n = getCount( value );
-                for (i=0; i<n; i++) {
-                    sum += value[i].count;
-                }
-                return sum;
-            }
-
-            /*
-                Returns the percentage of tweets in a node for the respective tag
-            */
-            function getTotalCountPercentage( value, index ) {
-                return ( value[index].count / getTotalCount( value, index ) ) || 0;
-            }
-
-            /*
-                Returns a font size based on the percentage of tweets relative to the total count
-            */
-            function getFontSize( value, index ) {
-                var MAX_FONT_SIZE = 28 * SCALE,
-                    MIN_FONT_SIZE = 12 * SCALE,
-                    FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
-                    sum = getTotalCount( value, index ),
-                    percentage = getTotalCountPercentage( value, index ),
-                    scale = Math.log( sum ),
-                    size = ( percentage * FONT_RANGE * scale ) + ( MIN_FONT_SIZE * percentage );
-                return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
-            }
-
-            /*
-                Returns a y offset to position tag entry relative to centre of tile
-            */
-            function getYOffset( value, index ) {
-                return 98 - ( (( getCount( value ) - 1) / 2 ) - index ) * 36;
-            }
-
-            /*
-                Returns a trimmed string based on character limit
-            */
-            function trimLabelText( value, index ) {
-                var MAX_LABEL_CHAR_COUNT = 9,
-                    str = value[index].tag;
-                if (str.length > MAX_LABEL_CHAR_COUNT) {
-                    str = str.substr(0, MAX_LABEL_CHAR_COUNT) + "...";
-                }
-                return str;
-            }
-
+            var that = this;
             /*
                 if user has clicked a tag entry, ensure newly created nodes are styled accordingly
             */
@@ -211,7 +151,7 @@ define(function (require) {
                         i,
                         tag,
                         percentages,
-                        count = getCount( value );
+                        count = TwitterUtil.getCount( value );
 
                     // create count summaries
                     html = '<div class="sentiment-summaries">';
@@ -225,10 +165,10 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
 
-                        tag = trimLabelText( value, i );
-                        percentages = getSentimentPercentages( value, i );
+                        tag = TwitterUtil.trimLabelText( value, i );
+                        percentages = TwitterUtil.getSentimentPercentages( value, i );
 
-                        html = '<div class="top-text-sentiments" style=" top:' +  getYOffset( value, i ) + 'px;">';
+                        html = '<div class="top-text-sentiments" style=" top:' +  TwitterUtil.getYOffset( value, i ) + 'px;">';
 
                         // create sentiment bars
                         html += '<div class="sentiment-bars">';
@@ -238,7 +178,7 @@ define(function (require) {
                         html += "</div>";
 
                         // create tag label
-                        html += '<div class="sentiment-labels" style="font-size:' + getFontSize( value, i ) +'px; ">'+tag+'</div>';
+                        html += '<div class="sentiment-labels" style="font-size:' + TwitterUtil.getFontSize( value, i ) +'px; ">'+tag+'</div>';
 
                         html += '</div>';
 
@@ -255,28 +195,10 @@ define(function (require) {
                         $html = $html.add( $elem );
                     }
 
-                    that.map.on( 'click', function() {
-                        $(".top-text-sentiments").removeClass('greyed');
-                        $(".top-text-sentiments").removeClass('clicked');
-                        that.clientState.removeClickState('tag');
-                    });
-
                     return $html;
-                },
-                css: {
-                    'z-index' : 749
                 }
             }));
 
-        },
-
-        setOpacity: function( opacity ) {
-            this.nodeLayer.$root_.css( 'opacity', opacity );
-        },
-
-        setVisibility: function( visible ) {
-            var visibility = visible ? 'visible' : 'hidden';
-            this.nodeLayer.$root_.css( 'visibility', visibility );
         },
 
         redraw: function( data ) {
@@ -286,5 +208,5 @@ define(function (require) {
 
     });
 
-    return HtmlRenderer;
+    return TopTextSentimentHtml;
 });

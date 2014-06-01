@@ -47,7 +47,6 @@ define(function (require) {
 
     Axis = Class.extend({
 
-
         Z_INDEX_OFFSET : 2000,
 
         /**
@@ -125,7 +124,7 @@ define(function (require) {
                     marginTop = 0,
                     marginBottom = 0;
 
-                // add margins in case other axis exist
+                // add margins in case other axis exist, this prevents ugly shadow overlaps
                 if (that.isXAxis) {
                     marginLeft = that.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
                     marginRight = that.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
@@ -163,11 +162,10 @@ define(function (require) {
             this.max = spec.max;
             this.repeat = spec.repeat || defaults.repeat;
 
-
             this.Z_INDEX = this.Z_INDEX_OFFSET + this.map.getZIndex();
 
             this.position = spec.position || defaults.position;
-            this.id = spec.id || this.mapId + "-" + this.position + "-axis";
+            this.id = spec.id || ( this.mapId + "-" + this.position + "-axis" );
 
             this.title = spec.title || defaults.title;
 
@@ -199,12 +197,11 @@ define(function (require) {
             this.map.on('move', function() {
                 that.redraw();
             });
+
             // generate the core html elements
             generateElements();
             // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
             this.enabled = true;
-            // get axis container widths
-            this.containerWidth = (this.isXAxis) ? this.$content.height() : this.$content.width();
             // check if axis starts open or closed
             if ( !isOpen ) {
                 // trigger close and skip animation;
@@ -223,11 +220,6 @@ define(function (require) {
 
         setEnabled: function( enabled ) {
             this.enabled = enabled;
-        },
-
-
-        getMaxContainerWidth: function() {
-            return this.containerWidth;
         },
 
 
@@ -261,7 +253,7 @@ define(function (require) {
 
             /**
              * Creates and returns a dummy marker label element to measure. This function
-             * is used for measauring, as the real label func sizes the labels to the current
+             * is used for measuring, as the real label func sizes the labels to the current
              * max measurements
              */
             function createDummyMarkerLabelHTML(marker) {
@@ -467,7 +459,7 @@ define(function (require) {
             updateTitle();
 
             // exit early if no markers are visible
-            if (!this.isEnabled()) {
+            if ( !this.isEnabled() ) {
                 return;
             }
 

@@ -43,12 +43,16 @@ define(function (require) {
     ClientNodeLayer = Class.extend({
         ClassName: "ClientNodeLayer",
 
+        Z_INDEX_OFFSET : 100,
+
         init: function( spec ) {
 
             this.map_ = spec.map || null;
             this.xAttr_ = spec.xAttr || null;
             this.yAttr_ = spec.yAttr || null;
             this.idKey_=  spec.idKey || null;
+
+            this.Z_INDEX = this.map_.getZIndex() + this.Z_INDEX_OFFSET;
 
             this.$root_ = this.createLayerRoot();
             this.nodes_ = [];
@@ -82,14 +86,14 @@ define(function (require) {
 
         createLayerRoot : function() {
             var pos = this.map_.getViewportPixelFromMapPixel( 0, this.map_.getMapHeight() );
-            return $('<div class="client-layer" style="position:absolute; left:'+pos.x+'px; top:' +pos.y+ 'px; width=0px; height=0px"></div>');
+            return $('<div class="client-layer" style="position:absolute; left:'+pos.x+'px; top:' +pos.y+ 'px; width=0px; height=0px; z-index:'+this.Z_INDEX+';"></div>');
         },
 
 
         createNodeRoot : function(data) {
             var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] ),
                 nodeId = data[this.idKey_] || "";
-            return $('<div id="'+nodeId+'" class="tile-root" style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; width: 256px; height:256px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
+            return $('<div id="'+nodeId+'" class="client-layer-tile" style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; width: 256px; height:256px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
         },
 
 

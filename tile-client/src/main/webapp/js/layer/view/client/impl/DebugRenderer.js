@@ -67,20 +67,10 @@ define(function (require) {
                     position: 'relative',
                     color: 'white',
                     left: '10px',
-                    top: '230px',
-                    'z-index' : 1000
+                    top: '230px'
                 }
             }));
 
-        },
-
-        setOpacity: function( opacity ) {
-            this.nodeLayer.$root_.css( 'opacity', opacity );
-        },
-
-        setVisibility: function( visible ) {
-            var visibility = visible ? 'visible' : 'hidden';
-            this.nodeLayer.$root_.css( 'visibility', visibility );
         },
 
         redraw: function( data ) {

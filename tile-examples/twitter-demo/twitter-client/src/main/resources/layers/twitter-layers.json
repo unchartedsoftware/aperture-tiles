@@ -70,7 +70,7 @@
                             "domain": "client",
                             "views": [
                                 {
-                                    "renderer": "HtmlRenderer"
+                                    "renderer": "TopTextSentimentHtml"
                                 },
                                 {
                                     "renderer": "DebugRenderer"

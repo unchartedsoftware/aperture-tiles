@@ -48,8 +48,6 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
-            var that = this;
-
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
@@ -57,8 +55,8 @@ define(function (require) {
 				}
 			});
 
-			// Map div id
 			this.id = id;
+			this.$map = $( "#" + this.id );
             this.axes = [];
             this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
 
@@ -76,11 +74,6 @@ define(function (require) {
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
 
-            //on map update, store mapkey for memoization
-            this.on('move', function() {
-                that.mapkey = that.getMapkey();
-            });
-
             // set resize callback
             $(window).resize( $.proxy(this.updateSize, this) );
 			// Trigger the initial resize event to resize everything
@@ -89,8 +82,9 @@ define(function (require) {
 
 
         getZIndex: function() {
-            var indices = OpenLayers.Map.Z_INDEX_BASE,
-                key, maxZ = 0;
+            var indices = OpenLayers.Map.prototype.Z_INDEX_BASE,
+                maxZ = 0,
+                key;
             for (key in indices) {
                 if (indices.hasOwnProperty(key)) {
                     maxZ = Math.max( maxZ, indices[key] );
@@ -101,9 +95,6 @@ define(function (require) {
 
 
         getElement:  function() {
-            if (!this.$map) {
-                this.$map = $("#" + this.id);
-            }
             return this.$map;
         },
 
@@ -139,13 +130,13 @@ define(function (require) {
             domElement.onwheel = propagateEvent;
             domElement.onmousewheel = propagateEvent;
             domElement.onscroll = propagateEvent;
+            domElement.onclick = propagateEvent;
         },
 
 
 		setAxisSpecs: function (axes) {
 
 			var i, spec;
-
 			for (i=0; i< axes.length; i++) {
 				spec = axes[i];
 				spec.mapId = this.id;
@@ -355,6 +346,7 @@ define(function (require) {
                 tileIndexY = Math.floor(my / TILESIZE),
                 tilePixelX = mx % TILESIZE,
                 tilePixelY = my % TILESIZE;
+
             return {
                 tile: {
                     level : this.getZoom(),

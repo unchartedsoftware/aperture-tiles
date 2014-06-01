@@ -51,35 +51,17 @@ define(function (require) {
 
             this.map = map;
             this.clientState = null;
-
             this.TILE_SIZE = 256;
-
-            this.BLACK_COLOUR = '#000000';
-            this.DARK_GREY_COLOUR = '#222222';
-            this.GREY_COLOUR = '#666666';
-            this.LIGHT_GREY_COLOUR = '#999999';
-            this.WHITE_COLOUR = '#FFFFFF';
-            this.BLUE_COLOUR = '#09CFFF';
-            this.DARK_BLUE_COLOUR  = '#069CCC';
-            this.PURPLE_COLOUR = '#D33CFF';
-            this.DARK_PURPLE_COLOUR = '#A009CC';
-            this.YELLOW_COLOUR = '#F5F56F';
         },
 
 
-        /**
-         * Returns the opacity of the layer set in the layer controls
-         */
-        getOpacity: function() {
-            return this.clientState.getSharedState('opacity');
+        setOpacity: function( opacity ) {
+            this.nodeLayer.$root_.css( 'opacity', opacity );
         },
 
-
-        /**
-         * Returns true if the layer is enabled in the layer controls
-         */
-        isVisible: function() {
-            return this.clientState.getSharedState('isVisible');
+        setVisibility: function( visible ) {
+            var visibility = visible ? 'visible' : 'hidden';
+            this.nodeLayer.$root_.css( 'visibility', visibility );
         },
 
         /**
@@ -91,65 +73,6 @@ define(function (require) {
         attachClientState: function(clientState) {
             this.clientState = clientState;
         },
-
-
-        /**
-         * Helper function for converting hex code colour to greyscale
-         * @param hex the hex code colour
-         */
-        hexToGreyscale: function(hex) {
-            var col, rgb;
-            if (hex[0] === '#') {
-                hex = hex.substr(1,6);
-            }
-            col = parseInt(hex, 16);
-            rgb = (((((((col >> 16) & 0xff)*76) + (((col >> 8) & 0xff)*150) +
-                   ((col & 0xff)*29)) >> 8)) << 16) |
-
-                   (((((((col >> 16) & 0xff)*76) + (((col >> 8) & 0xff)*150) +
-                   ((col & 0xff)*29)) >> 8)) << 8) |
-
-                   ((((((col >> 16) & 0xff)*76) + (((col >> 8) & 0xff)*150) +
-                   ((col & 0xff)*29)) >> 8));
-
-            return this.rgbToHex( (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255);
-        },
-
-
-        /**
-         * Helper function for converting rgb components to hex code colour
-         * @param r red component, should be in range 0-255
-         * @param g green component, should be in range 0-255
-         * @param b blue component, should be in range 0-255
-         */
-         rgbToHex : function(r, g, b) {
-             function componentToHex(c) {
-                 var hex = c.toString(16);
-                 return (hex.length === 1) ? "0" + hex : hex;
-             }
-             return "#" + componentToHex( Math.floor(r)) +
-                          componentToHex( Math.floor(g)) +
-                          componentToHex( Math.floor(b));
-        },
-
-
-        /**
-         * Helper function for converting hex code colour to rgb components
-         * @param hex the hex code colour
-         */
-         hexToRgb: function(hex) {
-             var bigint;
-             if (hex[0] === '#') {
-                 hex = hex.substr(1,6);
-             }
-             bigint = parseInt(hex, 16);
-             return {
-                 r: (bigint >> 16) & 255,
-                 g: (bigint >> 8) & 255,
-                 b: bigint & 255
-             };
-        },
-
 
         redraw: function() {
             return true;

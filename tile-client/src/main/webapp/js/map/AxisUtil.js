@@ -285,7 +285,7 @@ define({
             } else {
                 // cull above pivot
                 // NOTE: rounding here to prevent accumulated precision errors that truncate last axis 'tick'
-                while ( roundToDecimals(maxIncrement+subIncrement) <= maxCull) { //Math.floor(maxIncrement+subIncrement) <= maxCull) {
+                while ( roundToDecimals(maxIncrement+subIncrement) <= maxCull) {
                     maxIncrement += subIncrement;
                 }
             }
