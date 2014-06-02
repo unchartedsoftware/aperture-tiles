@@ -52,8 +52,8 @@ define(function (require) {
             html +=         '<div class="negative-summaries"> -'+tagData.negative+'</div>';
             html +=     '</div>';
 
-            html +=     '<div class="details-on-demand-title">'+TwitterUtil.trimLabelText(tagData.tag)+'</div>';
-            html +=     '<div class="details-on-demand-subtitle">Last 24 Hours</div>';
+            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(tagData.tag)+'</div>';
+            html +=     '<div class="details-on-demand-title small-title">Last 24 Hours</div>';
 
             html +=     '<div class="details-on-demand-chart">';
             html +=         '<div class="details-on-demand-positive-label">Positive Tweets</div>';
@@ -66,7 +66,7 @@ define(function (require) {
             // bottom half
             html += '<div class="details-on-demand-bottomhalf">'
 
-            html +=     '<div class="details-on-demand-subtitle">Most Recent</div>';
+            html +=     '<div class="details-on-demand-title small-title">Most Recent</div>';
             html +=     '<div class="details-on-demand-recent-tweets">';
 
             // bucket tweets by day
