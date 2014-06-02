@@ -66,8 +66,13 @@ define(function (require) {
                 css: {
                     position: 'relative',
                     color: 'white',
-                    left: '10px',
-                    top: '230px'
+                    width: '100%',
+                    height: '100%',
+                    'font-size': '40px',
+                    'line-height': '256px',
+                    'text-align': 'center',
+                    'vertical-align': 'middle',
+                    'text-shadow': '-2px -2px 2px #000, 2px -2px 2px #000, -2px  2px 2px #000, 2px  5px 5px #000'
                 }
             }));
 

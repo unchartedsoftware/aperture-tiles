@@ -80,7 +80,7 @@ define(function (require) {
             /*
                 if user has clicked a tag entry, ensure newly created nodes are styled accordingly
             */
-            function injectClasses( $elem, tag ) {
+            function injectClickStateClasses( $elem, tag ) {
                 var selectedTag = that.clientState.getClickState('tag');
                 if ( selectedTag ) {
                     if ( selectedTag !== tag ) {
@@ -208,7 +208,7 @@ define(function (require) {
                         $elem.mousedown( onMousedown( $elem, this, i ) );
                         $elem.mousemove( onMousemove( $elem ) );
 
-                        injectClasses( $elem, tag );
+                        injectClickStateClasses( $elem, tag );
 
                         $html = $html.add( $elem );
                     }

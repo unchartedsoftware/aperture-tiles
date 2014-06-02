@@ -134,18 +134,7 @@
             box-sizing: border-box;
 }
 
-.details-on-demand-tophalf {
-
-	position:relative;
-	width: 100%;
-	height: 50%;
-	padding: 10px 10px 20px 10px;
-	-webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-}
-
-.details-on-demand-bottomhalf {
+.details-on-demand-half {
 
 	position:relative;
 	width: 100%;
@@ -197,7 +186,7 @@
 
 	position: relative;
 	/*background-color: #555555;*/
-	height: calc(100% - 32px);
+	height: calc(100% - 34px);
 }
 
 .details-on-demand-positive-label {
@@ -237,7 +226,7 @@
 
 	position:relative;
 	color : #FFFFFF;
-	height: calc(100% - 40px);
+	height: calc(100% - 30px);
 	overflow:auto;
 	border-radius: 10px;
 	background-color:#111111;

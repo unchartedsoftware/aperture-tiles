@@ -44,7 +44,7 @@ define(function (require) {
                 i;
 
             // top half
-            html += '<div class="details-on-demand-tophalf">'
+            html += '<div class="details-on-demand-half">'
 
             html +=     '<div class="sentiment-summaries">';
             html +=         '<div class="positive-summaries"> +'+tagData.positive+'</div>';
@@ -64,7 +64,7 @@ define(function (require) {
             html += '</div>';
 
             // bottom half
-            html += '<div class="details-on-demand-bottomhalf">'
+            html += '<div class="details-on-demand-half">'
 
             html +=     '<div class="details-on-demand-title small-title">Most Recent</div>';
             html +=     '<div class="details-on-demand-recent-tweets">';
@@ -88,7 +88,6 @@ define(function (require) {
             }
 
             html +=     '</div>';
-
             html += '</div>';
 
             this.destroy(); // destroy any previous DoD
@@ -97,9 +96,7 @@ define(function (require) {
 
 
         destroy : function() {
-
             $('.details-on-demand').remove();
-
         }
 
     };
