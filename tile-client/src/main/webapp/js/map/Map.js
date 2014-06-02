@@ -141,7 +141,7 @@ define(function (require) {
                 var newEvent = new event.constructor(event.type, event),
                     below;
                 $(elem).css('pointer-events', 'none');
-                below =  document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
+                below = document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
                 if (below) {
                     below.dispatchEvent(newEvent);
                 }
@@ -156,6 +156,7 @@ define(function (require) {
                 domElement.onmousewheel = propagateEvent;
                 domElement.onscroll = propagateEvent;
                 domElement.onclick = propagateEvent;
+                domElement.ondblclick = propagateEvent;
             } else {
                 events = ($.isArray) ? events : [events];
                 for (i=0; i<events.length; i++) {
@@ -178,6 +179,7 @@ define(function (require) {
                 domElement.onmousewheel = null;
                 domElement.onscroll = null;
                 domElement.onclick = null;
+                domElement.ondblclick = null;
             } else {
                 events = ($.isArray) ? events : [events];
                 for (i=0; i<events.length; i++) {
@@ -293,6 +295,7 @@ define(function (require) {
 		getMapMinAndMaxInViewportPixels: function() {
 
 		    var olMap = this.map.olMap_;
+
 		    return {
                 min : {
                     x: Math.round( olMap.minPx.x ),
@@ -329,7 +332,6 @@ define(function (require) {
 		 */
 		getViewportPixelFromMapPixel: function(mx, my) {
 			var viewportMinMax = this.getMapMinAndMaxInViewportPixels();
-
 			return {
 				x: mx + viewportMinMax.min.x,
 				y: this.getMapWidth() - my + viewportMinMax.max.y

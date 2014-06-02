@@ -23,13 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines the base class for a client render layer. Must be
- * inherited from for any functionality.
- */
 define(function (require) {
     "use strict";
 
@@ -43,7 +37,9 @@ define(function (require) {
             return Math.min( value.length, MAX_COUNT );
         },
 
-
+        /*
+            Return the count of recent tweets entries, clamped at MAX_COUNT
+        */
         getTweetCount : function( data, max ) {
             var MAX_TWEETS = max || 10;
             return Math.min( data.recent.length, MAX_TWEETS );
@@ -80,6 +76,31 @@ define(function (require) {
             return ( value[index].count / this.getTotalCount( value, index ) ) || 0;
         },
 
+
+        getCountByTimePercentage: function( value, index, hour ) {
+            var val = value[index],
+                countByTime = val.countByTime[hour];
+            return ( countByTime / val.count ) || 0;
+        },
+
+
+        getMaxCountByTimePercentage: function( value, index ) {
+            var NUM_HOURS_IN_DAY = 24,
+                val = value[index],
+                i,
+                percent,
+                maxPercent = 0,
+                count = val.count;
+
+            for (i=0; i<NUM_HOURS_IN_DAY; i++) {
+                percent = ( val.countByTime[i] / count ) || 0;
+                maxPercent = Math.max( percent, maxPercent );
+            }
+            return maxPercent;
+        },
+
+
+
         /*
             Returns a font size based on the percentage of tweets relative to the total count
         */
@@ -107,7 +128,9 @@ define(function (require) {
             return str;
         },
         
-        
+        /*
+            Returns a string of the format "Month ##, year:" from a unix timestamp
+        */
         getDay : function( timestamp ) {
         
             function getMonth( date ) {
@@ -135,6 +158,9 @@ define(function (require) {
             return month + " " + day + ", " + year + ":";
         },
 
+        /*
+            Returns a string of the format "HH:MM:SS xm" from a unix timestamp
+        */
         getTime : function( timestamp ) {
 
             function padZero( num ) {
@@ -150,7 +176,9 @@ define(function (require) {
             return hours + ':' + minutes + ':' + seconds + " " + suffix;
         },
 
-
+        /*
+            Buckets recent tweets by day
+        */
         getRecentTweetsByDay : function( tagData ) {
             // bucket tweets by day
             var days = {},
@@ -167,7 +195,105 @@ define(function (require) {
                 });
             }
             return days;
+        },
+
+        /*
+            Centre map between tile and details on demand pane
+        */
+        centreForDetails: function( map, data ) {
+            var viewportPixel = map.getViewportPixelFromCoord( data.longitude, data.latitude ),
+                panCoord = map.getCoordFromViewportPixel( viewportPixel.x + map.getTileSize(),
+                                                          viewportPixel.y + map.getTileSize() );
+            map.panToCoord( panCoord.x, panCoord.y );
+        },
+
+        /*
+            Used to inject classes when nodes are loaded
+        */
+        injectClickStateClasses: function( $elem, tag, selectedTag ) {
+            // if user has clicked a tag entry, ensure newly created nodes are styled accordingly
+            if ( selectedTag ) {
+                if ( selectedTag !== tag ) {
+                    $elem.addClass('greyed');
+                } else {
+                    $elem.addClass('clicked');
+                }
+            }
+        },
+
+        createTweetSummaries: function() {
+            return $('<div class="sentiment-summaries">'
+                + '<div class="positive-summaries"></div>'
+                + '<div class="neutral-summaries"></div>'
+                + '<div class="negative-summaries"></div>'
+                + '</div>');
+        },
+
+
+
+        setMouseEventCallbacks: function( map, $element, $summaries, data, index, callback, DetailsOnDemand ) {
+
+            var that = this,
+                value = data.bin.value[index];
+
+            // set summaries text
+            $element.mouseover( function( event ) {
+                $summaries.find(".positive-summaries").text( "+" +value.positive );
+                $summaries.find(".neutral-summaries").text( value.neutral );
+                $summaries.find(".negative-summaries").text("-" + value.negative );
+            });
+
+            // clear summaries text
+            $element.mouseout( function( event ) {
+                $summaries.find(".positive-summaries").text( "" );
+                $summaries.find(".neutral-summaries").text( "" );
+                $summaries.find(".negative-summaries").text( "" );
+                $element.off('click');
+            });
+
+            // moving mouse disables click event
+            $element.mousemove( function( event ) {
+                 $element.off('click');
+            });
+
+            // mouse down enables click event
+            $element.mousedown( function( event ) {
+
+                // set click handler
+                $element.click( function( event ) {
+                    // call given callback
+                    $.proxy( callback, this )( event );
+                    // create details on demand
+                    that.createDetailsOnDemand( map, data, index, DetailsOnDemand );
+                    // prevent event from going further
+                    event.stopPropagation();
+                 });
+            });
+
+        },
+
+
+        /*
+            Create details on demand
+        */
+        createDetailsOnDemand: function( map, data, index, DetailsOnDemand ) {
+
+            var pos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
+                $details;
+
+            this.centreForDetails( map, data );
+
+            $details = DetailsOnDemand.create( pos.x + 256, map.getMapHeight() - pos.y, data.bin.value[index] );
+
+            map.enableEventToMapPropagation( $details, ['onmousemove', 'onmouseup'] );
+            map.getRootElement().append( $details );
+        },
+
+        destroyDetailsOnDemand: function( DetailsOnDemand ) {
+
+            DetailsOnDemand.destroy();
         }
+
 
 
         

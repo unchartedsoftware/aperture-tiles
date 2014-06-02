@@ -33,26 +33,36 @@
 define(function (require) {
     "use strict";
 
-     var TwitterUtil = require('./TwitterUtil');
+
+
+    var TwitterUtil = require('./TwitterUtil');
+
+
 
     return {
 
-        create: function( tagData ) {
+        create: function( x, y, tagData ) {
 
             var html = '',
                 time, day, tweetsByDay, key, lightOrDark,
                 i;
 
+            html += '<div class="details-on-demand" style="left:'+x+'px; top:'+y+'px;">';
+
             // top half
             html += '<div class="details-on-demand-half">'
 
+            // summaries
             html +=     '<div class="sentiment-summaries">';
             html +=         '<div class="positive-summaries"> +'+tagData.positive+'</div>';
             html +=         '<div class="neutral-summaries">'+tagData.neutral+'</div>';
             html +=         '<div class="negative-summaries"> -'+tagData.negative+'</div>';
             html +=     '</div>';
 
+            // title
             html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(tagData.tag)+'</div>';
+
+            // last 24 hours
             html +=     '<div class="details-on-demand-title small-title">Last 24 Hours</div>';
 
             html +=     '<div class="details-on-demand-chart">';
@@ -66,6 +76,7 @@ define(function (require) {
             // bottom half
             html += '<div class="details-on-demand-half">'
 
+            // most recent tweets
             html +=     '<div class="details-on-demand-title small-title">Most Recent</div>';
             html +=     '<div class="details-on-demand-recent-tweets">';
 
@@ -90,8 +101,11 @@ define(function (require) {
             html +=     '</div>';
             html += '</div>';
 
+            html += '</div>';
+
             this.destroy(); // destroy any previous DoD
-            return $(html);
+
+            return $(html).draggable();
         },
 
 

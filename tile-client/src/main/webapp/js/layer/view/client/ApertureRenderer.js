@@ -42,6 +42,7 @@ define(function (require) {
             this.opacity = 1.0;
             this.visibility = true;
             this.nodeLayer = {};
+
             this.X_CENTRE_OFFSET = 128;
             this.Y_CENTRE_OFFSET = 128;
         },

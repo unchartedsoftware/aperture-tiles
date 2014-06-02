@@ -11,6 +11,10 @@
             transform: scale(0.833);
 }
 
+/********************************************/
+/* 		       Top Text Sentiment			*/
+/********************************************/
+
 .top-text-sentiments {
 	position:absolute;
 	width: 200px;
@@ -34,8 +38,6 @@
         -ms-transform: scale(1.0);
             transform: scale(1.0);
 }
-
-
 
 .sentiment-labels {
 	position:absolute;
@@ -118,6 +120,67 @@
 .top-text-sentiments:hover .sentiment-bars-negative {
 	background-color: #D33CFF;
 }
+
+
+/********************************************/
+/* 		     Tags by Time Sentiment			*/
+/********************************************/
+
+.tags-by-time-sentiment {
+
+	position:absolute;
+	width: 200px;
+	height: 20px;
+	left: 28px;
+	-webkit-transform: scale(0.667);
+       -moz-transform: scale(0.667);
+        -ms-transform: scale(0.667);
+            transform: scale(0.667);
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+}
+
+.tags-by-time-sentiment:hover {
+	cursor: pointer;
+	-webkit-filter: grayscale(0);
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+.tags-by-time-label {
+	position:absolute;
+	font-size : 18px;
+	right: 0px;
+	bottom: -3px;
+	width: 33.333%;
+	color: #FFFFFF;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000; 	
+}
+
+.tags-by-time-bar {
+
+	position:absolute;
+	width: 5px;
+	bottom: 0px;
+	border: 1px solid #000;
+	background-color: #FFFFFF;
+	box-shadow: 0 0 15px #000;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+/********************************************/
+/* 		      Details on Demand  			*/
+/********************************************/
 
 .details-on-demand {
 

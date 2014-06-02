@@ -158,8 +158,8 @@ define(function (require) {
             // allow all events to propagate to map except 'click'
             this.map.enableEventToMapPropagation( this.$leftChevron );
             this.map.enableEventToMapPropagation( this.$rightChevron );
-            this.map.disableEventToMapPropagation( this.$leftChevron, ['onclick'] );
-            this.map.disableEventToMapPropagation( this.$rightChevron, ['onclick'] );
+            this.map.disableEventToMapPropagation( this.$leftChevron, ['onclick', 'ondblclick'] );
+            this.map.disableEventToMapPropagation( this.$rightChevron, ['onclick', 'ondblclick'] );
 
         },
 
@@ -192,7 +192,7 @@ define(function (require) {
 
             // allow all events to propagate to map except 'click'
             this.map.enableEventToMapPropagation( $indexContainer );
-            this.map.disableEventToMapPropagation( $indexContainer, ['onclick'] );
+            this.map.disableEventToMapPropagation( $indexContainer, ['onclick', 'ondblclick'] );
 
             this.$dots = [];
             for (i=0; i < this.views.length; i++) {

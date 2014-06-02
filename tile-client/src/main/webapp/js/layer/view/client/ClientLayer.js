@@ -79,7 +79,7 @@ define(function (require) {
 
             // initialize attributes
             this.id = id;
-            this.defaultViewIndex = 0;  	// if not specified, this is the default view of a tile
+            this.defaultViewIndex = 0;
             this.tileViewMap = {};      	// maps a tile key to its view index
             this.views = [];				// array of all views
 			this.clientState = clientState; 	// global mouse state to be shared by all views

@@ -36,7 +36,8 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand = require('./DetailsOnDemandSentiment'),
+        DetailsOnDemand = require('./DetailsOnDemandHtml'),
+        TwitterUtil = require('./TwitterUtil'),
         NUM_HOURS_IN_DAY = 24,
         TagsByTimeSentiment;
 
@@ -45,10 +46,11 @@ define(function (require) {
     TagsByTimeSentiment = TwitterTagRenderer.extend({
         ClassName: "TagsByTimeSentiment",
 
-        init: function(map) {
-            this._super("hash-tag-by-time", map);
+        init: function( map ) {
+            this._super( map );
             this.MAX_NUM_VALUES = 10;
             this.Y_SPACING = 18;
+            this.createLayer();
         },
 
 
@@ -81,28 +83,8 @@ define(function (require) {
                 tag : event.data.bin.value[index].tag,
                 index : index
             });
-            // pan map to center
-            this.detailsOnDemand.panMapToCenter(event.data);
-            // send this node to the front
-            this.plotLayer.all().where(event.data).toFront();
-            // redraw all nodes
-            this.plotLayer.all().redraw();
-        },
 
-
-        onHover: function(event, index, id) {
-            this.clientState.setHoverState(event.data.tilekey, {
-                tag : event.data.bin.value[index].tag,
-                index : index,
-                id : id
-            });
-            this.plotLayer.all().where(event.data).redraw();
-        },
-
-
-        onHoverOff: function(event) {
-            this.clientState.clearHoverState();
-            this.plotLayer.all().where(event.data).redraw();
+            TwitterUtil.createDetailsOnDemand( this, event.data, index, DetailsOnDemand );
         },
 
 
@@ -130,20 +112,14 @@ define(function (require) {
         },
 
 
-        /**
-         * Create our layer visuals, and attach them to our node layer.
-         */
-        createLayer: function (mapNodeLayer) {
+        createLayer: function() {
 
-            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently does not render correctly if on its own PlotLayer...
-            this.plotLayer = mapNodeLayer;
+            this.nodeLayer = this.map.addApertureLayer( aperture.geo.MapNodeLayer );
+            this.nodeLayer.map('latitude').from('latitude');
+            this.nodeLayer.map('longitude').from('longitude');
             this.createBars();
             this.createLabels();
             this.createCountSummaries();
-            this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
-            this.detailsOnDemand.attachClientState(this.clientState);
-            this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
 
@@ -153,28 +129,21 @@ define(function (require) {
                 BAR_WIDTH = 3,
                 BAR_LENGTH = 10;
        
-            this.bars = this.plotLayer.addLayer(aperture.BarLayer);
+            this.bars = this.nodeLayer.addLayer(aperture.BarLayer);
             this.bars.map('orientation').asValue('vertical');
             this.bars.map('width').asValue(BAR_WIDTH);
             this.bars.map('visible').from( function() {
-                return that.isSelectedView(this) && that.isVisible(this);
+                return that.visibility;
             });
             this.bars.map('fill').from( function(index) {
-                var tagIndex = Math.floor(index/NUM_HOURS_IN_DAY),
-                    positiveCount,
-                    negativeCount;
-                if (that.matchingTagIsSelected(this.bin.value[tagIndex].tag, this.tilekey)){
-                    // get counts
-                    positiveCount = this.bin.value[tagIndex].positiveByTime[index % NUM_HOURS_IN_DAY];
-                    negativeCount = this.bin.value[tagIndex].negativeByTime[index % NUM_HOURS_IN_DAY];
-                    return that.blendSentimentColours(positiveCount, negativeCount);
-                }
-                if (that.shouldBeGreyedOut(this.bin.value[tagIndex].tag, this.tilekey)) {
-                    return that.GREY_COLOUR;
-                }
+                /*
+                // get counts
+                positiveCount = this.bin.value[tagIndex].positiveByTime[index % NUM_HOURS_IN_DAY];
+                negativeCount = this.bin.value[tagIndex].negativeByTime[index % NUM_HOURS_IN_DAY];
+                return that.blendSentimentColours(positiveCount, negativeCount);
+                */
                 return that.WHITE_COLOUR;
             });
-            this.bars.map('cursor').asValue('pointer');
 
             this.bars.map('bar-count').from( function() {
                 return NUM_HOURS_IN_DAY * that.getCount(this);
@@ -184,7 +153,7 @@ define(function (require) {
                 if (maxPercentage === 0) {
                     return 0;
                 }
-                return -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
+                return that.Y_CENTRE_OFFSET -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
                        that.getYOffset(this, Math.floor(index/NUM_HOURS_IN_DAY));
             });
             this.bars.map('offset-x').from(function (index) {
@@ -203,16 +172,9 @@ define(function (require) {
                 return true; // swallow event
             });
 
-            this.bars.on('mousemove', function(event) {
-                that.onHover(event, Math.floor(event.index[0]/NUM_HOURS_IN_DAY), 'tagsByTimeSentimentCountSummary');
-                return true; // swallow event
-            });
 
-            this.bars.on('mouseout', function(event) {
-                that.onHoverOff(event);
-            });
             this.bars.map('opacity').from( function() {
-                return that.getOpacity();
+                return that.opacity;
             })
 
         },
@@ -222,15 +184,13 @@ define(function (require) {
 
             var that = this;
 
-            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.summaryLabel = this.nodeLayer.addLayer(aperture.LabelLayer);
             this.summaryLabel.map('label-count').asValue(3);
             this.summaryLabel.map('font-size').asValue(12);
             this.summaryLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.summaryLabel.map('font-outline-width').asValue(3);
-            this.summaryLabel.map('visible').from(function(){
-                return that.isSelectedView(this) &&
-                    that.clientState.hoverState.tilekey === this.tilekey &&
-                    that.clientState.hoverState.userData.id === 'tagsByTimeSentimentCountSummary';
+            this.summaryLabel.map('visible').from( function() {
+                return false; //that.visible;
             });
             this.summaryLabel.map('fill').from( function(index) {
                 switch(index) {
@@ -253,8 +213,8 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.getOpacity();
-                })
+                return that.opacity;
+            });
         },
 
 
@@ -263,24 +223,17 @@ define(function (require) {
             var that = this,
                 MAX_TITLE_CHAR_COUNT = 9;
 
-            this.tagLabels = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.tagLabels = this.nodeLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabels.map('visible').from(function() {
-                return that.isSelectedView(this) && that.isVisible(this);
+                return that.visibility;
             });
 
-            this.tagLabels.map('fill').from( function(index) {
-                if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
-                    return that.GREY_COLOUR;
-                }
-                return that.WHITE_COLOUR;
-            });
+            this.tagLabels.map('fill').asValue( that.WHITE_COLOUR );
 
             this.tagLabels.map('label-count').from(function() {
                 return that.getCount(this);
             });
-
-            this.tagLabels.map('cursor').asValue('pointer');
 
             this.tagLabels.map('text').from(function (index) {
                 var str = that.filterText(this.bin.value[index].tag);
@@ -290,15 +243,10 @@ define(function (require) {
                 return str;
             });
 
-            this.tagLabels.map('font-size').from( function(index) {
-                if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                    return 14;
-                }
-                return 12;
-            });
+            this.tagLabels.map('font-size').asValue( 12 );
 
             this.tagLabels.map('offset-y').from(function (index) {
-                return that.getYOffset(this, index) - 5;
+                return that.Y_CENTRE_OFFSET - that.getYOffset(this, index) - 5;
             });
 
             this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 16);
@@ -307,21 +255,13 @@ define(function (require) {
             this.tagLabels.map('font-outline-width').asValue(3);
 
             this.tagLabels.on('click', function(event) {
-                that.onClick(event, event.index[0]);
+                that.onClick( event, event.index[0] );
                 return true; // swallow event
             });
 
-            this.tagLabels.on('mousemove', function(event) {
-                that.onHover(event, event.index[0], 'tagsByTimeSentimentCountSummary');
-                return true;  // swallow event
-            });
-
-            this.tagLabels.on('mouseout', function(event) {
-                that.onHoverOff(event);
-            });
             this.tagLabels.map('opacity').from( function() {
-                    return that.getOpacity();
-                })
+                return that.opacity;
+            });
 
         }
 
