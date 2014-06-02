@@ -39,6 +39,7 @@ define(function (require) {
         ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
         TwitterUtil = require('./TwitterUtil'),
+        DetailsOnDemand = require('./DetailsOnDemandHtml'),
         TopTextSentimentHtml;
 
 
@@ -68,6 +69,7 @@ define(function (require) {
             this.map.on( 'click', function() {
                 $(".top-text-sentiments").removeClass('greyed');
                 $(".top-text-sentiments").removeClass('clicked');
+                DetailsOnDemand.destroy();
                 that.clientState.removeClickState('tag');
             });
         },
@@ -89,7 +91,14 @@ define(function (require) {
                 }
             }
 
-            function onClick( data ) {
+            function centreForDetails( data ) {
+                var viewportPixel = that.map.getViewportPixelFromCoord( data.longitude, data.latitude ),
+                    panCoord = that.map.getCoordFromViewportPixel( viewportPixel.x + that.map.getTileSize(),
+                                                                   viewportPixel.y + that.map.getTileSize() );
+                that.map.panToCoord( panCoord.x, panCoord.y );
+            }
+
+            function onClick( data, index ) {
                 return function( event ) {
 
                     var tag = $(this).find(".sentiment-labels").text();
@@ -104,7 +113,16 @@ define(function (require) {
 
                     that.clientState.setClickState('tag', tag );
 
-                    that.map.panToCoord( data.longitude, data.latitude  );
+                    centreForDetails( data );
+
+                    var pos = that.map.getMapPixelFromCoord( data.longitude, data.latitude ),
+
+                    $details = $('<div class="details-on-demand" style="left:'+(pos.x + 256)+'px; top:'+(that.map.getMapHeight() - pos.y)+'px;"></div>');
+                    $details.append( DetailsOnDemand.create( data.bin.value[index] ) );
+                    $details.draggable();
+
+                    that.map.enableEventToMapPropagation( $details, ['onmousemove'] );
+                    that.map.getRootElement().append( $details );
 
                     event.stopPropagation();
                 };
@@ -127,9 +145,9 @@ define(function (require) {
                 };
             }
 
-            function onMousedown( $elem, data ) {
+            function onMousedown( $elem, data, index ) {
                 return function( event ) {
-                    $elem.click( onClick( data ) );
+                    $elem.click( onClick( data, index ) );
                 };
             }
 
@@ -165,7 +183,7 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
 
-                        tag = TwitterUtil.trimLabelText( value, i );
+                        tag = TwitterUtil.trimLabelText( value[i].tag );
                         percentages = TwitterUtil.getSentimentPercentages( value, i );
 
                         html = '<div class="top-text-sentiments" style=" top:' +  TwitterUtil.getYOffset( value, i ) + 'px;">';
@@ -187,7 +205,7 @@ define(function (require) {
                         // bind event handlers
                         $elem.mouseover( onMouseover( $summaries, value, i ) );
                         $elem.mouseout( onMouseout( $elem, $summaries ) );
-                        $elem.mousedown( onMousedown( $elem, this ) );
+                        $elem.mousedown( onMousedown( $elem, this, i ) );
                         $elem.mousemove( onMousemove( $elem ) );
 
                         injectClasses( $elem, tag );

@@ -71,15 +71,33 @@ define(function (require) {
                 }
 			});
 
+            this.createRoot();
+
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
 
             // set resize callback
             $(window).resize( $.proxy(this.updateSize, this) );
+
 			// Trigger the initial resize event to resize everything
 			$(window).resize();
 		},
 
+
+        createRoot: function() {
+
+            var that = this;
+            this.$root = $('<div id="'+this.id+'-root" style="position:absolute;"></div>');
+            this.$map.append( this.$root );
+
+            this.on('move', function() {
+                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
+                that.$root.css({
+                    top: pos.y + "px",
+                    left: pos.x + "px"
+                });
+            });
+        },
 
         getZIndex: function() {
             var indices = OpenLayers.Map.prototype.Z_INDEX_BASE,
@@ -99,6 +117,11 @@ define(function (require) {
         },
 
 
+        getRootElement: function() {
+            return this.$root;
+        },
+
+
         getEventHandlingDOMElement: function() {
             return $('.olMapViewport')[0];
         },
@@ -108,10 +131,11 @@ define(function (require) {
          * Allows the given DOMElement or jQuery object events to propagate through
          * and interact with the underlying Map
          */
-        enableEventToMapPropagation: function( elem ) {
+        enableEventToMapPropagation: function( elem, events ) {
 
             var //that = this,
-                domElement = (elem instanceof jQuery) ? elem[0] : elem;
+                domElement = (elem instanceof jQuery) ? elem[0] : elem,
+                i;
 
             function propagateEvent( event ) {
                 var newEvent = new event.constructor(event.type, event),
@@ -124,15 +148,43 @@ define(function (require) {
                 $(elem).css('pointer-events', 'all');
             }
 
-            domElement.onmousedown = propagateEvent;
-            domElement.onmouseup = propagateEvent;
-            domElement.onmousemove = propagateEvent;
-            domElement.onwheel = propagateEvent;
-            domElement.onmousewheel = propagateEvent;
-            domElement.onscroll = propagateEvent;
-            domElement.onclick = propagateEvent;
+            if (!events) {
+                domElement.onmousedown = propagateEvent;
+                domElement.onmouseup = propagateEvent;
+                domElement.onmousemove = propagateEvent;
+                domElement.onwheel = propagateEvent;
+                domElement.onmousewheel = propagateEvent;
+                domElement.onscroll = propagateEvent;
+                domElement.onclick = propagateEvent;
+            } else {
+                events = ($.isArray) ? events : [events];
+                for (i=0; i<events.length; i++) {
+                    domElement[events[i]] = propagateEvent;
+                }
+            }
+
         },
 
+
+        disableEventToMapPropagation: function( elem, events ) {
+
+            var domElement = (elem instanceof jQuery) ? elem[0] : elem,
+                i;
+            if (!events) {
+                domElement.onmousedown = null;
+                domElement.onmouseup = null;
+                domElement.onmousemove = null;
+                domElement.onwheel = null;
+                domElement.onmousewheel = null;
+                domElement.onscroll = null;
+                domElement.onclick = null;
+            } else {
+                events = ($.isArray) ? events : [events];
+                for (i=0; i<events.length; i++) {
+                    domElement[events[i]] = null;
+                }
+            }
+        },
 
 		setAxisSpecs: function (axes) {
 
@@ -383,6 +435,21 @@ define(function (require) {
         },
 
 
+         /**
+         * Returns the top left pixel location in viewport coord from a tile index
+         */
+        getTopLeftMapPixelForTile: function(tx, ty) {
+
+            var mx = tx * TILESIZE,
+                my = ty * TILESIZE + TILESIZE;
+
+            return {
+                x : mx,
+                y : my
+            };
+        },
+
+
 		/**
 		 * Returns the tile and bin index corresponding to the given viewport pixel coordinate
 		 */
@@ -506,13 +573,7 @@ define(function (require) {
 
 
         panToCoord: function( x, y ) {
-
-            var tilesize = this.getTileSize()/2,
-                viewportPixel = this.getViewportPixelFromCoord( x, y ),
-                panCoord = this.getCoordFromViewportPixel( viewportPixel.x + tilesize,
-                                                           viewportPixel.y + tilesize );
-            this.map.olMap_.panDuration = 25;
-            this.map.panTo( panCoord.y, panCoord.x );
+            this.map.panTo( y, x );
         },
 
 

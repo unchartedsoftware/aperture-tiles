@@ -208,6 +208,10 @@ define(function (require) {
                 this.$header.click();
                 this.$content.finish();
             }
+
+            // allow events to propagate below to map
+            this.map.enableEventToMapPropagation( this.$div );
+
             // draw initial axis
             this.redraw();
         },

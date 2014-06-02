@@ -100,9 +100,8 @@ define(function (require) {
         /*
             Returns a trimmed string based on character limit
         */
-        trimLabelText : function( value, index ) {
-            var MAX_LABEL_CHAR_COUNT = 9,
-                str = value[index].tag;
+        trimLabelText : function( str ) {
+            var MAX_LABEL_CHAR_COUNT = 9;
             if (str.length > MAX_LABEL_CHAR_COUNT) {
                 str = str.substr( 0, MAX_LABEL_CHAR_COUNT ) + "...";
             }

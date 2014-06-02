@@ -50,6 +50,7 @@ define(function (require) {
 
             var that = this;
 
+            // call base class ClientLayer constructor
             this._super(id, map);
 
             // constants
@@ -65,24 +66,21 @@ define(function (require) {
 
             this.Z_INDEX = this.map.getZIndex() + this.Z_INDEX_OFFSET;
 
-            // call base class ClientLayer constructor
-
             this.previousMouse = {};
             this.selectedTileInfo = {};
 
             // put mouse move callback on global document
             this.map.on('mousemove', function(event) {
-                var tilekey = that.map.getTileKeyFromViewportPixel(event.xy.x, event.xy.y);
-                that.updateSelectedTile(tilekey);
+                that.updateSelectedTile( event.xy.x, event.xy.y );
                 that.previousMouse.x = event.xy.x;
                 that.previousMouse.y = event.xy.y;
             });
 
-            // update carousel if map is moving and mouse isn't
-            this.map.on('move', function(event) {
-                var tilekey = that.map.getTileKeyFromViewportPixel( that.previousMouse.x, that.previousMouse.y );
-                that.updateSelectedTile(tilekey);
+            // update carousel on zoomend
+            this.map.on('zoomend', function(event) {
+                that.updateSelectedTile(  that.previousMouse.x, that.previousMouse.y );
             });
+
         },
 
 
@@ -100,7 +98,7 @@ define(function (require) {
         createUI: function() {
 
             // tile outline layer
-            this.createTileOutline();
+            this.createCarouselPanel();
 
             if (this.views.length > 1) {
                 // only create carousel ui if there is more than 1 view
@@ -130,27 +128,38 @@ define(function (require) {
          */
         createChevrons: function() {
 
-            var that = this,
-                incIndex = function(inc) {
-                    var tilekey = that.selectedTileInfo.tilekey,
-                        prevIndex = that.getTileViewIndex(tilekey),
-                        mod = function (m, n) {
-                            return ((m % n) + n) % n;
-                        },
-                        newIndex = mod(prevIndex + inc, that.views.length);
-                    that.changeViewIndex(tilekey, prevIndex, newIndex);
-                };
+            var that = this;
+
+            function generateCallbacks( chevron, inc ) {
+
+                chevron.mouseout( function() { chevron.off('click'); });
+                chevron.mousemove( function() { chevron.off('click'); });
+                chevron.mousedown( function() {
+                    chevron.click( function() {
+                        var tilekey = that.selectedTileInfo.tilekey,
+                            prevIndex = that.getTileViewIndex(tilekey),
+                            mod = function (m, n) {
+                                return ((m % n) + n) % n;
+                            },
+                            newIndex = mod(prevIndex + inc, that.views.length);
+                      that.changeViewIndex(tilekey, prevIndex, newIndex);
+                    });
+                });
+            }
 
             this.$leftChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_LEFT+"'></div>");
-            this.$leftChevron.click( function() { incIndex(-1); return true; });
-            this.$outline.append(this.$leftChevron);
+            generateCallbacks( this.$leftChevron, -1 );
+            this.$panel.append(this.$leftChevron);
 
             this.$rightChevron = $("<div class='"+this.CHEVRON_CLASS+" "+this.CHEVRON_CLASS_RIGHT+"'></div>");
-            this.$rightChevron.click( function() { incIndex(1); return true; });
-            this.$outline.append(this.$rightChevron);
+            generateCallbacks( this.$rightChevron, 1 );
+            this.$panel.append(this.$rightChevron);
 
+            // allow all events to propagate to map except 'click'
             this.map.enableEventToMapPropagation( this.$leftChevron );
             this.map.enableEventToMapPropagation( this.$rightChevron );
+            this.map.disableEventToMapPropagation( this.$leftChevron, ['onclick'] );
+            this.map.disableEventToMapPropagation( this.$rightChevron, ['onclick'] );
 
         },
 
@@ -165,28 +174,33 @@ define(function (require) {
                 $indexContainer,
                 i;
 
-            function generateDotCallback(index) {
-                return function(){
-                    var tilekey = that.selectedTileInfo.tilekey,
-                        prevIndex = that.getTileViewIndex(tilekey);
-                    that.changeViewIndex(tilekey, prevIndex, index);
-                    return true;
-                };
+            function generateCallbacks( dot, index ) {
+
+                dot.mouseout( function() { dot.off('click'); });
+                dot.mousemove( function() { dot.off('click'); });
+                dot.mousedown( function() {
+                    dot.click( function() {
+                        var tilekey = that.selectedTileInfo.tilekey,
+                            prevIndex = that.getTileViewIndex(tilekey);
+                        that.changeViewIndex(tilekey, prevIndex, index);
+                    });
+                });
             }
 
             $indexContainer = $("<div class='"+this.DOT_CONTAINER_CLASS+"'></div>");
-            this.$outline.append($indexContainer);
+            this.$panel.append( $indexContainer );
+
+            // allow all events to propagate to map except 'click'
+            this.map.enableEventToMapPropagation( $indexContainer );
+            this.map.disableEventToMapPropagation( $indexContainer, ['onclick'] );
 
             this.$dots = [];
-
             for (i=0; i < this.views.length; i++) {
 
                 indexClass = (this.defaultViewIndex === i) ? this.DOT_CLASS_SELECTED : this.DOT_CLASS_DEFAULT;
-
                 this.$dots[i] = $("<div id='" + this.DOT_ID_PREFIX +i+"' class='" + this.DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
-                this.$dots[i].click( generateDotCallback(i) );
+                generateCallbacks( this.$dots[i], i );
                 $indexContainer.append( this.$dots[i] );
-                this.map.enableEventToMapPropagation( this.$dots[i] );
             }
             $indexContainer.css('left', this.map.getTileSize()/2 - $indexContainer.width()/2 );
         },
@@ -195,10 +209,10 @@ define(function (require) {
         /**
          * Construct the tile outline to indicate the current tile selected
          */
-        createTileOutline: function() {
+        createCarouselPanel: function() {
 
-            this.$outline = $('<div class="' +this.CAROUSEL_CLASS +'" style="z-index:'+this.Z_INDEX+';"></div>');
-            this.map.getElement().append(this.$outline);
+            this.$panel = $('<div class="' +this.CAROUSEL_CLASS +'" style="z-index:'+this.Z_INDEX+';"></div>');
+            this.map.getRootElement().append(this.$panel);
         },
 
 
@@ -206,16 +220,15 @@ define(function (require) {
          * Updates selected tile nodeLayer data and redraws UI
          * @param tilekey tile identification key of the form: "level,x,y"
          */
-        updateSelectedTile: function(tilekey) {
+        updateSelectedTile: function( x, y ) {
 
             if (this.views === undefined || this.views.length === 0) {
                 return;
             }
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
-                tilekey : tilekey
+                tilekey : this.map.getTileKeyFromViewportPixel( x, y )
             };
-            this.clientState.setSharedState('activeCarouselTile', tilekey);
             this.redrawUI();
         },
 
@@ -229,14 +242,14 @@ define(function (require) {
                 parsedValues = tilekey.split(','),
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10),
-                topLeft = this.map.getTopLeftViewportPixelForTile(xIndex, yIndex),
+                topLeft = this.map.getTopLeftMapPixelForTile(xIndex, yIndex),
                 prevActiveView = this.getTileViewIndex(this.selectedTileInfo.previouskey),
                 activeViewForTile = this.getTileViewIndex(tilekey);
 
             // re-position carousel tile
-            this.$outline.css({
+            this.$panel.css({
                 left: topLeft.x,
-                top: topLeft.y
+                top: this.map.getMapHeight() - topLeft.y
             });
 
             // if over new tile

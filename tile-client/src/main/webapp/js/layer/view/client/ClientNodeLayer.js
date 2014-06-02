@@ -54,12 +54,9 @@ define(function (require) {
 
             this.Z_INDEX = this.map_.getZIndex() + this.Z_INDEX_OFFSET;
 
-            this.$root_ = this.createLayerRoot();
+            this.createLayerRoot();
             this.nodes_ = [];
             this.nodesById_ = {};
-
-            this.map_.getElement().append( this.$root_ );
-            this.map_.on('move', $.proxy( this.onMapUpdate, this ));
 
             this.layers_ = [];
             this.subset_ = [];
@@ -85,8 +82,12 @@ define(function (require) {
 
 
         createLayerRoot : function() {
-            var pos = this.map_.getViewportPixelFromMapPixel( 0, this.map_.getMapHeight() );
-            return $('<div class="client-layer" style="position:absolute; left:'+pos.x+'px; top:' +pos.y+ 'px; width=0px; height=0px; z-index:'+this.Z_INDEX+';"></div>');
+            // create layer root div
+            this.$root_ = $('<div class="client-layer" style="position:relative; z-index:'+this.Z_INDEX+';"></div>');
+            // append to map root
+            this.map_.getRootElement().append( this.$root_ );
+            // allow mouse events to propagate through to map
+            this.map_.enableEventToMapPropagation( this.$root_ );
         },
 
 
@@ -109,14 +110,27 @@ define(function (require) {
             // create and append tile root to layer root
             var $nodeRoot = this.createNodeRoot( data );
             this.$root_.append( $nodeRoot );
-
-            // allow events to propagate through to map
-            this.map_.enableEventToMapPropagation( $nodeRoot );
-
             return {
                  data : data,
                  $root : $nodeRoot
             };
+        },
+
+
+        getNodeById: function( id ) {
+            return this.nodesById_[ id ];
+        },
+
+
+        getNodeByData: function(data) {
+            var nodes = this.nodes_,
+                i;
+            for (i=0; i<nodes.length; i++) {
+                if ( nodes[i].data === data ) {
+                    return nodes[i];
+                }
+            }
+            return null;
         },
 
 
@@ -212,7 +226,7 @@ define(function (require) {
 
                 // keep list of current nodes, to track which ones are not in the new set
                 for (i=0; i<nodes.length; ++i) {
-                    defunctNodesArray.push( that.findNodeFromData( nodes[i].data ) );
+                    defunctNodesArray.push( that.getNodeByData( nodes[i].data ) );
                 }
 
                 // only root will execute the following code
@@ -220,7 +234,7 @@ define(function (require) {
 
                     if ( that.doesNodeExist( data[i] ) ) {
                         // remove from tracking list
-                        index = defunctNodesArray.indexOf(  that.findNodeFromData( data[i] ) );
+                        index = defunctNodesArray.indexOf(  that.getNodeByData( data[i] ) );
                         defunctNodesArray.splice(index, 1);
                     } else {
                         // new data
@@ -312,7 +326,7 @@ define(function (require) {
             // remove by data
             function removeByData() {
                 for (i=0; i<data.length; i++) {
-                    that.removeNode( that.findNodeFromData( data[i] ) );
+                    that.removeNode( that.getNodeByData( data[i] ) );
                 }
             }
 
@@ -386,7 +400,7 @@ define(function (require) {
 
             function whereByData() {
                 for (i=0; i<idEval.length; i++) {
-                    node = that.findNodeFromData( idEval[i] );
+                    node = that.getNodeByData( idEval[i] );
                     if (node) {
                         subset.push( node );
                     }
@@ -415,20 +429,8 @@ define(function (require) {
         },
 
 
-        findNodeFromData: function(data) {
-            var nodes = this.nodes_,
-                i;
-            for (i=0; i<nodes.length; i++) {
-                if ( nodes[i].data === data ) {
-                    return nodes[i];
-                }
-            }
-            return null;
-        },
-
-
         doesNodeExist: function(data) {
-            return this.findNodeFromData( data ) !== null;
+            return this.getNodeByData( data ) !== null;
         },
 
 
