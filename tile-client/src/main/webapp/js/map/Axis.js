@@ -209,8 +209,9 @@ define(function (require) {
                 this.$content.finish();
             }
 
-            // allow events to propagate below to map
+            // allow events to propagate below to map except 'click'
             this.map.enableEventToMapPropagation( this.$div );
+            this.map.disableEventToMapPropagation( this.$div, ['onclick'] );
 
             // draw initial axis
             this.redraw();
