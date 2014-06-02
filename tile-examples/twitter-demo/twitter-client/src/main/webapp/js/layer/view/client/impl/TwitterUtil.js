@@ -38,11 +38,16 @@ define(function (require) {
         /*
             Return the count of node entries, clamped at MAX_COUNT
         */
-        getCount : function( value ) {
+        getTagCount : function( value ) {
             var MAX_COUNT = 5;
             return Math.min( value.length, MAX_COUNT );
         },
 
+
+        getTweetCount : function( data ) {
+            var MAX_TWEETS = 10;
+            return Math.min( data.recent.length, MAX_TWEETS );
+        },
 
         /*
             Return the relative percentages of positive, neutral, and negative tweets
@@ -61,7 +66,7 @@ define(function (require) {
         getTotalCount : function( value, index ) {
             var i,
                 sum = 0,
-                n = this.getCount( value );
+                n = this.getTagCount( value );
             for (i=0; i<n; i++) {
                 sum += value[i].count;
             }
@@ -94,7 +99,7 @@ define(function (require) {
             Returns a y offset to position tag entry relative to centre of tile
         */
         getYOffset : function( value, index ) {
-            return 98 - ( (( this.getCount( value ) - 1) / 2 ) - index ) * 36;
+            return 98 - ( (( this.getTagCount( value ) - 1) / 2 ) - index ) * 36;
         },
 
         /*
@@ -107,6 +112,71 @@ define(function (require) {
             }
             return str;
         },
+        
+        
+        getDay : function( timestamp ) {
+        
+            function getMonth( date ) {
+                var month = date.getMonth();
+                switch(month) {
+                    case 0: return "January";
+                    case 1: return "February";
+                    case 2: return "March";
+                    case 3: return "April";
+                    case 4: return "May";
+                    case 5: return "June";
+                    case 6: return "July";
+                    case 7: return "August";
+                    case 8: return "September";
+                    case 9: return "October";
+                    case 10: return "November";
+                    default: return "December";
+                }
+            }
+            var date = new Date( timestamp ),
+                month = getMonth( date ),
+                year =  date.getFullYear(),
+                day = date.getDay();
+
+            return month + " " + day + ", " + year + ":";
+        },
+
+        getTime : function( timestamp ) {
+
+            function padZero( num ) {
+                return ("0" + num).slice(-2);
+            }
+            var date = new Date( timestamp ),
+                hours = date.getHours(),
+                minutes = padZero( date.getMinutes() ),
+                seconds = padZero( date.getSeconds() ),
+                suffix = (hours >= 12) ? 'pm' : 'am';
+            // ensure hour is correct
+            hours = ( hours === 0 || hours === 12 ) ? 12 : hours % 12;
+            return hours + ':' + minutes + ':' + seconds + " " + suffix;
+        },
+
+
+        getRecentTweetsByDay : function( tagData ) {
+            // bucket tweets by day
+            var days = {},
+                count = this.getTweetCount( tagData ),
+                time, day, recent, i;
+            for (i=0; i<count; i++) {
+                recent = tagData.recent[i];
+                time = recent.time;
+                day = this.getDay( time );
+                days[day] = days[day] || [];
+                days[day].push({
+                    tweet: recent.tweet,
+                    time: this.getTime( time )
+                });
+            }
+            return days;
+        }
+
+
+        
 
     };
 

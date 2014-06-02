@@ -40,52 +40,8 @@ define(function (require) {
         create: function( tagData ) {
 
             var html = '',
-                count = tweetCount( tagData ),
-                time, tweet,
+                time, day, tweetsByDay, key, lightOrDark,
                 i;
-
-            function getTime( timestamp ) {
-
-                function getMonth( date ) {
-
-                    var month = date.getMonth();
-                    switch(month) {
-                        case 0: return "Jan";
-                        case 1: return "Feb";
-                        case 2: return "Mar";
-                        case 3: return "Apr";
-                        case 4: return "May";
-                        case 5: return "Jun";
-                        case 6: return "Jul";
-                        case 7: return "Aug";
-                        case 8: return "Sep";
-                        case 9: return "Oct";
-                        case 10: return "Nov";
-                        default: return "Dec";
-                    }
-                }
-
-                function padZero( num ) {
-                    return ("0" + num).slice(-2);
-                }
-
-                var date = new Date( timestamp*1000 ),
-                    month = getMonth( date ),
-                    day = date.getDay(),
-                    hours = date.getHours(),
-                    minutes = padZero( date.getMinutes() ),
-                    seconds = padZero( date.getSeconds() ),
-                    suffix = (hours >= 12) ? 'pm' : 'am';
-
-                hours = ( hours === 0 || hours === 12 ) ? 12 : hours % 12;
-
-                return month + " " + day + ", " + hours + ':' + minutes + ':' + seconds + " " + suffix;
-            }
-
-            function tweetCount( data ) {
-                var MAX_TWEETS = 10;
-                return Math.min( data.recent.length, MAX_TWEETS );
-            }
 
             // top half
             html += '<div class="details-on-demand-tophalf">'
@@ -112,12 +68,25 @@ define(function (require) {
 
             html +=     '<div class="details-on-demand-subtitle">Most Recent</div>';
             html +=     '<div class="details-on-demand-recent-tweets">';
-            for (i=0; i<count; i++) {
-                time = getTime( tagData.recent[i].time );
-                tweet = tagData.recent[i].tweet;
-                html +=         '<div class="details-on-demand-tweet-time">'+time+'</div>';
-                html +=         '<div class="details-on-demand-tweet-text">'+tweet+'</div>';
+
+            // bucket tweets by day
+            tweetsByDay = TwitterUtil.getRecentTweetsByDay( tagData );
+
+            for ( key in tweetsByDay ) {
+                if( tweetsByDay.hasOwnProperty( key ) ) {
+                    day = tweetsByDay[key];
+                    lightOrDark = 'light';
+                    html += '<div class="details-on-demand-tweet-day">'+key+'</div>';
+                    for (i=0; i<day.length; i++) {
+                        html += '<div class="details-on-demand-tweet tweet-'+lightOrDark+'">';
+                        html +=     '<div class="details-on-demand-tweet-text">'+day[i].tweet+'</div>';
+                        html +=     '<div class="details-on-demand-tweet-time">'+day[i].time+'</div>';
+                        html += '</div>';
+                        lightOrDark = (lightOrDark === 'light') ? 'dark' : 'light';
+                    }
+                }
             }
+
             html +=     '</div>';
 
             html += '</div>';

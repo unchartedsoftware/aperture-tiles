@@ -169,7 +169,7 @@ define(function (require) {
                         i,
                         tag,
                         percentages,
-                        count = TwitterUtil.getCount( value );
+                        count = TwitterUtil.getTagCount( value );
 
                     // create count summaries
                     html = '<div class="sentiment-summaries">';
