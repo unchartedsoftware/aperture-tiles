@@ -47,8 +47,8 @@ define(function (require) {
     EmptyRenderer = ClientRenderer.extend({
         ClassName: "EmptyRenderer",
 		
-        init: function (map) {
-            this._super(map);
+        init: function ( map ) {
+            this._super( map );
         },
 
         setOpacity: function( opacity ) {

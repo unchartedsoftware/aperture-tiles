@@ -239,12 +239,9 @@ define(function (require) {
         redrawUI: function() {
 
             var tilekey = this.selectedTileInfo.tilekey,
-                parsedValues = tilekey.split(','),
-                xIndex = parseInt(parsedValues[1], 10),
-                yIndex = parseInt(parsedValues[2], 10),
-                topLeft = this.map.getTopLeftMapPixelForTile(xIndex, yIndex),
-                prevActiveView = this.getTileViewIndex(this.selectedTileInfo.previouskey),
-                activeViewForTile = this.getTileViewIndex(tilekey);
+                topLeft = this.map.getTopLeftMapPixelForTile( tilekey ),
+                prevActiveView = this.getTileViewIndex( this.selectedTileInfo.previouskey ),
+                activeViewForTile = this.getTileViewIndex( tilekey );
 
             // re-position carousel tile
             this.$panel.css({

@@ -28,41 +28,39 @@ define(function (require) {
 
 
 
-    var Class = require('../../../class'),
-        ClientRenderer;
+    var ClientRenderer = require('./ClientRenderer'),
+        ApertureRenderer;
 
 
 
-    ClientRenderer = Class.extend({
-        ClassName: "ClientRenderer",
+    ApertureRenderer = ClientRenderer.extend({
+        ClassName: "ApertureRenderer",
 
-        /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
-         */
-        init: function(map) {
+        init: function( map ) {
 
-            this.map = map;
-            this.clientState = null;
-        },
-
-        attachClientState: function(clientState) {
-            this.clientState = clientState;
+            this._super( map );
+            this.opacity = 1.0;
+            this.visibility = true;
+            this.nodeLayer = {};
+            this.X_CENTRE_OFFSET = 128;
+            this.Y_CENTRE_OFFSET = 128;
         },
 
         setOpacity: function( opacity ) {
-            return true;
+            this.opacity = opacity;
+            this.nodeLayer.all().redraw();
         },
 
         setVisibility: function( visible ) {
-            return true;
+            this.visibility = visible;
+            this.nodeLayer.all().redraw();
         },
 
-        redraw: function() {
-            return true;
+        redraw: function( data ) {
+            this.nodeLayer.all( data ).where( data ).redraw();
         }
 
     });
 
-    return ClientRenderer;
+    return ApertureRenderer;
 });

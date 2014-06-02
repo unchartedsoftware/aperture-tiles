@@ -35,7 +35,7 @@ define(function (require) {
 
 
 
-    var ClientRenderer = require('../ClientRenderer'),
+    var HtmlRenderer = require('../HtmlRenderer'),
         ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
         TwitterUtil = require('./TwitterUtil'),
@@ -44,7 +44,7 @@ define(function (require) {
 
 
 
-    TopTextSentimentHtml = ClientRenderer.extend({
+    TopTextSentimentHtml = HtmlRenderer.extend({
         ClassName: "TopTextSentimentHtml",
 
         /**
@@ -96,6 +96,11 @@ define(function (require) {
                     panCoord = that.map.getCoordFromViewportPixel( viewportPixel.x + that.map.getTileSize(),
                                                                    viewportPixel.y + that.map.getTileSize() );
                 that.map.panToCoord( panCoord.x, panCoord.y );
+            }
+
+            function getYOffset( value, index ) {
+                var SPACING =  36;
+                return 98 - ( (( TwitterUtil.getTagCount( value ) - 1) / 2 ) - index ) * SPACING;
             }
 
             function onClick( data, index ) {
@@ -186,7 +191,7 @@ define(function (require) {
                         tag = TwitterUtil.trimLabelText( value[i].tag );
                         percentages = TwitterUtil.getSentimentPercentages( value, i );
 
-                        html = '<div class="top-text-sentiments" style=" top:' +  TwitterUtil.getYOffset( value, i ) + 'px;">';
+                        html = '<div class="top-text-sentiments" style=" top:' +  getYOffset( value, i ) + 'px;">';
 
                         // create sentiment bars
                         html += '<div class="sentiment-bars">';
@@ -217,10 +222,6 @@ define(function (require) {
                 }
             }));
 
-        },
-
-        redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
         }
 
 

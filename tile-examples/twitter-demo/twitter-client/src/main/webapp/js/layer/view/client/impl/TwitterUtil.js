@@ -38,14 +38,14 @@ define(function (require) {
         /*
             Return the count of node entries, clamped at MAX_COUNT
         */
-        getTagCount : function( value ) {
-            var MAX_COUNT = 5;
+        getTagCount : function( value, max ) {
+            var MAX_COUNT = max || 5;
             return Math.min( value.length, MAX_COUNT );
         },
 
 
-        getTweetCount : function( data ) {
-            var MAX_TWEETS = 10;
+        getTweetCount : function( data, max ) {
+            var MAX_TWEETS = max || 10;
             return Math.min( data.recent.length, MAX_TWEETS );
         },
 
@@ -95,12 +95,6 @@ define(function (require) {
             return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
         },
 
-        /*
-            Returns a y offset to position tag entry relative to centre of tile
-        */
-        getYOffset : function( value, index ) {
-            return 98 - ( (( this.getTagCount( value ) - 1) / 2 ) - index ) * 36;
-        },
 
         /*
             Returns a trimmed string based on character limit

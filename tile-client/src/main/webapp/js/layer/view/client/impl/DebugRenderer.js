@@ -39,18 +39,18 @@ define(function (require) {
 	
 	
 	
-    var ClientRenderer = require('../ClientRenderer'),
-        HtmlLayer = require('../HtmlLayer'),
+    var HtmlRenderer = require('../HtmlRenderer'),
         ClientNodeLayer = require('../ClientNodeLayer'),
+        HtmlLayer = require('../HtmlLayer'),
         DebugRenderer;
 
 		
 		
-    DebugRenderer = ClientRenderer.extend({
+    DebugRenderer = HtmlRenderer.extend({
         ClassName: "DebugLayer",
 		
-        init: function (map) {
-            this._super(map);
+        init: function ( map ) {
+            this._super( map );
 
             this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
@@ -75,11 +75,6 @@ define(function (require) {
                     'text-shadow': '-2px -2px 2px #000, 2px -2px 2px #000, -2px  2px 2px #000, 2px  5px 5px #000'
                 }
             }));
-
-        },
-
-        redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
         }
 
     });

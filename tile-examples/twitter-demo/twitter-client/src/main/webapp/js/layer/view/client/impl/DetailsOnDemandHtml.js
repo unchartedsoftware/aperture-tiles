@@ -91,7 +91,7 @@ define(function (require) {
             html += '</div>';
 
             this.destroy(); // destroy any previous DoD
-            return html;
+            return $(html);
         },
 
 

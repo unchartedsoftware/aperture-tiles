@@ -73,6 +73,9 @@
                                     "renderer": "TopTextSentimentHtml"
                                 },
                                 {
+                                    "renderer": "TagsByTimeSentiment"
+                                },
+                                {
                                     "renderer": "DebugRenderer"
                                 }
                             ]

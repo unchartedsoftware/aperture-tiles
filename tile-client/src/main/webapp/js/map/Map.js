@@ -328,12 +328,11 @@ define(function (require) {
 		 *          map [0,0] is BOTTOM-LEFT
 		 */
 		getViewportPixelFromMapPixel: function(mx, my) {
-			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
-			    totalPixelSpan = this.getMapWidth();
+			var viewportMinMax = this.getMapMinAndMaxInViewportPixels();
 
 			return {
 				x: mx + viewportMinMax.min.x,
-				y: totalPixelSpan - my + viewportMinMax.max.y
+				y: this.getMapWidth() - my + viewportMinMax.max.y
 			};
 		},
 
@@ -343,7 +342,7 @@ define(function (require) {
 		 * NOTE:    data and map [0,0] are both BOTTOM-LEFT
 		 */
 		getMapPixelFromCoord: function(x, y) {
-			var zoom = this.map.olMap_.getZoom(),
+			var zoom = this.getZoom(),
 			    tile = this.pyramid.rootToTile( x, y, zoom, TILESIZE),
 			    bin = this.pyramid.rootToBin( x, y, tile);
 			return {
@@ -419,30 +418,24 @@ define(function (require) {
         /**
          * Returns the top left pixel location in viewport coord from a tile index
          */
-        getTopLeftViewportPixelForTile: function(tx, ty) {
+        getTopLeftViewportPixelForTile: function( tilekey ) {
 
-            var mx = tx * TILESIZE,
-                my = ty * TILESIZE + TILESIZE,
-                pixel;
-
+            var mapPixel = this.getTopLeftMapPixelForTile( tilekey );
             // transform map coord to viewport coord
-            pixel = this.getViewportPixelFromMapPixel(mx, my);
-
-            return {
-                x : pixel.x,
-                y : pixel.y
-            };
+            return this.getViewportPixelFromMapPixel( mapPixel.x, mapPixel.y );
         },
 
 
          /**
          * Returns the top left pixel location in viewport coord from a tile index
          */
-        getTopLeftMapPixelForTile: function(tx, ty) {
+        getTopLeftMapPixelForTile: function( tilekey ) {
 
-            var mx = tx * TILESIZE,
-                my = ty * TILESIZE + TILESIZE;
-
+            var parsedValues = tilekey.split(','),
+                x = parseInt(parsedValues[1], 10),
+                y = parseInt(parsedValues[2], 10),
+                mx = x * TILESIZE,
+                my = y * TILESIZE + TILESIZE;
             return {
                 x : mx,
                 y : my
