@@ -69,6 +69,7 @@ body {
     padding-left: 0px;
     background: transparent;
     border-width: 0px 0px 1px 0px;
+	border-left: 1px solid #c0c0c0;
     -moz-border-radius: 0px;
     -webkit-border-radius: 0px;
     border-radius: 0px;
@@ -78,11 +79,10 @@ body {
 #tabs-major .ui-tabs-panel {
     background-color: white;
     border-width: 0px 1px 1px 1px;
-    height: 85%;
+    height: 87%;
+	width: 95.8%
 }
 .table-sub-tab {
-    width: 90%;
-    height: 85%;
     overflow: scroll;
 }
 .sub-tabs {
@@ -92,7 +92,7 @@ body {
 .sub-tabs .ui-widget-header {
     background: transparent;
     border: none;
-    border-bottom: 1px solid #c0c0c0;
+    border-bottom: 1px solid rgb(170, 170, 170);
     -moz-border-radius: 0px;
     -webkit-border-radius: 0px;
     border-radius: 0px;
@@ -107,7 +107,6 @@ body {
 }
 .sub-tabs .ui-tabs-nav .ui-state-default a {
     color: #c0c0c0;
-
 }
 .sub-tabs .ui-tabs-nav .ui-state-active a {
     color: #38629e;
@@ -125,13 +124,9 @@ body {
 #layer-control {
     font-weight: bold;
 }
-#tabs-tables , #tabs-plots{
-	
+#tabs-tables , #tabs-plots{	
     width: 95%;
 	padding: 0px;
-}
-#tabs-plots .ui-tabs-panel {
-    height: 90%;
 }
 table {
     border-top-width: 2px;
@@ -330,4 +325,8 @@ body div.ui-slider-range.ui-widget-header {
     border-style : solid;
     border-color : black;
     z-index : 1001;
+}
+.ui-tabs .ui-tabs-nav li{
+	margin-left: .2em;
+	margin-right: 0;
 }
