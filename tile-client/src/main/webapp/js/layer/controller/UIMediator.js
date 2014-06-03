@@ -187,9 +187,9 @@ define(function (require) {
             // Register a callback to handle layer state change events.
             layerState.addListener(function (fieldName) {
                 if (fieldName === "opacity") {
-                    clientLayer.setOpacity(layerState.getOpacity());
+                    clientLayer.setOpacity( layerState.getOpacity() );
                 } else if (fieldName === "enabled") {
-                    clientLayer.setVisibility(layerState.isEnabled());
+                    clientLayer.setVisibility( layerState.isEnabled() );
                 }
             });
 

@@ -49,6 +49,7 @@ define( function (require) {
 			// listeners that will push state changes into the layers.
             uiMediator.setServerLayers(serverLayers, map);
 
+            return serverLayers;
 		}
 
     };	

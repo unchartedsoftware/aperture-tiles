@@ -164,6 +164,11 @@ define(function (require) {
             return layerInfoById;
         },
 
+        getSubLayerInfosById: function () {
+
+            return this.dataListener.getLayerInformation();
+        },
+
 
         /**
          * Get the opacity of a given sub-layer
