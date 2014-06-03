@@ -80,7 +80,7 @@ define(function (require) {
                 cumulativePercentages[0] = sentimentPercentages.negative[i]*relativePercent;
                 cumulativePercentages[1] = cumulativePercentages[0] + sentimentPercentages.neutral[i]*relativePercent;
                 cumulativePercentages[2] = cumulativePercentages[1] + sentimentPercentages.positive[i]*relativePercent;
-                
+
                 visibility = (relativePercent > 0) ? 'visible' : 'hidden';
                 html +=            '<div class="details-chart-bar" style="visibility:'+visibility+';">';
                 html +=            '<div class="details-chart-positive-bar" style="height:'+cumulativePercentages[2]+'%;"></div>';

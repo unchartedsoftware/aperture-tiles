@@ -86,13 +86,7 @@ define(function (require) {
 
                 var tag = $(this).find(".sentiment-labels").text();
 
-                $(".top-text-sentiments").filter( function() {
-                    return $(this).find(".sentiment-labels").text() !== tag;
-                }).addClass('greyed').removeClass('clicked');
-
-                $(".top-text-sentiments").filter( function() {
-                    return $(this).find(".sentiment-labels").text() === tag;
-                }).removeClass('greyed').addClass('clicked');
+                TwitterUtil.injectClickStateClassesGlobal( tag );
 
                 that.clientState.setClickState('tag', tag );
             }
@@ -141,7 +135,6 @@ define(function (require) {
 
                         // set event handlers
                         TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, onClick, DetailsOnDemand );
-
                         TwitterUtil.injectClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
 
                         $html = $html.add( $elem );

@@ -1,15 +1,4 @@
-
-
-.greyed {
-	-webkit-filter: grayscale(1) brightness(50%);
-}
-
-.clicked {
-	-webkit-transform: scale(0.833);
-       -moz-transform: scale(0.833);
-        -ms-transform: scale(0.833);
-            transform: scale(0.833);
-}
+@charset "UTF-8";
 
 /********************************************/
 /* 		       Top Text Sentiment			*/
@@ -95,14 +84,20 @@
 	background-color: #FFFFFF;
 }
 
-.top-text-sentiments:hover .sentiment-bars-positive {
-	background-color: #09CFFF;
-}
-
 .sentiment-bars-neutral {
 	height:100%;
 	float:left;
 	background-color: #222222;
+}
+
+.sentiment-bars-negative {
+	height:100%;
+	float:left;
+	background-color: #666666;
+}
+
+.top-text-sentiments:hover .sentiment-bars-positive {
+	background-color: #09CFFF;
 }
 
 /*
@@ -111,81 +106,74 @@
 }
 */
 
-.sentiment-bars-negative {
-	height:100%;
-	float:left;
-	background-color: #666666;
-}
-
 .top-text-sentiments:hover .sentiment-bars-negative {
 	background-color: #D33CFF;
 }
-
 
 /********************************************/
 /* 		     Tags by Time Sentiment			*/
 /********************************************/
 
 .tags-by-time-sentiment {
-
-	position:relative;
-	width: 200px;
+	position:absolute;
+	width: 190px;
 	height: 20px;
-	left: 28px;
-	top: 20px;
+	left: 38px;
 }
 
 .tags-by-time-left {
-
 	position: relative;
 	float:left;
-	width: 66.666%;
+	padding-top:2px;
+	padding-bottom:2px;
+	width: 55%;
 	height: 100%;
-	background-color: #0000FF;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .tags-by-time-right {
-
 	position: relative;
 	float:right;
-	width: 33.333%;
+	width: 45%;
 	height: 100%;
-	background-color: #00FF00;
 }
 
 
 .tags-by-time-label {
-
 	position:relative;
 	text-align: left;
-	font-size : 20px;
+	vertical-align: middle;
+	font-size : 22px;
+	line-height: 22px;
 	color: #FFFFFF;
 	text-shadow:
 	    -2px -2px 2px #000,
 	     2px -2px 2px #000,
 	    -2px  2px 2px #000,
 	     2px  5px 5px #000;
-
+	-webkit-transform-origin: left center;
+	   -moz-transform-origin: left center;
+	    -ms-transform-origin: left center;
+	        transform-origin: left center;
 	-webkit-transition: -webkit-transform 0.1s ease-in-out;
        -moz-transition:    -moz-transform 0.1s ease-in-out;
        	-ms-transition:     -ms-transform 0.1s ease-in-out;
             transition:         transform 0.1s ease-in-out;
-/*
-	-webkit-transform: scale(0.667);
-       -moz-transform: scale(0.667);
-        -ms-transform: scale(0.667);
-            transform: scale(0.667); 
-*/	
+	-webkit-transform: scale(0.75);
+       -moz-transform: scale(0.75);
+        -ms-transform: scale(0.75);
+            transform: scale(0.75);
 }
 
 .tags-by-time-bar {
-
 	position: relative;
-	display:inline-block;
-	width: 5px;
+	float:left;
+	width: 8px;
 	bottom: 0px;
 	border: 1px solid #000;
-	background-color: #FFFFFF;	
+	-webkit-filter: grayscale(1) brightness(10000);
 	-webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -197,26 +185,21 @@
 }
 
 .tags-by-time-sentiment:hover .tags-by-time-label {
-
 	-webkit-transform: scale(1.0);
        -moz-transform: scale(1.0);
         -ms-transform: scale(1.0);
             transform: scale(1.0);
 }
 
-.tags-by-time-sentiment:hover .tags-by-time-left {
-
-
+.tags-by-time-sentiment:hover .tags-by-time-bar {
+	-webkit-filter: grayscale(0) brightness(1);
 }
-
-
 
 /********************************************/
 /* 		      Details on Demand  			*/
 /********************************************/
 
 .details-on-demand {
-
 	position:absolute;
 	width: 257px;
 	height: 513px;
@@ -231,7 +214,6 @@
 }
 
 .details-on-demand-half {
-
 	position:relative;
 	width: 100%;
 	height: 50%;
@@ -242,7 +224,6 @@
 }
 
 .details-on-demand-title {
-
 	position:relative;
 	color : #FFFFFF;
 	margin-bottom:10px;
@@ -255,22 +236,18 @@
 }
 
 .large-title {
-
 	height: 20px;
 	line-height: 20px;
 	font-size: 20px;
 }
 
 .small-title {
-
 	height: 16px;
 	line-height: 16px;
 	font-size: 16px;
 }
 
-
 .details-on-demand-chart {
-
 	position: relative;
 	background-color: #111111;
 	height: calc(100% - 56px);
@@ -279,7 +256,6 @@
 }
 
 .details-chart-content {
-
 	position: relative;
 	padding: 0 5% 0 5%;
 	background-color: #222222;
@@ -288,21 +264,18 @@
 }
 
 .details-chart-bars {
-
 	position: relative;
 	padding-top:5%;
 	height: 75%;
 }
 
 .details-chart-axis {
-
 	position: relative;
 	height: 15%;
 
 }
 
 .details-chart-bar {
-
 	position: relative;
 	float:left;
 	width: 4.1667%;
@@ -318,7 +291,7 @@
 }
 
 .details-chart-bar:hover {
-
+	-webkit-filter: brightness(2);
 	-webkit-transform: scaleY(1.2);
        -moz-transform: scaleY(1.2);
         -ms-transform: scaleY(1.2);
@@ -360,7 +333,6 @@
 }
 
 .details-axis-markers {
-
 	position: relative;
 	border-top: 1px solid #aaa;
 	height: 33.333%;
@@ -368,7 +340,6 @@
 }
 
 .details-axis-labels {
-
 	position: relative;
 	margin-left: -4%;
 	margin-right: -4%;
@@ -411,7 +382,6 @@
 }
 
 .details-positive-label {
-
 	position: relative;
 	color: #09CFFF;
 	font-size:12px;
@@ -427,7 +397,6 @@
 }
 
 .details-negative-label {
-
 	position: relative;
 	font-size:12px;
 	line-height: 16px;
@@ -444,7 +413,6 @@
 
 
 .details-on-demand-recent-tweets {
-
 	position:relative;
 	color : #FFFFFF;
 	height: calc(100% - 30px);
@@ -463,7 +431,6 @@
 }
 
 .details-on-demand-tweet-day {
-
 	position:relative;
 	font-size:12px;
 	color: #09CFFF;
@@ -471,7 +438,6 @@
 }
 
 .details-on-demand-tweet-time {
-
 	position:relative;
 	color: #DDDDDD;
 	text-align: right;
@@ -493,9 +459,7 @@
 	background-color: #222222;
 }
 
-
 .details-on-demand-tweet-text {
-
 	position:relative;
 	text-align: center;
 	padding: 5px 5px 0px 5px;
@@ -518,7 +482,13 @@
     -webkit-box-shadow: 0 0 6px #000;
 }
 
+.greyed {
+	-webkit-filter: grayscale(1) brightness(0.5);
+}
 
+.clicked {
+	-webkit-filter: grayscale(0);
+}
 
 
 

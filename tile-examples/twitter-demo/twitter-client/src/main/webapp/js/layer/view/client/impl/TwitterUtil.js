@@ -141,8 +141,8 @@ define(function (require) {
         /*
             Returns a trimmed string based on character limit
         */
-        trimLabelText : function( str ) {
-            var MAX_LABEL_CHAR_COUNT = 9;
+        trimLabelText : function( str, charCount ) {
+            var MAX_LABEL_CHAR_COUNT = charCount || 9;
             if (str.length > MAX_LABEL_CHAR_COUNT) {
                 str = str.substr( 0, MAX_LABEL_CHAR_COUNT ) + "...";
             }
@@ -228,6 +228,53 @@ define(function (require) {
             map.panToCoord( panCoord.x, panCoord.y );
         },
 
+
+        blendSentimentColours: function( positivePercent, negativePercent ) {
+            var BLUE_COLOUR = '#09CFFF',
+                PURPLE_COLOUR = '#D33CFF',
+                negWeight, negRGB,
+                posWeight, posRGB,
+                finalRGB = {};
+
+            function hexToRgb(hex) {
+                 var bigint;
+                 if (hex[0] === '#') {
+                     hex = hex.substr(1,6);
+                 }
+                 bigint = parseInt(hex, 16);
+                 return {
+                     r: (bigint >> 16) & 255,
+                     g: (bigint >> 8) & 255,
+                     b: bigint & 255
+                 };
+            }
+
+            function rgbToHex(r, g, b) {
+                function componentToHex(c) {
+                    var hex = c.toString(16);
+                    return (hex.length === 1) ? "0" + hex : hex;
+                }
+                return "#" + componentToHex( Math.floor(r)) +
+                             componentToHex( Math.floor(g)) +
+                             componentToHex( Math.floor(b));
+            }
+
+            if ( positivePercent === 0 || negativePercent ===0 ) {
+                return '#222222';
+            }
+
+            negRGB = hexToRgb(PURPLE_COLOUR);
+            posRGB = hexToRgb(BLUE_COLOUR);
+            negWeight = negativePercent/100;
+            posWeight = positivePercent/100;
+
+            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight);
+            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight);
+            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight);
+            return rgbToHex( finalRGB.r, finalRGB.g, finalRGB.b );
+        },
+
+
         /*
             Used to inject classes when nodes are loaded
         */
@@ -241,6 +288,35 @@ define(function (require) {
                 }
             }
         },
+
+
+        injectClickStateClassesGlobal: function( tag ) {
+
+            var $root = $('.client-layer'),
+                $topTextSentiments = $root.find(".top-text-sentiments"),
+                $tagsByTimeLabels = $root.find(".tags-by-time-sentiment"),
+                $temp;
+
+            // top text sentiments
+            $topTextSentiments.filter( function() {
+                return $(this).find(".sentiment-labels").text() !== tag;
+            }).addClass('greyed').removeClass('clicked');
+
+            $topTextSentiments.filter( function() {
+                return $(this).find(".sentiment-labels").text() === tag;
+            }).removeClass('greyed').addClass('clicked')
+
+            // tags by time
+            $tagsByTimeLabels.filter( function() {
+                return $(this).text() !== tag;
+            }).addClass('greyed').removeClass('clicked');
+
+            $tagsByTimeLabels.filter( function() {
+                return $(this).text() === tag;
+            }).removeClass('greyed').addClass('clicked');
+
+        },
+
 
         createTweetSummaries: function() {
             return $('<div class="sentiment-summaries">'
@@ -286,6 +362,8 @@ define(function (require) {
                     $.proxy( callback, this )( event );
                     // create details on demand
                     that.createDetailsOnDemand( map, data, index, DetailsOnDemand );
+                    // centre map after creation
+                    that.centreForDetails( map, data );
                     // prevent event from going further
                     event.stopPropagation();
                  });
@@ -301,8 +379,6 @@ define(function (require) {
 
             var pos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
                 $details;
-
-            this.centreForDetails( map, data );
 
             $details = DetailsOnDemand.create( pos.x + 256, map.getMapHeight() - pos.y, data.bin.value[index] );
 
