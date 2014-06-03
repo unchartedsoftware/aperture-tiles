@@ -128,55 +128,88 @@
 
 .tags-by-time-sentiment {
 
-	position:absolute;
+	position:relative;
 	width: 200px;
 	height: 20px;
 	left: 28px;
-	-webkit-transform: scale(0.667);
-       -moz-transform: scale(0.667);
-        -ms-transform: scale(0.667);
-            transform: scale(0.667);
+	top: 20px;
+}
+
+.tags-by-time-left {
+
+	position: relative;
+	float:left;
+	width: 66.666%;
+	height: 100%;
+	background-color: #0000FF;
+}
+
+.tags-by-time-right {
+
+	position: relative;
+	float:right;
+	width: 33.333%;
+	height: 100%;
+	background-color: #00FF00;
+}
+
+
+.tags-by-time-label {
+
+	position:relative;
+	text-align: left;
+	font-size : 20px;
+	color: #FFFFFF;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+
 	-webkit-transition: -webkit-transform 0.1s ease-in-out;
        -moz-transition:    -moz-transform 0.1s ease-in-out;
        	-ms-transition:     -ms-transform 0.1s ease-in-out;
             transition:         transform 0.1s ease-in-out;
+/*
+	-webkit-transform: scale(0.667);
+       -moz-transform: scale(0.667);
+        -ms-transform: scale(0.667);
+            transform: scale(0.667); 
+*/	
+}
+
+.tags-by-time-bar {
+
+	position: relative;
+	display:inline-block;
+	width: 5px;
+	bottom: 0px;
+	border: 1px solid #000;
+	background-color: #FFFFFF;	
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .tags-by-time-sentiment:hover {
 	cursor: pointer;
 	-webkit-filter: grayscale(0);
+}
+
+.tags-by-time-sentiment:hover .tags-by-time-label {
+
 	-webkit-transform: scale(1.0);
        -moz-transform: scale(1.0);
         -ms-transform: scale(1.0);
             transform: scale(1.0);
 }
 
-.tags-by-time-label {
-	position:absolute;
-	font-size : 18px;
-	right: 0px;
-	bottom: -3px;
-	width: 33.333%;
-	color: #FFFFFF;
-	text-shadow:
-	    -2px -2px 2px #000,
-	     2px -2px 2px #000,
-	    -2px  2px 2px #000,
-	     2px  5px 5px #000; 	
+.tags-by-time-sentiment:hover .tags-by-time-left {
+
+
 }
 
-.tags-by-time-bar {
 
-	position:absolute;
-	width: 5px;
-	bottom: 0px;
-	border: 1px solid #000;
-	background-color: #FFFFFF;
-	box-shadow: 0 0 15px #000;
-	-webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-}
 
 /********************************************/
 /* 		      Details on Demand  			*/
@@ -245,14 +278,139 @@
 	box-shadow: inset 0 0 10px #000;
 }
 
-.details-on-demand-chart-vizlet {
+.details-chart-content {
 
 	position: relative;
-	/*background-color: #555555;*/
+	padding: 0 5% 0 5%;
+	background-color: #222222;
+	box-shadow: inset 0 0 10px #000;
 	height: calc(100% - 34px);
 }
 
-.details-on-demand-positive-label {
+.details-chart-bars {
+
+	position: relative;
+	padding-top:5%;
+	height: 75%;
+}
+
+.details-chart-axis {
+
+	position: relative;
+	height: 15%;
+
+}
+
+.details-chart-bar {
+
+	position: relative;
+	float:left;
+	width: 4.1667%;
+	height: 100%;
+	-webkit-transform-origin: center bottom;
+	   -moz-transform-origin: center bottom;
+	    -ms-transform-origin: center bottom;
+	        transform-origin: center bottom;
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+}
+
+.details-chart-bar:hover {
+
+	-webkit-transform: scaleY(1.2);
+       -moz-transform: scaleY(1.2);
+        -ms-transform: scaleY(1.2);
+            transform: scaleY(1.2);
+}
+
+.details-chart-positive-bar {
+	position: absolute;
+	background-color: #09CFFF;
+	width: 100%;
+	bottom: 0px;
+	border: 1px solid #000;
+	box-shadow: 0 0 10px #000;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-chart-neutral-bar {
+	position: absolute;
+	background-color: #222222;
+	width: 100%;
+	bottom: 0px;
+	border: 1px solid #000;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-chart-negative-bar {
+	position: absolute;
+	background-color: #D33CFF;
+	width: 100%;
+	bottom: 0px;
+	border: 1px solid #000;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-axis-markers {
+
+	position: relative;
+	border-top: 1px solid #aaa;
+	height: 33.333%;
+	overflow:hidden;
+}
+
+.details-axis-labels {
+
+	position: relative;
+	margin-left: -4%;
+	margin-right: -4%;
+	height: 66.667%;
+}
+
+.details-axis-marker {
+	position: relative;
+	float: left;
+	width: calc(12.5% - 1px);
+	border-left: 1px solid #aaa;
+}
+
+.details-major-marker {
+	height: 100%;
+}
+
+.details-last-major-marker {
+	height: 100%;
+	width: 0px;
+	margin-left: -1px;
+}
+
+.details-minor-marker {
+	height: 50%;
+}
+
+.details-axis-label {
+	position: relative;
+	text-align: center;
+	float: left;
+	width: 20%;
+	font-size: 9px;
+	color: #FFFFFF;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000; 
+}
+
+.details-positive-label {
 
 	position: relative;
 	color: #09CFFF;
@@ -268,7 +426,7 @@
 	left: 5px;
 }
 
-.details-on-demand-negative-label {
+.details-negative-label {
 
 	position: relative;
 	font-size:12px;

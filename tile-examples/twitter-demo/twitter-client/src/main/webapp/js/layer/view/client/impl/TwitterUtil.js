@@ -32,9 +32,9 @@ define(function (require) {
         /*
             Return the count of node entries, clamped at MAX_COUNT
         */
-        getTagCount : function( value, max ) {
+        getTagCount : function( values, max ) {
             var MAX_COUNT = max || 5;
-            return Math.min( value.length, MAX_COUNT );
+            return Math.min( values.length, MAX_COUNT );
         },
 
         /*
@@ -50,21 +50,44 @@ define(function (require) {
         */
         getSentimentPercentages : function( value, index ) {
             return {
-                positive : ( value[index].positive / value[index].count )*100 || 0,
-                neutral : ( value[index].neutral / value[index].count )*100 || 0,
-                negative : ( value[index].negative / value[index].count )*100 || 0
+                positive : ( value.positive / value.count )*100 || 0,
+                neutral : ( value.neutral / value.count )*100 || 0,
+                negative : ( value.negative / value.count )*100 || 0
             };
+        },
+
+        /*
+            Return the relative percentages of positive, neutral, and negative tweets
+        */
+        getSentimentPercentagesByTime : function( value, index ) {
+
+            var NUM_HOURS_IN_DAY = 24,
+                percentages = {
+                    positive: [],
+                    neutral: [],
+                    negative: []
+                },
+                count,
+                i;
+
+            for (i=0; i<NUM_HOURS_IN_DAY; i++) {
+                count = value.countByTime[i];
+                percentages.positive.push( ( value.positiveByTime[i] / count )*100 || 0 );
+                percentages.neutral.push( ( value.neutralByTime[i] / count )*100 || 0 );
+                percentages.negative.push( ( value.negativeByTime[i] / count )*100 || 0 );
+            }
+            return percentages;
         },
 
         /*
             Returns the total count of all tweets in a node
         */
-        getTotalCount : function( value, index ) {
+        getTotalCount : function( values, index ) {
             var i,
                 sum = 0,
-                n = this.getTagCount( value );
+                n = this.getTagCount( values );
             for (i=0; i<n; i++) {
-                sum += value[i].count;
+                sum += values[i].count;
             }
             return sum;
         },
@@ -72,28 +95,26 @@ define(function (require) {
         /*
             Returns the percentage of tweets in a node for the respective tag
         */
-        getTotalCountPercentage : function( value, index ) {
-            return ( value[index].count / this.getTotalCount( value, index ) ) || 0;
+        getTotalCountPercentage : function( values, index ) {
+            return ( values[index].count / this.getTotalCount( values, index ) ) || 0;
         },
 
 
-        getCountByTimePercentage: function( value, index, hour ) {
-            var val = value[index],
-                countByTime = val.countByTime[hour];
-            return ( countByTime / val.count ) || 0;
+        getCountByTimePercentage: function( value, hour ) {
+            var countByTime = value.countByTime[hour];
+            return ( countByTime / value.count ) || 0;
         },
 
 
-        getMaxCountByTimePercentage: function( value, index ) {
+        getMaxCountByTimePercentage: function( value ) {
             var NUM_HOURS_IN_DAY = 24,
-                val = value[index],
                 i,
                 percent,
                 maxPercent = 0,
-                count = val.count;
+                count = value.count;
 
             for (i=0; i<NUM_HOURS_IN_DAY; i++) {
-                percent = ( val.countByTime[i] / count ) || 0;
+                percent = ( value.countByTime[i] / count ) || 0;
                 maxPercent = Math.max( percent, maxPercent );
             }
             return maxPercent;
@@ -104,13 +125,13 @@ define(function (require) {
         /*
             Returns a font size based on the percentage of tweets relative to the total count
         */
-        getFontSize : function( value, index ) {
+        getFontSize : function( values, index ) {
             var DOWNSCALE_OFFSET = 1.5,
                 MAX_FONT_SIZE = 28 * DOWNSCALE_OFFSET,
                 MIN_FONT_SIZE = 12 * DOWNSCALE_OFFSET,
                 FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
-                sum = this.getTotalCount( value, index ),
-                percentage = this.getTotalCountPercentage( value, index ),
+                sum = this.getTotalCount( values, index ),
+                percentage = this.getTotalCountPercentage( values, index ),
                 scale = Math.log( sum ),
                 size = ( percentage * FONT_RANGE * scale ) + ( MIN_FONT_SIZE * percentage );
             return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
@@ -287,6 +308,7 @@ define(function (require) {
 
             map.enableEventToMapPropagation( $details, ['onmousemove', 'onmouseup'] );
             map.getRootElement().append( $details );
+
         },
 
         destroyDetailsOnDemand: function( DetailsOnDemand ) {

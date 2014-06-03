@@ -41,10 +41,13 @@ define(function (require) {
 
     return {
 
-        create: function( x, y, tagData ) {
+        create: function( x, y, value ) {
 
             var html = '',
-                time, day, tweetsByDay, key, lightOrDark,
+                time, day, tweetsByDay, key, lightOrDark, visibility,
+                maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value ),
+                sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value ),
+                relativePercent, cumulativePercentages = [],
                 i;
 
             html += '<div class="details-on-demand" style="left:'+x+'px; top:'+y+'px;">';
@@ -54,21 +57,66 @@ define(function (require) {
 
             // summaries
             html +=     '<div class="sentiment-summaries">';
-            html +=         '<div class="positive-summaries"> +'+tagData.positive+'</div>';
-            html +=         '<div class="neutral-summaries">'+tagData.neutral+'</div>';
-            html +=         '<div class="negative-summaries"> -'+tagData.negative+'</div>';
+            html +=         '<div class="positive-summaries"> +'+value.positive+'</div>';
+            html +=         '<div class="neutral-summaries">'+value.neutral+'</div>';
+            html +=         '<div class="negative-summaries"> -'+value.negative+'</div>';
             html +=     '</div>';
 
             // title
-            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(tagData.tag)+'</div>';
+            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.tag)+'</div>';
 
             // last 24 hours
             html +=     '<div class="details-on-demand-title small-title">Last 24 Hours</div>';
 
             html +=     '<div class="details-on-demand-chart">';
-            html +=         '<div class="details-on-demand-positive-label">Positive Tweets</div>';
-            html +=         '<div class="details-on-demand-chart-vizlet"></div>';
-            html +=         '<div class="details-on-demand-negative-label">Negative Tweets</div>';
+            html +=         '<div class="details-positive-label">Positive Tweets</div>';
+
+            html +=         '<div class="details-chart-content">';
+
+            html +=             '<div class="details-chart-bars">';
+
+            for (i=0; i<value.countByTime.length; i++) {
+                relativePercent = TwitterUtil.getCountByTimePercentage( value, i ) / maxPercentage;
+                cumulativePercentages[0] = sentimentPercentages.negative[i]*relativePercent;
+                cumulativePercentages[1] = cumulativePercentages[0] + sentimentPercentages.neutral[i]*relativePercent;
+                cumulativePercentages[2] = cumulativePercentages[1] + sentimentPercentages.positive[i]*relativePercent;
+                
+                visibility = (relativePercent > 0) ? 'visible' : 'hidden';
+                html +=            '<div class="details-chart-bar" style="visibility:'+visibility+';">';
+                html +=            '<div class="details-chart-positive-bar" style="height:'+cumulativePercentages[2]+'%;"></div>';
+                html +=            '<div class="details-chart-neutral-bar" style="height:'+cumulativePercentages[1]+'%;"></div>';
+                html +=            '<div class="details-chart-negative-bar" style="height:'+cumulativePercentages[0]+'%;"></div>';
+                html +=            '</div>';
+            }
+            html +=            '</div>';
+
+            html +=             '<div class="details-chart-axis">';
+            html +=                 '<div class="details-axis-markers">';
+            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
+            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
+
+            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
+            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
+
+            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
+            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
+
+            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
+            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
+            html +=                     '<div class="details-axis-marker details-last-major-marker"></div>';
+            html +=                 '</div>';
+
+            html +=                 '<div class="details-axis-labels">';
+            html +=                     '<div class="details-axis-label">12am</div>';
+            html +=                     '<div class="details-axis-label">6am</div>';
+            html +=                     '<div class="details-axis-label">12pm</div>';
+            html +=                     '<div class="details-axis-label">6am</div>';
+            html +=                     '<div class="details-axis-label">12am</div>';
+            html +=                 '</div>';
+
+            html +=             '</div>';
+            html +=         '</div>';
+            html +=         '<div class="details-negative-label">Negative Tweets</div>';
             html +=     '</div>';
 
             html += '</div>';
@@ -81,7 +129,7 @@ define(function (require) {
             html +=     '<div class="details-on-demand-recent-tweets">';
 
             // bucket tweets by day
-            tweetsByDay = TwitterUtil.getRecentTweetsByDay( tagData );
+            tweetsByDay = TwitterUtil.getRecentTweetsByDay( value );
 
             for ( key in tweetsByDay ) {
                 if( tweetsByDay.hasOwnProperty( key ) ) {

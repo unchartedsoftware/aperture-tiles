@@ -77,9 +77,9 @@ define(function (require) {
 
             var that = this;
 
-            function getYOffset( value, index ) {
+            function getYOffset( values, index ) {
                 var SPACING =  36;
-                return 95 - ( (( TwitterUtil.getTagCount( value ) - 1) / 2 ) - index ) * SPACING;
+                return 95 - ( (( TwitterUtil.getTagCount( values ) - 1) / 2 ) - index ) * SPACING;
             }
 
             function onClick() {
@@ -105,11 +105,12 @@ define(function (require) {
                         $html = $(''),
                         $elem,
                         $summaries,
-                        value = this.bin.value,
+                        values = this.bin.value,
+                        value,
                         i,
                         tag,
                         percentages,
-                        count = TwitterUtil.getTagCount( value );
+                        count = TwitterUtil.getTagCount( values );
 
                     // create count summaries
                     $summaries = TwitterUtil.createTweetSummaries();
@@ -118,10 +119,11 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
 
-                        tag = TwitterUtil.trimLabelText( value[i].tag );
-                        percentages = TwitterUtil.getSentimentPercentages( value, i );
+                        value = values[i];
+                        tag = TwitterUtil.trimLabelText( values[i].tag );
+                        percentages = TwitterUtil.getSentimentPercentages( value );
 
-                        html = '<div class="top-text-sentiments" style=" top:' +  getYOffset( value, i ) + 'px;">';
+                        html = '<div class="top-text-sentiments" style=" top:' +  getYOffset( values, i ) + 'px;">';
 
                         // create sentiment bars
                         html += '<div class="sentiment-bars">';
@@ -131,7 +133,7 @@ define(function (require) {
                         html += "</div>";
 
                         // create tag label
-                        html += '<div class="sentiment-labels" style="font-size:' + TwitterUtil.getFontSize( value, i ) +'px; ">'+tag+'</div>';
+                        html += '<div class="sentiment-labels" style="font-size:' + TwitterUtil.getFontSize( values, i ) +'px; ">'+tag+'</div>';
 
                         html += '</div>';
 

@@ -86,11 +86,11 @@ define(function (require) {
                 var tag = $(this).find(".tags-by-time-label").text();
 
                 $(".tags-by-time-sentiment").filter( function() {
-                    return $(this).find(".tag-labels").text() !== tag;
+                    return $(this).find(".tags-by-time-label").text() !== tag;
                 }).addClass('greyed').removeClass('clicked');
 
                 $(".tags-by-time-sentiment").filter( function() {
-                    return $(this).find(".tag-labels").text() === tag;
+                    return $(this).find(".tags-by-time-label").text() === tag;
                 }).removeClass('greyed').addClass('clicked');
 
                 that.clientState.setClickState('tag', tag );
@@ -104,12 +104,13 @@ define(function (require) {
                         $html = $(''),
                         $elem,
                         $summaries,
-                        value = this.bin.value,
+                        values = this.bin.value,
+                        value,
                         maxPercentage, relativePerc,
                         yOffset,
                         i, j,
                         tag,
-                        count = TwitterUtil.getTagCount( value, 10 );
+                        count = TwitterUtil.getTagCount( values, 10 );
 
                     // create count summaries
                     $summaries = TwitterUtil.createTweetSummaries();
@@ -118,22 +119,31 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
 
-                        tag = TwitterUtil.trimLabelText( value[i].tag );
-                        maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value, i );
+                        value = values[i];
+                        tag = TwitterUtil.trimLabelText( value.tag );
+                        maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value );
 
-                        html = '<div class="tags-by-time-sentiment" style="top:' +  getYOffset( value, i ) + 'px;">';
+                        html = '<div class="tags-by-time-sentiment">'; // style="top:' +  getYOffset( value, i ) + 'px;">';
 
                         // create count chart
+                        html += '<div class="tags-by-time-left">'
+
                         for (j=0; j<24; j++) {
-                            relativePerc = ( TwitterUtil.getCountByTimePercentage( value, i, j ) / maxPercentage ) * 100;
-                            if (relativePerc > 0) {
-                                html += '<div class="tags-by-time-bar" style="left:'+ (j*5) +'px; height:'+relativePerc+'%;"></div>';
-                            }
+                            relativePerc = ( TwitterUtil.getCountByTimePercentage( value, j ) / maxPercentage ) * 100;
+                            //if (relativePerc > 0) {
+                                html += '<div class="tags-by-time-bar" style=" height:'+relativePerc+'%;"></div>';
+                            //}
                         }
 
 
+                        html += '</div>';
+
                         // create tag label
-                        html += '<div class="tags-by-time-label">'+tag+'</div>';
+                        html += '<div class="tags-by-time-right">'
+
+                        html +=     '<div class="tags-by-time-label">'+tag+'</div>';
+
+                        html += '</div>';
 
                         html += '</div>';
 
