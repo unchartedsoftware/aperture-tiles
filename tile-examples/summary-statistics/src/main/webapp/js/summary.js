@@ -52,7 +52,7 @@
             datasetLowerCase = summaryBuilderOptions.dataset ? summaryBuilderOptions.dataset.toLowerCase() : null;
 
         var makeSafeIdForJQuery = function (inputString){
-            return inputString.replace(/\./g, '_dot_').replace(/\,/g, '');
+            return inputString.replace(/\./g, '_dot_').replace(/\,/g, '').replace(/\ /g, '_');
         };
 
         // Create the layerId by concatenating the layer names together;
@@ -343,23 +343,23 @@
                 var length = maps.length,
                     i=0;
                 for(i; i<length; i++){
-                    if (maps[i]["id"]
-                        && maps[i]["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1
-                        && maps[i]["id"] === mapID){
+                    if (maps[i].id
+                        && maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase) != -1
+                        && maps[i].id === mapID){
                         return maps[i];
                     }
                 }
             };
 
-            var getLayer = function(layers, pyramidConfig){
+            var getLayer = function(layers, pyramidConfig, mapID){
                 var layer;
                 // bitcoin
                 if (datasetLowerCase === 'bitcoin') {
                     $.each(layers, function (pk, pv) {
                         if (pv.id === datasetLowerCase) {
                             $.each(pv.children, function (k, v) {
-                                //if mapID contains v.name
-                                if (PyramidFactory.pyramidsEqual(v['pyramid'], pyramidConfig)){
+                                if (PyramidFactory.pyramidsEqual(v.pyramid, pyramidConfig)
+                                        && (v.name.indexOf(mapID.replace('bitcoin', '').trim()) != -1)){
                                     layer = v;
                                 }
                             });
@@ -369,7 +369,7 @@
                     layer = layers;
                 }
                 return [{
-                    "layer": layer["id"],
+                    "layer": layer.id,
                     "domain": layer.renderers[0].domain,
                     "name": layer.name,
                     "renderer": layer.renderers[0].renderer,
@@ -377,7 +377,7 @@
                 }];
             };
 
-            var generateMap = function(mapID, mapConfig,layerConfig, layer){
+            var generateMap = function(mapID, mapConfig, layerConfig, layer){
                 var tabLayerId = getTabLayerId(mapID),
                     plotTabDiv = "tab-plot-" + tabLayerId,
                     $plotTab = $('<div id="' + plotTabDiv + '">'),
@@ -387,7 +387,8 @@
                     uiMediator,
                     worldMap,
                     $plotControls,
-                    controlsButton;
+                    controlsButton,
+                    serverLayerDeferred;
 
                 $tabsPlotsUl.append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
                 $plotTab.append($plotVisual);
@@ -400,20 +401,6 @@
 
                 if(datasetLowerCase === 'twitter') {
                     worldMap.map.zoomTo( 40, -95, 4 );
-                }
-                uiMediator = new UIMediator();
-                if (layerConfig[0]["domain"] === 'server') {
-                    ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
-                } else {
-                    var clientLayers = [{
-                        "domain" : layer["renderers"][0]["domain"],
-                        "layer" : layer["id"],
-                        "name" : layer["name"],
-                        "type" : layer["renderers"][0]["type"],
-                        "views" : layer["renderers"][0]["views"]
-                    }];
-
-                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
                 }
 
                 //create the controls
@@ -429,12 +416,39 @@
                 controlsButton.getContentElement().addClass('layer-controls-content');
                 controlsButton.getContainerElement().addClass('layer-controls');
 
-                new LayerControls().initialize(plotControls + '-content', uiMediator.getLayerStateMap());
+                uiMediator = new UIMediator();
+
+                if (layerConfig[0].domain === 'server') {
+                    serverLayerDeferred = ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
+                    $.when( serverLayerDeferred ).done( function( layersFromServer ) {
+                        var filterAxisConfig,
+                            key,
+                            layerInfo = layersFromServer.getSubLayerInfosById();
+
+                        for(key in layerInfo){
+                            if(layerInfo.hasOwnProperty( key )){
+                                filterAxisConfig = layerInfo[ key ].meta;
+                            }
+                        }
+                        filterAxisConfig.worldMap = worldMap;
+                        new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap(), filterAxisConfig);
+                    });
+
+                } else {
+                    var clientLayers = [{
+                        "domain" : layer.renderers[0].domain,
+                        "layer" : layer.id,
+                        "name" : layer.name,
+                        "type" : layer.renderers[0].type,
+                        "views" : layer.renderers[0].views
+                    }];
+                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+                    new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap());
+                }
             };
 
             $.when( mapDeferreds, layerDeferreds).done( function( maps, layers ) {
-                var plotId = 0,
-                    twitterComplete = false;
+                var twitterComplete = false;
 
                 //iterate over each of the cross plots, generate the map, and container div
                 $.each(maps, function (pk, pv) {
@@ -443,12 +457,11 @@
                         layerConfig,
                         mapConfig;
 
-                    if (datasetLowerCase === 'bitcoin' && pv["id"]
-                        && pv["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1) {
-                            mapID = pv["id"];
-                            layerConfig = getLayer(layers, pv["PyramidConfig"]);
+                    if (datasetLowerCase === 'bitcoin' && pv.id
+                        && pv.id.toLowerCase().trim().indexOf(datasetLowerCase) != -1) {
+                            mapID = pv.id;
+                            layerConfig = getLayer(layers, pv.PyramidConfig, mapID);
                             mapConfig = getBitcoinMapConfig(maps, mapID);
-                            plotId++;
                             generateMap(mapID, mapConfig, layerConfig);
                     } else if (datasetLowerCase === 'twitter' && !twitterComplete){
                         var layer,
@@ -457,19 +470,18 @@
                         twitterComplete = true;
                         for(i; i < layers.length; i++){
                             if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
-                                for (j = 0; j < layers[i]["children"].length; j++) {
-                                    mapID = layers[i]["children"][j].name;
-                                    layer = layers[i]["children"][j];
-                                    layerConfig = getLayer(layer, mapID);
+                                for (j = 0; j < layers[i].children.length; j++) {
+                                    mapID = layers[i].children[j].name;
+                                    layer = layers[i].children[j];
+                                    layerConfig = getLayer(layer);
                                     mapConfig = pv;
-                                    plotId++;
                                     generateMap(mapID, mapConfig, layerConfig, layer);
                                 }
                             }
                         }
                     }
                 });
-
+                
                 $tabsPlotsUl.each(function () {
                     $(this).click( function (){
                         $(window).resize();

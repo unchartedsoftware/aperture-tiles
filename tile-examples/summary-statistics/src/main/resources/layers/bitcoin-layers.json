@@ -278,7 +278,7 @@
 				},
 				{
 					"id" : "bitcoin.time.source",
-					"name" : "Time vs. Source",
+					"name" : "Time vs. Source ID",
 					"pyramid" : {
 						"type" : "AreaOfInterest",
 						"minX" : 1230958800000,

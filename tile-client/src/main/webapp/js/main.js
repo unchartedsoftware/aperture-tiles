@@ -249,11 +249,23 @@ require(['./FileLoader',
 
 				        // Create client, server and annotation layers
 				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
-				        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-				        new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap() ).noop();
+                        $.when(ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap)).done( function( layersFromServer ) {
 
+                            layerInfo = layersFromServer.getSubLayerInfosById();
+                            var layer,
+                                layerInfo,
+                                filterAxisConfig;
+
+                            for(layer in layerInfo){
+                                if(layerInfo.hasOwnProperty( layer )){
+                                    filterAxisConfig = layerInfo[ layer ].meta;
+                                }
+                            }
+                            filterAxisConfig.worldMap = worldMap;
+                            new LayerControls('layer-controls-content', uiMediator.getLayerStateMap(), filterAxisConfig).noop();
+                        });
 			        }
 		        );
 
