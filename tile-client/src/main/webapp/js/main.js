@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/*global OpenLayers */
 
+/* global OpenLayers */
 require(['./FileLoader',
          './ApertureConfig',
          './ui/OverlayButton',
@@ -52,6 +52,7 @@ require(['./FileLoader',
                   AnnotationLayerFactory,
                   LayerControls,
                   UIMediator) {
+
 	        "use strict";
 
 	        var apertureConfigFile = "data/aperture-config.json",
@@ -238,6 +239,7 @@ require(['./FileLoader',
 				        };
 				        clientLayers = getLayers("client", layers, filter);
 				        serverLayers = getLayers("server", layers, filter);
+                        annotationLayers = getAnnotationLayers( annotationLayers, filter );
 
 				        if (UICustomization.customizeLayers) {
 					        UICustomization.customizeLayers(layers);
@@ -245,15 +247,12 @@ require(['./FileLoader',
 
 				        uiMediator = new UIMediator();
 
-				        // Create client and server layers
+				        // Create client, server and annotation layers
 				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
 				        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
+                        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-				        new LayerControls().initialize( 'layer-controls-content', uiMediator.getLayerStateMap() );
-
-				        // Annotation layers
-				        annotationLayers = getAnnotationLayers(annotationLayers, filter);
-				        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
+				        new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap() ).jslintSucks();
 
 			        }
 		        );

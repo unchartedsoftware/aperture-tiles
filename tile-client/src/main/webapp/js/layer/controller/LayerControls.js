@@ -398,7 +398,7 @@ define(function (require) {
          *
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
-        initialize: function ( controlsId, layerStateMap) {
+        init: function ( controlsId, layerStateMap ) {
             var layerState;
 
             // "Private" vars
@@ -419,6 +419,10 @@ define(function (require) {
                     ));
                 }
             }
+        },
+
+        jslintSucks: function() {
+            return true;
         }
 
     });
