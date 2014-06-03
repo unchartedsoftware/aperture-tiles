@@ -20,6 +20,18 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-core_${dependency-scala-version}</artifactId>
+			<version>${spark-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-streaming_${dependency-scala-version}</artifactId>
+			<version>${spark-version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.oculusinfo</groupId>
 			<artifactId>binning-utilities</artifactId>
 			<version>${project.version}</version>
@@ -55,18 +67,6 @@
 					<groupId>org.slf4j</groupId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_${dependency-scala-version}</artifactId>
-			<version>${spark-version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming_${dependency-scala-version}</artifactId>
-			<version>${spark-version}</version>
 		</dependency>
 
 		<dependency>

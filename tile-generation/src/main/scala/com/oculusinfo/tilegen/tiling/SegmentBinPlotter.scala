@@ -342,36 +342,40 @@ class LineSegmentTileBinner (tileScheme: TilePyramid,
 		val binner = universalBinsToBins
 
 		// Figure out which segments intersect each tile
-		val tiledData = data.flatMap(p => {
-			                             val pt1 = new Point2D.Double(p._1._1, p._1._2)
-			                             val pt2 = new Point2D.Double(p._2._1, p._2._2)
+		val tiledData = data.flatMap(p =>
+			{
+				val pt1 = new Point2D.Double(p._1._1, p._1._2)
+				val pt2 = new Point2D.Double(p._2._1, p._2._2)
 
-			                             levels.flatMap(level => {
-				                                            val tile1 = ts.rootToTile(pt1, level)
-				                                            val tileBin1 = ts.rootToBin(pt1, tile1)
-				                                            val bin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+				levels.flatMap(level =>
+					{
+						val tile1 = ts.rootToTile(pt1, level)
+						val tileBin1 = ts.rootToBin(pt1, tile1)
+						val bin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
 
-				                                            val tile2 = ts.rootToTile(pt2, level)
-				                                            val tileBin2 = ts.rootToBin(pt2, tile2)
-				                                            val bin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+						val tile2 = ts.rootToTile(pt2, level)
+						val tileBin2 = ts.rootToBin(pt2, tile2)
+						val bin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
 
-				                                            val points = math.abs(bin1.getX()-bin2.getX()) max math.abs(bin1.getY()-bin2.getY())
-				                                            if (points < minPts || maxPts < points) {
-					                                            List[(TileIndex, (BinIndex, BinIndex))]()
-				                                            } else {
-					                                            tiler(tile1, pixelator(bin1, bin2)).map(tile =>
-						                                            (tile, (bin1, bin2))
-					                                            )
-				                                            }
-			                                            })
-		                             })
+						val points = math.abs(bin1.getX()-bin2.getX()) max math.abs(bin1.getY()-bin2.getY())
+						if (points < minPts || maxPts < points) {
+							List[(TileIndex, (BinIndex, BinIndex))]()
+						} else {
+							tiler(tile1, pixelator(bin1, bin2)).map(tile =>
+								(tile, (bin1, bin2))
+							)
+						}
+					}
+				)
+			}
+		)
 
 		// Consolidate segments for each tile index, and draw a tile data based on
 		// the consolidated results
 		tiledData.groupByKey().map(t =>
 			{
 				val tile: TileIndex = t._1
-				val segments: Seq[(BinIndex, BinIndex)] = t._2
+				val segments: Iterable[(BinIndex, BinIndex)] = t._2
 
 				val xLimit = tile.getXBins()
 				val yLimit = tile.getYBins()
