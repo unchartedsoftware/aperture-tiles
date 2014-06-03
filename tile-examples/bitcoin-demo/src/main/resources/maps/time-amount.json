@@ -25,7 +25,7 @@
 		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
-	"id" : "bitcoin time vs. amount",
+	"id" : "bitcoin Time vs. Amount",
 	"description" : "Bitcoin Time vs. Amount of Transaction",
 
 	"PyramidConfig": {

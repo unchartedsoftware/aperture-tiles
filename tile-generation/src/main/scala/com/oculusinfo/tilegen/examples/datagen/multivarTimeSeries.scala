@@ -30,7 +30,6 @@ import java.util.GregorianCalendar
 import java.util.Calendar
 import java.util.Date
 import scala.collection.immutable.NumericRange
-import org.apache.velocity.runtime.directive.Foreach
 import scala.util.Random
 import java.io.File
 import java.io.PrintWriter

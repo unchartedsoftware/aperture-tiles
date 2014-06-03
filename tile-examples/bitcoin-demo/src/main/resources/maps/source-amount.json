@@ -25,7 +25,7 @@
 		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
-	"id" : "bitcoin source vs. amount",
+	"id" : "bitcoin Source ID vs. Amount",
 	"description" : "Bitcoin Source ID vs. Amount of Transaction",
 
 	"PyramidConfig": {

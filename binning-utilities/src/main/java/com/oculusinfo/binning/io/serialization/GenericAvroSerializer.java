@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +61,6 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	}
 
 	abstract protected String getRecordSchemaFile ();
-	abstract protected Map<String, String> getTileMetaData ();
 	abstract protected T getValue (GenericRecord bin);
 	abstract protected void setValue (GenericRecord bin, T value) throws IOException ;
     
@@ -79,6 +80,18 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		return _typeDescription;
 	}
 
+	protected Map<String, String> getTileMetaData (TileData<T> tile) {
+		Collection<String> keys = tile.getMetaDataProperties();
+		if (null == keys || keys.isEmpty()) return null;
+		Map<String, String> metaData = new HashMap<String, String>();
+		for (String key: keys) {
+			String value = tile.getMetaData(key);
+			if (null != value)
+				metaData.put(key, value);
+		}
+		return metaData;
+	}
+
 	@Override
 	public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
 
@@ -94,6 +107,8 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 			int yIndex = (Integer) r.get("yIndex");
 			int xBins = (Integer) r.get("xBinCount");
 			int yBins = (Integer) r.get("yBinCount");
+			Map<?, ?> meta = (Map<?, ?>) r.get("meta");
+			
                     
 			@SuppressWarnings("unchecked")
 			GenericData.Array<GenericRecord> bins = (GenericData.Array<GenericRecord>) r.get("values");
@@ -108,6 +123,16 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 			}
 			TileIndex newTileIndex = new TileIndex(level, xIndex, yIndex, xBins, yBins);
 			TileData<T> newTile = new TileData<T>(newTileIndex, data);
+			if (null != meta) {
+    			for (Object key: meta.keySet()) {
+    				if (null != key) {
+    					Object value = meta.get(key);
+    					if (null != value) {
+    						newTile.setMetaData(key.toString(), value.toString());
+    					}
+    				}
+    			}
+			}
 			return newTile;
 		} finally {
 			dataFileReader.close();
@@ -138,7 +163,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		tileRecord.put("yBinCount", idx.getYBins());
 		tileRecord.put("values", bins);
 		tileRecord.put("default", null);
-		tileRecord.put("meta", getTileMetaData());
+		tileRecord.put("meta", getTileMetaData(tile));
 
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);

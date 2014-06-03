@@ -26,9 +26,6 @@
 package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
@@ -37,18 +34,8 @@ import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class IntegerAvroSerializer extends GenericAvroSerializer<Integer> {
-	private static final long serialVersionUID = -8317163654416878678L;
+	private static final long serialVersionUID = 2068151360199139591L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Integer.class);
-
-
-
-	public static final Map<String,String> META;
-	static {
-		Map<String,String> map = new HashMap<String, String>();
-		map.put("source", "Oculus Binning Utilities");
-		map.put("data-type", "int");
-		META = Collections.unmodifiableMap(map);
-	}
 
 
 
@@ -59,11 +46,6 @@ public class IntegerAvroSerializer extends GenericAvroSerializer<Integer> {
 	@Override
 	protected String getRecordSchemaFile () {
 		return "integerData.avsc";
-	}
-
-	@Override
-	protected Map<String, String> getTileMetaData () {
-		return META;
 	}
 
 	@Override

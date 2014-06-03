@@ -14,7 +14,6 @@ rgb(252, 249, 207)  Pale Yellow (from luminance scale)
 	font-weight:normal;
 	font-style:normal;
 }
-
 header h1 {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 	font-weight: bold;
@@ -30,7 +29,8 @@ header h2 {
 }
 section {
 	background-color: white;
-	padding: 15px;
+	padding-left: 15px; 
+	padding-right: 15px;
 	border: solid 1px GRAY;
 	margin: 15px;
 }
@@ -40,7 +40,8 @@ section h1 {
 	text-transform: uppercase;
 	font-size: 1.3em;
 	color: rgb(72, 12, 59);
-	margin-bottom: .5em;
+	margin-top: 12px;
+	margin-bottom: .1em;
 }
 section h2 {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
@@ -55,6 +56,9 @@ section a {
 }
 section a:hover {
 	color: rgb(251, 174, 44);
+}
+section ul{
+	margin: 5px 8px 12px 8px;
 }
 section ul#listStyleImage {
 	padding: 0 0 0 1em;

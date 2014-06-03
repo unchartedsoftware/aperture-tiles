@@ -32,9 +32,6 @@ trait SharedSparkContext extends BeforeAndAfterAll { self: Suite =>
 	var conf = new SparkConf(false)
 
 	override def beforeAll() {
-		Logger.getLogger("org").setLevel(Level.WARN)
-		Logger.getLogger("akka").setLevel(Level.WARN)
-
 		_sc = new SparkContext("local", "test", conf)
 		super.beforeAll()
 	}

@@ -25,7 +25,7 @@
 		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
-	"id" : "bitcoin time vs. destination",
+	"id" : "bitcoin Time vs. Destination",
 	"description" : "Bitcoin Time vs. Destination ID",
 
 	"PyramidConfig": {

@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-
-
 package com.oculusinfo.stats.qualitative
 
 import org.apache.spark._
@@ -33,7 +31,6 @@ import org.apache.spark.rdd.RDD
 /**
  * @author $mkielo
  */
-
 
 object Frequency {
 
@@ -45,35 +42,32 @@ object Frequency {
     textFile.filter(_.equals(key)).map(record => 1).reduce(_ + _)
   }
 
+  def MostFrequent(returnNum: Int, textFile: RDD[String], sorted: Boolean): Array[(Int, String)] = { //make sorted default to false if not specified. make the function work if not specified
 
-   def MostFrequent(returnNum: Int, textFile: RDD[String], sorted: Boolean): Array[(Int, String)] = { //make sorted default to false if not specified. make the function work if not specified
-
-    val freqTable = FrequencyTable(textFile).map(_.swap).sortByKey(false) 
+    val freqTable = FrequencyTable(textFile).map(_.swap).sortByKey(false)
     val tieCheck = freqTable.take(100 + returnNum)
     val rowCount = tieCheck.length
-    var tieNum = 0 
+    var tieNum = 0
 
     println(rowCount)
     for (i <- 0 to (rowCount - returnNum - 1)) {
-        if (tieCheck(returnNum - 1)._1 == tieCheck(returnNum + i)._1) {
-          tieNum += 1
-        }
+      if (tieCheck(returnNum - 1)._1 == tieCheck(returnNum + i)._1) {
+        tieNum += 1
       }
+    }
 
-    if(tieNum == 100){
-      val tiedFreq = tieCheck(returnNum - 1)._1 
+    if (tieNum == 100) {
+      val tiedFreq = tieCheck(returnNum - 1)._1
       var cleanedNum = returnNum
-      for (i <- 2 to returnNum){
-        if(tieCheck(returnNum - 1)  == tieCheck(returnNum - i)){
+      for (i <- 2 to returnNum) {
+        if (tieCheck(returnNum - 1) == tieCheck(returnNum - i)) {
           cleanedNum -= 1
         }
       }
-      freqTable.take(cleanedNum):+ ((tiedFreq,"FREQUENCY INFO: There are atleast 100 other values with the frequency: "))     
+      freqTable.take(cleanedNum) :+ ((tiedFreq, "FREQUENCY INFO: There are atleast 100 other values with the frequency: "))
+    } else {
+      freqTable.take(returnNum + tieNum)
     }
-
-    else {
-      freqTable.take(returnNum + tieNum)}
-   }
-   
+  }
 
 }

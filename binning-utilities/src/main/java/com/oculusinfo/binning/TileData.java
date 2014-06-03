@@ -27,8 +27,11 @@ package com.oculusinfo.binning;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.oculusinfo.binning.TileIndex;
 
@@ -50,14 +53,17 @@ public class TileData<T> implements Serializable {
 
 
 
-	private TileIndex         _definition;
-	private ArrayList<T>      _data;
+	private TileIndex           _definition;
+	private ArrayList<T>        _data;
+	private Map<String, String> _metaData;
+
+
 
 	// No-argument constructor, really just for use by Kryo, but we call it from
 	// the main constructor just to get rid of the warning.
 	private TileData () {
-        
 	}
+
 	/**
 	 * Construct a tile data object for a particular tile. All entries are
 	 * initialized to null.
@@ -78,7 +84,7 @@ public class TileData<T> implements Serializable {
 	 * @param defaultValue The default value of each bin
 	 */
 	public TileData (TileIndex definition, T defaultValue) {
-	    this();
+		this();
 		_definition = definition;
 		_data = new ArrayList<T>(_definition.getXBins()
 		                         * _definition.getYBins());
@@ -87,6 +93,7 @@ public class TileData<T> implements Serializable {
 				_data.add(defaultValue);
 			}
 		}
+		_metaData = null;
 	}
 
 	/**
@@ -149,5 +156,41 @@ public class TileData<T> implements Serializable {
 	 */
 	public List<T> getData () {
 		return Collections.unmodifiableList(_data);
+	}
+
+	/**
+	 * Get the properties listed in the metadata of this tile.
+	 *
+	 * @return A collection of listed properties.  This can be null if 
+	 *         there are no listed properties.
+	 */
+	public Collection<String> getMetaDataProperties () {
+		if (null == _metaData) return null;
+		return _metaData.keySet();
+	}
+
+	/**
+	 * Get the value of the given metadata property.
+	 *
+	 * @param The property of interest
+	 * @return The value of the given property, or null if the property
+	 *         isn't listed in the tile's metadata.
+	 */
+	public String getMetaData (String property) {
+		if (null != _metaData) return _metaData.get(property);
+		return null;
+	}
+
+	/**
+	 * Sets the value for a given property in the tile's metadata.
+	 *
+	 * @param property The property of interest
+	 * @param value The value of said property
+	 */
+	public void setMetaData (String property, String value) {
+		if (null == _metaData) {
+			_metaData = new HashMap<>();
+		}
+		_metaData.put(property, value);
 	}
 }

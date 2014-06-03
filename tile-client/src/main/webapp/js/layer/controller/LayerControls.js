@@ -163,6 +163,9 @@ define(function (require) {
             min: 0,
             max: OPACITY_RESOLUTION,
             value: layerState.getOpacity() * OPACITY_RESOLUTION,
+            change: function () {
+                layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
+            },
             slide: function () {
                 layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
             }
@@ -421,7 +424,7 @@ define(function (require) {
             }
         },
 
-        jslintSucks: function() {
+        noop: function() {
             return true;
         }
 

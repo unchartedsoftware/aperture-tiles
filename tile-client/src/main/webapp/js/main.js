@@ -252,7 +252,7 @@ require(['./FileLoader',
 				        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-				        new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap() ).jslintSucks();
+				        new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap() ).noop();
 
 			        }
 		        );
