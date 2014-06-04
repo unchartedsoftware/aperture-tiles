@@ -347,10 +347,15 @@ public class AnnotationServiceImpl implements AnnotationService {
         _filtersByUuid.put( uuid, getFiltersFromJSON( info.getFilterConfiguration() ) );
 
         try {
-            // initialize the layer for read to ensure the io system exists
+            // ensure both the tile and data io's exist
+            // tile io
             AnnotationConfiguration config = getConfiguration( info.getID() );
-            PyramidIO io = config.produce(PyramidIO.class);
-            io.initializeForWrite( info.getID() );
+            PyramidIO tileIo = config.produce(PyramidIO.class);
+            tileIo.initializeForWrite( info.getID() );
+            // data io
+            AnnotationIO dataIo = AnnotationIOFactory.produce( _annotationLayersById.get( info.getID() ) );
+            dataIo.initializeForWrite( getDataLayerId( info.getID() ) );
+
         } catch ( Exception e ) {
             throw new IllegalArgumentException( e.getMessage() );
         }

@@ -112,10 +112,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
 	            HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
 	            tableDesc.addFamily(tileFamily);
 	            _admin.createTable(tableDesc);
-	        } catch (TableExistsException e) {
-				// swallow table exists exception, with concurrent access the table 
-				// may have been created between test-for-existence and attempt-at-creation
-			}
+	        } catch ( Exception e ) {
+                e.printStackTrace();
+            }
         }
         
     }
