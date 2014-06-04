@@ -122,7 +122,7 @@ define( function (require) {
                 }
 
                 clientLayer.setViews( views );
-                clientLayerDeferred.resolve();
+                clientLayerDeferred.resolve( clientLayer );
             });
 
             return clientLayerDeferred;
