@@ -43,13 +43,14 @@ define( function (require) {
 		createLayers: function(layerJSON, uiMediator, map) {
 
 			// Set up server-rendered display layers
-			var serverLayers = new ServerLayer(layerJSON, map);
+			var serverLayerDeferred = $.Deferred(),
+			    serverLayers = new ServerLayer(layerJSON, map, serverLayerDeferred);
 
 			// Populate the map layer state object with server layer data, and enable
 			// listeners that will push state changes into the layers.
             uiMediator.setServerLayers(serverLayers, map);
 
-            return serverLayers;
+            return serverLayerDeferred;
 		}
 
     };	

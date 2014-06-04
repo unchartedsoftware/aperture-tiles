@@ -81,7 +81,7 @@ define(function (require) {
 
     ServerLayer = Class.extend({
         ClassName: "ServerLayer",
-        init: function (layerSpec, map) {
+        init: function (layerSpec, map, deferred) {
 
             this.map = map;
             this.pendingLayerRequests = [];
@@ -91,6 +91,7 @@ define(function (require) {
             this.dataListener = new DataLayer(layerSpec);
             this.dataListener.setRequestCallback( $.proxy(this.requestLayerInfo, this));
             this.dataListener.addRetrievedCallback( $.proxy(this.useLayerInfo, this));
+            this.dataListener.addRetrievedCallback( function() { deferred.resolve(); });
             this.dataListener.retrieveLayerInfo();
         },
 

@@ -58,8 +58,9 @@ define( function (require) {
 			var layer = {
                     views : []
                 },
-                deferreds = [],
+                dependencyDeferreds = [],
                 clientLayer,
+                clientLayerDeferred,
                 i;
 	
 			// load module func
@@ -85,6 +86,7 @@ define( function (require) {
                     layer.views[index].dataService = new TileService( layerInfo, map.getPyramid() );
                     layerDeferred.resolve();
                 });
+
                 layerInfoListener.retrieveLayerInfo();
                 return layerDeferred;
             }
@@ -94,17 +96,18 @@ define( function (require) {
 
                 layer.views[i] = {};
                 // get renderer class from require.js
-                deferreds.push( loadRequireJsModule( "./impl/" + layerJSON.views[i].renderer, i ) );
+                dependencyDeferreds.push( loadRequireJsModule( "./impl/" + layerJSON.views[i].renderer, i ) );
                 // POST request for layerInfo
-                deferreds.push( getLayerInfoFromServer( { layer: layerJSON.layer }, i ) );
+                dependencyDeferreds.push( getLayerInfoFromServer( { layer: layerJSON.layer }, i ) );
             }
 
             clientLayer = new ClientLayer( layerJSON.name, map );
+            clientLayerDeferred = $.Deferred();
 
             // instantiate layer object
             uiMediator.addClientLayer( clientLayer );
 
-            $.when.apply( $, deferreds ).done( function() {
+            $.when.apply( $, dependencyDeferreds ).done( function() {
 
                 // once everything has loaded
                 var views = [],
@@ -118,10 +121,11 @@ define( function (require) {
                     });
                 }
 
-               clientLayer.setViews( views );
+                clientLayer.setViews( views );
+                clientLayerDeferred.resolve();
             });
 
-            return clientLayer;
+            return clientLayerDeferred;
 		}
 
 
