@@ -85,7 +85,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	
     	private void write( String name ) {
     		//System.out.println( "Thread " + name + " writing " + _data.getUUID() );   		    	
-			_service.writeAnnotation( TEST_LAYER_NAME, _data );	
+			_service.write( TEST_LAYER_NAME, _data );
 			_status++;
     	}
     	
@@ -131,7 +131,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     		
     		AnnotationData<?> newData = JSONAnnotation.fromJSON( json );
     		
-			_service.modifyAnnotation( TEST_LAYER_NAME, _data, newData );
+			_service.modify( TEST_LAYER_NAME, _data, newData );
 			_data = newData;
 			_status++;
     	}
@@ -139,7 +139,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	private void remove( String name ) {
     		
     		//System.out.println( "Thread " + name + " removing " + _data.getUUID() );   		    	
-			_service.removeAnnotation( TEST_LAYER_NAME, _data );		
+			_service.remove( TEST_LAYER_NAME, _data );
 			_status++;
     	}
     	
@@ -212,7 +212,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	    		
 	    		int i = (int)( Math.random() * indices.size() );
 	    		if ( annotations.get( indices.get(i) ).process( _name ) ) {
-	    			indices.remove(i);	    			
+	    			indices.remove(i);
 	    		}
 	    		
 	    	}
@@ -278,7 +278,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( null, TEST_LAYER_NAME, tile );   	
+    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( null, TEST_LAYER_NAME, tile );
     	return scan;
 
 	}
@@ -291,7 +291,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 		int y = (int)(Math.random() * (level * (1 << level)) );
 		TileIndex tile = new TileIndex( level, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
 
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.readAnnotations( null, TEST_LAYER_NAME, tile );   	
+		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( null, TEST_LAYER_NAME, tile );
     	return scan;
 
 	}

@@ -223,7 +223,7 @@ public class HBasePyramidIO implements PyramidIO {
 
 	@Override
 	public void initializeForWrite (String tableName) throws IOException {
-		if (!_admin.tableExists(tableName)) {
+		if ( !_admin.tableExists(tableName) ) {
 			try {
 				HTableDescriptor tableDesc = new HTableDescriptor(tableName);          
 				HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);

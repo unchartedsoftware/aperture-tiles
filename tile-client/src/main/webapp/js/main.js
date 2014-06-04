@@ -210,7 +210,7 @@ require(['./FileLoader',
                                     href: '?map='+i
                                 });
                                 mapButton.append(maps[i].description+'<br>');
-                                mapsOverlay.getContentElement.append( mapButton );
+                                mapsOverlay.getContentElement().append( mapButton );
                             }
 				        }
 

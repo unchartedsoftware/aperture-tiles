@@ -48,7 +48,7 @@ public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "test.annotations";
 	static final double   EPSILON = 0.001;
-	static final int      NUM_ENTRIES = 100;
+	static final int      NUM_ENTRIES = 1000;
 	static final int      NUM_TESTS = 25;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 
@@ -154,8 +154,8 @@ public class AnnotationTestsBase {
 	
 	protected boolean compareTiles( TileData< Map<String, List<Pair<String, Long>>>> a, TileData< Map<String, List<Pair<String, Long>>>> b, boolean verbose ) {
 		
-		List<Pair<String, Long>> aReferences = AnnotationManipulator.getAllReferencesFromTile( a );
-		List<Pair<String, Long>> bReferences = AnnotationManipulator.getAllReferencesFromTile( b );
+		List<Pair<String, Long>> aReferences = AnnotationManipulator.getAllCertificatesFromTile( a );
+		List<Pair<String, Long>> bReferences = AnnotationManipulator.getAllCertificatesFromTile( b );
 		
 		if ( !a.getDefinition().equals( b.getDefinition() ) ) {
 			if ( verbose ) System.out.println( "Bin indices are not equal");
@@ -197,17 +197,29 @@ public class AnnotationTestsBase {
 		Long timestamp = new Timestamp( date.getTime() ).getTime();
 		
 		try {
-			JSONObject anno = new JSONObject();			
-			anno.put("x", xy[0]);
-			anno.put("y", xy[1]);	
-			anno.put("level", (int)(rand.nextDouble() * 18) );
-			anno.put("priority", randomPriority() );
-			anno.put("uuid", UUID.randomUUID() );
-			anno.put("timestamp", timestamp.toString() );
-			JSONObject data = new JSONObject();
-			data.put("comment", randomComment() );
-			anno.put("data", data);
-			return anno;
+            JSONObject anno = new JSONObject();
+            anno.put("x", xy[0]);
+            anno.put("y", xy[1]);
+
+            int level = (int)(rand.nextDouble() * 18);
+            anno.put("level", level );
+
+            JSONObject range = new JSONObject();
+            range.put("min", 0 );
+            range.put("max", level );
+            anno.put("range", range );
+
+            anno.put("group", randomGroup() );
+
+            JSONObject certificate = new JSONObject();
+            certificate.put("uuid", UUID.randomUUID() );
+            certificate.put("timestamp", timestamp.toString() );
+            anno.put("certificate", certificate );
+
+            JSONObject data = new JSONObject();
+            data.put("comment", randomComment() );
+            anno.put("data", data);
+            return anno;
 			
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -278,7 +290,7 @@ public class AnnotationTestsBase {
 	}
 	
 	
-	protected String randomPriority() {
+	protected String randomGroup() {
 		
 		final Random rand = new Random();
 		String priorities[] = {"Urgent", "High", "Medium", "Low"};		
@@ -312,7 +324,7 @@ public class AnnotationTestsBase {
 	protected List<Pair<String, Long>> dataToIndices( List<AnnotationData<?>> data ) {
 		List<Pair<String, Long>> indices = new ArrayList<>();
 		for ( AnnotationData<?> d : data ) {
-			indices.add( d.getReference() );
+			indices.add( d.getCertificate() );
 		}
 		return indices;
 	}

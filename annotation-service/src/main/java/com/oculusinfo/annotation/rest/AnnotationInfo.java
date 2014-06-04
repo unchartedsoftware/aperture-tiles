@@ -36,7 +36,7 @@ public class AnnotationInfo {
     private JSONObject _data;
     private JSONObject _dataConfiguration;
     private JSONObject _pyramidConfiguration;
-    private JSONArray _priorities;
+    private JSONArray _groups;
     private JSONObject _filterConfiguration;
     
 	public AnnotationInfo( JSONObject data ) {
@@ -77,13 +77,12 @@ public class AnnotationInfo {
         }
     }
 
-    
-    public JSONArray getPriorities () {
-        if (null == _priorities) {
+    public JSONArray getGroups () {
+        if (null == _groups) {
             synchronized (this) {
-                if (null == _priorities) {
+                if (null == _groups) {
                     try {
-                    	_priorities = _data.getJSONArray("priorities");
+                    	_groups = _data.getJSONArray("groups");
                     } catch (JSONException e) {
                     	LOGGER.warn("Missing priorities on annotation {}", _data);
                         return null;
@@ -91,7 +90,7 @@ public class AnnotationInfo {
                 }
             }
         }
-        return _priorities;
+        return _groups;
     }
     
     
@@ -100,7 +99,7 @@ public class AnnotationInfo {
             synchronized (this) {
                 if (null == _filterConfiguration) {
                     try {
-                    	_filterConfiguration = _data.getJSONObject("filters");
+                    	_filterConfiguration = _data.getJSONObject("filter");
                     } catch (JSONException e) {
                     	LOGGER.warn("Missing filter configuration on annotation {}", _data);
                         return null;

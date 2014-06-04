@@ -33,9 +33,9 @@ import com.oculusinfo.annotation.io.impl.*;
 
 public class AnnotationIOFactory  {
 
-	public static String ANNOTATION_IO_TYPE = new String("type");
-	public static String HBASE_IO_TYPE = new String("hbase");
-	public static String FILESYSTEM_IO_TYPE = new String("file-system");
+	public static String ANNOTATION_IO_TYPE = "type";
+	public static String HBASE_IO_TYPE = "hbase";
+	public static String FILESYSTEM_IO_TYPE = "file-system";
 	
 	static public AnnotationIO produce( AnnotationInfo info ) throws IOException {
 
