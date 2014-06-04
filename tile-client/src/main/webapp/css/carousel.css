@@ -6,9 +6,7 @@
     height:257px;
     pointer-events: none;
     border: 1px solid rgba(255, 255, 255, .5);
-    -webkit-box-shadow: 0 0 10px #ccc;
-       -moz-box-shadow: 0 0 10px #ccc;      
-            box-shadow: 0 0 10px #ccc;
+    box-shadow: inset 0 0 10px #ccc;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;

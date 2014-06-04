@@ -48,21 +48,17 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
-			var that = this,
-			    mapSpecs;
-			
-			mapSpecs = spec.MapConfig;
-
+            // Set the map configuration
 			aperture.config.provide({
-				// Set the map configuration
 				'aperture.map' : {
-					'defaultMapConfig' : mapSpecs
+					'defaultMapConfig' : spec.MapConfig
 				}
 			});
-			
-			
-			// Map div id
+
 			this.id = id;
+			this.$map = $( "#" + this.id );
+            this.axes = [];
+            this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
 
 			// Initialize the map
 			this.map = new aperture.geo.Map({ 
@@ -75,27 +71,38 @@ define(function (require) {
                 }
 			});
 
-			this.map.olMap_.baseLayer.setOpacity(1);
-			this.axes = [];
+            this.createRoot();
 
-			this.pyramid = PyramidFactory.createPyramid(spec.PyramidConfig);
+			// initialize previous zoom
+            this.previousZoom = this.map.getZoom();
 
-            $(window).resize( function() {
-                // set map to full extent of window
-                that.updateSize();
-
-            });
-
-			this.previousZoom = this.map.getZoom();
+            // set resize callback
+            $(window).resize( $.proxy(this.updateSize, this) );
 
 			// Trigger the initial resize event to resize everything
-			$(window).resize();			
+			$(window).resize();
 		},
 
 
+        createRoot: function() {
+
+            var that = this;
+            this.$root = $('<div id="'+this.id+'-root" style="position:absolute;"></div>');
+            this.$map.append( this.$root );
+
+            this.on('move', function() {
+                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
+                that.$root.css({
+                    top: pos.y + "px",
+                    left: pos.x + "px"
+                });
+            });
+        },
+
         getZIndex: function() {
-            var indices = OpenLayers.Map.Z_INDEX_BASE,
-                key, maxZ = 0;
+            var indices = OpenLayers.Map.prototype.Z_INDEX_BASE,
+                maxZ = 0,
+                key;
             for (key in indices) {
                 if (indices.hasOwnProperty(key)) {
                     maxZ = Math.max( maxZ, indices[key] );
@@ -106,10 +113,12 @@ define(function (require) {
 
 
         getElement:  function() {
-            if (!this.$map) {
-                this.$map = $("#" + this.id);
-            }
             return this.$map;
+        },
+
+
+        getRootElement: function() {
+            return this.$root;
         },
 
 
@@ -122,35 +131,66 @@ define(function (require) {
          * Allows the given DOMElement or jQuery object events to propagate through
          * and interact with the underlying Map
          */
-        enableEventToMapPropagation: function( elem ) {
+        enableEventToMapPropagation: function( elem, events ) {
 
             var //that = this,
-                domElement = (elem instanceof jQuery) ? elem[0] : elem;
+                domElement = (elem instanceof jQuery) ? elem[0] : elem,
+                i;
 
             function propagateEvent( event ) {
                 var newEvent = new event.constructor(event.type, event),
                     below;
                 $(elem).css('pointer-events', 'none');
-                below =  document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
+                below = document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
                 if (below) {
                     below.dispatchEvent(newEvent);
                 }
                 $(elem).css('pointer-events', 'all');
             }
 
-            domElement.onmousedown = propagateEvent;
-            domElement.onmouseup = propagateEvent;
-            domElement.onmousemove = propagateEvent;
-            domElement.onwheel = propagateEvent;
-            domElement.onmousewheel = propagateEvent;
-            domElement.onscroll = propagateEvent;
+            if (!events) {
+                domElement.onmousedown = propagateEvent;
+                domElement.onmouseup = propagateEvent;
+                domElement.onmousemove = propagateEvent;
+                domElement.onwheel = propagateEvent;
+                domElement.onmousewheel = propagateEvent;
+                domElement.onscroll = propagateEvent;
+                domElement.onclick = propagateEvent;
+                domElement.ondblclick = propagateEvent;
+            } else {
+                events = ($.isArray) ? events : [events];
+                for (i=0; i<events.length; i++) {
+                    domElement[events[i]] = propagateEvent;
+                }
+            }
+
         },
 
+
+        disableEventToMapPropagation: function( elem, events ) {
+
+            var domElement = (elem instanceof jQuery) ? elem[0] : elem,
+                i;
+            if (!events) {
+                domElement.onmousedown = null;
+                domElement.onmouseup = null;
+                domElement.onmousemove = null;
+                domElement.onwheel = null;
+                domElement.onmousewheel = null;
+                domElement.onscroll = null;
+                domElement.onclick = null;
+                domElement.ondblclick = null;
+            } else {
+                events = ($.isArray) ? events : [events];
+                for (i=0; i<events.length; i++) {
+                    domElement[events[i]] = null;
+                }
+            }
+        },
 
 		setAxisSpecs: function (axes) {
 
 			var i, spec;
-
 			for (i=0; i< axes.length; i++) {
 				spec = axes[i];
 				spec.mapId = this.id;
@@ -237,51 +277,15 @@ define(function (require) {
 
 		getViewportHeight: function() {
 			return this.map.olMap_.viewPortDiv.clientHeight;
-		},
+        },
 
-		/**
-		 * Returns the min and max visible viewport pixels
-		 * Axes may be covering parts of the map, so this determines the actual visible
-		 * bounds
-		 */
-		getMinMaxVisibleViewportPixels: function() {
-
-			var bounds = {
-                    min : {
-                         x: 0,
-                         y: 0
-                     },
-                     max : {
-                         x: this.getViewportWidth(),
-                         y: this.getViewportHeight()
-                     }
-                };
-            /*, i;
-			// determine which axes exist
-			for (i=0; i<this.axes.length; i++) {
-
-				if (this.axes[i].isEnabled()) {
-
-					switch ( this.axes[i].position ) {
-
-                        case 'top':
-                            bounds.min.y = this.axes[i].getMaxContainerWidth();
-                            break;
-                        case 'bottom':
-                            bounds.max.y = this.getViewportHeight() - this.axes[i].getMaxContainerWidth();
-                            break;
-                        case 'left':
-                            bounds.min.x = this.axes[i].getMaxContainerWidth();
-                            break;
-                        case 'right':
-                            bounds.max.x = this.getViewportWidth() - this.axes[i].getMaxContainerWidth();
-                            break;
-					}
-				}
-			}*/
-			return bounds;
-		},
-
+        getMapkey : function() {
+            var minMax = this.getMapMinAndMaxInViewportPixels();
+            return minMax.min.x + ":"
+                 + minMax.max.x + ","
+                 + minMax.min.y + ":"
+                 + minMax.max.y;
+        },
 
 		/**
 		 * Returns the maps min and max pixels in viewport pixels
@@ -289,16 +293,19 @@ define(function (require) {
 		 *          map [0,0] is BOTTOM-LEFT
 		 */
 		getMapMinAndMaxInViewportPixels: function() {
-			return {
-				min : {
-					x: Math.round( this.map.olMap_.minPx.x ),
-					y: Math.round( this.map.olMap_.maxPx.y )
-				},
-				max : {
-					x: Math.round( this.map.olMap_.maxPx.x ),
-					y: Math.round( this.map.olMap_.minPx.y )
-				}
-			};
+
+		    var olMap = this.map.olMap_;
+
+		    return {
+                min : {
+                    x: Math.round( olMap.minPx.x ),
+                    y: Math.round( olMap.maxPx.y )
+                },
+                max : {
+                    x: Math.round( olMap.maxPx.x ),
+                    y: Math.round( olMap.minPx.y )
+                }
+            };
 		},
 
 
@@ -324,12 +331,10 @@ define(function (require) {
 		 *          map [0,0] is BOTTOM-LEFT
 		 */
 		getViewportPixelFromMapPixel: function(mx, my) {
-			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
-			    totalPixelSpan = this.getMapWidth();
-
+			var viewportMinMax = this.getMapMinAndMaxInViewportPixels();
 			return {
 				x: mx + viewportMinMax.min.x,
-				y: totalPixelSpan - my + viewportMinMax.max.y
+				y: this.getMapWidth() - my + viewportMinMax.max.y
 			};
 		},
 
@@ -339,7 +344,7 @@ define(function (require) {
 		 * NOTE:    data and map [0,0] are both BOTTOM-LEFT
 		 */
 		getMapPixelFromCoord: function(x, y) {
-			var zoom = this.map.olMap_.getZoom(),
+			var zoom = this.getZoom(),
 			    tile = this.pyramid.rootToTile( x, y, zoom, TILESIZE),
 			    bin = this.pyramid.rootToBin( x, y, tile);
 			return {
@@ -389,10 +394,12 @@ define(function (require) {
          * Returns the tile and bin index corresponding to the given map pixel coordinate
          */
         getTileAndBinFromMapPixel: function(mx, my, xBinCount, yBinCount) {
+
             var tileIndexX = Math.floor(mx / TILESIZE),
                 tileIndexY = Math.floor(my / TILESIZE),
                 tilePixelX = mx % TILESIZE,
                 tilePixelY = my % TILESIZE;
+
             return {
                 tile: {
                     level : this.getZoom(),
@@ -406,24 +413,34 @@ define(function (require) {
                     y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
                 }
             };
+
         },
 
 
         /**
          * Returns the top left pixel location in viewport coord from a tile index
          */
-        getTopLeftViewportPixelForTile: function(tx, ty) {
+        getTopLeftViewportPixelForTile: function( tilekey ) {
 
-            var mx = tx * TILESIZE,
-                my = ty * TILESIZE + TILESIZE,
-                pixel;
-
+            var mapPixel = this.getTopLeftMapPixelForTile( tilekey );
             // transform map coord to viewport coord
-            pixel = this.getViewportPixelFromMapPixel(mx, my);
+            return this.getViewportPixelFromMapPixel( mapPixel.x, mapPixel.y );
+        },
 
+
+         /**
+         * Returns the top left pixel location in viewport coord from a tile index
+         */
+        getTopLeftMapPixelForTile: function( tilekey ) {
+
+            var parsedValues = tilekey.split(','),
+                x = parseInt(parsedValues[1], 10),
+                y = parseInt(parsedValues[2], 10),
+                mx = x * TILESIZE,
+                my = y * TILESIZE + TILESIZE;
             return {
-                x : pixel.x,
-                y : pixel.y
+                x : mx,
+                y : my
             };
         },
 
@@ -548,6 +565,11 @@ define(function (require) {
 		getTileSize: function() {
 			return TILESIZE;
 		},
+
+
+        panToCoord: function( x, y ) {
+            this.map.panTo( y, x );
+        },
 
 
 		on: function (eventType, callback) {

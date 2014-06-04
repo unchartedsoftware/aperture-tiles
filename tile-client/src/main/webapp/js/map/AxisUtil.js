@@ -210,9 +210,9 @@ define({
             // given an axis value, get the pixel position on the page
             var pixelPosition;
             if (axis.isXAxis) {
-                pixelPosition = axis.map.getViewportPixelFromCoord( value, 0).x;
+                pixelPosition = axis.map.getViewportPixelFromCoord( value, 0 ).x;
             } else {
-                pixelPosition = axis.map.getViewportPixelFromCoord( 0, value).y;
+                pixelPosition = axis.map.getViewportPixelFromCoord( 0, value ).y;
             }
             return pixelPosition;
         }
@@ -220,13 +220,12 @@ define({
         function getMinIncrement() {
 
             var minCull,      // exact value of cull point, any value less will be culled from view
-                minIncrement, // the minimum increment that is visible
-                minMax = axis.map.getMinMaxVisibleViewportPixels();
+                minIncrement; // the minimum increment that is visible
 
             if (axis.isXAxis) {
-                minCull = axis.map.getCoordFromViewportPixel( minMax.min.x, 0 ).x;
+                minCull = axis.map.getCoordFromViewportPixel( 0, 0 ).x;
             } else {
-                minCull = axis.map.getCoordFromViewportPixel( 0, minMax.max.y ).y;
+                minCull = axis.map.getCoordFromViewportPixel( 0, axis.map.getViewportHeight() ).y;
             }
 
             if ( !axis.repeat && minCull < axis.min ) {
@@ -258,8 +257,7 @@ define({
         function getMaxIncrement() {
 
             var maxCull,      // exact value of cull point, any value greater will be culled from view
-                maxIncrement, // the minimum increment that is visible
-                minMax = axis.map.getMinMaxVisibleViewportPixels();
+                maxIncrement; // the minimum increment that is visible
 
             function roundToDecimals( num ) {
                 var numDec = axis.unitSpec.decimals || 2,
@@ -268,9 +266,9 @@ define({
             }
 
             if (axis.isXAxis) {
-                maxCull = axis.map.getCoordFromViewportPixel( minMax.max.x, 0 ).x;
+                maxCull = axis.map.getCoordFromViewportPixel( axis.map.getViewportWidth(), 0 ).x;
             } else {
-                maxCull = axis.map.getCoordFromViewportPixel( 0, minMax.min.y ).y;
+                maxCull = axis.map.getCoordFromViewportPixel( 0, 0 ).y;
             }
             if ( !axis.repeat && maxCull > axis.max ) {
                 // prevent roll-over
@@ -287,7 +285,7 @@ define({
             } else {
                 // cull above pivot
                 // NOTE: rounding here to prevent accumulated precision errors that truncate last axis 'tick'
-                while ( roundToDecimals(maxIncrement+subIncrement) <= maxCull) { //Math.floor(maxIncrement+subIncrement) <= maxCull) {
+                while ( roundToDecimals(maxIncrement+subIncrement) <= maxCull) {
                     maxIncrement += subIncrement;
                 }
             }
@@ -306,12 +304,12 @@ define({
                     // this modulos works correctly for negative numbers
                     return ((val%n)+n)%n;
                 },
-                i = mod(startingMarkerTypeIndex, that.MARKER_TYPE_ORDER.length),
+                i = mod( startingMarkerTypeIndex, that.MARKER_TYPE_ORDER.length ),
                 value;
 
             for (value = start; value <= end; value+=subIncrement) {
 
-                markers[that.MARKER_TYPE_ORDER[i]].push({
+                markers[ that.MARKER_TYPE_ORDER[i] ].push({
                     label : that.getMarkerRollover(axis, value),
                     pixel : getPixelPosition(value)
                 });

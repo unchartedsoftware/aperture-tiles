@@ -47,14 +47,20 @@ define(function (require) {
     EmptyRenderer = ClientRenderer.extend({
         ClassName: "EmptyRenderer",
 		
-        init: function () {
-            this._super('empty');
-        },		
-		
-		
-        createLayer: function(nodeLayer) {
-            // noop
-            return undefined;
+        init: function ( map ) {
+            this._super( map );
+        },
+
+        setOpacity: function( opacity ) {
+            return true;
+        },
+
+        setVisibility: function( visible ) {
+            return true;
+        },
+
+        redraw: function() {
+            return true;
         }
 
     });

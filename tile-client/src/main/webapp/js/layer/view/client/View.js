@@ -53,14 +53,8 @@ define(function (require) {
 
             this.renderer = spec.renderer;
             this.renderer.attachClientState(spec.clientState);    // attach the shared client state
-            this.renderer.createLayer(spec.mapNodeLayer);   // create the render layer
             this.dataService = spec.dataService;
             this.tiles = [];
-        },
-
-
-        getRendererId: function() {
-            return this.renderer.id;
         },
 
 
@@ -68,25 +62,6 @@ define(function (require) {
             return this.dataService.layerInfo.layer;
         },
 
-        /** add views renderer id to node data
-         *
-         * @param data      data to add renderer id to
-         */
-        addRendererIdToData: function( data ) {
-            var i;
-            if ( $.isArray( data ) ) {
-                for (i=0; i<data.length; i++ ) {
-                    data[i].rendererId = this.getRendererId();
-                }
-            } else {
-                for (i in data) {
-                    if (data.hasOwnProperty(i)) {
-                        data[i].rendererId = this.getRendererId();
-                    }
-                }
-            }
-            return data;
-        },
 
         /**
          * Given a list of tiles, determines which are already tracked, which need to be
@@ -95,19 +70,15 @@ define(function (require) {
          * @param visibleTiles an array of all visible tiles that will need to be displayed
          * @param callback tile receive callback function
          */
-        filterAndRequestTiles: function(visibleTiles, tileSetBounds, callback) {
+        updateTiles: function( visibleTiles, tileSetBounds ) {
 
             var activeTiles = [],
                 defunctTiles = {},
                 neededTiles = [],
-                i, tile, tileKey;
+                i, tile, tilekey;
 
-            // Copy out all keys from the current data.  As we go through
-            // making new requests, we won't bother with tiles we've
-            // already received, but we'll remove them from the defunct
-            // list.  When we're done requesting data, we'll then know
-            // which tiles are defunct, and can be removed from the data
-            // set.
+            // keep track of current tiles to ensure we know
+            // which ones no longer exist
             for (i=0; i<this.tiles.length; ++i) {
                 defunctTiles[this.tiles[i]] = true;
             }
@@ -115,109 +86,121 @@ define(function (require) {
             // Go through, seeing what we need.
             for (i=0; i<visibleTiles.length; ++i) {
                 tile = visibleTiles[i];
-                tileKey = this.dataService.createTileKey(tile);
+                tilekey = this.dataService.createTileKey(tile);
 
-                if (defunctTiles[tileKey]) {
+                if (defunctTiles[tilekey]) {
                     // Already have the data, remove from defunct list
-                    delete defunctTiles[tileKey];
+                    delete defunctTiles[tilekey];
                 } else {
                     // New data.  Mark for fetch.
-                    neededTiles.push(tileKey);
+                    neededTiles.push(tilekey);
                 }
                 // And mark tile it as meaningful
-                activeTiles.push(tileKey);
+                activeTiles.push(tilekey);
             }
 
             // Update our internal lists
             this.tiles = activeTiles;
             // Remove all old defunct tiles references
-            for (tileKey in defunctTiles) {
-                if (defunctTiles.hasOwnProperty(tileKey)) {
-                    this.dataService.releaseData(tileKey);
+            for (tilekey in defunctTiles) {
+                if (defunctTiles.hasOwnProperty(tilekey)) {
+                    this.dataService.releaseData(tilekey);
                 }
             }
             // Request needed tiles from dataService
-            this.dataService.requestData(neededTiles, tileSetBounds, callback);
+            this.dataService.requestData( neededTiles, tileSetBounds, $.proxy( this.redraw, this) );
         },
 
 
-        swapTileWith: function (otherTracker, tilekey) {
-            otherTracker.tiles.push(tilekey);
-            otherTracker.dataService.data[tilekey] = this.dataService.data[tilekey];
+        swapTileWith: function( newView, tilekey ) {
 
-            this.tiles.splice(this.tiles.indexOf(tilekey), 1);
-            this.dataService.releaseData(tilekey);
+            if ( this.getLayerId() === newView.getLayerId() ) {
+
+                // if both views share the same type of data source, swap tile data
+                // give tile to new view
+                newView.giveTile( tilekey, this.dataService.data[tilekey] );
+                newView.redraw( tilekey );
+
+            } else {
+                // otherwise release and request new data
+                if (tilekey === this.renderer.clientState.clickState.tilekey) {
+                    // if same tile as clicked tile, un-select elements from this view
+                    this.renderer.clientState.clearClickState();
+                }
+                newView.requestTile( tilekey );
+            }
+            this.releaseTile( tilekey ); // release tile from this view
+            this.redraw( tilekey );      // redraw tile
+
         },
 
 
         releaseTile: function(tilekey) {
 
             if (this.tiles.indexOf(tilekey) === -1) {
-                // this tracker does not have requested tile, this function should not
+                // this view does not have requested tile, this function should not
                 // have been called, return
                 return;
             }
-            // remove tile from tracked list
-            this.tiles.splice(this.tiles.indexOf(tilekey), 1);
-            // release data
-            this.dataService.releaseData(tilekey);
+            this.tiles.splice(this.tiles.indexOf(tilekey), 1); // remove tile from tracked list
+            this.dataService.releaseData(tilekey); // release data
         },
 
 
         requestTile: function(tilekey, callback) {
-            if (this.tiles.indexOf(tilekey) === -1) {
-                this.tiles.push(tilekey);
+
+            if (this.tiles.indexOf(tilekey) !== -1) {
+                // this view already has the requested tile, this function should not
+                // have been called, return
+                return;
             }
-            this.dataService.requestData([tilekey], {}, callback);
+            this.tiles.push(tilekey); // add tile
+            this.dataService.requestData( [tilekey], {}, $.proxy( this.redraw, this ) ); // request data
         },
 
 
-        getTileData: function(tilekey) {
-            this.dataService.data[tilekey].rendererId = this.getRendererId();
-            return this.dataService.data[tilekey];
+        giveTile: function( tilekey, data ) {
+
+            if (this.tiles.indexOf(tilekey) !== -1) {
+                // this view already has the gifted tile, this function should not
+                // have been called, return
+                return;
+            }
+            this.tiles.push(tilekey); // add tile
+            this.dataService.data[tilekey] = data; // set data
         },
+
+
+        redraw: function( tilekey ) {
+            this.renderer.redraw( this.getDataArray() );
+        },
+
 
         /**
-         * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
+         * Returns the data of the tiles in an array
          */
         getDataArray: function ( tilekeys ) {
 
-            var data;
-            // if tilekeys are specified, return those
-            if ( tilekeys !== undefined ) {
-                if ( !$.isArray( tilekeys ) ) {
-                    // only one tilekey specified, wrap in array
-                    tilekeys = [tilekeys];
-                }
-                data =  this.dataService.getDataArray(tilekeys);
-            } else {
-                // otherwise, return all tiles currently tracked
-                data =  this.dataService.getDataArray(this.tiles);
+            if ( tilekeys === undefined ) {
+                tilekeys = this.tiles;
+            } else if ( !$.isArray( tilekeys ) ) {
+                tilekeys = [ tilekeys ];
             }
-            return this.addRendererIdToData( data );
-
+            return this.dataService.getDataArray( tilekeys );
         },
 
 
         /**
-         * Returns the data format of the tiles required by an aperture.geo.mapnodelayer
+         * Returns the data of the tiles as an object keyed by tilekey
          */
         getDataObject: function ( tilekeys ) {
 
-            var data;
-            // if tilekeys are specified, return those
-            if ( tilekeys !== undefined ) {
-                if ( !$.isArray( tilekeys ) ) {
-                    // only one tilekey specified, wrap in array
-                    tilekeys = [tilekeys];
-                }
-                data = this.dataService.getDataObject(tilekeys);
-            } else {
-                // otherwise, return all tiles currently tracked
-                data = this.dataService.getDataObject(this.tiles);
+            if ( tilekeys === undefined ) {
+                tilekeys = this.tiles;
+            } else if ( !$.isArray( tilekeys ) ) {
+                tilekeys = [ tilekeys ];
             }
-            return this.addRendererIdToData( data );
-
+            return this.dataService.getDataObject( tilekeys );
         }
 
     });

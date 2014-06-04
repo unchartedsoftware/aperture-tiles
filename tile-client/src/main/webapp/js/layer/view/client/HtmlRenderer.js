@@ -28,41 +28,33 @@ define(function (require) {
 
 
 
-    var Class = require('../../../class'),
-        ClientRenderer;
+    var ClientRenderer = require('./ClientRenderer'),
+        HtmlRenderer;
 
 
 
-    ClientRenderer = Class.extend({
-        ClassName: "ClientRenderer",
+    HtmlRenderer = ClientRenderer.extend({
+        ClassName: "HtmlRenderer",
 
-        /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
-         */
         init: function(map) {
-
-            this.map = map;
-            this.clientState = null;
-        },
-
-        attachClientState: function(clientState) {
-            this.clientState = clientState;
+            this._super( map );
+            this.nodeLayer = {};
         },
 
         setOpacity: function( opacity ) {
-            return true;
+            this.nodeLayer.$root_.css( 'opacity', opacity );
         },
 
         setVisibility: function( visible ) {
-            return true;
+            var visibility = visible ? 'visible' : 'hidden';
+            this.nodeLayer.$root_.css( 'visibility', visibility );
         },
 
-        redraw: function() {
-            return true;
+        redraw: function( data ) {
+            this.nodeLayer.all( data ).redraw();
         }
 
     });
 
-    return ClientRenderer;
+    return HtmlRenderer;
 });
