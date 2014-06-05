@@ -252,11 +252,11 @@ require(['./FileLoader',
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
                         $.when(ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap)).done( function( layersFromServer ) {
-
-                            layerInfo = layersFromServer.getSubLayerInfosById();
                             var layer,
-                                layerInfo,
-                                filterAxisConfig;
+                            	layerInfo,
+                            	filterAxisConfig;
+                            
+                            layerInfo = layersFromServer.getSubLayerInfosById();
 
                             for(layer in layerInfo){
                                 if(layerInfo.hasOwnProperty( layer )){
