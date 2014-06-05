@@ -223,6 +223,10 @@ require(['./FileLoader',
 				        worldMap = new Map("map", mapConfig);
 				        // ... (set up our map axes) ...
 				        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
+
+                        // ... (set up our map tile borders) ...
+                        MapService.setTileBorderConfig(mapConfig);
+
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {
 					        UICustomization.customizeMap(worldMap);

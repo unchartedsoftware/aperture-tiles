@@ -368,6 +368,9 @@
                 // ... (set up our map axes) ...
                 worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
+                // ... (set up our map tile borders) ...
+                MapService.setTileBorderConfig(mapConfig, plotDiv);
+
                 if(datasetLowerCase === 'twitter') {
                     worldMap.map.zoomTo( 40, -95, 4 );
                 }

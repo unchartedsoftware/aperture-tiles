@@ -1,10 +1,5 @@
 @charset "UTF-8";
 
-.olTileImage {
-    border-left: 1px solid rgba(255, 255, 255, .5);
-    border-top: 1px solid rgba(255, 255, 255, .5);
-}
-
 .olMap {
     position:relative;
     overflow:hidden;
@@ -13,14 +8,12 @@
     width: 100%;
     height: 100%;
 }
-
 div.olControlZoom {
 	right: 10px !important;
 	top: 60px !important;
 	left:auto !important;
     z-index: 2999 !important; 
 }
-
 .olLayerGoogleV3 {
     visibility:hidden !important;
 }

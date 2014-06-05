@@ -51,6 +51,7 @@
 			"title" : "Time",
 			"position" : "bottom",
             "repeat": false,
+            "isOpen" : false,
 			"intervalSpec" : {
 				"type" : "percentage",
 				"increment" : 20,
@@ -67,6 +68,7 @@
 			"title" : "Amount (BTC)",
 			"position" : "left",
             "repeat" : false,
+            "isOpen" : false,
 			"intervalSpec" : {
 				"type" : "value",
 				"increment" : 100000,
@@ -79,5 +81,9 @@
 				"allowStepDown" : false
 			}
 		}
-	]
+	],
+	"TileBorderConfig" : {
+		"style" : "groove",
+        "color" : "white"
+	}	
 }
