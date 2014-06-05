@@ -370,7 +370,7 @@ define(function (require) {
 
                     that.MAX_LABEL_WIDTH = Math.max( sinH + cosW, that.MAX_LABEL_WIDTH );
                     that.MAX_LABEL_HEIGHT = Math.max( cosH + sinW, that.MAX_LABEL_HEIGHT );
-                    that.MAX_LABEL_UNROTATED_WIDTH = $label.width();
+                    that.MAX_LABEL_UNROTATED_WIDTH = Math.max( $label.width(), that.MAX_LABEL_UNROTATED_WIDTH );
                 }
 
                 // initialized all measurements to zero
@@ -408,6 +408,11 @@ define(function (require) {
                 $temp = $(createDummyMarkerLabelHTML({pixel:0, label:that.min})).appendTo(that.$content);
                 measureLabelMaxDimensions( $temp );
                 $temp.remove();
+
+                console.log(that.position);
+                console.log( "MAX_LABEL_WIDTH " + that.MAX_LABEL_WIDTH );
+                console.log( "MAX_LABEL_HEIGHT " + that.MAX_LABEL_HEIGHT );
+                console.log( "MAX_LABEL_UNROTATED_WIDTH " + that.MAX_LABEL_UNROTATED_WIDTH );
 
                 // set flag so these do not need to be calculated again
                 that.elementDimensionsCalculated = true;
