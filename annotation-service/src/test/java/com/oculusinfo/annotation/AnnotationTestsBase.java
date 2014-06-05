@@ -24,6 +24,7 @@
 package com.oculusinfo.annotation;
 
 import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.AnnotationManipulator;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.*;
@@ -67,7 +68,7 @@ public class AnnotationTestsBase {
 		
 		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : tiles ) {
 			try {
-				System.out.println( AnnotationManipulator.tileToJSON( tile ).toString( 4 ) );	
+				System.out.println( AnnotationManipulator.tileToJSON(tile).toString( 4 ) );
 			} catch ( Exception e ) { e.printStackTrace(); }
 					
 		}
