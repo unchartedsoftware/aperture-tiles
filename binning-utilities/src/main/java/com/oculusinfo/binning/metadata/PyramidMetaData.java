@@ -75,9 +75,25 @@ public class PyramidMetaData {
 		_metaData = new JSONObject(metaData);
 	}
 
+	@Deprecated
 	public PyramidMetaData (String name,
 	                        String description,
 	                        Integer tileSize,
+	                        String scheme,
+	                        String projection,
+	                        Integer minZoom,
+	                        Integer maxZoom,
+	                        Rectangle2D bounds,
+	                        Collection<Pair<Integer, String>> levelMins,
+	                        Collection<Pair<Integer, String>> levelMaxes) throws JSONException {
+		this(name, description, tileSize, tileSize,
+		     scheme, projection, minZoom, maxZoom, bounds,
+		     levelMins, levelMaxes);
+	}
+	public PyramidMetaData (String name,
+	                        String description,
+	                        Integer tileSizeX,
+	                        Integer tileSizeY,
 	                        String scheme,
 	                        String projection,
 	                        Integer minZoom,
@@ -90,8 +106,10 @@ public class PyramidMetaData {
 			_metaData.put("name", name);
 		if (null != description)
 			_metaData.put("description", description);
-		if (null != tileSize)
-			_metaData.put("tilesize", tileSize);
+		if (null != tileSizeX)
+			_metaData.put("tilesizex", tileSizeX);
+		if (null != tileSizeY)
+			_metaData.put("tilesizey", tileSizeY);
 		if (null != scheme)
 			_metaData.put("scheme", scheme);
 		if (null != projection)
@@ -250,6 +268,34 @@ public class PyramidMetaData {
 			LOGGER.log(Level.WARNING, "Bad projection data in tile pyramid", e);
 		}
 		return null;
+	}
+
+	public String getCustomMetaData (String... path) {
+		JSONObject metaInfo = _metaData.optJSONObject("meta");
+		if (null == metaInfo) return null;
+		int index = 0;
+		while (null != metaInfo && index < path.length-1) {
+			metaInfo = metaInfo.optJSONObject(path[index]);
+			index++;
+		}
+		if (null == metaInfo) return null;
+		Object result = metaInfo.opt(path[path.length-1]);
+		if (null == result) return null;
+		return result.toString();
+	}
+
+	public void setCustomMetaData(String value, String... path) throws JSONException {
+		if (!_metaData.has("meta"))
+			_metaData.put("meta", new JSONObject());
+		JSONObject metaInfo = _metaData.getJSONObject("meta");
+		int index = 0;
+		while (index < path.length-1) {
+			if (!metaInfo.has(path[index]))
+				metaInfo.put(path[index], new JSONObject());
+			metaInfo = metaInfo.getJSONObject(path[index]);
+			index++;
+		}
+		metaInfo.put(path[path.length-1], value);
 	}
 
 	/**
