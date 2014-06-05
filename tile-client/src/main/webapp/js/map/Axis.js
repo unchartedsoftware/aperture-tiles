@@ -47,7 +47,6 @@ define(function (require) {
 
     Axis = Class.extend({
 
-
         Z_INDEX_OFFSET : 2000,
 
         /**
@@ -125,7 +124,7 @@ define(function (require) {
                     marginTop = 0,
                     marginBottom = 0;
 
-                // add margins in case other axis exist
+                // add margins in case other axis exist, this prevents ugly shadow overlaps
                 if (that.isXAxis) {
                     marginLeft = that.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
                     marginRight = that.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
@@ -163,11 +162,10 @@ define(function (require) {
             this.max = spec.max;
             this.repeat = spec.repeat || defaults.repeat;
 
-
             this.Z_INDEX = this.Z_INDEX_OFFSET + this.map.getZIndex();
 
             this.position = spec.position || defaults.position;
-            this.id = spec.id || this.mapId + "-" + this.position + "-axis";
+            this.id = spec.id || ( this.mapId + "-" + this.position + "-axis" );
 
             this.title = spec.title || defaults.title;
 
@@ -199,18 +197,22 @@ define(function (require) {
             this.map.on('move', function() {
                 that.redraw();
             });
+
             // generate the core html elements
             generateElements();
             // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
             this.enabled = true;
-            // get axis container widths
-            this.containerWidth = (this.isXAxis) ? this.$content.height() : this.$content.width();
             // check if axis starts open or closed
             if ( !isOpen ) {
                 // trigger close and skip animation;
                 this.$header.click();
                 this.$content.finish();
             }
+
+            // allow events to propagate below to map except 'click'
+            this.map.enableEventToMapPropagation( this.$div );
+            this.map.disableEventToMapPropagation( this.$div, ['onclick', 'ondblclick'] );
+
             // draw initial axis
             this.redraw();
         },
@@ -226,41 +228,37 @@ define(function (require) {
         },
 
 
-        getMaxContainerWidth: function() {
-            return this.containerWidth;
-        },
-
-
         /**
          * Checks if the mutable spec attributes have changed, if so, redraws
          * that.
          */
         redraw: function() {
 
-            var markers = [],
+            var markersBySize = [],
                 that = this;
 
             function updateTitle() {
 
                 // update axis length
-                var axisLength = that.$map.css(that.axisWidthOrHeight).replace('px', ''); // strip px suffix
+                var $title = that.$title,
+                    axisLength = that.$map.css( that.axisWidthOrHeight ).replace('px', ''); // strip px suffix
                 
                 // add position offset for vertical axes
                 if (!that.isXAxis) {
                     if (that.position === 'left') {
-                        that.$title.css(that.leftOrTop, axisLength + "px");
+                        $title.css(that.leftOrTop, axisLength + "px");
                     } else {
-                        that.$title.css(that.leftOrTop, -that.$title.width()*0.5 + "px");
+                        $title.css(that.leftOrTop, -$title.width()*0.5 + "px");
                     }
                 }
                 // add padding for hover hit box
-                that.$title.css('padding-left', (axisLength*0.5 - that.$title.width()*0.5) + "px");
-                that.$title.css('padding-right', (axisLength*0.5 - that.$title.width()*0.5) + "px" );
+                $title.css('padding-left', (axisLength*0.5 - $title.width()*0.5) + "px");
+                $title.css('padding-right', (axisLength*0.5 - $title.width()*0.5) + "px" );
             }
 
             /**
              * Creates and returns a dummy marker label element to measure. This function
-             * is used for measauring, as the real label func sizes the labels to the current
+             * is used for measuring, as the real label func sizes the labels to the current
              * max measurements
              */
             function createDummyMarkerLabelHTML(marker) {
@@ -422,6 +420,7 @@ define(function (require) {
             function addAxisMarkerElements() {
 
                 var marker,
+                    markers,
                     markerSize,
                     markersHTML = "",
                     i;
@@ -432,11 +431,14 @@ define(function (require) {
                 }
 
                 // iterate through markers, by marker type
-                for ( markerSize in markers ) {
-                    if (markers.hasOwnProperty(markerSize)) {
-                        for (i = 0; i < markers[markerSize].length; i++) {
+                for ( markerSize in markersBySize ) {
+                    if (markersBySize.hasOwnProperty(markerSize)) {
 
-                            marker = markers[markerSize][i];
+                        markers = markersBySize[markerSize];
+
+                        for (i = 0; i < markers.length; i++) {
+
+                            marker = markers[i];
 
                             switch (markerSize) {
                                 case 'large':
@@ -462,14 +464,14 @@ define(function (require) {
             updateTitle();
 
             // exit early if no markers are visible
-            if (!this.isEnabled()) {
+            if ( !this.isEnabled() ) {
                 return;
             }
 
             // empty elements of axis container
             that.$content.empty();
             // generate array of marker labels and pixel locations
-            markers = AxisUtil.getMarkers(this);
+            markersBySize = AxisUtil.getMarkers(this);
             // add each marker to correct pixel location in axis DOM elements
             addAxisMarkerElements();
         }

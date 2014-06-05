@@ -102,7 +102,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		AnnotationCache<Pair<String,Long>, AnnotationData<?>> dataCache = getLayerDataCache( layer );
 		
 		// put in cache
-		dataCache.put( data.getReference(), data );
+		dataCache.put( data.getCertificate(), data );
 		
 		super.writeDataToIO( layer, data );
 	}
@@ -194,7 +194,7 @@ public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {
 		
 		// add to cache
 		for ( AnnotationData<?> d : freshData ) {
-			dataCache.put( d.getReference(), d );
+			dataCache.put( d.getCertificate(), d );
 		}
 
 		return data;		

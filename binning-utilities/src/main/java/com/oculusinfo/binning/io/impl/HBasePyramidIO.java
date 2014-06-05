@@ -223,7 +223,7 @@ public class HBasePyramidIO implements PyramidIO {
 
 	@Override
 	public void initializeForWrite (String tableName) throws IOException {
-		if (!_admin.tableExists(tableName)) {
+		if ( !_admin.tableExists(tableName) ) {
 			try {
 				HTableDescriptor tableDesc = new HTableDescriptor(tableName);          
 				HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
@@ -231,10 +231,9 @@ public class HBasePyramidIO implements PyramidIO {
 				HColumnDescriptor tileFamily = new HColumnDescriptor(TILE_FAMILY_NAME);
 				tableDesc.addFamily(tileFamily);
 				_admin.createTable(tableDesc);
-			} catch (TableExistsException e) {
-				// swallow table exists exception, with concurrent access the table 
-				// may have been created between test-for-existence and attempt-at-creation
-			}
+			} catch (Exception e) {
+                e.printStackTrace();
+            }
 			
 		}
 	}

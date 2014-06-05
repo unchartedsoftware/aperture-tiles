@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.oculusinfo.binning.util.Pair;
 import oculus.aperture.common.rest.ApertureServerResource;
 
 import com.oculusinfo.annotation.index.*;
@@ -50,7 +51,7 @@ import com.google.inject.Inject;
 public class AnnotationResource extends ApertureServerResource {
 
 
-	private AnnotationService 			 _service;
+	private AnnotationService _service;
 	
 	@Inject
 	public AnnotationResource( AnnotationService service ) {
@@ -71,40 +72,45 @@ public class AnnotationResource extends ApertureServerResource {
 			if ( requestType.equals("write") ) {
 				
 				String layer = json.getString("layer");
-				JSONObject data = json.getJSONObject("data");
-				JSONAnnotation annotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );			
-				_service.writeAnnotation( layer, annotation );
-				jsonResult.put("data", annotation.toJSON() );
+				JSONAnnotation annotation = JSONAnnotation.fromJSON( json.getJSONObject("annotation") );
+                Pair<String, Long> certificate = _service.write( layer, annotation );
+				jsonResult.put("uuid", certificate.getFirst() );
+                jsonResult.put("timestamp", certificate.getSecond().toString() );
 				
 			} else if ( requestType.equals("remove") ) {
-	
+
 				String layer = json.getString("layer");
-				JSONObject data = json.getJSONObject("data");
-				_service.removeAnnotation( layer, JSONAnnotation.fromJSON( data.getJSONObject("old") ) );
+				_service.remove(layer, JSONAnnotation.fromJSON(json.getJSONObject("annotation")));
 				
 			} else if ( requestType.equals("modify") ) {
 				
 				String layer = json.getString("layer");
-				JSONObject data = json.getJSONObject("data");
-				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("old") );
-				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( data.getJSONObject("new") );				
-				_service.modifyAnnotation( layer, oldAnnotation, newAnnotation );				
-				jsonResult.put("data", newAnnotation.toJSON() );
-				
-			} else if ( requestType.equals("filter") ) {
+				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON( json.getJSONObject("previous") );
+				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( json.getJSONObject("current") );
+                Pair<String, Long> certificate = _service.modify(layer, oldAnnotation, newAnnotation);
+                jsonResult.put("uuid", certificate.getFirst() );
+                jsonResult.put("timestamp", certificate.getSecond().toString() );
+
+			} else if ( requestType.equals("filter-config") ) {
 				
 				String layer = json.getString("layer");
 				JSONObject data = json.getJSONObject("data");
-				JSONObject jsonFilters = data.getJSONObject("filters");
-				UUID uuid = _service.configureFilters( layer, jsonFilters );
+				JSONObject jsonFilters = data.getJSONObject("filter");
+				UUID uuid = _service.configureFilter(layer, jsonFilters);
                 jsonResult.put("uuid", uuid);
 
-			} else if ( requestType.equals("list") ) {
+			} else if ( requestType.equals("filter-unconfig") ) {
+
+                String layer = json.getString("layer");
+                UUID uuid = UUID.fromString(json.getString("uuid"));
+                _service.unconfigureFilter( layer, uuid );
+
+            } else if ( requestType.equals("list") ) {
 				
-                List<AnnotationInfo> layers = _service.listAnnotations();
+                List<AnnotationInfo> layers = _service.list();
                 JSONArray jsonLayers = new JSONArray();
                 for (int i=0; i<layers.size(); ++i) {
-                    jsonLayers.put(i, layers.get(i).getRawData());
+                    jsonLayers.put( i, layers.get(i).getRawData() );
                 }
                 return new JsonRepresentation(jsonLayers);
 			
@@ -128,9 +134,9 @@ public class AnnotationResource extends ApertureServerResource {
 	public Representation getAnnotation() throws ResourceException {
 
 		try {
-			
-			String id = (String) getRequest().getAttributes().get("id");
+
 			String layer = (String) getRequest().getAttributes().get("layer");
+            String id = (String) getRequest().getAttributes().get("uuid");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			String xAttr = (String) getRequest().getAttributes().get("x");
 			String yAttr = (String) getRequest().getAttributes().get("y");
@@ -138,29 +144,25 @@ public class AnnotationResource extends ApertureServerResource {
 			int zoomLevel = Integer.parseInt(levelDir);
 			int x = Integer.parseInt(xAttr);
 			int y = Integer.parseInt(yAttr);
-			
-			
+
 			UUID uuid = null;
 			if( !id.equals("default") ){
 				uuid = UUID.fromString(id);
 			}
 
-		    // We return an object including the tile index ("index") and 
-		    // the tile data ("data").
-		    //
-		    // The data should include index information, but it has to be 
-		    // there for tiles with no data too, so we can't count on it.
-			JSONObject result = new JSONObject();
-		    JSONObject indexJson = new JSONObject();
-		    indexJson.put("level", zoomLevel);
-		    indexJson.put("xIndex", x);
-		    indexJson.put("yIndex", y);
-		    result.put("index", indexJson );
+		    JSONObject tileJson = new JSONObject();
+            tileJson.put("level", zoomLevel);
+            tileJson.put("x", x);
+            tileJson.put("y", y);
+
+            JSONObject result = new JSONObject();
+		    result.put("tile", tileJson );
 		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
 		    
-		    Map<BinIndex, List<AnnotationData<?>>> data = _service.readAnnotations( uuid, layer, index );
+		    Map<BinIndex, List<AnnotationData<?>>> data = _service.read(uuid, layer, index);
 
-		    JSONObject dataJson = new JSONObject();
+            // annotations by bin
+		    JSONObject binsJson = new JSONObject();
 		    for (Map.Entry<BinIndex, List<AnnotationData<?>>> entry : data.entrySet() ) {
 				
 		    	BinIndex binIndex = entry.getKey();
@@ -170,10 +172,10 @@ public class AnnotationResource extends ApertureServerResource {
 			    for ( AnnotationData<?> annotation : annotations ) {
 			    	annotationArray.put( annotation.toJSON() );
 			    }
-			    dataJson.put( binIndex.toString(), annotationArray );
+                binsJson.put( binIndex.toString(), annotationArray );
 		    }
 		    
-		    result.put( "annotationsByBin", dataJson );
+		    result.put( "annotations", binsJson );
 
 		    setStatus(Status.SUCCESS_CREATED);
 		    return new JsonRepresentation( result );

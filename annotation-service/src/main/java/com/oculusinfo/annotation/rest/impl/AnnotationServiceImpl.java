@@ -105,23 +105,27 @@ public class AnnotationServiceImpl implements AnnotationService {
     }
 
 
-	public void writeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
+	public Pair<String,Long> write( String layer,
+                                    AnnotationData<?> annotation ) throws IllegalArgumentException {
 		
 		_lock.writeLock().lock();
     	try {
-    		AnnotationConfiguration config = getAnnotationConfiguration(layer);
+    		AnnotationConfiguration config = getConfiguration(layer);
     		TilePyramid pyramid = config.produce(TilePyramid.class);
-    		    		
-    		/* 
-    		 * check in case client generated UUID results in IO collision, if so
-    		 * prevent io corruption by throwing an exception, this is so statistically 
-    		 * unlikely that any further action is unnecessary
-    		 */ 
-    		if ( checkForCollision( layer, annotation ) ) {
-    			throw new IllegalArgumentException("UUID for data results in collision, WRITE operation aborted");
-    		}
-    		  		
+
+            /*
+             * check if UUID results in IO collision, if so prevent io corruption
+             * by throwing an exception, this is so statistically unlikely that
+             * any further action is unnecessary
+             */
+            if ( checkForCollision( layer, annotation ) ) {
+                throw new IllegalArgumentException("Unable to generate UUID without collision, WRITE operation aborted");
+            }
+
     		addDataToTiles( layer, annotation, pyramid );
+
+            // return generated certificate
+            return annotation.getCertificate();
     		
     	} catch ( Exception e ) {
     		e.printStackTrace();
@@ -133,9 +137,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 	
-	public void modifyAnnotation( String layer, 
-								  AnnotationData<?> oldAnnotation, 
-								  AnnotationData<?> newAnnotation ) throws IllegalArgumentException {
+	public Pair<String,Long> modify( String layer,
+								     AnnotationData<?> oldAnnotation,
+								     AnnotationData<?> newAnnotation ) throws IllegalArgumentException {
 		
 		// temporary naive modification, remove old, write new		
 		_lock.writeLock().lock();
@@ -150,20 +154,25 @@ public class AnnotationServiceImpl implements AnnotationService {
     											 + "MODIFY operation aborted. It is recommended "
     											 + "upon receiving this exception to refresh all client annotations");        		
     		}
-    		AnnotationConfiguration config = getAnnotationConfiguration(layer);
+    		AnnotationConfiguration config = getConfiguration(layer);
     		TilePyramid pyramid = config.produce(TilePyramid.class);
     		
 			/* 
 			 * Technically you should not have to re-tile the annotation if
 			 * there is only a content change, as it will stay in the same tiles.
-			 * However, we want to update the reference time-stamp in the containing 
+			 * However, we want to update the certificate time-stamp in the containing 
 			 * tile so that we can filter from tiles without relying on reading the 
 			 * individual annotations themselves
 			 */
 			// remove from old tiles
 			removeDataFromTiles( layer, oldAnnotation, pyramid );
+            // update certificate
+            newAnnotation.updateCertificate();
 			// add it to new tiles
 			addDataToTiles( layer, newAnnotation, pyramid );
+            // return updated certificate
+            return newAnnotation.getCertificate();
+
     	} catch ( Exception e ) {
     		e.printStackTrace();
     		throw new IllegalArgumentException( e.getMessage() );
@@ -175,7 +184,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	
 	
 
-	public Map<BinIndex, List<AnnotationData<?>>> readAnnotations( UUID id, String layer, TileIndex query ) {
+	public Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex query ) {
 		
 		Map<String, Integer> filters;		
 		/*
@@ -190,7 +199,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		_lock.readLock().lock();
     	try {
-    		AnnotationConfiguration config = getAnnotationConfiguration(layer);
+    		AnnotationConfiguration config = getConfiguration(layer);
     		TilePyramid pyramid = config.produce(TilePyramid.class);
 			    		
     		return getDataFromTiles( layer, query, filters, pyramid );
@@ -204,11 +213,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 		
-	public void removeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
+	public void remove( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
 		
 		TilePyramid pyramid;
 		try {
-			AnnotationConfiguration config = getAnnotationConfiguration(layer);
+			AnnotationConfiguration config = getConfiguration(layer);
 			pyramid = config.produce(TilePyramid.class);
 			
 			_lock.writeLock().lock();		
@@ -223,10 +232,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 													 + "REMOVE operation aborted. It is recommended "
 													 + "upon receiving this exception to refresh all client annotations");       		
 	    		}
-				// remove the references from tiles
+				// remove the certificates from tiles
 				removeDataFromTiles( layer, annotation, pyramid );
 				// remove data from io
-				removeDataFromIO( layer, annotation.getReference() );
+				removeDataFromIO( layer, annotation.getCertificate() );
 				
 			} finally {
 				_lock.writeLock().unlock();
@@ -240,12 +249,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 
 	@Override
-	public List<AnnotationInfo> listAnnotations () {
+	public List<AnnotationInfo> list () {
 	    return _annotationLayers;
 	}
 	
 
-	public AnnotationConfiguration getAnnotationConfiguration( String layer ) {
+	public AnnotationConfiguration getConfiguration( String layer ) {
 					
 		try {
 			AnnotationConfiguration configFactory = new AnnotationConfiguration( _pyramidIOFactoryProvider,
@@ -266,12 +275,18 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 	@Override
-	public UUID configureFilters (String layerId, JSONObject filters ) {
+	public UUID configureFilter (String layerId, JSONObject filters ) {
 
         UUID uuid = UUID.randomUUID();
         _filtersByUuid.put( uuid, getFiltersFromJSON( filters ) );
         return uuid;
 	}
+
+    @Override
+    public void unconfigureFilter (String layerId, UUID uuid ) {
+
+        _filtersByUuid.remove( uuid );
+    }
 
 	
 	// ////////////////////////////////////////////////////////////////////////
@@ -323,12 +338,28 @@ public class AnnotationServiceImpl implements AnnotationService {
     }
 	
 	private void addConfiguration (AnnotationInfo info) {
-    	_annotationLayers.add(info);
-    	_annotationLayersById.put(info.getID(), info);
-    	// set default filter
-    	UUID uuid = UUID.randomUUID();
-    	_defaultFilterUuidById.put( info.getID(), uuid );
-    	_filtersByUuid.put( uuid, getFiltersFromJSON( info.getFilterConfiguration() ) );
+
+        _annotationLayers.add(info);
+        _annotationLayersById.put(info.getID(), info);
+        // set default filter
+        UUID uuid = UUID.randomUUID();
+        _defaultFilterUuidById.put( info.getID(), uuid );
+        _filtersByUuid.put( uuid, getFiltersFromJSON( info.getFilterConfiguration() ) );
+
+        try {
+            // ensure both the tile and data io's exist
+            // tile io
+            AnnotationConfiguration config = getConfiguration( info.getID() );
+            PyramidIO tileIo = config.produce(PyramidIO.class);
+            tileIo.initializeForWrite( info.getID() );
+            // data io
+            AnnotationIO dataIo = AnnotationIOFactory.produce( _annotationLayersById.get( info.getID() ) );
+            dataIo.initializeForWrite( getDataLayerId( info.getID() ) );
+
+        } catch ( Exception e ) {
+            throw new IllegalArgumentException( e.getMessage() );
+        }
+
     }
 	
 	private Map<String, Integer> getFiltersFromJSON( JSONObject jsonFilters ) {
@@ -363,10 +394,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 */
 	private boolean checkForCollision( String layer, AnnotationData<?> annotation ) {
 		
-		List<Pair<String,Long>> reference = new LinkedList<>();
-		reference.add( annotation.getReference() );
-		return ( readDataFromIO( layer, reference ).size() > 0 ) ;
-
+		List<Pair<String,Long>> certificate = new LinkedList<>();  
+		certificate.add( annotation.getCertificate() );
+		return ( readDataFromIO( layer, certificate ).size() > 0 ) ;
 	}
 	
 	/*
@@ -374,16 +404,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 */
 	public boolean isRequestOutOfDate( String layer, AnnotationData<?> annotation ) {
 		
-		List<Pair<String, Long>> reference = new LinkedList<>();
-		reference.add( annotation.getReference() );
-		List<AnnotationData<?>> annotations = readDataFromIO( layer, reference );
+		List<Pair<String, Long>> certificate = new LinkedList<>();
+		certificate.add( annotation.getCertificate() );
+		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificate );
 		
 		if ( annotations.size() == 0 ) {
 			// removed since client update, abort
 			return true;
 		}
 		
-		if ( !annotations.get(0).getTimeStamp().equals( annotation.getTimeStamp() ) ) {
+		if ( !annotations.get(0).getTimestamp().equals( annotation.getTimestamp() ) ) {
 			// clients timestamp doesn't not match most up to date, abort
 			return true;
 		}
@@ -394,10 +424,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 	
 	
 	/*
-	 * Iterate through all indices, find matching tiles and add data reference, if tile
+	 * Iterate through all indices, find matching tiles and add data certificate, if tile
 	 * is missing, add it
 	 */
-	private void addDataReferenceToTiles( List< TileData<Map<String, List<Pair<String,Long>>>>> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
+	private void addDataCertificateToTiles( List< TileData<Map<String, List<Pair<String,Long>>>>> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
 		
     	for ( TileAndBinIndices index : indices ) {			
 			// check all existing tiles for matching index
@@ -420,10 +450,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	/*
-	 * Iterate through all tiles, removing data reference from bins, any tiles with no bin entries
+	 * Iterate through all tiles, removing data certificate from bins, any tiles with no bin entries
 	 * are added to tileToRemove, the rest are added to tilesToWrite
 	 */
-	private void removeDataReferenceFromTiles( List<TileData<Map<String, List<Pair<String,Long>>>>> tilesToWrite, 
+	private void removeDataCertificateFromTiles( List<TileData<Map<String, List<Pair<String,Long>>>>> tilesToWrite, 
 											   List<TileIndex> tilesToRemove, 
 											   List<TileData<Map<String, List<Pair<String,Long>>>>> tiles, 
 											   AnnotationData<?> data,
@@ -476,20 +506,20 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// get tiles
 		List<TileData<Map<String,List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, indices );
 				
-		// for each tile, assemble list of all data references
-		List<Pair<String,Long>> references = new LinkedList<>();
+		// for each tile, assemble list of all data certificates
+		List<Pair<String,Long>> certificates = new LinkedList<>();
 		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {					
 			if ( filter != null ) {
 				// filter provided
-				references.addAll( AnnotationManipulator.getFilteredReferencesFromTile( tile, filter ) );
+				certificates.addAll( AnnotationManipulator.getFilteredCertificatesFromTile( tile, filter ) );
 			} else {
 				// no filter provided
-				references.addAll(  AnnotationManipulator.getAllReferencesFromTile( tile ) );
+				certificates.addAll(  AnnotationManipulator.getAllCertificatesFromTile( tile ) );
 			}
 		}
 		
 		// read data from io in bulk
-		List<AnnotationData<?>> data = readDataFromIO( layer, references );
+		List<AnnotationData<?>> data = readDataFromIO( layer, certificates );
 
 		// assemble data by bin
 		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();
@@ -513,8 +543,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 		List<TileAndBinIndices> indices = _indexer.getIndices( data, pyramid );
 		// get all affected tiles
 		List<TileData<Map<String, List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, convert( indices ) );
-		// add new data reference to tiles
-    	addDataReferenceToTiles( tiles, indices, data );
+		// add new data certificate to tiles
+    	addDataCertificateToTiles( tiles, indices, data );
 		// write tiles back to io
 		writeTilesToIO( layer, tiles );    		
 		// write data to io
@@ -533,7 +563,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		List<TileData<Map<String, List<Pair<String,Long>>>>> tilesToWrite = new LinkedList<>(); 
 		List<TileIndex> tilesToRemove = new LinkedList<>();			
 		// remove data from tiles and organize into lists to write and remove
-		removeDataReferenceFromTiles( tilesToWrite, tilesToRemove, tiles, data, pyramid );
+		removeDataCertificateFromTiles( tilesToWrite, tilesToRemove, tiles, data, pyramid );
 		// write modified tiles
 		writeTilesToIO( layer, tilesToWrite );		
 		// remove empty tiles and data
@@ -550,7 +580,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		if ( tiles.size() == 0 ) return;
 		
 		try {
-			AnnotationConfiguration config = getAnnotationConfiguration(layer);
+			AnnotationConfiguration config = getConfiguration(layer);
 			PyramidIO io = config.produce(PyramidIO.class);	
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
@@ -587,7 +617,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		if ( tiles.size() == 0 ) return;
 		
 		try {		
-			AnnotationConfiguration config = getAnnotationConfiguration(layer);
+			AnnotationConfiguration config = getConfiguration(layer);
 			PyramidIO io = config.produce(PyramidIO.class);			
 			io.removeTiles( layer, tiles );	
 			
@@ -623,7 +653,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		if ( indices.size() == 0 ) return tiles;
 		
 		try {
-			AnnotationConfiguration config = getAnnotationConfiguration(layer);
+			AnnotationConfiguration config = getConfiguration(layer);
 			PyramidIO io = config.produce(PyramidIO.class);	
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
@@ -637,11 +667,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return tiles;		
 	}
 	
-	protected List<AnnotationData<?>> readDataFromIO( String layer, List<Pair<String,Long>> references ) {
+	protected List<AnnotationData<?>> readDataFromIO( String layer, List<Pair<String,Long>> certificates ) {
 		
 		List<AnnotationData<?>> data = new LinkedList<>();
 		
-		if ( references.size() == 0 ) return data;
+		if ( certificates.size() == 0 ) return data;
 		
 		String dataLayer = getDataLayerId( layer );		
 		
@@ -649,7 +679,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 			AnnotationIO io = AnnotationIOFactory.produce( _annotationLayersById.get(layer) );
 			io.initializeForRead( dataLayer );	
-			data = io.readData( dataLayer, _dataSerializer, references );			
+			data = io.readData( dataLayer, _dataSerializer, certificates );			
 			
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );

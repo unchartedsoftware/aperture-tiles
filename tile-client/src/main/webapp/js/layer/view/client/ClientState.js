@@ -48,43 +48,24 @@ define(function (require) {
 
             // holds the state of mouse clicks
             this.clearClickState();
-            // holds the state of mouse hovers
-            this.clearHoverState();
             // holds any
             this.clearSharedState();
         },
 
 
-        setHoverState: function(tilekey, userData) {
-            var splitKey = tilekey.split(',');
-            this.hoverState.userData = userData;
-            this.hoverState.tilekey = tilekey;
-            this.hoverState.level = parseInt(splitKey[0], 10);
-            this.hoverState.xIndex = parseInt(splitKey[1], 10);
-            this.hoverState.yIndex = parseInt(splitKey[2], 10);
+        setClickState: function( key, value) {
+
+            this.clickState[key] = value;
         },
 
+        getClickState: function( key ) {
 
-        setClickState: function(tilekey, userData) {
-            var splitKey = tilekey.split(',');
-            this.clickState.userData = userData;
-            this.clickState.tilekey = tilekey;
-            this.clickState.level = parseInt(splitKey[0], 10);
-            this.clickState.xIndex = parseInt(splitKey[1], 10);
-            this.clickState.yIndex = parseInt(splitKey[2], 10);
+            return this.clickState[key];
         },
 
-
-        areDetailsOverTile: function(xIndex, yIndex) {
-            return this.clickState.xIndex+1 === xIndex &&
-                 ( this.clickState.yIndex === yIndex ||
-                     this.clickState.yIndex-1 === yIndex);
-        },
-
-
-        removeSharedState: function(key) {
-            if (this.sharedState[key] !== undefined) {
-                delete this.sharedState[key];
+        removeClickState: function(key) {
+            if (this.clickState[key] !== undefined) {
+                delete this.clickState[key];
             }
         },
 
@@ -92,42 +73,20 @@ define(function (require) {
             this.sharedState[key] = value;
         },
 
-
         getSharedState: function(key) {
-            if ( this.sharedState[key] !== undefined) {
-                return this.sharedState[key];
+            return this.sharedState[key];
+        },
+
+        removeSharedState: function(key) {
+            if (this.sharedState[key] !== undefined) {
+                delete this.sharedState[key];
             }
-            return "";
         },
-
-
-        clear: function() {
-            this.clearClickState();
-            this.clearHoverState();
-        },
-
 
         clearClickState: function() {
             this.clickState = {
-                userData : {},
-                tilekey : '',
-                level : -1,
-                xIndex : -1,
-                yIndex : -1
             };
         },
-
-
-        clearHoverState: function() {
-            this.hoverState = {
-                userData : {},
-                tilekey : '',
-                level : -1,
-                xIndex : -1,
-                yIndex : -1
-            };
-        },
-
 
         clearSharedState: function() {
             this.sharedState = {
@@ -135,7 +94,6 @@ define(function (require) {
                 opacity : 1.0
             };
         }
-		
 
      });
 

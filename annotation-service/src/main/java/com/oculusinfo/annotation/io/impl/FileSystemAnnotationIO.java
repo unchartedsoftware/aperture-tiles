@@ -57,11 +57,11 @@ public class FileSystemAnnotationIO implements AnnotationIO {
 		return _rootPath;
 	}
 
-	private File getAnnotationFile (String basePath, Pair<String, Long> reference) {
+	private File getAnnotationFile (String basePath, Pair<String, Long> certificate) {
 		return new File(String.format("%s/" + ANNOTATIONS_FOLDERNAME
 		                              + "/%s." + _extension,
 		                              _rootPath + basePath,
-		                              reference.getFirst() ) );
+		                              certificate.getFirst() ) );
 	}
 	
 
@@ -73,7 +73,7 @@ public class FileSystemAnnotationIO implements AnnotationIO {
 	public void writeData (String basePath, AnnotationSerializer serializer,
 	                            Iterable<AnnotationData<?>> data) throws IOException {
 		for (AnnotationData<?> d: data) {
-			File annotationFile = getAnnotationFile(basePath, d.getReference() );
+			File annotationFile = getAnnotationFile( basePath, d.getCertificate() );
 			File parent = annotationFile.getParentFile();
 			if (!parent.exists()) parent.mkdirs();
 
@@ -93,10 +93,10 @@ public class FileSystemAnnotationIO implements AnnotationIO {
 	@Override
 	public List<AnnotationData<?>> readData (String basePath,
 	                                        AnnotationSerializer serializer,
-	                                        Iterable<Pair<String, Long>> references) throws IOException {
-		List<AnnotationData<?>> results = new LinkedList<AnnotationData<?>>();
-		for (Pair<String, Long> reference: references) {
-			File annotationFile = getAnnotationFile(basePath, reference);
+	                                        Iterable<Pair<String, Long>> certificates) throws IOException {
+		List<AnnotationData<?>> results = new LinkedList<>();
+		for (Pair<String, Long> certificate: certificates) {
+			File annotationFile = getAnnotationFile(basePath, certificate);
 
 			if (annotationFile.exists() && annotationFile.isFile()) {
 				FileInputStream stream = new FileInputStream(annotationFile);
@@ -110,10 +110,10 @@ public class FileSystemAnnotationIO implements AnnotationIO {
 
 
 	@Override
-	public void removeData (String basePath, Iterable<Pair<String, Long>> references ) throws IOException {
+	public void removeData (String basePath, Iterable<Pair<String, Long>> certificates ) throws IOException {
 		
-		for (Pair<String, Long> reference: references) {
-			File annotationFile = getAnnotationFile(basePath, reference);
+		for (Pair<String, Long> certificate: certificates) {
+			File annotationFile = getAnnotationFile(basePath, certificate);
 			annotationFile.delete();
 		}
 	}

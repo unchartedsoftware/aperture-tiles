@@ -42,12 +42,13 @@ public abstract class AnnotationData<T> implements Serializable {
 	public abstract Double getY();
 	public abstract Integer getLevel();
 	public abstract UUID getUUID();
-	public abstract Long getTimeStamp();
-	public abstract String getPriority();
+	public abstract Long getTimestamp();
+	public abstract String getGroup();
 	public abstract T getData();
-	
-	public Pair<String, Long> getReference() {
-		return new Pair<String, Long>( getUUID().toString(), getTimeStamp() );
+    public abstract void updateCertificate();
+    public abstract Pair<Integer, Integer> getRange();
+	public Pair<String, Long> getCertificate() {
+		return new Pair<>( getUUID().toString(), getTimestamp() );
 	}
 	
 	static public AnnotationData<?> fromJSON( JSONObject json ) throws IllegalArgumentException {		
@@ -57,13 +58,24 @@ public abstract class AnnotationData<T> implements Serializable {
 	public JSONObject toJSON() {
 		try {
 			JSONObject json = new JSONObject();
+
+            json.put("level", getLevel() );
 			json.put( "x", getX() );
 			json.put( "y", getY() );
-			json.put("level", getLevel() );
-			json.put("uuid", getUUID().toString() );
-			json.put("timestamp", getTimeStamp().toString() );
-			json.put("priority", getPriority() );
-			json.put("data", getData() );
+
+            JSONObject range = new JSONObject();
+            range.put("min", getRange().getFirst() );
+            range.put("max", getRange().getSecond() );
+            json.put("range", range );
+
+            json.put("group", getGroup() );
+            json.put("data", getData() );
+
+            JSONObject certificate = new JSONObject();
+            certificate.put("uuid", getUUID().toString() );
+            certificate.put("timestamp", getTimestamp().toString() );
+            json.put("certificate", certificate );
+
 			return json;
 		} catch (Exception e) {
 			e.printStackTrace();

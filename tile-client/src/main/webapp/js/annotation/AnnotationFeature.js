@@ -47,7 +47,7 @@ define(function (require) {
         ANNOTATION_EDIT_BUTTON_ID = "annotation-popup-edit",
         ANNOTATION_REMOVE_BUTTON_ID = "annotation-popup-remove",
         ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
-        ANNOTATION_POPUP_PRIORITY_ID = "annotation-popup-priority-id",
+        ANNOTATION_POPUP_GROUP_ID = "annotation-popup-group-id",
         ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
         ANNOTATION_POPUP_RESIZE_ID = 'annotation-popup-resize-icon',
         ANNOTATION_ACCORDION_ID = "annotation-accordion-id",
@@ -104,8 +104,8 @@ define(function (require) {
 
         setAnnotation: function( annotation ) {
 
-            this.annotationsByPriority = {}; // clear old annotation
-            this.annotationsByPriority[ annotation.priority ] = [ annotation ]; // set new annotation
+            this.annotationsByGroup = {}; // clear old annotation
+            this.annotationsByGroup[ annotation.group ] = [ annotation ]; // set new annotation
         },
 
 
@@ -115,31 +115,31 @@ define(function (require) {
                 xSum = 0,
                 ySum = 0,
                 sumCount = 0,
-                annotationsByPriority = {},
+                annotationsByGroup = {},
                 viewportPixel,
                 latlon,
-                priority;
+                group;
 
             // for each annotation
             for (i=0; i<annotations.length; i++) {
 
-                // organize by priority
-                priority = annotations[i].priority;
+                // organize by group
+                group = annotations[i].group;
 
-                if ( annotationsByPriority[ priority ] === undefined ) {
-                    annotationsByPriority[ priority ] = [];
+                if ( annotationsByGroup[ group ] === undefined ) {
+                    annotationsByGroup[ group ] = [];
                 }
 
                 xSum += annotations[i].x;
                 ySum += annotations[i].y;
                 sumCount++;
-                annotationsByPriority[ priority ].push( annotations[i] );
+                annotationsByGroup[ group ].push( annotations[i] );
             }
 
             // average display lat lon
             viewportPixel = this.map.getViewportPixelFromCoord( xSum/sumCount, ySum/sumCount );
             latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel );
-            this.annotationsByPriority = annotationsByPriority;
+            this.annotationsByGroup = annotationsByGroup;
 
             if ( this.olFeature_ === undefined ) {
                 // if no feature exists yet, create it
@@ -165,10 +165,10 @@ define(function (require) {
             this.olFeature_.geometry.y = ((this.olFeature_.geometry.y*count) + latlon.lat) / (count+1);
 
             // add annotation to data object
-            if ( this.annotationsByPriority[ annotation.priority ] === undefined ) {
-                this.annotationsByPriority[ annotation.priority ] = [];
+            if ( this.annotationsByGroup[ annotation.group ] === undefined ) {
+                this.annotationsByGroup[ annotation.group ] = [];
             }
-            this.annotationsByPriority[ annotation.priority ].push( annotation );
+            this.annotationsByGroup[ annotation.group ].push( annotation );
             this.redraw();
 
         },
@@ -179,10 +179,10 @@ define(function (require) {
             var key, i,
                 data = [];
 
-            for (key in this.annotationsByPriority) {
-                if (this.annotationsByPriority.hasOwnProperty(key)) {
-                    for(i=0; i<this.annotationsByPriority[key].length; i++) {
-                        data.push( this.annotationsByPriority[key][i] );
+            for (key in this.annotationsByGroup) {
+                if (this.annotationsByGroup.hasOwnProperty(key)) {
+                    for(i=0; i<this.annotationsByGroup[key].length; i++) {
+                        data.push( this.annotationsByGroup[key][i] );
                     }
                 }
             }
@@ -193,10 +193,10 @@ define(function (require) {
         isAggregated: function() {
 
             var key, i, count = 0;
-            for (key in this.annotationsByPriority) {
-                if (this.annotationsByPriority.hasOwnProperty(key)) {
+            for (key in this.annotationsByGroup) {
+                if (this.annotationsByGroup.hasOwnProperty(key)) {
 
-                    for(i=0; i<this.annotationsByPriority[key].length; i++) {
+                    for(i=0; i<this.annotationsByGroup[key].length; i++) {
                         count++;
                         if (count > 1) {
                             return true;
@@ -212,9 +212,9 @@ define(function (require) {
         getAnnotationCount: function() {
 
             var key, i, count = 0;
-            for (key in this.annotationsByPriority) {
-                if (this.annotationsByPriority.hasOwnProperty(key)) {
-                    for(i=0; i<this.annotationsByPriority[key].length; i++) {
+            for (key in this.annotationsByGroup) {
+                if (this.annotationsByGroup.hasOwnProperty(key)) {
+                    for(i=0; i<this.annotationsByGroup[key].length; i++) {
                         count++;
                     }
 
@@ -248,12 +248,12 @@ define(function (require) {
         },
 
 
-        createEditablePopup: function( priorities, closeFunc, saveFunc, removeFunc ) {
+        createEditablePopup: function( groups, closeFunc, saveFunc, removeFunc ) {
 
             // edit popup is only possible on single features, so take only data entry
             var that = this,
                 hasRemoveFunc = ( removeFunc !== undefined ),
-                html = this.getEditablePopupHTML( this.getDataArray()[0], priorities, hasRemoveFunc );
+                html = this.getEditablePopupHTML( this.getDataArray()[0], groups, hasRemoveFunc );
 
             // create popup with close callback
             this.createPopup( html, function() {
@@ -389,7 +389,7 @@ define(function (require) {
         checkData: function() {
 
             var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
-                $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
+                $group = $('#'+ANNOTATION_POPUP_GROUP_ID),
                 $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID),
                 INVALID_COLOR = {color: '#7e0004'},
                 INVALID_COLOR_EFFECT_LENGTH_MS = 3000;
@@ -398,8 +398,8 @@ define(function (require) {
             if ( $title.val() === "" ) {
                 $title.effect("highlight", INVALID_COLOR, INVALID_COLOR_EFFECT_LENGTH_MS);
             }
-            if ( $priority.val() === "" ) {
-                $priority.effect("highlight", INVALID_COLOR, INVALID_COLOR_EFFECT_LENGTH_MS);
+            if ( $group.val() === "" ) {
+                $group.effect("highlight", INVALID_COLOR, INVALID_COLOR_EFFECT_LENGTH_MS);
             }
             if ( $description.val() === "" ) {
                 $description.effect("highlight", INVALID_COLOR, INVALID_COLOR_EFFECT_LENGTH_MS);
@@ -407,7 +407,7 @@ define(function (require) {
 
             // check input values
             return ( $title.val() !== "" &&
-                     $priority.val() !== "" &&
+                     $group.val() !== "" &&
                      $description.val() !== "" );
         },
 
@@ -415,10 +415,10 @@ define(function (require) {
         setDataFromPopup: function( annotation ) {
 
             var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
-                $priority = $('#'+ANNOTATION_POPUP_PRIORITY_ID),
+                $group = $('#'+ANNOTATION_POPUP_GROUP_ID),
                 $description = $('#'+ANNOTATION_POPUP_DESCRIPTION_ID);
 
-            annotation.priority = $priority.val();
+            annotation.group = $group.val();
             annotation.data.title = $title.val();
             annotation.data.comment = $description.val();
         },
@@ -446,7 +446,7 @@ define(function (require) {
                                     annotation.data.title +
                                 "</div>"+
                                 "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
-                                    "Priority: "+ annotation.priority +
+                                    "Priority: "+ annotation.group +
                                 "</div>"+
                                 "<div class='"+ANNOTATION_TEXT_DIV_CLASS+"'>"+
                                     annotation.data.comment +
@@ -470,7 +470,7 @@ define(function (require) {
                 html += "<h3>" + annotations[i].data.title + "</h3>"+
                             "<div>"+
                                 "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
-                                    "Priority: "+ annotations[i].priority +
+                                    "Priority: "+ annotations[i].group +
                                 "</div>"+
                                 "<div class='"+ANNOTATION_TEXT_DIV_CLASS+"'>"+
                                     annotations[i].data.comment +
@@ -482,10 +482,10 @@ define(function (require) {
         },
 
 
-        getEditablePopupHTML: function( annotation, priorities, includeRemoveButton ) {
+        getEditablePopupHTML: function( annotation, groups, includeRemoveButton ) {
 
             var TITLE_PLACEHOLDER = ' Enter title',
-                PRIORITY_PLACEHOLDER = 'Enter priority',
+                PRIORITY_PLACEHOLDER = 'Enter group',
                 DESCRIPTION_PLACEHOLDER = ' Enter description',
                 titleVal= annotation.data.title || "",
                 descriptionVal = annotation.data.comment || "",
@@ -493,18 +493,18 @@ define(function (require) {
 
                 function getSelectHTML() {
 
-                    var html = "<select class='"+ANNOTATION_INPUT_CLASS+"' id='"+ ANNOTATION_POPUP_PRIORITY_ID+"'>",
+                    var html = "<select class='"+ANNOTATION_INPUT_CLASS+"' id='"+ ANNOTATION_POPUP_GROUP_ID+"'>",
                         i;
 
-                    for (i=0; i<priorities.length; i++) {
-                        if ( priorities[i] === annotation.priority ) {
-                            html += "<option selected='true' value='" +priorities[i] +"'>"+priorities[i]+"</option>";
+                    for (i=0; i<groups.length; i++) {
+                        if ( groups[i] === annotation.group ) {
+                            html += "<option selected='true' value='" +groups[i] +"'>"+groups[i]+"</option>";
                         } else {
-                            html += "<option value='" +priorities[i] +"'>"+priorities[i]+"</option>";
+                            html += "<option value='" +groups[i] +"'>"+groups[i]+"</option>";
                         }
                     }
 
-                    if ( annotation.priority === undefined ) {
+                    if ( annotation.group === undefined ) {
                         html += "<option selected='true' style='display:none;' value=''>"+PRIORITY_PLACEHOLDER+"</option>";
                     }
 

@@ -33,22 +33,8 @@ define(function (require) {
 
 
     var Class = require('../class'),
-        generateUUID,
         AnnotationService;
 
-
-
-    /**
-     * Generates an RFC4122 version 4 compliant UUID
-     *
-     * @returns {string}    UUID
-     */
-    generateUUID = function() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
-            return v.toString(16);
-        });
-    };
 
 
     AnnotationService = Class.extend({
@@ -80,8 +66,8 @@ define(function (require) {
             // request data from server
             aperture.io.rest(
                 ('/annotation/'+
-                    this.uuid+'/'+
                     this.layer+'/'+
+                    this.uuid+'/'+
                     level+'/'+
                     xIndex+'/'+
                     yIndex+'.json'),
@@ -98,14 +84,18 @@ define(function (require) {
          */
         writeAnnotation: function( annotation, callback ) {
 
-            // generate uuid for data
-            annotation.uuid = generateUUID();
+            var request = {
+                    type: "WRITE",
+                    annotation: annotation
+                };
 
-            var data = {
-                "new": annotation
-            };
+            this.postRequest( request, function( result, statusInfo ) {
+                if (statusInfo.success) {
+                    annotation.certificate = result;
+                }
+                callback( result, statusInfo );
+            });
 
-            this.postRequest( "WRITE", data, callback );
         },
 
 
@@ -117,12 +107,13 @@ define(function (require) {
          */
         modifyAnnotation: function( oldAnnotation, newAnnotation, callback ) {
 
-            var data = {
-                "old": oldAnnotation,
-                "new": newAnnotation
-            };
+            var request = {
+                    type: "MODIFY",
+                    previous: oldAnnotation,
+                    current: newAnnotation
+                };
 
-            this.postRequest( "MODIFY", data, callback );
+            this.postRequest( request, callback );
         },
 
 
@@ -133,11 +124,12 @@ define(function (require) {
          */
         removeAnnotation: function( annotation, callback ) {
 
-            var data = {
-                "old": annotation
-            };
+            var request = {
+                    type: "REMOVE",
+                    annotation: annotation
+                };
 
-            this.postRequest( "REMOVE", data, callback );
+            this.postRequest( request, callback );
         },
 
 
@@ -146,20 +138,41 @@ define(function (require) {
          * @param filters      filters to be passed to server
          * @param callback     the callback that is called upon receiving data from server
          */
-        setFilters: function( filters, callback ) {
+        configureFilter: function( filter, callback ) {
 
             var that = this,
-                data = {
-                uuid: this.uuid,
-                filters: filters
-            };
+                request = {
+                    type : "FILTER-CONFIG",
+                    uuid: this.uuid,
+                    filter: filter
+                };
 
-            this.postRequest( "FILTER", data, function( result ) {
-                that.uuid = result.uuid;
-                callback();
+            this.postRequest( request, function( result, statusInfo ) {
+                // on return, un-configure old filter
+                var oldUuid = that.uuid;
+                if (statusInfo.success) {
+                    that.uuid = result.uuid;
+                    that.unconfigureFilter( oldUuid, function(){ return true; } );
+                }
+                callback( result, statusInfo );
             });
         },
 
+
+        /**
+         * Release server side annotation filters
+         * @param uuid      filter uuid to be released
+         * @param callback  the callback that is called upon receiving data from server
+         */
+        unconfigureFilter: function( uuid, callback ) {
+
+            var request = {
+                    type : "FILTER-UNCONFIG",
+                    uuid: uuid
+                };
+
+            this.postRequest( request, callback );
+        },
 
         /**
          * Receive all annotation layers from server
@@ -167,7 +180,7 @@ define(function (require) {
          */
         requestLayers: function( callback ) {
 
-            this.postRequest( "LIST", {}, callback );
+            this.postRequest( {type: "LIST"}, callback );
         },
 
 
@@ -177,24 +190,17 @@ define(function (require) {
          * @param data   annotation data to send server
          * @param callback  the callback that is called upon receiving data from server
          */
-        postRequest: function( type, data, callback ) {
+        postRequest: function( request, callback ) {
 
-            // timestamp "new" request, this will replace the "old" timestamp if operation
-            // is successful
-            if ( data["new"] !== undefined ) {
-                data["new"].timestamp = new Date().getTime();
-            }
+            // append layer id to request
+            request.layer = this.layer;
 
             // Request the layer information
             aperture.io.rest('/annotation',
                              'POST',
                              callback,
                              {
-                                 postData: {
-                                                "layer": this.layer,
-                                                "type": type.toLowerCase(),
-                                                "data" : data
-                                            },
+                                 postData: request,
                                  contentType: 'application/json'
                              });
 

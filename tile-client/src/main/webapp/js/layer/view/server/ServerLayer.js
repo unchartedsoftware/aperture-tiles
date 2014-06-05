@@ -81,7 +81,9 @@ define(function (require) {
 
     ServerLayer = Class.extend({
         ClassName: "ServerLayer",
-        init: function (layerSpec, map) {
+        init: function (layerSpec, map, deferred) {
+
+            var that = this;
 
             this.map = map;
             this.pendingLayerRequests = [];
@@ -91,6 +93,7 @@ define(function (require) {
             this.dataListener = new DataLayer(layerSpec);
             this.dataListener.setRequestCallback( $.proxy(this.requestLayerInfo, this));
             this.dataListener.addRetrievedCallback( $.proxy(this.useLayerInfo, this));
+            this.dataListener.addRetrievedCallback( function() { deferred.resolve( that ); });
             this.dataListener.retrieveLayerInfo();
         },
 
@@ -162,6 +165,11 @@ define(function (require) {
             });
 
             return layerInfoById;
+        },
+
+        getSubLayerInfosById: function () {
+
+            return this.dataListener.getLayerInformation();
         },
 
 

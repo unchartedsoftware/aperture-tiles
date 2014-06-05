@@ -59,9 +59,8 @@ define(function (require) {
             // layer info
             this.layerInfo = layerInfo;
 
-            // The relative position within each bin at which visuals will 
-            // be drawn
-            this.position = {x: 'minX', y: 'centerY'}; //maxY
+            // The relative position within each bin at which visuals will be drawn
+            this.position = {x: 'minX', y: 'maxY'};
 
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
@@ -70,18 +69,22 @@ define(function (require) {
 
         getDataArray: function ( tilekeys ) {
             var i,
+                data = this.data,
+                tile,
                 allData = [];
 
             for(i=0; i<tilekeys.length; i++) {
+
+                tile = data[ tilekeys[i] ];
                 // if data exists in tile
-                if ( this.data[ tilekeys[i] ] !== undefined ) {
+                if ( tile !== undefined ) {
                     // check format of data
-                    if ( $.isArray( this.data[ tilekeys[i] ] ) ) {
+                    if ( $.isArray( tile ) ) {
                         // for each tile, data is an array, merge it together
-                        $.merge( allData, this.data[ tilekeys[i] ] );
+                        $.merge( allData, tile );
                     } else {
                         // for each tile, data is an object
-                        allData.push( this.data[ tilekeys[i] ] );
+                        allData.push( tile );
                     }
                 }
             }
@@ -91,13 +94,16 @@ define(function (require) {
 
         getDataObject: function ( tilekeys ) {
             var i,
+                data = this.data,
+                tile,
                 allData = {};
 
             for(i=0; i<tilekeys.length; i++) {
+
+                tile = data[ tilekeys[i] ];
                 // if data exists in tile
-                if ( this.data[ tilekeys[i] ] !== undefined &&
-                     this.data[ tilekeys[i] ].length > 0 ) {
-                    allData[ tilekeys[i] ] = this.data[ tilekeys[i] ];
+                if ( tile !== undefined && tile.length > 0 ) {
+                    allData[ tilekeys[i] ] = tile;
                 }
             }
             return allData;
@@ -130,7 +136,6 @@ define(function (require) {
          * Clears unneeded data from memory
          */
         releaseData: function(tilekey) {
-
             delete this.data[tilekey];
             delete this.waitingOnTile[tilekey];
             delete this.dataCallback[tilekey];
@@ -149,7 +154,7 @@ define(function (require) {
             var i;
             // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
-                this.getRequest(requestedTiles[i], tileSetBounds, callback);
+                this.getRequest( requestedTiles[i], tileSetBounds, callback );
             }
         },
 
@@ -225,17 +230,17 @@ define(function (require) {
         getCallback: function(tileData) {
 
             // create tile key: "level, xIndex, yIndex"
-            var tilekey = this.createTileKey(tileData.index);
+            var tilekey = this.createTileKey( tileData.index );
 
             // ensure we still need the tile
             if (this.waitingOnTile[tilekey] === true) {
 
                 // convert tile data into data by bin
-                this.data[tilekey] = this.transformTileToBins(tileData.tile, tilekey);
+                this.data[tilekey] = this.transformTileToBins( tileData.tile, tilekey );
 
                 if (tileData.tile !== undefined) {
                     // only call callback function if the tile actually has data associated with it
-                    this.dataCallback[tilekey]( [tilekey] );
+                    this.dataCallback[tilekey]( tilekey );
                 }
 
                 // clear callbacks and 'waiting on' status
@@ -278,28 +283,27 @@ define(function (require) {
          * @return An array of output records, each of which will be considered
          *         a node by the MapLayer's MapNodeLayer.
          */
-        transformTileToBins: function (tileData, tileKey) {
+        transformTileToBins: function (tileData, tilekey) {
 
             var x, y, binNum, bin, binRect, binData, results;
 
             results = [];
+
             if (tileData) {
+
                 binNum = 0;
                 for (y=0; y<tileData.yBinCount; ++y) {
                     for (x=0; x<tileData.xBinCount; ++x) {
                         bin =  {x: x, y: y};
 
-                        binRect = this.tilePyramid.getBinBounds(tileData, bin);
+                        binRect = this.tilePyramid.getBinBounds( tileData, bin );
                         
                         binData = {
-                            level: tileData.level,
-                            binkey: this.createBinKey(tileKey, bin),
+                            binkey: this.createBinKey(tilekey, bin),
+                            tilekey: tilekey,
                             longitude: binRect[this.position.x],
                             latitude: binRect[this.position.y],
-                            visible: true,
-                            bin: tileData.values[binNum],
-                            tilekey: tileKey
-                            //layerId: this.layerInfo.layer
+                            bin: tileData.values[binNum]
                         };
                         results.push( binData );
                         ++binNum;

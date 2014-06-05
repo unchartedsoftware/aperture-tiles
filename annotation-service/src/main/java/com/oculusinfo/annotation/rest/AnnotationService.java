@@ -27,13 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-
-
 import org.json.JSONObject;
 
 import com.oculusinfo.annotation.*;
 import com.oculusinfo.annotation.config.*;
 import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.util.Pair;
 
 
 
@@ -43,36 +42,39 @@ public interface AnnotationService {
 	 * Write an annotation to the storage service
 	 * 
 	 */
-	public abstract void writeAnnotation( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
+	public abstract Pair<String,Long> write( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 	
 	
 	/*
 	 * Modify an annotation in the storage service
 	 * 
 	 */
-	public abstract void modifyAnnotation( String layer, AnnotationData<?> oldAnnotation, AnnotationData<?> newAnnotation ) throws IllegalArgumentException;
+	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> oldAnnotation, AnnotationData<?> newAnnotation ) throws IllegalArgumentException;
 	
 	
 	/*
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> readAnnotations( UUID id, String layer, TileIndex tile ) throws IllegalArgumentException;
+	public abstract Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex tile ) throws IllegalArgumentException;
 	
 	
 	/*
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public abstract void removeAnnotation( String layer, AnnotationData<?> annotation );
+	public abstract void remove( String layer, AnnotationData<?> annotation );
 
 	
 	/*
 	 * Configuration interface 
 	 */
-	public abstract AnnotationConfiguration getAnnotationConfiguration( String layer );
-	//public abstract UUID configureAnnotationLayer (String layerId, JSONObject configuration);
-	public abstract UUID configureFilters (String layerId, JSONObject filters );
-	
-	public abstract List<AnnotationInfo> listAnnotations();
+	public abstract AnnotationConfiguration getConfiguration( String layer );
+	public abstract UUID configureFilter (String layerId, JSONObject filters );
+    public abstract void unconfigureFilter (String layerId, UUID uuid );
+
+    /*
+     * List Layers interface
+     */
+	public abstract List<AnnotationInfo> list();
 }

@@ -44,74 +44,70 @@ define( function (require) {
 		 * @param map			map object from map.js
 		 */
 		createLayers: function(layerJSON, uiMediator, map) {
-			var i;
+			var i,
+			    layers = [];
 			for (i=0; i<layerJSON.length; i++) {   
-				this.createLayer(layerJSON[i], uiMediator, map);
-			}		
+				layers.push( this.createLayer(layerJSON[i], uiMediator, map) );
+			}
+			return layers;
 		},
 	
 
 		createLayer: function(layerJSON, uiMediator, map) {
 
 			var layer = {
-                    views : [],
-                    controller : {}
+                    views : []
                 },
-                tasks = [],
+                dependencyDeferreds = [],
                 clientLayer,
-                d,
+                clientLayerDeferred,
                 i;
 	
 			// load module func
-			function loadRequireJsModule(arg, callback) {
-				require([arg], callback);
-			}
-			
-			// get layer info from server func	
-			function getLayerInfoFromServer(arg, callback) {
-				var layerInfoListener = new DataLayer([arg]);
-				layerInfoListener.addRetrievedCallback(callback);
-				layerInfoListener.retrieveLayerInfo();
+			function loadRequireJsModule( arg, index ) {
+
+			    var requireDeferred = $.Deferred();
+
+				require( [arg], function( Module ) {
+				    layer.views[index].renderer = new Module(map);
+				    requireDeferred.resolve();
+				});
+				return requireDeferred;
 			}
 
-            function onRetrieveRenderer( index, deferred ){
-                return function( Module ) {
-                    layer.views[index].renderer = new Module(map);
-                    deferred.resolve();
-                };
-            }
+			// get layer info from server func
+            function getLayerInfoFromServer( arg, index ) {
 
-            function onRetrieveLayerInfo( index, deferred ){
-                return function( dataLayer, layerInfo ) {
+                var layerInfoListener = new DataLayer( [arg] ),
+                    layerDeferred = $.Deferred();
+
+                layerInfoListener.addRetrievedCallback( function( dataLayer, layerInfo ) {
+
                     layer.views[index].dataService = new TileService( layerInfo, map.getPyramid() );
-                    deferred.resolve();
-                };
+                    layerDeferred.resolve();
+                });
+
+                layerInfoListener.retrieveLayerInfo();
+                return layerDeferred;
             }
 
             // add view dependencies to requirements
             for (i=0; i<layerJSON.views.length; i++) {
 
                 layer.views[i] = {};
-
-                d = $.Deferred();
-                tasks.push( d );
-
                 // get renderer class from require.js
-                loadRequireJsModule( "./impl/" + layerJSON.views[i].renderer, onRetrieveRenderer( i ,d ) );
-
-                d = $.Deferred();
-                tasks.push( d );
-
+                dependencyDeferreds.push( loadRequireJsModule( "./impl/" + layerJSON.views[i].renderer, i ) );
                 // POST request for layerInfo
-                getLayerInfoFromServer({ layer: layerJSON.layer }, onRetrieveLayerInfo(i, d ) );
+                dependencyDeferreds.push( getLayerInfoFromServer( { layer: layerJSON.layer }, i ) );
             }
 
-            clientLayer = new ClientLayer(layerJSON.name, map);
+            clientLayer = new ClientLayer( layerJSON.name, map );
+            clientLayerDeferred = $.Deferred();
 
             // instantiate layer object
             uiMediator.addClientLayer( clientLayer );
 
-            $.when.apply( $, tasks ).done( function() {
+            $.when.apply( $, dependencyDeferreds ).done( function() {
 
                 // once everything has loaded
                 var views = [],
@@ -125,9 +121,11 @@ define( function (require) {
                     });
                 }
 
-               clientLayer.setViews( views );
+                clientLayer.setViews( views );
+                clientLayerDeferred.resolve( clientLayer );
             });
 
+            return clientLayerDeferred;
 		}
 
 

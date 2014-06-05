@@ -94,9 +94,9 @@ define(function (require) {
 
             this.map = spec.map;
             this.layer = spec.layer;
-            this.priorities = spec.priorities;
+            this.groups = spec.groups;
             this.indexer = new TileAnnotationIndexer( this.map.getPyramid() );
-            this.filters = spec.filters;
+            this.filter = spec.filter;
             this.service = new AnnotationService( this.layer );
             this.features = {};
             this.pendingFeature = null;
@@ -185,11 +185,13 @@ define(function (require) {
         getCallback: function( data ) {
 
             function createTileKey(tile) {
-                return tile.level + "," + tile.xIndex + "," + tile.yIndex;
+                return tile.level + "," + tile.x + "," + tile.y;
             }
 
-            var tilekey = createTileKey( data.index),
-                annotationsByBin = data.annotationsByBin,
+            console.log("tile return");
+
+            var tilekey = createTileKey( data.tile ),
+                annotationsByBin = data.annotations,
                 binkey,
                 spec,
                 defunctFeatures = {};
@@ -218,10 +220,10 @@ define(function (require) {
                         // create new feature
                         spec = {
                                 annotations:annotationsByBin[ binkey ],
-                                tilekey:tilekey,
-                                binkey:binkey,
+                                tilekey: tilekey,
+                                binkey: binkey,
                                 map: this.map,
-                                layer:this.olLayer_
+                                layer: this.olLayer_
                         };
 
                         // feature does not exist, create it
@@ -409,7 +411,7 @@ define(function (require) {
         popupDisplayEdit : function( feature ) {
             // destroy popup
             feature.removeAndDestroyPopup();
-            feature.createEditablePopup( this.priorities,
+            feature.createEditablePopup( this.groups,
                                          $.proxy( this.popupEditClose, this ),
                                          $.proxy( this.popupEditSave, this ),
                                          $.proxy( this.popupEditRemove, this ) );
@@ -488,7 +490,11 @@ define(function (require) {
                         annotation = {
                             x: info.x,
                             y: info.y,
-                            priority: "_pending",   // mark as pending
+                            group: "_pending",   // mark as pending
+                            range: {
+                                min: 0,
+                                max: that.map.getZoom()
+                            },
                             level: that.map.getZoom(),
                             data: {}
                         };
@@ -503,7 +509,7 @@ define(function (require) {
                         });
 
                         // create edit popup to enter annotation info
-                        that.pendingFeature.createEditablePopup( that.priorities,
+                        that.pendingFeature.createEditablePopup( that.groups,
                                                                  $.proxy( that.popupCreationClose, that ),
                                                                  $.proxy( that.popupCreationSave, that ));
 

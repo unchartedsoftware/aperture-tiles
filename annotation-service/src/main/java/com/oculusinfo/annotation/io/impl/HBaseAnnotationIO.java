@@ -112,10 +112,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
 	            HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
 	            tableDesc.addFamily(tileFamily);
 	            _admin.createTable(tableDesc);
-	        } catch (TableExistsException e) {
-				// swallow table exists exception, with concurrent access the table 
-				// may have been created between test-for-existence and attempt-at-creation
-			}
+	        } catch ( Exception e ) {
+                e.printStackTrace();
+            }
         }
         
     }
@@ -127,7 +126,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
 					       AnnotationSerializer serializer, 
 					       Iterable<AnnotationData<?>> data ) throws IOException {
         
-    	List<Row> rows = new ArrayList<Row>();
+    	List<Row> rows = new ArrayList<>();
         for (AnnotationData<?> d : data) {
         	
         	ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -159,11 +158,11 @@ public class HBaseAnnotationIO implements AnnotationIO {
     @Override
     public List<AnnotationData<?>> readData (String tableName, 
 								          AnnotationSerializer serializer,
-								          Iterable<Pair<String,Long>> references) throws IOException {
+								          Iterable<Pair<String,Long>> certificates) throws IOException {
 
-    	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (Pair<String,Long> reference: references) {
-            rowIds.add( rowIdFromData( UUID.fromString( reference.getFirst() ) ) );
+    	List<byte[]> rowIds = new ArrayList<>();
+        for (Pair<String,Long> certificate: certificates) {
+            rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );
         }
         
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
@@ -173,11 +172,11 @@ public class HBaseAnnotationIO implements AnnotationIO {
 
     
     @Override
-    public void removeData (String tableName, Iterable<Pair<String,Long>> references) throws IOException {
+    public void removeData (String tableName, Iterable<Pair<String,Long>> certificates) throws IOException {
     	
-    	List<byte[]> rowIds = new ArrayList<byte[]>();
-        for (Pair<String,Long> reference: references) {
-            rowIds.add( rowIdFromData( UUID.fromString( reference.getFirst() ) ) );
+    	List<byte[]> rowIds = new ArrayList<>();
+        for (Pair<String,Long> certificate: certificates) {
+            rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );
         }        
         deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
     }
@@ -275,7 +274,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         Map<HBaseColumn, byte[]> results = null;
         for (HBaseColumn column: columns) {
             if (row.containsColumn(column.family, column.qualifier)) {
-                if (null == results) results = new HashMap<HBaseColumn, byte[]>(); 
+                if (null == results) results = new HashMap<>();
                 results.put(column, row.getValue(column.family, column.qualifier));
             }
         }
@@ -299,7 +298,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
     private List<Map<HBaseColumn, byte[]>> readRows (String tableName, List<byte[]> rows, HBaseColumn... columns) throws IOException {
         HTable table = getTable(tableName);
 
-        List<Get> gets = new ArrayList<Get>(rows.size());
+        List<Get> gets = new ArrayList<>(rows.size());
         for (byte[] rowId: rows) {
             Get get = new Get(rowId);
             for (HBaseColumn column: columns) {
@@ -317,10 +316,10 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     
     
-    private void deleteRows (String tableName, List<byte[]> rows, HBaseColumn... columns) throws IOException {
+    private void deleteRows (String tableName, List<byte[]> rows, HBaseColumn... columns ) throws IOException {
         
     	HTable table = getTable(tableName);
-        List<Delete> deletes = new LinkedList<Delete>();
+        List<Delete> deletes = new LinkedList<>();
         for (byte[] rowId: rows) {
         	Delete delete = new Delete(rowId);
             deletes.add(delete);

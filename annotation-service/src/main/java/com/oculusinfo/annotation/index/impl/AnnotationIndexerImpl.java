@@ -40,8 +40,12 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
 	public List<TileAndBinIndices> getIndices( AnnotationData<?> data, TilePyramid pyramid ) {
 		
 		// only generate indices upwards
-    	List<TileAndBinIndices> indices = new LinkedList<>();		
-		for (int i=0; i<=data.getLevel(); i++) {
+    	List<TileAndBinIndices> indices = new LinkedList<>();
+
+        int minLevel = Math.min( data.getLevel(), data.getRange().getFirst() );
+        int maxLevel = Math.max( data.getLevel(), data.getRange().getSecond() );
+
+		for (int i=minLevel; i<=maxLevel; i++) {
 			indices.add( getIndex( data, i, pyramid ) );
 		}
 		return indices;
@@ -60,7 +64,7 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
     	TileIndex tile = pyramid.rootToTile( x, y, level, NUM_BINS );
 		BinIndex bin = pyramid.rootToBin( x, y, tile );
 
-		// insert -1's for univariate annotations
+		// insert -1's for uni-variate annotations
 		if ( !xExists ) {			
 			tile = new TileIndex( tile.getLevel(), -1, tile.getY(), NUM_BINS, NUM_BINS );
 			bin = new BinIndex( -1, bin.getY() );	  

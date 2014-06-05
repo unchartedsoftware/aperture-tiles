@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2014 Oculus Info Inc.
+/*
+ * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -23,37 +23,45 @@
  * SOFTWARE.
  */
 
-
-/**
- * This module when given a server layer json object, will load the required classes and build
- * the layers
- */
-define( function (require) {
+define(function (require) {
     "use strict";
 
-	var ServerLayer = require('./ServerLayer');
-		
-	return {
 
-		/**
-		 * Given a layer JSON specification object and a map, will create server rendered tile layers
-		 * @param layerJSON	 	layer specification JSON object
-		 * @param map			map object
-		 */
-		createLayers: function(layerJSON, uiMediator, map) {
 
-			// Set up server-rendered display layers
-			var serverLayerDeferred = $.Deferred(),
-			    serverLayers = new ServerLayer(layerJSON, map, serverLayerDeferred);
+    var ClientRenderer = require('./ClientRenderer'),
+        ApertureRenderer;
 
-			// Populate the map layer state object with server layer data, and enable
-			// listeners that will push state changes into the layers.
-            uiMediator.setServerLayers(serverLayers, map);
 
-            return serverLayerDeferred;
-		}
 
-    };	
-	
+    ApertureRenderer = ClientRenderer.extend({
+        ClassName: "ApertureRenderer",
 
+        init: function( map ) {
+
+            this._super( map );
+            this.opacity = 1.0;
+            this.visibility = true;
+            this.nodeLayer = {};
+
+            this.X_CENTRE_OFFSET = 128;
+            this.Y_CENTRE_OFFSET = 128;
+        },
+
+        setOpacity: function( opacity ) {
+            this.opacity = opacity;
+            this.nodeLayer.all().redraw();
+        },
+
+        setVisibility: function( visible ) {
+            this.visibility = visible;
+            this.nodeLayer.all().redraw();
+        },
+
+        redraw: function( data ) {
+            this.nodeLayer.all( data ).where( data ).redraw();
+        }
+
+    });
+
+    return ApertureRenderer;
 });

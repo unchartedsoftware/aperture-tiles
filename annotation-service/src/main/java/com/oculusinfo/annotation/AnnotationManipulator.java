@@ -44,10 +44,10 @@ public class AnnotationManipulator {
 	
 	public static final int NUM_BINS = 8;
 	
-	static private class ReferenceComparator implements Comparator< Pair<String, Long> > {
+	static private class CertificateComparator implements Comparator< Pair<String, Long> > {
 	    @Override
 	    public int compare( Pair<String, Long> a, Pair<String, Long> b ) {	    	
-	    	// java sorts in ascending order, we want descending ( new references first )
+	    	// java sorts in ascending order, we want descending ( new certificates first )
 	    	// so we negate the compareTo
 	    	return -a.getSecond().compareTo( b.getSecond() );
 	    }
@@ -71,23 +71,23 @@ public class AnnotationManipulator {
     static public void addDataToBin( Map<String, List<Pair<String, Long>>> bin, AnnotationData<?> data ) {
     	
     	synchronized( bin ) {
-	    	String priority = data.getPriority();
-	    	Pair<String, Long> reference =  data.getReference();   	
+	    	String group = data.getGroup();
+	    	Pair<String, Long> certificate =  data.getCertificate();
 	    	List< Pair<String, Long> > entries;
 	    	
-	    	if ( bin.containsKey( priority ) ) {
-	    		entries = bin.get( priority ); 
-	    		if ( !entries.contains( reference ) ) {
-	    			entries.add( reference );
+	    	if ( bin.containsKey( group ) ) {
+	    		entries = bin.get( group ); 
+	    		if ( !entries.contains( certificate ) ) {
+	    			entries.add( certificate );
 	    		}   
 	    	} else {
 	    		entries = new LinkedList<>();
-	    		entries.add( reference );
-	    		bin.put( priority, entries );
+	    		entries.add( certificate );
+	    		bin.put( group, entries );
 	    	}
 	
-	    	// sort references after insertion... maybe instead use a SortedSet?
-	    	Collections.sort( entries, new ReferenceComparator() );
+	    	// sort certificates after insertion... maybe instead use a SortedSet?
+	    	Collections.sort( entries, new CertificateComparator() );
     	}
     }
       
@@ -96,20 +96,20 @@ public class AnnotationManipulator {
     	
     	synchronized( bin ) {
     	
-	    	String priority = data.getPriority();
-	    	Pair<String, Long> reference =  data.getReference();   	
+	    	String group = data.getGroup();
+	    	Pair<String, Long> certificate =  data.getCertificate();
 	    	boolean removedAny = false;
 	    	
-	    	if ( bin.containsKey( priority ) ) {
+	    	if ( bin.containsKey( group ) ) {
 	    		
-	    		List< Pair<String, Long> > entries = bin.get( priority );	    		
-	    		if ( entries.contains( reference ) ) {
-	    			entries.remove( reference );
+	    		List< Pair<String, Long> > entries = bin.get( group );	    		
+	    		if ( entries.contains( certificate ) ) {
+	    			entries.remove( certificate );
 	    			removedAny = true;
 	    		}     		   		
 	    		if ( entries.size() == 0 ) {
-		    		// remove references for priority
-	    			bin.remove( priority );
+		    		// remove certificates for group
+	    			bin.remove( group );
 		    	}
 	    	} 
 	
@@ -156,12 +156,12 @@ public class AnnotationManipulator {
     }
 
 
-    static public List<Pair<String, Long>> getReferencesFromBin( Map<String, List<Pair<String, Long>>> bin, String priority ) {
+    static public List<Pair<String, Long>> getCertificatesFromBin( Map<String, List<Pair<String, Long>>> bin, String group ) {
     	
     	synchronized( bin ) {
     		
-	    	if ( bin.containsKey( priority ) ) {
-	    		return bin.get( priority );
+	    	if ( bin.containsKey( group ) ) {
+	    		return bin.get( group );
 	    	} else {
 	    		return new LinkedList<>();
 	    	}
@@ -170,41 +170,41 @@ public class AnnotationManipulator {
     }
     
     
-    static public List<Pair<String, Long>> getAllReferencesFromBin( Map<String, List<Pair<String, Long>>> bin ) {
+    static public List<Pair<String, Long>> getAllCertificatesFromBin( Map<String, List<Pair<String, Long>>> bin ) {
     	
     	synchronized( bin ) {
-    		List<Pair<String, Long>> allReferences = new LinkedList<>();  
-        	// for each priority group in a bin
-    		for ( List<Pair<String, Long>> references : bin.values() ) {
-    			allReferences.addAll( references );
+    		List<Pair<String, Long>> allCertificates = new LinkedList<>();  
+        	// for each group group in a bin
+    		for ( List<Pair<String, Long>> certificates : bin.values() ) {
+    			allCertificates.addAll( certificates );
     		}	
-        	return allReferences;
+        	return allCertificates;
     	}
     	
     }  
     
     
     
-    static public List<Pair<String, Long>> getAllReferencesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
+    static public List<Pair<String, Long>> getAllCertificatesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
     	
     	synchronized( tile ) {
     		
-	    	List<Pair<String, Long>> allReferences = new LinkedList<>();  
+	    	List<Pair<String, Long>> allCertificates = new LinkedList<>();  
 	    	// for each bin
 			for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
 				
 				if (bin != null) {
-					// get all references
-					allReferences.addAll( getAllReferencesFromBin( bin ) );
+					// get all certificates
+					allCertificates.addAll( getAllCertificatesFromBin( bin ) );
 				}
 				
 			} 	
-	    	return allReferences;
+	    	return allCertificates;
     	}
     }
        
     
-    static public List<Pair<String, Long>> getFilteredReferencesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile, Map<String, Integer> filter ) {
+    static public List<Pair<String, Long>> getFilteredCertificatesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile, Map<String, Integer> filter ) {
     	
     	synchronized( tile ) {
 	    	List<Pair<String, Long>> filtered = new LinkedList<>();
@@ -212,16 +212,16 @@ public class AnnotationManipulator {
 	    	for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
 	    		
 	    		if (bin != null) {
-					// go through filter list get references by priority and by count
+					// go through filter list get certificates by group and by count
 					for (Map.Entry<String, Integer> f : filter.entrySet() ) {
 						
-						String priority = f.getKey();
+						String group = f.getKey();
 						Integer count = f.getValue();
 						
-						List<Pair<String, Long>> references = getReferencesFromBin( bin, priority );
+						List<Pair<String, Long>> certificates = getCertificatesFromBin( bin, group );
 						
-						// references are sorted, so simply cut the tail off to get the n newest
-						filtered.addAll( references.subList( 0, count < references.size() ? count : references.size() ) );
+						// certificates are sorted, so simply cut the tail off to get the n newest
+						filtered.addAll( certificates.subList( 0, count < certificates.size() ? count : certificates.size() ) );
 					}
 	    		}
 	    	}
@@ -231,12 +231,12 @@ public class AnnotationManipulator {
     
     
     
-    static public JSONObject referenceToJSON( Pair<String, Long> reference ) {
+    static public JSONObject certificateToJSON( Pair<String, Long> certificate ) {
     	
     	JSONObject json = new JSONObject();
     	try {		   	
-    		json.put( "uuid", reference.getFirst().toString() );
-    		json.put( "timestamp", reference.getSecond().toString() );		    
+    		json.put( "uuid", certificate.getFirst().toString() );
+    		json.put( "timestamp", certificate.getSecond().toString() );		    
     	} catch ( Exception e ) {
     		e.printStackTrace();
     	}
@@ -245,7 +245,7 @@ public class AnnotationManipulator {
     }
     
     
-    static public Pair<String, Long> getReferenceFromJSON( JSONObject json ) throws IllegalArgumentException {
+    static public Pair<String, Long> getCertificateFromJSON( JSONObject json ) throws IllegalArgumentException {
     	
     	try {
 			
@@ -265,28 +265,28 @@ public class AnnotationManipulator {
     	
     	try {
 
-    		Map<String, List<Pair<String, Long>>> references =  new LinkedHashMap<>();
+    		Map<String, List<Pair<String, Long>>> certificates =  new LinkedHashMap<>();
         	
         	Iterator<?> priorities = json.keys();
             while( priorities.hasNext() ){
             	
-                String priority = (String)priorities.next();
+                String group = (String)priorities.next();
                 
-                if( json.get(priority) instanceof JSONArray ) {
+                if( json.get(group) instanceof JSONArray ) {
                 
-	            	JSONArray jsonReferences = json.getJSONArray(priority);
+	            	JSONArray jsonCertificates = json.getJSONArray(group);
 	            	
-	            	List<Pair<String, Long>> referenceList = new LinkedList<>();	            	
-	            	for (int i=0; i<jsonReferences.length(); i++) {
+	            	List<Pair<String, Long>> certificateList = new LinkedList<>();	            	
+	            	for (int i=0; i<jsonCertificates.length(); i++) {
 	            		
-	            		JSONObject jsonRef = jsonReferences.getJSONObject( i );
-	            		referenceList.add( getReferenceFromJSON( jsonRef ) );            		
+	            		JSONObject jsonRef = jsonCertificates.getJSONObject( i );
+	            		certificateList.add( getCertificateFromJSON( jsonRef ) );            		
 	            	}           	
-	            	references.put( priority, referenceList );	
+	            	certificates.put( group, certificateList );	
                 }
                 
             }	        
-    	    return references;
+    	    return certificates;
 			
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e );
@@ -300,19 +300,19 @@ public class AnnotationManipulator {
     	JSONObject binJSON = new JSONObject();
     	try {
 
-	    	// for each priority group in a bin
-		    for (Map.Entry<String, List<Pair<String, Long>>> referenceEntry : bin.entrySet() ) {		    	
+	    	// for each group group in a bin
+		    for (Map.Entry<String, List<Pair<String, Long>>> certificateEntry : bin.entrySet() ) {		    	
 		    	
-		    	String priority = referenceEntry.getKey();
-		    	List<Pair<String, Long>> references = referenceEntry.getValue();
+		    	String group = certificateEntry.getKey();
+		    	List<Pair<String, Long>> certificates = certificateEntry.getValue();
 		    	
-		    	JSONArray referenceJSON = new JSONArray();
-		    	for ( Pair<String, Long> reference : references ) {
-		    		referenceJSON.put( referenceToJSON( reference ) );
+		    	JSONArray certificateJSON = new JSONArray();
+		    	for ( Pair<String, Long> certificate : certificates ) {
+		    		certificateJSON.put( certificateToJSON( certificate ) );
 		    	}
 		    	
-		    	// add priority to bin json object
-		    	binJSON.put( priority, referenceJSON );		    	
+		    	// add group to bin json object
+		    	binJSON.put( group, certificateJSON );		    	
 		    }
 		    
     	} catch ( Exception e ) {

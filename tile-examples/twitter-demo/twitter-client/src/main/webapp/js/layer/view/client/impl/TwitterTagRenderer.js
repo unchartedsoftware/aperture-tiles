@@ -35,24 +35,37 @@ define(function (require) {
 
 
 
-    var ClientRenderer = require('../ClientRenderer'),
+    var ApertureRenderer = require('../ApertureRenderer'),
         TwitterTagRenderer;
 
 
 
-    TwitterTagRenderer = ClientRenderer.extend({
+    TwitterTagRenderer = ApertureRenderer.extend({
         ClassName: "TwitterTagRenderer",
 
         /**
          * Constructs a twitter tag render layer object
          * @param id the id string for the render layer
          */
-        init: function(id, map, avoidIncrement) {
-            this._super(id, map, avoidIncrement);
+        init: function( map ) {
+
+            this._super( map );
             this.Y_SPACING = 10;
             this.MAX_NUM_VALUES = 10;   // default, over-ride this based on the renderer
             this.HORIZONTAL_BUFFER = 14;
-            this.VERTICAL_BUFFER = 24;           
+            this.VERTICAL_BUFFER = 24;
+
+            this.BLACK_COLOUR = '#000000';
+            this.DARK_GREY_COLOUR = '#222222';
+            this.GREY_COLOUR = '#666666';
+            this.LIGHT_GREY_COLOUR = '#999999';
+            this.WHITE_COLOUR = '#FFFFFF';
+            this.BLUE_COLOUR = '#09CFFF';
+            this.DARK_BLUE_COLOUR  = '#069CCC';
+            this.PURPLE_COLOUR = '#D33CFF';
+            this.DARK_PURPLE_COLOUR = '#A009CC';
+            this.YELLOW_COLOUR = '#F5F56F';
+
             this.FILTER_WORDS = [/s+h+i+t+/, /f+u+c+k+/, /n+i+g+g+/];
         },
 

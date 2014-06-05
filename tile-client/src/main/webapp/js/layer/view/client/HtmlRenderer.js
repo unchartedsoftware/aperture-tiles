@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2014 Oculus Info Inc.
+/*
+ * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -23,37 +23,38 @@
  * SOFTWARE.
  */
 
-
-/**
- * This module when given a server layer json object, will load the required classes and build
- * the layers
- */
-define( function (require) {
+define(function (require) {
     "use strict";
 
-	var ServerLayer = require('./ServerLayer');
-		
-	return {
 
-		/**
-		 * Given a layer JSON specification object and a map, will create server rendered tile layers
-		 * @param layerJSON	 	layer specification JSON object
-		 * @param map			map object
-		 */
-		createLayers: function(layerJSON, uiMediator, map) {
 
-			// Set up server-rendered display layers
-			var serverLayerDeferred = $.Deferred(),
-			    serverLayers = new ServerLayer(layerJSON, map, serverLayerDeferred);
+    var ClientRenderer = require('./ClientRenderer'),
+        HtmlRenderer;
 
-			// Populate the map layer state object with server layer data, and enable
-			// listeners that will push state changes into the layers.
-            uiMediator.setServerLayers(serverLayers, map);
 
-            return serverLayerDeferred;
-		}
 
-    };	
-	
+    HtmlRenderer = ClientRenderer.extend({
+        ClassName: "HtmlRenderer",
 
+        init: function(map) {
+            this._super( map );
+            this.nodeLayer = {};
+        },
+
+        setOpacity: function( opacity ) {
+            this.nodeLayer.$root_.css( 'opacity', opacity );
+        },
+
+        setVisibility: function( visible ) {
+            var visibility = visible ? 'visible' : 'hidden';
+            this.nodeLayer.$root_.css( 'visibility', visibility );
+        },
+
+        redraw: function( data ) {
+            this.nodeLayer.all( data ).redraw();
+        }
+
+    });
+
+    return HtmlRenderer;
 });
