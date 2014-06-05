@@ -23,10 +23,11 @@
  */
 package com.oculusinfo.annotation.index;
 
-import java.util.List;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.binning.TileAndBinIndices;
+import com.oculusinfo.binning.TilePyramid;
 
-import com.oculusinfo.binning.*;
-import com.oculusinfo.annotation.*;
+import java.util.List;
 
 public abstract class AnnotationIndexer {
 

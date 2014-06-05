@@ -24,14 +24,9 @@
  */
 package com.oculusinfo.geometry.geodesic;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.oculusinfo.math.linearalgebra.ListUtilities;
+
+import java.util.*;
 
 abstract public class Track {
     private PositionCalculationParameters _parameters;

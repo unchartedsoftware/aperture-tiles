@@ -24,21 +24,15 @@
 package com.oculusinfo.tile.rest.tile.caching;
 
 
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeSet;
-
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.LRUCache.RemovalPolicy;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.SynchronizedLRUCache;
 import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 
 

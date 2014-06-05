@@ -23,13 +23,12 @@
  */
 package com.oculusinfo.twitter.binning;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
+import com.oculusinfo.binning.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.util.Pair;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class TwitterDemoRecordTests {
     @Test

@@ -25,10 +25,7 @@
 package com.oculusinfo.math.statistics;
 
 import junit.framework.Assert;
-
 import org.junit.Test;
-
-import com.oculusinfo.math.statistics.StatTracker;
 
 public class TestStats {
     private static final double EPSILON = 1E-12;

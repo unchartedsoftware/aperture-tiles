@@ -25,10 +25,9 @@
 package com.oculusinfo.binning.visualization;
 
 
-
-import javax.swing.JPanel;
-
 import com.oculusinfo.binning.io.PyramidIO;
+
+import javax.swing.*;
 
 
 

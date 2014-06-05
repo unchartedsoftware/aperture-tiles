@@ -24,10 +24,6 @@
 package com.oculusinfo.tile.init.providers;
 
 
-
-import java.util.List;
-import java.util.Set;
-
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -35,8 +31,11 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.FactoryProvider;
+
+import java.util.List;
+import java.util.Set;
 
 
 @Singleton

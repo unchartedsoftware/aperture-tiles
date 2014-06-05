@@ -24,15 +24,12 @@
 package com.oculusinfo.tile;
 
 
-
-import java.util.ArrayList;
-import java.util.List;
+import com.google.inject.Singleton;
+import oculus.aperture.ApertureServerConfig;
 
 import javax.servlet.ServletContextEvent;
-
-import com.google.inject.Singleton;
-
-import oculus.aperture.ApertureServerConfig;
+import java.util.ArrayList;
+import java.util.List;
 
 
 

@@ -93,11 +93,12 @@ define(function (require) {
         init: function (spec) {
 
             this.map = spec.map;
-            this.layer = spec.layer;
+            this.id = spec.id;
             this.groups = spec.groups;
+            this.accessibility = spec.accessibility;
             this.indexer = new TileAnnotationIndexer( this.map.getPyramid() );
             this.filter = spec.filter;
-            this.service = new AnnotationService( this.layer );
+            this.service = new AnnotationService( this.id );
             this.features = {};
             this.pendingFeature = null;
             this.pendingTileRequests = {};
@@ -151,6 +152,10 @@ define(function (require) {
                 tilekey,
                 i;
 
+            if ( !this.accessibility.read ) {
+                return;
+            }
+
             function createTileKey(tile) {
                 return tile.level + "," + tile.xIndex + "," + tile.yIndex;
             }
@@ -187,8 +192,6 @@ define(function (require) {
             function createTileKey(tile) {
                 return tile.level + "," + tile.x + "," + tile.y;
             }
-
-            console.log("tile return");
 
             var tilekey = createTileKey( data.tile ),
                 annotationsByBin = data.annotations,
@@ -252,25 +255,22 @@ define(function (require) {
         },
 
 
-        writeCallback: function( data ) {
+        writeCallback: function( data, statusInfo ) {
 
-            if ( data.status.toLowerCase() === "success" ) {
-                // success
-                console.log("WRITE returned successfully from server");
-            } /*else {
+            /*)
+            if ( !statusInfo.success ) {
                 // failure
                 // writes can only fail if server is dead or UUID collision
-            } */
+            }
+            */
+            return true;
 
         },
 
 
-        modifyCallback: function( data ) {
+        modifyCallback: function( data, statusInfo ) {
 
-            if ( data.status.toLowerCase() === "success" ) {
-                // success
-                console.log("MODIFY returned successfully from server");
-            } else {
+            if ( !statusInfo.success ) {
                 // failure
                 // re-poll data in case client is out-of-sync
                 this.onMapUpdate();
@@ -278,12 +278,9 @@ define(function (require) {
         },
 
 
-        removeCallback: function( data ) {
+        removeCallback: function( data, statusInfo ) {
 
-            if ( data.status.toLowerCase() === "success" ) {
-                // success
-                console.log("REMOVE returned successfully from server");
-            } else {
+            if ( !statusInfo.success ) {
                 // failure
                 // re-poll data in case client is out-of-sync
                 this.onMapUpdate();
@@ -366,11 +363,13 @@ define(function (require) {
 
 
         popupEditClose : function( feature ) {
+
+            var editFunc = (this.accessibility.modify) ? $.proxy( this.popupDisplayEdit, this ) : null;
             // destroy popup
             feature.removeAndDestroyPopup();
             // go back to display
             feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
-                                        $.proxy( this.popupDisplayEdit, this ) );
+                                        editFunc );
         },
 
 
@@ -449,7 +448,7 @@ define(function (require) {
 
             var that = this;
 
-            this.olLayer_ = new OpenLayers.Layer.Vector( "annotation-layer-"+this.layer, { 
+            this.olLayer_ = new OpenLayers.Layer.Vector( "annotation-layer-"+this.id, { 
                 ratio: 2,
                 styleMap: new OpenLayers.StyleMap({ 
                     "default" : defaultStyle,
@@ -461,13 +460,14 @@ define(function (require) {
 
                     "featureselected": function(e) {
 
+                        var editFunc = (that.accessibility.modify) ? $.proxy( that.popupDisplayEdit, that ) : null;
                         // cancel any pending feature creation
                         that.cancelPendingFeature();
                         // if anything is selected, prevent click-out from adding a new point
                         that.addPointControl.deactivate();
                         // show display popup
                         e.feature.attributes.feature.createDisplayPopup( $.proxy( that.popupDisplayClose, that ),
-                                                                         $.proxy( that.popupDisplayEdit, that ) );
+                                                                         editFunc );
                     },
 
                     "featureunselected": function(e) {
@@ -475,7 +475,9 @@ define(function (require) {
                         // remove and destroy popup
                         e.feature.attributes.feature.removeAndDestroyPopup();
                         // if nothing is selected, re-enable adding points
-                        that.addPointControl.activate();
+                        if ( that.accessibility.write ) {
+                            that.addPointControl.activate();
+                        }
                     },
 
                     "featureadded": function(e) {
@@ -542,7 +544,7 @@ define(function (require) {
                         return;
                     }
 
-                    if ( that.features[ tilekey ][ binkey ].isAggregated() ) {
+                    if ( that.features[ tilekey ][ binkey ].isAggregated() || !that.accessibility.modify ) {
                         // disable dragging of aggregated points!
                         that.dragControl.handlers.drag.deactivate();
                     }
@@ -630,7 +632,9 @@ define(function (require) {
             this.map.addOLControl(this.selectControl);
 
             // activate controls
-            this.addPointControl.activate();
+            if (this.accessibility.write) {
+                this.addPointControl.activate();
+            }
             this.dragControl.activate();
             this.highlightControl.activate();
             this.selectControl.activate();

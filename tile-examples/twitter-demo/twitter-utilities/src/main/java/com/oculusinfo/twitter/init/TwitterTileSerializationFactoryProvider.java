@@ -23,11 +23,11 @@
  */
 package com.oculusinfo.twitter.init;
 
-import java.util.List;
-
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
+
+import java.util.List;
 
 public class TwitterTileSerializationFactoryProvider implements FactoryProvider<TileSerializer<?>> {
     @Override

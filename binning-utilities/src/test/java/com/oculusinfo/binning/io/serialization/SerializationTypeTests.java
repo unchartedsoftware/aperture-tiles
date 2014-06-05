@@ -24,16 +24,15 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer;
-import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.List;
 
 // Test that serializers can check their bin types somehow
 public class SerializationTypeTests {

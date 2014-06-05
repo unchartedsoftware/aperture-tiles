@@ -24,15 +24,14 @@
 package com.oculusinfo.tile.init.providers;
 
 
-
-import java.util.List;
-
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 import com.oculusinfo.tile.rest.tile.caching.LiveTilePyramidIOFactory;
 import com.oculusinfo.tile.spark.SparkContextProvider;
+
+import java.util.List;
 
 
 

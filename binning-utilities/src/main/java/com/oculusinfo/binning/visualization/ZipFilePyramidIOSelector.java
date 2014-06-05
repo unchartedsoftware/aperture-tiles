@@ -24,26 +24,19 @@
  */
 package com.oculusinfo.binning.visualization;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.impl.PyramidStreamSource;
+import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
+import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
-import com.oculusinfo.binning.io.impl.PyramidStreamSource;
-import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 
 
 

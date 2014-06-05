@@ -24,25 +24,25 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Random;
-//import java.util.zip.DeflaterOutputStream;
-
-import org.apache.avro.file.CodecFactory;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import org.apache.avro.file.CodecFactory;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Random;
+
+//import java.util.zip.DeflaterOutputStream;
 
 
 

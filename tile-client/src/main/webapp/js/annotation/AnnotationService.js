@@ -91,6 +91,7 @@ define(function (require) {
 
             this.postRequest( request, function( result, statusInfo ) {
                 if (statusInfo.success) {
+                    // update certificate on success
                     annotation.certificate = result;
                 }
                 callback( result, statusInfo );
@@ -113,7 +114,14 @@ define(function (require) {
                     current: newAnnotation
                 };
 
-            this.postRequest( request, callback );
+            this.postRequest( request, function( result, statusInfo ) {
+                if (statusInfo.success) {
+                    // update certificate on success
+                    newAnnotation.certificate = result;
+                }
+                callback( result, statusInfo );
+            });
+
         },
 
 

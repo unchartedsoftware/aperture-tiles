@@ -26,9 +26,7 @@
 package com.oculusinfo.twitter.binning;
 
 
-
 import com.esotericsoftware.kryo.Kryo;
-
 import com.oculusinfo.tilegen.kryo.TileRegistrator;
 
 

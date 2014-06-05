@@ -24,6 +24,17 @@
  */
 package com.oculusinfo.binning;
 
+import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.TestPyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.*;
+import com.oculusinfo.binning.util.Pair;
+import junit.framework.Assert;
+import org.apache.avro.file.CodecFactory;
+import org.junit.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,23 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import junit.framework.Assert;
-
-import org.apache.avro.file.CodecFactory;
-import org.junit.Test;
-
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.TestPyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
-import com.oculusinfo.binning.util.Pair;
 
 public class SerializationTests {
 	//@Test

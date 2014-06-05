@@ -24,18 +24,16 @@
  */
 package com.oculusinfo.binning;
 
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import junit.framework.Assert;
+import org.junit.Test;
+
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.Assert;
-
-import org.junit.Test;
-
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 
 public class BinIteratorTest {
 	private Point2D getBinCenter (TilePyramid binner,

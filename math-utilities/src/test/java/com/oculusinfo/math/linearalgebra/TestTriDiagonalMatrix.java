@@ -25,11 +25,7 @@
 package com.oculusinfo.math.linearalgebra;
 
 import junit.framework.Assert;
-
 import org.junit.Test;
-
-import com.oculusinfo.math.linearalgebra.TriDiagonalMatrix;
-import com.oculusinfo.math.linearalgebra.Vector;
 
 public class TestTriDiagonalMatrix {
     private static final double EPSILON = 1E-12;

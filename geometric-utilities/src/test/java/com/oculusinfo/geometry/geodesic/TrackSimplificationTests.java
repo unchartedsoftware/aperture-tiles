@@ -24,10 +24,9 @@
  */
 package com.oculusinfo.geometry.geodesic;
 
+import com.oculusinfo.geometry.geodesic.tracks.GeodeticTrack;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.oculusinfo.geometry.geodesic.tracks.GeodeticTrack;
 
 public class TrackSimplificationTests {
     // Test to make sure intermediate colinear points are removed. 

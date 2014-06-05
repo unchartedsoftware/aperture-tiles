@@ -23,11 +23,10 @@
  */
 package com.oculusinfo.factory.properties;
 
-import org.json.JSONException;
-
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
+import org.json.JSONException;
 
 public class DoubleProperty implements ConfigurationProperty<Double> {
 	private String _name;

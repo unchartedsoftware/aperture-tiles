@@ -24,13 +24,13 @@
  */
 package com.oculusinfo.binning.util;
 
-import java.util.Properties;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Properties;
 
 public class JSONUtilitiesTests {
 	@Test

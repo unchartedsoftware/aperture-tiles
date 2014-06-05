@@ -23,25 +23,26 @@
  */
 package com.oculusinfo.annotation.rest.impl;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
-
-
-import com.google.inject.Singleton;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.cache.*;
-import com.oculusinfo.annotation.cache.impl.*;
+import com.oculusinfo.annotation.cache.AnnotationCache;
+import com.oculusinfo.annotation.cache.impl.ConcurrentLRUCache;
+import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.*;
+import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.tile.init.FactoryProvider;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class CachedAnnotationServiceImpl extends AnnotationServiceImpl {

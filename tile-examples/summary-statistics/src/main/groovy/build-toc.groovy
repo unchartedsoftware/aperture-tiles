@@ -1,6 +1,3 @@
-import javax.swing.text.DefaultStyledDocument.SectionElement;
-
-
 def buildTocRecursive(groovy.xml.MarkupBuilder html, File directory){
 	boolean done = false;
 	

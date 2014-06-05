@@ -45,9 +45,10 @@ define( function (require) {
 
 			var spec = {
 				map: map,
-				layer: layerJSON.id,
+				id: layerJSON.id,
                 groups: layerJSON.groups,
-				filter: layerJSON.filter
+				filter: layerJSON.filter,
+				accessibility: layerJSON.accessibility
 			};
 			return new AnnotationLayer( spec );
 

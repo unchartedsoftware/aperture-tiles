@@ -24,15 +24,6 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import junit.framework.Assert;
-
-import org.apache.avro.file.CodecFactory;
-import org.junit.Test;
-
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
@@ -41,6 +32,13 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer;
+import junit.framework.Assert;
+import org.apache.avro.file.CodecFactory;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 //@Ignore
 public class HBaseAvroPyramidIOTest {

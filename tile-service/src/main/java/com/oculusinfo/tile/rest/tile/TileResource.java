@@ -24,14 +24,10 @@
  */
 package com.oculusinfo.tile.rest.tile;
 
-import java.awt.image.BufferedImage;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
+import com.google.inject.Inject;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 import oculus.aperture.common.rest.ApertureServerResource;
-
 import org.json.JSONObject;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
@@ -41,9 +37,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
-import com.google.inject.Inject;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.tile.rest.ImageOutputRepresentation;
+import java.awt.image.BufferedImage;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class TileResource extends ApertureServerResource {
 

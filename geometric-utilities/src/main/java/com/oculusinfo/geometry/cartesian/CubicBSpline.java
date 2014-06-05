@@ -23,14 +23,13 @@
  * SOFTWARE.
  */package com.oculusinfo.geometry.cartesian;
 
-import java.awt.Graphics2D;
-import java.awt.Point;
+import com.oculusinfo.math.linearalgebra.TriDiagonalMatrix;
+import com.oculusinfo.math.linearalgebra.Vector;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import com.oculusinfo.math.linearalgebra.TriDiagonalMatrix;
-import com.oculusinfo.math.linearalgebra.Vector;
 
 
 

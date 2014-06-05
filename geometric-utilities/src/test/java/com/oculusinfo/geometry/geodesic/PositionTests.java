@@ -24,14 +24,11 @@
  */
 package com.oculusinfo.geometry.geodesic;
 
-import java.awt.geom.Rectangle2D;
-
+import com.oculusinfo.math.linearalgebra.Vector;
 import junit.framework.Assert;
-
 import org.junit.Test;
 
-import com.oculusinfo.geometry.geodesic.Position;
-import com.oculusinfo.math.linearalgebra.Vector;
+import java.awt.geom.Rectangle2D;
 
 public class PositionTests {
     private static final double EPSILON = 1E-12;

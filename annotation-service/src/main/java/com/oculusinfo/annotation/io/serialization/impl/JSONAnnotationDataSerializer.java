@@ -24,12 +24,11 @@
  */
 package com.oculusinfo.annotation.io.serialization.impl;
 
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.io.serialization.GenericJSONAnnotationSerializer;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.impl.*;
-import com.oculusinfo.annotation.io.serialization.*;
 
 
 public class JSONAnnotationDataSerializer extends GenericJSONAnnotationSerializer<JSONObject> {

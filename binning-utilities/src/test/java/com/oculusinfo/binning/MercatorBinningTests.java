@@ -25,18 +25,15 @@
 package com.oculusinfo.binning;
 
 
-
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import junit.framework.Assert;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 
 

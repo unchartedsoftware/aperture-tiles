@@ -24,14 +24,13 @@
  */
 package com.oculusinfo.tile.rest;
 
+import org.restlet.data.MediaType;
+import org.restlet.representation.OutputRepresentation;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import javax.imageio.ImageIO;
-
-import org.restlet.data.MediaType;
-import org.restlet.representation.OutputRepresentation;
 
 /**
  * @author dgray

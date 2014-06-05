@@ -26,6 +26,20 @@
 package com.oculusinfo.binning.io.storageutil;
 
 
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TileIterable;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.impl.*;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
+import org.apache.avro.file.CodecFactory;
+import org.json.JSONObject;
+
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,26 +52,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.avro.file.CodecFactory;
-import org.json.JSONObject;
-
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TileIterable;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
-import com.oculusinfo.binning.io.impl.HBasePyramidIO;
-import com.oculusinfo.binning.io.impl.PyramidStreamSource;
-import com.oculusinfo.binning.io.impl.ResourcePyramidStreamSource;
-import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
-import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
-import com.oculusinfo.binning.metadata.PyramidMetaData;
 
 /**
  * @TODO Document this

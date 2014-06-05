@@ -24,12 +24,11 @@
  */
 package com.oculusinfo.tile.rest.tile;
 
-import java.awt.image.BufferedImage;
-import java.util.UUID;
-
+import com.oculusinfo.binning.TileIndex;
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.TileIndex;
+import java.awt.image.BufferedImage;
+import java.util.UUID;
 
 public interface TileService {
 	/**

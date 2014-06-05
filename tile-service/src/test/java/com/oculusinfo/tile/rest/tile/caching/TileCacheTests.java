@@ -24,19 +24,16 @@
 package com.oculusinfo.tile.rest.tile.caching;
 
 
-
-import java.util.Collections;
-import java.util.List;
-
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.tile.rest.tile.caching.TileCache;
-import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
+import java.util.Collections;
+import java.util.List;
 
 
 

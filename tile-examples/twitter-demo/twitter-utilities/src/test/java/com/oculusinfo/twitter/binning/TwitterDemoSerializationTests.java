@@ -24,22 +24,20 @@
  */
 package com.oculusinfo.twitter.binning;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.apache.avro.file.CodecFactory;
-
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.util.Pair;
+import org.apache.avro.file.CodecFactory;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 
 

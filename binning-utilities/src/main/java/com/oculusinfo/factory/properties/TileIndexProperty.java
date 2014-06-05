@@ -23,13 +23,12 @@
  */
 package com.oculusinfo.factory.properties;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 	private String    _name;

@@ -24,10 +24,10 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
+import com.oculusinfo.tile.rendering.color.FixedPoint;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import com.oculusinfo.tile.rendering.color.FixedPoint;
 
 
 public class WareColorRamp extends AbstractColorRamp {

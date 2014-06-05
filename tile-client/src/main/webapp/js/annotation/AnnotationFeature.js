@@ -286,6 +286,7 @@ define(function (require) {
         createDisplayPopup: function( closeFunc, editFunc ) {
 
             var that = this,
+                hasEditFunc = editFunc !== null,
                 html;
 
             if ( this.isAggregated() ) {
@@ -294,7 +295,7 @@ define(function (require) {
 
             } else {
                 // single
-                html = this.getSingleDisplayPopupHTML( this.getDataArray()[0] );
+                html = this.getSingleDisplayPopupHTML( this.getDataArray()[0], hasEditFunc );
 
             }
 
@@ -316,11 +317,14 @@ define(function (require) {
 
             } else {
 
-                // set save callback
-                $( "#"+ANNOTATION_EDIT_BUTTON_ID ).click( function() {
-                    editFunc( that );
-                    return false;   // stop event propagation
-                });
+                if ( hasEditFunc ) {
+                    // set save callback
+                    $( "#"+ANNOTATION_EDIT_BUTTON_ID ).click( function() {
+                        editFunc( that );
+                        return false;   // stop event propagation
+                    });
+                }
+
             }
 
             // set cancel callback
@@ -436,24 +440,30 @@ define(function (require) {
         },
 
 
-        getSingleDisplayPopupHTML: function( annotation ) {
+        getSingleDisplayPopupHTML: function( annotation, isEditable ) {
 
-            return  "<div style='overflow:hidden'>"+
-                        "<input id='"+ ANNOTATION_EDIT_BUTTON_ID + "' type='image' src='./images/edit-icon.png' width='17' height='17'>"+
-                        "<div id='" +ANNOTATION_POPUP_ID+ "' class='ui-widget-content'>"+
-                            "<div class='"+ANNOTATION_CONTENT_CLASS+"'>"+
-                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
-                                    annotation.data.title +
-                                "</div>"+
-                                "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
-                                    "Priority: "+ annotation.group +
-                                "</div>"+
-                                "<div class='"+ANNOTATION_TEXT_DIV_CLASS+"'>"+
-                                    annotation.data.comment +
-                                "</div>"+
+            var html = "<div style='overflow:hidden'>";
+
+            if ( isEditable ) {
+                html += "<input id='"+ ANNOTATION_EDIT_BUTTON_ID + "' type='image' src='./images/edit-icon.png' width='17' height='17'>";
+            }
+
+            html += "<div id='" +ANNOTATION_POPUP_ID+ "' class='ui-widget-content'>"+
+                        "<div class='"+ANNOTATION_CONTENT_CLASS+"'>"+
+                            "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
+                                annotation.data.title +
+                            "</div>"+
+                            "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
+                                "Priority: "+ annotation.group +
+                            "</div>"+
+                            "<div class='"+ANNOTATION_TEXT_DIV_CLASS+"'>"+
+                                annotation.data.comment +
                             "</div>"+
                         "</div>"+
-                    "</div>";
+                    "</div>"+
+                "</div>";
+
+            return html;
         },
 
 

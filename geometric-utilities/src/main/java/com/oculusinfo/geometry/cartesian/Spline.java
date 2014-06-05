@@ -24,10 +24,10 @@
  */
 package com.oculusinfo.geometry.cartesian;
 
+import com.oculusinfo.math.linearalgebra.Vector;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import com.oculusinfo.math.linearalgebra.Vector;
 
 
 public class Spline {

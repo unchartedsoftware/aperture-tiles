@@ -24,16 +24,15 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.util.TypeDescriptor;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 

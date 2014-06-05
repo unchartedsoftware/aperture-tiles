@@ -24,16 +24,10 @@
  */
 package com.oculusinfo.tile.init;
 
-import java.util.List;
-
-import com.oculusinfo.binning.io.FileSystemPyramidIOFactory;
-import com.oculusinfo.binning.io.HBasePyramidIOFactory;
-import com.oculusinfo.binning.io.JDBCPyramidIOFactory;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.ResourcePyramidIOFactory;
-import com.oculusinfo.binning.io.SQLitePyramidIOFactory;
-import com.oculusinfo.binning.io.ZipPyramidIOFactory;
+import com.oculusinfo.binning.io.*;
 import com.oculusinfo.factory.ConfigurableFactory;
+
+import java.util.List;
 
 /**
  * Basic enum of all the default {@link DelegateFactoryProviderTarget} types availables in the system.<br>

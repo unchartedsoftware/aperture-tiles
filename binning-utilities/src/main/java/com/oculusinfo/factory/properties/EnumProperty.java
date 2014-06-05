@@ -1,15 +1,14 @@
 package com.oculusinfo.factory.properties;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.ConfigurationProperty;
-import com.oculusinfo.factory.JSONNode;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(EnumProperty.class);

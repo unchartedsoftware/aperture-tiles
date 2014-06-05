@@ -24,9 +24,9 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
-import java.util.Arrays;
-
 import com.oculusinfo.tile.rendering.color.FixedPoint;
+
+import java.util.Arrays;
 
 
 public class GreyColorRamp extends AbstractColorRamp {

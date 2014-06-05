@@ -24,14 +24,13 @@
 package com.oculusinfo.binning;
 
 
-
-import java.util.List;
-
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+
+import java.util.List;
 
 
 

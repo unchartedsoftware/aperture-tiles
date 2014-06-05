@@ -21,16 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.impl;
+package com.oculusinfo.annotation.data.impl;
+
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.binning.util.Pair;
+import org.json.JSONObject;
 
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
-
-import com.oculusinfo.binning.util.Pair;
-import org.json.JSONObject;
-
-import com.oculusinfo.annotation.*;
 
 
 /*

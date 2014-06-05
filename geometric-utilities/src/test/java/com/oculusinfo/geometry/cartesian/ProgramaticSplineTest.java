@@ -25,16 +25,13 @@
 package com.oculusinfo.geometry.cartesian;
 
 
+import com.oculusinfo.math.linearalgebra.Vector;
+import junit.framework.Assert;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import junit.framework.Assert;
-
-import org.junit.Test;
-
-import com.oculusinfo.math.linearalgebra.Vector;
 
 
 

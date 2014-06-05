@@ -24,17 +24,17 @@
  */
 package com.oculusinfo.annotation.io.impl;
 
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.binning.util.Pair;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.io.*;
-import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.binning.util.*;
 
 
 public class FileSystemAnnotationIO implements AnnotationIO {

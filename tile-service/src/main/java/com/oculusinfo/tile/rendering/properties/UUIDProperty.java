@@ -23,13 +23,12 @@
  */
 package com.oculusinfo.tile.rendering.properties;
 
-import java.util.UUID;
-
-import org.json.JSONException;
-
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
+import org.json.JSONException;
+
+import java.util.UUID;
 
 public class UUIDProperty implements ConfigurationProperty<UUID> {
 	private String   _name;

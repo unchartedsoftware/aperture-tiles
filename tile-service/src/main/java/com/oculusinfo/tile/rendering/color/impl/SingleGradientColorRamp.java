@@ -24,10 +24,10 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
-import java.awt.Color;
-import java.util.Arrays;
-
 import com.oculusinfo.tile.rendering.color.FixedPoint;
+
+import java.awt.*;
+import java.util.Arrays;
 
 /**
  * Ramps between a 'from' colour and a 'to' colour.

@@ -24,18 +24,16 @@
 package com.oculusinfo.binning;
 
 
-
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.oculusinfo.binning.impl.AOITilePyramid;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.oculusinfo.binning.impl.AOITilePyramid;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 

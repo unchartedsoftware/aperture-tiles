@@ -23,14 +23,13 @@
  */
 package com.oculusinfo.factory.properties;
 
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.ConfigurationProperty;
-import com.oculusinfo.factory.JSONNode;
 
 public class JSONProperty implements ConfigurationProperty<JSONObject> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JSONProperty.class);

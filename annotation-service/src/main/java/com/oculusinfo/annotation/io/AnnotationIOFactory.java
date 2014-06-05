@@ -23,12 +23,12 @@
  */
 package com.oculusinfo.annotation.io;
 
+import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
+import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
+import com.oculusinfo.annotation.rest.AnnotationInfo;
 import org.json.JSONObject;
 
 import java.io.IOException;
-
-import com.oculusinfo.annotation.rest.AnnotationInfo;
-import com.oculusinfo.annotation.io.impl.*;
 
 
 public class AnnotationIOFactory  {

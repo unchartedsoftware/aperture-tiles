@@ -24,27 +24,20 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import static org.junit.Assert.fail;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
+import org.junit.*;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Ignore;
-
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.impl.JDBCPyramidIO;
-import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
-import com.oculusinfo.binning.util.Pair;
+import static org.junit.Assert.fail;
 
 /**
  * test SQLite implementation

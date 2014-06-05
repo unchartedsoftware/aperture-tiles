@@ -24,12 +24,12 @@
  */
 package com.oculusinfo.tile.rest.tile.caching;
 
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
 
 /**
  * This class tracks an entry in an LRU cache for a particular tile; it keeps 

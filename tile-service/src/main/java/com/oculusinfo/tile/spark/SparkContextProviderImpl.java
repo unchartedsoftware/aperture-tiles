@@ -24,24 +24,20 @@
 package com.oculusinfo.tile.spark;
 
 
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.ServletContextEvent;
-
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-
-import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.JavaSparkContext;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.oculusinfo.tile.ServletLifecycleListener;
 import com.oculusinfo.tile.TileServiceConfiguration;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaSparkContext;
+
+import javax.servlet.ServletContextEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 
 

@@ -24,18 +24,17 @@
 package com.oculusinfo.annotation.config;
 
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.json.JSONObject;
-
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
+import org.json.JSONObject;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
 public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfiguration> {

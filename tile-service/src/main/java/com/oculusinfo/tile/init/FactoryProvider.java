@@ -25,10 +25,9 @@
 package com.oculusinfo.tile.init;
 
 
+import com.oculusinfo.factory.ConfigurableFactory;
 
 import java.util.List;
-
-import com.oculusinfo.factory.ConfigurableFactory;
 
 
 

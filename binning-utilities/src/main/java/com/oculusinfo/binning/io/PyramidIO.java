@@ -24,16 +24,15 @@
 package com.oculusinfo.binning.io;
 
 
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
-
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 
 

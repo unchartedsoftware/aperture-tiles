@@ -24,24 +24,14 @@
 package com.oculusinfo.binning.io.serialization;
 
 
-
-import java.util.List;
-
-import org.apache.avro.file.CodecFactory;
-
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
+import com.oculusinfo.binning.io.serialization.impl.*;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.EnumProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+import org.apache.avro.file.CodecFactory;
+
+import java.util.List;
 
 
 

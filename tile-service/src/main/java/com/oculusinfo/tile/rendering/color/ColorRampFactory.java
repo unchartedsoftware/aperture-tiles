@@ -24,24 +24,18 @@
  */
 package com.oculusinfo.tile.rendering.color;
 
-import java.awt.Color;
-import java.lang.reflect.Field;
-import java.util.List;
-
-import org.json.JSONObject;
-
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.BooleanProperty;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.tile.rendering.color.impl.BRColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.FlatColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.GreyColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.HueColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.SingleGradientColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.WareColorRamp;
+import com.oculusinfo.tile.rendering.color.impl.*;
+import org.json.JSONObject;
+
+import java.awt.*;
+import java.lang.reflect.Field;
+import java.util.List;
 
 public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	public static final StringProperty           RAMP_TYPE = new StringProperty("ramp",

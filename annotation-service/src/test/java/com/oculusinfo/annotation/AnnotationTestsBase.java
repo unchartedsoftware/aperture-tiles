@@ -23,33 +23,23 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.UUID;
-import java.util.Date;
-
-import java.sql.Timestamp;
-
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.*;
-import com.oculusinfo.annotation.impl.*;
-import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.binning.util.*;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileAndBinIndices;
-
+import com.oculusinfo.binning.util.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.sql.Timestamp;
+import java.util.*;
 
 
 public class AnnotationTestsBase {
 	
-	static final String	  TEST_LAYER_NAME = "test.annotations";
+	static final String	  TEST_LAYER_NAME = "annotations-unit-test";
 	static final double   EPSILON = 0.001;
-	static final int      NUM_ENTRIES = 1000;
-	static final int      NUM_TESTS = 25;
+	static final int      NUM_ENTRIES = 100;
 	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
 
 
@@ -234,7 +224,7 @@ public class AnnotationTestsBase {
 	 */
 	protected AnnotationData<?> generateJSONAnnotation() {
 
-		return JSONAnnotation.fromJSON( generateJSON() );
+		return JSONAnnotation.fromJSON(generateJSON());
 				
 	}
 	
@@ -293,9 +283,9 @@ public class AnnotationTestsBase {
 	protected String randomGroup() {
 		
 		final Random rand = new Random();
-		String priorities[] = {"Urgent", "High", "Medium", "Low"};		
-		int priorityIndex = (int)(rand.nextDouble() * 3);
-		return priorities[ priorityIndex ];
+		String groups[] = {"Urgent", "High", "Medium", "Low"};
+		int index = (int)(rand.nextDouble() * 3);
+		return groups[ index ];
 	}
 	
 	

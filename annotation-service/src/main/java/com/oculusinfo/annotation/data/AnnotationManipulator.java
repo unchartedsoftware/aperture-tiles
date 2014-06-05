@@ -21,23 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation;
+package com.oculusinfo.annotation.data;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.UUID;
-import java.util.Comparator;
-
-import com.oculusinfo.binning.*;
-import com.oculusinfo.annotation.index.*;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.Pair;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.*;
 
 
 public class AnnotationManipulator {
@@ -121,7 +115,7 @@ public class AnnotationManipulator {
     
     
     
-    static public void addDataToTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) {   	
+    static public void addDataToTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) {
     	
     	synchronized( tile ) {
     		
@@ -235,7 +229,7 @@ public class AnnotationManipulator {
     	
     	JSONObject json = new JSONObject();
     	try {		   	
-    		json.put( "uuid", certificate.getFirst().toString() );
+    		json.put( "uuid", certificate.getFirst() );
     		json.put( "timestamp", certificate.getSecond().toString() );		    
     	} catch ( Exception e ) {
     		e.printStackTrace();
@@ -252,7 +246,7 @@ public class AnnotationManipulator {
     		UUID uuid = UUID.fromString( json.getString("uuid") );
     		Long timestamp = Long.parseLong( json.getString("timestamp") );
     		
-    		return new Pair<String, Long>( uuid.toString(), timestamp );
+    		return new Pair<>( uuid.toString(), timestamp );
 		    
     	} catch ( Exception e ) {
     		throw new IllegalArgumentException( e );

@@ -23,47 +23,69 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.LinkedList;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
+import com.oculusinfo.annotation.rest.AnnotationService;
+import com.oculusinfo.annotation.rest.impl.CachedAnnotationServiceImpl;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider;
+import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.Collections;
-
-import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.After;
-import org.junit.Before;
-
-import com.oculusinfo.annotation.impl.*;
-import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
-import com.oculusinfo.annotation.rest.*;
-import com.oculusinfo.binning.*;
 
 
 public class ConcurrentServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
-	static final int NUM_THREADS = 8;
+	static final int NUM_THREADS = 4;
 
-	protected AnnotationIO _io;
 	protected AnnotationService _service;	
 
     @Before
     public void setup () { 	
     	
     	try {
-    		
-    		_service = null; //new CachedAnnotationServiceImpl( _io, indexer );
+
+            String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
+            //String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
+            Set<DelegateFactoryProviderTarget<PyramidIO>> ioSet = new HashSet<>();
+            ioSet.add( DefaultPyramidIOFactoryProvider.HBASE.create() );
+            ioSet.add( DefaultPyramidIOFactoryProvider.FILE_SYSTEM.create() );
+
+            FactoryProvider<PyramidIO> ioFactoryProvider = new StandardPyramidIOFactoryProvider( ioSet );
+            FactoryProvider<TileSerializer<?>> serializerFactoryProvider = new StandardTileSerializationFactoryProvider();
+            FactoryProvider<TilePyramid> pyramidFactoryProvider = new StandardTilePyramidFactoryProvider();
+            AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
+            AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
+
+            _service = new CachedAnnotationServiceImpl( configFile,
+                                                        ioFactoryProvider,
+                                                        serializerFactoryProvider,
+                                                        pyramidFactoryProvider,
+                                                        annotationIndexer,
+                                                        annotationSerializer );
     		
     	} catch (Exception e) {
-    		
-			System.out.println("Error: " + e.getMessage());
-			
+            throw e;
 		}
     	
     }
@@ -84,24 +106,36 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	}
     	
     	private void write( String name ) {
-    		//System.out.println( "Thread " + name + " writing " + _data.getUUID() );   		    	
+
+            if ( VERBOSE )
+    		    System.out.println( "Thread " + name + " writing " + _data.getUUID() );
+
 			_service.write( TEST_LAYER_NAME, _data );
 			_status++;
     	}
     	
     	private void read( String name ) {
     		long start = System.currentTimeMillis();
-			Map<BinIndex, List<AnnotationData<?>>> scan = readRandom();	   				
+            TileIndex tile = getRandomTile();
+			Map<BinIndex, List<AnnotationData<?>>> scan = readRandom( tile );
+
+            int annotationCount = 0;
+            for (List<AnnotationData<?>> annotations : scan.values()) {
+                annotationCount += annotations.size();
+            }
+
 			long end = System.currentTimeMillis();
 	    	double time = ((end-start)/1000.0);
 	    	_readTimesPerEntry.get( name ).add( time );
-	    	//System.out.println( "Thread " + name + " read " + scan.size() +" entries in " + time );	
+            if ( VERBOSE )
+	    	    System.out.println( "Thread " + name + " read " + scan.size() +" bins with " + annotationCount + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time );
 			_status++;
     	}
     	
     	private void modify( String name ) {
-    		
-    		//System.out.println( "Thread " + name + " writing " + _data.getUUID() );  		
+
+            if ( VERBOSE )
+    		    System.out.println( "Thread " + name + " writing " + _data.getUUID() );
     		JSONObject json = _data.toJSON();    		
     		try {
     			
@@ -129,7 +163,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     			e.printStackTrace(); 
     		}
     		
-    		AnnotationData<?> newData = JSONAnnotation.fromJSON( json );
+    		AnnotationData<?> newData = JSONAnnotation.fromJSON(json);
     		
 			_service.modify( TEST_LAYER_NAME, _data, newData );
 			_data = newData;
@@ -137,8 +171,10 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	}
     	
     	private void remove( String name ) {
-    		
-    		//System.out.println( "Thread " + name + " removing " + _data.getUUID() );   		    	
+
+            if ( VERBOSE )
+    		    System.out.println( "Thread " + name + " removing " + _data.getUUID() );
+
 			_service.remove( TEST_LAYER_NAME, _data );
 			_status++;
     	}
@@ -221,56 +257,48 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	}
 	
 	
-	//@Test
+	@Test
 	public void concurrentTest() {
-		
-		try {
 
-			long start = System.currentTimeMillis();
-		    	
-			List<Thread> threads = new LinkedList<>();
-			
-			// write / read
-			for (int i=0; i<NUM_THREADS; i++) {
-							
-				Thread t = new Thread( new Tester( ""+i ) );
-				threads.add( t );			
-				t.start();
-			}
-			
-			for( Thread t : threads ) {
-				try {
-					t.join();
-				} catch ( Exception e ) {
-					e.printStackTrace();
-				}
-			}
-	
-			// ensure everything was removed
-			Map<BinIndex, List<AnnotationData<?>>> scan = readAll();
-	    	printData( scan );
-	    	Assert.assertTrue( scan.size() == 0 );
-	    	
-	    	long end = System.currentTimeMillis();
-	    	double time = ((end-start)/1000.0);
-			System.out.println( "Completed in " + time + " seconds");
-			
-			double sum = 0;
-			int count = 0;
-			for ( List<Double> t : _readTimesPerEntry.values() ) {
-				for ( Double d : t ) {
-					sum += d;
-					count++;
-				}			
-			}	
-			System.out.println( "Average read times of " + ( sum / count ) + " seconds per scan");
-			
-		} finally {
-	    	// Drop table
-	    	System.out.println("Disabling and dropping table");
-	    	((HBaseAnnotationIO)_io).dropTable(TEST_LAYER_NAME);
-		}
-		
+        long start = System.currentTimeMillis();
+
+        List<Thread> threads = new LinkedList<>();
+
+        // write / read
+        for (int i=0; i<NUM_THREADS; i++) {
+
+            Thread t = new Thread( new Tester( ""+i ) );
+            threads.add( t );
+            t.start();
+        }
+
+        for( Thread t : threads ) {
+            try {
+                t.join();
+            } catch ( Exception e ) {
+                e.printStackTrace();
+            }
+        }
+
+        // ensure everything was removed
+        Map<BinIndex, List<AnnotationData<?>>> scan = readAll();
+        printData( scan );
+        Assert.assertTrue( scan.size() == 0 );
+
+        long end = System.currentTimeMillis();
+        double time = ((end-start)/1000.0);
+        System.out.println( "Completed in " + time + " seconds");
+
+        double sum = 0;
+        int count = 0;
+        for ( List<Double> t : _readTimesPerEntry.values() ) {
+            for ( Double d : t ) {
+                sum += d;
+                count++;
+            }
+        }
+        System.out.println( "Average read times of " + ( sum / count ) + " seconds per scan");
+
 		
 	}
 	
@@ -282,18 +310,20 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	return scan;
 
 	}
+
+    private TileIndex getRandomTile() {
+
+        final int MAX_DEPTH = 4;
+        int level = (int)(Math.random() * MAX_DEPTH);
+        int x = (int)(Math.random() * (level * (1 << level)) );
+        int y = (int)(Math.random() * (level * (1 << level)) );
+        return new TileIndex( level, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
+    }
 	
-	private Map<BinIndex, List<AnnotationData<?>>> readRandom() {
-		
-		final int MAX_DEPTH = 4;
-		int level = (int)(Math.random() * MAX_DEPTH);
-		int x = (int)(Math.random() * (level * (1 << level)) );
-		int y = (int)(Math.random() * (level * (1 << level)) );
-		TileIndex tile = new TileIndex( level, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
+	private Map<BinIndex, List<AnnotationData<?>>> readRandom( TileIndex tile ) {
 
 		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( null, TEST_LAYER_NAME, tile );
     	return scan;
-
 	}
 
 }

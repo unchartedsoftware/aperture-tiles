@@ -23,15 +23,14 @@
  */
 package com.oculusinfo.twitter.init;
 
-import java.util.List;
-
-import org.apache.avro.file.CodecFactory;
-
 import com.oculusinfo.binning.io.serialization.StandardTileSerializerFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.twitter.binning.TwitterDemoAvroSerializer;
+import org.apache.avro.file.CodecFactory;
+
+import java.util.List;
 
 public class TwitterTileSerializationFactory extends StandardTileSerializerFactory {
     public static StringProperty TWITTER_SERIALIZER_TYPE = new StringProperty("type",

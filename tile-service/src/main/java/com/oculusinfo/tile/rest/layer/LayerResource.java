@@ -24,12 +24,13 @@
 package com.oculusinfo.tile.rest.layer;
 
 
-
-import java.util.List;
-import java.util.UUID;
-
+import com.google.inject.Inject;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
+import com.oculusinfo.binning.util.JsonUtilities;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import oculus.aperture.common.rest.ApertureServerResource;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,12 +42,8 @@ import org.restlet.resource.ResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.oculusinfo.binning.metadata.PyramidMetaData;
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.binning.util.JsonUtilities;
+import java.util.List;
+import java.util.UUID;
 
 
 

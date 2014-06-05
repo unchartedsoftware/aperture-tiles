@@ -25,10 +25,7 @@
 package com.oculusinfo.math.linearalgebra;
 
 import junit.framework.Assert;
-
 import org.junit.Test;
-
-import com.oculusinfo.math.linearalgebra.Vector;
 
 public class VectorTests {
     @Test

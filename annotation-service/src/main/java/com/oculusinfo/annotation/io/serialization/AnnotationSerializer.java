@@ -23,12 +23,12 @@
  */
 package com.oculusinfo.annotation.io.serialization;
 
+import com.oculusinfo.annotation.data.AnnotationData;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-
-import com.oculusinfo.annotation.*;
 
 public interface AnnotationSerializer extends Serializable {
 	

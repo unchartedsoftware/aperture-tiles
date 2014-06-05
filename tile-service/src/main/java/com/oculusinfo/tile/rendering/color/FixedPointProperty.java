@@ -24,12 +24,11 @@
  */
 package com.oculusinfo.tile.rendering.color;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
 	private String _name;

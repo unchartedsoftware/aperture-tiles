@@ -23,12 +23,12 @@
  */
 package com.oculusinfo.tile.init.providers;
 
-import java.util.List;
-
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.TilePyramidFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
+
+import java.util.List;
 
 public class StandardTilePyramidFactoryProvider implements FactoryProvider<TilePyramid> {
 	@Override

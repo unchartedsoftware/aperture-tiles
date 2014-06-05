@@ -23,13 +23,9 @@
  */
 package com.oculusinfo.annotation.cache.impl;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.HashSet;
-import java.util.Map;
+import com.oculusinfo.annotation.cache.AnnotationCache;
 
-import com.oculusinfo.annotation.cache.*;
+import java.util.*;
 	
 /**
  * Simple Least-Recently-Used cache that extends LinkedHashMap for its internal map. As

@@ -24,10 +24,9 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import org.json.JSONException;
-
 import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import org.json.JSONException;
 
 public class DoubleJsonSerializer extends GenericJSONSerializer<Double> {
 	private static final long serialVersionUID = -9050739153280154898L;

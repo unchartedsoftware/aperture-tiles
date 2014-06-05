@@ -24,12 +24,11 @@
  */
 package com.oculusinfo.tile.rest;
 
-import java.util.List;
-
-import org.json.JSONObject;
-
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.JSONProperty;
+import org.json.JSONObject;
+
+import java.util.List;
 
 /**
  * This {@link ConfigurableFactory} is meant to create {@link RequestParams} objects that keep
