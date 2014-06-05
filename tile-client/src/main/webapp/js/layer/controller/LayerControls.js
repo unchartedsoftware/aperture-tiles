@@ -455,8 +455,13 @@ define(function (require) {
         };
 
         if (filterAxisConfiguration) {
-            val = parseFloat(filterAxisConfiguration.levelMinimums[filterAxisConfiguration.worldMap.getZoom()]);
-            increment = (parseFloat(filterAxisConfiguration.levelMaximums[filterAxisConfiguration.worldMap.getZoom()]) - val) / majorTicks;
+        	if (filterAxisConfiguration.levelMinFreq) {
+        		val = parseFloat(filterAxisConfiguration.levelMinFreq[filterAxisConfiguration.worldMap.getZoom()]);
+        		increment = (parseFloat(filterAxisConfiguration.levelMaxFreq[filterAxisConfiguration.worldMap.getZoom()]) - val) / majorTicks;
+        	} else {
+        		val = parseFloat(filterAxisConfiguration.levelMinimums[filterAxisConfiguration.worldMap.getZoom()]);
+        		increment = (parseFloat(filterAxisConfiguration.levelMaximums[filterAxisConfiguration.worldMap.getZoom()]) - val) / majorTicks;
+        	}
         } else {
             val = 0;
             increment = 10 / majorTicks;
@@ -494,8 +499,13 @@ define(function (require) {
         };
 
         if (filterAxisConfiguration) {
-            val = parseFloat(filterAxisConfiguration.levelMinimums[filterAxisConfiguration.worldMap.getZoom()]);
-            increment = (parseFloat(filterAxisConfiguration.levelMaximums[filterAxisConfiguration.worldMap.getZoom()]) - val) / length;
+        	if (filterAxisConfiguration.levelMinFreq) {
+        		val = parseFloat(filterAxisConfiguration.levelMinFreq[filterAxisConfiguration.worldMap.getZoom()]);
+        		increment = (parseFloat(filterAxisConfiguration.levelMaxFreq[filterAxisConfiguration.worldMap.getZoom()]) - val) / length;
+        	} else {
+        		val = parseFloat(filterAxisConfiguration.levelMinimums[filterAxisConfiguration.worldMap.getZoom()]);
+        		increment = (parseFloat(filterAxisConfiguration.levelMaximums[filterAxisConfiguration.worldMap.getZoom()]) - val) / length;
+        	}
         } else {
             val = 0;
             increment = 10 / length;
