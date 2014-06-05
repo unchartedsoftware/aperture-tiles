@@ -117,7 +117,9 @@ define(function (require) {
 
             var tilekey, binkey;
 
-            this.addPointControl.activate();
+            if (this.accessibility.write) {
+                this.addPointControl.activate();
+            }
 
             // un-select all features
             this.highlightControl.unselectAll();

@@ -251,19 +251,19 @@ require(['./FileLoader',
 				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-                        $.when(ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap)).done( function( layersFromServer ) {
+                        $.when( ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap) ).done( function( serverLayers ) {
                             var layer,
                             	layerInfo,
                             	filterAxisConfig;
                             
-                            layerInfo = layersFromServer.getSubLayerInfosById();
+                            layerInfo = serverLayers.getSubLayerInfosById();
 
                             for(layer in layerInfo){
                                 if(layerInfo.hasOwnProperty( layer )){
                                     filterAxisConfig = layerInfo[ layer ].meta;
                                 }
                             }
-                            filterAxisConfig.worldMap = worldMap;
+                            filterAxisConfig.map = worldMap;
                             new LayerControls('layer-controls-content', uiMediator.getLayerStateMap(), filterAxisConfig).noop();
                         });
 			        }

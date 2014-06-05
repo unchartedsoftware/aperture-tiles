@@ -409,11 +409,6 @@ define(function (require) {
                 measureLabelMaxDimensions( $temp );
                 $temp.remove();
 
-                console.log(that.position);
-                console.log( "MAX_LABEL_WIDTH " + that.MAX_LABEL_WIDTH );
-                console.log( "MAX_LABEL_HEIGHT " + that.MAX_LABEL_HEIGHT );
-                console.log( "MAX_LABEL_UNROTATED_WIDTH " + that.MAX_LABEL_UNROTATED_WIDTH );
-
                 // set flag so these do not need to be calculated again
                 that.elementDimensionsCalculated = true;
             }

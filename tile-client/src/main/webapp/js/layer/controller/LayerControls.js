@@ -97,7 +97,7 @@ define(function (require) {
      *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (sortedLayers, index, $parentElement, controlsMap, filterAxisConfiguration) {
+    addLayer = function (sortedLayers, index, $parentElement, controlsMap, filterAxisSpec) {
         var $cell,
             $filterSlider,
             $opacitySlider,
@@ -183,7 +183,7 @@ define(function (require) {
             $layerContent.append($cell);
 
             $cell.append($('<div class="slider-label">Filter</div>'));
-            $filterSlider = $('<div id="' + "filter-slider-" + name + '"></div>');
+            $filterSlider = $('<div class="filter-slider-img"></div>');
             $filterSlider.slider({
                 range: true,
                 min: 0,
@@ -203,11 +203,11 @@ define(function (require) {
 
             //create the filter axis container and append it to the .filter-slider
             //jquery gets confused if ".", ",", and " " are not removed.
-            $filterAxis = $('<div id="filter-axis-' + name.replace(/\./g, '_dot_').replace(/\,/g, '').replace(/\ /g, '_') + '" class="filter-axis"></div>');
+            $filterAxis = $('<div class="filter-axis"></div>');
             $cell.append($filterAxis);
 
             //create the filter axis
-            generateFilterAxis($filterAxis, filterAxisConfiguration);
+            generateFilterAxis( $filterAxis, filterAxisSpec );
         } else {
             $filterSlider = null;
         }
@@ -352,7 +352,7 @@ define(function (require) {
             } else if (fieldName === "rampImageUrl") {
                 controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
             } else if (fieldName === "zIndex") {
-                replaceLayers(sortLayers(layerStateMap), $layersControlListRoot, controlsMap);
+                replaceLayers( sortLayers(layerStateMap), $layersControlListRoot, controlsMap );
             }
         };
     };
@@ -365,7 +365,7 @@ define(function (require) {
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap, filterAxisConfiguration) {
+    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap, filterAxisSpec ) {
         var i, key, sortedLayerStateList;
         sortedLayerStateList = sortLayers(layerStateMap);
         $layerControlsContainer.empty();
@@ -377,7 +377,7 @@ define(function (require) {
         }
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStateList.length; i += 1) {
-            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, filterAxisConfiguration);
+            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, filterAxisSpec);
         }
     };
 
@@ -407,13 +407,13 @@ define(function (require) {
      *  note - 5 major and 4 minor tick marks will be created.
      * @param $filterAxis the tick mark container
      */
-    generateFilterAxis = function ($filterAxis, filterAxisConfiguration) {
+    generateFilterAxis = function ($filterAxis, filterAxisSpec) {
         var axisTicks = '<div class="filter-axis-tick-major filter-axis-tick-first"></div>', //the first tick
             major = false, //start with a minor tick
             majorCount = 1,
             numberOfInnerTicks = 7,
             i,
-            $labelDiv = $('<div id="' + ($filterAxis[0].id).replace('axis', 'axis-label') + '" class="filter-axis-label-container"></div>');
+            $labelDiv = $('<div class="filter-axis-label-container"></div>');
 
         //create the inner ticks
         for(i = 0; i < numberOfInnerTicks; i++) {
@@ -429,9 +429,9 @@ define(function (require) {
 
         //add the last tick
         axisTicks += '<div class="filter-axis-tick-major filter-axis-tick-last"></div>';
-        $filterAxis.html('<div id="'+ $filterAxis[0].id.replace('axis', 'axis-ticks') +'" class="filter-axis-ticks-container">' + axisTicks + '</div>');
+        $filterAxis.html('<div class="filter-axis-ticks-container">' + axisTicks + '</div>');
         $filterAxis.append($labelDiv);
-        generateFilterAxisLabels(majorCount, $labelDiv, filterAxisConfiguration);
+        generateFilterAxisLabels(majorCount, $labelDiv, filterAxisSpec);
     };
 
     /** Generates the filter labels and their initial values.
@@ -439,14 +439,14 @@ define(function (require) {
      * @param majorTicks the number of major tick marks
      * @param $labelDiv the label container
      */
-    generateFilterAxisLabels = function(majorTicks, $labelDiv, filterAxisConfiguration){
+    generateFilterAxisLabels = function(majorTicks, $labelDiv, filterAxisSpec){
         var html,
             val,
             increment,
             unitSpec,
             i;
 
-        filterAxisConfiguration['label-container'] = $labelDiv[0].id;
+        filterAxisSpec.$labelDiv = $labelDiv;
 
         unitSpec = {
             'allowStepDown' : true,
@@ -454,13 +454,13 @@ define(function (require) {
             'type': 'b'
         };
 
-        if (filterAxisConfiguration) {
-        	if (filterAxisConfiguration.levelMinFreq) {
-        		val = parseFloat(filterAxisConfiguration.levelMinFreq[filterAxisConfiguration.worldMap.getZoom()]);
-        		increment = (parseFloat(filterAxisConfiguration.levelMaxFreq[filterAxisConfiguration.worldMap.getZoom()]) - val) / majorTicks;
+        if (filterAxisSpec) {
+        	if (filterAxisSpec.levelMinFreq) {
+        		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
+        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
         	} else {
-        		val = parseFloat(filterAxisConfiguration.levelMinimums[filterAxisConfiguration.worldMap.getZoom()]);
-        		increment = (parseFloat(filterAxisConfiguration.levelMaximums[filterAxisConfiguration.worldMap.getZoom()]) - val) / majorTicks;
+        		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
+        		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
         	}
         } else {
             val = 0;
@@ -483,9 +483,9 @@ define(function (require) {
         $labelDiv.html(html);
     };
 
-    //called on worldMap zoom event
-    updateAxisLabels = function(filterAxisConfiguration){
-        var $labels = $('#' + filterAxisConfiguration['label-container']),
+    //called on map zoom event
+    updateAxisLabels = function(filterAxisSpec){
+        var $labels = filterAxisSpec.$labelDiv,
             val,
             increment,
             unitSpec,
@@ -498,13 +498,13 @@ define(function (require) {
             'type': 'b'
         };
 
-        if (filterAxisConfiguration) {
-        	if (filterAxisConfiguration.levelMinFreq) {
-        		val = parseFloat(filterAxisConfiguration.levelMinFreq[filterAxisConfiguration.worldMap.getZoom()]);
-        		increment = (parseFloat(filterAxisConfiguration.levelMaxFreq[filterAxisConfiguration.worldMap.getZoom()]) - val) / length;
+        if (filterAxisSpec) {
+        	if (filterAxisSpec.levelMinFreq) {
+        		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
+        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / length;
         	} else {
-        		val = parseFloat(filterAxisConfiguration.levelMinimums[filterAxisConfiguration.worldMap.getZoom()]);
-        		increment = (parseFloat(filterAxisConfiguration.levelMaximums[filterAxisConfiguration.worldMap.getZoom()]) - val) / length;
+        		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
+        		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / length;
         	}
         } else {
             val = 0;
@@ -525,17 +525,17 @@ define(function (require) {
          *
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
-        init: function ( controlsId, layerStateMap, filterAxisConfig ) {
+        init: function ( controlsId, layerStateMap, filterAxisSpec ) {
             var layerState;
 
             // "Private" vars
             this.controlsMap = {};
-            this.filterAxisConfiguration = filterAxisConfig;
+            this.filterAxisSpec = filterAxisSpec;
 
             //create a listener for updating the filter axis labels
-            if (this.filterAxisConfiguration) {
-                this.filterAxisConfiguration.worldMap.on('zoomend', function () {
-                    updateAxisLabels(filterAxisConfig);
+            if (this.filterAxisSpec) {
+                this.filterAxisSpec.map.on('zoomend', function () {
+                    updateAxisLabels( filterAxisSpec );
                 });
             }
 
@@ -543,7 +543,7 @@ define(function (require) {
             this.$layerControlsContainer = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap, this.filterAxisConfiguration);
+            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap, this.filterAxisSpec);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
                     layerStateMap[layerState].addListener(makeLayerStateObserver(
