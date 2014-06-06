@@ -78,10 +78,5 @@
 				"allowStepDown" : false
 			}
 		}
-	],
-	"TileBorderConfig" : {
-		"color" : "red",
-		"weight" : "1px",
-		"style" : "solid"
-	}
+	]
 }
