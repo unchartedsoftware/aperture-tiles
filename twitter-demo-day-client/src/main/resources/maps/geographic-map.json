@@ -112,5 +112,10 @@
 				"allowStepDown" : false
 			}
 		}
-	]
+	],
+		"TileBorderConfig" : {
+		"color" : "white",
+		"weight" : "1px",
+		"style" : "solid"
+	}
 }
