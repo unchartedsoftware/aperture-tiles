@@ -335,21 +335,6 @@
             var layerDeferreds = LayerService.requestLayers(),
                 mapDeferreds = MapService.requestMaps(),
                 $tabsPlotsUl = $('#tabs-plots ul');
-            /**
-             * getBitcoinMapConfig relies on each map returned from MapService.requestMaps id to contain the
-             * string 'bitcoin' it filters the maps by the UrlVar dataset and the mapID provided.
-             */
-            var getBitcoinMapConfig = function(maps, mapID){
-                var length = maps.length,
-                    i=0;
-                for(i; i<length; i++){
-                    if (maps[i].id
-                        && maps[i].id.toLowerCase().trim().indexOf(datasetLowerCase) != -1
-                        && maps[i].id === mapID){
-                        return maps[i];
-                    }
-                }
-            };
             
             var getLayerConfig = function(layer) {
             	return [{
