@@ -60,7 +60,7 @@ import java.util.concurrent.ConcurrentMap;
 public class ConcurrentServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
-	static final int NUM_THREADS = 50;
+	static final int NUM_THREADS = 8;
 
 	protected AnnotationService _service;
 
