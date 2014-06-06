@@ -80,11 +80,6 @@ define(function (require) {
 
         onClick: function(event, index) {
 
-            this.clientState.setClickState( event.data.tilekey, {
-                tag : event.data.bin.value[index].tag,
-                index : index
-            });
-
             TwitterUtil.createDetailsOnDemand( this.map, event.data, index, DetailsOnDemand );
         },
 
@@ -173,7 +168,6 @@ define(function (require) {
                 return true; // swallow event
             });
 
-
             this.bars.map('opacity').from( function() {
                 return that.opacity;
             })
@@ -201,12 +195,15 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = 0; //that.clientState.hoverState.userData.index;
+                /*
+                var tagIndex = that.clientState.hoverState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;
                     default: return "- "+this.bin.value[tagIndex].negative;
                 }
+                */
+                return "";
             });
             this.summaryLabel.map('offset-y').from(function(index) {
                 return (-that.TILE_SIZE/2) + (that.VERTICAL_BUFFER-4) + (14 * index);
