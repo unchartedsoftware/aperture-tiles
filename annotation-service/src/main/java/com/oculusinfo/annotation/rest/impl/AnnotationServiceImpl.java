@@ -171,7 +171,6 @@ public class AnnotationServiceImpl implements AnnotationService {
             return newAnnotation.getCertificate();
 
         } catch ( Exception e ) {
-            e.printStackTrace();
             throw new IllegalArgumentException( e.getMessage() );
         } finally {
             _lock.writeLock().unlock();
@@ -197,7 +196,6 @@ public class AnnotationServiceImpl implements AnnotationService {
     		return getDataFromTiles( layer, query, filters, pyramid );
     		
     	} catch ( Exception e ) {
-    		e.printStackTrace();
     		throw new IllegalArgumentException( e.getMessage() );
     	} finally { 		
     		_lock.readLock().unlock();
@@ -207,36 +205,31 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 	public void remove( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
 
-		try {
+        _lock.writeLock().lock();
+        try {
 
 			AnnotationConfiguration config = getConfiguration( layer );
             TilePyramid pyramid = config.produce(TilePyramid.class);
-			
-			_lock.writeLock().lock();		
-			try {
-				
-				/*
-	    		 *  ensure request is coherent with server state, if client is operating
-	    		 *  on a previous data state, prevent io corruption by throwing an exception
-	    		 */
-	    		if ( isRequestOutOfDate( layer, annotation ) ) {
-	    			throw new IllegalArgumentException("Client is out of sync with Server, "
-													 + "REMOVE operation aborted. It is recommended "
-													 + "upon receiving this exception to refresh all client annotations");       		
-	    		}
-				// remove the certificates from tiles
-				removeDataFromTiles( layer, annotation, pyramid );
-				// remove data from io
-				removeDataFromIO( layer, annotation.getCertificate() );
-				
-			} finally {
-				_lock.writeLock().unlock();
-			}
-			
+
+            /*
+             *  ensure request is coherent with server state, if client is operating
+             *  on a previous data state, prevent io corruption by throwing an exception
+             */
+            if ( isRequestOutOfDate( layer, annotation ) ) {
+                throw new IllegalArgumentException("Client is out of sync with Server, "
+                                                 + "REMOVE operation aborted. It is recommended "
+                                                 + "upon receiving this exception to refresh all client annotations");
+            }
+            // remove the certificates from tiles
+            removeDataFromTiles( layer, annotation, pyramid );
+            // remove data from io
+            removeDataFromIO( layer, annotation.getCertificate() );
+
 		} catch ( Exception e ) {
-			e.printStackTrace();
     		throw new IllegalArgumentException( e.getMessage() );
-		}
+        } finally {
+            _lock.writeLock().unlock();
+        }
 	}
 
 

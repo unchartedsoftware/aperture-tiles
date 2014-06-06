@@ -103,8 +103,8 @@ public class AnnotationJSONTests extends AnnotationTestsBase {
 		
 		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : before ) {
 			
-			JSONObject json = AnnotationManipulator.tileToJSON(tile);
-			after.add( AnnotationManipulator.getTileFromJSON( json ) );
+			JSONObject json = tileToJSON( tile );
+			after.add( getTileFromJSON( json ) );
 		}
 		
 		

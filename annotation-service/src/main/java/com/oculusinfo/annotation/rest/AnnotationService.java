@@ -63,7 +63,7 @@ public interface AnnotationService {
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public abstract void remove( String layer, AnnotationData<?> annotation );
+	public abstract void remove( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 
 	
 	/*

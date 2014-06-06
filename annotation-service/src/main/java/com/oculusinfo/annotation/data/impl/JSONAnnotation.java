@@ -138,8 +138,10 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
 
 			String group = json.getString("group");
             JSONObject data = json.getJSONObject("data");
+
             UUID uuid;
             Long timestamp;
+
             try {
                 // certificate may not exist on write
                 JSONObject certificate = json.getJSONObject("certificate");
