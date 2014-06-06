@@ -202,7 +202,6 @@ define(function (require) {
             $cell.append($filterSlider);
 
             //create the filter axis container and append it to the .filter-slider
-            //jquery gets confused if ".", ",", and " " are not removed.
             $filterAxis = $('<div class="filter-axis"></div>');
             $cell.append($filterAxis);
 

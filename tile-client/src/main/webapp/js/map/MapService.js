@@ -102,6 +102,8 @@ define(function (require) {
                 return;
             }
 
+            plotDiv = plotDiv? ('#' + plotDiv) : '';
+
             if(olTileImageConfig === 'default'){
                 olTileImageConfig = {
                     "color" : "rgba(255, 255, 255, .5)",
@@ -124,7 +126,7 @@ define(function (require) {
             }
 
             $(document.body).prepend(
-                $('<style type="text/css"> #' + plotDiv + ' .olTileImage {' +
+                $('<style type="text/css">' + plotDiv + ' .olTileImage {' +
                     'border-left : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +
                     '; border-top : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +';}' +
                     ' </style>')
