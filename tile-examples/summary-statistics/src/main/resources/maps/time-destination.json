@@ -26,6 +26,7 @@
 	],
 
 	"id" : "bitcoin Time vs. Destination",
+	"dataset" : "bitcoin",
 	"description" : "Bitcoin Time vs. Destination ID",
 
 	"PyramidConfig": {
@@ -33,7 +34,7 @@
 		"minX" : 1230958800000,
 		"maxX" : 1365566400000,
 		"minY" : 0,
-		"maxY" : 6336769
+		"maxY" : 6336768
 	},
 
 	"MapConfig" : {
@@ -50,7 +51,6 @@
 			"title" : "Time",
 			"position" : "bottom",
             "repeat": false,
-			"isOpen" : false,
 			"intervalSpec" : {
 				"type" : "percentage",
 				"increment" : 20,
@@ -67,7 +67,6 @@
 			"title" : "Destination ID",
 			"position" : "left",
             "repeat" : false,
-			"isOpen" : false,
 			"intervalSpec" : {
 				"type" : "value",
 				"increment" : 1000000,

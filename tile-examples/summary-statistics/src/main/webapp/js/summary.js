@@ -350,32 +350,16 @@
                     }
                 }
             };
-
-            var getLayer = function(layers, pyramidConfig, mapID){
-                var layer;
-                // bitcoin
-                if (datasetLowerCase === 'bitcoin') {
-                    $.each(layers, function (pk, pv) {
-                        if (pv.id === datasetLowerCase) {
-                            $.each(pv.children, function (k, v) {
-                                if (PyramidFactory.pyramidsEqual(v.pyramid, pyramidConfig)
-                                        && (v.name.indexOf(mapID.replace('bitcoin', '').trim()) != -1)){
-                                    layer = v;
-                                }
-                            });
-                        }
-                    });
-                } else { // twitter
-                    layer = layers;
-                }
-                return [{
+            
+            var getLayerConfig = function(layer) {
+            	return [{
                     "layer": layer.id,
                     "domain": layer.renderers[0].domain,
                     "name": layer.name,
                     "renderer": layer.renderers[0].renderer,
                     "transform": layer.renderers[0].transform
                 }];
-            };
+            }
 
             var generateMap = function(mapID, mapConfig, layerConfig, layer){
                 var tabLayerId = getTabLayerId(mapID),
@@ -430,7 +414,7 @@
                                 filterAxisConfig = layerInfo[ key ].meta;
                             }
                         }
-                        filterAxisConfig.worldMap = worldMap;
+                        filterAxisConfig.map = worldMap;
                         new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap(), filterAxisConfig);
                     });
 
@@ -448,38 +432,31 @@
             };
 
             $.when( mapDeferreds, layerDeferreds).done( function( maps, layers ) {
-                var twitterComplete = false;
-
+                var dataset = datasetLowerCase.split(".")[0], twitterComplete = false;
+                
                 //iterate over each of the cross plots, generate the map, and container div
-                $.each(maps, function (pk, pv) {
+                $.each(maps, function (pk, mapConfig) {
                     // Initialize our maps...
-                    var mapID,
+                    var layer,
+                        mapID,
                         layerConfig,
                         mapConfig;
 
-                    if (datasetLowerCase === 'bitcoin' && pv.id
-                        && pv.id.toLowerCase().trim().indexOf(datasetLowerCase) != -1) {
-                            mapID = pv.id;
-                            layerConfig = getLayer(layers, pv.PyramidConfig, mapID);
-                            mapConfig = getBitcoinMapConfig(maps, mapID);
-                            generateMap(mapID, mapConfig, layerConfig);
-                    } else if (datasetLowerCase === 'twitter' && !twitterComplete){
-                        var layer,
-                            i = 0,
-                            j;
-                        twitterComplete = true;
-                        for(i; i < layers.length; i++){
-                            if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
-                                for (j = 0; j < layers[i].children.length; j++) {
-                                    mapID = layers[i].children[j].name;
-                                    layer = layers[i].children[j];
-                                    layerConfig = getLayer(layer);
-                                    mapConfig = pv;
-                                    generateMap(mapID, mapConfig, layerConfig, layer);
-                                }
-                            }
-                        }
-                    }
+                    // determine whether the map matches our dataset
+                    if (mapConfig.dataset.toLowerCase().trim() === dataset) {
+                    	// for each layer if it matches our dataset and this map then add
+                    	$.each(layers, function (pk, pv) {
+                    		if (pv.id.toLowerCase().trim() === dataset) {
+                    			$.each(pv.children, function (k, layer) {
+                    				if (PyramidFactory.pyramidsEqual(layer.pyramid, mapConfig.PyramidConfig)){
+                    					mapID = layer.name;
+                    					layerConfig = getLayerConfig(layer);
+                    					generateMap(layer.name, mapConfig, layerConfig, layer);
+                    				}
+                    			});
+                    		}
+                    	});
+                	}
                 });
                 
                 $tabsPlotsUl.each(function () {
