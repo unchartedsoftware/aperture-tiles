@@ -96,7 +96,7 @@ define(function (require) {
                 html: function() {
 
                     var html = '',
-                        $html = $(''),
+                        $html = $('<div id="'+this.tilekey+'" class="aperture-tile"></div>'),
                         $elem,
                         $summaries,
                         values = this.bin.value,
@@ -109,7 +109,7 @@ define(function (require) {
                     // create count summaries
                     $summaries = TwitterUtil.createTweetSummaries();
 
-                    $html = $html.add( $summaries );
+                    $html.append( $summaries );
 
                     for (i=0; i<count; i++) {
 
@@ -137,7 +137,7 @@ define(function (require) {
                         TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, onClick, DetailsOnDemand );
                         TwitterUtil.injectClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
 
-                        $html = $html.add( $elem );
+                        $html.append( $elem );
                     }
 
                     return $html;

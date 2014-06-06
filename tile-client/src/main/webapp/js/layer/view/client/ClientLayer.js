@@ -66,29 +66,22 @@ define(function (require) {
 
             var that = this;
 
-            function attachMap(map) {
-
-                // add map and zoom/pan event handlers
-                that.map = map;
-
-                that.map.on('move', function() {
-					// cal map update on pan end
-                    that.onMapUpdate();
-                });
-            }
-
             // initialize attributes
             this.id = id;
             this.defaultViewIndex = 0;
             this.tileViewMap = {};      	// maps a tile key to its view index
             this.views = [];				// array of all views
-			this.clientState = clientState; 	// global mouse state to be shared by all views
+			this.clientState = clientState; 	// global client state to be shared by all views
             this.opacity = 1.0;
             this.isVisible = true;
 
-            // attach map
-            attachMap(map);
+            this.map = map;
+            this.map.on('move', function() {
+                // cal map update on pan end
+                that.onMapUpdate();
+            });
         },
+
 
         setViews: function( viewSpecs ) {
 
@@ -104,6 +97,7 @@ define(function (require) {
             // trigger callback to draw first frame
             this.onMapUpdate();
         },
+
 
         setOpacity: function( opacity ) {
 

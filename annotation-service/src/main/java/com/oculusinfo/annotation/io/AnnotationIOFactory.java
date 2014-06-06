@@ -23,44 +23,98 @@
  */
 package com.oculusinfo.annotation.io;
 
-import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
-import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
-import com.oculusinfo.annotation.rest.AnnotationInfo;
-import org.json.JSONObject;
+import com.google.common.collect.Lists;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.JSONProperty;
+import com.oculusinfo.factory.properties.StringProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.List;
 
 
-public class AnnotationIOFactory  {
+/**
+ * Factory class to create the standard types of AnnotationIOs
+ *
+ * @author nkronenfeld
+ */
+public class AnnotationIOFactory extends ConfigurableFactory<AnnotationIO> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationIOFactory.class);
 
-	public static String ANNOTATION_IO_TYPE = "type";
-	public static String HBASE_IO_TYPE = "hbase";
-	public static String FILESYSTEM_IO_TYPE = "file-system";
-	
-	static public AnnotationIO produce( AnnotationInfo info ) throws IOException {
+    public static StringProperty PYRAMID_IO_TYPE        = new StringProperty("type",
+            "The location to and from which to read tile annotations",
+            null,
+            null);
+    public static JSONProperty INITIALIZATION_DATA    = new JSONProperty("data",
+            "Data to be passed to the AnnotationIO for read initialization",
+            null);
 
-		JSONObject data = info.getDataConfiguration();
-		
-		try {
-			JSONObject pyramidio = data.getJSONObject("pyramidio");
-			String type = pyramidio.getString(ANNOTATION_IO_TYPE);
-			if ( type.equals(HBASE_IO_TYPE) ) {
-				
-				return new HBaseAnnotationIO( pyramidio.getString("hbase.zookeeper.quorum"),
-										  	  pyramidio.getString("hbase.zookeeper.port"),
-										  	  pyramidio.getString("hbase.master") );
-				
-			} else if ( type.equals(FILESYSTEM_IO_TYPE) ) {
-				
-				return new FileSystemAnnotationIO( pyramidio.getString("root.path"),
-											  	   pyramidio.getString("extension") );			
-			} else {
-				throw new IOException("AnnotationIO type: '" + type + "' not recognized");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
+    private AnnotationIO _product;
+    public AnnotationIOFactory (ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
+        this(null, parent, path, children);
+    }
+
+    public AnnotationIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
+        super(name, AnnotationIO.class, parent, path);
+
+        _product = null;
+        List<String> annotationTypes = getPyramidTypes(children);
+
+        //use the first factory name for the first child as the default type
+        String defaultType = null;
+        if (annotationTypes.size() > 0) {
+            defaultType = annotationTypes.get(0);
+        }
+
+        //set up the PYRAMID_IO_TYPE property to use all the associated children factory names.
+        PYRAMID_IO_TYPE = new StringProperty("type",
+                "The location to and from which to read tile annotations",
+                defaultType,
+                annotationTypes.toArray(new String[0]));
+
+        addProperty(PYRAMID_IO_TYPE);
+        addProperty(INITIALIZATION_DATA);
+
+        //add any child factories
+        if (children != null) {
+            for (ConfigurableFactory<?> factory : children) {
+                addChildFactory(factory);
+            }
+        }
+
+    }
+
+    private static List<String> getPyramidTypes(List<ConfigurableFactory<?>> childFactories) {
+        List<String> annotationTypes = Lists.newArrayListWithCapacity(childFactories.size());
+
+        //add any child factories
+        if (childFactories != null) {
+            for (ConfigurableFactory<?> factory : childFactories) {
+                String factoryName = factory.getName();
+                if (factoryName != null) {
+                    annotationTypes.add(factoryName);
+                }
+            }
+        }
+
+        return annotationTypes;
+    }
+
+    @Override
+    protected AnnotationIO create () {
+        if (null == _product) {
+            synchronized (this) {
+                if (null == _product) {
+                    String annotationIOType = getPropertyValue(PYRAMID_IO_TYPE);
+
+                    try {
+                        _product = produce(annotationIOType, AnnotationIO.class);
+                    } catch (Exception e) {
+                        LOGGER.error("Error trying to create AnnotationIO", e);
+                    }
+                }
+            }
+        }
+        return _product;
+    }
 }

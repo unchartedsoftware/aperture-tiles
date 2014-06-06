@@ -1,5 +1,15 @@
 @charset "UTF-8";
 
+
+.aperture-tile {
+	position:relative;
+	-webkit-backface-visibility: hidden; 
+			backface-visibility: hidden;
+	height: 256px;
+	width: 256px;
+}
+
+
 /********************************************/
 /* 		       Top Text Sentiment			*/
 /********************************************/
@@ -56,6 +66,8 @@
 	    -2px  2px 2px #000,
 	     2px  5px 5px #000;
 }
+
+
 
 .positive-summaries {
 	color: #09CFFF;

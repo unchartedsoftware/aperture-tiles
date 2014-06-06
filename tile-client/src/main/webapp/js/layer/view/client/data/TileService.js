@@ -152,7 +152,6 @@ define(function (require) {
          */
         requestData: function(requestedTiles, tileSetBounds, callback) {
             var i;
-            // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
                 this.getRequest( requestedTiles[i], tileSetBounds, callback );
             }

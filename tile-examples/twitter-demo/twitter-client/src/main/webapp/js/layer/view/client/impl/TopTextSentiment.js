@@ -85,7 +85,7 @@ define(function (require) {
                 index : event.index[0]
             });
 
-            TwitterUtil.createDetailsOnDemand( this, event.data, event.index[0], DetailsOnDemand );
+            TwitterUtil.createDetailsOnDemand( this.map, event.data, event.index[0], DetailsOnDemand );
         },
 
 
@@ -225,7 +225,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.clientState.hoverState.userData.index;
+                var tagIndex = 0; //that.clientState.hoverState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;

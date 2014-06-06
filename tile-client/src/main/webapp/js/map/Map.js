@@ -48,8 +48,6 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
-            var that = this;
-
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
@@ -77,7 +75,8 @@ define(function (require) {
             this.createRoot();
 
             // if move while map is panning, interrupt pan
-            this.on('moveend', function(){
+            // current doesn't work properly
+            this.on('movestart', function(){
                 if ( that.map.olMap_.panTween ) {
                     that.map.olMap_.panTween.callbacks = null;
                     that.map.olMap_.panTween.stop();
@@ -108,6 +107,8 @@ define(function (require) {
                     left: pos.x + "px"
                 });
             });
+
+            this.trigger('move'); // fire initial move event
         },
 
         getZIndex: function() {
@@ -600,7 +601,7 @@ define(function (require) {
 			case 'panend':
 
 				/*
-				 * ApertureJS 'panend' event is simply an alias to 'moveend' which also triggers
+				 * ApertureJS 'panend' event is an alias to 'moveend' which also triggers
 				 * on 'zoomend'. This intercepts it and ensures 'panend' is not called on a 'zoomend'
 				 * event
 				 */
@@ -633,7 +634,7 @@ define(function (require) {
 			case 'moveend':
             case 'move':
 
-				this.map.olMap_.events.unregister(eventType, this.map.olMap_, callback);
+				this.map.olMap_.events.unregister( eventType, this.map.olMap_, callback );
 				break;
 
 			case 'panend':

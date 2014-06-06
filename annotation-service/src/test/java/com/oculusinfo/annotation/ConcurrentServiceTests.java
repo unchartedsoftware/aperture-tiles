@@ -28,6 +28,8 @@ import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.init.DefaultAnnotationIOFactoryProvider;
+import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
@@ -79,22 +81,29 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 
             //String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
             String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
-            Set<DelegateFactoryProviderTarget<PyramidIO>> ioSet = new HashSet<>();
-            ioSet.add( DefaultPyramidIOFactoryProvider.HBASE.create() );
-            ioSet.add( DefaultPyramidIOFactoryProvider.FILE_SYSTEM.create() );
 
-            FactoryProvider<PyramidIO> ioFactoryProvider = new StandardPyramidIOFactoryProvider( ioSet );
+            Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
+            tileIoSet.add( DefaultPyramidIOFactoryProvider.HBASE.create() );
+            tileIoSet.add( DefaultPyramidIOFactoryProvider.FILE_SYSTEM.create() );
+            FactoryProvider<PyramidIO> tileIoFactoryProvider = new StandardPyramidIOFactoryProvider( tileIoSet );
+
+            Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
+            annotationIoSet.add( DefaultAnnotationIOFactoryProvider.HBASE.create() );
+            annotationIoSet.add( DefaultAnnotationIOFactoryProvider.FILE_SYSTEM.create() );
+            FactoryProvider<AnnotationIO> annotationIoFactoryProvider = new StandardAnnotationIOFactoryProvider( annotationIoSet );
+
             FactoryProvider<TileSerializer<?>> serializerFactoryProvider = new StandardTileSerializationFactoryProvider();
             FactoryProvider<TilePyramid> pyramidFactoryProvider = new StandardTilePyramidFactoryProvider();
             AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
             AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
 
             _service = new AnnotationServiceImpl( configFile,
-                                                        ioFactoryProvider,
-                                                        serializerFactoryProvider,
-                                                        pyramidFactoryProvider,
-                                                        annotationIndexer,
-                                                        annotationSerializer );
+                                                  tileIoFactoryProvider,
+                                                  annotationIoFactoryProvider,
+                                                  serializerFactoryProvider,
+                                                  pyramidFactoryProvider,
+                                                  annotationIndexer,
+                                                  annotationSerializer );
 
     	} catch (Exception e) {
             throw e;

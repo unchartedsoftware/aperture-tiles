@@ -79,12 +79,13 @@ define(function (require) {
 
 
         onClick: function(event, index) {
-            this.clientState.setClickState(event.data.tilekey, {
+
+            this.clientState.setClickState( event.data.tilekey, {
                 tag : event.data.bin.value[index].tag,
                 index : index
             });
 
-            TwitterUtil.createDetailsOnDemand( this, event.data, index, DetailsOnDemand );
+            TwitterUtil.createDetailsOnDemand( this.map, event.data, index, DetailsOnDemand );
         },
 
 
@@ -200,7 +201,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.clientState.hoverState.userData.index;
+                var tagIndex = 0; //that.clientState.hoverState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;

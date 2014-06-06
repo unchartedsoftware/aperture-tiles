@@ -51,6 +51,7 @@ define(function (require) {
             this.xAttr_ = spec.xAttr || null;
             this.yAttr_ = spec.yAttr || null;
             this.idKey_=  spec.idKey || null;
+            this.propagate = spec.propagate === undefined ? true : spec.propagate;
 
             this.Z_INDEX = this.map_.getZIndex() + this.Z_INDEX_OFFSET;
 
@@ -83,18 +84,19 @@ define(function (require) {
 
         createLayerRoot : function() {
             // create layer root div
-            this.$root_ = $('<div class="client-layer" style="position:relative; z-index:'+this.Z_INDEX+';"></div>');
+            this.$root_ = $('<div style="position:relative; z-index:'+this.Z_INDEX+';"></div>');
             // append to map root
             this.map_.getRootElement().append( this.$root_ );
-            // allow mouse events to propagate through to map
-            this.map_.enableEventToMapPropagation( this.$root_ );
+            if ( this.propagate ) {
+                // allow mouse events to propagate through to map
+                this.map_.enableEventToMapPropagation( this.$root_ );
+            }
         },
 
 
         createNodeRoot : function(data) {
-            var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] ),
-                nodeId = data[this.idKey_] || "";
-            return $('<div id="'+nodeId+'" class="client-layer-tile" style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; width: 256px; height:256px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
+            var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] );
+            return $('<div style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
         },
 
 

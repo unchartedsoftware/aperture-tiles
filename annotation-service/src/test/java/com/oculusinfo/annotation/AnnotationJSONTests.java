@@ -24,7 +24,6 @@
 package com.oculusinfo.annotation;
 
 import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.AnnotationManipulator;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;

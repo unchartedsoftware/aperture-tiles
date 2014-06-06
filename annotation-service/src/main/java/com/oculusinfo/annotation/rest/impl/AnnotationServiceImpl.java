@@ -32,7 +32,6 @@ import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.AnnotationManipulator;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.annotation.io.AnnotationIOFactory;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.rest.AnnotationInfo;
 import com.oculusinfo.annotation.rest.AnnotationService;
@@ -69,6 +68,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     private ConcurrentHashMap< UUID, Map<String, Integer> > _filtersByUuid;
 
     private FactoryProvider<PyramidIO>         _pyramidIOFactoryProvider;
+    private FactoryProvider<AnnotationIO>      _annotationIOFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _tileSerializerFactoryProvider;
     private FactoryProvider<TilePyramid>       _tilePyramidFactoryProvider;
         
@@ -81,6 +81,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	@Inject
     public AnnotationServiceImpl( @Named("com.oculusinfo.annotation.config") String annotationConfigurationLocation,
 					    		  FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                                  FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
 					    	      FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
 					    		  FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 					    		  AnnotationIndexer indexer,
@@ -92,6 +93,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_filtersByUuid = new ConcurrentHashMap<>();
 		
 		_pyramidIOFactoryProvider = pyramidIOFactoryProvider;
+        _annotationIOFactoryProvider = annotationIOFactoryProvider;
 		_tileSerializerFactoryProvider = tileSerializerFactoryProvider;
 		_tilePyramidFactoryProvider = tilePyramidFactoryProvider;
 		
@@ -151,8 +153,8 @@ public class AnnotationServiceImpl implements AnnotationService {
                         + "MODIFY operation aborted. It is recommended "
                         + "upon receiving this exception to refresh all client annotations");
             }
-            AnnotationConfiguration config = getConfiguration(layer);
-            TilePyramid pyramid = config.produce(TilePyramid.class);
+            AnnotationConfiguration config = getConfiguration( layer );
+            TilePyramid pyramid = config.produce( TilePyramid.class );
 
 			/*
 			 * Technically you should not have to re-tile the annotation if
@@ -243,6 +245,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 					
 		try {
 			AnnotationConfiguration configFactory = new AnnotationConfiguration( _pyramidIOFactoryProvider,
+                                                                                 _annotationIOFactoryProvider,
 																				 _tileSerializerFactoryProvider,
 																				 _tilePyramidFactoryProvider,
 																				 null, 
@@ -338,7 +341,7 @@ public class AnnotationServiceImpl implements AnnotationService {
             PyramidIO tileIo = config.produce( PyramidIO.class );
             tileIo.initializeForWrite( info.getID() );
             // data io
-            AnnotationIO dataIo = AnnotationIOFactory.produce( _annotationLayersById.get( info.getID() ) );
+            AnnotationIO dataIo = config.produce( AnnotationIO.class );
             dataIo.initializeForWrite( info.getID() );
 
         } catch ( Exception e ) {
@@ -580,7 +583,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 		dataList.add( data );
 
 		try {
-			AnnotationIO io = AnnotationIOFactory.produce( _annotationLayersById.get(layer) );		
+            AnnotationConfiguration config = getConfiguration(layer);
+            AnnotationIO io = config.produce( AnnotationIO.class );
 			io.initializeForWrite( layer );
 			io.writeData( layer, _dataSerializer, dataList );
 
@@ -615,7 +619,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 		dataList.add( data );
 
 		try {
-			AnnotationIO io = AnnotationIOFactory.produce( _annotationLayersById.get(layer) );		
+            AnnotationConfiguration config = getConfiguration( layer );
+			AnnotationIO io = config.produce( AnnotationIO.class );
 			io.removeData( layer, dataList );
 			
 		} catch ( Exception e ) {
@@ -658,7 +663,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 
-			AnnotationIO io = AnnotationIOFactory.produce( _annotationLayersById.get(layer) );
+            AnnotationConfiguration config = getConfiguration( layer );
+            AnnotationIO io = config.produce( AnnotationIO.class );
 			io.initializeForRead( layer );
 			data = io.readData( layer, _dataSerializer, certificates );
 			
