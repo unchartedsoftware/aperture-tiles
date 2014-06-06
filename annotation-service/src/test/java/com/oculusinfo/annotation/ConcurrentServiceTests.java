@@ -23,18 +23,22 @@
  */
 package com.oculusinfo.annotation;
 
+import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.rest.AnnotationService;
-import com.oculusinfo.annotation.rest.impl.CachedAnnotationServiceImpl;
+import com.oculusinfo.annotation.rest.impl.AnnotationServiceImpl;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
@@ -56,17 +60,25 @@ import java.util.concurrent.ConcurrentMap;
 public class ConcurrentServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
-	static final int NUM_THREADS = 4;
+	static final int NUM_THREADS = 50;
 
-	protected AnnotationService _service;	
+	protected AnnotationService _service;
+
+    ConcurrentMap<String, List<Double>> _readTimesPerEntry = new ConcurrentHashMap<>();
+
+    Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
+    List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
+    Random _random = new Random( System.currentTimeMillis() );
+
+    Object decisionLock = new Object();
 
     @Before
     public void setup () { 	
     	
     	try {
 
-            String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
-            //String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
+            //String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
+            String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
             Set<DelegateFactoryProviderTarget<PyramidIO>> ioSet = new HashSet<>();
             ioSet.add( DefaultPyramidIOFactoryProvider.HBASE.create() );
             ioSet.add( DefaultPyramidIOFactoryProvider.FILE_SYSTEM.create() );
@@ -77,13 +89,13 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
             AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
             AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
 
-            _service = new CachedAnnotationServiceImpl( configFile,
+            _service = new AnnotationServiceImpl( configFile,
                                                         ioFactoryProvider,
                                                         serializerFactoryProvider,
                                                         pyramidFactoryProvider,
                                                         annotationIndexer,
                                                         annotationSerializer );
-    		
+
     	} catch (Exception e) {
             throw e;
 		}
@@ -95,210 +107,308 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	_service = null;
     }
 
-    
-    private class WriteReadRemove {
-    	
-    	AnnotationData<?> _data;
-    	int _status = 0;
-    	
-    	WriteReadRemove( AnnotationData<?> data ) {
+    public synchronized AnnotationWrapper getRandomPublicAnnotation() {
+        if ( _publicAnnotations.size() == 0 ) {
+            return null;
+        }
+        int index = _random.nextInt( _publicAnnotations.size() );
+        return _publicAnnotations.get( index );
+    }
+
+    public synchronized void addAnnotationToPublic( AnnotationWrapper annotation ) {
+        _publicAnnotations.add( annotation );
+    }
+
+    public synchronized void removeAnnotationFromPublic( AnnotationWrapper annotation ) {
+        _publicAnnotations.remove( annotation );
+        _remainingAnnotations--;
+    }
+
+    public synchronized int getRemainingAnnotations() {
+        return _remainingAnnotations;
+    }
+
+    private class AnnotationWrapper {
+
+        private AnnotationData<?> _data;
+
+        AnnotationWrapper( AnnotationData<?> data ) {
     		_data = data;
     	}
-    	
-    	private void write( String name ) {
 
+        public synchronized AnnotationData clone() {
+
+            JSONObject json = _data.toJSON();
+            return JSONAnnotation.fromJSON( json );
+        }
+
+        public synchronized void update(AnnotationData<?> newState ) {
+            _data = newState;
+        }
+    	
+    }
+
+    
+	private class Tester implements Runnable {
+
+        private String _name;
+        private List<AnnotationWrapper> _annotations = new LinkedList<>();
+
+        Tester( String name ) {
+
+            // set thread name
+			_name = name;
+            // generate private local annotations
+            for ( int i=0; i<NUM_ENTRIES; i++ ) {
+                _annotations.add( new AnnotationWrapper( generateJSONAnnotation() ) );
+            }
+            // add name to read times map
+            _readTimesPerEntry.put( _name, new LinkedList<Double>() );
+		}
+		
+		public void run() {
+
+            while ( true ) {
+
+                int operation;
+                AnnotationWrapper randomAnnotation;
+
+                // decision process is atomic
+                synchronized( decisionLock ) {
+
+                    if ( getRemainingAnnotations() == 0 && _annotations.size() == 0 ) {
+                        // no more annotations, we are done
+                        return;
+                    }
+
+                    // get a random annotation
+                    randomAnnotation = getRandomPublicAnnotation();
+
+                    if ( randomAnnotation == null ) {
+
+                        // no available public annotations
+                        if ( _annotations.size() > 0 ) {
+                            // local is available
+                            operation = _random.nextInt(2) + 2;     // 2-3 read or write
+                        } else {
+                            // nothing available at the moment
+                            operation = -1;
+                        }
+
+                    } else {
+                        // public annotations available
+                        if ( _annotations.size() > 0 ) {
+                            // public and local both available
+                            operation = _random.nextInt(4);         // 0-3 modify, remove, read or write
+                        } else {
+                            // only public available
+                            operation = _random.nextInt(3);          // 0-2 modify, remove, or read
+                        }
+                    }
+
+                }
+
+                switch ( operation ) {
+
+                    case 0:
+
+                        //  modify
+                        modify( randomAnnotation );
+                        break;
+
+                    case 1:
+
+                        // remove
+                        remove( randomAnnotation );
+                        break;
+
+                    case 2:
+
+                        // read
+                        read();
+                        break;
+
+                    case 3:
+
+                        // write
+                        int index = _random.nextInt( _annotations.size() );
+                        AnnotationWrapper annotation = _annotations.get( index );
+                        _annotations.remove( index );
+                        write( annotation );
+                        break;
+
+                    default:
+
+                        break;
+
+                }
+
+            }
+	    	
+		}
+
+        private void write( AnnotationWrapper annotation ) {
+
+            AnnotationData<?> clone = annotation.clone();
+            _service.write( TEST_LAYER_NAME, annotation.clone() );
             if ( VERBOSE )
-    		    System.out.println( "Thread " + name + " writing " + _data.getUUID() );
+                System.out.println( "Thread " + _name + " successfully wrote " + clone.getUUID() );
+            addAnnotationToPublic( annotation );
+        }
 
-			_service.write( TEST_LAYER_NAME, _data );
-			_status++;
-    	}
-    	
-    	private void read( String name ) {
-    		long start = System.currentTimeMillis();
+        private void read() {
+
+            long start = System.currentTimeMillis();
             TileIndex tile = getRandomTile();
-			Map<BinIndex, List<AnnotationData<?>>> scan = readRandom( tile );
+            Map<BinIndex, List<AnnotationData<?>>> scan = readRandom( tile );
 
             int annotationCount = 0;
             for (List<AnnotationData<?>> annotations : scan.values()) {
                 annotationCount += annotations.size();
             }
 
-			long end = System.currentTimeMillis();
-	    	double time = ((end-start)/1000.0);
-	    	_readTimesPerEntry.get( name ).add( time );
-            if ( VERBOSE )
-	    	    System.out.println( "Thread " + name + " read " + scan.size() +" bins with " + annotationCount + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time );
-			_status++;
-    	}
-    	
-    	private void modify( String name ) {
+            long end = System.currentTimeMillis();
+            double time = ((end-start)/1000.0);
+            _readTimesPerEntry.get( _name ).add( time );
 
             if ( VERBOSE )
-    		    System.out.println( "Thread " + name + " writing " + _data.getUUID() );
-    		JSONObject json = _data.toJSON();    		
-    		try {
-    			
-    			int type = (int)(Math.random() * 2);    		
-        		switch (type) {
-        		
-    	    		case 0:
-    	    			
-    	    			// change position
-    	    			double [] xy = randomPosition();
-    	    			json.put("x", xy[0]);
-    	    			json.put("y", xy[1]);
-    	    			break;
-    	    			
-    	    		default:
-    	    			
-    	    			// change data
-    	    			JSONObject data = new JSONObject();
-    	    			data.put("comment", randomComment() );
-    	    			json.put("data", data);
-    	    			break;
-        		}
-        		
-    		} catch ( Exception e ) { 
-    			e.printStackTrace(); 
-    		}
-    		
-    		AnnotationData<?> newData = JSONAnnotation.fromJSON(json);
-    		
-			_service.modify( TEST_LAYER_NAME, _data, newData );
-			_data = newData;
-			_status++;
-    	}
-    	
-    	private void remove( String name ) {
+                System.out.println( "Thread " + _name + " read " + scan.size() +" bins with " + annotationCount + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time );
+        }
 
-            if ( VERBOSE )
-    		    System.out.println( "Thread " + name + " removing " + _data.getUUID() );
+        private void modify( AnnotationWrapper annotation ) {
 
-			_service.remove( TEST_LAYER_NAME, _data );
-			_status++;
-    	}
-    	
-    	public boolean process( String name ) {
-    		
-    		switch ( _status ) { 		
-    			case 0:
-    			{
-    				write( name );
-    				break;
-    			}
-    			case 1:
-    			{  		   				
-    				read( name );
-    				break;
-    			}
-    			case 2:
-    			{
-    				modify( name );
-    				break;
-    			} 
-    			case 3:
-    			{
-    				read( name );
-    				break;
-    			}  
-    			case 4: 
-    			{
-    				remove( name );
-    				System.out.println( "Thread " + name + " completed write, read, remove for index " + _data.getUUID().toString() );
-        			return true;
-    			}
-    		}
+            AnnotationData<?> oldAnnotation = annotation.clone();
+            AnnotationData<?> newAnnotation =  editAnnotation( oldAnnotation );
 
-    		return false;
-    	}
-    	
-    }
-    
+            try {
+                _service.modify( TEST_LAYER_NAME, oldAnnotation, newAnnotation );
+                annotation.update( newAnnotation );
+                if ( VERBOSE )
+                    System.out.println( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() );
 
-    static ConcurrentMap<String, List<WriteReadRemove>> _dataRecord = new ConcurrentHashMap<>();   
-    static ConcurrentMap<String, List<Double>> _readTimesPerEntry = new ConcurrentHashMap<>();
-   
-    
-	private class Tester implements Runnable {
-		
-		String _name;
+            } catch (Exception e) {
 
-		Tester( String name ) {
-			_name = name;
-		}
-		
-		public void run() {
-				
-			// generate annotations
-			List<WriteReadRemove> annotations = new LinkedList<>();
-			for ( int i=0; i<NUM_ENTRIES; i++ ) {
-				annotations.add( new WriteReadRemove( generateJSONAnnotation() ) );
-			}	
-			_dataRecord.put( _name, annotations );
-			_readTimesPerEntry.put( _name, new LinkedList<Double>() );
-						
-			List<Integer> indices = new ArrayList<>();
-			for (int i=0; i<NUM_ENTRIES; i++) {
-				indices.add(i);
-			}			
-			Collections.shuffle( indices );
-			
-	    	while ( indices.size() > 0 ) {
-	    		
-	    		int i = (int)( Math.random() * indices.size() );
-	    		if ( annotations.get( indices.get(i) ).process( _name ) ) {
-	    			indices.remove(i);
-	    		}
-	    		
-	    	}
-	    	
-		}		
+                if ( VERBOSE )
+                    System.out.println( "Thread " + _name + " unsuccessfully modified " + newAnnotation.getUUID() );
+            }
+
+        }
+
+        private void remove( AnnotationWrapper annotation ) {
+
+            AnnotationData<?> clone = annotation.clone();
+            try {
+                _service.remove(TEST_LAYER_NAME, clone);
+                removeAnnotationFromPublic(annotation);
+                if (VERBOSE)
+                    System.out.println("Thread " + _name + " successfully removed " + clone.getUUID());
+
+            } catch (Exception e) {
+
+                if (VERBOSE)
+                    System.out.println("Thread " + _name + " unsuccessfully removed " + clone.getUUID());
+            }
+        }
+
+        private AnnotationData<?> editAnnotation( AnnotationData<?> annotation ) {
+            JSONObject json = annotation.toJSON();
+            try {
+                int type = (int)(Math.random() * 2);
+                switch (type) {
+
+                    case 0:
+                        // change position
+                        double [] xy = randomPosition();
+                        json.put("x", xy[0]);
+                        json.put("y", xy[1]);
+                        break;
+
+                    default:
+                        // change data
+                        JSONObject data = new JSONObject();
+                        data.put("comment", randomComment() );
+                        json.put("data", data);
+                        break;
+                }
+
+            } catch ( Exception e ) {
+                e.printStackTrace();
+            }
+
+            return JSONAnnotation.fromJSON(json);
+        }
 	}
 	
 	
 	@Test
 	public void concurrentTest() {
 
-        long start = System.currentTimeMillis();
+        try {
+        /*
+            This text is designed to mimic a high user write / modify / read / remove traffic.
+            All test threads begin with a list of annotations that will be written. Once an annotation
+            is written, its existence becomes public and any other thread may read / modify / remove it.
 
-        List<Thread> threads = new LinkedList<>();
+         */
+            long start = System.currentTimeMillis();
 
-        // write / read
-        for (int i=0; i<NUM_THREADS; i++) {
+            List<Thread> threads = new LinkedList<>();
 
-            Thread t = new Thread( new Tester( ""+i ) );
-            threads.add( t );
-            t.start();
-        }
+            // write / read
+            for (int i = 0; i < NUM_THREADS; i++) {
 
-        for( Thread t : threads ) {
+                Thread t = new Thread(new Tester("" + i));
+                threads.add(t);
+                t.start();
+            }
+
+            for (Thread t : threads) {
+                try {
+                    t.join();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // ensure everything was removed
+            Map<BinIndex, List<AnnotationData<?>>> scan = readAll();
+            printData(scan);
+            Assert.assertTrue(scan.size() == 0);
+
+            long end = System.currentTimeMillis();
+            double time = ((end - start) / 1000.0);
+            System.out.println("Completed in " + time + " seconds");
+
+            double sum = 0;
+            int count = 0;
+            for (List<Double> t : _readTimesPerEntry.values()) {
+                for (Double d : t) {
+                    sum += d;
+                    count++;
+                }
+            }
+            System.out.println("Average read times of " + (sum / count) + " seconds per scan");
+        } finally {
+
+
             try {
-                t.join();
-            } catch ( Exception e ) {
+
+                AnnotationConfiguration config = _service.getConfiguration( TEST_LAYER_NAME );
+                PyramidIO tileIo = config.produce( PyramidIO.class );
+                AnnotationIO dataIo = config.produce( AnnotationIO.class );
+                if ( tileIo instanceof HBasePyramidIO ) {
+                    System.out.println("Dropping tile HBase table");
+                    ((HBasePyramidIO)tileIo).dropTable( TEST_LAYER_NAME );
+                }
+                if ( dataIo instanceof HBaseAnnotationIO ) {
+                    System.out.println("Dropping data HBase table");
+                    ((HBaseAnnotationIO)dataIo).dropTable( TEST_LAYER_NAME );
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+
         }
-
-        // ensure everything was removed
-        Map<BinIndex, List<AnnotationData<?>>> scan = readAll();
-        printData( scan );
-        Assert.assertTrue( scan.size() == 0 );
-
-        long end = System.currentTimeMillis();
-        double time = ((end-start)/1000.0);
-        System.out.println( "Completed in " + time + " seconds");
-
-        double sum = 0;
-        int count = 0;
-        for ( List<Double> t : _readTimesPerEntry.values() ) {
-            for ( Double d : t ) {
-                sum += d;
-                count++;
-            }
-        }
-        System.out.println( "Average read times of " + ( sum / count ) + " seconds per scan");
-
 		
 	}
 	

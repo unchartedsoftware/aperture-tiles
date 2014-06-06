@@ -34,6 +34,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -71,7 +73,12 @@ public class HBasePyramidIO implements PyramidIO {
 
 	public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
-		_config = HBaseConfiguration.create();
+
+        Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.hadoop.hbase.zookeeper").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.hadoop.hbase.client").setLevel(Level.WARN);
+
+        _config = HBaseConfiguration.create();
 		_config.set("hbase.zookeeper.quorum", zookeeperQuorum);
 		_config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
 		_config.set("hbase.master", hbaseMaster);
