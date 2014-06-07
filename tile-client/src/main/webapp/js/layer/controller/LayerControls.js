@@ -456,10 +456,18 @@ define(function (require) {
         if (filterAxisSpec) {
         	if (filterAxisSpec.levelMinFreq) {
         		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
-        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
-        	} else {
+        	} else if (filterAxisSpec.levelMinimums) {
         		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
+        	} else {
+        		val = 0;
+        	}
+        	
+        	if (filterAxisSpec.levelMaxFreq) {
+        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
+        	} else if (filterAxisSpec.levelMaximums) {
         		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
+        	} else {
+        		increment = 10 / majorTicks;
         	}
         } else {
             val = 0;
@@ -500,10 +508,20 @@ define(function (require) {
         if (filterAxisSpec) {
         	if (filterAxisSpec.levelMinFreq) {
         		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
-        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / length;
-        	} else {
+        	}
+        	else if (filterAxisSpec.levelMinimums) {
         		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
+        	}
+        	else {
+        		val = 0;
+        	}
+        	
+        	if (filterAxisSpec.levelMaxFreq) {
+        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / length;
+        	} else if (filterAxisSpec.levelMaximums) {
         		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / length;
+        	} else {
+        		increment = 10 / length;
         	}
         } else {
             val = 0;

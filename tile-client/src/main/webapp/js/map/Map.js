@@ -47,7 +47,8 @@ define(function (require) {
 		ClassName: "Map",
 		
 		init: function (id, spec) {
-
+			var that = this;
+			
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
