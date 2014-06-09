@@ -156,7 +156,7 @@ define(function (require) {
             this.destroy(); // destroy any previous DoD
 
             return $(html).draggable().resizable({
-                minHeight: 385,
+                minHeight: 257,
                 minWidth: 257,
                 handles: 'se'
             });

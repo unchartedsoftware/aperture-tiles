@@ -42,12 +42,12 @@ define(function (require) {
         },
 
         setOpacity: function( opacity ) {
-            this.nodeLayer.$root_.css( 'opacity', opacity );
+            this.nodeLayer.getRootElement().css( 'opacity', opacity );
         },
 
         setVisibility: function( visible ) {
             var visibility = visible ? 'visible' : 'hidden';
-            this.nodeLayer.$root_.css( 'visibility', visibility );
+            this.nodeLayer.getRootElement().css( 'visibility', visibility );
         },
 
         redraw: function( data ) {

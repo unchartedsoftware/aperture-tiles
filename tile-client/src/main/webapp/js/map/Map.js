@@ -98,15 +98,12 @@ define(function (require) {
         createRoot: function() {
 
             var that = this;
-            this.$root = $('<div id="'+this.id+'-root" style="position:absolute;"></div>');
+            this.$root = $('<div id="'+this.id+'-root" style="position:absolute; top:0px; z-index:999;"></div>');
             this.$map.append( this.$root );
 
             this.on('move', function() {
                 var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
-                that.$root.css({
-                    top: pos.y + "px",
-                    left: pos.x + "px"
-                });
+                that.$root.css({ "-webkit-transform":"translate("+ pos.x +"px, " + pos.y + "px)"});
             });
 
             this.trigger('move'); // fire initial move event

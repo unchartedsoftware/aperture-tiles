@@ -113,9 +113,11 @@ define(function (require) {
                         // create count chart
                         html += '<div class="tags-by-time-left">'
                         for (j=0; j<24; j++) {
-                            blendedColour = TwitterUtil.blendSentimentColours( sentimentPercentages.positive[j], sentimentPercentages.negative[j]);
+                            blendedColour = TwitterUtil.blendSentimentColours( sentimentPercentages.positive[j],
+                                                                               sentimentPercentages.neutral[j],
+                                                                               sentimentPercentages.negative[j] );
                             relativePercent = ( TwitterUtil.getCountByTimePercentage( value, j ) / maxPercentage ) * 100;
-                            visibility = (relativePercent > 0) ? 'visible' : 'hidden';
+                            visibility = (relativePercent > 0) ? '' : 'hidden';
                             html += '<div class="tags-by-time-bar" style="background-color:'+blendedColour+'; visibility:'+visibility+';height:'+relativePercent+'%; top:'+(100-relativePercent)+'%;"></div>';
                         }
                         html += '</div>';

@@ -229,10 +229,11 @@ define(function (require) {
         },
 
 
-        blendSentimentColours: function( positivePercent, negativePercent ) {
+        blendSentimentColours: function( positivePercent, neutralPercent, negativePercent ) {
             var BLUE_COLOUR = '#09CFFF',
                 PURPLE_COLOUR = '#D33CFF',
                 negWeight, negRGB,
+                neuWeight, neuRGB,
                 posWeight, posRGB,
                 finalRGB = {};
 
@@ -260,17 +261,20 @@ define(function (require) {
             }
 
             if ( positivePercent === 0 || negativePercent ===0 ) {
-                return '#222222';
+                return '#ffffff';
             }
 
             negRGB = hexToRgb(PURPLE_COLOUR);
+            neuRGB = { r: 255, g: 255, b: 255 };
             posRGB = hexToRgb(BLUE_COLOUR);
-            negWeight = negativePercent/100;
-            posWeight = positivePercent/100;
 
-            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight);
-            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight);
-            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight);
+            posWeight = positivePercent/100;
+            neuWeight = neutralPercent/100;
+            negWeight = negativePercent/100;
+
+            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight) + (neuRGB.r * neuWeight);
+            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight) + (neuRGB.g * neuWeight);
+            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight) + (neuRGB.b * neuWeight);
             return rgbToHex( finalRGB.r, finalRGB.g, finalRGB.b );
         },
 
