@@ -38,8 +38,15 @@ import java.util.UUID;
  * 		x:
  * 		y:
  * 		level:
- * 		uuid:
- * 		priority:
+ * 	    range: {
+ * 	        min:
+ * 	        max:
+ * 	    }
+ * 	    group:
+ * 		certificate: {
+ * 	        timestamp:
+ * 	    	uuid:
+ * 	    }
  * 		data: {}
  * }
  */

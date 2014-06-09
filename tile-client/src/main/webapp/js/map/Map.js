@@ -47,8 +47,7 @@ define(function (require) {
 		ClassName: "Map",
 		
 		init: function (id, spec) {
-			var that = this;
-			
+
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
@@ -76,13 +75,14 @@ define(function (require) {
             this.createRoot();
 
             // if move while map is panning, interrupt pan
-            // current doesn't work properly
+            /*
             this.on('movestart', function(){
                 if ( that.map.olMap_.panTween ) {
                     that.map.olMap_.panTween.callbacks = null;
                     that.map.olMap_.panTween.stop();
                 }
             });
+            */
 
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();

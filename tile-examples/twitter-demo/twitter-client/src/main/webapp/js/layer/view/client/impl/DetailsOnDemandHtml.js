@@ -52,6 +52,7 @@ define(function (require) {
 
             html += '<div class="details-on-demand" style="left:'+x+'px; top:'+y+'px;">';
 
+
             // top half
             html += '<div class="details-on-demand-half">'
 
@@ -62,6 +63,7 @@ define(function (require) {
             html +=         '<div class="negative-summaries"> -'+value.negative+'</div>';
             html +=     '</div>';
 
+
             // title
             html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.tag)+'</div>';
 
@@ -70,7 +72,6 @@ define(function (require) {
 
             html +=     '<div class="details-on-demand-chart">';
             html +=         '<div class="details-positive-label">Positive Tweets</div>';
-
             html +=         '<div class="details-chart-content">';
 
             html +=             '<div class="details-chart-bars">';
@@ -149,11 +150,17 @@ define(function (require) {
             html +=     '</div>';
             html += '</div>';
 
+            html += '<div class="details-on-demand-close-button"></div>'
             html += '</div>';
 
             this.destroy(); // destroy any previous DoD
 
-            return $(html).draggable();
+            return $(html).draggable().resizable({
+                minHeight: 385,
+                minWidth: 257,
+                handles: 'se'
+            });
+
         },
 
 

@@ -67,20 +67,18 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	protected AnnotationService _service;
 
     ConcurrentMap<String, List<Double>> _readTimesPerEntry = new ConcurrentHashMap<>();
-
-    Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
     List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
+    Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
     Random _random = new Random( System.currentTimeMillis() );
-
-    Object decisionLock = new Object();
+    final Object decisionLock = new Object();
 
     @Before
     public void setup () { 	
     	
     	try {
 
-            //String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
-            String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
+            String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
+            //String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
 
             Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.add( DefaultPyramidIOFactoryProvider.HBASE.create() );

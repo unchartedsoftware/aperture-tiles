@@ -67,9 +67,7 @@ define(function (require) {
             this.createLayer();
 
             this.map.on( 'click', function() {
-                $(".top-text-sentiments").removeClass('greyed clicked');
-                TwitterUtil.destroyDetailsOnDemand( DetailsOnDemand );
-                that.clientState.removeClickState('tag');
+                TwitterUtil.clickOff( that.clientState, DetailsOnDemand );
             });
         },
 
@@ -80,15 +78,6 @@ define(function (require) {
             function getYOffset( values, index ) {
                 var SPACING =  36;
                 return 95 - ( (( TwitterUtil.getTagCount( values ) - 1) / 2 ) - index ) * SPACING;
-            }
-
-            function onClick() {
-
-                var tag = $(this).find(".sentiment-labels").text();
-
-                TwitterUtil.injectClickStateClassesGlobal( tag );
-
-                that.clientState.setClickState('tag', tag );
             }
 
             this.nodeLayer.addLayer( new HtmlLayer({
@@ -117,25 +106,25 @@ define(function (require) {
                         tag = TwitterUtil.trimLabelText( values[i].tag );
                         percentages = TwitterUtil.getSentimentPercentages( value );
 
-                        html = '<div class="top-text-sentiments" style=" top:' +  getYOffset( values, i ) + 'px;">';
+                        html = '<div class="top-text-sentiment" style=" top:' +  getYOffset( values, i ) + 'px;">';
 
                         // create sentiment bars
                         html += '<div class="sentiment-bars">';
-                        html +=     '<div class="sentiment-bars-negative" style="width:'+percentages.negative+'%;"></div>';
-                        html +=     '<div class="sentiment-bars-neutral"  style="width:'+percentages.neutral+'%;"></div>';
-                        html +=     '<div class="sentiment-bars-positive" style="width:'+percentages.positive+'%;"></div>';
+                        html +=     '<div class="sentiment-bar-negative" style="width:'+percentages.negative+'%;"></div>';
+                        html +=     '<div class="sentiment-bar-neutral"  style="width:'+percentages.neutral+'%;"></div>';
+                        html +=     '<div class="sentiment-bar-positive" style="width:'+percentages.positive+'%;"></div>';
                         html += "</div>";
 
                         // create tag label
-                        html += '<div class="sentiment-labels" style="font-size:' + TwitterUtil.getFontSize( values, i ) +'px; ">'+tag+'</div>';
+                        html += '<div class="sentiment-label" style="font-size:' + TwitterUtil.getFontSize( values, i ) +'px; ">'+tag+'</div>';
 
                         html += '</div>';
 
                         $elem = $(html);
 
                         // set event handlers
-                        TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, onClick, DetailsOnDemand );
-                        TwitterUtil.injectClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
+                        TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
+                        TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
 
                         $html.append( $elem );
                     }

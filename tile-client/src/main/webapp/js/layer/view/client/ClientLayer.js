@@ -60,7 +60,7 @@ define(function (require) {
 		 *								dataService : 	the DataService from which to pull the tile data
 		 *								renderer : 		the ClientRenderer to draw the view data
 		 *							}]
-		 *
+		 *              }
          */
         init: function ( id, map ) {
 
@@ -101,7 +101,6 @@ define(function (require) {
 
         setOpacity: function( opacity ) {
 
-            //this.clientState.setSharedState('opacity', opacity);
             var i;
             for (i=0; i<this.views.length; ++i) {
                 this.views[i].renderer.setOpacity( opacity );
@@ -110,7 +109,7 @@ define(function (require) {
 
 
         setVisibility: function( visible ) {
-            //this.clientState.setSharedState('isVisible', visible);
+
             var i;
             for (i=0; i<this.views.length; ++i) {
                 this.views[i].renderer.setVisibility( visible );
