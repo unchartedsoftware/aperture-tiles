@@ -160,12 +160,11 @@ public class TileStorageUtility {
 	
 	private static <T> void readWrite (PyramidIO inputIO, String inputId,
 			                           PyramidIO outputIO, String outputId, 
-			                           TilePyramid pyramid,
 			                           TileSerializer<T> fromSerializer,
 			                           TileSerializer<T> toSerializer,
 			                           Iterable<TileIndex> tiles) throws IOException {
-		
-		outputIO.writeTiles(outputId, pyramid, toSerializer,
+
+		outputIO.writeTiles(outputId, toSerializer,
 				            inputIO.readTiles(inputId, fromSerializer, tiles));
 	}
 
@@ -307,9 +306,7 @@ public class TileStorageUtility {
 				if (count > blocksize) {
 					readWrite (fromObject, fromPyramidID,
 	                           toObject, toPyramidID,
-	                           pyramid,
-	                           fromSerializer, toSerializer,
-	                           toLoad);
+	                           fromSerializer, toSerializer, toLoad);
 					currentTime = System.currentTimeMillis();
 					if(currentTime - lastPrint > 5000){
 						LOGGER.log(Level.INFO,
@@ -334,7 +331,7 @@ public class TileStorageUtility {
 		if (!toLoad.isEmpty()){
 			readWrite (fromObject, fromPyramidID,
                     toObject, toPyramidID,
-                    pyramid, fromSerializer, toSerializer, toLoad);
+                    fromSerializer, toSerializer, toLoad);
 		}
 		LOGGER.log(Level.INFO,
                 "TILE COPYING COMPLETE");

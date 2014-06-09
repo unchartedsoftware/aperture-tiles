@@ -24,18 +24,21 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.google.common.primitives.Doubles;
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.TypeDescriptor;
-
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import com.google.common.primitives.Doubles;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 	private static final long serialVersionUID = 1L;
@@ -66,8 +69,7 @@ public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 	}
 
 	@Override
-	public void serialize(TileData<Double> data, TilePyramid tilePyramid,
-	                      OutputStream output) throws IOException {
+	public void serialize(TileData<Double> data, OutputStream output) throws IOException {
 
 		ZipOutputStream zip = new ZipOutputStream(output);
 		zip.putNextEntry(new ZipEntry("tile.data"));

@@ -47,7 +47,8 @@ public enum DefaultPyramidIOFactoryProvider {
 	JDBC ("jdbc"),
 	RESOURCE ("resource"), 
 	ZIP ("zip"),
-	SQLITE ("sqlite");
+	SQLITE ("sqlite"),
+	DUMMY ("dummy");
 
 	//-------------------------------------
 
@@ -104,6 +105,9 @@ public enum DefaultPyramidIOFactoryProvider {
 			}
 			else if (factoryType.equals("sqlite")) {
 				factory = new SQLitePyramidIOFactory(factoryName, parent, path);				
+			}
+			else if (factoryType.equals("dummy")) {
+			    factory = new DummyPyramidIOFactory(factoryName, parent, path);
 			}
 			return factory;
 		}

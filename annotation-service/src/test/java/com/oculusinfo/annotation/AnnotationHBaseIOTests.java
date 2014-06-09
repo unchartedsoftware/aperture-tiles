@@ -114,7 +114,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to table");	
-	    	_tileIO.writeTiles(TABLE_NAME, _pyramid, _tileSerializer, tiles );
+	    	_tileIO.writeTiles(TABLE_NAME, _tileSerializer, tiles );
 	    	_dataIO.writeData(TABLE_NAME, _dataSerializer, annotations );
 	        
 	    	/*

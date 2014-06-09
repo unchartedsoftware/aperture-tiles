@@ -24,20 +24,19 @@
  */
 package com.oculusinfo.twitter.binning;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.util.Pair;
-import org.apache.avro.file.CodecFactory;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.avro.file.CodecFactory;
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.Pair;
 
 
 
@@ -54,11 +53,10 @@ public class TwitterDemoSerializationTests {
                                                                          new Pair<String, Long>("This is another #tag", 2L),
                                                                          new Pair<String, Long>("more #tags and more", -4L)));
 
-        TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         TileIndex index = new TileIndex(0, 0, 0, 1, 1);
         TileData<List<TwitterDemoRecord>> tileIn = new TileData<>(index, Arrays.asList(Arrays.asList(recordIn)));
-        serializer.serialize(tileIn, pyramid, baos);
+        serializer.serialize(tileIn, baos);
         baos.flush();
         baos.close();
 
@@ -84,11 +82,10 @@ public class TwitterDemoSerializationTests {
                                                                          new Pair<String, Long>("\u2728", 2L),
                                                                          new Pair<String, Long>("\u1F302", -4L)));
 
-        TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         TileIndex index = new TileIndex(0, 0, 0, 1, 1);
         TileData<List<TwitterDemoRecord>> tileIn = new TileData<>(index, Arrays.asList(Arrays.asList(recordIn)));
-        serializer.serialize(tileIn, pyramid, baos);
+        serializer.serialize(tileIn, baos);
         baos.flush();
         baos.close();
 

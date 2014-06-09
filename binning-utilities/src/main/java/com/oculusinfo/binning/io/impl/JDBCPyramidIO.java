@@ -24,20 +24,24 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 /**
  * JDBC-based implementation of PyramidIO.
@@ -154,7 +158,7 @@ public class JDBCPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> void writeTiles(String pyramidId, TilePyramid tilePyramid,
+	public <T> void writeTiles(String pyramidId,
 	                           TileSerializer<T> serializer, Iterable<TileData<T>> data)
 		throws IOException {
 		PreparedStatement ps = null;
@@ -180,7 +184,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			int count = 0;
 			for (TileData<T> tile : data) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				serializer.serialize(tile, tilePyramid, baos);
+				serializer.serialize(tile, baos);
 
 				TileIndex index = tile.getDefinition();
 

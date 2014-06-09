@@ -108,7 +108,7 @@ public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to file system");	
-	    	_tileIO.writeTiles(BASE_PATH, _pyramid, _tileSerializer, tiles );
+	    	_tileIO.writeTiles(BASE_PATH, _tileSerializer, tiles );
 	    	_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
 	        
 	    	/*

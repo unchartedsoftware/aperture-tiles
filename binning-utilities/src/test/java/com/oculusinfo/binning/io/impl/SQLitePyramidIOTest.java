@@ -24,20 +24,23 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
-import com.oculusinfo.binning.util.Pair;
-import org.junit.*;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 /**
  * test SQLite implementation
@@ -92,7 +95,6 @@ public class SQLitePyramidIOTest {
 			// XXX: This test is coupled to some implementations of other
 			// classes--ideally, these objects should be mocked.
 
-			TilePyramid tilePyramid = new WebMercatorTilePyramid();
 			TileIndex tileDef = new TileIndex(0, 0, 0, 1, 1);
 			StringIntPairArrayJSONSerializer serializer = new StringIntPairArrayJSONSerializer();
 
@@ -102,7 +104,7 @@ public class SQLitePyramidIOTest {
 			binVals.add(binVal);
 			tileToWrite.setBin(0, 0, binVals);
 
-			sqlitePyramidIO.writeTiles(PYRAMID_ID, tilePyramid, serializer, Collections.singletonList(tileToWrite));
+			sqlitePyramidIO.writeTiles(PYRAMID_ID, serializer, Collections.singletonList(tileToWrite));
 
 			List<TileData<List<Pair<String, Integer>>>> readResult =
 				sqlitePyramidIO.readTiles(PYRAMID_ID, serializer,

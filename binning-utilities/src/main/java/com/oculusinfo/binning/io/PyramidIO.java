@@ -24,15 +24,14 @@
 package com.oculusinfo.binning.io;
 
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 
 
@@ -65,7 +64,7 @@ public interface PyramidIO {
 	 *            format will be written
 	 * @param data The data to be written
 	 */
-	public <T> void writeTiles (String pyramidId, TilePyramid tilePyramid,
+	public <T> void writeTiles (String pyramidId,
 	                            TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException;
 

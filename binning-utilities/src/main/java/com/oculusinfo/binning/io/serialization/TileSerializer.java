@@ -24,15 +24,14 @@
 package com.oculusinfo.binning.io.serialization;
 
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.util.TypeDescriptor;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 
 
@@ -80,6 +79,5 @@ public interface TileSerializer<T> extends Serializable {
 	 * @param ouput A raw output stream to which to write the tile
 	 * @throws IOException
 	 */
-	public void serialize (TileData<T> data, TilePyramid tilePyramid,
-	                       OutputStream output) throws IOException;
+	public void serialize (TileData<T> data, OutputStream output) throws IOException;
 }

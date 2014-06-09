@@ -24,17 +24,22 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 
 
 public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
@@ -108,7 +113,7 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 	}
 
 	@Override
-	public void serialize (TileData<T> tile, TilePyramid pyramid, OutputStream stream) throws IOException {
+	public void serialize (TileData<T> tile, OutputStream stream) throws IOException {
 
 		TileIndex tileIndex = tile.getDefinition();
 
