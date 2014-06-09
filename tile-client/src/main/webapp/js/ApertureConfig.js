@@ -37,7 +37,10 @@ define(function (require) {
 
 			// The endpoint locations for Aperture services accessed through 
 			// the io interface
-			'aperture.io' : spec['aperture.io']
+			'aperture.io' : spec['aperture.io'],
+			
+			// force initialization of aperture geo library
+			'aperture.map' : {'defaultMapConfig' : {}}
 		});
 	};	
 });

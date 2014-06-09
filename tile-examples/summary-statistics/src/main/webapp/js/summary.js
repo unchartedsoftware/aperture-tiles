@@ -169,16 +169,16 @@
                             }
                             else {    // regular field
                                 var value = v;
-                                if((typeof value) == "number"){
+                                if ((typeof value) == "number") {
                                     value = $.number(value, 2);
                                     tbl_row += '<td style="text-align:right">'+ value +'</td>';
                                 }
-                                else if(Object.prototype.toString.call( value ) === '[object Array]'){
+                                else if ($.isArray(value)) {
                                     value = "";
                                     var rowHtml = '',
-                                        tokens = value.split(/<br \/>/g);
+                                        tokens = '';
 
-                                    $.each(v, function(vk, vv){
+                                    $.each(v, function(vk, vv) {
                                         $.each(vv, function(vvk, vvv){    // Assumes array of objects.
                                             var vvValue = vvv;
                                             if((typeof vvValue) == "number"){
@@ -188,10 +188,11 @@
 
                                         });
                                     });
-                                    if (tokens.length > 0){
+                                    tokens = value.split(/<br \/>/g);
+                                    if (tokens.length > 0) {
                                         var hasEllipse = false,
                                             i = 0;
-                                        for (i; i < tokens.length; i++){
+                                        for (i; i < tokens.length; i++) {
                                             var token = tokens[i];
                                             if (i>0){
                                                 rowHtml += '</br>';
@@ -371,8 +372,8 @@
                 // ... (set up our map tile borders) ...
                 MapService.setTileBorderConfig(mapConfig, plotDiv);
 
-                if(datasetLowerCase === 'twitter') {
-                    worldMap.map.zoomTo( 40, -95, 4 );
+                if(mapConfig.zoomTo) {
+                    worldMap.map.zoomTo( mapConfig.zoomTo[0], [1], [2] );
                 }
 
                 //create the controls
@@ -461,7 +462,7 @@
 
             //setup the ui layout
             var tocPane = $('#toc'),
-                $summaryDiv = $('#summary'),
+                summaryDiv = $('#summary'),
                 layout,
                 tableJsonFile,
                 showControls,
@@ -470,8 +471,8 @@
             tocPane.load('toc.html #toc-contents');
             tocPane.addClass('ui-layout-west');
             $('header').addClass('ui-layout-north');
-            $summaryDiv.addClass('ui-layout-center');
-            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:178}});
+            summaryDiv.addClass('ui-layout-center');
+            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:278}});
             layout.panes.west.css({
                 background:  "rgb(204,204,204)"
             });
@@ -483,7 +484,7 @@
             });
 
             if(!summaryBuilderOptions.dataset){
-                $summaryDiv.html('<h2>No dataset selected.</h2>');
+                summaryDiv.html('<h2>No dataset selected.</h2>');
             	return;
             }
 
