@@ -74,16 +74,16 @@ body {
     -webkit-border-radius: 0px;
     border-radius: 0px;
 	width: 100%;
-	padding: 0ps;	
+	padding: 0px;	
 }
 #tabs-major .ui-tabs-panel {
     background-color: white;
-    border-width: 0px 1px 1px 1px;
-    height: 87%;
-	width: 95.8%
+   /*  border-width: 0px 1px 1px 1px; */
+    height: 92%;
+	width: 98%
 }
 .table-sub-tab {
-    overflow: scroll;
+    overflow: auto;
 }
 .sub-tabs {
     background: transparent;
@@ -329,4 +329,7 @@ body div.ui-slider-range.ui-widget-header {
 .ui-tabs .ui-tabs-nav li{
 	margin-left: .2em;
 	margin-right: 0;
+}
+.elipsisDialog {
+	font-size: 10px !important;
 }

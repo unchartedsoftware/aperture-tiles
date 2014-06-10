@@ -23,8 +23,6 @@
  */
 package com.oculusinfo.tile.init.providers;
 
-import java.util.List;
-
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -32,6 +30,8 @@ import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+
+import java.util.List;
 
 public class StandardLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
     @Inject

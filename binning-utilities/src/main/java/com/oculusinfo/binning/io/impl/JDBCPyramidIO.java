@@ -40,7 +40,6 @@ import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
@@ -159,7 +158,7 @@ public class JDBCPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> void writeTiles(String pyramidId, TilePyramid tilePyramid,
+	public <T> void writeTiles(String pyramidId,
 	                           TileSerializer<T> serializer, Iterable<TileData<T>> data)
 		throws IOException {
 		PreparedStatement ps = null;
@@ -185,7 +184,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			int count = 0;
 			for (TileData<T> tile : data) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				serializer.serialize(tile, tilePyramid, baos);
+				serializer.serialize(tile, baos);
 
 				TileIndex index = tile.getDefinition();
 

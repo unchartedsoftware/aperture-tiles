@@ -24,14 +24,14 @@
  */
 package com.oculusinfo.binning.impl;
 
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.util.Collection;
-
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 
 /**
  * Area-of-Interest tile pyramid

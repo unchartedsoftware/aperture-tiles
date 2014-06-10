@@ -25,12 +25,11 @@
 package com.oculusinfo.annotation.rest;
 
 import com.google.inject.AbstractModule;
-import com.oculusinfo.annotation.rest.AnnotationService;
-import com.oculusinfo.annotation.rest.impl.*;
-import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.annotation.io.serialization.impl.*;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
+import com.oculusinfo.annotation.rest.impl.AnnotationServiceImpl;
 
 
 public class AnnotationServiceModule extends AbstractModule {
@@ -40,7 +39,7 @@ public class AnnotationServiceModule extends AbstractModule {
 		
 		bind(AnnotationSerializer.class).to(JSONAnnotationDataSerializer.class);
 		bind(AnnotationIndexer.class).to(AnnotationIndexerImpl.class);
-		bind(AnnotationService.class).to(CachedAnnotationServiceImpl.class);
+		bind(AnnotationService.class).to(AnnotationServiceImpl.class);
 
 	}
 

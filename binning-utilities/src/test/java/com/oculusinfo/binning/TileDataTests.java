@@ -24,11 +24,11 @@
  */
 package com.oculusinfo.binning;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  * Some basic tests to test potential tile addition

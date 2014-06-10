@@ -38,7 +38,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
-        NUM_BINS = 8,       // MUST MATCH AnnotationTile.NUM_BINS in 'AnnotationTile.java'
+        NUM_BINS = 8,       // MUST MATCH AnnotationIndexer.NUM_BINS in 'AnnotationIndexer.java'
         TileAnnotationIndexer;
 
 		
@@ -51,9 +51,11 @@ define(function (require) {
 
         getIndices: function( data ) {
             var indices = [],
+                minLevel = Math.min( data.level, data.range.min ),
+                maxLevel = Math.max( data.level, data.range.max ),
                 i;
 
-            for (i=0; i<=data.level; i++) {
+            for (i=minLevel; i<=maxLevel; i++) {
                 indices.push( this.getIndex( data, i ) );
             }
             return indices;

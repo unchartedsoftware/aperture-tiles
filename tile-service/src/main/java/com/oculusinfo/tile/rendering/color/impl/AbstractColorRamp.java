@@ -24,13 +24,13 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.color.FixedPoint;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractColorRamp implements ColorRamp {
 	private boolean isInverted;

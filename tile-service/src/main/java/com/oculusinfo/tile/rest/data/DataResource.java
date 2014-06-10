@@ -23,8 +23,8 @@
  */
 package com.oculusinfo.tile.rest.data;
 
+import com.google.inject.Inject;
 import oculus.aperture.common.rest.ApertureServerResource;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Status;
@@ -34,8 +34,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class DataResource extends ApertureServerResource {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DataResource.class);

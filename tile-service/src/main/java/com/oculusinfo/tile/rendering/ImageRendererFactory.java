@@ -25,17 +25,13 @@
 
 package com.oculusinfo.tile.rendering;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-import com.oculusinfo.tile.rendering.impl.DoublesImageRenderer;
-import com.oculusinfo.tile.rendering.impl.DoublesSeriesImageRenderer;
-import com.oculusinfo.tile.rendering.impl.DoublesStatisticImageRenderer;
-import com.oculusinfo.tile.rendering.impl.TopAndBottomTextScoresImageRenderer;
-import com.oculusinfo.tile.rendering.impl.TopTextScoresImageRenderer;
+import com.oculusinfo.tile.rendering.impl.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRenderer> {
     public static StringProperty RENDERER_TYPE = new StringProperty("type",

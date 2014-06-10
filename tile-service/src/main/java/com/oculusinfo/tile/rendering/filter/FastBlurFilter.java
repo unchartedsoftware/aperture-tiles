@@ -31,9 +31,9 @@ package com.oculusinfo.tile.rendering.filter;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.awt.image.BufferedImage;
-
 import com.oculusinfo.tile.util.GraphicsUtilities;
+
+import java.awt.image.BufferedImage;
 
 /**
  * <p>A fast blur filter can be used to blur pictures quickly. This filter is an

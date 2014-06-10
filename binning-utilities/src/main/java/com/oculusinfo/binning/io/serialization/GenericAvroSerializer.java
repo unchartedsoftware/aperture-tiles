@@ -46,7 +46,6 @@ import org.apache.avro.io.DatumWriter;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
@@ -141,7 +140,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	}
 
 	@Override
-	public void serialize (TileData<T> tile, TilePyramid pyramid, OutputStream stream) throws IOException {
+	public void serialize (TileData<T> tile, OutputStream stream) throws IOException {
 		Schema recordSchema = getRecordSchema();
 		Schema tileSchema = getTileSchema();
 

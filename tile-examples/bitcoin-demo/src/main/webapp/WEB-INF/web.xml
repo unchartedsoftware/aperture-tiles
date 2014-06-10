@@ -35,8 +35,11 @@
       com.oculusinfo.tile.rest.TileModule:
 
       <!-- Set up the spark module -->
-<!--       com.oculusinfo.tile.spark.SparkModule: -->
+      <!-- com.oculusinfo.tile.spark.SparkModule: -->
 
+      <!-- Annotation IO factory module - override to add custom AnnotationIO 
+           implementations -->
+      com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
       <!-- Sets up the REST interface by which clients can retrieve annotations -->
       com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
       <!-- Sets up the annotation service -->

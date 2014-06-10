@@ -24,32 +24,25 @@
  */
 package com.oculusinfo.annotation.io.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.nio.ByteBuffer;
-
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.binning.util.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableExistsException;
-//import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
-import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.io.*;
-import com.oculusinfo.annotation.io.serialization.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
+
+//import org.apache.hadoop.hbase.TableName;
 
 
 public class HBaseAnnotationIO implements AnnotationIO {
@@ -88,7 +81,6 @@ public class HBaseAnnotationIO implements AnnotationIO {
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);       
     }
-
     
     /**
 	 * Determine the row ID we use in HBase for given annotation data 
@@ -104,22 +96,13 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     @Override    
     public void initializeForWrite (String tableName) throws IOException {
-        if (!_admin.tableExists(tableName)) {
-        	try {
-	            HTableDescriptor tableDesc = new HTableDescriptor( /*TableName.valueOf(*/ tableName /*)*/ );            
-	            HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
-	            tableDesc.addFamily(metadataFamily);
-	            HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
-	            tableDesc.addFamily(tileFamily);
-	            _admin.createTable(tableDesc);
-	        } catch ( Exception e ) {
-                e.printStackTrace();
-            }
+        // convert to separate data table name
+        String dataTableName = getTableName(tableName);
+        if ( !_admin.tableExists(  dataTableName ) ) {
+            createTable( dataTableName );
         }
-        
     }
-    
-    
+
    
     @Override
     public void writeData (String tableName, 
@@ -136,9 +119,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
                                ANNOTATION_COLUMN, 
                                baos.toByteArray() ) );
         }
-        
+
         try {
-            writeRows(tableName, rows);
+            writeRows( tableName, rows);
         } catch (InterruptedException e) {
             throw new IOException("Error writing annotations to HBase", e);
         }
@@ -164,7 +147,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         for (Pair<String,Long> certificate: certificates) {
             rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );
         }
-        
+
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
 
         return convertResults( rawResults, serializer );
@@ -173,12 +156,12 @@ public class HBaseAnnotationIO implements AnnotationIO {
     
     @Override
     public void removeData (String tableName, Iterable<Pair<String,Long>> certificates) throws IOException {
-    	
-    	List<byte[]> rowIds = new ArrayList<>();
+
+        List<byte[]> rowIds = new ArrayList<>();
         for (Pair<String,Long> certificate: certificates) {
             rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );
         }        
-        deleteRows(tableName, rowIds, ANNOTATION_COLUMN);
+        deleteRows( tableName, rowIds, ANNOTATION_COLUMN);
     }
 
 
@@ -194,37 +177,49 @@ public class HBaseAnnotationIO implements AnnotationIO {
         tableDesc.addFamily(metadataFamily);
         HColumnDescriptor tileFamily = new HColumnDescriptor(ANNOTATION_FAMILY_NAME);
         tableDesc.addFamily(tileFamily);
-        
         try {
         	_admin.createTable(tableDesc);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-    
-    
-    public void dropTable( String tableName ) {
-    	
-    	try {
-    		_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
-    		_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
-        } catch (Exception e) {}
- 	
-    }
-        
-	/**
-	 * Get the configuration used to connect to HBase.
-	 */
-	public Configuration getConfiguration () {
-		return _config;
-	}
 
+    public void dropTable( String tableName ) {
+
+        // convert to separate data table name
+        String dataTableName = getTableName( tableName );
+
+        try {
+            _admin.disableTable( /*TableName.valueOf(*/ dataTableName /*)*/ );
+            _admin.deleteTable( /*TableName.valueOf(*/ dataTableName /*)*/ );
+        } catch (Exception e) {}
+
+    }
+
+    /**
+     * Get the configuration used to connect to HBase.
+     */
+    public Configuration getConfiguration () {
+        return _config;
+    }
+
+
+    private String getTableName( String layer ) {
+        return layer + "-data";
+    }
 
     /*
      * Gets an existing table (without creating it)
      */
     private HTable getTable (String tableName) throws IOException {
-        return new HTable(_config, tableName);
+
+        // convert to separate data table name
+        String dataTableName = getTableName(tableName);
+        return new HTable( _config, dataTableName );
     }
     
+    
+
 
     /*
      * Given a put request (a request to put data into a table), add a single
@@ -327,46 +322,13 @@ public class HBaseAnnotationIO implements AnnotationIO {
         table.delete(deletes);
     }
 
-    
-    /*
-    private List<Map<HBaseColumn, byte[]>> scanRange(String tableName, byte[] startRow, byte[] stopRow, HBaseColumn... columns) throws IOException {
-        
-    	HTable table = getTable(tableName);
-        Scan scan;
-        if ( startRow.length > 0 && stopRow.length > 0) {      	
-        	// add trailing zero for inclusive
-        	byte [] trailingZero = {0};
-        	stopRow = ArrayUtils.addAll(stopRow, trailingZero);      	
-        	scan = new Scan( startRow, stopRow );
-        } else {
-        	scan = new Scan();
-        }
-	        
-	    ResultScanner rs = table.getScanner(scan);	    
-	    List<Map<HBaseColumn, byte[]>> allResults = new LinkedList<Map<HBaseColumn,byte[]>>();
-
-	    try {
-	    	// process results
-	    	for (Result r = rs.next(); r != null; r = rs.next()) {
-	    		allResults.add( decodeRawResult(r, columns) );
-	    	}
-	        
-	    } finally {
-	    	rs.close();  // always close the ResultScanner!
-	    }
-	    
-	    table.close();
-        return allResults;
-    }
-    */
-
 
     private List<AnnotationData<?>> convertResults( List<Map<HBaseColumn, byte[]>> rawResults,
 									AnnotationSerializer serializer ) 
 					    		   	throws IOException {    	
 		List<AnnotationData<?>> results = new LinkedList<>();
 		Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();       
-		while (iData.hasNext()) {
+		while ( iData.hasNext() ) {
 			Map<HBaseColumn, byte[]> rawResult = iData.next();
 		
 			if (null != rawResult) {

@@ -24,10 +24,10 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import java.io.InputStream;
-
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
+
+import java.io.InputStream;
 
 public class ResourcePyramidStreamSource implements PyramidStreamSource {
 	

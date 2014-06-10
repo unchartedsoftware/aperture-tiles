@@ -24,14 +24,12 @@
  */
 package com.oculusinfo.binning;
 
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-
+import com.oculusinfo.binning.impl.AOITilePyramid;
 import junit.framework.Assert;
-
 import org.junit.Test;
 
-import com.oculusinfo.binning.impl.AOITilePyramid;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 public class AOITest {
 	private static final double EPSILON = 1E-12;

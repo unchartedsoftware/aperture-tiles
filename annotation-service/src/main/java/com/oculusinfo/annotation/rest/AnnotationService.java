@@ -23,16 +23,16 @@
  */
 package com.oculusinfo.annotation.rest;
 
+import com.oculusinfo.annotation.config.AnnotationConfiguration;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.Pair;
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.json.JSONObject;
-
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.config.*;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.util.Pair;
 
 
 
@@ -63,7 +63,7 @@ public interface AnnotationService {
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public abstract void remove( String layer, AnnotationData<?> annotation );
+	public abstract void remove( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 
 	
 	/*

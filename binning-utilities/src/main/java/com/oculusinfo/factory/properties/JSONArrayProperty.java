@@ -23,14 +23,13 @@
  */
 package com.oculusinfo.factory.properties;
 
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.JSONNode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.ConfigurationProperty;
-import com.oculusinfo.factory.JSONNode;
 
 /**
  * A {@link ConfigurationProperty} that can handle {@link JSONArray}s.

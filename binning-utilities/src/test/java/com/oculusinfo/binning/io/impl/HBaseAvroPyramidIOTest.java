@@ -35,8 +35,6 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -45,11 +43,11 @@ import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer;
 //@Ignore
 public class HBaseAvroPyramidIOTest {
 
-	private <T> void writeAvroTiles (PyramidIO pio, TilePyramid pyramider, TileSerializer<T> serializer,
+	private <T> void writeAvroTiles (PyramidIO pio, TileSerializer<T> serializer,
 	                                 String pyramidId, ArrayList<TileData<T>> tiles) {
 		try {
 			pio.initializeForWrite(pyramidId);
-			pio.writeTiles(pyramidId, pyramider, serializer, tiles);
+			pio.writeTiles(pyramidId, serializer, tiles);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -72,7 +70,6 @@ public class HBaseAvroPyramidIOTest {
 	@Test 
 	public void writeReadAvroRoundTripTest () {
 		PyramidIO io = new TestPyramidIO();
-		TilePyramid pyramid = new AOITilePyramid(0, 256, 0, 256);
 		TileSerializer<Integer> serializer = new IntegerAvroSerializer(CodecFactory.nullCodec());
 
 		ArrayList<TileData<Integer>> writeTiles = new ArrayList<TileData<Integer>>();
@@ -85,7 +82,7 @@ public class HBaseAvroPyramidIOTest {
 			}
 		}
 		writeTiles.add(tile);
-		writeAvroTiles(io, pyramid, serializer, "test", writeTiles);
+		writeAvroTiles(io, serializer, "test", writeTiles);
 
 		List<TileData<Integer>> readTiles = readAvroTiles(io, serializer, "test");
 

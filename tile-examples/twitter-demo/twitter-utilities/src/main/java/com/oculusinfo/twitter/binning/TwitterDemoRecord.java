@@ -24,14 +24,13 @@
 package com.oculusinfo.twitter.binning;
 
 
+import com.oculusinfo.binning.util.Pair;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-
-import com.oculusinfo.binning.util.Pair;
 
 
 

@@ -23,13 +23,12 @@
  */
 package com.oculusinfo.factory;
 
-import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+import org.json.JSONObject;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ConfigurableFactoryTests {
 	private static IntegerProperty INT_PROP = new IntegerProperty("int", "", 1);

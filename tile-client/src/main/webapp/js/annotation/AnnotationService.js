@@ -51,12 +51,28 @@ define(function (require) {
         },
 
 
-        /**
+         /**
+         * send a GET request to the server to pull all annotation data for an array of tilekeys
+         * @param tilekeys   array of tile identification keys
+         * @param callback  the callback that is called upon receiving data from server
+         */
+        getAnnotations: function(tilekeys, callback) {
+
+            var i;
+            if ( !$.isArray( tilekeys ) ) {
+                tilekeys = [ tilekeys ];
+            }
+            for (i=0; i<tilekeys.length; ++i) {
+                this.getAnnotation( tilekeys[i], callback );
+            }
+        },
+
+         /**
          * send a GET request to the server to pull all annotation data for a specific tilekey
          * @param tilekey   tile identification key
          * @param callback  the callback that is called upon receiving data from server
          */
-        getAnnotations: function( tilekey, callback ) {
+        getAnnotation: function( tilekey, callback ) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
@@ -65,12 +81,12 @@ define(function (require) {
 
             // request data from server
             aperture.io.rest(
-                ('/annotation/'+
-                    this.layer+'/'+
-                    this.uuid+'/'+
-                    level+'/'+
-                    xIndex+'/'+
-                    yIndex+'.json'),
+                '/annotation/'+
+                 this.layer+'/'+
+                 this.uuid+'/'+
+                 level+'/'+
+                 xIndex+'/'+
+                 yIndex+'.json',
                 'GET',
                 callback
             );
@@ -91,6 +107,7 @@ define(function (require) {
 
             this.postRequest( request, function( result, statusInfo ) {
                 if (statusInfo.success) {
+                    // update certificate on success
                     annotation.certificate = result;
                 }
                 callback( result, statusInfo );
@@ -113,7 +130,15 @@ define(function (require) {
                     current: newAnnotation
                 };
 
-            this.postRequest( request, callback );
+            this.postRequest( request, function( result, statusInfo ) {
+                if (statusInfo.success) {
+                    // update certificate on success
+                    console.log("inject new certificate");
+                    newAnnotation.certificate = result;
+                }
+                callback( result, statusInfo );
+            });
+
         },
 
 

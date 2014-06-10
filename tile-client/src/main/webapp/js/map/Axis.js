@@ -370,7 +370,7 @@ define(function (require) {
 
                     that.MAX_LABEL_WIDTH = Math.max( sinH + cosW, that.MAX_LABEL_WIDTH );
                     that.MAX_LABEL_HEIGHT = Math.max( cosH + sinW, that.MAX_LABEL_HEIGHT );
-                    that.MAX_LABEL_UNROTATED_WIDTH = $label.width();
+                    that.MAX_LABEL_UNROTATED_WIDTH = Math.max( $label.width(), that.MAX_LABEL_UNROTATED_WIDTH );
                 }
 
                 // initialized all measurements to zero

@@ -24,12 +24,12 @@
 package com.oculusinfo.tile.rest.data;
 
 
-
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
+import com.google.inject.Inject;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.math.statistics.StatTracker;
+import com.oculusinfo.tile.spark.SparkContextProvider;
+import com.oculusinfo.tilegen.datasets.CSVDataset;
+import com.oculusinfo.tilegen.datasets.FilterFunctions;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.json.JSONArray;
@@ -37,20 +37,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import scala.Function1;
 import scala.collection.immutable.List;
 import scala.util.Failure;
 import scala.util.Try;
 
-import com.google.inject.Inject;
-
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.math.statistics.StatTracker;
-import com.oculusinfo.tile.spark.SparkContextProvider;
-import com.oculusinfo.binning.util.JsonUtilities;
-import com.oculusinfo.tilegen.datasets.CSVDataset;
-import com.oculusinfo.tilegen.datasets.FilterFunctions;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 
 

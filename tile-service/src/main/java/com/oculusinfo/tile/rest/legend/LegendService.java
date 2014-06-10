@@ -24,9 +24,9 @@
  */
 package com.oculusinfo.tile.rest.legend;
 
-import java.awt.image.BufferedImage;
-
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+
+import java.awt.image.BufferedImage;
 
 public interface LegendService {
 	public BufferedImage getLegend (LayerConfiguration config, String layer, int zoomLevel, int width,

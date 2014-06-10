@@ -24,17 +24,16 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
+import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
-import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.binning.util.TypeDescriptor;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>> {
 	private static final long serialVersionUID = -7445619308538292627L;

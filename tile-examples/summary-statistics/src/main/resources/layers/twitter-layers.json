@@ -71,10 +71,10 @@
                             "type": "CarouselLayer",
                             "views": [
                                 {
-                                    "renderer": "TopTextSentiment"
+                                    "renderer": "TopTextSentimentHtml"
                                 },
                                 {
-                                    "renderer": "TagsByTimeSentiment"
+                                    "renderer": "TagsByTimeSentimentHtml"
                                 },
                                 {
                                     "renderer": "EmptyRenderer"

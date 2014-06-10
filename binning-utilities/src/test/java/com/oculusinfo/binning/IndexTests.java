@@ -24,12 +24,12 @@
  */
 package com.oculusinfo.binning;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * Tests of the Tile and Bin classes

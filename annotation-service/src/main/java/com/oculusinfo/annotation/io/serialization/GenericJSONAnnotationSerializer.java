@@ -24,17 +24,11 @@
  */
 package com.oculusinfo.annotation.io.serialization;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-
+import com.oculusinfo.annotation.data.AnnotationData;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.annotation.*;
+import java.io.*;
 
 public abstract class GenericJSONAnnotationSerializer<T> implements AnnotationSerializer {
 	

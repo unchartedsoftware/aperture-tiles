@@ -24,16 +24,10 @@
  */
 package com.oculusinfo.tile.init;
 
-import java.util.List;
-
-import com.oculusinfo.binning.io.FileSystemPyramidIOFactory;
-import com.oculusinfo.binning.io.HBasePyramidIOFactory;
-import com.oculusinfo.binning.io.JDBCPyramidIOFactory;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.ResourcePyramidIOFactory;
-import com.oculusinfo.binning.io.SQLitePyramidIOFactory;
-import com.oculusinfo.binning.io.ZipPyramidIOFactory;
+import com.oculusinfo.binning.io.*;
 import com.oculusinfo.factory.ConfigurableFactory;
+
+import java.util.List;
 
 /**
  * Basic enum of all the default {@link DelegateFactoryProviderTarget} types availables in the system.<br>
@@ -53,7 +47,8 @@ public enum DefaultPyramidIOFactoryProvider {
 	JDBC ("jdbc"),
 	RESOURCE ("resource"), 
 	ZIP ("zip"),
-	SQLITE ("sqlite");
+	SQLITE ("sqlite"),
+	DUMMY ("dummy");
 
 	//-------------------------------------
 
@@ -110,6 +105,9 @@ public enum DefaultPyramidIOFactoryProvider {
 			}
 			else if (factoryType.equals("sqlite")) {
 				factory = new SQLitePyramidIOFactory(factoryName, parent, path);				
+			}
+			else if (factoryType.equals("dummy")) {
+			    factory = new DummyPyramidIOFactory(factoryName, parent, path);
 			}
 			return factory;
 		}

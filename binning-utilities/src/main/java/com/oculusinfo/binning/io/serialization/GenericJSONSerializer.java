@@ -40,7 +40,6 @@ import org.json.JSONObject;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 
 
 public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
@@ -114,7 +113,7 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 	}
 
 	@Override
-	public void serialize (TileData<T> tile, TilePyramid pyramid, OutputStream stream) throws IOException {
+	public void serialize (TileData<T> tile, OutputStream stream) throws IOException {
 
 		TileIndex tileIndex = tile.getDefinition();
 

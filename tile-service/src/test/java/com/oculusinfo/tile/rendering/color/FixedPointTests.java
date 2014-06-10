@@ -24,13 +24,12 @@
  */
 package com.oculusinfo.tile.rendering.color;
 
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.JSONNode;
 
 public class FixedPointTests {
 	@Test

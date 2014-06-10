@@ -24,14 +24,10 @@
  */
 package com.oculusinfo.tile;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.google.common.io.Closeables;
+import com.google.inject.Singleton;
+import com.google.inject.servlet.ServletModule;
+import com.oculusinfo.tile.util.ResourceHelper;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.constructs.blocking.LockTimeoutException;
 import net.sf.ehcache.constructs.web.AlreadyCommittedException;
@@ -39,14 +35,15 @@ import net.sf.ehcache.constructs.web.AlreadyGzippedException;
 import net.sf.ehcache.constructs.web.PageInfo;
 import net.sf.ehcache.constructs.web.filter.FilterNonReentrantException;
 import net.sf.ehcache.constructs.web.filter.SimplePageCachingFilter;
-import com.oculusinfo.tile.util.ResourceHelper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Closeables;
-import com.google.inject.Singleton;
-import com.google.inject.servlet.ServletModule;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Set up caching

@@ -1,7 +1,7 @@
 {
     "layers": [ 
         { 
-            "id" : "bitcoin.source.amount.annotations",
+            "id" : "bitcoin.source.amount.annotations.test",
             "name" : "Source vs Amount Annotation Service",
             "description": "Source vs Amount bitcoina annotations",
             "pyramid" : {
@@ -28,7 +28,12 @@
                     "High": 10,
                     "Medium": 10,
                     "Low" : 10
-            }  
+            },
+            "accessibility": {
+        		"read": true,
+            	"write": false,
+            	"modify": false
+            },
         }
     ]
 }

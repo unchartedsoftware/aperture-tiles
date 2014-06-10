@@ -56,7 +56,7 @@ define({
             if (allowStepDown && Math.abs(Number(numberStr)) < 1 && value !== 0){
                 return formatNumber(value, decimals );
             }
-            return numberStr + 'K';
+            return value === 0 ? numberStr : numberStr + 'K';
         }
 
         function formatMillion(value, decimals, allowStepDown) {
@@ -77,7 +77,7 @@ define({
             if (allowStepDown && Math.abs(Number(numberStr)) < 1 && value !== 0){
                 return formatThousand(value, decimals, allowStepDown);
             }
-            return numberStr + 'M';
+            return value === 0 ? numberStr : numberStr + 'M';
         }
 
         function formatBillion(value, decimals, allowStepDown) {
@@ -99,7 +99,7 @@ define({
             if (allowStepDown && Math.abs(Number(numberStr)) < 1 && value !== 0){
                 return formatMillion(value, decimals, allowStepDown);
             }
-            return numberStr + 'B';
+            return value === 0 ? numberStr : numberStr + 'B';
 
         }
 

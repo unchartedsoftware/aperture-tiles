@@ -168,8 +168,7 @@ define(function (require) {
         },
 
         getSubLayerInfosById: function () {
-
-            return this.dataListener.getLayerInformation();
+            return this.dataListener.getLayersInformation();
         },
 
 

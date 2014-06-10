@@ -29,7 +29,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Random;
-//import java.util.zip.DeflaterOutputStream;
 
 import org.apache.avro.file.CodecFactory;
 import org.junit.After;
@@ -39,10 +38,10 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+
+//import java.util.zip.DeflaterOutputStream;
 
 
 
@@ -52,13 +51,11 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 //@Ignore
 public class SerializationSpeedTests {
 	private TileSerializer<Double> _serializer;
-	private TilePyramid            _pyramid;
 	private TileData<Double>       _data;
 
 	@Before
 	public void setup () {
 		_serializer = new DoubleAvroSerializer(CodecFactory.deflateCodec(4));
-		_pyramid = new AOITilePyramid(0.0, 0.0, 1.0, 1.0);
 
 		// Create some data
 		Random random = new Random(15485863);
@@ -73,7 +70,6 @@ public class SerializationSpeedTests {
 	@After
 	public void teardown () {
 		_serializer = null;
-		_pyramid = null;
 		_data = null;
 	}
 
@@ -86,7 +82,7 @@ public class SerializationSpeedTests {
 		long startTime = System.currentTimeMillis();
 		for (int n=0; n<N; ++n) {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			_serializer.serialize(_data, _pyramid, baos);
+			_serializer.serialize(_data, baos);
 			baos.close();
 			baos.flush();
 
@@ -107,7 +103,7 @@ public class SerializationSpeedTests {
 		long startTime = System.currentTimeMillis();
 		for (int n=0; n<N; ++n) {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			serializer.serialize(_data, _pyramid, baos);
+			serializer.serialize(_data, baos);
 			baos.close();
 			baos.flush();
 
@@ -147,7 +143,7 @@ public class SerializationSpeedTests {
 
 		// Get somethign to deserialization
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		_serializer.serialize(_data, _pyramid, baos);
+		_serializer.serialize(_data, baos);
 		baos.close();
 		baos.flush();
 		byte[] data = baos.toByteArray();
@@ -173,7 +169,7 @@ public class SerializationSpeedTests {
 
 		// Get somethign to deserialization
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		serializer.serialize(_data, _pyramid, baos);
+		serializer.serialize(_data, baos);
 		baos.close();
 		baos.flush();
 		byte[] data = baos.toByteArray();

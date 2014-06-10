@@ -33,16 +33,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
@@ -109,7 +106,7 @@ public class CachingPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> void writeTiles (String pyramidId, TilePyramid tilePyramid,
+	public <T> void writeTiles (String pyramidId,
 	                            TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
 		throw new UnsupportedOperationException("Caching Pyramid IO only supports reading");
@@ -219,18 +216,11 @@ public class CachingPyramidIO implements PyramidIO {
 		if (null == tile) {
 			return null;
 		} else {
-			try {
-				PyramidMetaData metaData = new PyramidMetaData(readMetaData(pyramidId));
-				TilePyramid pyramid = metaData.getTilePyramid();
-    
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				serializer.serialize(tile, pyramid, baos);
-				baos.flush();
-				baos.close();
-				return new ByteArrayInputStream(baos.toByteArray());
-			} catch (JSONException e) {
-				throw new IOException("Exception trying to obtain metadata for pyramid "+pyramidId, e);
-			}
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			serializer.serialize(tile, baos);
+			baos.flush();
+			baos.close();
+			return new ByteArrayInputStream(baos.toByteArray());
 		}
 	}
 

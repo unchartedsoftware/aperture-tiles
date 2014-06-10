@@ -24,13 +24,13 @@
  */
 package com.oculusinfo.geometry.geodesic.tracks;
 
-import java.util.List;
-
 import com.oculusinfo.geometry.geodesic.Position;
 import com.oculusinfo.geometry.geodesic.PositionCalculationParameters;
 import com.oculusinfo.geometry.geodesic.PositionCalculationType;
 import com.oculusinfo.geometry.geodesic.Track;
 import com.oculusinfo.math.linearalgebra.Vector;
+
+import java.util.List;
 
 public class Cartesian2DTrack extends Track {
     public Cartesian2DTrack (PositionCalculationParameters parameters,

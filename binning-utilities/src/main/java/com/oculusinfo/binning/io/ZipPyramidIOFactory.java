@@ -24,20 +24,19 @@
  */
 package com.oculusinfo.binning.io;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.oculusinfo.binning.io.impl.PyramidStreamSource;
 import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
 import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class ZipPyramidIOFactory extends ConfigurableFactory<PyramidIO> {

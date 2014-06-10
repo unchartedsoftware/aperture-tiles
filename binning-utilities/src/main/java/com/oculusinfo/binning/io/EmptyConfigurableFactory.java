@@ -24,9 +24,9 @@
  */
 package com.oculusinfo.binning.io;
 
-import java.util.List;
-
 import com.oculusinfo.factory.ConfigurableFactory;
+
+import java.util.List;
 
 /**
  * A helper factory to enable getting data from data paths within the configuration phase.<br>

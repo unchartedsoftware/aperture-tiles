@@ -48,8 +48,6 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
-            var that = this;
-
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
@@ -77,12 +75,14 @@ define(function (require) {
             this.createRoot();
 
             // if move while map is panning, interrupt pan
-            this.on('moveend', function(){
+            /*
+            this.on('movestart', function(){
                 if ( that.map.olMap_.panTween ) {
                     that.map.olMap_.panTween.callbacks = null;
                     that.map.olMap_.panTween.stop();
                 }
             });
+            */
 
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
@@ -98,16 +98,15 @@ define(function (require) {
         createRoot: function() {
 
             var that = this;
-            this.$root = $('<div id="'+this.id+'-root" style="position:absolute;"></div>');
+            this.$root = $('<div id="'+this.id+'-root" style="position:absolute; top:0px; z-index:999;"></div>');
             this.$map.append( this.$root );
 
             this.on('move', function() {
                 var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
-                that.$root.css({
-                    top: pos.y + "px",
-                    left: pos.x + "px"
-                });
+                that.$root.css({ "-webkit-transform":"translate("+ pos.x +"px, " + pos.y + "px)"});
             });
+
+            this.trigger('move'); // fire initial move event
         },
 
         getZIndex: function() {
@@ -600,7 +599,7 @@ define(function (require) {
 			case 'panend':
 
 				/*
-				 * ApertureJS 'panend' event is simply an alias to 'moveend' which also triggers
+				 * ApertureJS 'panend' event is an alias to 'moveend' which also triggers
 				 * on 'zoomend'. This intercepts it and ensures 'panend' is not called on a 'zoomend'
 				 * event
 				 */
@@ -633,7 +632,7 @@ define(function (require) {
 			case 'moveend':
             case 'move':
 
-				this.map.olMap_.events.unregister(eventType, this.map.olMap_, callback);
+				this.map.olMap_.events.unregister( eventType, this.map.olMap_, callback );
 				break;
 
 			case 'panend':

@@ -223,6 +223,10 @@ require(['./FileLoader',
 				        worldMap = new Map("map", mapConfig);
 				        // ... (set up our map axes) ...
 				        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
+
+                        // ... (set up our map tile borders) ...
+                        MapService.setTileBorderConfig(mapConfig);
+
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {
 					        UICustomization.customizeMap(worldMap);
@@ -249,11 +253,23 @@ require(['./FileLoader',
 
 				        // Create client, server and annotation layers
 				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
-				        ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap);
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-				        new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap() ).noop();
+                        $.when( ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap) ).done( function( serverLayers ) {
+                            var layer,
+                            	layerInfo,
+                            	filterAxisConfig;
+                            
+                            layerInfo = serverLayers.getSubLayerInfosById();
 
+                            for(layer in layerInfo){
+                                if(layerInfo.hasOwnProperty( layer )){
+                                    filterAxisConfig = layerInfo[ layer ].meta;
+                                }
+                            }
+                            filterAxisConfig.map = worldMap;
+                            new LayerControls('layer-controls-content', uiMediator.getLayerStateMap(), filterAxisConfig).noop();
+                        });
 			        }
 		        );
 

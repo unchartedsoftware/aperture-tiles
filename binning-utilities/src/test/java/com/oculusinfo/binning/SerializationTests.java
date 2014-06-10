@@ -37,8 +37,6 @@ import junit.framework.Assert;
 import org.apache.avro.file.CodecFactory;
 import org.junit.Test;
 
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -54,14 +52,12 @@ public class SerializationTests {
 	public void testBackwardCompatbilitySerialize() throws IOException{
 		TestPyramidIO io = new TestPyramidIO();
 		TileSerializer<Double> serializer = new BackwardCompatibilitySerializer();
-		TilePyramid pyramid = new WebMercatorTilePyramid();
-		
 		
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<Double> tile = new TileData<Double>(index);
 		tile.setBin(0, 0, 5.0);
 		io.initializeForWrite("backwardsCompatibilityTest");
-		io.writeTiles("backwardsCompatibilityTest", pyramid, serializer, Collections.singleton(tile));
+		io.writeTiles("backwardsCompatibilityTest", serializer, Collections.singleton(tile));
 		
 		
 		
@@ -75,7 +71,6 @@ public class SerializationTests {
 	@Test
 	public void testStringIntPairArrayTileSerialization() throws IOException {
 		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJSONSerializer();
-		TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
 
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Integer>>> tile = new TileData<List<Pair<String,Integer>>>(index);
@@ -88,7 +83,7 @@ public class SerializationTests {
 		tile.setBin(0, 0, data);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		serializer.serialize(tile, pyramid, baos);
+		serializer.serialize(tile, baos);
 		baos.flush();
 		baos.close();
 
@@ -118,8 +113,7 @@ public class SerializationTests {
 		}
 		PyramidIO io = new TestPyramidIO();
 		TileSerializer<Double> serializer = new DoubleAvroSerializer(CodecFactory.nullCodec());
-		WebMercatorTilePyramid tilePyramid = new WebMercatorTilePyramid();
-		io.writeTiles(".", tilePyramid, serializer, Collections.singleton(tile));
+		io.writeTiles(".", serializer, Collections.singleton(tile));
 
 		List<TileData<Double>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
 		Assert.assertEquals(1, tilesOut.size());
@@ -142,8 +136,7 @@ public class SerializationTests {
 		}
 		PyramidIO io = new TestPyramidIO();
 		TileSerializer<List<Double>> serializer = new DoubleArrayAvroSerializer(CodecFactory.nullCodec());
-		WebMercatorTilePyramid tilePyramid = new WebMercatorTilePyramid();
-		io.writeTiles(".", tilePyramid, serializer, Collections.singleton(tile));
+		io.writeTiles(".", serializer, Collections.singleton(tile));
 
 		List<TileData<List<Double>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
 		Assert.assertEquals(1, tilesOut.size());
@@ -169,8 +162,7 @@ public class SerializationTests {
 		}
 		PyramidIO io = new TestPyramidIO();
 		TileSerializer<List<String>> serializer = new StringArrayAvroSerializer(CodecFactory.nullCodec());
-		WebMercatorTilePyramid tilePyramid = new WebMercatorTilePyramid();
-		io.writeTiles(".", tilePyramid, serializer, Collections.singleton(tile));
+		io.writeTiles(".", serializer, Collections.singleton(tile));
 
 		List<TileData<List<String>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
 		Assert.assertEquals(1, tilesOut.size());
@@ -188,7 +180,6 @@ public class SerializationTests {
 	@Test
 	public void testUnicodeStringIntPairTileSerialization() throws IOException {
 		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJSONSerializer();
-		TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
 
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Integer>>> tile = new TileData<List<Pair<String,Integer>>>(index);
@@ -220,7 +211,7 @@ public class SerializationTests {
 		tile.setBin(0, 0, data);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		serializer.serialize(tile, pyramid, baos);
+		serializer.serialize(tile, baos);
 		baos.flush();
 		baos.close();
 

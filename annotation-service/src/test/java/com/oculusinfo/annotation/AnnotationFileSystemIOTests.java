@@ -23,32 +23,34 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.After;
-import org.junit.Before;
-
-import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.annotation.io.*;
-import com.oculusinfo.annotation.io.impl.*;
-import com.oculusinfo.annotation.io.serialization.*;
-import com.oculusinfo.annotation.io.serialization.impl.*;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.io.*;
-import com.oculusinfo.binning.io.impl.*;
-import com.oculusinfo.binning.impl.*;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
 import com.oculusinfo.binning.util.Pair;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
+import java.util.Map;
 
 public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
 	
-	private static final String  ROOT_PATH = "C:\\Users\\kbirk\\Desktop\\";
-	private static final String  BASE_PATH = "filesystem-annotations-test\\";
+	private static final String  ROOT_PATH = ".\\annotation-service\\src\\test\\";
+	private static final String  BASE_PATH = TEST_LAYER_NAME;
 	private static final String  TILE_EXT = "json";
 	private static final String  DATA_EXT = "json";
 	private static final boolean VERBOSE = false;
@@ -94,7 +96,7 @@ public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
     public void testHBaseIO() {
     	
     	
-        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );        
+        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
         List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( annotations, _indexer, _pyramid );
 		
         List<TileIndex> tileIndices = tilesToIndices( tiles );
@@ -106,7 +108,7 @@ public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
 	    	 *  Write annotations
 	    	 */ 	
 	    	System.out.println("Writing "+NUM_ENTRIES+" to file system");	
-	    	_tileIO.writeTiles(BASE_PATH, _pyramid, _tileSerializer, tiles );
+	    	_tileIO.writeTiles(BASE_PATH, _tileSerializer, tiles );
 	    	_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
 	        
 	    	/*

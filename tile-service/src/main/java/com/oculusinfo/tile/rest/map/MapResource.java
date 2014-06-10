@@ -23,14 +23,12 @@
  */
 package com.oculusinfo.tile.rest.map;
 
+import com.google.inject.Inject;
 import oculus.aperture.common.rest.ApertureServerResource;
-
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-
-import com.google.inject.Inject;
 
 public class MapResource extends ApertureServerResource {
     private MapService _service;

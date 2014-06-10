@@ -23,12 +23,11 @@
  */
 package com.oculusinfo.binning.metadata;
 
-import java.util.List;
-
+import com.oculusinfo.binning.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.util.Pair;
+import java.util.List;
 
 public class MetaDataMutationTests {
 	@Test

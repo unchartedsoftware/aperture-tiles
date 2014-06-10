@@ -58,10 +58,6 @@ define(function (require) {
             this.dataCallback = {};
             // layer info
             this.layerInfo = layerInfo;
-
-            // The relative position within each bin at which visuals will be drawn
-            this.position = {x: 'minX', y: 'maxY'};
-
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
         },
@@ -152,7 +148,6 @@ define(function (require) {
          */
         requestData: function(requestedTiles, tileSetBounds, callback) {
             var i;
-            // send request to respective coordinator
             for (i=0; i<requestedTiles.length; ++i) {
                 this.getRequest( requestedTiles[i], tileSetBounds, callback );
             }
@@ -301,8 +296,8 @@ define(function (require) {
                         binData = {
                             binkey: this.createBinKey(tilekey, bin),
                             tilekey: tilekey,
-                            longitude: binRect[this.position.x],
-                            latitude: binRect[this.position.y],
+                            longitude: binRect.minX, // top left of tile
+                            latitude: binRect.maxY,
                             bin: tileData.values[binNum]
                         };
                         results.push( binData );

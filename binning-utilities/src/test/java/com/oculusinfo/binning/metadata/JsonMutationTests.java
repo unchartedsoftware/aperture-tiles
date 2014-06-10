@@ -23,15 +23,15 @@
  */
 package com.oculusinfo.binning.metadata;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JsonMutationTests {
 	private static final double EPSILON = 1E-12;

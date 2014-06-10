@@ -24,12 +24,12 @@
  */
 package com.oculusinfo.tile.rendering.transformations;
 
-import java.util.List;
-
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+
+import java.util.List;
 
 /**
  * A factory for creating {@link IValueTransformer} objects.

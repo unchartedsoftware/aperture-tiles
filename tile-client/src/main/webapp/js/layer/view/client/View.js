@@ -44,10 +44,10 @@ define(function (require) {
 
 
     TileTracker = Class.extend({
-        ClassName: "TileTracker",
+        ClassName: "View",
 
         /**
-         * Construct a TileTracker
+         * Construct a View
          */
         init: function ( spec ) {
 
@@ -108,7 +108,7 @@ define(function (require) {
                 }
             }
             // Request needed tiles from dataService
-            this.dataService.requestData( neededTiles, tileSetBounds, $.proxy( this.redraw, this) );
+            this.dataService.requestData( neededTiles, tileSetBounds, $.proxy( this.redraw, this ) );
         },
 
 
@@ -123,7 +123,7 @@ define(function (require) {
 
             } else {
                 // otherwise release and request new data
-                if (tilekey === this.renderer.clientState.clickState.tilekey) {
+                if (tilekey === this.renderer.clientState.getClickState( 'tilekey' )) {
                     // if same tile as clicked tile, un-select elements from this view
                     this.renderer.clientState.clearClickState();
                 }

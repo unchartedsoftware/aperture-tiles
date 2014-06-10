@@ -48,10 +48,7 @@ define(function (require) {
 
             // holds the state of mouse clicks
             this.clearClickState();
-            // holds any
-            this.clearSharedState();
         },
-
 
         setClickState: function( key, value) {
 
@@ -69,29 +66,8 @@ define(function (require) {
             }
         },
 
-        setSharedState: function(key, value) {
-            this.sharedState[key] = value;
-        },
-
-        getSharedState: function(key) {
-            return this.sharedState[key];
-        },
-
-        removeSharedState: function(key) {
-            if (this.sharedState[key] !== undefined) {
-                delete this.sharedState[key];
-            }
-        },
-
         clearClickState: function() {
             this.clickState = {
-            };
-        },
-
-        clearSharedState: function() {
-            this.sharedState = {
-                isVisible : true,
-                opacity : 1.0
             };
         }
 

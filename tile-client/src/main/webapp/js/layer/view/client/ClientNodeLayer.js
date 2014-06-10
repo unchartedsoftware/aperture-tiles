@@ -23,13 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines the base class for a client render layer. Must be 
- * inherited from for any functionality.
- */
 define(function (require) {
     "use strict";
 
@@ -51,6 +45,7 @@ define(function (require) {
             this.xAttr_ = spec.xAttr || null;
             this.yAttr_ = spec.yAttr || null;
             this.idKey_=  spec.idKey || null;
+            this.propagate = spec.propagate === undefined ? true : spec.propagate;
 
             this.Z_INDEX = this.map_.getZIndex() + this.Z_INDEX_OFFSET;
 
@@ -60,6 +55,12 @@ define(function (require) {
 
             this.layers_ = [];
             this.subset_ = [];
+        },
+
+
+        getRootElement: function() {
+
+            return this.$root_;
         },
 
 
@@ -83,18 +84,19 @@ define(function (require) {
 
         createLayerRoot : function() {
             // create layer root div
-            this.$root_ = $('<div class="client-layer" style="position:relative; z-index:'+this.Z_INDEX+';"></div>');
+            this.$root_ = $('<div style="position:relative; z-index:'+this.Z_INDEX+';"></div>');
             // append to map root
             this.map_.getRootElement().append( this.$root_ );
-            // allow mouse events to propagate through to map
-            this.map_.enableEventToMapPropagation( this.$root_ );
+            if ( this.propagate ) {
+                // allow mouse events to propagate through to map
+                this.map_.enableEventToMapPropagation( this.$root_ );
+            }
         },
 
 
         createNodeRoot : function(data) {
-            var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] ),
-                nodeId = data[this.idKey_] || "";
-            return $('<div id="'+nodeId+'" class="client-layer-tile" style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; width: 256px; height:256px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
+            var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] );
+            return $('<div style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
         },
 
 
@@ -140,9 +142,11 @@ define(function (require) {
                 node = nodesById[ key ],
                 index = nodes.indexOf( node );
 
-            this.destroyNode( node );
-            nodes.splice(index, 1);
-            delete nodesById[ key ];
+            if (node) {
+                this.destroyNode( node );
+                nodes.splice(index, 1);
+                delete nodesById[ key ];
+            }
         },
 
 
@@ -150,8 +154,10 @@ define(function (require) {
             var nodes = this.nodes_,
                 index = nodes.indexOf( node );
 
-            this.destroyNode( nodes[index] );
-            nodes.splice( index, 1 );
+            if (index !== -1) {
+                this.destroyNode( nodes[index] );
+                nodes.splice( index, 1 );
+            }
         },
 
 
@@ -367,6 +373,22 @@ define(function (require) {
                     removeById();
                     break;
             }
+
+            return this;
+        },
+
+
+        clear: function() {
+
+            var nodes = this.nodes_,
+                i;
+
+            for (i=0; i<nodes.length; i++) {
+                this.destroyNode( nodes[i] );
+            }
+            this.nodes_ = [];
+            this.nodesById_ = {};
+            this.subset_ = [];
 
             return this;
         },

@@ -24,16 +24,15 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.PyramidIO;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.PyramidIO;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 

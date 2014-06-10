@@ -25,7 +25,8 @@
 		"           allowStepDown: 		if the units can step down if they are below range"
 	],
 
-	"id" : "Geographic-Google-Map",
+	"id" : "Twitter Geographic-Google-Map",
+	"dataset" : "twitter",
 	"description" : "A geographic Google map base layer using web mercator projection",
 
 	"PyramidConfig" : {

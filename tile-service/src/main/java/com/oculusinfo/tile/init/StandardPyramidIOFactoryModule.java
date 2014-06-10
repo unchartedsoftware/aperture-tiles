@@ -41,8 +41,9 @@ public class StandardPyramidIOFactoryModule extends AbstractModule {
 		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.JDBC.create());
 		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.RESOURCE.create());
 		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.ZIP.create());
-		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.SQLITE.create());
-		
+        factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.SQLITE.create());
+        factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.DUMMY.create());
+
 		bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(StandardPyramidIOFactoryProvider.class);
 	}
 	

@@ -24,8 +24,6 @@
  */
 package com.oculusinfo.tile.rest;
 
-import oculus.aperture.common.rest.ResourceDefinition;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.oculusinfo.tile.rest.data.DataResource;
@@ -33,6 +31,7 @@ import com.oculusinfo.tile.rest.layer.LayerResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
 import com.oculusinfo.tile.rest.map.MapResource;
 import com.oculusinfo.tile.rest.tile.TileResource;
+import oculus.aperture.common.rest.ResourceDefinition;
 
 public class RestConfigModule extends AbstractModule {
 	@Override

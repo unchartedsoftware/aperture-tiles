@@ -24,15 +24,14 @@
  */
 package com.oculusinfo.binning.io;
 
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.factory.properties.StringProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 
 public class HBasePyramidIOFactory extends SharedInstanceFactory<PyramidIO> {

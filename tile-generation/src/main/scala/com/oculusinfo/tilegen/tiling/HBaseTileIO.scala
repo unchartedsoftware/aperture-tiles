@@ -181,7 +181,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 				// Create a Put (a table write object) that will write this tile
 				val baos = new ByteArrayOutputStream()
-				binDesc.getSerializer.serialize(tile, pyramider, baos);
+				binDesc.getSerializer.serialize(tile, baos);
 				baos.close
 				baos.flush
 

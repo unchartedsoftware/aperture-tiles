@@ -25,10 +25,7 @@
 package com.oculusinfo.math.algebra;
 
 import junit.framework.Assert;
-
 import org.junit.Test;
-
-import com.oculusinfo.math.algebra.AngleUtilities;
 
 public class TestAngleUtilities {
     private static final double EPSILON = 1E-12;

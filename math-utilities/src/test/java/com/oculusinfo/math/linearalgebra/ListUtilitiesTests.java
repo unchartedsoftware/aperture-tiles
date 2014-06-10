@@ -24,12 +24,11 @@
  */
 package com.oculusinfo.math.linearalgebra;
 
+import junit.framework.Assert;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.List;
-
-import junit.framework.Assert;
-
-import org.junit.Test;
 
 public class ListUtilitiesTests {
     private static final double EPSILON = 1E-12;

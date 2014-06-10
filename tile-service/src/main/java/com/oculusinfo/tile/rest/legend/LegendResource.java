@@ -24,16 +24,12 @@
  */
 package com.oculusinfo.tile.rest.legend;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.UUID;
-
-import javax.imageio.ImageIO;
-
+import com.google.inject.Inject;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.ImageOutputRepresentation;
+import com.oculusinfo.tile.rest.layer.LayerService;
 import oculus.aperture.common.rest.ApertureServerResource;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Form;
@@ -46,11 +42,12 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
-import com.google.inject.Inject;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rest.ImageOutputRepresentation;
-import com.oculusinfo.tile.rest.layer.LayerService;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.UUID;
 
 public class LegendResource extends ApertureServerResource {
 

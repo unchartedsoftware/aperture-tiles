@@ -24,10 +24,9 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import oculus.aperture.common.rest.ResourceDefinition;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import oculus.aperture.common.rest.ResourceDefinition;
 
 public class AnnotationRestConfigModule extends AbstractModule {
 

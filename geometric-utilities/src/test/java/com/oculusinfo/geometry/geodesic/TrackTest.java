@@ -24,11 +24,9 @@
  */
 package com.oculusinfo.geometry.geodesic;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
 import com.oculusinfo.geometry.geodesic.tracks.GeodeticTrack;
+import junit.framework.Assert;
+import org.junit.Test;
 
 public class TrackTest {
     private static final double EPSILON = 1E-12;

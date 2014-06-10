@@ -23,12 +23,11 @@
  */
 package com.oculusinfo.tile.rendering.properties;
 
-import java.util.UUID;
-
+import com.oculusinfo.factory.ConfigurationException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.factory.ConfigurationException;
+import java.util.UUID;
 
 public class UUIDPropertyTests {
 	@Test

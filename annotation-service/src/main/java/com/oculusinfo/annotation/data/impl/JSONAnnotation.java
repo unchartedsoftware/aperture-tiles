@@ -21,16 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.impl;
+package com.oculusinfo.annotation.data.impl;
+
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.binning.util.Pair;
+import org.json.JSONObject;
 
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
-
-import com.oculusinfo.binning.util.Pair;
-import org.json.JSONObject;
-
-import com.oculusinfo.annotation.*;
 
 
 /*
@@ -39,8 +38,15 @@ import com.oculusinfo.annotation.*;
  * 		x:
  * 		y:
  * 		level:
- * 		uuid:
- * 		priority:
+ * 	    range: {
+ * 	        min:
+ * 	        max:
+ * 	    }
+ * 	    group:
+ * 		certificate: {
+ * 	        timestamp:
+ * 	    	uuid:
+ * 	    }
  * 		data: {}
  * }
  */
@@ -139,8 +145,10 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
 
 			String group = json.getString("group");
             JSONObject data = json.getJSONObject("data");
+
             UUID uuid;
             Long timestamp;
+
             try {
                 // certificate may not exist on write
                 JSONObject certificate = json.getJSONObject("certificate");

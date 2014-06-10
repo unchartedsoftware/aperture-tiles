@@ -23,10 +23,10 @@
  */
 package com.oculusinfo.binning.metadata;
 
-import java.util.List;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
 
 
 

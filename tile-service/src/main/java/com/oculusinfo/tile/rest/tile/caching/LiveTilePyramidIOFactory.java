@@ -23,16 +23,15 @@
  */
 package com.oculusinfo.tile.rest.tile.caching;
 
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.spark.SparkContextProvider;
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class LiveTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LiveTilePyramidIOFactory.class);

@@ -26,6 +26,7 @@
 	],
 
 	"id" : "bitcoin Source ID vs. Amount",
+	"dataset" : "bitcoin",
 	"description" : "Bitcoin Source ID vs. Amount of Transaction",
 
 	"PyramidConfig": {
@@ -50,7 +51,7 @@
 			"title" : "Source ID",
 			"position" : "bottom",
             "repeat": false,
-			"isOpen" : false,
+            "isOpen" : false,
 			"intervalSpec" : {
 				"type" : "percentage",
 				"increment" : 20,
@@ -67,7 +68,7 @@
 			"title" : "Amount",
 			"position" : "left",
             "repeat" : false,
-			"isOpen" : false,
+            "isOpen" : false,
 			"intervalSpec" : {
 				"type" : "value",
 				"increment" : 100000,
@@ -80,5 +81,8 @@
 				"allowStepDown" : false
 			}
 		}
-	]
+	],
+	"TileBorderConfig" : {
+		"color" : "red"
+	}	
 }

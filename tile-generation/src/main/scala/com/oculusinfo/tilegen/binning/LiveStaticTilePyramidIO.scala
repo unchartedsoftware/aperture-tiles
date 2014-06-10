@@ -78,7 +78,6 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	}
 
 	def writeTiles[T] (pyramidId: String,
-	                   tilePyramid: TilePyramid,
 	                   serializer: TileSerializer[T],
 	                   data: JavaIterable[TileData[T]]): Unit =
 		throw new IOException("Can't write raw data")

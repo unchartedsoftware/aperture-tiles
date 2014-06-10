@@ -25,9 +25,9 @@
 
 package com.oculusinfo.tile.rendering.impl;
 
-import java.util.List;
-
 import com.oculusinfo.binning.util.Pair;
+
+import java.util.List;
 
 /**
  * A server side to render Map<String, Double> (well, technically,

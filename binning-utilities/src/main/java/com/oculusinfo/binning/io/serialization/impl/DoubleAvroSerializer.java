@@ -24,13 +24,12 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import java.io.IOException;
-
+import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
-import com.oculusinfo.binning.util.TypeDescriptor;
+import java.io.IOException;
 
 public class DoubleAvroSerializer extends GenericAvroSerializer<Double> {
 	private static final long serialVersionUID = 6100948287405483872L;

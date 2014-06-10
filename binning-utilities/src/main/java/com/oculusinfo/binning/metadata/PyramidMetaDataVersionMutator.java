@@ -23,14 +23,13 @@
  */
 package com.oculusinfo.binning.metadata;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import com.oculusinfo.binning.util.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.util.Pair;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 
 

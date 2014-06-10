@@ -21,29 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation;
+package com.oculusinfo.annotation.data;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.UUID;
-import java.util.Comparator;
-
-import com.oculusinfo.binning.*;
-import com.oculusinfo.annotation.index.*;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.util.Pair;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.util.*;
 
 
 public class AnnotationManipulator {
-	
-	public static final int NUM_BINS = 8;
-	
+
+
 	static private class CertificateComparator implements Comparator< Pair<String, Long> > {
 	    @Override
 	    public int compare( Pair<String, Long> a, Pair<String, Long> b ) {	    	
@@ -71,6 +60,7 @@ public class AnnotationManipulator {
     static public void addDataToBin( Map<String, List<Pair<String, Long>>> bin, AnnotationData<?> data ) {
     	
     	synchronized( bin ) {
+
 	    	String group = data.getGroup();
 	    	Pair<String, Long> certificate =  data.getCertificate();
 	    	List< Pair<String, Long> > entries;
@@ -121,7 +111,7 @@ public class AnnotationManipulator {
     
     
     
-    static public void addDataToTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) {   	
+    static public void addDataToTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) {
     	
     	synchronized( tile ) {
     		
@@ -173,6 +163,7 @@ public class AnnotationManipulator {
     static public List<Pair<String, Long>> getAllCertificatesFromBin( Map<String, List<Pair<String, Long>>> bin ) {
     	
     	synchronized( bin ) {
+
     		List<Pair<String, Long>> allCertificates = new LinkedList<>();  
         	// for each group group in a bin
     		for ( List<Pair<String, Long>> certificates : bin.values() ) {
@@ -207,6 +198,7 @@ public class AnnotationManipulator {
     static public List<Pair<String, Long>> getFilteredCertificatesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile, Map<String, Integer> filter ) {
     	
     	synchronized( tile ) {
+
 	    	List<Pair<String, Long>> filtered = new LinkedList<>();
 	    	// for each bin
 	    	for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
@@ -228,170 +220,7 @@ public class AnnotationManipulator {
 			return filtered;
     	}
     }    
-    
-    
-    
-    static public JSONObject certificateToJSON( Pair<String, Long> certificate ) {
-    	
-    	JSONObject json = new JSONObject();
-    	try {		   	
-    		json.put( "uuid", certificate.getFirst().toString() );
-    		json.put( "timestamp", certificate.getSecond().toString() );		    
-    	} catch ( Exception e ) {
-    		e.printStackTrace();
-    	}
-    	
-    	return json;
-    }
-    
-    
-    static public Pair<String, Long> getCertificateFromJSON( JSONObject json ) throws IllegalArgumentException {
-    	
-    	try {
-			
-    		UUID uuid = UUID.fromString( json.getString("uuid") );
-    		Long timestamp = Long.parseLong( json.getString("timestamp") );
-    		
-    		return new Pair<String, Long>( uuid.toString(), timestamp );
-		    
-    	} catch ( Exception e ) {
-    		throw new IllegalArgumentException( e );
-    	}
 
-    }
-    
-    
-    static public Map<String, List<Pair<String, Long>>> getBinFromJSON( JSONObject json ) throws IllegalArgumentException {
-    	
-    	try {
-
-    		Map<String, List<Pair<String, Long>>> certificates =  new LinkedHashMap<>();
-        	
-        	Iterator<?> priorities = json.keys();
-            while( priorities.hasNext() ){
-            	
-                String group = (String)priorities.next();
-                
-                if( json.get(group) instanceof JSONArray ) {
-                
-	            	JSONArray jsonCertificates = json.getJSONArray(group);
-	            	
-	            	List<Pair<String, Long>> certificateList = new LinkedList<>();	            	
-	            	for (int i=0; i<jsonCertificates.length(); i++) {
-	            		
-	            		JSONObject jsonRef = jsonCertificates.getJSONObject( i );
-	            		certificateList.add( getCertificateFromJSON( jsonRef ) );            		
-	            	}           	
-	            	certificates.put( group, certificateList );	
-                }
-                
-            }	        
-    	    return certificates;
-			
-		} catch ( Exception e ) {
-			throw new IllegalArgumentException( e );
-		}
-
-    }
-    
-    
-    static public JSONObject binToJSON( Map<String, List<Pair<String, Long>>> bin ) {
-    	
-    	JSONObject binJSON = new JSONObject();
-    	try {
-
-	    	// for each group group in a bin
-		    for (Map.Entry<String, List<Pair<String, Long>>> certificateEntry : bin.entrySet() ) {		    	
-		    	
-		    	String group = certificateEntry.getKey();
-		    	List<Pair<String, Long>> certificates = certificateEntry.getValue();
-		    	
-		    	JSONArray certificateJSON = new JSONArray();
-		    	for ( Pair<String, Long> certificate : certificates ) {
-		    		certificateJSON.put( certificateToJSON( certificate ) );
-		    	}
-		    	
-		    	// add group to bin json object
-		    	binJSON.put( group, certificateJSON );		    	
-		    }
-		    
-    	} catch ( Exception e ) {
-    		e.printStackTrace();
-    	}
-    	
-    	return binJSON;
-    }
-    
-    
-    
-    
-    
-    static public TileData<Map<String, List<Pair<String, Long>>>> getTileFromJSON( JSONObject json ) throws IllegalArgumentException {
-    	
-		try {
-			
-			TileIndex index = new TileIndex( json.getInt("level"),
-											 json.getInt("x"),
-											 json.getInt("y"), 
-											 AnnotationIndexer.NUM_BINS, 
-											 AnnotationIndexer.NUM_BINS );
-			
-			// create tile with empty bins
-			TileData<Map<String, List<Pair<String, Long>>>> tile = new TileData<>( index );
-			
-			// for all binkeys
-	        Iterator<?> binKeys = json.keys();
-	        while( binKeys.hasNext() ) {
-	        	
-	        	String binKey = (String)binKeys.next();
-	            
-	            if( json.get(binKey) instanceof JSONObject ){
-	            	
-	            	JSONObject bin = (JSONObject)json.get(binKey);            	
-	            	BinIndex binIndex = BinIndex.fromString( binKey );	
-	            	tile.setBin( binIndex.getX(), binIndex.getY(), getBinFromJSON( bin ));
-	            }
-	        }
-			
-			return tile;
-			
-		} catch ( Exception e ) {
-			throw new IllegalArgumentException( e );
-		}		
-    	
-    }
-    
-    
-    static public JSONObject tileToJSON( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
-    	
-    	JSONObject tileJSON = new JSONObject();
-		
-		try {
-			
-			tileJSON.put("level", tile.getDefinition().getLevel() );
-			tileJSON.put("x", tile.getDefinition().getX() );
-			tileJSON.put("y", tile.getDefinition().getY() );
-			
-			for (int i=0; i<tile.getDefinition().getXBins(); i++ ) {
-				for (int j=0; j<tile.getDefinition().getYBins(); j++ ) {
-					
-					Map<String, List<Pair<String, Long>>> bin = tile.getBin( i, j );
-					
-					if ( bin != null) {
-						// add bin object to tile
-					    tileJSON.put( new BinIndex(i, j).toString(), binToJSON( bin ) );
-					}
-					
-				}
-			}
-
-		} catch ( Exception e ) {
-			e.printStackTrace();
-		}
-		
-		return tileJSON;
-    	
-    }
 	
     
 }

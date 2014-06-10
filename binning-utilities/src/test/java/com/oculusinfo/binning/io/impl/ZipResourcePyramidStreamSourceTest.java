@@ -24,19 +24,17 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-
+import com.oculusinfo.binning.TileIndex;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.junit.Assert.fail;
 
 public class ZipResourcePyramidStreamSourceTest {
 

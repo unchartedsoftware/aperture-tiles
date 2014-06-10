@@ -52,7 +52,7 @@
             datasetLowerCase = summaryBuilderOptions.dataset ? summaryBuilderOptions.dataset.toLowerCase() : null;
 
         var makeSafeIdForJQuery = function (inputString){
-            return inputString.replace(/\./g, '_dot_').replace(/\,/g, '');
+            return inputString.replace(/\./g, '_dot_').replace(/\,/g, '').replace(/\ /g, '_');
         };
 
         // Create the layerId by concatenating the layer names together;
@@ -169,16 +169,16 @@
                             }
                             else {    // regular field
                                 var value = v;
-                                if((typeof value) == "number"){
+                                if ((typeof value) == "number") {
                                     value = $.number(value, 2);
                                     tbl_row += '<td style="text-align:right">'+ value +'</td>';
                                 }
-                                else if(Object.prototype.toString.call( value ) === '[object Array]'){
+                                else if ($.isArray(value)) {
                                     value = "";
                                     var rowHtml = '',
-                                        tokens = value.split(/<br \/>/g);
+                                        tokens = '';
 
-                                    $.each(v, function(vk, vv){
+                                    $.each(v, function(vk, vv) {
                                         $.each(vv, function(vvk, vvv){    // Assumes array of objects.
                                             var vvValue = vvv;
                                             if((typeof vvValue) == "number"){
@@ -188,10 +188,11 @@
 
                                         });
                                     });
-                                    if (tokens.length > 0){
+                                    tokens = value.split(/<br \/>/g);
+                                    if (tokens.length > 0) {
                                         var hasEllipse = false,
                                             i = 0;
-                                        for (i; i < tokens.length; i++){
+                                        for (i; i < tokens.length; i++) {
                                             var token = tokens[i];
                                             if (i>0){
                                                 rowHtml += '</br>';
@@ -335,49 +336,18 @@
             var layerDeferreds = LayerService.requestLayers(),
                 mapDeferreds = MapService.requestMaps(),
                 $tabsPlotsUl = $('#tabs-plots ul');
-            /**
-             * getBitcoinMapConfig relies on each map returned from MapService.requestMaps id to contain the
-             * string 'bitcoin' it filters the maps by the UrlVar dataset and the mapID provided.
-             */
-            var getBitcoinMapConfig = function(maps, mapID){
-                var length = maps.length,
-                    i=0;
-                for(i; i<length; i++){
-                    if (maps[i]["id"]
-                        && maps[i]["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1
-                        && maps[i]["id"] === mapID){
-                        return maps[i];
-                    }
-                }
-            };
-
-            var getLayer = function(layers, pyramidConfig){
-                var layer;
-                // bitcoin
-                if (datasetLowerCase === 'bitcoin') {
-                    $.each(layers, function (pk, pv) {
-                        if (pv.id === datasetLowerCase) {
-                            $.each(pv.children, function (k, v) {
-                                //if mapID contains v.name
-                                if (PyramidFactory.pyramidsEqual(v['pyramid'], pyramidConfig)){
-                                    layer = v;
-                                }
-                            });
-                        }
-                    });
-                } else { // twitter
-                    layer = layers;
-                }
-                return [{
-                    "layer": layer["id"],
+            
+            var getLayerConfig = function(layer) {
+            	return [{
+                    "layer": layer.id,
                     "domain": layer.renderers[0].domain,
                     "name": layer.name,
                     "renderer": layer.renderers[0].renderer,
                     "transform": layer.renderers[0].transform
                 }];
-            };
+            }
 
-            var generateMap = function(mapID, mapConfig,layerConfig, layer){
+            var generateMap = function(mapID, mapConfig, layerConfig, layer){
                 var tabLayerId = getTabLayerId(mapID),
                     plotTabDiv = "tab-plot-" + tabLayerId,
                     $plotTab = $('<div id="' + plotTabDiv + '">'),
@@ -387,7 +357,8 @@
                     uiMediator,
                     worldMap,
                     $plotControls,
-                    controlsButton;
+                    controlsButton,
+                    serverLayerDeferred;
 
                 $tabsPlotsUl.append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
                 $plotTab.append($plotVisual);
@@ -398,22 +369,11 @@
                 // ... (set up our map axes) ...
                 worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
-                if(datasetLowerCase === 'twitter') {
-                    worldMap.map.zoomTo( 40, -95, 4 );
-                }
-                uiMediator = new UIMediator();
-                if (layerConfig[0]["domain"] === 'server') {
-                    ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
-                } else {
-                    var clientLayers = [{
-                        "domain" : layer["renderers"][0]["domain"],
-                        "layer" : layer["id"],
-                        "name" : layer["name"],
-                        "type" : layer["renderers"][0]["type"],
-                        "views" : layer["renderers"][0]["views"]
-                    }];
+                // ... (set up our map tile borders) ...
+                MapService.setTileBorderConfig(mapConfig, plotDiv);
 
-                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+                if(mapConfig.zoomTo) {
+                    worldMap.map.zoomTo( mapConfig.zoomTo[0], [1], [2] );
                 }
 
                 //create the controls
@@ -429,47 +389,65 @@
                 controlsButton.getContentElement().addClass('layer-controls-content');
                 controlsButton.getContainerElement().addClass('layer-controls');
 
-                new LayerControls().initialize(plotControls + '-content', uiMediator.getLayerStateMap());
+                uiMediator = new UIMediator();
+
+                if (layerConfig[0].domain === 'server') {
+                    serverLayerDeferred = ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
+                    $.when( serverLayerDeferred ).done( function( layersFromServer ) {
+                        var filterAxisConfig,
+                            key,
+                            layerInfo = layersFromServer.getSubLayerInfosById();
+
+                        for(key in layerInfo){
+                            if(layerInfo.hasOwnProperty( key )){
+                                filterAxisConfig = layerInfo[ key ].meta;
+                            }
+                        }
+                        filterAxisConfig.map = worldMap;
+                        new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap(), filterAxisConfig);
+                    });
+
+                } else {
+                    var clientLayers = [{
+                        "domain" : layer.renderers[0].domain,
+                        "layer" : layer.id,
+                        "name" : layer.name,
+                        "type" : layer.renderers[0].type,
+                        "views" : layer.renderers[0].views
+                    }];
+                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+                    new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap());
+                }
             };
 
             $.when( mapDeferreds, layerDeferreds).done( function( maps, layers ) {
-                var plotId = 0,
-                    twitterComplete = false;
-
+                var dataset = datasetLowerCase.split(".")[0], twitterComplete = false;
+                
                 //iterate over each of the cross plots, generate the map, and container div
-                $.each(maps, function (pk, pv) {
+                $.each(maps, function (pk, mapConfig) {
                     // Initialize our maps...
-                    var mapID,
+                    var layer,
+                        mapID,
                         layerConfig,
                         mapConfig;
 
-                    if (datasetLowerCase === 'bitcoin' && pv["id"]
-                        && pv["id"].toLowerCase().trim().indexOf(datasetLowerCase) != -1) {
-                            mapID = pv["id"];
-                            layerConfig = getLayer(layers, pv["PyramidConfig"]);
-                            mapConfig = getBitcoinMapConfig(maps, mapID);
-                            plotId++;
-                            generateMap(mapID, mapConfig, layerConfig);
-                    } else if (datasetLowerCase === 'twitter' && !twitterComplete){
-                        var layer,
-                            i = 0,
-                            j;
-                        twitterComplete = true;
-                        for(i; i < layers.length; i++){
-                            if (layers[i].id.toLowerCase().trim() === datasetLowerCase) {
-                                for (j = 0; j < layers[i]["children"].length; j++) {
-                                    mapID = layers[i]["children"][j].name;
-                                    layer = layers[i]["children"][j];
-                                    layerConfig = getLayer(layer, mapID);
-                                    mapConfig = pv;
-                                    plotId++;
-                                    generateMap(mapID, mapConfig, layerConfig, layer);
-                                }
-                            }
-                        }
-                    }
+                    // determine whether the map matches our dataset
+                    if (mapConfig.dataset.toLowerCase().trim() === dataset) {
+                    	// for each layer if it matches our dataset and this map then add
+                    	$.each(layers, function (pk, pv) {
+                    		if (pv.id.toLowerCase().trim() === dataset) {
+                    			$.each(pv.children, function (k, layer) {
+                    				if (PyramidFactory.pyramidsEqual(layer.pyramid, mapConfig.PyramidConfig)){
+                    					mapID = layer.name;
+                    					layerConfig = getLayerConfig(layer);
+                    					generateMap(layer.name, mapConfig, layerConfig, layer);
+                    				}
+                    			});
+                    		}
+                    	});
+                	}
                 });
-
+                
                 $tabsPlotsUl.each(function () {
                     $(this).click( function (){
                         $(window).resize();
@@ -484,7 +462,7 @@
 
             //setup the ui layout
             var tocPane = $('#toc'),
-                $summaryDiv = $('#summary'),
+                summaryDiv = $('#summary'),
                 layout,
                 tableJsonFile,
                 showControls,
@@ -493,8 +471,8 @@
             tocPane.load('toc.html #toc-contents');
             tocPane.addClass('ui-layout-west');
             $('header').addClass('ui-layout-north');
-            $summaryDiv.addClass('ui-layout-center');
-            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:178}});
+            summaryDiv.addClass('ui-layout-center');
+            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:278}});
             layout.panes.west.css({
                 background:  "rgb(204,204,204)"
             });
@@ -506,7 +484,7 @@
             });
 
             if(!summaryBuilderOptions.dataset){
-                $summaryDiv.html('<h2>No dataset selected.</h2>');
+                summaryDiv.html('<h2>No dataset selected.</h2>');
             	return;
             }
 

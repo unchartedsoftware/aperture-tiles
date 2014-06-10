@@ -80,12 +80,7 @@ define(function (require) {
 
         onClick: function(event) {
 
-            this.clientState.setClickState(event.data.tilekey, {
-                tag : event.data.bin.value[event.index[0]].tag,
-                index : event.index[0]
-            });
-
-            TwitterUtil.createDetailsOnDemand( this, event.data, event.index[0], DetailsOnDemand );
+            TwitterUtil.createDetailsOnDemand( this.map, event.data, event.index[0], DetailsOnDemand );
         },
 
 
@@ -106,7 +101,7 @@ define(function (require) {
                 BAR_LENGTH = 100,
                 BAR_WIDTH = 6;
 
-            function barTemplate( id, defaultColour, greyedColour, normalColour, selectedColour ) {
+            function barTemplate( defaultColour, greyedColour, normalColour, selectedColour ) {
 
                 var bar = that.nodeLayer.addLayer( aperture.BarLayer );
 
@@ -154,7 +149,7 @@ define(function (require) {
             }
 
             // negative bar
-            this.negativeBar = barTemplate('topTextSentimentBarsNegative', this.GREY_COLOUR, this.DARK_GREY_COLOUR, this.PURPLE_COLOUR, this.DARK_PURPLE_COLOUR);
+            this.negativeBar = barTemplate( this.GREY_COLOUR, this.DARK_GREY_COLOUR, this.PURPLE_COLOUR, this.DARK_PURPLE_COLOUR);
             this.negativeBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2 +
                     -(that.getCountPercentage(this, index, 'negative') * BAR_LENGTH);
@@ -164,7 +159,7 @@ define(function (require) {
             });
 
             // neutral bar
-            this.neutralBar = barTemplate('topTextSentimentBarsNeutral', this.DARK_GREY_COLOUR, this.BLACK_COLOUR, this.DARK_GREY_COLOUR, this.BLACK_COLOUR );
+            this.neutralBar = barTemplate( this.DARK_GREY_COLOUR, this.BLACK_COLOUR, this.DARK_GREY_COLOUR, this.BLACK_COLOUR );
             this.neutralBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET -(that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -173,7 +168,7 @@ define(function (require) {
             });
 
             // positive bar
-            this.positiveBar = barTemplate('topTextSentimentBarsPositive', this.WHITE_COLOUR, this.GREY_COLOUR, this.BLUE_COLOUR, this.DARK_BLUE_COLOUR);
+            this.positiveBar = barTemplate( this.WHITE_COLOUR, this.GREY_COLOUR, this.BLUE_COLOUR, this.DARK_BLUE_COLOUR);
             this.positiveBar.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET + (that.getCountPercentage(this, index, 'neutral') * BAR_LENGTH)/2;
             });
@@ -194,12 +189,7 @@ define(function (require) {
             this.summaryLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.summaryLabel.map('font-outline-width').asValue(3);
             this.summaryLabel.map('visible').from(function(){
-                return false; /* that.visibility; &&
-                        that.clientState.hoverState.tilekey === this.tilekey &&
-                        (that.clientState.hoverState.userData.id === 'topTextSentimentBarsPositive' ||
-                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsNeutral' ||
-                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsNegative' ||
-                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsAll'); */
+                return false; /* that.visibility; */
             });
             this.summaryLabel.map('fill').from( function(index) {
                 var id = that.clientState.hoverState.userData.id;
@@ -225,12 +215,15 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
+                /*
                 var tagIndex = that.clientState.hoverState.userData.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;
                     default: return "- "+this.bin.value[tagIndex].negative;
                 }
+                */
+                return "";
             });
             this.summaryLabel.map('offset-y').from(function(index) {
                 return -that.TILE_SIZE/2 + (that.VERTICAL_BUFFER-4) + (14) * index;
@@ -289,7 +282,6 @@ define(function (require) {
                     scale = Math.log(sum),
                     size = ( perc * FONT_RANGE * scale) + (MIN_FONT_SIZE * perc);
                     size = Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
-
                 /*
                 if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
                     return size + 2;

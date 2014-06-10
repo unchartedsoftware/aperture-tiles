@@ -23,15 +23,14 @@
  */
 package com.oculusinfo.factory.properties;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 	private ConfigurationProperty<T> _baseProperty;

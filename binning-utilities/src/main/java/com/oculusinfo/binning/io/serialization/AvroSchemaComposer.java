@@ -24,6 +24,7 @@
 package com.oculusinfo.binning.io.serialization;
 
 
+import org.apache.avro.Schema;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,8 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.avro.Schema;
 
 
 

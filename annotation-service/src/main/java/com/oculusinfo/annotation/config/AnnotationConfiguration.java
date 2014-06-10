@@ -24,38 +24,41 @@
 package com.oculusinfo.annotation.config;
 
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.json.JSONObject;
-
+import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
+import org.json.JSONObject;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
 public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfiguration> {
 	
 	public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");    
     public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList(Arrays.asList("data","pyramidio"));
+    public static final List<String> ANNOTATION_IO_PATH = Collections.unmodifiableList(Arrays.asList("data","pyramidio"));
     public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList(Arrays.asList("data","serializer"));
 
 
 	public AnnotationConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                                    FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
 	                                FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 	                                FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 	                                ConfigurableFactory<?> parent,
 	                                List<String> path) {
-		this(pyramidIOFactoryProvider, serializationFactoryProvider,
+		this(pyramidIOFactoryProvider, annotationIOFactoryProvider, serializationFactoryProvider,
 				tilePyramidFactoryProvider, null, parent, path);
 	}
 
 
 	public AnnotationConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                                    FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
 		                            FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 		                            FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 		                            String name, ConfigurableFactory<?> parent,
@@ -64,6 +67,7 @@ public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfi
 
 		addChildFactory(tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH));
 		addChildFactory(pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH));
+        addChildFactory(annotationIOFactoryProvider.createFactory(this, ANNOTATION_IO_PATH));
 		addChildFactory(serializationFactoryProvider.createFactory(this, SERIALIZER_PATH));
 	}
 

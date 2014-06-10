@@ -67,9 +67,7 @@ define(function (require) {
             this.createLayer();
 
             this.map.on( 'click', function() {
-                $(".tags-by-time-sentiment").removeClass('greyed clicked');
-                DetailsOnDemand.destroy();
-                that.clientState.removeClickState('tag');
+                TwitterUtil.clickOff( that.clientState, DetailsOnDemand );
             });
         },
 
@@ -82,20 +80,12 @@ define(function (require) {
                 return 113 - ( (( TwitterUtil.getTagCount( values, 8 ) - 1) / 2 ) - index ) * SPACING;
             }
 
-            function onClick() {
-                var tag = $(this).find(".tags-by-time-label").text();
-
-                TwitterUtil.injectClickStateClassesGlobal( tag );
-
-                that.clientState.setClickState('tag', tag );
-            }
-
             this.nodeLayer.addLayer( new HtmlLayer({
 
                 html: function() {
 
                     var html = '',
-                        $html = $(''),
+                        $html = $('<div id="'+this.tilekey+'" class="aperture-tile"></div>'),
                         $elem,
                         $summaries,
                         values = this.bin.value,
@@ -109,7 +99,7 @@ define(function (require) {
                     // create count summaries
                     $summaries = TwitterUtil.createTweetSummaries();
 
-                    $html = $html.add( $summaries );
+                    $html.append( $summaries );
 
                     for (i=0; i<count; i++) {
 
@@ -122,10 +112,12 @@ define(function (require) {
 
                         // create count chart
                         html += '<div class="tags-by-time-left">'
-                        for (j=12; j<24; j++) {
-                            blendedColour = TwitterUtil.blendSentimentColours( sentimentPercentages.positive[j], sentimentPercentages.negative[j]);
+                        for (j=0; j<24; j++) {
+                            blendedColour = TwitterUtil.blendSentimentColours( sentimentPercentages.positive[j],
+                                                                               sentimentPercentages.neutral[j],
+                                                                               sentimentPercentages.negative[j] );
                             relativePercent = ( TwitterUtil.getCountByTimePercentage( value, j ) / maxPercentage ) * 100;
-                            visibility = (relativePercent > 0) ? 'visible' : 'hidden';
+                            visibility = (relativePercent > 0) ? '' : 'hidden';
                             html += '<div class="tags-by-time-bar" style="background-color:'+blendedColour+'; visibility:'+visibility+';height:'+relativePercent+'%; top:'+(100-relativePercent)+'%;"></div>';
                         }
                         html += '</div>';
@@ -140,11 +132,11 @@ define(function (require) {
                         $elem = $(html);
 
                         // set event handlers
-                        TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, onClick, DetailsOnDemand );
+                        TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
 
-                        TwitterUtil.injectClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
+                        TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
 
-                        $html = $html.add( $elem );
+                        $html.append( $elem );
                     }
 
                     return $html;

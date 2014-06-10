@@ -42,6 +42,7 @@ define(function (require) {
 
     var Class = require('../../class'),
         LayerState = require('../model/LayerState'),
+        AxisUtil = require('../../map/AxisUtil'),
         LayerControls,
         addLayer,
         showLayerSettings,
@@ -50,7 +51,10 @@ define(function (require) {
         replaceChildren,
         makeLayerStateObserver,
         replaceLayers,
-        sortLayers;
+        sortLayers,
+        generateFilterAxis,
+        generateFilterAxisLabels,
+        updateAxisLabels;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
@@ -93,7 +97,7 @@ define(function (require) {
      *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (sortedLayers, index, $parentElement, controlsMap) {
+    addLayer = function (sortedLayers, index, $parentElement, controlsMap, filterAxisSpec) {
         var $cell,
             $filterSlider,
             $opacitySlider,
@@ -110,7 +114,8 @@ define(function (require) {
             name,
             filterRange,
             id,
-            layerState;
+            layerState,
+            $filterAxis;
 
         layerState = sortedLayers[index];
 
@@ -178,7 +183,7 @@ define(function (require) {
             $layerContent.append($cell);
 
             $cell.append($('<div class="slider-label">Filter</div>'));
-            $filterSlider = $('<div id="' + "filter-slider-" + name + '"></div>');
+            $filterSlider = $('<div class="filter-slider-img"></div>');
             $filterSlider.slider({
                 range: true,
                 min: 0,
@@ -194,8 +199,14 @@ define(function (require) {
 
             // Set the ramp image
             $filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
-
             $cell.append($filterSlider);
+
+            //create the filter axis container and append it to the .filter-slider
+            $filterAxis = $('<div class="filter-axis"></div>');
+            $cell.append($filterAxis);
+
+            //create the filter axis
+            generateFilterAxis( $filterAxis, filterAxisSpec );
         } else {
             $filterSlider = null;
         }
@@ -216,7 +227,6 @@ define(function (require) {
             });
             $promotionDiv.append($promotionButton);
         }
-
 
         $parentElement.append($layerControlSetRoot);
 
@@ -341,7 +351,7 @@ define(function (require) {
             } else if (fieldName === "rampImageUrl") {
                 controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
             } else if (fieldName === "zIndex") {
-                replaceLayers(sortLayers(layerStateMap), $layersControlListRoot, controlsMap);
+                replaceLayers( sortLayers(layerStateMap), $layersControlListRoot, controlsMap );
             }
         };
     };
@@ -354,7 +364,7 @@ define(function (require) {
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap) {
+    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap, filterAxisSpec ) {
         var i, key, sortedLayerStateList;
         sortedLayerStateList = sortLayers(layerStateMap);
         $layerControlsContainer.empty();
@@ -366,7 +376,7 @@ define(function (require) {
         }
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStateList.length; i += 1) {
-            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, sortedLayerStateList);
+            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, filterAxisSpec);
         }
     };
 
@@ -392,6 +402,137 @@ define(function (require) {
         return sortedList;
     };
 
+    /** generates the filter axis major and minor tick marks
+     *  note - 5 major and 4 minor tick marks will be created.
+     * @param $filterAxis the tick mark container
+     */
+    generateFilterAxis = function ($filterAxis, filterAxisSpec) {
+        var axisTicks = '<div class="filter-axis-tick-major filter-axis-tick-first"></div>', //the first tick
+            major = false, //start with a minor tick
+            majorCount = 1,
+            numberOfInnerTicks = 7,
+            i,
+            $labelDiv = $('<div class="filter-axis-label-container"></div>');
+
+        //create the inner ticks
+        for(i = 0; i < numberOfInnerTicks; i++) {
+            if(major) {
+                axisTicks += '<div class="filter-axis-tick-major"></div>';
+                majorCount++;
+                major = !major;
+            } else {
+                axisTicks += '<div class="filter-axis-tick-minor"></div>';
+                major = !major;
+            }
+        }
+
+        //add the last tick
+        axisTicks += '<div class="filter-axis-tick-major filter-axis-tick-last"></div>';
+        $filterAxis.html('<div class="filter-axis-ticks-container">' + axisTicks + '</div>');
+        $filterAxis.append($labelDiv);
+        generateFilterAxisLabels(majorCount, $labelDiv, filterAxisSpec);
+    };
+
+    /** Generates the filter labels and their initial values.
+     *
+     * @param majorTicks the number of major tick marks
+     * @param $labelDiv the label container
+     */
+    generateFilterAxisLabels = function(majorTicks, $labelDiv, filterAxisSpec){
+        var html,
+            val,
+            increment,
+            unitSpec,
+            i;
+
+        filterAxisSpec.$labelDiv = $labelDiv;
+
+        unitSpec = {
+            'allowStepDown' : true,
+            'decimals' : 1,
+            'type': 'b'
+        };
+
+        if (filterAxisSpec) {
+        	if (filterAxisSpec.levelMinFreq) {
+        		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
+        	} else if (filterAxisSpec.levelMinimums) {
+        		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
+        	} else {
+        		val = 0;
+        	}
+        	
+        	if (filterAxisSpec.levelMaxFreq) {
+        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
+        	} else if (filterAxisSpec.levelMaximums) {
+        		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
+        	} else {
+        		increment = 10 / majorTicks;
+        	}
+        } else {
+            val = 0;
+            increment = 10 / majorTicks;
+        }
+
+        //start with the first label
+        html = '<div class="filter-axis-label filter-axis-label-first">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+
+        //iterate over the inner labels
+        for(i = 1; i < majorTicks; i++){
+            val += increment;
+            html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+        }
+
+        //add the last label
+        val += increment;
+        html += '<div class="filter-axis-label filter-axis-label-last">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+
+        $labelDiv.html(html);
+    };
+
+    //called on map zoom event
+    updateAxisLabels = function(filterAxisSpec){
+        var $labels = filterAxisSpec.$labelDiv,
+            val,
+            increment,
+            unitSpec,
+            i,
+            length = $labels === undefined ? 0 : $labels[0].children.length;
+
+        unitSpec = {
+            'allowStepDown' : true,
+            'decimals' : 1,
+            'type': 'b'
+        };
+
+        if (filterAxisSpec) {
+        	if (filterAxisSpec.levelMinFreq) {
+        		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
+        	}
+        	else if (filterAxisSpec.levelMinimums) {
+        		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
+        	}
+        	else {
+        		val = 0;
+        	}
+        	
+        	if (filterAxisSpec.levelMaxFreq) {
+        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / length;
+        	} else if (filterAxisSpec.levelMaximums) {
+        		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / length;
+        	} else {
+        		increment = 10 / length;
+        	}
+        } else {
+            val = 0;
+            increment = 10 / length;
+        }
+        for(i = 0; i < length; i++){
+            $labels[0].children[i].innerHTML = AxisUtil.formatText(val, unitSpec);
+            val += increment;
+        }
+    };
+
     LayerControls = Class.extend({
         ClassName: "LayerControls",
 
@@ -401,17 +542,25 @@ define(function (require) {
          *
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
-        init: function ( controlsId, layerStateMap ) {
+        init: function ( controlsId, layerStateMap, filterAxisSpec ) {
             var layerState;
 
             // "Private" vars
             this.controlsMap = {};
+            this.filterAxisSpec = filterAxisSpec;
+
+            //create a listener for updating the filter axis labels
+            if (this.filterAxisSpec) {
+                this.filterAxisSpec.map.on('zoomend', function () {
+                    updateAxisLabels( filterAxisSpec );
+                });
+            }
 
             // Add the title
             this.$layerControlsContainer = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap);
+            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap, this.filterAxisSpec);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
                     layerStateMap[layerState].addListener(makeLayerStateObserver(

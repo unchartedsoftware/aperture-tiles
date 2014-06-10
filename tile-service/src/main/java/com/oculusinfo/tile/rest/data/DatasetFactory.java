@@ -24,16 +24,14 @@
 package com.oculusinfo.tile.rest.data;
 
 
+import com.oculusinfo.binning.util.JsonUtilities;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.SharedInstanceFactory;
+import com.oculusinfo.tilegen.datasets.CSVDataset;
+import org.apache.spark.SparkContext;
 
 import java.util.List;
 import java.util.Properties;
-
-import org.apache.spark.SparkContext;
-
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.SharedInstanceFactory;
-import com.oculusinfo.binning.util.JsonUtilities;
-import com.oculusinfo.tilegen.datasets.CSVDataset;
 
 
 

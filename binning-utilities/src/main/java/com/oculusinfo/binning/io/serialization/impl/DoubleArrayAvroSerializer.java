@@ -24,11 +24,10 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.generic.GenericRecord;
-
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.generic.GenericRecord;
 
 public class DoubleArrayAvroSerializer extends GenericAvroArraySerializer<Double> {
 	private static final long serialVersionUID = 5994875196491382037L;

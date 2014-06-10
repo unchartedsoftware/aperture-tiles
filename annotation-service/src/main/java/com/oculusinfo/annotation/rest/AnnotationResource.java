@@ -24,21 +24,17 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import com.google.inject.Inject;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.Pair;
 import oculus.aperture.common.rest.ApertureServerResource;
-
-import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.*;
-import com.oculusinfo.annotation.impl.*;
-import com.oculusinfo.binning.*;
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONArray;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -46,7 +42,9 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
-import com.google.inject.Inject;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class AnnotationResource extends ApertureServerResource {
 
@@ -85,7 +83,7 @@ public class AnnotationResource extends ApertureServerResource {
 			} else if ( requestType.equals("modify") ) {
 				
 				String layer = json.getString("layer");
-				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON( json.getJSONObject("previous") );
+				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON(json.getJSONObject("previous"));
 				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( json.getJSONObject("current") );
                 Pair<String, Long> certificate = _service.modify(layer, oldAnnotation, newAnnotation);
                 jsonResult.put("uuid", certificate.getFirst() );

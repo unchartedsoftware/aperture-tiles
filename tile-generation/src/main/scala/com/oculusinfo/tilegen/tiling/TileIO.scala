@@ -156,7 +156,7 @@ trait TileIO extends Serializable {
 			{
 				val pyramidIO = getPyramidIO
 				// Write out tje group of tiles
-				pyramidIO.writeTiles(baseLocation, pyramider, binDesc.getSerializer, group)
+				pyramidIO.writeTiles(baseLocation, binDesc.getSerializer, group)
 
 				// And collect stats on them
 				group.foreach(tile =>

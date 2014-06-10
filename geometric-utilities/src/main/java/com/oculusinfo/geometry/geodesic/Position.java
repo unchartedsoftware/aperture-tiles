@@ -24,11 +24,11 @@
  */
 package com.oculusinfo.geometry.geodesic;
 
-import java.awt.geom.Rectangle2D;
-import java.io.Serializable;
-
 import com.oculusinfo.math.algebra.AngleUtilities;
 import com.oculusinfo.math.linearalgebra.Vector;
+
+import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 
 
 

@@ -34,8 +34,6 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializer;
 
@@ -44,7 +42,6 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializer;
 public class AvroMetaDataSerializationTests {
 	private TileIndex        _index;
 	private TileData<Double> _tile;
-	private TilePyramid      _pyramid;
 
 	@Before
 	public void setup () {
@@ -58,12 +55,12 @@ public class AvroMetaDataSerializationTests {
 		_tile.setBin(1, 1, 4.0);
 		_tile.setMetaData("a", "abc");
 		_tile.setMetaData("b", "bcd");
-
-		_pyramid = new AOITilePyramid(0.0, 0.0, 1.0, 1.0);
 	}
+
 	@After
 	public void tearDown () {
-        
+	    _tile = null;
+	    _index = null;
 	}
 
 	@Test
@@ -71,7 +68,7 @@ public class AvroMetaDataSerializationTests {
 		TileSerializer<Double> serializer = new DoubleAvroSerializer(CodecFactory.nullCodec());
 
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		serializer.serialize(_tile, _pyramid, output);
+		serializer.serialize(_tile, output);
 		output.flush();
 		output.close();
 
@@ -90,7 +87,7 @@ public class AvroMetaDataSerializationTests {
 		TileSerializer<Double> serializer = new DoubleJsonSerializer();
 
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		serializer.serialize(_tile, _pyramid, output);
+		serializer.serialize(_tile, output);
 		output.flush();
 		output.close();
 

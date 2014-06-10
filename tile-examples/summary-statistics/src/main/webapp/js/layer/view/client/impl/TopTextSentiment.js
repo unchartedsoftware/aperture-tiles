@@ -36,7 +36,8 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand = require('./DetailsOnDemandSentiment'),
+        DetailsOnDemand = require('./DetailsOnDemandHtml'),
+        TwitterUtil = require('./TwitterUtil'),
         TopTextSentiment;
 
 
@@ -44,10 +45,11 @@ define(function (require) {
     TopTextSentiment = TwitterTagRenderer.extend({
         ClassName: "TopTextSentiment",
 
-        init: function(map) {
-            this._super("top-text-sentiment", map);
+        init: function( map ) {
+            this._super( map );
             this.MAX_NUM_VALUES = 5;
             this.Y_SPACING = 36;
+            this.createLayer();
         },
 
         getTotalCount : function(data, index) {
@@ -82,46 +84,19 @@ define(function (require) {
                 tag : event.data.bin.value[event.index[0]].tag,
                 index : event.index[0]
             });
-            // pan map to center
-            this.detailsOnDemand.panMapToCenter(event.data);
-            // send this node to the front
-            this.plotLayer.all().where(event.data).toFront();
-            // redraw all nodes
-            this.plotLayer.all().redraw();
+
+            TwitterUtil.createDetailsOnDemand( this, event.data, event.index[0], DetailsOnDemand );
         },
 
 
-        onHover: function(event, id) {
+        createLayer: function() {
 
-            this.clientState.setHoverState(event.data.tilekey, {
-                tag : event.data.bin.value[event.index[0]].tag,
-                index :  event.index[0],
-                id : id
-            });
-            this.plotLayer.all().where(event.data).redraw();
-        },
-
-
-        onHoverOff: function(event) {
-            this.clientState.clearHoverState();
-            this.plotLayer.all().where(event.data).redraw();
-        },
-
-
-        /**
-         * Create our layer visuals, and attach them to our node layer.
-         */
-        createLayer: function (mapNodeLayer) {
-
-            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently does not render correctly if on its own PlotLayer...
-            this.plotLayer = mapNodeLayer;
+            this.nodeLayer = this.map.addApertureLayer( aperture.geo.MapNodeLayer );
+            this.nodeLayer.map('latitude').from('latitude');
+            this.nodeLayer.map('longitude').from('longitude');
             this.createBars();
             this.createLabels();
             this.createCountSummaries();
-            this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
-            this.detailsOnDemand.attachClientState(this.clientState);
-            this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
 
@@ -133,16 +108,15 @@ define(function (require) {
 
             function barTemplate( id, defaultColour, greyedColour, normalColour, selectedColour ) {
 
-                var bar = that.plotLayer.addLayer(aperture.BarLayer);
+                var bar = that.nodeLayer.addLayer( aperture.BarLayer );
 
                 bar.map('visible').from( function() {
-                    return that.isSelectedView(this) && that.isVisible(this);
+                    return that.visibility;
                 });
-
-                bar.map('cursor').asValue('pointer');
 
                 bar.map('fill').from( function(index) {
 
+                    /*
                     if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
                         if ( that.clientState.hoverState.userData.id === id &&
                              that.clientState.hoverState.userData.index === index) {
@@ -154,7 +128,7 @@ define(function (require) {
                     if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
                         return greyedColour;
                     }
-
+                    */
                     return defaultColour;
                 });
 
@@ -163,27 +137,18 @@ define(function (require) {
                     return true; // swallow event
                 });
 
-                bar.on('mousemove', function(event) {
-                    that.onHover(event, id);
-                    return true; //swallow event
-                });
-
-                bar.on('mouseout', function(event) {
-                    that.onHoverOff(event);
-                });
-
                 bar.map('orientation').asValue('horizontal');
                 bar.map('bar-count').from(function() {
-                    return that.getCount(this);
+                    return TwitterUtil.getTagCount( this.bin.value );
                 });
                 bar.map('width').asValue(BAR_WIDTH);
                 bar.map('stroke').asValue(that.BLACK_COLOUR);
                 bar.map('stroke-width').asValue(2);
                 bar.map('offset-y').from(function(index) {
-                    return that.getYOffset(this, index) + 6;
+                    return that.X_CENTRE_OFFSET - that.getYOffset(this, index) + 6;
                 });
                 bar.map('opacity').from( function() {
-                    return that.getOpacity();
+                    return that.opacity;
                 })
                 return bar;
             }
@@ -223,18 +188,18 @@ define(function (require) {
 
             var that = this;
 
-            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.summaryLabel = this.nodeLayer.addLayer(aperture.LabelLayer);
             this.summaryLabel.map('label-count').asValue(3);
             this.summaryLabel.map('font-size').asValue(12);
             this.summaryLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.summaryLabel.map('font-outline-width').asValue(3);
             this.summaryLabel.map('visible').from(function(){
-                return that.isSelectedView(this) && that.isVisible(this) &&
+                return false; /* that.visibility; &&
                         that.clientState.hoverState.tilekey === this.tilekey &&
                         (that.clientState.hoverState.userData.id === 'topTextSentimentBarsPositive' ||
                          that.clientState.hoverState.userData.id === 'topTextSentimentBarsNeutral' ||
                          that.clientState.hoverState.userData.id === 'topTextSentimentBarsNegative' ||
-                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsAll');
+                         that.clientState.hoverState.userData.id === 'topTextSentimentBarsAll'); */
             });
             this.summaryLabel.map('fill').from( function(index) {
                 var id = that.clientState.hoverState.userData.id;
@@ -273,8 +238,8 @@ define(function (require) {
             this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
             this.summaryLabel.map('text-anchor').asValue('end');
             this.summaryLabel.map('opacity').from( function() {
-                    return that.getOpacity();
-                })
+                return that.opacity;
+            });
         },
 
 
@@ -283,34 +248,24 @@ define(function (require) {
             var that = this,
                 MAX_LABEL_CHAR_COUNT = 9;
 
-            this.tagLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.tagLabel = this.nodeLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabel.map('visible').from(function() {
-                return that.isSelectedView(this) && that.isVisible(this);
+                return  that.visibility;
             });
 
             this.tagLabel.map('fill').from( function(index) {
-
+                /*
                 if (that.shouldBeGreyedOut(this.bin.value[index].tag, this.tilekey)) {
                     return that.GREY_COLOUR;
                 }
+                */
                 return that.WHITE_COLOUR;
             });
-
-            this.tagLabel.map('cursor').asValue('pointer');
 
             this.tagLabel.on('click', function(event) {
                 that.onClick(event);
                 return true; // swallow event
-            });
-
-            this.tagLabel.on('mousemove', function(event) {
-                that.onHover(event, 'topTextSentimentBarsAll');
-                return true; // swallow event
-            });
-
-            this.tagLabel.on('mouseout', function(event) {
-                that.onHoverOff(event);
             });
 
             this.tagLabel.map('label-count').from(function() {
@@ -334,18 +289,17 @@ define(function (require) {
                     scale = Math.log(sum),
                     size = ( perc * FONT_RANGE * scale) + (MIN_FONT_SIZE * perc);
                     size = Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
-                    //FONT_SCALE_FACTOR = 5,
-                    //size = (that.getTotalCountPercentage(this, index) * FONT_SCALE_FACTOR * scale) + 8;
-                    //size = (size > MAX_FONT_SIZE) ? MAX_FONT_SIZE : size;
 
+                /*
                 if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
                     return size + 2;
                 }
+                */
                 return size;
             });
 
             this.tagLabel.map('offset-y').from(function (index) {
-                return that.getYOffset(this, index) + 10;
+                return that.X_CENTRE_OFFSET - that.getYOffset(this, index) + 10;
             });
             this.tagLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
             this.tagLabel.map('text-anchor').asValue('middle');
@@ -353,7 +307,7 @@ define(function (require) {
             this.tagLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.tagLabel.map('font-outline-width').asValue(3);
             this.tagLabel.map('opacity').from( function() {
-                return that.getOpacity();
+                return that.opacity;
             })
 
         }

@@ -28,7 +28,6 @@
 package com.oculusinfo.math.statistics;
 
 import junit.framework.Assert;
-
 import org.junit.Test;
 
 public class PoissonDistributionTests {

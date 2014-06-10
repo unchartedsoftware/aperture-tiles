@@ -95,6 +95,7 @@
             var maxZoom = 0; // Assume starting from level 0.
             var projection;
             var isFirst = true;
+            var layerMaxZoom = 0;
 
             for (var layerName in layerInfoMap){
                 var layerInfo = layerInfoMap[layerName];
@@ -111,14 +112,20 @@
                     }
                     joinDataBounds(layerInfo.dataBounds, maxDataBounds);
                 }
-                if (layerInfo.maxzoom > maxZoom){
-                    maxZoom = layerInfo.maxzoom;
+                if (layerInfo.maxzoom) {  // backward compatibility
+                	layerMaxZoom = layerInfo.maxzoom;
+                } else {
+                	layerMaxZoom = layerInfo.maxZoom;
+                }
+                if (layerMaxZoom > maxZoom){
+                    maxZoom = layerMaxZoom;
                 }
             }
             return {
                 dataBounds : maxDataBounds,
                 mapBounds : maxMapBounds,
-                numZoomLevels : maxZoom + 1
+                numZoomLevels : maxZoom + 1,
+                projection: projection
             }
         };
 
@@ -282,18 +289,16 @@
             };
 
             // Use the first listed base layer as the default base layer
-            if(options.baseLayer){
+            if (options.baseLayer){
                 mapSpec.baseLayer = options.baseLayer[0];
+            } else {
+            	aperture.config.provide({
+    				// Set the map configuration
+    				'aperture.map' : {
+    					'defaultMapConfig' : {}
+    				}
+    			});
             }
-            
-			/*
-            aperture.config.provide({
-				// Set the map configuration
-				'aperture.map' : {
-					'defaultMapConfig' : mapSpec
-				}
-			});
-			*/
             
             _mapState.canvas = new aperture.geo.Map(mapSpec);
 
@@ -691,7 +696,11 @@
             var mapZoom = _mapState.canvas.getZoom();
             for (var layerName in _mapState.overlayInfoMap){
                 var overlayInfo = _mapState.overlayInfoMap[layerName];
-                maxRange = Math.max(maxRange, overlayInfo.meta.levelMaximums[String(mapZoom)]);
+                if (overlayInfo.meta.levelMaxFreq) { // backward compatibility
+                	maxRange = Math.max(maxRange, overlayInfo.meta.levelMaxFreq[String(mapZoom)]);
+                } else {
+                	maxRange = Math.max(maxRange, overlayInfo.meta.levelMaximums[String(mapZoom)]);
+                }
             }
             var range = {
                 min: 0,

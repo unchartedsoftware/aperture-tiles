@@ -23,22 +23,23 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import com.oculusinfo.annotation.impl.*;
-import com.oculusinfo.annotation.index.*;
-import com.oculusinfo.annotation.index.impl.*;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.impl.*;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.util.Pair;
-
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class AnnotationJSONTests extends AnnotationTestsBase {
 	
@@ -74,7 +75,7 @@ public class AnnotationJSONTests extends AnnotationTestsBase {
 		for ( AnnotationData<?> annotation : before ) {
 			
 			JSONObject json = annotation.toJSON();
-			after.add( JSONAnnotation.fromJSON( json ) );
+			after.add( JSONAnnotation.fromJSON(json) );
 		}
 		
 		if (VERBOSE) {
@@ -101,8 +102,8 @@ public class AnnotationJSONTests extends AnnotationTestsBase {
 		
 		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : before ) {
 			
-			JSONObject json = AnnotationManipulator.tileToJSON( tile );
-			after.add( AnnotationManipulator.getTileFromJSON( json ) );
+			JSONObject json = tileToJSON( tile );
+			after.add( getTileFromJSON( json ) );
 		}
 		
 		

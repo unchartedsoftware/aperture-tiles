@@ -42,7 +42,7 @@ define(function (require) {
         */
         getTweetCount : function( data, max ) {
             var MAX_TWEETS = max || 10;
-            return Math.min( data.recent.length, MAX_TWEETS );
+            return data.recent.length; //Math.min( data.recent.length, MAX_TWEETS );
         },
 
         /*
@@ -229,10 +229,11 @@ define(function (require) {
         },
 
 
-        blendSentimentColours: function( positivePercent, negativePercent ) {
+        blendSentimentColours: function( positivePercent, neutralPercent, negativePercent ) {
             var BLUE_COLOUR = '#09CFFF',
                 PURPLE_COLOUR = '#D33CFF',
                 negWeight, negRGB,
+                neuWeight, neuRGB,
                 posWeight, posRGB,
                 finalRGB = {};
 
@@ -260,17 +261,20 @@ define(function (require) {
             }
 
             if ( positivePercent === 0 || negativePercent ===0 ) {
-                return '#222222';
+                return '#ffffff';
             }
 
             negRGB = hexToRgb(PURPLE_COLOUR);
+            neuRGB = { r: 255, g: 255, b: 255 };
             posRGB = hexToRgb(BLUE_COLOUR);
-            negWeight = negativePercent/100;
-            posWeight = positivePercent/100;
 
-            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight);
-            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight);
-            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight);
+            posWeight = positivePercent/100;
+            neuWeight = neutralPercent/100;
+            negWeight = negativePercent/100;
+
+            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight) + (neuRGB.r * neuWeight);
+            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight) + (neuRGB.g * neuWeight);
+            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight) + (neuRGB.b * neuWeight);
             return rgbToHex( finalRGB.r, finalRGB.g, finalRGB.b );
         },
 
@@ -278,7 +282,7 @@ define(function (require) {
         /*
             Used to inject classes when nodes are loaded
         */
-        injectClickStateClasses: function( $elem, tag, selectedTag ) {
+        addClickStateClasses: function( $elem, tag, selectedTag ) {
             // if user has clicked a tag entry, ensure newly created nodes are styled accordingly
             if ( selectedTag ) {
                 if ( selectedTag !== tag ) {
@@ -290,45 +294,61 @@ define(function (require) {
         },
 
 
-        injectClickStateClassesGlobal: function( tag ) {
+        addClickStateClassesGlobal: function( tag ) {
 
-            var $root = $('.client-layer'),
-                $topTextSentiments = $root.find(".top-text-sentiments"),
-                $tagsByTimeLabels = $root.find(".tags-by-time-sentiment"),
-                $temp;
+            var $elements = $(".top-text-sentiment, .tags-by-time-sentiment");
 
             // top text sentiments
-            $topTextSentiments.filter( function() {
-                return $(this).find(".sentiment-labels").text() !== tag;
-            }).addClass('greyed').removeClass('clicked');
-
-            $topTextSentiments.filter( function() {
-                return $(this).find(".sentiment-labels").text() === tag;
-            }).removeClass('greyed').addClass('clicked')
-
-            // tags by time
-            $tagsByTimeLabels.filter( function() {
+            $elements.filter( function() {
                 return $(this).text() !== tag;
             }).addClass('greyed').removeClass('clicked');
 
-            $tagsByTimeLabels.filter( function() {
+            $elements.filter( function() {
                 return $(this).text() === tag;
-            }).removeClass('greyed').addClass('clicked');
+            }).removeClass('greyed').addClass('clicked')
 
+        },
+
+        removeClickStateClassesGlobal: function( tag ) {
+
+            $(".top-text-sentiment, .tags-by-time-sentiment").removeClass('greyed clicked');
         },
 
 
         createTweetSummaries: function() {
             return $('<div class="sentiment-summaries">'
-                + '<div class="positive-summaries"></div>'
-                + '<div class="neutral-summaries"></div>'
-                + '<div class="negative-summaries"></div>'
-                + '</div>');
+                        + '<div class="positive-summaries"></div>'
+                        + '<div class="neutral-summaries"></div>'
+                        + '<div class="negative-summaries"></div>'
+                    + '</div>');
         },
 
 
+        clickOn: function( map, $element, data, index, clientState, DetailsOnDemand ) {
 
-        setMouseEventCallbacks: function( map, $element, $summaries, data, index, callback, DetailsOnDemand ) {
+            var tag = $element.text();
+
+            this.addClickStateClassesGlobal( tag );
+
+            clientState.setClickState('tag', tag );
+
+            // create details on demand
+            this.createDetailsOnDemand( map, data, index, clientState, DetailsOnDemand );
+            // centre map after creation
+            this.centreForDetails( map, data );
+
+        },
+
+
+        clickOff: function( clientState, DetailsOnDemand ) {
+
+            this.removeClickStateClassesGlobal();
+            DetailsOnDemand.destroy();
+            clientState.removeClickState('tag');
+        },
+
+
+        setMouseEventCallbacks: function( map, $element, $summaries, data, index, clientState, DetailsOnDemand ) {
 
             var that = this,
                 value = data.bin.value[index];
@@ -358,12 +378,8 @@ define(function (require) {
 
                 // set click handler
                 $element.click( function( event ) {
-                    // call given callback
-                    $.proxy( callback, this )( event );
-                    // create details on demand
-                    that.createDetailsOnDemand( map, data, index, DetailsOnDemand );
-                    // centre map after creation
-                    that.centreForDetails( map, data );
+                    // process click
+                    that.clickOn( map, $element, data, index, clientState, DetailsOnDemand );
                     // prevent event from going further
                     event.stopPropagation();
                  });
@@ -375,15 +391,20 @@ define(function (require) {
         /*
             Create details on demand
         */
-        createDetailsOnDemand: function( map, data, index, DetailsOnDemand ) {
+        createDetailsOnDemand: function( map, data, index, clientState, DetailsOnDemand ) {
 
-            var pos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
+            var that = this,
+                pos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
                 $details;
 
             $details = DetailsOnDemand.create( pos.x + 256, map.getMapHeight() - pos.y, data.bin.value[index] );
 
             map.enableEventToMapPropagation( $details, ['onmousemove', 'onmouseup'] );
             map.getRootElement().append( $details );
+
+            $('.details-on-demand-close-button').click( function() {
+                that.clickOff( clientState, DetailsOnDemand );
+            });
 
         },
 
