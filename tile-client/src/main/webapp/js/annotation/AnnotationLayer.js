@@ -31,159 +31,334 @@ define(function (require) {
 
     var Class = require('../class'),
         AnnotationService = require('./AnnotationService'),
-        AnnotationFeature = require('./AnnotationFeature'),
-        TileAnnotationIndexer = require('./TileAnnotationIndexer'),
-        defaultStyle,
-        highlightStyle,
-        selectStyle,
-        temporaryStyle,
-        annotationContext,
+        ClientNodeLayer = require('../layer/view/client/ClientNodeLayer'),
+        HtmlLayer = require('../layer/view/client/HtmlLayer'),
+        NUM_BINS_PER_DIM = 8,
         AnnotationLayer;
 
 
 
-    // this function is used to determine what the label above each annotation is
-    // only displays a number if above 1 ( annotation is aggregated )
-    annotationContext = {
-        getLabel: function( feature ) {
-            if ( feature.attributes.feature === undefined || !feature.attributes.feature.isAggregated() ) {
-                return "";
-            }
-            return feature.attributes.feature.getAnnotationCount();
-        }
-    };
-
-    defaultStyle = new OpenLayers.Style({
-        externalGraphic: "./images/marker-purple.png",
-        graphicWidth: 24,
-        graphicHeight: 24,
-        graphicYOffset: -23,
-        label: "${getLabel}",
-        labelYOffset: 35,
-        labelOutlineColor: "#000000",
-        labelOutlineWidth: 3,
-        fontColor: "#FFFFFF",
-        'cursor': 'pointer'
-    }, { context: annotationContext });
-
-    selectStyle = new OpenLayers.Style({
-        externalGraphic: "./images/marker-blue.png",
-        graphicWidth: 24,
-        graphicHeight: 24,
-        graphicYOffset: -23,
-        'cursor': 'pointer'
-    });
-
-    temporaryStyle = new OpenLayers.Style({
-        display:"none",
-        'cursor': 'pointer'
-    });
-
-    highlightStyle = new OpenLayers.Style({
-        externalGraphic: "./images/marker-green.png",
-        graphicWidth: 24,
-        graphicHeight: 24,
-        graphicYOffset: -23,
-        'cursor': 'pointer'
-    });
 
     AnnotationLayer = Class.extend({
 
-
         init: function (spec) {
 
+            var that = this;
+
             this.map = spec.map;
-            this.id = spec.id;
+            this.service = new AnnotationService( spec.id );
             this.groups = spec.groups;
             this.accessibility = spec.accessibility;
-            this.indexer = new TileAnnotationIndexer( this.map.getPyramid() );
             this.filter = spec.filter;
-            this.service = new AnnotationService( this.id );
-            this.features = {};
-            this.pendingFeature = null;
             this.pendingTileRequests = {};
-            this.createLayer();
+            this.tiles = [];
 
             // set callbacks
-            this.map.on('zoomend', $.proxy( this.onMapZoom, this ) );
-            this.map.on('panend', $.proxy( this.onMapUpdate, this ) );
+            this.map.on('moveend', $.proxy( this.updateTiles, this ) );
+            this.map.on('zoom', function() {
+                that.nodeLayer.clear();
+                that.updateTiles();
+            });
 
-            // trigger callback to draw first frame
-            this.onMapUpdate();
+            this.createLayer();
+            this.updateTiles();
         },
 
 
-        onMapZoom: function() {
+        writeCallback: function( data, statusInfo ) {
 
-            var tilekey, binkey;
+            if ( statusInfo.success ) {
+                console.log("WRITE SUCCESS");
+            }
+            // writes can only fail if server is dead or UUID collision
+            this.updateTiles();
 
-            if (this.accessibility.write) {
-                this.addPointControl.activate();
+        },
+
+
+        modifyCallback: function( data, statusInfo ) {
+
+            if ( statusInfo.success ) {
+                console.log("MODIFY SUCCESS");
+            }
+            this.updateTiles();
+        },
+
+
+        removeCallback: function( data, statusInfo ) {
+
+            if ( statusInfo.success ) {
+                console.log("REMOVE SUCCESS");
+            }
+            this.updateTiles();
+        },
+
+
+        createLayer : function() {
+
+            var that = this,
+                detailsIsOpen = false;
+
+            function DEBUG_ANNOTATION( pos ) {
+                return {
+                    x: pos.x,
+                    y: pos.y,
+                    group: "Urgent",
+                    range: {
+                        min: 0,
+                        max: that.map.getZoom()
+                    },
+                    level: that.map.getZoom(),
+                    data: {
+                        title: "example annotation title " + Math.random(),
+                       comment: "example annotation id " + Math.random()
+                    }
+                };
             }
 
-            // un-select all features
-            this.highlightControl.unselectAll();
-            this.selectControl.unselectAll();
-            this.dragControl.outFeature();
+            function createDetails( pos ) {
 
-            // for each tile
-            for (tilekey in this.features) {
-                if (this.features.hasOwnProperty( tilekey )) {
+                var html = '<div class="annotation-details" style="left:'+pos.x+'px; top:'+ (that.map.getMapHeight()-pos.y) +'px;"></div>',
+                    $details = $(html);
+                $(".annotation-details").remove(); // remove any previous details
+                that.map.getRootElement().append( $details );
+                $details.draggable().resizable();
+                detailsIsOpen = true;
+            }
+
+            function destroyDetails() {
+
+                $(".annotation-details").remove();
+                detailsIsOpen = false;
+            }
+
+            function createAnnotation() {
+
+                if (detailsIsOpen) {
+                    destroyDetails();
+                    return;
+                }
+                var pos = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y );
+                that.service.writeAnnotation( DEBUG_ANNOTATION( pos ), $.proxy( that.writeCallback, that) );
+            }
+
+
+            this.nodeLayer = new ClientNodeLayer({
+                map: this.map,
+                xAttr: 'longitude',
+                yAttr: 'latitude',
+                idKey: 'tilekey',
+                propagate: false
+            });
+
+
+            this.nodeLayer.addLayer( new HtmlLayer({
+
+                html: function() {
+
+                    var data = this,
+                        $tile = $(''),
+                        key,
+                        tilePos;
+
+                    // get tile position
+                    tilePos = that.map.getViewportPixelFromCoord( data.longitude, data.latitude );
+
+                    function createAggregateHtml( bin ) {
+
+                        var html = '',
+                            avgPos = { x:0, y:0 },
+                            annoPos, annoMapPos,
+                            offset,
+                            $aggregate,
+                            i;
+
+                        html += '<div class="point-annotation-aggregate" style="position:absolute;">';
+
+                        // for each annotation
+                        for (i=0; i<bin.length; i++) {
+
+                            annoPos = that.map.getViewportPixelFromCoord( bin[i].x, bin[i].y );
+                            annoMapPos = that.map.getMapPixelFromViewportPixel( annoPos.x, annoPos.y );
+
+                            avgPos.x += annoMapPos.x;
+                            avgPos.y += annoMapPos.y;
+
+                            offset = {
+                                x : annoPos.x - tilePos.x,
+                                y : annoPos.y - tilePos.y
+                            };
+
+                            html += '<div class="point-annotation point-annotation-front" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>' +
+                                    '<div class="point-annotation point-annotation-back" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>';
+
+                        }
+
+                        html += '</div>';
+
+                        $aggregate = $(html);
+
+                        if (bin.length === 1) {
+
+                            $aggregate.draggable({
+
+                                stop: function( event ) {
+                                    var $element = $(this).find('.point-annotation-back'),
+                                        offset = $element.offset(),
+                                        dim = $element.width()/2,
+                                        pos = that.map.getCoordFromViewportPixel( offset.left+dim, offset.top+dim ),
+                                        newAnno = JSON.parse( JSON.stringify( bin[0] ) );
+
+                                    newAnno.x = pos.x;
+                                    newAnno.y = pos.y;
+
+                                    that.service.modifyAnnotation( bin[0], newAnno, $.proxy( that.modifyCallback, that ) );
+                                }
+                            });
+                        }
+
+                        avgPos.x /= bin.length;
+                        avgPos.y /= bin.length;
+
+
+                        $aggregate.click( function() {
+                            createDetails( avgPos );
+                        });
+
+                        return $aggregate;
+                    }
+
+
                     // for each bin
-                    for (binkey in this.features[ tilekey ]) {
-                        if (this.features[ tilekey ].hasOwnProperty( binkey )) {
-                            // remove and delete from layer
-                            this.features[ tilekey ][ binkey ].removeFromLayerAndDestroy();
+                    for (key in data.bins) {
+                        if (data.bins.hasOwnProperty(key)) {
+                            $tile = $tile.add( createAggregateHtml( data.bins[key] ) );
                         }
                     }
+
+                    return $tile;
                 }
+
+            }));
+
+            this.nodeLayer.addLayer( new HtmlLayer({
+                html : function() {
+
+                    var data = this,
+                        html = '',
+                        key;
+
+                    function createBinHtml( binkey ) {
+                        var BIN_SIZE = 256/NUM_BINS_PER_DIM,
+                            parsedValues = binkey.split(/[,\[\] ]/),
+                            bX = parseInt(parsedValues[1], 10),
+                            bY = parseInt(parsedValues[3], 10),
+                            left = BIN_SIZE*bX,
+                            top = BIN_SIZE*bY;
+                         return '<div class="annotation-bin"' +
+                                'style="position:absolute;' +
+                                'z-index:-1;'+
+                                'left:'+left+'px; top:'+top+'px;'+
+                                'width:'+BIN_SIZE+'px; height:'+BIN_SIZE+'px;'+
+                                'pointer-events:none;' +
+                                'border: 1px solid #FF0000;' +
+                                '-webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;">'+
+                                '</div>';
+                    }
+
+                    // for each bin
+                    for (key in data.bins) {
+                        if (data.bins.hasOwnProperty(key)) {
+                            html += createBinHtml( key );
+                        }
+                    }
+
+                    return html;
+
+                }
+            }));
+
+
+            if ( !that.accessibility.write ) {
+                that.map.on('click', createAnnotation );
             }
-
-            // clear feature map
-            this.features = {};
-            this.cancelPendingFeature();
-
-            this.onMapUpdate();
         },
 
 
-        onMapUpdate: function() {
+        updateTiles: function() {
 
-            // determine all tiles in view
-            var tiles = this.map.getTilesInView(),
-                tilekey,
-                i;
+            var visibleTiles = this.map.getTilesInView(),  // determine all tiles in view
+                activeTiles = [],
+                defunctTiles = {},
+                key,
+                i, tile, tilekey;
 
             if ( !this.accessibility.read ) {
                 return;
             }
 
-            function createTileKey(tile) {
+            function createTileKey ( tile ) {
                 return tile.level + "," + tile.xIndex + "," + tile.yIndex;
             }
 
-            // clear pending tiles
-            this.pendingTileRequests = {};
-
-            // request each tile from server
-            for (i=0; i<tiles.length; i++ ) {
-                tilekey = createTileKey( tiles[i] );
-                this.pendingTileRequests[tilekey] = true;
-                this.service.getAnnotations( tilekey, $.proxy( this.getCallback, this ) );
+            // keep track of current tiles to ensure we know
+            // which ones no longer exist
+            for (key in this.tiles) {
+                if ( this.tiles.hasOwnProperty(key)) {
+                    defunctTiles[key] = true;
+                }
             }
 
+            this.pendingTileRequests = {};
+
+            // Go through, seeing what we need.
+            for (i=0; i<visibleTiles.length; ++i) {
+                tile = visibleTiles[i];
+                tilekey = createTileKey(tile);
+
+                if ( defunctTiles[tilekey] ) {
+                    // Already have the data, remove from defunct list
+                    delete defunctTiles[tilekey];
+                }
+                // And mark tile it as meaningful
+                this.pendingTileRequests[tilekey] = true;
+                activeTiles.push(tilekey);
+            }
+
+            // Remove all old defunct tiles references
+            for (tilekey in defunctTiles) {
+                if (defunctTiles.hasOwnProperty(tilekey)) {
+                    delete this.tiles[tilekey];
+                }
+            }
+
+            // Request needed tiles from dataService
+            this.service.getAnnotations( activeTiles, $.proxy( this.getCallback, this ) );
+        },
+
+
+        transformTileToBins: function (tileData, tilekey) {
+
+            var tileRect = this.map.getPyramid().getTileBounds( tileData.tile );
+
+            return {
+                bins : tileData.annotations,
+                tilekey : tilekey,
+                longitude: tileRect.minX,
+                latitude: tileRect.maxY
+            };
         },
 
 
         /**
          * @param annotationData annotation data received from server of the form:
          *  {
-         *      index: {
+         *      tile: {
          *                  level:
          *                  xIndex:
          *                  yIndex:
          *             }
-         *      annotationsByBin: {
+         *      annotations: {
          *                  <binkey>: [ <annotation>, <annotation>, ... ]
          *                  <binkey>: [ <annotation>, <annotation>, ... ]
          *            }
@@ -191,103 +366,42 @@ define(function (require) {
          */
         getCallback: function( data ) {
 
-            function createTileKey(tile) {
-                return tile.level + "," + tile.x + "," + tile.y;
+            function createTileKey( tile ) {
+                return tile.level + "," + tile.xIndex + "," + tile.yIndex;
             }
 
             var tilekey = createTileKey( data.tile ),
-                annotationsByBin = data.annotations,
-                binkey,
-                spec,
-                defunctFeatures = {};
+                key,
+                tileArray = [];
 
-            if (this.pendingTileRequests[tilekey] === undefined ) {
+            if ( this.pendingTileRequests[tilekey] === undefined ) {
                 // receiving data from old request, ignore it
                 return;
             }
 
-            if ( this.features[ tilekey ] === undefined ) {
-                this.features[ tilekey ] = {};
-            }
+            // clear data and visual representation
+            this.nodeLayer.remove( tilekey );
+            this.tiles[tilekey] = this.transformTileToBins( data, tilekey );
 
-            for (binkey in this.features[ tilekey ]) {
-                if (this.features[ tilekey ].hasOwnProperty( binkey )) {
-                    defunctFeatures[ binkey ] = true;
+            // convert all tiles from object to array and redraw
+            for (key in this.tiles) {
+                if ( this.tiles.hasOwnProperty( key )) {
+                    tileArray.push( this.tiles[key] );
                 }
             }
 
-            // for each bin
-            for (binkey in annotationsByBin) {
-                if (annotationsByBin.hasOwnProperty(binkey)) {
-
-                    if ( this.features[ tilekey ][ binkey ] === undefined ) {
-
-                        // create new feature
-                        spec = {
-                                annotations:annotationsByBin[ binkey ],
-                                tilekey: tilekey,
-                                binkey: binkey,
-                                map: this.map,
-                                layer: this.olLayer_
-                        };
-
-                        // feature does not exist, create it
-                        this.features[ tilekey ][ binkey ] = new AnnotationFeature( spec );
-
-                    } else {
-
-                        // modify existing feature
-                        this.features[ tilekey ][ binkey ].setAnnotations( annotationsByBin[ binkey ] );
-                        // redraw feature
-                        this.features[ tilekey ][ binkey ].redraw();
-                        // remove from defunct list so we know not to delete it later
-                        delete defunctFeatures[ binkey ];
-                    }
-                }
-            }
-
-            // remove no longer needed features from map
-            for (binkey in defunctFeatures) {
-                if (defunctFeatures.hasOwnProperty( binkey )) {
-                    // remove old feature
-                    this.removeAndDestroyFeature( tilekey, binkey );
-                }
-            }
-
+            this.redraw( tileArray );
         },
 
 
-        writeCallback: function( data, statusInfo ) {
-
-            /*)
-            if ( !statusInfo.success ) {
-                // failure
-                // writes can only fail if server is dead or UUID collision
-            }
-            */
-            return true;
-
-        },
+        redraw: function( data ) {
+            this.nodeLayer.all( data ).redraw();
+        }
 
 
-        modifyCallback: function( data, statusInfo ) {
-
-            if ( !statusInfo.success ) {
-                // failure
-                // re-poll data in case client is out-of-sync
-                this.onMapUpdate();
-            }
-        },
 
 
-        removeCallback: function( data, statusInfo ) {
-
-            if ( !statusInfo.success ) {
-                // failure
-                // re-poll data in case client is out-of-sync
-                this.onMapUpdate();
-            }
-        },
+        /*,
 
 
         removeAndDestroyFeature: function( tilekey, binkey ) {
@@ -641,7 +755,7 @@ define(function (require) {
             this.highlightControl.activate();
             this.selectControl.activate();
         }
-
+        */
      });
 
     return AnnotationLayer;

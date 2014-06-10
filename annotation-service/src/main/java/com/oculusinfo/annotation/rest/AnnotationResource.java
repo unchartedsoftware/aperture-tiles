@@ -150,8 +150,8 @@ public class AnnotationResource extends ApertureServerResource {
 
 		    JSONObject tileJson = new JSONObject();
             tileJson.put("level", zoomLevel);
-            tileJson.put("x", x);
-            tileJson.put("y", y);
+            tileJson.put("xIndex", x);
+            tileJson.put("yIndex", y);
 
             JSONObject result = new JSONObject();
 		    result.put("tile", tileJson );

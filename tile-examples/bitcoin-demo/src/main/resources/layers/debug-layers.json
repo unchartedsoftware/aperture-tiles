@@ -1,0 +1,54 @@
+{
+    "_comment": [
+        "This json configuration file specifies all layers associated with the bitcoin ",
+        "dataset, organized hierarchically according to two things: primarily, ability ",
+        "to go on the same map, and secondarily, by interest to the user.  This means ",
+        "that if two layers can go on the same map, using the same axes, they should fall ",
+        "under the same node in the hierarchy, and that the axes should be noted on the ",
+        "joint parent node under which they both fall.  However, as long as layers that ",
+        "can and should share a map are so grouped, any further organization is completely ",
+        "open, and should be used simply to present the layers to the user in a way that ",
+        "makes sense.",
+        "",
+        "Leaf nodes should all specify actual layers that can be displayed on a map, and ",
+        "all layers that can be so displayed should be leaf nodes.  Non-leaf nodes exist ",
+        "solely to organize and group layers as described above.",
+        ""
+    ],
+    "layers": [
+        {
+            "id": "bitcoin.dummy.amount",
+            "name": "Debug layer",
+            "pyramid" : {
+                "type" : "AreaOfInterest",
+                "minX" : 1.0,
+                "maxX" : 6336769,
+                "minY" : 0,
+                "maxY" : 500000
+            },
+            "data": {
+                "pyramidio": {
+                    "type": "dummy",
+                    "minX" : 1.0,
+                    "maxX" : 6336769,
+                    "minY" : 0,
+                    "maxY" : 500000,
+                    "minZ" : 0,
+                    "maxZ" : 18
+                }
+            },
+            "renderers": [
+                {
+                    "domain": "client",
+                    "views": [
+                        {
+                            "renderer": "BinRenderer"
+                        }
+                    ]
+                }
+
+            ]
+        }
+    ]
+}
+
