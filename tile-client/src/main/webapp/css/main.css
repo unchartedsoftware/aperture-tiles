@@ -9,7 +9,7 @@ html, body
 body {
     margin: 0;
     font-family: Verdana, Arial, sans-serif;
-    background-color: black; 
+    background-color: black;
     color: #7E7E7E;
     overflow:hidden;
     -webkit-touch-callout: none;
