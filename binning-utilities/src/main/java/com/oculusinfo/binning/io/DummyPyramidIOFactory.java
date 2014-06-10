@@ -28,14 +28,35 @@ import java.util.List;
 
 import com.oculusinfo.binning.io.impl.DummyPyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.DoubleProperty;
+import com.oculusinfo.factory.properties.IntegerProperty;
 
 public class DummyPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+    public static DoubleProperty  MIN_X = new DoubleProperty ("minX", "The minimum x value in the space the dummy pyramid IO represents", 0.0);
+    public static DoubleProperty  MAX_X = new DoubleProperty ("maxX", "The maximum x value in the space the dummy pyramid IO represents", 1.0);
+    public static DoubleProperty  MIN_Y = new DoubleProperty ("minY", "The minimum y value in the space the dummy pyramid IO represents", 0.0);
+    public static DoubleProperty  MAX_Y = new DoubleProperty ("maxY", "The maximum y value in the space the dummy pyramid IO represents", 1.0);
+    public static IntegerProperty MIN_Z = new IntegerProperty("minZ", "The minimum zoom level in the space the dummy pyramid IO represents", 0);
+    public static IntegerProperty MAX_Z = new IntegerProperty("maxZ", "The maximum zoom level in the space the dummy pyramid IO represents", 18);
     public DummyPyramidIOFactory (String factoryName, ConfigurableFactory<?> parent, List<String> path) {
         super(factoryName, PyramidIO.class, parent, path);
+
+        addProperty(MIN_X);
+        addProperty(MAX_X);
+        addProperty(MIN_Y);
+        addProperty(MAX_Y);
+        addProperty(MIN_Z);
+        addProperty(MAX_Z);
     }
 
     @Override
     protected PyramidIO create() {
-        return new DummyPyramidIO();
+        double minX = getPropertyValue(MIN_X);
+        double maxX = getPropertyValue(MAX_X);
+        double minY = getPropertyValue(MIN_Y);
+        double maxY = getPropertyValue(MAX_Y);
+        int    minZ = getPropertyValue(MIN_Z);
+        int    maxZ = getPropertyValue(MAX_Z);
+        return new DummyPyramidIO(minX, maxX, minY, maxY, minZ, maxZ);
     }
 }

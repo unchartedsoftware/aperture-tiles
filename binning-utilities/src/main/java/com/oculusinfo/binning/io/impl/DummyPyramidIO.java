@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.binning.io.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +39,39 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 /** A dummy pyramid IO that doesn't actually read anything, just returns empty tiles */
 public class DummyPyramidIO implements PyramidIO {
+    private String _metaData;
+    public DummyPyramidIO (double minX, double maxX, double minY, double maxY, int minZ, int maxZ) {
+        String metaData = 
+                "{"+
+                "  \"name\":\"dummy\",\n"+
+                "  \"description\":\"dummy layer\",\n"+
+                "  \"tilesize\":1,\n"+
+                "  \"scheme\":\"TMS\",\n"+
+                "  \"projection\":\"EPSG:4326\",\n"+
+                "  \"minzoom\": "+minZ+",\n"+
+                "  \"maxzoom\": "+maxZ+",\n"+
+                "  \"bounds\": ["+minX+", "+minY+", "+maxX+", "+maxY+"],\n"+
+                "  \"meta\": {\n"+
+                "    \"levelMinimums\": {\n";
+            for (int i=minZ; i<=maxZ; ++i) {
+                metaData += "      \""+i+"\": 0";
+                if (i == maxZ) metaData += "\n";
+                else metaData += ",\n";
+            }
+            metaData += "    },\n";
+            metaData += "    \"levelMaximums\": {\n";
+            for (int i=minZ; i<=maxZ; ++i) {
+                metaData += "      \""+i+"\": 0";
+                if (i == maxZ) metaData += "\n";
+                else metaData += ",\n";
+            }
+            metaData += "    }\n";
+            metaData += "  }\n";
+            metaData += "}\n";
+
+            _metaData = metaData;
+    }
+
     @Override
     public void initializeForWrite (String pyramidId) throws IOException {
     }
@@ -62,7 +96,8 @@ public class DummyPyramidIO implements PyramidIO {
                                             TileSerializer<T> serializer,
                                             Iterable<TileIndex> tiles) throws IOException {
         List<TileData<T>> results = new ArrayList<>();
-        for (TileIndex index: tiles) {
+        for (TileIndex rawIndex: tiles) {
+            TileIndex index = new TileIndex(rawIndex.getLevel(), rawIndex.getX(), rawIndex.getY(), 1, 1);
             TileData<T> tile = new TileData<>(index);
             results.add(tile);
         }
@@ -73,16 +108,17 @@ public class DummyPyramidIO implements PyramidIO {
     @Override
     public <T> InputStream getTileStream (String pyramidId,
                                           TileSerializer<T> serializer,
-                                          TileIndex tile) throws IOException {
+                                          TileIndex rawIndex) throws IOException {
+        TileIndex index = new TileIndex(rawIndex.getLevel(), rawIndex.getX(), rawIndex.getY(), 1, 1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        serializer.serialize(new TileData<T>(tile), baos);
+        serializer.serialize(new TileData<T>(index), baos);
 
-        return null;
+        return new ByteArrayInputStream(baos.toByteArray());
     }
 
     @Override
     public String readMetaData (String pyramidId) throws IOException {
-        return "";
+        return _metaData;
     }
 
     @Override
