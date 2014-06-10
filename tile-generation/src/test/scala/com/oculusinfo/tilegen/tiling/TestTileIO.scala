@@ -65,7 +65,6 @@ class TestPyramidIO extends PyramidIO with Serializable {
 	}
 
 	def writeTiles[T] (pyramidId: String,
-	                   tilePyramid: TilePyramid,
 	                   serializer: TileSerializer[T],
 	                   data: JavaIterable[TileData[T]]): Unit = {
 		if (!datas.contains(pyramidId)) {

@@ -23,13 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines the base class for a client render layer. Must be 
- * inherited from for any functionality.
- */
 define(function (require) {
     "use strict";
 
@@ -61,6 +55,12 @@ define(function (require) {
 
             this.layers_ = [];
             this.subset_ = [];
+        },
+
+
+        getRootElement: function() {
+
+            return this.$root_;
         },
 
 
@@ -142,9 +142,11 @@ define(function (require) {
                 node = nodesById[ key ],
                 index = nodes.indexOf( node );
 
-            this.destroyNode( node );
-            nodes.splice(index, 1);
-            delete nodesById[ key ];
+            if (node) {
+                this.destroyNode( node );
+                nodes.splice(index, 1);
+                delete nodesById[ key ];
+            }
         },
 
 
@@ -152,8 +154,10 @@ define(function (require) {
             var nodes = this.nodes_,
                 index = nodes.indexOf( node );
 
-            this.destroyNode( nodes[index] );
-            nodes.splice( index, 1 );
+            if (index !== -1) {
+                this.destroyNode( nodes[index] );
+                nodes.splice( index, 1 );
+            }
         },
 
 
@@ -369,6 +373,22 @@ define(function (require) {
                     removeById();
                     break;
             }
+
+            return this;
+        },
+
+
+        clear: function() {
+
+            var nodes = this.nodes_,
+                i;
+
+            for (i=0; i<nodes.length; i++) {
+                this.destroyNode( nodes[i] );
+            }
+            this.nodes_ = [];
+            this.nodesById_ = {};
+            this.subset_ = [];
 
             return this;
         },

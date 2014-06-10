@@ -63,6 +63,4 @@ public class FileSystemPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		}
 		return null;
 	}
-	
-
 }

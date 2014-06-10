@@ -24,14 +24,6 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +31,14 @@ import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
@@ -59,7 +59,7 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> void writeTiles (String basePath, TilePyramid tilePyramid, TileSerializer<T> serializer,
+	public <T> void writeTiles (String basePath, TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
     	
 		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");

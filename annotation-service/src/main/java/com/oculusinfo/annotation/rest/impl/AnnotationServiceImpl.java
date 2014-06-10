@@ -568,7 +568,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
 			io.initializeForWrite( layer );
-			io.writeTiles( layer, null, serializer, tiles );
+			io.writeTiles( layer, serializer, tiles );
 					
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );

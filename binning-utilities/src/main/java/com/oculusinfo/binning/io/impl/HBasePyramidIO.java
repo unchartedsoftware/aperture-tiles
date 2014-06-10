@@ -24,24 +24,37 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Row;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 //import org.apache.hadoop.hbase.TableName;
 
@@ -232,12 +245,12 @@ public class HBasePyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> void writeTiles (String tableName, TilePyramid tilePyramid,  TileSerializer<T> serializer,
+	public <T> void writeTiles (String tableName, TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
 		List<Row> rows = new ArrayList<Row>();
 		for (TileData<T> tile: data) {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			serializer.serialize(tile, tilePyramid, baos);
+			serializer.serialize(tile, baos);
 
 			rows.add(addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
 			                  TILE_COLUMN, baos.toByteArray()));

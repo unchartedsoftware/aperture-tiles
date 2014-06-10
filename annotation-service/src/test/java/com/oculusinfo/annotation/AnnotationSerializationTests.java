@@ -124,7 +124,7 @@ public class AnnotationSerializationTests extends AnnotationTestsBase {
 			
 			// serialize
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			_tileSerializer.serialize( tile, _pyramid, baos );
+			_tileSerializer.serialize( tile, baos );
 			baos.close();
             baos.flush();
             

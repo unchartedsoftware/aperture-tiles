@@ -47,8 +47,7 @@ define(function (require) {
 		ClassName: "Map",
 		
 		init: function (id, spec) {
-			var that = this;
-			
+
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
@@ -76,13 +75,14 @@ define(function (require) {
             this.createRoot();
 
             // if move while map is panning, interrupt pan
-            // current doesn't work properly
+            /*
             this.on('movestart', function(){
                 if ( that.map.olMap_.panTween ) {
                     that.map.olMap_.panTween.callbacks = null;
                     that.map.olMap_.panTween.stop();
                 }
             });
+            */
 
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
@@ -98,15 +98,12 @@ define(function (require) {
         createRoot: function() {
 
             var that = this;
-            this.$root = $('<div id="'+this.id+'-root" style="position:absolute;"></div>');
+            this.$root = $('<div id="'+this.id+'-root" style="position:absolute; top:0px; z-index:999;"></div>');
             this.$map.append( this.$root );
 
             this.on('move', function() {
                 var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
-                that.$root.css({
-                    top: pos.y + "px",
-                    left: pos.x + "px"
-                });
+                that.$root.css({ "-webkit-transform":"translate("+ pos.x +"px, " + pos.y + "px)"});
             });
 
             this.trigger('move'); // fire initial move event

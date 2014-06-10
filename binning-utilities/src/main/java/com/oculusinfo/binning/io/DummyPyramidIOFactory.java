@@ -22,56 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package com.oculusinfo.binning.io;
 
-/*global OpenLayers*/
+import java.util.List;
 
-/**
- * This module defines a ClientState class which is to be held by a ViewController and shared with the individual client
- * render layers. This is to guarantee that interface states can be shared / integrated between separate client layers
- */
-define(function (require) {
-    "use strict";
+import com.oculusinfo.binning.io.impl.DummyPyramidIO;
+import com.oculusinfo.factory.ConfigurableFactory;
 
+public class DummyPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+    public DummyPyramidIOFactory (String factoryName, ConfigurableFactory<?> parent, List<String> path) {
+        super(factoryName, PyramidIO.class, parent, path);
+    }
 
-
-    var Class = require('../../../class'),
-        ClientState;
-
-
-
-    ClientState = Class.extend({
-
-        /**
-         * Construct a mouse state
-         */
-        init: function () {
-
-            // holds the state of mouse clicks
-            this.clearClickState();
-        },
-
-        setClickState: function( key, value) {
-
-            this.clickState[key] = value;
-        },
-
-        getClickState: function( key ) {
-
-            return this.clickState[key];
-        },
-
-        removeClickState: function(key) {
-            if (this.clickState[key] !== undefined) {
-                delete this.clickState[key];
-            }
-        },
-
-        clearClickState: function() {
-            this.clickState = {
-            };
-        }
-
-     });
-
-    return ClientState;
-});
+    @Override
+    protected PyramidIO create() {
+        return new DummyPyramidIO();
+    }
+}

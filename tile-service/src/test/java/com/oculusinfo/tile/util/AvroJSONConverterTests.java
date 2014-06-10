@@ -26,13 +26,13 @@
 package com.oculusinfo.tile.util;
 
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
-import com.oculusinfo.binning.util.Pair;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Parser;
 import org.apache.avro.file.CodecFactory;
@@ -46,12 +46,11 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
+import com.oculusinfo.binning.util.Pair;
 
 
 
@@ -117,7 +116,6 @@ public class AvroJSONConverterTests {
 	@Test
 	public void testReadWordScoreTile () throws IOException, JSONException {
 		// Create a tile to test
-		TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
 		TileSerializer<List<Pair<String, Double>>> serializer = new StringDoublePairArrayAvroSerializer(CodecFactory.nullCodec());
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Double>>> tile = new TileData<>(index);
@@ -128,7 +126,7 @@ public class AvroJSONConverterTests {
 		bin.add(new Pair<String, Double>("jkl", 2.25));
 		tile.setBin(0, 0, bin);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		serializer.serialize(tile, pyramid, baos);
+		serializer.serialize(tile, baos);
 		baos.flush();
 		baos.close();
 		byte[] serializedTileData = baos.toByteArray();
