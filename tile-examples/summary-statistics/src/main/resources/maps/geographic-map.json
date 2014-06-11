@@ -46,80 +46,66 @@
 				20037508.342789244
 			]
 		},
-        "baseLayer" : [
-        	{
-                "type" : "Google",
-                "options" : {
-                    "name" : "Google Black",
-                    "type" : "styled",
-                    "style" : [
-                        { "stylers" : [ { "invert_lightness" : true },
-                            { "saturation" : -100 },
-                            { "visibility" : "simplified" } ] },
-                        { "featureType" : "landscape.natural.landcover",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "road",
-                            "stylers" : [ { "visibility" : "on" } ] },
-                        { "featureType" : "landscape.man_made",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "transit",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "poi",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "administrative.country",
-                            "elementType" : "geometry",
-                            "stylers" : [ { "visibility" : "on" },
-                                { "lightness" : -56 } ] },
-                        { "elementType" : "labels",
-                            "stylers" : [ 	{ "lightness" : -46 },
-                                { "visibility" : "on" } ] }
-                    ]
-                }
-            },
-            {
-                "type" : "Google",
-                "options" : {
-                    "name" : "Google White",
-                    "type" : "styled",
-                    "style" : [
-                        { "stylers" : [ { "invert_lightness" : false },
-                            { "saturation" : -100 },
-                            { "visibility" : "simplified" } ] },
-                        { "featureType" : "landscape.natural.landcover",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "road",
-                            "stylers" : [ { "visibility" : "on" } ] },
-                        { "featureType" : "landscape.man_made",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "transit",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "poi",
-                            "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "administrative.country",
-                            "elementType" : "geometry",
-                            "stylers" : [ { "visibility" : "on" },
-                                { "lightness" : -56 } ] },
-                        { "elementType" : "labels",
-                            "stylers" : [ 	{ "lightness" : -46 },
-                                { "visibility" : "on" } ] }
-                    ]
-                }
-            },
-            {
-                "type" : "BlankBase",
-                "options" : {
-                    "name" : "black",
-                    "color" : "rgb(0,0,0)"
-                }
-            },
-            {
-                "type" : "BlankBase",
-                "options" : {
-                    "name" : "white",
-                    "color" : "rgb(255,255,255)"
-                }
-            }
-        ]
+        		"baseLayer" : [
+			{
+				"type": "Google",
+				"options" : {
+					"name" : "Google Black",
+					"type" : "styled",
+					"style" : [
+						{ "stylers" : [ { "invert_lightness" : true },
+								 		{ "saturation" : -100 },
+								 		{ "visibility" : "simplified" } ] },
+						{ "featureType" : "landscape.natural.landcover",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "road",
+				  	  	  "stylers" : [ { "visibility" : "on" } ] },
+						{ "featureType" : "landscape.man_made",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "transit",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "poi",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "administrative.country",
+				  	  	  "elementType" : "geometry",
+				  	  	  "stylers" : [ { "visibility" : "on" },
+							   			{ "lightness" : -56 } ] },
+						{ "elementType" : "labels",
+				  	  	  "stylers" : [ { "lightness" : -46 },
+				   						{ "visibility" : "on" } ] }
+					]
+				}
+			},
+			{
+				"type": "Google",
+				"options" : {
+					"name" : "Google Gray",
+					"type" : "styled",
+					"style" : [
+						{ "stylers" : [ { "invert_lightness" : false },
+								 		{ "saturation" : -100 },
+								 		{ "visibility" : "simplified" } ] },
+						{ "featureType" : "landscape.natural.landcover",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "road",
+				  	  	  "stylers" : [ { "visibility" : "on" } ] },
+						{ "featureType" : "landscape.man_made",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "transit",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "poi",
+				  	  	  "stylers" : [ { "visibility" : "off" } ] },
+						{ "featureType" : "administrative.country",
+				  	  	  "elementType" : "geometry",
+				  	  	  "stylers" : [ { "visibility" : "on" },
+							   			{ "lightness" : -56 } ] },
+						{ "elementType" : "labels",
+				  	  	  "stylers" : [ { "lightness" : -46 },
+				   						{ "visibility" : "on" } ] }
+					]
+				}
+			}
+		]
 	},
 
 	"AxisConfig" : [
