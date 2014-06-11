@@ -386,22 +386,26 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 		(start, end) => {
 
 			// Bresenham's algorithm
-			var steep = math.abs(end.getY() - start.getY()) > math.abs(end.getX() - start.getX())
-
-			var (x0, y0, x1, y1) =
-				if (steep) {
-					if (start.getY() > end.getY()) {
-						(end.getY(), end.getX(), start.getY(), start.getX())
-					} else {
-						(start.getY(), start.getX(), end.getY(), end.getX())
-					}
-				} else {
-					if (start.getX() > end.getX()) {
-						(end.getX(), end.getY(), start.getX(), start.getY())
-					} else {
-						(start.getX(), start.getY(), end.getX(), end.getY())
-					}
-				}
+			var (x0, y0, x1, y1) = (start.getX(), start.getY(), end.getX(), end.getY())
+			var steep = math.abs(y1 - y0) > math.abs(x1 - x0)
+			
+			var tmpInt = 0
+			if (steep) {
+				tmpInt = y0		//swap x0, y0
+				y0 = x0
+				x0 = tmpInt
+				tmpInt = y1		//swap x1, y1
+				y1 = x1
+				x1 = tmpInt
+			}
+			if (x0 > x1) {
+				tmpInt = x1		//swap x0, x1
+				x1 = x0
+				x0 = tmpInt
+				tmpInt = y0		//swap y0, y1
+				y0 = y1
+				y1 = tmpInt
+			}
 
 			val deltax = x1-x0
 			val deltay = math.abs(y1-y0)
@@ -421,7 +425,6 @@ class RDDLineBinner(minBins: Int = 4,	//was 1<<1
 					if (steep) new BinIndex(ourY, x)
 					else new BinIndex(x, ourY)
 				}
-			)
+			)	
 		}
-	
 }
