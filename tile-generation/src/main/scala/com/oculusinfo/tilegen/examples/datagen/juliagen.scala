@@ -61,19 +61,19 @@ object JuliaSetGenerator {
 			val minR = argParser.getDouble("minreal",
 			                               "The minimum real value of the "
 				                               +"input domain.",
-			                               Some(-1.0))
+			                               Some(-2.0))
 			val maxR = argParser.getDouble("maxreal",
 			                               "The maximum real value of the "
 				                               +"input domain",
-			                               Some(1.0))
+			                               Some(2.0))
 			val minI = argParser.getDouble("minimag",
 			                               "The minimum imaginary value of "
 				                               +"the input domain",
-			                               Some(-1.0))
+			                               Some(-2.0))
 			val maxI = argParser.getDouble("maximag",
 			                               "The maximum imaginary value of "
 				                               +"the input domain",
-			                               Some(1.0))
+			                               Some(2.0))
 			val samples = argParser.getLong("samples",
 			                                "The number of sample points "
 				                                +"to generate in our Julia set. "
