@@ -243,6 +243,10 @@ require(['./FileLoader',
 
                         // ... (set up our map tile borders) ...
                         MapService.setTileBorderConfig(mapConfig);
+                        
+                        if(mapConfig.MapConfig.zoomTo) {
+                            worldMap.map.zoomTo( mapConfig.MapConfig.zoomTo[0], mapConfig.MapConfig.zoomTo[1], mapConfig.MapConfig.zoomTo[2] );
+                        }
 
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {

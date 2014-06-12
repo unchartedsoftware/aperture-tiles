@@ -388,7 +388,7 @@
                 MapService.setTileBorderConfig(mapConfig, plotDiv);
 
                 if(mapConfig.zoomTo) {
-                    worldMap.map.zoomTo( mapConfig.zoomTo[0], [1], [2] );
+                    worldMap.map.zoomTo( mapConfig.zoomTo[0], mapConfig.zoomTo[1], mapConfig.zoomTo[2] );
                 }
 
                 //create the controls
@@ -486,7 +486,7 @@
             tocPane.addClass('ui-layout-west');
             $('header').addClass('ui-layout-north');
             $summaryDiv.addClass('ui-layout-center');
-            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:178}});
+            layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:278}});
 
             layout.panes.west.css({
                 "background":  "rgb(204,204,204)"
