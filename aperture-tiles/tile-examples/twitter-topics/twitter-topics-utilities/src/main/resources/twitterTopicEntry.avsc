@@ -1,0 +1,35 @@
+{
+    "name":      "entryType",
+    "namespace": "ar.avro",
+    "type":      "record",
+    "fields": [
+        {"name": "topic",      "type": "string", "doc": "Twitter topic in original language"},
+        {"name": "topicEnglish",      "type": "string", "doc": "Twitter topic in English"},
+        {"name": "countMonthly",    "type": "int",    "doc": "Total number of tweets per month with this topic"},
+        {"name": "countDaily",
+         "type": {"type": "array", "items": "int"},
+         "doc": "An array of tweet counts per day for the past month with this topic"
+        },
+        {"name": "countPer6hrs",
+         "type": {"type": "array", "items": "int"},
+         "doc": "An array of tweet counts per six hours for last week with this topic"
+        },
+        {"name": "countPerHour",
+         "type": {"type": "array", "items": "int"},
+         "doc": "An array of tweet counts per hour for last 24 hrs with this topic"
+        },                  
+        {"name": "recentTweets",
+         "type": {"type": "array", "items":
+                  {"name": "recentEntry",
+                   "type": "record",
+                   "fields": [
+                       {"name": "tweet", "type": "string"},
+                       {"name": "time", "type": "long"}
+                   ]
+                  }
+                 },
+         "doc": "The ten most recent tweets with this topic"
+        },
+        {"name": "endTimeSecs",      "type": "long", "doc": "End time (in secs) chosen for this tile generation job"}
+    ]
+}
