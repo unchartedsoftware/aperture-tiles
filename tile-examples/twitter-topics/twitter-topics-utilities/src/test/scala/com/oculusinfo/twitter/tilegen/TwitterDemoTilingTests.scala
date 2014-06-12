@@ -432,10 +432,12 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
       tio.writeTileSet(tilePyramid, "abc", tiles, binDesc)
     })
 
-    val mdo = tio.readMetaData("abc")
-    assert(mdo.isDefined)
-    val md = mdo.get
-    assert(List(0, 1, 2, 3) === md.levelMins.map(_._1).toList)
-    assert(List(0, 1, 2, 3) === md.levelMaxes.map(_._1).toList)
-  }
+		val mdo = tio.readMetaData("abc")
+		assert(mdo.isDefined)
+		val md = mdo.get
+		assert(List(0, 1, 2, 3) ===
+			       md.getLevelMinimums().keySet().asScala.toList.map(_.intValue).sorted)
+		assert(List(0, 1, 2, 3) ===
+			       md.getLevelMaximums().keySet().asScala.toList.map(_.intValue).sorted)
+	}
 }

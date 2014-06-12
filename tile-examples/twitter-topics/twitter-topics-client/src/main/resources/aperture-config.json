@@ -14,6 +14,6 @@
     },
     "aperture.io" : {
     	"rpcEndpoint" : "/aperture/rpc",
-        "restEndpoint" : "/twitter-demo-day/rest"
+        "restEndpoint" : "/${project.build.finalName}/rest"
     }
 }

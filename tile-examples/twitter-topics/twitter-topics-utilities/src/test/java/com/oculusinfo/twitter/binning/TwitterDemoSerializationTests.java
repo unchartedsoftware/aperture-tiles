@@ -56,11 +56,11 @@ public class TwitterDemoSerializationTests {
                                                                          new Pair<String, Long>("This is another #tag", 2L),
                                                                          new Pair<String, Long>("more #tags and more", -4L)));
 
-        TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
+        //TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         TileIndex index = new TileIndex(0, 0, 0, 1, 1);
         TileData<List<TwitterDemoRecord>> tileIn = new TileData<>(index, Arrays.asList(Arrays.asList(recordIn)));
-        serializer.serialize(tileIn, pyramid, baos);
+        serializer.serialize(tileIn, baos);
         baos.flush();
         baos.close();
 
@@ -86,11 +86,11 @@ public class TwitterDemoSerializationTests {
                                                                          new Pair<String, Long>("\u2728", 2L),
                                                                          new Pair<String, Long>("\u1F302", -4L)));
 
-        TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
+        //TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         TileIndex index = new TileIndex(0, 0, 0, 1, 1);
         TileData<List<TwitterDemoRecord>> tileIn = new TileData<>(index, Arrays.asList(Arrays.asList(recordIn)));
-        serializer.serialize(tileIn, pyramid, baos);
+        serializer.serialize(tileIn, baos);
         baos.flush();
         baos.close();
 
@@ -111,11 +111,11 @@ public class TwitterDemoSerializationTests {
 				Arrays.asList(new Pair<String, Long>("ghi", 9999L)), 10000);
 		TwitterTopicAvroSerializer serializer = new TwitterTopicAvroSerializer(CodecFactory.nullCodec());
 		
-		TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
+		//TilePyramid pyramid = new AOITilePyramid(0, 0, 1, 1);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<TwitterDemoTopicRecord>> tileIn = new TileData<>(index, Arrays.asList(Arrays.asList(recordIn)));
-		serializer.serialize(tileIn, pyramid, baos);
+		serializer.serialize(tileIn, baos);
 		baos.flush();
 		baos.close();
 		
