@@ -2,14 +2,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>twitter-demo-day-client</artifactId>
+  <artifactId>twitter-topics-client</artifactId>
   <packaging>war</packaging>
-  <name>Twitter Demo Day Client</name>
+  <name>Twitter Track Topics Client</name>
   <url>http://github.com/oculusinfo/aperture-tiles</url>
   <description>A website to display custom-processed twitter data.</description>
 
   <parent>
-    <artifactId>twitter-demo-day</artifactId>
+    <artifactId>twitter-topics</artifactId>
     <groupId>com.oculusinfo</groupId>
     <version>0.3-SNAPSHOT</version>
   </parent>
@@ -23,7 +23,7 @@
     </dependency>
     <dependency>
       <groupId>com.oculusinfo</groupId>
-      <artifactId>twitter-demo-day-utilities</artifactId>
+      <artifactId>twitter-topics-utilities</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

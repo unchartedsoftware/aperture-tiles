@@ -3,12 +3,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>twitter-demo-day-utilities</artifactId>
+  <artifactId>twitter-topics-utilities</artifactId>
   <name>Twitter Custom Processing Utilities</name>
   <description>A server-side service for sending tiles from tile pyramids to web clients</description>
 
   <parent>
-    <artifactId>twitter-demo-day</artifactId>
+    <artifactId>twitter-topics</artifactId>
     <groupId>com.oculusinfo</groupId>
     <version>0.3-SNAPSHOT</version>
   </parent>

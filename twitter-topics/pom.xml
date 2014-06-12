@@ -2,9 +2,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>twitter-demo-day</artifactId>
+  <artifactId>twitter-topics</artifactId>
   <packaging>pom</packaging>
-  <name>Twitter I2O Demo Day Demo</name>
+  <name>Twitter Track Topics Demo</name>
   <url>http://github.com/oculusinfo/aperture-tiles</url>
   <description>
     A project for custom binning and display of twitter data.
@@ -17,7 +17,7 @@
   </parent>
 
   <modules>
-    <module>twitter-demo-day-client</module>
-    <module>twitter-demo-day-utilities</module>
+    <module>twitter-topics-client</module>
+    <module>twitter-topics-utilities</module>
   </modules>
 </project>
