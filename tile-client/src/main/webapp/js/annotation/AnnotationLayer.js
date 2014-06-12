@@ -34,8 +34,18 @@ define(function (require) {
         ClientNodeLayer = require('../layer/view/client/ClientNodeLayer'),
         HtmlLayer = require('../layer/view/client/HtmlLayer'),
         NUM_BINS_PER_DIM = 8,
+        ANNOTATION_DETAILS_CLASS = 'annotation-details',
+        ANNOTATION_DETAILS_CONTENT_CLASS = "annotation-details-content",
+        ANNOTATION_DETAILS_HEAD_CLASS = "annotation-details-head",
+        ANNOTATION_DETAILS_BODY_CLASS = "annotation-details-body",
+        ANNOTATION_DETAILS_LABEL_CLASS = "annotation-details-label",
+        ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS = "annotation-details-close-button",
+        ANNOTATION_CAROUSEL_CLASS = "annotation-carousel",
+        ANNOTATION_CHEVRON_CLASS = "carousel-ui-chevron",
+        ANNOTATION_CHEVRON_LEFT_CLASS = "carousel-ui-chevron-left",
+        ANNOTATION_CHEVRON_RIGHT_CLASS = "carousel-ui-chevron-right",
+        ANNOTATION_INDEX_CLASS = "carousel-ui-text-index",
         AnnotationLayer;
-
 
 
 
@@ -103,32 +113,119 @@ define(function (require) {
                 return {
                     x: pos.x,
                     y: pos.y,
-                    group: "Urgent",
+                    group: that.groups[ Math.floor( that.groups.length*Math.random() ) ],
                     range: {
                         min: 0,
                         max: that.map.getZoom()
                     },
                     level: that.map.getZoom(),
                     data: {
-                        title: "example annotation title " + Math.random(),
-                       comment: "example annotation id " + Math.random()
+                        username: "DebugTweetUser",
+                        tweet: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec purus in ante pretium blandit. Aliquam erat volutpat. Nulla libero lectus."
                     }
                 };
             }
 
-            function createDetails( pos ) {
 
-                var html = '<div class="annotation-details" style="left:'+pos.x+'px; top:'+ (that.map.getMapHeight()-pos.y) +'px;"></div>',
-                    $details = $(html);
-                $(".annotation-details").remove(); // remove any previous details
+            function createDetailsContent( $details, annotation ) {
+
+                var $content;
+
+                // remove any previous view
+                $( "."+ANNOTATION_DETAILS_CONTENT_CLASS ).remove();
+
+                $content = $('<div class="'+ANNOTATION_DETAILS_CONTENT_CLASS+'">'
+                         +     '<div class="'+ANNOTATION_DETAILS_HEAD_CLASS+'">'
+                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'+annotation.data.username+'</div>'
+                         +    '</div>'
+                         +    '<div class="'+ANNOTATION_DETAILS_BODY_CLASS+'">'
+                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> x: '+annotation.x+', y: '+annotation.y+'</div>'
+                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> Group: '+annotation.group+'</div>'
+                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> Data: '+annotation.data.tweet+'</div>'
+                         +    '</div>'
+                         + '</div>');
+
+                $details.append( $content );
+            }
+
+            function createDetailsCarouselUI( $details, bin ) {
+
+                var $carousel,
+                    $leftChevron,
+                    $rightChevron,
+                    $indexText,
+                    index = 0;
+
+                function mod( m, n ) {
+                    return ((m % n) + n) % n;
+                }
+
+                function indexText() {
+                    return (index+1) +' of '+ bin.length;
+                }
+
+                // remove any previous details
+                $( "."+ANNOTATION_CAROUSEL_CLASS ).remove();
+
+                $leftChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_LEFT_CLASS+"'></div>");
+                $rightChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_RIGHT_CLASS+"'></div>");
+
+                $leftChevron.click( function() {
+                    index = mod( index-1, bin.length );
+                    createDetailsContent( $details, bin[index] );
+                    $indexText.text( indexText() );
+                });
+                $rightChevron.click( function() {
+                    index = mod( index+1, bin.length );
+                    createDetailsContent( $details, bin[index] );
+                    $indexText.text( indexText() );
+                });
+
+                $indexText = $('<div class="'+ANNOTATION_INDEX_CLASS+'">'+ indexText() +'</div>');
+                $carousel = $('<div class="'+ANNOTATION_CAROUSEL_CLASS+'"></div>');
+
+                $carousel.append( $leftChevron );
+                $carousel.append( $rightChevron );
+                $carousel.append( $indexText );
+                $details.append( $carousel );
+            }
+
+            function createDetailsElement( bin, pos ) {
+
+                var $details, $closeButton;
+
+                // remove any previous details
+                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
+                // create details div
+                $details = $('<div class="'+ANNOTATION_DETAILS_CLASS+'" style="left:'+pos.x+'px; top:'+ pos.y +'px;"></div>');
+                // create close button
+                $closeButton = $('<div class="'+ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS+'"></div>');
+                $closeButton.click( destroyDetails );
+                // create display for first annotation
+                createDetailsContent( $details, bin[0] );
+                // if more than one annotation, create carousel ui
+                if ( bin.length > 1 ) {
+                    createDetailsCarouselUI( $details, bin );
+                }
+                // add close button last to overlap
+                $details.append( $closeButton );
+                // make details draggable and resizable
+                $details.draggable().resizable({
+                    minHeight: 257,
+                    minWidth: 257
+                });
                 that.map.getRootElement().append( $details );
-                $details.draggable().resizable();
+            }
+
+            function createDetails( bin, pos ) {
+
+                createDetailsElement( bin, pos );
                 detailsIsOpen = true;
             }
 
             function destroyDetails() {
 
-                $(".annotation-details").remove();
+                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
                 detailsIsOpen = false;
             }
 
@@ -138,6 +235,11 @@ define(function (require) {
                     destroyDetails();
                     return;
                 }
+
+                if ( !that.accessibility.write ) {
+                    return;
+                }
+
                 var pos = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y );
                 that.service.writeAnnotation( DEBUG_ANNOTATION( pos ), $.proxy( that.writeCallback, that) );
             }
@@ -198,7 +300,7 @@ define(function (require) {
 
                         $aggregate = $(html);
 
-                        if (bin.length === 1) {
+                        if (bin.length === 1 && that.accessibility.draggable) {
 
                             $aggregate.draggable({
 
@@ -218,11 +320,11 @@ define(function (require) {
                         }
 
                         avgPos.x /= bin.length;
-                        avgPos.y /= bin.length;
-
+                        avgPos.y = that.map.getMapHeight() - ( avgPos.y / bin.length );
 
                         $aggregate.click( function() {
-                            createDetails( avgPos );
+
+                            createDetails( bin, avgPos );
                         });
 
                         return $aggregate;
@@ -278,10 +380,8 @@ define(function (require) {
                 }
             }));
 
+            that.map.on('click', createAnnotation );
 
-            if ( !that.accessibility.write ) {
-                that.map.on('click', createAnnotation );
-            }
         },
 
 
@@ -399,363 +499,6 @@ define(function (require) {
         }
 
 
-
-
-        /*,
-
-
-        removeAndDestroyFeature: function( tilekey, binkey ) {
-
-            var olFeature = this.features[ tilekey ][ binkey ].olFeature_;
-
-            this.highlightControl.unselect( olFeature );
-            this.selectControl.unselect( olFeature );
-
-            // completely remove old feature
-            this.features[ tilekey ][ binkey ].removeFromLayerAndDestroy();
-            delete this.features[ tilekey ][ binkey ];
-        },
-
-
-        popupCreationClose : function( feature ) {
-            // destroy popup
-            feature.removeAndDestroyPopup();
-            // destroy feature
-            feature.removeFromLayerAndDestroy();
-            this.pendingFeature = null;
-        },
-
-
-        popupCreationSave : function( feature ) {
-
-            var annotation = feature.getDataArray()[0],
-                tilekey = feature.olFeature_.attributes.tilekey,
-                binkey = feature.olFeature_.attributes.binkey;
-
-            // make sure input is valid, if so, put it in annotation
-            if ( feature.checkAndSetData() ) {
-
-                // null out pending feature as it is no longer pending
-                this.pendingFeature = null;
-
-                if ( this.features[ tilekey ][ binkey ] !== undefined ) {
-
-                    // already exists, aggregate
-                    this.features[ tilekey ][ binkey ].addAnnotation( annotation );
-                    // destroy feature
-                    feature.removeFromLayerAndDestroy();
-                    // set feature to correct feature
-                    feature = this.features[ tilekey ][ binkey ];
-
-                } else {
-
-                    // does not exist, add to correct feature bin
-                    this.features[ tilekey ][ binkey ] = feature;
-                }
-
-                // send POST request to write annotation to server
-                this.service.writeAnnotation( annotation, $.proxy( this.writeCallback, this) );
-
-                // get rid of popup
-                feature.removeAndDestroyPopup();
-
-                // select newly added annotation up. This will open the display popup
-                this.selectControl.select( feature.olFeature_ );
-            }
-        },
-
-
-        popupEditRemove : function( feature ) {
-
-            var tilekey = feature.olFeature_.attributes.tilekey,
-                binkey = feature.olFeature_.attributes.binkey;
-
-            // send POST request to remove annotation from server
-            this.service.removeAnnotation( feature.getDataArray()[0], $.proxy( this.removeCallback, this) );
-
-            // remove and destroy feature from layer
-            this.removeAndDestroyFeature( tilekey, binkey );
-        },
-
-
-        popupEditClose : function( feature ) {
-
-            var editFunc = (this.accessibility.modify) ? $.proxy( this.popupDisplayEdit, this ) : null;
-            // destroy popup
-            feature.removeAndDestroyPopup();
-            // go back to display
-            feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
-                                        editFunc );
-        },
-
-
-        popupEditSave : function( feature ) {
-
-            // get a deep copy of the old annotation data
-            var oldAnno,
-                newAnno;
-
-            // only check if input is correct
-            if ( feature.checkData() ) {
-
-                // get old data
-                oldAnno = feature.getDataArray()[0];
-                // deep copy annotation data
-                newAnno = JSON.parse( JSON.stringify( oldAnno ) );
-                // set new annotation data from popup input values
-                feature.setDataFromPopup( newAnno );
-                // send POST request to modify annotation on server
-                this.service.modifyAnnotation( oldAnno, newAnno, $.proxy( this.modifyCallback, this) );
-                // swap old data for new
-                feature.setAnnotation( newAnno );
-                // then remove edit popup, and add display popup
-                feature.removeAndDestroyPopup();
-                feature.createDisplayPopup( $.proxy( this.popupDisplayClose, this ),
-                                            $.proxy( this.popupDisplayEdit, this ) );
-            }
-        },
-
-
-        popupDisplayClose : function( feature ) {
-            // destroy popup
-            feature.removeAndDestroyPopup();
-            this.selectControl.clickoutFeature( feature.olFeature_ );
-        },
-
-
-        popupDisplayEdit : function( feature ) {
-            // destroy popup
-            feature.removeAndDestroyPopup();
-            feature.createEditablePopup( this.groups,
-                                         $.proxy( this.popupEditClose, this ),
-                                         $.proxy( this.popupEditSave, this ),
-                                         $.proxy( this.popupEditRemove, this ) );
-        },
-
-
-        getFeatureInfo: function( feature ) {
-
-            var latLon = OpenLayers.LonLat.fromString( feature.geometry.toShortString() ),
-                viewportPixel = this.map.getOLMap().getViewPortPxFromLonLat( latLon ),
-                xy = this.map.getCoordFromViewportPixel( viewportPixel.x, viewportPixel.y ),
-                index = this.indexer.getIndex( xy, this.map.getZoom() );
-
-            return {
-                    tilekey: index.tilekey,
-                    binkey: index.binkey,
-                    lat: latLon.lat,
-                    lon: latLon.lon,
-                    x: xy.x,
-                    y: xy.y
-                };
-        },
-
-
-        cancelPendingFeature: function() {
-
-            if ( this.pendingFeature !== null ) {
-                this.pendingFeature.removeFromLayerAndDestroy();
-                this.pendingFeature = null;
-            }
-        },
-
-
-        createLayer: function() {
-
-            var that = this;
-
-            this.olLayer_ = new OpenLayers.Layer.Vector( "annotation-layer-"+this.id, { 
-                ratio: 2,
-                styleMap: new OpenLayers.StyleMap({ 
-                    "default" : defaultStyle,
-                    "highlight": highlightStyle,
-                    "select": selectStyle,
-                    "temporary": temporaryStyle
-                }),
-                eventListeners: {
-
-                    "featureselected": function(e) {
-
-                        var editFunc = (that.accessibility.modify) ? $.proxy( that.popupDisplayEdit, that ) : null;
-                        // cancel any pending feature creation
-                        that.cancelPendingFeature();
-                        // if anything is selected, prevent click-out from adding a new point
-                        that.addPointControl.deactivate();
-                        // show display popup
-                        e.feature.attributes.feature.createDisplayPopup( $.proxy( that.popupDisplayClose, that ),
-                                                                         editFunc );
-                    },
-
-                    "featureunselected": function(e) {
-
-                        // remove and destroy popup
-                        e.feature.attributes.feature.removeAndDestroyPopup();
-                        // if nothing is selected, re-enable adding points
-                        if ( that.accessibility.write ) {
-                            that.addPointControl.activate();
-                        }
-                    },
-
-                    "featureadded": function(e) {
-
-                        // cancel any previous pending feature creation
-                        that.cancelPendingFeature();
-
-                        var info = that.getFeatureInfo( e.feature ),
-                            annotation;
-
-                        // create base annotation
-                        annotation = {
-                            x: info.x,
-                            y: info.y,
-                            group: "_pending",   // mark as pending
-                            range: {
-                                min: 0,
-                                max: that.map.getZoom()
-                            },
-                            level: that.map.getZoom(),
-                            data: {}
-                        };
-
-                        // create temporary feature
-                        that.pendingFeature = new AnnotationFeature({
-                            map: that.map,
-                            feature : e.feature,
-                            annotations: [ annotation ],
-                            tilekey : info.tilekey,
-                            binkey: info.binkey
-                        });
-
-                        // create edit popup to enter annotation info
-                        that.pendingFeature.createEditablePopup( that.groups,
-                                                                 $.proxy( that.popupCreationClose, that ),
-                                                                 $.proxy( that.popupCreationSave, that ));
-
-                    }
-
-                }
-            });
-
-            this.addPointControl = new OpenLayers.Control.DrawFeature( this.olLayer_, OpenLayers.Handler.Point );
-
-            this.selectControl = new OpenLayers.Control.SelectFeature( this.olLayer_ );
-
-            this.highlightControl = new OpenLayers.Control.SelectFeature( this.olLayer_, {
-                hover: true,                // mouse-over == select and mouse-off == un-select
-                highlightOnly: true,        // instead of selecting, only highlight
-                renderIntent: "highlight"   // when highlighted, use this style
-            });
-
-            this.dragControl = new OpenLayers.Control.DragFeature( this.olLayer_, {
-
-                onStart: function(feature, pixel) {
-
-                    // get feature key
-                    var tilekey = feature.attributes.tilekey,
-                        binkey = feature.attributes.binkey;
-
-                    if ( that.pendingFeature !== null &&
-                         that.pendingFeature.olFeature_ === feature ) {
-                        // cannot select pending feature
-                        return;
-                    }
-
-                    if ( that.features[ tilekey ][ binkey ].isAggregated() || !that.accessibility.modify ) {
-                        // disable dragging of aggregated points!
-                        that.dragControl.handlers.drag.deactivate();
-                    }
-
-                    // dragging has prescedence over selection, so manually select the feature
-                    that.selectControl.clickFeature( feature );
-                },
-
-                onComplete: function(feature, pixel) {
-
-                    var info = that.getFeatureInfo( feature ),
-                        oldTilekey = feature.attributes.tilekey,
-                        oldBinkey =  feature.attributes.binkey,
-                        newTilekey = info.tilekey,
-                        newBinkey = info.binkey,
-                        oldAnno,
-                        newAnno;
-
-                    // set key attribute to new key
-                    feature.attributes.tilekey = newTilekey;
-                    feature.attributes.binkey = newBinkey;
-
-                    // if dragging pending feature, update location and return
-                    if (that.pendingFeature !== null &&
-                        that.pendingFeature.olFeature_ === feature ) {
-
-                        oldAnno = that.pendingFeature.getDataArray()[0];
-                        oldAnno.x = info.x;
-                        oldAnno.y = info.y;
-                        return;
-                    }
-
-                    // this feature only contains 1 annotation as you cannot drag aggregates
-                    oldAnno = that.features[ oldTilekey ][ oldBinkey ].getDataArray()[0];
-
-                    // deep copy annotation data
-                    newAnno = JSON.parse( JSON.stringify( oldAnno ) );
-                    newAnno.x = info.x;
-                    newAnno.y = info.y;
-
-                    if ( oldTilekey === newTilekey &&
-                         oldBinkey === newBinkey ) {
-
-                        // remaining in same bin
-                        // change internal data from old to new anno
-                        that.features[ newTilekey ][ newBinkey ].setAnnotation( newAnno );
-
-                    } else if ( that.features[ newTilekey ][ newBinkey ] !== undefined ) {
-
-                        // feature already exists in new location, aggregate!
-                        // add annotation to aggregate
-                        that.features[ newTilekey ][ newBinkey ].addAnnotation( newAnno );
-                        // remove and destroy feature
-                        that.removeAndDestroyFeature( oldTilekey, oldBinkey );
-
-                    } else {
-
-                        // un-occupied bin
-                        // move feature to new bin
-                        that.features[ newTilekey ][ newBinkey ] = that.features[ oldTilekey ][ oldBinkey ];
-                        // delete old bin
-                        delete that.features[ oldTilekey ][ oldBinkey ];
-                        // change internal data from old to new anno
-                        that.features[ newTilekey ][ newBinkey ].setAnnotation( newAnno );
-                    }
-
-                    // send POST request to modify annotation on server
-                    that.service.modifyAnnotation( oldAnno, newAnno, $.proxy( that.modifyCallback, that) );
-
-                },
-
-                onDrag: function(feature, pixel) {
-
-                    // centre popup on feature when dragging
-                    feature.attributes.feature.centrePopup( OpenLayers.LonLat.fromString( feature.geometry.toShortString() ) );
-                }
-
-            });
-
-            // attach layer and controls to map
-            this.map.addOLLayer( this.olLayer_ );
-            this.map.addOLControl(this.addPointControl);
-            this.map.addOLControl(this.dragControl);
-            this.map.addOLControl(this.highlightControl);
-            this.map.addOLControl(this.selectControl);
-
-            // activate controls
-            if (this.accessibility.write) {
-                this.addPointControl.activate();
-            }
-            this.dragControl.activate();
-            this.highlightControl.activate();
-            this.selectControl.activate();
-        }
-        */
      });
 
     return AnnotationLayer;

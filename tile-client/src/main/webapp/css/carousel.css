@@ -24,12 +24,12 @@
 }
 
 .carousel-ui-chevron-left {
-    left:10px;
+    left:5px;
     background: transparent url(../images/chevron_L.png) no-repeat center top;
 }
 
 .carousel-ui-chevron-right {
-    right:10px;
+    right:5px;
     background: transparent url(../images/chevron_R.png) no-repeat center top;
 }
 
@@ -69,3 +69,17 @@
     background: transparent url(../images/select.png) no-repeat center top;
 }
 
+.carousel-ui-text-index {
+    position:absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align:center;
+    pointer-events:none;
+    font-size:20px;
+    color: #ffffff;
+    text-shadow:
+        -1px -1px 2px #000,
+         1px -1px 2px #000,
+        -1px  1px 2px #000,
+         1px  1px 2px #000; 
+}
