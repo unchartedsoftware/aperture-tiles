@@ -189,7 +189,8 @@ class RDDLineBinner(minBins: Int = 2,
 	                                          levels: Seq[Int],
 	                                          bins: Int = 256,
 	                                          consolidationPartitions: Option[Int] = None,
-	                                          isDensityStrip: Boolean = false):
+	                                          isDensityStrip: Boolean = false,
+	                                          usePointBinner: Boolean = true):
 	        RDD[TileData[BT]] = {
 				
 		val tileBinToUniBin = {
@@ -231,7 +232,7 @@ class RDDLineBinner(minBins: Int = 2,
 				)
 			}
 
-		processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip)
+		processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip, usePointBinner)
 	}
 
 
@@ -392,7 +393,7 @@ class RDDLineBinner(minBins: Int = 2,
 		//val reduced2 = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
 		
 		val reducedData = data.flatMap(p => {		
-			universalBinsToTiles(p._1._3, endpointsToLineBins(p._1._1, p._1._2)).map(tile =>
+			universalBinsToTiles(p._1._3, endpointsToLineBins(p._1._1, p._1._2)).map(tile =>	//TODO use '256' version here
 								(tile, (p._1._1, p._1._2, p._2))
 							)
 		})
@@ -420,7 +421,7 @@ class RDDLineBinner(minBins: Int = 2,
 					{
 						// get all universal bins in line, discard ones not in current tile, 
 						// and convert bins to 'regular' tile/bin units
-						universalBinsToBins(index, endpointsToLineBins(segment._1, segment._2)).foreach(bin =>
+						universalBinsToBins(index, endpointsToLineBins(segment._1, segment._2)).foreach(bin =>	//TODO use '256' version here
 							{
 								val x = bin.getX()
 								val y = bin.getY()
