@@ -277,8 +277,7 @@ define(function (require) {
                     //turn off the opacity slide and checkbox
                     $toggleDiv.css( 'visibility', 'hidden' );
                     $cell.css( 'visibility', 'hidden' );
-                }
-                if( bl.type==='Google' ){
+                } else {
                     //reset the back-ground color to black
                     $mapDiv.css( 'background-color', 'rgb(0,0,0)' );
                     //turn on the opacity slide and checkbox
@@ -291,7 +290,8 @@ define(function (require) {
                             	olMap_.baseLayer.setVisibility(false);
                                 olMap_.baseLayer.destroy();
                                 spec = layerControlsSpec.baseLayers[k];
-                                newBase = layerControlsSpec.map.map.addLayer(aperture.geo.MapTileLayer.Google, {}, spec);
+                                newBase = layerControlsSpec.map.map.addLayer(
+                                				bl.type === 'Google' ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS, {}, spec);
                                 olMap_.baseLayer = newBase.olLayer_;
                                 olMap_.setBaseLayer(newBase.olLayer_);
                                 olMap_.baseLayer.setVisibility(false);
