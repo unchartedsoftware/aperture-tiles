@@ -53,9 +53,6 @@ define(function (require) {
                     worldMap.map.zoomTo( majorCities[this.value].lat,
                                          majorCities[this.value].long, 8);
                 });
-
-                // Zoom to the area of the world with the data.
-                worldMap.map.zoomTo( -15, -60, 4 );
             }, "json");
         }
     };
