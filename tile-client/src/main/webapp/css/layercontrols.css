@@ -26,6 +26,7 @@
 }
 #layer-controls-content {
     position: relative;
+    padding-bottom: 15px !important;
     background-color: #FFF;
     color: #000;
     width: 612px;
@@ -47,9 +48,9 @@
 }
 .layer-toggle {
     width: 15px;
-    vertical-align: bottom;
-    display: inline-block;
     padding-right:10px;
+    float: left;
+    padding-top: 15px;
 }
 .slider-label {
     font-size: 10px;
@@ -217,11 +218,8 @@ fieldset{
     position: relative;
     border: none;
     text-align: center;
-    width: 85%;
-    float: right;
     margin: 0px;
     margin-bottom: 2px;
-    top: -20px;
     height: 15px;
 }
 fieldset input[type=radio] {
