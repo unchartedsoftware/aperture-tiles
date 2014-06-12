@@ -387,8 +387,8 @@
                 // ... (set up our map tile borders) ...
                 MapService.setTileBorderConfig(mapConfig, plotDiv);
 
-                if(mapConfig.zoomTo) {
-                    worldMap.map.zoomTo( mapConfig.zoomTo[0], mapConfig.zoomTo[1], mapConfig.zoomTo[2] );
+                if(mapConfig.MapConfig.zoomTo) {
+                    worldMap.map.zoomTo( mapConfig.MapConfig.zoomTo[0], mapConfig.MapConfig.zoomTo[1], mapConfig.MapConfig.zoomTo[2] );
                 }
 
                 //create the controls
