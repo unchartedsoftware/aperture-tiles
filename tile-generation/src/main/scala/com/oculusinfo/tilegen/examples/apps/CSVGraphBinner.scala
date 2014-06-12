@@ -292,7 +292,9 @@ class CSVGraphDataset[IT: ClassTag](indexer:  CSVIndexExtractor[IT],
 object CSVGraphBinner {
 	
 	private var _graphDataType = "nodes"
-	
+	private var _lineLevelThres = 4		// [level] threshold to determine whether to use 'point' vs 'tile' 
+										// based line segment binning.  Levels above this thres use tile-based binning.
+			
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
 		properties.getString("oculus.tileio.type",
 		                     "Where to put tiles",
@@ -326,6 +328,13 @@ object CSVGraphBinner {
 	}
 
 	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
+			
+		_lineLevelThres = properties.getInt("oculus.binning.line.level.threshold",
+											"Level threshold to determine whether to use 'point' vs 'tile'"+
+											" based line segment binning (levels above this thres use tile-based binning)",
+											Some(4))
+		
+		
 		_graphDataType = properties.getString("oculus.binning.graph.data",
 		                                     "The type of graph data to tile (nodes or edges). "+
 			                                     "Default is nodes.",
@@ -364,8 +373,7 @@ object CSVGraphBinner {
 				                                Some(CSVDatasetBase.ZERO_STR))				                                
 				new LineSegmentIndexExtractor(xVar1, yVar1, xVar2, yVar2)
 			}			
-
-		}			
+		}
 	}	
 	
 	def processDataset[IT: ClassTag,
@@ -381,6 +389,8 @@ object CSVGraphBinner {
 					val procFcn: RDD[(IT, PT)] => Unit =
 						rdd =>
 					{
+						val bUsePointBinner = (levels.max <= _lineLevelThres)	// use point-based vs tile-based line-segment binning?
+						
 						val tiles = binner.processDataByLevel(rdd,
 						                                      dataset.getIndexScheme,
 						                                      dataset.getBinDescriptor,
@@ -388,7 +398,8 @@ object CSVGraphBinner {
 						                                      levels,
 						                                      (dataset.getNumXBins max dataset.getNumYBins),
 						                                      dataset.getConsolidationPartitions,
-						                                      dataset.isDensityStrip)
+						                                      dataset.isDensityStrip,
+						                                      bUsePointBinner)
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
