@@ -288,14 +288,16 @@ define(function (require) {
                     if(olMap_.baseLayer.options.name !== bl.options.name){
                         for(k; k<layerControlsSpec.baseLayers.length; k++){
                             if(layerControlsSpec.baseLayers[k].options.name === bl.options.name){
+                            	olMap_.baseLayer.setVisibility(false);
                                 olMap_.baseLayer.destroy();
                                 spec = layerControlsSpec.baseLayers[k];
                                 newBase = layerControlsSpec.map.map.addLayer(aperture.geo.MapTileLayer.Google, {}, spec);
                                 olMap_.baseLayer = newBase.olLayer_;
                                 olMap_.setBaseLayer(newBase.olLayer_);
+                                olMap_.baseLayer.setVisibility(false);
                                 olMap_.baseLayer.setVisibility(true);
-                                olMap_.zoomIn();
-                                olMap_.zoomOut();
+//                                olMap_.zoomIn();
+//                                olMap_.zoomOut();
                                 return true;
                             }
                         }
