@@ -64,10 +64,10 @@ class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double
  * @param tileScheme the type of tile pyramid this binner can bin.
  */
 class RDDLineBinner(minBins: Int = 2,
-                    maxBins: Int = 1024) extends Serializable {
+                    maxBins: Int = 1024) extends Serializable {	//1<<10 = 1024  256*4 = 4 tile widths
 	var debug: Boolean = true
 	
-	protected def getMinBins = minBins	//TODO -- pass in a function to validate a line segment instead of min/max pts (so easier to customize as desired)
+	protected def getMinBins = minBins
 	protected def getMaxBins = maxBins	
 
 	/**
