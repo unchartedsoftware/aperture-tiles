@@ -76,7 +76,7 @@ define(function (require) {
              *  Array counts are inverted, 0 index is most recent
              */
 
-            var tagIndex = this.clientState.clickState.userData.index,
+            var tagIndex = this.clientState.clickState.index,
                 i, length, count = 0;
 
             switch(type) {
@@ -110,7 +110,7 @@ define(function (require) {
              */
 
             var attrib = 'count' + type,
-                tagIndex = this.clientState.clickState.userData.index,
+                tagIndex = this.clientState.clickState.index,
                 count = this.getParentCount(data, type),
                 length = data.bin.value[tagIndex][attrib].length;
             if (count === 0) {
@@ -124,7 +124,7 @@ define(function (require) {
             var i,
                 percent,
                 maxPercent = 0,
-                tagIndex = this.clientState.clickState.userData.index,
+                tagIndex = this.clientState.clickState.index,
                 count = this.getParentCount(data, type);
             if (count === 0) {
                 return 0;
@@ -391,7 +391,7 @@ define(function (require) {
 
 
         getRecentTweetsCount: function(data) {
-            var length = data.bin.value[this.clientState.clickState.userData.index].recentTweets.length || 0;
+            var length = data.bin.value[this.clientState.clickState.index].recentTweets.length || 0;
             return (length > this.MAX_NUM_RECENT_TWEETS) ? this.MAX_NUM_RECENT_TWEETS : length;
         },
 
@@ -408,9 +408,9 @@ define(function (require) {
                 };
 
             function isHoveredOver(index) {
-                return (that.clientState.hoverState.userData !== undefined &&
-                        that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
-                        that.clientState.hoverState.userData.index === index);
+                return (that.clientState.hoverState !== undefined &&
+                        that.clientState.hoverState.id === 'detailsOnDemandRecent' &&
+                        that.clientState.hoverState.index === index);
             }
 
             // MOST RECENT TWEETS LABELS
@@ -420,9 +420,9 @@ define(function (require) {
                 return that.getRecentTweetsCount(this);
             });
             this.recentTweetsLabels.map('fill').from( function(index) {
-                if (that.clientState.hoverState.userData !== undefined &&
-                    that.clientState.hoverState.userData.id === 'detailsOnDemandRecent' &&
-                    that.clientState.hoverState.userData.index === index) {
+                if (that.clientState.hoverState !== undefined &&
+                    that.clientState.hoverState.id === 'detailsOnDemandRecent' &&
+                    that.clientState.hoverState.index === index) {
                     return that.YELLOW_COLOUR;
                 } else {
                     return that.WHITE_COLOUR;
@@ -437,7 +437,7 @@ define(function (require) {
 
 
             this.recentTweetsLabels.map('text').from( function(index) {
-                var tagIndex = that.clientState.clickState.userData.index,
+                var tagIndex = that.clientState.clickState.index,
                     tweet = this.bin.value[tagIndex].recentTweets[index].tweet;
                     return that.filterText(tweet.substring(1, tweet.length - 2) );
             });

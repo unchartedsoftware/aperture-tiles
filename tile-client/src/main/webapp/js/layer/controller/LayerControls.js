@@ -41,7 +41,6 @@ define(function (require) {
     "use strict";
 
     var Class = require('../../class'),
-        LayerState = require('../model/LayerState'),
         AxisUtil = require('../../map/AxisUtil'),
         LayerControls,
         addLayer,
@@ -88,6 +87,7 @@ define(function (require) {
         return removed;
     };
 
+
     /**
      * Adds a new set of layer controls to the panel.
      *
@@ -98,37 +98,22 @@ define(function (require) {
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
     addLayer = function (sortedLayers, index, $parentElement, controlsMap, layerControlsSpec) {
-        var $cell,
-            $filterSlider,
-            $opacitySlider,
-            $toggleDiv,
-            $toggleBox,
-            $promotionDiv,
-            $promotionButton,
-            $settingsButton,
-            $layerControlSetRoot,
-            $layerControlTitleBar,
-            $layerContent,
-            className,
-            hasFilter,
-            name,
+        var layerState = sortedLayers[index],
+            name = layerState.getName() || layerState.getId(),
+            $cell, $filterSlider, $opacitySlider,
+            $toggleDiv, $toggleBox, $promotionDiv,
+            $promotionButton, $settingsButton, $layerControlSetRoot,
+            $layerControlTitleBar, $layerContent, $fieldset, $mapDiv,
+            $filterAxis,
+            sliderClass,
             filterRange,
             id,
-            layerState,
-            $filterAxis,
             count,
             radioHTML,
-            $mapDiv,
-            key,
-            $fieldset;
+            key;
 
-        layerState = sortedLayers[index];
-
+        // create layer root
         $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '" class="layer-controls-layer"></div>');
-
-        name = layerState.getName();
-        name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
-
         // create title div
         $layerControlTitleBar = $('<div class="layer-title"></div>');
         // add title span to div
@@ -139,13 +124,13 @@ define(function (require) {
         $layerContent = $('<div class="layer-content"></div>');
         $layerControlSetRoot.append($layerContent);
 
-        // create settings button
-        if ( layerState.getRampFunction() !== null && layerState.getRampType() !== null) {
+        // create settings button, only for server layers
+        if ( layerState.domain === 'server' ) {
             $settingsButton = $('<button class="settings-link">settings</button>');
             $settingsButton.click(function () {
                 showLayerSettings($parentElement, layerState);
             });
-            $layerControlTitleBar.append($settingsButton);
+            $layerControlTitleBar.append( $settingsButton );
         }
 
         // add visibility toggle box
@@ -160,11 +145,9 @@ define(function (require) {
         $layerContent.append($toggleDiv);
 
         // add opacity slider
-        filterRange = layerState.getFilterRange();
-        hasFilter = filterRange !== null && filterRange[0] >= 0 && filterRange[1] >= 0;
-        className = hasFilter ? "opacity-slider" : "base-opacity-slider";
+        sliderClass = ( layerState.domain === 'server' ) ? "opacity-slider" : "base-opacity-slider";
 
-        $cell = $('<div class="' + className + '"></div>');
+        $cell = $('<div class="' + sliderClass + '"></div>');
         $layerContent.append($cell);
 
         $cell.append($('<div class="slider-label">Opacity</div>'));
@@ -180,10 +163,13 @@ define(function (require) {
                 layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
             }
         });
-        $cell.append($opacitySlider);
+        $cell.append( $opacitySlider );
 
         // add filter slider
-        if (hasFilter) {
+        if ( layerState.domain === 'server' ) {
+
+            filterRange = layerState.getFilterRange();
+
             $cell = $('<div class="filter-slider"></div>');
             $layerContent.append($cell);
 
@@ -217,7 +203,7 @@ define(function (require) {
         }
 
         // add layer promotion button
-        if (layerState.getZIndex() !== null && layerState.getZIndex() >= 0) {
+        if ( layerState.domain === "server" ) {
             $promotionDiv = $('<div class="promotion-container"></div>');
             $layerContent.append($promotionDiv);
             $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
@@ -236,7 +222,7 @@ define(function (require) {
         $parentElement.append($layerControlSetRoot);
 
         //add base layer radio buttons when this layer is the base layer
-        if(name === 'Base Layer'){
+        if( layerState.domain === "base" ) {
             count = 0;
             radioHTML = '';
             $mapDiv = $('#' + layerControlsSpec.map.id);
@@ -376,12 +362,12 @@ define(function (require) {
         $rampTypes.append($leftSpan);
         $rampTypes.append($rightSpan);
 
-        for (i=0; i<LayerState.RAMP_TYPES.length; i++) {
+        for (i=0; i<layerState.RAMP_TYPES.length; i++) {
             // for each ramp type
-            name = LayerState.RAMP_TYPES[i].name;
-            id = LayerState.RAMP_TYPES[i].id;
+            name = layerState.RAMP_TYPES[i].name;
+            id = layerState.RAMP_TYPES[i].id;
             // add half types to left, and half to right
-            span = (i < LayerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
+            span = (i < layerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
             span.append($('<div class="settings-values"></div>')
                     .append($('<input type="radio" name="ramp-types" value="' + id + '">')
                         .add($('<label for="' + id + '">' + name + '</label>')
@@ -394,9 +380,9 @@ define(function (require) {
         $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
         $settingsContent.append($rampFunctions);
 
-        for (i=0; i<LayerState.RAMP_FUNCTIONS.length; i++) {
-            name = LayerState.RAMP_FUNCTIONS[i].name;
-            id = LayerState.RAMP_FUNCTIONS[i].id;
+        for (i=0; i<layerState.RAMP_FUNCTIONS.length; i++) {
+            name = layerState.RAMP_FUNCTIONS[i].name;
+            id = layerState.RAMP_FUNCTIONS[i].id;
             $rampFunctions.append($('<div class="settings-values"></div>')
                             .append($('<input type="radio" name="ramp-functions" value="' + id + '">')
                                 .add($('<label for="' + id + '">' + name + '</label>')
@@ -448,7 +434,7 @@ define(function (require) {
      */
     replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap, layerControlsSpec ) {
         var i, key, sortedLayerStateList;
-        sortedLayerStateList = sortLayers(layerStateMap);
+        sortedLayerStateList = sortLayers( layerStateMap );
         $layerControlsContainer.empty();
         // Clear out the controls map
         for (key in controlsMap) {
@@ -458,7 +444,7 @@ define(function (require) {
         }
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStateList.length; i += 1) {
-            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, layerControlsSpec);
+            addLayer( sortedLayerStateList, i, $layerControlsContainer, controlsMap, layerControlsSpec );
         }
 
         //set the content div height depending on the number of layers
@@ -478,7 +464,7 @@ define(function (require) {
         sortedList = [];
         for (layerState in layerStateMap) {
             if (layerStateMap.hasOwnProperty(layerState)) {
-                sortedList.push(layerStateMap[layerState]);
+                sortedList.push( layerStateMap[layerState] );
             }
         }
         sortedList.sort(function (a, b) {
@@ -642,7 +628,7 @@ define(function (require) {
                 });
 
                 //add a default base layer
-                if (!Array.isArray(layerControlsSpec.baseLayers) || layerControlsSpec.baseLayers.length < 1 || !layerControlsSpec.baseLayers[0].type){
+                if (!$.isArray(layerControlsSpec.baseLayers) || layerControlsSpec.baseLayers.length < 1 || !layerControlsSpec.baseLayers[0].type){
                     layerControlsSpec.baseLayers = [];
                     layerControlsSpec.baseLayers.push({
                         "type" : "BlankBase",
@@ -661,7 +647,7 @@ define(function (require) {
             replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap, this.layerControlsSpec);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
-                    layerStateMap[layerState].addListener(makeLayerStateObserver(
+                    layerStateMap[ layerState ].addListener( makeLayerStateObserver(
                         layerStateMap[layerState],
                         this.controlsMap,
                         layerStateMap,

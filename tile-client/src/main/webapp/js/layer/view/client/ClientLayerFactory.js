@@ -43,24 +43,32 @@ define( function (require) {
 		 * @param layerJSON	 	layer specification JSON object loaded from layers.json
 		 * @param map			map object from map.js
 		 */
-		createLayers: function(layerJSON, uiMediator, map) {
-			var i,
-			    layers = [];
+		createLayers: function(layerJSON, map) {
+			var layerDeferreds = [],
+			    factoryDeferred = $.Deferred(),
+			    i;
+
 			for (i=0; i<layerJSON.length; i++) {   
-				layers.push( this.createLayer(layerJSON[i], uiMediator, map) );
+				layerDeferreds.push( this.createLayer(layerJSON[i], map) );
 			}
-			return layers;
+
+			$.when.apply( $, layerDeferreds ).done( function() {
+			    // when all individual layer deferreds are resolved, resolve the factory deferred
+			    factoryDeferred.resolve( Array.prototype.slice.call( arguments, 0 ) );
+			});
+
+			return factoryDeferred;
 		},
 	
 
-		createLayer: function(layerJSON, uiMediator, map) {
+		createLayer: function(layerJSON, map) {
 
 			var layer = {
                     views : []
                 },
                 dependencyDeferreds = [],
                 clientLayer,
-                clientLayerDeferred,
+                clientLayerDeferred = $.Deferred(),
                 i;
 	
 			// load module func
@@ -102,10 +110,6 @@ define( function (require) {
             }
 
             clientLayer = new ClientLayer( layerJSON.name, map );
-            clientLayerDeferred = $.Deferred();
-
-            // instantiate layer object
-            uiMediator.addClientLayer( clientLayer );
 
             $.when.apply( $, dependencyDeferreds ).done( function() {
 

@@ -100,7 +100,7 @@ define(function (require) {
             // tile outline layer
             this.createCarouselPanel();
 
-            if (this.views.length > 1) {
+            if ( this.views.length > 1 ) {
                 // only create carousel ui if there is more than 1 view
                 // left and right view buttons
                 this.createChevrons();
@@ -137,12 +137,13 @@ define(function (require) {
                 chevron.mousedown( function() {
                     chevron.click( function() {
                         var tilekey = that.selectedTileInfo.tilekey,
-                            prevIndex = that.getTileViewIndex(tilekey),
+                            prevIndex = that.clientState.getTileViewIndex(tilekey),
                             mod = function (m, n) {
                                 return ((m % n) + n) % n;
                             },
                             newIndex = mod(prevIndex + inc, that.views.length);
-                      that.changeViewIndex(tilekey, prevIndex, newIndex);
+
+                      that.clientState.setTileViewIndex( tilekey, newIndex );
                     });
                 });
             }
@@ -180,9 +181,8 @@ define(function (require) {
                 dot.mousemove( function() { dot.off('click'); });
                 dot.mousedown( function() {
                     dot.click( function() {
-                        var tilekey = that.selectedTileInfo.tilekey,
-                            prevIndex = that.getTileViewIndex(tilekey);
-                        that.changeViewIndex(tilekey, prevIndex, index);
+                        var tilekey = that.selectedTileInfo.tilekey;
+                        that.clientState.setTileViewIndex( tilekey, index );
                     });
                 });
             }
@@ -222,13 +222,19 @@ define(function (require) {
          */
         updateSelectedTile: function( x, y ) {
 
+            // get tilekey under mouse
+            var tilekey = this.map.getTileKeyFromViewportPixel( x, y );
+            // if only one view, or no views, abort
             if (this.views === undefined || this.views.length === 0) {
                 return;
             }
+            // set selected info
             this.selectedTileInfo = {
                 previouskey : this.selectedTileInfo.tilekey,
-                tilekey : this.map.getTileKeyFromViewportPixel( x, y )
+                tilekey : tilekey
             };
+            //this.clientState.activeCarouselTile = tilekey
+            // update ui
             this.redrawUI();
         },
 
@@ -239,9 +245,19 @@ define(function (require) {
         redrawUI: function() {
 
             var tilekey = this.selectedTileInfo.tilekey,
-                topLeft = this.map.getTopLeftMapPixelForTile( tilekey ),
-                prevActiveView = this.getTileViewIndex( this.selectedTileInfo.previouskey ),
-                activeViewForTile = this.getTileViewIndex( tilekey );
+                previousTilekey = this.selectedTileInfo.previouskey,
+                topLeft,
+                prevActiveView,
+                activeViewForTile;
+
+            // abort if not over new tile
+            if ( previousTilekey === tilekey ) {
+                return;
+            }
+
+            topLeft = this.map.getTopLeftMapPixelForTile( tilekey );
+            prevActiveView = this.getTileViewIndex( previousTilekey );
+            activeViewForTile = this.getTileViewIndex( tilekey );
 
             // re-position carousel tile
             this.$panel.css({
@@ -249,19 +265,13 @@ define(function (require) {
                 top: this.map.getMapHeight() - topLeft.y
             });
 
-            // if over new tile
-            if ( this.selectedTileInfo.previouskey !== this.selectedTileInfo.tilekey ) {
-
-                // if more than 1 view and different dot display is needed
-                if (this.views.length > 1 && prevActiveView !== activeViewForTile ) {
-                    // if active view is different we need to update the dots
-                    this.$dots[prevActiveView].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
-                    this.$dots[activeViewForTile].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
-                }
+            // if more than 1 view update dots
+            if ( this.views.length > 1 ) {
+                // if active view is different we need to update the dots
+                this.$dots[prevActiveView].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
+                this.$dots[activeViewForTile].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
             }
         }
-
-
 
      });
 

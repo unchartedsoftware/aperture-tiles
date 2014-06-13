@@ -35,46 +35,10 @@ define(function (require) {
     "use strict";
 
     var Class = require('../../class'),
-        LayerState,
-        notify,
-        arraysEqual;
+        LayerState;
 
-    /**
-     * @param {string} fieldName - Name of the modified field.
-     * @param {Array} listeners - Array of {valueChange} listeners to execute.
-     */
-    notify = function (fieldName, listeners) {
-        var i;
-        for (i = 0; i < listeners.length; i += 1) {
-            listeners[i](fieldName);
-        }
-    };
+    
 
-    /**
-     * Compares arrays for equality.
-     *
-     * @param {Array} a - First array under comparison
-     * @param {Array} b - Second array under comparison
-     * @returns {boolean} true if they are equal, false otherwise.
-     */
-    arraysEqual = function (a, b) {
-        var i;
-        if (a === b) {
-            return true;
-        }
-        if (a === null || b === null) {
-            return false;
-        }
-        if (a.length !== b.length) {
-            return false;
-        }
-        for (i = 0; i < a.length; ++i) {
-            if (a[i] !== b[i]) {
-                return false;
-            }
-        }
-        return true;
-    };
 
     LayerState = Class.extend({
         ClassName: "LayerState",
@@ -85,19 +49,26 @@ define(function (require) {
          * @param {string} id - The immutable ID of the layer.
          */
         init: function (id) {
-            this.domain = 'server';
+            this.domain = null;
             this.id = id;
+            this.name = id; // for now just set name to to he id
             this.zIndex = 0;
-            this.name = id;
             this.enabled = false;
             this.opacity = 1.0;
-            this.filterRange = [0.0, 1.0];
-            this.rampType = "ware";
-            this.rampFunction = "linear";
-            this.rampImageUrl = "";
             this.listeners = [];
         },
 
+
+        /**
+         * @param {string} fieldName - Name of the modified field.
+         * @param {Array} listeners - Array of {valueChange} listeners to execute.
+         */
+        notify : function (fieldName, listeners) {
+            var i;
+            for (i = 0; i < listeners.length; i += 1) {
+                listeners[i](fieldName);
+            }
+        },
 
         /**
          * Listener used when a layer state value has been modified.
@@ -123,7 +94,7 @@ define(function (require) {
         removeListener: function (listener) {
             var index = this.listeners.indexOf(listener);
             if (index > -1) {
-                this.listeners = this.listeners.splice(index, 1);
+                this.listeners.splice(index, 1);
             }
         },
 
@@ -150,7 +121,7 @@ define(function (require) {
         setZIndex: function (zIndex) {
             if (this.zIndex !== zIndex) {
                 this.zIndex = zIndex;
-                notify("zIndex", this.listeners);
+                this.notify("zIndex", this.listeners);
             }
         },
 
@@ -169,7 +140,7 @@ define(function (require) {
         setName: function (name) {
             if (this.name !== name) {
                 this.name = name;
-                notify("name", this.listeners);
+                this.notify("name", this.listeners);
             }
         },
 
@@ -186,7 +157,7 @@ define(function (require) {
         setEnabled: function (enabled) {
             if (this.enabled !== enabled) {
                 this.enabled = enabled;
-                notify("enabled", this.listeners);
+                this.notify("enabled", this.listeners);
             }
         },
 
@@ -205,106 +176,11 @@ define(function (require) {
         setOpacity: function (opacity) {
             if (this.opacity !== opacity) {
                 this.opacity = opacity;
-                notify("opacity", this.listeners);
-            }
-        },
-
-        /**
-         * @returns {Array} - A 2 element array containing the min and max filter values.  These values range
-         * from [0.0 - 1.0], representing a fraction of the total data range.
-         */
-        getFilterRange: function () {
-            return this.filterRange;
-        },
-
-        /**
-         * @param {Array} filterRange - A 2 element array containing the min and max filter values.  These values range
-         * from [0.0 - 1.0], representing a fraction of the total data range.
-         */
-        setFilterRange: function (filterRange) {
-            if (!arraysEqual(this.filterRange, filterRange)) {
-                this.filterRange = filterRange;
-                notify("filterRange", this.listeners);
-            }
-        },
-
-        /**
-         * @returns {string} - The type of the colour ramp that is applied to the layer when displayed.  See
-         * RAMP_TYPES for valid ramp types.
-         */
-        getRampType: function () {
-            return this.rampType;
-        },
-
-        /**
-         * @param {string} rampType - The type of the colour ramp that is applied to the layer when displayed.  See
-         * RAMP_TYPES for valid ramp types.
-         */
-        setRampType: function (rampType) {
-            if (this.rampType !== rampType) {
-                this.rampType = rampType;
-                notify("rampType", this.listeners);
-            }
-        },
-
-        /**
-         * @returns {string} - The transformation to apply to the ramp.  See RAMP_FUNCTIONS for valid values.
-         */
-        getRampFunction: function () {
-            return this.rampFunction;
-        },
-
-        /**
-         * @param {string} rampFunction - See RAMP_FUNCTIONS for valid values.
-         */
-        setRampFunction: function (rampFunction) {
-            if (this.rampFunction !== rampFunction) {
-                this.rampFunction = rampFunction;
-                notify("rampFunction", this.listeners);
-            }
-        },
-
-        /**
-         * @returns {string} - The URL of an image representing the colour ramp defined by the ramp type and function.
-         */
-        getRampImageUrl: function () {
-            return this.rampImageUrl;
-        },
-
-        /**
-         *
-         * @param {string} url - The URL of an image representing the colour ramp defined by the ramp type and function.
-         */
-        setRampImageUrl: function (url) {
-            if (this.rampImageUrl !== url) {
-                this.rampImageUrl = url;
-                notify("rampImageUrl", this.listeners);
+                this.notify("opacity", this.listeners);
             }
         }
+
     });
-
-    /**
-     * Valid ramp type strings.
-     */
-    LayerState.RAMP_TYPES = [
-        {id: "ware", name: "Ware"},
-        {id: "inv-ware", name: "Inverse Ware"},
-        {id: "br", name: "Blue/Red"},
-        {id: "inv-br", name: "Inverse Blue/Red"},
-        {id: "grey", name: "Grey"},
-        {id: "inv-grey", name: "Inverse Grey"},
-        {id: "flat", name: "Flat"},
-        {id: "single-gradient", name: "Single Gradient"}
-    ];
-
-
-    /**
-     * Valid ramp function strings.
-     */
-    LayerState.RAMP_FUNCTIONS = [
-        {id: "linear", name: "Linear"},
-        {id: "log10", name: "Log 10"}
-    ];
 
 
     return LayerState;

@@ -330,7 +330,7 @@ define(function (require) {
 
             this.addClickStateClassesGlobal( tag );
 
-            clientState.setClickState('tag', tag );
+            clientState.clickState.tag = tag;
 
             // create details on demand
             this.createDetailsOnDemand( map, data, index, clientState, DetailsOnDemand );
@@ -344,7 +344,7 @@ define(function (require) {
 
             this.removeClickStateClassesGlobal();
             DetailsOnDemand.destroy();
-            clientState.removeClickState('tag');
+            delete clientState.clickState.tag;
         },
 
 

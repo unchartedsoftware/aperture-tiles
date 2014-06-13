@@ -79,7 +79,9 @@ define(function (require) {
 
 
         onClick: function(event, index) {
-            this.clientState.setClickState(event.data.tilekey, {
+            this.clientState.clickState = {
+                tilekey: event.data.tilekey, {
+            }
                 tag : event.data.bin.value[index].tag,
                 index : index
             });
@@ -200,7 +202,7 @@ define(function (require) {
                 }
             });
             this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.clientState.hoverState.userData.index;
+                var tagIndex = that.clientState.hoverState.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;

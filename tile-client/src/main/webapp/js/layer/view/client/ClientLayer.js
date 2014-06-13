@@ -69,11 +69,9 @@ define(function (require) {
             // initialize attributes
             this.id = id;
             this.defaultViewIndex = 0;
-            this.tileViewMap = {};      	// maps a tile key to its view index
-            this.views = [];				// array of all views
+            this.tileViewMap = {};      	    // maps a tile key to its view index
+            this.views = [];				    // array of all views
 			this.clientState = clientState; 	// global client state to be shared by all views
-            this.opacity = 1.0;
-            this.isVisible = true;
 
             this.map = map;
             this.map.on('move', function() {
@@ -118,37 +116,17 @@ define(function (require) {
 
 
         /**
-         * Maps a tilekey to its current view index. If none is specified, use default
-         * @param tilekey tile identification key of the form: "level,x,y"
-         */
-        getTileViewIndex: function(tilekey) {
-            // given a tile key "level + "," + xIndex + "," + yIndex"
-            // return the view index
-            var viewIndex;
-            if ( this.tileViewMap[tilekey] === undefined ) {
-                viewIndex = this.defaultViewIndex;
-            } else {
-                viewIndex = this.tileViewMap[tilekey];
-            }
-            return viewIndex;
-        },
-
-
-        /**
          * Tile change callback function
          * @param tilekey 		tile identification key of the form: "level,x,y"
          * @param newViewIndex  the new index to set the tilekey to
          */
-        onTileViewChange: function(tilekey, newViewIndex) {
+        setTileViewIndex: function( tilekey, tileViewIndex ) {
 
-            var oldViewIndex = this.getTileViewIndex(tilekey),  // old view index for tile
-                oldView = this.views[oldViewIndex],
-                newView = this.views[newViewIndex];
+            var oldView = this.views[tileViewIndex.previousIndex],
+                newView = this.views[tileViewIndex.index];
 
-            // map tile to new view
-            this.tileViewMap[tilekey] = newViewIndex;
             // swap tile between views
-            oldView.swapTileWith(newView, tilekey);
+            oldView.swapTileWith( newView, tilekey );
         },
 
 

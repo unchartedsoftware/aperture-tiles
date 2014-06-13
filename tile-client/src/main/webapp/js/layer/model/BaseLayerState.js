@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -23,40 +23,39 @@
  * SOFTWARE.
  */
 
-/*global OpenLayers*/
+/*global $, define*/
 
 /**
- * This module defines a ClientState class which is to be held by a ViewController and shared with the individual client
- * render layers. This is to guarantee that interface states can be shared / integrated between separate client layers
+ * @class LayerState
+ *
+ * Captures the visual state of a layer in the system, and provides a notification
+ * mechanism to allow external code to react to changes to it.
  */
 define(function (require) {
     "use strict";
 
 
 
-    var Class = require('../../../class'),
-        ClientState;
+
+    var LayerState = require('./LayerState'),
+        BaseLayerState;
 
 
 
-    ClientState = Class.extend({
+    BaseLayerState = LayerState.extend({
+        ClassName: "BaseLayerState",
 
         /**
-         * Construct a mouse state
+         * Initializes a LayerState object with default values.
+         *
+         * @param {string} id - The immutable ID of the layer.
          */
-        init: function () {
-
-            this.clickState = {};
-            this.hoverState = {};
-            // holds the state of mouse clicks
-            this.clearClickState();
-        },
-
-        clearClickState: function() {
-            this.clickState = {};
+        init: function ( id ) {
+            this._super( id );
+            this.domain = 'base';
         }
 
-     });
+    });
 
-    return ClientState;
+    return BaseLayerState;
 });

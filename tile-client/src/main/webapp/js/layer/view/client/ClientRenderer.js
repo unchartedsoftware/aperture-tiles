@@ -36,10 +36,7 @@ define(function (require) {
     ClientRenderer = Class.extend({
         ClassName: "ClientRenderer",
 
-        /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
-         */
+
         init: function(map) {
 
             this.map = map;

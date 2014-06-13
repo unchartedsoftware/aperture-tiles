@@ -48,6 +48,9 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
+            // set base layers
+            this.baseLayers = ( $.isArray( spec.MapConfig.baseLayer ) ) ? spec.MapConfig.baseLayer : [spec.MapConfig.baseLayer];
+
             // Set the map configuration
 			aperture.config.provide({
 				'aperture.map' : {
@@ -92,6 +95,12 @@ define(function (require) {
 
 			// Trigger the initial resize event to resize everything
 			$(window).resize();
+
+			if(spec.MapConfig.zoomTo) {
+                this.map.zoomTo( spec.MapConfig.zoomTo[0],
+                                 spec.MapConfig.zoomTo[1],
+                                 spec.MapConfig.zoomTo[2] );
+            }
 		},
 
 

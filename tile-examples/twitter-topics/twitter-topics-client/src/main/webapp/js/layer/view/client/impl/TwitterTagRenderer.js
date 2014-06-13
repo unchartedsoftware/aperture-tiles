@@ -35,24 +35,37 @@ define(function (require) {
 
 
 
-    var ClientRenderer = require('../ClientRenderer'),
+    var ApertureRenderer = require('../ApertureRenderer'),
         TwitterTagRenderer;
 
 
 
-    TwitterTagRenderer = ClientRenderer.extend({
+    TwitterTagRenderer = ApertureRenderer.extend({
         ClassName: "TwitterTagRenderer",
 
         /**
          * Constructs a twitter tag render layer object
          * @param id the id string for the render layer
          */
-        init: function(id, map, avoidIncrement) {
-            this._super(id, map, avoidIncrement);
+        init: function( map ) {
+            this._super( map );
             this.Y_SPACING = 10;
             this.MAX_NUM_VALUES = 10;   // default, over-ride this based on the renderer
+
             this.HORIZONTAL_BUFFER = 14;
-            this.VERTICAL_BUFFER = 24;           
+            this.VERTICAL_BUFFER = 24;
+
+            this.BLACK_COLOUR = '#000000';
+            this.DARK_GREY_COLOUR = '#222222';
+            this.GREY_COLOUR = '#666666';
+            this.LIGHT_GREY_COLOUR = '#999999';
+            this.WHITE_COLOUR = '#FFFFFF';
+            this.BLUE_COLOUR = '#09CFFF';
+            this.DARK_BLUE_COLOUR  = '#069CCC';
+            this.PURPLE_COLOUR = '#D33CFF';
+            this.DARK_PURPLE_COLOUR = '#A009CC';
+            this.YELLOW_COLOUR = '#F5F56F';
+
             this.FILTER_WORDS = [/s+h+i+t+/, /f+u+c+k+/, /n+i+g+g+/];
         },
 
@@ -70,7 +83,7 @@ define(function (require) {
 
 
         isTileTranslated: function( tilekey ) {
-            var translationState = this.clientState.getSharedState( 'translate-' + tilekey );
+            var translationState = this.clientState['translate-' + tilekey];
             if ( translationState === "" ) {
                 return false;
             } else {
@@ -80,16 +93,11 @@ define(function (require) {
 
 
         toggleTileTranslation: function( tilekey ) {
-            var translationState = this.clientState.getSharedState( 'translate-' + tilekey );
-            if ( translationState === "" ) {
-                this.clientState.setSharedState('translate-' + tilekey, true );
+            var translationState = this.clientState['translate-' + tilekey];
+            if ( !translationState ) {
+                this.clientState['translate-' + tilekey] = true;
             } else {
-                if (translationState === true) {
-                    this.clientState.removeSharedState('translate-' + tilekey);
-                } else {
-                    this.clientState.setSharedState('translate-' + tilekey, false );
-                }
-               
+                delete this.clientState['translate-' + tilekey];
             }
         },
 
@@ -170,7 +178,7 @@ define(function (require) {
          */
         isHovered: function (tag, tilekey) {
             var hoverTilekey = this.clientState.hoverState.tilekey,
-                hoverTag = this.clientState.hoverState.userData.tag;
+                hoverTag = this.clientState.hoverState.tag;
 
             return hoverTag === tag && hoverTilekey === tilekey;
 
@@ -184,7 +192,7 @@ define(function (require) {
          */
         isClicked: function (tag, tilekey) {
             var clickTilekey = this.clientState.clickState.tilekey,
-                clickTag = this.clientState.clickState.userData.tag;
+                clickTag = this.clientState.clickState.tag;
 
             return clickTag === tag && clickTilekey === tilekey;
 
@@ -209,9 +217,9 @@ define(function (require) {
         shouldBeGreyedOut: function (tag, tilekey) {
 
             var hoverTilekey = this.clientState.hoverState.tilekey,
-                hoverTag = this.clientState.hoverState.userData.tag,
+                hoverTag = this.clientState.hoverState.tag,
                 clickTilekey = this.clientState.clickState.tilekey,
-                clickTag = this.clientState.clickState.userData.tag;
+                clickTag = this.clientState.clickState.tag;
 
             if ( // nothing is hovered or clicked on
                  (clickTilekey === '' && hoverTilekey === '') ||
@@ -235,8 +243,8 @@ define(function (require) {
          */
         matchingTagIsSelected: function (tag, tilekey) {
             return ((this.clientState.hoverState.tilekey === tilekey &&
-                    this.clientState.hoverState.userData.tag === tag) ||
-                    this.clientState.clickState.userData.tag === tag)
+                     this.clientState.hoverState.tag === tag) ||
+                     this.clientState.clickState.tag === tag)
         },
 
 
@@ -245,12 +253,11 @@ define(function (require) {
             var that = this,
                 isHoveredOn = false;
 
-            this.translateLabel = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.translateLabel = this.nodeLayer.addLayer(aperture.LabelLayer);
 
             this.translateLabel.map('visible').from(function() {
-                return that.isSelectedView(this) && 
-                       that.isVisible(this) && 
-                       that.clientState.getSharedState('activeCarouselTile') === this.tilekey;
+                return that.visibility &&
+                       that.clientState.activeCarouselTile === this.tilekey;
             });
 
             this.translateLabel.map('fill').from( function() {
@@ -265,19 +272,19 @@ define(function (require) {
 
             this.translateLabel.on('click', function(event) {
                 that.toggleTileTranslation(event.data.tilekey);
-                that.plotLayer.all().where(event.data).redraw();
+                that.nodeLayer.all().where(event.data).redraw();
                 return true; // swallow event
             });
 
             this.translateLabel.on('mousemove', function(event) {
                 isHoveredOn = true;
-                that.plotLayer.all().where(event.data).redraw();
+                that.nodeLayer.all().where(event.data).redraw();
                 return true; // swallow event
             });
 
             this.translateLabel.on('mouseout', function(event) {
                 isHoveredOn = false;
-                that.plotLayer.all().where(event.data).redraw();
+                that.nodeLayer.all().where(event.data).redraw();
             });
 
             this.translateLabel.map('label-count').asValue(1);
@@ -299,7 +306,7 @@ define(function (require) {
             this.translateLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.translateLabel.map('font-outline-width').asValue(3);
             this.translateLabel.map('opacity').from( function() {
-                return that.getOpacity();
+                return that.opacity;
             })
         },
 

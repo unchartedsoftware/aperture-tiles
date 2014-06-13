@@ -105,7 +105,7 @@
     <hbase-version>0.94.2-cdh4.2.0</hbase-version>
     -->
 
-    <aperture-version>1.0.6-SNAPSHOT</aperture-version>
+    <aperture-version>1.0.7-SNAPSHOT</aperture-version>
     <dependency-scala-version>2.10</dependency-scala-version>
 	<scala-version>2.10.3</scala-version>
     <spark-version>1.0.0</spark-version>

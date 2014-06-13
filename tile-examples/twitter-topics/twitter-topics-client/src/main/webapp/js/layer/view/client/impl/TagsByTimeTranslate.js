@@ -44,10 +44,11 @@ define(function (require) {
     TagsByTimeTranslate = TwitterTagRenderer.extend({
         ClassName: "TagsByTimeTranslate",
 
-        init: function(map) {
-            this._super("tags-by-time-translate", map);
+        init: function( map ) {
+            this._super( map );
             this.MAX_NUM_VALUES = 10;
             this.Y_SPACING = 18;
+            this.createLayer();
         },
 
 
@@ -61,49 +62,43 @@ define(function (require) {
 
 
         onClick: function(event, index) {
-            this.clientState.setClickState(event.data.tilekey, {
+            this.clientState.clickState = {
+                tilekey : event.data.tilekey,
                 tag : event.data.bin.value[index].topic,
                 index : index
-            });
-            // pan map to center
-            this.detailsOnDemand.panMapToCenter(event.data);
-            // send this node to the front
-            this.plotLayer.all().where(event.data).toFront();
+            };
             // redraw all nodes
-            this.plotLayer.all().redraw();
+            this.nodeLayer.all().redraw();
         },
 
 
-        onHover: function(event, index, id) {
-            this.clientState.setHoverState(event.data.tilekey, {
+        onHover: function(event, index) {
+            this.clientState.hoverState = {
+                tilekey : event.data.tilekey,
                 tag : event.data.bin.value[index].topic,
-                index : index,
-                id : id
-            });
-            this.plotLayer.all().where(event.data).redraw();
+                index : index
+            };
+            this.nodeLayer.all().where(event.data).redraw();
         },
 
 
         onHoverOff: function(event) {
-            this.clientState.clearHoverState();
-            this.plotLayer.all().where(event.data).redraw();
+            this.clientState.hoverState = {};
+            this.nodeLayer.all().where(event.data).redraw();
         },
 
 
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
-        createLayer: function (mapNodeLayer) {
+        createLayer: function() {
 
-            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently does not render correctly if on its own PlotLayer...
-            this.plotLayer = mapNodeLayer;
+            this.nodeLayer = this.map.addApertureLayer( aperture.geo.MapNodeLayer );
+            this.nodeLayer.map('latitude').from('latitude');
+            this.nodeLayer.map('longitude').from('longitude');
             this.createBars();
             this.createLabels();
             this.createTranslateLabel();
-            this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
-            this.detailsOnDemand.attachClientState(this.clientState);
-            this.detailsOnDemand.createLayer(this.plotLayer);
         },
 
 
@@ -130,11 +125,11 @@ define(function (require) {
                 return maxPercent;
             }
 
-            this.bars = this.plotLayer.addLayer(aperture.BarLayer);
+            this.bars = this.nodeLayer.addLayer(aperture.BarLayer);
             this.bars.map('orientation').asValue('vertical');
             this.bars.map('width').asValue(3);
             this.bars.map('visible').from( function() {
-                return that.isSelectedView(this) && that.isVisible(this);
+                return that.visibility;
             });
             this.bars.map('fill').from( function(index) {
 
@@ -160,7 +155,7 @@ define(function (require) {
                 if (maxPercentage === 0) {
                     return 0;
                 }
-                return -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
+                return that.Y_CENTRE_OFFSET -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
                        that.getYOffset(this, Math.floor(index/that.getTotalDaysInMonth(this)));
             });
             this.bars.map('offset-x').from(function (index) {
@@ -180,7 +175,7 @@ define(function (require) {
             });
 
             this.bars.on('mousemove', function(event) {
-                that.onHover(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(event.data)), 'tagsByTimeTranslateCountSummary');
+                that.onHover(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(event.data)));
                 return true; // swallow event
             });
 
@@ -188,62 +183,20 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.bars.map('opacity').from( function() {
-                    return that.getOpacity();
+                    return that.opacity;
                 })
 
         },
-
-
-        /*
-        createCountSummaries: function () {
-
-            var that = this;
-
-            this.summaryLabel = this.plotLayer.addLayer(aperture.LabelLayer);
-            this.summaryLabel.map('label-count').asValue(3);
-            this.summaryLabel.map('font-size').asValue(12);
-            this.summaryLabel.map('font-outline').asValue(this.BLACK_COLOUR);
-            this.summaryLabel.map('font-outline-width').asValue(3);
-            this.summaryLabel.map('visible').from(function(){
-                return that.isSelectedView(this) &&
-                    that.clientState.hoverState.tilekey === this.tilekey &&
-                    that.clientState.hoverState.userData.id === 'tagsByTimeTranslateCountSummary';
-            });
-            this.summaryLabel.map('fill').from( function(index) {
-                switch(index) {
-                    case 0: return that.BLUE_COLOUR;
-                    case 1: return that.WHITE_COLOUR;
-                    default: return that.NEGATIVE_COLOUR;
-                }
-            });
-            this.summaryLabel.map('text').from( function(index) {
-                var tagIndex = that.clientState.hoverState.userData.index;
-                switch(index) {
-                    case 0: return "+ "+this.bin.value[tagIndex].positive;
-                    case 1: return ""+this.bin.value[tagIndex].neutral;
-                    default: return "- "+this.bin.value[tagIndex].negative;
-                }
-            });
-            this.summaryLabel.map('offset-y').from(function(index) {
-                return (-that.TILE_SIZE/2) + (that.VERTICAL_BUFFER-4) + (14 * index);
-            });
-            this.summaryLabel.map('offset-x').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER);
-            this.summaryLabel.map('text-anchor').asValue('end');
-            this.summaryLabel.map('opacity').from( function() {
-                    return that.getOpacity();
-                })
-        },
-        */
 
 
         createLabels: function () {
 
             var that = this;
 
-            this.tagLabels = this.plotLayer.addLayer(aperture.LabelLayer);
+            this.tagLabels = this.nodeLayer.addLayer(aperture.LabelLayer);
 
             this.tagLabels.map('visible').from(function() {
-                return that.isSelectedView(this) && that.isVisible(this);
+                return that.visibility;
             });
 
             this.tagLabels.map('fill').from( function(index) {
@@ -275,7 +228,7 @@ define(function (require) {
             });
 
             this.tagLabels.map('offset-y').from(function (index) {
-                return that.getYOffset(this, index) - 5;
+                return that.Y_CENTRE_OFFSET + that.getYOffset(this, index) - 5;
             });
 
             this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 38);
@@ -289,7 +242,7 @@ define(function (require) {
             });
 
             this.tagLabels.on('mousemove', function(event) {
-                that.onHover(event, event.index[0], 'tagsByTimeTranslateCountSummary');
+                that.onHover(event, event.index[0]);
                 return true;  // swallow event
             });
 
@@ -297,7 +250,7 @@ define(function (require) {
                 that.onHoverOff(event);
             });
             this.tagLabels.map('opacity').from( function() {
-                    return that.getOpacity();
+                    return that.opacity;
                 })
 
         }

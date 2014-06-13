@@ -35,23 +35,62 @@ define( function (require) {
 		
 	return {
 
-		/**
-		 * Given a layer JSON specification object and a map, will create server rendered tile layers
-		 * @param layerJSON	 	layer specification JSON object
-		 * @param map			map object
-		 */
-		createLayers: function(layerJSON, uiMediator, map) {
+		/*
+		createLayers: function(layerJSON, serverLayerMediator, map) {
 
 			// Set up server-rendered display layers
 			var serverLayerDeferred = $.Deferred(),
-			    serverLayers = new ServerLayer(layerJSON, map, serverLayerDeferred);
+			    serverLayers = new ServerLayer( layerJSON, map, serverLayerDeferred );
 
 			// Populate the map layer state object with server layer data, and enable
 			// listeners that will push state changes into the layers.
-            uiMediator.setServerLayers(serverLayers, map);
+            serverLayerMediator.registerLayers( serverLayers );
 
             return serverLayerDeferred;
 		}
+		*/
+
+		/**
+         * Given a layer JSON specification object and a map, this function will pull data information from the server and load
+         * required layer and renderer class modules using require.js. Once everything is ready, constructs individual layers.
+         * @param layerJSON	 	layer specification JSON object loaded from layers.json
+         * @param map			map object from map.js
+         */
+        createLayers: function(layerJSON, map) {
+            var layerDeferreds = [],
+                factoryDeferred = $.Deferred(),
+                i;
+
+            for (i=0; i<layerJSON.length; i++) {
+                layerDeferreds.push( this.createLayer(layerJSON[i], map) );
+            }
+
+            $.when.apply( $, layerDeferreds ).done( function() {
+                // when all individual layer deferreds are resolved, resolve the factory deferred
+                factoryDeferred.resolve( Array.prototype.slice.call( arguments, 0 ) );
+            });
+
+            return factoryDeferred;
+        },
+
+
+        createLayer: function(layerJSON, map) {
+
+            var serverLayer,
+                serverLayerDeferred = $.Deferred();
+
+            // create the layer
+            serverLayer = new ServerLayer( layerJSON, map );
+            // send configuration request
+            serverLayer.configure( function( layerInfo ) {
+                // update layer and resolve deferred
+                serverLayer.update( layerInfo );
+                serverLayerDeferred.resolve( serverLayer );
+            })
+
+            return serverLayerDeferred;
+        }
+
 
     };	
 	

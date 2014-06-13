@@ -113,8 +113,8 @@ define(function (require) {
 
                     /*
                     if (that.isHoveredOrClicked(this.bin.value[index].tag, this.tilekey)) {
-                        if ( that.clientState.hoverState.userData.id === id &&
-                             that.clientState.hoverState.userData.index === index) {
+                        if ( that.clientState.hoverState.id === id &&
+                             that.clientState.hoverState.index === index) {
                             return selectedColour;
                         }
                         return normalColour;
@@ -192,7 +192,8 @@ define(function (require) {
                 return false; /* that.visibility; */
             });
             this.summaryLabel.map('fill').from( function(index) {
-                var id = that.clientState.hoverState.userData.id;
+                /*
+                var id = that.clientState.hoverState.id;
                 switch(index) {
                     case 0:
                         if (id === 'topTextSentimentBarsPositive' || id === 'topTextSentimentBarsAll') {
@@ -213,10 +214,11 @@ define(function (require) {
                             return that.LIGHT_GREY_COLOUR;
                         }
                 }
+                */
             });
             this.summaryLabel.map('text').from( function(index) {
                 /*
-                var tagIndex = that.clientState.hoverState.userData.index;
+                var tagIndex = that.clientState.hoverState.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;

@@ -36,7 +36,9 @@ require(['./FileLoader',
          './layer/view/client/ClientLayerFactory',
          './annotation/AnnotationLayerFactory',
          './layer/controller/LayerControls',
-         './layer/controller/UIMediator'
+         './layer/controller/BaseLayerMediator',
+         './layer/controller/ClientLayerMediator',
+         './layer/controller/ServerLayerMediator'
         ],
 
         function (FileLoader, 
@@ -51,7 +53,9 @@ require(['./FileLoader',
                   ClientLayerFactory,
                   AnnotationLayerFactory,
                   LayerControls,
-                  UIMediator) {
+                  BaseLayerMediator,
+                  ClientLayerMediator,
+                  ServerLayerMediator) {
 
 	        "use strict";
 
@@ -59,9 +63,12 @@ require(['./FileLoader',
 	            cloneObject,
 	            getLayers,
 	            getAnnotationLayers,
-	            uiMediator,
+	            baseLayerMediator,
+                clientLayerMediator,
+                serverLayerMediator,
 	            getURLParameter,
-	            mapsDeferred, layersDeferred, annotationsDeferred;
+	            mapsDeferred, layersDeferred, annotationsDeferred,
+	            clientLayerDeferreds, serverLayerDeferreds;
 
 	        getURLParameter = function (key) {
 		        var url = window.location.search.substring(1),
@@ -243,10 +250,6 @@ require(['./FileLoader',
 
                         // ... (set up our map tile borders) ...
                         MapService.setTileBorderConfig(mapConfig);
-                        
-                        if(mapConfig.MapConfig.zoomTo) {
-                            worldMap.map.zoomTo( mapConfig.MapConfig.zoomTo[0], mapConfig.MapConfig.zoomTo[1], mapConfig.MapConfig.zoomTo[2] );
-                        }
 
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {
@@ -270,32 +273,44 @@ require(['./FileLoader',
 					        UICustomization.customizeLayers(layers);
 				        }
 
-				        uiMediator = new UIMediator();
+				        baseLayerMediator = new BaseLayerMediator();
+                        //clientLayerMediator = new ClientLayerMediator();
+                        serverLayerMediator = new ServerLayerMediator();
 
 				        // Create client, server and annotation layers
-				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+				        //clientLayerDeferreds = ClientLayerFactory.createLayers( clientLayers, worldMap );
+				        serverLayerDeferreds = ServerLayerFactory.createLayers( serverLayers, worldMap );
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-                        $.when( ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap) ).done( function( serverLayers ) {
+                        $.when( /*clientLayerDeferreds,*/ serverLayerDeferreds ).done( function( /*clientLayers,*/ serverLayers ) {
                             var layer,
                             	layerInfo,
-                            	filterAxisConfig;
-                            
-                            layerInfo = serverLayers.getSubLayerInfosById();
+                            	filterAxisConfig,
+                            	sharedStateMap = {};
 
-                            for(layer in layerInfo){
-                                if(layerInfo.hasOwnProperty( layer )){
-                                    filterAxisConfig = layerInfo[ layer ].meta;
-                                }
-                            }
+                            // register layers to mediators
+                            baseLayerMediator.registerLayers( worldMap );
+                            //clientLayerMediator.registerLayers( clientLayers );
+                            serverLayerMediator.registerLayers( serverLayers );
+
+
+                            layerInfo = serverLayers[0].getLayerInfo();
+
+                            filterAxisConfig = layerInfo.meta;
                             filterAxisConfig.map = worldMap;
                             filterAxisConfig.baseLayers = baseLayers;
-                            new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap(), filterAxisConfig ).noop();
+
+                            $.extend( sharedStateMap, /*clientLayerMediator.getLayerStateMap(),*/
+                                                      serverLayerMediator.getLayerStateMap(),
+                                                      baseLayerMediator.getLayerStateMap() );
+
+                            new LayerControls( 'layer-controls-content', sharedStateMap, filterAxisConfig ).noop();
 
                             //hack to trigger a refresh of the map - this will override map style
                             //as well as update the controls panel.
                             $('fieldset input[type=radio]').first().click();
                         });
+
 			        }
 		        );
 

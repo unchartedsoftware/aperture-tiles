@@ -33,8 +33,6 @@ define(function (require) {
 
     var LayerService,
         visitLayers,
-        leafLayerFilter,
-        axisLayerFilter,
         layersDeferred;
 
     visitLayers = function (layers, fcn) {
@@ -51,39 +49,14 @@ define(function (require) {
         }
     };
 
-    leafLayerFilter = function (layers, filterFcn) {
-        var result = [];
-
-        visitLayers(layers, function (layer) {
-            if (!layer.children && (!filterFcn || filterFcn(layer))) {
-                result.push(layer);
-            }
-        });
-
-        return result;
-    };
-
-    axisLayerFilter = function (layers, filterFcn) {
-        var result = [];
-
-        visitLayers(layers, function (layer) {
-            if (layer.axes && (!filterFcn || filterFcn(layer))) {
-                result.push(layer);
-            }
-        });
-
-        return result;
-    };
-
     LayerService = {
         /**
          * Request layers from the server, sending them to the listed callback 
          * function when they are received.
-         *
-         * @param callback A function taking a hierarchical layers description.
+
          */
-        requestLayers: function (callback) {
-	        if (!layersDeferred) {
+        requestLayers: function () {
+	        if ( !layersDeferred ) {
 		        layersDeferred = $.Deferred();
                 aperture.io.rest('/layer',
                                  'POST',
@@ -105,6 +78,44 @@ define(function (require) {
 	        return layersDeferred;
         },
 
+
+        /**
+         * Get basic information about this layer from the server
+         *
+         * @param layerSet The layers to retrieve.  Leave off to retrieve all
+         *                 layers.
+         */
+        configureLayer: function( layerSpec, callback ) {
+
+            aperture.io.rest('/layer',
+                             'POST',
+                             callback,
+                             {
+                                 postData: {
+                                     request: "configure",
+                                     layer: layerSpec.layer,
+                                     configuration: layerSpec
+                                 },
+                                 contentType: 'application/json'
+                             });
+        },
+
+        unconfigureLayer: function( layerInfo, callback ) {
+
+            aperture.io.rest('/layer',
+                             'POST',
+                             callback,
+                             {
+                                 postData: {
+                                     request: "unconfigure",
+                                     configuration: layerInfo.id
+                                 },
+                                 contentType: 'application/json'
+                             }
+                            );
+        },
+
+
         /**
          * Run through the given hierarchical layers object, retrieving only 
          * leaf nodes, and filtering those leaf nodes based on an arbitrary 
@@ -116,7 +127,17 @@ define(function (require) {
          *                  true if it is wanted, and false if it isn't.  If
          *                  the filterFcn is null, all leaves are returned.
          */
-        filterLeafLayers: leafLayerFilter,
+        filterLeafLayers: function (layers, filterFcn) {
+
+            var result = [];
+            visitLayers(layers, function (layer) {
+                if (!layer.children && (!filterFcn || filterFcn(layer))) {
+                    result.push(layer);
+                }
+            });
+
+            return result;
+        },
 
         /**
          * Run through the given hierarchical layers object, retrieving only 
@@ -130,7 +151,19 @@ define(function (require) {
          *                  filterFcn is null, all nodes specifying axes are
          *                  returned.
          */
-        filterAxisLayers: axisLayerFilter
+        /*
+        filterAxisLayers: function (layers, filterFcn) {
+            var result = [];
+
+            visitLayers(layers, function (layer) {
+                if (layer.axes && (!filterFcn || filterFcn(layer))) {
+                    result.push(layer);
+                }
+            });
+
+            return result;
+        };
+        */
     };
 
     return LayerService;

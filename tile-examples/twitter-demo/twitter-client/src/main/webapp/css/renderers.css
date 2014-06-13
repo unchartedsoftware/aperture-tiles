@@ -322,10 +322,6 @@
 	float:left;
 	width: 4.1667%;
 	height: 100%;
-	-webkit-transform-origin: center bottom;
-	   -moz-transform-origin: center bottom;
-	    -ms-transform-origin: center bottom;
-	        transform-origin: center bottom;
 	-webkit-transition: -webkit-transform 0.1s ease-in-out;
        -moz-transition:    -moz-transform 0.1s ease-in-out;
        	-ms-transition:     -ms-transform 0.1s ease-in-out;
@@ -334,10 +330,10 @@
 
 .details-chart-bar:hover {
 	-webkit-filter: brightness(2);
-	-webkit-transform: scaleY(1.2);
-       -moz-transform: scaleY(1.2);
-        -ms-transform: scaleY(1.2);
-            transform: scaleY(1.2);
+	-webkit-transform: scaleX(1.4);
+       -moz-transform: scaleX(1.4);
+        -ms-transform: scaleX(1.4);
+            transform: scaleX(1.4);
 }
 
 .details-chart-positive-bar {
@@ -465,11 +461,11 @@
 }
 
 .tweet-dark {	
-	background-color: #111111;	
+	background-color: #111111;
 }
 
 .tweet-light {
-	background-color: #222222;
+	background-color: #181818;
 }
 
 .details-on-demand-tweet-text {

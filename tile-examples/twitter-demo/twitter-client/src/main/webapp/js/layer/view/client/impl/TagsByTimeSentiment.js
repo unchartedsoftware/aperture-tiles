@@ -196,7 +196,7 @@ define(function (require) {
             });
             this.summaryLabel.map('text').from( function(index) {
                 /*
-                var tagIndex = that.clientState.hoverState.userData.index;
+                var tagIndex = that.clientState.hoverState.index;
                 switch(index) {
                     case 0: return "+ "+this.bin.value[tagIndex].positive;
                     case 1: return ""+this.bin.value[tagIndex].neutral;

@@ -37,18 +37,19 @@ define(function (require) {
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
         DetailsOnDemand = require('./DetailsOnDemandTranslate'),
-        TopTextTranslate;
+        WordCloudLayer = require('./WordCloudLayer'),
+        TopTextTranslate,
 
 
 
     TopTextTranslate = TwitterTagRenderer.extend({
         ClassName: "TopTextTranslate",
 
-        init: function(map) {
-            this._super("top-text-translate", map);
+        init: function( map ) {
+            this._super( map );
             this.MAX_NUM_VALUES = 5;
             this.Y_SPACING = 36;
-            this.translatedTiles = {};
+            this.createLayer();
         },
 
         getCountPercentage: function(data, index, type) {
@@ -67,70 +68,67 @@ define(function (require) {
         },
 
         onClick: function(event) {
-            this.clientState.setClickState(event.data.tilekey, {
+            this.clientState.clickState = {
+                tilekey : event.data.tilekey,
                 tag : event.data.bin.value[event.index[0]].topic,
                 index : event.index[0]
-            });
-            // pan map to center
-            this.detailsOnDemand.panMapToCenter(event.data);
-            // send this node to the front
-            this.plotLayer.all().where(event.data).toFront();
+            };
             // redraw all nodes
-            this.plotLayer.all().redraw();
+            this.nodeLayer.all().redraw();
         },
 
 
         onHover: function(event, id) {
-            this.clientState.setHoverState(event.data.tilekey, {
+            this.clientState.hoverState = {
+                tilekey : event.data.tilekey,
                 tag :  event.data.bin.value[event.index[0]].topic,
-                index :  event.index[0],
-                id : id
-            });
-            this.plotLayer.all().where(event.data).redraw();
+                index :  event.index[0]
+            };
+            this.nodeLayer.all().where(event.data).redraw();
         },
 
 
         onHoverOff: function(event) {
-            this.clientState.clearHoverState();
-            this.plotLayer.all().where(event.data).redraw();
+            this.clientState.hoverState = {}; //clearHoverState();
+            this.nodeLayer.all().where(event.data).redraw();
         },
 
 
         /**
          * Create our layer visuals, and attach them to our node layer.
          */
-        createLayer: function (mapNodeLayer) {
+        createLayer: function() {
 
-            // TODO: everything should be put on its own PlotLayer instead of directly on the mapNodeLayer
-            // TODO: currently does not render correctly if on its own PlotLayer...
-            this.plotLayer = mapNodeLayer;
+            this.nodeLayer = this.map.addApertureLayer( aperture.geo.MapNodeLayer );
+            this.nodeLayer.map('latitude').from('latitude');
+            this.nodeLayer.map('longitude').from('longitude');
             this.createLabels();
             this.createTranslateLabel();
+            /*
             this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
             this.detailsOnDemand.attachClientState(this.clientState);
-            this.detailsOnDemand.createLayer(this.plotLayer);
+            this.detailsOnDemand.createLayer(this.nodeLayer);
+            */
         },
 
 
         createLabels: function () {
 
-
             var that = this,
                 MAX_LABEL_CHAR_COUNT = 12;
 
-
-            this.wordCloudLabel = this.plotLayer.addLayer(aperture.WordCloudLayer);
+            this.wordCloudLabel = this.nodeLayer.addLayer(WordCloudLayer);
 
             this.wordCloudLabel.map('visible').from(function() {
-                return that.isSelectedView(this) && that.isVisible(this);
+                return that.visibility;
             });
 
             this.wordCloudLabel.map('fill').from(function(index) {
 
-                if (that.matchingTagIsSelected(this.bin.value[index].topic, this.tilekey)){
+                if (that.matchingTagIsSelected( this.bin.value[index].topic, this.tilekey ) ){
                     return that.BLUE_COLOUR;
                 }
-                if (that.shouldBeGreyedOut(this.bin.value[index].topic, this.tilekey)) {
+                if (that.shouldBeGreyedOut( this.bin.value[index].topic, this.tilekey) ) {
                     return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
@@ -143,7 +141,7 @@ define(function (require) {
             });
 
             this.wordCloudLabel.on('mousemove', function(event) {
-                that.onHover(event, 'topTextSentimentBarsAll');
+                that.onHover(event);
                 return true; // swallow event
             });
 
@@ -183,7 +181,7 @@ define(function (require) {
             });
 
             this.wordCloudLabel.map('opacity').from( function() {
-                return that.getOpacity();
+                return that.opacity;
             });
 
             this.wordCloudLabel.map('min-font-size').asValue(9);

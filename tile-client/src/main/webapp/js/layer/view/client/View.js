@@ -123,9 +123,9 @@ define(function (require) {
 
             } else {
                 // otherwise release and request new data
-                if (tilekey === this.renderer.clientState.getClickState( 'tilekey' )) {
+                if (tilekey === this.renderer.clientState.clickState.tilekey ) {
                     // if same tile as clicked tile, un-select elements from this view
-                    this.renderer.clientState.clearClickState();
+                    this.renderer.clientState.clickState = {};
                 }
                 newView.requestTile( tilekey );
             }

@@ -99,7 +99,7 @@ define(function (require) {
          */
         isHovered: function (tag, tilekey) {
             var hoverTilekey = this.clientState.hoverState.tilekey,
-                hoverTag = this.clientState.hoverState.userData.tag;
+                hoverTag = this.clientState.hoverState.tag;
 
             return hoverTag === tag && hoverTilekey === tilekey;
 
@@ -113,7 +113,7 @@ define(function (require) {
          */
         isClicked: function (tag, tilekey) {
             var clickTilekey = this.clientState.clickState.tilekey,
-                clickTag = this.clientState.clickState.userData.tag;
+                clickTag = this.clientState.clickState.tag;
 
             return clickTag === tag && clickTilekey === tilekey;
 
@@ -138,9 +138,9 @@ define(function (require) {
         shouldBeGreyedOut: function (tag, tilekey) {
 
             var hoverTilekey = this.clientState.hoverState.tilekey,
-                hoverTag = this.clientState.hoverState.userData.tag,
+                hoverTag = this.clientState.hoverState.tag,
                 clickTilekey = this.clientState.clickState.tilekey,
-                clickTag = this.clientState.clickState.userData.tag;
+                clickTag = this.clientState.clickState.tag;
 
             if ( // nothing is hovered or clicked on
                  (clickTilekey === '' && hoverTilekey === '') ||
@@ -160,8 +160,8 @@ define(function (require) {
          */
         matchingTagIsSelected: function (tag, tilekey) {
             return ((this.clientState.hoverState.tilekey === tilekey &&
-                    this.clientState.hoverState.userData.tag === tag) ||
-                    this.clientState.clickState.userData.tag === tag)
+                    this.clientState.hoverState.tag === tag) ||
+                    this.clientState.clickState.tag === tag)
         },
 
 

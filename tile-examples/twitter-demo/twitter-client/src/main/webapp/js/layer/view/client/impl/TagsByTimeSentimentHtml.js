@@ -134,7 +134,7 @@ define(function (require) {
                         // set event handlers
                         TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
 
-                        TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
+                        TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.clickState.tag );
 
                         $html.append( $elem );
                     }
