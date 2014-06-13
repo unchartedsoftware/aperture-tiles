@@ -73,31 +73,7 @@ object RDDLineBinner {
 		result
 	}
 
-	def getPoints1 (start: BinIndex, end: BinIndex): (Boolean, Int, Int, Int, Int) = {
-		var (x0, y0, x1, y1): (Int, Int, Int, Int) = (start.getX(), start.getY(), end.getX(), end.getY())
-		var steep = math.abs(y1 - y0) > math.abs(x1 - x0)
-
-		var tmpInt = 0
-		if (steep) {
-			tmpInt = y0		//swap x0, y0
-			y0 = x0
-			x0 = tmpInt
-			tmpInt = y1		//swap x1, y1
-			y1 = x1
-			x1 = tmpInt
-		}
-		if (x0 > x1) {
-			tmpInt = x1		//swap x0, x1
-			x1 = x0
-			x0 = tmpInt
-			tmpInt = y0		//swap y0, y1
-			y0 = y1
-			y1 = tmpInt
-		}
-		(steep, x0, y0, x1, y1)
-	}
-
-	def getPoints2 (start: BinIndex, end: BinIndex): (Boolean, Int, Int, Int, Int) = {
+	def getPoints (start: BinIndex, end: BinIndex): (Boolean, Int, Int, Int, Int) = {
 		val xs = start.getX()
 		val xe = end.getX()
 		val ys = start.getY()
@@ -139,52 +115,7 @@ object RDDLineBinner {
 		(start, end) => {
 
 			// Bresenham's algorithm
-			val (steep, x0, y0, x1, y1) = getPoints1(start, end)
-/*
-<<<<<<< Updated upstream
-			var (x0, y0, x1, y1) = (start.getX(), start.getY(), end.getX(), end.getY())
-			var steep = math.abs(y1 - y0) > math.abs(x1 - x0)
-			
-			var tmpInt = 0
-			if (steep) {
-				tmpInt = y0		//swap x0, y0
-				y0 = x0
-				x0 = tmpInt
-				tmpInt = y1		//swap x1, y1
-				y1 = x1
-				x1 = tmpInt
-			}
-			if (x0 > x1) {
-				tmpInt = x1		//swap x0, x1
-				x1 = x0
-				x0 = tmpInt
-				tmpInt = y0		//swap y0, y1
-				y0 = y1
-				y1 = tmpInt
-			}
-=======
-			val xs = start.getX()
-			val xe = end.getX()
-			val ys = start.getY()
-			val ye = end.getY()
-			val steep = (math.abs(ye - ys) > math.abs(xe - xs))
-
-			val (x0, y0, x1, y1) =
-				if (steep) {
-					if (ys > ye) {
-						(ye, xe, ys, xs)
-					} else {
-						(ys, xs, ye, xe)
-					}
-				} else {
-					if (xs > xe) {
-						(xe, ye, xs, ys)
-					} else {
-						(xs, ys, xe, ye)
-					}
-				}
->>>>>>> Stashed changes
- */
+			val (steep, x0, y0, x1, y1) = getPoints(start, end)
 			val deltax = x1-x0
 			val deltay = math.abs(y1-y0)
 			var error = deltax>>1
