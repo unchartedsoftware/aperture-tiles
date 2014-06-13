@@ -1,4 +1,4 @@
-/*
+/*A
  * Copyright (c) 2013 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -40,6 +40,8 @@ import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.tilegen.tiling.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.TestPyramidIO
@@ -207,16 +209,43 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
 		val localStartTime = startTime
 		val localEndTime = endTime
 		val localBins = bins
-		val data = sc.parallelize(localData).mapPartitions(i => {
-			                                                   val parser = new TwitterDemoRecordParser(localStartTime, localEndTime, localBins)
-			                                                   i.flatMap(line => parser.getRecordsByTag(line))
-		                                                   })
+		val levelBounds = List(0, 1)
+		val minAnalysis = new TwitterDemoListAnalysis(
+			sc, new TwitterMinRecordAnalytic,
+			Range(levelBounds(0), levelBounds(1)+1).map(level =>
+				(level+".min" -> ((index: TileIndex) => (level == index.getLevel())))
+			).toMap + ("global.min" -> ((index: TileIndex) => true))
+		)
+
+		val maxAnalysis = new TwitterDemoListAnalysis(
+			sc, new TwitterMaxRecordAnalytic,
+			Range(levelBounds(0), levelBounds(1)+1).map(level =>
+				(level+".max" -> ((index: TileIndex) => (level == index.getLevel())))
+			).toMap + ("global.max" -> ((index: TileIndex) => true))
+		)
+
+		val tileAnalytics =
+			Some(new CompositeAnalysisDescription(minAnalysis, maxAnalysis))
+		val dataAnalytics: Option[AnalysisDescription[((Double, Double), Map[String, TwitterDemoRecord]), Int]] = None
+		val data = sc.parallelize(localData).mapPartitions(i =>
+			{
+				val parser = new TwitterDemoRecordParser(localStartTime,
+				                                         localEndTime,
+				                                         localBins)
+				i.flatMap(line => parser.getRecordsByTag(line))
+			}
+		).map(p => (p._1, p._2, dataAnalytics.map(_.convert(p))))
 
 		val tilePyramid = new WebMercatorTilePyramid
 		val binner = new RDDBinner
-		val binDesc = new TwitterDemoBinDescriptor
-		val tiles = binner.processDataByLevel(data, new CartesianIndexScheme,
-		                                      binDesc, tilePyramid, List(0, 1), bins=1).collect
+		val tiles = binner.processDataByLevel(data,
+		                                      new CartesianIndexScheme,
+		                                      new TwitterDemoBinningAnalytic,
+		                                      tileAnalytics,
+		                                      dataAnalytics,
+		                                      tilePyramid,
+		                                      List(0, 1),
+		                                      bins=1).collect
 		assert(5 === tiles.size)
 		val recordsByTile = tiles.map(tile => (tile.getDefinition,
 		                                       tile.getBin(0, 0).asScala.toList)).toMap
@@ -400,44 +429,103 @@ class TwitterDemoTilingTestSuite extends FunSuite with SharedSparkContext {
 		                 (10, 0, "d", "this is the fourteenth tweet #nop #opq"),
 		                 ( 6, 0, "e", "this is the fifteenth tweet  #opq #pqr"))
 
-		val localData = specs.flatMap(spec => {
-			                              val ll = Range(0, spec._1).map(n => createRecord(0+spec._2, spec._3, spec._4,
-				         -45.0, -90.0, positive, 50.0))
-			                              val ul = Range(0, spec._1).map(n => createRecord(1+spec._2, spec._3, spec._4,
-				         45.0, -90.0, positive, 50.0))
-			                              val lr = Range(0, spec._1).map(n => createRecord(2+spec._2, spec._3, spec._4,
-				         -45.0, 90.0, positive, 50.0))
-			                              // Create the upper left quadrant with a different number of records
-			                              val ur = Range(0, (11-spec._1)).map(n => createRecord(3+spec._2, spec._3, spec._4,
-				              45.0, 90.0, positive, 50.0))
-			                              ll union lr union ul  union ur
-		                              })
+		val localData = specs.flatMap(spec =>
+			{
+				val ll = Range(0, spec._1).map(n =>
+					createRecord(0+spec._2, spec._3, spec._4,
+					             -45.0, -90.0, positive, 50.0))
+				val ul = Range(0, spec._1).map(n =>
+					createRecord(1+spec._2, spec._3, spec._4,
+					             45.0, -90.0, positive, 50.0))
+				val lr = Range(0, spec._1).map(n =>
+					createRecord(2+spec._2, spec._3, spec._4,
+					             -45.0, 90.0, positive, 50.0))
+				// Create the upper left quadrant with a different number of records
+				val ur = Range(0, (11-spec._1)).map(n =>
+					createRecord(3+spec._2, spec._3, spec._4,
+					             45.0, 90.0, positive, 50.0))
+				ll union lr union ul  union ur
+			}
+		)
 		val localStartTime = startTime
 		val localEndTime = endTime
 		val localBins = bins
-		val data = sc.parallelize(localData).mapPartitions(i => {
-			                                                   val parser = new TwitterDemoRecordParser(localStartTime, localEndTime, localBins)
-			                                                   i.flatMap(line => parser.getRecordsByTag(line))
-		                                                   })
+		val levelBounds = List(0, 4)
+		val minAnalysis = new TwitterDemoListAnalysis(
+			sc, new TwitterMinRecordAnalytic,
+			Range(levelBounds(0), levelBounds(1)+1).map(level =>
+				(level+"" -> ((index: TileIndex) => (level == index.getLevel())))
+			).toMap + ("global" -> ((index: TileIndex) => true))
+		)
+
+		val maxAnalysis = new TwitterDemoListAnalysis(
+			sc, new TwitterMaxRecordAnalytic,
+			Range(levelBounds(0), levelBounds(1)+1).map(level =>
+				(level+"" -> ((index: TileIndex) => (level == index.getLevel())))
+			).toMap + ("global" -> ((index: TileIndex) => true))
+		)
+
+		val tileAnalytics =
+			Some(new CompositeAnalysisDescription(minAnalysis, maxAnalysis))
+		val dataAnalytics: Option[AnalysisDescription[((Double, Double), Map[String, TwitterDemoRecord]), Int]] = None
+		val data = sc.parallelize(localData).mapPartitions(i =>
+			{
+				val parser = new TwitterDemoRecordParser(localStartTime,
+				                                         localEndTime,
+				                                         localBins)
+				i.flatMap(line => parser.getRecordsByTag(line))
+			}
+		).map(p => (p._1, p._2, dataAnalytics.map(_.convert(p))))
 
 		val tilePyramid = new WebMercatorTilePyramid
 		val binner = new RDDBinner
-		val binDesc = new TwitterDemoBinDescriptor
 		val tio = new TestTileIO
 
-		Range(0, 4).map(level => {
-			                val tiles = binner.processDataByLevel(data, new CartesianIndexScheme,
-			                                                      binDesc, tilePyramid, List(level), bins=1)
+		Range(0, 4).map(level =>
+			{
+				val tiles = binner.processDataByLevel(data,
+				                                      new CartesianIndexScheme,
+				                                      new TwitterDemoBinningAnalytic,
+				                                      tileAnalytics,
+				                                      dataAnalytics,
+				                                      tilePyramid,
+				                                      List(level),
+				                                      bins=1)
 
-			                tio.writeTileSet(tilePyramid, "abc", tiles, binDesc)
-		                })
+				tio.writeTileSet(tilePyramid,
+				                 "abc",
+				                 tiles,
+				                 new TwitterDemoValueDescription,
+				                 tileAnalytics,
+				                 dataAnalytics)
+			}
+		)
 
 		val mdo = tio.readMetaData("abc")
 		assert(mdo.isDefined)
 		val md = mdo.get
-		assert(List(0, 1, 2, 3) ===
-			       md.getLevelMinimums().keySet().asScala.toList.map(_.intValue).sorted)
-		assert(List(0, 1, 2, 3) ===
-			       md.getLevelMaximums().keySet().asScala.toList.map(_.intValue).sorted)
+
+		println()
+		println()
+		println()
+		println(md)
+		println()
+		println()
+		println()
+
+		assert(null != md.getCustomMetaData("global", "minimum"))
+		assert(null != md.getCustomMetaData("0",      "minimum"))
+		assert(null != md.getCustomMetaData("1",      "minimum"))
+		assert(null != md.getCustomMetaData("2",      "minimum"))
+		assert(null != md.getCustomMetaData("3",      "minimum"))
+		assert(null != md.getCustomMetaData("global", "maximum"))
+		assert(null != md.getCustomMetaData("0",      "maximum"))
+		assert(null != md.getCustomMetaData("1",      "maximum"))
+		assert(null != md.getCustomMetaData("2",      "maximum"))
+		assert(null != md.getCustomMetaData("3",      "maximum"))
+//		assert(List(0, 1, 2, 3) ===
+//			       md.getLevelMinimums().keySet().asScala.toList.map(_.intValue).sorted)
+//		assert(List(0, 1, 2, 3) ===
+//			       md.getLevelMaximums().keySet().asScala.toList.map(_.intValue).sorted)
 	}
 }

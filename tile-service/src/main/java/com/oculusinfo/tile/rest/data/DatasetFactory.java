@@ -42,7 +42,7 @@ import java.util.Properties;
  *  
  *  @author nkronenfeld
  */
-public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?>> {
+public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?,?,?,?,?>> {
 	private SparkContext _context;
 	protected DatasetFactory (SparkContext context, ConfigurableFactory<?> parent, List<String> path) {
 		this(context, null, parent, path);
@@ -55,11 +55,11 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?>> {
 	}
 
 	@Override
-	protected CSVDataset<?> createInstance () {
+	protected CSVDataset<?,?,?,?,?> createInstance () {
 		Properties datasetProps = JsonUtilities.jsonObjToProperties(getConfigurationNode());
 		// Width and height are irrelevant for record queries, so we just set them to 1.
-		CSVDataset<?> dataset =
-			(CSVDataset<?>) com.oculusinfo.tilegen.datasets.DatasetFactory.createDataset(
+		CSVDataset<?,?,?,?,?> dataset =
+			(CSVDataset<?,?,?,?,?>) com.oculusinfo.tilegen.datasets.DatasetFactory.createDataset(
 				       _context, datasetProps, false, true, false, 1, 1);
 
 		return dataset;

@@ -30,6 +30,7 @@ package com.oculusinfo.tilegen.datasets
 
 
 import java.lang.{Integer => JavaInt}
+import java.lang.{Double => JavaDouble}
 import java.util.ArrayList
 import java.util.Properties
 
@@ -42,13 +43,15 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.Time
 
+import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
-import com.oculusinfo.tilegen.tiling.BinDescriptor
+import com.oculusinfo.tilegen.tiling.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.BinningAnalytic
 import com.oculusinfo.tilegen.tiling.IndexScheme
-import com.oculusinfo.tilegen.tiling.BinDescriptor
 
 
 
@@ -59,9 +62,11 @@ import com.oculusinfo.tilegen.tiling.BinDescriptor
  * simple property files, which can be passed into a binning process from any
  * place that needs raw data to be binned.
  */
-abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
-	val indexTypeManifest = implicitly[ClassTag[IT]]
-	val binTypeManifest = implicitly[ClassTag[PT]]
+abstract class Dataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT] {
+	val indexTypeTag = implicitly[ClassTag[IT]]
+	val binTypeTag = implicitly[ClassTag[PT]]
+	val dataAnalysisTypeTag = implicitly[ClassTag[DT]]
+	val tileAnalysisTypeTag = implicitly[ClassTag[AT]]
 	var _debug = true;
 
 
@@ -88,11 +93,12 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
 	def isDensityStrip: Boolean = false
 
 	def getIndexScheme: IndexScheme[IT]
+	def getValueScheme: ValueDescription[BT]
 
 	/**
-	 * Get a bin descriptor that can be used to bin this data
-	 */
-	def getBinDescriptor: BinDescriptor[PT, BT]
+	 * Get an analytic that defines how to aggregate this data
+     */
+	def getBinningAnalytic: BinningAnalytic[PT, BT]
 
 	/**
 	 * Creates a blank metadata describing this dataset
@@ -116,7 +122,7 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
 	}
 
 
-	type STRATEGY_TYPE <: ProcessingStrategy[IT, PT]
+	type STRATEGY_TYPE <: ProcessingStrategy[IT, PT, DT]
 
 	protected var strategy: STRATEGY_TYPE
 	def initialize (strategy: STRATEGY_TYPE): Unit = {
@@ -130,7 +136,7 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
 	 * Note that these function may be serialized remotely, so any context-stored
 	 * parameters must be serializable
 	 */
-	def process[OUTPUT] (fcn: (RDD[(IT, PT)]) => OUTPUT,
+	def process[OUTPUT] (fcn: (RDD[(IT, PT, Option[DT])]) => OUTPUT,
 	                     completionCallback: Option[OUTPUT => Unit]): Unit = {
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized dataset "+getName)
@@ -139,8 +145,12 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
 		}
 	}
 
+	def getDataAnalytics: Option[AnalysisDescription[_, DT]]
+
+	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]]
+
 	def transformRDD[OUTPUT_TYPE: ClassTag]
-		(fcn: (RDD[(IT, PT)]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		(fcn: (RDD[(IT, PT, Option[DT])]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized dataset "+getName)
 		} else {
@@ -148,7 +158,7 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
 		}
 
 	def transformDStream[OUTPUT_TYPE: ClassTag]
-		(fcn: (RDD[(IT, PT)]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		(fcn: (RDD[(IT, PT, Option[DT])]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized dataset "+getName)
 		} else {
@@ -156,61 +166,64 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, BT] {
 		}
 }
 
-trait StreamingProcessor[IT, PT] {
-	def processWithTime[OUTPUT] (fcn: Time => RDD[(IT, PT)] => OUTPUT,
+trait StreamingProcessor[IT, PT, DT] {
+	def processWithTime[OUTPUT] (fcn: Time => RDD[(IT, PT, Option[DT])] => OUTPUT,
 	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit
 }
 
-abstract class ProcessingStrategy[IT: ClassTag, PT: ClassTag] {
-	def process[OUTPUT] (fcn: RDD[(IT, PT)] => OUTPUT,
+abstract class ProcessingStrategy[IT: ClassTag, PT: ClassTag, DT: ClassTag] {
+	def process[OUTPUT] (fcn: RDD[(IT, PT, Option[DT])] => OUTPUT,
 	                     completionCallback: Option[OUTPUT => Unit]): Unit
 
+	def getDataAnalytics: Option[AnalysisDescription[_, DT]]
+
 	def transformRDD[OUTPUT_TYPE: ClassTag]
-		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
+		(fcn: RDD[(IT, PT, Option[DT])] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE]
 
 	def transformDStream[OUTPUT_TYPE: ClassTag]
-		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
+		(fcn: RDD[(IT, PT, Option[DT])] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE]
 }
 
-abstract class StaticProcessingStrategy[IT: ClassTag, PT: ClassTag] (sc: SparkContext)
-		extends ProcessingStrategy[IT, PT] {
+abstract class StaticProcessingStrategy[IT: ClassTag, PT: ClassTag, DT: ClassTag] (sc: SparkContext)
+		extends ProcessingStrategy[IT, PT, DT] {
 	private val rdd = getData
 
-	protected def getData: RDD[(IT, PT)]
+	protected def getData: RDD[(IT, PT, Option[DT])]
 
-	final def process[OUTPUT] (fcn: RDD[(IT, PT)] => OUTPUT,
+	final def process[OUTPUT] (fcn: RDD[(IT, PT, Option[DT])] => OUTPUT,
 	                           completionCallback: Option[OUTPUT => Unit] = None): Unit = {
 		val result = fcn(rdd)
 		completionCallback.map(_(result))
 	}
 
 	final def transformRDD[OUTPUT_TYPE: ClassTag]
-		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		(fcn: RDD[(IT, PT, Option[DT])] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 		fcn(rdd)
 
 	final def transformDStream[OUTPUT_TYPE: ClassTag]
-		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		(fcn: RDD[(IT, PT, Option[DT])] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 		throw new Exception("Attempt to call DStream transform on RDD processor")
 }
 
-abstract class StreamingProcessingStrategy[IT: ClassTag, PT: ClassTag]
-		extends ProcessingStrategy[IT, PT] {
+abstract class StreamingProcessingStrategy[IT: ClassTag, PT: ClassTag, DT: ClassTag]
+		extends ProcessingStrategy[IT, PT, DT] {
 	private val dstream = getData
 
-	protected def getData: DStream[(IT, PT)]
+	protected def getData: DStream[(IT, PT, Option[DT])]
 
-	private final def internalProcess[OUTPUT] (rdd: RDD[(IT, PT)], fcn: RDD[(IT, PT)] => OUTPUT,
+	private final def internalProcess[OUTPUT] (rdd: RDD[(IT, PT, Option[DT])],
+	                                           fcn: RDD[(IT, PT, Option[DT])] => OUTPUT,
 	                                           completionCallback: Option[OUTPUT => Unit] = None): Unit = {
 		val result = fcn(rdd)
 		completionCallback.map(_(result))
 	}
 
-	def process[OUTPUT] (fcn: RDD[(IT, PT)] => OUTPUT,
+	def process[OUTPUT] (fcn: RDD[(IT, PT, Option[DT])] => OUTPUT,
 	                     completionCallback: Option[(OUTPUT => Unit)] = None): Unit = {
 		dstream.foreachRDD(internalProcess(_, fcn, completionCallback))
 	}
 
-	def processWithTime[OUTPUT] (fcn: Time => RDD[(IT, PT)] => OUTPUT,
+	def processWithTime[OUTPUT] (fcn: Time => RDD[(IT, PT, Option[DT])] => OUTPUT,
 	                             completionCallback: Option[Time => OUTPUT => Unit]): Unit = {
 		dstream.foreachRDD{(rdd, time) =>
 			internalProcess(rdd, fcn(time), completionCallback.map(_(time)))
@@ -218,28 +231,79 @@ abstract class StreamingProcessingStrategy[IT: ClassTag, PT: ClassTag]
 	}
 	
 	final def transformRDD[OUTPUT_TYPE: ClassTag]
-		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		(fcn: RDD[(IT, PT, Option[DT])] => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 		throw new Exception("Attempt to call RDD transform on DStream processor")
 
 	final def transformDStream[OUTPUT_TYPE: ClassTag]
-		(fcn: RDD[(IT, PT)] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		(fcn: RDD[(IT, PT, Option[DT])] => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 		dstream.transform(fcn)
 }
 
 
 
 object DatasetFactory {
-	private def getDataset[T: ClassTag] (indexer: CSVIndexExtractor[T],
-	                                     properties: CSVRecordPropertiesWrapper,
-	                                     tileWidth: Int,
-	                                     tileHeight: Int): CSVDataset[T] =
-		new CSVDataset(indexer, properties, tileWidth, tileHeight)
+	private def newDataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
+		(sc: SparkContext,
+		 cacheRaw: Boolean,
+		 cacheFilterable: Boolean,
+		 cacheProcessed: Boolean,
+		 indexer: CSVIndexExtractor[IT],
+		 valuer: CSVValueExtractor[PT, BT],
+		 properties: CSVRecordPropertiesWrapper,
+		 tileWidth: Int,
+		 tileHeight: Int,
+		 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]]):
+			CSVDataset[IT, PT, DT, AT, BT] = {
+		val dataset = new CSVDataset(indexer, valuer, properties, tileWidth, tileHeight,
+		               dataAnalytics, tileAnalytics)
+		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
+		dataset
+	}
 
-	private def getDatasetGeneric[T] (indexer: CSVIndexExtractor[T],
-	                                  properties: CSVRecordPropertiesWrapper,
-	                                  tileWidth: Int,
-	                                  tileHeight: Int): CSVDataset[T] =
-		getDataset(indexer, properties, tileWidth, tileHeight)(indexer.indexTypeManifest)
+	private def addGenericAnalytics[IT, PT, DT, AT, BT]
+		(sc: SparkContext,
+		 cacheRaw: Boolean,
+		 cacheFilterable: Boolean,
+		 cacheProcessed: Boolean,
+		 indexer: CSVIndexExtractor[IT],
+		 valuer: CSVValueExtractor[PT, BT],
+		 properties: CSVRecordPropertiesWrapper,
+		 tileWidth: Int,
+		 tileHeight: Int,
+		 dataAnalyticsWithTag: (Option[AnalysisDescription[(IT, PT), DT]], ClassTag[DT]),
+		 tileAnalyticsWithTag: (Option[AnalysisDescription[TileData[BT], AT]], ClassTag[AT])):
+			CSVDataset[IT, PT, DT, AT, BT] = {
+		newDataset(sc, cacheRaw, cacheFilterable, cacheProcessed,
+		           indexer,
+		           valuer,
+		           properties,
+		           tileWidth,
+		           tileHeight,
+		           dataAnalyticsWithTag._1,
+		           tileAnalyticsWithTag._1)(indexer.indexTypeTag,
+		                                    valuer.valueTypeTag,
+		                                    dataAnalyticsWithTag._2,
+		                                    tileAnalyticsWithTag._2)
+	}
+
+	// CreateDataset, but with labeled types
+	private def createDatasetGeneric[IT, PT, BT] (sc: SparkContext,
+	                                              cacheRaw: Boolean,
+	                                              cacheFilterable: Boolean,
+	                                              cacheProcessed: Boolean,
+	                                              indexer: CSVIndexExtractor[IT],
+	                                              valuer: CSVValueExtractor[PT, BT],
+	                                              properties: CSVRecordPropertiesWrapper,
+	                                              tileWidth: Int,
+	                                              tileHeight: Int):
+			CSVDataset[IT, PT, _, _, BT] =
+		addGenericAnalytics(sc, cacheRaw, cacheFilterable, cacheProcessed,
+		                    indexer, valuer, properties, tileWidth, tileHeight,
+		                    CSVDataAnalyticExtractor.fromProperties(properties,
+		                                                            indexer.indexTypeTag,
+		                                                            valuer.valueTypeTag),
+		                    CSVTileAnalyticExtractor.fromProperties(properties))
 
 	def createDataset (sc: SparkContext,
 	                   dataDescription: Properties,
@@ -247,15 +311,16 @@ object DatasetFactory {
 	                   cacheFilterable: Boolean,
 	                   cacheProcessed: Boolean,
 	                   tileWidth: Int = 256,
-	                   tileHeight: Int = 256): Dataset[_, _, _] = {
-		// Wrapp parameters more usefully
+	                   tileHeight: Int = 256): Dataset[_, _, _, _, _] = {
+
+		// Wrap parameters more usefully
 		val properties = new CSVRecordPropertiesWrapper(dataDescription)
 
-		// Determine indexing information
+		// Determine index and value information
 		val indexer = CSVIndexExtractor.fromProperties(properties)
+		val valuer = CSVValueExtractor.fromProperties(properties)
 
-		val dataset:CSVDataset[_] = getDatasetGeneric(indexer, properties, tileWidth, tileHeight)
-		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
-		dataset
+		createDatasetGeneric(sc, cacheRaw, cacheFilterable, cacheProcessed,
+		                     indexer, valuer, properties, tileWidth, tileHeight)
 	}
 }

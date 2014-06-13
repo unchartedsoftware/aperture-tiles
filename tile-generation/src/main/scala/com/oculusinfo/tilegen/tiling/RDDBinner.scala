@@ -30,6 +30,7 @@ package com.oculusinfo.tilegen.tiling
 import java.awt.geom.Point2D
 import java.awt.geom.Rectangle2D
 
+import scala.collection.JavaConverters._
 
 
 import scala.collection.mutable.{Map => MutableMap}
@@ -53,57 +54,8 @@ import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.binning.io.serialization.TileSerializer
 
-
-
-trait IndexScheme[T] {
-	def toCartesian (t: T): (Double, Double)
-	
-	//TODO -- toCartesianEndpoints is only used for RDDLineBinner 
-	//so ideally this should be moved to LineSegmentIndexScheme in RDDLineBinner?
-	def toCartesianEndpoints (t: T): (Double, Double, Double, Double)
-}
-
-class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializable {
-	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
-	def toCartesianEndpoints (coords: (Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._1, coords._2, coords._2) 	//TODO -- redundant, see note above
-}
-
-class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
-	def toCartesian (ipAddress: Array[Byte]): (Double, Double) = {
-		def getXDigit (byte: Byte): Long =
-			(((byte & 0x40) >> 3) |
-				 ((byte & 0x10) >> 2) |
-				 ((byte & 0x04) >> 1) |
-				 ((byte & 0x01))).toLong
-
-		def getYDigit (byte: Byte): Long =
-			(((byte & 0x80) >> 4) |
-				 ((byte & 0x20) >> 3) |
-				 ((byte & 0x08) >> 2) |
-				 ((byte & 0x02) >> 1)).toLong
-
-		ipAddress.map(byte => (getXDigit(byte), getYDigit(byte)))
-			.foldLeft((0.0, 0.0))((a, b) =>
-			(16.0*a._1+b._1, 16.0*a._2+b._2)
-		)
-	}
-	def toCartesianEndpoints (ipAddress: Array[Byte]): (Double, Double, Double, Double) = (0, 0, 0, 0) 	//TODO -- redundant, see note above
-}
-
-trait TimeIndexScheme[T] extends IndexScheme[T] {
-	def extractTime (t: T): Double
-}
-
-/**
- * Assumes the coords coming in are (Date, X, Y), so this just throws away the date field.
- */
-class TimeRangeCartesianIndexScheme extends TimeIndexScheme[(Double, Double, Double)] with Serializable {
-	def toCartesian (coords: (Double, Double, Double)): (Double, Double) = (coords._2, coords._3)
-	def extractTime (coords: (Double, Double, Double)): Double = coords._1
-	def toCartesianEndpoints (coords: (Double, Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._2, coords._3, coords._3) 	//TODO -- redundant, see note above
-}
+import com.oculusinfo.tilegen.datasets.ValueDescription
 
 
 /**
@@ -115,7 +67,49 @@ class TimeRangeCartesianIndexScheme extends TimeIndexScheme[(Double, Double, Dou
  */
 class RDDBinner {
 	var debug: Boolean = true
-	
+
+	/**
+	 * Transform an arbitrary dataset into one that can be used for binning.
+     * Also sets up data-based analytics to be attached to tiles
+     *
+     * Note that this method only sets up transformations; nothing it does 
+     * actually causes any work to be done directly, so the accumulators passed 
+     * in will not be populated when this method is complete.  They will be 
+	 * populated once the data actually has been used.
+     * 
+     * @param RT The raw data type
+     * @param IT The index type, used as input into the pyramid transformation 
+     *           that determins in which tile and bin any given piece of data 
+     *           falls
+     * @param PT The processing bin type, to be used as the values in resulting 
+	 *           tiles
+     * @param DT The data analytic type, used to attach analytic values to tiles
+     *           calculated from raw data
+     * @param data The raw data to be tiled
+     * @param indexFcn A function to transform a raw data record into an index 
+	 *                 (see parameter IT)
+     * @param valueFcn A function to transform a raw data record into a value 
+     *                 to be binned (see parameter RT)
+     * @param dataAnalytic An optional transformation from a raw data record 
+     *                     into an aggregable analytic value.  If None, this 
+	 *                     should cause no extra processing.  If multiple 
+     *                     analytics are desired, use ComposedTileAnalytic
+     */
+	def transformData[RT: ClassTag, IT: ClassTag, PT: ClassTag, DT: ClassTag]
+		(data: RDD[RT],
+		 indexFcn: RT => Try[IT],
+		 valueFcn: RT => Try[PT],
+		 dataAnalytics: Option[AnalysisDescription[RT, DT]] = None):
+			RDD[(IT, PT, Option[DT])] =
+	{
+		// Process the data to remove all but the minimal portion we need for
+		// tiling - index, value, and analytics
+		data.mapPartitions(iter =>
+			iter.map(i => (indexFcn(i), valueFcn(i), dataAnalytics.map(_.convert(i))))
+		).filter(record => record._1.isSuccess && record._2.isSuccess)
+			.map(record =>(record._1.get, record._2.get, record._3))
+	}
+
 
 	/**
 	 * Fully process a dataset of input records into output tiles written out
@@ -124,14 +118,20 @@ class RDDBinner {
 	 * @param RT The raw input record type
 	 * @param IT The coordinate type
 	 * @param PT The processing bin type
+     * @param AT The tile analytic type
+	 * @param DT The data anlytic type
 	 * @param BT The output bin type
 	 */
-	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag, BT] (
+	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag,
+	                    AT: ClassTag, DT: ClassTag, BT] (
 		data: RDD[RT],
 		indexFcn: RT => Try[IT],
 		valueFcn: RT => Try[PT],
 		indexScheme: IndexScheme[IT],
-		binDesc: BinDescriptor[PT, BT],
+		binAnalytic: BinningAnalytic[PT, BT],
+		tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		dataAnalytics: Option[AnalysisDescription[RT, DT]],
+		valueScheme: ValueDescription[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
 		writeLocation: String,
@@ -155,15 +155,7 @@ class RDDBinner {
 
 		val startTime = System.currentTimeMillis()
 
-		// Process the data to remove all but the minimal portion we need for
-		// tiling - x coordinate, y coordinate, and bin value
-		val bareData = data.mapPartitions(iter =>
-			{
-				println("Initial partition processing")
-				iter.map(i => (indexFcn(i), valueFcn(i)))
-			}
-		).filter(record => record._1.isSuccess && record._2.isSuccess)
-			.map(record =>(record._1.get, record._2.get))
+		val bareData = transformData(data, indexFcn, valueFcn, dataAnalytics)
 
 		// Cache this, we'll use it at least once for each level set
 		bareData.persist(StorageLevel.MEMORY_AND_DISK)
@@ -174,14 +166,17 @@ class RDDBinner {
 				// For each level set, process the bare data into tiles...
 				var tiles = processDataByLevel(bareData,
 				                               indexScheme,
-				                               binDesc,
+				                               binAnalytic,
+				                               tileAnalytics,
+				                               dataAnalytics,
 				                               tileScheme,
 				                               levels,
 				                               bins,
 				                               consolidationPartitions)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
-				                    binDesc, name, description)
+				                    valueScheme, tileAnalytics, dataAnalytics,
+				                    name, description)
 				if (debug) {
 					val levelEndTime = System.currentTimeMillis()
 					println("Finished binning levels ["+levels.mkString(", ")+"] of data set "
@@ -203,6 +198,7 @@ class RDDBinner {
 
 
 
+
 	/**
 	 * Process a simplified input dataset minimally - transform an RDD of raw,
 	 * but minimal, data into an RDD of tiles on the given levels.
@@ -210,8 +206,13 @@ class RDDBinner {
 	 * @param data The data to be processed
 	 * @param indexScheme A conversion scheme for converting from the index type 
 	 *        to one we can use.
-	 * @param binDesc A description of how raw values are to be aggregated into
-	 *                bin values
+	 * @param binAnalytic A description of how raw values are aggregated into 
+     *                    bin values
+     * @param tileAnalytics A description of analytics that can be run on each 
+     *                      tile, and how to aggregate them
+     * @param dataAnalytics A description of analytics that can be run on the
+     *                      raw data, and recorded (in the aggregate) on each
+     *                      tile
 	 * @param tileScheme A description of how raw values are transformed to bin
 	 *                   coordinates
 	 * @param levels A list of levels on which to create tiles
@@ -224,18 +225,23 @@ class RDDBinner {
 	 * @param IT the index type, convertable to a cartesian pair with the 
      *           coordinateFromIndex function
 	 * @param PT The bin type, when processing and aggregating
+     * @param AT The type of tile-level analytic to calculate for each tile.
+     * @param DT The type of raw data-level analytic that already has been 
+     *           calculated for each tile.
      * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processDataByLevel[IT: ClassTag,
-	                       PT: ClassTag, BT] (data: RDD[(IT, PT)],
-	                                          indexScheme: IndexScheme[IT],
-	                                          binDesc: BinDescriptor[PT, BT],
-	                                          tileScheme: TilePyramid,
-	                                          levels: Seq[Int],
-	                                          bins: Int = 256,
-	                                          consolidationPartitions: Option[Int] = None,
-	                                          isDensityStrip: Boolean = false):
-			RDD[TileData[BT]] = {
+	def processDataByLevel[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+		(data: RDD[(IT, PT, Option[DT])],
+		 indexScheme: IndexScheme[IT],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]],
+		 tileScheme: TilePyramid,
+		 levels: Seq[Int],
+		 bins: Int = 256,
+		 consolidationPartitions: Option[Int] = None,
+		 isDensityStrip: Boolean = false): RDD[TileData[BT]] =
+	{
 		val mapOverLevels: IT => TraversableOnce[(TileIndex, BinIndex)] =
 			index => {
 				val (x, y) = indexScheme.toCartesian(index)
@@ -248,7 +254,8 @@ class RDDBinner {
 				)
 			}
 
-		processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip)
+		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
+		            mapOverLevels, bins, consolidationPartitions, isDensityStrip)
 	}
 
 
@@ -258,11 +265,10 @@ class RDDBinner {
 	 * but minimal, data into an RDD of tiles.
 	 * 
 	 * @param data The data to be processed
-	 * @param binDesc A description of how raw values are to be aggregated into
+	 * @param binAnalytic A description of how raw values are to be aggregated into
 	 *                bin values
-	 * @param datumToTiles A function that spreads a data point out over the
+	 * @param indexToTiles A function that spreads a data point out over the
 	 *                     tiles and bins of interest
-	 * @param levels A list of levels on which to create tiles
 	 * @param bins The number of bins per coordinate on each tile
 	 * @param consolidationPartitions The number of partitions to use when
 	 *                                grouping values in the same bin or the same
@@ -273,14 +279,19 @@ class RDDBinner {
 	 * @param PT The bin type, when processing and aggregating
      * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processData[IT: ClassTag,
-	                PT: ClassTag, BT] (data: RDD[(IT, PT)],
-	                                   binDesc: BinDescriptor[PT, BT],
-	                                   indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
-	                                   bins: Int = 256,
-	                                   consolidationPartitions: Option[Int] = None,
-	                                   isDensityStrip: Boolean = false):
-			RDD[TileData[BT]] = {
+	def processData[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+		(data: RDD[(IT, PT, Option[DT])],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]],
+		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
+		 bins: Int = 256,
+		 consolidationPartitions: Option[Int] = None,
+		 isDensityStrip: Boolean = false): RDD[TileData[BT]] =
+	{
+		// Determine metadata
+		val metaData = processMetaData(data, indexToTiles, dataAnalytics)
+
 		// We first bin data in each partition into its associated bins
 		val partitionBins = data.mapPartitions(iter =>
 			{
@@ -295,7 +306,7 @@ class RDDBinner {
 						val key = tbv._1
 						val value = tbv._2
 						if (partitionResults.contains(key)) {
-							partitionResults(key) = binDesc.aggregateBins(partitionResults(key), value)
+							partitionResults(key) = binAnalytic.aggregate(partitionResults(key), value)
 						} else {
 							partitionResults(key) = value
 						}
@@ -307,55 +318,168 @@ class RDDBinner {
 		)
 
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
-		consolidate(partitionBins, binDesc, consolidationPartitions, isDensityStrip)
+		consolidate(partitionBins, binAnalytic, tileAnalytics, 
+		            metaData, consolidationPartitions, isDensityStrip)
 	}
 
-
-
-	private def consolidate[PT: ClassTag, BT] (data: RDD[((TileIndex, BinIndex), PT)],
-	                                           binDesc: BinDescriptor[PT, BT],
-	                                           consolidationPartitions: Option[Int],
-	                                           isDensityStrip: Boolean):
-			RDD[TileData[BT]] = {
-		val densityStripLocal = isDensityStrip
-		val reduced = data.reduceByKey(binDesc.aggregateBins(_, _),
-		                               getNumSplits(consolidationPartitions, data)).map(p =>
-			(p._1._1, (p._1._2, p._2))
+	/**
+     * Process a simplified input dataset to run any raw data-based analysis
+     * 
+     * @param IT The index type of the data set
+     * @param DT The type of data analytic used
+     * @param data The data to process
+	 * @param indexToTiles A function that spreads a data point out over the
+	 *                     tiles and bins of interest
+     * @param dataAnalytic An optional transformation from a raw data record 
+     *                     into an aggregable analytic value.  If None, this 
+	 *                     should cause no extra processing.  If multiple 
+     *                     analytics are desired, use ComposedTileAnalytic
+     */
+	def processMetaData[IT: ClassTag, PT: ClassTag, DT: ClassTag]
+		(data: RDD[(IT, PT, Option[DT])],
+		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
+			Option[RDD[(TileIndex, Map[String, String])]] =
+	{
+		dataAnalytics.map(da =>
+			data.mapPartitions(iter =>
+				{
+					val partitionResults = MutableMap[TileIndex, DT]()
+					iter.foreach(record =>
+						indexToTiles(record._1).map(tbi => (tbi._1, record._3))
+							.foreach{
+							case (tile, value) =>
+								value.foreach(v =>
+									{
+										partitionResults(tile) =
+											if (partitionResults.contains(tile)) {
+												da.analytic.aggregate(partitionResults(tile), v)
+											} else {
+												v
+											}
+										da.accumulate(tile, v)
+									}
+								)
+						}
+					)
+					partitionResults.iterator
+				}
+			).reduceByKey(da.analytic.aggregate(_, _))
+				.map{case (tile, value) =>
+					(tile, da.analytic.toMap(value))
+			}
 		)
-		val result = reduced
-			.groupByKey(getNumSplits(consolidationPartitions, reduced))
-			.map(t =>
+	}
+
+	private def consolidate[PT: ClassTag, AT: ClassTag, BT]
+		(data: RDD[((TileIndex, BinIndex), PT)],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 tileMetaData: Option[RDD[(TileIndex, Map[String, String])]],
+		 consolidationPartitions: Option[Int],
+		 isDensityStrip: Boolean): RDD[TileData[BT]] =
+	{
+		val densityStripLocal = isDensityStrip
+		// We need to consolidate both metadata and binning data, so our result 
+		// has two slots, and each half populates one of them.
+		//
+		// We need to do this right away because the tiles should be immutable 
+		// once created
+		//
+		// For the same reason, we'll have to run the tile analytic when we 
+		// create the tile, too.
+		// 
+		// First the binning data half
+		val reduced: RDD[(TileIndex, (Option[(BinIndex, PT)],
+		                              Option[Map[String, String]]))] =
+			data.reduceByKey(binAnalytic.aggregate(_, _),
+			                 getNumSplits(consolidationPartitions, data))
+				.map(p => (p._1._1, (Some((p._1._2, p._2)), None)))
+		// Now the metadata half (in a way that should take no work if there is no metadata)
+		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, PT)],
+		                                      Option[Map[String, String]]))]] =
+			tileMetaData.map(
+				_.map{case (index, metaData) => (index, (None, Some(metaData))) }
+			)
+
+		// Get the combination of the two sets, again in a way that does 
+		// no extra work if there is no metadata
+		val toTile =
+			(if (metaData.isDefined)
+				 // Just take the simple union
+			    (reduced union metaData.get)
+			 else reduced
+			).groupByKey(getNumSplits(consolidationPartitions, reduced))
+
+
+		toTile.map(t =>
 			{
 				val index = t._1
-				val bins = t._2
+				val tileData = t._2
 				val xLimit = index.getXBins()
 				val yLimit = index.getYBins()
+
+				// Create our tile
 				val tile = if (densityStripLocal) new DensityStripData[BT](index)
 				else new TileData[BT](index)
-				val defaultBinValue = binDesc.convert(binDesc.defaultProcessedBinValue)
 
+				// Put the proper default in all bins
+				val defaultBinValue =
+					binAnalytic.finish(binAnalytic.defaultProcessedValue)
 				for (x <- 0 until xLimit) {
 					for (y <- 0 until yLimit) {
 						tile.setBin(x, y, defaultBinValue)
 					}
 				}
 
-				bins.foreach(p =>
+				// Put the proper value into each bin
+				tileData.filter(_._1.isDefined).foreach(p =>
 					{
-						val bin = p._1
-						val value = p._2
-						tile.setBin(bin.getX(), bin.getY(), binDesc.convert(value))
+						val bin = p._1.get._1
+						val value = p._1.get._2
+						tile.setBin(bin.getX(), bin.getY(), binAnalytic.finish(value))
+					}
+				)
+
+				// Add in any pre-calculated metadata
+				tileData.filter(_._2.isDefined).foreach(p =>
+					{
+						val metaData = p._2.get
+						metaData.map{
+							case (key, value) =>
+								tile.setMetaData(key, value)
+						}
+					}
+				)
+
+				// Calculate and add in an tile-level metadata we've been told to calculate
+				tileAnalytics.map(ta =>
+					{
+						// Figure out the value for this tile
+						val analyticValue = ta.convert(tile)
+						// Add it into any appropriate accumulators
+						ta.accumulate(tile.getDefinition(), analyticValue)
+						// And store it in the tile's metadata
+						ta.analytic.toMap(analyticValue).map{case (key, value) =>
+							tile.setMetaData(key,value)
+						}
 					}
 				)
 
 				tile
 			}
 		)
-
-		result
 	}
 
-
+	/**
+     * Get the number of partitions to use when operating on a data set.
+     * 
+     * @param requestedPartitions An optional override of the default number of 
+     *                            partitions
+     * @param dataSet the dataSet for which to determine the number of 
+     *                partitions.
+     * @return The number of partitions that should be used for this dataset.
+	 */
 	def getNumSplits[T: ClassTag] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
 		val curSize = dataSet.partitions.size
 		val result = curSize max requestedPartitions.getOrElse(0)

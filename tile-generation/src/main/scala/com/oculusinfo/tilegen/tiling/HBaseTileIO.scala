@@ -53,6 +53,9 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.impl.HBasePyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 
+import com.oculusinfo.tilegen.datasets.ValueDescription
+import com.oculusinfo.tilegen.spark.IntMinAccumulatorParam
+import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.util.ArgumentParser
 
 
@@ -141,12 +144,14 @@ class HBaseTileIO (zookeeperQuorum: String,
 	 * 
 	 * Note that this uses the old Hadoop API
 	 */
-	override def writeTileSet[PT, BT] (pyramider: TilePyramid,
-	                                   baseLocation: String,
-	                                   data: RDD[TileData[BT]],
-	                                   binDesc: BinDescriptor[PT, BT],
-	                                   name: String = "unknown",
-	                                   description: String = "unknown"): Map[Int, (BT, BT)] = {
+	override def writeTileSet[BT, AT, DT] (pyramider: TilePyramid,
+	                                       baseLocation: String,
+	                                       data: RDD[TileData[BT]],
+	                                       valueScheme: ValueDescription[BT],
+	                                       tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+	                                       dataAnalytics: Option[AnalysisDescription[_, DT]],
+	                                       name: String = "unknown",
+	                                       description: String = "unknown"): Unit = {
 		val pyramidIO = getPyramidIO
 
 		// We need some TableOutputFormat constants in here.
@@ -155,42 +160,49 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// Do any needed table initialization
 		pyramidIO.initializeForWrite(baseLocation)
 
-		// Set up some accumulators to figure out needed metadata
-		val minMaxAccumulable = new LevelMinMaxAccumulableParam[BT](binDesc.min,
-		                                                            binDesc.defaultMin,
-		                                                            binDesc.max,
-		                                                            binDesc.defaultMax)
-		val minMaxAccum = data.context.accumulable(minMaxAccumulable.zero(Map()))(minMaxAccumulable)
-		// And this is just for reporting, because it's basically free and easy
+		// Record the min and max level we write, so we can add that to the 
+		// metadata
+		val minLevel = data.context.accumulator(Int.MaxValue)(new IntMinAccumulatorParam)
+		val maxLevel = data.context.accumulator(Int.MinValue)(new IntMinAccumulatorParam)
+
+		// Record and report the total number of tiles we write, because it's 
+		// basically free and easy
 		val tileCount = data.context.accumulator(0)
+
+		println("Writing tile set from")
+		println(data.toDebugString)
 
 		// Turn each tile into a table row, noting mins, maxes, and counts as
 		// we go.  Note that none of the min/max/count accumulation is actually
 		// done until the file is writting - this just sets it up, it doesn't
 		// run it
-		val HBaseTiles = data.map(tile =>
+		val HBaseTiles = data.mapPartitions(iter =>
 			{
-				val index = tile.getDefinition()
-				val level = index.getLevel()
+				val serializer = valueScheme.getSerializer
+				iter.map(tile =>
+					{
+						val index = tile.getDefinition()
+						val level = index.getLevel()
 
-				// Update count, minimums, and maximums
-				tileCount += 1
-				for (x <- 0 until index.getXBins())
-					for (y <- 0 until index.getYBins())
-						minMaxAccum += (level -> tile.getBin(x, y))
+						// Update count, level bounds
+						tileCount += 1
+						minLevel += level
+						maxLevel += level
 
-				// Create a Put (a table write object) that will write this tile
-				val baos = new ByteArrayOutputStream()
-				binDesc.getSerializer.serialize(tile, baos);
-				baos.close
-				baos.flush
+						// Create a Put (a table write object) that will write this tile
+						val baos = new ByteArrayOutputStream()
+						serializer.serialize(tile, baos);
+						baos.close
+						baos.flush
 
-				val put = new Put(rowIdFromTileIndex(index).getBytes())
-				put.add(TILE_COLUMN.getFamily(),
-				        TILE_COLUMN.getQualifier(),
-				        baos.toByteArray())
+						val put = new Put(rowIdFromTileIndex(index).getBytes())
+						put.add(TILE_COLUMN.getFamily(),
+						        TILE_COLUMN.getQualifier(),
+						        baos.toByteArray())
 
-				(new ImmutableBytesWritable, put)
+						(new ImmutableBytesWritable, put)
+					}
+				)
 			}
 		)
 
@@ -216,15 +228,18 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// Don't alter metadata if there was no data added.
 		// Ideally, we'd still alter levels, but that's stored in our min/max list,
 		// so since we have no min/max info for levels with no data, we just don't store them.
-		val minMax = minMaxAccum.value
 		if (tileCount.value > 0) {
 			val sampleTile = data.first.getDefinition()
-			val tileSize = sampleTile.getXBins()
-			val metaData = combineMetaData(pyramider, baseLocation, minMax, tileSize, name, description)
+			val tileAnalyticMetaData = tileAnalytics.map(_.toMap).getOrElse(Map[String, String]())
+			val dataAnalyticMetaData = dataAnalytics.map(_.toMap).getOrElse(Map[String, String]())
+			val metaData =
+				combineMetaData(pyramider, baseLocation,
+				                (minLevel.value, maxLevel.value),
+				                tileAnalytics, dataAnalytics,
+				                sampleTile.getXBins, sampleTile.getYBins,
+				                name, description)
 			writeMetaData(baseLocation, metaData)
 		}
-		
-		minMax
 	}
 }
 
