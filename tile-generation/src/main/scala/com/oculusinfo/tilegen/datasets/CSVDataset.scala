@@ -602,13 +602,19 @@ abstract class CSVDatasetBase[IT: ClassTag]
 				{
 					val extrema = levelRange.split('-')
 
-					if (0 == extrema.size) Seq[Int]()
-					if (1 == extrema.size) Seq[Int](extrema(0).toInt)
-					else Range(extrema(0).toInt, extrema(1).toInt+1).toSeq
+					if ((0 == extrema.size) || (levelRange==""))
+						Seq[Int]()
+					else if (1 == extrema.size)
+						Seq[Int](extrema(0).toInt)
+					else 
+						Range(extrema(0).toInt, extrema(1).toInt+1).toSeq
 				}
 			).fold(Seq[Int]())(_ ++ _)
 		}
-	)
+	).filter(levelSeq => {
+		levelSeq != Seq[Int]()	// discard empty entries
+	})
+	
 
 	private val consolidationPartitions =
 		properties.getIntOption("oculus.binning.consolidationPartitions",

@@ -65,9 +65,36 @@ import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
-/*
- * The following properties control how the application runs:
+/**
+ * This application handles reading in a graph dataset from a CSV file, and generating
+ * tiles for the graph's nodes or edges.
  * 
+ * NOTE:  It is expected that the 1st column of the CSV graph data will contain either the keyword "node"
+ * for data lines representing a graph's node/vertex, or the keyword "edge" for data lines representing
+ * a graph's edge
+ * 
+ * The following properties control how the application runs: 
+ * (See code comments in CSVDataset.scala for more info and settings)
+ * 
+ * 
+ *  oculus.binning.graph.data
+ *      The type of graph data to use for tile generation.  Set to "nodes" to generate tiles of a graph's
+ *      nodes [default], or set to "edges" to generate tiles of a graph's edges.
+ *      
+ *  oculus.binning.hierarchical.clusters
+ *  	To configure tile generation of hierarchical clustered data.  Set to false [default] for 'regular'
+ *   	tile generation (ie non-clustered data).  If set to true then one needs to assign different source 
+ *    	'cluster levels' using the oculus.binning.source.levels.<order> property for each desired set of 
+ *     	tile levels to be generated.  In this case, the property oculus.binning.source.location is not used.
+ *     
+ *  oculus.binning.source.levels.<order>
+ *  	This is only required if oculus.binning.hierarchical.clusters=true.  This property is used to assign
+ *   	A given hierarchy "level" of clustered data to a given set of tile levels.  E.g., clustered data assigned
+ *     	to oculus.binning.source.levels.0 will be used to generate tiles for all tiles given in the set 
+ *     	oculus.binning.levels.0, and so on for other level 'orders'.
+ *      
+ *  -----    
+ *      
  *  hbase.zookeeper.quorum
  *      If tiles are written to hbase, the zookeeper quorum location needed to
  *      connect to hbase.
@@ -265,7 +292,9 @@ class CSVGraphDataset[IT: ClassTag](indexer:  CSVIndexExtractor[IT],
 object CSVGraphBinner {
 	
 	private var _graphDataType = "nodes"
-	
+	private var _lineLevelThres = 4		// [level] threshold to determine whether to use 'point' vs 'tile' 
+										// based line segment binning.  Levels above this thres use tile-based binning.
+			
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
 		properties.getString("oculus.tileio.type",
 		                     "Where to put tiles",
@@ -299,6 +328,13 @@ object CSVGraphBinner {
 	}
 
 	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
+			
+		_lineLevelThres = properties.getInt("oculus.binning.line.level.threshold",
+											"Level threshold to determine whether to use 'point' vs 'tile'"+
+											" based line segment binning (levels above this thres use tile-based binning)",
+											Some(4))
+		
+		
 		_graphDataType = properties.getString("oculus.binning.graph.data",
 		                                     "The type of graph data to tile (nodes or edges). "+
 			                                     "Default is nodes.",
@@ -337,8 +373,7 @@ object CSVGraphBinner {
 				                                Some(CSVDatasetBase.ZERO_STR))				                                
 				new LineSegmentIndexExtractor(xVar1, yVar1, xVar2, yVar2)
 			}			
-
-		}			
+		}
 	}	
 	
 	def processDataset[IT: ClassTag,
@@ -354,6 +389,8 @@ object CSVGraphBinner {
 					val procFcn: RDD[(IT, PT)] => Unit =
 						rdd =>
 					{
+						val bUsePointBinner = (levels.max <= _lineLevelThres)	// use point-based vs tile-based line-segment binning?
+						
 						val tiles = binner.processDataByLevel(rdd,
 						                                      dataset.getIndexScheme,
 						                                      dataset.getBinDescriptor,
@@ -361,7 +398,8 @@ object CSVGraphBinner {
 						                                      levels,
 						                                      (dataset.getNumXBins max dataset.getNumYBins),
 						                                      dataset.getConsolidationPartitions,
-						                                      dataset.isDensityStrip)
+						                                      dataset.isDensityStrip,
+						                                      bUsePointBinner)
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
@@ -476,8 +514,58 @@ object CSVGraphBinner {
 			val propStream = new FileInputStream(args(argIdx))
 			props.load(propStream)
 			propStream.close()
-
-			processDatasetGeneric(createDataset(sc, props, false, false, true), tileIO)
+			
+			// check if hierarchical mode is enabled
+			var valTemp = props.getProperty("oculus.binning.hierarchical.clusters","false");
+			var hierarchicalClusters = if (valTemp=="true") true else false
+			
+			if (!hierarchicalClusters) {
+				// regular tile generation
+				processDatasetGeneric(createDataset(sc, props, false, false, true), tileIO)			
+			}
+			else {
+				// hierarchical-based tile generation
+				var nn = 0;
+				var levelsList:scala.collection.mutable.MutableList[String] = scala.collection.mutable.MutableList()
+				var sourcesList:scala.collection.mutable.MutableList[String] = scala.collection.mutable.MutableList()
+				do {
+					// Loop through all "sets" of tile generation levels.  
+					// (For each set, we will generate tiles based on a
+					// given subset of hierarchically-clustered data)
+					valTemp = props.getProperty("oculus.binning.levels."+nn)
+					
+					if (valTemp != null) {
+						levelsList += valTemp	// save tile gen level set in a list
+						//... and temporarily overwrite tiling levels as empty in preparation for hierarchical tile gen
+						props.setProperty("oculus.binning.levels."+nn, "")	
+						
+						// get clustered data for this hierarchical level and save to list
+						var sourceTemp = props.getProperty("oculus.binning.source.levels."+nn)
+						if (sourceTemp == null) {
+							throw new Exception("Source data not defined for hierarchical level oculus.binning.source.levels."+nn)
+						}
+						else {
+							sourcesList += sourceTemp
+						}
+						nn+=1
+					}
+					
+				} while (valTemp != null)
+				
+				// Loop through all hierarchical levels, and perform tile generation
+				var m = 0
+				for (m <- 0 until nn) {
+					// set tile gen level(s)
+					props.setProperty("oculus.binning.levels."+m, levelsList(m))
+					// set raw data source
+					props.setProperty("oculus.binning.source.location", sourcesList(m))
+					// perform tile generation
+					processDatasetGeneric(createDataset(sc, props, false, false, true), tileIO)
+					// reset tile gen levels for next loop iteration
+					props.setProperty("oculus.binning.levels."+m, "")
+				}	
+								    				
+			}
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

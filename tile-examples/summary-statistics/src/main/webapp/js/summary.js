@@ -345,7 +345,7 @@
                     "renderer": layer.renderers[0].renderer,
                     "transform": layer.renderers[0].transform
                 }];
-            }
+            };
 
             var generateMap = function(mapID, mapConfig, layerConfig, layer){
                 var tabLayerId = getTabLayerId(mapID),
@@ -358,13 +358,28 @@
                     worldMap,
                     $plotControls,
                     controlsButton,
-                    serverLayerDeferred;
+                    serverLayerDeferred,
+                    baseLayers = [];
 
                 $tabsPlotsUl.append('<li><a href="#' + plotTabDiv + '">' + mapID.replace(datasetLowerCase, '').trim() + '</a></li>');
                 $plotTab.append($plotVisual);
                 $('#tabs-plots').append($plotTab);
 
                 //add map after the containing div has been added
+                //reconfigure mapConfig for Map.js
+                if (Array.isArray(mapConfig.MapConfig.baseLayer)) {
+                    baseLayers = mapConfig.MapConfig.baseLayer;
+                    if ( mapConfig.MapConfig.baseLayer.length < 1 || mapConfig.MapConfig.baseLayer[0].type === 'BlankBase' ) {
+                        mapConfig.MapConfig.baseLayer = null;
+                    } else {
+                        mapConfig.MapConfig.baseLayer = { 'Google' :
+                             { 'options'  :  mapConfig.MapConfig.baseLayer[0].options }
+                        }
+                    }
+                } else {
+                    baseLayers.push(mapConfig.MapConfig.baseLayer);
+                }
+
                 worldMap = new Map(plotDiv, mapConfig);
                 // ... (set up our map axes) ...
                 worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
@@ -372,8 +387,8 @@
                 // ... (set up our map tile borders) ...
                 MapService.setTileBorderConfig(mapConfig, plotDiv);
 
-                if(mapConfig.zoomTo) {
-                    worldMap.map.zoomTo( mapConfig.zoomTo[0], [1], [2] );
+                if(mapConfig.MapConfig.zoomTo) {
+                    worldMap.map.zoomTo( mapConfig.MapConfig.zoomTo[0], mapConfig.MapConfig.zoomTo[1], mapConfig.MapConfig.zoomTo[2] );
                 }
 
                 //create the controls
@@ -404,6 +419,7 @@
                             }
                         }
                         filterAxisConfig.map = worldMap;
+                        filterAxisConfig.baseLayers = baseLayers;
                         new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap(), filterAxisConfig);
                     });
 
@@ -421,15 +437,13 @@
             };
 
             $.when( mapDeferreds, layerDeferreds).done( function( maps, layers ) {
-                var dataset = datasetLowerCase.split(".")[0], twitterComplete = false;
+                var dataset = datasetLowerCase.split(".")[0];
                 
                 //iterate over each of the cross plots, generate the map, and container div
                 $.each(maps, function (pk, mapConfig) {
                     // Initialize our maps...
-                    var layer,
-                        mapID,
-                        layerConfig,
-                        mapConfig;
+                    var mapID,
+                        layerConfig;
 
                     // determine whether the map matches our dataset
                     if (mapConfig.dataset.toLowerCase().trim() === dataset) {
@@ -462,7 +476,7 @@
 
             //setup the ui layout
             var tocPane = $('#toc'),
-                summaryDiv = $('#summary'),
+                $summaryDiv = $('#summary'),
                 layout,
                 tableJsonFile,
                 showControls,
@@ -471,16 +485,17 @@
             tocPane.load('toc.html #toc-contents');
             tocPane.addClass('ui-layout-west');
             $('header').addClass('ui-layout-north');
-            summaryDiv.addClass('ui-layout-center');
+            $summaryDiv.addClass('ui-layout-center');
             layout = $('#container').layout({applyDemoStyles: true, north:{size:95}, west:{size:278}});
+
             layout.panes.west.css({
-                background:  "rgb(204,204,204)"
+                "background":  "rgb(204,204,204)"
             });
             layout.panes.north.css({
-                background:  "rgb(204,204,204)"
+                "background":  "rgb(204,204,204)"
             });
             layout.panes.center.css({
-                background:  "rgb(204,204,204)"
+                "background":  "rgb(204,204,204)"
             });
 
             if(!summaryBuilderOptions.dataset){
@@ -521,7 +536,11 @@
             //also trigger the first resize
             $( '#tabs-major li' ).click(function( event ) {
                 $( '#dialog-controls').dialog( 'close' );
-                $('#tabs-plots li').first().click();//hack - without this, the left-axis and map don't render properly
+                //The following two click events are hacks
+                $('#tabs-plots li').first().click(); // without this, the left-axis and map don't render properly
+                $.each($('#tabs-plots .olMap'), function(){
+                    $('#' + this.id + ' fieldset input[type=radio]').first().click() // without this, the map background loads white by default.
+                });
             });
 
             generateJsonTables(tableJsonFile, function(){

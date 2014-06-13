@@ -97,7 +97,7 @@ define(function (require) {
      *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (sortedLayers, index, $parentElement, controlsMap, filterAxisSpec) {
+    addLayer = function (sortedLayers, index, $parentElement, controlsMap, layerControlsSpec) {
         var $cell,
             $filterSlider,
             $opacitySlider,
@@ -115,11 +115,16 @@ define(function (require) {
             filterRange,
             id,
             layerState,
-            $filterAxis;
+            $filterAxis,
+            count,
+            radioHTML,
+            $mapDiv,
+            key,
+            $fieldset;
 
         layerState = sortedLayers[index];
 
-        $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '"></div>');
+        $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '" class="layer-controls-layer"></div>');
 
         name = layerState.getName();
         name = name === undefined ||  name === "" ? layerState.getId() : layerState.getName();
@@ -206,7 +211,7 @@ define(function (require) {
             $cell.append($filterAxis);
 
             //create the filter axis
-            generateFilterAxis( $filterAxis, filterAxisSpec );
+            generateFilterAxis( $filterAxis, layerControlsSpec );
         } else {
             $filterSlider = null;
         }
@@ -230,6 +235,83 @@ define(function (require) {
 
         $parentElement.append($layerControlSetRoot);
 
+        //add base layer radio buttons when this layer is the base layer
+        if(name === 'Base Layer'){
+            count = 0;
+            radioHTML = '';
+            $mapDiv = $('#' + layerControlsSpec.map.id);
+            $fieldset = $('<fieldset id="fieldset_' + layerControlsSpec.map.id + '"></fieldset>');
+
+            for(key in layerControlsSpec.baseLayers){
+                if(layerControlsSpec.baseLayers.hasOwnProperty( key )){
+                    radioHTML += '<input type="radio" class="radio_' + layerControlsSpec.map.id + '" id="baseLayerId_' + layerControlsSpec.map.id +
+                        '_' + layerControlsSpec.baseLayers[key].options.name + '" name="base-names_' + layerControlsSpec.map.id + '" value="' + count +
+                            '"' + ((count===0)? 'checked>' : '>') +
+                        '<label for="baseLayerId_' + layerControlsSpec.map.id + '_' + layerControlsSpec.baseLayers[key].options.name + '">' +
+                            layerControlsSpec.baseLayers[key].options.name + '</label>';
+                    count++;
+                }
+            }
+
+            $layerControlTitleBar.append($fieldset.html(radioHTML));
+
+            //turn off the opacity slide and checkbox if there is only 1 base layer
+            if($('#' + $fieldset[0].id + ' input[type=radio]').length < 2){
+                $toggleDiv.css( 'visibility', 'hidden' );
+                $cell.css( 'visibility', 'hidden' );
+            }
+            // register listener to update the map BaseLayer,
+            // update base layer.
+            $('.radio_'+layerControlsSpec.map.id).on('click', function(){
+                var newBase,
+                    bl = layerControlsSpec.baseLayers[this.value],
+                    olMap_ = layerControlsSpec.map.map.olMap_,
+                    spec = {},
+                    k=0;
+
+                if( bl.type==='BlankBase' ) {
+                    $mapDiv.css( 'background-color', bl.options.color );
+                    if(olMap_.baseLayer){
+                        olMap_.baseLayer.setVisibility(false);
+                    }
+                    //turn off the opacity slide and checkbox
+                    $toggleDiv.css( 'visibility', 'hidden' );
+                    $cell.css( 'visibility', 'hidden' );
+                } else {
+                    //reset the back-ground color to black
+                    $mapDiv.css( 'background-color', 'rgb(0,0,0)' );
+                    //turn on the opacity slide and checkbox
+                    $toggleDiv.css( 'visibility', 'visible' );
+                    $toggleBox.prop( 'checked', true );
+                    $cell.css( 'visibility', 'visible' );
+                    if(olMap_.baseLayer.options.name !== bl.options.name){
+                        for(k; k<layerControlsSpec.baseLayers.length; k++){
+                            if(layerControlsSpec.baseLayers[k].options.name === bl.options.name){
+                            	olMap_.baseLayer.setVisibility(false);
+                                olMap_.baseLayer.destroy();
+                                spec = layerControlsSpec.baseLayers[k];
+                                newBase = layerControlsSpec.map.map.addLayer(
+                                				bl.type === 'Google' ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS, {}, spec);
+                                olMap_.baseLayer = newBase.olLayer_;
+                                olMap_.setBaseLayer(newBase.olLayer_);
+                                olMap_.baseLayer.setVisibility(false);
+                                olMap_.baseLayer.setVisibility(true);
+//                                olMap_.zoomIn();
+//                                olMap_.zoomOut();
+                                return true;
+                            }
+                        }
+                    } else {
+                        olMap_.baseLayer.setVisibility(true);
+                    }
+                }
+            });
+
+            //only display the base layer selector fieldset if there is more than one
+            if($('#' + $fieldset[0].id + ' input[type=radio]').length < 2){
+                $($fieldset).css('display', 'none');
+            }
+        }
         id = layerState.getId();
         controlsMap[id] = {
             controlSetRoot: $layerControlSetRoot,
@@ -364,7 +446,7 @@ define(function (require) {
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap, filterAxisSpec ) {
+    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap, layerControlsSpec ) {
         var i, key, sortedLayerStateList;
         sortedLayerStateList = sortLayers(layerStateMap);
         $layerControlsContainer.empty();
@@ -376,8 +458,11 @@ define(function (require) {
         }
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStateList.length; i += 1) {
-            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, filterAxisSpec);
+            addLayer(sortedLayerStateList, i, $layerControlsContainer, controlsMap, layerControlsSpec);
         }
+
+        //set the content div height depending on the number of layers
+        $($('#content')).css('height', ($('.layer-controls-layer').length * 90) + 'px');
     };
 
     /**
@@ -406,7 +491,7 @@ define(function (require) {
      *  note - 5 major and 4 minor tick marks will be created.
      * @param $filterAxis the tick mark container
      */
-    generateFilterAxis = function ($filterAxis, filterAxisSpec) {
+    generateFilterAxis = function ($filterAxis, layerControlsSpec) {
         var axisTicks = '<div class="filter-axis-tick-major filter-axis-tick-first"></div>', //the first tick
             major = false, //start with a minor tick
             majorCount = 1,
@@ -430,7 +515,7 @@ define(function (require) {
         axisTicks += '<div class="filter-axis-tick-major filter-axis-tick-last"></div>';
         $filterAxis.html('<div class="filter-axis-ticks-container">' + axisTicks + '</div>');
         $filterAxis.append($labelDiv);
-        generateFilterAxisLabels(majorCount, $labelDiv, filterAxisSpec);
+        generateFilterAxisLabels(majorCount, $labelDiv, layerControlsSpec);
     };
 
     /** Generates the filter labels and their initial values.
@@ -438,14 +523,14 @@ define(function (require) {
      * @param majorTicks the number of major tick marks
      * @param $labelDiv the label container
      */
-    generateFilterAxisLabels = function(majorTicks, $labelDiv, filterAxisSpec){
+    generateFilterAxisLabels = function(majorTicks, $labelDiv, layerControlsSpec){
         var html,
             val,
             increment,
             unitSpec,
             i;
 
-        filterAxisSpec.$labelDiv = $labelDiv;
+        layerControlsSpec.$labelDiv = $labelDiv;
 
         unitSpec = {
             'allowStepDown' : true,
@@ -453,22 +538,22 @@ define(function (require) {
             'type': 'b'
         };
 
-        if (filterAxisSpec) {
-        	if (filterAxisSpec.levelMinFreq) {
-        		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
-        	} else if (filterAxisSpec.levelMinimums) {
-        		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
-        	} else {
-        		val = 0;
-        	}
-        	
-        	if (filterAxisSpec.levelMaxFreq) {
-        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
-        	} else if (filterAxisSpec.levelMaximums) {
-        		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / majorTicks;
-        	} else {
-        		increment = 10 / majorTicks;
-        	}
+        if (layerControlsSpec) {
+            if (layerControlsSpec.levelMinFreq) {
+                val = parseFloat(layerControlsSpec.levelMinFreq[layerControlsSpec.map.getZoom()]);
+            } else if (layerControlsSpec.levelMinimums) {
+                val = parseFloat(layerControlsSpec.levelMinimums[layerControlsSpec.map.getZoom()]);
+            } else {
+                val = 0;
+            }
+
+            if (layerControlsSpec.levelMaxFreq) {
+                increment = (parseFloat(layerControlsSpec.levelMaxFreq[layerControlsSpec.map.getZoom()]) - val) / majorTicks;
+            } else if (layerControlsSpec.levelMaximums) {
+                increment = (parseFloat(layerControlsSpec.levelMaximums[layerControlsSpec.map.getZoom()]) - val) / majorTicks;
+            } else {
+                increment = 10 / majorTicks;
+            }
         } else {
             val = 0;
             increment = 10 / majorTicks;
@@ -491,8 +576,8 @@ define(function (require) {
     };
 
     //called on map zoom event
-    updateAxisLabels = function(filterAxisSpec){
-        var $labels = filterAxisSpec.$labelDiv,
+    updateAxisLabels = function(layerControlsSpec){
+        var $labels = layerControlsSpec.$labelDiv,
             val,
             increment,
             unitSpec,
@@ -505,24 +590,24 @@ define(function (require) {
             'type': 'b'
         };
 
-        if (filterAxisSpec) {
-        	if (filterAxisSpec.levelMinFreq) {
-        		val = parseFloat(filterAxisSpec.levelMinFreq[filterAxisSpec.map.getZoom()]);
-        	}
-        	else if (filterAxisSpec.levelMinimums) {
-        		val = parseFloat(filterAxisSpec.levelMinimums[filterAxisSpec.map.getZoom()]);
-        	}
-        	else {
-        		val = 0;
-        	}
-        	
-        	if (filterAxisSpec.levelMaxFreq) {
-        		increment = (parseFloat(filterAxisSpec.levelMaxFreq[filterAxisSpec.map.getZoom()]) - val) / length;
-        	} else if (filterAxisSpec.levelMaximums) {
-        		increment = (parseFloat(filterAxisSpec.levelMaximums[filterAxisSpec.map.getZoom()]) - val) / length;
-        	} else {
-        		increment = 10 / length;
-        	}
+        if (layerControlsSpec) {
+            if (layerControlsSpec.levelMinFreq) {
+                val = parseFloat(layerControlsSpec.levelMinFreq[layerControlsSpec.map.getZoom()]);
+            }
+            else if (layerControlsSpec.levelMinimums) {
+                val = parseFloat(layerControlsSpec.levelMinimums[layerControlsSpec.map.getZoom()]);
+            }
+            else {
+                val = 0;
+            }
+
+            if (layerControlsSpec.levelMaxFreq) {
+                increment = (parseFloat(layerControlsSpec.levelMaxFreq[layerControlsSpec.map.getZoom()]) - val) / length;
+            } else if (layerControlsSpec.levelMaximums) {
+                increment = (parseFloat(layerControlsSpec.levelMaximums[layerControlsSpec.map.getZoom()]) - val) / length;
+            } else {
+                increment = 10 / length;
+            }
         } else {
             val = 0;
             increment = 10 / length;
@@ -542,25 +627,38 @@ define(function (require) {
          *
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
-        init: function ( controlsId, layerStateMap, filterAxisSpec ) {
+        init: function ( controlsId, layerStateMap, layerControlsSpec ) {
             var layerState;
 
             // "Private" vars
             this.controlsMap = {};
-            this.filterAxisSpec = filterAxisSpec;
+            this.layerControlsSpec = layerControlsSpec;
 
-            //create a listener for updating the filter axis labels
-            if (this.filterAxisSpec) {
-                this.filterAxisSpec.map.on('zoomend', function () {
-                    updateAxisLabels( filterAxisSpec );
+            if (this.layerControlsSpec) {
+
+                //create a listener for updating the filter axis labels
+                this.layerControlsSpec.map.on('zoomend', function () {
+                    updateAxisLabels( layerControlsSpec );
                 });
+
+                //add a default base layer
+                if (!Array.isArray(layerControlsSpec.baseLayers) || layerControlsSpec.baseLayers.length < 1 || !layerControlsSpec.baseLayers[0].type){
+                    layerControlsSpec.baseLayers = [];
+                    layerControlsSpec.baseLayers.push({
+                        "type" : "BlankBase",
+                        "options" : {
+                            "name" : "black",
+                            "color" : "rgb(0,0,0)"
+                        }
+                    });
+                }
             }
 
             // Add the title
             this.$layerControlsContainer = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap, this.filterAxisSpec);
+            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap, this.layerControlsSpec);
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {
                     layerStateMap[layerState].addListener(makeLayerStateObserver(

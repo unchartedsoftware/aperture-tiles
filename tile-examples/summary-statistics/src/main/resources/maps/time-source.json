@@ -43,7 +43,15 @@
 			"projection" : "EPSG:900913",
 			"displayProjection" : "EPSG:4326"
 		},
-		"baseLayer" : {}
+		"baseLayer" : [
+            {
+                "type" : "BlankBase",
+                "options" : {
+                    "name" : "black",
+                    "color" : "rgb(0,0,0)"
+                }
+            }
+		]
 	},
 
 	"AxisConfig": [

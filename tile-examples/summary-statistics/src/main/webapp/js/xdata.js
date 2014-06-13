@@ -908,7 +908,7 @@
 
         onBgChange = function ( evt ){
             var bg = $('input[name="'+ options.components.controls.colorBackgroundInputName +'"]:checked').val();
-            $('.olMap').css('background-color', bg);
+            $('#tabs-tables .olMap').css('background-color', bg);
         };
 
         var onLayerProcessed = function(){
