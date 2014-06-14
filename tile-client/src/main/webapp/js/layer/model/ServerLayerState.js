@@ -106,6 +106,8 @@ define(function (require) {
             this.rampType = "ware";
             this.rampFunction = "linear";
             this.rampImageUrl = "";
+            this.rampLevel = 0;
+            this.rampMinMax = [0,10];
         },
 
         /**
@@ -179,7 +181,18 @@ define(function (require) {
                 this.rampImageUrl = url;
                 this.notify("rampImageUrl", this.listeners);
             }
-        }
+        },
+
+        setRampMinMax: function(minMax) {
+            if (this.rampMinMax !== minMax ) {
+                this.rampMinMax = minMax;
+                this.notify("rampMinMax", this.listeners);
+            }
+        },
+
+        getRampMinMax: function () {
+            return this.rampMinMax;
+        },
     });
 
 

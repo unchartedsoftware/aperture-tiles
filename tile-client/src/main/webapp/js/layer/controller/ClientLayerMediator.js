@@ -46,7 +46,6 @@ define(function (require) {
 
         init: function() {
             this.layerStateMap = {};
-            this.layerInfos = {};
         },
 
         registerLayers: function( layers ) {

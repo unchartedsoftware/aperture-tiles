@@ -77,7 +77,6 @@ define(function (require) {
 
         init: function() {
             this.layerStateMap = {};
-            this.layerInfos = {};
         },
 
 
@@ -86,7 +85,6 @@ define(function (require) {
             var that = this,
 
                 i;
-
 
             function register( layer ) {
 
@@ -112,34 +110,30 @@ define(function (require) {
                             layer.setFilterRange( layerState.getFilterRange(), 0 );
                         } else if (fieldName === "zIndex") {
                             layer.setZIndex( layerState.getZIndex() );
+                        } else if (fieldName === "rampLevel") {
+                            // no change in view
                         }
                     };
                 };
 
+                function getLevelMinMax( level ) {
+                    var meta =  layer.getLayerInfo().meta,
+                        minArray = meta.levelMinFreq || meta.levelMinimums,
+                        maxArray = meta.levelMaxFreq || meta.levelMaximums,
+                        min = minArray[level],
+                        max = maxArray[level];
+                    return [ parseFloat(min), parseFloat(max) ];
+                }
+
                 // Make a callback to regen the ramp image on map zoom changes
                 function makeMapZoomCallback() {
                     return function () {
+                        // set ramp image
                         setupRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                        // set ramp level
+                        layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
                     };
                 };
-
-                // Store and listen to configuration changes, so our requests can
-                // match the map's configuration
-                /* this shouldn't be needed as all config occurs through the state....
-                layer.addLayerInfoListener( function( dataListener, layerInfo ) {
-                    var layerState, layer;
-
-                    // Record for posterity...
-                    layer = layerInfo.layer;
-                    that.layerInfos[layer] = layerInfo;
-
-                    // And try to update our image.
-                    layerState = that.layerStateMap[layer];
-                    if (layerState) {
-                        setupRampImage( layerState, that.layerInfos, map.getZoom() );
-                    }
-                });
-                */
 
                 layerSpec = layer.getLayerSpec();
 
@@ -150,8 +144,9 @@ define(function (require) {
                 layerState.setName( layerSpec.name || layer.id );
                 layerState.setEnabled( true );
                 layerState.setOpacity( layerSpec.renderer.opacity );
-                layerState.setRampFunction( layerSpec.transform.name);
+                layerState.setRampFunction( layerSpec.transform.name );
                 layerState.setRampType( layerSpec.renderer.ramp );
+                layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
                 layerState.setFilterRange( [0.0, 1.0] );
                 layerState.setZIndex( i+1 );
 
@@ -164,7 +159,7 @@ define(function (require) {
                 that.layerStateMap[ layerState.getId() ] = layerState;
 
                 // Handle map zoom events - can require a re-gen of the filter image.
-                map.on("zoom", makeMapZoomCallback );
+                map.on("zoomend", makeMapZoomCallback() );
 
             }
 

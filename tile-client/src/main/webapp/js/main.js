@@ -283,32 +283,24 @@ require(['./FileLoader',
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
                         $.when( /*clientLayerDeferreds,*/ serverLayerDeferreds ).done( function( /*clientLayers,*/ serverLayers ) {
-                            var layer,
-                            	layerInfo,
-                            	filterAxisConfig,
-                            	sharedStateMap = {};
+                            var sharedStateMap = {};
 
                             // register layers to mediators
                             baseLayerMediator.registerLayers( worldMap );
                             //clientLayerMediator.registerLayers( clientLayers );
                             serverLayerMediator.registerLayers( serverLayers );
 
-
-                            layerInfo = serverLayers[0].getLayerInfo();
-
-                            filterAxisConfig = layerInfo.meta;
-                            filterAxisConfig.map = worldMap;
-                            filterAxisConfig.baseLayers = baseLayers;
+                            //filterAxisConfig.baseLayers = baseLayers;
 
                             $.extend( sharedStateMap, /*clientLayerMediator.getLayerStateMap(),*/
                                                       serverLayerMediator.getLayerStateMap(),
                                                       baseLayerMediator.getLayerStateMap() );
 
-                            new LayerControls( 'layer-controls-content', sharedStateMap, filterAxisConfig ).noop();
+                            new LayerControls( 'layer-controls-content', sharedStateMap ).noop();
 
                             //hack to trigger a refresh of the map - this will override map style
                             //as well as update the controls panel.
-                            $('fieldset input[type=radio]').first().click();
+                            //$('fieldset input[type=radio]').first().click();
                         });
 
 			        }

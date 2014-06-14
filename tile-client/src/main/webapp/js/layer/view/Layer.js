@@ -61,7 +61,6 @@ define(function (require) {
 
             LayerService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
                 if (statusInfo.success) {
-
                     if ( that.layerInfo ) {
                         // if a previous configuration exists, release it
                         LayerService.unconfigureLayer( that.layerInfo, function() {
@@ -71,9 +70,7 @@ define(function (require) {
                     // set layer info
                     that.layerInfo = layerInfo;
                 }
-
-                // resolve the deferred
-                callback( layerInfo );
+                callback( layerInfo, statusInfo );
             });
         },
 
