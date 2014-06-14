@@ -106,25 +106,6 @@ define(function (require) {
             return this.viewsByTile[tilekey] || { index:0, previousIndex : null };
         },
 
-        getTilesByView: function() {
-            var i;
-            for (i=0; i<this.views.length; ++i) {
-                tilesByView[i] = [];
-            }
-
-            // determine all tiles in view
-            tiles = this.map.getTilesInView();
-            tileViewBounds = this.map.getTileBoundsInView();
-
-            // group tiles by view index
-            for (i=0; i<tiles.length; ++i) {
-                viewIndex = this.getTileViewIndex( tiles[i].level+','+
-                                                   tiles[i].xIndex+','+
-                                                   tiles[i].yIndex );
-                tilesByView[viewIndex].push( tiles[i] );
-            }
-        },
-
         setTileFocus: function( tilekey ) {
             if (this.tileFocus !== tilekey) {
                 this.tileFocus = tilekey;

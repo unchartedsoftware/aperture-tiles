@@ -32,8 +32,7 @@ define( function (require) {
     "use strict";
 		
 	var TileService = require('./data/TileService'),
-        ClientLayer = require('./CarouselLayer'),
-		DataLayer = require('../../DataLayer');	
+        ClientLayer = require('./CarouselLayer');
 		
 	return {
 	
@@ -86,7 +85,7 @@ define( function (require) {
 			// get layer info from server func
             function getLayerInfoFromServer( arg, index ) {
 
-                var layerInfoListener = new DataLayer( [arg] ),
+                var layerInfoListener = null, //new DataLayer( [arg] ),
                     layerDeferred = $.Deferred();
 
                 layerInfoListener.addRetrievedCallback( function( dataLayer, layerInfo ) {

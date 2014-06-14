@@ -38,7 +38,7 @@ define(function (require) {
 
     var Class = require('../../class'),
         LayerService = require('../LayerService'),
-        ServerLayer,
+        Layer;
 
 
 

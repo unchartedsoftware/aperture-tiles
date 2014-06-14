@@ -59,9 +59,11 @@ define(function (require) {
                 ramp: layerState.getRampType()
             };
 
+        console.log( "req new ramp: " + layerState.getRampType() + ", " + layerState.getRampFunction());
         aperture.io.rest('/legend',
                          'POST',
                          function (legendString, status) {
+                            console.log( "got new ramp : " + legendString);
                             layerState.setRampImageUrl(legendString);
                          },
                          {
@@ -110,11 +112,9 @@ define(function (require) {
                             layer.setFilterRange( layerState.getFilterRange(), 0 );
                         } else if (fieldName === "zIndex") {
                             layer.setZIndex( layerState.getZIndex() );
-                        } else if (fieldName === "rampLevel") {
-                            // no change in view
                         }
                     };
-                };
+                }
 
                 function getLevelMinMax( level ) {
                     var meta =  layer.getLayerInfo().meta,
@@ -133,7 +133,7 @@ define(function (require) {
                         // set ramp level
                         layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
                     };
-                };
+                }
 
                 layerSpec = layer.getLayerSpec();
 
@@ -152,6 +152,7 @@ define(function (require) {
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( makeLayerStateCallback() );
+
                 // Request ramp image from server.
                 setupRampImage( layerState, layer.getLayerInfo(), 0 );
 

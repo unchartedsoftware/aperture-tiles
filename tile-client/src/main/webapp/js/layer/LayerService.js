@@ -137,7 +137,7 @@ define(function (require) {
             });
 
             return result;
-        },
+        }
 
         /**
          * Run through the given hierarchical layers object, retrieving only 

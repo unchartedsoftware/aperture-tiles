@@ -37,7 +37,7 @@ define(function (require) {
 
 
     var Layer = require('../Layer'),
-        ServerLayer,
+        ServerLayer;
 
 
 
@@ -119,9 +119,9 @@ define(function (require) {
                 yFunction;
 
             // y transformation function for non-density strips
-            function passY( yInput ) { return yInput; };
+            function passY( yInput ) { return yInput; }
             // y transformation function for density strips
-            function clampY( yInput ) { return 0; };
+            function clampY( yInput ) { return 0; }
             // create url function
             function createUrl( bounds ) {
 

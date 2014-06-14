@@ -45,15 +45,20 @@ define(function (require) {
         LayerControls,
         addLayer,
         showLayerSettings,
+        createSettingsButton,
+        createVisibilityButton,
+        createOpacitySlider,
+        createFilterSlider,
+        createFilterAxis,
+        createFilterAxisLabels,
+        createPromotionButton,
+        createBaseLayerButtons,
         OPACITY_RESOLUTION,
         FILTER_RESOLUTION,
         replaceChildren,
         makeLayerStateObserver,
         replaceLayers,
-        sortLayers,
-        generateFilterAxis,
-        generateFilterAxisLabels,
-        updateAxisLabels;
+        sortLayers;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
@@ -88,238 +93,289 @@ define(function (require) {
     };
 
 
+    createSettingsButton = function( $parentElement, layerState, controlsMapping ) {
+
+        var $settingsButton = $('<button class="settings-link">settings</button>');
+        $settingsButton.click(function () {
+            showLayerSettings( $parentElement, layerState );
+        });
+        controlsMapping.settingsLink = $settingsButton;
+
+        return $settingsButton;
+    };
+
+    createVisibilityButton = function( layerState, controlsMapping ) {
+
+        var $toggleDiv = $('<div class="layer-toggle"></div>'),
+            $toggleBox = $('<input type="checkbox" checked="checked">');
+
+        $toggleDiv.append( $toggleBox );
+        // Initialize the button from the model and register event handler.
+        $toggleBox.prop("checked", layerState.isEnabled());
+        $toggleBox.click(function () {
+            layerState.setEnabled( $toggleBox.prop("checked") );
+        });
+
+        controlsMapping.enabledCheckbox = $toggleBox;
+
+        return $toggleDiv;
+    };
+
+    createOpacitySlider = function( layerState, controlsMapping ) {
+
+        var sliderClass = ( layerState.domain === 'server' ) ? "opacity-slider" : "base-opacity-slider",
+            $opacitySliderContainer = $('<div class="' + sliderClass + '"></div>'),
+            $opacitySliderLabel = $('<div class="slider-label">Opacity</div>'),
+            $opacitySlider = $('<div class="opacity-slider-bar"></div>').slider({
+                 range: "min",
+                 min: 0,
+                 max: OPACITY_RESOLUTION,
+                 value: layerState.getOpacity() * OPACITY_RESOLUTION,
+                 change: function () {
+                     layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
+                 },
+                 slide: function () {
+                     layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
+                 }
+             });
+
+        $opacitySliderContainer.append( $opacitySliderLabel );
+        $opacitySliderContainer.append( $opacitySlider );
+
+        controlsMapping.opacitySlider = $opacitySlider;
+
+        return $opacitySliderContainer;
+    };
+
+    createFilterSlider = function( layerState, controlsMapping ) {
+
+        var filterRange = layerState.getFilterRange(),
+            $filterSliderContainer = $('<div class="filter-slider"></div>'),
+            $filterLabel = $('<div class="slider-label">Filter</div>'),
+            $filterSlider = $('<div class="filter-slider-img"></div>'),
+            $filterAxis;
+
+        $filterSliderContainer.append( $filterLabel );
+
+        $filterSlider.slider({
+            range: true,
+            min: 0,
+            max: FILTER_RESOLUTION,
+            values: [filterRange[0] * FILTER_RESOLUTION, filterRange[1] * FILTER_RESOLUTION],
+            change: function () {
+                var result = $filterSlider.slider("option", "values");
+                layerState.setFilterRange([result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
+            }
+        });
+
+        // Disable the background for the range slider
+        $( ".ui-slider-range", $filterSlider ).css({"background": "none"});
+
+        // Set the ramp image
+        $filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+        //create the filter axis
+        $filterAxis = createFilterAxis( layerState.getRampMinMax() );
+
+        $filterSliderContainer.append( $filterSlider );
+        $filterSliderContainer.append( $filterAxis );
+
+        controlsMapping.filterSlider = $filterSlider;
+        controlsMapping.filterAxis = $filterAxis;
+
+        return $filterSliderContainer;
+    };
+
+    /** generates the filter axis major and minor tick marks
+     *  note - 5 major and 4 minor tick marks will be created.
+     * @param $filterAxis the tick mark container
+     */
+    createFilterAxis = function ( minMax ) {
+
+        var axisTicks = '<div class="filter-axis-tick-major filter-axis-tick-first"></div>', //the first tick
+            major = false, // next tick is a minor tick
+            majorCount = 1,
+            numberOfInnerTicks = 7,
+            $filterAxis = $('<div class="filter-axis"></div>'),
+            $filterAxisTicksContainer = $('<div class="filter-axis-ticks-container"></div>'),
+            $filterAxisLabelContainer = $('<div class="filter-axis-label-container"></div>'),
+            i;
+
+        //create the inner ticks
+        for(i = 0; i < numberOfInnerTicks; i++) {
+            if(major) {
+                axisTicks += '<div class="filter-axis-tick-major"></div>';
+                majorCount++;
+                major = !major;
+            } else {
+                axisTicks += '<div class="filter-axis-tick-minor"></div>';
+                major = !major;
+            }
+        }
+
+        //add the last tick
+        axisTicks += '<div class="filter-axis-tick-major filter-axis-tick-last"></div>';
+
+        $filterAxisTicksContainer.append( axisTicks );
+        $filterAxisLabelContainer.append( createFilterAxisLabels( majorCount, minMax ) );
+
+        $filterAxis.append( $filterAxisTicksContainer );
+        $filterAxis.append( $filterAxisLabelContainer );
+
+        return $filterAxis;
+
+    };
+
+    /** Generates the filter labels and their initial values.
+     *
+     * @param majorTicks the number of major tick marks
+     * @param $labelDiv the label container
+     */
+    createFilterAxisLabels = function( majorTicks, minMax ){
+        var val = minMax[0],
+            increment = ( minMax[1] - minMax[0] ) / majorTicks,
+            unitSpec = {
+                'allowStepDown' : true,
+                'decimals' : 1,
+                'type': 'b'
+            },
+            html,
+            i;
+
+        //start with the first label
+        html = '<div class="filter-axis-label filter-axis-label-first">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+
+        //iterate over the inner labels
+        for(i = 1; i < majorTicks; i++){
+            val += increment;
+            html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+        }
+
+        //add the last label
+        val += increment;
+        html += '<div class="filter-axis-label filter-axis-label-last">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+
+        return $(html);
+    };
+
+    createPromotionButton = function( layerState, nextLayerState, controlsMapping ) {
+
+        var $promotionDiv = $('<div class="promotion-container"></div>'),
+            $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
+
+        $promotionButton.click(function () {
+            var otherZ;
+            if ( nextLayerState ) {
+                otherZ = nextLayerState.getZIndex();
+                nextLayerState.setZIndex( layerState.getZIndex() );
+                layerState.setZIndex(otherZ);
+            }
+        });
+        $promotionDiv.append( $promotionButton );
+
+        controlsMapping.promotionButton = $promotionButton;
+
+        return $promotionDiv;
+    };
+
+
+    createBaseLayerButtons = function( layerState, controlsMapping ) {
+
+        var $baseLayerButtonSet = $('<fieldset class="baselayer-fieldset"></fieldset>'),
+            $radioButton,
+            $radioLabel,
+            baseLayer,
+            i;
+
+        function onClick() {
+            var index = $(this).val();
+            layerState.setBaseLayerIndex( index );
+        }
+
+        for (i=0; i<layerState.BASE_LAYERS.length; i++) {
+
+            baseLayer = layerState.BASE_LAYERS[i];
+
+            // create radio button
+            $radioButton = $( '<input type="radio" class="baselayer-radio-button" name="baselayer-radio-button" id="'+(baseLayer.options.name+i)+'"'
+                            + 'value="' + i + '"' + ( ( i === layerState.getBaseLayerIndex() )? 'checked>' : '>'));
+            $radioButton.on( 'click', onClick );
+            // create radio label
+            $radioLabel = $('<label for="'+(baseLayer.options.name+i)+'">' + baseLayer.options.name + '</label>');
+            $baseLayerButtonSet.append( $radioButton ).append( $radioLabel );
+        }
+
+        controlsMapping.baseLayerButtonSet = $baseLayerButtonSet;
+
+        return $baseLayerButtonSet;
+    };
+
+
     /**
      * Adds a new set of layer controls to the panel.
      *
      * @param layerState - The layer state model the controls are bound to.
      *
-     * @param $parentElement - The parent element in the document tree to add the controls to.
+     * @param $layerControlsContainer - The parent element in the document tree to add the controls to.
      *
      * @param controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function (sortedLayers, index, $parentElement, controlsMap) {
+    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap ) {
         var layerState = sortedLayers[index],
             name = layerState.getName() || layerState.getId(),
-            $cell, $filterSlider, $opacitySlider,
-            $toggleDiv, $toggleBox, $promotionDiv,
-            $promotionButton, $settingsButton, $layerControlSetRoot,
-            $layerControlTitleBar, $layerContent, $fieldset, $mapDiv,
-            $filterAxis,
-            sliderClass,
-            filterRange,
-            id,
-            count,
-            radioHTML,
-            key;
+            $layerControlSetRoot,
+            $layerControlTitleBar,
+            $layerContent,
+            layerStateId,
+            controlsMapping;
+
+        layerStateId = layerState.getId();
+        controlsMap[layerStateId] = {};
+        controlsMapping = controlsMap[layerStateId];
 
         // create layer root
-        $layerControlSetRoot = $('<div id="layer-controls-' + layerState.getId() + '" class="layer-controls-layer"></div>');
+        $layerControlSetRoot = $('<div id="layer-controls-' + layerStateId + '" class="layer-controls-layer"></div>');
         // create title div
-        $layerControlTitleBar = $('<div class="layer-title"></div>');
-        // add title span to div
-        $layerControlTitleBar.append($('<span class="layer-labels">' + name + '</span>'));
-        $layerControlSetRoot.append($layerControlTitleBar);
+        $layerControlTitleBar = $('<div class="layer-title"><span class="layer-labels">' + name + '</span></div>');
+
+        $layerControlSetRoot.append( $layerControlTitleBar );
 
         // create content div
         $layerContent = $('<div class="layer-content"></div>');
-        $layerControlSetRoot.append($layerContent);
+        $layerControlSetRoot.append( $layerContent );
 
         // create settings button, only for server layers
         if ( layerState.domain === 'server' ) {
-            $settingsButton = $('<button class="settings-link">settings</button>');
-            $settingsButton.click(function () {
-                showLayerSettings($parentElement, layerState);
-            });
-            $layerControlTitleBar.append( $settingsButton );
+            $layerControlTitleBar.append( createSettingsButton( $layerControlsContainer, layerState, controlsMapping ) );
         }
 
         // add visibility toggle box
-        $toggleDiv = $('<div class="layer-toggle"></div>');
-        $toggleBox = $('<input type="checkbox" checked="checked">');
-        $toggleDiv.append($toggleBox);
-        // Initialize the button from the model and register event handler.
-        $toggleBox.prop("checked", layerState.isEnabled());
-        $toggleBox.click(function () {
-            layerState.setEnabled($toggleBox.prop("checked"));
-        });
-        $layerContent.append($toggleDiv);
+        $layerContent.append( createVisibilityButton( layerState, controlsMapping ) );
 
         // add opacity slider
-        sliderClass = ( layerState.domain === 'server' ) ? "opacity-slider" : "base-opacity-slider";
+        $layerContent.append( createOpacitySlider( layerState, controlsMapping ) );
 
-        $cell = $('<div class="' + sliderClass + '"></div>');
-        $layerContent.append($cell);
-
-        $cell.append($('<div class="slider-label">Opacity</div>'));
-        $opacitySlider = $('<div id="' + "opacity-slider-" + name + '"></div>').slider({
-            range: "min",
-            min: 0,
-            max: OPACITY_RESOLUTION,
-            value: layerState.getOpacity() * OPACITY_RESOLUTION,
-            change: function () {
-                layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
-            },
-            slide: function () {
-                layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
-            }
-        });
-        $cell.append( $opacitySlider );
-
-        // add filter slider
         if ( layerState.domain === 'server' ) {
-
-            filterRange = layerState.getFilterRange();
-
-            $cell = $('<div class="filter-slider"></div>');
-            $layerContent.append($cell);
-
-            $cell.append($('<div class="slider-label">Filter</div>'));
-            $filterSlider = $('<div class="filter-slider-img"></div>');
-            $filterSlider.slider({
-                range: true,
-                min: 0,
-                max: FILTER_RESOLUTION,
-                values: [filterRange[0] * FILTER_RESOLUTION, filterRange[1] * FILTER_RESOLUTION],
-                change: function () {
-                    var result = $filterSlider.slider("option", "values");
-                    layerState.setFilterRange([result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
-                }
-            });
-            // Disable the background for the range slider
-            $(".ui-slider-range", $filterSlider).css({"background": "none"});
-
-            // Set the ramp image
-            $filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
-            $cell.append($filterSlider);
-
-            //create the filter axis container and append it to the .filter-slider
-            $filterAxis = $('<div class="filter-axis"></div>');
-            $cell.append($filterAxis);
-
-            //create the filter axis
-            generateFilterAxis( $filterAxis, layerState.getRampMinMax() );
-        } else {
-            $filterSlider = null;
+            // add filter slider
+            $layerContent.append( createFilterSlider( layerState, controlsMapping ) );
+            // add layer promotion button
+            $layerContent.append( createPromotionButton( layerState, sortedLayers[index - 1] || null, controlsMapping ) );
         }
-
-        // add layer promotion button
-        if ( layerState.domain === "server" ) {
-            $promotionDiv = $('<div class="promotion-container"></div>');
-            $layerContent.append($promotionDiv);
-            $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
-            $promotionButton.click(function () {
-                var nextLayerState, otherZ;
-                if (index > 0) {
-                    nextLayerState = sortedLayers[index - 1];
-                    otherZ = nextLayerState.getZIndex();
-                    nextLayerState.setZIndex(layerState.getZIndex());
-                    layerState.setZIndex(otherZ);
-                }
-            });
-            $promotionDiv.append($promotionButton);
-        }
-
-        $parentElement.append($layerControlSetRoot);
 
         //add base layer radio buttons when this layer is the base layer
-        /*
-        if( layerState.domain === "base" ) {
-            count = 0;
-            radioHTML = '';
-            $mapDiv = $('#' + layerControlsSpec.map.id);
-            $fieldset = $('<fieldset id="fieldset_' + layerControlsSpec.map.id + '"></fieldset>');
-
-            for(key in layerControlsSpec.baseLayers){
-                if(layerControlsSpec.baseLayers.hasOwnProperty( key )){
-                    radioHTML += '<input type="radio" class="radio_' + layerControlsSpec.map.id + '" id="baseLayerId_' + layerControlsSpec.map.id +
-                        '_' + layerControlsSpec.baseLayers[key].options.name + '" name="base-names_' + layerControlsSpec.map.id + '" value="' + count +
-                            '"' + ((count===0)? 'checked>' : '>') +
-                        '<label for="baseLayerId_' + layerControlsSpec.map.id + '_' + layerControlsSpec.baseLayers[key].options.name + '">' +
-                            layerControlsSpec.baseLayers[key].options.name + '</label>';
-                    count++;
-                }
-            }
-
-            $layerControlTitleBar.append($fieldset.html(radioHTML));
-
-            //turn off the opacity slide and checkbox if there is only 1 base layer
-            if($('#' + $fieldset[0].id + ' input[type=radio]').length < 2){
-                $toggleDiv.css( 'visibility', 'hidden' );
-                $cell.css( 'visibility', 'hidden' );
-            }
-            // register listener to update the map BaseLayer,
-            // update base layer.
-            $('.radio_'+layerControlsSpec.map.id).on('click', function(){
-                var newBase,
-                    bl = layerControlsSpec.baseLayers[this.value],
-                    olMap_ = layerControlsSpec.map.map.olMap_,
-                    spec = {},
-                    k=0;
-
-                if( bl.type==='BlankBase' ) {
-                    $mapDiv.css( 'background-color', bl.options.color );
-                    if(olMap_.baseLayer){
-                        olMap_.baseLayer.setVisibility(false);
-                    }
-                    //turn off the opacity slide and checkbox
-                    $toggleDiv.css( 'visibility', 'hidden' );
-                    $cell.css( 'visibility', 'hidden' );
-                } else {
-                    //reset the back-ground color to black
-                    $mapDiv.css( 'background-color', 'rgb(0,0,0)' );
-                    //turn on the opacity slide and checkbox
-                    $toggleDiv.css( 'visibility', 'visible' );
-                    $toggleBox.prop( 'checked', true );
-                    $cell.css( 'visibility', 'visible' );
-                    if(olMap_.baseLayer.options.name !== bl.options.name){
-                        for(k; k<layerControlsSpec.baseLayers.length; k++){
-                            if(layerControlsSpec.baseLayers[k].options.name === bl.options.name){
-                            	olMap_.baseLayer.setVisibility(false);
-                                olMap_.baseLayer.destroy();
-                                spec = layerControlsSpec.baseLayers[k];
-                                newBase = layerControlsSpec.map.map.addLayer(
-                                				bl.type === 'Google' ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS, {}, spec);
-                                olMap_.baseLayer = newBase.olLayer_;
-                                olMap_.setBaseLayer(newBase.olLayer_);
-                                olMap_.baseLayer.setVisibility(false);
-                                olMap_.baseLayer.setVisibility(true);
-//                                olMap_.zoomIn();
-//                                olMap_.zoomOut();
-                                return true;
-                            }
-                        }
-                    } else {
-                        olMap_.baseLayer.setVisibility(true);
-                    }
-                }
-            });
-
-            //only display the base layer selector fieldset if there is more than one
-            if($('#' + $fieldset[0].id + ' input[type=radio]').length < 2){
-                $($fieldset).css('display', 'none');
-            }
+        if( layerState.domain === "base" && layerState.BASE_LAYERS.length > 1 ) {
+            $layerControlTitleBar.append( createBaseLayerButtons( layerState, controlsMapping) );
         }
-        */
-        id = layerState.getId();
-        controlsMap[id] = {
-            controlSetRoot: $layerControlSetRoot,
-            filterSlider: $filterSlider,
-            filterAxis: $filterAxis,
-            opacitySlider: $opacitySlider,
-            enabledCheckbox: $toggleBox,
-            promotionButton: $promotionButton,
-            settingsLink: $settingsButton
-        };
+
+        $layerControlsContainer.append( $layerControlSetRoot );
     };
 
     /**
      * Displays a settings panel for a layer.
      *
      * @param {object} $parent - The parent node to attach the layer panel to.
-     *
      * @param {object} layerState - The layer state model the panel will read from and update.
      */
-    showLayerSettings = function ($parent, layerState) {
+    showLayerSettings = function( $parent, layerState ) {
 
         var $settingsTitleBar,
             $settingsContent,
@@ -424,7 +480,7 @@ define(function (require) {
             } else if (fieldName === "zIndex") {
                 replaceLayers( sortLayers(layerStateMap), $layersControlListRoot, controlsMap );
             } else if (fieldName === "rampMinMax") {
-                generateFilterAxis( controlsMap[layerState.getId()].filterAxis, layerState.getRampMinMax() );
+                controlsMap[layerState.getId()].filterAxis.html( createFilterAxis( layerState.getRampMinMax() ).children() );
             }
         };
     };
@@ -437,7 +493,7 @@ define(function (require) {
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function (layerStateMap, $layerControlsContainer, controlsMap ) {
+    replaceLayers = function ( layerStateMap, $layerControlsContainer, controlsMap ) {
         var i, key, sortedLayerStateList;
         sortedLayerStateList = sortLayers( layerStateMap );
         $layerControlsContainer.empty();
@@ -478,100 +534,7 @@ define(function (require) {
         return sortedList;
     };
 
-    /** generates the filter axis major and minor tick marks
-     *  note - 5 major and 4 minor tick marks will be created.
-     * @param $filterAxis the tick mark container
-     */
-    generateFilterAxis = function ( $filterAxis, minMax ) {
 
-        var axisTicks = '<div class="filter-axis-tick-major filter-axis-tick-first"></div>', //the first tick
-            major = false, // next tick is a minor tick
-            majorCount = 1,
-            numberOfInnerTicks = 7,
-            i,
-            $labelDiv = $('<div class="filter-axis-label-container"></div>');
-
-        $filterAxis.empty(); // remove any previous axis elements
-
-        //create the inner ticks
-        for(i = 0; i < numberOfInnerTicks; i++) {
-            if(major) {
-                axisTicks += '<div class="filter-axis-tick-major"></div>';
-                majorCount++;
-                major = !major;
-            } else {
-                axisTicks += '<div class="filter-axis-tick-minor"></div>';
-                major = !major;
-            }
-        }
-
-        //add the last tick
-        axisTicks += '<div class="filter-axis-tick-major filter-axis-tick-last"></div>';
-        $filterAxis.html('<div class="filter-axis-ticks-container">' + axisTicks + '</div>');
-        $filterAxis.append( $labelDiv );
-        generateFilterAxisLabels( majorCount, $labelDiv, minMax );
-    };
-
-    /** Generates the filter labels and their initial values.
-     *
-     * @param majorTicks the number of major tick marks
-     * @param $labelDiv the label container
-     */
-    generateFilterAxisLabels = function( majorTicks, $labelDiv, minMax ){
-        var html,
-            val,
-            increment,
-            unitSpec,
-            i;
-
-        // hard code unit spec
-        unitSpec = {
-            'allowStepDown' : true,
-            'decimals' : 1,
-            'type': 'b'
-        };
-
-        val = minMax[0];
-        increment = ( minMax[1] - minMax[0] ) / majorTicks;
-
-        /*
-        if (layerControlsSpec) {
-            if (layerControlsSpec.levelMinFreq) {
-                val = parseFloat(layerControlsSpec.levelMinFreq[layerControlsSpec.map.getZoom()]);
-            } else if (layerControlsSpec.levelMinimums) {
-                val = parseFloat(layerControlsSpec.levelMinimums[layerControlsSpec.map.getZoom()]);
-            } else {
-                val = 0;
-            }
-
-            if (layerControlsSpec.levelMaxFreq) {
-                increment = (parseFloat(layerControlsSpec.levelMaxFreq[layerControlsSpec.map.getZoom()]) - val) / majorTicks;
-            } else if (layerControlsSpec.levelMaximums) {
-                increment = (parseFloat(layerControlsSpec.levelMaximums[layerControlsSpec.map.getZoom()]) - val) / majorTicks;
-            } else {
-                increment = 10 / majorTicks;
-            }
-        } else {
-            val = 0;
-            increment = 10 / majorTicks;
-        }
-        */
-
-        //start with the first label
-        html = '<div class="filter-axis-label filter-axis-label-first">' + AxisUtil.formatText(val, unitSpec) + '</div>';
-
-        //iterate over the inner labels
-        for(i = 1; i < majorTicks; i++){
-            val += increment;
-            html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
-        }
-
-        //add the last label
-        val += increment;
-        html += '<div class="filter-axis-label filter-axis-label-last">' + AxisUtil.formatText(val, unitSpec) + '</div>';
-
-        $labelDiv.html( html );
-    };
 
 
     LayerControls = Class.extend({
@@ -584,33 +547,17 @@ define(function (require) {
          * @param layerStateMap - The map layer the layer controls reflect and modify.
          */
         init: function ( controlsId, layerStateMap ) {
+
             var layerState;
 
             // "Private" vars
             this.controlsMap = {};
 
-            /*
-            if (this.layerControlsSpec) {
-                //add a default base layer
-                if (!$.isArray(layerControlsSpec.baseLayers) || layerControlsSpec.baseLayers.length < 1 || !layerControlsSpec.baseLayers[0].type){
-                    layerControlsSpec.baseLayers = [];
-                    layerControlsSpec.baseLayers.push({
-                        "type" : "BlankBase",
-                        "options" : {
-                            "name" : "black",
-                            "color" : "rgb(0,0,0)"
-                        }
-                    });
-                }
-            }
-            */
-
-            // Add the title
+            // find the container
             this.$layerControlsContainer = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers(layerStateMap, this.$layerControlsContainer, this.controlsMap );
-
+            replaceLayers( layerStateMap, this.$layerControlsContainer, this.controlsMap );
 
             for (layerState in layerStateMap) {
                 if (layerStateMap.hasOwnProperty(layerState)) {

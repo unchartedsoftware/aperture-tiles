@@ -53,18 +53,25 @@ define(function (require) {
 
             var layerState;
             // Create a layer state object for the base map.
-            layerState = new BaseLayerState("Base Layer");
+            layerState = new BaseLayerState( map.id );
+
+            layerState.BASE_LAYERS = map.baseLayers;
             layerState.setName("Base Layer");
-            layerState.setEnabled( map.isEnabled() );
-            layerState.setOpacity( map.getOpacity() );
+            layerState.setEnabled( true );
+            layerState.setOpacity( 1.0 );
             layerState.setZIndex( -1 );
+            layerState.setBaseLayerIndex( 0 );
 
             // Register a callback to handle layer state change events.
             layerState.addListener( function( fieldName ) {
                 if (fieldName === "opacity") {
                     map.setOpacity( layerState.getOpacity() );
                 } else if (fieldName === "enabled") {
-                    map.setEnabled( layerState.isEnabled( ));
+                    map.setEnabled( layerState.isEnabled() );
+                } else if (fieldName === "baseLayerIndex") {
+                    map.setBaseLayerIndex( layerState.getBaseLayerIndex() );
+                    map.setOpacity( layerState.getOpacity() );
+                    map.setEnabled( layerState.isEnabled() );
                 }
             });
 

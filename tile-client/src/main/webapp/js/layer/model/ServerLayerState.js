@@ -159,6 +159,7 @@ define(function (require) {
          * @param {string} rampFunction - See RAMP_FUNCTIONS for valid values.
          */
         setRampFunction: function (rampFunction) {
+            console.log( "set rampFunction: " + this.rampFunction + " ,  " + rampFunction);
             if (this.rampFunction !== rampFunction) {
                 this.rampFunction = rampFunction;
                 this.notify("rampFunction", this.listeners);
@@ -177,6 +178,7 @@ define(function (require) {
          * @param {string} url - The URL of an image representing the colour ramp defined by the ramp type and function.
          */
         setRampImageUrl: function (url) {
+            console.log( "set rampImageUrl: " + this.rampImageUrl + " ,  " + url);
             if (this.rampImageUrl !== url) {
                 this.rampImageUrl = url;
                 this.notify("rampImageUrl", this.listeners);
@@ -192,7 +194,7 @@ define(function (require) {
 
         getRampMinMax: function () {
             return this.rampMinMax;
-        },
+        }
     });
 
 

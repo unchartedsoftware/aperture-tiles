@@ -53,6 +53,18 @@ define(function (require) {
         init: function ( id ) {
             this._super( id );
             this.domain = 'base';
+            this.baseLayerIndex = 0;
+        },
+
+        setBaseLayerIndex: function(index) {
+            if (this.baseLayerIndex !== index ) {
+                this.baseLayerIndex = index;
+                this.notify("baseLayerIndex", this.listeners);
+            }
+        },
+
+        getBaseLayerIndex: function() {
+            return this.baseLayerIndex;
         }
 
     });

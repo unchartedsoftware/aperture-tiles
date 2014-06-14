@@ -86,51 +86,8 @@ define(function (require) {
 			}
 
 			return axisConfig;
-		},
+		}
 
-        /**
-         *
-         * @param mapConfig
-         * @param plotDiv optional div container id of the plot - useful when multiple maps are present
-         * @returns {*}
-         */
-        setTileBorderConfig: function (mapConfig, plotDiv){
-            var olTileImageConfig = mapConfig.TileBorderConfig;
 
-            //if it is not defined, don't set border style
-            if(!olTileImageConfig){
-                return;
-            }
-
-            plotDiv = plotDiv? ('#' + plotDiv) : '';
-
-            if(olTileImageConfig === 'default'){
-                olTileImageConfig = {
-                    "color" : "rgba(255, 255, 255, .5)",
-                    "style" : "solid",
-                    "weight" : "1px"
-                };
-            }
-
-            //set individual defaults if they are omitted.
-            if(!olTileImageConfig.color){
-                olTileImageConfig.color = "rgba(255, 255, 255, .5)";
-            }
-
-            if(!olTileImageConfig.style){
-                olTileImageConfig.style = "solid";
-            }
-
-            if(!olTileImageConfig.weight){
-                olTileImageConfig.weight = "1px";
-            }
-
-            $(document.body).prepend(
-                $('<style type="text/css">' + plotDiv + ' .olTileImage {' +
-                    'border-left : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +
-                    '; border-top : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +';}' +
-                    ' </style>')
-            );
-        }
 	};
 });

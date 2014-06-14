@@ -48,20 +48,29 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
-            // set base layers
+            this.id = id;
+            this.$map = $( "#" + this.id );
+            this.axes = [];
+            this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
             this.baseLayers = ( $.isArray( spec.MapConfig.baseLayer ) ) ? spec.MapConfig.baseLayer : [spec.MapConfig.baseLayer];
 
+            if ( this.baseLayers.length === 0 ) {
+                this.baseLayers[0] = {
+                    "type" : "BlankBase",
+                    "options" : {
+                        "name" : "black",
+                        "color" : "rgb(0,0,0)"
+                    }
+                };
+            }
+
             // Set the map configuration
+            spec.MapConfig.baseLayer = {}; // default to no base layer
 			aperture.config.provide({
 				'aperture.map' : {
 					'defaultMapConfig' : spec.MapConfig
 				}
 			});
-
-			this.id = id;
-			this.$map = $( "#" + this.id );
-            this.axes = [];
-            this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
 
 			// Initialize the map
 			this.map = new aperture.geo.Map({ 
@@ -73,6 +82,9 @@ define(function (require) {
                     ]
                 }
 			});
+
+            // set proper base layer
+			this.setBaseLayerIndex( 0 );
 
             // create div root layer
             this.createRoot();
@@ -117,6 +129,78 @@ define(function (require) {
 
             this.trigger('move'); // fire initial move event
         },
+
+
+        setBaseLayerIndex: function(index) {
+
+            var $map = this.getElement(),
+                olMap_ = this.map.olMap_,
+                newBaseLayerConfig = this.baseLayers[index],
+                newBaseLayerType,
+                newBaseLayer;
+
+            if( newBaseLayerConfig.type === 'BlankBase' ) {
+
+                // changing to blank base layer
+                $map.css( 'background-color', newBaseLayerConfig.options.color );
+
+            } else {
+
+                //reset the background color to black
+                $map.css( 'background-color', 'rgb(0,0,0)' );
+
+                // destroy original base layer
+                olMap_.baseLayer.setVisibility(false);
+                olMap_.baseLayer.destroy();
+                olMap_.baseLayer = null;
+
+                newBaseLayerType = (newBaseLayerConfig.type === 'Google') ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
+                newBaseLayer = this.map.addLayer( newBaseLayerType, {}, newBaseLayerConfig );
+
+                olMap_.baseLayer = newBaseLayer.olLayer_;
+                olMap_.setBaseLayer( newBaseLayer.olLayer_ );
+                olMap_.baseLayer.setVisibility(false);
+                olMap_.baseLayer.setVisibility(true);
+            }
+        },
+
+
+        /**
+         *
+         * @param mapConfig
+         * @param plotDiv optional div container id of the plot - useful when multiple maps are present
+         * @returns {*}
+         */
+        setTileBorderStyle: function ( mapConfig ) {
+
+            var olTileImageConfig = mapConfig.TileBorderConfig;
+
+            //if it is not defined, don't set border style
+            if( !olTileImageConfig ){
+                return;
+            }
+
+            if( olTileImageConfig === 'default' ){
+                olTileImageConfig = {
+                    "color" : "rgba(255, 255, 255, .5)",
+                    "style" : "solid",
+                    "weight" : "1px"
+                };
+            }
+
+            //set individual defaults if they are omitted.
+            olTileImageConfig.color = olTileImageConfig.color || "rgba(255, 255, 255, .5)";
+            olTileImageConfig.style = olTileImageConfig.style || "solid";
+            olTileImageConfig.weight = olTileImageConfig.weight || "1px";
+
+            $(document.body).prepend(
+                $('<style type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
+                    'border-left : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +
+                    '; border-top : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +';}' +
+                  '</style>')
+            );
+        },
+
 
         getZIndex: function() {
             var indices = OpenLayers.Map.prototype.Z_INDEX_BASE,
@@ -543,16 +627,26 @@ define(function (require) {
 			return this.map.olMap_.getLayerIndex(layer);
 		},
 
-		setOpacity: function (newOpacity) {
-			this.map.olMap_.baseLayer.setOpacity(newOpacity);
+		setOpacity: function( opacity ) {
+		    var olMap_ = this.map.olMap_;
+		    if ( olMap_.baseLayer ) {
+		        olMap_.baseLayer.setOpacity ( opacity );
+		    } else {
+		        this.getElement.css( 'opacity', opacity );
+		    }
 		},
 
-		getOpacity: function () {
-			return this.map.olMap_.baseLayer.opacity;
-		},
-
-		setVisibility: function (visibility) {
-			this.map.olMap_.baseLayer.setVisibility(visibility);
+		setVisibility: function( visibility ) {
+            var olMap_ = this.map.olMap_;
+		    if ( olMap_.baseLayer ) {
+                olMap_.baseLayer.setVisibility( visibility );
+            } else {
+                if ( visibility ) {
+                    this.getElement.css( 'visibility', 'visible' );
+                } else {
+                    this.getElement.css( 'visibility', 'hidden' );
+                }
+            }
 		},
 
 		getExtent: function () {

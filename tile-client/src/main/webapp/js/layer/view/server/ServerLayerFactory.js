@@ -86,7 +86,7 @@ define( function (require) {
                 // update layer and resolve deferred
                 serverLayer.update( layerInfo );
                 serverLayerDeferred.resolve( serverLayer );
-            })
+            });
 
             return serverLayerDeferred;
         }
