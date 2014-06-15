@@ -23,116 +23,42 @@
  * SOFTWARE.
  */
 
- 
-/**
- * This module when given a client layer json object contains all layer data, will load the required classes and build
- * the layers
- */
+
 define( function (require) {
     "use strict";
-		
-	var TileService = require('./data/TileService'),
-        ClientLayer = require('./CarouselLayer');
-		
-	return {
-	
-		/**
-		 * Given a layer JSON specification object and a map, this function will pull data information from the server and load
-		 * required layer and renderer class modules using require.js. Once everything is ready, constructs individual layers.
-		 * @param layerJSON	 	layer specification JSON object loaded from layers.json
-		 * @param map			map object from map.js
-		 */
-		createLayers: function(layerJSON, map) {
-			var layerDeferreds = [],
-			    factoryDeferred = $.Deferred(),
-			    i;
 
-			for (i=0; i<layerJSON.length; i++) {   
-				layerDeferreds.push( this.createLayer(layerJSON[i], map) );
-			}
+	var LayerFactory = require('../LayerFactory'),
+	    ClientLayer = require('./ClientLayer'),
+	    ClientLayerFactory;
 
-			$.when.apply( $, layerDeferreds ).done( function() {
-			    // when all individual layer deferreds are resolved, resolve the factory deferred
-			    factoryDeferred.resolve( Array.prototype.slice.call( arguments, 0 ) );
-			});
+    ClientLayerFactory = LayerFactory.extend({
+        ClassName: "ClientLayerFactory",
 
-			return factoryDeferred;
-		},
-	
 
-		createLayer: function(layerJSON, map) {
+        createLayer: function(layerJSON, map) {
 
-			var layer = {
-                    views : []
-                },
-                dependencyDeferreds = [],
-                clientLayer,
-                clientLayerDeferred = $.Deferred(),
-                i;
-	
-			// load module func
-			function loadRequireJsModule( arg, index ) {
+            var clientLayer,
+                clientLayerDeferred = $.Deferred();
 
-			    var requireDeferred = $.Deferred();
-
-				require( [arg], function( Module ) {
-				    layer.views[index].renderer = new Module(map);
-				    requireDeferred.resolve();
-				});
-				return requireDeferred;
-			}
-
-			// get layer info from server func
-            function getLayerInfoFromServer( arg, index ) {
-
-                var layerInfoListener = null, //new DataLayer( [arg] ),
-                    layerDeferred = $.Deferred();
-
-                layerInfoListener.addRetrievedCallback( function( dataLayer, layerInfo ) {
-
-                    layer.views[index].dataService = new TileService( layerInfo, map.getPyramid() );
-                    layerDeferred.resolve();
+            // load renderer module
+            require( ["./impl/" + layerJSON.renderer], function( RendererModule ) {
+                // create the layer
+                clientLayer = new ClientLayer( layerJSON,  new RendererModule( map ), map );
+                // send configuration request
+                clientLayer.configure( function( layerInfo ) {
+                    // update layer and resolve deferred
+                    clientLayer.update( layerInfo );
+                    clientLayerDeferred.resolve( clientLayer );
                 });
 
-                layerInfoListener.retrieveLayerInfo();
-                return layerDeferred;
-            }
-
-            // add view dependencies to requirements
-            for (i=0; i<layerJSON.views.length; i++) {
-
-                layer.views[i] = {};
-                // get renderer class from require.js
-                dependencyDeferreds.push( loadRequireJsModule( "./impl/" + layerJSON.views[i].renderer, i ) );
-                // POST request for layerInfo
-                dependencyDeferreds.push( getLayerInfoFromServer( { layer: layerJSON.layer }, i ) );
-            }
-
-            clientLayer = new ClientLayer( layerJSON.name, map );
-
-            $.when.apply( $, dependencyDeferreds ).done( function() {
-
-                // once everything has loaded
-                var views = [],
-                    i;
-
-                // add views to layer spec object
-                for (i=0; i<layerJSON.views.length; i++) {
-                    views.push({
-                        renderer: layer.views[i].renderer,
-                        dataService: layer.views[i].dataService
-                    });
-                }
-
-                clientLayer.setViews( views );
-                clientLayerDeferred.resolve( clientLayer );
             });
 
             return clientLayerDeferred;
-		}
+        }
 
 
-    };	
-	
+    });
+
+    return ClientLayerFactory;
 
 });

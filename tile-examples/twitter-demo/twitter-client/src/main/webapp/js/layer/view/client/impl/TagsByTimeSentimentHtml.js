@@ -67,7 +67,7 @@ define(function (require) {
             this.createLayer();
 
             this.map.on( 'click', function() {
-                TwitterUtil.clickOff( that.clientState, DetailsOnDemand );
+                //TwitterUtil.clickOff( that.clientState, DetailsOnDemand );
             });
         },
 
@@ -132,9 +132,8 @@ define(function (require) {
                         $elem = $(html);
 
                         // set event handlers
-                        TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
-
-                        TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.clickState.tag );
+                        //TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
+                        //TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.clickState.tag );
 
                         $html.append( $elem );
                     }

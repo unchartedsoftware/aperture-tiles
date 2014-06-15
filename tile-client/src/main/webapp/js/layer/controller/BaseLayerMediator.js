@@ -35,17 +35,17 @@ define(function (require) {
 
 
 
-    var Class = require('../../class'),
+    var LayerMediator = require('./LayerMediator'),
         BaseLayerState = require('../model/BaseLayerState'),
         BaseLayerMediator;
 
 
 
-    BaseLayerMediator = Class.extend({
+    BaseLayerMediator = LayerMediator.extend({
         ClassName: "BaseLayerMediator",
 
          init: function() {
-             this.layerStateMap = {};
+             this._super();
          },
 
 
@@ -67,21 +67,16 @@ define(function (require) {
                 if (fieldName === "opacity") {
                     map.setOpacity( layerState.getOpacity() );
                 } else if (fieldName === "enabled") {
-                    map.setEnabled( layerState.isEnabled() );
+                    map.setVisibility( layerState.isEnabled() );
                 } else if (fieldName === "baseLayerIndex") {
                     map.setBaseLayerIndex( layerState.getBaseLayerIndex() );
                     map.setOpacity( layerState.getOpacity() );
-                    map.setEnabled( layerState.isEnabled() );
+                    map.setVisibility( layerState.isEnabled() );
                 }
             });
 
-            // Add the layer to the layer statemap.
-            this.layerStateMap[ layerState.getId() ] = layerState;
-        },
-
-
-        getLayerStateMap: function() {
-            return this.layerStateMap;
+            // Add the layer to the layer state array.
+            this.layerStates.push( layerState );
         }
 
     });

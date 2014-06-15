@@ -40,16 +40,17 @@
 
 .carousel-ui-dot-container {
     position: absolute;
+    width: 256px;
+    text-align: center;
     pointer-events: all;  
-    bottom: 16px;
-    margin: 0 auto;
+    bottom: 10px;
 }
 
 .carousel-ui-dot {
     position: relative;
-    float:left;
-    width:10px;
-    height:10px;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
     margin: 4px;
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;

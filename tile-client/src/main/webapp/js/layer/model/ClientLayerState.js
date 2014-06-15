@@ -38,10 +38,17 @@ define(function (require) {
 
     var LayerState = require('./LayerState'),
         objectsEqual,
+        arraysEqual,
         ClientLayerState;
 
 
-
+    /**
+     * Compares objects for equality.
+     *
+     * @param {Object} a - First object under comparison
+     * @param {Object} b - Second object under comparison
+     * @returns {boolean} true if they are equal, false otherwise.
+     */
     objectsEqual = function (a, b) {
 
         var keyA, keyB, found;
@@ -63,6 +70,32 @@ define(function (require) {
         return true;
     };
 
+    /**
+     * Compares arrays for equality.
+     *
+     * @param {Array} a - First array under comparison
+     * @param {Array} b - Second array under comparison
+     * @returns {boolean} true if they are equal, false otherwise.
+     */
+    arraysEqual = function (a, b) {
+        var i;
+        if (a === b) {
+            return true;
+        }
+        if (a === null || b === null) {
+            return false;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+        for (i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     ClientLayerState = LayerState.extend({
         ClassName: "ClientLayerState",
 
@@ -76,12 +109,13 @@ define(function (require) {
             this._super( id );
             this.domain = 'client';
             this.tileFocus = "";
+            this.visibleTiles = [];
             this.clickState = {};
             this.hoverState = {};
-            this.viewsByTile = {};
+           // this.viewsByTile = {};
         },
 
-
+        /*
         setTileViewIndex: function( tilekey, index ) {
 
             var tileView;
@@ -93,7 +127,7 @@ define(function (require) {
                 // store previous
                 tileView.previousIndex = tileView.index || 0;
                 tileView.index = index;
-                this.notify("tileView", this.listeners);
+                this.notify("tileViewIndex", this.listeners);
 
                 if (index === 0) {
                     // if returned to default state, free the memory
@@ -105,6 +139,20 @@ define(function (require) {
         getTileViewIndex: function( tilekey ) {
             return this.viewsByTile[tilekey] || { index:0, previousIndex : null };
         },
+        */
+
+        setVisibleTiles: function( tiles ) {
+            if ( !arraysEqual( this.visibleTiles, tiles ) ) {
+                this.visibleTiles = tiles;
+                this.notify("visibleTiles", this.listeners);
+            }
+        },
+
+
+        getVisibleTiles: function( tiles ) {
+            return this.visibleTiles;
+        },
+
 
         setTileFocus: function( tilekey ) {
             if (this.tileFocus !== tilekey) {
@@ -113,7 +161,7 @@ define(function (require) {
             }
         },
 
-        getTileFocus: function( tilekey ) {
+        getTileFocus: function() {
             return this.tileFocus;
         },
 

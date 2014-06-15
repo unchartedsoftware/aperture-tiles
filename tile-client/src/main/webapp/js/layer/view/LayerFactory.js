@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -23,47 +23,48 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
 
-
-/**
- * This modules defines a basic layer class that can be added to maps.
- */
-define(function (require) {
+define( function (require) {
     "use strict";
 
 
-
-    var Class = require('../../class'),
-        Layer;
-
+	var Class = require('../../class'),
+        LayerFactory;
 
 
-    Layer = Class.extend({
-        ClassName: "Layer",
+    LayerFactory = Class.extend({
+        ClassName: "LayerFactory",
 
 
-        init: function ( spec, map ) {
+        createLayers: function( layerJSON, map, layerMediator ) {
+            var layerDeferreds = [],
+                factoryDeferred = $.Deferred(),
+                i;
 
-            this.id = spec.layer;
-            this.map = map;
-            this.layerSpec = spec;
-            this.layerInfo = null;
+            for (i=0; i<layerJSON.length; i++) {
+                layerDeferreds.push( this.createLayer(layerJSON[i], map) );
+            }
+
+            $.when.apply( $, layerDeferreds ).done( function() {
+
+                // when all individual layer deferreds are resolved, register with layer mediator, and resolve the factory deferred
+                var layers = Array.prototype.slice.call( arguments, 0 );
+                layerMediator.registerLayers( layers );
+                factoryDeferred.resolve( layers );
+            });
+
+            return factoryDeferred;
         },
 
 
-        getLayerSpec: function () {
-            return this.layerSpec;
-        },
-
-
-        getLayerInfo: function () {
-            return this.layerInfo;
+        createLayer: function(layerJSON, map) {
+            return true;
         }
+
 
     });
 
-    return Layer;
+    return LayerFactory;
+
 });

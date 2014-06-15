@@ -24,12 +24,11 @@
  */
 
 /* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
-
+/*global define, console, $, aperture*/
 
 /**
- * This modules defines a basic layer class that can be added to maps.
+ * Populates the LayerState model based on the contents of a the layer, and makes the appropriate
+ * modifications to it as the LayerState model changes.
  */
 define(function (require) {
     "use strict";
@@ -37,33 +36,28 @@ define(function (require) {
 
 
     var Class = require('../../class'),
-        Layer;
+        LayerMediator;
 
 
 
-    Layer = Class.extend({
-        ClassName: "Layer",
+    LayerMediator = Class.extend({
+        ClassName: "LayerMediator",
 
-
-        init: function ( spec, map ) {
-
-            this.id = spec.layer;
-            this.map = map;
-            this.layerSpec = spec;
-            this.layerInfo = null;
+        init: function() {
+            this.layerStates = [];
         },
 
 
-        getLayerSpec: function () {
-            return this.layerSpec;
+        registerLayers: function( layers ) {
+            return true;
         },
 
 
-        getLayerInfo: function () {
-            return this.layerInfo;
+        getLayerStates: function() {
+            return this.layerStates;
         }
 
     });
 
-    return Layer;
+    return LayerMediator;
 });

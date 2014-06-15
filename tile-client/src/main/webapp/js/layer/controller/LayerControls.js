@@ -68,13 +68,10 @@ define(function (require) {
      * Replaces node's children and returns the replaced for storage.
      *
      * @param {Object} $parent - The node to remove the children from.
-     *
-     * @param {Object} children - The children to replace.  Null will result
-     * in children being removed only.
-     *
+     * @param {Object} children - The children to replace.  Null will result in children being removed only.
      * @returns {Array} - The removed children.
      */
-    replaceChildren = function ($parent, children) {
+    replaceChildren = function ( $parent, children ) {
         var i, removed;
 
         // Remove existing children.
@@ -278,7 +275,7 @@ define(function (require) {
     };
 
 
-    createBaseLayerButtons = function( layerState, controlsMapping ) {
+    createBaseLayerButtons = function( $layerContent, layerState, controlsMapping ) {
 
         var $baseLayerButtonSet = $('<fieldset class="baselayer-fieldset"></fieldset>'),
             $radioButton,
@@ -294,6 +291,12 @@ define(function (require) {
         for (i=0; i<layerState.BASE_LAYERS.length; i++) {
 
             baseLayer = layerState.BASE_LAYERS[i];
+
+            if (baseLayer.type === "BlankBase") {
+                $layerContent.css( 'display', 'none' );
+            } else {
+                $layerContent.css( 'display', 'block' );
+            }
 
             // create radio button
             $radioButton = $( '<input type="radio" class="baselayer-radio-button" name="baselayer-radio-button" id="'+(baseLayer.options.name+i)+'"'
@@ -322,26 +325,33 @@ define(function (require) {
     addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap ) {
         var layerState = sortedLayers[index],
             name = layerState.getName() || layerState.getId(),
-            $layerControlSetRoot,
+            $layerControlRoot,
             $layerControlTitleBar,
             $layerContent,
             layerStateId,
             controlsMapping;
 
         layerStateId = layerState.getId();
+
+        if ( controlsMap[layerStateId] ) {
+            // ensure only one layer controls UI is created per ID, this is used for
+            // multiple client layers which will share ids but offer different renderings
+            return;
+        }
+
         controlsMap[layerStateId] = {};
         controlsMapping = controlsMap[layerStateId];
 
         // create layer root
-        $layerControlSetRoot = $('<div id="layer-controls-' + layerStateId + '" class="layer-controls-layer"></div>');
+        $layerControlRoot = $('<div id="layer-controls-' + layerStateId + '" class="layer-controls-layer"></div>');
         // create title div
         $layerControlTitleBar = $('<div class="layer-title"><span class="layer-labels">' + name + '</span></div>');
 
-        $layerControlSetRoot.append( $layerControlTitleBar );
+        $layerControlRoot.append( $layerControlTitleBar );
 
         // create content div
         $layerContent = $('<div class="layer-content"></div>');
-        $layerControlSetRoot.append( $layerContent );
+        $layerControlRoot.append( $layerContent );
 
         // create settings button, only for server layers
         if ( layerState.domain === 'server' ) {
@@ -363,10 +373,10 @@ define(function (require) {
 
         //add base layer radio buttons when this layer is the base layer
         if( layerState.domain === "base" && layerState.BASE_LAYERS.length > 1 ) {
-            $layerControlTitleBar.append( createBaseLayerButtons( layerState, controlsMapping) );
+            $layerControlTitleBar.append( createBaseLayerButtons( $layerContent, layerState, controlsMapping) );
         }
 
-        $layerControlsContainer.append( $layerControlSetRoot );
+        $layerControlsContainer.append( $layerControlRoot );
     };
 
     /**
@@ -466,21 +476,25 @@ define(function (require) {
     /**
      * Creates an observer to handle layer state changes, and update the controls based on them.
      */
-    makeLayerStateObserver = function (layerState, controlsMap, layerStateMap, $layersControlListRoot) {
+    makeLayerStateObserver = function (layerState, controlsMap, layerStates, $layersControlListRoot) {
         return function (fieldName) {
+
+            var controlsMapping = controlsMap[ layerState.getId() ],
+                range;
+
             if (fieldName === "enabled") {
-                controlsMap[layerState.getId()].enabledCheckbox.prop("checked", layerState.isEnabled());
+                controlsMapping.enabledCheckbox.prop("checked", layerState.isEnabled());
             } else if (fieldName === "opacity") {
-                controlsMap[layerState.getId()].opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
+                controlsMapping.opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
             } else if (fieldName === "filterRange") {
-                var range = layerState.getFilterRange();
-                controlsMap[layerState.getId()].filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
+                range = layerState.getFilterRange();
+                controlsMapping.filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
             } else if (fieldName === "rampImageUrl") {
-                controlsMap[layerState.getId()].filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+                controlsMapping.filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
             } else if (fieldName === "zIndex") {
-                replaceLayers( sortLayers(layerStateMap), $layersControlListRoot, controlsMap );
+                replaceLayers( sortLayers(layerStates), $layersControlListRoot, controlsMap );
             } else if (fieldName === "rampMinMax") {
-                controlsMap[layerState.getId()].filterAxis.html( createFilterAxis( layerState.getRampMinMax() ).children() );
+                controlsMapping.filterAxis.html( createFilterAxis( layerState.getRampMinMax() ).children() );
             }
         };
     };
@@ -489,23 +503,25 @@ define(function (require) {
      * Replace the existing layer controls with new ones derived from the set of LayerState objects.  All the
      * new control references will be stored in the controlsMap for later access.
      *
-     * @param {object} layerStateMap - A hash map of LayerState objects.
+     * @param {object} layerStates - An array map of LayerState objects.
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function ( layerStateMap, $layerControlsContainer, controlsMap ) {
-        var i, key, sortedLayerStateList;
-        sortedLayerStateList = sortLayers( layerStateMap );
+    replaceLayers = function ( layerStates, $layerControlsContainer, controlsMap ) {
+        var sortedLayerStates = sortLayers( layerStates ),
+            i, key;
+
         $layerControlsContainer.empty();
-        // Clear out the controls map
+        // Clear out any existing the controls map
         for (key in controlsMap) {
             if (controlsMap.hasOwnProperty(key)) {
                 delete controlsMap[key];
             }
         }
+
         // Add layers - this will update the controls list.
-        for (i = 0; i < sortedLayerStateList.length; i += 1) {
-            addLayer( sortedLayerStateList, i, $layerControlsContainer, controlsMap );
+        for (i = 0; i < sortedLayerStates.length; i += 1) {
+            addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap );
         }
 
         //set the content div height depending on the number of layers
@@ -516,22 +532,17 @@ define(function (require) {
      * Converts the layer state map into an array and then sorts it based layer
      * z indices.
      *
-     * @param layerStateMap - An object-based hash map of LayerState objects.
+     * @param layerStates - An array of LayerState objects.
      * @returns {Array} - An array of LayerState objects sorted highest to lowest by z index.
      */
-    sortLayers = function (layerStateMap) {
-        var sortedList, layerState;
-        // Sort the layers
-        sortedList = [];
-        for (layerState in layerStateMap) {
-            if (layerStateMap.hasOwnProperty(layerState)) {
-                sortedList.push( layerStateMap[layerState] );
-            }
-        }
-        sortedList.sort(function (a, b) {
+    sortLayers = function (layerStates) {
+
+        var arrayCopy = layerStates.concat();
+
+        arrayCopy.sort( function (a, b) {
             return b.zIndex - a.zIndex;
         });
-        return sortedList;
+        return arrayCopy;
     };
 
 
@@ -544,11 +555,11 @@ define(function (require) {
          * Initializes the layer controls by modifying the DOM tree, and registering
          * callbacks against the LayerState obj
          *
-         * @param layerStateMap - The map layer the layer controls reflect and modify.
+         * @param layerStates - The list of layers the layer controls reflect and modify.
          */
-        init: function ( controlsId, layerStateMap ) {
+        init: function ( controlsId, layerStates ) {
 
-            var layerState;
+            var i;
 
             // "Private" vars
             this.controlsMap = {};
@@ -557,18 +568,16 @@ define(function (require) {
             this.$layerControlsContainer = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers( layerStateMap, this.$layerControlsContainer, this.controlsMap );
+            replaceLayers( layerStates, this.$layerControlsContainer, this.controlsMap );
 
-            for (layerState in layerStateMap) {
-                if (layerStateMap.hasOwnProperty(layerState)) {
-                    // add listeners for each layer state
-                    layerStateMap[ layerState ].addListener( makeLayerStateObserver(
-                        layerStateMap[layerState],
-                        this.controlsMap,
-                        layerStateMap,
-                        this.$layerControlsContainer
-                    ));
-                }
+            for (i=0; i<layerStates.length; i++) {
+
+                layerStates[i].addListener( makeLayerStateObserver(
+                    layerStates[i],
+                    this.controlsMap,
+                    layerStates,
+                    this.$layerControlsContainer
+                ));
             }
         },
 

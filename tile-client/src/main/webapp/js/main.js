@@ -36,6 +36,7 @@ require(['./FileLoader',
          './layer/view/client/ClientLayerFactory',
          './annotation/AnnotationLayerFactory',
          './layer/controller/LayerControls',
+         './layer/controller/CarouselControls',
          './layer/controller/BaseLayerMediator',
          './layer/controller/ClientLayerMediator',
          './layer/controller/ServerLayerMediator'
@@ -53,6 +54,7 @@ require(['./FileLoader',
                   ClientLayerFactory,
                   AnnotationLayerFactory,
                   LayerControls,
+                  CarouselControls,
                   BaseLayerMediator,
                   ClientLayerMediator,
                   ServerLayerMediator) {
@@ -195,9 +197,14 @@ require(['./FileLoader',
 				            mapButton,
 				            i,
 				            filter,
-				            //clientLayers,
+				            clientLayers,
 				            serverLayers,
-                            //clientLayerDeferreds,
+				            clientLayerFactory,
+				            serverLayerFactory,
+				            baseLayerMediator,
+				            clientLayerMediator,
+				            serverLayerMediator,
+                            clientLayerDeferreds,
                             serverLayerDeferreds;
 
 				        // Initialize our map choice panel
@@ -247,7 +254,7 @@ require(['./FileLoader',
 					        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
 				        };
 
-				        //clientLayers = getLayers("client", layers, filter);
+				        clientLayers = getLayers("client", layers, filter);
 				        serverLayers = getLayers("server", layers, filter);
                         annotationLayers = getAnnotationLayers( annotationLayers, filter );
 
@@ -255,28 +262,33 @@ require(['./FileLoader',
 					        UICustomization.customizeLayers(layers);
 				        }
 
+                        baseLayerMediator = new BaseLayerMediator();
+                        baseLayerMediator.registerLayers( worldMap );
+
+                        clientLayerMediator = new ClientLayerMediator();
+                        serverLayerMediator = new ServerLayerMediator();
+
+                        clientLayerFactory = new ClientLayerFactory();
+                        serverLayerFactory = new ServerLayerFactory();
+
 				        // Create client, server and annotation layers
-				        //clientLayerDeferreds = ClientLayerFactory.createLayers( clientLayers, worldMap );
-				        serverLayerDeferreds = ServerLayerFactory.createLayers( serverLayers, worldMap );
+				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
+				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap, serverLayerMediator );
+
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-                        $.when( /*clientLayerDeferreds,*/ serverLayerDeferreds ).done( function( /*clientLayers,*/ serverLayers ) {
+                        $.when( clientLayerDeferreds, serverLayerDeferreds ).done( function( clientLayers, serverLayers ) {
 
-                            var baseLayerMediator = new BaseLayerMediator(),
-                                //clientLayerMediator = new ClientLayerMediator(),
-                                serverLayerMediator = new ServerLayerMediator(),
-                                sharedStateMap = {};
+                            var sharedStates = [];
 
-                            // register layers to mediators
-                            baseLayerMediator.registerLayers( worldMap );
-                            //clientLayerMediator.registerLayers( clientLayers );
-                            serverLayerMediator.registerLayers( serverLayers );
+                            $.merge( sharedStates, baseLayerMediator.getLayerStates() );
+                            $.merge( sharedStates, clientLayerMediator.getLayerStates() );
+                            $.merge( sharedStates, serverLayerMediator.getLayerStates() );
 
-                            $.extend( sharedStateMap, baseLayerMediator.getLayerStateMap(),
-                                                      /*clientLayerMediator.getLayerStateMap(),*/
-                                                      serverLayerMediator.getLayerStateMap() );
-
-                            new LayerControls( 'layer-controls-content', sharedStateMap ).noop();
+                            // create layer controls
+                            new LayerControls( 'layer-controls-content', sharedStates ).noop();
+                            // create the carousel controls
+                            new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
 
                         });
 

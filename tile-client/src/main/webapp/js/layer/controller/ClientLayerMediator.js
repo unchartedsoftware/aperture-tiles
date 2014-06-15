@@ -35,23 +35,52 @@ define(function (require) {
 
 
 
-    var Class = require('../../class'),
+    var LayerMediator = require('./LayerMediator'),
         ClientLayerState = require('../model/ClientLayerState'),
         ClientLayerMediator;
 
 
 
-    ClientLayerMediator = Class.extend({
+    ClientLayerMediator = LayerMediator.extend({
         ClassName: "ClientLayerMediator",
 
         init: function() {
-            this.layerStateMap = {};
+            this._super();
         },
 
         registerLayers: function( layers ) {
 
             var that = this,
+                tileViewMap = {},
                 i;
+
+            function mapUpdateCallback() {
+
+                // check which tiles for this view are active, then request them from server
+                var i,
+                    tiles, tilekey,
+                    layerIndex,
+                    tilesByLayer = [];
+
+                for (i=0; i<layers.length; ++i) {
+                    tilesByLayer[i] = [];
+                }
+
+                // determine all tiles in view
+                tiles = layers[0].map.getTilesInView();
+
+                // group tiles by view index
+                for (i=0; i<tiles.length; ++i) {
+                    tilekey = tiles[i].level+','+tiles[i].xIndex+','+tiles[i].yIndex;
+                    layerIndex = tileViewMap[tilekey] || 0;
+                    tilesByLayer[layerIndex].push( tiles[i] );
+                }
+
+                for (i=0; i<layers.length; ++i) {
+                    // set visible tiles
+                    that.layerStates[i].setVisibleTiles( tilesByLayer[i] );
+                }
+            }
 
             function register( layer ) {
 
@@ -70,13 +99,15 @@ define(function (require) {
                         layer.setOpacity( layerState.getOpacity() );
                     } else if (fieldName === "enabled") {
                         layer.setVisibility( layerState.isEnabled() );
-                    } else if (fieldName === "tileView") {
-                        layer.setTileView( layerState.getTileFocus(), layerState.getTileViewIndex( layerState.getTileFocus() ) );
+                    } else if (fieldName === "visibleTiles") {
+                        layer.update( layerState.getVisibleTiles() );
                     }
                 });
 
-                // Add the layer to the layer statemap.
-                that.layerStateMap[layerState.getId()] = layerState;
+                //layer.map.on('move', mapUpdateCallback );
+
+                // Add the layer to the layer state array.
+                that.layerStates.push( layerState );
             }
 
             // ensure it is an array
@@ -85,10 +116,13 @@ define(function (require) {
             for (i=0; i<layers.length; i++) {
                 register( layers[i] );
             }
-        },
 
-        getLayerStateMap: function() {
-            return this.layerStateMap;
+            // all layers will share the same map, therefore only bind callback once
+            if (layers.length > 0) {
+                layers[0].map.on('move', mapUpdateCallback );
+                layers[0].map.trigger('move');
+            }
+
         }
 
     });

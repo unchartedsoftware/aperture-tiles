@@ -28,15 +28,13 @@
 
 
 
-/**
- * This modules defines a basic layer class that can be added to maps.
- */
 define(function (require) {
     "use strict";
 
 
 
     var Layer = require('../Layer'),
+        LayerService = require('../../LayerService'),
         ServerLayer;
 
 
@@ -50,6 +48,24 @@ define(function (require) {
             this._super( spec, map );
         },
 
+        /**
+         * Set the opacity
+         */
+        setOpacity: function ( opacity ) {
+            if (this.layer) {
+                this.layer.olLayer_.setOpacity( opacity );
+            }
+        },
+
+
+        /**
+         * Set the visibility
+         */
+        setVisibility: function ( visibility ) {
+            if (this.layer) {
+                this.layer.olLayer_.setVisibility( visibility );
+            }
+        },
 
         /**
          * Updates the ramp type associated with the layer.  Results in a POST
@@ -108,6 +124,27 @@ define(function (require) {
          */
         setZIndex: function (subLayerId, zIndex) {
             this.map.setLayerIndex( this.layer.olLayer_, zIndex );
+        },
+
+
+        configure: function( callback ) {
+
+            var that = this;
+
+            LayerService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
+                if (statusInfo.success) {
+                    if ( that.layerInfo ) {
+                        // if a previous configuration exists, release it
+                        LayerService.unconfigureLayer( that.layerInfo, function() {
+                            return true;
+                        });
+                    }
+                    // set layer info
+                    that.layerInfo = layerInfo;
+                }
+
+                callback( layerInfo, statusInfo );
+            });
         },
 
 

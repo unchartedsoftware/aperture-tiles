@@ -152,7 +152,6 @@ define(function (require) {
                 // destroy original base layer
                 olMap_.baseLayer.setVisibility(false);
                 olMap_.baseLayer.destroy();
-                olMap_.baseLayer = null;
 
                 newBaseLayerType = (newBaseLayerConfig.type === 'Google') ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
                 newBaseLayer = this.map.addLayer( newBaseLayerType, {}, newBaseLayerConfig );
@@ -628,25 +627,11 @@ define(function (require) {
 		},
 
 		setOpacity: function( opacity ) {
-		    var olMap_ = this.map.olMap_;
-		    if ( olMap_.baseLayer ) {
-		        olMap_.baseLayer.setOpacity ( opacity );
-		    } else {
-		        this.getElement.css( 'opacity', opacity );
-		    }
+            this.map.olMap_.baseLayer.setOpacity ( opacity );
 		},
 
 		setVisibility: function( visibility ) {
-            var olMap_ = this.map.olMap_;
-		    if ( olMap_.baseLayer ) {
-                olMap_.baseLayer.setVisibility( visibility );
-            } else {
-                if ( visibility ) {
-                    this.getElement.css( 'visibility', 'visible' );
-                } else {
-                    this.getElement.css( 'visibility', 'hidden' );
-                }
-            }
+            this.map.olMap_.baseLayer.setVisibility( visibility );
 		},
 
 		getExtent: function () {
@@ -655,14 +640,6 @@ define(function (require) {
 
 		getZoom: function () {
 			return this.map.olMap_.getZoom();
-		},
-
-		isEnabled: function () {
-			return this.map.olMap_.baseLayer.getVisibility();
-		},
-
-		setEnabled: function (enabled) {
-			this.map.olMap_.baseLayer.setVisibility(enabled);
 		},
 
 		zoomToExtent: function (extent, findClosestZoomLvl) {

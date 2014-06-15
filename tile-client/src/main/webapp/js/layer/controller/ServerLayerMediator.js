@@ -35,7 +35,7 @@ define(function (require) {
 
 
 
-    var Class = require('../../class'),
+    var LayerMediator = require('./LayerMediator'),
         ServerLayerState = require('../model/ServerLayerState'),
         requestRampImage,
         ServerLayerMediator;
@@ -70,11 +70,11 @@ define(function (require) {
     };
 
 
-    ServerLayerMediator = Class.extend({
+    ServerLayerMediator = LayerMediator.extend({
         ClassName: "ServerLayerMediator",
 
         init: function() {
-            this.layerStateMap = {};
+            this._super();
         },
 
 
@@ -90,29 +90,6 @@ define(function (require) {
                     layerState,
                     layerSpec;
 
-                // A callback to modify map / visual state in response to layer changes.
-                function makeLayerStateCallback() {
-                    // Create layer state objects from the layer specs provided by the server rendered map layer.
-                    return function (fieldName) {
-                        if (fieldName === "opacity") {
-                            layer.setOpacity( layerState.getOpacity() );
-                        } else if (fieldName === "enabled") {
-                            layer.setVisibility( layerState.isEnabled() );
-                        } else if (fieldName === "rampType") {
-                            // re-configure layer with new ramp type, then request new image
-                            layer.setRampType( layerState.getRampType(), function() {
-                                requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
-                            });
-                        } else if (fieldName === "rampFunction") {
-                            layer.setRampFunction( layerState.getRampFunction() );
-                        } else if (fieldName === "filterRange") {
-                            layer.setFilterRange( layerState.getFilterRange(), 0 );
-                        } else if (fieldName === "zIndex") {
-                            layer.setZIndex( layerState.getZIndex() );
-                        }
-                    };
-                }
-
                 function getLevelMinMax( level ) {
                     var meta =  layer.getLayerInfo().meta,
                         minArray = meta.levelMinFreq || meta.levelMinimums,
@@ -123,13 +100,11 @@ define(function (require) {
                 }
 
                 // Make a callback to regen the ramp image on map zoom changes
-                function makeMapZoomCallback() {
-                    return function () {
-                        // set ramp image
-                        requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
-                        // set ramp level
-                        layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
-                    };
+                function mapZoomCallback() {
+                    // set ramp image
+                    requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                    // set ramp level
+                    layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
                 }
 
                 layerSpec = layer.getLayerSpec();
@@ -148,16 +123,33 @@ define(function (require) {
                 layerState.setZIndex( i+1 );
 
                 // Register a callback to handle layer state change events.
-                layerState.addListener( makeLayerStateCallback() );
+                layerState.addListener( function (fieldName) {
+                    if (fieldName === "opacity") {
+                        layer.setOpacity( layerState.getOpacity() );
+                    } else if (fieldName === "enabled") {
+                        layer.setVisibility( layerState.isEnabled() );
+                    } else if (fieldName === "rampType") {
+                        // re-configure layer with new ramp type, then request new image
+                        layer.setRampType( layerState.getRampType(), function() {
+                            requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                        });
+                    } else if (fieldName === "rampFunction") {
+                        layer.setRampFunction( layerState.getRampFunction() );
+                    } else if (fieldName === "filterRange") {
+                        layer.setFilterRange( layerState.getFilterRange(), 0 );
+                    } else if (fieldName === "zIndex") {
+                        layer.setZIndex( layerState.getZIndex() );
+                    }
+                });
 
                 // Request ramp image from server.
                 requestRampImage( layerState, layer.getLayerInfo(), 0 );
 
-                // Add the layer to the layer statemap.
-                that.layerStateMap[ layerState.getId() ] = layerState;
+                // Add the layer to the layer state array.
+                that.layerStates.push( layerState );
 
                 // Handle map zoom events - can require a re-gen of the filter image.
-                map.on("zoomend", makeMapZoomCallback() );
+                map.on("zoomend", mapZoomCallback );
 
             }
 
@@ -167,10 +159,6 @@ define(function (require) {
             for (i=0; i<layers.length; i++) {
                 register( layers[i] );
             }
-        },
-
-        getLayerStateMap: function() {
-            return this.layerStateMap;
         }
 
     });
