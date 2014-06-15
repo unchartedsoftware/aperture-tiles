@@ -55,17 +55,22 @@ define(function (require) {
          * Updates the ramp type associated with the layer.  Results in a POST
          * to the server.
          *
-         * @param {string} subLayerId - The ID of layer
          * @param {string} rampType - The new ramp type for the layer.
+         * @param {function} callback - The callback function when the configure request returns, used to request new
+         *                              ramp image
          */
-        setRampType: function ( rampType ) {
+        setRampType: function ( rampType, callback ) {
 
+            var that = this;
             if ( !this.layerSpec.renderer ) {
                 this.layerSpec.renderer = {ramp: rampType};
             } else {
                 this.layerSpec.renderer.ramp = rampType;
             }
-            this.configure( $.proxy( this.update, this ) );
+            this.configure( function() {
+                callback();
+                that.update();
+            });
         },
 
 
@@ -73,7 +78,6 @@ define(function (require) {
          * Updates the ramp function associated with the layer.  Results in a POST
          * to the server.
          *
-         * @param {string} subLayerId - The ID of the sub layer to update.
          * @param {string} rampFunction - The new new ramp function.
          */
         setRampFunction: function ( rampFunction ) {
@@ -90,7 +94,6 @@ define(function (require) {
         /**
          * Updates the filter range for the layer.  Results in a POST to the server.
          *
-         * @param {string} subLayerId - The ID of the sub layer to update.
          * @param {Array} filterRange - A two element array with values in the range [0.0, 1.0],
          * where the first element is the min range, and the second is the max range.
          */
@@ -101,7 +104,6 @@ define(function (require) {
 
 
         /**
-         * @param {string} subLayerId - The ID of the sublayer to update.
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
         setZIndex: function (subLayerId, zIndex) {

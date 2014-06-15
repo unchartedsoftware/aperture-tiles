@@ -37,33 +37,29 @@ define(function (require) {
 
     var Class = require('../../class'),
         ServerLayerState = require('../model/ServerLayerState'),
-        setupRampImage,
+        requestRampImage,
         ServerLayerMediator;
 
     /**
-     * Asynchronously updates colour ramp image.
+     * Asynchronously requests colour ramp image.
      *
      * @param {Object} layerState - The layer state object that contains
      * the parameters to use when generating the image.
      */
-    setupRampImage = function ( layerState, layerInfo, level ) {
+    requestRampImage = function ( layerState, layerInfo, level ) {
 
         var legendData = {
-                transform: layerState.getRampFunction(),
                 layer: layerState.getId(),  // layer id
                 id: layerInfo.id,           // config id
                 level: level,
                 width: 128,
                 height: 1,
-                orientation: "horizontal",
-                ramp: layerState.getRampType()
+                orientation: "horizontal"
             };
 
-        console.log( "req new ramp: " + layerState.getRampType() + ", " + layerState.getRampFunction());
         aperture.io.rest('/legend',
                          'POST',
                          function (legendString, status) {
-                            console.log( "got new ramp : " + legendString);
                             layerState.setRampImageUrl(legendString);
                          },
                          {
@@ -103,11 +99,12 @@ define(function (require) {
                         } else if (fieldName === "enabled") {
                             layer.setVisibility( layerState.isEnabled() );
                         } else if (fieldName === "rampType") {
-                            layer.setRampType( layerState.getRampType() );
-                            setupRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                            // re-configure layer with new ramp type, then request new image
+                            layer.setRampType( layerState.getRampType(), function() {
+                                requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                            });
                         } else if (fieldName === "rampFunction") {
-                            layer.setRampFunction( layerState.getId(), layerState.getRampFunction() );
-                            setupRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                            layer.setRampFunction( layerState.getRampFunction() );
                         } else if (fieldName === "filterRange") {
                             layer.setFilterRange( layerState.getFilterRange(), 0 );
                         } else if (fieldName === "zIndex") {
@@ -129,7 +126,7 @@ define(function (require) {
                 function makeMapZoomCallback() {
                     return function () {
                         // set ramp image
-                        setupRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                        requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
                         // set ramp level
                         layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
                     };
@@ -154,7 +151,7 @@ define(function (require) {
                 layerState.addListener( makeLayerStateCallback() );
 
                 // Request ramp image from server.
-                setupRampImage( layerState, layer.getLayerInfo(), 0 );
+                requestRampImage( layerState, layer.getLayerInfo(), 0 );
 
                 // Add the layer to the layer statemap.
                 that.layerStateMap[ layerState.getId() ] = layerState;

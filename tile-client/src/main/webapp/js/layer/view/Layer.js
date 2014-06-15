@@ -62,6 +62,7 @@ define(function (require) {
             LayerService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
                 if (statusInfo.success) {
                     if ( that.layerInfo ) {
+                        console.log( "config ret id: " + layerInfo.id);
                         // if a previous configuration exists, release it
                         LayerService.unconfigureLayer( that.layerInfo, function() {
                             return true;
@@ -70,6 +71,7 @@ define(function (require) {
                     // set layer info
                     that.layerInfo = layerInfo;
                 }
+
                 callback( layerInfo, statusInfo );
             });
         },
