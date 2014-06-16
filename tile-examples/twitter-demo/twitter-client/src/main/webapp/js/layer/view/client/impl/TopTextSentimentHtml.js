@@ -37,7 +37,7 @@ define(function (require) {
 
     var ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
-        TwitterUtil = require('./TwitterUtil'),
+        TwitterUtil = require('./TwitterSentimentUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         NUM_TAGS_DISPLAYED = 5,
         TopTextSentimentHtml;

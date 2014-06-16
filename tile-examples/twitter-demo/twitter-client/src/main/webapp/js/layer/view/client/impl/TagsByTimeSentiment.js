@@ -36,9 +36,9 @@ define(function (require) {
 
 
     var TwitterApertureRenderer = require('./TwitterApertureRenderer'),
-        TwitterUtil = require('./TwitterUtil'),
+        TwitterUtil = require('./TwitterSentimentUtil'),
         NUM_HOURS_IN_DAY = 24,
-        NUM_TAGS_DISPLAYED = 5,
+        NUM_TAGS_DISPLAYED = 10,
         TagsByTimeSentiment;
 
 

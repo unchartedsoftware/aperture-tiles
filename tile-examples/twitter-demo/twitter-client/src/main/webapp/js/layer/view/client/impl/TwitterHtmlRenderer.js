@@ -30,7 +30,7 @@ define(function (require) {
 
 
     var HtmlRenderer = require('../HtmlRenderer'),
-        TwitterUtil = require('./TwitterUtil'),
+        TwitterUtil = require('./TwitterSentimentUtil'),
         DetailsOnDemand = require('./DetailsOnDemandHtml'),
         TwitterHtmlRenderer;
 
