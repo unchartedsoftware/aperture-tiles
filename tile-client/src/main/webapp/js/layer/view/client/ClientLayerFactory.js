@@ -35,6 +35,46 @@ define( function (require) {
         ClassName: "ClientLayerFactory",
 
 
+
+        createLayer: function(layerJSON, map) {
+
+            var renderers = layerJSON.renderers,
+                rendererDeferreds = [],
+                clientLayer,
+                clientLayerDeferred = $.Deferred(),
+                i;
+
+            function loadModule( arg ) {
+                var requireDeferred = $.Deferred();
+                require( [arg], function( RendererModule ) {
+                    requireDeferred.resolve( new RendererModule( map ) );
+                });
+                return requireDeferred;
+            }
+
+            for (i=0; i<renderers.length; i++) {
+                rendererDeferreds.push( loadModule( "./impl/" + renderers[i] ) );
+            }
+
+            $.when.apply( $, rendererDeferreds ).done( function() {
+
+                // once everything has loaded
+                var renderers = Array.prototype.slice.call( arguments, 0 );
+                // create the layer
+                clientLayer = new ClientLayer( layerJSON, renderers, map );
+                // send configuration request
+                clientLayer.configure( function( layerInfo ) {
+                    // resolve deferred
+                    clientLayerDeferred.resolve( clientLayer );
+                });
+            });
+
+            return clientLayerDeferred;
+        }
+
+
+        /*
+
         createLayer: function(layerJSON, map) {
 
             var clientLayer,
@@ -55,6 +95,7 @@ define( function (require) {
 
             return clientLayerDeferred;
         }
+        */
 
 
     });

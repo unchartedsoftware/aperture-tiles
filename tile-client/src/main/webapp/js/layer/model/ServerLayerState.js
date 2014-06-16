@@ -110,6 +110,8 @@ define(function (require) {
             this.rampMinMax = [0,10];
         },
 
+
+
         /**
          * @returns {Array} - A 2 element array containing the min and max filter values.  These values range
          * from [0.0 - 1.0], representing a fraction of the total data range.

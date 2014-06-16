@@ -176,8 +176,11 @@ define(function (require) {
                 // on return, un-configure old filter
                 var oldUuid = that.uuid;
                 if (statusInfo.success) {
+                    // if previous config is not default, un-configure it
+                    if ( oldUuid !== "default" ) {
+                        that.unconfigureFilter( oldUuid, function(){ return true; } );
+                    }
                     that.uuid = result.uuid;
-                    that.unconfigureFilter( oldUuid, function(){ return true; } );
                 }
                 callback( result, statusInfo );
             });

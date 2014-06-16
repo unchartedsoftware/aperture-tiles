@@ -51,38 +51,9 @@ define(function (require) {
         registerLayers: function( layers ) {
 
             var that = this,
-                tileViewMap = {},
                 i;
 
-            function mapUpdateCallback() {
-
-                // check which tiles for this view are active, then request them from server
-                var i,
-                    tiles, tilekey,
-                    layerIndex,
-                    tilesByLayer = [];
-
-                for (i=0; i<layers.length; ++i) {
-                    tilesByLayer[i] = [];
-                }
-
-                // determine all tiles in view
-                tiles = layers[0].map.getTilesInView();
-
-                // group tiles by view index
-                for (i=0; i<tiles.length; ++i) {
-                    tilekey = tiles[i].level+','+tiles[i].xIndex+','+tiles[i].yIndex;
-                    layerIndex = tileViewMap[tilekey] || 0;
-                    tilesByLayer[layerIndex].push( tiles[i] );
-                }
-
-                for (i=0; i<layers.length; ++i) {
-                    // set visible tiles
-                    that.layerStates[i].setVisibleTiles( tilesByLayer[i] );
-                }
-            }
-
-            function register( layer ) {
+            function register( layer, index ) {
 
                 var layerState;
 
@@ -92,19 +63,26 @@ define(function (require) {
                 layerState.setEnabled( true );
                 layerState.setOpacity( 1.0 );
                 layerState.setZIndex( 0 );
+                layerState.setDefaultRendererIndex( 0 );
+                layerState.setRendererCount( layer.renderers.length );
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {
+                    var tilekey;
                     if (fieldName === "opacity") {
                         layer.setOpacity( layerState.getOpacity() );
                     } else if (fieldName === "enabled") {
                         layer.setVisibility( layerState.isEnabled() );
-                    } else if (fieldName === "visibleTiles") {
-                        layer.update( layerState.getVisibleTiles() );
+                    } else if (fieldName === "tileFocus") {
+                        layer.setTileFocus( layerState.getTileFocus() );
+                    } else if (fieldName === "defaultRendererIndex") {
+                        layer.setDefaultRendererIndex( layerState.getDefaultRendererIndex() );
+                    } else if (fieldName === "tileRendererIndex") {
+                        // set renderer for tile
+                        tilekey = layerState.getTileFocus();
+                        layer.setTileRenderer( tilekey, layerState.getRendererByTile( tilekey ) );
                     }
                 });
-
-                //layer.map.on('move', mapUpdateCallback );
 
                 // Add the layer to the layer state array.
                 that.layerStates.push( layerState );
@@ -114,13 +92,7 @@ define(function (require) {
             layers = ( $.isArray(layers) ) ? layers : [layers];
 
             for (i=0; i<layers.length; i++) {
-                register( layers[i] );
-            }
-
-            // all layers will share the same map, therefore only bind callback once
-            if (layers.length > 0) {
-                layers[0].map.on('move', mapUpdateCallback );
-                layers[0].map.trigger('move');
+                register( layers[i], i );
             }
 
         }

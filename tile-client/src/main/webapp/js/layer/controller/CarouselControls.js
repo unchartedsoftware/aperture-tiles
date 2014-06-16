@@ -50,13 +50,14 @@ define(function (require) {
         createChevrons,
         createIndexDots,
         createCarousel,
+        updateDotIndices,
         CarouselControls;
 
 
     /**
      * Creates an observer to handle layer state changes, and update the controls based on them.
      */
-    makeLayerStateObserver = function ( map, $carousel, layerState ) {
+    makeLayerStateObserver = function ( map, $carousel, controlMap, layerState ) {
 
         return function (fieldName) {
 
@@ -65,12 +66,28 @@ define(function (require) {
                 var tilekey = layerState.getTileFocus(),
                     topLeft;
 
-                topLeft = map.getTopLeftMapPixelForTile( tilekey );
+                // move carousel to new tile if it is enabled
+                if ( layerState.getCarouselEnabled() ) {
 
-                $carousel.css({
-                    left: topLeft.x,
-                    top: map.getMapHeight() - topLeft.y
-                });
+                    topLeft = map.getTopLeftMapPixelForTile( tilekey );
+
+                    $carousel.css({
+                        left: topLeft.x,
+                        top: map.getMapHeight() - topLeft.y
+                    });
+                    updateDotIndices( controlMap, layerState );
+                }
+
+            } else if (fieldName === "carouselEnabled") {
+
+                // empty carousel
+                $carousel.empty().css('visibility', 'hidden');
+                if ( layerState.getCarouselEnabled() ) {
+                    // create carousel UI
+                    $carousel.css('visibility', 'visible');
+                    createCarousel( $carousel, map, controlMap, layerState );
+                }
+
             }
         };
     };
@@ -87,7 +104,22 @@ define(function (require) {
     };
 
 
-    createChevrons = function( $carousel, map, controlMapping ) {
+    updateDotIndices = function( controlMap, layerState ) {
+
+        var tilekey = layerState.getTileFocus(),
+            count = controlMap.dots.length,
+            index = layerState.getRendererByTile( tilekey ),
+            i;
+
+        for (i=0; i<count; i++) {
+            controlMap.dots[i].removeClass(DOT_CLASS_SELECTED).addClass(DOT_CLASS_DEFAULT);
+        }
+        controlMap.dots[index].removeClass(DOT_CLASS_DEFAULT).addClass(DOT_CLASS_SELECTED);
+
+    };
+
+
+    createChevrons = function( $carousel, map, controlMap, layerState ) {
 
         var $leftChevron,
             $rightChevron;
@@ -98,17 +130,16 @@ define(function (require) {
             chevron.mousemove( function() { chevron.off('click'); });
             chevron.mousedown( function() {
                 chevron.click( function() {
-                    return true;
-                    /*
-                    var tilekey = that.selectedTileInfo.tilekey,
-                        prevIndex = that.clientState.getTileViewIndex(tilekey),
+
+                    var tilekey = layerState.getTileFocus(),
+                        prevIndex = layerState.getRendererByTile( tilekey ),
                         mod = function (m, n) {
                             return ((m % n) + n) % n;
                         },
-                        newIndex = mod(prevIndex + inc, that.views.length);
+                        newIndex = mod( prevIndex + inc, layerState.getRendererCount() );
 
-                    that.clientState.setTileViewIndex( tilekey, newIndex );
-                  */
+                    layerState.setRendererByTile( tilekey, newIndex );
+                    updateDotIndices( controlMap, layerState );
 
                 });
             });
@@ -128,13 +159,13 @@ define(function (require) {
         map.disableEventToMapPropagation( $leftChevron, ['onclick', 'ondblclick'] );
         map.disableEventToMapPropagation( $rightChevron, ['onclick', 'ondblclick'] );
 
-        controlMapping.leftChevron = $leftChevron;
-        controlMapping.rightChevron = $rightChevron;
+        controlMap.leftChevron = $leftChevron;
+        controlMap.rightChevron = $rightChevron;
 
     };
 
 
-    createIndexDots = function( $carousel, map, controlMapping, layerStates ) {
+    createIndexDots = function( $carousel, map, controlMap, layerState ) {
 
         var indexClass,
             $indexContainer,
@@ -147,11 +178,9 @@ define(function (require) {
             dot.mousemove( function() { dot.off('click'); });
             dot.mousedown( function() {
                 dot.click( function() {
-                    return true;
-                    /*
-                    var tilekey = that.selectedTileInfo.tilekey;
-                    that.clientState.setTileViewIndex( tilekey, index );
-                    */
+
+                    layerState.setRendererByTile( layerState.getTileFocus(), index );
+                    updateDotIndices( controlMap, layerState );
                 });
             });
         }
@@ -163,7 +192,7 @@ define(function (require) {
         map.enableEventToMapPropagation( $indexContainer );
         map.disableEventToMapPropagation( $indexContainer, ['onclick', 'ondblclick'] );
 
-        for (i=0; i < layerStates.length; i++) {
+        for (i=0; i < layerState.getRendererCount(); i++) {
 
             indexClass = (i === 0) ? DOT_CLASS_SELECTED : DOT_CLASS_DEFAULT;
             $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
@@ -171,18 +200,16 @@ define(function (require) {
             $indexContainer.append( $dots[i] );
         }
 
-        controlMapping.dots = $dots;
+        controlMap.dots = $dots;
     };
 
 
-    createCarousel = function( map, controlMapping, layerStates ) {
+    createCarousel = function( $carousel, map, controlMap, layerState ) {
 
-        var $carousel = $('<div class="' +CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
-
-        if ( layerStates.length > 1 ) {
+        if ( layerState.getRendererCount() > 1 ) {
             // only create chevrons and indices if there is more than 1 layer
-            createChevrons( $carousel, map, controlMapping );
-            createIndexDots( $carousel, map, controlMapping, layerStates );
+            createChevrons( $carousel, map, controlMap, layerState );
+            createIndexDots( $carousel, map, controlMap, layerState );
         }
         map.getRootElement().append( $carousel );
         return $carousel;
@@ -198,10 +225,13 @@ define(function (require) {
                 i;
 
             this.controlMap = {};
-            this.$carousel = createCarousel( map, this.controlMap, layerStates );
+            this.$carousel = $('<div class="' +CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
 
             for (i=0; i<layerStates.length; i++) {
-                layerStates[i].addListener( makeLayerStateObserver( map, this.$carousel, layerStates[i] ));
+                layerStates[i].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[i] ) );
+                if (i === 0) {
+                    layerStates[i].setCarouselEnabled( true );
+                }
             }
 
             // set tile focus callbacks
@@ -228,8 +258,6 @@ define(function (require) {
                 return;
             }
 
-            this.$dots[prevIndex].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
-            this.$dots[newIndex].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
 
             this.onTileViewChange(tilekey, newIndex);
         },

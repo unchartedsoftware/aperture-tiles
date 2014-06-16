@@ -38,7 +38,6 @@ define(function (require) {
 
     var LayerState = require('./LayerState'),
         objectsEqual,
-        arraysEqual,
         ClientLayerState;
 
 
@@ -70,31 +69,6 @@ define(function (require) {
         return true;
     };
 
-    /**
-     * Compares arrays for equality.
-     *
-     * @param {Array} a - First array under comparison
-     * @param {Array} b - Second array under comparison
-     * @returns {boolean} true if they are equal, false otherwise.
-     */
-    arraysEqual = function (a, b) {
-        var i;
-        if (a === b) {
-            return true;
-        }
-        if (a === null || b === null) {
-            return false;
-        }
-        if (a.length !== b.length) {
-            return false;
-        }
-        for (i = 0; i < a.length; ++i) {
-            if (a[i] !== b[i]) {
-                return false;
-            }
-        }
-        return true;
-    };
 
     ClientLayerState = LayerState.extend({
         ClassName: "ClientLayerState",
@@ -109,48 +83,74 @@ define(function (require) {
             this._super( id );
             this.domain = 'client';
             this.tileFocus = "";
-            this.visibleTiles = [];
+
+            this.carouselEnabled = false;
+
             this.clickState = {};
             this.hoverState = {};
-           // this.viewsByTile = {};
+
+            this.rendererCount = 0;
+            this.rendererIndicesByTile = {};
+            this.defaultRendererIndex = 0;
         },
 
-        /*
-        setTileViewIndex: function( tilekey, index ) {
+        setRendererCount: function(count) {
+            if (this.rendererCount !== count) {
+                this.rendererCount = count;
+                this.notify("rendererCount", this.listeners);
+            }
+        },
 
-            var tileView;
-            // if doesn't exist, create it;
-            this.viewsByTile[tilekey] = this.viewsByTile[tilekey] || {};
-            tileView = this.viewsByTile[tilekey];
 
-            if ( tileView.index !== index ) {
-                // store previous
-                tileView.previousIndex = tileView.index || 0;
-                tileView.index = index;
-                this.notify("tileViewIndex", this.listeners);
+        getRendererCount: function() {
+            return this.rendererCount;
+        },
 
-                if (index === 0) {
-                    // if returned to default state, free the memory
-                    delete this.viewsByTile[tilekey];
+
+        setDefaultRendererIndex: function( defaultRendererIndex ) {
+            if ( this.defaultRendererIndex !== defaultRendererIndex ) {
+                this.defaultRendererIndex = defaultRendererIndex;
+                this.notify("defaultRendererIndex", this.listeners);
+            }
+        },
+
+
+        getDefaultRendererIndex: function() {
+            return this.defaultRendererIndex;
+        },
+
+
+        setRendererByTile: function( tilekey, index ) {
+
+            var renderersByTile = this.rendererIndicesByTile;
+
+            if ( renderersByTile[tilekey] !== index ) {
+                if ( index === this.defaultRendererIndex ) {
+                    delete renderersByTile[tilekey];
+                } else {
+                    renderersByTile[tilekey] = index;
                 }
+                this.notify("tileRendererIndex", this.listeners);
             }
         },
 
-        getTileViewIndex: function( tilekey ) {
-            return this.viewsByTile[tilekey] || { index:0, previousIndex : null };
+        getRendererByTile: function( tilekey ) {
+            return this.rendererIndicesByTile[tilekey] || this.defaultRendererIndex;
         },
-        */
 
-        setVisibleTiles: function( tiles ) {
-            if ( !arraysEqual( this.visibleTiles, tiles ) ) {
-                this.visibleTiles = tiles;
-                this.notify("visibleTiles", this.listeners);
+        getRenderersByTile: function() {
+            return this.rendererIndicesByTile;
+        },
+
+        setCarouselEnabled: function( enabled ) {
+            if (this.carouselEnabled !== enabled) {
+                this.carouselEnabled = enabled;
+                this.notify("carouselEnabled", this.listeners);
             }
         },
 
-
-        getVisibleTiles: function( tiles ) {
-            return this.visibleTiles;
+        getCarouselEnabled: function( enabled ) {
+            return this.carouselEnabled;
         },
 
 

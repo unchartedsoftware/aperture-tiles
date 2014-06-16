@@ -51,8 +51,8 @@ define(function (require) {
         init: function (id) {
             this.domain = null;
             this.id = id;
-            this.name = id; // for now just set name to to he id
             this.zIndex = 0;
+            this.name = id; // for now just set name to to he id
             this.enabled = false;
             this.opacity = 1.0;
             this.listeners = [];
@@ -106,6 +106,25 @@ define(function (require) {
         },
 
         /**
+         * @returns {string} - The simple name of the layer.  This can appear in user facing elements and
+         * should be formatted accordingly.
+         */
+        getName: function () {
+            return this.name;
+        },
+
+        /**
+         * @param name - The simple name of the layer.  This can appear in user facing elements and should be formatted
+         * accordingly.
+         */
+        setName: function (name) {
+            if (this.name !== name) {
+                this.name = name;
+                this.notify("name", this.listeners);
+            }
+        },
+
+        /**
          * @returns {number} - The Z index of the layer.  Layers are drawn starting at 0, going from lowest
          * to highest.
          */
@@ -122,25 +141,6 @@ define(function (require) {
             if (this.zIndex !== zIndex) {
                 this.zIndex = zIndex;
                 this.notify("zIndex", this.listeners);
-            }
-        },
-
-        /**
-         * @returns {string} - The simple name of the layer.  This can appear in user facing elements and
-         * should be formatted accordingly.
-         */
-        getName: function () {
-            return this.name;
-        },
-
-        /**
-         * @param name - The simple name of the layer.  This can appear in user facing elements and should be formatted
-         * accordingly.
-         */
-        setName: function (name) {
-            if (this.name !== name) {
-                this.name = name;
-                this.notify("name", this.listeners);
             }
         },
 

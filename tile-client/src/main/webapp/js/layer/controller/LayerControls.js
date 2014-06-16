@@ -110,7 +110,11 @@ define(function (require) {
         // Initialize the button from the model and register event handler.
         $toggleBox.prop("checked", layerState.isEnabled());
         $toggleBox.click(function () {
-            layerState.setEnabled( $toggleBox.prop("checked") );
+            var value = $toggleBox.prop("checked");
+            layerState.setEnabled( value );
+            if (layerState.domain === "client") {
+                layerState.setCarouselEnabled( value );
+            }
         });
 
         controlsMapping.enabledCheckbox = $toggleBox;
@@ -332,13 +336,6 @@ define(function (require) {
             controlsMapping;
 
         layerStateId = layerState.getId();
-
-        if ( controlsMap[layerStateId] ) {
-            // ensure only one layer controls UI is created per ID, this is used for
-            // multiple client layers which will share ids but offer different renderings
-            return;
-        }
-
         controlsMap[layerStateId] = {};
         controlsMapping = controlsMap[layerStateId];
 
