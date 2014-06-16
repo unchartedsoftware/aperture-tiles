@@ -88,6 +88,13 @@ define(function (require) {
         },
 
 
+        getTileRenderer: function( tilekey ) {
+
+            var index = this.renderersByTile[tilekey];
+            return (index !== undefined) ? index : this.defaultRendererIndex;
+        },
+
+
         configure: function( callback ) {
 
             var that = this;
@@ -119,7 +126,7 @@ define(function (require) {
 
         setTileRenderer: function( tilekey, newIndex ) {
 
-            var oldIndex = this.renderersByTile[tilekey] || this.defaultRendererIndex,
+            var oldIndex = this.getTileRenderer( tilekey ),
                 oldRenderer = this.renderers[oldIndex],
                 newRenderer = this.renderers[newIndex],
                 oldService = this.tileServices[oldIndex],
@@ -174,7 +181,7 @@ define(function (require) {
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
                 tilekey = tiles[i].level+','+tiles[i].xIndex+','+tiles[i].yIndex;
-                rendererIndex = this.renderersByTile[tilekey] || this.defaultRendererIndex;
+                rendererIndex = this.getTileRenderer( tilekey );
                 tilesByRenderer[rendererIndex].push( tiles[i] );
             }
 

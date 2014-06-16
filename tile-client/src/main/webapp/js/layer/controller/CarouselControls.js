@@ -128,7 +128,6 @@ define(function (require) {
 
                     layerState.setRendererByTile( tilekey, newIndex );
                     updateDotIndices( controlMap, layerState );
-
                 });
             });
         }

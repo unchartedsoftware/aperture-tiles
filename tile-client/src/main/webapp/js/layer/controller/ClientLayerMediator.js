@@ -71,9 +71,8 @@ define(function (require) {
                 layerState.setEnabled( true );
                 layerState.setOpacity( 1.0 );
                 layerState.setZIndex( 0 );
-                layerState.setDefaultRendererIndex( 0 );
                 layerState.setRendererCount( layer.renderers.length );
-
+                layerState.setDefaultRendererIndex( 0 );
                 // register layer state
                 for (i=0; i< layer.renderers.length; i++) {
                     layer.renderers[i].registerLayer( layerState );
@@ -89,14 +88,15 @@ define(function (require) {
                         layer.setVisibility( layerState.isEnabled() );
                     } else if (fieldName === "tileFocus") {
                         layer.setTileFocus( layerState.getTileFocus() );
-                    } else
-                    if (fieldName === "defaultRendererIndex") {
+                    } else if (fieldName === "defaultRendererIndex") {
                         layer.setDefaultRendererIndex( layerState.getDefaultRendererIndex() );
                     } else if (fieldName === "tileRendererIndex") {
                         tilekey = layerState.getTileFocus();
                         layer.setTileRenderer( tilekey, layerState.getRendererByTile( tilekey ) );
                     }
                 });
+
+
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {

@@ -49,7 +49,7 @@ aperture = (function(aperture) {
 	 * The aperture release version number.
 	 * @type String
 	 */
-	aperture.VERSION = '1.0.6-SNAPSHOT';
+	aperture.VERSION = '1.0.7-SNAPSHOT';
 
 	return aperture;
 
@@ -2251,6 +2251,8 @@ function(namespace) {
 		// Initialize unique properties.
 		node.uid      = (nextUid++).toString();
 		node.parent   = parent;
+		node.next     = null;
+		node.prev     = null;
 		node.layer    = layer;
 		node.kids     = {};
 		node.userData = {};
@@ -2325,15 +2327,20 @@ function(namespace) {
 	 * store references their adjacent nodes rather than externalizing that in a list structure.
 	 */
 	function linkNode( node, prev ) {
-		
 		if (prev == null) {
+			// Insert node at head of layer's node list
+			node.next = node.layer.nodes_;
 			node.layer.nodes_ = node;
-			node.prev = null;			
+			node.prev = null;
 		} else {
+			// Insert node elsewhere
+			node.next = prev.next;
 			prev.next = node;
 			node.prev = prev;
 		}
-		node.next = null;
+		if (node.next) {
+			node.next.prev = node;
+		}
 	}
 
 	/**
@@ -2380,9 +2387,10 @@ function(namespace) {
 		
 		// DATA CHANGED? SORT *ALL* CHANGES OUT AND RETURN
 		// if our data changes, we have to execute a full pass through everything
-		// to sort into add/changed/removed. EVERYTHING is touched. this could be made more
+		// to sort into add/changed/removed. Adds and removes are always processed, and changes
+		// are only marked if the hints dictate a data changed happened. this could be made more
 		// efficient if data models exposed chg fns to the user - i.e. w/ adds, joins etc.
-		if (myChangeSet.dataChanged) {
+		if (this.dataChangeHints) {
 			var allParents  = (this.parentLayer_ && this.parentLayer_.nodes_) || this.rootNode_,
 				adds = myChangeSet.added,
 				rmvs = myChangeSet.removed,
@@ -2397,7 +2405,7 @@ function(namespace) {
 			for (dad = allParents; dad != null; dad = dad.next) {
 				var existing = indexNodes(dad.kids[myUid]),
 					newkids = dad.kids[myUid] = [];
-				
+
 				// for all my new items, look for matches in existing.
 				forEach( this.dataItems( dad.data ), function( dataItem ) {
 					c = null;
@@ -2437,21 +2445,20 @@ function(namespace) {
 						c.data = dataItem;
 						c.idFn = idFunction;
 
-						// only process further if showing.
-						if (updateVisibility(c)) {
+						// only process further if showing and hints say data actually changed
+						if (updateVisibility(c) && this.dataChangeHints.changed) {
 							chgs.push(c);
 						}
 						
 					// else make new
 					} else {
 						adds.push( c = addNode( this, dad, prev, dataItem ) );
-						
 					}
 					
 					prev = c;
 					
 				}, this);
-				
+
 				// whatever is left is trash. these are already removed from our locally linked list.
 				for (i = existing.next; i != null; i = i.next) {
 					rmvs.push(i.node);
@@ -2910,15 +2917,19 @@ function(namespace) {
 						this.idFunction = data && data.length && data[0].id? getId : null;
 					}
 					
-					// mark changed for next render loop.
-					this.dataChanged = true;
+					// mark everything changed for next render loop.
+					this.dataChangeHints = {
+						delta: true,
+						changed: true
+					};
 				}
 				
 				return new aperture.Layer.LogicalNodeSet(this);
 			},
 			
 			/**
-			 * TODO: implement. Adds to the logical set of all layer nodes, returning the set of added items.
+			 * Adds to the logical set of all layer nodes, returning the set of added items. The idFunction, 
+			 * if given via join or all, remains unchanged.
 			 * 
 			 * @param {Array|Object} data
 			 *      the array of data objects, from which each node will be mapped.  May be an array 
@@ -2930,7 +2941,70 @@ function(namespace) {
 			 *      the set of added layer nodes.
 			 */
 			add : function( data ) {
-				
+				if (this.hasLocalData && this.dataItems.values) {
+					// Existing dataset to add to
+					var newData = this.dataItems.values.concat(data);
+					this.dataItems = function() {
+						return newData;
+					};
+					this.dataItems.values = newData;
+
+					this.dataChangeHints = this.dataChangeHints || {};
+					this.dataChangeHints.delta = true;
+
+					// return a nodeset filtered to the new data
+					return new aperture.Layer.LogicalNodeSet(this).where(data);
+				} else if (this.hasLocalData) {
+					// Local data is a function operator on the parent, illegal call to add
+					throw new Error('Can only add data to a layer with a dataset already specified');
+				} else {
+					// No local data, this add is the same as calling all
+					return this.all(data);
+				}
+			},
+
+			/**
+			 * ${protected}
+			 * Removes the contents of a nodeset from this layer's data. This is used internally
+			 * by the framework, {@link aperture.Layer.NodeSet#remove} should be used instead of
+			 * this method.
+			 * 
+			 * @param {aperture.Layer.NodeSet} nodeset
+			 *      The set of data nodes to remove from this layer.
+			 *
+			 * @returns {aperture.Layer.NodeSet} the removed nodeset
+			 */
+			removeNodeSet : function ( nodeset ) {
+				if (this.hasLocalData && this.dataItems.values) {
+					var removeIter = nodeset.data(),
+						removedArray = [],
+						node;
+
+					// Create searchable array of values to remove from iter
+					while (node = removeIter.next()) {
+						removedArray.push(node);
+					}
+
+					// filter out values to remove
+					var newData = util.filter(this.dataItems.values, function(value) {
+						return !util.has(removedArray, value);
+					});
+
+					this.dataItems = function() {
+						return newData;
+					};
+					this.dataItems.values = newData;
+
+					// Mark delta changes, no changes to existing data
+					this.dataChangeHints = this.dataChangeHints || {};
+					this.dataChangeHints.delta = true;
+
+					// return a nodeset filtered to the new data
+					return nodeset;
+				} else {
+					// Local data is a function operator on the parent, illegal call to add
+					throw new Error('Can only remove data from a layer with a dataset already specified');
+				}
 			},
 			
 			/**
@@ -2960,15 +3034,20 @@ function(namespace) {
 				var chgs = myChangeSet.changed = [],
 					adds = myChangeSet.added = [],
 					rmvs = myChangeSet.removed = [];
-				
-				// is data changed locally or in a parent that we subselect from?
-				myChangeSet.dataChanged = this.dataChanged || (parentChangeSet.dataChanged && hasLocalData && !this.dataItems.values);
 
-				
-				// reset now that we're going to process.
-				this.dataChanged = false;
+				// If "changes" in parent changeset represent actual *data* changes, mark our change hints to
+				// reflect this. Will result in full reprocess of data
+				if (parentChangeSet.dataChanged && hasLocalData && !this.dataItems.values) {
+					this.dataChangeHints = this.dataChangeHints || {};
+					this.dataChangeHints.changed = true;
+				}
 
+				// Mark set of "changes" in this changeset as actual *data* changes not just requests to redraw
+				// if data in this layer was actually changed or flag is cascading down from parent and this layer's
+				// data is computed via data subselect
+				myChangeSet.dataChanged = this.dataChangeHints && this.dataChangeHints.changed;
 				
+
 				// SHORTCUT REMOVAL
 				// if we rendered local data last time and not this, or vice versa,
 				// we need to destroy everything and rebuild to respect new orders of data.
@@ -3082,7 +3161,7 @@ function(namespace) {
 				// adds always propagate down, but not changes if they are not visible.
 				// form the list here of everything that need drawing/redrawing.
 				if (adds.length !== 0) {
-					var draw = myChangeSet.updates = myChangeSet.changed.splice();
+					var draw = myChangeSet.updates = myChangeSet.changed.slice();
 					
 					// on construction we did not create graphics unless it was visible
 					forEach(adds, function(c) {
@@ -3116,6 +3195,9 @@ function(namespace) {
 					log.debug(clist);
 					log.debug(rlist);
 				}
+
+				// Done processing changes, reset hints
+				this.dataChangeHints = null;
 				
 				return myChangeSet;
 			},
@@ -3675,7 +3757,7 @@ function(namespace) {
 						anchorPoint: [0,0],
 						userData: {},
 						graphics : aperture.canvas.NO_GRAPHICS,
-						kids: []
+						kids: {}
 					};
 
 			// an actual element?
@@ -4021,8 +4103,7 @@ function(namespace) {
 
 						var barSeriesData = barSpec.node.data;
 						var lineStroke = this.valueFor('stroke', barSeriesData, 'none', index);
-						var barLayout =	this.valueFor('bar-layout', barSeriesData, null, index);						
-						var cursor = this.valueFor('cursor', barSeriesData, 'default', index);
+						var barLayout =	this.valueFor('bar-layout', barSeriesData, null, index);
 
 						// Check if the visual exceeds the current context size,
 						// culling if necessary.
@@ -4056,8 +4137,7 @@ function(namespace) {
 								"stroke-width":lineStroke==null?0:barSpec.strokeWidth,
 								"stroke-linejoin": "round",
 								"width" : renderBarDim.width,
-								"height" : renderBarDim.height,
-								"cursor" : cursor
+								"height" : renderBarDim.height
 							}, transition);
 						}
 						else {
@@ -4707,6 +4787,203 @@ function(namespace) {
 
 }(aperture || {}));
 /**
+ * Source: Date.js
+ * Copyright (c) 2013-2014 Oculus Info Inc.
+ * @fileOverview Aperture Date APIs
+ */
+
+/**
+ * @ignore
+ * Ensure namespace exists
+ */
+aperture = (
+/** @private */
+function(namespace) {
+
+	var util = aperture.util;
+
+	var dateFields = ['FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'];
+
+	namespace.Date = aperture.Class.extend( 'aperture.Date', {
+		/** @private */
+		_utc: true,
+		/** @private */
+		_date: null,
+
+		/**
+		 * @class 
+		 *
+		 * @constructs
+		 * @description
+		 * Constructs a new Date object. By default the date will be represented (e.g. via 
+		 * methods like get('Hours')) in UTC.
+		 *
+		 * @param {String|Number|Date} date
+		 *      the date value (as a string to be parsed, number of milliseconds past epoch,
+		 *      or existing aperture/javascript Date object)
+		 * @param {Object} [options]
+		 *      an optional options object. Currently only supports local: true which directs
+		 *      the date object to represent time units in local time.
+		 *
+		 * @returns {this}
+		 *      a new Date
+		 */
+		init: function(date, options) {
+			if (Object.prototype.toString.call(date) === '[object Date]') {
+				this._date = date;
+			} else {
+				this._date = new Date(date.valueOf());
+			}
+			this._utc = !(options && options.local);
+		},
+
+		/**
+		 * Returns the unit value (e.g. year, minute, etc) of the date. If no unit given, returns
+		 * a hash of all date unit fields to values
+		 *
+		 * @param {String} [unit]
+		 *  If given, one of 'FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'.
+		 *  If not specified, will return an object containing values for all fields.
+		 *
+		 * @returns {Number|Object}
+		 *  If a unit is given, returns the numerical value. If no unit, returns an object containing
+		 *  values for each field where the keys are the supported unit names.
+		 */
+		get: function(unit) {
+			if (unit) {
+				var getter = 'get' + (this._utc ? 'UTC' : '') + unit;
+				if (!this._date[getter]) {
+					throw new Error('Unrecognized date unit: ' + unit);
+				}
+				return this._date[getter]();
+			} else {
+				var self = this, 
+					result = {};
+				util.forEach(dateFields, function(unit) {
+					result[unit] = self.get(unit);
+				});
+				return result;
+			}
+		},
+
+		/**
+		 * Sets one or more units of this date to a given value. Supports setting one unit at a time
+		 * or multiple units at once. This function mutates the Date object.
+		 *
+		 * @example
+		 * // Set only the year to 1997
+		 * date.set(1997, 'FullYear');
+		 *
+		 * // Date and Hour
+		 * date.set({
+		 *   Date: 18,
+		 *   Hours: 7
+		 * });
+		 *
+		 * @param {Number|Object} value
+		 *  If a number is given it must be combined with a unit. The number + unit will be used to set
+		 *  the desired value. If an object is given it must contain keys from the set of allowed units.
+		 *
+		 * @param {String} [unit]
+		 *  Optional, one of 'FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		set: function(value, unit) {
+			var prefix = (this._utc ? 'setUTC' : 'set');
+
+			if (util.isObject(value)) {
+				var newValues = util.extend(this.get(), value);
+				this._date[prefix+'FullYear']( newValues.FullYear, newValues.Month, newValues.Date );
+				this._date[prefix+'Hours']( newValues.Hours, newValues.Minutes, newValues.Seconds, newValues.Milliseconds );
+			} else {
+				if (!this._date[prefix+unit]) {
+					throw new Error('Unrecognized date unit: ' + unit);
+				}
+				this._date[prefix+unit](value);
+			}
+
+			return this;
+		},
+
+		/**
+		 * Alters the date's timezone, sets to UTC. The actual date-time represented by this object
+		 * remains unchanged. Calling this only affects the numbers returned via get('Hours'), etc.
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		utc: function() {
+			this._utc = true;
+			return this;
+		},
+
+
+
+		/**
+		 * Alters the date's timezone, sets to the local timezone. The actual date-time represented by this object
+		 * remains unchanged. Calling this only affects the numbers returned via get('Hours'), etc.
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		local: function() {
+			this._utc = false;
+			return this;
+		},
+
+		/**
+		 * Returns the number of milliseconds since the Unix Epoch. Equivalent to JavaScript built-in Date
+		 * .valueOf() and .getTime().
+		 *
+		 * @returns {Number}
+		 *  The number of milliseconds since the unix epoch.
+		 */
+		valueOf: function() {
+			return this._date.valueOf();
+		},
+
+		/**
+		 * Adds the specified value and unit of time to this Date object.
+		 *
+		 * @example
+		 * // Adds 12 hours to the date
+		 * date.add(12, 'Hours');
+		 *
+		 * @param {Number} value
+		 *  The numerical value of the value/unit combination to add to the current date.allowed units.
+		 *
+		 * @param {String} unit
+		 *  One of 'FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		add: function(value, unit) {
+			var normalizedUnit = (this._utc ? 'UTC' : '') + unit;
+			this._date['set'+normalizedUnit]( this._date['get'+normalizedUnit]() + value);
+			return this;
+		},
+
+		/**
+		 * JavaScript standard toString function. Delegates to JavaScript built-in Date object's
+		 * toString or toUTCString depending on date's timezone setting.
+		 *
+		 * @returns {String}
+		 *  String representation of the current date.
+		 */
+		toString: function() {
+			if (this._utc) {
+				return this._date.toUTCString();
+			} else {
+				return this._date.toString();
+			}
+		}
+	});
+
+	return namespace;
+}(aperture || {}));/**
  * Source: Format.js
  * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Formats values.
@@ -4720,6 +4997,8 @@ function(namespace) {
 aperture = (
 /** @private */
 function(namespace) {
+
+	var util = namespace.util;
 
 	// TODO: extend these to take precise format specifications as a string.
 
@@ -4770,7 +5049,7 @@ function(namespace) {
 			 * of doing so:
 			 *
 			 * @example
-			 * var hourFormat = aperture.Format.getTimeFormat( 'Hours' );
+			 * var hourFormat = aperture.Format.getTimeFormat( {precision: 'Hours'} );
 			 *
 			 * // displays 'Date'
 			 * alert( hourFormat.nextOrder() );
@@ -5012,38 +5291,38 @@ function(namespace) {
 			return num < 10? '0' + num : String(num);
 		}
 		function hh12( date ) {
-			var h = date.getHours();
+			var h = date.get('Hours');
 			return h? (h < 13? String(h) : String(h - 12)) : '12';
 		}
 		function ampm( date ) {
-			return date.getHours() < 12? 'am' : 'pm';
+			return date.get('Hours') < 12? 'am' : 'pm';
 		}
 		function millis( date ) {
-			return ':' + ((date.getSeconds()*1000 + date.getMilliseconds())/1000) + 's';
+			return ':' + ((date.get('Seconds')*1000 + date.get('Milliseconds'))/1000) + 's';
 		}
 		function ss( date ) {
-			return ':' + pad2(date.getSeconds()) + 's';
+			return ':' + pad2(date.get('Seconds')) + 's';
 		}
 		function hhmm( date ) {
-			return hh12(date) + ':' + pad2(date.getMinutes()) + ampm(date);
+			return hh12(date) + ':' + pad2(date.get('Minutes')) + ampm(date);
 		}
 		function hh( date ) {
 			return hh12(date) + ampm(date);
 		}
 		function mondd( date ) {
-			return months[date.getMonth()] + ' '+ date.getDate();
+			return months[date.get('Month')] + ' '+ date.get('Date');
 		}
 		function day( date ) {
-			return days[date.getDay()] + ' ' + mondd(date);
+			return days[date.get('Day')] + ' ' + mondd(date);
 		}
 		function mon( date ) {
-			return months[date.getMonth()];
+			return months[date.get('Month')];
 		}
 		function year( date ) {
-			return String(date.getFullYear());
+			return String(date.get('FullYear'));
 		}
 		function yy( date ) {
-			return "'" + String(date.getFullYear()).substring(start, end);
+			return "'" + String(date.get('FullYear')).substring(start, end);
 		}
 
 		return {
@@ -5076,24 +5355,42 @@ function(namespace) {
 	namespace.TimeFormat = namespace.Format.extend( 'aperture.TimeFormat',
 
 		{
+			/** @private */
+			_utc: true,
+
 			/**
 			 * @private
 			 *
-			 * @param {String} [precision]
+			 * @param {Object|String} [options]
+			 *      Optional options hash to affect time formatting behaviour. For backwards 
+			 *      compatibility also supports passing precision (see below) as a string
+			 *
+			 * @param {String} [options.precision]
 			 *      The optional precision of the value to format. For times this
 			 *      will be a Date field reference, such as 'FullYear' or 'Seconds'.
+			 *
+			 * @param {Boolean} [options.local]
+			 *      When true, causes the formatter to display times using the local 
+			 *      timezone (vs the default UTC)
 			 *
 			 * @returns {aperture.TimeFormat}
 			 *      A new time format object.
 			 */
-			init : function ( precision ) {
-				if (precision) {
-					this.order = timeOrders[precision];
-
-					if (!this.order) {
-						aperture.log.warn('Invalid precision "' + precision + '" in TimeFormat');
+			init : function ( options ) {
+				if (util.isString(options)) {
+					options = {
+						precision: options
 					}
 				}
+				if (options && options.precision) {
+					this.order = timeOrders[options.precision];
+
+					if (!this.order) {
+						aperture.log.warn('Invalid precision "' + options.precision + '" in TimeFormat');
+					}
+				}
+
+				this._utc = !(options && options.local);
 			},
 
 			/**
@@ -5110,8 +5407,8 @@ function(namespace) {
 
 				// precision based formatting?
 				if ( value != null ) {
-					if (!value.getTime) {
-						value = new Date(value);
+					if (!value.typeOf || !value.typeOf(aperture.Date)) {
+						value = new aperture.Date(value, {local: !this._utc});
 					}
 					if ( this.order ) {
 						return this.order.format( value );
@@ -5137,9 +5434,17 @@ function(namespace) {
 	/**
 	 * Returns a time format object, suitable for formatting dates and times.
 	 *
-	 * @param {String} [precision]
+	 * @param {Object|String} [options]
+	 *      Optional options hash to affect time formatting behaviour. For backwards 
+	 *      compatibility also supports passing precision (see below) as a string
+	 *
+	 * @param {String} [options.precision]
 	 *      The optional precision of the value to format. For times this
 	 *      will be a Date field reference, such as 'FullYear' or 'Seconds'.
+	 *
+	 * @param {Boolean} [options.local]
+	 *      When true, causes the formatter to display times using the local 
+	 *      timezone (vs the default UTC)
 	 *
 	 * @returns {aperture.Format}
 	 *      a time format object.
@@ -5147,8 +5452,8 @@ function(namespace) {
 	 * @name aperture.Format.getTimeFormat
 	 * @function
 	 */
-	namespace.Format.getTimeFormat = function( precision ) {
-		return new namespace.TimeFormat( precision );
+	namespace.Format.getTimeFormat = function( options ) {
+		return new namespace.TimeFormat( options );
 	};
 
 	return namespace;
@@ -5296,9 +5601,6 @@ function(namespace) {
 
 }(aperture || {}));
 
-
-
-
 /**
  * Source: LabelLayer.js
  * Copyright (c) 2013-2014 Oculus Info Inc.
@@ -5313,12 +5615,7 @@ function(namespace) {
 	var orientations = {
 		horizontal : 0,
 		vertical: -90
-	}, isString = aperture.util.isString,
-	   MAX_CACHE_ENTRIES = 256,
-		stringCache = {
-			entries : {},
-			lruStack : []
-		};
+	}, isString = aperture.util.isString;
 	
 	namespace.LabelLayer = namespace.Layer.extend( 'aperture.LabelLayer',
 	/** @lends aperture.LabelLayer# */
@@ -5393,161 +5690,6 @@ function(namespace) {
 
 		canvasType : aperture.canvas.VECTOR_CANVAS,
 
-		getFromCache :  function(hash) {
-			if (stringCache.entries[hash] === undefined) {
-				return null;
-			} else {
-				// add 
-				stringCache.lruStack.splice( stringCache.lruStack.indexOf(hash), 1);
-				stringCache.lruStack.push(hash);
-				return stringCache.entries[hash];
-			}
-		},
-
-		addToCache : function( formatted, hash ) {
-
-			if (stringCache.entries[hash] === undefined) {
-
-				while ( stringCache.lruStack.length >= MAX_CACHE_ENTRIES) {
-					// pop from front of stack (LRU), and delete entry
-					delete stringCache.entries[stringCache.lruStack.shift()];
-				}
-
-				// add new entry to LRU stack and cache
-				stringCache.lruStack.push(hash);
-				stringCache.entries[hash] = formatted;
-			}
-		},
-
-		getFontSize : function( g, str, font ) {
-			
-			font.x = 0;
-			font.y = 0;
-			font.opacity = 0;
-			font.str = str;
-			var temp = g.text(0, 0, str);
-			g.update(temp, font);
-			var bb = temp.getBBox();
-			g.remove(temp);
-			return {
-				width: bb.width,
-				height: bb.height
-			};
-		},
-
-		addWordLetterByLetter : function( g, formatted, word, widthLeft, font ) {
-
-			var pos = 0,
-				letter = word[pos++],
-				letterWidth = this.getFontSize( g, letter, font ).width;
-			while (widthLeft > letterWidth && pos < word.length) {
-				formatted += letter;
-				widthLeft -= letterWidth;
-				letter = word[pos++];
-				letterWidth = this.getFontSize( g, letter, font ).width;
-			}
-			return {
-				appended : formatted,
-				remaining : word.substring(pos),
-				widthLeft : widthLeft
-			};
-		},
-
-		formatText : function( g, maxWidth, maxHeight, str, font ) {
-
-			function strHash(str) {
-				var hash = 0, i, chr, len;
-			 	if (str.length == 0) return hash;
-			 	for (i = 0, len = str.length; i < len; i++) {
-				    chr   = str.charCodeAt(i);
-				    hash  = ((hash << 5) - hash) + chr;
-				    hash |= 0; // Convert to 32bit integer
-				}
-				return hash;
-			}
-
-			// see if we already formatted the string
-			var hash = strHash(str) + "-" + strHash(maxWidth + "-" + maxHeight + "-" +font['font-size']);
-	        var cacheEntry = this.getFromCache(hash);
-	        if ( cacheEntry !== null ) {
-	        	return cacheEntry;
-	        }
-
-	        // compute some constants only after checking cache
-	        var widthLeftOnLine = maxWidth,
-				formatted = "",
-				ELLIPSIS = "...",
-				ELLIPSIS_WIDTH = this.getFontSize( g, ELLIPSIS, font ).width,
-				HYPHEN_WIDTH = this.getFontSize( g, "-", font ).width,
-				SPACE_WIDTH = this.getFontSize( g, "- -", font ).width - 2*HYPHEN_WIDTH,
-				LINE_HEIGHT = this.getFontSize( g, str, font ).height,
-				numLinesLeft = Math.floor( maxHeight / LINE_HEIGHT ),
-				strArray = str.split(" ");
-
-			for (var j = 0; j<strArray.length; j++) {
-
-				var word = strArray[j],
-					wordWidth = this.getFontSize( g, word, font).width;
-
-				while( wordWidth > widthLeftOnLine ) {
-
-					if (numLinesLeft <= 1) {
-						// on last line, add ellipsis
-
-	                    // strip characters until we at least have room for ellipsis
-	                    while(widthLeftOnLine < ELLIPSIS_WIDTH) {
-	                    	var lastChar = formatted[formatted.length-1];
-	                    	formatted = formatted.substring(0, formatted.length-1);
-	                        widthLeftOnLine += this.getFontSize( g, lastChar, font ).width;
-	                    }
-
-	                    // strip space if it is last character of string
-	                    if (formatted[formatted.length-1] === ' ') {									
-                    		formatted = formatted.substring(0, formatted.length - 1);
-                    		widthLeftOnLine -= SPACE_WIDTH;
-                    	}
-
-	                    // save room for ellipse
-						widthLeftOnLine -= ELLIPSIS_WIDTH;
-						// add word letter by letteer
-						formatted = this.addWordLetterByLetter( g, formatted, word, widthLeftOnLine, font ).appended;
-						// add ellipse and return
-	                    return formatted + ELLIPSIS;
-					}
-
-					if (wordWidth < maxWidth) {
-						// we can fit it on the next line
-						// if last character on line is space, remove it
-						if (formatted[formatted.length-1] === ' ') {									
-                    		formatted = formatted.substring(0, formatted.length - 1);
-                    	}
-						formatted += '\n';
-					} else {
-						// this word will not fit on ANY line, hyphenate it
-						// save room for hyphen
-						widthLeftOnLine -= HYPHEN_WIDTH;
-						// add word letter by letter, return rest of word
-						var result = this.addWordLetterByLetter( g, formatted, word, widthLeftOnLine, font );
-						word = result.remaining;
-						formatted = result.appended;
-						// get new length
-						wordWidth = this.getFontSize( g, word, font).width;
-						// add hyphen and newline
-						formatted += "-\n";
-					}
-					widthLeftOnLine = maxWidth;
-					numLinesLeft--;
-				}
-
-				formatted += word + ' ';
-				widthLeftOnLine -= (wordWidth + SPACE_WIDTH);
-			}
-
-			this.addToCache(formatted, hash);
-			return formatted;
-		},
-
-
 		render : function(changeSet) {
 			var node, i, n, g, labels;
 
@@ -5602,8 +5744,6 @@ function(namespace) {
 					var fontSize = this.valueFor('font-size', node.data, 10, index);
 					var fontWeight = this.valueFor('font-weight', node.data, "normal", index);
 
-					var cursor = this.valueFor('cursor', node.data, 'default', index);
-
 					var moreLines = str.match(/\n/g),
 						textHeight = fontSize *1.4 + fontSize* (moreLines? moreLines.length: 0);
 
@@ -5623,8 +5763,6 @@ function(namespace) {
 					var offsetY = this.valueFor('offset-y', node.data, 0, index);
 					var textAnchor = this.valueFor('text-anchor', node.data, 'middle', index);
 					var vAlign  = this.valueFor('text-anchor-y', node.data, 'middle', index);
-					var maxWidth = this.valueFor('max-width', node.data, 'none', index);
-					var maxHeight  = this.valueFor('max-height', node.data, 'none', index);
 
 					// convert to a number
 					vAlign = vAlign !== 'middle'? 0.5*textHeight * (vAlign === 'top'? 1: -1): 0;
@@ -5649,30 +5787,13 @@ function(namespace) {
 							'font-weight': fontWeight,
 							'text-anchor': textAnchor,
 							'transform': transform,
-							'opacity': opacity,
-							'cursor': cursor
+							'opacity': opacity
 							};
 					var fattr;
 
 					if (!label) {
 						label = labels[index] = {};
 					}
-					
-					// if max-width is given, format text to fit!
-					if ( maxWidth !== 'none') {
-						
-						var font = {
-								'font-family': fontFamily,
-								'font-size': fontSize,
-								'font-weight': fontWeight,
-								'transform': transform
-							};
-
-						maxHeight = (maxHeight === 'none') ? Number.MAX_VALUE : maxHeight;
-						str = this.formatText( g, maxWidth, maxHeight, str, font );
-					}
-					
-					attr.text = str;
 					
 					// if outlined we create geometry behind the main text.
 					if (outlineWidth) {
@@ -5707,19 +5828,15 @@ function(namespace) {
 					
 					index = [index];
 					
-					
 					// always deal with the back one first.
 					if (!label.back) {
-						
 						label.back = g.text(xPoint, yPoint, str);
 						g.data(label.back, node.data, index);
 						g.update(label.back, attr);
 						g.apparate(label.back, changeSet.transition);
-						
 					} else {
 						g.update(label.back, attr, changeSet.transition);
 					}
-					
 					
 					if (connect) {
 						var connectX = this.valueFor('connect-x', node.data, 0, index);
@@ -5749,512 +5866,14 @@ function(namespace) {
 							g.update(label.front, fattr, changeSet.transition);
 						}
 					}
-				}	
-
+				}
 			}
-			
 		}
 	});
 
 	return namespace;
 
 }(aperture || {}));
-
-
-
-
-
-/**
- * Source: WordCloudLayer.js
- * Copyright (c) 2013-2014 Oculus Info Inc.
- * @fileOverview Aperture Text Layer
- */
-
-aperture = (
-/** @private */
-function(namespace) {
-
-	var MAX_CACHE_ENTRIES = 1024,
-		cloudCache = {
-			entries : {},
-			lruStack : []
-		};
-
-	namespace.WordCloudLayer = namespace.Layer.extend( 'aperture.WordCloudLayer',
-	/** @lends aperture.WordCloudLayer# */
-	{
-		/**
-		 * @augments aperture.Layer
-		 * @requires a vector canvas
-		 * @class Creates a layer displaying text at specific locations.
-
-		 * @mapping {Number=1} label-count
-		 *   The number of labels to be drawn.
-
-		 * @mapping {Number=1} label-visible
-		 *   The visibility of a label.
-
-		 * @mapping {String} text
-		 *   The text to be displayed.
-
-		 * @mapping {String='black'} fill
-		 *   The color of a label.
-
-		 * @mapping {Number=0} x
-		 *   The horizontal position at which the label will be anchored.
-
-		 * @mapping {Number=0} y
-		 *   The vertical position at which the label will be anchored.
-
-		 * @mapping {Number=0} offset-x
-		 *   The offset along the x-axis by which to shift the text after it has been positioned at (x,y).
-
-		 * @mapping {Number=0} offset-y
-		 *   The offset along the y-axis by which to shift the text after it has been positioned at (x,y).
-
-		 * @mapping {Number=1.0} opacity
-		 *   How opaque the label will be in the range [0,1].
-
-		 * @mapping {'middle'|'start'|'end'} text-anchor
-		 *   How the label is aligned with respect to its x position.
-
-		 * @mapping {'middle'|'top'|'bottom'} text-anchor-y
-		 *   How the label is aligned with respect to its y position.
-
-		 * @mapping {'horizontal'|'vertical'| Number} orientation
-		 *   The orientation of the text as a counter-clockwise angle of rotation, or constants 'vertical'
-		 *   or 'horizontal'.
-
-		 * @mapping {String='Arial'} font-family
-		 *   One or more comma separated named font families,
-		 *   starting with the ideal font to be used if present.
-
-		 * @mapping {Number=10} font-size
-		 *   The font size (in pixels).
-
-		 * @mapping {String='normal'} font-weight
-		 *   The font weight as a valid CSS value.
-
-		 * @mapping {String='none'} font-outline
-		 *   The colour of the outline drawn around each character of text. 
-		 *   
-		 * @mapping {Number=3} font-outline-width
-		 *   The width of the outline drawn around each character of text, if font-outline is not none.
-		 *   
-		 * @mapping {Number=1.0} font-outline-opacity
-		 *   How opaque the font outline will be.
-		 *   
-		 * @constructs
-		 * @factoryMade
-		 */
-		init : function(spec, mappings){
-			aperture.Layer.prototype.init.call(this, spec, mappings);
-		},
-
-		canvasType : aperture.canvas.VECTOR_CANVAS,
-
-		getFromCache :  function(hash) {
-			if (cloudCache.entries[hash] === undefined) {
-				return null;
-			} else {
-				// add 
-				cloudCache.lruStack.splice( cloudCache.lruStack.indexOf(hash), 1);
-				cloudCache.lruStack.push(hash);
-				return cloudCache.entries[hash];
-			}
-		},
-
-		addToCache : function( cloud, hash ) {
-
-			if (cloudCache.entries[hash] === undefined) {
-
-				while ( cloudCache.lruStack.length >= MAX_CACHE_ENTRIES) {
-					// pop from front of stack (LRU), and delete entry
-					console.log("pop");
-					delete cloudCache.entries[cloudCache.lruStack.shift()];
-				}
-
-				// add new entry to LRU stack and cache
-				cloudCache.lruStack.push(hash);
-				cloudCache.entries[hash] = cloud;
-			}
-		},
-
-
-		spiralPosition : function( pos ) {
-
-			var pi2 = 2 * Math.PI,
-				circ = pi2 * pos.radius,
-				inc = ( pos.arcLength > circ/10) ? circ/10 : pos.arcLength,
-				da = inc / pos.radius,
-				nt = (pos.t+da);
-
-			if (nt > pi2) {
-				nt = nt % pi2;
-				pos.radius = pos.radius + pos.radiusInc;
-			}
-
-			pos.t = nt;			
-			pos.x = pos.radius * Math.cos(nt);		
-			pos.y = pos.radius * Math.sin(nt);
-			return pos; 
-        },
-
-
-        intersectsAWord : function( p, d, c, bb ) {
-        	var w, box = {
-        		x:p.x,
-        		y:p.y,
-        		height:d.height,
-        		width:d.width
-        	};
-
-        	function boxTest( a, b ) {
-			  	return (Math.abs(a.x - b.x) * 2 < (a.width + b.width)) &&
-			           (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
-			}
-
-			function overlapTest( a, b ) {
-				return ( a.x + a.width/2 > b.x+b.width/2 ||
-					     a.x - a.width/2 < b.x-b.width/2 ||
-					     a.y + a.height/2 > b.y+b.height/2 ||
-					     a.y - a.height/2 < b.y-b.height/2 );
-			}
-
-        	for (w=0; w<c.length; w++) {
-        		if ( c[w] !== null && boxTest( box, c[w] ) ) {
-        			return { 
-        				result : true,
-        			    type: 'word' 
-        			};
-        		}
-        	}
-
-        	// make sure it doesn't intersect the border;
-        	if ( overlapTest( box, bb ) ) {
-        		return { 
-        			result : true,
-        		 	type: 'border' 
-        		};
-        	}
-
-        	return { 
-        		result : false 
-        	};
-        },
-
-
-        getFontSize : function( g, str, font ) {
-			
-			font.x = 0;
-			font.y = 0;
-			font.opacity = 0;
-			font.str = str;
-			var temp = g.text(0, 0, str);
-			g.update(temp, font);
-			var bb = temp.getBBox();
-			g.remove(temp);
-			return {
-				width: bb.width,
-				height: bb.height
-			};
-		},
-
-
-        generateCloud : function( g, words, frequencies, itemCount, font, bb ) {
-
-        	function strHash(str) {
-				var hash = 0, i, chr, len;
-			 	if (str.length == 0) return hash;
-			 	for (i = 0, len = str.length; i < len; i++) {
-				    chr   = str.charCodeAt(i);
-				    hash  = ((hash << 5) - hash) + chr;
-				    hash |= 0; // Convert to 32bit integer
-				}
-				return hash;
-			}
-
-	        // Assemble into ordered list
-	        var wordCounts = [];
-	        var hash = "";
-			for (j=0; j<itemCount; j++) {
-	        	wordCounts.push({
-	        		word: words[j],
-	        		count: frequencies[j]
-	        	});
-	        	hash += words[j] +"-"+ frequencies[j] +":";
-	        }
-	        hash += font.maxFontSize +":"+ font.minFontSize;
-
-	        hash = strHash(hash);
-	        // see if we already created the cloud
-	        var cloud = this.getFromCache(hash);
-	        if ( cloud !== null ) {
-	        	return cloud;
-	        }
-
-	        // Get mean				
-	        var sum = 0;
-	        for (j=0; j<itemCount; j++) {
-	        	sum += frequencies[j];
-	        }
-
-	        wordCounts.sort(function(a, b){return b.count-a.count});
-
-	        // Assemble word cloud
-			var word, count, dim,		
-				fontSize,
-				cloud = [], i,
-				pos, scale = Math.log(sum),
-				fontRange = (font.maxFontSize - font.minFontSize);
-
-	        // assemble words in cloud
-			for (j=0; j<itemCount; j++) {	
-
-				word = wordCounts[j].word;
-	        	count = wordCounts[j].count;
-	        	
-                fontSize = ( (count/sum) * fontRange * scale) + (font.minFontSize * (count / sum));
-                fontSize = Math.min( Math.max( fontSize, font.minFontSize), font.maxFontSize );
-
-	        	font['font-size'] = fontSize;
-
-	        	dim = this.getFontSize( g, word, font );
-	        	// add horizontal buffer
-	        	dim.width += 4;
-	        	// downsize vertical buffer as it always is too much
-	        	dim.height -= dim.height * 0.25;
-	        	
-	        	pos = {
-					radius : 1,
-					radiusInc : 2,
-					arcLength : 2,				
-					x : 0,
-					y : 0,
-					t : 0
-				};
-
-				var borderCollisions = 0,
-					intersection;
-
-	        	while( true ) {
-
-	        		// increment spiral
-	        		pos = this.spiralPosition(pos);
-	        		// test for intersection
-	        		intersection = this.intersectsAWord(pos, dim, cloud, bb);
-
-	        		if ( intersection.result === false ) {
-
-	        			cloud[j] = {
-	        				word: word,
-	        				fontSize: fontSize,
-	        				x:pos.x,
-	        				y:pos.y,
-	        				width: dim.width,
-	        				height: dim.height
-	        			};
-	        			break;
-
-	        		} else {
-
-	        			if ( intersection.type === 'border' ) {
-	        				// if we hit border, extend arc length
-	        				pos.arcLength = pos.radius;
-	        				borderCollisions++;
-	        				if ( borderCollisions > 20 ) {
-	        					// bail
-	        					cloud[j] = null;
-	        					break;
-	        				}
-	        				
-	        			}
-	        		}
-	        	}
-	        }
-
-	        this.addToCache(cloud, hash);
-
-	        return cloud;
-        },
-
-
-		render : function(changeSet) {
-
-			var node, i, j, n, g, labels;
-
-			// Create a list of all additions and changes.
-			var toProcess = changeSet.updates;
-
-			for (i=0; i < toProcess.length; i++){
-				node = toProcess[i];
-
-				labels = node.userData.labels = node.userData.labels || [];
-
-				// Get the number of labels to be rendered.
-				var words = this.valueFor('words', node.data, [], 0),
-				    frequencies = this.valueFor('frequencies', node.data, [], 0),				   
-					itemCount = (words.length <= frequencies.length) ? words.length : frequencies.length,
-					index;
-
-				g = node.graphics;
-				
-				// remove any extraneous labels
-				for (index=itemCount; index < labels.count; index++){
-					g.remove(labels[index].back);
-					g.remove(labels[index].front);
-				}
-				
-				labels.length = itemCount;
-				
-				var width = this.valueFor('width', node.data, 256, 0);
-				var height  = this.valueFor('height', node.data, 256, 0);
-				var opacity = this.valueFor('opacity', node.data, '', 0);
-				var offsetX = this.valueFor('offset-x', node.data, 0, 0);
-				var offsetY = this.valueFor('offset-y', node.data, 0, 0);
-				var outlineColor = this.valueFor('font-outline', node.data, 'none', 0);
-				var oopacity = this.valueFor('font-outline-opacity', node.data, 1.0, 0);
-				var outlineWidth = outlineColor !== 'none' && this.valueFor('font-outline-width', node.data, 3, 1);										        
-            	var fontFamily = this.valueFor('font-family', node.data, "Arial", 0);
-				var fontWeight = this.valueFor('font-weight', node.data, "normal", 0);
-				var minFontSize = this.valueFor('min-font-size', node.data, 12, 0);
-	        	var maxFontSize = this.valueFor('max-font-size', node.data, 24, 0);        	
-				var cursor = this.valueFor('cursor', node.data, 'default', 0);
-				var xPoint = offsetX + (this.valueFor('x', node.data, 0, 0) * node.width) + (node.position[0]||0);
-				var yPoint = offsetY + (this.valueFor('y', node.data, 0, 0) * node.height) + (node.position[1]||0);
-				var visible = !!this.valueFor('label-visible', node.data, true, 0);
-				var textAnchor = 'middle';
-				var vAlign = 0;
-				var font = {
-					'font-family': fontFamily,
-					'font-weight': fontWeight,
-					minFontSize : minFontSize,
-					maxFontSize : maxFontSize,
-					'transform': ''
-				};
-				var boundingBox = {
-					width:width, 
-					height:height, 
-					x: 0, 
-					y:0
-				};
-				var cloud = this.generateCloud( g, words, frequencies, itemCount, font, boundingBox ); 
-				for (index=0; index < itemCount; index++) {
-				
-					var label = labels[index];
-					
-					// if not visible, or cloud word could not fit
-					if (!visible || cloud[index] === null ){
-						if (label) {
-							g.remove(label.back);
-							g.remove(label.front);
-							labels[index] = null;
-						}
-						// Since all the labels are re-rendered on each update, there is
-						// nothing more to do if the label is not visible.
-						continue;
-					}
-
-					// Make the outline and fill colour the same.
-					var fillColor = this.valueFor('fill', node.data, '#000000', index);
-					
-					var fontSize = cloud[index].fontSize;
-					var str = cloud[index].word;
-					var wordX = xPoint + cloud[index].x;
-					var wordY = yPoint + cloud[index].y;
-
-					var attr = {
-							'x': wordX,
-							'y': wordY,
-							'text': str,
-							'stroke': 'none',
-							'font-family': fontFamily,
-							'font-size': fontSize,
-							'font-weight': fontWeight,
-							'text-anchor': textAnchor,
-							'opacity': opacity,
-							'cursor': cursor
-							};
-					var fattr;
-
-					if (!label) {
-						label = labels[index] = {};
-					}
-
-					
-					// if outlined we create geometry behind the main text.
-					if (outlineWidth) {
-						fattr = aperture.util.extend({
-							'fill': fillColor
-						}, attr);
-									
-						if (oopacity !== '' && oopacity != null && oopacity !== 1) {
-							if (opacity !== '' && opacity != null) {
-								oopacity = Math.min(1.0, opacity * oopacity);
-							}
-						} else {
-							oopacity = opacity;
-						}
-						
-						attr['opacity']= oopacity !== 1? oopacity : '';
-						attr['stroke-width']= outlineWidth;
-						attr['stroke']= outlineColor;
-						attr['stroke-linecap']= 'round';
-						attr['stroke-linejoin']= 'round';
-					} else {
-						if (label.front) {
-							g.remove(label.front);
-							label.front = null;
-						}
-						attr['stroke']= 'none';
-						attr['fill']= fillColor;
-					}
-					
-					index = [index];
-									
-					// always deal with the back one first.
-					if (!label.back) {
-						
-						label.back = g.text(xPoint, yPoint, str);
-						g.data(label.back, node.data, index);
-						g.update(label.back, attr);
-						g.apparate(label.back, changeSet.transition);
-						
-					} else {
-						g.update(label.back, attr, changeSet.transition);
-					}
-					
-					
-					// then the front.
-					if (outlineWidth) {
-						if (!label.front) {
-							label.front = g.text(xPoint, yPoint, str);
-							
-							g.data(label.front, node.data, index);
-							g.update(label.front, fattr);
-							g.apparate(label.front, changeSet.transition);
-						} else {
-							g.update(label.front, fattr, changeSet.transition);
-						}
-					}
-				}					
-			}
-			
-		}
-	});
-
-	return namespace;
-
-}(aperture || {}));
-
-
-
-
-
-
-
-
-
 /**
  * Source: LinkLayer.js
  * Copyright (c) 2013-2014 Oculus Info Inc.
@@ -7436,8 +7055,9 @@ function(namespace) {
 			// PROCESS TEST
 			// string test arg? a field name.
 			if (isString(test)) {
-				test = test === 'id'? getId : function() {
-					return this[test];
+				var propName = test;
+				test = propName === 'id'? getId : function() {
+					return this[propName];
 				};
 						
 			// no test arg? shift args.
@@ -7629,10 +7249,16 @@ function(namespace) {
 		},
 		
 		/**
-		 * TODO
+		 * Removes the data within this set from the host layer. This provides a 
+		 * mechanism to remove data from a layer without needing to reset all of the
+		 * layer's data via a call to {@link aperture.Layer#all}.
+		 *
+		 * @returns {this}
+		 *    this set after removing it from the host layer
 		 */
 		remove : function( ) {
-			
+			this._layer.removeNodeSet(this);
+			return this;
 		},
 		
 		/**
@@ -7859,6 +7485,20 @@ function(namespace) {
 		 * override
 		 */
 		where : NEVER,
+
+		/**
+		 * @private
+		 * override
+		 */
+		remove : function () {
+			var i, sets = this._sets, n = sets.length;
+			
+			for (i=0; i<n; i++) {
+				sets[i].remove();
+			}
+			
+			return this;
+		},
 		
 		/**
 		 * @private
@@ -9625,26 +9265,60 @@ function(namespace) {
 	var timeOrders = (function () {
 
 		function roundY( date, base ) {
-			date.setFullYear(Math.floor(date.getFullYear() / base) * base, 0,1);
-			date.setHours(0,0,0,0);
+			date.set({
+				FullYear: Math.floor(date.get('FullYear') / base) * base, 
+				Month: 0,
+				Date: 1, 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
 		function roundM( date, base ) {
-			date.setMonth(Math.floor(date.getMonth() / base) * base, 1);
-			date.setHours(0,0,0,0);
+			date.set({
+				Month: Math.floor(date.get('Month') / base) * base,
+				Date: 1, 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
 		function roundW( date, base ) {
-			date.setDate(date.getDate() - date.getDay());
-			date.setHours(0,0,0,0);
+			date.set({
+				Date: date.get('Date') - date.get('Day'), 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
 		function roundD( date, base ) {
-			date.setDate(1 + Math.floor((date.getDate() - 1) / base) * base);
-			date.setHours(0,0,0,0);
+			date.set({
+				Date: 1 + Math.floor((date.get('Date') - 1) / base) * base, 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
-		function roundF( date, base ) {
-			this.setter.call(date, Math.floor(this.getter.call(date) / base) * base, 0,0,0);
+		function roundH( date, base ) {
+			date.set({
+				Hours: Math.floor(date.get('Hours') / base) * base,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
-		function add( date, value ){
-			this.setter.call(date, this.getter.call(date) + value);
+		function roundMin( date, base ) {
+			date.set({
+				Minutes: Math.floor(date.get('Minutes') / base) * base,
+				Seconds: 0,
+				MilliSeconds: 0});
+		}
+		function roundS( date, base ) {
+			date.set({
+				Seconds: Math.floor(date.get('Seconds') / base) * base,
+				MilliSeconds: 0});
+		}
+		function roundMs( date, base ) {
+			date.set({MilliSeconds: Math.floor(date.get('Milliseconds') / base) * base});
 		}
 
 		// define using logical schema...
@@ -9654,10 +9328,10 @@ function(namespace) {
 				{ field: 'Month', span: /*31 days*/26784e5, round: roundM, steps: [ 3, 1 ] },
 				{ field: 'Date', span: 864e5, round: roundW, steps: [ 7 ] },
 				{ field: 'Date', span: 864e5, round: roundD, steps: [ 1 ] },
-				{ field: 'Hours', span:36e5, round: roundF, steps: [ 12, 6, 3, 1 ] },
-				{ field: 'Minutes', span: 6e4, round: roundF, steps: [ 30, 15, 5, 1 ] },
-				{ field: 'Seconds', span: 1e3, round: roundF, steps: [ 30, 15, 5, 1 ] },
-				{ field: 'Milliseconds', span: 1, round: roundF, steps: [ 500, 250, 100, 50, 25, 10, 5, 1 ] }
+				{ field: 'Hours', span:36e5, round: roundH, steps: [ 12, 6, 3, 1 ] },
+				{ field: 'Minutes', span: 6e4, round: roundMin, steps: [ 30, 15, 5, 1 ] },
+				{ field: 'Seconds', span: 1e3, round: roundS, steps: [ 30, 15, 5, 1 ] },
+				{ field: 'Milliseconds', span: 1, round: roundMs, steps: [ 500, 250, 100, 50, 25, 10, 5, 1 ] }
 				// below seconds, normal scalar band rules apply
 		], timeOrders = [], last, dateProto = Date.prototype;
 
@@ -9669,13 +9343,7 @@ function(namespace) {
 					span   : order.span * step,
 					next   : last,
 					base   : step,
-					field  : {
-						round  : order.round,
-						add    : add,
-						getter : dateProto['get' + order.field],
-						setter : dateProto['set' + order.field]
-					},
-					format : new namespace.TimeFormat( order.field )
+					round  : order.round
 				});
 			});
 		});
@@ -9694,6 +9362,9 @@ function(namespace) {
 
 		/** @lends aperture.TimeScalar.prototype */
 		{
+			/** @private */
+			_utc: true,
+
 			/**
 			 * @class Extends a scalar model property range with
 			 * modest specialization of formatting and banding for
@@ -9810,17 +9481,17 @@ function(namespace) {
 
 				// only auto update format if we haven't had it overridden.
 				if (this.autoFormat) {
-					this.formatter_ = order.format;
+					this.formatter_ = new namespace.TimeFormat( {precision: order.name, local: !this._utc} )
 				}
 
 				// round the start date
-				var date = new Date(start), field = order.field, band, bands = [];
-				field.round(date, base);
+				var date = new aperture.Date(start, {local: !this._utc}), band, bands = [];
+				order.round(date, base);
 
 				// stepping function for bands, in milliseconds
 				// (this arbitrary threshold limit kills any chance of an infinite loop, jic.)
 				while (i++ < 1000) {
-					var next = date.getTime();
+					var next = date.valueOf();
 
 					// last limit is this
 					if (band) {
@@ -9835,13 +9506,47 @@ function(namespace) {
 					// create band (set limit next round)
 					bands.push(band = {min: next});
 
-					field.add(date, base);
+					date.add(base, order.name);
 				}
 
 				return bands;
 			}
 		}
 	);
+
+	/**
+	 * Returns a new time scalar view which operates in the local timezone. This
+	 * applies to banding and time display.
+	 *
+	 * @returns {aperture.TimeScalar}
+	 *      a new view of this Range.
+	 *
+	 * @name aperture.TimeScalar.prototype.local
+	 * @function
+	 */
+	namespace.TimeScalar.addView( 'local', {
+		init : function () {
+			this._utc = false;
+			this.formatter._utc = false;
+		}
+	});
+
+	/**
+	 * Returns a new time scalar view which operates in the UTC timezone. This
+	 * applies to banding and time display.
+	 *
+	 * @returns {aperture.TimeScalar}
+	 *      a new view of this Range.
+	 *
+	 * @name aperture.TimeScalar.prototype.utc
+	 * @function
+	 */
+	namespace.TimeScalar.addView( 'utc', {
+		init : function () {
+			this._utc = true;
+			this.formatter._utc = true;
+		}
+	});
 
 	namespace.Ordinal = namespace.Range.extend( 'aperture.Ordinal',
 
@@ -10114,6 +9819,7 @@ function(namespace) {
 		switch (style) {
 		case 'none':
 			attrs.opacity = 0;
+			break;
 		case '':
 		case 'solid':
 			return '';
@@ -10126,6 +9832,7 @@ function(namespace) {
 		return style;
 	}
 
+
 	function removeSankeys(links){
 		var i;
 
@@ -10137,6 +9844,8 @@ function(namespace) {
 			}
 		}
 	}
+
+
 	function stackLinks(links){
 		var i, sourceMap = {},
 			targetMap = {};
@@ -10166,13 +9875,15 @@ function(namespace) {
 
 			var flowSpec = {
 				'source': {
-					'id' : sourceData.id,
-					'x' : this.valueFor('node-x', sourceData, 0, linkData),
-					'y': this.valueFor('node-y', sourceData, 0, linkData) ,
-					'r': this.valueFor('source-offset', sourceData, 0, linkData)
+					uid : this.valueFor('node-uid', sourceData, '', linkData),
+					duplicateId : this.valueFor('node-id', sourceData, '', linkData),
+					x : this.valueFor('node-x', sourceData, 0, linkData),
+					y : this.valueFor('node-y', sourceData, 0, linkData) ,
+					r : this.valueFor('source-offset', sourceData, 0, linkData)
 				},
 				'target' : {
-					'id' : targetData.id,
+					uid : this.valueFor('node-uid', targetData, '', linkData),
+					duplicateId : this.valueFor('node-id', targetData, '', linkData),
 					'x': this.valueFor('node-x', targetData, 0, linkData),
 					'y': this.valueFor('node-y', targetData, 0, linkData),
 					'r': this.valueFor('target-offset', targetData, 0, linkData)
@@ -10181,42 +9892,40 @@ function(namespace) {
 				'width' : width
 			};
 
-			var src = sourceMap[sourceData.id];
+			var src = sourceMap[sourceData.uid];
 			if (src == null) {
-				src = sourceMap[sourceData.id] = {'outflows':[]};
+				src = sourceMap[sourceData.uid] = {'outflows':[]};
 			}
 			src.outflows.push(flowSpec);
 			src.anchor = this.valueFor('sankey-anchor', sourceData, 'top');
 
-			var trg = targetMap[targetData.id];
+			var trg = targetMap[targetData.uid];
 			if (trg == null) {
-				trg = targetMap[targetData.id] = {'inflows':[]};
+				trg = targetMap[targetData.uid] = {'inflows':[]};
 			}
 			trg.inflows.push(flowSpec);
 			trg.anchor = this.valueFor('sankey-anchor', targetData, 'top');
 		}
+
 		// Order the source endpoints based on the target endpoints's y-position.
-		var flows, key;
-		for (key in sourceMap){
-			if (sourceMap.hasOwnProperty(key)) {
-				flows = sourceMap[key].outflows;
-				flows.sort(function(a, b) {
-					return a.target.y <= b.target.y? -1 : 1;
-				});
-			}
-		}
+		aperture.util.forEach(sourceMap, function(source) {
+			var flows = source.outflows;
+			flows.sort(function(a, b) {
+				return a.target.y <= b.target.y ? -1 : 1;
+			});
+		});
 
 		// Order the incoming flows of each target node by the flow's target y-position.
-		for (key in targetMap){
-			if (targetMap.hasOwnProperty(key)) {
-				flows = targetMap[key].inflows;
-				flows.sort(function(a, b) {
-					return a.source.y <= b.source.y? -1 : 1;
-				});
-			}
-		}
+		aperture.util.forEach(targetMap, function(target) {
+			var flows = target.inflows;
+			flows.sort(function(a, b) {
+				return a.source.y <= b.source.y ? -1 : 1;
+			});
+		});
+
 		return {sourceMap : sourceMap, targetMap : targetMap, minWidth: minWidth};
 	}
+
 
 	function calcFlowPath(source, target){
 		//TODO: Account for different flow styles and layout orientations.
@@ -10233,6 +9942,7 @@ function(namespace) {
 
 		return path;
 	}
+
 
 	// assumes pre-existence of layer.
 	namespace.SankeyPathLayer = aperture.Layer.extend( 'aperture.SankeyPathLayer',
@@ -10268,7 +9978,7 @@ function(namespace) {
 			 *
 			 * @mapping {Object} source
 			 *  The source node data object representing the starting point of the link. The source node
-			 *  data object is supplied for node mappings 'node-x', 'node-y', and 'source-offset' for
+			 *  data object is supplied for node mappings 'node-uid', 'node-id', 'node-x', 'node-y', and 'source-offset' for
 			 *  convenience of shared mappings.
 			 *
 			 * @mapping {Number=0} source-offset
@@ -10277,12 +9987,18 @@ function(namespace) {
 			 *
 			 * @mapping {Object} target
 			 *  The target node data object representing the ending point of the link. The target node
-			 *  data object is supplied for node mappings 'node-x', 'node-y', and 'target-offset' for
+			 *  data object is supplied for node mappings 'node-uid', 'node-id', 'node-x', 'node-y', and 'target-offset' for
 			 *  convenience of shared mappings.
 			 *
 			 * @mapping {Number=0} target-offset
 			 *  The distance from the target node position at which to begin the link. The target-offset
 			 *  mapping is supplied the target node as a data object when evaluated.
+			 *
+			 * @mapping {String} node-uid
+			 *  A node's unique identifier.
+			 *
+			 * @mapping {String} node-id
+			 *  A node's secondary id. This does not need to be unique and can be used for type or property identification.
 			 *
 			 * @mapping {Number} node-x
 			 *  A node's horizontal position, evaluated for both source and target nodes.
@@ -10311,11 +10027,11 @@ function(namespace) {
 					links = changeSet.updates,
 					transition = changeSet.transition;
 
-
 				// Remove any obsolete visuals.
 				if (changeSet.removed.length > 0){
 					removeSankeys(changeSet.removed);
 				}
+
 				// PRE-PROCESSING
 				// Iterate through each link and create a map describing the
 				// source and target endpoints for each flow.
@@ -10328,81 +10044,105 @@ function(namespace) {
 				var nIndex=0;
 				var paths = [];
 
-				var totalOffset, key, flowSpec, flowWidth;
+				var totalOffset, flowSpec, flowWidth;
 				var targetPt, sourcePt;
+
 
 
 				// For each target node, iterate over all the incoming flows
 				// and determine the stacked, flow endpoint positions.
-				for (key in targetMap){
-					if (targetMap.hasOwnProperty(key)) {
-						var target = targetMap[key];
-						var targetSpecList = target.inflows;
+				aperture.util.forEach(targetMap, function(target) {
+					var targetSpecList = target.inflows;
 
-						totalOffset=0;
+					totalOffset=0;
 
-						if (target.anchor === 'middle' || target.anchor === 'bottom') {
-							for (nIndex = 0; nIndex < targetSpecList.length; nIndex++){
-								totalOffset -= targetSpecList[nIndex].width;
-							}
-							if (target.anchor === 'middle') {
-								totalOffset *= 0.5;
-							}
+					if (target.anchor === 'middle' || target.anchor === 'bottom') {
+						for (nIndex = 0; nIndex < targetSpecList.length; nIndex++){
+							totalOffset -= targetSpecList[nIndex].width;
+						}
+						if (target.anchor === 'middle') {
+							totalOffset *= 0.5;
+						}
+					}
+
+					var sourceEndpointMap = {};
+					for (nIndex = 0; nIndex < targetSpecList.length; nIndex++){
+						flowSpec = targetSpecList[nIndex];
+						flowWidth = Math.max(minWidth, flowSpec.width);
+						var updateTargetOffset = true;
+
+						var targetY;
+						if (sourceEndpointMap.hasOwnProperty(flowSpec.source.duplicateId)) {
+							targetY = sourceEndpointMap[flowSpec.source.duplicateId];
+							updateTargetOffset = false;
+						} else {
+							targetY = flowSpec.target.y + totalOffset + flowWidth * 0.5;
+							sourceEndpointMap[flowSpec.source.duplicateId] = targetY;
 						}
 
-						for (nIndex = 0; nIndex < targetSpecList.length; nIndex++){
-							flowSpec = targetSpecList[nIndex];
-							flowWidth = Math.max(minWidth, flowSpec.width);
-							flowSpec.targetPt = {
-								x : flowSpec.target.x - flowSpec.target.r,
-								y : flowSpec.target.y + totalOffset + flowWidth*0.5
-							};
+						flowSpec.targetPt = {
+							x : flowSpec.target.x - flowSpec.target.r,
+							y : targetY
+						};
+
+						if (updateTargetOffset) {
 							totalOffset += flowSpec.width;
 						}
 					}
-				}
+				});
 
 				// For each source node, iterate overall all the outgoing flows
 				// and determine the stacked, flow endpoint positions.
 				// Then couple these source endpoints with the target endpoints
 				// from above and calculate the bezier path for that flow.
-				for (key in sourceMap){
-					if (sourceMap.hasOwnProperty(key)) {
-						var source = sourceMap[key];
-						var sourceSpecList = source.outflows;
+				aperture.util.forEach(sourceMap, function(source) {
+					var sourceSpecList = source.outflows;
 
-						totalOffset=0;
+					totalOffset=0;
 
-						if (source.anchor === 'middle' || source.anchor === 'bottom') {
-							for (nIndex = 0; nIndex < sourceSpecList.length; nIndex++){
-								totalOffset -= sourceSpecList[nIndex].width;
-							}
-							if (source.anchor === 'middle') {
-								totalOffset *= 0.5;
-							}
-						}
-
+					if (source.anchor === 'middle' || source.anchor === 'bottom') {
 						for (nIndex = 0; nIndex < sourceSpecList.length; nIndex++){
-							flowSpec = sourceSpecList[nIndex];
-							targetPt = flowSpec.targetPt;
-
-							if (targetPt) {
-								flowWidth = Math.max(minWidth, flowSpec.width);
-								sourcePt = {
-									x : flowSpec.source.x + flowSpec.source.r,
-									y : flowSpec.source.y + totalOffset + flowWidth*0.5
-								};
-								totalOffset += flowSpec.width;
-
-								paths.push({
-									'link': flowSpec.link,
-									'path' : calcFlowPath(sourcePt, targetPt),
-									 width : flowWidth
-								});
-							}
+							totalOffset -= sourceSpecList[nIndex].width;
+						}
+						if (source.anchor === 'middle') {
+							totalOffset *= 0.5;
 						}
 					}
-				}
+
+					var targetEndpointMap = {};
+					for (nIndex = 0; nIndex < sourceSpecList.length; nIndex++){
+						flowSpec = sourceSpecList[nIndex];
+						targetPt = flowSpec.targetPt;
+						var updateSourceOffset = true;
+
+						var sourceY;
+						if (targetEndpointMap.hasOwnProperty(flowSpec.target.duplicateId)) {
+							sourceY = targetEndpointMap[flowSpec.target.duplicateId];
+							updateSourceOffset = false;
+						} else {
+							sourceY = flowSpec.source.y + totalOffset + flowWidth * 0.5;
+							targetEndpointMap[flowSpec.target.duplicateId] = sourceY;
+						}
+
+						if (targetPt) {
+							flowWidth = Math.max(minWidth, flowSpec.width);
+							sourcePt = {
+								x : flowSpec.source.x + flowSpec.source.r,
+								y : sourceY
+							};
+
+							if (updateSourceOffset) {
+								totalOffset += flowSpec.width;
+							}
+
+							paths.push({
+								'link': flowSpec.link,
+								'path' : calcFlowPath(sourcePt, targetPt),
+								width : flowWidth
+							});
+						}
+					}
+				});
 
 				// Iterate over the list of flow paths and render.
 				for (i=0; i < paths.length; i++){
@@ -13669,7 +13409,7 @@ function esriMaps() {
 		init: function(spec, mappings) {
 			this.robId = "MapNodeLayer";
 			aperture.PlotLayer.prototype.init.call(this, spec, mappings);
-
+			
 			if (mappings && mappings.map) {
 				this.canvas_.esriMap_ = mappings.map;
 			}
@@ -14357,7 +14097,7 @@ function openLayersMaps() {
                 [spec.url],
                 spec.options
 			);
-
+			
 			this.canvas_.olMap_.addLayer(this.olLayer_);
 		}		
 	});
@@ -15175,6 +14915,8 @@ function openLayersMaps() {
 			this._layer = new DivOpenLayer(spec.name || ('NodeLayer_' + this.uid), {});
 			mapCanvas.olMap_.addLayer(this._layer);
 			this._layer.setZIndex(999); // Change z as set by OpenLayers to be just under controls
+			// Turn off pointer events on the divs/svg to allow click through to map layers below
+			this._layer.div.style.pointerEvents = 'none';
 
 			// because we parent vector graphics but render into a specialized open layers
 			// canvas we need to help bridge the two by pre-creating this canvas with the
@@ -17026,6 +16768,8 @@ function(namespace) {
 			var bandCount = this.width / 100;
 			// update bands
 			if (this.axisArray.x[0]){
+				// XXX: This re-creation of banding creating an additional view.proto
+				// depth on every call. After some time, proto depth >> 1000
 				var mapKeyX = this.mappings().x.transformation;
 				var rangeX = mapKeyX.from();
 				// Reband the range to reflect the desired zoom level.
@@ -17043,6 +16787,8 @@ function(namespace) {
 			}
 
 			// TODO: Does secondary axis logic belong here?
+			// XXX: No, this code has the effect of clobbering the banding/views
+			// applied to the secondary axis on creation
 			if (this.axisArray.x[1]){
 				var nextOrder = bandedX.formatter().nextOrder();
 				if (nextOrder){
@@ -18250,6 +17996,10 @@ function(namespace) {
 	R.fn.container = function() {
 
 		var node = elem( 'g' );
+
+		// Ensure vector containers are clickable
+		// Some vizlets disable pointer events on top-level SVG to allow click-through
+		node.style.pointerEvents = 'auto';
 		
 		// The container MUST have a UNIQUE ID, otherwise the
 		// mouse events will not be triggered properly.

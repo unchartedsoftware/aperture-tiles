@@ -44,7 +44,7 @@ define(function (require) {
         create: function( position, value, closeCallback ) {
 
             var html = '',
-                time, day, tweetsByDay, key, lightOrDark, visibility,
+                day, tweetsByDay, key, lightOrDark, visibility,
                 maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value ),
                 sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value ),
                 relativePercent, cumulativePercentages = [], $details,
@@ -54,7 +54,7 @@ define(function (require) {
 
 
             // top half
-            html += '<div class="details-on-demand-half">'
+            html += '<div class="details-on-demand-half">';
 
             // summaries
             html +=     '<div class="sentiment-summaries">';
@@ -77,7 +77,7 @@ define(function (require) {
             html +=             '<div class="details-chart-bars">';
 
             for (i=0; i<value.countByTime.length; i++) {
-                relativePercent = TwitterUtil.getCountByTimePercentage( value, i ) / maxPercentage;
+                relativePercent = (TwitterUtil.getCountByTimePercentage( value, i ) / maxPercentage) * 100;
                 cumulativePercentages[0] = sentimentPercentages.negative[i]*relativePercent;
                 cumulativePercentages[1] = cumulativePercentages[0] + sentimentPercentages.neutral[i]*relativePercent;
                 cumulativePercentages[2] = cumulativePercentages[1] + sentimentPercentages.positive[i]*relativePercent;
@@ -123,7 +123,7 @@ define(function (require) {
             html += '</div>';
 
             // bottom half
-            html += '<div class="details-on-demand-half">'
+            html += '<div class="details-on-demand-half">';
 
             // most recent tweets
             html +=     '<div class="details-on-demand-title small-title">Most Recent</div>';
@@ -150,7 +150,7 @@ define(function (require) {
             html +=     '</div>';
             html += '</div>';
 
-            html += '<div class="details-on-demand-close-button"></div>'
+            html += '<div class="details-on-demand-close-button"></div>';
             html += '</div>';
 
             this.destroy(); // destroy any previous DoD

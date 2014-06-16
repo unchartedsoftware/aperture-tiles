@@ -40,26 +40,32 @@ define(function (require) {
         /*
             Return the count of recent tweets entries, clamped at MAX_COUNT
         */
-        getTweetCount : function( data, max ) {
-            var MAX_TWEETS = max || 10;
-            return data.recent.length; //Math.min( data.recent.length, MAX_TWEETS );
+        getTweetCount : function( data ) {
+            return data.recent.length;
         },
 
         /*
             Return the relative percentages of positive, neutral, and negative tweets
         */
-        getSentimentPercentages : function( value, index ) {
+        getSentimentPercentages : function( value ) {
             return {
-                positive : ( value.positive / value.count )*100 || 0,
-                neutral : ( value.neutral / value.count )*100 || 0,
-                negative : ( value.negative / value.count )*100 || 0
+                positive : this.getSentimentPercentage( value, 'positive'),
+                neutral : this.getSentimentPercentage( value, 'neutral'),
+                negative : this.getSentimentPercentage( value, 'negative')
             };
         },
 
         /*
+            Return the relative percentages of positive, neutral, or negative tweets
+        */
+        getSentimentPercentage : function( value, sentiment ) {
+            return ( value[sentiment] / value.count ) || 0;
+        },
+
+        /*
             Return the relative percentages of positive, neutral, and negative tweets
         */
-        getSentimentPercentagesByTime : function( value, index ) {
+        getSentimentPercentagesByTime : function( value ) {
 
             var NUM_HOURS_IN_DAY = 24,
                 percentages = {
@@ -72,10 +78,25 @@ define(function (require) {
 
             for (i=0; i<NUM_HOURS_IN_DAY; i++) {
                 count = value.countByTime[i];
-                percentages.positive.push( ( value.positiveByTime[i] / count )*100 || 0 );
-                percentages.neutral.push( ( value.neutralByTime[i] / count )*100 || 0 );
-                percentages.negative.push( ( value.negativeByTime[i] / count )*100 || 0 );
+                percentages.positive.push( ( value.positiveByTime[i] / count ) || 0 );
+                percentages.neutral.push( ( value.neutralByTime[i] / count ) || 0 );
+                percentages.negative.push( ( value.negativeByTime[i] / count ) || 0 );
             }
+            return percentages;
+        },
+
+        /*
+            Return the relative percentages of positive, neutral, and negative tweets
+        */
+        getSentimentPercentageByTime : function( value, index ) {
+
+            var percentages = {},
+                count = value.countByTime[index];
+
+            percentages.positive = ( value.positiveByTime[index] / count ) || 0;
+            percentages.neutral = ( value.neutralByTime[index] / count ) || 0;
+            percentages.negative = ( value.negativeByTime[index] / count ) || 0;
+
             return percentages;
         },
 
@@ -125,16 +146,13 @@ define(function (require) {
         /*
             Returns a font size based on the percentage of tweets relative to the total count
         */
-        getFontSize : function( values, index ) {
-            var DOWNSCALE_OFFSET = 1.5,
-                MAX_FONT_SIZE = 28 * DOWNSCALE_OFFSET,
-                MIN_FONT_SIZE = 12 * DOWNSCALE_OFFSET,
-                FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
+        getFontSize : function( values, index, minFontSize, maxFontSize ) {
+            var fontRange = maxFontSize - minFontSize,
                 sum = this.getTotalCount( values, index ),
                 percentage = this.getTotalCountPercentage( values, index ),
                 scale = Math.log( sum ),
-                size = ( percentage * FONT_RANGE * scale ) + ( MIN_FONT_SIZE * percentage );
-            return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
+                size = ( percentage * fontRange * scale ) + ( minFontSize * percentage );
+            return Math.min( Math.max( size, minFontSize), maxFontSize );
         },
 
 
@@ -268,154 +286,15 @@ define(function (require) {
             neuRGB = { r: 255, g: 255, b: 255 };
             posRGB = hexToRgb(BLUE_COLOUR);
 
-            posWeight = positivePercent/100;
-            neuWeight = neutralPercent/100;
-            negWeight = negativePercent/100;
+            posWeight = positivePercent;
+            neuWeight = neutralPercent;
+            negWeight = negativePercent;
 
             finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight) + (neuRGB.r * neuWeight);
             finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight) + (neuRGB.g * neuWeight);
             finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight) + (neuRGB.b * neuWeight);
             return rgbToHex( finalRGB.r, finalRGB.g, finalRGB.b );
-        },
-
-
-        /*
-            Used to inject classes when nodes are loaded
-        */
-        addClickStateClasses: function( $elem, tag, selectedTag ) {
-            // if user has clicked a tag entry, ensure newly created nodes are styled accordingly
-            if ( selectedTag ) {
-                if ( selectedTag !== tag ) {
-                    $elem.addClass('greyed');
-                } else {
-                    $elem.addClass('clicked');
-                }
-            }
-        },
-
-
-        addClickStateClassesGlobal: function( tag ) {
-
-            var $elements = $(".top-text-sentiment, .tags-by-time-sentiment");
-
-            // top text sentiments
-            $elements.filter( function() {
-                return $(this).text() !== tag;
-            }).addClass('greyed').removeClass('clicked');
-
-            $elements.filter( function() {
-                return $(this).text() === tag;
-            }).removeClass('greyed').addClass('clicked')
-
-        },
-
-        removeClickStateClassesGlobal: function( tag ) {
-
-            $(".top-text-sentiment, .tags-by-time-sentiment").removeClass('greyed clicked');
-        },
-
-
-        createTweetSummaries: function() {
-            return $('<div class="sentiment-summaries">'
-                        + '<div class="positive-summaries"></div>'
-                        + '<div class="neutral-summaries"></div>'
-                        + '<div class="negative-summaries"></div>'
-                    + '</div>');
-        },
-
-
-        clickOn: function( map, $element, data, index, clientState, DetailsOnDemand ) {
-
-            var tag = $element.text();
-
-            this.addClickStateClassesGlobal( tag );
-
-            layerState.setClickState( { tag : tag });
-            clientState.clickState.tag = tag;
-
-            // create details on demand
-            this.createDetailsOnDemand( map, data, index, DetailsOnDemand );
-            // centre map after creation
-            this.centreForDetails( map, data );
-
-        },
-
-
-        clickOff: function( DetailsOnDemand ) {
-
-            this.removeClickStateClassesGlobal();
-            DetailsOnDemand.destroy();
-        },
-
-
-        setMouseEventCallbacks: function( map, $element, $summaries, data, index, clientState, DetailsOnDemand ) {
-
-            var that = this,
-                value = data.bin.value[index];
-
-            // set summaries text
-            $element.mouseover( function( event ) {
-                $summaries.find(".positive-summaries").text( "+" +value.positive );
-                $summaries.find(".neutral-summaries").text( value.neutral );
-                $summaries.find(".negative-summaries").text("-" + value.negative );
-            });
-
-            // clear summaries text
-            $element.mouseout( function( event ) {
-                $summaries.find(".positive-summaries").text( "" );
-                $summaries.find(".neutral-summaries").text( "" );
-                $summaries.find(".negative-summaries").text( "" );
-                $element.off('click');
-            });
-
-            // moving mouse disables click event
-            $element.mousemove( function( event ) {
-                 $element.off('click');
-            });
-
-            // mouse down enables click event
-            $element.mousedown( function( event ) {
-
-                // set click handler
-                $element.click( function( event ) {
-                    // process click
-                    that.clickOn( map, $element, data, index, clientState, DetailsOnDemand );
-                    // prevent event from going further
-                    event.stopPropagation();
-                 });
-            });
-
-        },
-
-
-        /*
-            Create details on demand
-        */
-        createDetailsOnDemand: function( map, data, index, DetailsOnDemand ) {
-
-            var that = this,
-                pos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
-                $details;
-
-            $details = DetailsOnDemand.create( pos.x + 256, map.getMapHeight() - pos.y, data.bin.value[index] );
-
-            map.enableEventToMapPropagation( $details, ['onmousemove', 'onmouseup'] );
-            map.getRootElement().append( $details );
-
-            $('.details-on-demand-close-button').click( function() {
-                that.clickOff( DetailsOnDemand );
-            });
-
-        },
-
-        destroyDetailsOnDemand: function( DetailsOnDemand ) {
-
-            DetailsOnDemand.destroy();
         }
-
-
-
-        
 
     };
 

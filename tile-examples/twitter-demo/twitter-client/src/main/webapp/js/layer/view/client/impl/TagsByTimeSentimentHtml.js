@@ -35,11 +35,11 @@ define(function (require) {
 
 
 
-    var HtmlRenderer = require('../HtmlRenderer'),
-        ClientNodeLayer = require('../ClientNodeLayer'),
+    var ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
         TwitterUtil = require('./TwitterUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
+        NUM_TAGS_DISPLAYED = 8,
         TagsByTimeSentimentHtml;
 
 
@@ -74,7 +74,7 @@ define(function (require) {
 
             $elements.filter( function() {
                 return $(this).text() === selectedTag;
-            }).removeClass('greyed').addClass('clicked')
+            }).removeClass('greyed').addClass('clicked');
 
         },
 
@@ -91,7 +91,7 @@ define(function (require) {
 
             function getYOffset( values, index ) {
                 var SPACING = 20;
-                return 113 - ( (( TwitterUtil.getTagCount( values, 8 ) - 1) / 2 ) - index ) * SPACING;
+                return 113 - ( (( TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED ) - 1) / 2 ) - index ) * SPACING;
             }
 
             this.nodeLayer.addLayer( new HtmlLayer({
@@ -105,13 +105,13 @@ define(function (require) {
                         values = this.bin.value,
                         value,
                         maxPercentage, sentimentPercentages, relativePercent,
-                        yOffset, visibility, blendedColour,
+                        visibility, blendedColour,
                         i, j,
                         tag,
-                        count = TwitterUtil.getTagCount( values, 8 );
+                        count = TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED );
 
                     // create count summaries
-                    $summaries = TwitterUtil.createTweetSummaries();
+                    $summaries = that.createTweetSummaries();
 
                     $html.append( $summaries );
 
@@ -125,7 +125,7 @@ define(function (require) {
                         html = '<div class="tags-by-time-sentiment" style="top:' +  getYOffset( values, i ) + 'px;">';
 
                         // create count chart
-                        html += '<div class="tags-by-time-left">'
+                        html += '<div class="tags-by-time-left">';
                         for (j=0; j<24; j++) {
                             blendedColour = TwitterUtil.blendSentimentColours( sentimentPercentages.positive[j],
                                                                                sentimentPercentages.neutral[j],
@@ -137,7 +137,7 @@ define(function (require) {
                         html += '</div>';
 
                         // create tag label
-                        html += '<div class="tags-by-time-right">'
+                        html += '<div class="tags-by-time-right">';
                         html +=     '<div class="tags-by-time-label">'+tag+'</div>';
                         html += '</div>';
 

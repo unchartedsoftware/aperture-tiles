@@ -69,8 +69,8 @@
                         {
                             "domain": "client",
                             "renderers": [
-                                "TopTextSentimentHtml",
-                                "TagsByTimeSentimentHtml",
+                                "TopTextSentiment",
+                                "TagsByTimeSentiment",
                                 "EmptyRenderer"
                             ]
                         }

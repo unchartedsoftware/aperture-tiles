@@ -130,7 +130,9 @@ define(function (require) {
             var renderersByTile = this.rendererIndicesByTile;
 
             if ( renderersByTile[tilekey] !== index ) {
+
                 if ( index === this.defaultRendererIndex ) {
+                    // if matches default, delete it, it will default appropriately
                     delete renderersByTile[tilekey];
                 } else {
                     renderersByTile[tilekey] = index;
@@ -141,12 +143,9 @@ define(function (require) {
 
 
         getRendererByTile: function( tilekey ) {
-            return this.rendererIndicesByTile[tilekey] || this.defaultRendererIndex;
-        },
 
-
-        getRenderersByTile: function() {
-            return this.rendererIndicesByTile;
+            var index = this.rendererIndicesByTile[tilekey];
+            return (index !== undefined) ? index : this.defaultRendererIndex;
         },
 
 
@@ -189,6 +188,11 @@ define(function (require) {
         },
 
 
+        hasClickState: function() {
+            return !$.isEmptyObject( this.clickState );
+        },
+
+
         setHoverState: function( hoverState ) {
             if ( !objectsEqual( this.hoverState, hoverState ) ) {
                 this.hoverState = hoverState;
@@ -199,6 +203,11 @@ define(function (require) {
 
         getHoverState: function() {
             return this.hoverState;
+        },
+
+
+        hasHoverState: function() {
+            return !$.isEmptyObject( this.hoverState );
         }
 
     });
