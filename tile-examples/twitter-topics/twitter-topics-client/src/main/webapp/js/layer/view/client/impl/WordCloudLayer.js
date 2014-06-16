@@ -86,14 +86,16 @@ define(function (require) {
 		canvasType : aperture.canvas.VECTOR_CANVAS,
 
 		getFromCache :  function(hash) {
+		    var entries;
 			if (cloudCache.entries[hash] === undefined) {
-				return null;
+				entries = null;
 			} else {
 				// add 
 				cloudCache.lruStack.splice( cloudCache.lruStack.indexOf(hash), 1);
 				cloudCache.lruStack.push(hash);
-				return cloudCache.entries[hash];
+				entries = cloudCache.entries[hash];
 			}
+			return entries;
 		},
 
 		addToCache : function( cloud, hash ) {
@@ -177,14 +179,16 @@ define(function (require) {
 
 
         getFontSize : function( g, str, font ) {
-			
+
+			var temp,
+			    bb;
 			font.x = 0;
 			font.y = 0;
 			font.opacity = 0;
 			font.str = str;
-			var temp = g.text(0, 0, str);
+			temp = g.text(0, 0, str);
 			g.update(temp, font);
-			var bb = temp.getBBox();
+			bb = temp.getBBox();
 			g.remove(temp);
 			return {
 				width: bb.width,
@@ -197,7 +201,9 @@ define(function (require) {
 
         	function strHash(str) {
 				var hash = 0, i, chr, len;
-			 	if (str.length == 0) return hash;
+			 	if (str.length === 0) {
+			 	    return hash;
+			 	}
 			 	for (i = 0, len = str.length; i < len; i++) {
 				    chr   = str.charCodeAt(i);
 				    hash  = ((hash << 5) - hash) + chr;
@@ -209,12 +215,11 @@ define(function (require) {
 	        // Assemble into ordered list
 	        var wordCounts = [],
 	            hash = "",
-	            cloud, sum, i, j,
+	            cloud, sum, j,
 	            word, count, dim,
                 fontSize, pos, scale,
                 fontRange, borderCollisions = 0,
-                intersection;;
-
+                intersection;
 
 			for (j=0; j<itemCount; j++) {
 	        	wordCounts.push({
@@ -239,10 +244,12 @@ define(function (require) {
 	        	sum += frequencies[j];
 	        }
 
-	        wordCounts.sort(function(a, b){return b.count-a.count});
+	        wordCounts.sort(function(a, b) {
+	            return b.count-a.count;
+	        });
 
 	        // Assemble word cloud
-			scale = Math.log(sum),
+			scale = Math.log(sum);
 			fontRange = (font.maxFontSize - font.minFontSize);
 
 	        // assemble words in cloud
@@ -315,13 +322,13 @@ define(function (require) {
 
 		render : function(changeSet) {
 
-			var node, i, j, n, g,
+			var node, i, g,
 			    labels, toProcess,
 			    words, frequencies, itemCount, index,
 			    width, height, opacity, offsetX, offsetY,
 			    outlineColor, oopacity, outlineWidth,
 			    fontFamily, fontWeight, minFontSize, maxFontSize,
-			    cursor, xPoint, yPoint, visible, textAnchor, vAlign,
+			    cursor, xPoint, yPoint, visible, textAnchor,
 			    font, boundingBox, cloud, label, fillColor, fontSize,
 			    str, wordX, wordY, attr, fattr;
 
@@ -334,10 +341,9 @@ define(function (require) {
 				labels = node.userData.labels = node.userData.labels || [];
 
 				// Get the number of labels to be rendered.
-				words = this.valueFor('words', node.data, [], 0),
-				frequencies = this.valueFor('frequencies', node.data, [], 0),
-				itemCount = (words.length <= frequencies.length) ? words.length : frequencies.length,
-				index;
+				words = this.valueFor('words', node.data, [], 0);
+				frequencies = this.valueFor('frequencies', node.data, [], 0);
+				itemCount = (words.length <= frequencies.length) ? words.length : frequencies.length;
 
 				g = node.graphics;
 				
@@ -366,7 +372,6 @@ define(function (require) {
 				yPoint = offsetY + (this.valueFor('y', node.data, 0, 0) * node.height) + (node.position[1]||0);
 				visible = !!this.valueFor('label-visible', node.data, true, 0);
 				textAnchor = 'middle';
-				vAlign = 0;
 				font = {
 					'font-family': fontFamily,
 					'font-weight': fontWeight,
@@ -406,41 +411,39 @@ define(function (require) {
 					wordY = yPoint + cloud[index].y;
 
 					attr = {
-							'x': wordX,
-							'y': wordY,
-							'text': str,
-							'stroke': 'none',
-							'font-family': fontFamily,
-							'font-size': fontSize,
-							'font-weight': fontWeight,
-							'text-anchor': textAnchor,
-							'opacity': opacity,
-							'cursor': cursor
-							};
-					fattr;
+                        'x': wordX,
+                        'y': wordY,
+                        'text': str,
+                        'stroke': 'none',
+                        'font-family': fontFamily,
+                        'font-size': fontSize,
+                        'font-weight': fontWeight,
+                        'text-anchor': textAnchor,
+                        'opacity': opacity,
+                        'cursor': cursor
+                    };
 
 					if (!label) {
 						label = labels[index] = {};
 					}
 
-					
 					// if outlined we create geometry behind the main text.
 					if (outlineWidth) {
 						fattr = aperture.util.extend({
 							'fill': fillColor
 						}, attr);
 									
-						if (oopacity !== '' && oopacity != null && oopacity !== 1) {
-							if (opacity !== '' && opacity != null) {
+						if (oopacity !== '' && oopacity !== null && oopacity !== 1) {
+							if (opacity !== '' && opacity !== null) {
 								oopacity = Math.min(1.0, opacity * oopacity);
 							}
 						} else {
 							oopacity = opacity;
 						}
 						
-						attr['opacity']= oopacity !== 1? oopacity : '';
+						attr.opacity = ( oopacity !== 1 ) ? oopacity : '';
 						attr['stroke-width']= outlineWidth;
-						attr['stroke']= outlineColor;
+						attr.stroke = outlineColor;
 						attr['stroke-linecap']= 'round';
 						attr['stroke-linejoin']= 'round';
 					} else {
@@ -448,8 +451,8 @@ define(function (require) {
 							g.remove(label.front);
 							label.front = null;
 						}
-						attr['stroke']= 'none';
-						attr['fill']= fillColor;
+						attr.stroke = 'none';
+						attr.fill = fillColor;
 					}
 					
 					index = [index];

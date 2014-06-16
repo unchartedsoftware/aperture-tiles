@@ -67,8 +67,8 @@
                     "renderers": [
                         {
                             "domain": "client",
-                            "views": [ "TopTextTranslate",
-                                       "TagsByTimeTranslate",
+                            "renderers": [ "TopTagsWordCloud",
+                                       "TagsByTime",
                                        "EmptyRenderer"
                             ]
                         }

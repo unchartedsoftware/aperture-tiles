@@ -40,12 +40,12 @@ define(function (require) {
         TwitterUtil = require('./TwitterSentimentUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         NUM_TAGS_DISPLAYED = 5,
-        TopTextSentimentHtml;
+        TopTagsSentimentHtml;
 
 
 
-    TopTextSentimentHtml = TwitterHtmlRenderer.extend({
-        ClassName: "TopTextSentimentHtml",
+    TopTagsSentimentHtml = TwitterHtmlRenderer.extend({
+        ClassName: "TopTagsSentimentHtml",
 
         init: function( map) {
 
@@ -153,5 +153,5 @@ define(function (require) {
 
     });
 
-    return TopTextSentimentHtml;
+    return TopTagsSentimentHtml;
 });

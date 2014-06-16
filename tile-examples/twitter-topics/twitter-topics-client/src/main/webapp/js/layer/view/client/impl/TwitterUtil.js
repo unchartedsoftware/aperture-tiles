@@ -29,6 +29,58 @@ define(function (require) {
 
     return {
 
+
+        getMonth: function(data) {
+            var month = new Date( data.bin.value[0].endTimeSecs * 1000 ).getMonth();
+            switch(month) {
+                case 0: return "Jan";
+                case 1: return "Feb";
+                case 2: return "Mar";
+                case 3: return "Apr";
+                case 4: return "May";
+                case 5: return "Jun";
+                case 6: return "Jul";
+                case 7: return "Aug";
+                case 8: return "Sep";
+                case 9: return "Oct";
+                case 10: return "Nov";
+                default: return "Dec";
+            }
+        },
+
+
+        getLastWeekOfMonth: function(data) {
+            var lastDay = this.getLastDayOfMonth(data),
+                i,
+                week = [];
+            function numToDay(num) {
+                switch (num) {
+                    case 0: return "Su";
+                    case 1: return "Mo";
+                    case 2: return "Tu";
+                    case 3: return "We";
+                    case 4: return "Th";
+                    case 5: return "Fr";
+                    case 6: return "Sa";
+                }
+            }
+            for (i=0; i<7; i++) {
+                week.push( numToDay( (lastDay + i) % 7 ) );
+            }
+            return week;
+        },
+
+
+        getLastDayOfMonth: function(data) {
+            return new Date( data.bin.value[0].endTimeSecs * 1000 ).getDay();
+        },
+
+
+        getTotalDaysInMonth: function(data) {
+            return new Date( data.bin.value[0].endTimeSecs * 1000 ).getDate();
+        },
+
+
         /*
             Return the count of node entries, clamped at MAX_COUNT
         */
@@ -41,86 +93,39 @@ define(function (require) {
             Return the count of recent tweets entries, clamped at MAX_COUNT
         */
         getTweetCount : function( data ) {
-            return data.recent.length;
+            return data.recentTweets.length;
         },
 
-        /*
-            Return the relative percentages of positive, neutral, and negative tweets
-        */
-        getSentimentPercentages : function( value ) {
-            return {
-                positive : this.getSentimentPercentage( value, 'positive'),
-                neutral : this.getSentimentPercentage( value, 'neutral'),
-                negative : this.getSentimentPercentage( value, 'negative')
-            };
+
+        getCountPercentageByType: function(values, index, type) {
+            return ( values[index][type] / values[index].countMonthly) || 0;
         },
 
-        /*
-            Return the relative percentages of positive, neutral, or negative tweets
-        */
-        getSentimentPercentage : function( value, sentiment ) {
-            return ( value[sentiment] / value.count ) || 0;
-        },
-
-        /*
-            Return the relative percentages of positive, neutral, and negative tweets
-        */
-        getSentimentPercentagesByTime : function( value ) {
-
-            var NUM_HOURS_IN_DAY = 24,
-                percentages = {
-                    positive: [],
-                    neutral: [],
-                    negative: []
-                },
-                count,
-                i;
-
-            for (i=0; i<NUM_HOURS_IN_DAY; i++) {
-                count = value.countByTime[i];
-                percentages.positive.push( ( value.positiveByTime[i] / count ) || 0 );
-                percentages.neutral.push( ( value.neutralByTime[i] / count ) || 0 );
-                percentages.negative.push( ( value.negativeByTime[i] / count ) || 0 );
-            }
-            return percentages;
-        },
-
-        /*
-            Return the relative percentages of positive, neutral, and negative tweets
-        */
-        getSentimentPercentageByTime : function( value, index ) {
-
-            var percentages = {},
-                count = value.countByTime[index];
-
-            percentages.positive = ( value.positiveByTime[index] / count ) || 0;
-            percentages.neutral = ( value.neutralByTime[index] / count ) || 0;
-            percentages.negative = ( value.negativeByTime[index] / count ) || 0;
-
-            return percentages;
-        },
 
         /*
             Returns the total count of all tweets in a node
         */
         getTotalCount : function( values ) {
+
             var i,
                 sum = 0,
                 n = this.getTagCount( values );
             for (i=0; i<n; i++) {
-                sum += values[i].count;
+                sum += values[i].countMonthly;
             }
             return sum;
         },
+
 
         /*
             Returns the percentage of tweets in a node for the respective tag
         */
         getTotalCountPercentage : function( values, index ) {
-            return ( values[index].count / this.getTotalCount( values ) ) || 0;
+            return ( values[index].countMonthly / this.getTotalCount( values ) ) || 0;
         },
 
 
+        /*
         getCountByTimePercentage: function( value, hour ) {
             var countByTime = value.countByTime[hour];
             return ( countByTime / value.count ) || 0;
@@ -140,6 +145,7 @@ define(function (require) {
             }
             return maxPercent;
         },
+        */
 
 
 
@@ -244,57 +250,8 @@ define(function (require) {
                 panCoord = map.getCoordFromViewportPixel( viewportPixel.x + map.getTileSize(),
                                                           viewportPixel.y + map.getTileSize() );
             map.panToCoord( panCoord.x, panCoord.y );
-        },
-
-
-        blendSentimentColours: function( positivePercent, neutralPercent, negativePercent ) {
-            var BLUE_COLOUR = '#09CFFF',
-                PURPLE_COLOUR = '#D33CFF',
-                negWeight, negRGB,
-                neuWeight, neuRGB,
-                posWeight, posRGB,
-                finalRGB = {};
-
-            function hexToRgb(hex) {
-                 var bigint;
-                 if (hex[0] === '#') {
-                     hex = hex.substr(1,6);
-                 }
-                 bigint = parseInt(hex, 16);
-                 return {
-                     r: (bigint >> 16) & 255,
-                     g: (bigint >> 8) & 255,
-                     b: bigint & 255
-                 };
-            }
-
-            function rgbToHex(r, g, b) {
-                function componentToHex(c) {
-                    var hex = c.toString(16);
-                    return (hex.length === 1) ? "0" + hex : hex;
-                }
-                return "#" + componentToHex( Math.floor(r)) +
-                             componentToHex( Math.floor(g)) +
-                             componentToHex( Math.floor(b));
-            }
-
-            if ( positivePercent === 0 || negativePercent ===0 ) {
-                return '#ffffff';
-            }
-
-            negRGB = hexToRgb(PURPLE_COLOUR);
-            neuRGB = { r: 255, g: 255, b: 255 };
-            posRGB = hexToRgb(BLUE_COLOUR);
-
-            posWeight = positivePercent;
-            neuWeight = neutralPercent;
-            negWeight = negativePercent;
-
-            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight) + (neuRGB.r * neuWeight);
-            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight) + (neuRGB.g * neuWeight);
-            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight) + (neuRGB.b * neuWeight);
-            return rgbToHex( finalRGB.r, finalRGB.g, finalRGB.b );
         }
+
 
     };
 

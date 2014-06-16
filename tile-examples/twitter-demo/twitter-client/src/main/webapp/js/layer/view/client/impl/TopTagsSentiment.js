@@ -38,12 +38,12 @@ define(function (require) {
     var TwitterApertureRenderer = require('./TwitterApertureRenderer'),
         TwitterUtil = require('./TwitterSentimentUtil'),
         NUM_TAGS_DISPLAYED = 5,
-        TopTextSentiment;
+        TopTagsSentiment;
 
 
 
-    TopTextSentiment = TwitterApertureRenderer.extend({
-        ClassName: "TopTextSentiment",
+    TopTagsSentiment = TwitterApertureRenderer.extend({
+        ClassName: "TopTagsSentiment",
 
         init: function( map ) {
             this._super( map );
@@ -271,5 +271,5 @@ define(function (require) {
 
     });
 
-    return TopTextSentiment;
+    return TopTagsSentiment;
 });

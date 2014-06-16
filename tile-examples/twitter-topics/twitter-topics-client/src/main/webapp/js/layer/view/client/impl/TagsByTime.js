@@ -35,14 +35,14 @@ define(function (require) {
 
 
 
-    var TwitterTagRenderer = require('./TwitterTagRenderer'),   
-        DetailsOnDemand = require('./DetailsOnDemandTranslate'),
-        TagsByTimeTranslate;
+    var TwitterApertureRenderer = require('./TwitterApertureRenderer'),
+        TwitterUtil = require('./TwitterUtil'),
+        TagsByTime;
 
 
 
-    TagsByTimeTranslate = TwitterTagRenderer.extend({
-        ClassName: "TagsByTimeTranslate",
+    TagsByTime = TwitterApertureRenderer.extend({
+        ClassName: "TagsByTime",
 
         init: function( map ) {
             this._super( map );
@@ -107,10 +107,10 @@ define(function (require) {
             var that = this,
                 BAR_LENGTH = 10;
 
-            function getMaxPercentage(data, index) {
+            function getMaxPercentage( data, index ) {
                 var i,
                     percent,
-                    numDays = that.getTotalDaysInMonth(data),
+                    numDays = TwitterUtil.getTotalDaysInMonth( data ),
                     tagIndex = Math.floor(index/numDays),                 
                     maxPercent = 0,
                     count = data.bin.value[tagIndex].countMonthly;
@@ -133,7 +133,7 @@ define(function (require) {
             });
             this.bars.map('fill').from( function(index) {
 
-                var numDays = that.getTotalDaysInMonth(this),
+                var numDays = TwitterUtil.getTotalDaysInMonth(this),
                     tagIndex = Math.floor(index/numDays),
                     topic = this.bin.value[tagIndex].topic;
 
@@ -184,7 +184,7 @@ define(function (require) {
             });
             this.bars.map('opacity').from( function() {
                     return that.opacity;
-                })
+            });
 
         },
 
@@ -251,12 +251,12 @@ define(function (require) {
             });
             this.tagLabels.map('opacity').from( function() {
                     return that.opacity;
-                })
+            });
 
         }
 
 
     });
 
-    return TagsByTimeTranslate;
+    return TagsByTime;
 });

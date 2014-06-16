@@ -36,62 +36,20 @@ define(function (require) {
 
 
     var TwitterTagRenderer = require('./TwitterTagRenderer'),
-        DetailsOnDemand = require('./DetailsOnDemandTranslate'),
+        //TwitterUtil = require('./TwitterUtil'),
         WordCloudLayer = require('./WordCloudLayer'),
-        TopTextTranslate,
+        TopTagsWordCloud;
 
 
 
-    TopTextTranslate = TwitterTagRenderer.extend({
-        ClassName: "TopTextTranslate",
+    TopTagsWordCloud = TwitterTagRenderer.extend({
+        ClassName: "TopTagsWordCloud",
 
         init: function( map ) {
             this._super( map );
-            this.MAX_NUM_VALUES = 5;
-            this.Y_SPACING = 36;
             this.createLayer();
         },
 
-        getCountPercentage: function(data, index, type) {
-            return (data.bin.value[index][type] / data.bin.value[index].countMonthly) || 0;
-        },
-
-
-        getTotalCountPercentage: function(data, index) {
-            var i,
-                sum = 0,
-                n = this.getCount(data);
-            for (i=0; i<n; i++) {
-                sum += data.bin.value[i].countMonthly;
-            }
-            return (data.bin.value[index].countMonthly/sum) || 0;
-        },
-
-        onClick: function(event) {
-            this.clientState.clickState = {
-                tilekey : event.data.tilekey,
-                tag : event.data.bin.value[event.index[0]].topic,
-                index : event.index[0]
-            };
-            // redraw all nodes
-            this.nodeLayer.all().redraw();
-        },
-
-
-        onHover: function(event, id) {
-            this.clientState.hoverState = {
-                tilekey : event.data.tilekey,
-                tag :  event.data.bin.value[event.index[0]].topic,
-                index :  event.index[0]
-            };
-            this.nodeLayer.all().where(event.data).redraw();
-        },
-
-
-        onHoverOff: function(event) {
-            this.clientState.hoverState = {}; //clearHoverState();
-            this.nodeLayer.all().where(event.data).redraw();
-        },
 
 
         /**
@@ -104,11 +62,7 @@ define(function (require) {
             this.nodeLayer.map('longitude').from('longitude');
             this.createLabels();
             this.createTranslateLabel();
-            /*
-            this.detailsOnDemand = new DetailsOnDemand(this.id, this.map);
-            this.detailsOnDemand.attachClientState(this.clientState);
-            this.detailsOnDemand.createLayer(this.nodeLayer);
-            */
+
         },
 
 
@@ -125,28 +79,23 @@ define(function (require) {
 
             this.wordCloudLabel.map('fill').from(function(index) {
 
-                if (that.matchingTagIsSelected( this.bin.value[index].topic, this.tilekey ) ){
+                var layerState = that.layerState,
+                    clickState = layerState.getClickState(),
+                    hoverState = layerState.getHoverState(),
+                    hasClickState = layerState.hasClickState(),
+                    hasHoverState = layerState.hasHoverState(),
+                    selectedTag = clickState.tag,
+                    hoveredTag = hoverState.tag,
+                    tag = this.bin.value[index].topic;
+
+                if ( (hasClickState && selectedTag === tag) ||
+                     (hasHoverState && hoveredTag === tag) ) {
                     return that.BLUE_COLOUR;
                 }
-                if (that.shouldBeGreyedOut( this.bin.value[index].topic, this.tilekey) ) {
+                if ( hasClickState && selectedTag !== tag  ) {
                     return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
-            });
-
-
-            this.wordCloudLabel.on('click', function(event) {
-                that.onClick(event);
-                return true; // swallow event
-            });
-
-            this.wordCloudLabel.on('mousemove', function(event) {
-                that.onHover(event);
-                return true; // swallow event
-            });
-
-            this.wordCloudLabel.on('mouseout', function(event) {
-                that.onHoverOff(event);
             });
 
             this.wordCloudLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
@@ -154,8 +103,8 @@ define(function (require) {
             this.wordCloudLabel.map('cursor').asValue('pointer');
             this.wordCloudLabel.map('font-outline').asValue(this.BLACK_COLOUR);
             this.wordCloudLabel.map('font-outline-width').asValue(3);
-            this.wordCloudLabel.map('width').asValue(this.TILE_SIZE - this.HORIZONTAL_BUFFER*2);
-            this.wordCloudLabel.map('height').asValue(this.TILE_SIZE - this.VERTICAL_BUFFER*2);
+            this.wordCloudLabel.map('width').asValue( 228 );
+            this.wordCloudLabel.map('height').asValue( 208 );
 
             this.wordCloudLabel.map('words').from(function() {
                 var numWords = this.bin.value.length,
@@ -163,7 +112,7 @@ define(function (require) {
                     word,
                     i;
                 for (i=0; i<numWords; i++) {
-                    word = that.getTopic(this, i);
+                    word = that.getTopic( this, i );
                     word = (word.length > MAX_LABEL_CHAR_COUNT) ? word.substr(0, MAX_LABEL_CHAR_COUNT) + "..." : word;
                     wordList.push( word );
                 }
@@ -191,5 +140,5 @@ define(function (require) {
 
     });
 
-    return TopTextTranslate;
+    return TopTagsWordCloud;
 });
