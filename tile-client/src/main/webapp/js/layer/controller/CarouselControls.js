@@ -46,7 +46,6 @@ define(function (require) {
         CHEVRON_CLASS_RIGHT = "carousel-ui-chevron-right",
         Z_INDEX = 2000,
         makeLayerStateObserver,
-        updateTileFocus,
         createChevrons,
         createIndexDots,
         createCarousel,
@@ -90,17 +89,6 @@ define(function (require) {
 
             }
         };
-    };
-
-
-    updateTileFocus = function ( x, y, map, layerStates ) {
-
-        var tilekey = map.getTileKeyFromViewportPixel( x, y ), // get tilekey under mouse
-            i;
-
-        for (i=0; i<layerStates.length; i++) {
-            layerStates[i].setTileFocus( tilekey );
-        }
     };
 
 
@@ -221,8 +209,7 @@ define(function (require) {
 
         init: function ( layerStates, map ) {
 
-            var previousMouse = {},
-                i;
+            var i;
 
             this.controlMap = {};
             this.$carousel = $('<div class="' +CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
@@ -234,86 +221,12 @@ define(function (require) {
                 }
             }
 
-            // set tile focus callbacks
-            map.on('mousemove', function(event) {
-                updateTileFocus( event.xy.x, event.xy.y, map, layerStates );
-                previousMouse.x = event.xy.x;
-                previousMouse.y = event.xy.y;
-            });
-            map.on('zoomend', function(event) {
-                updateTileFocus( previousMouse.x, previousMouse.y, map, layerStates );
-            });
 
         },
 
         noop: function() {
             return true;
         }
-
-
-        /*
-        changeViewIndex: function(tilekey, prevIndex, newIndex) {
-
-            if (prevIndex === newIndex) {
-                return;
-            }
-
-
-            this.onTileViewChange(tilekey, newIndex);
-        },
-
-
-
-        updateSelectedTile: function( x, y ) {
-
-            // get tilekey under mouse
-            var tilekey = this.map.getTileKeyFromViewportPixel( x, y );
-            // if only one view, or no views, abort
-            if (this.views === undefined || this.views.length === 0) {
-                return;
-            }
-            // set selected info
-            this.selectedTileInfo = {
-                previouskey : this.selectedTileInfo.tilekey,
-                tilekey : tilekey
-            };
-            //this.clientState.activeCarouselTile = tilekey
-            // update ui
-            this.redrawUI();
-        },
-
-
-        redrawUI: function() {
-
-            var tilekey = this.selectedTileInfo.tilekey,
-                previousTilekey = this.selectedTileInfo.previouskey,
-                topLeft,
-                prevActiveView,
-                activeViewForTile;
-
-            // abort if not over new tile
-            if ( previousTilekey === tilekey ) {
-                return;
-            }
-
-            topLeft = this.map.getTopLeftMapPixelForTile( tilekey );
-            prevActiveView = this.getTileViewIndex( previousTilekey );
-            activeViewForTile = this.getTileViewIndex( tilekey );
-
-            // re-position carousel tile
-            this.$panel.css({
-                left: topLeft.x,
-                top: this.map.getMapHeight() - topLeft.y
-            });
-
-            // if more than 1 view update dots
-            if ( this.views.length > 1 ) {
-                // if active view is different we need to update the dots
-                this.$dots[prevActiveView].removeClass(this.DOT_CLASS_SELECTED).addClass(this.DOT_CLASS_DEFAULT);
-                this.$dots[activeViewForTile].removeClass(this.DOT_CLASS_DEFAULT).addClass(this.DOT_CLASS_SELECTED);
-            }
-        }
-        */
 
      });
 

@@ -330,21 +330,21 @@ define(function (require) {
 
             this.addClickStateClassesGlobal( tag );
 
+            layerState.setClickState( { tag : tag });
             clientState.clickState.tag = tag;
 
             // create details on demand
-            this.createDetailsOnDemand( map, data, index, clientState, DetailsOnDemand );
+            this.createDetailsOnDemand( map, data, index, DetailsOnDemand );
             // centre map after creation
             this.centreForDetails( map, data );
 
         },
 
 
-        clickOff: function( clientState, DetailsOnDemand ) {
+        clickOff: function( DetailsOnDemand ) {
 
             this.removeClickStateClassesGlobal();
             DetailsOnDemand.destroy();
-            delete clientState.clickState.tag;
         },
 
 
@@ -391,7 +391,7 @@ define(function (require) {
         /*
             Create details on demand
         */
-        createDetailsOnDemand: function( map, data, index, clientState, DetailsOnDemand ) {
+        createDetailsOnDemand: function( map, data, index, DetailsOnDemand ) {
 
             var that = this,
                 pos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
@@ -403,7 +403,7 @@ define(function (require) {
             map.getRootElement().append( $details );
 
             $('.details-on-demand-close-button').click( function() {
-                that.clickOff( clientState, DetailsOnDemand );
+                that.clickOff( DetailsOnDemand );
             });
 
         },

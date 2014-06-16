@@ -55,7 +55,15 @@ define(function (require) {
 
             function register( layer, index ) {
 
-                var layerState;
+                var layerState,
+                    previousMouse = {},
+                    i;
+
+                function updateTileFocus( x, y ) {
+
+                    var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
+                    layerState.setTileFocus( tilekey );
+                }
 
                 // Create a layer state object for the base map.
                 layerState = new ClientLayerState( layer.id );
@@ -66,22 +74,43 @@ define(function (require) {
                 layerState.setDefaultRendererIndex( 0 );
                 layerState.setRendererCount( layer.renderers.length );
 
+                // register layer state
+                for (i=0; i< layer.renderers.length; i++) {
+                    layer.renderers[i].registerLayer( layerState );
+                }
+
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {
                     var tilekey;
+
                     if (fieldName === "opacity") {
                         layer.setOpacity( layerState.getOpacity() );
                     } else if (fieldName === "enabled") {
                         layer.setVisibility( layerState.isEnabled() );
                     } else if (fieldName === "tileFocus") {
                         layer.setTileFocus( layerState.getTileFocus() );
-                    } else if (fieldName === "defaultRendererIndex") {
+                    } else
+                    if (fieldName === "defaultRendererIndex") {
                         layer.setDefaultRendererIndex( layerState.getDefaultRendererIndex() );
                     } else if (fieldName === "tileRendererIndex") {
-                        // set renderer for tile
                         tilekey = layerState.getTileFocus();
                         layer.setTileRenderer( tilekey, layerState.getRendererByTile( tilekey ) );
                     }
+                });
+
+                // clear click state if map is clicked
+                layer.map.on( 'click', function() {
+                    layerState.setClickState( {} );
+                });
+
+                // set tile focus callbacks
+                layer.map.on('mousemove', function(event) {
+                    updateTileFocus( event.xy.x, event.xy.y );
+                    previousMouse.x = event.xy.x;
+                    previousMouse.y = event.xy.y;
+                });
+                layer.map.on('zoomend', function(event) {
+                    updateTileFocus( previousMouse.x, previousMouse.y );
                 });
 
                 // Add the layer to the layer state array.

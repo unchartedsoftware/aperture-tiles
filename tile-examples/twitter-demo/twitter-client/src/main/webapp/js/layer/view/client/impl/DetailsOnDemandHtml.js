@@ -41,16 +41,16 @@ define(function (require) {
 
     return {
 
-        create: function( x, y, value ) {
+        create: function( position, value, closeCallback ) {
 
             var html = '',
                 time, day, tweetsByDay, key, lightOrDark, visibility,
                 maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value ),
                 sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value ),
-                relativePercent, cumulativePercentages = [],
+                relativePercent, cumulativePercentages = [], $details,
                 i;
 
-            html += '<div class="details-on-demand" style="left:'+x+'px; top:'+y+'px;">';
+            html += '<div class="details-on-demand" style="left:'+position.x+'px; top:'+position.y+'px;">';
 
 
             // top half
@@ -155,11 +155,14 @@ define(function (require) {
 
             this.destroy(); // destroy any previous DoD
 
-            return $(html).draggable().resizable({
+            // create element
+            $details = $(html).draggable().resizable({
                 minHeight: 257,
                 minWidth: 257,
                 handles: 'se'
             });
+            $details.find('.details-on-demand-close-button').click( closeCallback );
+            return $details;
 
         },
 

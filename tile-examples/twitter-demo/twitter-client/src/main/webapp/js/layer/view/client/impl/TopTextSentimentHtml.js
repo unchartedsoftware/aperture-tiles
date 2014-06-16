@@ -39,21 +39,15 @@ define(function (require) {
         ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
         TwitterUtil = require('./TwitterUtil'),
-        DetailsOnDemand = require('./DetailsOnDemandHtml'),
+        TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         TopTextSentimentHtml;
 
 
 
-    TopTextSentimentHtml = HtmlRenderer.extend({
+    TopTextSentimentHtml = TwitterHtmlRenderer.extend({
         ClassName: "TopTextSentimentHtml",
 
-        /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
-         */
         init: function( map) {
-
-            var that = this;
 
             this._super(map);
 
@@ -65,11 +59,30 @@ define(function (require) {
             });
 
             this.createLayer();
-
-            this.map.on( 'click', function() {
-                //TwitterUtil.clickOff( that.clientState, DetailsOnDemand );
-            });
         },
+
+
+        addClickStateClassesGlobal: function() {
+
+            var selectedTag = this.layerState.getClickState().tag,
+                $elements = $(".top-text-sentiment");
+
+            // top text sentiments
+            $elements.filter( function() {
+                return $(this).text() !== selectedTag;
+            }).addClass('greyed').removeClass('clicked');
+
+            $elements.filter( function() {
+                return $(this).text() === selectedTag;
+            }).removeClass('greyed').addClass('clicked')
+
+        },
+
+        removeClickStateClassesGlobal: function() {
+
+            $(".top-text-sentiment").removeClass('greyed clicked');
+        },
+
 
         createLayer : function() {
 
@@ -122,9 +135,8 @@ define(function (require) {
 
                         $elem = $(html);
 
-                        // set event handlers
-                        //TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
-                        //TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.clickState.tag );
+                        that.setMouseEventCallbacks( $elem, $summaries, this, value );
+                        that.addClickStateClasses( $elem, tag );
 
                         $html.append( $elem );
                     }

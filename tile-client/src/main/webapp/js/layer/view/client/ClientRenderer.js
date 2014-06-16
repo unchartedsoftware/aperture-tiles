@@ -40,11 +40,10 @@ define(function (require) {
         init: function(map) {
 
             this.map = map;
-            this.clientState = null;
         },
 
-        attachClientState: function(clientState) {
-            this.clientState = clientState;
+        registerLayer: function( layerState ) {
+            this.layerState = layerState;
         },
 
         setOpacity: function( opacity ) {

@@ -51,10 +51,15 @@ define(function (require) {
     objectsEqual = function (a, b) {
 
         var keyA, keyB, found;
+
+        if ( $.isEmptyObject(a) !== $.isEmptyObject(b) ) {
+            return false;
+        }
+
         for ( keyA in a ) {         // iterate through a
             if ( a.hasOwnProperty(keyA) ) {
                 found = false;
-                for ( keyB in b ) { // iterate through by
+                for ( keyB in b ) { // iterate through b
                     if ( b.hasOwnProperty(keyB) ) {
                         if ( a[keyA] === b[keyB] ) {
                             found = true; // found and equal
@@ -134,13 +139,16 @@ define(function (require) {
             }
         },
 
+
         getRendererByTile: function( tilekey ) {
             return this.rendererIndicesByTile[tilekey] || this.defaultRendererIndex;
         },
 
+
         getRenderersByTile: function() {
             return this.rendererIndicesByTile;
         },
+
 
         setCarouselEnabled: function( enabled ) {
             if (this.carouselEnabled !== enabled) {
@@ -148,6 +156,7 @@ define(function (require) {
                 this.notify("carouselEnabled", this.listeners);
             }
         },
+
 
         getCarouselEnabled: function( enabled ) {
             return this.carouselEnabled;
@@ -161,9 +170,11 @@ define(function (require) {
             }
         },
 
+
         getTileFocus: function() {
             return this.tileFocus;
         },
+
 
         setClickState: function( clickState ) {
             if ( !objectsEqual( this.clickState, clickState ) ) {
@@ -172,9 +183,11 @@ define(function (require) {
             }
         },
 
+
         getClickState: function() {
             return this.clickState;
         },
+
 
         setHoverState: function( hoverState ) {
             if ( !objectsEqual( this.hoverState, hoverState ) ) {
@@ -182,6 +195,7 @@ define(function (require) {
                 this.notify("hoverState", this.listeners);
             }
         },
+
 
         getHoverState: function() {
             return this.hoverState;

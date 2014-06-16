@@ -31,6 +31,8 @@ define( function (require) {
 	    ClientLayer = require('./ClientLayer'),
 	    ClientLayerFactory;
 
+
+
     ClientLayerFactory = LayerFactory.extend({
         ClassName: "ClientLayerFactory",
 
@@ -71,31 +73,6 @@ define( function (require) {
 
             return clientLayerDeferred;
         }
-
-
-        /*
-
-        createLayer: function(layerJSON, map) {
-
-            var clientLayer,
-                clientLayerDeferred = $.Deferred();
-
-            // load renderer module
-            require( ["./impl/" + layerJSON.renderer], function( RendererModule ) {
-                // create the layer
-                clientLayer = new ClientLayer( layerJSON,  new RendererModule( map ), map );
-                // send configuration request
-                clientLayer.configure( function( layerInfo ) {
-                    // update layer and resolve deferred
-                    clientLayer.update( layerInfo );
-                    clientLayerDeferred.resolve( clientLayer );
-                });
-
-            });
-
-            return clientLayerDeferred;
-        }
-        */
 
 
     });
