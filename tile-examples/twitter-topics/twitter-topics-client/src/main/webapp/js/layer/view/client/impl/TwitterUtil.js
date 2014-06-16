@@ -92,8 +92,8 @@ define(function (require) {
         /*
             Return the count of recent tweets entries, clamped at MAX_COUNT
         */
-        getTweetCount : function( data ) {
-            return data.recentTweets.length;
+        getTweetCount : function( value ) {
+            return value.recentTweets.length;
         },
 
         /*
@@ -281,13 +281,13 @@ define(function (require) {
         /*
             Buckets recent tweets by day
         */
-        getRecentTweetsByDay : function( tagData ) {
+        getRecentTweetsByDay : function( value ) {
             // bucket tweets by day
             var days = {},
-                count = this.getTweetCount( tagData ),
+                count = this.getTweetCount( value ),
                 time, day, recent, i;
             for (i=0; i<count; i++) {
-                recent = tagData.recent[i];
+                recent = value.recentTweets[i];
                 time = recent.time;
                 day = this.getDay( time );
                 days[day] = days[day] || [];

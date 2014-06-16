@@ -70,7 +70,7 @@ define(function (require) {
 
             function createMarkersHtml( numIncs ) {
                 var totalIncs = (numIncs*2)-1,
-                    width = 100/totalIncs,
+                    width = 100/(totalIncs-1),
                     majorOrMinor = 'major',
                     html = "",
                     i;
@@ -79,7 +79,7 @@ define(function (require) {
                     if (i < totalIncs-1) {
                         html +=  '<div class="details-axis-marker details-'+majorOrMinor+'-marker" style="width:calc('+width+'% - 1px);"></div>';
                     } else {
-                        html +=  '<div class="details-axis-marker details-last-major-marker" style="width:calc('+width+'% - 1px)"></div>';
+                        html +=  '<div class="details-axis-marker details-last-major-marker"></div>';
                     }
                     majorOrMinor = (majorOrMinor === 'major') ? 'minor' : 'major';
                 }
@@ -139,7 +139,7 @@ define(function (require) {
             }
 
             html +=     '<div class="details-axis-labels">';
-            html +=         createLabelsHtml( NUM_INCS[type] );
+            html +=         createLabelsHtml( NUM_INCS[type], labels );
             html +=     '</div>';
 
             return html;
@@ -181,10 +181,10 @@ define(function (require) {
             barWidth = 100 / barCount;
             maxPercentage = TwitterUtil.getMaxPercentageByType( value, incType );
             for (i=0; i<barCount; i++ ) {
-                relativePercent = ( TwitterUtil.getPercentageByType( value, incType ) / maxPercentage ) * 100;
+                relativePercent = ( TwitterUtil.getPercentageByType( value, i, incType ) / maxPercentage ) * 100;
                 visibility = (relativePercent > 0) ? 'visible' : 'hidden';
-                html += '<div class="details-chart-bar" style="visibility:'+visibility+';">';
-                html += '<div class="details-chart-bar-fill" style="height:'+relativePercent+'%; width='+barWidth+'%;"></div>';
+                html += '<div class="details-chart-bar" style="visibility:'+visibility+'; width:'+barWidth+'%;">';
+                html += '<div class="details-chart-bar-fill" style="height:'+relativePercent+'%;"></div>';
                 html += '</div>';
             }
 
@@ -193,11 +193,16 @@ define(function (require) {
         },
 
 
-        createChartByType: function( title, value, type ) {
+        createChartByType: function( value, type, title ) {
 
-            var html =  '<div class="details-on-demand-title small-title">'+title+'</div>';
 
-            html +=     '<div class="details-on-demand-chart">';
+
+            var html = ''; // '<div class="details-on-demand-title small-title">'+title+'</div>';
+
+
+            html +=     '<div class="details-on-demand-sub-chart">';
+
+            html +=         '<div class="details-chart-title-label">'+title+'</div>';
             html +=         '<div class="details-chart-content">';
 
             // create bars
@@ -213,8 +218,6 @@ define(function (require) {
             html +=         '</div>';
             html +=     '</div>';
 
-            html += '</div>';
-
             return html;
         },
 
@@ -229,10 +232,12 @@ define(function (require) {
 
             // top half
             html += '<div class="details-on-demand-half">';
-            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.tag)+'</div>';
-            html +=     this.createChartByType( value, "Last Month" );      // last month
-            html +=     this.createChartByType( value, "Last Week" );       // last week
-            html +=     this.createChartByType( value, "Last 24 hours" );   // last day
+            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.topic)+'</div>';
+            html +=     '<div class="details-on-demand-chart">';
+            html +=         this.createChartByType( value, "month", "Last Month" );      // last month
+            html +=         this.createChartByType( value, "week", "Last Week" );       // last week
+            html +=         this.createChartByType( value, "day", "Last 24 hours" );   // last day
+            html +=     '</div>';
             html += '</div>';
 
 
@@ -252,7 +257,7 @@ define(function (require) {
                     html += '<div class="details-on-demand-tweet-day">'+key+'</div>';
                     for (i=0; i<day.length; i++) {
                         html += '<div class="details-on-demand-tweet tweet-'+lightOrDark+'">';
-                        html +=     '<div class="details-on-demand-tweet-text">'+day[i].tweet+'</div>';
+                        html +=     '<div class="details-on-demand-tweet-text">'+day[i].tweet.substring(1, day[i].tweet.length - 2)+'</div>';
                         html +=     '<div class="details-on-demand-tweet-time">'+day[i].time+'</div>';
                         html += '</div>';
                         lightOrDark = (lightOrDark === 'light') ? 'dark' : 'light';
@@ -270,7 +275,7 @@ define(function (require) {
 
             // create element
             $details = $(html).draggable().resizable({
-                minHeight: 257,
+                minHeight: 513,
                 minWidth: 257,
                 handles: 'se'
             });
