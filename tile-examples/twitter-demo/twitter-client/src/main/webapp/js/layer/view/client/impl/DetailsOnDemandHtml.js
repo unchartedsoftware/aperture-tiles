@@ -35,7 +35,7 @@ define(function (require) {
 
 
 
-    var TwitterUtil = require('./TwitterUtil');
+    var TwitterUtil = require('./TwitterSentimentUtil');
 
 
 

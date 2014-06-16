@@ -30,8 +30,8 @@ define(function (require) {
     return {
 
 
-        getMonth: function(data) {
-            var month = new Date( data.bin.value[0].endTimeSecs * 1000 ).getMonth();
+        getMonth: function( value ) {
+            var month = new Date( value.endTimeSecs * 1000 ).getMonth();
             switch(month) {
                 case 0: return "Jan";
                 case 1: return "Feb";
@@ -49,8 +49,8 @@ define(function (require) {
         },
 
 
-        getLastWeekOfMonth: function(data) {
-            var lastDay = this.getLastDayOfMonth(data),
+        getLastWeekOfMonth: function( value ) {
+            var lastDay = this.getLastDayOfMonth( value ),
                 i,
                 week = [];
             function numToDay(num) {
@@ -71,13 +71,13 @@ define(function (require) {
         },
 
 
-        getLastDayOfMonth: function(data) {
-            return new Date( data.bin.value[0].endTimeSecs * 1000 ).getDay();
+        getLastDayOfMonth: function( value ) {
+            return new Date( value.endTimeSecs * 1000 ).getDay();
         },
 
 
-        getTotalDaysInMonth: function(data) {
-            return new Date( data.bin.value[0].endTimeSecs * 1000 ).getDate();
+        getTotalDaysInMonth: function( value ) {
+            return new Date( value.endTimeSecs * 1000 ).getDate();
         },
 
 
@@ -96,9 +96,23 @@ define(function (require) {
             return data.recentTweets.length;
         },
 
-
+        /*
         getCountPercentageByType: function(values, index, type) {
             return ( values[index][type] / values[index].countMonthly) || 0;
+        },
+        */
+
+
+        getPercentageByType: function( value, timeIndex, type ) {
+
+            // Array counts are inverted, 0 is most recent
+            var attrib = 'count' + type,
+                count = this.getParentCount( value, type),
+                length = value[attrib].length;
+            if (count === 0) {
+                return 0;
+            }
+            return value[attrib][length - 1 - timeIndex] / count;
         },
 
 
@@ -123,6 +137,49 @@ define(function (require) {
         getTotalCountPercentage : function( values, index ) {
             return ( values[index].countMonthly / this.getTotalCount( values ) ) || 0;
         },
+
+
+        getParentCount: function( value, type ) {
+
+            // Array counts are inverted, 0 index is most recent
+            var i,
+                count = 0;
+
+            switch(type) {
+                case 'Daily':
+                    count = value.countMonthly;
+                    break;
+                case 'Per6hrs':
+                    for (i = 0; i<7; i++) {
+                        count += value.countDaily[i];
+                    }
+                    break;
+                case 'PerHour':
+                    count = value.countDaily[0];
+                    break;
+            }
+            return count;
+        },
+
+
+         getMaxPercentageByType: function( value, type) {
+            var i,
+                percent,
+                maxPercent = 0,
+                count = this.getParentCount( value, type );
+            if (count === 0) {
+                return 0;
+            }
+            for (i=0; i<value['count' + type].length; i++) {
+                // get maximum percent
+                percent = value['count' + type][i] / count;
+                if (percent > maxPercent) {
+                    maxPercent = percent;
+                }
+            }
+            return maxPercent;
+        },
+
 
 
         /*

@@ -208,7 +208,19 @@ define(function (require) {
 
         hasHoverState: function() {
             return !$.isEmptyObject( this.hoverState );
-        }
+        },
+
+
+        setCustomState: function( state, value ) {
+            if (this[state] !== value) {
+                this[state] = value;
+                this.notify( state, this.listeners );
+            }
+        },
+
+        getCustomState: function( state, value ) {
+            return this[state];
+        },
 
     });
 

@@ -1,0 +1,407 @@
+@charset "UTF-8";
+
+
+.aperture-tile {
+	position:relative;
+	-webkit-backface-visibility: hidden; 
+			backface-visibility: hidden;
+	height: 256px;
+	width: 256px;
+}
+
+
+/********************************************/
+/* 		       Top Text Sentiment			*/
+/********************************************/
+
+.top-tags-cloud-word {
+	position:absolute;
+	/*
+	width: 200px;
+	height: 50px;
+	left: 28px;
+	-webkit-transform: scale(0.667);
+       -moz-transform: scale(0.667);
+        -ms-transform: scale(0.667);
+            transform: scale(0.667);
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+    */
+}
+
+.top-text-sentiment:hover {
+	cursor: pointer;
+	-webkit-filter: grayscale(0);
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+
+/********************************************/
+/* 		     Tags by Time Sentiment			*/
+/********************************************/
+
+.tags-by-time-sentiment {
+	position:absolute;
+	width: 190px;
+	height: 20px;
+	left: 38px;
+}
+
+.tags-by-time-left {
+	position: relative;
+	float:left;
+	padding-top:2px;
+	padding-bottom:2px;
+	width: 55%;
+	height: 100%;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.tags-by-time-right {
+	position: relative;
+	float:right;
+	width: 45%;
+	height: 100%;
+}
+
+
+.tags-by-time-label {
+	position:relative;
+	text-align: left;
+	vertical-align: middle;
+	font-size : 22px;
+	line-height: 22px;
+	color: #FFFFFF;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+	-webkit-transform-origin: left center;
+	   -moz-transform-origin: left center;
+	    -ms-transform-origin: left center;
+	        transform-origin: left center;
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+	-webkit-transform: scale(0.75);
+       -moz-transform: scale(0.75);
+        -ms-transform: scale(0.75);
+            transform: scale(0.75);
+}
+
+.tags-by-time-bar {
+	position: relative;
+	float:left;
+	width: 4px;
+	bottom: 0px;
+	border: 1px solid #000;
+	-webkit-filter: grayscale(1) brightness(10000);
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.tags-by-time-sentiment:hover {
+	cursor: pointer;
+	-webkit-filter: grayscale(0);
+}
+
+.tags-by-time-sentiment:hover .tags-by-time-label {
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+.tags-by-time-sentiment:hover .tags-by-time-bar {
+	-webkit-filter: grayscale(0) brightness(1);
+}
+
+/********************************************/
+/* 		      Details on Demand  			*/
+/********************************************/
+
+.details-on-demand {
+	position:absolute;
+	width: 257px;
+	height: 513px;
+	background-color: #222222;
+	padding-left: 10px;
+	padding-right: 10px;
+	z-index: 2001;
+	box-shadow: 0px 5px 15px #000;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-on-demand-half {
+	position:relative;
+	width: 100%;
+	height: 50%;
+	padding: 10px 10px 10px 10px;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-on-demand-title {
+	position:relative;
+	color : #FFFFFF;
+	margin-bottom:10px;
+	vertical-align: middle;	
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+}
+
+.large-title {
+	height: 20px;
+	line-height: 20px;
+	font-size: 20px;
+}
+
+.small-title {
+	height: 16px;
+	line-height: 16px;
+	font-size: 16px;
+}
+
+.details-on-demand-chart {
+	position: relative;
+	background-color: #111111;
+	height: calc(33.33% - 56px);
+	border-radius: 10px;
+	box-shadow: inset 0 0 10px #000;
+}
+
+
+.details-chart-content {
+	position: relative;
+	padding: 0 5% 0 5%;
+	background-color: #111111;
+	box-shadow: inset 0 0 10px #000;
+	height: calc(100% - 32px);
+}
+
+.details-chart-bars {
+	position: relative;
+	padding-top:5px;
+	height: 75%;
+}
+
+.details-chart-axis {
+	position: relative;
+	height: 15%;
+
+}
+
+.details-chart-bar {
+	position: relative;
+	float:left;
+	width: 4.1667%;
+	height: 100%;
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+}
+
+.details-chart-bar:hover {
+	-webkit-filter: brightness(2);
+	-webkit-transform: scaleX(1.4);
+       -moz-transform: scaleX(1.4);
+        -ms-transform: scaleX(1.4);
+            transform: scaleX(1.4);
+}
+
+.details-chart-bar-fill {
+	position: absolute;
+	background-color: #09CFFF;
+	width: 100%;
+	bottom: 0px;
+	border: 1px solid #000;
+	box-shadow: 0 0 10px #000;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-axis-markers {
+	position: relative;
+	border-top: 1px solid #aaa;
+	height: 33.333%;
+	overflow:hidden;
+}
+
+.details-axis-labels {
+	position: relative;
+	margin-left: -4%;
+	margin-right: -4%;
+	height: 66.667%;
+}
+
+.details-axis-marker {
+	position: relative;
+	float: left;
+	border-left: 1px solid #aaa;
+}
+
+.details-major-marker {
+	height: 100%;
+}
+
+.details-last-major-marker {
+	height: 100%;
+	width: 0px;
+	margin-left: -1px;
+}
+
+.details-minor-marker {
+	height: 50%;
+}
+
+.details-axis-label {
+	position: relative;
+	text-align: center;
+	float: left;
+	width: 20%;
+	font-size: 9px;
+	color: #FFFFFF;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000; 
+}
+
+
+.details-on-demand-recent-tweets {
+	position:relative;
+	color : #FFFFFF;
+	height: calc(100% - 30px);
+	overflow:auto;
+	border-radius: 10px;
+	background-color:#111111;
+	box-shadow: inset 0 0 10px #000;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-on-demand-tweet-day {
+	position:relative;
+	font-size:12px;
+	color: #09CFFF;
+	margin: 5px;
+}
+
+.details-on-demand-tweet-time {
+	position:relative;
+	color: #DDDDDD;
+	text-align: right;
+	font-size: 0.6em;
+	padding: 5px;
+}
+
+.details-on-demand-tweet {
+	position:relative;
+	box-shadow: inset -10px 0 10px -10px #000,
+				inset 10px 0 10px -10px #000;
+}
+
+.tweet-dark {	
+	background-color: #111111;
+}
+
+.tweet-light {
+	background-color: #181818;
+}
+
+.details-on-demand-tweet-text {
+	position:relative;
+	text-align: center;
+	padding: 5px 5px 0px 5px;
+	font-size: 0.65em;
+}
+
+
+.details-on-demand-close-button {
+	position:absolute;
+	right:3px;
+	top:3px;
+	width:12px;
+	height:12px;
+	background: transparent url(../images/close_icon.png) no-repeat center top;
+	-webkit-filter: brightness(0.5);
+	
+	-webkit-transform: scale(0.75);
+       -moz-transform: scale(0.75);
+        -ms-transform: scale(0.75);
+            transform: scale(0.75);
+            
+	-webkit-transition: 0.1s ease-in-out;
+       -moz-transition: 0.1s ease-in-out;
+       	-ms-transition: 0.1s ease-in-out;
+            transition: 0.1s ease-in-out;
+}
+
+.details-on-demand-close-button:hover {
+	cursor: pointer;
+	-webkit-filter: brightness(1);
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+
+/********************************************/
+/* 		             Other     		    	*/
+/********************************************/
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px #000; 
+    border-radius: 10px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #222222;
+    border: 1px solid #000;
+    -webkit-box-shadow: 0 0 6px #000;
+}
+
+.greyed {
+	-webkit-filter: grayscale(1) brightness(0.5);
+}
+
+.clicked {
+	-webkit-filter: grayscale(0);
+}
+
+
+
+
+
+

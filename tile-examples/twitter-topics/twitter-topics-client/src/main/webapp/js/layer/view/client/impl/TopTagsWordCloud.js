@@ -35,14 +35,14 @@ define(function (require) {
 
 
 
-    var TwitterTagRenderer = require('./TwitterTagRenderer'),
+    var TwitterApertureRenderer = require('./TwitterApertureRenderer'),
         //TwitterUtil = require('./TwitterUtil'),
         WordCloudLayer = require('./WordCloudLayer'),
         TopTagsWordCloud;
 
 
 
-    TopTagsWordCloud = TwitterTagRenderer.extend({
+    TopTagsWordCloud = TwitterApertureRenderer.extend({
         ClassName: "TopTagsWordCloud",
 
         init: function( map ) {
@@ -72,6 +72,15 @@ define(function (require) {
                 MAX_LABEL_CHAR_COUNT = 12;
 
             this.wordCloudLabel = this.nodeLayer.addLayer(WordCloudLayer);
+            this.wordCloudLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
+            this.wordCloudLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET);
+            this.wordCloudLabel.map('cursor').asValue('pointer');
+            this.wordCloudLabel.map('font-outline').asValue(this.BLACK_COLOUR);
+            this.wordCloudLabel.map('font-outline-width').asValue(3);
+            this.wordCloudLabel.map('width').asValue( 228 );
+            this.wordCloudLabel.map('height').asValue( 208 );
+            this.wordCloudLabel.map('min-font-size').asValue(9);
+            this.wordCloudLabel.map('max-font-size').asValue(32);
 
             this.wordCloudLabel.map('visible').from(function() {
                 return that.visibility;
@@ -98,21 +107,13 @@ define(function (require) {
                 return that.WHITE_COLOUR;
             });
 
-            this.wordCloudLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET);
-            this.wordCloudLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET);
-            this.wordCloudLabel.map('cursor').asValue('pointer');
-            this.wordCloudLabel.map('font-outline').asValue(this.BLACK_COLOUR);
-            this.wordCloudLabel.map('font-outline-width').asValue(3);
-            this.wordCloudLabel.map('width').asValue( 228 );
-            this.wordCloudLabel.map('height').asValue( 208 );
-
             this.wordCloudLabel.map('words').from(function() {
                 var numWords = this.bin.value.length,
                     wordList = [],
                     word,
                     i;
                 for (i=0; i<numWords; i++) {
-                    word = that.getTopic( this, i );
+                    word = that.getTopic( this.bin.value[i] );
                     word = (word.length > MAX_LABEL_CHAR_COUNT) ? word.substr(0, MAX_LABEL_CHAR_COUNT) + "..." : word;
                     wordList.push( word );
                 }
@@ -133,8 +134,25 @@ define(function (require) {
                 return that.opacity;
             });
 
-            this.wordCloudLabel.map('min-font-size').asValue(9);
-            this.wordCloudLabel.map('max-font-size').asValue(32);
+            this.wordCloudLabel.on('click', function(event) {
+                var data = event.data,
+                    value = data.bin.value[ event.index[0] ],
+                    tag = value.topic;
+                that.clickOn( tag, data, value );
+                return true; // swallow event
+            });
+            this.wordCloudLabel.on('mouseover', function(event) {
+                var data = event.data,
+                    value = data.bin.value[ event.index[0] ],
+                    tag = value.topic;
+                that.hoverOn( tag, data, value );
+                that.nodeLayer.all().where(data).redraw( new aperture.Transition( 100 ) );
+            });
+            this.wordCloudLabel.on('mouseout', function(event) {
+
+                that.hoverOff();
+                that.nodeLayer.all().where(event.data).redraw( new aperture.Transition( 100 ) );
+            });
 
         }
 

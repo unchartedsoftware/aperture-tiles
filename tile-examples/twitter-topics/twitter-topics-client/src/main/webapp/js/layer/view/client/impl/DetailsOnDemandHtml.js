@@ -41,90 +41,203 @@ define(function (require) {
 
     return {
 
-        create: function( position, value, closeCallback ) {
 
-            var html = '',
-                day, tweetsByDay, key, lightOrDark, visibility,
-                maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value ),
-                sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value ),
-                relativePercent, cumulativePercentages = [], $details,
+        /*
+            countDaily: Array[31]
+            countMonthly: 1545
+            countPer6hrs: Array[28]
+            countPerHour: Array[24]
+            endTimeSecs: 1396310399
+            recentTweets: Array[10]
+            topic: "guayas"
+            topicEnglish: "guayas"
+        */
+        createAxisByType: function( value, type ) {
+
+            var MONTH_INCS = 5,
+                WEEK_INCS = 7,
+                DAY_INCS = 5,
+                NUM_INCS = {
+                    month : MONTH_INCS,
+                    week : WEEK_INCS,
+                    day : DAY_INCS
+                },
+                month,
+                dayInc,
+                html = "",
+                labels = [],
                 i;
 
-            html += '<div class="details-on-demand" style="left:'+position.x+'px; top:'+position.y+'px;">';
+            function createMarkersHtml( numIncs ) {
+                var totalIncs = (numIncs*2)-1,
+                    width = 100/totalIncs,
+                    majorOrMinor = 'major',
+                    html = "",
+                    i;
+
+                for (i=0; i<totalIncs; i++) {
+                    if (i < totalIncs-1) {
+                        html +=  '<div class="details-axis-marker details-'+majorOrMinor+'-marker" style="width:calc('+width+'% - 1px);"></div>';
+                    } else {
+                        html +=  '<div class="details-axis-marker details-last-major-marker" style="width:calc('+width+'% - 1px)"></div>';
+                    }
+                    majorOrMinor = (majorOrMinor === 'major') ? 'minor' : 'major';
+                }
+
+                return html;
+            }
+
+            function createLabelsHtml( numIncs, labels ) {
+                var width = 100/numIncs,
+                    html = "",
+                    i;
+                for (i=0; i<numIncs; i++) {
+                    html += '<div class="details-axis-label" style="width:'+width+'%;">'+labels[i]+'</div>';
+                }
+                return html;
+            }
 
 
-            // top half
-            html += '<div class="details-on-demand-half">';
-
-            // summaries
-            html +=     '<div class="sentiment-summaries">';
-            html +=         '<div class="positive-summaries"> +'+value.positive+'</div>';
-            html +=         '<div class="neutral-summaries">'+value.neutral+'</div>';
-            html +=         '<div class="negative-summaries"> -'+value.negative+'</div>';
+            html +=     '<div class="details-axis-markers">';
+            html +=         createMarkersHtml( NUM_INCS[type] );
             html +=     '</div>';
 
+            switch (type) {
 
-            // title
-            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.tag)+'</div>';
+                case 'month':
 
-            // last 24 hours
-            html +=     '<div class="details-on-demand-title small-title">Last 24 Hours</div>';
+                    month = TwitterUtil.getMonth( value );
+                    dayInc = TwitterUtil.getTotalDaysInMonth( value ) / (MONTH_INCS-1);
+                    // label function
+                    for (i=0; i<MONTH_INCS; i++) {
+                        labels.push( (i === 0) ? month + " 1" : month + " " + Math.round( dayInc*i ) );
+                    }
+                    break;
+
+                case 'week':
+
+                    for (i=0; i<WEEK_INCS+1; i++) {
+                        labels.push( TwitterUtil.getLastWeekOfMonth( value )[i % WEEK_INCS] );
+                    }
+                    break;
+
+                case 'day':
+                    // label function
+                    for (i=0; i<WEEK_INCS+1; i++) {
+                        switch (i) {
+                            case 1: labels.push( "6am" );
+                                    break;
+                            case 2: labels.push( "12pm" );
+                                    break;
+                            case 3: labels.push( "6pm" );
+                                    break;
+                            default: labels.push( "12am" );
+                                    break;
+                        }
+                    }
+                    break;
+            }
+
+            html +=     '<div class="details-axis-labels">';
+            html +=         createLabelsHtml( NUM_INCS[type] );
+            html +=     '</div>';
+
+            return html;
+        },
+
+
+        createBarsHtml: function( value, type ) {
+
+            var html = "",
+                maxPercentage,
+                relativePercent,
+                visibility,
+                barCount,
+                barWidth,
+                incType,
+                i;
+
+            switch (type) {
+
+                case 'month':
+
+                    barCount = TwitterUtil.getTotalDaysInMonth( value );
+                    incType = 'Daily';
+                    break;
+
+                case 'week':
+
+                    barCount = 28;
+                    incType = 'Per6hrs';
+                    break;
+
+                case 'day':
+
+                    barCount = 24;
+                    incType = 'PerHour';
+                    break;
+            }
+
+            barWidth = 100 / barCount;
+            maxPercentage = TwitterUtil.getMaxPercentageByType( value, incType );
+            for (i=0; i<barCount; i++ ) {
+                relativePercent = ( TwitterUtil.getPercentageByType( value, incType ) / maxPercentage ) * 100;
+                visibility = (relativePercent > 0) ? 'visible' : 'hidden';
+                html += '<div class="details-chart-bar" style="visibility:'+visibility+';">';
+                html += '<div class="details-chart-bar-fill" style="height:'+relativePercent+'%; width='+barWidth+'%;"></div>';
+                html += '</div>';
+            }
+
+            return html;
+
+        },
+
+
+        createChartByType: function( title, value, type ) {
+
+            var html =  '<div class="details-on-demand-title small-title">'+title+'</div>';
 
             html +=     '<div class="details-on-demand-chart">';
-            html +=         '<div class="details-positive-label">Positive Tweets</div>';
             html +=         '<div class="details-chart-content">';
 
+            // create bars
             html +=             '<div class="details-chart-bars">';
-
-            for (i=0; i<value.countByTime.length; i++) {
-                relativePercent = (TwitterUtil.getCountByTimePercentage( value, i ) / maxPercentage) * 100;
-                cumulativePercentages[0] = sentimentPercentages.negative[i]*relativePercent;
-                cumulativePercentages[1] = cumulativePercentages[0] + sentimentPercentages.neutral[i]*relativePercent;
-                cumulativePercentages[2] = cumulativePercentages[1] + sentimentPercentages.positive[i]*relativePercent;
-
-                visibility = (relativePercent > 0) ? 'visible' : 'hidden';
-                html +=            '<div class="details-chart-bar" style="visibility:'+visibility+';">';
-                html +=            '<div class="details-chart-positive-bar" style="height:'+cumulativePercentages[2]+'%;"></div>';
-                html +=            '<div class="details-chart-neutral-bar" style="height:'+cumulativePercentages[1]+'%;"></div>';
-                html +=            '<div class="details-chart-negative-bar" style="height:'+cumulativePercentages[0]+'%;"></div>';
-                html +=            '</div>';
-            }
-            html +=            '</div>';
-
-            html +=             '<div class="details-chart-axis">';
-            html +=                 '<div class="details-axis-markers">';
-            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
-            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
-
-            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
-            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
-
-            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
-            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
-
-            html +=                     '<div class="details-axis-marker details-major-marker"></div>';
-            html +=                     '<div class="details-axis-marker details-minor-marker"></div>';
-            html +=                     '<div class="details-axis-marker details-last-major-marker"></div>';
-            html +=                 '</div>';
-
-            html +=                 '<div class="details-axis-labels">';
-            html +=                     '<div class="details-axis-label">12am</div>';
-            html +=                     '<div class="details-axis-label">6am</div>';
-            html +=                     '<div class="details-axis-label">12pm</div>';
-            html +=                     '<div class="details-axis-label">6am</div>';
-            html +=                     '<div class="details-axis-label">12am</div>';
-            html +=                 '</div>';
-
+            html +=                 this.createBarsHtml( value, type );
             html +=             '</div>';
+
+            // create axis
+            html +=             '<div class="details-chart-axis">';
+            html +=                 this.createAxisByType( value, type );
+            html +=             '</div>';
+
             html +=         '</div>';
-            html +=         '<div class="details-negative-label">Negative Tweets</div>';
             html +=     '</div>';
 
             html += '</div>';
 
+            return html;
+        },
+
+        create: function( position, value, closeCallback ) {
+
+            var html = '',
+                day, tweetsByDay, key, lightOrDark,
+                $details,
+                i;
+
+            html += '<div class="details-on-demand" style="left:'+position.x+'px; top:'+position.y+'px;">';
+
+            // top half
+            html += '<div class="details-on-demand-half">';
+            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.tag)+'</div>';
+            html +=     this.createChartByType( value, "Last Month" );      // last month
+            html +=     this.createChartByType( value, "Last Week" );       // last week
+            html +=     this.createChartByType( value, "Last 24 hours" );   // last day
+            html += '</div>';
+
+
             // bottom half
             html += '<div class="details-on-demand-half">';
-
             // most recent tweets
             html +=     '<div class="details-on-demand-title small-title">Most Recent</div>';
             html +=     '<div class="details-on-demand-recent-tweets">';

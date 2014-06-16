@@ -116,22 +116,33 @@ define(function (require) {
                 isHoveredOn = false;
 
             this.translateLabel = this.nodeLayer.addLayer(aperture.LabelLayer);
+            this.translateLabel.map('label-count').asValue(1);
+            this.translateLabel.map('text').asValue('translate');
+            this.translateLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET + 85);
+            this.translateLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET - 100);
+            this.translateLabel.map('text-anchor').asValue('left');
+            this.translateLabel.map('text-anchor-y').asValue('start');
+            this.translateLabel.map('font-outline').asValue(this.BLACK_COLOUR);
+            this.translateLabel.map('font-outline-width').asValue(3);
 
             this.translateLabel.map('visible').from(function() {
                 return that.visibility &&
-                       that.clientState.activeCarouselTile === this.tilekey;
+                       that.layerState.getTileFocus() === this.tilekey;
             });
 
             this.translateLabel.map('fill').from( function() {
 
+                /*
                 if (that.isTileTranslated(this.tilekey)) {
                     return that.WHITE_COLOUR;
                 }
+                */
                 return that.LIGHT_GREY_COLOUR;
             });
 
             this.translateLabel.map('cursor').asValue('pointer');
 
+            /*
             this.translateLabel.on('click', function(event) {
                 that.toggleTileTranslation(event.data.tilekey);
                 that.nodeLayer.all().where(event.data).redraw();
@@ -148,10 +159,8 @@ define(function (require) {
                 isHoveredOn = false;
                 that.nodeLayer.all().where(event.data).redraw();
             });
+            */
 
-            this.translateLabel.map('label-count').asValue(1);
-
-            this.translateLabel.map('text').asValue('translate');
 
             this.translateLabel.map('font-size').from(function () {
                 var FONT_SIZE = 16;
@@ -161,12 +170,7 @@ define(function (require) {
                 return FONT_SIZE;
 
             });
-            this.translateLabel.map('offset-x').asValue(this.X_CENTRE_OFFSET + this.TILE_SIZE / 3);
-            this.translateLabel.map('offset-y').asValue(this.Y_CENTRE_OFFSET - 100);
-            this.translateLabel.map('text-anchor').asValue('left');
-            this.translateLabel.map('text-anchor-y').asValue('start');
-            this.translateLabel.map('font-outline').asValue(this.BLACK_COLOUR);
-            this.translateLabel.map('font-outline-width').asValue(3);
+
             this.translateLabel.map('opacity').from( function() {
                 return that.opacity;
             });
