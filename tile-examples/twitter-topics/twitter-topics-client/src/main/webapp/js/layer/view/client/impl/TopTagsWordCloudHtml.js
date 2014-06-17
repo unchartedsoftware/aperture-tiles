@@ -268,8 +268,8 @@ define(function (require) {
                     var DOWNSCALE_OFFSET = 1.5,
                         MAX_FONT_SIZE = 24 * DOWNSCALE_OFFSET,
                         MIN_FONT_SIZE = 8 * DOWNSCALE_OFFSET,
-                        HORIZONTAL_OFFSET = 14,
-                        VERTICAL_OFFSET = 24,
+                        HORIZONTAL_OFFSET = 10,
+                        VERTICAL_OFFSET = 14,
                         tilekey = this.tilekey,
                         $html = $('<div id="'+tilekey+'" class="aperture-tile"></div>'),
                         $elem,
@@ -295,13 +295,13 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
                         value = values[i];
-                        words.push( TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), 12 ) );
+                        words.push( TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), 10 ) );
                         frequencies.push( value.countMonthly );
                     }
 
                     cloud = that.createWordCloud( words, frequencies, MIN_FONT_SIZE, MAX_FONT_SIZE, boundingBox );
 
-                    for (i=0; i<cloud.length; i++) {
+                    for (i=cloud.length-1; i>=0; i--) {
 
                         cloudWord = cloud[i];
 

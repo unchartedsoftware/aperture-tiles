@@ -65,15 +65,18 @@ define(function (require) {
         addClickStateClassesGlobal: function() {
 
             var selectedTag = this.layerState.getClickState().tag,
+                selectedTagEnglish = this.layerState.getClickState().translatedTag,
                 $elements = $(".tags-by-time");
 
             // top text sentiments
             $elements.filter( function() {
-                return $(this).text() !== selectedTag;
+                return $(this).text() !== selectedTag &&
+                       $(this).text() !== selectedTagEnglish;
             }).addClass('greyed').removeClass('clicked');
 
             $elements.filter( function() {
-                return $(this).text() === selectedTag;
+                return $(this).text() === selectedTag ||
+                       $(this).text() === selectedTagEnglish;
             }).removeClass('greyed').addClass('clicked');
 
         },
@@ -81,7 +84,7 @@ define(function (require) {
 
         removeClickStateClassesGlobal: function() {
 
-            $(".tags-by-time-sentiment").removeClass('greyed clicked');
+            $(".tags-by-time").removeClass('greyed clicked');
         },
 
 
@@ -143,7 +146,7 @@ define(function (require) {
                         $elem = $(html);
 
                         that.setMouseEventCallbacks( $elem, this, value );
-                        that.addClickStateClasses( $elem, tag );
+                        that.addClickStateClasses( $elem, value.topic );
 
                         $html.append( $elem );
                     }

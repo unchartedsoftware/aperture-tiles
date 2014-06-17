@@ -18,7 +18,7 @@
 	font-size : 18px;
 	line-height: 18px;
 	height: 18px;
-	color: #ffffff;
+	color: #09CFFF;
 	text-shadow:
 	    -2px -2px 2px #000,
 	     2px -2px 2px #000,
@@ -34,6 +34,7 @@
             transform: scale(0.75);
 }
 
+
 .translate-label:hover {
 	cursor: pointer;
 	-webkit-filter: grayscale(0) brightness(1);
@@ -43,8 +44,9 @@
             transform: scale(1);
 }
 
+
 /********************************************/
-/* 		       Top Text Sentiment			*/
+/* 		     Top Tag Word Cloud	  	     	*/
 /********************************************/
 
 .top-tags-cloud-word {
@@ -246,7 +248,6 @@
 	position: relative;
 	background-color: #111111;
 	height: 33.33%;
-	box-shadow: inset 0 0 10px #000;
 }
 
 
@@ -260,11 +261,9 @@
 
 .details-chart-title-label {
 	position: relative;
-	color: #09CFFF;
+	color: #ffffff;
 	font-size:12px;
-	line-height: 16px;
-	height: 16px;	
-	vertical-align: middle;
+	height: 15px;
 	text-shadow:
 	    -2px -2px 2px #000,
 	     2px -2px 2px #000,
@@ -355,8 +354,7 @@
 	position: relative;
 	text-align: center;
 	float: left;
-	width: 20%;
-	font-size: 9px;
+	font-size: 8px;
 	color: #FFFFFF;
 	text-shadow:
 	    -2px -2px 2px #000,

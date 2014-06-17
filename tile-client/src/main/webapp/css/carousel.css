@@ -41,8 +41,7 @@
 .carousel-ui-dot-container {
     position: absolute;
     width: 256px;
-    text-align: center;
-    pointer-events: all;  
+    text-align: center; 
     bottom: 10px;
 }
 
@@ -51,7 +50,7 @@
     display: inline-block;
     width: 10px;
     height: 10px;
-    margin: 4px;
+    margin: 4px; 
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;
             transition:         transform .1s ease-in-out;
