@@ -192,7 +192,8 @@ require(['./FileLoader',
 				            i,
 				            filter,
 				            clientLayers,
-				            serverLayers;
+				            serverLayers,
+                            baseLayers;
 
 				        // Initialize our map choice panel
 				        if (maps.length > 1) {
@@ -219,13 +220,33 @@ require(['./FileLoader',
 				        if (!currentMap || !maps[currentMap]) {
 					        currentMap = 0;
 				        }
+
+                        //add map after the containing div has been added
+                        //reconfigure mapConfig for Map.js
 				        mapConfig = maps[currentMap];
+                        if (Array.isArray(mapConfig.MapConfig.baseLayer)) {
+                            baseLayers = mapConfig.MapConfig.baseLayer;
+                            if ( mapConfig.MapConfig.baseLayer[0].type === 'BlankBase' ) {
+                                mapConfig.MapConfig.baseLayer = {};
+                            } else {
+                                mapConfig.MapConfig.baseLayer = { 'Google' :
+                                    { 'options'  :  mapConfig.MapConfig.baseLayer[0].options }
+                                };
+                            }
+                        } else {
+                            baseLayers.push(mapConfig.MapConfig.baseLayer);
+                        }
+
 				        worldMap = new Map("map", mapConfig);
 				        // ... (set up our map axes) ...
 				        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
 
                         // ... (set up our map tile borders) ...
                         MapService.setTileBorderConfig(mapConfig);
+                        
+                        if(mapConfig.MapConfig.zoomTo) {
+                            worldMap.map.zoomTo( mapConfig.MapConfig.zoomTo[0], mapConfig.MapConfig.zoomTo[1], mapConfig.MapConfig.zoomTo[2] );
+                        }
 
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {
@@ -268,7 +289,12 @@ require(['./FileLoader',
                                 }
                             }
                             filterAxisConfig.map = worldMap;
-                            new LayerControls('layer-controls-content', uiMediator.getLayerStateMap(), filterAxisConfig).noop();
+                            filterAxisConfig.baseLayers = baseLayers;
+                            new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap(), filterAxisConfig ).noop();
+
+                            //hack to trigger a refresh of the map - this will override map style
+                            //as well as update the controls panel.
+                            $('fieldset input[type=radio]').first().click();
                         });
 			        }
 		        );

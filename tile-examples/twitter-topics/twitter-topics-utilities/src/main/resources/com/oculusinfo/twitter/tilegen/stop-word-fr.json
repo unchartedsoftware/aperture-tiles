@@ -1,0 +1,19 @@
+[
+    "je", "tu", "il", "elle", "nous", "vous", "ils", "elles", "on", "tout", "tous", "toute", "toutes",
+    "ne", "pas", "rien", "jamais", "personne", "trop", "plus", "moins", "ni", "aussi", "toujours", "tourjours", "sans",
+    "le", "la", "un", "une", "que", "qui", "ce", "ces", "cet", "cette", "cela", "celui", "celle", "celles", "ci", "ceci", "et", "en", "ca", "me", "te", "se", "ma", "ta", "sa", "mon", "ton", "son", "mes", "tes", "ses", "moi", "toi", "soi", "quoi", "ici", "lui", "leur", "leurs", "cette", "autre", "autres", "notre", "votre", "nos", "vos", "eux",
+    "de", "du", "des", "mais", "dans", "ou", "a", "au", "aux", "avec", "comme", "comment", "sur", "pourquoi", "quand", "alors", "par", "meme", "seul", "seuls", "seule", "seules", "quelque", "quelques", "sur", "chez", "avant", "deja", "donc", "dont", "tant", "entre", "sous", "contre", "pendant", "seulement", "suite", "car", "prochain", "prochaine", "souvent", "sauf", "pourtant", "autour", "selon", "dedans", "hors", "parmi", "avec", "dehors", "pour",
+    "suis", "es", "c'est", "est", "sommes", "etes", "sont", "etre",
+    "j'ai", "ai", "as", "a", "avons", "avez", "ont", "avoir",
+    "vais", "vas", "va", "allons", "allez", "vont", "aller",
+    "fais", "fait", "faisons", "faites", "font", "faire",
+    "dis", "dit", "disons", "disez", "disent", "dire",
+    "peux", "puis", "peut", "pouvons", "pouvez", "peuvent", "pouvoir",
+    "veux", "veut", "voulons", "voulez", "veulent", "vouloir",
+    "vois", "voit", "voyons", "voyez", "voient", "voir",
+    "viens", "vient", "venons", "venez", "viennent", "venir",
+    "bon", "mauvais", "bonne", "mauvaise", "bons", "bonnes", "mauvaises", "meilleur", "meilleure", "meilleurs", "meilleures", "pire", "pires", "bien", "mal", "mieux",
+    "si", "bon", "chose", "tres", "merci", "peu", "temps", "temp", "vrai", "faux", "oh", "eh", "ah", "besoin", "accord", "voila", "grand", "grande", "grands", "grandes", "petit", "petite", "petits", "petites", "gens", "bonjour", "bonsoir", "vite", "truc", "voici", "gros", "d'accord",
+    "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix",
+    "hier", "aujourd'hui", "demain", "maintenant", "depuis", "bientot", "bas", "partout", "assez", "vraiment", "presque", "habituellement"
+]

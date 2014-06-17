@@ -1,0 +1,104 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>twitter-topics-client</artifactId>
+  <packaging>war</packaging>
+  <name>Twitter Track Topics Client</name>
+  <url>http://github.com/oculusinfo/aperture-tiles</url>
+  <description>A website to display custom-processed twitter data.</description>
+
+  <parent>
+    <artifactId>twitter-topics</artifactId>
+    <groupId>com.oculusinfo</groupId>
+    <version>0.3-SNAPSHOT</version>
+  </parent>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>tile-client</artifactId>
+      <version>${project.version}</version>
+      <type>war</type>
+    </dependency>
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>twitter-topics-utilities</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>twitter-topics</finalName>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <targetPath>../jettyFilteredResources</targetPath>
+        <filtering>true</filtering>
+        <includes>
+          <include>aperture-config.json</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+        	<exclude>aperture-config.json</exclude>
+        </excludes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-war-plugin</artifactId>
+		<version>2.1.1</version>
+		<configuration>
+          <webResources>
+            <resources>
+              <directory>src/main/resources</directory>
+              <targetPath>data</targetPath>
+              <filtering>true</filtering>
+              <includes>
+		  		<include>aperture-config.json</include>
+			  </includes>
+            </resources>
+          </webResources>
+      	  <warName>twitter-demo</warName>
+	  	  <overlays>
+	    	<overlay>
+	      	  <groupId>com.oculusinfo</groupId>
+	      	  <artifactId>tile-client</artifactId>
+	    	</overlay>
+	  	  </overlays>
+		</configuration>
+      </plugin>
+      <plugin>
+		<!-- Jetty For Dev Builds Only -->
+		<groupId>org.mortbay.jetty</groupId>
+		<artifactId>jetty-maven-plugin</artifactId>
+		<version>7.2.0.v20101020</version>
+		<configuration>
+	  	  <webAppConfig>
+	    	<contextPath>/twitter-topics</contextPath>
+	    	<baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
+	      			Use the development (source) code
+	      	  <resourcesAsCSV>
+                src/main/webapp,
+                ../../../tile-client/src/main/webapp,
+                ${project.build.directory}/jettyFilteredResources,
+                ${project.build.directory}/${project.build.finalName}
+              </resourcesAsCSV>
+	        </baseResource>
+	  	  </webAppConfig>	
+	    </configuration>
+	    <dependencies>
+	  	  <dependency>
+	        <groupId>org.eclipse.jetty</groupId>
+	        <artifactId>jetty-server</artifactId>
+	        <version>7.2.0.v20101020</version>
+	      </dependency>
+	    </dependencies>
+	  </plugin>
+    </plugins>
+   </build>
+</project>
