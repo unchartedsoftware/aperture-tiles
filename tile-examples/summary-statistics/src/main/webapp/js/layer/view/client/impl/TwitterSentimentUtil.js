@@ -40,26 +40,32 @@ define(function (require) {
         /*
             Return the count of recent tweets entries, clamped at MAX_COUNT
         */
-        getTweetCount : function( data, max ) {
-            var MAX_TWEETS = max || 10;
-            return Math.min( data.recent.length, MAX_TWEETS );
+        getTweetCount : function( data ) {
+            return data.recent.length;
         },
 
         /*
             Return the relative percentages of positive, neutral, and negative tweets
         */
-        getSentimentPercentages : function( value, index ) {
+        getSentimentPercentages : function( value ) {
             return {
-                positive : ( value.positive / value.count )*100 || 0,
-                neutral : ( value.neutral / value.count )*100 || 0,
-                negative : ( value.negative / value.count )*100 || 0
+                positive : this.getSentimentPercentage( value, 'positive'),
+                neutral : this.getSentimentPercentage( value, 'neutral'),
+                negative : this.getSentimentPercentage( value, 'negative')
             };
         },
 
         /*
+            Return the relative percentages of positive, neutral, or negative tweets
+        */
+        getSentimentPercentage : function( value, sentiment ) {
+            return ( value[sentiment] / value.count ) || 0;
+        },
+
+        /*
             Return the relative percentages of positive, neutral, and negative tweets
         */
-        getSentimentPercentagesByTime : function( value, index ) {
+        getSentimentPercentagesByTime : function( value ) {
 
             var NUM_HOURS_IN_DAY = 24,
                 percentages = {
@@ -72,17 +78,32 @@ define(function (require) {
 
             for (i=0; i<NUM_HOURS_IN_DAY; i++) {
                 count = value.countByTime[i];
-                percentages.positive.push( ( value.positiveByTime[i] / count )*100 || 0 );
-                percentages.neutral.push( ( value.neutralByTime[i] / count )*100 || 0 );
-                percentages.negative.push( ( value.negativeByTime[i] / count )*100 || 0 );
+                percentages.positive.push( ( value.positiveByTime[i] / count ) || 0 );
+                percentages.neutral.push( ( value.neutralByTime[i] / count ) || 0 );
+                percentages.negative.push( ( value.negativeByTime[i] / count ) || 0 );
             }
+            return percentages;
+        },
+
+        /*
+            Return the relative percentages of positive, neutral, and negative tweets
+        */
+        getSentimentPercentageByTime : function( value, index ) {
+
+            var percentages = {},
+                count = value.countByTime[index];
+
+            percentages.positive = ( value.positiveByTime[index] / count ) || 0;
+            percentages.neutral = ( value.neutralByTime[index] / count ) || 0;
+            percentages.negative = ( value.negativeByTime[index] / count ) || 0;
+
             return percentages;
         },
 
         /*
             Returns the total count of all tweets in a node
         */
-        getTotalCount : function( values, index ) {
+        getTotalCount : function( values ) {
             var i,
                 sum = 0,
                 n = this.getTagCount( values );
@@ -96,7 +117,7 @@ define(function (require) {
             Returns the percentage of tweets in a node for the respective tag
         */
         getTotalCountPercentage : function( values, index ) {
-            return ( values[index].count / this.getTotalCount( values, index ) ) || 0;
+            return ( values[index].count / this.getTotalCount( values ) ) || 0;
         },
 
 
@@ -125,16 +146,13 @@ define(function (require) {
         /*
             Returns a font size based on the percentage of tweets relative to the total count
         */
-        getFontSize : function( values, index ) {
-            var DOWNSCALE_OFFSET = 1.5,
-                MAX_FONT_SIZE = 28 * DOWNSCALE_OFFSET,
-                MIN_FONT_SIZE = 12 * DOWNSCALE_OFFSET,
-                FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
+        getFontSize : function( values, index, minFontSize, maxFontSize ) {
+            var fontRange = maxFontSize - minFontSize,
                 sum = this.getTotalCount( values, index ),
                 percentage = this.getTotalCountPercentage( values, index ),
                 scale = Math.log( sum ),
-                size = ( percentage * FONT_RANGE * scale ) + ( MIN_FONT_SIZE * percentage );
-            return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
+                size = ( percentage * fontRange * scale ) + ( minFontSize * percentage );
+            return Math.min( Math.max( size, minFontSize), maxFontSize );
         },
 
 
@@ -174,7 +192,7 @@ define(function (require) {
             var date = new Date( timestamp ),
                 month = getMonth( date ),
                 year =  date.getFullYear(),
-                day = date.getDay();
+                day = date.getDate();
 
             return month + " " + day + ", " + year + ":";
         },
@@ -229,10 +247,11 @@ define(function (require) {
         },
 
 
-        blendSentimentColours: function( positivePercent, negativePercent ) {
+        blendSentimentColours: function( positivePercent, neutralPercent, negativePercent ) {
             var BLUE_COLOUR = '#09CFFF',
                 PURPLE_COLOUR = '#D33CFF',
                 negWeight, negRGB,
+                neuWeight, neuRGB,
                 posWeight, posRGB,
                 finalRGB = {};
 
@@ -260,141 +279,22 @@ define(function (require) {
             }
 
             if ( positivePercent === 0 || negativePercent ===0 ) {
-                return '#222222';
+                return '#ffffff';
             }
 
             negRGB = hexToRgb(PURPLE_COLOUR);
+            neuRGB = { r: 255, g: 255, b: 255 };
             posRGB = hexToRgb(BLUE_COLOUR);
-            negWeight = negativePercent/100;
-            posWeight = positivePercent/100;
 
-            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight);
-            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight);
-            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight);
+            posWeight = positivePercent;
+            neuWeight = neutralPercent;
+            negWeight = negativePercent;
+
+            finalRGB.r = (negRGB.r * negWeight) + (posRGB.r * posWeight) + (neuRGB.r * neuWeight);
+            finalRGB.g = (negRGB.g * negWeight) + (posRGB.g * posWeight) + (neuRGB.g * neuWeight);
+            finalRGB.b = (negRGB.b * negWeight) + (posRGB.b * posWeight) + (neuRGB.b * neuWeight);
             return rgbToHex( finalRGB.r, finalRGB.g, finalRGB.b );
-        },
-
-
-        /*
-            Used to inject classes when nodes are loaded
-        */
-        injectClickStateClasses: function( $elem, tag, selectedTag ) {
-            // if user has clicked a tag entry, ensure newly created nodes are styled accordingly
-            if ( selectedTag ) {
-                if ( selectedTag !== tag ) {
-                    $elem.addClass('greyed');
-                } else {
-                    $elem.addClass('clicked');
-                }
-            }
-        },
-
-
-        injectClickStateClassesGlobal: function( tag ) {
-
-            var $root = $('.client-layer'),
-                $topTextSentiments = $root.find(".top-text-sentiments"),
-                $tagsByTimeLabels = $root.find(".tags-by-time-sentiment"),
-                $temp;
-
-            // top text sentiments
-            $topTextSentiments.filter( function() {
-                return $(this).find(".sentiment-labels").text() !== tag;
-            }).addClass('greyed').removeClass('clicked');
-
-            $topTextSentiments.filter( function() {
-                return $(this).find(".sentiment-labels").text() === tag;
-            }).removeClass('greyed').addClass('clicked')
-
-            // tags by time
-            $tagsByTimeLabels.filter( function() {
-                return $(this).text() !== tag;
-            }).addClass('greyed').removeClass('clicked');
-
-            $tagsByTimeLabels.filter( function() {
-                return $(this).text() === tag;
-            }).removeClass('greyed').addClass('clicked');
-
-        },
-
-
-        createTweetSummaries: function() {
-            return $('<div class="sentiment-summaries">'
-                + '<div class="positive-summaries"></div>'
-                + '<div class="neutral-summaries"></div>'
-                + '<div class="negative-summaries"></div>'
-                + '</div>');
-        },
-
-
-
-        setMouseEventCallbacks: function( map, $element, $summaries, data, index, callback, DetailsOnDemand ) {
-
-            var that = this,
-                value = data.bin.value[index];
-
-            // set summaries text
-            $element.mouseover( function( event ) {
-                $summaries.find(".positive-summaries").text( "+" +value.positive );
-                $summaries.find(".neutral-summaries").text( value.neutral );
-                $summaries.find(".negative-summaries").text("-" + value.negative );
-            });
-
-            // clear summaries text
-            $element.mouseout( function( event ) {
-                $summaries.find(".positive-summaries").text( "" );
-                $summaries.find(".neutral-summaries").text( "" );
-                $summaries.find(".negative-summaries").text( "" );
-                $element.off('click');
-            });
-
-            // moving mouse disables click event
-            $element.mousemove( function( event ) {
-                 $element.off('click');
-            });
-
-            // mouse down enables click event
-            $element.mousedown( function( event ) {
-
-                // set click handler
-                $element.click( function( event ) {
-                    // call given callback
-                    $.proxy( callback, this )( event );
-                    // create details on demand
-                    that.createDetailsOnDemand( map, data, index, DetailsOnDemand );
-                    // centre map after creation
-                    that.centreForDetails( map, data );
-                    // prevent event from going further
-                    event.stopPropagation();
-                 });
-            });
-
-        },
-
-
-        /*
-            Create details on demand
-        */
-        createDetailsOnDemand: function( map, data, index, DetailsOnDemand ) {
-
-            var pos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
-                $details;
-
-            $details = DetailsOnDemand.create( pos.x + 256, map.getMapHeight() - pos.y, data.bin.value[index] );
-
-            map.enableEventToMapPropagation( $details, ['onmousemove', 'onmouseup'] );
-            map.getRootElement().append( $details );
-
-        },
-
-        destroyDetailsOnDemand: function( DetailsOnDemand ) {
-
-            DetailsOnDemand.destroy();
         }
-
-
-
-        
 
     };
 

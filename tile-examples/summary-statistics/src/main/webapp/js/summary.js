@@ -30,11 +30,13 @@
         Map = require('./map/Map'),
         MapService = require('./map/MapService'),
         LayerService = require('./layer/LayerService'),
-        ServerLayerMediator = require('./layer/controller/ServerLayerMediator'),
         BaseLayerMediator = require('./layer/controller/BaseLayerMediator'),
+        ClientLayerMediator = require('./layer/controller/ClientLayerMediator'),
+        ServerLayerMediator = require('./layer/controller/ServerLayerMediator'),
         ClientLayerFactory = require('./layer/view/client/ClientLayerFactory'),
         ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
         LayerControls = require('./layer/controller/LayerControls'),
+        CarouselControls = require('./layer/controller/CarouselControls'),
         PyramidFactory = require('./binning/PyramidFactory'),
         OverlayButton = require('./ui/OverlayButton');
 
@@ -272,7 +274,7 @@
                                 "Layers" : [{
                                     "Layer" : layerName,
                                     "Type" : "tile",
-									"Config" : layerList[0].Config
+                                    "Config" : layerList[0].Config
                                 }],
                                 "parentDiv" : parentDivId,
                                 "mapDiv" : largeDivId,
@@ -337,9 +339,9 @@
             var layerDeferreds = LayerService.requestLayers(),
                 mapDeferreds = MapService.requestMaps(),
                 $tabsPlotsUl = $('#tabs-plots ul');
-            
+
             var getLayerConfig = function(layer) {
-            	return [{
+                return [{
                     "layer": layer.id,
                     "domain": layer.renderers[0].domain,
                     "name": layer.name,
@@ -386,34 +388,49 @@
                 controlsButton.getContentElement().addClass('layer-controls-content');
                 controlsButton.getContainerElement().addClass('layer-controls');
 
+                var baseLayerMediator = new BaseLayerMediator();
+                baseLayerMediator.registerLayers( worldMap );
+
                 if (layerConfig[0].domain === 'server') {
 
-                    serverLayerDeferred = ServerLayerFactory.createLayers(layerConfig, worldMap);
-                    $.when( serverLayerDeferred ).done( function( serverLayers ) {
+                    var serverLayerMediator = new ServerLayerMediator();
+                    var serverLayerFactory = new ServerLayerFactory();
+                    var serverLayerDeferreds = serverLayerFactory.createLayers( layerConfig, worldMap, serverLayerMediator );
 
-                        var serverLayerMediator = new ServerLayerMediator(),
-                            sharedStateMap = {};
+                    $.when( serverLayerDeferreds ).done( function( serverLayers ) {
 
-                        serverLayerMediator.registerLayers( serverLayers );
+                        var sharedStates = [];
 
-                        $.extend( sharedStateMap, serverLayerMediator.getLayerStateMap(),
-                                                   baseLayerMediator.getLayerStateMap() );
+                        $.merge( sharedStates, baseLayerMediator.getLayerStates() );
+                        $.merge( sharedStates, serverLayerMediator.getLayerStates() );
 
-                        new LayerControls(plotControls +'-content', sharedStateMap );
+                        new LayerControls(plotControls +'-content', sharedStates );
                     });
 
                 } else {
-                    /*
+
                     var clientLayers = [{
                         "domain" : layer.renderers[0].domain,
                         "layer" : layer.id,
                         "name" : layer.name,
-                        "type" : layer.renderers[0].type,
-                        "views" : layer.renderers[0].views
+                        "renderers" : layer.renderers[0].renderers
                     }];
-                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
-                    new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap());
-                    */
+
+                    var clientLayerMediator = new ClientLayerMediator();
+                    var clientLayerFactory = new ClientLayerFactory();
+                    var clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
+
+                    $.when( clientLayerDeferreds ).done( function( clientLayers ) {
+
+                        var sharedStates = [];
+
+                        $.merge( sharedStates, baseLayerMediator.getLayerStates() );
+                        $.merge( sharedStates, clientLayerMediator.getLayerStates() );
+
+                        new LayerControls(plotControls +'-content', sharedStates );
+                        new CarouselControls( clientLayerMediator.getLayerStates(), worldMap );
+
+                    });
                 }
             };
 
