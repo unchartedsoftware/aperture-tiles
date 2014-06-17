@@ -49,23 +49,47 @@
 
 .top-tags-cloud-word {
 	position:absolute;
-	/*
-	width: 200px;
-	height: 50px;
-	left: 28px;
-	-webkit-transform: scale(0.667);
-       -moz-transform: scale(0.667);
-        -ms-transform: scale(0.667);
-            transform: scale(0.667);
+	color: #FFFFFF;	
+	vertical-align: middle;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+	margin-left: 5px;
+	margin-right: 5px;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+	-webkit-transform: scale(0.9);
+       -moz-transform: scale(0.9);
+        -ms-transform: scale(0.9);
+            transform: scale(0.9);
 	-webkit-transition: -webkit-transform 0.1s ease-in-out;
        -moz-transition:    -moz-transform 0.1s ease-in-out;
        	-ms-transition:     -ms-transform 0.1s ease-in-out;
             transition:         transform 0.1s ease-in-out;
-    */
 }
 
-.top-text-sentiment:hover {
+.top-tags-cloud-word-temp {
+	position:relative;
+	display: inline-block;
+	vertical-align: middle;
+	color: #FFFFFF;
+	margin-left: 5px;
+	margin-right: 5px;
+	-webkit-transform: scale(0.9);
+       -moz-transform: scale(0.9);
+        -ms-transform: scale(0.9);
+            transform: scale(0.9);
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.top-tags-cloud-word:hover {
 	cursor: pointer;
+	color: #09CFFF;
 	-webkit-filter: grayscale(0);
 	-webkit-transform: scale(1.0);
        -moz-transform: scale(1.0);

@@ -111,7 +111,7 @@ define(function (require) {
                         tag,
                         count = TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED );
 
-                    // create count summaries
+                    // create translate button
                     $translate = that.createTranslateLabel( tilekey );
 
                     $html.append( $translate );

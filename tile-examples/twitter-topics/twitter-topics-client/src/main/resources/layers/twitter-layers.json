@@ -67,7 +67,7 @@
                     "renderers": [
                         {
                             "domain": "client",
-                            "renderers": [ "TopTagsWordCloud",
+                            "renderers": [ "TopTagsWordCloudHtml",
                                            "TagsByTimeHtml",
                                            "EmptyRenderer"
                             ]
