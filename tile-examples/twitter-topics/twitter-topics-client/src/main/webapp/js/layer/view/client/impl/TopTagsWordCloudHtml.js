@@ -65,22 +65,25 @@ define(function (require) {
         addClickStateClassesGlobal: function() {
 
             var selectedTag = this.layerState.getClickState().tag,
-                $elements = $(".top-text-sentiment");
+                selectedTagEnglish = this.layerState.getClickState().translatedTag,
+                $elements = $(".top-tags-cloud-word");
 
             // top text sentiments
             $elements.filter( function() {
-                return $(this).text() !== selectedTag;
+                return $(this).text() !== selectedTag &&
+                       $(this).text() !== selectedTagEnglish;
             }).addClass('greyed').removeClass('clicked');
 
             $elements.filter( function() {
-                return $(this).text() === selectedTag;
+                return $(this).text() === selectedTag ||
+                       $(this).text() === selectedTagEnglish;
             }).removeClass('greyed').addClass('clicked');
 
         },
 
         removeClickStateClassesGlobal: function() {
 
-            $(".top-text-sentiment").removeClass('greyed clicked');
+            $(".top-tags-cloud-word").removeClass('greyed clicked');
         },
 
 
@@ -306,6 +309,8 @@ define(function (require) {
                             continue;
                         }
 
+                        value = values[i];
+
                         $elem = $('<div class="top-tags-cloud-word" style="'
                             + 'font-size:'+cloudWord.fontSize+'px;'
                             + 'line-height:'+cloudWord.fontSize+'px;'
@@ -315,10 +320,8 @@ define(function (require) {
                             + 'height:'+cloudWord.height+'px;">'+cloudWord.word+'</div>');
 
                         that.setMouseEventCallbacks( $elem, this, value );
-                        that.addClickStateClasses( $elem, cloud.word );
-
+                        that.addClickStateClasses( $elem, value.topic );
                         $html.append( $elem );
-
                     }
 
                     return $html;

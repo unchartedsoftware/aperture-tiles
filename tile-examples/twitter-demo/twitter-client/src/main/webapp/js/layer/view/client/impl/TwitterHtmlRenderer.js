@@ -100,10 +100,10 @@ define(function (require) {
         },
 
 
-        clickOn: function( $element, data, value ) {
+        clickOn: function( data, value ) {
 
             this.layerState.setClickState({
-                tag: $element.text(),
+                tag: value.tag,
                 data: data,
                 value : value
             });
@@ -146,7 +146,7 @@ define(function (require) {
                 // set click handler
                 $element.click( function( event ) {
                     // process click
-                    that.clickOn( $element, data, value );
+                    that.clickOn( data, value );
                     // create details here so that only 1 is created
                     that.createDetailsOnDemand();
                     // prevent event from going further

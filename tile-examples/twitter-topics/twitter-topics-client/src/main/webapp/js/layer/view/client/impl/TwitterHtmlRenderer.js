@@ -62,7 +62,6 @@ define(function (require) {
                 } else if (fieldName === "translate") {
                     // redraw node based on translation
                     that.nodeLayer.where( that.layerState.getTileFocus() ).redraw();
-                    console.log("translating " + that.layerState.getTileFocus() );
                 }
             });
 
@@ -107,28 +106,28 @@ define(function (require) {
                 greyed = translation ? '' : 'greyed',
                 $translate = $('<div class="translate-label '+greyed+'">translate</div>');
 
-            $translate.click( function() {
+            $translate.click( function( event) {
 
                 var translation = that.layerState.getCustomObject( 'translate', tilekey );
                 if (translation) {
                     that.layerState.removeCustomObject( 'translate', tilekey );
-                    console.log('added');
                     $translate.addClass('greyed');
                 } else {
                     that.layerState.setCustomObject( 'translate', tilekey, true );
-                    console.log('removed');
                     $translate.removeClass('greyed');
                 }
+                event.stopPropagation();
             });
 
             return $translate;
         },
 
 
-        clickOn: function( $element, data, value ) {
+        clickOn: function( data, value ) {
 
             this.layerState.setClickState({
-                tag: $element.text(),
+                tag: value.topic, //$element.text(),
+                translatedTag: value.topicEnglish,
                 data: data,
                 value : value
             });
@@ -156,7 +155,7 @@ define(function (require) {
                 // set click handler
                 $element.click( function( event ) {
                     // process click
-                    that.clickOn( $element, data, value );
+                    that.clickOn( data, value );
                     // create details here so that only 1 is created
                     that.createDetailsOnDemand();
                     // prevent event from going further
