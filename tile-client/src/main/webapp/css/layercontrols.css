@@ -6,10 +6,11 @@
     right: 10px;
     bottom: 42px;
 }
+
 #layer-controls-header {
     position: relative;
     height:32px;
-    width: 100px;
+    width: 120px;
     vertical-align: middle;
     text-align:center;
     line-height: 32px;
@@ -21,9 +22,11 @@
         -1px  1px 1px #000,
          1px  1px 1px #000;
 }
+
 #layer-controls-header:hover {   
     color: #FFFFFF;
 }
+
 #layer-controls-content {
     position: relative;
     padding-bottom: 15px !important;
@@ -32,32 +35,38 @@
     width: 612px;
     font-size: 12px;
 }
+
 .layer-labels {
     font-size: 12px;
     text-align: left;
 }
+
 .layer-title {
     position: relative;
     padding-bottom: 5px;
     padding-top:15px;
 }
+
 .layer-content {
     position:relative;
     width:100%;
     padding-bottom:5px;
 }
+
 .layer-toggle {
     width: 15px;
     padding-right:10px;
     float: left;
     padding-top: 15px;
 }
+
 .slider-label {
     font-size: 10px;
     text-align: center;
     color: #939393;
     padding-bottom: 3px;
 }
+
 .opacity-slider {
     width: calc(30% - 47px);
     color: #7E7E7E;
@@ -67,6 +76,7 @@
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
+
 .filter-slider {
     width: calc(70% - 47px);
     display: inline-block;
@@ -75,6 +85,7 @@
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
+
 .base-opacity-slider {
     width: calc(100% - 35px);
     display: inline-block;
@@ -83,6 +94,7 @@
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
+
 .promotion-container {
     vertical-align: bottom;
     display: inline-block;
@@ -93,6 +105,7 @@
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
+
 .layer-promotion-button {
     width:32px;
     height:32px;
@@ -101,21 +114,25 @@
     position:relative;
     display: inline-block;
 }
+
 .layer-promotion-button:hover:enabled {
     border: none;
     background: transparent url(../images/PromoteButton.png) no-repeat center top;
     background-position: 0px -32px;
     display: inline-block;
 }
+
 .layer-promotion-button:active:enabled {
     border:none;
     background:transparent url(../images/PromoteButton.png) no-repeat center top;
     background-position: 0px -32px;
     display: inline-block;
 }
+
 .layer-promotion-button:focus {
     outline:none;
 }
+
 .tile-outline-button {
     position:relative;
     margin-top:20px;
@@ -125,55 +142,66 @@
     right:0px;
     font-size: 12px;
 }
+
 /* Settings menu styles */
 .settings-title {
     position:relative;
     padding-bottom:10px;
     padding-top:10px;
 }
+
 .settings-content {
     position:relative;
     padding-bottom:12px;
 }
+
 .settings-back-link {
     position:absolute;
     right:0px;
     font-size: 12px;
 }
+
 .settings-ramp-title {
     font-size: 12px;
     font-weight: bold;
     margin-top:10px;
     margin-bottom:10px;
 }
+
 .settings-ramp-types {
     width:66%;
     display: inline-block;
 }
+
 .settings-ramp-functions {
     width:33%;
     display: inline-block;
     vertical-align: top;
 }
+
 .settings-ramp-span-left {
     width:50%;
     display: inline-block;
 }
+
 .settings-ramp-span-right {
     width:50%;
     display: inline-block;
 }
+
 .settings-values {
     min-width:120px;
     font: 12px Arial;
     margin: 2px 2px 2px 2px;
 }
+
 .filter-axis{
     position: relative;
 	top: -4px;
     width: 100%;
     left: 0;
 }
+
 .filter-axis-tick-major, .filter-axis-tick-minor{
     position: relative;
     height: 8px;
@@ -183,15 +211,18 @@
 	margin-left: 6.07%;
     float: left;
 }
+
 .filter-axis-tick-minor{
     height: 5px;
 }
+
 .filter-axis-label-container, .filter-axis-ticks-container{
 	position: relative;
 	top: 7px;
 	left: 0px;
 	clear: both;
 }
+
 .filter-axis-label{
     font-size: 10px;
 	text-align: center;
@@ -204,12 +235,15 @@
 	margin-left: 12.5%;
     float: left;
 }
+
 .filter-axis-tick-first, .filter-axis-label-first{
 	margin-left: 0px;
 }
+
 .filter-axis-label-first{
 	left: -3.5%;
 }
+
 .filter-axis-tick-last, .filter-axis-label-last{
 	margin-right: 0px;
 	float: right;
