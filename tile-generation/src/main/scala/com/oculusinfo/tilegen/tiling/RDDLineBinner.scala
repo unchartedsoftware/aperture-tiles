@@ -29,17 +29,14 @@ package com.oculusinfo.tilegen.tiling
 
 import java.awt.geom.Point2D
 import java.awt.geom.Rectangle2D
-
 import scala.collection.TraversableOnce
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
-
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
 import com.oculusinfo.binning.DensityStripData
@@ -49,6 +46,7 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.TileAndBinIndices
 
 
 class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable { 
@@ -393,7 +391,7 @@ class RDDLineBinner(minBins: Int = 2,
 		//val reduced2 = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
 		
 		val reducedData = data.flatMap(p => {		
-			universalBinsToTiles(p._1._3, endpointsToLineBins(p._1._1, p._1._2)).map(tile =>	//TODO use '256' version here
+			universalBinsToTiles(p._1._3, endpointsToLineBins(p._1._1, p._1._2), uniBinToTileBin).map(tile =>
 								(tile, (p._1._1, p._1._2, p._2))
 							)
 		})
@@ -421,7 +419,7 @@ class RDDLineBinner(minBins: Int = 2,
 					{
 						// get all universal bins in line, discard ones not in current tile, 
 						// and convert bins to 'regular' tile/bin units
-						universalBinsToBins(index, endpointsToLineBins(segment._1, segment._2)).foreach(bin =>	//TODO use '256' version here
+						universalBinsToBins(index, endpointsToLineBins(segment._1, segment._2), uniBinToTileBin).foreach(bin =>
 							{
 								val x = bin.getX()
 								val y = bin.getY()
@@ -517,49 +515,53 @@ class RDDLineBinner(minBins: Int = 2,
 	 * @param baseTile
 	 *        A sample tile specifying level and number of bins of all required
 	 *        results.
-	 * @param start
-	 *        The start bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
-	 * @param end
-	 *        The end bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
 	 * @return All tiles falling on the direct line (in universal bin
 	 *         coordinates) between the two endpoint bins
 	 */
-	protected val universalBinsToTiles:
-			(TileIndex, IndexedSeq[BinIndex]) => Traversable[TileIndex] =
-		(baseTile, bins) => {
-			bins.map(ubin =>
-				{
-					val tb = TileIndex.universalBinIndexToTileBinIndex(baseTile, ubin)
-					tb.getTile()
-				}
-			).toSet
-			// transform to set to remove duplicates
-		}
+//	protected val universalBinsToTiles:
+//			(TileIndex, IndexedSeq[BinIndex]) => Traversable[TileIndex] =
+//		(baseTile, bins) => {
+//			bins.map(ubin =>
+//				{
+//					val tb = TileIndex.universalBinIndexToTileBinIndex(baseTile, ubin)
+//					tb.getTile()
+//				}
+//			).toSet
+//			// transform to set to remove duplicates
+//		}
 		
+	protected def universalBinsToTiles(baseTile: TileIndex, bins: IndexedSeq[BinIndex], 
+									   uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices): Traversable[TileIndex] = {
+		bins.map(ubin =>
+			{
+				val tb = uniBinToTB(baseTile, ubin)
+				tb.getTile()
+			}
+		).toSet	// transform to set to remove duplicates			
+	}	
 	/**
 	 * Determine all bins within a given tile that are required to draw a line
 	 * between two endpoint bins.
 	 *
 	 * @param tile
 	 *        The tile of interest
-	 * @param start
-	 *        The start bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
-	 * @param end
-	 *        The end bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
 	 * @return All bins, in tile bin coordinates, in the given tile, falling on
 	 *         the direct line (in universal bin coordinates) between the two
 	 *         endoint bins.
 	 */
-	protected val universalBinsToBins:
-			(TileIndex, IndexedSeq[BinIndex]) => IndexedSeq[BinIndex] =
-		(tile, bins) => {
-			bins.map(ubin =>
-				TileIndex.universalBinIndexToTileBinIndex(tile, ubin)
-			).filter(_.getTile().equals(tile)).map(_.getBin())
-		}	
+//	protected val universalBinsToBins:
+//			(TileIndex, IndexedSeq[BinIndex]) => IndexedSeq[BinIndex] =
+//		(tile, bins) => {
+//			bins.map(ubin =>
+//				TileIndex.universalBinIndexToTileBinIndex(tile, ubin)
+//			).filter(_.getTile().equals(tile)).map(_.getBin())
+//		}
+		
+	protected def universalBinsToBins(tile: TileIndex, bins: IndexedSeq[BinIndex],
+									   uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices): IndexedSeq[BinIndex] = {
+		bins.map(ubin =>
+			uniBinToTB(tile, ubin)
+		).filter(_.getTile().equals(tile)).map(_.getBin())
+	}			
 		
 }

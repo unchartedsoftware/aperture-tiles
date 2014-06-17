@@ -133,7 +133,6 @@ define(function (require) {
             this.postRequest( request, function( result, statusInfo ) {
                 if (statusInfo.success) {
                     // update certificate on success
-                    console.log("inject new certificate");
                     newAnnotation.certificate = result;
                 }
                 callback( result, statusInfo );

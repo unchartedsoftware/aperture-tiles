@@ -141,6 +141,9 @@
 }
 
 .horizontal-axis-marker-label {
+    -webkit-transform:rotate(-25deg);
+        -ms-transform:rotate(-25deg); /* IE 9 */
+            transform:rotate(-25deg);
 }
 
 .vertical-axis-marker-label {

@@ -71,3 +71,17 @@
     background: transparent url(../images/select.png) no-repeat center top;
 }
 
+.carousel-ui-text-index {
+    position:absolute;
+    bottom: 5px;
+    width: 100%;
+    text-align:center;
+    pointer-events:none;
+    font-size:16px;
+    color: #ffffff;
+    text-shadow:
+        -1px -1px 2px #000,
+         1px -1px 2px #000,
+        -1px  1px 2px #000,
+         1px  1px 2px #000; 
+}
