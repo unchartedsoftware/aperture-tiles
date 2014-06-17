@@ -129,23 +129,23 @@ define(function (require) {
 
             function createDetailsContent( $details, annotation ) {
 
-                var $content;
+                var html = "";
 
                 // remove any previous view
                 $( "."+ANNOTATION_DETAILS_CONTENT_CLASS ).remove();
 
-                $content = $('<div class="'+ANNOTATION_DETAILS_CONTENT_CLASS+'">'
-                         +     '<div class="'+ANNOTATION_DETAILS_HEAD_CLASS+'">'
-                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'+annotation.data.username+'</div>'
-                         +    '</div>'
-                         +    '<div class="'+ANNOTATION_DETAILS_BODY_CLASS+'">'
-                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> x: '+annotation.x+', y: '+annotation.y+'</div>'
-                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> Group: '+annotation.group+'</div>'
-                         +        '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> Data: '+annotation.data.tweet+'</div>'
-                         +    '</div>'
-                         + '</div>');
+                html = '<div class="'+ANNOTATION_DETAILS_CONTENT_CLASS+'">'
+                     +     '<div class="'+ANNOTATION_DETAILS_HEAD_CLASS+'">'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'+annotation.data.username+'</div>'
+                     +     '</div>'
+                     +     '<div class="'+ANNOTATION_DETAILS_BODY_CLASS+'">'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> x: '+annotation.x+', y: '+annotation.y+'</div>'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> group: '+annotation.group+'</div>'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> tweet: '+annotation.data.tweet+'</div>'
+                     +    '</div>'
+                     + '</div>';
 
-                $details.append( $content );
+                $details.append( html );
             }
 
             function createDetailsCarouselUI( $details, bin ) {
@@ -166,6 +166,8 @@ define(function (require) {
 
                 // remove any previous details
                 $( "."+ANNOTATION_CAROUSEL_CLASS ).remove();
+
+                $details.addClass('annotation-details-aggregate');
 
                 $leftChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_LEFT_CLASS+"'></div>");
                 $rightChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_RIGHT_CLASS+"'></div>");

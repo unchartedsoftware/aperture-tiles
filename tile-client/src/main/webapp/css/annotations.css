@@ -60,48 +60,57 @@
     margin: -12px 0 0 -12px;
 }
 
-
 .annotation-details {
 
     position:absolute;
-    width: 305px;
-    height: calc(100% + 30px);
-    margin-top : -277px;
-    margin-left : -192px;
+    width: 384px;
     background-color: #222222;
-    padding: 20px 40px 20px 40px;
+    padding: 10px;
     z-index: 2001;
     border: 1px solid #333333;
     box-shadow: 0px 5px 15px #000;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;  
 }
 
-.annotation-carousel {
+.annotation-details-aggregate {
 
-    position:absolute;
-    width:100%;
+    padding: 10px 24px 24px 24px;   
+}
+
+.annotation-details-content {
+
+    position:relative;
     height:100%;
-    top:0px;
-    left:0px;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
 
+
 .annotation-details-head {
 
     position:relative;
-    overflow:auto;
     font-size: 18px;
     color: #ffffff;
     width:100%;
 }
 
+
 .annotation-details-body {
 
-    position:relative;
-    overflow:auto;
-    font-size: 14px;
-    width:100%;
+    position:relative;   
+    font-size: 14px; 
+    border-radius: 10px;
+    background-color:#111111;
+    box-shadow: inset 0 0 10px #000;  
+    padding: 5px;
+    overflow: auto;
+    height: calc(100% - 42px);
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 
 }
 
@@ -110,7 +119,6 @@
     position:relative;
     padding-top: 5px;
     padding-bottom: 5px;
-    width:100%;
     color: #ffffff;
     text-shadow:
         -1px -1px 1px #000,
@@ -118,6 +126,7 @@
         -1px  1px 1px #000,
          1px  1px 1px #000; 
 }
+
 
 .annotation-details-close-button {
     position:absolute;
@@ -146,4 +155,17 @@
        -moz-transform: scale(1.0);
         -ms-transform: scale(1.0);
             transform: scale(1.0);
+}
+
+.annotation-carousel {
+
+    position:absolute;
+    pointer-events:none;
+    width:100%;
+    height:100%;
+    top:0px;
+    left:0px;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
