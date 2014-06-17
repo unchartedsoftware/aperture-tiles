@@ -113,7 +113,7 @@ define(function (require) {
                     word,
                     i;
                 for (i=0; i<numWords; i++) {
-                    word = that.getTopic( this.bin.value[i] );
+                    word = that.getTopic( this.bin.value[i], this.tilekey );
                     word = (word.length > MAX_LABEL_CHAR_COUNT) ? word.substr(0, MAX_LABEL_CHAR_COUNT) + "..." : word;
                     wordList.push( word );
                 }

@@ -59,6 +59,10 @@ define(function (require) {
                         that.removeClickStateClassesGlobal();
                         DetailsOnDemand.destroy();
                     }
+                } else if (fieldName === "translate") {
+                    // redraw node based on translation
+                    that.nodeLayer.where( that.layerState.getTileFocus() ).redraw();
+                    console.log("translating " + that.layerState.getTileFocus() );
                 }
             });
 
@@ -91,12 +95,33 @@ define(function (require) {
         },
 
 
-        createTweetSummaries: function() {
-            return $('<div class="sentiment-summaries">'
-                        + '<div class="positive-summaries"></div>'
-                        + '<div class="neutral-summaries"></div>'
-                        + '<div class="negative-summaries"></div>'
-                    + '</div>');
+        getTopic: function( value, tilekey ) {
+            var translation = this.layerState.getCustomObject('translate', tilekey);
+            return translation ? value.topicEnglish : value.topic;
+        },
+
+
+        createTranslateLabel: function( tilekey ) {
+            var that = this,
+                translation = that.layerState.getCustomObject( 'translate', tilekey ),
+                greyed = translation ? '' : 'greyed',
+                $translate = $('<div class="translate-label '+greyed+'">translate</div>');
+
+            $translate.click( function() {
+
+                var translation = that.layerState.getCustomObject( 'translate', tilekey );
+                if (translation) {
+                    that.layerState.removeCustomObject( 'translate', tilekey );
+                    console.log('added');
+                    $translate.addClass('greyed');
+                } else {
+                    that.layerState.setCustomObject( 'translate', tilekey, true );
+                    console.log('removed');
+                    $translate.removeClass('greyed');
+                }
+            });
+
+            return $translate;
         },
 
 
@@ -116,24 +141,9 @@ define(function (require) {
         },
 
 
-        setMouseEventCallbacks: function( $element, $summaries, data, value ) {
+        setMouseEventCallbacks: function( $element, data, value ) {
 
             var that = this;
-
-            // set summaries text
-            $element.mouseover( function( event ) {
-                $summaries.find(".positive-summaries").text( "+" +value.positive );
-                $summaries.find(".neutral-summaries").text( value.neutral );
-                $summaries.find(".negative-summaries").text("-" + value.negative );
-            });
-
-            // clear summaries text
-            $element.mouseout( function( event ) {
-                $summaries.find(".positive-summaries").text( "" );
-                $summaries.find(".neutral-summaries").text( "" );
-                $summaries.find(".negative-summaries").text( "" );
-                $element.off('click');
-            });
 
             // moving mouse disables click event
             $element.mousemove( function( event ) {

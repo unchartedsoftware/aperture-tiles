@@ -68,8 +68,8 @@
                         {
                             "domain": "client",
                             "renderers": [ "TopTagsWordCloud",
-                                       "TagsByTime",
-                                       "EmptyRenderer"
+                                           "TagsByTimeHtml",
+                                           "EmptyRenderer"
                             ]
                         }
                     ]

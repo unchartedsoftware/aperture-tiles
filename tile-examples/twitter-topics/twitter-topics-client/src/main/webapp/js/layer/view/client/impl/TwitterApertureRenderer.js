@@ -73,8 +73,9 @@ define(function (require) {
 
         },
 
-        getTopic: function( value ) {
-            return value.topic;
+        getTopic: function( value, tilekey ) {
+            var translation = this.layerState.getCustomObject('translate', tilekey);
+            return translation ? value.topicEnglish : value.topic;
         },
 
         clickOn: function( tag, data, value ) {

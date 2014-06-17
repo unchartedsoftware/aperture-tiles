@@ -10,6 +10,39 @@
 }
 
 
+.translate-label {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	text-align: right;
+	font-size : 18px;
+	line-height: 18px;
+	height: 18px;
+	color: #ffffff;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+	-webkit-transform: scale(0.75);
+       -moz-transform: scale(0.75);
+        -ms-transform: scale(0.75);
+            transform: scale(0.75);
+}
+
+.translate-label:hover {
+	cursor: pointer;
+	-webkit-filter: grayscale(0) brightness(1);
+	-webkit-transform: scale(1);
+       -moz-transform: scale(1);
+        -ms-transform: scale(1);
+            transform: scale(1);
+}
+
 /********************************************/
 /* 		       Top Text Sentiment			*/
 /********************************************/
@@ -45,7 +78,7 @@
 /* 		     Tags by Time Sentiment			*/
 /********************************************/
 
-.tags-by-time-sentiment {
+.tags-by-time {
 	position:absolute;
 	width: 190px;
 	height: 20px;
@@ -104,26 +137,26 @@
 	width: 4px;
 	bottom: 0px;
 	border: 1px solid #000;
-	-webkit-filter: grayscale(1) brightness(10000);
+	background-color: #ffffff;
 	-webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
 
-.tags-by-time-sentiment:hover {
+.tags-by-time:hover {
 	cursor: pointer;
 	-webkit-filter: grayscale(0);
 }
 
-.tags-by-time-sentiment:hover .tags-by-time-label {
+.tags-by-time:hover .tags-by-time-label {
 	-webkit-transform: scale(1.0);
        -moz-transform: scale(1.0);
         -ms-transform: scale(1.0);
             transform: scale(1.0);
 }
 
-.tags-by-time-sentiment:hover .tags-by-time-bar {
-	-webkit-filter: grayscale(0) brightness(1);
+.tags-by-time:hover .tags-by-time-bar {
+	background-color: #09CFFF;
 }
 
 /********************************************/

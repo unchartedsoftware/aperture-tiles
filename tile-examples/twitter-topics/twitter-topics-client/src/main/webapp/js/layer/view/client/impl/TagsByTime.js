@@ -211,7 +211,7 @@ define(function (require) {
             });
 
             this.tagLabels.map('text').from(function (index) {
-                var str = that.getTopic(this, index);
+                var str = that.getTopic( this.bin.value[index], this.tilekey );
                 if (str.length > 9) {
                     str = str.substr(0,9) + "...";
                 }

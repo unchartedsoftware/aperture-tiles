@@ -211,16 +211,26 @@ define(function (require) {
         },
 
 
-        setCustomState: function( state, value ) {
-            if (this[state] !== value) {
-                this[state] = value;
-                this.notify( state, this.listeners );
+        setCustomObject: function( objName, key, value ) {
+            this[objName] = this[objName] || {};
+            if ( this[objName][key] !== value) {
+                this[objName][key] = value;
+                this.notify( objName, this.listeners );
             }
         },
 
-        getCustomState: function( state, value ) {
-            return this[state];
+        getCustomObject: function( objName, key ) {
+            this[objName] = this[objName] || {};
+            return this[objName][key];
         },
+
+        removeCustomObject: function( objName, key ) {
+            this[objName] = this[objName] || {};
+            if ( this[objName][key]) {
+                delete this[objName][key];
+                this.notify( objName, this.listeners );
+            }
+        }
 
     });
 
