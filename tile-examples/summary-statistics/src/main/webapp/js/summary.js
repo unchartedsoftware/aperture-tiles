@@ -388,9 +388,6 @@
                 controlsButton.getContentElement().addClass('layer-controls-content');
                 controlsButton.getContainerElement().addClass('layer-controls');
 
-                var baseLayerMediator = new BaseLayerMediator();
-                baseLayerMediator.registerLayers( worldMap );
-
                 if (layerConfig[0].domain === 'server') {
 
                     var serverLayerMediator = new ServerLayerMediator();
