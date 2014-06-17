@@ -192,7 +192,7 @@ define(function (require) {
             var date = new Date( timestamp ),
                 month = getMonth( date ),
                 year =  date.getFullYear(),
-                day = date.getDay();
+                day = date.getDate();
 
             return month + " " + day + ", " + year + ":";
         },

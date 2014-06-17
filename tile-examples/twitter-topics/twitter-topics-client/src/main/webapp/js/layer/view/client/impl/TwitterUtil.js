@@ -255,7 +255,7 @@ define(function (require) {
             var date = new Date( timestamp ),
                 month = getMonth( date ),
                 year =  date.getFullYear(),
-                day = date.getDay();
+                day = date.getDate();
 
             return month + " " + day + ", " + year + ":";
         },
@@ -289,11 +289,11 @@ define(function (require) {
             for (i=0; i<count; i++) {
                 recent = value.recentTweets[i];
                 time = recent.time;
-                day = this.getDay( time );
+                day = this.getDay( time*1000 );
                 days[day] = days[day] || [];
                 days[day].push({
                     tweet: recent.tweet,
-                    time: this.getTime( time )
+                    time: this.getTime( time*1000 )
                 });
             }
             return days;
