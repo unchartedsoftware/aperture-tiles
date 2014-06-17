@@ -175,16 +175,15 @@ define(function (require) {
         $indexContainer = $("<div class='"+DOT_CONTAINER_CLASS+"'></div>");
         $carousel.append( $indexContainer );
 
-        // allow all events to propagate to map except 'click'
-        map.enableEventToMapPropagation( $indexContainer );
-        map.disableEventToMapPropagation( $indexContainer, ['onclick', 'ondblclick'] );
-
         for (i=0; i < layerState.getRendererCount(); i++) {
 
             indexClass = (i === 0) ? DOT_CLASS_SELECTED : DOT_CLASS_DEFAULT;
             $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
             generateCallbacks( $dots[i], i );
             $indexContainer.append( $dots[i] );
+            // allow all events to propagate to map except 'click'
+            map.enableEventToMapPropagation( $dots[i] );
+            map.disableEventToMapPropagation( $dots[i], ['onclick', 'ondblclick'] );
         }
 
         controlMap.dots = $dots;
