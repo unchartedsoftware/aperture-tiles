@@ -7,6 +7,7 @@
     <description>
 	 	Builds aperture tile generator distribution.	
 	</description>
+    <packaging>pom</packaging>
 
     <parent>
         <artifactId>aperture-tiles</artifactId>
@@ -24,6 +25,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>binning-utilities</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>math-utilities</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -52,6 +59,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>tile-client-template</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -59,19 +74,33 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/tile-generator-assembly.xml</descriptor>
-                    </descriptors>
-                    <finalName>tile-generator-${project.version}</finalName>
-                </configuration>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
+                        <id>make-generator</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/tile-generator-assembly.xml</descriptor>
+                            </descriptors>
+                            <finalName>tile-generator-${project.version}</finalName>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>make-server</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/tile-server-assembly.xml</descriptor>
+                            </descriptors>
+                            <finalName>tile-server-${project.version}</finalName>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -1,0 +1,32 @@
+# spark connection details
+spark=local
+sparkhome=/opt/spark
+
+# general output properties
+oculus.tileio.type=file
+oculus.binning.name=tilesets/julia
+oculus.binning.source.location=file:///datasets/julia
+oculus.binning.separator=\t
+
+# Sets spark streaming to poll events every 60 seconds
+# Uncomment this to turn on live streaming data from 'oculus.binning.source.location'
+#oculus.binning.source.pollTime=60
+
+oculus.binning.parsing.x.index=0
+oculus.binning.parsing.y.index=1
+oculus.binning.parsing.v.index=2
+oculus.binning.parsing.v.fieldAggregation=min
+
+oculus.binning.projection=EPSG:4326
+oculus.binning.projection.minx=-2.0
+oculus.binning.projection.maxx=2.0
+oculus.binning.projection.miny=-2.0
+oculus.binning.projection.maxy=2.0
+oculus.binning.xField=x
+oculus.binning.yField=y
+oculus.binning.valueField=v
+oculus.binning.levels.0=0,1
+oculus.binning.levels.1=2
+oculus.binning.levels.2=3
+oculus.binning.levels.3=4
+oculus.binning.levels.4=5
