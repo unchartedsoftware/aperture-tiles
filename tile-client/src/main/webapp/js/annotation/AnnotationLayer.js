@@ -190,6 +190,14 @@ define(function (require) {
                 $details.append( $carousel );
             }
 
+
+
+            function destroyDetails() {
+
+                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
+                detailsIsOpen = false;
+            }
+
             function createDetailsElement( bin, pos ) {
 
                 var $details, $closeButton;
@@ -211,7 +219,7 @@ define(function (require) {
                 $details.append( $closeButton );
                 // make details draggable and resizable
                 $details.draggable().resizable({
-                    minHeight: 257,
+                    minHeight: 128,
                     minWidth: 257
                 });
                 that.map.getRootElement().append( $details );
@@ -221,12 +229,6 @@ define(function (require) {
 
                 createDetailsElement( bin, pos );
                 detailsIsOpen = true;
-            }
-
-            function destroyDetails() {
-
-                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
-                detailsIsOpen = false;
             }
 
             function createAnnotation() {
@@ -357,15 +359,15 @@ define(function (require) {
                             bY = parseInt(parsedValues[3], 10),
                             left = BIN_SIZE*bX,
                             top = BIN_SIZE*bY;
-                         return '<div class="annotation-bin"' +
-                                'style="position:absolute;' +
-                                'z-index:-1;'+
-                                'left:'+left+'px; top:'+top+'px;'+
-                                'width:'+BIN_SIZE+'px; height:'+BIN_SIZE+'px;'+
-                                'pointer-events:none;' +
-                                'border: 1px solid #FF0000;' +
-                                '-webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;">'+
-                                '</div>';
+                        return '<div class="annotation-bin"' +
+                               'style="position:absolute;' +
+                               'z-index:-1;'+
+                               'left:'+left+'px; top:'+top+'px;'+
+                               'width:'+BIN_SIZE+'px; height:'+BIN_SIZE+'px;'+
+                               'pointer-events:none;' +
+                               'border: 1px solid #FF0000;' +
+                               '-webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;">'+
+                               '</div>';
                     }
 
                     // for each bin
@@ -474,7 +476,7 @@ define(function (require) {
                 key,
                 tileArray = [];
 
-            if ( this.pendingTileRequests[tilekey] === undefined ) {
+            if ( !this.pendingTileRequests[tilekey] ) {
                 // receiving data from old request, ignore it
                 return;
             }
@@ -489,6 +491,8 @@ define(function (require) {
                     tileArray.push( this.tiles[key] );
                 }
             }
+
+            console.log("read anno " + tileArray.length);
 
             this.redraw( tileArray );
         },
