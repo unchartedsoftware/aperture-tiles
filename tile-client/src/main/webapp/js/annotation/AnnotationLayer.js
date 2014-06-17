@@ -33,7 +33,7 @@ define(function (require) {
         AnnotationService = require('./AnnotationService'),
         ClientNodeLayer = require('../layer/view/client/ClientNodeLayer'),
         HtmlLayer = require('../layer/view/client/HtmlLayer'),
-        NUM_BINS_PER_DIM = 8,
+        //NUM_BINS_PER_DIM = 8,
         ANNOTATION_DETAILS_CLASS = 'annotation-details',
         ANNOTATION_DETAILS_CONTENT_CLASS = "annotation-details-content",
         ANNOTATION_DETAILS_HEAD_CLASS = "annotation-details-head",
@@ -139,7 +139,8 @@ define(function (require) {
                      +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'+annotation.data.username+'</div>'
                      +     '</div>'
                      +     '<div class="'+ANNOTATION_DETAILS_BODY_CLASS+'">'
-                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> x: '+annotation.x+', y: '+annotation.y+'</div>'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> x: '+annotation.x+'</div>'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> y: '+annotation.y+'</div>'
                      +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> group: '+annotation.group+'</div>'
                      +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> tweet: '+annotation.data.tweet+'</div>'
                      +    '</div>'
@@ -190,9 +191,8 @@ define(function (require) {
                 $carousel.append( $rightChevron );
                 $carousel.append( $indexText );
                 $details.append( $carousel );
+
             }
-
-
 
             function destroyDetails() {
 
@@ -207,7 +207,7 @@ define(function (require) {
                 // remove any previous details
                 $( "."+ANNOTATION_DETAILS_CLASS ).remove();
                 // create details div
-                $details = $('<div class="'+ANNOTATION_DETAILS_CLASS+'" style="left:'+pos.x+'px; top:'+ pos.y +'px;"></div>');
+                $details = $('<div class="'+ANNOTATION_DETAILS_CLASS+'"></div>');
                 // create close button
                 $closeButton = $('<div class="'+ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS+'"></div>');
                 $closeButton.click( destroyDetails );
@@ -225,6 +225,11 @@ define(function (require) {
                     minWidth: 257
                 });
                 that.map.getRootElement().append( $details );
+
+                $details.css({
+                    left: pos.x -( $details.outerWidth()/2 ),
+                    top: pos.y - ( $details.outerHeight() + 26 )
+                });
             }
 
             function createDetails( bin, pos ) {
@@ -347,6 +352,7 @@ define(function (require) {
 
             }));
 
+            /* debug bin visualizing
             this.nodeLayer.addLayer( new HtmlLayer({
                 html : function() {
 
@@ -378,14 +384,14 @@ define(function (require) {
                             html += createBinHtml( key );
                         }
                     }
-
                     return html;
 
                 }
             }));
+            */
 
             that.map.on('click', createAnnotation );
-
+            that.map.on('zoom', destroyDetails );
         },
 
 
@@ -493,8 +499,6 @@ define(function (require) {
                     tileArray.push( this.tiles[key] );
                 }
             }
-
-            console.log("read anno " + tileArray.length);
 
             this.redraw( tileArray );
         },
