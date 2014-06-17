@@ -116,6 +116,8 @@ trait TileAnalytic[T] extends Analytic[T] {
      */
 	def toMap (value: T): Map[String, String] =
 		Map(name -> valueToString(value))
+
+	override def toString = "["+name+"]"
 }
 
 
@@ -135,6 +137,7 @@ class ComposedTileAnalytic[T1, T2]
 		(val1.defaultUnprocessedValue, val2.defaultUnprocessedValue)
 	override def toMap (value: (T1, T2)): Map[String, String] =
 		val1.toMap(value._1) ++ val2.toMap(value._2)
+	override def toString = "["+val1+" + "+val2+"]"
 }
 
 /**
@@ -227,24 +230,18 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 	).reduceOption(_ ++ _).getOrElse(Map[String, String]())
 
 	def applyTo (metaData: PyramidMetaData): Unit = {
-		println("Applying monolithic analysis "+analytic.name)
-		println("Initial metadata: "+metaData)
 		toMap.foreach{case (key, value) => 
 			{
-				println("\t"+key+": "+value)
 				metaData.setCustomMetaData(value, key.split("\\.") :_*)
 			}
 		}
-		println()
-		println("Final metadata: "+metaData)
-		println()
-		println()
-		println()
 	}
 
 	def resetAccumulators (sc: SparkContext): Unit = accumulatorInfos.map(_.reset(sc))
 
 	def copy = new MonolithicAnalysisDescription(sc, convert, analytic, globalMetaData)
+
+	override def toString = analyticParam.toString
 }
 
 class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
@@ -266,7 +263,6 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 	}
 	def toMap: Map[String, String] = analysis1.toMap ++ analysis2.toMap
 	def applyTo (metaData: PyramidMetaData): Unit = {
-		println("Applying composite analysis")
 		analysis1.applyTo(metaData)
 		analysis2.applyTo(metaData)
 	}
@@ -275,6 +271,7 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis2.resetAccumulators(sc)
 	}
 	def copy = new CompositeAnalysisDescription(analysis1, analysis2)
+	override def toString = "["+analysis1+","+analysis2+"]"
 }
 
 object AnalysisDescriptionTileWrapper {
@@ -319,11 +316,17 @@ class MinimumDoubleAnalytic extends Analytic[Double] {
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = Double.MaxValue
 }
+class MinimumDoubleTileAnalytic extends MinimumDoubleAnalytic with TileAnalytic[Double] {
+	def name = "minimum"
+}
 
 class MaximumDoubleAnalytic extends Analytic[Double] {
 	def aggregate (a: Double, b: Double): Double = a max b
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = Double.MinValue
+}
+class MaximumDoubleTileAnalytic extends MaximumDoubleAnalytic with TileAnalytic[Double] {
+	def name = "maximum"
 }
 
 class SumLogDoubleAnalytic(base: Double = math.exp(1.0)) extends Analytic[Double] {

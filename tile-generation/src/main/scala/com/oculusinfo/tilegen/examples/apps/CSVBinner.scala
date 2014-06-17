@@ -112,11 +112,13 @@ object CSVBinner {
 				val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 					rdd =>
 				{
+					val tileAnalytics = dataset.getTileAnalytics
+					val dataAnalytics = dataset.getDataAnalytics
 					val tiles = binner.processDataByLevel(rdd,
 					                                      dataset.getIndexScheme,
 					                                      dataset.getBinningAnalytic,
-					                                      dataset.getTileAnalytics,
-					                                      dataset.getDataAnalytics,
+					                                      tileAnalytics,
+					                                      dataAnalytics,
 					                                      dataset.getTilePyramid,
 					                                      levels,
 					                                      (dataset.getNumXBins max dataset.getNumYBins),
@@ -126,7 +128,7 @@ object CSVBinner {
 					                    dataset.getName,
 					                    tiles,
 					                    dataset.getValueScheme,
-					                    None, None,
+					                    tileAnalytics, dataAnalytics,
 					                    dataset.getName,
 					                    dataset.getDescription)
 				}
