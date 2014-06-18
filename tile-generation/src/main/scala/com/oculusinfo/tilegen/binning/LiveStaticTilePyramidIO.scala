@@ -196,12 +196,16 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 					                    datasetMetaData.getTileSizeY(),
 					                    datasetMetaData.getScheme(),
 					                    datasetMetaData.getProjection(),
-					                    datasetMetaData.getMinZoom(),
-					                    datasetMetaData.getMaxZoom(),
+					                    datasetMetaData.getValidZoomLevels(),
 					                    datasetMetaData.getBounds(),
 					                    null, null)
 				dataset.getTileAnalytics.map(_.applyTo(newDatasetMetaData))
 				dataset.getDataAnalytics.map(_.applyTo(newDatasetMetaData))
+				newDatasetMetaData.addValidZoomLevels(
+					results.map(tile =>
+						new JavaInt(tile.getDefinition().getLevel())
+					).toSet.asJava
+				)
 
 				metaData(pyramidId) = newDatasetMetaData
 

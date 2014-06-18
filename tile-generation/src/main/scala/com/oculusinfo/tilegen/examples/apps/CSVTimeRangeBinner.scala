@@ -156,7 +156,7 @@ object CSVTimeRangeBinner {
 	def writeBaseMetaData[BT, AT, DT](tileIO: TileIO,
 	                                  pyramider: TilePyramid,
 	                                  baseLocation: String,
-	                                  levelBounds: (Int, Int),
+	                                  levels: Set[Int],
 	                                  tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	                                  dataAnalytics: Option[AnalysisDescription[_, DT]],
 	                                  tileSizeX: Int,
@@ -165,7 +165,7 @@ object CSVTimeRangeBinner {
 	                                  description: String): Unit = {
 		val metaData = tileIO.combineMetaData(pyramider,
 		                                      baseLocation,
-		                                      levelBounds,
+		                                      levels,
 		                                      tileAnalytics,
 		                                      dataAnalytics,
 		                                      tileSizeX,
@@ -237,9 +237,9 @@ object CSVTimeRangeBinner {
 							// TODO: This doesn't actually write the tiles, does it?
 							// I think we need to write them to do anyting.
 							val rangeMD = tileIO.readMetaData(name).get
-							(rangeMD.getMinZoom, rangeMD.getMaxZoom)
+							rangeMD.getValidZoomLevels.asScala.map(_.intValue).toSet
 						}
-					).reduce((a, b) => (a._1 min b._1, a._2 max b._2))
+					).reduce(_ ++ _)
 					
 					writeBaseMetaData(tileIO,
 					                  dataset.getTilePyramid,

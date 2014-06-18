@@ -30,6 +30,8 @@ import org.junit.Test;
 
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 public class PyramidMetaDataTests {
@@ -44,8 +46,7 @@ public class PyramidMetaDataTests {
 			 "    \"tilesize\":255,\n" +
 			 "    \"scheme\":\"TMS\",\n" +
 			 "    \"projection\":\"web mercator\",\n" +
-			 "    \"minzoom\":0,\n" +
-			 "    \"maxzoom\":2,\n" +
+			 "    \"zoomlevels\":[0,1,2]\""+
 			 "    \"bounds\": [ -180.000000, -85.051129, 180.000000, 85.051129 ],\n" +
 			 "    \"meta\": {\n" +
 			 "        \"levelMaximums\": {\n" +
@@ -90,84 +91,27 @@ public class PyramidMetaDataTests {
 	}
 
 	@Test
-	public void testAddLevel () throws JSONException {
-		String text = 
-			("{\n" +
-			 "    \"name\":\"Foobar\",\n" +
-			 "    \"description\":\"Binned foobar data\",\n" +
-			 "    \"tilesize\":256,\n" +
-			 "    \"scheme\":\"TMS\",\n" +
-			 "    \"projection\":\"web mercator\",\n" +
-			 "    \"minzoom\":0,\n" +
-			 "    \"maxzoom\":2,\n" +
-			 "    \"bounds\": [ -180.000000, -85.051129, 180.000000, 85.051129 ],\n" +
-			 "    \"meta\": {\n" +
-			 "        \"levelMaximums\": {\n" +
-			 "            \"0\": \"1497547\",\n" +
-			 "            \"1\": \"748773\",\n" +
-			 "            \"2\": \"374386\"\n" +
-			 "        },\n" +
-			 "        \"levelMinimums\": {\n" +
-			 "            \"0\": \"0\",\n" +
-			 "            \"1\": \"2\",\n" +
-			 "            \"2\": \"4\"\n" +
-			 "        }\n" +
-			 "    }\n" +
-			 "}\n");
-		PyramidMetaData metaData = new PyramidMetaData(text);
-
-		PyramidMetaData md2 = metaData.addLevel(3,
-		                                        new Integer(6).toString(),
-		                                        new Integer(187193).toString());
-		Assert.assertEquals(4, md2.getLevelMaximums().size());
-		Assert.assertEquals("1497547", md2.getLevelMaximums().get(0));
-		Assert.assertEquals("1497547", md2.getLevelMaximum(0));
-		Assert.assertEquals("748773", md2.getLevelMaximums().get(1));
-		Assert.assertEquals("748773", md2.getLevelMaximum(1));
-		Assert.assertEquals("374386", md2.getLevelMaximums().get(2));
-		Assert.assertEquals("374386", md2.getLevelMaximum(2));
-		Assert.assertEquals("187193", md2.getLevelMaximums().get(3));
-		Assert.assertEquals("187193", md2.getLevelMaximum(3));
-		Assert.assertEquals(4, md2.getLevelMinimums().size());
-		Assert.assertEquals("0", md2.getLevelMinimums().get(0));
-		Assert.assertEquals("0", md2.getLevelMinimum(0));
-		Assert.assertEquals("2", md2.getLevelMinimums().get(1));
-		Assert.assertEquals("2", md2.getLevelMinimum(1));
-		Assert.assertEquals("4", md2.getLevelMinimums().get(2));
-		Assert.assertEquals("4", md2.getLevelMinimum(2));
-		Assert.assertEquals("6", md2.getLevelMinimums().get(3));
-		Assert.assertEquals("6", md2.getLevelMinimum(3));
-
-		PyramidMetaData md3 = md2.addLevel(4,
-		                                   new Integer(8).toString(),
-		                                   new Integer(93596).toString());
-		Assert.assertEquals(5, md3.getLevelMaximums().size());
-		Assert.assertEquals("1497547", md3.getLevelMaximums().get(0));
-		Assert.assertEquals("1497547", md3.getLevelMaximum(0));
-		Assert.assertEquals("748773", md3.getLevelMaximums().get(1));
-		Assert.assertEquals("748773", md3.getLevelMaximum(1));
-		Assert.assertEquals("374386", md3.getLevelMaximums().get(2));
-		Assert.assertEquals("374386", md3.getLevelMaximum(2));
-		Assert.assertEquals("187193", md3.getLevelMaximums().get(3));
-		Assert.assertEquals("187193", md3.getLevelMaximum(3));
-		Assert.assertEquals("93596", md3.getLevelMaximums().get(4));
-		Assert.assertEquals("93596", md3.getLevelMaximum(4));
-		Assert.assertEquals(5, md3.getLevelMinimums().size());
-		Assert.assertEquals("0", md3.getLevelMinimums().get(0));
-		Assert.assertEquals("0", md3.getLevelMinimum(0));
-		Assert.assertEquals("2", md3.getLevelMinimums().get(1));
-		Assert.assertEquals("2", md3.getLevelMinimum(1));
-		Assert.assertEquals("4", md3.getLevelMinimums().get(2));
-		Assert.assertEquals("4", md3.getLevelMinimum(2));
-		Assert.assertEquals("6", md3.getLevelMinimums().get(3));
-		Assert.assertEquals("6", md3.getLevelMinimum(3));
-		Assert.assertEquals("8", md3.getLevelMinimums().get(4));
-		Assert.assertEquals("8", md3.getLevelMinimum(4));
+	public void testMetaDataLevelList () throws JSONException {
+		PyramidMetaData pmd = new PyramidMetaData("name", "description", 256, 256, 
+		                                          "scheme", "projection",
+		                                          new ArrayList<Integer>(),
+		                                          new Rectangle2D.Double(0, 0, 1, 2),
+		                                          null, null);
+		Assert.assertTrue(pmd.getValidZoomLevels().isEmpty());
+		pmd.addValidZoomLevels(Arrays.asList(3, 1));
+		Assert.assertEquals(1, pmd.getValidZoomLevels().get(0).intValue());
+		Assert.assertEquals(3, pmd.getValidZoomLevels().get(1).intValue());
+		pmd.addValidZoomLevels(Arrays.asList(5, 2));
+		Assert.assertEquals(1, pmd.getValidZoomLevels().get(0).intValue());
+		Assert.assertEquals(2, pmd.getValidZoomLevels().get(1).intValue());
+		Assert.assertEquals(3, pmd.getValidZoomLevels().get(2).intValue());
+		Assert.assertEquals(5, pmd.getValidZoomLevels().get(3).intValue());
 	}
 
 	@Test
 	public void testMetaDataWriting () throws JSONException {
-		PyramidMetaData original = new PyramidMetaData("n", "d", 13, "s", "p", 1, 2,
+		PyramidMetaData original = new PyramidMetaData("n", "d", 13, 13, "s", "p",
+		                                               Arrays.asList(1, 2),
 		                                               new Rectangle2D.Double(0, 0, 1, 2),
 		                                               Arrays.asList(new Pair<Integer, String>(0, "12"),
 		                                                             new Pair<Integer, String>(1, "9")),

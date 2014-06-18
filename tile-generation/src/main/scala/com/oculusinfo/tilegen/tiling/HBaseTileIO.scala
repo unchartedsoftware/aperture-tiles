@@ -30,6 +30,8 @@ package com.oculusinfo.tilegen.tiling
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
+import scala.collection.mutable.{HashSet => MutableSet}
+
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -54,8 +56,6 @@ import com.oculusinfo.binning.io.impl.HBasePyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 
 import com.oculusinfo.tilegen.datasets.ValueDescription
-import com.oculusinfo.tilegen.spark.IntMinAccumulatorParam
-import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.util.ArgumentParser
 
 
@@ -160,16 +160,13 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// Do any needed table initialization
 		pyramidIO.initializeForWrite(baseLocation)
 
-		// Record the min and max level we write, so we can add that to the 
-		// metadata
-		val minLevel = data.context.accumulator(Int.MaxValue)(new IntMinAccumulatorParam)
-		val maxLevel = data.context.accumulator(Int.MinValue)(new IntMinAccumulatorParam)
-
 		// Record and report the total number of tiles we write, because it's 
 		// basically free and easy
 		val tileCount = data.context.accumulator(0)
+		// Record the levels we write
+		val levelSet = data.context.accumulableCollection(MutableSet[Int]())
 
-		println("Writing tile set from")
+		println("Writing tile set to HBase from")
 		println(data.toDebugString)
 
 		// Turn each tile into a table row, noting mins, maxes, and counts as
@@ -186,8 +183,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 						// Update count, level bounds
 						tileCount += 1
-						minLevel += level
-						maxLevel += level
+						levelSet += level
 
 						// Create a Put (a table write object) that will write this tile
 						val baos = new ByteArrayOutputStream()
@@ -219,22 +215,18 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// above.
 		HBaseTiles.saveAsHadoopDataset(jobConfig)
 		println("Input tiles: "+tileCount)
+		println("Input levels: "+levelSet.value)
 
 
 
-		// Now that we've written tiles  (therefore actually run our data mapping),
-		// our accumulators should be set, and we can update our metadata
-		println("Calculating metadata")
 		// Don't alter metadata if there was no data added.
-		// Ideally, we'd still alter levels, but that's stored in our min/max list,
-		// so since we have no min/max info for levels with no data, we just don't store them.
+		// Ideally, we'd still alter levels
 		if (tileCount.value > 0) {
+			println("Calculating metadata")
 			val sampleTile = data.first.getDefinition()
-			val tileAnalyticMetaData = tileAnalytics.map(_.toMap).getOrElse(Map[String, String]())
-			val dataAnalyticMetaData = dataAnalytics.map(_.toMap).getOrElse(Map[String, String]())
 			val metaData =
 				combineMetaData(pyramider, baseLocation,
-				                (minLevel.value, maxLevel.value),
+				                levelSet.value.toSet,
 				                tileAnalytics, dataAnalytics,
 				                sampleTile.getXBins, sampleTile.getYBins,
 				                name, description)

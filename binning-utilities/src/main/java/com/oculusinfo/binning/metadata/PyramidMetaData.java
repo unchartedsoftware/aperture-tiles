@@ -67,32 +67,18 @@ public class PyramidMetaData {
 		_metaData = new JSONObject(metaData);
 	}
 
-	@Deprecated
-	public PyramidMetaData (String name,
-	                        String description,
-	                        Integer tileSize,
-	                        String scheme,
-	                        String projection,
-	                        Integer minZoom,
-	                        Integer maxZoom,
-	                        Rectangle2D bounds,
-	                        Collection<Pair<Integer, String>> levelMins,
-	                        Collection<Pair<Integer, String>> levelMaxes) throws JSONException {
-		this(name, description, tileSize, tileSize,
-		     scheme, projection, minZoom, maxZoom, bounds,
-		     levelMins, levelMaxes);
-	}
 	public PyramidMetaData (String name,
 	                        String description,
 	                        Integer tileSizeX,
 	                        Integer tileSizeY,
 	                        String scheme,
 	                        String projection,
-	                        Integer minZoom,
-	                        Integer maxZoom,
+	                        List<Integer> zoomLevels,
 	                        Rectangle2D bounds,
 	                        Collection<Pair<Integer, String>> levelMins,
-	                        Collection<Pair<Integer, String>> levelMaxes) throws JSONException {
+	                        Collection<Pair<Integer, String>> levelMaxes)
+		throws JSONException
+	{
 		_metaData = new JSONObject();
 		if (null != name)
 			_metaData.put("name", name);
@@ -106,10 +92,8 @@ public class PyramidMetaData {
 			_metaData.put("scheme", scheme);
 		if (null != projection)
 			_metaData.put("projection", projection);
-		if (null != minZoom)
-			_metaData.put("minzoom", minZoom);
-		if (null != maxZoom)
-			_metaData.put("maxzoom", maxZoom);
+		if (null != zoomLevels)
+			_metaData.put("zoomlevels", zoomLevels);
 		if (null != bounds) {
 			JSONArray metaDataBounds = new JSONArray();
 			metaDataBounds.put(bounds.getMinX());
@@ -137,6 +121,7 @@ public class PyramidMetaData {
 			}
 		}
 	}
+
 	/**
 	 * Sometimes one just needs access to the raw json object - such as when one
 	 * is constructing another such object. This method provides said access.
@@ -213,7 +198,16 @@ public class PyramidMetaData {
 	 * this metadata object.
 	 */
 	public int getMinZoom () {
-		return _metaData.optInt("minzoom", 0);
+		int minZoom = 0;
+		JSONArray levels = _metaData.optJSONArray("zoomlevels");
+		if (null != levels && levels.length() > 0) {
+			try {
+				minZoom = levels.getInt(0);
+			} catch (JSONException e) {
+				LOGGER.log(Level.WARNING, "Bad minimum zoom level in metadata", e);
+			}
+		}
+		return minZoom;
 	}
 
 	/**
@@ -221,7 +215,48 @@ public class PyramidMetaData {
 	 * this metadata object.
 	 */
 	public int getMaxZoom () {
-		return _metaData.optInt("maxzoom", 0);
+		int maxZoom = 0;
+		JSONArray levels = _metaData.optJSONArray("zoomlevels");
+		if (null != levels && levels.length() > 0) {
+			try {
+				maxZoom = levels.getInt(levels.length()-1);
+			} catch (JSONException e) {
+				LOGGER.log(Level.WARNING, "Bad maximum zoom level in metadata", e);
+			}
+		}
+		return maxZoom;
+	}
+
+	/**
+	 * Get all valid zoom levels in the tile pyramid described by this metadata 
+	 * object.
+	 */
+	public List<Integer> getValidZoomLevels () {
+		List<Integer> levels = new ArrayList<>();
+		JSONArray storedLevels = _metaData.optJSONArray("zoomlevels");
+		if (null != storedLevels) {
+			for (int i=0; i<storedLevels.length(); ++i) {
+				try {
+					levels.add(storedLevels.getInt(i));
+				} catch (JSONException e) {
+					LOGGER.log(Level.WARNING, "Bad zoom level in metadata: "+i, e);
+				}
+			}
+		}
+		return levels;
+	}
+
+	/**
+	 * Adds levels to the list of valid zoom levels in the tile pyramid
+	 * described by this metadata object.
+	 */
+	public void addValidZoomLevels (Collection<Integer> newLevels) throws JSONException {
+		List<Integer> currentLevels = getValidZoomLevels();
+		Set<Integer> allLevels = new HashSet<>(currentLevels);
+		allLevels.addAll(newLevels);
+		List<Integer> sortedLevels = new ArrayList<>(allLevels);
+		Collections.sort(sortedLevels);
+		_metaData.put("zoomlevels", sortedLevels);
 	}
 
 	/**
@@ -298,23 +333,10 @@ public class PyramidMetaData {
 	 *         an error is encountered getting the level information.
 	 */
 	public List<Integer> getLevels () {
-		JSONObject maxes = getLevelExtremaObject(true);
-
-		List<Integer> levels = new ArrayList<Integer>();
-		if (null != maxes) {
-			for (Iterator<?> i = maxes.keys(); i.hasNext();) {
-				Object rawKey = i.next();
-				try {
-					int key = Integer.parseInt(rawKey.toString());
-					levels.add(key);
-				} catch (NumberFormatException e) {
-					LOGGER.log(Level.WARNING, "Unparsable level " + rawKey + ".");
-				}
-			}
-
-			Collections.sort(levels);
-		}
-
+		int minZoom = getMinZoom();
+		int maxZoom = getMaxZoom();
+		List<Integer> levels = new ArrayList<>();
+		for (int i=minZoom; i<=maxZoom; ++i) levels.add(i);
 		return levels;
 	}
 
@@ -436,25 +458,6 @@ public class PyramidMetaData {
 	 */
 	public String getLevelMinimum (int level) {
 		return getLevelExtremum(false, level);
-	}
-
-
-	/**
-	 * Create a new metadata object, which is a combination of the current with
-	 * the specified new level.
-	 */
-	public PyramidMetaData addLevel (int level, String min, String max) throws JSONException {
-		JSONObject newBase = JsonUtilities.deepClone(_metaData);
-		if (!newBase.has("meta"))
-			newBase.put("meta", new JSONObject());
-		JSONObject meta = newBase.getJSONObject("meta");
-		if (!meta.has("levelMinimums"))
-			meta.put("levelMinimums", new JSONObject());
-		if (!meta.has("levelMaximums"))
-			meta.put("levelMaximums", new JSONObject());
-		meta.getJSONObject("levelMinimums").put(""+level, min);
-		meta.getJSONObject("levelMaximums").put(""+level, max);
-		return new PyramidMetaData(newBase);
 	}
 
 	@Override
