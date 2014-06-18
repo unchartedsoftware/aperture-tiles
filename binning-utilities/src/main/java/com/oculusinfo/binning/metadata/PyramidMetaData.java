@@ -109,7 +109,7 @@ public class PyramidMetaData {
 		if (null != minZoom)
 			_metaData.put("minzoom", minZoom);
 		if (null != maxZoom)
-			_metaData.put("maxZoom", maxZoom);
+			_metaData.put("maxzoom", maxZoom);
 		if (null != bounds) {
 			JSONArray metaDataBounds = new JSONArray();
 			metaDataBounds.put(bounds.getMinX());
