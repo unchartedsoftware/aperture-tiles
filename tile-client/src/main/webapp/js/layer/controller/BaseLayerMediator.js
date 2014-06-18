@@ -64,15 +64,27 @@ define(function (require) {
 
             // Register a callback to handle layer state change events.
             layerState.addListener( function( fieldName ) {
-                if (fieldName === "opacity") {
-                    map.setOpacity( layerState.getOpacity() );
-                } else if (fieldName === "enabled") {
-                    map.setVisibility( layerState.isEnabled() );
-                } else if (fieldName === "baseLayerIndex") {
-                    map.setBaseLayerIndex( layerState.getBaseLayerIndex() );
-                    map.setOpacity( layerState.getOpacity() );
-                    map.setVisibility( layerState.isEnabled() );
+
+                switch (fieldName) {
+
+                    case "opacity":
+
+                        map.setOpacity( layerState.getOpacity() );
+                        break;
+
+                    case "enabled":
+
+                        map.setVisibility( layerState.isEnabled() );
+                        break;
+
+                    case "baseLayerIndex":
+
+                        map.setBaseLayerIndex( layerState.getBaseLayerIndex() );
+                        map.setOpacity( layerState.getOpacity() );
+                        map.setVisibility( layerState.isEnabled() );
+                        break;
                 }
+
             });
 
             // Add the layer to the layer state array.

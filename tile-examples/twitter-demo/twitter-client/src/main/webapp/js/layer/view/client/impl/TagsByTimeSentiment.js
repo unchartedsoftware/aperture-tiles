@@ -125,7 +125,7 @@ define(function (require) {
                     maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value ),
                     countByTimePerc= TwitterUtil.getCountByTimePercentage( value, hour ),
                     relativePercentage = countByTimePerc / maxPercentage || 0;
-                return that.Y_CENTRE_OFFSET -( relativePercentage * BAR_LENGTH ) - that.getYOffset( values, tagIndex );
+                return that.Y_CENTRE_OFFSET - ( relativePercentage * BAR_LENGTH ) - that.getYOffset( values, tagIndex );
             });
             this.bars.map('offset-x').from(function (index) {
                 return that.X_CENTRE_OFFSET - 90 + ((index % NUM_HOURS_IN_DAY) * (BAR_WIDTH+1));
@@ -147,16 +147,14 @@ define(function (require) {
 
             this.bars.on('click', function(event) {
                 var data = event.data,
-                    value = data.bin.value[ Math.floor(event.index[0]/NUM_HOURS_IN_DAY)  ],
-                    tag = value.tag;
-                that.clickOn( tag, data, value );
+                    value = data.bin.value[ Math.floor(event.index[0]/NUM_HOURS_IN_DAY)  ];
+                that.clickOn( data, value );
                 return true; // swallow event
             });
             this.bars.on('mouseover', function(event) {
                 var data = event.data,
-                    value = data.bin.value[ Math.floor(event.index[0]/NUM_HOURS_IN_DAY) ],
-                    tag = value.tag;
-                that.hoverOn( tag, data, value );
+                    value = data.bin.value[ Math.floor(event.index[0]/NUM_HOURS_IN_DAY) ]
+                that.hoverOn( data, value );
                 that.nodeLayer.all().where(data).redraw( new aperture.Transition( 100 ) );
             });
             this.bars.on('mouseout', function(event) {
@@ -236,16 +234,14 @@ define(function (require) {
 
             this.tagLabels.on('click', function(event) {
                 var data = event.data,
-                    value = data.bin.value[ event.index[0] ],
-                    tag = value.tag;
-                that.clickOn( tag, data, value );
+                    value = data.bin.value[ event.index[0] ];
+                that.clickOn( data, value );
                 return true; // swallow event
             });
             this.tagLabels.on('mouseover', function(event) {
                 var data = event.data,
-                    value = data.bin.value[ event.index[0] ],
-                    tag = value.tag;
-                that.hoverOn( tag, data, value );
+                    value = data.bin.value[ event.index[0] ];
+                that.hoverOn( data, value );
                 that.nodeLayer.all().where(data).redraw( new aperture.Transition( 100 ) );
             });
             this.tagLabels.on('mouseout', function(event) {

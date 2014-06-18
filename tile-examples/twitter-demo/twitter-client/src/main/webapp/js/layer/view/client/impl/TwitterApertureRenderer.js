@@ -74,10 +74,10 @@ define(function (require) {
         },
 
 
-        clickOn: function( tag, data, value ) {
+        clickOn: function( data, value ) {
 
             this.layerState.setClickState({
-                tag: tag,
+                tag: value.tag,
                 data: data,
                 value : value
             });
@@ -92,10 +92,10 @@ define(function (require) {
         },
 
 
-        hoverOn: function( tag, data, value ) {
+        hoverOn: function( data, value ) {
 
             this.layerState.setHoverState({
-                tag: tag,
+                tag: value.tag,
                 data: data,
                 value : value
             });

@@ -113,16 +113,14 @@ define(function (require) {
 
                 bar.on('click', function(event) {
                     var data = event.data,
-                        value = data.bin.value[ event.index[0] ],
-                        tag = value.tag;
-                    that.clickOn( tag, data, value );
+                        value = data.bin.value[ event.index[0] ];
+                    that.clickOn( data, value );
                     return true; // swallow event
                 });
                 bar.on('mouseover', function(event) {
                     var data = event.data,
-                        value = data.bin.value[ event.index[0] ],
-                        tag = value.tag;
-                    that.hoverOn( tag, data, value );
+                        value = data.bin.value[ event.index[0] ];
+                    that.hoverOn( data, value );
                     that.nodeLayer.all().where(data).redraw( new aperture.Transition( 100 ) );
                 });
                 bar.on('mouseout', function(event) {
@@ -250,16 +248,14 @@ define(function (require) {
 
             this.tagLabels.on('click', function(event) {
                 var data = event.data,
-                    value = data.bin.value[ event.index[0] ],
-                    tag = value.tag;
-                that.clickOn( tag, data, value );
+                    value = data.bin.value[ event.index[0] ];
+                that.clickOn( data, value );
                 return true; // swallow event
             });
             this.tagLabels.on('mouseover', function(event) {
                 var data = event.data,
-                    value = data.bin.value[ event.index[0] ],
-                    tag = value.tag;
-                that.hoverOn( tag, data, value );
+                    value = data.bin.value[ event.index[0] ];
+                that.hoverOn( data, value );
                 that.nodeLayer.all().where(data).redraw( new aperture.Transition( 100 ) );
             });
             this.tagLabels.on('mouseout', function(event) {

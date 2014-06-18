@@ -73,6 +73,35 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "id" : "twitter_graph_edges.x.y",
+                    "name" : "Tweet Graph Edges",
+                    "pyramid" : {
+                        "type" : "WebMercator"
+                    },
+
+                    "data" : {
+                        "pyramidio" : {
+                            "type" : "zip",
+                            "root.path" : "/twitter_graph_edges.x.y.zip",
+                            "extension" : "avro"
+                        }
+                    },
+                    "renderers" : [
+                        {
+                            "domain" : "server",
+                            "renderer" : {
+                                "type" : "heatmap",
+                                "ramp" : "ware",
+                                "opacity" : 0.85,                                
+                            },
+                            "legendrange": [0.2, 1.0],
+                            "transform" : {
+                                "name" : "log10"
+                            }
+                        }
+                    ]
                 }
             ]
         }

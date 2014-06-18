@@ -258,7 +258,7 @@ define(function (require) {
         return $(html);
     };
 
-    createPromotionButton = function( layerState, nextLayerState, controlsMapping ) {
+    createPromotionButton = function( layerState, nextLayerState, controlsMapping, layerStates, $layerControlsContainer, controlsMap ) {
 
         var $promotionDiv = $('<div class="promotion-container"></div>'),
             $promotionButton = $('<button class="layer-promotion-button" title="pop layer to top"></button>');
@@ -269,6 +269,8 @@ define(function (require) {
                 otherZ = nextLayerState.getZIndex();
                 nextLayerState.setZIndex( layerState.getZIndex() );
                 layerState.setZIndex(otherZ);
+                // recreate controls with layers swapped position
+                replaceLayers( layerStates, $layerControlsContainer, controlsMap );
             }
         });
         $promotionDiv.append( $promotionButton );
@@ -365,7 +367,7 @@ define(function (require) {
             // add filter slider
             $layerContent.append( createFilterSlider( layerState, controlsMapping ) );
             // add layer promotion button
-            $layerContent.append( createPromotionButton( layerState, sortedLayers[index - 1] || null, controlsMapping ) );
+            $layerContent.append( createPromotionButton( layerState, sortedLayers[index - 1] || null, controlsMapping, sortedLayers, $layerControlsContainer, controlsMap ) );
         }
 
         //add base layer radio buttons when this layer is the base layer
@@ -413,7 +415,7 @@ define(function (require) {
         // create back button
         $backButton = $('<button class="settings-back-link">back</button>');
         $backButton.click(function () {
-            replaceChildren($parent, oldChildren);
+            replaceChildren( $parent, oldChildren );
         });
         $settingsTitleBar.append($backButton);
 
@@ -479,19 +481,39 @@ define(function (require) {
             var controlsMapping = controlsMap[ layerState.getId() ],
                 range;
 
-            if (fieldName === "enabled") {
-                controlsMapping.enabledCheckbox.prop("checked", layerState.isEnabled());
-            } else if (fieldName === "opacity") {
-                controlsMapping.opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
-            } else if (fieldName === "filterRange") {
-                range = layerState.getFilterRange();
-                controlsMapping.filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
-            } else if (fieldName === "rampImageUrl") {
-                controlsMapping.filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
-            } else if (fieldName === "zIndex") {
-                replaceLayers( sortLayers(layerStates), $layersControlListRoot, controlsMap );
-            } else if (fieldName === "rampMinMax") {
-                controlsMapping.filterAxis.html( createFilterAxis( layerState.getRampMinMax() ).children() );
+            switch (fieldName) {
+
+                case "enabled":
+
+                    controlsMapping.enabledCheckbox.prop("checked", layerState.isEnabled());
+                    break;
+
+                case "opacity":
+
+                     controlsMapping.opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
+                     break;
+
+                case "zIndex":
+
+                    range = layerState.getFilterRange();
+                    controlsMapping.filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
+                    break;
+
+                case "filterRange":
+
+                     controlsMapping.filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+                     break;
+
+                case "rampImageUrl":
+
+                    controlsMapping.filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+                    break;
+
+                case "rampMinMax":
+
+                    controlsMapping.filterAxis.html( createFilterAxis( layerState.getRampMinMax() ).children() );
+                    break;
+
             }
         };
     };

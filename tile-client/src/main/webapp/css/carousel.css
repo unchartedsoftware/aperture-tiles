@@ -24,12 +24,12 @@
 }
 
 .carousel-ui-chevron-left {
-    left:5px;
+    left:2px;
     background: transparent url(../images/chevron_L.png) no-repeat center top;
 }
 
 .carousel-ui-chevron-right {
-    right:5px;
+    right:2px;
     background: transparent url(../images/chevron_R.png) no-repeat center top;
 }
 
@@ -42,7 +42,7 @@
     position: absolute;
     width: 256px;
     text-align: center;
-    bottom: 10px;
+    bottom: 2px;
     pointer-events: none;
 }
 
@@ -73,7 +73,7 @@
 
 .carousel-ui-text-index {
     position:absolute;
-    bottom: 5px;
+    bottom: 2px;
     width: 100%;
     text-align:center;
     pointer-events:none;

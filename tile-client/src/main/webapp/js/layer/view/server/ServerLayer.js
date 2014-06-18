@@ -122,7 +122,7 @@ define(function (require) {
         /**
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
-        setZIndex: function (subLayerId, zIndex) {
+        setZIndex: function ( zIndex ) {
             this.map.setLayerIndex( this.layer.olLayer_, zIndex );
         },
 
@@ -239,7 +239,7 @@ define(function (require) {
             // but does prevent them from overlapping client layers. In the future it
             // may be worth implementing a more sophisticated system to allow proper
             // client-server inclusive ordering
-            this.map.setLayerIndex( this.layer.olLayer_, 0 );
+            //this.map.setLayerIndex( this.layer.olLayer_, 0 );
         }
     });
 

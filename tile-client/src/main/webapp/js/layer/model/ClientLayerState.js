@@ -164,6 +164,7 @@ define(function (require) {
 
         setTileFocus: function( tilekey ) {
             if (this.tileFocus !== tilekey) {
+                this.previousTileFocus = this.tileFocus;
                 this.tileFocus = tilekey;
                 this.notify("tileFocus", this.listeners);
             }
@@ -172,6 +173,11 @@ define(function (require) {
 
         getTileFocus: function() {
             return this.tileFocus;
+        },
+
+
+        getPreviousTileFocus: function() {
+            return this.previousTileFocus;
         },
 
 

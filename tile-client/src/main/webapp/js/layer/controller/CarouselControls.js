@@ -60,33 +60,34 @@ define(function (require) {
 
         return function (fieldName) {
 
-            if (fieldName === "tileFocus") {
+            switch (fieldName) {
 
-                var tilekey = layerState.getTileFocus(),
-                    topLeft;
+                case "tileFocus":
 
-                // move carousel to new tile if it is enabled
-                if ( layerState.getCarouselEnabled() ) {
+                    var tilekey = layerState.getTileFocus(),
+                        topLeft;
 
-                    topLeft = map.getTopLeftMapPixelForTile( tilekey );
+                    if ( layerState.getCarouselEnabled() ) {
+                        // if carousel is enabled, update its tile position
+                        topLeft = map.getTopLeftMapPixelForTile( tilekey );
+                        $carousel.css({
+                            left: topLeft.x,
+                            top: map.getMapHeight() - topLeft.y
+                        });
+                        updateDotIndices( controlMap, layerState );
+                    }
+                    break;
 
-                    $carousel.css({
-                        left: topLeft.x,
-                        top: map.getMapHeight() - topLeft.y
-                    });
-                    updateDotIndices( controlMap, layerState );
-                }
+                case "carouselEnabled":
 
-            } else if (fieldName === "carouselEnabled") {
-
-                // empty carousel
-                $carousel.empty().css('visibility', 'hidden');
-                if ( layerState.getCarouselEnabled() ) {
-                    // create carousel UI
-                    $carousel.css('visibility', 'visible');
-                    createCarousel( $carousel, map, controlMap, layerState );
-                }
-
+                    // empty carousel
+                    $carousel.empty().css('visibility', 'hidden');
+                    if ( layerState.getCarouselEnabled() ) {
+                        // create carousel UI
+                        $carousel.css('visibility', 'visible');
+                        createCarousel( $carousel, map, controlMap, layerState );
+                    }
+                    break;
             }
         };
     };

@@ -37,6 +37,8 @@ define(function (require) {
 
     var TwitterApertureRenderer = require('./TwitterApertureRenderer'),
         TwitterUtil = require('./TwitterUtil'),
+        NUM_HOURS_IN_DAY = 24,
+        NUM_TAGS_DISPLAYED = 10,
         TagsByTime;
 
 
@@ -46,9 +48,12 @@ define(function (require) {
 
         init: function( map ) {
             this._super( map );
-            this.MAX_NUM_VALUES = 10;
-            this.Y_SPACING = 18;
             this.createLayer();
+        },
+
+
+        getYOffset: function( values, index ) {
+            return 18 * ((( TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED ) - 1) / 2) - index);
         },
 
 
@@ -58,33 +63,6 @@ define(function (require) {
                 dailycount = data.bin.value[tagIndex].countDaily[numDays - 1 - (index % numDays)];
 
             return (dailycount / data.bin.value[tagIndex].countMonthly) || 0;
-        },
-
-
-        onClick: function(event, index) {
-            this.clientState.clickState = {
-                tilekey : event.data.tilekey,
-                tag : event.data.bin.value[index].topic,
-                index : index
-            };
-            // redraw all nodes
-            this.nodeLayer.all().redraw();
-        },
-
-
-        onHover: function(event, index) {
-            this.clientState.hoverState = {
-                tilekey : event.data.tilekey,
-                tag : event.data.bin.value[index].topic,
-                index : index
-            };
-            this.nodeLayer.all().where(event.data).redraw();
-        },
-
-
-        onHoverOff: function(event) {
-            this.clientState.hoverState = {};
-            this.nodeLayer.all().where(event.data).redraw();
         },
 
 
@@ -107,24 +85,6 @@ define(function (require) {
             var that = this,
                 BAR_LENGTH = 10;
 
-            function getMaxPercentage( data, index ) {
-                var i,
-                    percent,
-                    numDays = TwitterUtil.getTotalDaysInMonth( data ),
-                    tagIndex = Math.floor(index/numDays),                 
-                    maxPercent = 0,
-                    count = data.bin.value[tagIndex].countMonthly;
-
-                for (i=0; i<numDays; i++) {
-                    // get maximum percent
-                    percent = (data.bin.value[tagIndex].countDaily[i] / count) || 0;
-                    if (percent > maxPercent) {
-                        maxPercent = percent;
-                    }
-                }
-                return maxPercent;
-            }
-
             this.bars = this.nodeLayer.addLayer(aperture.BarLayer);
             this.bars.map('orientation').asValue('vertical');
             this.bars.map('width').asValue(3);
@@ -133,57 +93,75 @@ define(function (require) {
             });
             this.bars.map('fill').from( function(index) {
 
-                var numDays = TwitterUtil.getTotalDaysInMonth(this),
-                    tagIndex = Math.floor(index/numDays),
-                    topic = this.bin.value[tagIndex].topic;
+                var layerState = that.layerState,
+                    clickState = layerState.getClickState(),
+                    hoverState = layerState.getHoverState(),
+                    hasClickState = layerState.hasClickState(),
+                    hasHoverState = layerState.hasHoverState(),
+                    selectedTag = clickState.tag,
+                    hoveredTag = hoverState.tag,
+                    tagIndex = Math.floor( index/NUM_HOURS_IN_DAY ),
+                    hour = index % NUM_HOURS_IN_DAY,
+                    value = this.bin.value[tagIndex],
+                    tag = value.topic;
 
-                if (that.matchingTagIsSelected(topic, this.tilekey)){
+                if ( (hasClickState && selectedTag === tag) ||
+                     (hasHoverState && hoveredTag === tag) ) {
                     return that.BLUE_COLOUR;
                 }
-                if (that.shouldBeGreyedOut(topic, this.tilekey)) {
+                if ( hasClickState && selectedTag !== tag  ) {
                     return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
             });
-            this.bars.map('cursor').asValue('pointer');
 
             this.bars.map('bar-count').from( function() {
-                return that.getTotalDaysInMonth(this) * that.getCount(this);
+                return NUM_HOURS_IN_DAY * TwitterUtil.getTagCount( this.bin.value, NUM_TAGS_DISPLAYED );
             });
-            this.bars.map('offset-y').from(function(index) {
-                var maxPercentage = getMaxPercentage(this, index);
-                if (maxPercentage === 0) {
-                    return 0;
-                }
-                return that.Y_CENTRE_OFFSET -((that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH) +
-                       that.getYOffset(this, Math.floor(index/that.getTotalDaysInMonth(this)));
+
+            this.bars.map('offset-y').from( function(index) {
+                var tagIndex = Math.floor( index/NUM_HOURS_IN_DAY ),
+                    hour = index % NUM_HOURS_IN_DAY,
+                    values = this.bin.value,
+                    value = values[tagIndex],
+                    maxPercentage = TwitterUtil.getMaxPercentageByType( value, 'PerHour' ),
+                    relativePercent = (TwitterUtil.getPercentageByType( value, hour, 'PerHour' ) / maxPercentage) || 0 ;
+
+                return that.Y_CENTRE_OFFSET - ( relativePercent * BAR_LENGTH ) - that.getYOffset( values, tagIndex );
             });
-            this.bars.map('offset-x').from(function (index) {
-                return that.X_CENTRE_OFFSET - 100 + ((index % that.getTotalDaysInMonth(this)) * 4);
+            this.bars.map('offset-x').from( function(index) {
+                var hour = index % NUM_HOURS_IN_DAY;
+                return that.X_CENTRE_OFFSET - 100 + ( hour * 4);
             });
             this.bars.map('length').from(function (index) {
-                var maxPercentage = getMaxPercentage(this, index);
-                if (maxPercentage === 0) {
-                    return 0;
-                }
-                return (that.getTotalCountPercentage(this, index) / maxPercentage) * BAR_LENGTH;
-            });
+                var tagIndex = Math.floor( index/NUM_HOURS_IN_DAY ),
+                    hour = index % NUM_HOURS_IN_DAY,
+                    value = this.bin.value[tagIndex],
+                    maxPercentage = TwitterUtil.getMaxPercentageByType( value, 'PerHour' ),
+                    relativePercent = (TwitterUtil.getPercentageByType( value, hour, 'PerHour' ) / maxPercentage) || 0 ;
 
-            this.bars.on('click', function(event) {
-                that.onClick(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(event.data)));
-                return true; // swallow event
-            });
-
-            this.bars.on('mousemove', function(event) {
-                that.onHover(event, Math.floor(event.index[0]/that.getTotalDaysInMonth(event.data)));
-                return true; // swallow event
-            });
-
-            this.bars.on('mouseout', function(event) {
-                that.onHoverOff(event);
+                return relativePercent * BAR_LENGTH;
             });
             this.bars.map('opacity').from( function() {
                     return that.opacity;
+            });
+
+            this.bars.on('click', function(event) {
+                var data = event.data,
+                    value = data.bin.value[ Math.floor(event.index[0]/NUM_HOURS_IN_DAY)  ];
+                that.clickOn( data, value );
+                return true; // swallow event
+            });
+            this.bars.on('mouseover', function(event) {
+                var data = event.data,
+                    value = data.bin.value[ Math.floor(event.index[0]/NUM_HOURS_IN_DAY) ];
+                that.hoverOn( data, value );
+                that.nodeLayer.all().where(data).redraw( new aperture.Transition( 100 ) );
+            });
+            this.bars.on('mouseout', function(event) {
+
+                that.hoverOff();
+                that.nodeLayer.all().where(event.data).redraw( new aperture.Transition( 100 ) );
             });
 
         },
@@ -194,20 +172,38 @@ define(function (require) {
             var that = this;
 
             this.tagLabels = this.nodeLayer.addLayer(aperture.LabelLayer);
+            this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 38);
+            this.tagLabels.map('text-anchor').asValue('start');
+            this.tagLabels.map('font-outline').asValue(this.BLACK_COLOUR);
+            this.tagLabels.map('font-outline-width').asValue(3);
 
             this.tagLabels.map('visible').from(function() {
                 return that.visibility;
             });
 
             this.tagLabels.map('fill').from( function(index) {
-                if (that.shouldBeGreyedOut(this.bin.value[index].topic, this.tilekey)) {
+
+                var layerState = that.layerState,
+                    clickState = layerState.getClickState(),
+                    hoverState = layerState.getHoverState(),
+                    hasClickState = layerState.hasClickState(),
+                    hasHoverState = layerState.hasHoverState(),
+                    selectedTag = clickState.tag,
+                    hoveredTag = hoverState.tag,
+                    tag = this.bin.value[index].topic;
+
+                if ( (hasClickState && selectedTag === tag) ||
+                     (hasHoverState && hoveredTag === tag) ) {
+                    return that.WHITE_COLOUR;
+                }
+                if ( hasClickState && selectedTag !== tag  ) {
                     return that.GREY_COLOUR;
                 }
                 return that.WHITE_COLOUR;
             });
 
             this.tagLabels.map('label-count').from(function() {
-                return that.getCount(this);
+                return TwitterUtil.getTagCount( this.bin.value, NUM_TAGS_DISPLAYED );
             });
 
             this.tagLabels.map('text').from(function (index) {
@@ -218,39 +214,46 @@ define(function (require) {
                 return str;
             });
 
-            this.tagLabels.map('cursor').asValue('pointer');
-
             this.tagLabels.map('font-size').from( function(index) {
-                if (that.isHoveredOrClicked(this.bin.value[index].topic, this.tilekey)) {
-                    return 14;
+
+                var layerState = that.layerState,
+                    hoverState = layerState.getHoverState(),
+                    hasHoverState = layerState.hasHoverState(),
+                    tileFocus = layerState.getTileFocus(),
+                    hoveredTag = hoverState.tag,
+                    tag = this.bin.value[index].topic,
+                    fontSize = 12;
+
+                if ( hasHoverState && hoveredTag === tag && this.tilekey === tileFocus ) {
+                    fontSize += 4;
                 }
-                return 12;
+                return fontSize;
             });
 
             this.tagLabels.map('offset-y').from(function (index) {
-                return that.Y_CENTRE_OFFSET + that.getYOffset(this, index) - 5;
+                return that.Y_CENTRE_OFFSET - that.getYOffset( this.bin.value, index ) - 5;
             });
 
-            this.tagLabels.map('offset-x').asValue(that.X_CENTRE_OFFSET + 38);
-            this.tagLabels.map('text-anchor').asValue('start');
-            this.tagLabels.map('font-outline').asValue(this.BLACK_COLOUR);
-            this.tagLabels.map('font-outline-width').asValue(3);
-
-            this.tagLabels.on('click', function(event) {
-                that.onClick(event, event.index[0]);
-                return true; // swallow event
-            });
-
-            this.tagLabels.on('mousemove', function(event) {
-                that.onHover(event, event.index[0]);
-                return true;  // swallow event
-            });
-
-            this.tagLabels.on('mouseout', function(event) {
-                that.onHoverOff(event);
-            });
             this.tagLabels.map('opacity').from( function() {
                     return that.opacity;
+            });
+
+            this.tagLabels.on('click', function(event) {
+                var data = event.data,
+                    value = data.bin.value[ event.index[0] ];
+                that.clickOn( data, value );
+                return true; // swallow event
+            });
+            this.tagLabels.on('mouseover', function(event) {
+                var data = event.data,
+                    value = data.bin.value[ event.index[0] ];
+                that.hoverOn( data, value );
+                that.nodeLayer.all().where(data).redraw( new aperture.Transition( 100 ) );
+            });
+            this.tagLabels.on('mouseout', function(event) {
+
+                that.hoverOff();
+                that.nodeLayer.all().where(event.data).redraw( new aperture.Transition( 100 ) );
             });
 
         }

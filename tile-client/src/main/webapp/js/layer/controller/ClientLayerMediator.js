@@ -73,7 +73,7 @@ define(function (require) {
                 layerState.setZIndex( 0 );
                 layerState.setRendererCount( layer.renderers.length );
                 layerState.setDefaultRendererIndex( 0 );
-                // register layer state
+                // register layer state with each renderer
                 for (i=0; i< layer.renderers.length; i++) {
                     layer.renderers[i].registerLayer( layerState );
                 }
@@ -82,21 +82,37 @@ define(function (require) {
                 layerState.addListener( function( fieldName ) {
                     var tilekey;
 
-                    if (fieldName === "opacity") {
-                        layer.setOpacity( layerState.getOpacity() );
-                    } else if (fieldName === "enabled") {
-                        layer.setVisibility( layerState.isEnabled() );
-                    } else if (fieldName === "tileFocus") {
-                        layer.setTileFocus( layerState.getTileFocus() );
-                    } else if (fieldName === "defaultRendererIndex") {
-                        layer.setDefaultRendererIndex( layerState.getDefaultRendererIndex() );
-                    } else if (fieldName === "tileRendererIndex") {
-                        tilekey = layerState.getTileFocus();
-                        layer.setTileRenderer( tilekey, layerState.getRendererByTile( tilekey ) );
+
+                    switch (fieldName) {
+
+                        case "opacity":
+
+                            layer.setOpacity( layerState.getOpacity() );
+                            break;
+
+                        case "enabled":
+
+                            layer.setVisibility( layerState.isEnabled() );
+                            break;
+
+                        case "tileFocus":
+
+                            layer.setTileFocus( layerState.getTileFocus() );
+                            break;
+
+                        case "defaultRendererIndex":
+
+                            layer.setDefaultRendererIndex( layerState.getDefaultRendererIndex() );
+                            break;
+
+                        case "tileRendererIndex":
+
+                            tilekey = layerState.getTileFocus();
+                            layer.setTileRenderer( tilekey, layerState.getRendererByTile( tilekey ) );
+                            break;
                     }
+
                 });
-
-
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {

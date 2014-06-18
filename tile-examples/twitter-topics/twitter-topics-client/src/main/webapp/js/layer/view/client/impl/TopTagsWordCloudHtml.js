@@ -165,7 +165,7 @@ define(function (require) {
                 var $temp,
                     dimension = {};
 
-                $temp = $('<div class="top-tags-cloud-word-temp" style="visibility:hidden; font-size:'+fontSize+'px; line-height:'+fontSize+'px;">'+str+'</div>');
+                $temp = $('<div class="top-tags-cloud-word-temp" style="visibility:hidden; font-size:'+fontSize+'px;">'+str+'</div>');
                 $('body').append( $temp );
 
                 dimension.width = $temp.outerWidth();
@@ -206,11 +206,11 @@ define(function (require) {
                 fontSize = Math.min( Math.max( fontSize, minFontSize), maxFontSize );
 
                 dim = getWordDimensions( word, fontSize );
-                dim.height -= dim.height * 0.10;
+                dim.height -= dim.height * 0.20;
                 pos = {
                     radius : 1,
                     radiusInc : 5,
-                    arcLength : 15,
+                    arcLength : 5,
                     x : 0,
                     y : 0,
                     t : 0
@@ -269,7 +269,7 @@ define(function (require) {
                         MAX_FONT_SIZE = 24 * DOWNSCALE_OFFSET,
                         MIN_FONT_SIZE = 8 * DOWNSCALE_OFFSET,
                         HORIZONTAL_OFFSET = 10,
-                        VERTICAL_OFFSET = 14,
+                        VERTICAL_OFFSET = 24,
                         tilekey = this.tilekey,
                         $html = $('<div id="'+tilekey+'" class="aperture-tile"></div>'),
                         $elem,
@@ -295,7 +295,7 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
                         value = values[i];
-                        words.push( TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), 10 ) );
+                        words.push( TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), 11 ) );
                         frequencies.push( value.countMonthly );
                     }
 
@@ -313,7 +313,7 @@ define(function (require) {
 
                         $elem = $('<div class="top-tags-cloud-word" style="'
                             + 'font-size:'+cloudWord.fontSize+'px;'
-                            + 'line-height:'+cloudWord.fontSize+'px;'
+                            //+ 'line-height:'+cloudWord.fontSize+'px;'
                             + 'left:'+(128+cloudWord.x-(cloudWord.width/2))+'px;'
                             + 'top:'+(128+cloudWord.y-(cloudWord.height/2))+'px;'
                             + 'width:'+cloudWord.width+'px;'

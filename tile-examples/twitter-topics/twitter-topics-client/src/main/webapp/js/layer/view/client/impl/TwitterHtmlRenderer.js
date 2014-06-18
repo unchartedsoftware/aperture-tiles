@@ -50,6 +50,8 @@ define(function (require) {
 
             this.layerState.addListener( function( fieldName ) {
 
+                var tilekey, previousTilekey;
+
                 if (fieldName === "clickState") {
                     if ( layerState.hasClickState() ) {
                         // add click state classes
@@ -61,7 +63,19 @@ define(function (require) {
                     }
                 } else if (fieldName === "translate") {
                     // redraw node based on translation
-                    that.nodeLayer.where( that.layerState.getTileFocus() ).redraw();
+                    tilekey = that.layerState.getTileFocus();
+                    $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
+                    that.nodeLayer.where( tilekey ).redraw();
+
+                } else if (fieldName === "tileFocus") {
+
+                    tilekey = that.layerState.getTileFocus();
+                    previousTilekey = that.layerState.getPreviousTileFocus();
+                    $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
+                    if ( previousTilekey ) {
+                        $('#'+that.getTranslateLabelId( previousTilekey ) ).css('visibility', 'hidden');
+                    }
+
                 }
             });
 
@@ -100,21 +114,36 @@ define(function (require) {
         },
 
 
+        getTranslateLabelId : function( tilekey ) {
+            var parsedValues = tilekey.split(','),
+                level = parseInt(parsedValues[0], 10),
+                xIndex = parseInt(parsedValues[1], 10),
+                yIndex = parseInt(parsedValues[2], 10);
+
+            return 'translate-label-'+level+'-'+xIndex+'-'+yIndex;
+        },
+
+
         createTranslateLabel: function( tilekey ) {
             var that = this,
                 translation = that.layerState.getCustomObject( 'translate', tilekey ),
-                greyed = translation ? '' : 'greyed',
-                $translate = $('<div class="translate-label '+greyed+'">translate</div>');
+                $translate = $('<div id="'+this.getTranslateLabelId(tilekey)+'" class="translate-label">translate</div>');
+
+            if ( !translation ) {
+                $translate.addClass('greyed');
+            }
+
+            if ( tilekey === this.layerState.getTileFocus() ) {
+                $translate.css('visibility', 'visible');
+            }
 
             $translate.click( function( event) {
 
                 var translation = that.layerState.getCustomObject( 'translate', tilekey );
                 if (translation) {
                     that.layerState.removeCustomObject( 'translate', tilekey );
-                    $translate.addClass('greyed');
                 } else {
                     that.layerState.setCustomObject( 'translate', tilekey, true );
-                    $translate.removeClass('greyed');
                 }
                 event.stopPropagation();
             });
@@ -126,7 +155,7 @@ define(function (require) {
         clickOn: function( data, value ) {
 
             this.layerState.setClickState({
-                tag: value.topic, //$element.text(),
+                tag: value.topic,
                 translatedTag: value.topicEnglish,
                 data: data,
                 value : value

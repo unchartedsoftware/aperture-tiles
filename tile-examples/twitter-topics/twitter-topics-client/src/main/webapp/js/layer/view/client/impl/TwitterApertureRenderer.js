@@ -68,20 +68,32 @@ define(function (require) {
                     }
                     // redraw layer
                     that.nodeLayer.all().redraw();
+                } else if (fieldName === "translate") {
+                    // redraw node based on translation
+                    that.nodeLayer.all().where( 'tilekey', that.layerState.getTileFocus() ).redraw();
+                } else if (fieldName === "tileFocus") {
+
+                    that.translateLabel.all().where( 'tilekey', that.layerState.getTileFocus() ).redraw();
+                    if ( that.layerState.getPreviousTileFocus() ) {
+                        that.translateLabel.all().where( 'tilekey', that.layerState.getPreviousTileFocus() ).redraw();
+                    }
                 }
             });
 
         },
+
 
         getTopic: function( value, tilekey ) {
             var translation = this.layerState.getCustomObject('translate', tilekey);
             return translation ? value.topicEnglish : value.topic;
         },
 
-        clickOn: function( tag, data, value ) {
+
+        clickOn: function( data, value ) {
 
             this.layerState.setClickState({
-                tag: tag,
+                tag: value.topic,
+                translatedTag: value.topicEnglish,
                 data: data,
                 value : value
             });
@@ -96,10 +108,11 @@ define(function (require) {
         },
 
 
-        hoverOn: function( tag, data, value ) {
+        hoverOn: function( data, value ) {
 
             this.layerState.setHoverState({
-                tag: tag,
+                tag: value.topic,
+                translatedTag: value.topicEnglish,
                 data: data,
                 value : value
             });
@@ -127,40 +140,46 @@ define(function (require) {
             this.translateLabel.map('font-outline-width').asValue(3);
 
             this.translateLabel.map('visible').from(function() {
-                return that.visibility &&
-                       that.layerState.getTileFocus() === this.tilekey;
+                return that.visibility && that.layerState.getTileFocus() === this.tilekey;
             });
 
             this.translateLabel.map('fill').from( function() {
 
-                /*
-                if (that.isTileTranslated(this.tilekey)) {
+                var tilekey = this.tilekey,
+                    translation = translation = that.layerState.getCustomObject( 'translate', tilekey );
+                if (translation) {
                     return that.WHITE_COLOUR;
                 }
-                */
                 return that.LIGHT_GREY_COLOUR;
             });
 
             this.translateLabel.map('cursor').asValue('pointer');
 
-            /*
+
             this.translateLabel.on('click', function(event) {
-                that.toggleTileTranslation(event.data.tilekey);
+
+                var tilekey = event.data.tilekey,
+                    translation = that.layerState.getCustomObject( 'translate', tilekey );
+                if (translation) {
+                    that.layerState.removeCustomObject( 'translate', tilekey );
+                } else {
+                    that.layerState.setCustomObject( 'translate', tilekey, true );
+                }
                 that.nodeLayer.all().where(event.data).redraw();
                 return true; // swallow event
             });
 
             this.translateLabel.on('mousemove', function(event) {
                 isHoveredOn = true;
-                that.nodeLayer.all().where(event.data).redraw();
+                that.translateLabel.all().where(event.data).redraw();
                 return true; // swallow event
             });
 
             this.translateLabel.on('mouseout', function(event) {
                 isHoveredOn = false;
-                that.nodeLayer.all().where(event.data).redraw();
+                that.translateLabel.all().where(event.data).redraw();
             });
-            */
+
 
 
             this.translateLabel.map('font-size').from(function () {

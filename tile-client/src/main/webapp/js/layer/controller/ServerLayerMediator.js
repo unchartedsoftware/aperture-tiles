@@ -119,26 +119,47 @@ define(function (require) {
                 layerState.setRampFunction( layerSpec.transform.name );
                 layerState.setRampType( layerSpec.renderer.ramp );
                 layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
-                layerState.setFilterRange( [0.0, 1.0] );
+                layerState.setFilterRange( layerSpec.legendrange || [0.0, 1.0] );
                 layerState.setZIndex( i+1 );
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function (fieldName) {
-                    if (fieldName === "opacity") {
-                        layer.setOpacity( layerState.getOpacity() );
-                    } else if (fieldName === "enabled") {
-                        layer.setVisibility( layerState.isEnabled() );
-                    } else if (fieldName === "rampType") {
-                        // re-configure layer with new ramp type, then request new image
-                        layer.setRampType( layerState.getRampType(), function() {
-                            requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
-                        });
-                    } else if (fieldName === "rampFunction") {
-                        layer.setRampFunction( layerState.getRampFunction() );
-                    } else if (fieldName === "filterRange") {
-                        layer.setFilterRange( layerState.getFilterRange(), 0 );
-                    } else if (fieldName === "zIndex") {
-                        layer.setZIndex( layerState.getZIndex() );
+
+                    switch (fieldName) {
+
+                        case "opacity":
+
+                            layer.setOpacity( layerState.getOpacity() );
+                            break;
+
+                        case "enabled":
+
+                            layer.setVisibility( layerState.isEnabled() );
+                            break;
+
+                        case "rampType":
+
+                            layer.setRampType( layerState.getRampType(), function() {
+                                // once configuration is received that the server has been re-configured, request new image
+                                requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                            });
+                            break;
+
+                        case"rampFunction":
+
+                            layer.setRampFunction( layerState.getRampFunction() );
+                            break;
+
+                        case "filterRange":
+
+                            layer.setFilterRange( layerState.getFilterRange(), 0 );
+                            break;
+
+                        case "zIndex":
+
+                            layer.setZIndex( layerState.getZIndex() );
+                            break;
+
                     }
                 });
 
