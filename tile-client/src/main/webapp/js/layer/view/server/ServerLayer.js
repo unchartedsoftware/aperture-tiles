@@ -155,12 +155,17 @@ define(function (require) {
 
             var that = this,
                 olBounds,
-                yFunction;
+                yFunction,
+                previousZIndex = null;
 
             // y transformation function for non-density strips
-            function passY( yInput ) { return yInput; }
+            function passY( yInput ) {
+                return yInput;
+            }
             // y transformation function for density strips
-            function clampY( yInput ) { return 0; }
+            function clampY( yInput ) {
+                return 0;
+            }
             // create url function
             function createUrl( bounds ) {
 
@@ -193,7 +198,6 @@ define(function (require) {
                 }
             }
 
-
             if ( !this.map || !this.layerInfo ) {
                 return;
             }
@@ -212,7 +216,7 @@ define(function (require) {
 
             // Remove any old version of this layer
             if ( this.layer ) {
-                //this.map.map.removeLayer(this.layers[layer]);
+                previousZIndex = this.map.getLayerIndex( this.layer.olLayer_ );
                 this.layer.remove();
                 this.layer = null;
             }
@@ -234,12 +238,10 @@ define(function (require) {
                 }
             );
 
-            // TEMPORARY: manually set z index of this layer to 0, so it is behind client layers
-            // Note: this does not seem to actually affect the z-index value in the DOM
-            // but does prevent them from overlapping client layers. In the future it
-            // may be worth implementing a more sophisticated system to allow proper
-            // client-server inclusive ordering
-            //this.map.setLayerIndex( this.layer.olLayer_, 0 );
+            if ( previousZIndex ) {
+                // restore previous index
+                this.map.setLayerIndex( this.layer.olLayer_, previousZIndex );
+            }
         }
     });
 

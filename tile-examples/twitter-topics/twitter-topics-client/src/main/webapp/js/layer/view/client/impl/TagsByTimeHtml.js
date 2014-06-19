@@ -40,6 +40,7 @@ define(function (require) {
         TwitterUtil = require('./TwitterUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         NUM_TAGS_DISPLAYED = 8,
+        NUM_LETTERS_IN_TAG = 10,
         TagsByTimeSentimentHtml;
 
 
@@ -50,22 +51,20 @@ define(function (require) {
         init: function( map) {
 
             this._super( map );
-
             this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-
             this.createLayer();
         },
 
 
         addClickStateClassesGlobal: function() {
 
-            var selectedTag = this.layerState.getClickState().tag,
-                selectedTagEnglish = this.layerState.getClickState().translatedTag,
+            var selectedTag = TwitterUtil.trimLabelText( this.layerState.getClickState().tag, NUM_LETTERS_IN_TAG ),
+                selectedTagEnglish = TwitterUtil.trimLabelText( this.layerState.getClickState().translatedTag, NUM_LETTERS_IN_TAG ),
                 $elements = $(".tags-by-time");
 
             // top text sentiments
@@ -122,7 +121,7 @@ define(function (require) {
                     for (i=0; i<count; i++) {
 
                         value = values[i];
-                        tag = TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), 10 );
+                        tag = TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), NUM_LETTERS_IN_TAG );
                         maxPercentage = TwitterUtil.getMaxPercentageByType( value, 'PerHour' );
 
                         html = '<div class="tags-by-time" style="top:' +  getYOffset( values, i ) + 'px;">';
@@ -155,10 +154,6 @@ define(function (require) {
                 }
             }));
 
-        },
-
-        redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
         }
 
 

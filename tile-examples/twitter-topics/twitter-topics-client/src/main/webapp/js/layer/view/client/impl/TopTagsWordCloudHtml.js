@@ -40,6 +40,7 @@ define(function (require) {
         TwitterUtil = require('./TwitterUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         NUM_TAGS_DISPLAYED = 10,
+        NUM_LETTERS_IN_TAG = 11,
         TopTextSentimentHtml;
 
 
@@ -64,8 +65,8 @@ define(function (require) {
 
         addClickStateClassesGlobal: function() {
 
-            var selectedTag = this.layerState.getClickState().tag,
-                selectedTagEnglish = this.layerState.getClickState().translatedTag,
+            var selectedTag = TwitterUtil.trimLabelText( this.layerState.getClickState().tag, NUM_LETTERS_IN_TAG ),
+                selectedTagEnglish = TwitterUtil.trimLabelText( this.layerState.getClickState().translatedTag, NUM_LETTERS_IN_TAG ),
                 $elements = $(".top-tags-cloud-word");
 
             // top text sentiments
@@ -295,7 +296,7 @@ define(function (require) {
 
                     for (i=0; i<count; i++) {
                         value = values[i];
-                        words.push( TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), 11 ) );
+                        words.push( TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), NUM_LETTERS_IN_TAG ) );
                         frequencies.push( value.countMonthly );
                     }
 
@@ -312,12 +313,11 @@ define(function (require) {
                         value = values[i];
 
                         $elem = $('<div class="top-tags-cloud-word" style="'
-                            + 'font-size:'+cloudWord.fontSize+'px;'
-                            //+ 'line-height:'+cloudWord.fontSize+'px;'
-                            + 'left:'+(128+cloudWord.x-(cloudWord.width/2))+'px;'
-                            + 'top:'+(128+cloudWord.y-(cloudWord.height/2))+'px;'
-                            + 'width:'+cloudWord.width+'px;'
-                            + 'height:'+cloudWord.height+'px;">'+cloudWord.word+'</div>');
+                              + 'font-size:'+cloudWord.fontSize+'px;'
+                              + 'left:'+(128+cloudWord.x-(cloudWord.width/2))+'px;'
+                              + 'top:'+(128+cloudWord.y-(cloudWord.height/2))+'px;'
+                              + 'width:'+cloudWord.width+'px;'
+                              + 'height:'+cloudWord.height+'px;">'+cloudWord.word+'</div>');
 
                         that.setMouseEventCallbacks( $elem, this, value );
                         that.addClickStateClasses( $elem, value.topic );

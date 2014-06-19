@@ -119,8 +119,9 @@ define(function (require) {
                 layerState.setRampFunction( layerSpec.transform.name );
                 layerState.setRampType( layerSpec.renderer.ramp );
                 layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
-                layerState.setFilterRange( layerSpec.legendrange || [0.0, 1.0] );
-                layerState.setZIndex( i+1 );
+                if (layerSpec.legendrange) {
+                    layerState.setFilterRange( [ layerSpec.legendrange[0]/100, layerSpec.legendrange[1]/100 ] );
+                }
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function (fieldName) {
@@ -152,7 +153,7 @@ define(function (require) {
 
                         case "filterRange":
 
-                            layer.setFilterRange( layerState.getFilterRange(), 0 );
+                            layer.setFilterRange( layerState.getFilterRange() );
                             break;
 
                         case "zIndex":
@@ -162,6 +163,9 @@ define(function (require) {
 
                     }
                 });
+
+                // set z index here so callback is executed
+                layerState.setZIndex( i+1 );
 
                 // Request ramp image from server.
                 requestRampImage( layerState, layer.getLayerInfo(), 0 );

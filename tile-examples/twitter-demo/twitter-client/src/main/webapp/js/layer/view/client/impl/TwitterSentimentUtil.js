@@ -142,7 +142,6 @@ define(function (require) {
         },
 
 
-
         /*
             Returns a font size based on the percentage of tweets relative to the total count
         */

@@ -39,8 +39,10 @@ define(function (require) {
         ClassName: "TwitterHtmlRenderer",
 
         init: function( map) {
+
             this._super( map );
         },
+
 
         registerLayer: function( layerState ) {
 
@@ -50,15 +52,19 @@ define(function (require) {
 
             this.layerState.addListener( function( fieldName ) {
 
-                if (fieldName === "clickState") {
-                    if ( layerState.hasClickState() ) {
-                        // add click state classes
-                        that.addClickStateClassesGlobal();
-                    } else {
-                        // remove click state classes
-                        that.removeClickStateClassesGlobal();
-                        DetailsOnDemand.destroy();
-                    }
+                switch (fieldName) {
+
+                    case "clickState":
+
+                        if ( layerState.hasClickState() ) {
+                            // add click state classes
+                            that.addClickStateClassesGlobal();
+                        } else {
+                            // remove click state classes
+                            that.removeClickStateClassesGlobal();
+                            DetailsOnDemand.destroy();
+                        }
+                        break;
                 }
             });
 

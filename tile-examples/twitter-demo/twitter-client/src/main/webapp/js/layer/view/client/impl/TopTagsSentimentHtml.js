@@ -40,6 +40,7 @@ define(function (require) {
         TwitterUtil = require('./TwitterSentimentUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         NUM_TAGS_DISPLAYED = 5,
+        NUM_LETTERS_IN_TAG = 9,
         TopTagsSentimentHtml;
 
 
@@ -50,24 +51,21 @@ define(function (require) {
         init: function( map) {
 
             this._super(map);
-
             this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-
             this.createLayer();
         },
 
 
         addClickStateClassesGlobal: function() {
 
-            var selectedTag = this.layerState.getClickState().tag,
+            var selectedTag = TwitterUtil.trimLabelText( this.layerState.getClickState().tag, NUM_LETTERS_IN_TAG ),
                 $elements = $(".top-text-sentiment");
 
-            // top text sentiments
             $elements.filter( function() {
                 return $(this).text() !== selectedTag;
             }).addClass('greyed').removeClass('clicked');
@@ -77,6 +75,7 @@ define(function (require) {
             }).removeClass('greyed').addClass('clicked');
 
         },
+
 
         removeClickStateClassesGlobal: function() {
 

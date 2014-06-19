@@ -39,8 +39,10 @@ define(function (require) {
         ClassName: "TwitterHtmlRenderer",
 
         init: function( map) {
+
             this._super( map );
         },
+
 
         registerLayer: function( layerState ) {
 
@@ -52,31 +54,39 @@ define(function (require) {
 
                 var tilekey, previousTilekey;
 
-                if (fieldName === "clickState") {
-                    if ( layerState.hasClickState() ) {
-                        // add click state classes
-                        that.addClickStateClassesGlobal();
-                    } else {
-                        // remove click state classes
-                        that.removeClickStateClassesGlobal();
-                        DetailsOnDemand.destroy();
-                    }
-                } else if (fieldName === "translate") {
-                    // redraw node based on translation
-                    tilekey = that.layerState.getTileFocus();
-                    $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
-                    that.nodeLayer.where( tilekey ).redraw();
+                switch (fieldName) {
 
-                } else if (fieldName === "tileFocus") {
+                    case "clickState":
 
-                    tilekey = that.layerState.getTileFocus();
-                    previousTilekey = that.layerState.getPreviousTileFocus();
-                    $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
-                    if ( previousTilekey ) {
-                        $('#'+that.getTranslateLabelId( previousTilekey ) ).css('visibility', 'hidden');
-                    }
+                        if ( layerState.hasClickState() ) {
+                            // add click state classes
+                            that.addClickStateClassesGlobal();
+                        } else {
+                            // remove click state classes
+                            that.removeClickStateClassesGlobal();
+                            DetailsOnDemand.destroy();
+                        }
+                        break;
 
+                    case "translate":
+
+                        // redraw node based on translation
+                        tilekey = that.layerState.getTileFocus();
+                        $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
+                        that.nodeLayer.where( tilekey ).redraw();
+                        break;
+
+                    case "tileFocus":
+
+                        tilekey = that.layerState.getTileFocus();
+                        previousTilekey = that.layerState.getPreviousTileFocus();
+                        $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
+                        if ( previousTilekey ) {
+                            $('#'+that.getTranslateLabelId( previousTilekey ) ).css('visibility', 'hidden');
+                        }
+                        break;
                 }
+
             });
 
         },
@@ -208,7 +218,7 @@ define(function (require) {
                 },
                 $details;
 
-            $details = DetailsOnDemand.create( detailsPos, value, $.proxy( this.clickOff, this ) );
+            $details = DetailsOnDemand.create( detailsPos, value, this.getTopic( value, data.tilekey ), $.proxy( this.clickOff, this ) );
 
             map.enableEventToMapPropagation( $details, ['onmousemove', 'onmouseup'] );
             map.getRootElement().append( $details );

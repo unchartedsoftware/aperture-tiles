@@ -52,7 +52,6 @@ define(function (require) {
 
             html += '<div class="details-on-demand" style="left:'+position.x+'px; top:'+position.y+'px;">';
 
-
             // top half
             html += '<div class="details-on-demand-half">';
 
@@ -168,6 +167,7 @@ define(function (require) {
 
 
         destroy : function() {
+
             $('.details-on-demand').remove();
         }
 

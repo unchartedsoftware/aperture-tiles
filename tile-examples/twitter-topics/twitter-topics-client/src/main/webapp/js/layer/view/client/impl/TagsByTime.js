@@ -47,6 +47,7 @@ define(function (require) {
         ClassName: "TagsByTime",
 
         init: function( map ) {
+
             this._super( map );
             this.createLayer();
         },

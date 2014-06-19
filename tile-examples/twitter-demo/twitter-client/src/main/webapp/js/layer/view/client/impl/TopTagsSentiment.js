@@ -46,6 +46,7 @@ define(function (require) {
         ClassName: "TopTagsSentiment",
 
         init: function( map ) {
+
             this._super( map );
             this.createLayer();
         },

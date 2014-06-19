@@ -40,6 +40,7 @@ define(function (require) {
         TwitterUtil = require('./TwitterSentimentUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         NUM_TAGS_DISPLAYED = 8,
+        NUM_LETTERS_IN_TAG = 10,
         TagsByTimeSentimentHtml;
 
 
@@ -50,24 +51,21 @@ define(function (require) {
         init: function( map) {
 
             this._super( map );
-
             this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-
             this.createLayer();
         },
 
 
         addClickStateClassesGlobal: function() {
 
-            var selectedTag = this.layerState.getClickState().tag,
+            var selectedTag = TwitterUtil.trimLabelText( this.layerState.getClickState().tag, NUM_LETTERS_IN_TAG ),
                 $elements = $(".tags-by-time-sentiment");
 
-            // top text sentiments
             $elements.filter( function() {
                 return $(this).text() !== selectedTag;
             }).addClass('greyed').removeClass('clicked');
@@ -94,7 +92,7 @@ define(function (require) {
                 return 113 - ( (( TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED ) - 1) / 2 ) - index ) * SPACING;
             }
 
-            this.nodeLayer.addLayer( new HtmlLayer({
+            this.nodeLayer.addLayer( new HtmlLayer( {
 
                 html: function() {
 
@@ -118,7 +116,7 @@ define(function (require) {
                     for (i=0; i<count; i++) {
 
                         value = values[i];
-                        tag = TwitterUtil.trimLabelText( value.tag, 7 );
+                        tag = TwitterUtil.trimLabelText( value.tag, NUM_LETTERS_IN_TAG );
                         maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value );
                         sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value );
 
@@ -155,10 +153,6 @@ define(function (require) {
                 }
             }));
 
-        },
-
-        redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
         }
 
 

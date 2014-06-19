@@ -47,10 +47,11 @@ define( function (require) {
             }
 
             $.when.apply( $, layerDeferreds ).done( function() {
-
-                // when all individual layer deferreds are resolved, register with layer mediator, and resolve the factory deferred
+                // when all individual layer deferreds are resolved
                 var layers = Array.prototype.slice.call( arguments, 0 );
+                // register with layer mediator
                 layerMediator.registerLayers( layers );
+                // resolve the factory deferred
                 factoryDeferred.resolve( layers );
             });
 

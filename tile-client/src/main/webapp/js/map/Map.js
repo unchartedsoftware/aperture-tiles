@@ -48,6 +48,8 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
+            var that = this;
+
             this.id = id;
             this.$map = $( "#" + this.id );
             this.axes = [];
@@ -89,15 +91,13 @@ define(function (require) {
             // create div root layer
             this.createRoot();
 
-            // if move while map is panning, interrupt pan
-            /*
-            this.on('movestart', function(){
+            // if mousedown while map is panning, interrupt pan
+            this.getElement().mousedown( function(){
                 if ( that.map.olMap_.panTween ) {
-                    that.map.olMap_.panTween.callbacks = null;
-                    that.map.olMap_.panTween.stop();
+                     that.map.olMap_.panTween.callbacks = null;
+                     that.map.olMap_.panTween.stop();
                 }
             });
-            */
 
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
@@ -168,7 +168,6 @@ define(function (require) {
          *
          * @param mapConfig
          * @param plotDiv optional div container id of the plot - useful when multiple maps are present
-         * @returns {*}
          */
         setTileBorderStyle: function ( mapConfig ) {
 

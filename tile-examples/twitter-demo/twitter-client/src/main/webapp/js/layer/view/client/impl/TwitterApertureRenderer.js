@@ -39,8 +39,8 @@ define(function (require) {
         ClassName: "TwitterApertureRenderer",
 
         init: function( map) {
-            this._super( map );
 
+            this._super( map );
             this.BLACK_COLOUR = '#000000';
             this.DARK_GREY_COLOUR = '#222222';
             this.GREY_COLOUR = '#666666';
@@ -61,14 +61,19 @@ define(function (require) {
 
             this.layerState.addListener( function( fieldName ) {
 
-                if (fieldName === "clickState") {
-                    if ( !layerState.hasClickState() ) {
-                        // destroy details
-                        DetailsOnDemand.destroy();
-                    }
-                    // redraw layer
-                    that.nodeLayer.all().redraw();
+                switch (fieldName) {
+
+                    case "clickState":
+
+                        if ( !layerState.hasClickState() ) {
+                            // destroy details
+                            DetailsOnDemand.destroy();
+                        }
+                        // redraw layer
+                        that.nodeLayer.all().redraw();
+                        break;
                 }
+
             });
 
         },

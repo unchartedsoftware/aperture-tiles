@@ -29,58 +29,6 @@ define(function (require) {
 
     return {
 
-
-        getMonth: function( value ) {
-            var month = new Date( value.endTimeSecs * 1000 ).getMonth();
-            switch(month) {
-                case 0: return "Jan";
-                case 1: return "Feb";
-                case 2: return "Mar";
-                case 3: return "Apr";
-                case 4: return "May";
-                case 5: return "Jun";
-                case 6: return "Jul";
-                case 7: return "Aug";
-                case 8: return "Sep";
-                case 9: return "Oct";
-                case 10: return "Nov";
-                default: return "Dec";
-            }
-        },
-
-
-        getLastWeekOfMonth: function( value ) {
-            var lastDay = this.getLastDayOfMonth( value ),
-                i,
-                week = [];
-            function numToDay(num) {
-                switch (num) {
-                    case 0: return "Su";
-                    case 1: return "Mo";
-                    case 2: return "Tu";
-                    case 3: return "We";
-                    case 4: return "Th";
-                    case 5: return "Fr";
-                    case 6: return "Sa";
-                }
-            }
-            for (i=0; i<7; i++) {
-                week.push( numToDay( (lastDay + i) % 7 ) );
-            }
-            return week;
-        },
-
-
-        getLastDayOfMonth: function( value ) {
-            return new Date( value.endTimeSecs * 1000 ).getDay();
-        },
-
-
-        getTotalDaysInMonth: function( value ) {
-            return new Date( value.endTimeSecs * 1000 ).getDate();
-        },
-
-
         /*
             Return the count of node entries, clamped at MAX_COUNT
         */
@@ -95,12 +43,6 @@ define(function (require) {
         getTweetCount : function( value ) {
             return value.recentTweets.length;
         },
-
-        /*
-        getCountPercentageByType: function(values, index, type) {
-            return ( values[index][type] / values[index].countMonthly) || 0;
-        },
-        */
 
 
         getPercentageByType: function( value, timeIndex, type ) {
@@ -181,31 +123,6 @@ define(function (require) {
         },
 
 
-
-        /*
-        getCountByTimePercentage: function( value, hour ) {
-            var countByTime = value.countByTime[hour];
-            return ( countByTime / value.count ) || 0;
-        },
-
-
-        getMaxCountByTimePercentage: function( value ) {
-            var NUM_HOURS_IN_DAY = 24,
-                i,
-                percent,
-                maxPercent = 0,
-                count = value.count;
-
-            for (i=0; i<NUM_HOURS_IN_DAY; i++) {
-                percent = ( value.countByTime[i] / count ) || 0;
-                maxPercent = Math.max( percent, maxPercent );
-            }
-            return maxPercent;
-        },
-        */
-
-
-
         /*
             Returns a font size based on the percentage of tweets relative to the total count
         */
@@ -229,7 +146,59 @@ define(function (require) {
             }
             return str;
         },
-        
+
+
+        getMonth: function( value ) {
+            var month = new Date( value.endTimeSecs * 1000 ).getMonth();
+            switch(month) {
+                case 0: return "Jan";
+                case 1: return "Feb";
+                case 2: return "Mar";
+                case 3: return "Apr";
+                case 4: return "May";
+                case 5: return "Jun";
+                case 6: return "Jul";
+                case 7: return "Aug";
+                case 8: return "Sep";
+                case 9: return "Oct";
+                case 10: return "Nov";
+                default: return "Dec";
+            }
+        },
+
+
+        getLastWeekOfMonth: function( value ) {
+            var lastDay = this.getLastDayOfMonth( value ),
+                i,
+                week = [];
+            function numToDay(num) {
+                switch (num) {
+                    case 0: return "Su";
+                    case 1: return "Mo";
+                    case 2: return "Tu";
+                    case 3: return "We";
+                    case 4: return "Th";
+                    case 5: return "Fr";
+                    case 6: return "Sa";
+                }
+            }
+            for (i=0; i<7; i++) {
+                week.push( numToDay( (lastDay + i) % 7 ) );
+            }
+            return week;
+        },
+
+
+        getLastDayOfMonth: function( value ) {
+            return new Date( value.endTimeSecs * 1000 ).getDay();
+        },
+
+
+        getTotalDaysInMonth: function( value ) {
+            return new Date( value.endTimeSecs * 1000 ).getDate();
+        },
+
+
         /*
             Returns a string of the format "Month ##, year:" from a unix timestamp
         */

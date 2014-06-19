@@ -28,10 +28,9 @@
                     },
                     "data": {
                         "pyramidio": {
-                            "type": "hbase",
-                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
-                            "hbase.zookeeper.port": "2181",
-                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                            "type" : "zip",
+                            "root.path" : "/twitter.2014-01-02.longitude.latitude.zip",
+                            "extension" : "avro"
                         }
                     },
                     "renderers": [
@@ -56,10 +55,9 @@
                     },
                     "data": {
                         "pyramidio": {
-                            "type": "hbase",
-                            "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
-                            "hbase.zookeeper.port": "2181",
-                            "hbase.master": "hadoop-s1.oculus.local:60000"
+                            "type" : "zip",
+                            "root.path" : "/twitter.2014-01-02.words.censored.zip",
+                            "extension" : "avro"
                         },
                         "serializer": {
                             "type": "[twitterdemorecord]-a"

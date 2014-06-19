@@ -47,8 +47,8 @@ define(function (require) {
         ClassName: "TagsByTimeSentiment",
 
         init: function( map ) {
-            this._super( map );
 
+            this._super( map );
             this.createLayer();
         },
 

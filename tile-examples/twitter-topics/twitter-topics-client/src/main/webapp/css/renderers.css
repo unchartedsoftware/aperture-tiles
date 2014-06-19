@@ -58,7 +58,7 @@
 	     2px -2px 2px #000,
 	    -2px  2px 2px #000,
 	     2px  5px 5px #000;
-	     
+
 	-webkit-transform: scale(0.95);
        -moz-transform: scale(0.95);
         -ms-transform: scale(0.95);
@@ -360,7 +360,8 @@
 	position:relative;
 	color : #FFFFFF;
 	height: calc(100% - 30px);
-	overflow:auto;
+	overflow-x:hidden;
+	overflow-y:auto;
 	border-radius: 10px;
 	background-color:#111111;
 	box-shadow: inset 0 0 10px #000;
@@ -405,7 +406,6 @@
 
 .details-on-demand-tweet-text {
 	position:relative;
-	text-align: center;
 	padding: 5px 5px 0px 5px;
 	font-size: 0.65em;
 }
@@ -444,22 +444,6 @@
 /********************************************/
 /* 		             Other     		    	*/
 /********************************************/
-
-::-webkit-scrollbar {
-    width: 12px;
-}
- 
-::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px #000; 
-    border-radius: 10px;
-}
- 
-::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background-color: #222222;
-    border: 1px solid #000;
-    -webkit-box-shadow: 0 0 6px #000;
-}
 
 .greyed {
 	-webkit-filter: grayscale(1) brightness(0.5);

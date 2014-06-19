@@ -67,19 +67,17 @@ define(function (require) {
     /**
      * Replaces node's children and returns the replaced for storage.
      *
-     * @param {Object} $parent - The node to remove the children from.
+     * @param {JQuery} $parent - The node to remove the children from.
      * @param {Object} children - The children to replace.  Null will result in children being removed only.
      * @returns {Array} - The removed children.
      */
     replaceChildren = function ( $parent, children ) {
         var i, removed;
-
         // Remove existing children.
         removed = $parent.children();
         for (i = 0; i < removed.length; i += 1) {
             removed.eq(i).detach();
         }
-
         // Add in new children.
         if (children !== null) {
             for (i = 0; i < children.length; i += 1) {
@@ -89,18 +87,31 @@ define(function (require) {
         return removed;
     };
 
-
-    createSettingsButton = function( $parentElement, layerState, controlsMapping ) {
+    /**
+     * Creates and returns a jquery element object for the settings menu button.
+     *
+     * @param {Object} $layerControlsContainer - The layer controls container element.
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @returns {JQuery} - The created element wrapped in a jquery object.
+     */
+    createSettingsButton = function( $layerControlsContainer, layerState, controlsMapping ) {
 
         var $settingsButton = $('<button class="settings-link">settings</button>');
         $settingsButton.click(function () {
-            showLayerSettings( $parentElement, layerState );
+            showLayerSettings( $layerControlsContainer, layerState );
         });
         controlsMapping.settingsLink = $settingsButton;
-
         return $settingsButton;
     };
 
+    /**
+     * Creates and returns a jquery element object for the layer visibility toggle box.
+     *
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @returns {JQuery} - The created element wrapped in a jquery object.
+     */
     createVisibilityButton = function( layerState, controlsMapping ) {
 
         var $toggleDiv = $('<div class="layer-toggle"></div>'),
@@ -116,12 +127,17 @@ define(function (require) {
                 layerState.setCarouselEnabled( value );
             }
         });
-
         controlsMapping.enabledCheckbox = $toggleBox;
-
         return $toggleDiv;
     };
 
+    /**
+     * Creates and returns a jquery element object for the layer opacity slider bar.
+     *
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @returns {JQuery} - The created element wrapped in a jquery object.
+     */
     createOpacitySlider = function( layerState, controlsMapping ) {
 
         var sliderClass = ( layerState.domain === 'server' ) ? "opacity-slider" : "base-opacity-slider",
@@ -142,12 +158,17 @@ define(function (require) {
 
         $opacitySliderContainer.append( $opacitySliderLabel );
         $opacitySliderContainer.append( $opacitySlider );
-
         controlsMapping.opacitySlider = $opacitySlider;
-
         return $opacitySliderContainer;
     };
 
+    /**
+     * Creates and returns a jquery element object for the layer ramp filter slider bar.
+     *
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @returns {JQuery} - The created element wrapped in a jquery object.
+     */
     createFilterSlider = function( layerState, controlsMapping ) {
 
         var filterRange = layerState.getFilterRange(),
@@ -186,9 +207,10 @@ define(function (require) {
         return $filterSliderContainer;
     };
 
-    /** generates the filter axis major and minor tick marks
-     *  note - 5 major and 4 minor tick marks will be created.
-     * @param $filterAxis the tick mark container
+    /**
+     * Generates the filter axis major and minor tick marks. 5 major and 4 minor tick marks will be created.
+     * @param {Array} minMax - The min and max values for the axis.
+     * @returns {JQuery} - The created filter axis object.
      */
     createFilterAxis = function ( minMax ) {
 
@@ -228,8 +250,8 @@ define(function (require) {
 
     /** Generates the filter labels and their initial values.
      *
-     * @param majorTicks the number of major tick marks
-     * @param $labelDiv the label container
+     * @param {Integer} majorTicks - The number of major tick marks.
+     * @param {Array} minMax - The min and max values for the axis.
      */
     createFilterAxisLabels = function( majorTicks, minMax ){
         var val = minMax[0],
@@ -258,6 +280,17 @@ define(function (require) {
         return $(html);
     };
 
+    /**
+     * Creates and returns a jquery element object for the layer promotion button.
+     *
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} nextLayerState - The next layerstate object to be swapped with.
+     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @param {Array} layerStates - The array of all layerstate objects.
+     * @param {Object} $layerControlsContainer - The layer controls container element.
+     * @param {Object} controlsMap - The entire control map for all layerstate objects to their associated control elements.
+     * @returns {JQuery} - The created element wrapped in a jquery object.
+     */
     createPromotionButton = function( layerState, nextLayerState, controlsMapping, layerStates, $layerControlsContainer, controlsMap ) {
 
         var $promotionDiv = $('<div class="promotion-container"></div>'),
@@ -280,7 +313,14 @@ define(function (require) {
         return $promotionDiv;
     };
 
-
+    /**
+     * Creates and returns a jquery element object for the layer ramp filter slider bar.
+     *
+     * @param {JQuery} $layerContent - The containing jquery element for the respective layer.
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @returns {JQuery} - The created element wrapped in a jquery object.
+     */
     createBaseLayerButtons = function( $layerContent, layerState, controlsMapping ) {
 
         var $baseLayerButtonSet = $('<fieldset class="baselayer-fieldset"></fieldset>'),

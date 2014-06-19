@@ -61,23 +61,34 @@ define(function (require) {
 
             this.layerState.addListener( function( fieldName ) {
 
-                if (fieldName === "clickState") {
-                    if ( !layerState.hasClickState() ) {
-                        // destroy details
-                        DetailsOnDemand.destroy();
-                    }
-                    // redraw layer
-                    that.nodeLayer.all().redraw();
-                } else if (fieldName === "translate") {
-                    // redraw node based on translation
-                    that.nodeLayer.all().where( 'tilekey', that.layerState.getTileFocus() ).redraw();
-                } else if (fieldName === "tileFocus") {
 
-                    that.translateLabel.all().where( 'tilekey', that.layerState.getTileFocus() ).redraw();
-                    if ( that.layerState.getPreviousTileFocus() ) {
-                        that.translateLabel.all().where( 'tilekey', that.layerState.getPreviousTileFocus() ).redraw();
-                    }
+                switch (fieldName) {
+
+                    case "clickState":
+
+                        if ( !layerState.hasClickState() ) {
+                            // destroy details
+                            DetailsOnDemand.destroy();
+                        }
+                        // redraw layer
+                        that.nodeLayer.all().redraw();
+                        break;
+
+                    case "translate":
+
+                        // redraw node based on translation
+                        that.nodeLayer.all().where( 'tilekey', that.layerState.getTileFocus() ).redraw();
+                        break;
+
+                    case "tileFocus":
+
+                        that.translateLabel.all().where( 'tilekey', that.layerState.getTileFocus() ).redraw();
+                        if ( that.layerState.getPreviousTileFocus() ) {
+                            that.translateLabel.all().where( 'tilekey', that.layerState.getPreviousTileFocus() ).redraw();
+                        }
+                        break;
                 }
+
             });
 
         },
@@ -169,10 +180,9 @@ define(function (require) {
                 return true; // swallow event
             });
 
-            this.translateLabel.on('mousemove', function(event) {
+            this.translateLabel.on('mouseover', function(event) {
                 isHoveredOn = true;
                 that.translateLabel.all().where(event.data).redraw();
-                return true; // swallow event
             });
 
             this.translateLabel.on('mouseout', function(event) {
@@ -209,7 +219,7 @@ define(function (require) {
                 },
                 $details;
 
-            $details = DetailsOnDemand.create( detailsPos, value, $.proxy( this.clickOff, this ) );
+            $details = DetailsOnDemand.create( detailsPos, value,  this.getTopic( value, data.tilekey ), $.proxy( this.clickOff, this ) );
 
             map.enableEventToMapPropagation( $details, ['onmousemove', 'onmouseup'] );
             map.getRootElement().append( $details );

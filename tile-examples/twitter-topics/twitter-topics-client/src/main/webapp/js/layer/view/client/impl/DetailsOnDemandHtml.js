@@ -41,17 +41,6 @@ define(function (require) {
 
     return {
 
-
-        /*
-            countDaily: Array[31]
-            countMonthly: 1545
-            countPer6hrs: Array[28]
-            countPerHour: Array[24]
-            endTimeSecs: 1396310399
-            recentTweets: Array[10]
-            topic: "guayas"
-            topicEnglish: "guayas"
-        */
         createAxisByType: function( value, type ) {
 
             var MONTH_INCS = 5,
@@ -108,7 +97,7 @@ define(function (require) {
 
                     month = TwitterUtil.getMonth( value );
                     dayInc = TwitterUtil.getTotalDaysInMonth( value ) / (MONTH_INCS-1);
-                    // label function
+
                     for (i=0; i<MONTH_INCS; i++) {
                         labels.push( (i === 0) ? month + " 1" : month + " " + Math.round( dayInc*i ) );
                     }
@@ -122,17 +111,13 @@ define(function (require) {
                     break;
 
                 case 'day':
-                    // label function
+
                     for (i=0; i<WEEK_INCS+1; i++) {
                         switch (i) {
-                            case 1: labels.push( "6am" );
-                                    break;
-                            case 2: labels.push( "12pm" );
-                                    break;
-                            case 3: labels.push( "6pm" );
-                                    break;
-                            default: labels.push( "12am" );
-                                    break;
+                            case 1: labels.push( "6am" );   break;
+                            case 2: labels.push( "12pm" );  break;
+                            case 3: labels.push( "6pm" );   break;
+                            default: labels.push( "12am" ); break;
                         }
                     }
                     break;
@@ -195,33 +180,26 @@ define(function (require) {
 
         createChartByType: function( value, type, title ) {
 
-
-
-            var html = ''; // '<div class="details-on-demand-title small-title">'+title+'</div>';
-
+            var html = '';
 
             html +=     '<div class="details-on-demand-sub-chart">';
-
             html +=         '<div class="details-chart-title-label">'+title+'</div>';
             html +=         '<div class="details-chart-content">';
-
             // create bars
             html +=             '<div class="details-chart-bars">';
             html +=                 this.createBarsHtml( value, type );
             html +=             '</div>';
-
             // create axis
             html +=             '<div class="details-chart-axis">';
             html +=                 this.createAxisByType( value, type );
             html +=             '</div>';
-
             html +=         '</div>';
             html +=     '</div>';
 
             return html;
         },
 
-        create: function( position, value, closeCallback ) {
+        create: function( position, value, topic, closeCallback ) {
 
             var html = '',
                 day, tweetsByDay, key, lightOrDark,
@@ -232,10 +210,10 @@ define(function (require) {
 
             // top half
             html += '<div class="details-on-demand-half">';
-            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.topic)+'</div>';
+            html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText( topic, 12 )+'</div>';
             html +=     '<div class="details-on-demand-chart">';
-            html +=         this.createChartByType( value, "month", "Last Month" );      // last month
-            html +=         this.createChartByType( value, "week", "Last Week" );       // last week
+            html +=         this.createChartByType( value, "month", "Last Month" );    // last month
+            html +=         this.createChartByType( value, "week", "Last Week" );      // last week
             html +=         this.createChartByType( value, "day", "Last 24 hours" );   // last day
             html +=     '</div>';
             html += '</div>';

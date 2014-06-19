@@ -46,10 +46,10 @@ define(function (require) {
         ClassName: "TopTagsWordCloud",
 
         init: function( map ) {
+
             this._super( map );
             this.createLayer();
         },
-
 
 
         /**
@@ -62,7 +62,6 @@ define(function (require) {
             this.nodeLayer.map('longitude').from('longitude');
             this.createLabels();
             this.createTranslateLabel();
-
         },
 
 
