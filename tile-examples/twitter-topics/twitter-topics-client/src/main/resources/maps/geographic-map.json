@@ -77,6 +77,18 @@
 				}
 			},
 			{
+				"type": "TMS",
+				"url" : "http://aperture.oculusinfo.com/map-world-graphite/",
+				"options" : {
+					"name" : "Open Graphite",
+					"layername": "world-graphite",
+					"osm": 0,
+					"type": "png",
+					"serverResolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172],
+					"resolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172]
+				}
+			},
+			{
 				"type": "Google",
 				"options" : {
 					"name" : "Google Gray",
