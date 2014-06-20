@@ -361,27 +361,6 @@ define(function (require) {
     };
 
 
-    createControlRoot = function( layerState, controlsMapping ) {
-
-        layerStateId = layerState.getId();
-        controlsMap[layerStateId] = {};
-        controlsMapping = controlsMap[layerStateId];
-
-        // create layer root
-        $layerControlRoot = $('<div id="layer-controls-' + layerState.getId() + '" class="layer-controls-layer"></div>');
-        // create title div
-        $layerControlTitleBar = $('<div class="layer-title"><span class="layer-labels">' + layerState.getName() + '</span></div>');
-        $layerControlRoot.append( $layerControlTitleBar );
-        // create content div
-        $layerContent = $('<div class="layer-content"></div>');
-        $layerControlRoot.append( $layerContent );
-
-        controlsMapping.layerControlRoot = $layerControlRoot;
-        controlsMapping.layerControlTitleBar = $layerControlTitleBar;
-        controlsMapping.layerContent = $layerContent;
-    },
-
-
     /**
      * Adds a new set of layer controls to the panel.
      *

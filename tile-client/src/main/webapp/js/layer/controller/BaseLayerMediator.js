@@ -69,23 +69,19 @@ define(function (require) {
 
                     case "opacity":
 
-                        layer.setOpacity( layerState.getOpacity() );
+                        map.setOpacity( layerState.getOpacity() );
                         break;
 
                     case "enabled":
 
-                        layer.setVisibility( layerState.isEnabled() );
+                        map.setVisibility( layerState.isEnabled() );
                         break;
 
                     case "baseLayerIndex":
 
-                        layer.setActive();
-
-                        if ( layer.getLayerSpec().type !== "BlankBase") {
-                            layer.setOpacity( layerState.getOpacity() );
-                            layer.setVisibility( layerState.isEnabled() );
-                        }
-
+                        map.setBaseLayerIndex( layerState.getBaseLayerIndex() );
+                        map.setOpacity( layerState.getOpacity() );
+                        map.setVisibility( layerState.isEnabled() );
                         break;
                 }
 

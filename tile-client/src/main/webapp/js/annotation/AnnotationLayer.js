@@ -90,6 +90,7 @@ define(function (require) {
 
             if ( statusInfo.success ) {
                 console.log("MODIFY SUCCESS");
+                console.log( "timestamp after" + data.timestamp );
             }
             this.updateTiles();
         },
@@ -309,7 +310,7 @@ define(function (require) {
 
                         $aggregate = $(html);
 
-                        if (bin.length === 1 && that.accessibility.draggable) {
+                        if (bin.length === 1 && that.accessibility.modify) {
 
                             $aggregate.draggable({
 
@@ -323,7 +324,9 @@ define(function (require) {
                                     newAnno.x = pos.x;
                                     newAnno.y = pos.y;
 
-                                    that.service.modifyAnnotation( bin[0], newAnno, $.proxy( that.modifyCallback, that ) );
+                                    console.log( "timestamp before " + newAnno.certificate.timestamp );
+
+                                    that.service.modifyAnnotation( newAnno, $.proxy( that.modifyCallback, that ) );
                                 }
                             });
                         }

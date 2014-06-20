@@ -122,18 +122,17 @@ define(function (require) {
          * @param newAnnotation   new state of the annotation to be modified
          * @param callback        the callback that is called upon receiving data from server
          */
-        modifyAnnotation: function( oldAnnotation, newAnnotation, callback ) {
+        modifyAnnotation: function( annotation, callback ) {
 
             var request = {
                     type: "MODIFY",
-                    previous: oldAnnotation,
-                    current: newAnnotation
+                    annotation: annotation
                 };
 
             this.postRequest( request, function( result, statusInfo ) {
                 if (statusInfo.success) {
                     // update certificate on success
-                    newAnnotation.certificate = result;
+                    annotation.certificate = result;
                 }
                 callback( result, statusInfo );
             });
@@ -146,11 +145,11 @@ define(function (require) {
          * @param annotation   annotation to be removed
          * @param callback     the callback that is called upon receiving data from server
          */
-        removeAnnotation: function( annotation, callback ) {
+        removeAnnotation: function( certificate, callback ) {
 
             var request = {
                     type: "REMOVE",
-                    annotation: annotation
+                    certificate: certificate
                 };
 
             this.postRequest( request, callback );

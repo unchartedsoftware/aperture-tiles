@@ -78,14 +78,16 @@ public class AnnotationResource extends ApertureServerResource {
 			} else if ( requestType.equals("remove") ) {
 
 				String layer = json.getString("layer");
-				_service.remove(layer, JSONAnnotation.fromJSON(json.getJSONObject("annotation")));
+                JSONObject certificate =  json.getJSONObject("certificate");
+                String uuid = certificate.getString("uuid");
+                Long timestamp = certificate.getLong("timestamp");
+				_service.remove(layer, new Pair<>( uuid, timestamp ) );
 				
 			} else if ( requestType.equals("modify") ) {
 				
 				String layer = json.getString("layer");
-				JSONAnnotation oldAnnotation = JSONAnnotation.fromJSON(json.getJSONObject("previous"));
-				JSONAnnotation newAnnotation = JSONAnnotation.fromJSON( json.getJSONObject("current") );
-                Pair<String, Long> certificate = _service.modify(layer, oldAnnotation, newAnnotation);
+				JSONAnnotation annotation = JSONAnnotation.fromJSON( json.getJSONObject("annotation") );
+                Pair<String, Long> certificate = _service.modify(layer, annotation);
                 jsonResult.put("uuid", certificate.getFirst() );
                 jsonResult.put("timestamp", certificate.getSecond().toString() );
 

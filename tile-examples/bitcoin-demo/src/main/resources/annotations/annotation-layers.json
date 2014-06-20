@@ -31,7 +31,7 @@
             "accessibility": {
         		"read": true,
             	"write": true,
-            	"modify": false
+            	"modify": true
             },
         }
     ]
