@@ -55,6 +55,8 @@ define(function (require) {
 
             this.layers_ = [];
             this.subset_ = [];
+
+            this.map_.on( 'zoom', $.proxy(this.clear, this) );
         },
 
 

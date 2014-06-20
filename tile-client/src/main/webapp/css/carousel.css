@@ -24,12 +24,12 @@
 }
 
 .carousel-ui-chevron-left {
-    left:10px;
+    left:2px;
     background: transparent url(../images/chevron_L.png) no-repeat center top;
 }
 
 .carousel-ui-chevron-right {
-    right:10px;
+    right:2px;
     background: transparent url(../images/chevron_R.png) no-repeat center top;
 }
 
@@ -40,17 +40,19 @@
 
 .carousel-ui-dot-container {
     position: absolute;
-    pointer-events: all;  
-    bottom: 16px;
-    margin: 0 auto;
+    width: 256px;
+    text-align: center;
+    bottom: 2px;
+    pointer-events: none;
 }
 
 .carousel-ui-dot {
     position: relative;
-    float:left;
-    width:10px;
-    height:10px;
-    margin: 4px;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 4px; 
+    pointer-events: all;
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;
             transition:         transform .1s ease-in-out;
@@ -69,3 +71,17 @@
     background: transparent url(../images/select.png) no-repeat center top;
 }
 
+.carousel-ui-text-index {
+    position:absolute;
+    bottom: 2px;
+    width: 100%;
+    text-align:center;
+    pointer-events:none;
+    font-size:16px;
+    color: #ffffff;
+    text-shadow:
+        -1px -1px 2px #000,
+         1px -1px 2px #000,
+        -1px  1px 2px #000,
+         1px  1px 2px #000; 
+}

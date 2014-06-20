@@ -63,7 +63,7 @@
 			  </includes>
             </resources>
           </webResources>
-      	  <warName>twitter-demo</warName>
+      	  <warName>twitter-topics</warName>
 	  	  <overlays>
 	    	<overlay>
 	      	  <groupId>com.oculusinfo</groupId>

@@ -81,6 +81,18 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *      The type of graph data to use for tile generation.  Set to "nodes" to generate tiles of a graph's
  *      nodes [default], or set to "edges" to generate tiles of a graph's edges.
  *      
+ *  oculus.binning.line.level.threshold
+ *  	Level threshold to determine whether to use 'point' vs 'tile' based line segment binning
+ *   	Levels above this thres use tile-based binning. Default = 4.
+ *    
+ *  oculus.binning.line.min.bins
+ *  	Min line segment length (in bins) for a given level. Shorter line segments will be discarded.
+ *   	Default = 2.
+ *   
+ *  oculus.binning.line.max.bins
+ *  	Max line segment length (in bins) for a given level. Longer line segments will be discarded.
+ *   	Default = 1024.                      
+ *      
  *  oculus.binning.hierarchical.clusters
  *  	To configure tile generation of hierarchical clustered data.  Set to false [default] for 'regular'
  *   	tile generation (ie non-clustered data).  If set to true then one needs to assign different source 
@@ -294,7 +306,10 @@ object CSVGraphBinner {
 	private var _graphDataType = "nodes"
 	private var _lineLevelThres = 4		// [level] threshold to determine whether to use 'point' vs 'tile' 
 										// based line segment binning.  Levels above this thres use tile-based binning.
-			
+	private var _lineMinBins = 2		// [bins] min line segment length for a given level.
+	private var _lineMaxBins = 1024		// [bins] max line segment length for a given level.
+	private var _bLinesAsArcs = false	// [Boolean] switch to draw line segments as straight lines (default) or as clock-wise arcs.
+	
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
 		properties.getString("oculus.tileio.type",
 		                     "Where to put tiles",
@@ -328,13 +343,7 @@ object CSVGraphBinner {
 	}
 
 	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
-			
-		_lineLevelThres = properties.getInt("oculus.binning.line.level.threshold",
-											"Level threshold to determine whether to use 'point' vs 'tile'"+
-											" based line segment binning (levels above this thres use tile-based binning)",
-											Some(4))
-		
-		
+					
 		_graphDataType = properties.getString("oculus.binning.graph.data",
 		                                     "The type of graph data to tile (nodes or edges). "+
 			                                     "Default is nodes.",
@@ -382,7 +391,7 @@ object CSVGraphBinner {
 	                        tileIO: TileIO): Unit = {
 
 		if (_graphDataType == "edges") {
-			val binner = new RDDLineBinner
+			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins)
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
@@ -399,7 +408,8 @@ object CSVGraphBinner {
 						                                      (dataset.getNumXBins max dataset.getNumYBins),
 						                                      dataset.getConsolidationPartitions,
 						                                      dataset.isDensityStrip,
-						                                      bUsePointBinner)
+						                                      bUsePointBinner,
+						                                      _bLinesAsArcs)
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
@@ -475,9 +485,25 @@ object CSVGraphBinner {
 
 		// Determine indexing information
 		val indexer = createIndexExtractor(properties)
+		
+		// init parameters for binning graph edges (note, not used for binning graph's nodes) 
+		_lineLevelThres = properties.getInt("oculus.binning.line.level.threshold",
+									"Level threshold to determine whether to use 'point' vs 'tile'"+
+									" based line segment binning (levels above this thres use tile-based binning)",
+									Some(4))
+									
+		_lineMinBins = properties.getInt("oculus.binning.line.min.bins",
+									"Min line segment length (in bins) for a given level.  Shorter line segments will be discarded",
+									Some(2))
+									
+		_lineMaxBins = properties.getInt("oculus.binning.line.max.bins",
+									"Max line segment length (in bins) for a given level.  Longer line segments will be discarded",
+									Some(1024))
+									
+		_bLinesAsArcs = properties.getBoolean("oculus.binning.line.style.arcs",
+									"Draw line segments as straight lines (default) or as clock-wise arcs.",
+									Some(false))								
 
-		//val dataset:CSVDataset[_] = new CSVDataset(indexer, properties, tileWidth, tileHeight)  // getDatasetGeneric(indexer, properties, tileWidth, tileHeight)
-		//val dataset:CSVTimeRangeDataset[_] = getDatasetGeneric(indexer, properties, tileWidth, tileHeight)
 		val dataset:CSVGraphDataset[_] = getDatasetGeneric(indexer, properties, tileWidth, tileHeight)
 		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
 		dataset

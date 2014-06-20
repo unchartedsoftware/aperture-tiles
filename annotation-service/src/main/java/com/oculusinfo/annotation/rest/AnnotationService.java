@@ -49,7 +49,7 @@ public interface AnnotationService {
 	 * Modify an annotation in the storage service
 	 * 
 	 */
-	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> oldAnnotation, AnnotationData<?> newAnnotation ) throws IllegalArgumentException;
+	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 	
 	
 	/*
@@ -63,7 +63,7 @@ public interface AnnotationService {
 	 * Remove an annotation from the storage service
 	 * 
 	 */
-	public abstract void remove( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
+	public abstract void remove( String layer, Pair<String, Long> certificate ) throws IllegalArgumentException;
 
 	
 	/*

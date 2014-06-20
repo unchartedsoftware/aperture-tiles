@@ -38,13 +38,17 @@ object JSONwriter {
 
     val qualSummary = new JSONObject
     val qualList = new JSONArray
-
+   
     qualitative.foreach(r => {
 
       val field = new JSONObject
       val alias = r._1
       val name = r._2
-
+      val totalCleanRecords = if(r._4.contains("corruptRecords")){
+    	  totalRecords - r._4("corruptRecords").asInstanceOf[String].toDouble
+    	 } else {
+    	   totalRecords
+    	 }
       if (r._4.contains("mostFrequent")) {
         val freqs = r._4("mostFrequent").asInstanceOf[Array[(String, Int)]]
         val frequencies = new JSONArray
@@ -88,7 +92,7 @@ object JSONwriter {
         val naPercent = new JSONObject
         naPercent.put("Type", "float")
 
-        val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalRecords.toDouble
+        val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalCleanRecords.toDouble
         naPercent.put("Value", naPercentVal)
         naPercent.put("Unit", "%")
 
@@ -107,7 +111,7 @@ object JSONwriter {
         val uniquePercent = new JSONObject
         uniquePercent.put("Type", "float")
 
-        val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
+        val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalCleanRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
         uniquePercent.put("Value", uniquePercentVal)
         uniquePercent.put("Unit", "%")
 
@@ -143,6 +147,12 @@ object JSONwriter {
       val alias = r._1
       val name = r._2
 
+      val totalCleanRecords = if(r._4.contains("corruptRecords")){
+    	  totalRecords - r._4("corruptRecords").asInstanceOf[String].toDouble
+    	 } else {
+    	   totalRecords
+    	 }
+      
       if (r._4.contains("quartiles")) {
 
         val quartiles = r._4("quartiles").asInstanceOf[(Double, Double, Double)]
@@ -181,7 +191,7 @@ object JSONwriter {
         val naPercent = new JSONObject
         naPercent.put("Type", "float")
 
-        val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalRecords.toDouble
+        val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalCleanRecords.toDouble
         naPercent.put("Value", naPercentVal)
         naPercent.put("Unit", "%")
 
@@ -201,7 +211,7 @@ object JSONwriter {
         val uniquePercent = new JSONObject
         uniquePercent.put("Type", "float")
 
-        val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
+        val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalCleanRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
         uniquePercent.put("Value", uniquePercentVal)
         uniquePercent.put("Unit", "%")
 
@@ -234,6 +244,12 @@ object JSONwriter {
       val alias = r._1
       val name = r._2
 
+      val totalCleanRecords = if(r._4.contains("corruptRecords")){
+    	  totalRecords - r._4("corruptRecords").asInstanceOf[String].toDouble
+    	 } else {
+    	   totalRecords
+    	 }
+      
       if (r._4.contains("quartiles")) {
 
         val quartiles = r._4("quartiles").asInstanceOf[(Double, Double, Double)]
@@ -272,7 +288,7 @@ object JSONwriter {
         val naPercent = new JSONObject
         naPercent.put("Type", "float")
         //not safe
-        val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalRecords.toDouble
+        val naPercentVal = (100 * r._4("countNA").asInstanceOf[String].toDouble) / totalCleanRecords.toDouble
         naPercent.put("Value", naPercentVal)
         naPercent.put("Unit", "%")
 
@@ -292,7 +308,7 @@ object JSONwriter {
         val uniquePercent = new JSONObject
         uniquePercent.put("Type", "float")
         //not safe
-        val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
+        val uniquePercentVal = (100 * r._4("countUnique").asInstanceOf[String].toDouble) / (totalCleanRecords.toDouble - r._4("countNA").asInstanceOf[String].toDouble)
         uniquePercent.put("Value", uniquePercentVal)
         uniquePercent.put("Unit", "%")
 

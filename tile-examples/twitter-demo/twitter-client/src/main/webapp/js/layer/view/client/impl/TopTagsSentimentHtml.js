@@ -23,53 +23,59 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines the base class for a client render layer. Must be
- * inherited from for any functionality.
- */
 define(function (require) {
     "use strict";
 
 
 
-    var HtmlRenderer = require('../HtmlRenderer'),
-        ClientNodeLayer = require('../ClientNodeLayer'),
+    var ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
-        TwitterUtil = require('./TwitterUtil'),
-        DetailsOnDemand = require('./DetailsOnDemandHtml'),
-        TopTextSentimentHtml;
+        TwitterUtil = require('./TwitterSentimentUtil'),
+        TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
+        NUM_TAGS_DISPLAYED = 5,
+        NUM_LETTERS_IN_TAG = 9,
+        TopTagsSentimentHtml;
 
 
 
-    TopTextSentimentHtml = HtmlRenderer.extend({
-        ClassName: "TopTextSentimentHtml",
+    TopTagsSentimentHtml = TwitterHtmlRenderer.extend({
+        ClassName: "TopTagsSentimentHtml",
 
-        /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
-         */
         init: function( map) {
 
-            var that = this;
-
             this._super(map);
-
             this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-
             this.createLayer();
-
-            this.map.on( 'click', function() {
-                TwitterUtil.clickOff( that.clientState, DetailsOnDemand );
-            });
         },
+
+
+        addClickStateClassesGlobal: function() {
+
+            var selectedTag = TwitterUtil.trimLabelText( this.layerState.getClickState().tag, NUM_LETTERS_IN_TAG ),
+                $elements = $(".top-text-sentiment");
+
+            $elements.filter( function() {
+                return $(this).text() !== selectedTag;
+            }).addClass('greyed').removeClass('clicked');
+
+            $elements.filter( function() {
+                return $(this).text() === selectedTag;
+            }).removeClass('greyed').addClass('clicked');
+
+        },
+
+
+        removeClickStateClassesGlobal: function() {
+
+            $(".top-text-sentiment").removeClass('greyed clicked');
+        },
+
 
         createLayer : function() {
 
@@ -77,14 +83,17 @@ define(function (require) {
 
             function getYOffset( values, index ) {
                 var SPACING =  36;
-                return 95 - ( (( TwitterUtil.getTagCount( values ) - 1) / 2 ) - index ) * SPACING;
+                return 95 - ( (( TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED ) - 1) / 2 ) - index ) * SPACING;
             }
 
             this.nodeLayer.addLayer( new HtmlLayer({
 
                 html: function() {
 
-                    var html = '',
+                    var DOWNSCALE_OFFSET = 1.5,
+                        MAX_FONT_SIZE = 28 * DOWNSCALE_OFFSET,
+                        MIN_FONT_SIZE = 12 * DOWNSCALE_OFFSET,
+                        html = '',
                         $html = $('<div id="'+this.tilekey+'" class="aperture-tile"></div>'),
                         $elem,
                         $summaries,
@@ -93,10 +102,10 @@ define(function (require) {
                         i,
                         tag,
                         percentages,
-                        count = TwitterUtil.getTagCount( values );
+                        count = TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED );
 
                     // create count summaries
-                    $summaries = TwitterUtil.createTweetSummaries();
+                    $summaries = that.createTweetSummaries();
 
                     $html.append( $summaries );
 
@@ -110,21 +119,20 @@ define(function (require) {
 
                         // create sentiment bars
                         html += '<div class="sentiment-bars">';
-                        html +=     '<div class="sentiment-bar-negative" style="width:'+percentages.negative+'%;"></div>';
-                        html +=     '<div class="sentiment-bar-neutral"  style="width:'+percentages.neutral+'%;"></div>';
-                        html +=     '<div class="sentiment-bar-positive" style="width:'+percentages.positive+'%;"></div>';
+                        html +=     '<div class="sentiment-bar-negative" style="width:'+(percentages.negative*100)+'%;"></div>';
+                        html +=     '<div class="sentiment-bar-neutral"  style="width:'+(percentages.neutral*100)+'%;"></div>';
+                        html +=     '<div class="sentiment-bar-positive" style="width:'+(percentages.positive*100)+'%;"></div>';
                         html += "</div>";
 
                         // create tag label
-                        html += '<div class="sentiment-label" style="font-size:' + TwitterUtil.getFontSize( values, i ) +'px; ">'+tag+'</div>';
+                        html += '<div class="sentiment-label" style="font-size:' + TwitterUtil.getFontSize( values, i, MIN_FONT_SIZE, MAX_FONT_SIZE ) +'px; ">'+tag+'</div>';
 
                         html += '</div>';
 
                         $elem = $(html);
 
-                        // set event handlers
-                        TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
-                        TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
+                        that.setMouseEventCallbacks( $elem, $summaries, this, value );
+                        that.addClickStateClasses( $elem, tag );
 
                         $html.append( $elem );
                     }
@@ -138,5 +146,5 @@ define(function (require) {
 
     });
 
-    return TopTextSentimentHtml;
+    return TopTagsSentimentHtml;
 });

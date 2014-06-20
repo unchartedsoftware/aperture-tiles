@@ -35,14 +35,12 @@ define(function (require) {
     return {
         customizeMap: function (worldMap) {
 
-            var majorCities,
-                $majorCitiesDropDown,
-                majorCitiesFile = "/data/majorCities.json";
+            var MAJOR_CITIES_FILE = "./data/majorCities.json";
 
-            $.get("./data/majorCities.json", function(majorCities) {
+            $.get( MAJOR_CITIES_FILE, function(majorCities ) {
 
                 // Add major cities entries to zoom select box
-                $majorCitiesDropDown = $("#select-city-zoom");
+                var $majorCitiesDropDown = $("#select-city-zoom");
                 $.each(majorCities, function(key) {
                     $majorCitiesDropDown.append(
                         $('<option></option>').val(key).html(this.text)

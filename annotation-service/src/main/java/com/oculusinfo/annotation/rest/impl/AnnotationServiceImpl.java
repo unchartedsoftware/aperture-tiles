@@ -65,7 +65,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     private List<AnnotationInfo>         _annotationLayers;
     private Map<String, AnnotationInfo>  _annotationLayersById;
     private Map<String, UUID>  			 _defaultFilterUuidById;
-    private ConcurrentHashMap< UUID, Map<String, Integer> > _filtersByUuid;
+    private Map< UUID, Map<String, Integer> > _filtersByUuid;
 
     private FactoryProvider<PyramidIO>         _pyramidIOFactoryProvider;
     private FactoryProvider<AnnotationIO>      _annotationIOFactoryProvider;
@@ -138,8 +138,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 
     public Pair<String,Long> modify( String layer,
-                                     AnnotationData<?> oldAnnotation,
-                                     AnnotationData<?> newAnnotation ) throws IllegalArgumentException {
+                                     AnnotationData<?> annotation ) throws IllegalArgumentException {
 
         _lock.writeLock().lock();
         try {
@@ -148,7 +147,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     		 *  ensure request is coherent with server state, if client is operating
     		 *  on a previous data state, prevent io corruption by throwing an exception
     		 */
-            if ( isRequestOutOfDate( layer, oldAnnotation ) ) {
+            if ( isRequestOutOfDate( layer, annotation.getCertificate() ) ) {
                 throw new IllegalArgumentException("Client is out of sync with Server, "
                         + "MODIFY operation aborted. It is recommended "
                         + "upon receiving this exception to refresh all client annotations");
@@ -164,13 +163,13 @@ public class AnnotationServiceImpl implements AnnotationService {
 			 * individual annotations themselves
 			 */
             // remove old annotation from tiles
-            removeDataFromTiles( layer, oldAnnotation, pyramid );
+            removeDataFromTiles( layer, annotation.getCertificate(), pyramid );
             // update certificate
-            newAnnotation.updateCertificate();
+            annotation.updateCertificate();
             // add new annotation to tiles
-            addDataToTiles( layer, newAnnotation, pyramid );
+            addDataToTiles( layer, annotation, pyramid );
             // return updated certificate
-            return newAnnotation.getCertificate();
+            return annotation.getCertificate();
 
         } catch ( Exception e ) {
             throw new IllegalArgumentException( e.getMessage() );
@@ -205,7 +204,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 		
-	public void remove( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException {
+	public void remove( String layer, Pair<String, Long> certificate ) throws IllegalArgumentException {
 
         _lock.writeLock().lock();
         try {
@@ -217,15 +216,15 @@ public class AnnotationServiceImpl implements AnnotationService {
              *  ensure request is coherent with server state, if client is operating
              *  on a previous data state, prevent io corruption by throwing an exception
              */
-            if ( isRequestOutOfDate( layer, annotation ) ) {
+            if ( isRequestOutOfDate( layer, certificate ) ) {
                 throw new IllegalArgumentException("Client is out of sync with Server, "
                                                  + "REMOVE operation aborted. It is recommended "
                                                  + "upon receiving this exception to refresh all client annotations");
             }
             // remove the certificates from tiles
-            removeDataFromTiles( layer, annotation, pyramid );
+            removeDataFromTiles( layer, certificate, pyramid );
             // remove data from io
-            removeDataFromIO( layer, annotation.getCertificate() );
+            removeDataFromIO( layer, certificate );
 
 		} catch ( Exception e ) {
     		throw new IllegalArgumentException( e.getMessage() );
@@ -276,10 +275,6 @@ public class AnnotationServiceImpl implements AnnotationService {
         _filtersByUuid.remove( uuid );
     }
 
-	
-	// ////////////////////////////////////////////////////////////////////////
-	// Section: Configuration reading methods
-	//
 	private File[] getConfigurationFiles (String location) {
     	try {
 	    	// Find our configuration file.
@@ -390,18 +385,18 @@ public class AnnotationServiceImpl implements AnnotationService {
 	/*
 	 * Check data timestamp from clients source, if out of date, return true
 	 */
-	public boolean isRequestOutOfDate( String layer, AnnotationData<?> annotation ) {
+	public boolean isRequestOutOfDate( String layer, Pair<String, Long> certificate ) {
 		
-		List<Pair<String, Long>> certificate = new LinkedList<>();
-		certificate.add( annotation.getCertificate() );
-		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificate );
+		List<Pair<String, Long>> certificates = new LinkedList<>();
+		certificates.add( certificate );
+		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
 		
 		if ( annotations.size() == 0 ) {
 			// removed since client update, abort
 			return true;
 		}
 		
-		if ( !annotations.get(0).getTimestamp().equals( annotation.getTimestamp() ) ) {
+		if ( !annotations.get(0).getTimestamp().equals( certificate.getSecond() ) ) {
 			// clients timestamp doesn't not match most up to date, abort
 			return true;
 		}
@@ -540,8 +535,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	private void removeDataFromTiles( String layer, AnnotationData<?> data, TilePyramid pyramid ) {
-		
+	private void removeDataFromTiles( String layer, Pair<String, Long> certificate, TilePyramid pyramid ) {
+
+        // read the annotation data
+        List<Pair<String, Long>> certificates = new ArrayList<>();
+        certificates.add( certificate );
+        AnnotationData<?> data = readDataFromIO( layer, certificates ).get(0);
 		// get list of the indices for all levels
     	List<TileAndBinIndices> indices = _indexer.getIndices( data, pyramid );	    	
 		// read existing tiles
@@ -567,7 +566,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			PyramidIO io = config.produce(PyramidIO.class);	
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
-			io.initializeForWrite( layer );
+			//io.initializeForWrite( layer );
 			io.writeTiles( layer, serializer, tiles );
 					
 		} catch ( Exception e ) {
@@ -585,7 +584,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		try {
             AnnotationConfiguration config = getConfiguration(layer);
             AnnotationIO io = config.produce( AnnotationIO.class );
-			io.initializeForWrite( layer );
+			//io.initializeForWrite( layer );
 			io.writeData( layer, _dataSerializer, dataList );
 
 		} catch ( Exception e ) {
@@ -619,6 +618,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		dataList.add( data );
 
 		try {
+
             AnnotationConfiguration config = getConfiguration( layer );
 			AnnotationIO io = config.produce( AnnotationIO.class );
 			io.removeData( layer, dataList );
@@ -643,7 +643,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			PyramidIO io = config.produce( PyramidIO.class );
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce( TileSerializer.class );
 
-			io.initializeForRead( layer, 0, 0, null );		
+			//io.initializeForRead( layer, 0, 0, null );
 			tiles = io.readTiles( layer, serializer, indices );
 					
 		} catch ( Exception e ) {
@@ -665,7 +665,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
             AnnotationConfiguration config = getConfiguration( layer );
             AnnotationIO io = config.produce( AnnotationIO.class );
-			io.initializeForRead( layer );
+			//io.initializeForRead( layer );
 			data = io.readData( layer, _dataSerializer, certificates );
 			
 		} catch ( Exception e ) {

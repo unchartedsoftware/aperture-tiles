@@ -44,67 +44,58 @@ public class AnnotationManipulator {
 	
 
     static public boolean isTileEmpty( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
-    	
-    	synchronized( tile ) {
-    		
-    		for ( Map<String, List<Pair<String, Long>>> bin : tile.getData()  ) {
-    			if ( bin != null ) {
-    				return false;
-    			}
-    		}
-    		return true;
-    	}
-    	
+
+        for ( Map<String, List<Pair<String, Long>>> bin : tile.getData()  ) {
+            if ( bin != null ) {
+                return false;
+            }
+        }
+        return true;
+
     }
     
     static public void addDataToBin( Map<String, List<Pair<String, Long>>> bin, AnnotationData<?> data ) {
-    	
-    	synchronized( bin ) {
 
-	    	String group = data.getGroup();
-	    	Pair<String, Long> certificate =  data.getCertificate();
-	    	List< Pair<String, Long> > entries;
-	    	
-	    	if ( bin.containsKey( group ) ) {
-	    		entries = bin.get( group ); 
-	    		if ( !entries.contains( certificate ) ) {
-	    			entries.add( certificate );
-	    		}   
-	    	} else {
-	    		entries = new LinkedList<>();
-	    		entries.add( certificate );
-	    		bin.put( group, entries );
-	    	}
-	
-	    	// sort certificates after insertion... maybe instead use a SortedSet?
-	    	Collections.sort( entries, new CertificateComparator() );
-    	}
+        String group = data.getGroup();
+        Pair<String, Long> certificate =  data.getCertificate();
+        List< Pair<String, Long> > entries;
+
+        if ( bin.containsKey( group ) ) {
+            entries = bin.get( group );
+            if ( !entries.contains( certificate ) ) {
+                entries.add( certificate );
+            }
+        } else {
+            entries = new LinkedList<>();
+            entries.add( certificate );
+            bin.put( group, entries );
+        }
+
+        // sort certificates after insertion... maybe instead use a SortedSet?
+        Collections.sort( entries, new CertificateComparator() );
     }
       
     
     static public boolean removeDataFromBin( Map<String, List<Pair<String, Long>>> bin, AnnotationData<?> data ) { 
-    	
-    	synchronized( bin ) {
-    	
-	    	String group = data.getGroup();
-	    	Pair<String, Long> certificate =  data.getCertificate();
-	    	boolean removedAny = false;
-	    	
-	    	if ( bin.containsKey( group ) ) {
-	    		
-	    		List< Pair<String, Long> > entries = bin.get( group );	    		
-	    		if ( entries.contains( certificate ) ) {
-	    			entries.remove( certificate );
-	    			removedAny = true;
-	    		}     		   		
-	    		if ( entries.size() == 0 ) {
-		    		// remove certificates for group
-	    			bin.remove( group );
-		    	}
-	    	} 
-	
-	    	return removedAny;
-    	}
+
+        String group = data.getGroup();
+        Pair<String, Long> certificate =  data.getCertificate();
+        boolean removedAny = false;
+
+        if ( bin.containsKey( group ) ) {
+
+            List< Pair<String, Long> > entries = bin.get( group );
+            if ( entries.contains( certificate ) ) {
+                entries.remove( certificate );
+                removedAny = true;
+            }
+            if ( entries.size() == 0 ) {
+                // remove certificates for group
+                bin.remove( group );
+            }
+        }
+
+        return removedAny;
     }
 
     
@@ -112,115 +103,91 @@ public class AnnotationManipulator {
     
     
     static public void addDataToTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) {
-    	
-    	synchronized( tile ) {
-    		
-    		Map<String, List<Pair<String, Long>>> bin = tile.getBin( binIndex.getX(), binIndex.getY() );
-    		
-    		if ( bin != null ) {
-    			addDataToBin( bin, data );
-    		} else {
-    			
-    			Map<String, List<Pair<String, Long>>> newBin = new LinkedHashMap<>();
-    			addDataToBin( newBin, data );     			 
-    			tile.setBin( binIndex.getX(), binIndex.getY(), newBin );
-    		}
-        	
-    	}    		   	
+
+        Map<String, List<Pair<String, Long>>> bin = tile.getBin( binIndex.getX(), binIndex.getY() );
+
+        if ( bin != null ) {
+            addDataToBin( bin, data );
+        } else {
+
+            Map<String, List<Pair<String, Long>>> newBin = new LinkedHashMap<>();
+            addDataToBin( newBin, data );
+            tile.setBin( binIndex.getX(), binIndex.getY(), newBin );
+        }
     }
     
     
     static public void removeDataFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) { 
-    	
-    	synchronized( tile ) {
-    		
-    		Map<String, List<Pair<String, Long>>> bin = tile.getBin( binIndex.getX(), binIndex.getY() );  		
-        	if ( bin != null && removeDataFromBin( bin, data ) ) {
-    			// remove bin if empty
-    			if ( bin.size() == 0 ) {    				   				
-    				tile.setBin( binIndex.getX(), binIndex.getY(), null );
-    			}
-    		}       	
-    	} 
-    	
+
+        Map<String, List<Pair<String, Long>>> bin = tile.getBin( binIndex.getX(), binIndex.getY() );
+        if ( bin != null && removeDataFromBin( bin, data ) ) {
+            // remove bin if empty
+            if ( bin.size() == 0 ) {
+                tile.setBin( binIndex.getX(), binIndex.getY(), null );
+            }
+        }
     }
 
 
     static public List<Pair<String, Long>> getCertificatesFromBin( Map<String, List<Pair<String, Long>>> bin, String group ) {
-    	
-    	synchronized( bin ) {
-    		
-	    	if ( bin.containsKey( group ) ) {
-	    		return bin.get( group );
-	    	} else {
-	    		return new LinkedList<>();
-	    	}
-    	}
-    	
+
+        if ( bin.containsKey( group ) ) {
+            return bin.get( group );
+        } else {
+            return new LinkedList<>();
+        }
     }
     
     
     static public List<Pair<String, Long>> getAllCertificatesFromBin( Map<String, List<Pair<String, Long>>> bin ) {
-    	
-    	synchronized( bin ) {
 
-    		List<Pair<String, Long>> allCertificates = new LinkedList<>();  
-        	// for each group group in a bin
-    		for ( List<Pair<String, Long>> certificates : bin.values() ) {
-    			allCertificates.addAll( certificates );
-    		}	
-        	return allCertificates;
-    	}
-    	
+        List<Pair<String, Long>> allCertificates = new LinkedList<>();
+        // for each group group in a bin
+        for ( List<Pair<String, Long>> certificates : bin.values() ) {
+            allCertificates.addAll( certificates );
+        }
+        return allCertificates;
     }  
     
     
     
     static public List<Pair<String, Long>> getAllCertificatesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
-    	
-    	synchronized( tile ) {
-    		
-	    	List<Pair<String, Long>> allCertificates = new LinkedList<>();  
-	    	// for each bin
-			for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
-				
-				if (bin != null) {
-					// get all certificates
-					allCertificates.addAll( getAllCertificatesFromBin( bin ) );
-				}
-				
-			} 	
-	    	return allCertificates;
-    	}
+
+        List<Pair<String, Long>> allCertificates = new LinkedList<>();
+        // for each bin
+        for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
+
+            if (bin != null) {
+                // get all certificates
+                allCertificates.addAll( getAllCertificatesFromBin( bin ) );
+            }
+
+        }
+        return allCertificates;
     }
        
     
     static public List<Pair<String, Long>> getFilteredCertificatesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile, Map<String, Integer> filter ) {
-    	
-    	synchronized( tile ) {
 
-	    	List<Pair<String, Long>> filtered = new LinkedList<>();
-	    	// for each bin
-	    	for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
-	    		
-	    		if (bin != null) {
-					// go through filter list get certificates by group and by count
-					for (Map.Entry<String, Integer> f : filter.entrySet() ) {
-						
-						String group = f.getKey();
-						Integer count = f.getValue();
-						
-						List<Pair<String, Long>> certificates = getCertificatesFromBin( bin, group );
-						
-						// certificates are sorted, so simply cut the tail off to get the n newest
-						filtered.addAll( certificates.subList( 0, count < certificates.size() ? count : certificates.size() ) );
-					}
-	    		}
-	    	}
-			return filtered;
-    	}
+        List<Pair<String, Long>> filtered = new LinkedList<>();
+        // for each bin
+        for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
+
+            if (bin != null) {
+                // go through filter list get certificates by group and by count
+                for (Map.Entry<String, Integer> f : filter.entrySet() ) {
+
+                    String group = f.getKey();
+                    Integer count = f.getValue();
+
+                    List<Pair<String, Long>> certificates = getCertificatesFromBin( bin, group );
+
+                    // certificates are sorted, so simply cut the tail off to get the n newest
+                    filtered.addAll( certificates.subList( 0, count < certificates.size() ? count : certificates.size() ) );
+                }
+            }
+        }
+        return filtered;
     }    
 
-	
-    
 }

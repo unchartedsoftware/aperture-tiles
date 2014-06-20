@@ -23,14 +23,13 @@
  * SOFTWARE.
  */
 
- /*global OpenLayers */
+
 define(function (require) {
     "use strict";
 
 
 
-    var Class = require('../class'),
-        ANNOTATION_CLASS = "annotation",
+    var ANNOTATION_CLASS = "annotation",
         ANNOTATION_ATTRIBUTE_CLASS = ANNOTATION_CLASS + " annotation-attribute",
         ANNOTATION_INPUT_CLASS = ANNOTATION_CLASS + " annotation-input",
         ANNOTATION_LABEL_CLASS = ANNOTATION_CLASS + " annotation-label",
@@ -40,7 +39,6 @@ define(function (require) {
         ANNOTATION_BUTTON_CLASS = ANNOTATION_CLASS + " annotation-button",
         ANNOTATION_LEFT_BUTTON_CLASS = ANNOTATION_BUTTON_CLASS + " annotation-button-left",
         ANNOTATION_RIGHT_BUTTON_CLASS = ANNOTATION_BUTTON_CLASS + " annotation-button-right",
-        ANNOTATION_POPUP_OL_CONTAINER_ID = "annotation-ol-container",
         ANNOTATION_POPUP_ID = "annotation-popup-id",
         ANNOTATION_CANCEL_BUTTON_ID = "annotation-popup-cancel",
         ANNOTATION_SAVE_BUTTON_ID = "annotation-popup-save",
@@ -49,204 +47,9 @@ define(function (require) {
         ANNOTATION_POPUP_TITLE_ID = "annotation-popup-title-id",
         ANNOTATION_POPUP_GROUP_ID = "annotation-popup-group-id",
         ANNOTATION_POPUP_DESCRIPTION_ID = "annotation-popup-description-id",
-        ANNOTATION_POPUP_RESIZE_ID = 'annotation-popup-resize-icon',
-        ANNOTATION_ACCORDION_ID = "annotation-accordion-id",
-        AnnotationFeature;
+        ANNOTATION_ACCORDION_ID = "annotation-accordion-id";
 
-
-
-    AnnotationFeature = Class.extend({
-
-
-        init: function ( spec  ) {
-
-            /* There are two ways to instantiate a AnnotationFeature:
-             *
-             *  a)  creation by the user, in this case, the OpenLayers.Feature.Vector is created in the
-             *      AnnotationLayer and already attached to the OpenLayers.Layer.Vector
-             *
-             *  b)  using data from the server, in this case the OpenLayers.Feature.Vector must be created
-             *      internally and manually attached to the OpenLayers.Layer.Vector
-             */
-
-            // case a)
-            if ( spec.feature !== undefined ) {
-                // feature already exists ( created by user )
-                this.olFeature_ = spec.feature;
-                this.olLayer_ = spec.feature.layer;
-            }
-
-            // case b)
-            if ( spec.layer !== undefined ) {
-                // feature will need to be created as it is using data from server
-                this.olLayer_ = spec.layer;
-            }
-
-            this.map = spec.map;
-
-            // sets annotations, if feature has not been provided, creates it at average annotation location
-            this.setAnnotations( spec.annotations );
-
-            // append tilekey, binkey and a reference to the OpenLayers.Feature.attributes
-            this.olFeature_.attributes.tilekey = spec.tilekey;
-            this.olFeature_.attributes.binkey = spec.binkey;
-            this.olFeature_.attributes.feature = this;
-            this.olPopup_ = null;
-
-            this.redraw();
-        },
-
-
-        redraw: function() {
-            this.olFeature_.layer.drawFeature( this.olFeature_ );
-        },
-
-
-        setAnnotation: function( annotation ) {
-
-            this.annotationsByGroup = {}; // clear old annotation
-            this.annotationsByGroup[ annotation.group ] = [ annotation ]; // set new annotation
-        },
-
-
-        setAnnotations: function( annotations ) {
-
-            var i,
-                xSum = 0,
-                ySum = 0,
-                sumCount = 0,
-                annotationsByGroup = {},
-                viewportPixel,
-                latlon,
-                group;
-
-            // for each annotation
-            for (i=0; i<annotations.length; i++) {
-
-                // organize by group
-                group = annotations[i].group;
-
-                if ( annotationsByGroup[ group ] === undefined ) {
-                    annotationsByGroup[ group ] = [];
-                }
-
-                xSum += annotations[i].x;
-                ySum += annotations[i].y;
-                sumCount++;
-                annotationsByGroup[ group ].push( annotations[i] );
-            }
-
-            // average display lat lon
-            viewportPixel = this.map.getViewportPixelFromCoord( xSum/sumCount, ySum/sumCount );
-            latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel );
-            this.annotationsByGroup = annotationsByGroup;
-
-            if ( this.olFeature_ === undefined ) {
-                // if no feature exists yet, create it
-                this.olFeature_ = new OpenLayers.Feature.Vector( new OpenLayers.Geometry.Point( latlon.lon, latlon.lat) );
-                this.addToLayer( this.olLayer_ );
-            } else {
-                // otherwise change its location to new location
-                this.olFeature_.geometry.x = latlon.lon;
-                this.olFeature_.geometry.y = latlon.lat;
-                this.redraw();
-            }
-        },
-
-
-        addAnnotation: function( annotation ) {
-
-            var count = this.getAnnotationCount(),
-                viewportPixel = this.map.getViewportPixelFromCoord( annotation.x, annotation.y),
-                latlon = this.map.getOLMap().getLonLatFromViewPortPx( viewportPixel );
-
-            // re calculate avg position
-            this.olFeature_.geometry.x = ((this.olFeature_.geometry.x*count) + latlon.lon) / (count+1);
-            this.olFeature_.geometry.y = ((this.olFeature_.geometry.y*count) + latlon.lat) / (count+1);
-
-            // add annotation to data object
-            if ( this.annotationsByGroup[ annotation.group ] === undefined ) {
-                this.annotationsByGroup[ annotation.group ] = [];
-            }
-            this.annotationsByGroup[ annotation.group ].push( annotation );
-            this.redraw();
-
-        },
-
-
-        getDataArray: function() {
-
-            var key, i,
-                data = [];
-
-            for (key in this.annotationsByGroup) {
-                if (this.annotationsByGroup.hasOwnProperty(key)) {
-                    for(i=0; i<this.annotationsByGroup[key].length; i++) {
-                        data.push( this.annotationsByGroup[key][i] );
-                    }
-                }
-            }
-            return data;
-        },
-
-
-        isAggregated: function() {
-
-            var key, i, count = 0;
-            for (key in this.annotationsByGroup) {
-                if (this.annotationsByGroup.hasOwnProperty(key)) {
-
-                    for(i=0; i<this.annotationsByGroup[key].length; i++) {
-                        count++;
-                        if (count > 1) {
-                            return true;
-                        }
-                    }
-
-                }
-            }
-            return false;
-        },
-
-
-        getAnnotationCount: function() {
-
-            var key, i, count = 0;
-            for (key in this.annotationsByGroup) {
-                if (this.annotationsByGroup.hasOwnProperty(key)) {
-                    for(i=0; i<this.annotationsByGroup[key].length; i++) {
-                        count++;
-                    }
-
-                }
-            }
-            return count;
-        },
-
-
-        addToLayer: function( layer ) {
-
-            layer.addFeatures( [this.olFeature_], {silent:true} );
-        },
-
-
-        removeFromLayerAndDestroy: function() {
-
-            this.removeAndDestroyPopup();
-            this.olFeature_.layer.destroyFeatures( [this.olFeature_] );
-        },
-
-
-        removeAndDestroyPopup: function() {
-
-            // destroy popup
-            if ( this.olPopup_ !== null ) {
-                this.olFeature_.layer.map.removePopup( this.olPopup_ );
-                this.olPopup_.destroy();
-                this.olPopup_ = null;
-            }
-        },
-
+    return {
 
         createEditablePopup: function( groups, closeFunc, saveFunc, removeFunc ) {
 
@@ -283,13 +86,13 @@ define(function (require) {
         },
 
 
-        createDisplayPopup: function( closeFunc, editFunc ) {
+        createDisplayPopup: function( bin, closeFunc, editFunc ) {
 
             var that = this,
                 hasEditFunc = editFunc !== null,
                 html;
 
-            if ( this.isAggregated() ) {
+            if ( bin.length > 1 ) {
                 // aggregate
                 html = this.getAggregateDisplayPopupHTML();
 
@@ -301,12 +104,12 @@ define(function (require) {
 
             // create popup with close callback
             this.createPopup( html, function() {
-                closeFunc( that );
+                //closeFunc( that );
                 return false;   // stop event propagation
             });
 
 
-            if ( this.isAggregated() ) {
+            if ( bin.length > 1 ) {
 
                 // set accordion
                 $( "#"+ANNOTATION_ACCORDION_ID ).accordion({
@@ -336,61 +139,7 @@ define(function (require) {
         },
 
 
-        createPopup: function( html, closeFunc ) {
-
-            var that = this,
-                latlon = OpenLayers.LonLat.fromString( this.olFeature_.geometry.toShortString() );
-
-            this.olPopup_ = new OpenLayers.Popup(ANNOTATION_POPUP_OL_CONTAINER_ID,
-                                              latlon,
-                                              null,
-                                              html,
-                                              true,
-                                              closeFunc );
-
-            this.olPopup_.autoSize = true;
-            this.olFeature_.popup = this.olPopup_;
-            this.olFeature_.layer.map.addPopup( this.olPopup_, false );
-            this.centrePopup( latlon );
-
-            $( "#"+ANNOTATION_POPUP_ID ).resizable({
-                resize: function() {
-                    that.olPopup_.updateSize();
-                },
-                stop: function() {
-                    that.centrePopup( OpenLayers.LonLat.fromString( that.olFeature_.geometry.toShortString() ) );
-                },
-                maxWidth: 384,
-                maxHeight: 256,
-                minHeight: 150,
-                minWidth: 200,
-                handles: 'se'
-            });
-
-            // manually inject id for resize icon for clean css
-            $( "#"+ANNOTATION_POPUP_ID).find(".ui-resizable-handle", ".ui-resizable-se").attr('id', ANNOTATION_POPUP_RESIZE_ID);
-
-        },
-
-
-        centrePopup: function( latlon ) {
-
-            var px,
-                size;
-
-            if ( this.olPopup_ !== null ) {
-                px = this.olFeature_.layer.map.getLayerPxFromViewPortPx( this.olFeature_.layer.map.getPixelFromLonLat(latlon) );
-                size = this.olPopup_.size;
-                px.x -= size.w / 2;
-                px.y -= size.h + 32;
-                this.olPopup_.moveTo( px );
-                //this.olPopup_.panIntoView();
-            }
-
-        },
-
-
-        checkData: function() {
+        checkInputData: function() {
 
             var $title = $('#'+ANNOTATION_POPUP_TITLE_ID),
                 $group = $('#'+ANNOTATION_POPUP_GROUP_ID),
@@ -432,7 +181,7 @@ define(function (require) {
 
             var annotation = this.getDataArray()[0];
 
-            if ( this.checkData() ) {
+            if ( this.checkInputData() ) {
                 this.setDataFromPopup( annotation );
                 return true;
             }
@@ -467,7 +216,7 @@ define(function (require) {
         },
 
 
-        getAggregateDisplayPopupHTML: function() {
+        getAggregateDisplayPopupHTML: function( bin ) {
 
             var annotations = this.getDataArray(),
                 i,
@@ -476,8 +225,8 @@ define(function (require) {
                                 "<div class='"+ANNOTATION_CONTENT_CLASS+"'>"+
                                     "<div id='"+ANNOTATION_ACCORDION_ID+"'>";
 
-            for (i=0; i<annotations.length; i++) {
-                html += "<h3>" + annotations[i].data.title + "</h3>"+
+            for (i=0; i<bin.length; i++) {
+                html += "<h3>" + bin.title + "</h3>"+
                             "<div>"+
                                 "<div class='"+ANNOTATION_ATTRIBUTE_CLASS+"'>" +
                                     "Priority: "+ annotations[i].group +
@@ -547,10 +296,7 @@ define(function (require) {
                     "</div>";
         }
 
+    };
 
-
-    });
-
-    return AnnotationFeature;
 
 });

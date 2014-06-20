@@ -36,7 +36,7 @@ define(function (require) {
     HtmlRenderer = ClientRenderer.extend({
         ClassName: "HtmlRenderer",
 
-        init: function(map) {
+        init: function( map ) {
             this._super( map );
             this.nodeLayer = {};
         },

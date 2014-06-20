@@ -35,25 +35,26 @@ define(function (require) {
 
 
 
-    var TwitterUtil = require('./TwitterUtil');
+    var TwitterUtil = require('./TwitterSentimentUtil');
 
 
 
     return {
 
-        create: function( x, y, value ) {
+        create: function( position, value, closeCallback ) {
 
             var html = '',
-                time, day, tweetsByDay, key, lightOrDark, visibility,
+                day, tweetsByDay, key, lightOrDark, visibility,
                 maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value ),
                 sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value ),
-                relativePercent, cumulativePercentages = [],
+                relativePercent, cumulativePercentages = [], $details,
                 i;
 
-            html += '<div class="details-on-demand" style="left:'+x+'px; top:'+y+'px;">';
+            html += '<div class="details-on-demand" style="left:'+position.x+'px; top:'+position.y+'px;">';
+
 
             // top half
-            html += '<div class="details-on-demand-half">'
+            html += '<div class="details-on-demand-half">';
 
             // summaries
             html +=     '<div class="sentiment-summaries">';
@@ -61,6 +62,7 @@ define(function (require) {
             html +=         '<div class="neutral-summaries">'+value.neutral+'</div>';
             html +=         '<div class="negative-summaries"> -'+value.negative+'</div>';
             html +=     '</div>';
+
 
             // title
             html +=     '<div class="details-on-demand-title large-title">'+TwitterUtil.trimLabelText(value.tag)+'</div>';
@@ -70,13 +72,12 @@ define(function (require) {
 
             html +=     '<div class="details-on-demand-chart">';
             html +=         '<div class="details-positive-label">Positive Tweets</div>';
-
             html +=         '<div class="details-chart-content">';
 
             html +=             '<div class="details-chart-bars">';
 
             for (i=0; i<value.countByTime.length; i++) {
-                relativePercent = TwitterUtil.getCountByTimePercentage( value, i ) / maxPercentage;
+                relativePercent = (TwitterUtil.getCountByTimePercentage( value, i ) / maxPercentage) * 100;
                 cumulativePercentages[0] = sentimentPercentages.negative[i]*relativePercent;
                 cumulativePercentages[1] = cumulativePercentages[0] + sentimentPercentages.neutral[i]*relativePercent;
                 cumulativePercentages[2] = cumulativePercentages[1] + sentimentPercentages.positive[i]*relativePercent;
@@ -122,7 +123,7 @@ define(function (require) {
             html += '</div>';
 
             // bottom half
-            html += '<div class="details-on-demand-half">'
+            html += '<div class="details-on-demand-half">';
 
             // most recent tweets
             html +=     '<div class="details-on-demand-title small-title">Most Recent</div>';
@@ -149,11 +150,20 @@ define(function (require) {
             html +=     '</div>';
             html += '</div>';
 
+            html += '<div class="details-on-demand-close-button"></div>';
             html += '</div>';
 
             this.destroy(); // destroy any previous DoD
 
-            return $(html).draggable();
+            // create element
+            $details = $(html).draggable().resizable({
+                minHeight: 257,
+                minWidth: 257,
+                handles: 'se'
+            });
+            $details.find('.details-on-demand-close-button').click( closeCallback );
+            return $details;
+
         },
 
 

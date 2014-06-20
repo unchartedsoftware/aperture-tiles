@@ -19,3 +19,20 @@ body {
           -ms-user-select: none;
               user-select: none;
 }
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px #000; 
+    border-radius: 10px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #222222;
+    border: 1px solid #000;
+    -webkit-box-shadow: 0 0 6px #000;
+}

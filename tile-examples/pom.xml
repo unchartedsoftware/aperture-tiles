@@ -24,4 +24,5 @@
 	<module>twitter-heatmap</module>
 	<module>summary-statistics</module>
   </modules>
+
 </project>

@@ -288,7 +288,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
             AnnotationData<?> newAnnotation =  editAnnotation( oldAnnotation );
 
             try {
-                _service.modify( TEST_LAYER_NAME, oldAnnotation, newAnnotation );
+                _service.modify( TEST_LAYER_NAME, newAnnotation );
                 annotation.update( newAnnotation );
                 if ( VERBOSE )
                     System.out.println( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() );
@@ -305,7 +305,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 
             AnnotationData<?> clone = annotation.clone();
             try {
-                _service.remove(TEST_LAYER_NAME, clone);
+                _service.remove( TEST_LAYER_NAME, clone.getCertificate() );
                 removeAnnotationFromPublic(annotation);
                 if (VERBOSE)
                     System.out.println("Thread " + _name + " successfully removed " + clone.getUUID());

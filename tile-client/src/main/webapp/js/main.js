@@ -36,7 +36,10 @@ require(['./FileLoader',
          './layer/view/client/ClientLayerFactory',
          './annotation/AnnotationLayerFactory',
          './layer/controller/LayerControls',
-         './layer/controller/UIMediator'
+         './layer/controller/CarouselControls',
+         './layer/controller/BaseLayerMediator',
+         './layer/controller/ClientLayerMediator',
+         './layer/controller/ServerLayerMediator'
         ],
 
         function (FileLoader, 
@@ -51,7 +54,10 @@ require(['./FileLoader',
                   ClientLayerFactory,
                   AnnotationLayerFactory,
                   LayerControls,
-                  UIMediator) {
+                  CarouselControls,
+                  BaseLayerMediator,
+                  ClientLayerMediator,
+                  ServerLayerMediator) {
 
 	        "use strict";
 
@@ -59,9 +65,9 @@ require(['./FileLoader',
 	            cloneObject,
 	            getLayers,
 	            getAnnotationLayers,
-	            uiMediator,
 	            getURLParameter,
 	            mapsDeferred, layersDeferred, annotationsDeferred;
+
 
 	        getURLParameter = function (key) {
 		        var url = window.location.search.substring(1),
@@ -193,7 +199,13 @@ require(['./FileLoader',
 				            filter,
 				            clientLayers,
 				            serverLayers,
-                            baseLayers;
+				            clientLayerFactory,
+				            serverLayerFactory,
+				            baseLayerMediator,
+				            clientLayerMediator,
+				            serverLayerMediator,
+                            clientLayerDeferreds,
+                            serverLayerDeferreds;
 
 				        // Initialize our map choice panel
 				        if (maps.length > 1) {
@@ -217,36 +229,15 @@ require(['./FileLoader',
 
 				        // Initialize our map...
 				        currentMap = getURLParameter('map');
-				        if (!currentMap || !maps[currentMap]) {
+				        if ( !currentMap || !maps[currentMap] ) {
 					        currentMap = 0;
 				        }
 
-                        //add map after the containing div has been added
-                        //reconfigure mapConfig for Map.js
 				        mapConfig = maps[currentMap];
-                        if (Array.isArray(mapConfig.MapConfig.baseLayer)) {
-                            baseLayers = mapConfig.MapConfig.baseLayer;
-                            if ( mapConfig.MapConfig.baseLayer[0].type === 'BlankBase' ) {
-                                mapConfig.MapConfig.baseLayer = {};
-                            } else {
-                                mapConfig.MapConfig.baseLayer = { 'Google' :
-                                    { 'options'  :  mapConfig.MapConfig.baseLayer[0].options }
-                                };
-                            }
-                        } else {
-                            baseLayers.push(mapConfig.MapConfig.baseLayer);
-                        }
 
-				        worldMap = new Map("map", mapConfig);
-				        // ... (set up our map axes) ...
-				        worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
-
-                        // ... (set up our map tile borders) ...
-                        MapService.setTileBorderConfig(mapConfig);
-                        
-                        if(mapConfig.MapConfig.zoomTo) {
-                            worldMap.map.zoomTo( mapConfig.MapConfig.zoomTo[0], mapConfig.MapConfig.zoomTo[1], mapConfig.MapConfig.zoomTo[2] );
-                        }
+				        worldMap = new Map("map", mapConfig);   // create map
+				        worldMap.setAxisSpecs( MapService.getAxisConfig(mapConfig) ); // set axes
+                        worldMap.setTileBorderStyle( mapConfig );
 
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {
@@ -262,6 +253,7 @@ require(['./FileLoader',
 				        filter = function (layer) {
 					        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
 				        };
+
 				        clientLayers = getLayers("client", layers, filter);
 				        serverLayers = getLayers("server", layers, filter);
                         annotationLayers = getAnnotationLayers( annotationLayers, filter );
@@ -270,32 +262,36 @@ require(['./FileLoader',
 					        UICustomization.customizeLayers(layers);
 				        }
 
-				        uiMediator = new UIMediator();
+                        baseLayerMediator = new BaseLayerMediator();
+                        baseLayerMediator.registerLayers( worldMap );
+
+                        clientLayerMediator = new ClientLayerMediator();
+                        serverLayerMediator = new ServerLayerMediator();
+
+                        clientLayerFactory = new ClientLayerFactory();
+                        serverLayerFactory = new ServerLayerFactory();
 
 				        // Create client, server and annotation layers
-				        ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
+				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
+				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap, serverLayerMediator );
+
                         AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
 
-                        $.when( ServerLayerFactory.createLayers(serverLayers, uiMediator, worldMap) ).done( function( serverLayers ) {
-                            var layer,
-                            	layerInfo,
-                            	filterAxisConfig;
-                            
-                            layerInfo = serverLayers.getSubLayerInfosById();
+                        $.when( clientLayerDeferreds, serverLayerDeferreds ).done( function( clientLayers, serverLayers ) {
 
-                            for(layer in layerInfo){
-                                if(layerInfo.hasOwnProperty( layer )){
-                                    filterAxisConfig = layerInfo[ layer ].meta;
-                                }
-                            }
-                            filterAxisConfig.map = worldMap;
-                            filterAxisConfig.baseLayers = baseLayers;
-                            new LayerControls( 'layer-controls-content', uiMediator.getLayerStateMap(), filterAxisConfig ).noop();
+                            var sharedStates = [];
 
-                            //hack to trigger a refresh of the map - this will override map style
-                            //as well as update the controls panel.
-                            $('fieldset input[type=radio]').first().click();
+                            $.merge( sharedStates, baseLayerMediator.getLayerStates() );
+                            $.merge( sharedStates, clientLayerMediator.getLayerStates() );
+                            $.merge( sharedStates, serverLayerMediator.getLayerStates() );
+
+                            // create layer controls
+                            new LayerControls( 'layer-controls-content', sharedStates ).noop();
+                            // create the carousel controls
+                            new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
+
                         });
+
 			        }
 		        );
 

@@ -36,18 +36,14 @@ define(function (require) {
     ClientRenderer = Class.extend({
         ClassName: "ClientRenderer",
 
-        /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
-         */
+
         init: function(map) {
 
             this.map = map;
-            this.clientState = null;
         },
 
-        attachClientState: function(clientState) {
-            this.clientState = clientState;
+        registerLayer: function( layerState ) {
+            this.layerState = layerState;
         },
 
         setOpacity: function( opacity ) {

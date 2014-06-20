@@ -1,0 +1,29 @@
+{
+    "Sample Size": 1,
+    "Summaries": [
+        {
+            "Fields": [],
+            "Type": "Qualitative"
+        },
+        {
+            "Fields": [{
+                "1st Quartile": -5,
+                "3rd Quartile": 8,
+                "Field Alias": "scoreMargin",
+                "Median": 2,
+                "Name": "scoreMargin"
+            }],
+            "Type": "Numerical"
+        },
+        {
+            "Fields": [],
+            "Type": "Date"
+        },
+        {
+            "Fields": [],
+            "Type": "Text"
+        }
+    ],
+    "Title": "nba-playbyplay",
+    "Total Records": 1
+}

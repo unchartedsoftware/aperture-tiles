@@ -59,7 +59,7 @@ define(function (require) {
         css : function( attribute, value ) {
             // add css object or attribute to css for layer
             if ( $.isPlainObject(attribute) ) {
-                $.extend(this.css_, attribute);
+                $.extend( this.css_, attribute );
             } else {
                 this.css_[attribute] = value;
             }
@@ -97,8 +97,6 @@ define(function (require) {
             $elem.each( function() {
                 node.$root.append( $(this) );
             });
-
-
         },
 
 

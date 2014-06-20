@@ -1,131 +1,171 @@
 @charset "UTF-8";
 
-/* open layers id given to the popup */
-#annotation-ol-container {
-    background-color: #222222 !important;
-    border-radius:10px;
+
+.annotation-bin {
+    pointer-events:none;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+    border: 1px solid #FF0000; 
 }
 
-#annotation-popup-id {
-    background-color: #222222; 
-    background-image: none;
-    border: 0px solid #7E7E7E;
-    color: #7E7E7E; 
-    overflow:hidden;
-    width:256px;
-    height:192px;
+.point-annotation-aggregate {
+    position:absolute;
 }
 
-#annotation-accordion-id {
-    width:100%; 
-    height: calc(100% - 25px);
-    background-color: #222222; 
-    background-image: none;
-    color: #7E7E7E; 
-    overflow:auto;
+.point-annotation {
+
+    position:absolute;
+    -webkit-border-radius: 20px;
+       -moz-border-radius: 20px;
+            border-radius: 20px; 
+    width: 16px;
+    height: 16px;
+    -webkit-transition: 0.1s ease-in-out;
+       -moz-transition: 0.1s ease-in-out;
+        -ms-transition: 0.1s ease-in-out;
+            transition: 0.1s ease-in-out;
 }
 
-/* invert colour of jQuery accordian header */
-#annotation-accordion-id .ui-accordion-icons {
-    -webkit-filter:invert(100%);                    
-         -o-filter:invert(100%); 
-        -ms-filter:"invert(100%)";
-            filter:invert(100%); 
-    font-family: Verdana, Arial, sans-serif;
-    font-size: 12px;
+.point-annotation-front {
+
+    background-color: #09CFFF;
+    margin: -6px 2px 2px -6px;
+    z-index: 1;
 }
 
-#annotation-accordion-id .ui-accordion-content {
-    border: 0px solid #7E7E7E;
+.point-annotation-back {
+    
+    pointer-events:none;
+    background-color: #fff;
+    border: 2px solid #fff;
+    margin: -8px 0 0 -8px;
+    z-index: 0;
+}
+
+.point-annotation-aggregate:hover .point-annotation {
+
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+}
+
+.point-annotation-aggregate:hover .point-annotation-front {
+
+    margin: -10px 2px 2px -10px;
+}
+
+.point-annotation-aggregate:hover .point-annotation-back {
+
+    margin: -12px 0 0 -12px;
+}
+
+.annotation-details {
+
+    position:absolute;
+    width: 384px;
     background-color: #222222;
-    background-image: none;
-    font-family: Verdana, Arial, sans-serif;
-    color: #7E7E7E;    
+    padding: 10px;
+    z-index: 2001;
+    border: 1px solid #333333;
+    box-shadow: 0px 5px 15px #000;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;  
 }
 
-/* invert colour of jQuery resizable handle */
-#annotation-popup-resize-icon {
-    -webkit-filter:invert(100%);                    
-         -o-filter:invert(100%); 
-        -ms-filter:"invert(100%)";
-            filter:invert(100%);   
+.annotation-details-aggregate {
+
+    padding: 10px 24px 24px 24px;   
 }
 
-.annotation {
-    background-color: #222222;
-    color: #7E7E7E;
-    font-size: 12px;
+.annotation-details-content {
+
+    position:relative;
+    height:100%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
-.annotation-label {
-    float:left;
-    width:90px;
+
+.annotation-details-head {
+
+    position:relative;
+    font-size: 18px;
+    color: #ffffff;
+    width:100%;
 }
 
-.annotation-content-container {
-    padding-top:15px; 
-    padding-left:15px; 
-    height:calc(100% - 25px);
-}
 
-.annotation-attribute {
-    white-space: nowrap;
-    font-weight:bold; 
-    padding-bottom:10px;
-}
+.annotation-details-body {
 
-.annotation-input {
-    border: 1px solid #7E7E7E;
-    width: calc(100% - 108px)
-}
-
-.annotation-textarea {
-    border: 1px solid #7E7E7E;
-    width: calc(100% - 22px);
-    height: calc(100% - 110px);
-    max-width: 384px;
-    max-height: 256px;
-    font-family: inherit;
-    font-size: inherit;  
-    resize:none;
-}
-
-.annotation-text-div {
-    width: calc(100% - 17px);
-    height: calc(100% - 73px);
-    max-width: 384px;
-    max-height: 256px;
+    position:relative;   
+    font-size: 14px; 
+    border-radius: 10px;
+    background-color:#111111;
+    box-shadow: inset 0 0 10px #000;  
+    padding: 5px;
     overflow: auto;
+    height: calc(100% - 42px);
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+
 }
 
-.annotation-button {
-    margin-top:10px;
-    -webkit-border-radius: 5px;
-       -moz-border-radius: 5px;
-            border-radius: 5px;
-    color: #7E7E7E;
-    background: #222222;
-    padding: 5px 8px 5px 8px;
-    border: solid #7E7E7E 1px;
-    text-decoration: none;
+.annotation-details-label {
+
+    position:relative;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    color: #ffffff;
+    text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000; 
 }
 
-.annotation-button-right {
-    float:right;
+
+.annotation-details-close-button {
+    position:absolute;
+    right:3px;
+    top:3px;
+    width:12px;
+    height:12px;
+    background: transparent url(../images/close_icon.png) no-repeat center top;
+    -webkit-filter: brightness(0.5);
+    
+    -webkit-transform: scale(0.75);
+       -moz-transform: scale(0.75);
+        -ms-transform: scale(0.75);
+            transform: scale(0.75);
+            
+    -webkit-transition: 0.1s ease-in-out;
+       -moz-transition: 0.1s ease-in-out;
+        -ms-transition: 0.1s ease-in-out;
+            transition: 0.1s ease-in-out;
 }
 
-.annotation-button-left {
-    margin-left:15px;
-    float:left;
+.annotation-details-close-button:hover {
+    cursor: pointer;
+    -webkit-filter: brightness(1);
+    -webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
 }
 
-.annotation-button:hover {
-    background: #333333;
-}
+.annotation-carousel {
 
-#annotation-popup-edit {
-    position:absolute; 
-    right:0px; 
-    outline-width:0;
+    position:absolute;
+    pointer-events:none;
+    width:100%;
+    height:100%;
+    top:0px;
+    left:0px;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
-

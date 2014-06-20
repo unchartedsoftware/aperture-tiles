@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
@@ -23,55 +23,54 @@
  * SOFTWARE.
  */
 
-/*global OpenLayers*/
 
 /**
- * This module defines a ClientState class which is to be held by a ViewController and shared with the individual client
- * render layers. This is to guarantee that interface states can be shared / integrated between separate client layers
+ * This modules defines a basic layer class factory and provides an interface for generating
+ * layers that can be added to maps.
  */
-define(function (require) {
+define( function (require) {
     "use strict";
 
 
 
-    var Class = require('../../../class'),
-        ClientState;
+	var Class = require('../../class'),
+        LayerFactory;
 
 
 
-    ClientState = Class.extend({
+    LayerFactory = Class.extend({
+        ClassName: "LayerFactory",
 
-        /**
-         * Construct a mouse state
-         */
-        init: function () {
 
-            // holds the state of mouse clicks
-            this.clearClickState();
-        },
+        createLayers: function( layerJSON, map, layerMediator ) {
+            var layerDeferreds = [],
+                factoryDeferred = $.Deferred(),
+                i;
 
-        setClickState: function( key, value) {
-
-            this.clickState[key] = value;
-        },
-
-        getClickState: function( key ) {
-
-            return this.clickState[key];
-        },
-
-        removeClickState: function(key) {
-            if (this.clickState[key] !== undefined) {
-                delete this.clickState[key];
+            for (i=0; i<layerJSON.length; i++) {
+                layerDeferreds.push( this.createLayer(layerJSON[i], map) );
             }
+
+            $.when.apply( $, layerDeferreds ).done( function() {
+                // when all individual layer deferreds are resolved
+                var layers = Array.prototype.slice.call( arguments, 0 );
+                // register with layer mediator
+                layerMediator.registerLayers( layers );
+                // resolve the factory deferred
+                factoryDeferred.resolve( layers );
+            });
+
+            return factoryDeferred;
         },
 
-        clearClickState: function() {
-            this.clickState = {
-            };
+
+        createLayer: function(layerJSON, map) {
+            return true;
         }
 
-     });
 
-    return ClientState;
+    });
+
+    return LayerFactory;
+
 });

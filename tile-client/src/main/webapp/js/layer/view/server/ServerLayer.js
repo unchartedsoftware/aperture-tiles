@@ -28,246 +28,65 @@
 
 
 
-/**
- * This modules defines a basic layer class that can be added to maps.
- */
 define(function (require) {
     "use strict";
 
 
 
-    var Class = require('../../../class'),
-        DataLayer = require('../../DataLayer'),
-        ServerLayer,
-        forEachLayer,
-        Y_TILE_FUNC_PASSTHROUGH,
-        Y_TILE_FUNC_ZERO_CLAMP;
+    var Layer = require('../Layer'),
+        LayerService = require('../../LayerService'),
+        ServerLayer;
 
 
-    /*
-     * Private function to execute another function on each layer.
-     */
-    forEachLayer = function (layers, fcn) {
-        var layerInfos, layer;
 
-        if (!layers) { return; }
-        if (!layers.dataListener) { return; }
-
-        layerInfos = layers.dataListener.getLayersInformation();
-        if (!layerInfos) { return; }
-        for (layer in layerInfos) {
-            if (layerInfos.hasOwnProperty(layer)) {
-                $.proxy(fcn, layers)(layer, layerInfos[layer]);
-            }
-        }
-    };
-
-
-    /*
-     * Y transformation function for non-density strips
-     */
-    Y_TILE_FUNC_PASSTHROUGH = function (yInput) {
-        return yInput;
-    };
-
-
-    /*
-     * Y transformation function for density strips
-     */
-    Y_TILE_FUNC_ZERO_CLAMP = function (yInput) {
-        return 0;
-    };
-
-
-    ServerLayer = Class.extend({
+    ServerLayer = Layer.extend({
         ClassName: "ServerLayer",
-        init: function (layerSpec, map, deferred) {
 
-            var that = this;
 
-            this.map = map;
-            this.pendingLayerRequests = [];
-            this.layers = {};
+        init: function ( spec, map ) {
 
-            // send initial post to configure server
-            this.dataListener = new DataLayer(layerSpec);
-            this.dataListener.setRequestCallback( $.proxy(this.requestLayerInfo, this));
-            this.dataListener.addRetrievedCallback( $.proxy(this.useLayerInfo, this));
-            this.dataListener.addRetrievedCallback( function() { deferred.resolve( that ); });
-            this.dataListener.retrieveLayerInfo();
+            this._super( spec, map );
         },
 
         /**
-         * Let someone else listen to the layer info to which we listen
+         * Set the opacity
          */
-        addLayerInfoListener: function (listener) {
-            this.dataListener.addRetrievedCallback(listener);
-        },
-
-        /*
-         * Called when data is requested from the server.
-         */
-        requestLayerInfo: function (dataListener, layerSpec) {
-            // Record the layer being requested
-            this.pendingLayerRequests[this.pendingLayerRequests.length] = layerSpec.layer;
-        },
-
-        /*
-         * Called when data the basic information about the layer is received
-         * from the server.
-         */
-        useLayerInfo: function (dataListener, layerInfo) {
-
-            var index = this.pendingLayerRequests.indexOf(layerInfo.layer);
-
-            // Wait until all requests have been fulfilled
-            if (index > -1) {
-                this.pendingLayerRequests.splice(index, 1);
-            }
-            if (this.pendingLayerRequests.length > 0) {
-                return;
-            }
-
-            // We've got everything - create our map layers.
-            this.updateLayers();
-        },
-
-
-        /**
-         * Add this layer to a map.
-         */
-        addToMap: function (map) {
-            this.map = map;
-
-            this.updateLayers();
-        },
-
-
-        /**
-         * Get a list of server rendered sub-layers we control.
-         */
-        getSubLayerIds: function () {
-            var ids = [];
-
-            forEachLayer(this, function (layer, layerInfo) {
-                ids[ids.length] = layer;
-            });
-
-            return ids;
-        },
-
-
-        getSubLayerSpecsById: function () {
-            var layerInfoById = {};
-
-            forEachLayer(this, function (layer, layerInfo) {
-                layerInfoById[layer] = this.dataListener.getLayerSpecification(layer);
-            });
-
-            return layerInfoById;
-        },
-
-        getSubLayerInfosById: function () {
-            return this.dataListener.getLayersInformation();
-        },
-
-
-        /**
-         * Get the opacity of a given sub-layer
-         */
-        getSubLayerOpacity: function (subLayerId) {
-            var layer = this.layers[subLayerId],
-                opacity = NaN;
-
-            if (layer) {
-                opacity = layer.opacity;
-            }
-
-            return opacity;
-        },
-
-        /**
-         * Set the opacity of a given sub-layer
-         */
-        setSubLayerOpacity: function (subLayerId, opacity) {
-            var layer = this.layers[subLayerId];
-            if (layer) {
-                layer.olLayer_.setOpacity(opacity);
+        setOpacity: function ( opacity ) {
+            if (this.layer) {
+                this.layer.olLayer_.setOpacity( opacity );
             }
         },
 
 
         /**
-         * Set the visibility of a given sub-layer
+         * Set the visibility
          */
-        setSubLayerVisibility: function (subLayerId, visibility) {
-            var layer = this.layers[subLayerId];
-            if (layer) {
-                layer.olLayer_.setVisibility(visibility);
+        setVisibility: function ( visibility ) {
+            if (this.layer) {
+                this.layer.olLayer_.setVisibility( visibility );
             }
         },
-
-
-        /**
-         * Sets the visiblity of a sub layer.
-         *
-         * @param {string} subLayerId - The ID of the sublayer to modify.
-         * @param {boolean} enabled - TRUE if the sub layer should be enabled, false otherwise.
-         */
-        setSubLayerEnabled: function (subLayerId, enabled) {
-            var layer = this.layers[subLayerId];
-            if (layer) {
-                layer.olLayer_.setVisibility(enabled);
-            }
-        },
-
-        /**
-         * @param {string} subLayerId - The sub layer ID.
-         * @returns {boolean} - TRUE if the sublayer is enabled, false otherwise.
-         */
-        getSubLayerEnabled: function (subLayerId) {
-            var layer = this.layers[subLayerId], enabled;
-            enabled = false;
-
-            if (layer) {
-                enabled = layer.olLayer_.setVisibility(enabled);
-            }
-            return enabled;
-        },
-
 
         /**
          * Updates the ramp type associated with the layer.  Results in a POST
          * to the server.
          *
-         * @param {string} subLayerId - The ID of layer
          * @param {string} rampType - The new ramp type for the layer.
+         * @param {function} callback - The callback function when the configure request returns, used to request new
+         *                              ramp image
          */
-        setSubLayerRampType: function (subLayerId, rampType) {
-            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            if (!layerSpec) {
-                return;
-            }
+        setRampType: function ( rampType, callback ) {
 
-            if (!layerSpec.renderer) {
-                layerSpec.renderer = {ramp: rampType};
+            var that = this;
+            if ( !this.layerSpec.renderer ) {
+                this.layerSpec.renderer = {ramp: rampType};
             } else {
-                layerSpec.renderer.ramp = rampType;
+                this.layerSpec.renderer.ramp = rampType;
             }
-            this.dataListener.retrieveLayerInfo();
-        },
-
-
-        /**
-         * @param {string} subLayerId - The ID of the sub layer to query.
-         * @returns {string} ramp - The type of the ramp applied to the layer.
-         */
-        getSubLayerRampType: function (subLayerId) {
-            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            if (!layerSpec || !layerSpec.renderer || !layerSpec.renderer.ramp) {
-                return "ware";
-            }
-            return layerSpec.renderer.ramp;
+            this.configure( function() {
+                callback();
+                that.update();
+            });
         },
 
 
@@ -275,193 +94,154 @@ define(function (require) {
          * Updates the ramp function associated with the layer.  Results in a POST
          * to the server.
          *
-         * @param {string} subLayerId - The ID of the sub layer to update.
          * @param {string} rampFunction - The new new ramp function.
          */
-        setSubLayerRampFunction: function (subLayerId, rampFunction) {
-            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            if (!layerSpec) {
-                return;
-            }
+        setRampFunction: function ( rampFunction ) {
 
-            if (!layerSpec.transform) {
-                layerSpec.transform = {name: rampFunction};
+            if ( !this.layerSpec.transform ) {
+                this.layerSpec.transform = {name: rampFunction};
             } else {
-                layerSpec.transform.name = rampFunction;
+                this.layerSpec.transform.name = rampFunction;
             }
-            this.dataListener.retrieveLayerInfo();
-        },
-
-
-        /**
-         * @param {string} subLayerId - The ID of the sub layer to query.
-         * @returns {string}  The ramp function for the layer.
-         */
-        getSubLayerRampFunction: function (subLayerId) {
-            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            if (!layerSpec || !layerSpec.transform || !layerSpec.transform.name) {
-                return "linear";
-            }
-            return layerSpec.transform.name;
+            this.configure( $.proxy( this.update, this ) );
         },
 
 
         /**
          * Updates the filter range for the layer.  Results in a POST to the server.
          *
-         * @param {string} subLayerId - The ID of the sub layer to update.
          * @param {Array} filterRange - A two element array with values in the range [0.0, 1.0],
          * where the first element is the min range, and the second is the max range.
          */
-        setSubLayerFilterRange: function (subLayerId, filterRange) {
-            var layerSpec;
-            layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            layerSpec.legendrange = [filterRange[0] * 100, filterRange[1] * 100];
-            this.dataListener.retrieveLayerInfo();
+        setFilterRange: function ( filterRange ) {
+            this.layerSpec.legendrange = [filterRange[0] * 100, filterRange[1] * 100];
+            this.configure( $.proxy( this.update, this ) );
         },
 
 
         /**
-         * @param {string} subLayerId - The ID of the sub layer to update.
-         * @returns {Array} filterRange - A two element array with values in the range [0.0, 1.0],
-         * where the first element is the min range, and the second is the max range.
-         */
-        getSubLayerFilterRange: function (subLayerId) {
-            var layerSpec = this.dataListener.getLayerSpecification(subLayerId);
-            return layerSpec.legendrange;
-        },
-
-
-        /**
-         * @param {string} subLayerId - The ID of the sublayer to update.
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
-        setSubLayerZIndex: function (subLayerId, zIndex) {
-            var olLayer = this.layers[subLayerId].olLayer_;
-            this.map.setLayerIndex(olLayer, zIndex);
+        setZIndex: function ( zIndex ) {
+            this.map.setLayerIndex( this.layer.olLayer_, zIndex );
         },
 
 
-        /**
-         * @param {string} subLayerId - The ID of the sublayer to query.
-         * @returns {number} - The z-order value of the layer, where 0 is front.
-         */
-        getSubLayerZIndex: function (subLayerId) {
-            var olLayer = this.layers[subLayerId].olLayer_;
-            return this.map.getLayerIndex(olLayer);
+        configure: function( callback ) {
+
+            var that = this;
+
+            LayerService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
+                if (statusInfo.success) {
+                    if ( that.layerInfo ) {
+                        // if a previous configuration exists, release it
+                        LayerService.unconfigureLayer( that.layerInfo, function() {
+                            return true;
+                        });
+                    }
+                    // set layer info
+                    that.layerInfo = layerInfo;
+                }
+
+                callback( layerInfo, statusInfo );
+            });
         },
 
 
         /**
          * Update all our openlayers layers on our map.
          */
-        updateLayers: function () {
+        update: function () {
 
-            var that = this;
+            var that = this,
+                olBounds,
+                yFunction,
+                previousZIndex = null;
 
-            if (!this.map) {
+            // y transformation function for non-density strips
+            function passY( yInput ) {
+                return yInput;
+            }
+            // y transformation function for density strips
+            function clampY( yInput ) {
+                return 0;
+            }
+            // create url function
+            function createUrl( bounds ) {
+
+                var res = this.map.getResolution(),
+                    maxBounds = this.maxExtent,
+                    tileSize = this.tileSize,
+                    x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
+                    y = yFunction( Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ) ),
+                    z = this.map.getZoom(),
+                    fullUrl, viewBounds;
+
+                if (x >= 0 && y >= 0) {
+                    // tile bounds in view
+                    viewBounds = that.map.getTileBoundsInView();
+                    // set base url
+                    fullUrl = (this.url + this.version + "/" +
+                               this.layername + "/" +
+                               z + "/" + x + "/" + y + "." + this.type);
+                    // if bounds supplied, append those
+                    if (viewBounds) {
+                        fullUrl = (fullUrl
+                                + "?minX=" + viewBounds.minX
+                                + "&maxX=" + viewBounds.maxX
+                                + "&minY=" + viewBounds.minY
+                                + "&maxY=" + viewBounds.maxY
+                                + "&minZ=" + viewBounds.minZ
+                                + "&maxZ=" + viewBounds.maxZ);
+                    }
+                    return fullUrl;
+                }
+            }
+
+            if ( !this.map || !this.layerInfo ) {
                 return;
             }
 
-            forEachLayer(this, function (layer, layerInfo) {
-                var layerSpec = this.dataListener.getLayerSpecification(layer),
-                    olBounds,
-                    yFunction;
-                if (!layerInfo) {
-                    // No info; remove layer for now
-                    if (this.layers[layer]) {
-                        this.map.map.remove(this.layers[layer]);
-                        this.layers[layer] = null;
-                    }
-                } else {
-                    // The bounds of the full OpenLayers map, used to determine 
-                    // tile coordinates
-                    // Note: these values are not set to full 20037508.342789244 as 
-                    // it produces extra tiles around intended border. This rounded 
-                    // down value results in the intended tile bounds ending at the
-                    // border of the map
-                    olBounds = new OpenLayers.Bounds(-20037500, -20037500,
-                                                      20037500,  20037500);
+            // The bounds of the full OpenLayers map, used to determine
+            // tile coordinates
+            // Note: these values are not set to full 20037508.342789244 as
+            // it produces extra tiles around intended border. This rounded
+            // down value results in the intended tile bounds ending at the
+            // border of the map
+            olBounds = new OpenLayers.Bounds(-20037500, -20037500,
+                                              20037500,  20037500);
 
-                    // Adjust y function if we're displaying a density strip
-                    if (layerSpec.isDensityStrip) {
-                        yFunction = Y_TILE_FUNC_ZERO_CLAMP;
-                    } else {
-                        yFunction = Y_TILE_FUNC_PASSTHROUGH;
-                    }
+            // Adjust y function if we're displaying a density strip
+            yFunction = ( this.layerSpec.isDensityStrip ) ? clampY : passY;
 
-                    // Remove any old version of this layer
-                    if (this.layers[layer]) {
-                        //this.map.map.removeLayer(this.layers[layer]);
-                        this.layers[layer].remove();
-                        this.layers[layer] = null;
-                    }
+            // Remove any old version of this layer
+            if ( this.layer ) {
+                previousZIndex = this.map.getLayerIndex( this.layer.olLayer_ );
+                this.layer.remove();
+                this.layer = null;
+            }
 
-                    // Add the new layer
-                    this.layers[layer] = this.map.addApertureLayer(
-                        aperture.geo.MapTileLayer.TMS, {},
-                        {
-                            'name': 'Aperture Tile Layers',
-                            'url': layerInfo.tms,
-                            'options': {
-                                'layername': layerInfo.layer,
-                                'type': 'png',
-                                'version': '1.0.0',
-                                'maxExtent': olBounds,
-                                transparent: true,
-                                getURL: function (bounds) {
-                                    var res, x, y, z, maxBounds, tileSize, fullUrl, viewBounds;
-
-                                    res = this.map.getResolution();
-                                    tileSize = this.tileSize;
-                                    maxBounds = this.maxExtent;
-
-                                    x = Math.round((bounds.left - maxBounds.left) /
-                                                   (res*tileSize.w));
-                                    y = Math.round((bounds.bottom - maxBounds.bottom) /
-                                                   (res*tileSize.h));
-                                    y = yFunction(y);
-                                    z = this.map.getZoom();
-
-                                    if (x >= 0 && y >= 0) {
-
-                                        viewBounds = that.map.getTileBoundsInView(); //.params;
-                                        
-                                        fullUrl = (this.url + this.version + "/" +
-                                                   this.layername + "/" + 
-                                                   z + "/" + x + "/" + y + "." + this.type);
-
-                                        if (viewBounds) {
-                                            fullUrl = (fullUrl
-                                                       + "?minX=" + viewBounds.minX
-                                                       + "&maxX=" + viewBounds.maxX
-                                                       + "&minY=" + viewBounds.minY
-                                                       + "&maxY=" + viewBounds.maxY
-                                                       + "&minZ=" + viewBounds.minZ
-                                                       + "&maxZ=" + viewBounds.maxZ);
-                                        }
-
-                                        return fullUrl;
-                                    }
-                                }
-                            }
-                        }
-                    );
-
-					// manually set z index of this layer to 0, so it is behind client layers
-                    // Note: this does not seem to actually affect the z-index value in the DOM
-                    // but does prevent them from overlapping client layers. In the future it 
-                    // may be worth implementing a more sophisticated system to allow proper 
-                    // client-server inclusive ordering
-					this.map.setLayerIndex( this.layers[layer].olLayer_, 0 );
-
-                    // Apparently we can't set opacity through options, so we 
-                    // hand-set it now
-                    if (layerSpec && layerSpec.Opacity) {
-                        this.layers[layer].olLayer_.setOpacity(layerSpec.Opacity);
+            // Add the new layer
+            this.layer = this.map.addApertureLayer(
+                aperture.geo.MapTileLayer.TMS, {},
+                {
+                    'name': 'Aperture Tile Layers',
+                    'url': this.layerInfo.tms,
+                    'options': {
+                        'layername': this.layerInfo.layer,
+                        'type': 'png',
+                        'version': '1.0.0',
+                        'maxExtent': olBounds,
+                        transparent: true,
+                        getURL: createUrl
                     }
                 }
-            });
+            );
+
+            if ( previousZIndex ) {
+                // restore previous index
+                this.map.setLayerIndex( this.layer.olLayer_, previousZIndex );
+            }
         }
     });
 

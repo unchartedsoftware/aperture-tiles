@@ -23,132 +23,132 @@
  * SOFTWARE.
  */
 
-/*global OpenLayers*/
 
-/**
- * This module defines a ClientLayer class which provides delegation between multiple client renderers
- * and their respective data sources. Each view is composed of a ClientRenderer and DataService. Each view has
- * a View which delegates tile requests from the view and its DataService.
- *
- * Each DataService manages a unique set of data. Upon tile requests, if data for the tile is not held in memory, it is pulled from the server.
- * Each View manages the set of tiles that a currently visible within a particular view.
- * Each ClientRenderer is responsible for drawing only the elements currently visible within a specific view.
- *
- */
 define(function (require) {
     "use strict";
 
 
 
-    var Class = require('../../../class'),
-        View  = require('./View'),
-        ClientState   = require('./ClientState'),
-		clientState = new ClientState(),	// global client state
+    var Layer = require('../Layer'),
+        LayerService = require('../../LayerService'),
+        TileService = require('./data/TileService'),
+        makeRedrawFunc,
         ClientLayer;
 
 
 
-    ClientLayer = Class.extend({
+    makeRedrawFunc = function( renderer, tileService ) {
+        return function() {
+            renderer.redraw( tileService.getDataArray() );
+        };
+    };
 
-        /**
-         * Construct a ClientLayer
-		 * @param spec The ClientLayer specification object of the form:
-		 *				{
-		 *					map : 	aperture.js map
-		 *					views : array of views of the form:
-		 *							[{
-		 *								dataService : 	the DataService from which to pull the tile data
-		 *								renderer : 		the ClientRenderer to draw the view data
-		 *							}]
-		 *              }
-         */
-        init: function ( id, map ) {
-
-            var that = this;
-
-            // initialize attributes
-            this.id = id;
-            this.defaultViewIndex = 0;
-            this.tileViewMap = {};      	// maps a tile key to its view index
-            this.views = [];				// array of all views
-			this.clientState = clientState; 	// global client state to be shared by all views
-            this.opacity = 1.0;
-            this.isVisible = true;
-
-            this.map = map;
-            this.map.on('move', function() {
-                // cal map update on pan end
-                that.onMapUpdate();
-            });
-        },
+    ClientLayer = Layer.extend({
 
 
-        setViews: function( viewSpecs ) {
+        init: function ( spec, renderers, map ) {
 
-            var that =  this,
-                i;
-
-            // add views
-            for (i = 0; i < viewSpecs.length; i++) {
-                viewSpecs[i].clientState = that.clientState;
-                that.views.push( new View( viewSpecs[i] ) );
-            }
-
-            // trigger callback to draw first frame
-            this.onMapUpdate();
+            this._super( spec, map );
+            this.renderers = renderers;
+            this.tileServices = [];
+            this.renderersByTile = {};
+            this.defaultRendererIndex = 0;
+            this.map.on('move', $.proxy(this.update, this));
         },
 
 
         setOpacity: function( opacity ) {
 
             var i;
-            for (i=0; i<this.views.length; ++i) {
-                this.views[i].renderer.setOpacity( opacity );
+            for (i=0; i<this.renderers.length; i++) {
+                this.renderers[i].setOpacity( opacity );
             }
         },
 
 
         setVisibility: function( visible ) {
-
             var i;
-            for (i=0; i<this.views.length; ++i) {
-                this.views[i].renderer.setVisibility( visible );
+            for (i=0; i<this.renderers.length; i++) {
+                this.renderers[i].setVisibility( visible );
             }
         },
 
 
-        /**
-         * Maps a tilekey to its current view index. If none is specified, use default
-         * @param tilekey tile identification key of the form: "level,x,y"
-         */
-        getTileViewIndex: function(tilekey) {
-            // given a tile key "level + "," + xIndex + "," + yIndex"
-            // return the view index
-            var viewIndex;
-            if ( this.tileViewMap[tilekey] === undefined ) {
-                viewIndex = this.defaultViewIndex;
+        setTileFocus: function( tilekey ) {
+            return true;
+        },
+
+
+        setDefaultRendererIndex: function( index ) {
+            this.defaultRendererIndex = index;
+            this.update();
+        },
+
+
+        getTileRenderer: function( tilekey ) {
+
+            var index = this.renderersByTile[tilekey];
+            return (index !== undefined) ? index : this.defaultRendererIndex;
+        },
+
+
+        configure: function( callback ) {
+
+            var that = this;
+
+            LayerService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
+
+                var i;
+                if (statusInfo.success) {
+                    if ( that.layerInfo ) {
+                        // if a previous configuration exists, release it
+                        LayerService.unconfigureLayer( that.layerInfo, function() {
+                            return true;
+                        });
+                    }
+                    // set layer info
+                    that.layerInfo = layerInfo;
+                    // create tile service for each renderer
+                    // TODO: add support for different services (multiple layerInfos)
+                    for (i=0; i<that.renderers.length; i++) {
+                        that.tileServices[i] = new TileService( that.getLayerInfo(), that.map.getPyramid() );
+                    }
+                    that.update();
+                }
+
+                callback( layerInfo, statusInfo );
+            });
+        },
+
+
+        setTileRenderer: function( tilekey, newIndex ) {
+
+            var oldIndex = this.getTileRenderer( tilekey ),
+                oldRenderer = this.renderers[oldIndex],
+                newRenderer = this.renderers[newIndex],
+                oldService = this.tileServices[oldIndex],
+                newService = this.tileServices[newIndex];
+
+            // update internal state
+            if ( newIndex === this.defaultRendererIndex ) {
+                delete this.renderersByTile[tilekey];
             } else {
-                viewIndex = this.tileViewMap[tilekey];
+                this.renderersByTile[tilekey] = newIndex;
             }
-            return viewIndex;
-        },
 
+            if ( newService.layerInfo.layer === oldService.layerInfo.layer ) {
+                // both renderers share the same data source, swap tile data
+                // give tile to new view
+                newService.data[tilekey] = oldService.data[tilekey];
+                makeRedrawFunc( newRenderer, newService )();
+            } else {
+                // otherwise request new data
+                newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService ));
+            }
 
-        /**
-         * Tile change callback function
-         * @param tilekey 		tile identification key of the form: "level,x,y"
-         * @param newViewIndex  the new index to set the tilekey to
-         */
-        onTileViewChange: function(tilekey, newViewIndex) {
-
-            var oldViewIndex = this.getTileViewIndex(tilekey),  // old view index for tile
-                oldView = this.views[oldViewIndex],
-                newView = this.views[newViewIndex];
-
-            // map tile to new view
-            this.tileViewMap[tilekey] = newViewIndex;
-            // swap tile between views
-            oldView.swapTileWith(newView, tilekey);
+            // release and redraw to remove old data
+            oldService.releaseData( tilekey );
+            makeRedrawFunc( oldRenderer, oldService )();
         },
 
 
@@ -156,20 +156,19 @@ define(function (require) {
          * Map update callback, this function is called when the map view state is updating. Requests
          * and draws any new tiles
          */
-        onMapUpdate: function() {
+        update: function() {
 
-            var i,
-                tiles,
-                viewIndex,
-                tilesByView = [],
-                tileViewBounds;
+            var tiles, tilekey,
+                rendererIndex,
+                tilesByRenderer = [],
+                tileViewBounds, i;
 
-            if (this.views.length === 0) {
+            if (this.renderers.length === 0 || this.tileServices.length === 0) {
                 return;
             }
 
-            for (i=0; i<this.views.length; ++i) {
-                tilesByView[i] = [];
+            for (i=0; i<this.renderers.length; ++i) {
+                tilesByRenderer[i] = [];
             }
 
             // determine all tiles in view
@@ -178,15 +177,16 @@ define(function (require) {
 
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
-                viewIndex = this.getTileViewIndex( tiles[i].level+','+
-                                                   tiles[i].xIndex+','+
-                                                   tiles[i].yIndex );
-                tilesByView[viewIndex].push( tiles[i] );
+                tilekey = tiles[i].level+','+tiles[i].xIndex+','+tiles[i].yIndex;
+                rendererIndex = this.getTileRenderer( tilekey );
+                tilesByRenderer[rendererIndex].push( tiles[i] );
             }
 
-            for (i=0; i<this.views.length; ++i) {
+            for (i=0; i<this.renderers.length; ++i) {
                 // find which tiles we need for each view from respective
-                this.views[i].updateTiles( tilesByView[i], tileViewBounds );
+                this.tileServices[i].requestData( tilesByRenderer[i],
+                                                  tileViewBounds,
+                                                  makeRedrawFunc( this.renderers[i], this.tileServices[i] ) );
             }
         }
 
