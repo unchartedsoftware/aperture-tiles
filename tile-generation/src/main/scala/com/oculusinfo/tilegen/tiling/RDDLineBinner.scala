@@ -552,14 +552,15 @@ class RDDLineBinner(minBins: Int = 2,
 			val len = Math.sqrt(dx*dx + dy*dy)	//length between endpoints
 			val r = len.toInt	// set radius of circle = len for now  (TODO -- could make this a tunable parameter?)
 			
-			val theta1 = 0.5*Math.PI - Math.asin(len/(2.0*r)); // angle from each endpoint to circle's centre (centre and endpoints form an isosceles triangle)
+			val halfPI = 0.5*Math.PI
+			val theta1 = halfPI - Math.asin(len/(2.0*r)); // angle from each endpoint to circle's centre (centre and endpoints form an isosceles triangle)
 			val angleTemp = Math.atan2(dy, dx)-theta1;
-			val xC = x0 + (r*Math.cos(angleTemp)).toInt		   // co-ords for circle's centre
-			val yC = y0 + (r*Math.sin(angleTemp)).toInt
+			val xC = (x0 + r*Math.cos(angleTemp)).toInt		   // co-ords for circle's centre
+			val yC = (y0 + r*Math.sin(angleTemp)).toInt
 			//val xC_2 = x0 + (r*Math.cos(Math.atan2(dy, dx)+theta1)).toInt	//Note: 2nd possiblility for circle's centre 
 			//val yC_2 = y0 + (r*Math.cos(Math.atan2(dy, dx)+theta1)).toInt	//(corresponds to CCW arc, so not needed in this case)
 					
-			//---- Use Midpoint Circle algorithm to draw the arc
+			//---- Use Midpoint Circle algorithm to draw the arc	
 			var f = 1-r
 			var ddF_x = 1
 			var ddF_y = -2*r
@@ -576,11 +577,11 @@ class RDDLineBinner(minBins: Int = 2,
 		
 			val arcBins = scala.collection.mutable.ArrayBuffer[BinIndex]()
 			
-			// calc points for the four vertices of circle		
-			saveArcPoint((xC, yC+r))			
-			saveArcPoint((xC, yC-r))			
-			saveArcPoint((xC+r, yC))
-			saveArcPoint((xC-r, yC))
+			// calc points for the four vertices of circle
+			saveArcPoint((xC, yC+r), halfPI)			
+			saveArcPoint((xC, yC-r), -halfPI)			
+			saveArcPoint((xC+r, yC), 0)
+			saveArcPoint((xC-r, yC), Math.PI)
 			
 			while (x < y-1) {
 				if (f >= 0) {
@@ -591,33 +592,32 @@ class RDDLineBinner(minBins: Int = 2,
 				x = x + 1
 				ddF_x = ddF_x + 2
 				f = f + ddF_x
-
-				// TODO -- optimize this section (only need to do atan2 call once per loop iteration and then scale 
-				// angles below by multiples of pi/2 rads as needed)
-				saveArcPoint((xC+x, yC+y))			
-				saveArcPoint((xC-x, yC+y))			
-				saveArcPoint((xC+x, yC-y))
-				saveArcPoint((xC-x, yC-y))
+				
+				val newAngle = Math.atan2(y, x)
+				saveArcPoint((xC+x, yC+y), newAngle)			
+				saveArcPoint((xC-x, yC+y), Math.PI - newAngle)			
+				saveArcPoint((xC+x, yC-y), -newAngle)
+				saveArcPoint((xC-x, yC-y), -Math.PI + newAngle)
 				
 				if (x!=y) {
-					saveArcPoint((xC+y, yC+x))
-					saveArcPoint((xC-y, yC+x))
-					saveArcPoint((xC+y, yC-x))
-					saveArcPoint((xC-y, yC-x))
+					saveArcPoint((xC+y, yC+x), halfPI - newAngle)
+					saveArcPoint((xC-y, yC+x), halfPI + newAngle)
+					saveArcPoint((xC+y, yC-x), -halfPI + newAngle)
+					saveArcPoint((xC-y, yC-x), -halfPI - newAngle)
 				}
 			}
 			
-			def saveArcPoint(point: (Int, Int)) = {
-				
-				var newAngle = Math.atan2(point._2-yC, point._1-xC)
+			//------
+			def saveArcPoint(point: (Int, Int), angle: Double) = {				
+				var newAngle = angle
 				if (bWrapNeg && newAngle < 0.0)
 					newAngle += 2.0*Math.PI
-				
+					
 				if (newAngle <= startRad && newAngle >= stopRad)
 					arcBins += new BinIndex(point._1, point._2)
 			}
 			
-			arcBins.toIndexedSeq	
+			arcBins.toIndexedSeq	// seq of arc bins
 		}
 					
 	/**
