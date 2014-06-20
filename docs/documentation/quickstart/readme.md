@@ -9,25 +9,35 @@ layout: default
 
 The following instructions walk you through the process of creating an Aperture Tiles project that displays the points in a Julia set fractal on an X/Y plot with five zoom levels.
 
+![Aperture Tiles Julia Set Project](../../img/julia-set.png "Aperture Tiles Julia Set Project")
+
+This Quick Start Guide covers the following processes:
+
+1. Generating a sample data set to analyze
+2. Tiling and storing the sample data set
+3. Configuring a client to serve and display the tiles in a web client
+
 ##<a name="prerequisites"></a>Prerequisites
 
-To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 0.7.2 or greater (version 1.0.0 recommended). Spark is a cluster computing framework that enables fast data and tile generation.
+The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. 
+
+To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 0.9.0 or greater (version 1.0.0 recommended). Spark is a distributed cluster computing framework on which Aperture Tiles builds to enable fast data and tile generation at scale.
 
 If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
 
-- Your preferred flavor of Hadoop/HDFS ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html), [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop), [HortonWorks](http://hortonworks.com/), etc.), which allows you to configure a cluster of machines across which you can distribute Aperture Tiles analytic jobs 
+- Your preferred flavor of Hadoop/HDFS ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and  [HortonWorks](http://hortonworks.com/), etc. can also be used), which allows you to configure a cluster of machines across which you can distribute Aperture Tiles analytic jobs 
 - [Apache HBase](http://hbase.apache.org/), which acts as a data store for your Hadoop/HDFS  cluster
 
-Otherwise, if your data set is sufficiently small (like the Julia set) or if wait times are not an issue, you can simply install and run Spark on a single machine.
+Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
 
 ###<a name="aperture-tiles-utilities"></a>Aperture Tiles Utilities
 
-Save the following Aperture Tiles utilities available on the Downloads section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
+Save the following Aperture Tiles utilities available on the [Download](../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
 - [Tile Generator](../../download/tile-generator.zip): Enables you to create the Julia set data and generate a layered set of tiles that can be viewed in the Tile Client template
 - [Tile Client Template](../../download/tile-client-template.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
 
-Note that the full Aperture Tiles source code is available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the ApertureJS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs).
+The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../setup/) page.
 
 ###<a name="environment-variables"></a>Environment Variables
 Set the following environment variables:
@@ -38,27 +48,25 @@ Set the following environment variables:
 
 ###<a name="julia-set-data-generation"></a>Julia Set Data Generation
 
-For a typical Aperture Tiles project, you will work with your own custom data set. For the purposes of this demonstration, you must create the Julia set data using the provided Tile Generator utility.
+For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you must use the provided Tile Generator utility to create the Julia set data.
 
-1. Extract the contents of the [tile-generator.zip](../../download/tile-generator.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to help you automatically create the Julia set data.
-2. Execute the Spark script using the following command, changing the output URI to specify the system and path in which you want to save the Julia set data. The rest of the flags pass in the correct classes, data set limits, number of output files and total number of data points in the Julia set.
+1. Extract the contents of the [tile-generator.zip](../../download/tile-generator.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
+2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. The rest of the flags pass in the correct classes, data set limits, number of output files (5) and total number of data points (10M) in the Julia set.
 
 ```
-./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output hdfs://localhost/data/julia-set -partitions 5 -samples 10000000
+./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
 ```
 
-Check your `bin` folder for five part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
+Check your output folder for five part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
 
 ##<a name="tile-generation"></a>Tile Generation
 
-The first step in building any Aperture Tiles project is creating a layered set of AVRO tiles that aggregate your source data across the plot/map and its various zoom levels.
+The first step in building any Aperture Tiles project is creating a set of AVRO tiles that aggregate your source data across the plot/map and its various zoom levels.
 
 For delimited numeric data sources like the Julia set, the included CSVBinner tool can create these tiles. The CSVBinner tool requires two types of input:
 
 - The **base properties** file, which describes the general characteristics of your data
 - The **tiling properties** files, each of which describes a specific attribute you want to plot and the number of zoom levels
-
-Note that if you only want to visualize one specific attribute for a data source, you can combine the base properties file with the tiling properties file.
 
 ###<a name="base-property-file-configuration"></a>Base Property File Configuration
 
@@ -70,32 +78,40 @@ Note that for a typical Aperture Tiles project, you will need to edit additional
 
 These properties specify the location of your Spark installation.
 
-| Property    | Description |
-|:-------------|:-------------|
-| `spark`     | URI of the Spark master. Set to `local` for standalone Spark installations. |
-| `sparkhome` | File system location of Spark. Defaults to the value of the `SPARK_HOME` environment variable. |
+```
+spark
+	URI of the Spark master. Set to "local" for standalone Spark installations.
+sparkhome
+	File system location of Spark. Defaults to the value of the SPARK_HOME
+	environment variable.
+```
 
 ####<a name="general-output"></a>General Output Properties
 
 These properties specify the location of your Julia set data and where to save the generated tiles.
 
-| Property    | Description |
-|:-------------|:-------------|
-| `oculus.tileio.type` | Specify whether the tiles should be saved locally (`file`) or to HBase (`hbase`) |
-| `oculus.binning.source.location` | URI of the source data files in your local file system (`tile-generator/bin/julia`) or in HBase. |
+```
+oculus.tileio.type
+	Specify whether the tiles should be saved locally (file) or to HBase
+	(hbase). Note that local tile IO is supported only for standalone Spark
+	installations.
+oculus.binning.source.location
+	Path of the source data files in your local file system
+	(tile-generator/bin/julia) or HDFS.
+```
 
 ####<a name="hbase-connection"></a>HBase Connection Details (Optional)
 
 These properties should only be included if you are using Hadoop/HDFS and HBase.
 
-| Property    | Description |
-|:-------------|:-------------|
-| `hbase.zookeeper.quorum` | Zookeeper quorum location needed 
-   to connect to HBase. |
-| `hbase.zookeeper.port` | Port through which to connect 
-   to zookeeper. Typically defaults to `2181`. |
-| `hbase.master` | Location of the HBase master to 
-   which to save the tiles. |
+```
+hbase.zookeeper.quorum
+	Zookeeper quorum location needed to connect to HBase
+hbase.zookeeper.port
+	Port through which to connect to zookeeper. Typically defaults to 2181. 
+hbase.master
+	Location of the HBase master to which to save the tiles
+```
 
 ###<a name="tiling-property-file-configuration"></a>Tiling Property File Configuration
 
