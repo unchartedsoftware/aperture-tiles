@@ -80,7 +80,6 @@ object SummaryStatistics {
     val inputLocation = prop.getProperty("oculus.binning.source.location", "No input location specified")
     val title = prop.getProperty("oculus.binning.name", "No Title Specified")
     val delimiter = prop.getProperty("oculus.binning.parsing.separator", "\t")
-    val outputLocation = prop.getProperty("oculus.binning.output.location", "/output/summarystatsOutput")
 
     val sparkMaster = prop.getProperty("spark.connection.url", "local")
     val sparkHome = prop.getProperty("spark.connection.home", "/opt/spark")
@@ -96,8 +95,7 @@ for (it <- subsets.split(",")){
 	 
    	val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, sparkClassPath)
     
-   	val writer = new PrintWriter(new File(outputLocation)) 
-      val textFile = if(partitions.equals("none")){sc.textFile(inputLocation + "/" + i)} else {sc.textFile(inputLocation + "/" + i).coalesce(partitions.toInt)}
+     val textFile = if(partitions.equals("none")){sc.textFile(inputLocation + "/" + i)} else {sc.textFile(inputLocation + "/" + i).coalesce(partitions.toInt)}
 
       //analyze dataset at a high level. count total records etc.
      
@@ -119,7 +117,7 @@ for (it <- subsets.split(",")){
       val dirtytable = Parsing.rddCleaner(textFile, delimiter, columns, fieldMap, toLog)
       
       val tableTests = prop.getProperty("oculus.binning.table.tests", "none")
-      val tableTestResults = analyze.tableResults(dirtytable, tableTests.toLowerCase, writer)
+      val tableTestResults = analyze.tableResults(dirtytable, tableTests.toLowerCase)
 
       val table = dirtytable.filter(r => (!r.contains("%% corrupt data check failure invalid length %%")))
 //      val corruptLines = dirtytable.filter(r => (r.contains("%% corrupt data check failure invalid length %%"))).map(r => 1).reduce(_ + _)
@@ -138,10 +136,10 @@ for (it <- subsets.split(",")){
           val customVariables = prop.getProperty("oculus.binning.parsing." + field + ".custom.variables", "")
           val customOutput = prop.getProperty("oculus.binning.parsing." + field + ".custom.output", "")
           if (customOutput == "") {
-            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, writer, sc, i)
+            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, sc, i)
           } else {
             val customWriter = new PrintWriter(new File(customOutput))
-            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, customWriter, sc, i)
+            util.analyze.customAnalytic(table, field, index, customAnalytics, customVariables, sc, i)
           }
         }
       })
@@ -177,13 +175,12 @@ for (it <- subsets.split(",")){
               }
           }
             ).filter(r => (!r.contains("corrupt")))
-          util.analyze.quantitativeResults(dateColumn, field, fieldAlias, fieldType, testList, writer, dateFormat)
+          util.analyze.quantitativeResults(dateColumn, field, fieldAlias, fieldType, testList, dateFormat)
         } else if (fieldType == "numerical") {
-          util.analyze.quantitativeResults(column, field, fieldAlias, fieldType, testList, writer, "")
+          util.analyze.quantitativeResults(column, field, fieldAlias, fieldType, testList, "")
         } else {
-          util.analyze.qualitativeResults(column, field, fieldAlias, fieldType, testList, writer, "")
-  
-        }
+          util.analyze.qualitativeResults(column, field, fieldAlias, fieldType, testList, "")
+          }
       })
 
       //sort results by data type: qualitative, numeric, date, text 
@@ -213,8 +210,6 @@ for (it <- subsets.split(",")){
       val sampleRecords = totalRecords
 
       JSONwriter.JSONoutput(title, totalRecords, totalBytes, sampleRecords, qualSummary, numericSummary, dateSummary, textSummary)
-
-      writer.close()
 
     }
   }
