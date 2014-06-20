@@ -57,17 +57,20 @@ public class JsonUtilities {
 
         try {
             JSONObject clone = new JSONObject();
-            for (String key: JSONObject.getNames(source)) {
-                Object value = source.get(key);
-                if (value instanceof JSONObject) {
-                    JSONObject valueClone = deepClone((JSONObject) value);
-                    clone.put(key, valueClone);
-                } else if (value instanceof JSONArray) {
-                    JSONArray valueClone = deepClone((JSONArray) value);
-                    clone.put(key, valueClone);
-                } else {
-                    clone.put(key, value);
-                }
+            String[] keys = JSONObject.getNames(source);
+            if (null != keys) {
+	            for (String key: keys) {
+		            Object value = source.get(key);
+		            if (value instanceof JSONObject) {
+			            JSONObject valueClone = deepClone((JSONObject) value);
+			            clone.put(key, valueClone);
+		            } else if (value instanceof JSONArray) {
+			            JSONArray valueClone = deepClone((JSONArray) value);
+			            clone.put(key, valueClone);
+		            } else {
+			            clone.put(key, value);
+		            }
+	            }
             }
             return clone;
         } catch (JSONException e) {
