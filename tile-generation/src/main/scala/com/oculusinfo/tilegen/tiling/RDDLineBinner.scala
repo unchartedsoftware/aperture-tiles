@@ -550,22 +550,21 @@ class RDDLineBinner(minBins: Int = 2,
 			val dx = x1-x0
 			val dy = y1-y0		
 			val len = Math.sqrt(dx*dx + dy*dy)	//length between endpoints
-			val r = len	// set radius of circle = len for now  (TODO -- could make this a tunable parameter?)
+			val r = len.toInt	// set radius of circle = len for now  (TODO -- could make this a tunable parameter?)
 			
 			val theta1 = 0.5*Math.PI - Math.asin(len/(2.0*r)); // angle from each endpoint to circle's centre (centre and endpoints form an isosceles triangle)
 			val angleTemp = Math.atan2(dy, dx)-theta1;
-			val xC = x0 + r*Math.cos(angleTemp)
-			val yC = y0 + r*Math.sin(angleTemp)
-			
+			val xC = x0 + (r*Math.cos(angleTemp)).toInt		   // co-ords for circle's centre
+			val yC = y0 + (r*Math.sin(angleTemp)).toInt
+			//val xC_2 = x0 + (r*Math.cos(Math.atan2(dy, dx)+theta1)).toInt	//Note: 2nd possiblility for circle's centre 
+			//val yC_2 = y0 + (r*Math.cos(Math.atan2(dy, dx)+theta1)).toInt	//(corresponds to CCW arc, so not needed in this case)
+					
 			//---- Use Midpoint Circle algorithm to draw the arc
-			var f = 1.0-r
-			var ddF_x = 1.0
-			var ddF_y = -2.0*r
-			var x = 0.0
+			var f = 1-r
+			var ddF_x = 1
+			var ddF_y = -2*r
+			var x = 0
 			var y = r
-			
-			val xTmp = 0
-			val yTmp = 1
 			
 			// angles for start and end points of arc
 			var startRad = Math.atan2(y0-yC, x0-xC)
@@ -574,8 +573,7 @@ class RDDLineBinner(minBins: Int = 2,
 			val bWrapNeg = (stopRad-startRad > Math.PI)
 			if (bWrapNeg) startRad += 2.0*Math.PI	//note: this assumes using CW arcs only!
 													//(otherwise would need to check if stopRad is negative here as well)
-	
-			
+		
 			val arcBins = scala.collection.mutable.ArrayBuffer[BinIndex]()
 			
 			// calc points for the four vertices of circle		
@@ -584,14 +582,14 @@ class RDDLineBinner(minBins: Int = 2,
 			saveArcPoint((xC+r, yC))
 			saveArcPoint((xC-r, yC))
 			
-			while (x < y) {
+			while (x < y-1) {
 				if (f >= 0) {
-					y = y - 1.0
-					ddF_y = ddF_y + 2.0
+					y = y - 1
+					ddF_y = ddF_y + 2
 					f = f + ddF_y
 				}
-				x = x + 1.0
-				ddF_x = ddF_x + 2.0
+				x = x + 1
+				ddF_x = ddF_x + 2
 				f = f + ddF_x
 
 				// TODO -- optimize this section (only need to do atan2 call once per loop iteration and then scale 
@@ -599,27 +597,27 @@ class RDDLineBinner(minBins: Int = 2,
 				saveArcPoint((xC+x, yC+y))			
 				saveArcPoint((xC-x, yC+y))			
 				saveArcPoint((xC+x, yC-y))
-				saveArcPoint((xC+y, yC-x))
+				saveArcPoint((xC-x, yC-y))
 				
-				saveArcPoint((xC+y, yC+x))
-				saveArcPoint((xC-y, yC+x))
-				saveArcPoint((xC+y, yC-x))
-				saveArcPoint((xC-y, yC-x))							
+				if (x!=y) {
+					saveArcPoint((xC+y, yC+x))
+					saveArcPoint((xC-y, yC+x))
+					saveArcPoint((xC+y, yC-x))
+					saveArcPoint((xC-y, yC-x))
+				}
 			}
 			
-			def saveArcPoint(point: (Double, Double)) = {
+			def saveArcPoint(point: (Int, Int)) = {
 				
 				var newAngle = Math.atan2(point._2-yC, point._1-xC)
 				if (bWrapNeg && newAngle < 0.0)
 					newAngle += 2.0*Math.PI
 				
 				if (newAngle <= startRad && newAngle >= stopRad)
-					arcBins += new BinIndex((point._1).toInt, (point._2).toInt)	//TODO check conversions to Int here
+					arcBins += new BinIndex(point._1, point._2)
 			}
 			
-			//TODO need to check why this Midpoint circle algo sometimes returns duplicated pixels
-			//(for now convert toSet first to remove duplicates)
-			arcBins.toSet.toIndexedSeq	
+			arcBins.toIndexedSeq	
 		}
 					
 	/**
