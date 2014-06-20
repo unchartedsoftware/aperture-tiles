@@ -24,6 +24,10 @@
 .layer-controls-header:hover {   
     color: #FFFFFF;
 }
+.layer-controls-bottom-buffer {
+    position:relative;
+    height: 15px;
+}
 .layer-controls-content {
     position: relative;
     background-color: #FFF;

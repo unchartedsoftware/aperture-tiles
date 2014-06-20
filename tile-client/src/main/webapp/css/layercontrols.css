@@ -29,11 +29,15 @@
 
 #layer-controls-content {
     position: relative;
-    padding-bottom: 15px !important;
     background-color: #FFF;
     color: #000;
     width: 612px;
     font-size: 12px;
+}
+
+.layer-controls-bottom-buffer {
+    position:relative;
+    height: 15px;
 }
 
 .layer-labels {

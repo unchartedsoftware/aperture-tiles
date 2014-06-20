@@ -342,7 +342,7 @@ define(function (require) {
 
             if ( baseLayer.type === "BlankBase" && isActiveBaseLayer ) {
                 $layerContent.css( 'display', 'none' );
-            } else {
+            } else if ( isActiveBaseLayer ) {
                 $layerContent.css( 'display', 'block' );
             }
 
@@ -575,7 +575,9 @@ define(function (require) {
         var sortedLayerStates = sortLayers( layerStates ),
             i, key;
 
+        // empty the container
         $layerControlsContainer.empty();
+
         // Clear out any existing the controls map
         for (key in controlsMap) {
             if (controlsMap.hasOwnProperty(key)) {
@@ -588,8 +590,8 @@ define(function (require) {
             addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap );
         }
 
-        //set the content div height depending on the number of layers
-        $($('#content')).css('height', ($('.layer-controls-layer').length * 90) + 'px');
+        // append a spacer element at the bottom, padding causes jitter in overlay animation
+        $layerControlsContainer.append( '<div class="layer-controls-bottom-buffer"></div>');
     };
 
     /**

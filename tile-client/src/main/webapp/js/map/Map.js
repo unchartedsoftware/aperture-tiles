@@ -295,8 +295,13 @@ define(function (require) {
 				spec = axes[i];
 				spec.mapId = this.id;
 				spec.map = this;
-				this.axes.push(new Axis(spec));
+				this.axes.push( new Axis(spec) );
 			}
+			// set content dim after so that max out of all is used
+            for (i=0; i< this.axes.length; i++) {
+                this.axes[i].setContentDimension();
+            }
+            this.redrawAxes();
 		},
 
 

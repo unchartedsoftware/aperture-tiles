@@ -38,13 +38,14 @@ define(function (require) {
         ANNOTATION_DETAILS_CONTENT_CLASS = "annotation-details-content",
         ANNOTATION_DETAILS_HEAD_CLASS = "annotation-details-head",
         ANNOTATION_DETAILS_BODY_CLASS = "annotation-details-body",
+        ANNOTATION_DETAILS_AGGREGATE_CLASS = "annotation-details-aggregate",
         ANNOTATION_DETAILS_LABEL_CLASS = "annotation-details-label",
         ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS = "annotation-details-close-button",
         ANNOTATION_CAROUSEL_CLASS = "annotation-carousel",
-        ANNOTATION_CHEVRON_CLASS = "carousel-ui-chevron",
-        ANNOTATION_CHEVRON_LEFT_CLASS = "carousel-ui-chevron-left",
-        ANNOTATION_CHEVRON_RIGHT_CLASS = "carousel-ui-chevron-right",
-        ANNOTATION_INDEX_CLASS = "carousel-ui-text-index",
+        ANNOTATION_CHEVRON_CLASS = "annotation-carousel-ui-chevron",
+        ANNOTATION_CHEVRON_LEFT_CLASS = "annotation-carousel-ui-chevron-left",
+        ANNOTATION_CHEVRON_RIGHT_CLASS = "annotation-carousel-ui-chevron-right",
+        ANNOTATION_INDEX_CLASS = "annotation-carousel-ui-text-index",
         AnnotationLayer;
 
 
@@ -64,44 +65,14 @@ define(function (require) {
             this.tiles = [];
 
             // set callbacks
-            this.map.on('moveend', $.proxy( this.updateTiles, this ) );
+            this.map.on('moveend', $.proxy( this.update, this ) );
             this.map.on('zoom', function() {
                 that.nodeLayer.clear();
-                that.updateTiles();
+                that.update();
             });
 
             this.createLayer();
-            this.updateTiles();
-        },
-
-
-        writeCallback: function( data, statusInfo ) {
-
-            if ( statusInfo.success ) {
-                console.log("WRITE SUCCESS");
-            }
-            // writes can only fail if server is dead or UUID collision
-            this.updateTiles();
-
-        },
-
-
-        modifyCallback: function( data, statusInfo ) {
-
-            if ( statusInfo.success ) {
-                console.log("MODIFY SUCCESS");
-                console.log( "timestamp after" + data.timestamp );
-            }
-            this.updateTiles();
-        },
-
-
-        removeCallback: function( data, statusInfo ) {
-
-            if ( statusInfo.success ) {
-                console.log("REMOVE SUCCESS");
-            }
-            this.updateTiles();
+            this.update();
         },
 
 
@@ -121,8 +92,7 @@ define(function (require) {
                     },
                     level: that.map.getZoom(),
                     data: {
-                        username: "DebugTweetUser",
-                        tweet: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nec purus in ante pretium blandit. Aliquam erat volutpat. Nulla libero lectus."
+                        user: "DebugTweetUser"
                     }
                 };
             }
@@ -169,7 +139,7 @@ define(function (require) {
                 // remove any previous details
                 $( "."+ANNOTATION_CAROUSEL_CLASS ).remove();
 
-                $details.addClass('annotation-details-aggregate');
+                $details.addClass( ANNOTATION_DETAILS_AGGREGATE_CLASS );
 
                 $leftChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_LEFT_CLASS+"'></div>");
                 $rightChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_RIGHT_CLASS+"'></div>");
@@ -195,6 +165,7 @@ define(function (require) {
 
             }
 
+
             function destroyDetails() {
 
                 $( "."+ANNOTATION_DETAILS_CLASS ).remove();
@@ -213,7 +184,7 @@ define(function (require) {
                 $closeButton = $('<div class="'+ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS+'"></div>');
                 $closeButton.click( destroyDetails );
                 // create display for first annotation
-                createDetailsContent( $details, bin[0] );
+                createDetailsContent( $details, bin[0], bin.length > 1 );
                 // if more than one annotation, create carousel ui
                 if ( bin.length > 1 ) {
                     createDetailsCarouselUI( $details, bin );
@@ -251,7 +222,7 @@ define(function (require) {
                 }
 
                 var pos = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y );
-                that.service.writeAnnotation( DEBUG_ANNOTATION( pos ), $.proxy( that.writeCallback, that) );
+                that.service.writeAnnotation( DEBUG_ANNOTATION( pos ), $.proxy( that.update, that) );
             }
 
 
@@ -316,17 +287,15 @@ define(function (require) {
 
                                 stop: function( event ) {
                                     var $element = $(this).find('.point-annotation-back'),
+                                        annotation = bin[0],
                                         offset = $element.offset(),
                                         dim = $element.width()/2,
-                                        pos = that.map.getCoordFromViewportPixel( offset.left+dim, offset.top+dim ),
-                                        newAnno = JSON.parse( JSON.stringify( bin[0] ) );
+                                        pos = that.map.getCoordFromViewportPixel( offset.left+dim, offset.top+dim );
 
-                                    newAnno.x = pos.x;
-                                    newAnno.y = pos.y;
+                                    annotation.x = pos.x;
+                                    annotation.y = pos.y;
 
-                                    console.log( "timestamp before " + newAnno.certificate.timestamp );
-
-                                    that.service.modifyAnnotation( newAnno, $.proxy( that.modifyCallback, that ) );
+                                    that.service.modifyAnnotation( annotation, $.proxy( that.update, that ) );
                                 }
                             });
                         }
@@ -403,7 +372,7 @@ define(function (require) {
         },
 
 
-        updateTiles: function() {
+        update: function() {
 
             var visibleTiles = this.map.getTilesInView(),  // determine all tiles in view
                 currentTiles = this.tiles,

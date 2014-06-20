@@ -38,7 +38,7 @@
     
     pointer-events:none;
     background-color: #fff;
-    border: 2px solid #fff;
+    border: 2px solid #000;
     margin: -8px 0 0 -8px;
     z-index: 0;
 }
@@ -63,55 +63,54 @@
 .annotation-details {
 
     position:absolute;
+    background-color:#111111;
     width: 384px;
-    background-color: #222222;
-    padding: 10px;
     z-index: 2001;
     border: 1px solid #333333;
+    padding-bottom: 15px;
     box-shadow: 0px 5px 15px #000;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;  
 }
 
-.annotation-details-aggregate {
-
-    padding: 10px 24px 24px 24px;   
-}
 
 .annotation-details-content {
 
     position:relative;
     height:100%;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
 }
 
 
 .annotation-details-head {
 
     position:relative;
+    padding: 0 10px 0 10px;
+    background-color: #222222;
     font-size: 18px;
     color: #ffffff;
     width:100%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 
 .annotation-details-body {
 
     position:relative;   
-    font-size: 14px; 
-    border-radius: 10px;
+    font-size: 14px;
     background-color:#111111;
-    box-shadow: inset 0 0 10px #000;  
-    padding: 5px;
+    padding: 5px 15px 5px 15px;
     overflow: auto;
-    height: calc(100% - 42px);
+    height: calc(100% - 32px);
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 
+}
+
+
+.annotation-details-aggregate {
+
+    padding-bottom: 28px;
 }
 
 .annotation-details-label {
@@ -168,4 +167,46 @@
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+}
+
+.annotation-carousel-ui-chevron {
+    position: absolute;
+    pointer-events: all;
+    bottom: -10px;
+    height:50px;
+    width:20px;
+    -webkit-transform: scale(0.5); 
+    -webkit-transition: -webkit-transform .1s ease-in-out;
+       -moz-transition:    -moz-transform .1s ease-in-out;
+            transition:         transform .1s ease-in-out;
+}
+
+.annotation-carousel-ui-chevron-left {
+    left: calc(50% - 50px);
+    background: transparent url(../images/chevron_L.png) no-repeat center top;
+}
+
+.annotation-carousel-ui-chevron-right {
+    right: calc(50% - 50px);
+    background: transparent url(../images/chevron_R.png) no-repeat center top;
+}
+
+.annotation-carousel-ui-chevron:hover {
+    cursor: pointer;
+    -webkit-transform: scale(0.7);  
+}
+
+.annotation-carousel-ui-text-index {
+    position:absolute;
+    bottom: 6px;
+    width: 100%;
+    text-align:center;
+    pointer-events:none;
+    font-size:16px;
+    color: #ffffff;
+    text-shadow:
+        -1px -1px 2px #000,
+         1px -1px 2px #000,
+        -1px  1px 2px #000,
+         1px  1px 2px #000; 
 }

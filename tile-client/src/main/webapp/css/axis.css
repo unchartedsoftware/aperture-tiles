@@ -64,7 +64,6 @@
 }
 
 .top-axis-content {    
-    height:130px;
     width:100%;
     top:0px;
     left:0px;
@@ -72,7 +71,6 @@
 }
 
 .bottom-axis-content {
-    height:130px;
     width:100%;
     bottom:0px;
     left:0px;
@@ -80,7 +78,6 @@
 }
 
 .left-axis-content {
-    width:130px;
     height:100%;
     left:0px;
     top:0px;
@@ -88,7 +85,6 @@
 }
 
 .right-axis-content {
-    width:130px;
     height:100%;
     right:0px;
     top:0px;
@@ -141,9 +137,6 @@
 }
 
 .horizontal-axis-marker-label {
-    -webkit-transform:rotate(-25deg);
-        -ms-transform:rotate(-25deg); /* IE 9 */
-            transform:rotate(-25deg);
 }
 
 .vertical-axis-marker-label {
