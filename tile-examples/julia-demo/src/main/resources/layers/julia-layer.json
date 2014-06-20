@@ -15,49 +15,54 @@
 		"solely to organize and group layers as described above.",
 		""
 	],
-    "layers": [
-        {
-            "id": "julia-0.8r0.156i",
-            "name": "julia set live tiling demonstration",
-            "pyramid": {
-                "type": "AreaOfInterest",
-                "minX": -2,
-                "maxX": 2,
-                "minY": -2,
-                "maxY": 2
-            }
-            "data": {
-                "pyramidio": {
-                    "type": "live",
-                    "data": {
-                        "oculus.binning.source.location": "hdfs://hadoop-s1/xdata/data/julia/500by200",
-                        "oculus.binning.source.partitions": "96",
-                        "oculus.binning.projection": "EPSG:4326",
-                        "oculus.binning.projection.autobounds": "false",
-					    "oculus.binning.projection.minx": -2.0,
-					    "oculus.binning.projection.maxx":  2.0,
-					    "oculus.binning.projection.miny": -2.0,
-					    "oculus.binning.projection.maxy":  2.0,
-                        "oculus.binning.parsing.x.index": 0,
-                        "oculus.binning.parsing.y.index": 1,
-                        "oculus.binning.parsing.v.index": 2,
-                        "oculus.binning.parsing.v.fieldAggregation": "min",
-                        "oculus.binning.xField": "x",
-                        "oculus.binning.yField": "y",
-					    "oculus.binning.valueField": "v"
-                    }
-                }
-            },
-            "renderers": [
-                {
-                    "domain": "server",
-                    "renderer": {
-                        "type": "heatmap",
-                        "ramp": "ware",
-                        "opacity": 0.85
-                    },
-                    "transform": {
-                        "name": "linear"
-                    }
-                }
-            ]
+	"layers": [
+		{
+			"id": "julia-0.8r0.156i",
+			"name": "julia set live tiling demonstration",
+			"pyramid": {
+				"type": "AreaOfInterest",
+				"minX": -2,
+				"maxX": 2,
+				"minY": -2,
+				"maxY": 2
+			},
+			"data": {
+				"layer": "julia-0.8r0.156i",
+				"pyramidio": {
+					"type": "live",
+					"data": {
+						"oculus.binning.source.location": "hdfs://hadoop-s1/xdata/data/julia/500by200",
+						"oculus.binning.source.partitions": 128,
+						"oculus.binning.projection": "EPSG:4326",
+						"oculus.binning.projection.autobounds": "false",
+						"oculus.binning.projection.minx": -2.0,
+						"oculus.binning.projection.maxx":  2.0,
+						"oculus.binning.projection.miny": -2.0,
+						"oculus.binning.projection.maxy":  2.0,
+						"oculus.binning.parsing.x.index": 0,
+						"oculus.binning.parsing.y.index": 1,
+						"oculus.binning.parsing.v.index": 2,
+						"oculus.binning.parsing.v.fieldAggregation": "min",
+						"oculus.binning.xField": "x",
+						"oculus.binning.yField": "y",
+						"oculus.binning.valueField": "v",
+						"spark.shuffle.consolidateFiles": "true"
+					}
+				}
+			},
+			"renderers": [
+				{
+					"domain": "server",
+					"renderer": {
+						"type": "heatmap",
+						"ramp": "ware",
+						"opacity": 0.85
+					},
+					"transform": {
+						"name": "linear"
+					}
+				}
+			]
+		}
+	]
+}

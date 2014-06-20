@@ -25,6 +25,7 @@
       <!-- Pyramid IO factory module - override to add custom PyramidIO 
            implementations -->
       com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+      com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
       <!-- LayerConfiguration factory module - override to add custom layer configuration 
            parameters -->
       com.oculusinfo.tile.init.CachingLayerConfigurationModule:
@@ -32,7 +33,9 @@
       <!-- Sets up the REST interface by which clients can retrieve tiles -->
       com.oculusinfo.tile.rest.RestConfigModule:
       <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.TileModule
+      com.oculusinfo.tile.rest.TileModule:
+      <!-- Sets up the spark module -->
+      com.oculusinfo.tile.spark.SparkModule:
 
       <!-- Annotation IO factory module - override to add custom AnnotationIO 
            implementations -->

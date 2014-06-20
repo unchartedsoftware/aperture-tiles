@@ -308,6 +308,7 @@ object CSVGraphBinner {
 										// based line segment binning.  Levels above this thres use tile-based binning.
 	private var _lineMinBins = 2		// [bins] min line segment length for a given level.
 	private var _lineMaxBins = 1024		// [bins] max line segment length for a given level.
+	private var _bLinesAsArcs = false	// [Boolean] switch to draw line segments as straight lines (default) or as clock-wise arcs.
 	
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
 		properties.getString("oculus.tileio.type",
@@ -407,7 +408,8 @@ object CSVGraphBinner {
 						                                      (dataset.getNumXBins max dataset.getNumYBins),
 						                                      dataset.getConsolidationPartitions,
 						                                      dataset.isDensityStrip,
-						                                      bUsePointBinner)
+						                                      bUsePointBinner,
+						                                      _bLinesAsArcs)
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
@@ -496,7 +498,11 @@ object CSVGraphBinner {
 									
 		_lineMaxBins = properties.getInt("oculus.binning.line.max.bins",
 									"Max line segment length (in bins) for a given level.  Longer line segments will be discarded",
-									Some(1024))							
+									Some(1024))
+									
+		_bLinesAsArcs = properties.getBoolean("oculus.binning.line.style.arcs",
+									"Draw line segments as straight lines (default) or as clock-wise arcs.",
+									Some(false))								
 
 		val dataset:CSVGraphDataset[_] = getDatasetGeneric(indexer, properties, tileWidth, tileHeight)
 		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)

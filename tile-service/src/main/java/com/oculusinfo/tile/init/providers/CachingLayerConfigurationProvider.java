@@ -30,6 +30,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
@@ -128,6 +129,7 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 	private class CachingPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		private ConfigurableFactory<?>         _parent;
 		private ConfigurableFactory<PyramidIO> _baseFactory;
+		private boolean                        _baseInitialized;
 
 
 
@@ -144,6 +146,7 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 			super(name, PyramidIO.class, parent, path);
 			_parent = parent;
 			_baseFactory = base;
+			_baseInitialized = false;
 
 			addProperty(PyramidIOFactory.INITIALIZATION_DATA);
 		}
@@ -152,16 +155,19 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 		public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
 			super.readConfiguration(rootNode);
 			_baseFactory.readConfiguration(rootNode);
-			setupBasePyramidIO();
 		}
 
 		private void setupBasePyramidIO () {
-			String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_NAME);
-			_pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
+			if (!_baseInitialized) {
+				String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_NAME);
+				_pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
+				_baseInitialized = true;
+			}
 		}
 
 		@Override
 		protected PyramidIO create () {
+			setupBasePyramidIO();
 			return _pyramidIO;
 		}
         

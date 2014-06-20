@@ -188,7 +188,8 @@ class RDDLineBinner(minBins: Int = 2,
 	                                          bins: Int = 256,
 	                                          consolidationPartitions: Option[Int] = None,
 	                                          isDensityStrip: Boolean = false,
-	                                          usePointBinner: Boolean = true):
+	                                          usePointBinner: Boolean = true,
+	                                          linesAsArcs: Boolean = false):
 	        RDD[TileData[BT]] = {
 				
 		val tileBinToUniBin = {
@@ -230,7 +231,7 @@ class RDDLineBinner(minBins: Int = 2,
 				)
 			}
 
-		processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip, usePointBinner)
+		processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip, usePointBinner, linesAsArcs)
 	}
 
 
@@ -262,7 +263,8 @@ class RDDLineBinner(minBins: Int = 2,
 	                                   bins: Int = 256,
 	                                   consolidationPartitions: Option[Int] = None,
 	                                   isDensityStrip: Boolean = false,
-	                                   usePointBinner: Boolean = true):
+	                                   usePointBinner: Boolean = true,
+	                                   linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] = {
 		// We first bin data in each partition into its associated bins
 		val partitionBins = data.mapPartitions(iter =>
@@ -292,10 +294,10 @@ class RDDLineBinner(minBins: Int = 2,
 
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		if (usePointBinner) {
-			consolidateByPoints(partitionBins, binDesc, consolidationPartitions, isDensityStrip, bins)
+			consolidateByPoints(partitionBins, binDesc, consolidationPartitions, isDensityStrip, bins, linesAsArcs)
 		}
 		else {
-			consolidateByTiles(partitionBins, binDesc, consolidationPartitions, isDensityStrip, bins)
+			consolidateByTiles(partitionBins, binDesc, consolidationPartitions, isDensityStrip, bins, linesAsArcs)
 		}
 	}
 
@@ -305,7 +307,8 @@ class RDDLineBinner(minBins: Int = 2,
 	                                           binDesc: BinDescriptor[PT, BT],
 	                                           consolidationPartitions: Option[Int],
 	                                           isDensityStrip: Boolean,
-	                                           bins: Int = 256):
+	                                           bins: Int = 256,
+	                                           linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] = {
 		
 	    val uniBinToTileBin = {
@@ -314,6 +317,12 @@ class RDDLineBinner(minBins: Int = 2,
 			else 
 				(TileIndex.universalBinIndexToTileBinIndex)_
 		}
+	    val calcLinePixels = {
+	    	if (linesAsArcs)
+	    		endpointsToArcBins
+	    	else
+	    		endpointsToLineBins
+	    }	    
 		
 		val densityStripLocal = isDensityStrip
 		
@@ -323,7 +332,7 @@ class RDDLineBinner(minBins: Int = 2,
 		// Draw lines (based on endpoint bins), and convert all results from universal bins to tile,bin coords
 		//val reducedData = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
 		val reducedData = data.flatMap(p => {
-			endpointsToLineBins(p._1._1, p._1._2).map(bin => {
+			calcLinePixels(p._1._1, p._1._2).map(bin => {
 				val tb = uniBinToTileBin(p._1._3, bin)
 				((tb.getTile(), tb.getBin()), p._2)
 			})		
@@ -372,7 +381,8 @@ class RDDLineBinner(minBins: Int = 2,
 	                                           binDesc: BinDescriptor[PT, BT],
 	                                           consolidationPartitions: Option[Int],
 	                                           isDensityStrip: Boolean,
-	                                           bins: Int = 256):
+	                                           bins: Int = 256,
+	                                           linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] = {
 		
 	    val uniBinToTileBin = {
@@ -380,7 +390,13 @@ class RDDLineBinner(minBins: Int = 2,
 				(TileIndex.universalBinIndexToTileBinIndex256)_ 	// use this version if bins == 256
 			else 
 				(TileIndex.universalBinIndexToTileBinIndex)_
-		}
+		}	    
+	    val calcLinePixels = {
+	    	if (linesAsArcs)
+	    		endpointsToArcBins
+	    	else
+	    		endpointsToLineBins
+	    }
 		
 		val densityStripLocal = isDensityStrip
 		
@@ -391,7 +407,7 @@ class RDDLineBinner(minBins: Int = 2,
 		//val reduced2 = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
 		
 		val reducedData = data.flatMap(p => {		
-			universalBinsToTiles(p._1._3, endpointsToLineBins(p._1._1, p._1._2), uniBinToTileBin).map(tile =>
+			universalBinsToTiles(p._1._3, calcLinePixels(p._1._1, p._1._2), uniBinToTileBin).map(tile =>
 								(tile, (p._1._1, p._1._2, p._2))
 							)
 		})
@@ -419,7 +435,7 @@ class RDDLineBinner(minBins: Int = 2,
 					{
 						// get all universal bins in line, discard ones not in current tile, 
 						// and convert bins to 'regular' tile/bin units
-						universalBinsToBins(index, endpointsToLineBins(segment._1, segment._2), uniBinToTileBin).foreach(bin =>
+						universalBinsToBins(index, calcLinePixels(segment._1, segment._2), uniBinToTileBin).foreach(bin =>
 							{
 								val x = bin.getX()
 								val y = bin.getY()
@@ -508,7 +524,104 @@ class RDDLineBinner(minBins: Int = 2,
 				}
 			)	
 		}
-		
+
+	/**
+	 * Determine all bins that are required to draw an arc between two endpoint bins.
+	 *
+	 * Bresenham's Midpoint circle algorithm is used for filling in the intermediate pixels in an arc.
+	 *
+	 * From wikipedia
+	 * 
+	 * @param start
+	 *        The start bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @param end
+	 *        The end bin, in universal bin index coordinates (not tile bin
+	 *        coordinates)
+	 * @return All bins, in universal bin coordinates, falling on the direct
+	 *         line between the two endoint bins.
+	 */
+	protected val endpointsToArcBins: (BinIndex, BinIndex) => IndexedSeq[BinIndex] =
+		(start, end) => {
+
+			var (x0, y0, x1, y1) = (start.getX(), start.getY(), end.getX(), end.getY())
+
+			//---- Find centre of circle to be used to draw the arc
+			val dx = x1-x0
+			val dy = y1-y0		
+			val len = Math.sqrt(dx*dx + dy*dy)	//length between endpoints
+			val r = len	// set radius of circle = len for now  (TODO -- could make this a tunable parameter?)
+			
+			val theta1 = 0.5*Math.PI - Math.asin(len/(2.0*r)); // angle from each endpoint to circle's centre (centre and endpoints form an isosceles triangle)
+			val angleTemp = Math.atan2(dy, dx)-theta1;
+			val xC = x0 + r*Math.cos(angleTemp)
+			val yC = y0 + r*Math.sin(angleTemp)
+			
+			//---- Use Midpoint Circle algorithm to draw the arc
+			var f = 1.0-r
+			var ddF_x = 1.0
+			var ddF_y = -2.0*r
+			var x = 0.0
+			var y = r
+			
+			val xTmp = 0
+			val yTmp = 1
+			
+			// angles for start and end points of arc
+			var startRad = Math.atan2(y0-yC, x0-xC)
+			var stopRad = Math.atan2(y1-yC, x1-xC)
+			
+			val bWrapNeg = (stopRad-startRad > Math.PI)
+			if (bWrapNeg) startRad += 2.0*Math.PI	//note: this assumes using CW arcs only!
+													//(otherwise would need to check if stopRad is negative here as well)
+	
+			
+			val arcBins = scala.collection.mutable.ArrayBuffer[BinIndex]()
+			
+			// calc points for the four vertices of circle		
+			saveArcPoint((xC, yC+r))			
+			saveArcPoint((xC, yC-r))			
+			saveArcPoint((xC+r, yC))
+			saveArcPoint((xC-r, yC))
+			
+			while (x < y) {
+				if (f >= 0) {
+					y = y - 1.0
+					ddF_y = ddF_y + 2.0
+					f = f + ddF_y
+				}
+				x = x + 1.0
+				ddF_x = ddF_x + 2.0
+				f = f + ddF_x
+
+				// TODO -- optimize this section (only need to do atan2 call once per loop iteration and then scale 
+				// angles below by multiples of pi/2 rads as needed)
+				saveArcPoint((xC+x, yC+y))			
+				saveArcPoint((xC-x, yC+y))			
+				saveArcPoint((xC+x, yC-y))
+				saveArcPoint((xC+y, yC-x))
+				
+				saveArcPoint((xC+y, yC+x))
+				saveArcPoint((xC-y, yC+x))
+				saveArcPoint((xC+y, yC-x))
+				saveArcPoint((xC-y, yC-x))							
+			}
+			
+			def saveArcPoint(point: (Double, Double)) = {
+				
+				var newAngle = Math.atan2(point._2-yC, point._1-xC)
+				if (bWrapNeg && newAngle < 0.0)
+					newAngle += 2.0*Math.PI
+				
+				if (newAngle <= startRad && newAngle >= stopRad)
+					arcBins += new BinIndex((point._1).toInt, (point._2).toInt)	//TODO check conversions to Int here
+			}
+			
+			//TODO need to check why this Midpoint circle algo sometimes returns duplicated pixels
+			//(for now convert toSet first to remove duplicates)
+			arcBins.toSet.toIndexedSeq	
+		}
+					
 	/**
 	 * Determine all tiles required to draw a line between two endpoint bins.
 	 *
