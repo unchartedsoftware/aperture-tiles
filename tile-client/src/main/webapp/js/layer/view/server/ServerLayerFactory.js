@@ -24,36 +24,37 @@
  */
 
 
-/**
- * This module when given a server layer json object, will load the required classes and build
- * the layers
- */
 define( function (require) {
     "use strict";
 
-	var ServerLayer = require('./ServerLayer');
-		
-	return {
+	var LayerFactory = require('../LayerFactory'),
+	    ServerLayer = require('./ServerLayer'),
+	    ServerLayerFactory;
 
-		/**
-		 * Given a layer JSON specification object and a map, will create server rendered tile layers
-		 * @param layerJSON	 	layer specification JSON object
-		 * @param map			map object
-		 */
-		createLayers: function(layerJSON, uiMediator, map) {
+    ServerLayerFactory = LayerFactory.extend({
+        ClassName: "ServerLayerFactory",
 
-			// Set up server-rendered display layers
-			var serverLayerDeferred = $.Deferred(),
-			    serverLayers = new ServerLayer(layerJSON, map, serverLayerDeferred);
 
-			// Populate the map layer state object with server layer data, and enable
-			// listeners that will push state changes into the layers.
-            uiMediator.setServerLayers(serverLayers, map);
+        createLayer: function(layerJSON, map) {
+
+            var serverLayer,
+                serverLayerDeferred = $.Deferred();
+
+            // create the layer
+            serverLayer = new ServerLayer( layerJSON, map );
+            // send configuration request
+            serverLayer.configure( function( layerInfo ) {
+                // update layer and resolve deferred
+                serverLayer.update( layerInfo );
+                serverLayerDeferred.resolve( serverLayer );
+            });
 
             return serverLayerDeferred;
-		}
+        }
 
-    };	
-	
+
+    });
+
+    return ServerLayerFactory;
 
 });

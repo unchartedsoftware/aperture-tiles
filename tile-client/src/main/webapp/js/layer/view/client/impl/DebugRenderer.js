@@ -50,15 +50,14 @@ define(function (require) {
         ClassName: "DebugLayer",
 		
         init: function ( map ) {
-            this._super( map );
 
+            this._super( map );
             this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-
             this.nodeLayer.addLayer( new HtmlLayer({
                 html: function () {
                     return '<div>' + this.tilekey + '</div>';

@@ -30,10 +30,13 @@
         Map = require('./map/Map'),
         MapService = require('./map/MapService'),
         LayerService = require('./layer/LayerService'),
-        UIMediator = require('./layer/controller/UIMediator'),
+        BaseLayerMediator = require('./layer/controller/BaseLayerMediator'),
+        ClientLayerMediator = require('./layer/controller/ClientLayerMediator'),
+        ServerLayerMediator = require('./layer/controller/ServerLayerMediator'),
         ClientLayerFactory = require('./layer/view/client/ClientLayerFactory'),
         ServerLayerFactory = require('./layer/view/server/ServerLayerFactory'),
         LayerControls = require('./layer/controller/LayerControls'),
+        CarouselControls = require('./layer/controller/CarouselControls'),
         PyramidFactory = require('./binning/PyramidFactory'),
         OverlayButton = require('./ui/OverlayButton');
 
@@ -271,7 +274,7 @@
                                 "Layers" : [{
                                     "Layer" : layerName,
                                     "Type" : "tile",
-									"Config" : layerList[0].Config
+                                    "Config" : layerList[0].Config
                                 }],
                                 "parentDiv" : parentDivId,
                                 "mapDiv" : largeDivId,
@@ -336,9 +339,9 @@
             var layerDeferreds = LayerService.requestLayers(),
                 mapDeferreds = MapService.requestMaps(),
                 $tabsPlotsUl = $('#tabs-plots ul');
-            
+
             var getLayerConfig = function(layer) {
-            	return [{
+                return [{
                     "layer": layer.id,
                     "domain": layer.renderers[0].domain,
                     "name": layer.name,
@@ -354,7 +357,7 @@
                     plotDiv = "plot-" + tabLayerId,
                     $plotVisual = $('<div id="' + plotDiv + '"></div>'),
                     plotControls = plotDiv + '-controls',
-                    uiMediator,
+                    baseLayerMediator,
                     worldMap,
                     $plotControls,
                     controlsButton,
@@ -365,31 +368,12 @@
                 $plotTab.append($plotVisual);
                 $('#tabs-plots').append($plotTab);
 
-                //add map after the containing div has been added
-                //reconfigure mapConfig for Map.js
-                if (Array.isArray(mapConfig.MapConfig.baseLayer)) {
-                    baseLayers = mapConfig.MapConfig.baseLayer;
-                    if ( mapConfig.MapConfig.baseLayer.length < 1 || mapConfig.MapConfig.baseLayer[0].type === 'BlankBase' ) {
-                        mapConfig.MapConfig.baseLayer = null;
-                    } else {
-                        mapConfig.MapConfig.baseLayer = { 'Google' :
-                             { 'options'  :  mapConfig.MapConfig.baseLayer[0].options }
-                        }
-                    }
-                } else {
-                    baseLayers.push(mapConfig.MapConfig.baseLayer);
-                }
-
                 worldMap = new Map(plotDiv, mapConfig);
-                // ... (set up our map axes) ...
                 worldMap.setAxisSpecs(MapService.getAxisConfig(mapConfig));
+                worldMap.setTileBorderStyle(mapConfig);
 
-                // ... (set up our map tile borders) ...
-                MapService.setTileBorderConfig(mapConfig, plotDiv);
-
-                if(mapConfig.MapConfig.zoomTo) {
-                    worldMap.map.zoomTo( mapConfig.MapConfig.zoomTo[0], mapConfig.MapConfig.zoomTo[1], mapConfig.MapConfig.zoomTo[2] );
-                }
+                baseLayerMediator = new BaseLayerMediator();
+                baseLayerMediator.registerLayers( worldMap );
 
                 //create the controls
                 $plotControls = $('<div id="' + plotControls + '">');
@@ -404,35 +388,46 @@
                 controlsButton.getContentElement().addClass('layer-controls-content');
                 controlsButton.getContainerElement().addClass('layer-controls');
 
-                uiMediator = new UIMediator();
-
                 if (layerConfig[0].domain === 'server') {
-                    serverLayerDeferred = ServerLayerFactory.createLayers(layerConfig, uiMediator, worldMap);
-                    $.when( serverLayerDeferred ).done( function( layersFromServer ) {
-                        var filterAxisConfig,
-                            key,
-                            layerInfo = layersFromServer.getSubLayerInfosById();
 
-                        for(key in layerInfo){
-                            if(layerInfo.hasOwnProperty( key )){
-                                filterAxisConfig = layerInfo[ key ].meta;
-                            }
-                        }
-                        filterAxisConfig.map = worldMap;
-                        filterAxisConfig.baseLayers = baseLayers;
-                        new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap(), filterAxisConfig);
+                    var serverLayerMediator = new ServerLayerMediator();
+                    var serverLayerFactory = new ServerLayerFactory();
+                    var serverLayerDeferreds = serverLayerFactory.createLayers( layerConfig, worldMap, serverLayerMediator );
+
+                    $.when( serverLayerDeferreds ).done( function( serverLayers ) {
+
+                        var sharedStates = [];
+
+                        $.merge( sharedStates, baseLayerMediator.getLayerStates() );
+                        $.merge( sharedStates, serverLayerMediator.getLayerStates() );
+
+                        new LayerControls(plotControls +'-content', sharedStates );
                     });
 
                 } else {
+
                     var clientLayers = [{
                         "domain" : layer.renderers[0].domain,
                         "layer" : layer.id,
                         "name" : layer.name,
-                        "type" : layer.renderers[0].type,
-                        "views" : layer.renderers[0].views
+                        "renderers" : layer.renderers[0].renderers
                     }];
-                    ClientLayerFactory.createLayers(clientLayers, uiMediator, worldMap);
-                    new LayerControls(plotControls +'-content', uiMediator.getLayerStateMap());
+
+                    var clientLayerMediator = new ClientLayerMediator();
+                    var clientLayerFactory = new ClientLayerFactory();
+                    var clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
+
+                    $.when( clientLayerDeferreds ).done( function( clientLayers ) {
+
+                        var sharedStates = [];
+
+                        $.merge( sharedStates, baseLayerMediator.getLayerStates() );
+                        $.merge( sharedStates, clientLayerMediator.getLayerStates() );
+
+                        new LayerControls(plotControls +'-content', sharedStates );
+                        new CarouselControls( clientLayerMediator.getLayerStates(), worldMap );
+
+                    });
                 }
             };
 
@@ -499,7 +494,7 @@
             });
 
             if(!summaryBuilderOptions.dataset){
-                summaryDiv.html('<h2>No dataset selected.</h2>');
+                $summaryDiv.html('<h2>No dataset selected.</h2>');
             	return;
             }
 

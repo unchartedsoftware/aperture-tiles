@@ -68,17 +68,10 @@
                     "renderers": [
                         {
                             "domain": "client",
-                            "type": "CarouselLayer",
-                            "views": [
-                                {
-                                    "renderer": "TopTextSentimentHtml"
-                                },
-                                {
-                                    "renderer": "TagsByTimeSentimentHtml"
-                                },
-                                {
-                                    "renderer": "EmptyRenderer"
-                                }
+                            "renderers": [
+                                "TopTagsSentimentHtml",
+                                "TagsByTimeSentimentHtml",
+                                "EmptyRenderer"
                             ]
                         }
                     ]

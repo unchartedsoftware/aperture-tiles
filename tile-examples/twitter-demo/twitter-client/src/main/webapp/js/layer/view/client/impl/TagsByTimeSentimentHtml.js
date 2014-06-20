@@ -23,53 +23,59 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines the base class for a client render layer. Must be
- * inherited from for any functionality.
- */
 define(function (require) {
     "use strict";
 
 
 
-    var HtmlRenderer = require('../HtmlRenderer'),
-        ClientNodeLayer = require('../ClientNodeLayer'),
+    var ClientNodeLayer = require('../ClientNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
-        TwitterUtil = require('./TwitterUtil'),
-        DetailsOnDemand = require('./DetailsOnDemandHtml'),
+        TwitterUtil = require('./TwitterSentimentUtil'),
+        TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
+        NUM_TAGS_DISPLAYED = 8,
+        NUM_LETTERS_IN_TAG = 10,
         TagsByTimeSentimentHtml;
 
 
 
-    TagsByTimeSentimentHtml = HtmlRenderer.extend({
+    TagsByTimeSentimentHtml = TwitterHtmlRenderer.extend({
         ClassName: "TagsByTimeSentimentHtml",
 
-        /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
-         */
         init: function( map) {
 
-            var that = this;
-
-            this._super(map);
-
+            this._super( map );
             this.nodeLayer = new ClientNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-
             this.createLayer();
-
-            this.map.on( 'click', function() {
-                TwitterUtil.clickOff( that.clientState, DetailsOnDemand );
-            });
         },
+
+
+        addClickStateClassesGlobal: function() {
+
+            var selectedTag = TwitterUtil.trimLabelText( this.layerState.getClickState().tag, NUM_LETTERS_IN_TAG ),
+                $elements = $(".tags-by-time-sentiment");
+
+            $elements.filter( function() {
+                return $(this).text() !== selectedTag;
+            }).addClass('greyed').removeClass('clicked');
+
+            $elements.filter( function() {
+                return $(this).text() === selectedTag;
+            }).removeClass('greyed').addClass('clicked');
+
+        },
+
+
+        removeClickStateClassesGlobal: function() {
+
+            $(".tags-by-time-sentiment").removeClass('greyed clicked');
+        },
+
 
         createLayer : function() {
 
@@ -77,10 +83,10 @@ define(function (require) {
 
             function getYOffset( values, index ) {
                 var SPACING = 20;
-                return 113 - ( (( TwitterUtil.getTagCount( values, 8 ) - 1) / 2 ) - index ) * SPACING;
+                return 113 - ( (( TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED ) - 1) / 2 ) - index ) * SPACING;
             }
 
-            this.nodeLayer.addLayer( new HtmlLayer({
+            this.nodeLayer.addLayer( new HtmlLayer( {
 
                 html: function() {
 
@@ -91,27 +97,27 @@ define(function (require) {
                         values = this.bin.value,
                         value,
                         maxPercentage, sentimentPercentages, relativePercent,
-                        yOffset, visibility, blendedColour,
+                        visibility, blendedColour,
                         i, j,
                         tag,
-                        count = TwitterUtil.getTagCount( values, 8 );
+                        count = TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED );
 
                     // create count summaries
-                    $summaries = TwitterUtil.createTweetSummaries();
+                    $summaries = that.createTweetSummaries();
 
                     $html.append( $summaries );
 
                     for (i=0; i<count; i++) {
 
                         value = values[i];
-                        tag = TwitterUtil.trimLabelText( value.tag, 7 );
+                        tag = TwitterUtil.trimLabelText( value.tag, NUM_LETTERS_IN_TAG );
                         maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value );
                         sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value );
 
                         html = '<div class="tags-by-time-sentiment" style="top:' +  getYOffset( values, i ) + 'px;">';
 
                         // create count chart
-                        html += '<div class="tags-by-time-left">'
+                        html += '<div class="tags-by-time-left">';
                         for (j=0; j<24; j++) {
                             blendedColour = TwitterUtil.blendSentimentColours( sentimentPercentages.positive[j],
                                                                                sentimentPercentages.neutral[j],
@@ -123,7 +129,7 @@ define(function (require) {
                         html += '</div>';
 
                         // create tag label
-                        html += '<div class="tags-by-time-right">'
+                        html += '<div class="tags-by-time-right">';
                         html +=     '<div class="tags-by-time-label">'+tag+'</div>';
                         html += '</div>';
 
@@ -131,10 +137,8 @@ define(function (require) {
 
                         $elem = $(html);
 
-                        // set event handlers
-                        TwitterUtil.setMouseEventCallbacks( that.map, $elem, $summaries, this, i, that.clientState, DetailsOnDemand );
-
-                        TwitterUtil.addClickStateClasses( $elem, tag, that.clientState.getClickState('tag') );
+                        that.setMouseEventCallbacks( $elem, $summaries, this, value );
+                        that.addClickStateClasses( $elem, tag );
 
                         $html.append( $elem );
                     }
@@ -143,10 +147,6 @@ define(function (require) {
                 }
             }));
 
-        },
-
-        redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
         }
 
 

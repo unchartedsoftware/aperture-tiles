@@ -48,17 +48,31 @@ define(function (require) {
 		
 		init: function (id, spec) {
 
+            var that = this;
+
+            this.id = id;
+            this.$map = $( "#" + this.id );
+            this.axes = [];
+            this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
+            this.baseLayers = ( $.isArray( spec.MapConfig.baseLayer ) ) ? spec.MapConfig.baseLayer : [spec.MapConfig.baseLayer];
+
+            if ( this.baseLayers.length === 0 ) {
+                this.baseLayers[0] = {
+                    "type" : "BlankBase",
+                    "options" : {
+                        "name" : "black",
+                        "color" : "rgb(0,0,0)"
+                    }
+                };
+            }
+
             // Set the map configuration
+            spec.MapConfig.baseLayer = {}; // default to no base layer
 			aperture.config.provide({
 				'aperture.map' : {
 					'defaultMapConfig' : spec.MapConfig
 				}
 			});
-
-			this.id = id;
-			this.$map = $( "#" + this.id );
-            this.axes = [];
-            this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
 
 			// Initialize the map
 			this.map = new aperture.geo.Map({ 
@@ -71,18 +85,19 @@ define(function (require) {
                 }
 			});
 
+            // set proper base layer
+			this.setBaseLayerIndex( 0 );
+
             // create div root layer
             this.createRoot();
 
-            // if move while map is panning, interrupt pan
-            /*
-            this.on('movestart', function(){
+            // if mousedown while map is panning, interrupt pan
+            this.getElement().mousedown( function(){
                 if ( that.map.olMap_.panTween ) {
-                    that.map.olMap_.panTween.callbacks = null;
-                    that.map.olMap_.panTween.stop();
+                     that.map.olMap_.panTween.callbacks = null;
+                     that.map.olMap_.panTween.stop();
                 }
             });
-            */
 
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
@@ -92,6 +107,12 @@ define(function (require) {
 
 			// Trigger the initial resize event to resize everything
 			$(window).resize();
+
+			if(spec.MapConfig.zoomTo) {
+                this.map.zoomTo( spec.MapConfig.zoomTo[0],
+                                 spec.MapConfig.zoomTo[1],
+                                 spec.MapConfig.zoomTo[2] );
+            }
 		},
 
 
@@ -108,6 +129,75 @@ define(function (require) {
 
             this.trigger('move'); // fire initial move event
         },
+
+
+        setBaseLayerIndex: function(index) {
+
+            var $map = this.getElement(),
+                olMap_ = this.map.olMap_,
+                newBaseLayerConfig = this.baseLayers[index],
+                newBaseLayerType,
+                newBaseLayer;
+
+            if( newBaseLayerConfig.type === 'BlankBase' ) {
+
+                // changing to blank base layer
+                $map.css( 'background-color', newBaseLayerConfig.options.color );
+                olMap_.baseLayer.setVisibility(false);
+
+            } else {
+
+                // destroy previous baselayer
+                olMap_.baseLayer.destroy();
+                //reset the background color to black
+                $map.css( 'background-color', 'rgb(0,0,0)' );
+                // create new layer instsance
+                newBaseLayerType = (newBaseLayerConfig.type === 'Google') ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
+                newBaseLayer = this.map.addLayer( newBaseLayerType, {}, newBaseLayerConfig );
+                // attach, and refresh it by toggling visibility
+                olMap_.baseLayer = newBaseLayer.olLayer_;
+                olMap_.setBaseLayer( newBaseLayer.olLayer_ );
+                olMap_.baseLayer.setVisibility(false);
+                olMap_.baseLayer.setVisibility(true);
+            }
+        },
+
+
+        /**
+         *
+         * @param mapConfig
+         * @param plotDiv optional div container id of the plot - useful when multiple maps are present
+         */
+        setTileBorderStyle: function ( mapConfig ) {
+
+            var olTileImageConfig = mapConfig.TileBorderConfig;
+
+            //if it is not defined, don't set border style
+            if( !olTileImageConfig ){
+                return;
+            }
+
+            if( olTileImageConfig === 'default' ){
+                olTileImageConfig = {
+                    "color" : "rgba(255, 255, 255, .5)",
+                    "style" : "solid",
+                    "weight" : "1px"
+                };
+            }
+
+            //set individual defaults if they are omitted.
+            olTileImageConfig.color = olTileImageConfig.color || "rgba(255, 255, 255, .5)";
+            olTileImageConfig.style = olTileImageConfig.style || "solid";
+            olTileImageConfig.weight = olTileImageConfig.weight || "1px";
+
+            $(document.body).prepend(
+                $('<style type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
+                    'border-left : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +
+                    '; border-top : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +';}' +
+                  '</style>')
+            );
+        },
+
 
         getZIndex: function() {
             var indices = OpenLayers.Map.prototype.Z_INDEX_BASE,
@@ -534,16 +624,12 @@ define(function (require) {
 			return this.map.olMap_.getLayerIndex(layer);
 		},
 
-		setOpacity: function (newOpacity) {
-			this.map.olMap_.baseLayer.setOpacity(newOpacity);
+		setOpacity: function( opacity ) {
+		    this.map.olMap_.baseLayer.setOpacity ( opacity );
 		},
 
-		getOpacity: function () {
-			return this.map.olMap_.baseLayer.opacity;
-		},
-
-		setVisibility: function (visibility) {
-			this.map.olMap_.baseLayer.setVisibility(visibility);
+		setVisibility: function( visibility ) {
+            this.map.olMap_.baseLayer.setVisibility( visibility );
 		},
 
 		getExtent: function () {
@@ -552,14 +638,6 @@ define(function (require) {
 
 		getZoom: function () {
 			return this.map.olMap_.getZoom();
-		},
-
-		isEnabled: function () {
-			return this.map.olMap_.baseLayer.getVisibility();
-		},
-
-		setEnabled: function (enabled) {
-			this.map.olMap_.baseLayer.setVisibility(enabled);
 		},
 
 		zoomToExtent: function (extent, findClosestZoomLvl) {

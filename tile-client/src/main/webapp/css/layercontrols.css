@@ -43,14 +43,14 @@
 
 .layer-title {
     position: relative;
-    padding-bottom: 5px;
-    padding-top:15px;
+    margin-bottom: 5px;
+    margin-top:15px;
 }
 
 .layer-content {
     position:relative;
     width:100%;
-    padding-bottom:5px;
+    margin-bottom:5px;
 }
 
 .layer-toggle {

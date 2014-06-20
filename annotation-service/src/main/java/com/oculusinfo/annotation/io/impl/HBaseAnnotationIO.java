@@ -64,8 +64,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
 	    public byte[] getQualifier() { return qualifier; }
     }
     
-    private Configuration     _config;
-    private HBaseAdmin        _admin;
+    private Configuration  _config;
+    private HBaseAdmin     _admin;
+    private HConnection    _connection;
 
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
@@ -79,7 +80,8 @@ public class HBaseAnnotationIO implements AnnotationIO {
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
-        _admin = new HBaseAdmin(_config);       
+        _admin = new HBaseAdmin(_config);
+        _connection = HConnectionManager.createConnection(_config);
     }
     
     /**
@@ -106,7 +108,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
    
     @Override
     public void writeData (String tableName, 
-					       AnnotationSerializer serializer, 
+					       AnnotationSerializer serializer,
 					       Iterable<AnnotationData<?>> data ) throws IOException {
         
     	List<Row> rows = new ArrayList<>();
@@ -211,15 +213,13 @@ public class HBaseAnnotationIO implements AnnotationIO {
     /*
      * Gets an existing table (without creating it)
      */
-    private HTable getTable (String tableName) throws IOException {
+    private HTableInterface getTable (String tableName) throws IOException {
 
         // convert to separate data table name
         String dataTableName = getTableName(tableName);
-        return new HTable( _config, dataTableName );
+        return _connection.getTable( dataTableName );
     }
     
-    
-
 
     /*
      * Given a put request (a request to put data into a table), add a single
@@ -258,7 +258,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
      *            The rows to write
      */
     private void writeRows (String tableName, List<Row> rows) throws InterruptedException, IOException {
-        HTable table = getTable(tableName);
+        HTableInterface table = getTable(tableName);
         table.batch(rows);
         table.flushCommits();
         table.close();
@@ -291,7 +291,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
      *         map.
      */
     private List<Map<HBaseColumn, byte[]>> readRows (String tableName, List<byte[]> rows, HBaseColumn... columns) throws IOException {
-        HTable table = getTable(tableName);
+        HTableInterface table = getTable(tableName);
 
         List<Get> gets = new ArrayList<>(rows.size());
         for (byte[] rowId: rows) {
@@ -307,19 +307,21 @@ public class HBaseAnnotationIO implements AnnotationIO {
         for (Result result: results) {
             allResults.add(decodeRawResult(result, columns));
         }
+        table.close();
         return allResults;
     }
     
     
     private void deleteRows (String tableName, List<byte[]> rows, HBaseColumn... columns ) throws IOException {
-        
-    	HTable table = getTable(tableName);
+
+        HTableInterface table = getTable(tableName);
         List<Delete> deletes = new LinkedList<>();
         for (byte[] rowId: rows) {
         	Delete delete = new Delete(rowId);
             deletes.add(delete);
         }
         table.delete(deletes);
+        table.close();
     }
 
 

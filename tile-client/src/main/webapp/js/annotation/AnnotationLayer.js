@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
- /*global OpenLayers */
+
 define(function (require) {
     "use strict";
 
@@ -60,7 +60,7 @@ define(function (require) {
             this.groups = spec.groups;
             this.accessibility = spec.accessibility;
             this.filter = spec.filter;
-            this.pendingTileRequests = {};
+            this.pendingTiles = {};
             this.tiles = [];
 
             // set callbacks
@@ -90,6 +90,7 @@ define(function (require) {
 
             if ( statusInfo.success ) {
                 console.log("MODIFY SUCCESS");
+                console.log( "timestamp after" + data.timestamp );
             }
             this.updateTiles();
         },
@@ -309,7 +310,7 @@ define(function (require) {
 
                         $aggregate = $(html);
 
-                        if (bin.length === 1 && that.accessibility.draggable) {
+                        if (bin.length === 1 && that.accessibility.modify) {
 
                             $aggregate.draggable({
 
@@ -323,7 +324,9 @@ define(function (require) {
                                     newAnno.x = pos.x;
                                     newAnno.y = pos.y;
 
-                                    that.service.modifyAnnotation( bin[0], newAnno, $.proxy( that.modifyCallback, that ) );
+                                    console.log( "timestamp before " + newAnno.certificate.timestamp );
+
+                                    that.service.modifyAnnotation( newAnno, $.proxy( that.modifyCallback, that ) );
                                 }
                             });
                         }
@@ -395,55 +398,67 @@ define(function (require) {
         },
 
 
+        createTileKey : function ( tile ) {
+            return tile.level + "," + tile.xIndex + "," + tile.yIndex;
+        },
+
+
         updateTiles: function() {
 
             var visibleTiles = this.map.getTilesInView(),  // determine all tiles in view
-                activeTiles = [],
+                currentTiles = this.tiles,
+                pendingTiles = this.pendingTiles,
+                neededTiles = [],
                 defunctTiles = {},
-                key,
                 i, tile, tilekey;
 
             if ( !this.accessibility.read ) {
                 return;
             }
 
-            function createTileKey ( tile ) {
-                return tile.level + "," + tile.xIndex + "," + tile.yIndex;
-            }
-
-            // keep track of current tiles to ensure we know
-            // which ones no longer exist
-            for (key in this.tiles) {
-                if ( this.tiles.hasOwnProperty(key)) {
-                    defunctTiles[key] = true;
+            // track the tiles we have
+            for ( tilekey in currentTiles ) {
+                if ( currentTiles.hasOwnProperty(tilekey) ) {
+                    defunctTiles[ tilekey ] = true;
                 }
             }
-
-            this.pendingTileRequests = {};
+            // and the tiles we are waiting on
+            for ( tilekey in pendingTiles ) {
+                if ( pendingTiles.hasOwnProperty(tilekey) ) {
+                    defunctTiles[ tilekey ] = true;
+                }
+            }
 
             // Go through, seeing what we need.
             for (i=0; i<visibleTiles.length; ++i) {
                 tile = visibleTiles[i];
-                tilekey = createTileKey(tile);
+                tilekey = this.createTileKey(tile);
 
                 if ( defunctTiles[tilekey] ) {
+
                     // Already have the data, remove from defunct list
                     delete defunctTiles[tilekey];
+
+                } else {
+
+                    // we do not have it, and we are not waiting on it, flag it for retrieval
+                    pendingTiles[tilekey] = true;
+                    neededTiles.push(tilekey);
                 }
-                // And mark tile it as meaningful
-                this.pendingTileRequests[tilekey] = true;
-                activeTiles.push(tilekey);
+
             }
 
             // Remove all old defunct tiles references
             for (tilekey in defunctTiles) {
                 if (defunctTiles.hasOwnProperty(tilekey)) {
-                    delete this.tiles[tilekey];
+                    // remove from memory and pending list
+                    delete currentTiles[tilekey];
+                    delete pendingTiles[tilekey];
                 }
             }
 
             // Request needed tiles from dataService
-            this.service.getAnnotations( activeTiles, $.proxy( this.getCallback, this ) );
+            this.service.getAnnotations( neededTiles, $.proxy( this.getCallback, this ) );
         },
 
 
@@ -476,31 +491,30 @@ define(function (require) {
          */
         getCallback: function( data ) {
 
-            function createTileKey( tile ) {
-                return tile.level + "," + tile.xIndex + "," + tile.yIndex;
-            }
-
-            var tilekey = createTileKey( data.tile ),
+            var tilekey = this.createTileKey( data.tile ),
+                currentTiles = this.tiles,
                 key,
                 tileArray = [];
 
-            if ( !this.pendingTileRequests[tilekey] ) {
+            if ( !this.pendingTiles[tilekey] ) {
                 // receiving data from old request, ignore it
                 return;
             }
 
-            // clear data and visual representation
+            // clear visual representation
             this.nodeLayer.remove( tilekey );
-            this.tiles[tilekey] = this.transformTileToBins( data, tilekey );
+            // add to data cache
+            currentTiles[tilekey] = this.transformTileToBins( data, tilekey );
 
             // convert all tiles from object to array and redraw
-            for (key in this.tiles) {
-                if ( this.tiles.hasOwnProperty( key )) {
-                    tileArray.push( this.tiles[key] );
+            for (key in currentTiles) {
+                if ( currentTiles.hasOwnProperty( key )) {
+                    tileArray.push( currentTiles[key] );
                 }
             }
 
             this.redraw( tileArray );
+
         },
 
 

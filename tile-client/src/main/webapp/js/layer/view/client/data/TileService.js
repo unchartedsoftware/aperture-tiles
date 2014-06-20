@@ -48,12 +48,12 @@ define(function (require) {
         /**
          * Construct a TileService
          */
-        init: function (layerInfo, tilepyramid) {
+        init: function ( layerInfo, tilepyramid ) {
 
             // current tile data
             this.data = {};
             // tiles flagged as actively requested and waiting on
-            this.waitingOnTile = {};
+            this.pendingData = {};
             // callbacks
             this.dataCallback = {};
             // layer info
@@ -63,17 +63,15 @@ define(function (require) {
         },
 
 
-        getDataArray: function ( tilekeys ) {
-            var i,
-                data = this.data,
-                tile,
+        getDataArray: function () {
+            var data = this.data,
+                tilekey, tile,
                 allData = [];
 
-            for(i=0; i<tilekeys.length; i++) {
+            for ( tilekey in data ) {
+                if ( data.hasOwnProperty(tilekey) ) {
 
-                tile = data[ tilekeys[i] ];
-                // if data exists in tile
-                if ( tile !== undefined ) {
+                    tile = data[tilekey];
                     // check format of data
                     if ( $.isArray( tile ) ) {
                         // for each tile, data is an array, merge it together
@@ -82,24 +80,6 @@ define(function (require) {
                         // for each tile, data is an object
                         allData.push( tile );
                     }
-                }
-            }
-            return allData;
-        },
-
-
-        getDataObject: function ( tilekeys ) {
-            var i,
-                data = this.data,
-                tile,
-                allData = {};
-
-            for(i=0; i<tilekeys.length; i++) {
-
-                tile = data[ tilekeys[i] ];
-                // if data exists in tile
-                if ( tile !== undefined && tile.length > 0 ) {
-                    allData[ tilekeys[i] ] = tile;
                 }
             }
             return allData;
@@ -133,7 +113,7 @@ define(function (require) {
          */
         releaseData: function(tilekey) {
             delete this.data[tilekey];
-            delete this.waitingOnTile[tilekey];
+            delete this.pendingData[tilekey];
             delete this.dataCallback[tilekey];
         },
 
@@ -146,10 +126,51 @@ define(function (require) {
          * @param requestedTiles array of requested tilekeys
          * @param callback callback function
          */
-        requestData: function(requestedTiles, tileSetBounds, callback) {
-            var i;
+        requestData: function( requestedTiles, tileSetBounds, callback ) {
+
+            var currentTiles = this.data,
+                pendingTiles = this.pendingData,
+                defunctTiles = {},
+                neededTiles = [],
+                i, tile, tilekey;
+
+            // track the tiles we have
+            for ( tilekey in currentTiles ) {
+                if ( currentTiles.hasOwnProperty(tilekey) ) {
+                    defunctTiles[ tilekey ] = true;
+                }
+            }
+            // and the tiles we are waiting on
+            for ( tilekey in pendingTiles ) {
+                if ( pendingTiles.hasOwnProperty(tilekey) ) {
+                    defunctTiles[ tilekey ] = true;
+                }
+            }
+
+            // Go through, seeing what we need.
             for (i=0; i<requestedTiles.length; ++i) {
-                this.getRequest( requestedTiles[i], tileSetBounds, callback );
+                tile = requestedTiles[i];
+                tilekey = this.createTileKey(tile);
+
+                if ( defunctTiles[ tilekey ] ) {
+                    // Already have the data, or waiting for it remove from defunct list
+                    delete defunctTiles[ tilekey ];
+                } else {
+                    // New data.  Mark for fetch.
+                    neededTiles.push( tilekey );
+                }
+            }
+
+            // Remove all old defunct tiles references
+            for ( tilekey in defunctTiles ) {
+                if ( defunctTiles.hasOwnProperty( tilekey ) ) {
+                    this.releaseData( tilekey );
+                }
+            }
+
+            // send requests to server
+            for (i=0; i<neededTiles.length; ++i) {
+                this.getRequest( neededTiles[i], tileSetBounds, callback );
             }
         },
 
@@ -194,10 +215,10 @@ define(function (require) {
                 yIndex = parseInt(parsedValues[2], 10);
 
             // ensure we only send a request once
-            if (this.waitingOnTile[tilekey] === undefined) {
+            if (this.pendingData[tilekey] === undefined) {
 
                 // flag tile as loading and stash callback
-                this.waitingOnTile[tilekey] = true;
+                this.pendingData[tilekey] = true;
                 this.dataCallback[tilekey] = callback;
 
                 // request data from server
@@ -228,7 +249,7 @@ define(function (require) {
             var tilekey = this.createTileKey( tileData.index );
 
             // ensure we still need the tile
-            if (this.waitingOnTile[tilekey] === true) {
+            if (this.pendingData[tilekey] === true) {
 
                 // convert tile data into data by bin
                 this.data[tilekey] = this.transformTileToBins( tileData.tile, tilekey );
@@ -239,7 +260,7 @@ define(function (require) {
                 }
 
                 // clear callbacks and 'waiting on' status
-                delete this.waitingOnTile[tilekey];
+                delete this.pendingData[tilekey];
                 delete this.dataCallback[tilekey];
             }
         },

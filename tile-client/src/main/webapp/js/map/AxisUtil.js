@@ -206,6 +206,12 @@ define({
             startingMarkerTypeIndex = 0,
             pivot;
 
+        function roundToDecimals( num ) {
+            var numDec = axis.unitSpec.decimals || 2,
+                pow10 = Math.pow( 10, numDec );
+            return Math.round( num * pow10) / pow10;
+        }
+
         function getPixelPosition( value ) {
             // given an axis value, get the pixel position on the page
             var pixelPosition;
@@ -245,7 +251,8 @@ define({
                 }
             } else {
                 // cull below pivot
-                while (minIncrement-subIncrement >= minCull) {
+                // NOTE: rounding here to prevent accumulated precision errors that truncate first axis 'tick'
+                while ( roundToDecimals(minIncrement-subIncrement) >= minCull) {
                     minIncrement -= subIncrement;
                     startingMarkerTypeIndex--;
                 }
@@ -258,12 +265,6 @@ define({
 
             var maxCull,      // exact value of cull point, any value greater will be culled from view
                 maxIncrement; // the minimum increment that is visible
-
-            function roundToDecimals( num ) {
-                var numDec = axis.unitSpec.decimals || 2,
-                    pow10 = Math.pow(10, numDec);
-                return Math.round( num * pow10) / pow10;
-            }
 
             if (axis.isXAxis) {
                 maxCull = axis.map.getCoordFromViewportPixel( axis.map.getViewportWidth(), 0 ).x;

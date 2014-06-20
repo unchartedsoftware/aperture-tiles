@@ -30,8 +30,8 @@
             },
             "accessibility": {
         		"read": true,
-            	"write": false,
-            	"modify": false
+            	"write": true,
+            	"modify": true
             },
         }
     ]
