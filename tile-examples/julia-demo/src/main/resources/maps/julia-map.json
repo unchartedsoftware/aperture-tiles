@@ -81,7 +81,7 @@
 				"allowScaleByZoom" : true,
 			},
 			"unitSpec" : {
-				"type" : "time",
+				"type" : "decimal",
 				"decimals" : 2,
 				"allowStepDown" : false
 			},			
