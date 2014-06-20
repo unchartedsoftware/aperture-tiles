@@ -280,7 +280,7 @@ public class TileStorageUtility {
 		toObject.writeMetaData(toPyramidID, strmetadata);
 		
 		// gets the number of levels in the pyramid
-		List<Integer> pyramidlevels = metadata.getLevels();
+		List<Integer> pyramidlevels = metadata.getValidZoomLevels();
 		Collections.sort(pyramidlevels);
 	
 		

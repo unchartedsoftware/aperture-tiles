@@ -270,9 +270,9 @@ public class LayerServiceImpl implements LayerService {
             // Set level-specific properties in the configuration
             if (null != tile) {
                 PyramidMetaData metadata = getMetaData(layerId, pyramidIO);
-                config.setLevelProperties(tile,
-                                          metadata.getLevelMinimum(tile.getLevel()),
-                                          metadata.getLevelMaximum(tile.getLevel()));
+                String minimum = metadata.getCustomMetaData(""+tile.getLevel(), "minimum");
+                String maximum = metadata.getCustomMetaData(""+tile.getLevel(), "maximum");
+                config.setLevelProperties(tile, minimum, maximum);
             }
 
             return config;

@@ -24,19 +24,26 @@
 package com.oculusinfo.binning.metadata;
 
 
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.util.JsonUtilities;
-import com.oculusinfo.binning.util.Pair;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.awt.geom.Rectangle2D;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.util.Pair;
 
 
 
@@ -259,7 +266,24 @@ public class PyramidMetaData {
 		_metaData.put("zoomlevels", sortedLevels);
 	}
 
-	/**
+    /**
+     * Get a list of all levels described by the metadata of the given tile
+     * pyramid.
+     * 
+     * @return A list of levels. This should never be null, but may be empty if
+     *         an error is encountered getting the level information.
+     */
+/*
+    public List<Integer> getLevels () {
+        int minZoom = getMinZoom();
+        int maxZoom = getMaxZoom();
+        List<Integer> levels = new ArrayList<>();
+        for (int i=minZoom; i<=maxZoom; ++i) levels.add(i);
+        return levels;
+    }
+*/
+
+    /**
 	 * Get the bounds of the area covered by the tile pyramid described by this
 	 * metadata object, in raw data coordinates.
 	 */
@@ -325,23 +349,52 @@ public class PyramidMetaData {
 		metaInfo.put(path[path.length-1], value);
 	}
 
-	/**
-	 * Get a list of all levels described by the metadata of the given tile
-	 * pyramid.
-	 * 
-	 * @return A list of levels. This should never be null, but may be empty if
-	 *         an error is encountered getting the level information.
-	 */
-	public List<Integer> getLevels () {
-		int minZoom = getMinZoom();
-		int maxZoom = getMaxZoom();
-		List<Integer> levels = new ArrayList<>();
-		for (int i=minZoom; i<=maxZoom; ++i) levels.add(i);
-		return levels;
-	}
+    public Map<String, Object> getAllCustomMetaData () {
+        Object metaInfo = _metaData.opt("meta");
+        if (null == metaInfo)
+            return null;
+
+        Map<String, Object> customMetaData = new HashMap<String, Object>();
+        if (metaInfo instanceof JSONObject) {
+            addFieldsToMap("", (JSONObject) metaInfo, customMetaData);
+        } else if (metaInfo instanceof JSONArray) {
+            addFieldsToMap("", (JSONArray) metaInfo, customMetaData);
+        }
+        return customMetaData;
+    }
+
+    private void addFieldsToMap (String prefix, JSONObject info,
+                                 Map<String, Object> map) {
+        String[] keys = JSONObject.getNames(info);
+        for (String key: keys) {
+            Object value = info.opt(key);
+            if (value instanceof JSONObject) {
+                addFieldsToMap(prefix+key+".", (JSONObject) value, map);
+            } else if (value instanceof JSONArray) {
+                addFieldsToMap(prefix+key+".", (JSONArray) value, map);
+            } else if (null != value) {
+                map.put(prefix+key, value);
+            }
+        }
+    }
+
+    private void addFieldsToMap (String prefix, JSONArray info,
+                                 Map<String, Object> map) {
+        int length = info.length();
+        for (int i=0; i<length; ++i) {
+            Object value = info.opt(i);
+            if (value instanceof JSONObject) {
+                addFieldsToMap(prefix+i+".", (JSONObject) value, map);
+            } else if (value instanceof JSONArray) {
+                addFieldsToMap(prefix+i+".", (JSONArray) value, map);
+            } else if (null != value) {
+                map.put(prefix+i, value);
+            }
+        }
+    }
 
 
-
+/*
 	private JSONObject getLevelExtremaObject (boolean max) {
 		JSONObject metaInfo;
 		try {
@@ -415,27 +468,29 @@ public class PyramidMetaData {
 		}
 		return null;
 	}
-
+*/
 	/**
 	 * Get a map, indexed by level, of the maximum value for each level
 	 * 
 	 * @return A map from level to maximum value of that level. May be empty,
 	 *         but should never be null.
 	 */
+/*
 	public Map<Integer, String> getLevelMaximums () {
 		return getLevelExtrema(true);
 	}
-
+*/
 	/**
 	 * Get a map, indexed by level, of the minimum value for each level
 	 * 
 	 * @return A map from level to minimum value of that level. May be empty,
 	 *         but should never be null.
 	 */
+/*
 	public Map<Integer, String> getLevelMinimums () {
 		return getLevelExtrema(false);
 	}
-
+*/
 	/**
 	 * Get the maximum value of a given level
 	 * 
@@ -444,10 +499,11 @@ public class PyramidMetaData {
 	 * @return The maximum value of that level, or null if no maximum is
 	 *         properly specified for that level.
 	 */
+/*
 	public String getLevelMaximum (int level) {
 		return getLevelExtremum(true, level);
 	}
-
+*/
 	/**
 	 * Get the minimum value of a given level
 	 * 
@@ -456,6 +512,7 @@ public class PyramidMetaData {
 	 * @return The minimum value of that level, or null if no maximum is
 	 *         properly specified for that level.
 	 */
+/*
 	public String getLevelMinimum (int level) {
 		return getLevelExtremum(false, level);
 	}
@@ -464,4 +521,5 @@ public class PyramidMetaData {
 	public String toString () {
 		return _metaData.toString();
 	}
+*/
 }

@@ -28,6 +28,7 @@ import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.tilegen.datasets.CSVDataset;
+
 import org.apache.spark.SparkContext;
 
 import java.util.List;
@@ -48,7 +49,10 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?,?,?,?,?>>
 		this(context, null, parent, path);
 	}
 
-	protected DatasetFactory (SparkContext context, String name, 
+	// No way to pass a parameterized class back, such a thing doesn't exist in Java.
+	// The "(Class) CSVDataset.class" is the best we can do.
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+    protected DatasetFactory (SparkContext context, String name, 
 	                          ConfigurableFactory<?> parent, List<String> path) {
 		super(name, (Class) CSVDataset.class, parent, path);
 		_context = context;

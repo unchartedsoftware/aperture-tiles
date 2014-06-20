@@ -358,7 +358,7 @@ public class BinVisualizer extends JFrame {
 				_xField.removeAll();
 				_yField.removeAll();
 
-				List<Integer> levels = metaData.getLevels();
+				List<Integer> levels = metaData.getValidZoomLevels();
 				for (Integer level: levels) {
 					_levelField.addItem(level);
 				}

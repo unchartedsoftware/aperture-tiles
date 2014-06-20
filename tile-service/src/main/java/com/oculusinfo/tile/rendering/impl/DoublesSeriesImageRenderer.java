@@ -24,6 +24,14 @@
  */
 package com.oculusinfo.tile.rendering.impl;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
@@ -36,14 +44,6 @@ import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A renderer that renders tiles of series of doubles
@@ -183,19 +183,6 @@ public class DoublesSeriesImageRenderer implements TileDataImageRenderer {
 
 	@Override
 	public int getNumberOfImagesPerTile(PyramidMetaData metadata) {
-		int minFrames = Integer.MAX_VALUE;
-		Map<Integer, String> levelMaximums = metadata.getLevelMaximums();
-		for (String value: levelMaximums.values()) {
-			String lvlMax = value.toLowerCase();
-			if (lvlMax.startsWith("list(") && lvlMax.endsWith(")")) {
-				lvlMax = lvlMax.substring(5, lvlMax.length()-1);
-			}
-			String[] maxesByFrame = lvlMax.split(",");
-			int frames = maxesByFrame.length;
-			if (frames < minFrames) minFrames = frames;
-		}
-		if (minFrames == Integer.MAX_VALUE) return 0;
-		return minFrames;
+	    return Integer.parseInt(metadata.getCustomMetaData("framesPerTile"));
 	}
-
 }

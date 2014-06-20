@@ -87,7 +87,7 @@
 					]
 				},
 				{
-					"id" : "bitcoin.time.amount",
+					"id" : "na.bitcoin.time.amount.count",
 					"name" : "Time vs. Amount",
 					"pyramid" : {
 						"type" : "AreaOfInterest",
