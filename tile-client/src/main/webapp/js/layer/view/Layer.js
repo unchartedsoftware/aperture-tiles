@@ -23,10 +23,6 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
-
 
 /**
  * This modules defines a basic layer class that can be added to maps.
@@ -53,12 +49,16 @@ define(function (require) {
             this.layerInfo = null;
         },
 
-
+        /**
+         *  Returns the layer's specification object
+         */
         getLayerSpec: function () {
             return this.layerSpec;
         },
 
-
+        /**
+         *  Returns the layer's information object
+         */
         getLayerInfo: function () {
             return this.layerInfo;
         }

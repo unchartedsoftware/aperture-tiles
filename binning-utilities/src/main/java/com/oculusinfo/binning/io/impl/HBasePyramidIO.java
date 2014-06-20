@@ -41,13 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Row;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -83,6 +77,7 @@ public class HBasePyramidIO implements PyramidIO {
 
 	private Configuration       _config;
 	private HBaseAdmin          _admin;
+    private HConnection         _connection;
 
 	public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
@@ -96,6 +91,7 @@ public class HBasePyramidIO implements PyramidIO {
 		_config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
 		_config.set("hbase.master", hbaseMaster);
 		_admin = new HBaseAdmin(_config);
+        _connection = HConnectionManager.createConnection(_config);
 	}
 
 
@@ -131,8 +127,9 @@ public class HBasePyramidIO implements PyramidIO {
 	/*
 	 * Gets an existing table (without creating it)
 	 */
-	private HTable getTable (String tableName) throws IOException {
-		return new HTable(_config, tableName);
+	private HTableInterface getTable (String tableName) throws IOException {
+
+        return _connection.getTable( tableName );
 	}
 
 	/*
@@ -174,7 +171,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 *            The rows to write
 	 */
 	private void writeRows (String tableName, List<Row> rows) throws InterruptedException, IOException {
-		HTable table = getTable(tableName);
+        HTableInterface table = getTable(tableName);
 		table.batch(rows);
 		table.flushCommits();
 		table.close();
@@ -206,7 +203,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 *         map.
 	 */
 	private List<Map<HBaseColumn, byte[]>> readRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
-		HTable table = getTable(tableName);
+        HTableInterface table = getTable(tableName);
 
 		List<Get> gets = new ArrayList<Get>(rows.size());
 		for (String rowId: rows) {
@@ -222,6 +219,7 @@ public class HBasePyramidIO implements PyramidIO {
 		for (Result result: results) {
 			allResults.add(decodeRawResult(result, columns));
 		}
+        table.close();
 		return allResults;
 	}
 
@@ -358,14 +356,15 @@ public class HBasePyramidIO implements PyramidIO {
     }
 	
 	private void deleteRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
-        
-    	HTable table = getTable(tableName);
+
+        HTableInterface table = getTable(tableName);
         List<Delete> deletes = new LinkedList<Delete>();
         for (String rowId: rows) {
         	Delete delete = new Delete(rowId.getBytes());
             deletes.add(delete);
         }
         table.delete(deletes);
+        table.close();
     }
 	
 	public void dropTable( String tableName ) {

@@ -26,8 +26,7 @@
 /*global OpenLayers*/
 
 /**
- * This module defines a CarouselLayer class which inherits from a ClientLayer and provides a user
- * interface and event handler for switching between views for individual tiles
+ * This module defines the carousel UI class which is used to switch between client layer renderers for each tile.
  */
 define(function (require) {
     "use strict";
@@ -204,8 +203,14 @@ define(function (require) {
 
 
     CarouselControls = Class.extend({
+        ClassName: "CarouselControls",
 
-
+        /**
+         * Initializes the carousel controls and registers callbacks against the LayerState objects
+         *
+         * @param layerStates - The list of layers the layer controls reflect and modify.
+         * @param map - The map for which the layers are bound to.
+         */
         init: function ( layerStates, map ) {
 
             var i;

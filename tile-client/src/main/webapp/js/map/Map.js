@@ -143,19 +143,18 @@ define(function (require) {
 
                 // changing to blank base layer
                 $map.css( 'background-color', newBaseLayerConfig.options.color );
+                olMap_.baseLayer.setVisibility(false);
 
             } else {
 
+                // destroy previous baselayer
+                olMap_.baseLayer.destroy();
                 //reset the background color to black
                 $map.css( 'background-color', 'rgb(0,0,0)' );
-
-                // destroy original base layer
-                olMap_.baseLayer.setVisibility(false);
-                olMap_.baseLayer.destroy();
-
+                // create new layer instsance
                 newBaseLayerType = (newBaseLayerConfig.type === 'Google') ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
                 newBaseLayer = this.map.addLayer( newBaseLayerType, {}, newBaseLayerConfig );
-
+                // attach, and refresh it by toggling visibility
                 olMap_.baseLayer = newBaseLayer.olLayer_;
                 olMap_.setBaseLayer( newBaseLayer.olLayer_ );
                 olMap_.baseLayer.setVisibility(false);
@@ -626,7 +625,7 @@ define(function (require) {
 		},
 
 		setOpacity: function( opacity ) {
-            this.map.olMap_.baseLayer.setOpacity ( opacity );
+		    this.map.olMap_.baseLayer.setOpacity ( opacity );
 		},
 
 		setVisibility: function( visibility ) {

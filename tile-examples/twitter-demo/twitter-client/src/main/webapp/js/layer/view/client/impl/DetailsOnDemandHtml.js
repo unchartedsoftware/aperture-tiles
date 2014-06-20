@@ -23,13 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines the base class for a client render layer. Must be
- * inherited from for any functionality.
- */
 define(function (require) {
     "use strict";
 

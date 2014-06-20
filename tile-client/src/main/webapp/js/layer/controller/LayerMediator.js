@@ -23,8 +23,6 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global define, console, $, aperture*/
 
 /**
  * Populates the LayerState model based on the contents of a the layer, and makes the appropriate

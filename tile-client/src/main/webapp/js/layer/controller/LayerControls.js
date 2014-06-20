@@ -67,21 +67,21 @@ define(function (require) {
     /**
      * Replaces node's children and returns the replaced for storage.
      *
-     * @param {JQuery} $parent - The node to remove the children from.
+     * @param {JQuery} $layerControlsContainer - The node to remove the children from.
      * @param {Object} children - The children to replace.  Null will result in children being removed only.
      * @returns {Array} - The removed children.
      */
-    replaceChildren = function ( $parent, children ) {
+    replaceChildren = function ( $layerControlsContainer, children ) {
         var i, removed;
         // Remove existing children.
-        removed = $parent.children();
+        removed = $layerControlsContainer.children();
         for (i = 0; i < removed.length; i += 1) {
             removed.eq(i).detach();
         }
         // Add in new children.
         if (children !== null) {
             for (i = 0; i < children.length; i += 1) {
-                children.eq(i).appendTo($parent);
+                children.eq(i).appendTo($layerControlsContainer);
             }
         }
         return removed;
@@ -327,18 +327,20 @@ define(function (require) {
             $radioButton,
             $radioLabel,
             baseLayer,
+            isActiveBaseLayer,
             i;
 
         function onClick() {
-            var index = $(this).val();
+            var index = parseInt( $(this).val(), 10 );
             layerState.setBaseLayerIndex( index );
         }
 
         for (i=0; i<layerState.BASE_LAYERS.length; i++) {
 
             baseLayer = layerState.BASE_LAYERS[i];
+            isActiveBaseLayer = ( i === layerState.getBaseLayerIndex() );
 
-            if (baseLayer.type === "BlankBase") {
+            if ( baseLayer.type === "BlankBase" && isActiveBaseLayer ) {
                 $layerContent.css( 'display', 'none' );
             } else {
                 $layerContent.css( 'display', 'block' );
@@ -346,7 +348,7 @@ define(function (require) {
 
             // create radio button
             $radioButton = $( '<input type="radio" class="baselayer-radio-button" name="baselayer-radio-button" id="'+(baseLayer.options.name+i)+'"'
-                            + 'value="' + i + '"' + ( ( i === layerState.getBaseLayerIndex() )? 'checked>' : '>'));
+                            + 'value="' + i + '"' + ( isActiveBaseLayer ? 'checked>' : '>' ) );
             $radioButton.on( 'click', onClick );
             // create radio label
             $radioLabel = $('<label for="'+(baseLayer.options.name+i)+'">' + baseLayer.options.name + '</label>');
@@ -359,14 +361,34 @@ define(function (require) {
     };
 
 
+    createControlRoot = function( layerState, controlsMapping ) {
+
+        layerStateId = layerState.getId();
+        controlsMap[layerStateId] = {};
+        controlsMapping = controlsMap[layerStateId];
+
+        // create layer root
+        $layerControlRoot = $('<div id="layer-controls-' + layerState.getId() + '" class="layer-controls-layer"></div>');
+        // create title div
+        $layerControlTitleBar = $('<div class="layer-title"><span class="layer-labels">' + layerState.getName() + '</span></div>');
+        $layerControlRoot.append( $layerControlTitleBar );
+        // create content div
+        $layerContent = $('<div class="layer-content"></div>');
+        $layerControlRoot.append( $layerContent );
+
+        controlsMapping.layerControlRoot = $layerControlRoot;
+        controlsMapping.layerControlTitleBar = $layerControlTitleBar;
+        controlsMapping.layerContent = $layerContent;
+    },
+
+
     /**
      * Adds a new set of layer controls to the panel.
      *
-     * @param layerState - The layer state model the controls are bound to.
-     *
-     * @param $layerControlsContainer - The parent element in the document tree to add the controls to.
-     *
-     * @param controlsMap - Maps layers to the sets of controls associated with them.
+     * @param {Array} sortedLayers - The sorted array of layer states.
+     * @param {Integer} index - The index of the layer to be added to the controls panel.
+     * @param {JQuery } $layerControlsContainer - The parent element in the document tree to add the controls to.
+     * @param {Object} controlsMap - Maps layers to the sets of controls associated with them.
      */
     addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap ) {
         var layerState = sortedLayers[index],
@@ -385,12 +407,12 @@ define(function (require) {
         $layerControlRoot = $('<div id="layer-controls-' + layerStateId + '" class="layer-controls-layer"></div>');
         // create title div
         $layerControlTitleBar = $('<div class="layer-title"><span class="layer-labels">' + name + '</span></div>');
-
         $layerControlRoot.append( $layerControlTitleBar );
 
         // create content div
         $layerContent = $('<div class="layer-content"></div>');
         $layerControlRoot.append( $layerContent );
+        controlsMapping.layerContent = $layerContent;
 
         // create settings button, only for server layers
         if ( layerState.domain === 'server' ) {
@@ -421,10 +443,10 @@ define(function (require) {
     /**
      * Displays a settings panel for a layer.
      *
-     * @param {object} $parent - The parent node to attach the layer panel to.
+     * @param {object} $layerControlsContainer - The parent node to attach the layer panel to.
      * @param {object} layerState - The layer state model the panel will read from and update.
      */
-    showLayerSettings = function( $parent, layerState ) {
+    showLayerSettings = function( $layerControlsContainer, layerState ) {
 
         var $settingsTitleBar,
             $settingsContent,
@@ -440,22 +462,22 @@ define(function (require) {
             i;
 
         // Save the main layer controls hierarchy
-        oldChildren = replaceChildren($parent, null);
+        oldChildren = replaceChildren($layerControlsContainer, null);
 
         // create title div
         $settingsTitleBar = $('<div class="settings-title"></div>');
         // add title span to div
         $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + '</span>'));
-        $parent.append($settingsTitleBar);
+        $layerControlsContainer.append($settingsTitleBar);
 
         // create content div
         $settingsContent = $('<div class="settings-content"></div>');
-        $parent.append($settingsContent);
+        $layerControlsContainer.append($settingsContent);
 
         // create back button
         $backButton = $('<button class="settings-back-link">back</button>');
         $backButton.click(function () {
-            replaceChildren( $parent, oldChildren );
+            replaceChildren( $layerControlsContainer, oldChildren );
         });
         $settingsTitleBar.append($backButton);
 
@@ -554,6 +576,10 @@ define(function (require) {
                     controlsMapping.filterAxis.html( createFilterAxis( layerState.getRampMinMax() ).children() );
                     break;
 
+                case "baseLayerIndex":
+
+                    controlsMapping.baseLayerButtonSet.html( createBaseLayerButtons( controlsMapping.layerContent, layerState, controlsMapping ).children() );
+                    break;
             }
         };
     };
@@ -614,6 +640,7 @@ define(function (require) {
          * Initializes the layer controls by modifying the DOM tree, and registering
          * callbacks against the LayerState obj
          *
+         * @param controlsId - The DOM element id used as the container for the controls panel elements.
          * @param layerStates - The list of layers the layer controls reflect and modify.
          */
         init: function ( controlsId, layerStates ) {

@@ -77,8 +77,8 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     	
     	try {
 
-            String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
-            //String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
+            //String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
+            String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
 
             Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.add( DefaultPyramidIOFactoryProvider.HBASE.create() );

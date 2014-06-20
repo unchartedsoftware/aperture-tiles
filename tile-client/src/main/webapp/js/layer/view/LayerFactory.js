@@ -24,13 +24,18 @@
  */
 
 
-
+/**
+ * This modules defines a basic layer class factory and provides an interface for generating
+ * layers that can be added to maps.
+ */
 define( function (require) {
     "use strict";
 
 
+
 	var Class = require('../../class'),
         LayerFactory;
+
 
 
     LayerFactory = Class.extend({

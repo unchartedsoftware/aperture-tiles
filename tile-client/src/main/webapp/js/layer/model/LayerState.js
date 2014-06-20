@@ -23,22 +23,20 @@
  * SOFTWARE.
  */
 
-/*global $, define*/
 
 /**
- * @class LayerState
- *
  * Captures the visual state of a layer in the system, and provides a notification
  * mechanism to allow external code to react to changes to it.
  */
 define(function (require) {
     "use strict";
 
+
+
     var Class = require('../../class'),
         LayerState;
 
     
-
 
     LayerState = Class.extend({
         ClassName: "LayerState",
@@ -70,11 +68,6 @@ define(function (require) {
             }
         },
 
-        /**
-         * Listener used when a layer state value has been modified.
-         * @callback valueChange
-         * @param {string} - the name of the modified field.
-         */
 
         /**
          * Registers a listener that will be executed whenever a layer state value

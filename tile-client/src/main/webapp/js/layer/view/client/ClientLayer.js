@@ -23,8 +23,6 @@
  * SOFTWARE.
  */
 
-/*global OpenLayers*/
-
 
 define(function (require) {
     "use strict";
@@ -50,13 +48,12 @@ define(function (require) {
 
         init: function ( spec, renderers, map ) {
 
-            var that = this;
             this._super( spec, map );
             this.renderers = renderers;
             this.tileServices = [];
             this.renderersByTile = {};
             this.defaultRendererIndex = 0;
-            this.map.on('move', function() { that.update(); });
+            this.map.on('move', $.proxy(this.update, this));
         },
 
 

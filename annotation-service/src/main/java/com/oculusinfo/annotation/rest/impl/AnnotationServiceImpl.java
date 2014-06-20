@@ -65,7 +65,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     private List<AnnotationInfo>         _annotationLayers;
     private Map<String, AnnotationInfo>  _annotationLayersById;
     private Map<String, UUID>  			 _defaultFilterUuidById;
-    private ConcurrentHashMap< UUID, Map<String, Integer> > _filtersByUuid;
+    private Map< UUID, Map<String, Integer> > _filtersByUuid;
 
     private FactoryProvider<PyramidIO>         _pyramidIOFactoryProvider;
     private FactoryProvider<AnnotationIO>      _annotationIOFactoryProvider;
@@ -276,10 +276,6 @@ public class AnnotationServiceImpl implements AnnotationService {
         _filtersByUuid.remove( uuid );
     }
 
-	
-	// ////////////////////////////////////////////////////////////////////////
-	// Section: Configuration reading methods
-	//
 	private File[] getConfigurationFiles (String location) {
     	try {
 	    	// Find our configuration file.
@@ -567,7 +563,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			PyramidIO io = config.produce(PyramidIO.class);	
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
 
-			io.initializeForWrite( layer );
+			//io.initializeForWrite( layer );
 			io.writeTiles( layer, serializer, tiles );
 					
 		} catch ( Exception e ) {
@@ -585,7 +581,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		try {
             AnnotationConfiguration config = getConfiguration(layer);
             AnnotationIO io = config.produce( AnnotationIO.class );
-			io.initializeForWrite( layer );
+			//io.initializeForWrite( layer );
 			io.writeData( layer, _dataSerializer, dataList );
 
 		} catch ( Exception e ) {
@@ -619,6 +615,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		dataList.add( data );
 
 		try {
+
             AnnotationConfiguration config = getConfiguration( layer );
 			AnnotationIO io = config.produce( AnnotationIO.class );
 			io.removeData( layer, dataList );
@@ -643,7 +640,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 			PyramidIO io = config.produce( PyramidIO.class );
 			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce( TileSerializer.class );
 
-			io.initializeForRead( layer, 0, 0, null );		
+			//io.initializeForRead( layer, 0, 0, null );
 			tiles = io.readTiles( layer, serializer, indices );
 					
 		} catch ( Exception e ) {
@@ -665,7 +662,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
             AnnotationConfiguration config = getConfiguration( layer );
             AnnotationIO io = config.produce( AnnotationIO.class );
-			io.initializeForRead( layer );
+			//io.initializeForRead( layer );
 			data = io.readData( layer, _dataSerializer, certificates );
 			
 		} catch ( Exception e ) {

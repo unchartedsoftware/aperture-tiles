@@ -23,13 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines a simple client-rendered layer that displays a 
- * text score tile in a meaningful way.
- */
 define(function (require) {
     "use strict";
 

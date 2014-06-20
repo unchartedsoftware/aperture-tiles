@@ -144,7 +144,8 @@
 			}
 		}
 	],
-		"TileBorderConfig" : {
+	
+	"TileBorderConfig" : {
 		"color" : "rgba(255, 255, 255, .5)",
 		"weight" : "1px",
 		"style" : "solid"
