@@ -16,9 +16,9 @@
 .point-annotation {
 
     position:absolute;
-    -webkit-border-radius: 20px;
-       -moz-border-radius: 20px;
-            border-radius: 20px; 
+    -webkit-border-radius: 30px;
+       -moz-border-radius: 30px;
+            border-radius: 30px; 
     width: 16px;
     height: 16px;
     -webkit-transition: 0.1s ease-in-out;
@@ -85,7 +85,7 @@
     padding: 0 10px 0 10px;
     background-color: #222222;
     font-size: 18px;
-    color: #ffffff;
+    color: #D3D3D3;
     width:100%;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
@@ -118,7 +118,7 @@
     position:relative;
     padding-top: 5px;
     padding-bottom: 5px;
-    color: #ffffff;
+    color: #D3D3D3;
     text-shadow:
         -1px -1px 1px #000,
          1px -1px 1px #000,

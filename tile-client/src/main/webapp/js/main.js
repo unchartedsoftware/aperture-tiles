@@ -24,40 +24,42 @@
  */
 
 /* global OpenLayers */
-require(['./FileLoader',
-         './ApertureConfig',
+require(['./ApertureConfig',
+         './customization',
          './ui/OverlayButton',
+         './binning/PyramidFactory',
          './map/MapService',
          './map/Map',
-         './binning/PyramidFactory',
          './layer/LayerService',
-         './customization',
-         './layer/view/server/ServerLayerFactory',
-         './layer/view/client/ClientLayerFactory',
-         './annotation/AnnotationLayerFactory',
-         './layer/controller/LayerControls',
-         './layer/controller/CarouselControls',
-         './layer/controller/BaseLayerMediator',
-         './layer/controller/ClientLayerMediator',
-         './layer/controller/ServerLayerMediator'
+         './layer/LayerControls',
+         './layer/base/BaseLayerMediator',
+         './layer/server/ServerLayerFactory',
+         './layer/server/ServerLayerMediator',
+         './layer/client/ClientLayerFactory',
+         './layer/client/ClientLayerMediator',
+         './layer/client/CarouselControls',
+         './layer/annotation/AnnotationService',
+         './layer/annotation/AnnotationLayerFactory',
+         './layer/annotation/AnnotationLayerMediator'
         ],
 
-        function (FileLoader, 
-                  configureAperture,
+        function (configureAperture,
+                  UICustomization,
                   OverlayButton,
+                  PyramidFactory,
                   MapService,
                   Map,
-                  PyramidFactory,
                   LayerService,
-                  UICustomization,
-                  ServerLayerFactory,
-                  ClientLayerFactory,
-                  AnnotationLayerFactory,
                   LayerControls,
-                  CarouselControls,
                   BaseLayerMediator,
+                  ServerLayerFactory,
+                  ServerLayerMediator,
+                  ClientLayerFactory,
                   ClientLayerMediator,
-                  ServerLayerMediator) {
+                  CarouselControls,
+                  AnnotationService,
+                  AnnotationLayerFactory,
+                  AnnotationLayerMediator) {
 
 	        "use strict";
 
@@ -184,7 +186,7 @@ require(['./FileLoader',
 		        // Get our list of maps and layers
 		        mapsDeferred = MapService.requestMaps();
 		        layersDeferred = LayerService.requestLayers();
-		        annotationsDeferred = AnnotationLayerFactory.requestLayers();
+		        annotationsDeferred = AnnotationService.requestLayers();
 
 		        $.when(mapsDeferred, layersDeferred, annotationsDeferred).done(
 			        function (maps, layers, annotationLayers) {
@@ -201,11 +203,14 @@ require(['./FileLoader',
 				            serverLayers,
 				            clientLayerFactory,
 				            serverLayerFactory,
+				            annotationLayerFactory,
 				            baseLayerMediator,
 				            clientLayerMediator,
 				            serverLayerMediator,
+				            annotationLayerMediator,
                             clientLayerDeferreds,
-                            serverLayerDeferreds;
+                            serverLayerDeferreds,
+                            annotationrLayerDeferreds;
 
 				        // Initialize our map choice panel
 				        if (maps.length > 1) {
@@ -254,8 +259,8 @@ require(['./FileLoader',
 					        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
 				        };
 
-				        clientLayers = getLayers("client", layers, filter);
-				        serverLayers = getLayers("server", layers, filter);
+				        clientLayers = getLayers( "client", layers, filter );
+				        serverLayers = getLayers( "server", layers, filter );
                         annotationLayers = getAnnotationLayers( annotationLayers, filter );
 
 				        if (UICustomization.customizeLayers) {
@@ -267,17 +272,18 @@ require(['./FileLoader',
 
                         clientLayerMediator = new ClientLayerMediator();
                         serverLayerMediator = new ServerLayerMediator();
+                        annotationLayerMediator = new AnnotationLayerMediator();
 
                         clientLayerFactory = new ClientLayerFactory();
                         serverLayerFactory = new ServerLayerFactory();
+                        annotationLayerFactory = new AnnotationLayerFactory();
 
 				        // Create client, server and annotation layers
 				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
 				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap, serverLayerMediator );
+                        annotationrLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap, annotationLayerMediator );
 
-                        AnnotationLayerFactory.createLayers( annotationLayers, worldMap );
-
-                        $.when( clientLayerDeferreds, serverLayerDeferreds ).done( function( clientLayers, serverLayers ) {
+                        $.when( clientLayerDeferreds, serverLayerDeferreds, annotationrLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
 
                             var sharedStates = [];
 

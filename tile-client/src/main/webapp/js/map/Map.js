@@ -74,6 +74,7 @@ define(function (require) {
 				}
 			});
 
+
 			// Initialize the map
 			this.map = new aperture.geo.Map({ 
 				id: this.id,

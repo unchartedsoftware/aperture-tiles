@@ -57,7 +57,7 @@
 .sentiment-summaries {
 	position:absolute;
 	top: 10px;
-	right: 10px;
+	right: 20px;
 	text-align: right;
 	font-size: 0.8em;
 	text-shadow:
@@ -216,8 +216,7 @@
 	width: 257px;
 	height: 513px;
 	background-color: #222222;
-	padding-left: 10px;
-	padding-right: 10px;
+	border: 1px solid #333333;
 	z-index: 2001;
 	box-shadow: 0px 5px 15px #000;
 	-webkit-box-sizing: border-box;
@@ -229,7 +228,7 @@
 	position:relative;
 	width: 100%;
 	height: 50%;
-	padding: 10px 10px 10px 10px;
+	padding: 10px 0px 0px 0px;
 	-webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -239,6 +238,7 @@
 	position:relative;
 	color : #FFFFFF;
 	margin-bottom:10px;
+	padding-left:10px;
 	vertical-align: middle;	
 	text-shadow:
 	    -2px -2px 2px #000,
@@ -263,8 +263,6 @@
 	position: relative;
 	background-color: #111111;
 	height: calc(100% - 56px);
-	border-radius: 10px;
-	box-shadow: inset 0 0 10px #000;
 }
 
 .details-positive-label {
@@ -301,19 +299,18 @@
 	position: relative;
 	padding: 0 5% 0 5%;
 	background-color: #111111;
-	box-shadow: inset 0 0 10px #000;
-	height: calc(100% - 32px);
+	height: calc(100% - 37px);
 }
 
 .details-chart-bars {
 	position: relative;
 	padding-top:5px;
-	height: 75%;
+	height: 83%;
 }
 
 .details-chart-axis {
 	position: relative;
-	height: 15%;
+	height: 17%;
 
 }
 
@@ -422,12 +419,10 @@
 .details-on-demand-recent-tweets {
 	position:relative;
 	color : #FFFFFF;
-	height: calc(100% - 30px);
+	height: calc(100% - 26px);
 	overflow-x:hidden;
 	overflow-y:auto;
-	border-radius: 10px;
 	background-color:#111111;
-	box-shadow: inset 0 0 10px #000;
 	text-shadow:
 	    -2px -2px 2px #000,
 	     2px -2px 2px #000,
@@ -455,8 +450,6 @@
 
 .details-on-demand-tweet {
 	position:relative;
-	box-shadow: inset -10px 0 10px -10px #000,
-				inset 10px 0 10px -10px #000;
 }
 
 .tweet-dark {	

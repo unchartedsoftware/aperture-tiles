@@ -10,6 +10,8 @@
 
 .overlay-header {
     position: relative;
+    -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -25,7 +27,9 @@
     padding-top:1px;
     padding-bottom:1px;    
     padding-left:24px; 
-    padding-right:24px;
+    padding-right:24px;   
+    -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;

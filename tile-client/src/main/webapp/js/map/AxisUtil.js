@@ -36,6 +36,10 @@ define({
     formatText : function(value, unitSpec){
         "use strict";
 
+        function formatInteger (value) {
+            return Math.round(value);
+        }
+
         function formatNumber (value, decimals) {
             var func = (value < 0) ? 'ceil' : 'floor';
             return (Math[func](value * 100) / 100).toFixed(decimals);
@@ -119,7 +123,7 @@ define({
 
         if (unitSpec){
 
-            switch (unitSpec.type.toLowerCase()) {
+            switch ( unitSpec.type.toLowerCase() ) {
 
                 case 'degrees':
                 case 'degree':
@@ -149,6 +153,12 @@ define({
                 case 'billions':
 
                     return formatBillion(value, unitSpec.decimals, unitSpec.allowStepDown);
+
+                case 'i':
+                case 'int':
+                case 'integer':
+
+                    return formatInteger(value);
 
                 //case 'decimal':
                 //case 'd':

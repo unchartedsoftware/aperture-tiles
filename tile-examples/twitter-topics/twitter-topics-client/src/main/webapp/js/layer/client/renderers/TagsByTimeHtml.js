@@ -23,23 +23,18 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-/**
- * This module defines the base class for a client render layer. Must be
- * inherited from for any functionality.
- */
 define(function (require) {
     "use strict";
 
 
 
-    var HtmlNodeLayer = require('../HtmlNodeLayer'),
-        HtmlLayer = require('../HtmlLayer'),
-        TwitterUtil = require('./TwitterSentimentUtil'),
+    var HtmlNodeLayer = require('../../HtmlNodeLayer'),
+        HtmlLayer = require('../../HtmlLayer'),
+        TwitterUtil = require('./TwitterUtil'),
         TwitterHtmlRenderer = require('./TwitterHtmlRenderer'),
         NUM_TAGS_DISPLAYED = 8,
+        NUM_LETTERS_IN_TAG = 10,
         TagsByTimeSentimentHtml;
 
 
@@ -50,30 +45,31 @@ define(function (require) {
         init: function( map) {
 
             this._super( map );
-
             this.nodeLayer = new HtmlNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-
             this.createLayer();
         },
 
 
         addClickStateClassesGlobal: function() {
 
-            var selectedTag = this.layerState.getClickState().tag,
-                $elements = $(".tags-by-time-sentiment");
+            var selectedTag = TwitterUtil.trimLabelText( this.layerState.getClickState().tag, NUM_LETTERS_IN_TAG ),
+                selectedTagEnglish = TwitterUtil.trimLabelText( this.layerState.getClickState().translatedTag, NUM_LETTERS_IN_TAG ),
+                $elements = $(".tags-by-time");
 
             // top text sentiments
             $elements.filter( function() {
-                return $(this).text() !== selectedTag;
+                return $(this).text() !== selectedTag &&
+                       $(this).text() !== selectedTagEnglish;
             }).addClass('greyed').removeClass('clicked');
 
             $elements.filter( function() {
-                return $(this).text() === selectedTag;
+                return $(this).text() === selectedTag ||
+                       $(this).text() === selectedTagEnglish;
             }).removeClass('greyed').addClass('clicked');
 
         },
@@ -81,7 +77,7 @@ define(function (require) {
 
         removeClickStateClassesGlobal: function() {
 
-            $(".tags-by-time-sentiment").removeClass('greyed clicked');
+            $(".tags-by-time").removeClass('greyed clicked');
         },
 
 
@@ -98,41 +94,38 @@ define(function (require) {
 
                 html: function() {
 
-                    var html = '',
-                        $html = $('<div id="'+this.tilekey+'" class="aperture-tile"></div>'),
+                    var tilekey = this.tilekey,
+                        html = '',
+                        $html = $('<div id="'+tilekey+'" class="aperture-tile"></div>'),
                         $elem,
-                        $summaries,
+                        $translate,
                         values = this.bin.value,
                         value,
-                        maxPercentage, sentimentPercentages, relativePercent,
-                        visibility, blendedColour,
+                        maxPercentage, relativePercent,
+                        visibility,
                         i, j,
                         tag,
                         count = TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED );
 
-                    // create count summaries
-                    $summaries = that.createTweetSummaries();
+                    // create translate button
+                    $translate = that.createTranslateLabel( tilekey );
 
-                    $html.append( $summaries );
+                    $html.append( $translate );
 
                     for (i=0; i<count; i++) {
 
                         value = values[i];
-                        tag = TwitterUtil.trimLabelText( value.tag, 7 );
-                        maxPercentage = TwitterUtil.getMaxCountByTimePercentage( value );
-                        sentimentPercentages = TwitterUtil.getSentimentPercentagesByTime( value );
+                        tag = TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), NUM_LETTERS_IN_TAG );
+                        maxPercentage = TwitterUtil.getMaxPercentageByType( value, 'PerHour' );
 
-                        html = '<div class="tags-by-time-sentiment" style="top:' +  getYOffset( values, i ) + 'px;">';
+                        html = '<div class="tags-by-time" style="top:' +  getYOffset( values, i ) + 'px;">';
 
                         // create count chart
                         html += '<div class="tags-by-time-left">';
                         for (j=0; j<24; j++) {
-                            blendedColour = TwitterUtil.blendSentimentColours( sentimentPercentages.positive[j],
-                                                                               sentimentPercentages.neutral[j],
-                                                                               sentimentPercentages.negative[j] );
-                            relativePercent = ( TwitterUtil.getCountByTimePercentage( value, j ) / maxPercentage ) * 100;
+                            relativePercent = ( TwitterUtil.getPercentageByType( value, j, 'PerHour' ) / maxPercentage ) * 100;
                             visibility = (relativePercent > 0) ? '' : 'hidden';
-                            html += '<div class="tags-by-time-bar" style="background-color:'+blendedColour+'; visibility:'+visibility+';height:'+relativePercent+'%; top:'+(100-relativePercent)+'%;"></div>';
+                            html += '<div class="tags-by-time-bar" style="visibility:'+visibility+';height:'+relativePercent+'%; top:'+(100-relativePercent)+'%;"></div>';
                         }
                         html += '</div>';
 
@@ -145,8 +138,8 @@ define(function (require) {
 
                         $elem = $(html);
 
-                        that.setMouseEventCallbacks( $elem, $summaries, this, value );
-                        that.addClickStateClasses( $elem, tag );
+                        that.setMouseEventCallbacks( $elem, this, value );
+                        that.addClickStateClasses( $elem, value.topic );
 
                         $html.append( $elem );
                     }
@@ -155,10 +148,6 @@ define(function (require) {
                 }
             }));
 
-        },
-
-        redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
         }
 
 

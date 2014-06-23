@@ -3,6 +3,7 @@
 #layer-controls {
 	z-index: 2002;
     position: fixed;
+    border: 1px solid #333333;
     right: 10px;
     bottom: 42px;
 }
@@ -29,13 +30,18 @@
 
 #layer-controls-content {
     position: relative;
-    background-color: #FFF;
-    color: #000;
+    background-color: #111111;
+    color: #D3D3D3;
     width: 612px;
     font-size: 12px;
+    text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000;
 }
 
-.layer-controls-bottom-buffer {
+.layer-controls-buffer {
     position:relative;
     height: 15px;
 }
@@ -45,23 +51,35 @@
     text-align: left;
 }
 
+.layer-controls-layer {
+
+    position:relative;
+    background-color: #111111;
+}
+
+.layer-controls-layer:active {
+
+    cursor:pointer;
+}
+
 .layer-title {
     position: relative;
-    margin-bottom: 5px;
-    margin-top:15px;
+    padding-bottom: 5px;
+    padding-top: 10px;
 }
 
 .layer-content {
     position:relative;
     width:100%;
-    margin-bottom:5px;
+    overflow:hidden;
+    padding-bottom:10px;
 }
 
 .layer-toggle {
     width: 15px;
-    padding-right:10px;
+    padding-right:14px;
     float: left;
-    padding-top: 15px;
+    padding-top: 14px;
 }
 
 .slider-label {
@@ -81,10 +99,80 @@
             box-sizing: border-box;
 }
 
+.layer-content .ui-widget-content {
+   
+    background: linear-gradient(to right, #181818, #999999);*/ /* Standard syntax */
+    /*background:#181818;*/
+    border: none;
+}
+
+.layer-content .ui-slider-range-min {
+
+    /*background: #555555;*/
+    background: rgba(0,0,0,0);
+}
+
+.layer-content .ui-widget-content {
+
+    border: none;
+    box-shadow: 0 0 5px #000000;
+}
+
+.layer-content .ui-slider-handle {
+
+    background: #222222;
+    border: 1px solid #333333;
+    box-shadow: 2px 2px 5px #000;
+}
+
+.layer-content .ui-slider-handle:focus {
+    outline:none;
+}
+
+.layer-content .ui-slider-handle:hover {
+    cursor:pointer;
+}
+
+#layer-controls input + label:hover {
+    cursor:pointer;
+}
+
+#layer-controls input {
+    display:none;
+}
+
+#layer-controls input + label
+{
+    position:relative;
+    background: #111111;
+    box-shadow: inset 0 0 3px #222222;
+    border: 1px solid #333333;
+    height: 14px;
+    width: 14px;
+    display:inline-block;
+    padding: 0 0 0 0px;
+    margin: 0 5px 0 5px;
+
+}
+
+#layer-controls input:checked + label
+{
+    position:relative;
+    background: #00cc00;
+    box-shadow: inset 0 0 3px #00ff00;
+    border: 1px solid #333333;
+    height: 14px;
+    width: 14px;
+    display:inline-block;
+    padding: 0 0 0 0px;
+    margin: 0 5px 0 5px;
+}
+
+
 .filter-slider {
     width: calc(70% - 47px);
     display: inline-block;
-    padding-right: 25px;
+    padding-right: 15px;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -99,55 +187,88 @@
             box-sizing: border-box;
 }
 
+.baselayer-fieldset {
+
+    float:right;
+    margin-right: 20px;
+}
+
 .promotion-container {
-    vertical-align: bottom;
     display: inline-block;
     padding-right: 15px;
     position: relative;
-    bottom: 5px;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
 
 .layer-promotion-button {
-    width:32px;
-    height:32px;
-    border: none;
-    background: transparent url(../images/PromoteButton.png) no-repeat center top;
+
     position:relative;
+    visibility: hidden;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 14px 12px 14px;
+    border-color: transparent transparent #d3d3d3 transparent;
+    top:14px;
     display: inline-block;
 }
 
-.layer-promotion-button:hover:enabled {
-    border: none;
-    background: transparent url(../images/PromoteButton.png) no-repeat center top;
-    background-position: 0px -32px;
+.layer-promotion-button-bottom {
+
+    position:absolute;
+    visibility: hidden;
+    left: 6px;   
+    top: 20px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 8px 6px 8px;
+    border-color: transparent transparent #111111 transparent;
     display: inline-block;
 }
 
-.layer-promotion-button:active:enabled {
-    border:none;
-    background:transparent url(../images/PromoteButton.png) no-repeat center top;
-    background-position: 0px -32px;
-    display: inline-block;
+.promotion-container:hover{
+    cursor: pointer;
 }
 
-.layer-promotion-button:focus {
-    outline:none;
+.layer-content:hover .layer-promotion-button {
+    visibility: visible;
+}
+
+.layer-content:hover .layer-promotion-button-bottom {
+    visibility: visible;
 }
 
 .tile-outline-button {
     position:relative;
     margin-top:20px;
 }
+
+/* Settings menu styles */
+
 .settings-link {  
     position:absolute;
+    border: 1px solid #333333;
+    background-color: #222222;
+    color: #D3D3D3;
     right:0px;
+    top:10px;
     font-size: 12px;
 }
 
-/* Settings menu styles */
+.settings-link:hover {
+    cursor:pointer;
+    color: #ffffff;
+}
+
+
+.settings-link:focus {
+
+    outline:none;
+}
+
 .settings-title {
     position:relative;
     padding-bottom:10px;
@@ -159,11 +280,6 @@
     padding-bottom:12px;
 }
 
-.settings-back-link {
-    position:absolute;
-    right:0px;
-    font-size: 12px;
-}
 
 .settings-ramp-title {
     font-size: 12px;
@@ -199,6 +315,36 @@
     margin: 2px 2px 2px 2px;
 }
 
+/*
+.settings-content input[type=radio] {
+    display:none;
+}
+
+.settings-content input[type=radio] + label
+{
+    background: #111111;
+    box-shadow: inset 0 0 3px #222222;
+    border: 1px solid #333333;
+    height: 16px;
+    width: 16px;
+    display:inline-block;
+    padding: 0 0 0 0px;
+    margin: 2px 5px -4px 0px;
+}
+.settings-content input[type=radio]:checked + label
+{
+    background: #00cc00;
+    box-shadow: inset 0 0 3px #00ff00;
+    border: 1px solid #333333;
+    height: 16px;
+    width: 16px;
+    display:inline-block;
+    padding: 0 0 0 0px;
+    margin: 2px 5px -4px 0px;
+}
+*/
+
+
 .filter-axis{
     position: relative;
 	top: -4px;
@@ -208,21 +354,22 @@
 
 .filter-axis-tick-major, .filter-axis-tick-minor{
     position: relative;
-    height: 8px;
+    height: 6px;
     width: 1px;
-	background-color: rgb(128, 128, 128);
+	background-color: #d3d3d3;
 	margin-right: 6.07%;
 	margin-left: 6.07%;
+    box-shadow: 0 0 5px #000;
     float: left;
 }
 
 .filter-axis-tick-minor{
-    height: 5px;
+    height: 4px;  
 }
 
 .filter-axis-label-container, .filter-axis-ticks-container{
 	position: relative;
-	top: 7px;
+	top: 5px;
 	left: 0px;
 	clear: both;
 }
@@ -252,6 +399,8 @@
 	margin-right: 0px;
 	float: right;
 }
+
+/*
 fieldset{
     position: relative;
     border: none;
@@ -300,3 +449,4 @@ fieldset input[type=radio]:checked + label {
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.15),0 1px 2px rgba(0,0,0,0.05);
     background-color:#e0e0e0;
 }
+*/

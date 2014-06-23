@@ -2,6 +2,7 @@
 
 #description {
 	position: fixed;
+	border: 1px solid #333333;
 	right: 10px;
 	top: 10px;
 }
@@ -28,8 +29,13 @@
 
 #description-content {
 	position: relative;
-	background-color: #FFF;
-	color: #000;
+	background-color: #111;
+	color: #D3D3D3;
 	width: 612px;
 	font-size: 10pt;
+	text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000;
 }
