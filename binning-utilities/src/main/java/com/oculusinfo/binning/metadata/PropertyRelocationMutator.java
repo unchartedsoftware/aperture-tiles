@@ -27,27 +27,42 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class PropertyRelocationMutator extends JsonMutator {
+    private String _name;
 	private String[] _fromPath;
 	private String[] _toPath;
+	private boolean  _removeOld;
 
-	public PropertyRelocationMutator (String[] fromPath,
-	                                  String[] toPath) {
+	public PropertyRelocationMutator (String name,
+	                                  String[] fromPath,
+	                                  String[] toPath,
+	                                  boolean removeOld) {
+	    _name = name;
 		_fromPath = fromPath;
 		_toPath = toPath;
+		_removeOld = removeOld;
 	}
 
 	@Override
 	public void mutateJson (JSONObject json) throws JSONException {
 		for (LocationInformation fromTree: getTree(json, _fromPath, null, 0, false)) {
     		int size = fromTree.size();
-    		if (_fromPath.length == size && fromTree.get(size-1).has(_fromPath[size-1])) {
+    		String fromElt = fromTree.getFullMatch(size-1);
+    		if (_fromPath.length == size && fromTree.get(size-1).has(fromElt)) {
     			JSONObject from = fromTree.get(size-1);
     			LocationInformation toTree = getTree(json, _toPath, fromTree._matches, 0, true).get(0);
-    			toTree.get(toTree.size()-1).put(_toPath[_toPath.length-1],
-    			                                from.remove(_fromPath[size-1]));
-    			cleanTree(fromTree, _fromPath);
+    			String toElt = toTree.getFullMatch(_toPath.length-1);
+    			if (_removeOld) {
+                    toTree.get(toTree.size()-1).put(toElt, from.remove(fromElt));
+                    cleanTree(fromTree, _fromPath);
+    			} else {
+                    toTree.get(toTree.size()-1).put(toElt, from.get(fromElt));
+    			}
     		}
 		}
 	}
 
+	@Override
+	public String toString () {
+	    return "Relocation("+_name+")";
+	}
 }

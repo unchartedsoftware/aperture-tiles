@@ -42,8 +42,9 @@ import java.util.List;
  * @author nkronenfeld
  */
 public class PyramidMetaDataVersionMutator {
-	protected static Collection<PyramidMetaDataVersionMutator> ALL_MUTATORS = new ArrayList<>();
-	{
+	public static final String CURRENT_VERSION = "1.0";
+    protected static Collection<PyramidMetaDataVersionMutator> ALL_MUTATORS = new ArrayList<>();
+	static {
 	    MetaDataF0p0T1p0.register();
 	}
 

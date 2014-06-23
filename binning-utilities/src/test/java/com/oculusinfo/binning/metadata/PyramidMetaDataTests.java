@@ -23,15 +23,15 @@
  */
 package com.oculusinfo.binning.metadata;
 
-import com.oculusinfo.binning.util.Pair;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Map;
+import com.oculusinfo.binning.util.Pair;
 
 public class PyramidMetaDataTests {
 	private static final double EPSILON = 1E-10;

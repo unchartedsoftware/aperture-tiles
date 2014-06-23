@@ -66,12 +66,16 @@ public class PyramidMetaData {
 
 
 
-	public PyramidMetaData (JSONObject metaData) {
+	public PyramidMetaData (JSONObject metaData) throws JSONException {
 		_metaData = metaData;
+        PyramidMetaDataVersionMutator.updateMetaData(_metaData,
+                                                     PyramidMetaDataVersionMutator.CURRENT_VERSION);
 	}
 
 	public PyramidMetaData (String metaData) throws JSONException {
 		_metaData = new JSONObject(metaData);
+        PyramidMetaDataVersionMutator.updateMetaData(_metaData,
+                                                     PyramidMetaDataVersionMutator.CURRENT_VERSION);
 	}
 
 	public PyramidMetaData (String name,
