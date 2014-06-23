@@ -33,7 +33,6 @@ import com.oculusinfo.stats.numeric.StatTracker
 import com.oculusinfo.stats.numeric.Quartiles
 import com.oculusinfo.stats.qualitative.CountQualities
 import com.oculusinfo.stats.qualitative.Frequency
-import com.oculusinfo.stats.customAnalytics._ // get rid of this...
 import org.apache.spark.AccumulableParam
 import org.apache.spark.rdd.RDD
 import scala.collection.mutable.ListBuffer
