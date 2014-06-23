@@ -27,10 +27,10 @@ To begin configuring your Tile Server and Tile Client:
 
 The Tiler Server in your new template relies on the following configuration files:
 
-- [Web XML](#webxml)
-- [Tile Properties](#tileproperties)
-- [Maps](#maps)
-- [Layers](#layer)
+- [Web XML](#webxml), which passes modules to Guice.
+- [Tile Properties](#tileproperties), which specifies the location of your Spark installation.
+- [Maps](#maps), which defines the base maps on which your data is projected.
+- [Layers](#layer), which defines the individual layers of data that can be overlaid on your base map. The layers file also indicates whether rendering should be performed by the server or the client.
 
 ###<a name="webxml"></a>Web XML
 
@@ -264,86 +264,117 @@ Two example layer files are provided in the Tile Client Template (`tile-client-t
 - **crossplot-layers.json.example**: describes the parameters of an X/Y cross plot layer
 - **geographic-layers.json.example**: describes the parameters of a world map layer
 
-Choose the appropriate layer type and remove the **.example** suffix from the filename. The following section describe how to edit the **layers.json** for each layer type.
+Choose the appropriate layer type and remove the **.example** suffix from the filename. The following sections describe how to edit the **layers.json** for each layer type.
 
 Note that maps with multiple layers can be created by specifying multiple layer descriptions in the *children* section of the **layers.json** file. 
 					
-####Metadata
+####<a name="layer-metadata"></a>Metadata
 
-####Pyramid
+The Metadata parameters uniquely identify the layer.
 
-####Data
-
-####Renderers
-
-####<a name="type"></a>Type
-
-Currently "tile" is the only option supported.
-
-####<a name="transform"></a>Transform
-
-The transform option allows the user to apply transformations to the data values when determining color. Currently the options are "linear" which does not perform a transformation, and "log10" which will take logarithms of raw values prior to applying a color ramp.
-					
-####<a name="ramp"></a>Color Ramp
-
-The ramp option is used to determine what color scale is applied to the data points. Currently the ramp supports 3 options: linear, single-gradient, and default color scales.
-
-#####<a name="linear"></a>Linear Ramp
-
-The linear option shows all of the data points with a constant color and can be configured by setting:
-
-```JavaScript
-"ramp": {
-	"name": "flat",
-	"color": "green"
 ```
-#####<a name="grad"></a>Single Gradient Ramp
+id
+	Must match the name of the folder to which the tiles were saved during the  generation process, which is composed of the following parameters from the Tiing Property File:
+	<oculus.binning.name>.<oculus.binning.xField>.<oculus.binning.yField>.<oculus.binning.valueField>  
 
-The single-gradient option will draw the color of each data point as a gradient between two colors. The value where the gradient begins and ends can be manually altered by setting the from-alpha and to-alpha fields. The from-alpha and to-alpha can each take any value between 0-255.
+description
+	Description of the layer
+``` 
 
-A sample implementation is shown below:
+####<a name="layer-pyramid"></a>Pyramid
 
-```JavaScript
-"ramp": {
-    "name": "single-gradient",
-    "from": 0xffffff,
-    "from-alpha": 0,
-    "to": 0x00ff00,
-    "to-alpha": 100
-}
+The pyramid parameters describe the extent of the data in the layer.  The values that you provide in this section must match the values in your data source and in your map configuration.
+
+For cross plot maps, the `type` should always be set to *AreaOfInterest*. Also include the minimum and maximum values on the X and Y axes in your cross plot. 
+
+```json
+"pyramid": {
+	"type": "AreaOfInterest",
+	"minX" : 1,
+	"maxX" : 6336769,
+	"minY" : 0,
+	"maxY" : 500000
+},
 ```
 
-#####<a name="def"></a>Default Color Scales
+For geographic maps, the `type` should always be set to *WebMercator*. No minimum and maximum X and Y values are required for this layer type.
 
-The default color scales will edit the color of each data
-point based on its concentration using a predefined color scale.The current options are:
-
-- 'br': A blue-green ramp.
-- 'inv-br': Inverted blue-green ramp.
-- 'ware': A red-yellow-green ramp.
-- 'inv-ware': Inverted red-yellow-green ramp.
-- 'grey': Full greyscale ramp.
-- 'inv-grey': Inverse greyscale ramp.
-
-These options can be set directly by:
-
-```JavaScript
-"ramp": "ware"
+```json
+"pyramid": {
+	"type": "WebMercator"
+},
 ```
 
-####<a name="opacity"></a>Opacity
+####<a name="layer-data"></a>Data
 
-This setting is used to set the opacity of the rendered tile layer. This can be set to any decimal value ranging from 0 (totally transparent) to 1 (totally opaque).
+The data parameters specify the location of the tiles that you created. If you are using HBase, separate parameters are required.
 
-####<a name="renderer"></a>Renderer
+```
+pyramidio
 
-This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of  tile data.  The current renderer options are:
+	type
+		Indicates the file format of your tiles:
+		hbase - tiles are stored in HBase
+		file - tiles are stored in an uncompressed directory in a local
+               filesystem
+		zip - tiles are stored in compressed file in a local filesystem
 
-- 'default': Renders to a heat-map, based on a standard avro double-valued tile
-- 'doubleseries': Renders to a series of heat-maps, based on a standard avro double-series-valued tile
-- 'doublestatistics': Renders tile's total hit and % coverage as text to the tile
-- 'textscore': Renders to an image showing scored words, with bars based on their score
+	root.path
+		Root path in which the tiles are stored. Not used for HBase.
 
+	extension
+		Name of the compressed file in which tiles are stored. Only used for ZIP files.
+
+	hbase.zookeeper.quorum
+		Zookeeper quorum location needed to connect to HBase.
+
+	hbase.zookeeper.port
+		 Port through which to connect to zookeeper. Typically defaults to 2181.
+
+	hbase.master
+		Location of the HBase master on which the tiles are saved.
+	
+```
+
+####<a name="layer-renderers"></a>Renderers
+
+This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of tile data.  The current renderer options are:
+
+```
+domain
+	Indicates whether the tiles should be rendered by the server or the client.
+
+renderer
+	Used for server-side rendering.
+
+	type
+		'heatmap': Renders to a heat-map, based on a standard avro double-valued tile
+		'doubleseries': Renders to a series of heat-maps, based on a standard avro double-series-valued tile
+		'doublestatistics': Renders tile's total hit and % coverage as text to the tile
+		'textscore': Renders to an image showing scored words, with bars based on their score
+
+	ramp
+		Determines the color scale applied to the data points based on their concentration. The default color scales are:
+		'br': A blue-green ramp.
+		'inv-br': Inverted blue-green ramp.
+		'ware': A red-yellow-green ramp.
+		'inv-ware': Inverted red-yellow-green ramp.
+		'grey': Full greyscale ramp.
+		'inv-grey': Inverse greyscale ramp.
+
+	opacity
+		Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).
+
+renderers
+	List of custom renderers required to perform client-side rendering. 
+
+transform
+
+	name
+		Type of transformations that can be applied to the data values when determining color: 
+		"linear" does not perform a transformation.
+		"log10" takes logarithms of raw values before applying a color ramp.
+```
 
 ##<a name="clientconfig"></a>Tile Client Configuration
 
@@ -358,16 +389,8 @@ The Tile Client uses ApertureJS services and a client-side visualization library
 	"restEndpoint" : "%host%/new-project/rest"
 ```
 
-###<a name="server-side-config"></a>Server-Side Tile Rendering Configuration
+##<a name="deployment"></a>Deployment
 
-The Tile Client allows configuration of multiple layers of tiles that can be overlaid in the plot or map viewer. These are defined in the *new-project/src/main/resources/layers/* directory. Note that two layer property file examples are provided: one for cross plot visualizations and one for geographic map visualizations.
+Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your Apache Tomcat or Jetty server.
 
-This configuration file allows specifying server-side and client-side layers. 
-
-Each server layer contains six editable fields to customize how the tiles are rendered:
-- Data
-- layer, type, transform, ramp, opacity, renderer. A detailed description of each parameter is found below.
-
-###<a name="client-side-rendering"></a>Client-Side Tile Rendering Configuration
-
-Coming Soon.
+Access the `/tile-client-template/` directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
