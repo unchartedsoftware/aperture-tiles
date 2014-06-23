@@ -1,8 +1,0 @@
-
-Field: scoreMargin
-Fieldtype: Numerical
-Running tests: quartilesTest: Quartiles, Result: 
-Quartile 1: -5.0
-Quartile 2: 2.0
- Quartile 3: 8.0
-

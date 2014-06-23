@@ -252,7 +252,7 @@ object JSONwriter {
       
       if (r._4.contains("quartiles")) {
 
-        val quartiles = r._4("quartiles").asInstanceOf[(Double, Double, Double)]
+        val quartiles = r._4("quartiles").asInstanceOf[(java.util.Date, java.util.Date, java.util.Date)]
 
         val q1 = quartiles._1
         val median = quartiles._2

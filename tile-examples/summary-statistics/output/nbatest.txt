@@ -1,0 +1,465 @@
+0021300632,0,12,0,1,10:40 PM,12:00,null,Start of 1st Period (10:40 PM EST),null,null,null
+0021300632,1,10,0,1,10:41 PM,12:00,Jump Ball Lopez vs. Hickson: Tip to Matthews,null,null,null,null
+0021300632,2,6,1,1,10:41 PM,11:44,null,null,Chandler P.FOUL (P1.T1),null,null
+0021300632,3,2,1,1,10:42 PM,11:33,MISS Aldridge 22' Jump Shot,null,null,null,null
+0021300632,4,4,0,1,10:42 PM,11:31,null,null,Chandler REBOUND (Off:0 Def:1),null,null
+0021300632,5,5,2,1,10:42 PM,11:19,Matthews STEAL (1 STL),null,Foye Lost Ball Turnover (P1.T1),null,null
+0021300632,6,1,1,1,10:42 PM,11:14,Matthews  3PT Jump Shot (3 PTS),null,null,3 - 0,3
+0021300632,7,1,1,1,10:42 PM,10:56,null,null,Faried 14' Jump Shot (2 PTS) (Foye 1 AST),3 - 2,1
+0021300632,8,6,27,1,10:42 PM,10:43,null,null,Faried Personal Block Foul (P1.T2),null,null
+0021300632,9,1,57,1,10:43 PM,10:35,Lopez 3' Driving Hook Shot (2 PTS) (Lillard 1 AST),null,null,5 - 2,3
+0021300632,10,2,1,1,10:43 PM,10:19,null,null,MISS Lawson 18' Jump Shot,null,null
+0021300632,11,4,0,1,10:43 PM,10:18,Batum REBOUND (Off:0 Def:1),null,null,null,null
+0021300632,12,5,21,1,10:43 PM,10:11,Batum Palming Turnover (P1.T1),null,null,null,null
+0021300632,13,5,1,1,10:44 PM,9:53,Batum STEAL (1 STL),null,Chandler Bad Pass Turnover (P1.T2),null,null
+0021300632,14,1,41,1,10:44 PM,9:50,Lillard 2' Running Layup (2 PTS),null,null,7 - 2,5
+0021300632,15,6,2,1,10:44 PM,9:50,null,null,Hickson S.FOUL (P1.T3),null,null
+0021300632,16,3,10,1,10:44 PM,9:50,Lillard Free Throw 1 of 1 (3 PTS),null,null,8 - 2,6
+0021300632,18,1,1,1,10:44 PM,9:38,null,null,Faried 19' Jump Shot (4 PTS) (Lawson 1 AST),8 - 4,4
+0021300632,19,5,2,1,10:45 PM,9:23,Aldridge Lost Ball Turnover (P1.T2),null,Lawson STEAL (1 STL),null,null
+0021300632,20,1,42,1,10:45 PM,9:17,null,null,Faried 1' Driving Layup (6 PTS) (Lawson 2 AST),8 - 6,2
+0021300632,21,2,79,1,10:45 PM,8:59,MISS Matthews 12' Pullup Jump Shot,null,null,null,null
+0021300632,22,4,0,1,10:45 PM,8:59,null,null,Lawson REBOUND (Off:0 Def:1),null,null
+0021300632,23,2,1,1,10:45 PM,8:47,null,null,MISS Chandler  3PT Jump Shot,null,null
+0021300632,24,4,0,1,10:45 PM,8:46,Batum REBOUND (Off:0 Def:2),null,null,null,null
+0021300632,25,1,86,1,10:45 PM,8:36,Aldridge 13' Turnaround Fadeaway (2 PTS) (Lillard 2 AST),null,null,10 - 6,4
+0021300632,26,1,1,1,10:46 PM,8:22,null,null,Hickson 15' Jump Shot (2 PTS) (Faried 1 AST),10 - 8,2
+0021300632,27,2,5,1,10:46 PM,8:08,MISS Aldridge 2' Layup,null,null,null,null
+0021300632,28,4,0,1,10:46 PM,8:06,Aldridge REBOUND (Off:1 Def:0),null,null,null,null
+0021300632,29,1,1,1,10:46 PM,8:02,Matthews  3PT Jump Shot (6 PTS) (Aldridge 1 AST),null,null,13 - 8,5
+0021300632,30,6,2,1,10:46 PM,7:53,Lopez S.FOUL (P1.T1),null,null,null,null
+0021300632,31,3,11,1,10:46 PM,7:53,null,null,Lawson Free Throw 1 of 2 (1 PTS),13 - 9,4
+0021300632,33,3,12,1,10:47 PM,7:53,null,null,Lawson Free Throw 2 of 2 (2 PTS),13 - 10,3
+0021300632,35,2,58,1,10:47 PM,7:35,MISS Aldridge 6' Turnaround Hook Shot,null,null,null,null
+0021300632,36,4,0,1,10:47 PM,7:33,null,null,Hickson REBOUND (Off:0 Def:1),null,null
+0021300632,37,2,1,1,10:47 PM,7:23,Aldridge BLOCK (1 BLK),null,MISS Faried 7' Jump Shot,null,null
+0021300632,38,4,0,1,10:47 PM,7:23,null,null,Nuggets Rebound,null,null
+0021300632,39,1,5,1,10:48 PM,7:16,null,null,Lawson 1' Layup (4 PTS) (Hickson 1 AST),13 - 12,1
+0021300632,40,6,1,1,10:48 PM,7:00,null,null,Faried P.FOUL (P2.T4),null,null
+0021300632,41,8,0,1,10:48 PM,7:00,null,null,SUB: Randolph FOR Faried,null,null
+0021300632,42,5,1,1,10:48 PM,6:54,Lillard Bad Pass Turnover (P1.T3),null,null,null,null
+0021300632,43,1,1,1,10:49 PM,6:42,null,null,Randolph 21' Jump Shot (2 PTS) (Lawson 3 AST),13 - 14,-1
+0021300632,44,1,63,1,10:49 PM,6:27,Lillard 20' Fadeaway Jumper (5 PTS) (Matthews 1 AST),null,null,15 - 14,1
+0021300632,46,2,63,1,10:50 PM,6:09,null,null,MISS Hickson 17' Fadeaway Jumper,null,null
+0021300632,47,4,0,1,10:50 PM,6:08,null,null,Randolph REBOUND (Off:1 Def:0),null,null
+0021300632,48,2,1,1,10:50 PM,5:58,null,null,MISS Randolph 25' 3PT Jump Shot,null,null
+0021300632,49,4,0,1,10:50 PM,5:57,Aldridge REBOUND (Off:1 Def:1),null,null,null,null
+0021300632,50,2,46,1,10:50 PM,5:48,MISS Aldridge 4' Running Jump Shot,null,null,null,null
+0021300632,52,4,0,1,10:50 PM,5:47,Lopez REBOUND (Off:1 Def:0),null,null,null,null
+0021300632,51,1,4,1,10:50 PM,5:47,Lopez  Tip Shot (4 PTS),null,null,17 - 14,3
+0021300632,53,2,1,1,10:51 PM,5:25,null,null,MISS Hickson 5' Jump Shot,null,null
+0021300632,54,4,0,1,10:51 PM,5:25,Matthews REBOUND (Off:0 Def:1),null,null,null,null
+0021300632,55,2,1,1,10:51 PM,5:14,MISS Lillard 24' 3PT Jump Shot,null,null,null,null
+0021300632,56,4,0,1,10:51 PM,5:13,null,null,Hickson REBOUND (Off:0 Def:2),null,null
+0021300632,57,2,1,1,10:51 PM,5:07,null,null,MISS Lawson 25' 3PT Jump Shot,null,null
+0021300632,58,4,0,1,10:51 PM,5:06,Aldridge REBOUND (Off:1 Def:2),null,null,null,null
+0021300632,59,1,5,1,10:51 PM,5:00,Matthews 1' Layup (8 PTS) (Batum 1 AST),null,null,19 - 14,5
+0021300632,60,9,1,1,10:51 PM,4:56,null,null,Nuggets Timeout: Regular (Reg.1 Short 0),null,null
+0021300632,62,8,0,1,10:54 PM,4:56,SUB: Williams FOR Matthews,null,null,null,null
+0021300632,63,1,42,1,10:55 PM,4:42,null,null,Chandler 2' Driving Layup (2 PTS) (Lawson 4 AST),19 - 16,3
+0021300632,64,2,1,1,10:55 PM,4:32,MISS Lillard 24' 3PT Jump Shot,null,null,null,null
+0021300632,65,4,0,1,10:55 PM,4:30,null,null,Randolph REBOUND (Off:1 Def:1),null,null
+0021300632,66,6,26,1,10:55 PM,4:25,null,null,Chandler Offensive Charge Foul (P2.PN),null,null
+0021300632,67,5,5,1,10:55 PM,4:25,null,null,Chandler Foul Turnover (P2.T3),null,null
+0021300632,68,5,2,1,10:56 PM,4:10,Aldridge Lost Ball Turnover (P2.T4),null,Randolph STEAL (1 STL),null,null
+0021300632,69,5,40,1,10:56 PM,4:08,null,null,Chandler Out of Bounds Lost Ball Turnover (P3.T4),null,null
+0021300632,70,8,0,1,10:56 PM,4:08,null,null,SUB: Q. Miller FOR Chandler,null,null
+0021300632,71,2,1,1,10:56 PM,3:51,MISS Aldridge 15' Jump Shot,null,null,null,null
+0021300632,72,4,0,1,10:56 PM,3:49,null,null,Q. Miller REBOUND (Off:0 Def:1),null,null
+0021300632,73,5,1,1,10:56 PM,3:41,Batum STEAL (2 STL),null,Q. Miller Bad Pass Turnover (P1.T5),null,null
+0021300632,74,1,75,1,10:57 PM,3:36,Aldridge 1' Driving Finger Roll Layup (4 PTS) (Batum 2 AST),null,null,21 - 16,5
+0021300632,75,6,2,1,10:57 PM,3:23,Williams S.FOUL (P1.T2),null,null,null,null
+0021300632,76,3,11,1,10:57 PM,3:23,null,null,MISS Lawson Free Throw 1 of 2,null,null
+0021300632,77,4,1,1,10:57 PM,3:23,null,null,Nuggets Rebound,null,null
+0021300632,78,8,0,1,10:57 PM,3:23,null,null,SUB: Fournier FOR Foye,null,null
+0021300632,79,8,0,1,10:57 PM,3:23,SUB: Freeland FOR Lopez,null,null,null,null
+0021300632,80,3,12,1,10:57 PM,3:23,null,null,Lawson Free Throw 2 of 2 (5 PTS),21 - 17,4
+0021300632,82,2,7,1,10:58 PM,3:08,MISS Freeland 1' Dunk,null,Randolph BLOCK (1 BLK),null,null
+0021300632,83,4,0,1,10:58 PM,3:06,null,null,Q. Miller REBOUND (Off:0 Def:2),null,null
+0021300632,84,1,44,1,10:58 PM,2:59,null,null,Hickson 1' Reverse Layup (4 PTS) (Lawson 5 AST),21 - 19,2
+0021300632,85,2,42,1,10:58 PM,2:49,MISS Lillard 2' Driving Layup,null,null,null,null
+0021300632,86,4,0,1,10:58 PM,2:47,Freeland REBOUND (Off:1 Def:0),null,null,null,null
+0021300632,87,1,5,1,10:58 PM,2:44,Lillard 1' Layup (7 PTS) (Aldridge 2 AST),null,null,23 - 19,4
+0021300632,88,1,5,1,10:58 PM,2:33,null,null,Randolph 2' Layup (4 PTS) (Lawson 6 AST),23 - 21,2
+0021300632,89,2,1,1,10:58 PM,2:20,MISS Aldridge 11' Jump Shot,null,null,null,null
+0021300632,90,4,0,1,10:59 PM,2:19,null,null,Randolph REBOUND (Off:1 Def:2),null,null
+0021300632,91,1,42,1,10:59 PM,2:07,null,null,Lawson 2' Driving Layup (7 PTS),23 - 23,TIE
+0021300632,92,9,1,1,10:59 PM,2:05,TRAIL BLAZERS Timeout: Regular (Full 1 Short 0),null,null,null,null
+0021300632,94,8,0,1,11:02 PM,2:05,null,null,SUB: Mozgov FOR Hickson,null,null
+0021300632,95,8,0,1,11:02 PM,2:05,SUB: McCollum FOR Lillard,null,null,null,null
+0021300632,96,1,57,1,11:02 PM,1:47,Aldridge 4' Driving Hook Shot (6 PTS),null,null,25 - 23,2
+0021300632,97,6,1,1,11:03 PM,1:37,Freeland P.FOUL (P1.T3),null,null,null,null
+0021300632,98,2,1,1,11:03 PM,1:26,null,null,MISS Q. Miller 4' Jump Shot,null,null
+0021300632,100,4,0,1,11:03 PM,1:24,null,null,Mozgov REBOUND (Off:1 Def:0),null,null
+0021300632,99,1,4,1,11:03 PM,1:24,null,null,Mozgov  Tip Shot (2 PTS),25 - 25,TIE
+0021300632,101,1,1,1,11:03 PM,1:05,Aldridge 20' Jump Shot (8 PTS) (Batum 3 AST),null,null,27 - 25,2
+0021300632,102,1,1,1,11:04 PM,0:49,null,null,Randolph  3PT Jump Shot (7 PTS) (Lawson 7 AST),27 - 28,-1
+0021300632,103,2,46,1,11:04 PM,0:30,MISS McCollum 8' Running Jump Shot,null,null,null,null
+0021300632,104,4,0,1,11:04 PM,0:28,null,null,Q. Miller REBOUND (Off:0 Def:3),null,null
+0021300632,105,2,5,1,11:04 PM,0:22,null,null,MISS Lawson 2' Layup,null,null
+0021300632,106,4,0,1,11:04 PM,0:21,null,null,Mozgov REBOUND (Off:2 Def:0),null,null
+0021300632,107,6,2,1,11:05 PM,0:01,Freeland S.FOUL (P2.PN),null,null,null,null
+0021300632,108,3,11,1,11:05 PM,0:01,null,null,Randolph Free Throw 1 of 2 (8 PTS),27 - 29,-2
+0021300632,110,3,12,1,11:05 PM,0:01,null,null,Randolph Free Throw 2 of 2 (9 PTS),27 - 30,-3
+0021300632,112,2,1,1,11:05 PM,0:00,MISS Williams 50' 3PT Jump Shot,null,null,null,null
+0021300632,113,4,0,1,11:05 PM,0:00,TRAIL BLAZERS Rebound,null,null,null,null
+0021300632,114,13,0,1,11:05 PM,0:00,null,End of 1st Period (11:05 PM EST),null,27 - 30,-3
+0021300632,116,12,0,2,11:08 PM,12:00,null,Start of 2nd Period (11:08 PM EST),null,27 - 30,-3
+0021300632,117,5,2,2,11:09 PM,11:41,Williams STEAL (1 STL),null,Fournier Lost Ball Turnover (P1.T6),null,null
+0021300632,118,6,1,2,11:09 PM,11:37,null,null,Robinson P.FOUL (P1.T1),null,null
+0021300632,119,1,1,2,11:10 PM,11:30,McCollum  3PT Jump Shot (3 PTS) (Robinson 1 AST),null,null,30 - 30,TIE
+0021300632,120,2,46,2,11:10 PM,11:13,null,null,MISS Fournier 4' Running Jump Shot,null,null
+0021300632,121,4,0,2,11:10 PM,11:13,Robinson REBOUND (Off:0 Def:1),null,null,null,null
+0021300632,122,2,1,2,11:10 PM,11:02,MISS Matthews  3PT Jump Shot,null,null,null,null
+0021300632,123,4,0,2,11:10 PM,11:02,null,null,Fournier REBOUND (Off:0 Def:1),null,null
+0021300632,124,5,2,2,11:10 PM,11:00,Williams STEAL (2 STL),null,Q. Miller Lost Ball Turnover (P2.T7),null,null
+0021300632,125,2,1,2,11:10 PM,10:54,MISS McCollum 25' 3PT Jump Shot,null,null,null,null
+0021300632,126,4,0,2,11:10 PM,10:52,null,null,Q. Miller REBOUND (Off:0 Def:4),null,null
+0021300632,127,6,2,2,11:11 PM,10:43,McCollum S.FOUL (P1.T1),null,null,null,null
+0021300632,128,3,11,2,11:11 PM,10:43,null,null,Robinson Free Throw 1 of 2 (1 PTS),30 - 31,-1
+0021300632,130,3,12,2,11:11 PM,10:43,null,null,Robinson Free Throw 2 of 2 (2 PTS),30 - 32,-2
+0021300632,132,6,2,2,11:12 PM,10:28,null,null,Randolph S.FOUL (P1.T2),null,null
+0021300632,133,3,11,2,11:12 PM,10:28,McCollum Free Throw 1 of 2 (4 PTS),null,null,31 - 32,-1
+0021300632,135,8,0,2,11:12 PM,10:28,null,null,SUB: Faried FOR Randolph,null,null
+0021300632,136,3,12,2,11:12 PM,10:28,MISS McCollum Free Throw 2 of 2,null,null,null,null
+0021300632,138,4,0,2,11:12 PM,10:27,null,null,Faried REBOUND (Off:0 Def:1),null,null
+0021300632,139,6,1,2,11:13 PM,10:18,McCollum P.FOUL (P2.T2),null,null,null,null
+0021300632,140,1,5,2,11:13 PM,10:11,null,null,Fournier 1' Layup (2 PTS) (Mozgov 1 AST),31 - 34,-3
+0021300632,141,2,1,2,11:14 PM,9:51,MISS Robinson 4' Jump Shot,null,Mozgov BLOCK (1 BLK),null,null
+0021300632,142,4,0,2,11:14 PM,9:49,McCollum REBOUND (Off:1 Def:0),null,null,null,null
+0021300632,143,2,1,2,11:14 PM,9:45,MISS Freeland 19' Jump Shot,null,null,null,null
+0021300632,144,4,0,2,11:14 PM,9:45,null,null,Q. Miller REBOUND (Off:0 Def:5),null,null
+0021300632,145,6,1,2,11:14 PM,9:38,Williams P.FOUL (P2.T3),null,null,null,null
+0021300632,146,2,1,2,11:14 PM,9:24,null,null,MISS Robinson 25' 3PT Jump Shot,null,null
+0021300632,147,4,0,2,11:14 PM,9:22,Robinson REBOUND (Off:0 Def:2),null,null,null,null
+0021300632,148,2,46,2,11:15 PM,9:13,MISS Williams 3' Running Jump Shot,null,null,null,null
+0021300632,149,4,0,2,11:15 PM,9:13,null,null,Faried REBOUND (Off:0 Def:2),null,null
+0021300632,152,9,4,2,11:15 PM,8:59,null,Timeout: Official,null,null,null
+0021300632,154,8,0,2,11:17 PM,8:59,SUB: Lopez FOR Freeland,null,null,null,null
+0021300632,155,5,2,2,11:18 PM,8:55,Robinson STEAL (1 STL),null,Faried Lost Ball Turnover (P1.T8),null,null
+0021300632,156,2,1,2,11:18 PM,8:45,MISS Matthews 25' 3PT Jump Shot,null,null,null,null
+0021300632,157,4,0,2,11:18 PM,8:44,Robinson REBOUND (Off:1 Def:2),null,null,null,null
+0021300632,158,2,42,2,11:19 PM,8:37,MISS McCollum 2' Driving Layup,null,Mozgov BLOCK (2 BLK),null,null
+0021300632,159,4,0,2,11:19 PM,8:37,TRAIL BLAZERS Rebound,null,null,null,null
+0021300632,160,1,1,2,11:19 PM,8:34,Robinson 19' Jump Shot (2 PTS) (Matthews 2 AST),null,null,33 - 34,-1
+0021300632,161,1,1,2,11:19 PM,8:14,null,null,Robinson 25' 3PT Jump Shot (5 PTS) (Mozgov 2 AST),33 - 37,-4
+0021300632,162,6,1,2,11:19 PM,8:05,null,null,Q. Miller P.FOUL (P1.T3),null,null
+0021300632,163,8,0,2,11:20 PM,8:05,null,null,SUB: Lawson FOR Fournier,null,null
+0021300632,164,8,0,2,11:20 PM,8:05,null,null,SUB: Chandler FOR Q. Miller,null,null
+0021300632,165,8,0,2,11:20 PM,8:05,SUB: Lillard FOR McCollum,null,null,null,null
+0021300632,166,1,1,2,11:20 PM,7:56,Matthews 22' Jump Shot (10 PTS) (Williams 1 AST),null,null,35 - 37,-2
+0021300632,167,2,1,2,11:20 PM,7:37,null,null,MISS Mozgov 15' Jump Shot,null,null
+0021300632,168,4,0,2,11:20 PM,7:36,null,null,Nuggets Rebound,null,null
+0021300632,169,6,3,2,11:20 PM,7:36,Matthews L.B.FOUL (P1.T4),null,null,null,null
+0021300632,170,1,79,2,11:21 PM,7:29,null,null,Robinson 26' 3PT Pullup Jump Shot (8 PTS),35 - 40,-5
+0021300632,171,6,2,2,11:21 PM,7:15,null,null,Robinson S.FOUL (P2.T4),null,null
+0021300632,172,3,11,2,11:21 PM,7:15,Matthews Free Throw 1 of 2 (11 PTS),null,null,36 - 40,-4
+0021300632,174,8,0,2,11:22 PM,7:15,null,null,SUB: Hickson FOR Mozgov,null,null
+0021300632,175,3,12,2,11:22 PM,7:15,Matthews Free Throw 2 of 2 (12 PTS),null,null,37 - 40,-3
+0021300632,177,6,2,2,11:22 PM,7:07,Williams S.FOUL (P3.PN),null,null,null,null
+0021300632,178,3,11,2,11:22 PM,7:07,null,null,MISS Lawson Free Throw 1 of 2,null,null
+0021300632,179,4,1,2,11:22 PM,7:07,null,null,Nuggets Rebound,null,null
+0021300632,180,8,0,2,11:23 PM,7:07,SUB: Batum FOR Williams,null,null,null,null
+0021300632,181,3,12,2,11:23 PM,7:07,null,null,Lawson Free Throw 2 of 2 (8 PTS),37 - 41,-4
+0021300632,183,5,1,2,11:23 PM,6:49,Lillard Bad Pass Turnover (P2.T5),null,Lawson STEAL (2 STL),null,null
+0021300632,184,2,79,2,11:23 PM,6:43,null,null,MISS Robinson 20' Pullup Jump Shot,null,null
+0021300632,185,4,0,2,11:23 PM,6:41,null,null,Hickson REBOUND (Off:1 Def:2),null,null
+0021300632,186,1,1,2,11:23 PM,6:36,null,null,Robinson  3PT Jump Shot (11 PTS) (Hickson 2 AST),37 - 44,-7
+0021300632,187,9,1,2,11:24 PM,6:27,TRAIL BLAZERS Timeout: Regular (Full 2 Short 0),null,null,null,null
+0021300632,189,8,0,2,11:26 PM,6:27,SUB: Aldridge FOR Robinson,null,null,null,null
+0021300632,190,5,1,2,11:27 PM,6:19,Batum Bad Pass Turnover (P2.T6),null,null,null,null
+0021300632,191,1,79,2,11:27 PM,6:10,null,null,Robinson 21' Pullup Jump Shot (13 PTS),37 - 46,-9
+0021300632,192,1,47,2,11:28 PM,5:53,Aldridge 10' Turnaround Jump Shot (10 PTS) (Batum 4 AST),null,null,39 - 46,-7
+0021300632,193,1,47,2,11:28 PM,5:38,null,null,Hickson 8' Turnaround Jump Shot (6 PTS) (Lawson 8 AST),39 - 48,-9
+0021300632,194,2,1,2,11:28 PM,5:21,MISS Aldridge 19' Jump Shot,null,null,null,null
+0021300632,195,4,0,2,11:28 PM,5:20,null,null,Faried REBOUND (Off:0 Def:3),null,null
+0021300632,196,2,5,2,11:28 PM,5:11,Lillard BLOCK (1 BLK),null,MISS Faried 3' Layup,null,null
+0021300632,197,4,0,2,11:28 PM,5:09,null,null,Faried REBOUND (Off:1 Def:3),null,null
+0021300632,198,1,66,2,11:29 PM,5:05,null,null,Chandler 25' 3PT Jump Bank Shot (5 PTS) (Faried 2 AST),39 - 51,-12
+0021300632,199,1,80,2,11:29 PM,4:41,Batum 23' Step Back Jump Shot (2 PTS),null,null,41 - 51,-10
+0021300632,200,2,1,2,11:29 PM,4:22,Lillard BLOCK (2 BLK),null,MISS Robinson 19' Jump Shot,null,null
+0021300632,201,4,0,2,11:29 PM,4:21,Lillard REBOUND (Off:0 Def:1),null,null,null,null
+0021300632,202,6,1,2,11:29 PM,4:15,null,null,Chandler P.FOUL (P3.PN),null,null
+0021300632,203,3,11,2,11:30 PM,4:15,Batum Free Throw 1 of 2 (3 PTS),null,null,42 - 51,-9
+0021300632,205,8,0,2,11:30 PM,4:15,null,null,SUB: Foye FOR Chandler,null,null
+0021300632,206,3,12,2,11:30 PM,4:15,Batum Free Throw 2 of 2 (4 PTS),null,null,43 - 51,-8
+0021300632,208,5,4,2,11:31 PM,4:01,null,null,Lawson Traveling Turnover (P1.T9),null,null
+0021300632,209,2,1,2,11:31 PM,3:47,MISS Lopez 15' Jump Shot,null,null,null,null
+0021300632,210,4,0,2,11:31 PM,3:46,Aldridge REBOUND (Off:2 Def:2),null,null,null,null
+0021300632,211,2,47,2,11:31 PM,3:41,MISS Aldridge 9' Turnaround Jump Shot,null,null,null,null
+0021300632,212,4,0,2,11:31 PM,3:40,null,null,Faried REBOUND (Off:1 Def:4),null,null
+0021300632,213,5,15,2,11:31 PM,3:29,null,null,Faried Offensive Goaltending Turnover (P2.T10),null,null
+0021300632,214,1,5,2,11:32 PM,3:14,Matthews 1' Layup (14 PTS) (Aldridge 3 AST),null,null,45 - 51,-6
+0021300632,215,6,2,2,11:32 PM,3:14,null,null,Lawson S.FOUL (P1.PN),null,null
+0021300632,216,3,10,2,11:32 PM,3:14,Matthews Free Throw 1 of 1 (15 PTS),null,null,46 - 51,-5
+0021300632,218,2,42,2,11:32 PM,2:52,null,null,MISS Hickson 3' Driving Layup,null,null
+0021300632,219,4,0,2,11:33 PM,2:50,Batum REBOUND (Off:0 Def:3),null,null,null,null
+0021300632,220,1,71,2,11:33 PM,2:46,Aldridge 1' Finger Roll Layup (12 PTS) (Batum 5 AST),null,null,48 - 51,-3
+0021300632,221,9,1,2,11:33 PM,2:44,null,null,Nuggets Timeout: Regular (Reg.2 Short 0),null,null
+0021300632,223,8,0,2,11:35 PM,2:44,null,null,SUB: Q. Miller FOR Robinson,null,null
+0021300632,224,5,4,2,11:36 PM,2:32,null,null,Hickson Traveling Turnover (P1.T11),null,null
+0021300632,225,8,0,2,11:36 PM,2:32,null,null,SUB: Randolph FOR Faried,null,null
+0021300632,226,2,5,2,11:37 PM,2:19,MISS Matthews 1' Layup,null,Foye BLOCK (1 BLK),null,null
+0021300632,227,4,0,2,11:37 PM,2:17,null,null,Lawson REBOUND (Off:0 Def:2),null,null
+0021300632,228,1,1,2,11:37 PM,2:10,null,null,Foye 25' 3PT Jump Shot (3 PTS) (Randolph 1 AST),48 - 54,-6
+0021300632,229,7,5,2,11:37 PM,1:53,null,null,Hickson Violation:Kicked Ball,null,null
+0021300632,230,6,1,2,11:38 PM,1:46,null,null,Q. Miller P.FOUL (P2.PN),null,null
+0021300632,231,3,11,2,11:38 PM,1:46,Batum Free Throw 1 of 2 (5 PTS),null,null,49 - 54,-5
+0021300632,233,3,12,2,11:38 PM,1:46,Batum Free Throw 2 of 2 (6 PTS),null,null,50 - 54,-4
+0021300632,235,1,1,2,11:38 PM,1:31,null,null,Randolph 25' 3PT Jump Shot (12 PTS) (Foye 2 AST),50 - 57,-7
+0021300632,236,6,1,2,11:39 PM,1:22,null,null,Randolph P.FOUL (P2.PN),null,null
+0021300632,237,3,11,2,11:39 PM,1:22,Aldridge Free Throw 1 of 2 (13 PTS),null,null,51 - 57,-6
+0021300632,239,3,12,2,11:39 PM,1:22,Aldridge Free Throw 2 of 2 (14 PTS),null,null,52 - 57,-5
+0021300632,241,6,2,2,11:40 PM,1:04,Aldridge S.FOUL (P1.PN),null,null,null,null
+0021300632,242,3,11,2,11:40 PM,1:04,null,null,Lawson Free Throw 1 of 2 (9 PTS),52 - 58,-6
+0021300632,244,3,12,2,11:40 PM,1:04,null,null,Lawson Free Throw 2 of 2 (10 PTS),52 - 59,-7
+0021300632,246,5,1,2,11:41 PM,0:47,Matthews Bad Pass Turnover (P1.T7),null,Q. Miller STEAL (1 STL),null,null
+0021300632,247,1,42,2,11:41 PM,0:45,null,null,Q. Miller  Driving Layup (2 PTS),52 - 61,-9
+0021300632,248,6,2,2,11:41 PM,0:45,Matthews S.FOUL (P2.PN),null,null,null,null
+0021300632,249,3,10,2,11:41 PM,0:45,null,null,Q. Miller Free Throw 1 of 1 (3 PTS),52 - 62,-10
+0021300632,251,1,88,2,11:41 PM,0:34,Lillard  Driving Slam Dunk (9 PTS),null,null,54 - 62,-8
+0021300632,252,1,5,2,11:42 PM,0:29,null,null,Hickson  Layup (8 PTS) (Lawson 9 AST),54 - 64,-10
+0021300632,253,2,1,2,11:42 PM,0:14,MISS Lillard 24' 3PT Jump Shot,null,null,null,null
+0021300632,255,4,0,2,11:42 PM,0:13,Lopez REBOUND (Off:2 Def:0),null,null,null,null
+0021300632,254,2,4,2,11:42 PM,0:13,MISS Lopez 1' Tip Shot,null,null,null,null
+0021300632,257,4,0,2,11:42 PM,0:13,Lopez REBOUND (Off:3 Def:0),null,null,null,null
+0021300632,256,1,5,2,11:42 PM,0:13,Lopez 2' Layup (6 PTS),null,null,56 - 64,-8
+0021300632,258,1,42,2,11:42 PM,0:02,null,null,Lawson 2' Driving Layup (12 PTS),56 - 66,-10
+0021300632,259,6,2,2,11:42 PM,0:02,Lopez S.FOUL (P2.PN),null,null,null,null
+0021300632,260,3,10,2,11:43 PM,0:02,null,null,Lawson Free Throw 1 of 1 (13 PTS),56 - 67,-11
+0021300632,262,6,1,2,11:43 PM,0:00,null,null,Hickson P.FOUL (P2.PN),null,null
+0021300632,263,3,13,2,11:43 PM,0:00,Matthews Free Throw 1 of 3 (16 PTS),null,null,57 - 67,-10
+0021300632,265,3,14,2,11:43 PM,0:00,Matthews Free Throw 2 of 3 (17 PTS),null,null,58 - 67,-9
+0021300632,267,3,15,2,11:44 PM,0:00,Matthews Free Throw 3 of 3 (18 PTS),null,null,59 - 67,-8
+0021300632,269,2,1,2,11:44 PM,0:00,null,null,MISS Foye 71' 3PT Jump Shot,null,null
+0021300632,270,4,0,2,11:44 PM,0:00,null,null,Nuggets Rebound,null,null
+0021300632,271,13,0,2,11:44 PM,0:00,null,End of 2nd Period (11:44 PM EST),null,59 - 67,-8
+0021300632,273,12,0,3,12:03 AM,12:00,null,Start of 3rd Period (12:03 AM EST),null,59 - 67,-8
+0021300632,274,1,1,3,12:04 AM,11:45,null,null,Foye 26' 3PT Jump Shot (6 PTS) (Lawson 10 AST),59 - 70,-11
+0021300632,275,2,3,3,12:04 AM,11:31,MISS Lopez 2' Hook Shot,null,Faried BLOCK (1 BLK),null,null
+0021300632,276,4,0,3,12:04 AM,11:29,null,null,Nuggets Rebound,null,null
+0021300632,277,6,4,3,12:04 AM,11:16,null,null,Lawson OFF.Foul (P2),null,null
+0021300632,278,5,5,3,12:04 AM,11:16,null,null,Lawson Foul Turnover (P2.T12),null,null
+0021300632,279,1,7,3,12:05 AM,10:58,Lopez  Dunk (8 PTS) (Batum 6 AST),null,null,61 - 70,-9
+0021300632,280,1,1,3,12:05 AM,10:30,null,null,Foye 25' 3PT Jump Shot (9 PTS) (Hickson 3 AST),61 - 73,-12
+0021300632,282,6,1,3,12:06 AM,10:07,null,null,Hickson P.FOUL (P3.T1),null,null
+0021300632,283,2,58,3,12:06 AM,9:56,MISS Aldridge 6' Turnaround Hook Shot,null,null,null,null
+0021300632,284,4,0,3,12:06 AM,9:55,null,null,Hickson REBOUND (Off:1 Def:3),null,null
+0021300632,285,1,71,3,12:07 AM,9:46,null,null,Hickson 1' Finger Roll Layup (10 PTS) (Lawson 11 AST),61 - 75,-14
+0021300632,286,1,66,3,12:07 AM,9:34,Lopez 5' Jump Bank Shot (10 PTS) (Batum 7 AST),null,null,63 - 75,-12
+0021300632,287,2,1,3,12:07 AM,9:25,null,null,MISS Chandler 21' Jump Shot,null,null
+0021300632,288,4,0,3,12:07 AM,9:24,Aldridge REBOUND (Off:2 Def:3),null,null,null,null
+0021300632,289,2,1,3,12:07 AM,9:15,MISS Aldridge 19' Jump Shot,null,null,null,null
+0021300632,290,4,0,3,12:07 AM,9:14,null,null,Foye REBOUND (Off:0 Def:1),null,null
+0021300632,291,1,79,3,12:07 AM,9:08,null,null,Foye 28' 3PT Pullup Jump Shot (12 PTS),63 - 78,-15
+0021300632,292,1,5,3,12:07 AM,8:50,Aldridge  Layup (16 PTS) (Batum 8 AST),null,null,65 - 78,-13
+0021300632,293,6,2,3,12:07 AM,8:50,null,null,Foye S.FOUL (P1.T2),null,null
+0021300632,294,3,10,3,12:08 AM,8:50,Aldridge Free Throw 1 of 1 (17 PTS),null,null,66 - 78,-12
+0021300632,296,1,42,3,12:08 AM,8:33,null,null,Chandler 1' Driving Layup (7 PTS) (Foye 3 AST),66 - 80,-14
+0021300632,297,1,5,3,12:09 AM,8:09,Aldridge 1' Layup (19 PTS) (Matthews 3 AST),null,null,68 - 80,-12
+0021300632,298,6,26,3,12:09 AM,8:05,null,null,Lawson Offensive Charge Foul (P3.T3),null,null
+0021300632,299,5,5,3,12:09 AM,8:05,null,null,Lawson Foul Turnover (P3.T13),null,null
+0021300632,301,1,1,3,12:10 AM,7:45,Aldridge 20' Jump Shot (21 PTS) (Lillard 3 AST),null,null,70 - 80,-10
+0021300632,302,2,1,3,12:10 AM,7:30,null,null,MISS Foye 25' 3PT Jump Shot,null,null
+0021300632,303,4,0,3,12:10 AM,7:30,Lopez REBOUND (Off:3 Def:1),null,null,null,null
+0021300632,304,2,1,3,12:10 AM,7:20,MISS Matthews 24' 3PT Jump Shot,null,null,null,null
+0021300632,305,4,0,3,12:10 AM,7:19,null,null,Chandler REBOUND (Off:0 Def:2),null,null
+0021300632,306,2,1,3,12:10 AM,7:05,null,null,MISS Lawson 11' Jump Shot,null,null
+0021300632,307,4,0,3,12:10 AM,7:02,null,null,Foye REBOUND (Off:1 Def:1),null,null
+0021300632,308,1,1,3,12:10 AM,6:55,null,null,Faried 5' Jump Shot (8 PTS) (Foye 4 AST),70 - 82,-12
+0021300632,309,2,42,3,12:11 AM,6:32,MISS Aldridge 2' Driving Layup,null,Chandler BLOCK (1 BLK),null,null
+0021300632,310,4,0,3,12:11 AM,6:30,null,null,Hickson REBOUND (Off:1 Def:4),null,null
+0021300632,311,2,1,3,12:11 AM,6:25,null,null,MISS Foye 25' 3PT Jump Shot,null,null
+0021300632,312,4,0,3,12:11 AM,6:24,Aldridge REBOUND (Off:2 Def:4),null,null,null,null
+0021300632,313,2,79,3,12:11 AM,6:18,MISS Batum 14' Pullup Jump Shot,null,null,null,null
+0021300632,314,4,0,3,12:11 AM,6:17,null,null,Hickson REBOUND (Off:1 Def:5),null,null
+0021300632,315,6,2,3,12:11 AM,6:12,Lopez S.FOUL (P3.T1),null,null,null,null
+0021300632,316,3,11,3,12:11 AM,6:12,null,null,Chandler Free Throw 1 of 2 (8 PTS),70 - 83,-13
+0021300632,318,3,12,3,12:12 AM,6:12,null,null,MISS Chandler Free Throw 2 of 2,null,null
+0021300632,320,4,0,3,12:12 AM,6:11,Batum REBOUND (Off:0 Def:4),null,null,null,null
+0021300632,321,6,1,3,12:12 AM,6:00,null,null,Faried P.FOUL (P3.T4),null,null
+0021300632,322,1,52,3,12:12 AM,5:58,Matthews  Alley Oop Dunk (20 PTS) (Batum 9 AST),null,null,72 - 83,-11
+0021300632,323,5,1,3,12:13 AM,5:36,null,null,Hickson Bad Pass Turnover (P2.T14),null,null
+0021300632,324,9,1,3,12:13 AM,5:36,TRAIL BLAZERS Timeout: Regular (Full 3 Short 0),null,null,null,null
+0021300632,326,2,1,3,12:17 AM,5:24,MISS Batum 25' 3PT Jump Shot,null,null,null,null
+0021300632,327,4,0,3,12:17 AM,5:22,null,null,Faried REBOUND (Off:1 Def:5),null,null
+0021300632,328,2,1,3,12:17 AM,5:13,null,null,MISS Faried 17' Jump Shot,null,null
+0021300632,329,4,0,3,12:17 AM,5:12,Batum REBOUND (Off:0 Def:5),null,null,null,null
+0021300632,330,1,43,3,12:17 AM,5:00,Aldridge  Alley Oop Layup (23 PTS) (Lopez 1 AST),null,null,74 - 83,-9
+0021300632,331,1,1,3,12:17 AM,4:39,null,null,Chandler 20' Jump Shot (10 PTS) (Hickson 4 AST),74 - 85,-11
+0021300632,333,7,2,3,12:18 AM,4:26,null,null,Hickson Violation:Defensive Goaltending,null,null
+0021300632,332,1,5,3,12:18 AM,4:26,Lillard 1' Layup (11 PTS) (Aldridge 4 AST),null,null,76 - 85,-9
+0021300632,334,2,5,3,12:18 AM,4:01,Lopez BLOCK (1 BLK),null,MISS Hickson 3' Layup,null,null
+0021300632,335,4,0,3,12:18 AM,4:01,null,null,Nuggets Rebound,null,null
+0021300632,336,5,11,3,12:18 AM,4:01,null,null,Nuggets Turnover: Shot Clock (T#15),null,null
+0021300632,337,8,0,3,12:18 AM,4:01,SUB: Williams FOR Matthews,null,null,null,null
+0021300632,338,2,1,3,12:19 AM,3:49,MISS Lillard 25' 3PT Jump Shot,null,null,null,null
+0021300632,339,4,0,3,12:19 AM,3:48,Lopez REBOUND (Off:4 Def:1),null,null,null,null
+0021300632,340,2,4,3,12:19 AM,3:47,MISS Lopez 1' Tip Shot,null,null,null,null
+0021300632,342,4,0,3,12:19 AM,3:44,Aldridge REBOUND (Off:3 Def:4),null,null,null,null
+0021300632,341,1,72,3,12:19 AM,3:44,Aldridge 2' Putback Layup (25 PTS),null,null,78 - 85,-7
+0021300632,344,8,0,3,12:19 AM,3:29,null,null,SUB: Randolph FOR Faried,null,null
+0021300632,345,2,1,3,12:20 AM,3:26,null,null,MISS Foye 24' 3PT Jump Shot,null,null
+0021300632,346,4,0,3,12:20 AM,3:25,Aldridge REBOUND (Off:3 Def:5),null,null,null,null
+0021300632,347,6,2,3,12:20 AM,3:18,null,null,Lawson S.FOUL (P4.PN),null,null
+0021300632,348,3,11,3,12:20 AM,3:18,Lopez Free Throw 1 of 2 (11 PTS),null,null,79 - 85,-6
+0021300632,350,8,0,3,12:20 AM,3:18,null,null,SUB: Robinson FOR Lawson,null,null
+0021300632,351,8,0,3,12:20 AM,3:18,null,null,SUB: Fournier FOR Foye,null,null
+0021300632,352,3,12,3,12:20 AM,3:18,Lopez Free Throw 2 of 2 (12 PTS),null,null,80 - 85,-5
+0021300632,354,1,5,3,12:21 AM,3:05,null,null,Fournier 2' Layup (4 PTS) (Hickson 5 AST),80 - 87,-7
+0021300632,355,1,1,3,12:21 AM,2:44,Aldridge 18' Jump Shot (27 PTS) (Williams 2 AST),null,null,82 - 87,-5
+0021300632,356,2,80,3,12:22 AM,2:21,null,null,MISS Robinson 11' Step Back Jump Shot,null,null
+0021300632,357,4,0,3,12:22 AM,2:20,Williams REBOUND (Off:0 Def:1),null,null,null,null
+0021300632,358,5,2,3,12:22 AM,2:14,Williams Lost Ball Turnover (P1.T8),null,Chandler STEAL (1 STL),null,null
+0021300632,359,6,1,3,12:22 AM,2:14,Williams P.FOUL (P4.T2),null,null,null,null
+0021300632,360,9,1,3,12:22 AM,2:14,null,null,Nuggets Timeout: Regular (Reg.3 Short 0),null,null
+0021300632,362,8,0,3,12:24 AM,2:14,SUB: Freeland FOR Lopez,null,null,null,null
+0021300632,363,8,0,3,12:25 AM,2:14,SUB: McCollum FOR Lillard,null,null,null,null
+0021300632,364,8,0,3,12:25 AM,2:14,SUB: Matthews FOR Batum,null,null,null,null
+0021300632,365,8,0,3,12:25 AM,2:14,null,null,SUB: Mozgov FOR Hickson,null,null
+0021300632,366,1,75,3,12:25 AM,1:51,null,null,Chandler 1' Driving Finger Roll Layup (12 PTS),82 - 89,-7
+0021300632,367,1,47,3,12:26 AM,1:30,Aldridge 13' Turnaround Jump Shot (29 PTS),null,null,84 - 89,-5
+0021300632,368,2,81,3,12:26 AM,1:10,null,null,MISS Fournier 15' Pullup Bank Shot,null,null
+0021300632,369,4,0,3,12:26 AM,1:09,Aldridge REBOUND (Off:3 Def:6),null,null,null,null
+0021300632,370,1,1,3,12:26 AM,1:00,Williams 14' Jump Shot (2 PTS) (Aldridge 5 AST),null,null,86 - 89,-3
+0021300632,371,2,1,3,12:27 AM,0:37,null,null,MISS Fournier 22' Jump Shot,null,null
+0021300632,372,4,0,3,12:27 AM,0:37,Aldridge REBOUND (Off:3 Def:7),null,null,null,null
+0021300632,373,2,79,3,12:27 AM,0:18,MISS Williams 14' Pullup Jump Shot,null,null,null,null
+0021300632,374,4,0,3,12:27 AM,0:17,null,null,Fournier REBOUND (Off:0 Def:2),null,null
+0021300632,375,6,28,3,12:27 AM,0:03,Aldridge Personal Take Foul (P2.T3),null,null,null,null
+0021300632,376,8,0,3,12:28 AM,0:03,SUB: Batum FOR Williams,null,null,null,null
+0021300632,377,6,2,3,12:29 AM,0:00,Matthews S.FOUL (P3.PN),null,null,null,null
+0021300632,378,18,0,3,12:29 AM,0:00,null,Support Ruling,null,null,null
+0021300632,379,3,11,3,12:30 AM,0:00,null,null,Chandler Free Throw 1 of 2 (13 PTS),86 - 90,-4
+0021300632,381,3,12,3,12:30 AM,0:00,null,null,Chandler Free Throw 2 of 2 (14 PTS),86 - 91,-5
+0021300632,383,2,1,3,12:31 AM,0:00,MISS McCollum 46' 3PT Jump Shot,null,null,null,null
+0021300632,384,4,0,3,12:31 AM,0:00,TRAIL BLAZERS Rebound,null,null,null,null
+0021300632,385,13,0,3,12:31 AM,0:00,null,End of 3rd Period (12:31 AM EST),null,86 - 91,-5
+0021300632,387,12,0,4,12:34 AM,12:00,null,Start of 4th Period (12:34 AM EST),null,86 - 91,-5
+0021300632,388,2,1,4,12:35 AM,11:48,MISS Williams 15' Jump Shot,null,null,null,null
+0021300632,389,4,0,4,12:35 AM,11:46,null,null,Nuggets Rebound,null,null
+0021300632,390,5,2,4,12:35 AM,11:33,Robinson STEAL (2 STL),null,Randolph Lost Ball Turnover (P1.T16),null,null
+0021300632,391,6,2,4,12:35 AM,11:30,null,null,Robinson S.FOUL (P3.T1),null,null
+0021300632,392,3,11,4,12:36 AM,11:30,Robinson Free Throw 1 of 2 (3 PTS),null,null,87 - 91,-4
+0021300632,394,3,12,4,12:36 AM,11:30,Robinson Free Throw 2 of 2 (4 PTS),null,null,88 - 91,-3
+0021300632,396,2,1,4,12:37 AM,11:12,null,null,MISS Robinson 21' Jump Shot,null,null
+0021300632,397,4,0,4,12:37 AM,11:10,Robinson REBOUND (Off:1 Def:3),null,null,null,null
+0021300632,398,1,86,4,12:37 AM,10:59,Matthews 12' Turnaround Fadeaway (22 PTS) (Williams 3 AST),null,null,90 - 91,-1
+0021300632,399,6,1,4,12:37 AM,10:42,Williams P.FOUL (P5.T1),null,null,null,null
+0021300632,400,2,1,4,12:38 AM,10:29,null,null,MISS Fournier 25' 3PT Jump Shot,null,null
+0021300632,401,4,0,4,12:38 AM,10:28,Robinson REBOUND (Off:1 Def:4),null,null,null,null
+0021300632,402,1,1,4,12:38 AM,10:10,Matthews 15' Jump Shot (24 PTS) (Williams 4 AST),null,null,92 - 91,1
+0021300632,403,9,1,4,12:38 AM,10:09,null,null,Nuggets Timeout: Regular (Reg.4 Short 0),null,null
+0021300632,405,8,0,4,12:40 AM,10:09,null,null,SUB: Hickson FOR Randolph,null,null
+0021300632,406,1,47,4,12:41 AM,9:44,null,null,Mozgov 15' Turnaround Jump Shot (4 PTS),92 - 93,-1
+0021300632,407,1,1,4,12:42 AM,9:20,McCollum 25' 3PT Jump Shot (7 PTS) (Matthews 4 AST),null,null,95 - 93,2
+0021300632,408,2,1,4,12:42 AM,8:53,null,null,MISS Robinson 6' Jump Shot,null,null
+0021300632,409,4,0,4,12:42 AM,8:51,null,null,Nuggets Rebound,null,null
+0021300632,410,8,0,4,12:42 AM,8:51,SUB: Lillard FOR McCollum,null,null,null,null
+0021300632,411,8,0,4,12:43 AM,8:51,null,null,SUB: Lawson FOR Fournier,null,null
+0021300632,412,8,0,4,12:43 AM,8:51,SUB: Batum FOR Matthews,null,null,null,null
+0021300632,413,8,0,4,12:43 AM,8:51,null,null,SUB: Chandler FOR Q. Miller,null,null
+0021300632,414,5,4,4,12:43 AM,8:49,null,null,Robinson Traveling Turnover (P1.T17),null,null
+0021300632,415,2,3,4,12:43 AM,8:33,MISS Lopez 8' Hook Shot,null,null,null,null
+0021300632,416,4,0,4,12:43 AM,8:33,null,null,Nuggets Rebound,null,null
+0021300632,417,6,3,4,12:43 AM,8:33,Robinson L.B.FOUL (P1.T2),null,null,null,null
+0021300632,418,1,73,4,12:44 AM,8:15,null,null,Chandler 1' Driving Reverse Layup (16 PTS),95 - 95,TIE
+0021300632,419,5,1,4,12:44 AM,8:06,Lillard Bad Pass Turnover (P3.T9),null,null,null,null
+0021300632,420,2,1,4,12:44 AM,7:49,null,null,MISS Lawson 24' 3PT Jump Shot,null,null
+0021300632,422,4,0,4,12:45 AM,7:48,null,null,Nuggets Rebound,null,null
+0021300632,423,6,3,4,12:45 AM,7:48,Lillard L.B.FOUL (P1.T3),null,null,null,null
+0021300632,424,8,0,4,12:45 AM,7:48,SUB: Aldridge FOR Robinson,null,null,null,null
+0021300632,425,2,1,4,12:45 AM,7:38,null,null,MISS Chandler 18' Jump Shot,null,null
+0021300632,426,4,0,4,12:45 AM,7:37,Aldridge REBOUND (Off:3 Def:8),null,null,null,null
+0021300632,427,2,1,4,12:46 AM,7:13,MISS Aldridge 13' Jump Shot,null,null,null,null
+0021300632,428,4,0,4,12:46 AM,7:13,Lopez REBOUND (Off:5 Def:1),null,null,null,null
+0021300632,429,5,11,4,12:46 AM,7:13,TRAIL BLAZERS Turnover: Shot Clock (T#10),null,null,null,null
+0021300632,430,6,1,4,12:46 AM,7:00,Lillard P.FOUL (P2.T4),null,null,null,null
+0021300632,431,8,0,4,12:46 AM,7:00,SUB: Matthews FOR Williams,null,null,null,null
+0021300632,432,1,1,4,12:47 AM,6:53,null,null,Hickson 9' Jump Shot (12 PTS) (Robinson 1 AST),95 - 97,-2
+0021300632,433,6,2,4,12:47 AM,6:34,null,null,Mozgov S.FOUL (P1.T2),null,null
+0021300632,434,3,11,4,12:47 AM,6:34,Aldridge Free Throw 1 of 2 (30 PTS),null,null,96 - 97,-1
+0021300632,436,3,12,4,12:48 AM,6:34,Aldridge Free Throw 2 of 2 (31 PTS),null,null,97 - 97,TIE
+0021300632,439,5,4,4,12:49 AM,6:13,null,null,Mozgov Traveling Turnover (P1.T18),null,null
+0021300632,440,2,66,4,12:49 AM,5:57,MISS Matthews 8' Jump Bank Shot,null,null,null,null
+0021300632,442,4,0,4,12:49 AM,5:56,Lopez REBOUND (Off:6 Def:1),null,null,null,null
+0021300632,441,2,4,4,12:49 AM,5:56,MISS Lopez  Tip Shot,null,null,null,null
+0021300632,443,4,0,4,12:49 AM,5:54,Lopez REBOUND (Off:7 Def:1),null,null,null,null
+0021300632,444,1,1,4,12:49 AM,5:51,Aldridge 20' Jump Shot (33 PTS) (Lopez 2 AST),null,null,99 - 97,2
+0021300632,445,2,42,4,12:49 AM,5:40,Aldridge BLOCK (2 BLK),null,MISS Lawson 2' Driving Layup,null,null
+0021300632,446,4,0,4,12:49 AM,5:39,null,null,Nuggets Rebound,null,null
+0021300632,447,9,4,4,12:49 AM,5:39,null,Timeout: Official,null,null,null
+0021300632,449,2,1,4,12:53 AM,5:25,null,null,MISS Robinson 26' 3PT Jump Shot,null,null
+0021300632,450,4,0,4,12:53 AM,5:24,null,null,Mozgov REBOUND (Off:3 Def:0),null,null
+0021300632,451,5,11,4,12:53 AM,5:22,null,null,Nuggets Turnover: Shot Clock (T#19),null,null
+0021300632,452,2,1,4,12:53 AM,5:13,MISS Aldridge 16' Jump Shot,null,null,null,null
+0021300632,453,4,0,4,12:53 AM,5:11,Batum REBOUND (Off:1 Def:5),null,null,null,null
+0021300632,454,2,1,4,12:54 AM,5:08,MISS Batum  3PT Jump Shot,null,null,null,null
+0021300632,455,4,0,4,12:54 AM,5:06,null,null,Mozgov REBOUND (Off:3 Def:1),null,null
+0021300632,456,2,42,4,12:54 AM,4:58,Lopez BLOCK (2 BLK),null,MISS Robinson 3' Driving Layup,null,null
+0021300632,457,4,0,4,12:54 AM,4:57,null,null,Nuggets Rebound,null,null
+0021300632,458,6,3,4,12:54 AM,4:57,Lillard L.B.FOUL (P3.PN),null,null,null,null
+0021300632,459,3,11,4,12:54 AM,4:57,null,null,Mozgov Free Throw 1 of 2 (5 PTS),99 - 98,1
+0021300632,461,8,0,4,12:54 AM,4:57,null,null,SUB: Foye FOR Robinson,null,null
+0021300632,462,3,12,4,12:54 AM,4:57,null,null,Mozgov Free Throw 2 of 2 (6 PTS),99 - 99,TIE
+0021300632,464,6,1,4,12:55 AM,4:46,null,null,Foye P.FOUL (P2.T3),null,null
+0021300632,465,2,3,4,12:55 AM,4:32,MISS Lopez 4' Hook Shot,null,null,null,null
+0021300632,466,4,0,4,12:55 AM,4:31,Aldridge REBOUND (Off:4 Def:8),null,null,null,null
+0021300632,467,6,2,4,12:56 AM,4:18,null,null,Mozgov S.FOUL (P2.T4),null,null
+0021300632,468,3,11,4,12:56 AM,4:18,MISS Aldridge Free Throw 1 of 2,null,null,null,null
+0021300632,469,4,1,4,12:56 AM,4:18,TRAIL BLAZERS Rebound,null,null,null,null
+0021300632,470,3,12,4,12:56 AM,4:18,Aldridge Free Throw 2 of 2 (34 PTS),null,null,100 - 99,1
+0021300632,473,5,13,4,12:57 AM,4:00,null,null,Nuggets Turnover: Backcourt (T#20),null,null
+0021300632,474,6,2,4,12:58 AM,3:48,null,null,Foye S.FOUL (P3.PN),null,null
+0021300632,475,3,11,4,12:58 AM,3:48,MISS Aldridge Free Throw 1 of 2,null,null,null,null
+0021300632,476,4,1,4,12:58 AM,3:48,TRAIL BLAZERS Rebound,null,null,null,null
+0021300632,477,3,12,4,12:58 AM,3:48,MISS Aldridge Free Throw 2 of 2,null,null,null,null
+0021300632,480,4,0,4,12:58 AM,3:46,Lopez REBOUND (Off:8 Def:1),null,null,null,null
+0021300632,479,2,4,4,12:58 AM,3:46,MISS Lopez 1' Tip Shot,null,null,null,null
+0021300632,481,4,0,4,12:58 AM,3:46,TRAIL BLAZERS Rebound,null,null,null,null
+0021300632,482,9,1,4,12:59 AM,3:46,TRAIL BLAZERS Timeout: Regular (Full 4 Short 0),null,null,null,null
+0021300632,484,2,3,4,1:02 AM,3:33,MISS Lopez 7' Hook Shot,null,null,null,null
+0021300632,485,4,0,4,1:02 AM,3:31,null,null,Hickson REBOUND (Off:1 Def:6),null,null
+0021300632,486,6,4,4,1:02 AM,3:22,null,null,Chandler OFF.Foul (P4),null,null
+0021300632,487,5,5,4,1:02 AM,3:22,null,null,Chandler Foul Turnover (P4.T21),null,null
+0021300632,488,1,1,4,1:02 AM,3:08,Aldridge 18' Jump Shot (36 PTS) (Batum 10 AST),null,null,102 - 99,3
+0021300632,489,5,4,4,1:03 AM,2:53,null,null,Hickson Traveling Turnover (P3.T22),null,null
+0021300632,490,2,1,4,1:03 AM,2:39,MISS Aldridge 20' Jump Shot,null,null,null,null
+0021300632,491,4,0,4,1:03 AM,2:37,null,null,Chandler REBOUND (Off:0 Def:3),null,null
+0021300632,492,2,1,4,1:03 AM,2:24,null,null,MISS Lawson 11' Jump Shot,null,null
+0021300632,493,4,0,4,1:03 AM,2:23,null,null,Nuggets Rebound,null,null
+0021300632,494,1,42,4,1:04 AM,2:05,null,null,Chandler 1' Driving Layup (18 PTS),102 - 101,1
+0021300632,495,2,1,4,1:04 AM,1:44,MISS Batum 25' 3PT Jump Shot,null,null,null,null
+0021300632,496,4,0,4,1:04 AM,1:41,null,null,Foye REBOUND (Off:1 Def:2),null,null
+0021300632,497,1,3,4,1:04 AM,1:27,null,null,Mozgov 3' Hook Shot (8 PTS) (Foye 5 AST),102 - 103,-1
+0021300632,498,6,2,4,1:05 AM,1:07,null,null,Hickson S.FOUL (P4.PN),null,null
+0021300632,499,3,11,4,1:05 AM,1:07,Aldridge Free Throw 1 of 2 (37 PTS),null,null,103 - 103,TIE
+0021300632,501,3,12,4,1:05 AM,1:07,Aldridge Free Throw 2 of 2 (38 PTS),null,null,104 - 103,1
+0021300632,503,1,41,4,1:06 AM,1:01,null,null,Foye 3' Running Layup (14 PTS),104 - 105,-1
+0021300632,504,2,1,4,1:06 AM,0:43,MISS Matthews  3PT Jump Shot,null,null,null,null
+0021300632,505,4,0,4,1:06 AM,0:43,TRAIL BLAZERS Rebound,null,null,null,null
+0021300632,506,6,3,4,1:06 AM,0:43,null,null,Mozgov L.B.FOUL (P3.PN),null,null
+0021300632,507,3,11,4,1:06 AM,0:43,Aldridge Free Throw 1 of 2 (39 PTS),null,null,105 - 105,TIE
+0021300632,509,3,12,4,1:07 AM,0:43,Aldridge Free Throw 2 of 2 (40 PTS),null,null,106 - 105,1
+0021300632,511,9,1,4,1:07 AM,0:43,null,null,Nuggets Timeout: Regular (Reg.5 Short 0),null,null
+0021300632,513,2,79,4,1:10 AM,0:27,null,null,MISS Lawson 19' Pullup Jump Shot,null,null
+0021300632,514,4,0,4,1:10 AM,0:26,Aldridge REBOUND (Off:4 Def:9),null,null,null,null
+0021300632,515,6,1,4,1:10 AM,0:25,null,null,Hickson P.FOUL (P5.PN),null,null
+0021300632,516,3,11,4,1:10 AM,0:25,Aldridge Free Throw 1 of 2 (41 PTS),null,null,107 - 105,2
+0021300632,518,3,12,4,1:10 AM,0:25,Aldridge Free Throw 2 of 2 (42 PTS),null,null,108 - 105,3
+0021300632,520,9,2,4,1:11 AM,0:25,null,null,Nuggets Timeout: Short (Reg.5 Short 1),null,null
+0021300632,522,2,1,4,1:12 AM,0:17,null,null,MISS Foye 27' 3PT Jump Shot,null,null
+0021300632,523,4,0,4,1:12 AM,0:15,null,null,Nuggets Rebound,null,null
+0021300632,524,9,2,4,1:13 AM,0:15,null,null,Nuggets Timeout: Short (Reg.5 Short 2),null,null
+0021300632,526,18,0,4,1:13 AM,0:15,null,Support Ruling,null,null,null
+0021300632,527,8,0,4,1:15 AM,0:15,null,null,SUB: Robinson FOR Mozgov,null,null
+0021300632,528,8,0,4,1:15 AM,0:15,null,null,SUB: Fournier FOR Hickson,null,null
+0021300632,529,8,0,4,1:15 AM,0:15,SUB: Williams FOR Lopez,null,null,null,null
+0021300632,530,2,1,4,1:15 AM,0:08,null,null,MISS Chandler 17' Jump Shot,null,null
+0021300632,531,4,0,4,1:15 AM,0:08,Batum REBOUND (Off:1 Def:6),null,null,null,null
+0021300632,532,6,28,4,1:15 AM,0:08,null,null,Chandler Personal Take Foul (P5.PN),null,null
+0021300632,534,3,11,4,1:16 AM,0:08,Aldridge Free Throw 1 of 2 (43 PTS),null,null,109 - 105,4
+0021300632,536,3,12,4,1:16 AM,0:08,Aldridge Free Throw 2 of 2 (44 PTS),null,null,110 - 105,5
+0021300632,538,2,1,4,1:16 AM,0:03,null,null,MISS Fournier 24' 3PT Jump Shot,null,null
+0021300632,540,4,0,4,1:16 AM,0:00,Lillard REBOUND (Off:0 Def:2),null,null,null,null
+0021300632,541,13,0,4,1:16 AM,0:00,null,End of 4th Period (1:16 AM EST),null,110 - 105,5

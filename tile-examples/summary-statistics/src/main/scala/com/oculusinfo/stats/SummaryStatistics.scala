@@ -86,32 +86,38 @@ object SummaryStatistics {
     val sparkClassPath = prop.getProperty("spark.connection.classpath", "").split(",")
 
 
-val subsets = prop.getProperty("oculus.binning.subsets","none")
-val partitions = prop.getProperty("oculus.binning.partitions","none")
+    val subsets = prop.getProperty("oculus.binning.subsets","none")
+    val partitions = prop.getProperty("oculus.binning.partitions","none")
 
-for (it <- subsets.split(",")){
-	
-	val i = if(it == "none"){""} else {it}
-	 
-   	val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, sparkClassPath)
+    val conf = new SparkConf()
+      .setMaster("spark://xd-spark.xdata.data-tactics-corp.com:7077")
+      .setAppName("Summary Stats (Matt Kielo, Oculus)1")
+      .set("spark.executor.memory", "20g")
+      .set("spark.cores.max","100")
+      .set("spark.executor.extraClassPath", "sum-stats.jar:/home/bigdata/.m2/repository/org/json/json/20090211/json-20090211.jar")
+
+//    val sc = new SparkContext(sparkMaster, "Summary Stats", sparkHome, sparkClassPath)
+    val sc = new SparkContext(conf)
     
-     val textFile = if(partitions.equals("none")){sc.textFile(inputLocation + "/" + i)} else {sc.textFile(inputLocation + "/" + i).coalesce(partitions.toInt)}
+    for (it <- subsets.split(",")){
+      val i = if(it == "none"){""} else {it}
+
+      val textFile = if(partitions.equals("none")){sc.textFile(inputLocation + "/" + i)} else {sc.textFile(inputLocation + "/" + i).coalesce(partitions.toInt)}
 
       //analyze dataset at a high level. count total records etc.
-     
 
-      
-	val toLog = prop.getProperty("oculus.table.cleaning.log", "false").toBoolean
-	val columns = prop.getProperty("oculus.table.cleaning.columns").toInt
+      val toLog = prop.getProperty("oculus.table.cleaning.log", "false").toBoolean
+      val columns = prop.getProperty("oculus.table.cleaning.columns").toInt
 
-	val fieldMaptemp = collection.mutable.Map.empty[Int, String]
-	fields.foreach(r => {
-		val colIndex = prop.getProperty("oculus.binning.parsing." + r + ".index").toInt
-		val colType = prop.getProperty("oculus.binning.parsing." + r + ".fieldType")
-		fieldMaptemp(colIndex) = colType
-	})
+      val fieldMaptemp = collection.mutable.Map.empty[Int, String]
+      fields.foreach(r => {
+	   val colIndex = prop.getProperty("oculus.binning.parsing." + r + ".index").toInt
+	   val colType = prop.getProperty("oculus.binning.parsing." + r + ".fieldType")
 
-	val fieldMap = fieldMaptemp.toMap
+      fieldMaptemp(colIndex) = colType
+      })
+
+      val fieldMap = fieldMaptemp.toMap
 
       
       val dirtytable = Parsing.rddCleaner(textFile, delimiter, columns, fieldMap, toLog)

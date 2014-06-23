@@ -73,7 +73,13 @@ object analyze {
     }
 
     if (!tests.contains("nocorruptcheck")){
-	val unparseable = table.filter(r => (r.contains("%% corrupt data check failure invalid length %%"))).map(r => 1).reduce(_ + _)
+        println("test")
+ println("test")
+ println("test")
+ println("test")
+ println("test")      
+        val zeroSet = sc.parallelize(List[Int](0))
+	val unparseable = table.filter(r => (r.contains("%% corrupt data check failure invalid length %%"))).map(r => 1).union(zeroSet).reduce(_ + _)
 	tableTestResults("corruptRecords") = unparseable.toString
 	}
 	if (tests.contains("bytes")) {
