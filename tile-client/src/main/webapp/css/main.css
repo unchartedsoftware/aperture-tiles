@@ -51,6 +51,11 @@ select:focus {
     -webkit-box-shadow: 0 0 6px #000;
 }
 
+::-webkit-scrollbar-corner {
+
+    background-color: #111111;
+}
+
 .ui-icon-gripsmall-diagonal-se {
     background-image: url("");
 }

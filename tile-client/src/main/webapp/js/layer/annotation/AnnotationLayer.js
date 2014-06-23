@@ -67,7 +67,7 @@ define(function (require) {
 
             // set callbacks
             this.map.on('moveend', $.proxy( this.update, this ) );
-            this.map.on('zoom', function() {
+            this.map.on('zoomend', function() {
                 that.nodeLayer.clear();
                 that.update();
             });
@@ -76,6 +76,14 @@ define(function (require) {
             this.update();
         },
 
+        setOpacity: function( opacity ) {
+            this.nodeLayer.getRootElement().css( 'opacity', opacity );
+        },
+
+        setVisibility: function( visible ) {
+            var visibility = visible ? 'visible' : 'hidden';
+            this.nodeLayer.getRootElement().css( 'visibility', visibility );
+        },
 
         createLayer : function() {
 
@@ -108,13 +116,15 @@ define(function (require) {
 
                 html = '<div class="'+ANNOTATION_DETAILS_CONTENT_CLASS+'">'
                      +     '<div class="'+ANNOTATION_DETAILS_HEAD_CLASS+'">'
-                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'+annotation.data.username+'</div>'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'+annotation.data.user+'</div>'
                      +     '</div>'
                      +     '<div class="'+ANNOTATION_DETAILS_BODY_CLASS+'">'
                      +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> x: '+annotation.x+'</div>'
                      +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> y: '+annotation.y+'</div>'
-                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> group: '+annotation.group+'</div>'
-                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> tweet: '+annotation.data.tweet+'</div>'
+                     //+         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'"> group: '+annotation.group+'</div>'
+                     +         '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'
+                     +             '<a href="https://twitter.com/'+annotation.data.user+'" target="_blank" style="color:#666699;">https://twitter.com/'+annotation.data.user+'</a>'
+                     +         '</div>'
                      +    '</div>'
                      + '</div>';
 

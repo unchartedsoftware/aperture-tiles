@@ -64,7 +64,7 @@ define(function (require) {
                 layerState.setName( layerSpec.name || layer.id );
                 layerState.setEnabled( true );
                 layerState.setOpacity( 1.0 );
-                layerState.setZIndex( 100 );
+                layerState.setZIndex( 500+i );
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {

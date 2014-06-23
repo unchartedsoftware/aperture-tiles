@@ -70,7 +70,7 @@ define(function (require) {
                 layerState.setName( layer.getLayerSpec().name || layer.id );
                 layerState.setEnabled( true );
                 layerState.setOpacity( 1.0 );
-                layerState.setZIndex( 10 );
+                layerState.setZIndex( 1000+i );
                 layerState.setRendererCount( layer.renderers.length );
                 layerState.setDefaultRendererIndex( 0 );
                 // register layer state with each renderer

@@ -181,12 +181,12 @@
 }
 
 .annotation-carousel-ui-chevron-left {
-    left: calc(50% - 50px);
+    left: calc(50% - 70px);
     background: transparent url(../images/chevron_L.png) no-repeat center top;
 }
 
 .annotation-carousel-ui-chevron-right {
-    right: calc(50% - 50px);
+    right: calc(50% - 70px);
     background: transparent url(../images/chevron_R.png) no-repeat center top;
 }
 
