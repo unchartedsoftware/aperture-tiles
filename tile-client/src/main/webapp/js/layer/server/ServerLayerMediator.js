@@ -81,7 +81,6 @@ define(function (require) {
         registerLayers :  function( layers ) {
 
             var that = this,
-
                 i;
 
             function register( layer ) {

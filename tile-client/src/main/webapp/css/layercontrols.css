@@ -55,6 +55,8 @@
 
     position:relative;
     background-color: #111111;
+    -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden;
 }
 
 .layer-drag-hover {
@@ -97,7 +99,7 @@
     width: calc(30% - 47px);
     color: #7E7E7E;
     display: inline-block;
-    padding-right:20px;
+    padding-right:20px;    
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -142,13 +144,16 @@
     position:relative;
     width: 18px;
     height: 18px;
-    bottom: -4px;
+    bottom: -4px;   
 }
 
-#layer-controls input + label:hover {
+#layer-controls input:hover {
     cursor:pointer;
 }
 
+#layer-controls label {
+    padding-right: 10px;
+}
 
 /*
 #layer-controls input {

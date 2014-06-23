@@ -104,14 +104,7 @@
 				   						{ "visibility" : "on" } ] }
 					]
 				}
-			},
-			{
-                "type" : "BlankBase",
-                "options" : {
-                    "name" : "white",
-                    "color" : "rgb(255,255,255)"
-                }
-            }
+			}
 		]
 	},
 

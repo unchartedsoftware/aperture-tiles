@@ -53,11 +53,11 @@ define(function (require) {
             var that = this,
                 i;
 
-            function register( layer, index ) {
+            function register( layer ) {
 
                 var layerState,
                     previousMouse = {},
-                    i;
+                    j;
 
                 function updateTileFocus( x, y ) {
 
@@ -74,8 +74,8 @@ define(function (require) {
                 layerState.setRendererCount( layer.renderers.length );
                 layerState.setDefaultRendererIndex( 0 );
                 // register layer state with each renderer
-                for (i=0; i< layer.renderers.length; i++) {
-                    layer.renderers[i].registerLayer( layerState );
+                for (j=0; j< layer.renderers.length; j++) {
+                    layer.renderers[j].registerLayer( layerState );
                 }
 
                 // Register a callback to handle layer state change events.
@@ -137,7 +137,7 @@ define(function (require) {
             layers = ( $.isArray(layers) ) ? layers : [layers];
 
             for (i=0; i<layers.length; i++) {
-                register( layers[i], i );
+                register( layers[i] );
             }
 
         }

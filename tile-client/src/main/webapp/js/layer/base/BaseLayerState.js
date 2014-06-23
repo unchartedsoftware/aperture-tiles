@@ -56,15 +56,23 @@ define(function (require) {
             this.baseLayerIndex = 0;
         },
 
+
         setBaseLayerIndex: function(index) {
             if (this.baseLayerIndex !== index ) {
+                this.previousBaseLayerIndex = this.baseLayerIndex;
                 this.baseLayerIndex = index;
                 this.notify("baseLayerIndex", this.listeners);
             }
         },
 
+
         getBaseLayerIndex: function() {
             return this.baseLayerIndex;
+        },
+
+
+        getPreviousBaseLayerIndex: function() {
+            return this.previousBaseLayerIndex;
         }
 
     });

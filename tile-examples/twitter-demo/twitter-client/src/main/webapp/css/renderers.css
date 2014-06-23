@@ -420,8 +420,7 @@
 	position:relative;
 	color : #FFFFFF;
 	height: calc(100% - 26px);
-	overflow-x:hidden;
-	overflow-y:auto;
+	overflow:auto;
 	background-color:#111111;
 	text-shadow:
 	    -2px -2px 2px #000,

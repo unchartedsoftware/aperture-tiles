@@ -322,66 +322,16 @@ define(function (require) {
     };
 
     /**
-     * Creates and returns a jquery element object for the layer promotion button.
+     * Sets the drag and drop functionality for layer z-index ordering. Only domain-alike layers may be swapped.
      *
-     * @param {Object} layerState - The layerstate object for the respective layer.
-     * @param {Object} nextLayerState - The next layerstate object to be swapped with.
-     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
-     * @param {Array} layerStates - The array of all layerstate objects.
+     * @param {Object} sortedLayers - All layers, sorted by z-index, highest first.
      * @param {Object} $layerControlsContainer - The layer controls container element.
+     * @param {Object} $layerControlsRoot - The layer controls root element for the particular layer.
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} layerStateMap - The layerstate map for all layers keyed by layer id.
      * @param {Object} controlsMap - The entire control map for all layerstate objects to their associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-     /*
-    createPromotionButton = function( layerState, nextLayerState, controlsMapping, layerStates, $layerControlsContainer, controlsMap ) {
-
-        var $promotionDiv = $('<div class="promotion-container"></div>'),
-            $promotionButton = $('<div class="layer-promotion-button" title="Swap layer position"></div><div class="layer-promotion-button-bottom" title="Swap layer position"></div>');
-
-        $promotionButton.click(function () {
-
-            var otherZ,
-                $layerRoot,
-                $nextLayerRoot,
-                distance;
-
-            if ( nextLayerState ) {
-
-                $layerRoot = controlsMapping.layerRoot;
-                $nextLayerRoot = controlsMap[ nextLayerState.getId() ].layerRoot;
-                distance = $layerRoot.outerHeight();
-
-                if ( layerState.swappingInProgress || nextLayerState.swappingInProgress ) {
-                    return;
-                }
-
-                controlsMap.swappingInProgress = true;
-
-                $.when( $layerRoot.animate({
-                    top: -distance
-                }, 600 ),
-                $nextLayerRoot.animate({
-                    top: distance
-                }, 600)).done( function () {
-
-                    replaceLayers( layerStates, $layerControlsContainer, controlsMap );
-                    delete controlsMap.swappingInProgress;
-                });
-
-                otherZ = nextLayerState.getZIndex();
-                nextLayerState.setZIndex( layerState.getZIndex() );
-                layerState.setZIndex(otherZ);
-
-            }
-        });
-        $promotionDiv.append( $promotionButton );
-
-        controlsMapping.promotionButton = $promotionButton;
-
-        return $promotionDiv;
-    };
-    */
-
     addLayerDragCallbacks = function( sortedLayers, $layerControlsContainer, $layerControlRoot, layerState, layerStateMap, controlsMap ) {
 
         var controlsMapping = controlsMap[ layerState.getId() ];
@@ -480,20 +430,17 @@ define(function (require) {
             baseLayer = layerState.BASE_LAYERS[i];
             isActiveBaseLayer = ( i === layerState.getBaseLayerIndex() );
 
+            // if active baselayer is blank, hide content
             if ( baseLayer.type === "BlankBase" && isActiveBaseLayer ) {
-                //$layerContent.css( 'display', 'none' );
-                $layerContent.animate({height: '0px', "padding-bottom": "0px"});
-            } else if ( isActiveBaseLayer ) {
-                //$layerContent.css( 'display', 'block' );
-                $layerContent.animate({ height: '32px', "padding-bottom": "10px" });
+                $layerContent.css({height: '0px', "padding-bottom": "0px"});
             }
+
             // create radio button
             $radioButton = $( '<input type="radio" class="baselayer-radio-button" name="baselayer-radio-button" id="'+(baseLayer.options.name+i)+'"'
                             + 'value="' + i + '"' + ( isActiveBaseLayer ? 'checked>' : '>' ) );
             $radioButton.on( 'click', onClick );
             // create radio label
-            $radioLabel = $('<label for="'+(baseLayer.options.name+i)+'"></label>'
-                          + '<label for="'+(baseLayer.options.name+i)+'">' + baseLayer.options.name + '</label>');
+            $radioLabel = $('<label for="'+(baseLayer.options.name+i)+'">' + baseLayer.options.name + '</label>');
             $baseLayerButtonSet.append( $radioButton ).append( $radioLabel );
         }
 
@@ -628,8 +575,7 @@ define(function (require) {
             span = (i < layerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
             span.append($('<div class="settings-values"></div>')
                     .append($('<input type="radio" name="ramp-types" value="' + id + '" id="'+id+'">')
-                        .add($('<label for="' + id + '"></label>')
-                            .add($('<label for="' + id + '">' + name + '</label>'))
+                        .add($('<label for="' + id + '">' + name + '</label>')
                 )
             ));
         }
@@ -651,8 +597,7 @@ define(function (require) {
             id = layerState.RAMP_FUNCTIONS[i].id;
             $rampFunctions.append($('<div class="settings-values"></div>')
                             .append($('<input type="radio" name="ramp-functions" value="' + id + '" id="'+id+'">')
-                                .add($('<label for="' + id + '"></label>')
-                                    .add($('<label for="' + id + '">' + name + '</label>'))
+                                .add($('<label for="' + id + '">' + name + '</label>')
                 )
             ));
         }
@@ -672,8 +617,8 @@ define(function (require) {
     makeLayerStateObserver = function (layerState, controlsMap, layerStates, $layersControlListRoot) {
         return function (fieldName) {
 
-            var controlsMapping = controlsMap[ layerState.getId() ];
-                //range;
+            var controlsMapping = controlsMap[ layerState.getId() ],
+                baseLayer, previousBaseLayer;
 
             switch (fieldName) {
 
@@ -686,13 +631,7 @@ define(function (require) {
 
                      controlsMapping.opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
                      break;
-                /*
-                case "zIndex":
 
-                    range = layerState.getFilterRange();
-                    controlsMapping.filterSlider.slider("option", "values", [range[0] * FILTER_RESOLUTION, range[1] * FILTER_RESOLUTION]);
-                    break;
-                */
                 case "filterRange":
 
                      controlsMapping.filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
@@ -710,7 +649,16 @@ define(function (require) {
 
                 case "baseLayerIndex":
 
-                    controlsMapping.baseLayerButtonSet.html( createBaseLayerButtons( controlsMapping.layerContent, layerState, controlsMapping ).children() );
+                    baseLayer = layerState.BASE_LAYERS[ layerState.getBaseLayerIndex() ];
+                    previousBaseLayer = layerState.BASE_LAYERS[ layerState.getPreviousBaseLayerIndex() ];
+
+                    if ( baseLayer.type !== previousBaseLayer.type ) {
+                        if ( baseLayer.type === "BlankBase" ) {
+                            controlsMapping.layerContent.animate({height: "0px", "padding-bottom": "0px"});
+                        } else {
+                            controlsMapping.layerContent.animate({height: "30px", "padding-bottom": "10px"});
+                        }
+                    }
                     break;
             }
         };
@@ -742,6 +690,7 @@ define(function (require) {
 
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStates.length; i += 1) {
+            console.log(sortedLayerStates[i].getId() + " : " + sortedLayerStates[i].getZIndex() );
             addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap, layerStateMap );
         }
 
