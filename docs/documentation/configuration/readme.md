@@ -27,19 +27,19 @@ To begin configuring your Tile Server and Tile Client:
 
 The Tiler Server in your new template relies on the following configuration files:
 
-- web.xml
-- tile.properties
-- Maps
-- Layers
+- [Web XML](#webxml)
+- [Tile Properties](#tileproperties)
+- [Maps](#maps)
+- [Layers](#layer)
 
-###<a name="webxml"></a>web.xml
+###<a name="webxml"></a>Web XML
 
 Edit the **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
 
 1. If you performed a custom tile generation, edit the guice-modules parameter to pass in any custom modules you created (e.g., your custom Tile Serialization Factory).
 2. If required, uncomment the relevant Spark lines in the guice-modules to enable live tiling or drill-through to raw data.
 		
-###<a name="tileproperties"></a>tile.properties
+###<a name="tileproperties"></a>Tile Properties
 
 Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies:
 
@@ -50,22 +50,22 @@ Edit the **tile.properties** file in *new-project/src/main/resources/*. This fil
 
 ###<a name="maps"></a>Maps
 
-The maps file describes the base map upon which your source data is projected. Two example maps are provided in the Tile Client Template (`tile-client-template/src/main/resources/maps`):
+The maps file describes the base map upon which your source data is projected. Two example map files are provided in the Tile Client Template (`tile-client-template/src/main/resources/maps`):
 
-- **crossplot-maps.json.example**: describes the parameters of an X/Y cross plot 
-- **geographic-maps.json.example**: describes the parameters of a world map
+- **crossplot-maps.json.example**: describes the parameters of an [X/Y cross plot](#cross-plot-maps) 
+- **geographic-maps.json.example**: describes the parameters of a [world map](#geographic-maps)
 
-Choose the appropriate map and remove the **.example** suffix from the filename.
+Choose the appropriate map type and remove the **.example** suffix from the filename. The following sections describe how to edit the **maps.json** for each map type.
 
 ####<a name="cross-plot-maps"></a>Cross Plot Maps
 
 The following groups of parameters should be configured for your custom cross plot map:
 
-- Metadata
-- PyramidConfig
-- AxisConfig
+- [Metadata](#cross-metadata)
+- [PyramidConfig](cross-pyramidconfig)
+- [AxisConfig](#cross-axisconfig)
 
-#####Metadata
+#####<a name="cross-metadata"></a>Metadata
 
 The Metadata parameters uniquely identify the base map.
 
@@ -74,7 +74,7 @@ The Metadata parameters uniquely identify the base map.
 "description": "An example map config for a crossplot-map.",
 ``` 
 
-#####PyramidConfig
+#####<a name="cross-pyramidconfig"></a>PyramidConfig
 
 The PyramidConfig parameters describe the minimum and maximum values on the X and Y axes in your cross plot. The values that you provide in this section must match the values in your data source. The `type` should always be set to *AreaOfInterest* for cross plot maps. 
 
@@ -88,7 +88,7 @@ The PyramidConfig parameters describe the minimum and maximum values on the X an
 	},
 ```
 
-#####AxisConfig
+#####<a name="cross-axisconfig"></a>AxisConfig
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
 
@@ -106,7 +106,7 @@ repeat
 intervalSpec
 
 	type
-		Type of interval along the axis "percentage" or "fixed".
+		Type of interval along the axis "percentage", "fixed" or "value".
 
 	increment
 		Value or percentage of units by which to increment the intervals.
@@ -135,13 +135,13 @@ unitSpec
 
 The following groups of parameters should be configured for your custom geographic map:
 
-- Metadata
-- PyramidConfig
-- MapConfig
-- baseLayer
-- AxisConfig
+- [Metadata](#geo-metadata)
+- [PyramidConfig](#geo-pyramidconfig)
+- [MapConfig](#geo-mapconfig)
+- [baseLayer](#geo-baselayer)
+- [AxisConfig](#geo-axisconfig)
 
-#####Metadata
+#####<a name="geo-metadata"></a>Metadata
 
 The Metadata parameters uniquely identify the base map.
 
@@ -150,11 +150,11 @@ The Metadata parameters uniquely identify the base map.
 "description": "An example map config for a geographic map.",
 ``` 
 
-#####PyramidConfig
+#####<a name="geo-pyramid"></a>PyramidConfig
 
 The PyramidConfig `type` parameter should always be set to *WebMercator* for geographic maps.
 
-#####MapConfig
+#####<a name="geo-mapconfig"></a>MapConfig
 
 The MapConfig parameters determine the allowed zoom level and extent of the geographic map.
 
@@ -176,11 +176,44 @@ maxExtent
 	The coordinates that correspond to the geographic boundaries of the map.
 ```
 
-#####BaseLayer
+#####<a name="geo-baselayer"></a>BaseLayer
 
+The BaseLayer parameters use map provider APIs to determine what features to include on the base map. In the following example, the Google Maps API is used to define the style of the base map.
 
+```json 
+"baseLayer" : {
+            "Google" : {
+                "options" : {
+                    "name" : "Google Black",
+                    "type" : "styled",
+                    "style" : [
+                        { "stylers" : [ { "invert_lightness" : true },
+                                        { "saturation" : -100 },
+                                        { "visibility" : "simplified" } ] },
+                        { "featureType" : "landscape.natural.landcover",
+                          "stylers" : [ { "visibility" : "off" } ] },
+                        { "featureType" : "road",
+                          "stylers" : [ { "visibility" : "on" } ] },
+                        { "featureType" : "landscape.man_made",
+                          "stylers" : [ { "visibility" : "off" } ] },
+                        { "featureType" : "transit",
+                          "stylers" : [ { "visibility" : "off" } ] },
+                        { "featureType" : "poi",
+                          "stylers" : [ { "visibility" : "off" } ] },
+                        { "featureType" : "administrative.country",
+                          "elementType" : "geometry",
+                          "stylers" : [ { "visibility" : "on" },
+                                        { "lightness" : -56 } ] },
+                        { "elementType" : "labels",
+                          "stylers" : [ { "lightness" : -46 },
+                                        { "visibility" : "on" } ] }
+                    ]
+                }
+            }
+        }
+```
 
-#####AxisConfig
+#####<a name="geo-axisconfig"></a>AxisConfig
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
 
@@ -193,12 +226,11 @@ position
 
 repeat
 	Indicates whether the map will repeat when the user scrolls off one end.
-	Most useful for geographic maps.
 
 intervalSpec
 
 	type
-		Type of interval along the axis "percentage" or "fixed".
+		Type of interval along the axis "percentage", "fixed " or "value".
 
 	increment
 		Value or percentage of units by which to increment the intervals.
@@ -223,33 +255,27 @@ unitSpec
 		Indicates whether the units can step down if they are below range.	
 ```
 
-##<a name="clientconfig"></a>Tile Client Configuration
+###<a name="layers"></a>Layers
 
+The layers file points to the tiles you created and indicates how they should be displayed on the base map. 
 
-###<a name="configaperture"></a>Aperture Configuration
+Two example layer files are provided in the Tile Client Template (`tile-client-template/src/main/resources/layers`):
 
-The Tile Client uses ApertureJS services and a client-side visualization library. To communicate with the Tile Server, the Tile Client must specify the Aperture services endpoints.  This configuration is specified in *new-project/src/main/resources/**aperture-config.json***. Edit the `aperture.io` setting specifying the `restEndpoint` to use the correct URL for the *new-project*.  For example:
+- **crossplot-layers.json.example**: describes the parameters of an X/Y cross plot layer
+- **geographic-layers.json.example**: describes the parameters of a world map layer
 
-```javascript
-"aperture.io" : {
-	"rpcEndpoint" : "%host%/aperture/rpc",
-	"restEndpoint" : "%host%/new-project/rest"
-```
+Choose the appropriate layer type and remove the **.example** suffix from the filename. The following section describe how to edit the **layers.json** for each layer type.
 
-###<a name="server-side-config"></a>Server-Side Tile Rendering Configuration
-
-The Tile Client allows configuration of multiple layers of tiles that can be overlaid in the plot or map viewer. These are defined in the *new-project/src/main/resources/layers/* directory. Note that two layer property file examples are provided: one for cross plot visualizations and one for geographic map visualizations.
-
-This configuration file allows specifying server-side and client-side layers. 
-
-Each server layer contains six editable fields to customize how the tiles are rendered:
-- Data
-- layer, type, transform, ramp, opacity, renderer. A detailed description of each parameter is found below.
-
-####<a name="layer"></a>Layer
-
-The layer field is used to point to specific tiles which are displayed on the map. For example if tiles are stored in */data/tiles/twitter.lat.lon* the layers field should be set to "twitter.lat.lon". If HBase is being used then layer should be set to the table name in HBase that contains the tileset. 
+Note that maps with multiple layers can be created by specifying multiple layer descriptions in the *children* section of the **layers.json** file. 
 					
+####Metadata
+
+####Pyramid
+
+####Data
+
+####Renderers
+
 ####<a name="type"></a>Type
 
 Currently "tile" is the only option supported.
@@ -318,32 +344,29 @@ This option defines which renderer the server should use to render tiles. The re
 - 'doublestatistics': Renders tile's total hit and % coverage as text to the tile
 - 'textscore': Renders to an image showing scored words, with bars based on their score
 
-####<a name="multiple"></a>Multiple Layers
 
-Maps with multiple layers can be created by specifying multiple layer descriptions in *layers.json*. An example is shown below.
+##<a name="clientconfig"></a>Tile Client Configuration
 
-```JavaScript
-{
-	"ServerLayers": [
-		{
-            "layer": "my-layer1",
-            "type": "tile",
-            "transform": "linear",
-            "ramp": "ware",
-            "opacity": 0.85,
-            "renderer": "default"
-        },
-        {
-            "layer": "my-layer2",
-            "type": "tile",
-            "transform": "linear",
-            "ramp": "ware",
-            "opacity": 0.85,
-            "renderer": "textscore"
-        }
-    ]
-}
+
+###<a name="configaperture"></a>Aperture Configuration
+
+The Tile Client uses ApertureJS services and a client-side visualization library. To communicate with the Tile Server, the Tile Client must specify the Aperture services endpoints.  This configuration is specified in *new-project/src/main/resources/**aperture-config.json***. Edit the `aperture.io` setting specifying the `restEndpoint` to use the correct URL for the *new-project*.  For example:
+
+```javascript
+"aperture.io" : {
+	"rpcEndpoint" : "%host%/aperture/rpc",
+	"restEndpoint" : "%host%/new-project/rest"
 ```
+
+###<a name="server-side-config"></a>Server-Side Tile Rendering Configuration
+
+The Tile Client allows configuration of multiple layers of tiles that can be overlaid in the plot or map viewer. These are defined in the *new-project/src/main/resources/layers/* directory. Note that two layer property file examples are provided: one for cross plot visualizations and one for geographic map visualizations.
+
+This configuration file allows specifying server-side and client-side layers. 
+
+Each server layer contains six editable fields to customize how the tiles are rendered:
+- Data
+- layer, type, transform, ramp, opacity, renderer. A detailed description of each parameter is found below.
 
 ###<a name="client-side-rendering"></a>Client-Side Tile Rendering Configuration
 
