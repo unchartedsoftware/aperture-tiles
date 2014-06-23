@@ -8,23 +8,23 @@ layout: default
 Tile Generation
 ===============
 
-Aperture Tiles provides a framework for processing your large-scale data through the Apache Spark engine to create a set of tiles that aggregate your data at various levels in a pyramid structure. 
+Aperture Tiles provides a distributed framework for processing your large-scale data built on the Apache Spark engine to create a set of tiles that summarize and aggregate your data at various levels in a pyramid structure. 
 
-At the highest level in the tile set pyramid, there is only a single tile. At each subsequent level, there are 2^(z-1) tiles, where z is the level number starting at 1 for the highest level. At each level, the tiles are laid out row wise across the base map or plot, starting at the upper left. 
+At the highest level in the tile set pyramid, there is only a single tile summarizing all data. At each subsequent level, there are 2^(z-1) tiles, where z is the level number starting at 1 for the highest level. At each level, the tiles are laid out row wise across the base map or plot, starting at the upper left. Each tile summarizes the data located in that particular tile.
 
 ![Tile Layout](../../img/tile-layout.png)
 
-Each tile is an AVRO record object containing an array of values(typically 256 x 256). Each grid element in the array contains an aggregation of all the data points that fall within it.
+Each tile is an AVRO record object containing an array of values (typically 256 x 256). Each bin element in the array contains an aggregation of all the data points that fall within it.
 
 ![Tile Grid](../../img/tile-grid.png)
 
 There are three ways to turn your source data into a set of AVRO tiles:
 
-- Using the built-in CSVBinner tool, which can aggregate numeric data by:
+- Using the built-in CSVBinner tool, which can produce tiles that aggregate numeric data by:
 	- Summation
 	- Min and max ranges
 	- Time series
-	- Top keywords
+	- Top keywords 
 - Creating custom tile-based analytics using the *RDDBinner* and *ObjectifiedBinner* APIs.
 - Using third-party tools, provided they adhere to the Aperture Tiles AVRO schema (documentation coming soon).
 
@@ -45,9 +45,9 @@ See the [Installation documentation](../setup) for full details on the required 
 
 The tile generation process requires certain Aperture Tiles .jar files to be installed in your local Maven repository. Make sure you have correctly installed the Aperture Tiles project as outlined in the [Installation documentation](../setup).
 
-###<a name="spark-config"></a>Spark Configuration
+###<a name="spark-config"></a>Apache Spark Configuration
 
-Spark determines which version of Hadoop to use by looking in *\$SPARK\_HOME/project/**SparkBuild.scala***. Instructions for what to change are contained therein.
+Apache Spark determines which version of Hadoop to use by looking in *\$SPARK\_HOME/project/**SparkBuild.scala***. Instructions for what to change are contained therein.
 
 ####<a name="spark-script"></a>spark-run Script
 
@@ -78,7 +78,7 @@ The Aperture Tiles project includes a CSVBinner tool designed to process numeric
 
 
 
-Run the tiling generation using the **spark-run** script by using a command similar to:
+Run the tile generation using the **spark-run** script by using a command similar to:
 
 ```
 spark-run com.oculusinfo.tilegen.examples.apps.CSVBinner -d /data/twitter/dataset-base.bd /data/twitter/dataset.lon.lat.bd

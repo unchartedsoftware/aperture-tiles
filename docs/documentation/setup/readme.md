@@ -11,7 +11,7 @@ Installation and Compilation
 The instructions on this page are intended for developers who want to install the Aperture Tiles source code and build their own custom projects. For quick examples of the capabilities of Aperture Tiles:
 
 - See the [Demos](../../demos/) page to access fully functional demonstrations of Aperture Tiles from your web browser.
-- See the [Download](../../download) page to access a set of streamlined source code packages designed to help you understand the high-level process of creating an Aperture Tiles. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
+- See the [Download](../../download) page to access a set of streamlined source code packages designed to help you understand the high-level process of creating an Aperture Tiles application. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
 
 ##<a name="prerequisites"></a>Prerequisites
 
@@ -51,7 +51,7 @@ Set the following environment variables:
 
 ###<a name="project-structure"></a>Project Structure
 
-The Aperture Tiles is made up of eight sub-projects:
+Aperture Tiles is made up of eight sub-projects:
 
 -   **math-utilities** - Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.
 -   **geometric-utilities** - Advanced math utilities for processing geometry and geographic problems.
@@ -68,9 +68,9 @@ The Aperture Tiles is made up of eight sub-projects:
 
 ####<a name="hbase-version"></a>Specifying Your Hadoop/HBase Version
 
-Prior to building the project, you specify the version of Hadoop and/or HBase you installed (if applicable). Edit the `<properties>` section of the *aperture-tiles/pom.xml* build file to select the valid settings for your version. See the comments in the file for more details.
+Prior to building the project, you need to specify the version of Hadoop and/or HBase installed (if applicable). Edit the `<properties>` section of the *aperture-tiles/pom.xml* build file to select the valid settings for your version. See the comments in the file for more details.
  
-If you plan to run only Spark in standalone mode, you can skip this step.
+If you plan to run Spark only in standalone mode, you can skip this step.
 
 ####<a name="compiling"></a>Compiling the Aperture Tiles Projects
 

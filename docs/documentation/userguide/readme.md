@@ -9,13 +9,13 @@ layout: default
 
 This page is designed for analysts who want to understand how to navigate the Aperture Tiles user interface and use the application to investigate and assess their own data sources.
 
-The look and feel of each Aperture Tiles project is highly dependent on the source data to which it is configured. While the topics in this help system refer to the interface for one specific data set (66,996,907 Twitter messages in South America from February to April, 2014), many different configurations are available for the display of maps, layers and aggregated data points. Such customization options are noted where applicable.
+The look and feel of each Aperture Tiles application is highly dependent on the source data to which it is configured. While the topics in this help system refer to the interface for one specific data set (66,996,907 Twitter messages in South America from February to April, 2014), many different configurations are available for the display of maps, layers and aggregated data points. Such customization options are noted where applicable.
 
-Please note that fully functional example Aperture Tiles projects are available on the the [Demos](../../demos/) page. Copies of these demos are also available for your use in the Aperture Tiles source code.
+Please note that fully functional example Aperture Tiles applications are available on the the [Demos](../../demos/) page. Copies of these demos are also available for your use in the Aperture Tiles source code.
 
 ##<a name="twitter-data"></a>Twitter Latin American Topic Summarization Data
 
-The example project described in this User Guide illustrates a heatmap of Twitter messages originating in South American from February to April, 2014. Each tile in the project contains a carousel that summarizes and overlays the top words used in the Tweets covered by that tile.
+The example application described in this User Guide illustrates a heatmap of Twitter messages originating in South American from February to April, 2014. Each tile in the project contains a carousel that summarizes and overlays the top words used in the Tweets covered by that tile. 
 
 ![Twitter South America](../../img/twitter-sa.png)
 
@@ -33,13 +33,13 @@ The user interface for a typical Aperture Tiles project contains the following c
 
 The map is the canvas upon which your custom data is projected. Aperture tiles supports both geographic and cross plot maps. The map is automatically scaled to show more or less detail depending on the zoom level.
 
-The base map for the Twitter Latin American data is a Google Maps image that displays cities and towns, international borders, major roadways, bodies of water and basic elevation data. The project supports nine zoom levels across which varying levels of map detail are displayed. 
+The base map for the Twitter South American data is a Google Maps layer that displays cities and towns, international borders, major roadways, bodies of water and basic elevation data. The project supports nine zoom levels across which varying levels of map detail are displayed. 
 
 ###<a name="int-carousel"></a>Tile Carousel
 
-Each tile can contain a carousel with multiple pages that summarize the aggregate data contained in each tile. As they are highly specific to the source data, each Tile Carousel implementation generally requires custom coding.
+Each tile can contain a carousel with multiple views that summarize the aggregate data contained in each tile. As they are highly specific to the source data, each Tile Carousel implementation generally requires custom coding.
 
-In the Twitter Latin America project, each tile contains a carousel that lets you cycle through:
+In the Twitter South America application, each tile contains a carousel that lets you cycle through:
 
 - A word cloud that shows the top 10 topics mentioned in Tweets covered by the tile. The larger the word, the more times it was used.
 	<br/>![Tile Carousel Word Cloud](../../img/carousel-cloud.png)
@@ -68,9 +68,9 @@ The X and Y axes are labelled to describe the units in your base map. Click eith
 
 ###<a name="int-desc"></a>Description
 
-The Description section is an expandable dialog that provide an overview of your Aperture Tiles visual analytic.
+The Description section is an expandable dialog that provides a summary description of your Aperture Tiles application.
 
-It can also be configured to contain basic controls. In the Twitter Latin America project for example, the Description contains a drop-down list that lets you quickly jump to any of South America's major cities.
+It can also be configured to contain basic controls. In the Twitter Topics application for example, the Description contains a drop-down list that lets you quickly jump to any of South America's major cities.
 
 ![Description](../../img/description-expanded.png)
 
@@ -84,7 +84,7 @@ The Controls section is an expandable dialog that contains configurable settings
 
 ![Controls](../../img/controls.png)
 
-You can also use the Controls to change the color scheme (ramp) of your layers by clicking the **Settings** button.
+You can also use the Controls to change the color scheme (ramp) of your heatmap layers by clicking the **Settings** button.
 
 ![Layer Settings](../../img/controls-settings.png)
 
