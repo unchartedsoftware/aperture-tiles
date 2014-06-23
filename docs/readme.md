@@ -15,7 +15,7 @@ There are several classes of user that need this overview of "big data" in order
 - Visualization Designers: must select the appropriate visual metaphors and interactions to represent the data.
 - Analysts: need to understand the data in order to know which datasets to select, and which tools to use to approach a given analytic question.
 
-There is a clear need for new, powerful tools to aid these types of users in exploring, characterizing, and analyzing 'big data'. Aperture Tiles provides this aid with browser-based interactive visual analytics that scale to billions of data points (or more).
+There is a clear need for new, powerful tools to aid these types of users in exploring, characterizing, and analyzing 'big data'. Aperture Tiles provides this aid with browser-based interactive visual analytics that scale to data sets with billions or more of data points.
 
 ### Web Tile Rendering for Big Data Visual Analytics
 
@@ -23,10 +23,9 @@ The widespread adoption of web-based maps provides a familiar set of interaction
 
 Tile-based geographic maps provide a solid framework to construct large scale visualization:
 
-They feature:
 - continuous data along two dimensions
-- use of layering and legends
-- use of axes and scales. 
+- use of data layering and legends
+- use of axes and scales
 
 Web delivery of maps using tiled rendering has benefitted from years of work. With widespread use, map interactions have become familiar and make exploration of large data spaces easy and even enjoyable. By using this familiar interaction method, Aperture Tiles can provide a big data exploration experience that is just as easy and enjoyable.
 
@@ -36,13 +35,13 @@ Tile-based visual analytics (TBVA) is a technique that divides the data into eve
 
 The Aperture Tiles services and API are designed to be extensible, allowing a broad community to leverage and extend its capabilities in creative ways. The extensible AVRO tile format allows generation of tiles by third parties, which can be served using the Aperture Tiles server. Aperture Tiles leverages open standards such as [Tile Map Services (TMS)](http://en.wikipedia.org/wiki/Tile_Map_Service) that are widely supported by web mapping clients and servers.
 
-Aperture Tile generation service builds on the [Apache Spark](http://spark.incubator.apache.org/) and [Hadoop](http://hadoop.apache.org/) cluster computing systems, providing the ability to scale up to billions (or more) data points. Tile sets involving billions of tiles are efficiently handled using [Apache Hive](http://hive.apache.org/) for distributed data storage.
+Aperture Tile generation service builds on the [Apache Spark](http://spark.incubator.apache.org/) and [Hadoop](http://hadoop.apache.org/) cluster computing systems, providing the ability to scale up to billions (or more) data points. Tile sets involving billions of tiles are efficiently handled using [Apache HBase](http://hbase.apache.org/) for distributed data storage.
 
 Aperture Tiles is under ongoing development and is freely available for download under [The MIT License](http://www.opensource.org/licenses/MIT) open source licensing. Unlike GNU General Public License (GPL), MIT freely permits distribution of derivative work under proprietary license, without requiring the release of source code.
 
 ###Interested in Learning More?
 
 - [Tour](/tour/overview/): Take our tour to learn more about the methodology behind Aperture Tiles.
-- [Documentation](/documentation/quickstart/): Learn how to install, implement, and test your Aperture Tiles visual analytic.
-	- [Quick Start](/documentation/quickstart/): our Julia data set provides an example of the process of displaying a single dataset using Aperture Tiles.
-- [Download](download/): Visit our GitHub repository to download the Aperture Tiles components.
+- [Documentation](/documentation/quickstart/): Learn how to install, implement, and test your Aperture Tiles applications.
+	- [Quick Start](/documentation/quickstart/): our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
+- [Download](download/): For details on downloading pre-packaged versions or aquiring the Aperture Tiles source code visit our download page.
