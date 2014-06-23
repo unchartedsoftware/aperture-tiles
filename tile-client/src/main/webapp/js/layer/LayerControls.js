@@ -388,9 +388,13 @@ define(function (require) {
 
         $layerControlRoot.draggable({
             "revert": function(valid) {
+
+                var $that = $(this);
                 if( !valid ) {
                     // dropped in an invalid location
-                    $(this).css({'box-shadow':"none", "z-index": 0});
+                    setTimeout( function() {
+                        $that.css({'box-shadow':"none", "z-index": 0});
+                    }, 500);
                 }
                 return !valid;
             },
@@ -403,7 +407,9 @@ define(function (require) {
         });
 
         $layerControlRoot.droppable({
-            drop: function(event, ui) {
+            "accept": ".layer-controls-"+layerState.domain,
+            "hoverClass": "layer-drag-hover",
+            "drop": function(event, ui) {
 
                 var $draggedLayerRoot = ui.draggable,
                     $droppedLayerRoot = $(this),
@@ -417,36 +423,29 @@ define(function (require) {
                     endPosition = $droppedLayerRoot.position(),
                     otherZ, key;
 
-                if ( dragLayerState.domain !== dropLayerState.domain ) {
-                    $draggedLayerRoot.animate({
-                        top: 0,
-                        left: 0
-                    }, {
-                        complete: function() {
-                            $draggedLayerRoot.css({'box-shadow':"none", "z-index": 0});
-                        }
-                    });
-                    return;
-                }
-
                 // remove all dragability until this transition finishes
                 for ( key in controlsMap ) {
                     if ( controlsMap.hasOwnProperty(key) ) {
                         controlsMap[key].layerRoot.css('pointer-events', 'none');
                     }
                 }
-
+                // give pop-up effect to droppable
+                $droppedLayerRoot.css({'box-shadow':"0 5px 15px #000", "z-index": 999});
+                // animate swap
                 $.when( $draggedLayerRoot.animate({
+                    // move dragged layer to its new position
                     top: endPosition.top - dragStartPosition.top,
                     left: endPosition.left - dragStartPosition.left
-                }, 600 ),
+                }),
                 $droppedLayerRoot.animate({
+                    // move dropped layer to its new position
                     top: dragStartPosition.top - dropStartPosition.top,
                     left: dragStartPosition.left - dropStartPosition.left
-                }, 600)).done( function () {
+                })).done( function () {
+                    // once animation is complete, re-do the html
                     replaceLayers( sortedLayers, $layerControlsContainer, controlsMap, layerStateMap );
                 });
-
+                // swap z-indexes
                 otherZ = dropLayerState.getZIndex();
                 dropLayerState.setZIndex( dragLayerState.getZIndex() );
                 dragLayerState.setZIndex(otherZ);
@@ -483,12 +482,11 @@ define(function (require) {
 
             if ( baseLayer.type === "BlankBase" && isActiveBaseLayer ) {
                 //$layerContent.css( 'display', 'none' );
-                $layerContent.animate({height: '0px'});
+                $layerContent.animate({height: '0px', "padding-bottom": "0px"});
             } else if ( isActiveBaseLayer ) {
                 //$layerContent.css( 'display', 'block' );
-                $layerContent.animate({ height: '32px' });
+                $layerContent.animate({ height: '32px', "padding-bottom": "10px" });
             }
-
             // create radio button
             $radioButton = $( '<input type="radio" class="baselayer-radio-button" name="baselayer-radio-button" id="'+(baseLayer.options.name+i)+'"'
                             + 'value="' + i + '"' + ( isActiveBaseLayer ? 'checked>' : '>' ) );
@@ -528,7 +526,7 @@ define(function (require) {
         controlsMapping = controlsMap[layerStateId];
 
         // create layer root
-        $layerControlRoot = $('<div id="layer-controls-' + layerStateId + '" class="layer-controls-layer"></div>');
+        $layerControlRoot = $('<div id="layer-controls-' + layerStateId + '" class="layer-controls-layer layer-controls-'+layerState.domain+'"></div>');
         $layerControlsContainer.append( $layerControlRoot );
         controlsMapping.layerRoot = $layerControlRoot;
         // add layer dragging / dropping callbacks to swap layer z-index
@@ -565,8 +563,6 @@ define(function (require) {
         if( layerState.domain === "base" && layerState.BASE_LAYERS.length > 1 ) {
             $layerControlTitleBar.append( createBaseLayerButtons( $layerContent, layerState, controlsMapping) );
         }
-
-
     };
 
     /**

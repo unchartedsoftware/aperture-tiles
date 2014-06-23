@@ -80,7 +80,11 @@ define(function (require) {
 
                         tilekey = that.layerState.getTileFocus();
                         previousTilekey = that.layerState.getPreviousTileFocus();
-                        $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
+                        // set this translate label visible, if layer is enabled
+                        if ( that.layerState.isEnabled() ) {
+                            $('#'+that.getTranslateLabelId( tilekey ) ).css('visibility', 'visible');
+                        }
+                        // set previous tile translate label invisible
                         if ( previousTilekey ) {
                             $('#'+that.getTranslateLabelId( previousTilekey ) ).css('visibility', 'hidden');
                         }
