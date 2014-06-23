@@ -123,7 +123,7 @@ public class LayerServiceImpl implements LayerService {
         } catch (IOException e) {
             LOGGER.error("Couldn't read metadata: {}", layerId, e);
         }
-        return new PyramidMetaData(new JSONObject());
+        return null;
     }
 
     /*
