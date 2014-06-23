@@ -415,9 +415,9 @@ define(function (require) {
                     dragStartPosition = controlsMapping.startPosition,
                     dropStartPosition = $droppedLayerRoot.position(),
                     endPosition = $droppedLayerRoot.position(),
-                    otherZ;
+                    otherZ, key;
 
-                if ( controlsMap.swappingInProgress || dragLayerState.domain !== dropLayerState.domain ) {
+                if ( dragLayerState.domain !== dropLayerState.domain ) {
                     $draggedLayerRoot.animate({
                         top: 0,
                         left: 0
@@ -429,7 +429,13 @@ define(function (require) {
                     return;
                 }
 
-                controlsMap.swappingInProgress = true;
+                // remove all dragability until this transition finishes
+                for ( key in controlsMap ) {
+                    if ( controlsMap.hasOwnProperty(key) ) {
+                        controlsMap[key].layerRoot.css('pointer-events', 'none');
+                    }
+                }
+
                 $.when( $draggedLayerRoot.animate({
                     top: endPosition.top - dragStartPosition.top,
                     left: endPosition.left - dragStartPosition.left
@@ -439,7 +445,6 @@ define(function (require) {
                     left: dragStartPosition.left - dropStartPosition.left
                 }, 600)).done( function () {
                     replaceLayers( sortedLayers, $layerControlsContainer, controlsMap, layerStateMap );
-                    delete controlsMap.swappingInProgress;
                 });
 
                 otherZ = dropLayerState.getZIndex();
