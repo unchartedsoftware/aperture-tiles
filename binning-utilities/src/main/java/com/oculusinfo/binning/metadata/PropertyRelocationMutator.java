@@ -26,8 +26,6 @@ package com.oculusinfo.binning.metadata;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
-
 public class PropertyRelocationMutator extends JsonMutator {
 	private String[] _fromPath;
 	private String[] _toPath;
@@ -40,14 +38,15 @@ public class PropertyRelocationMutator extends JsonMutator {
 
 	@Override
 	public void mutateJson (JSONObject json) throws JSONException {
-		List<JSONObject> fromTree = getTree(json, _fromPath, 0, false);
-		int size = fromTree.size();
-		if (_fromPath.length == size && fromTree.get(size-1).has(_fromPath[size-1])) {
-			JSONObject from = fromTree.get(size-1);
-			List<JSONObject> toTree = getTree(json, _toPath, 0, true);
-			toTree.get(toTree.size()-1).put(_toPath[_toPath.length-1],
-			                                from.remove(_fromPath[size-1]));
-			cleanTree(fromTree, _fromPath);
+		for (LocationInformation fromTree: getTree(json, _fromPath, null, 0, false)) {
+    		int size = fromTree.size();
+    		if (_fromPath.length == size && fromTree.get(size-1).has(_fromPath[size-1])) {
+    			JSONObject from = fromTree.get(size-1);
+    			LocationInformation toTree = getTree(json, _toPath, fromTree._matches, 0, true).get(0);
+    			toTree.get(toTree.size()-1).put(_toPath[_toPath.length-1],
+    			                                from.remove(_fromPath[size-1]));
+    			cleanTree(fromTree, _fromPath);
+    		}
 		}
 	}
 
