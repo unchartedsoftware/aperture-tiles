@@ -81,9 +81,9 @@
 
 .layer-toggle {
     width: 15px;
-    padding-right:14px;
+    padding-right:18px;
     float: left;
-    padding-top: 14px;
+    padding-top: 6px;
 }
 
 .slider-label {
@@ -137,10 +137,20 @@
     cursor:pointer;
 }
 
+#layer-controls input {
+    -webkit-filter: invert(100%);
+    position:relative;
+    width: 18px;
+    height: 18px;
+    bottom: -4px;
+}
+
 #layer-controls input + label:hover {
     cursor:pointer;
 }
 
+
+/*
 #layer-controls input {
     display:none;
 }
@@ -171,6 +181,7 @@
     padding: 0 0 0 0px;
     margin: 0 5px 0 5px;
 }
+*/
 
 
 .filter-slider {

@@ -54,14 +54,9 @@ define(function (require) {
 
         init: function( spec, map ) {
 
-            this._super( spec, map );
-
             var that = this;
-
+            this._super( spec, map );
             this.service = new AnnotationService( spec.layer );
-            this.groups = spec.groups;
-            this.accessibility = spec.accessibility;
-            this.filter = spec.filter;
             this.pendingTiles = {};
             this.tiles = [];
 
@@ -94,7 +89,7 @@ define(function (require) {
                 return {
                     x: pos.x,
                     y: pos.y,
-                    group: that.groups[ Math.floor( that.groups.length*Math.random() ) ],
+                    group: that.layerSpec.groups[ Math.floor( that.layerSpec.groups.length*Math.random() ) ],
                     range: {
                         min: 0,
                         max: that.map.getZoom()
@@ -106,6 +101,11 @@ define(function (require) {
                 };
             }
 
+            function destroyDetails() {
+
+                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
+                detailsIsOpen = false;
+            }
 
             function createDetailsContent( $details, annotation ) {
 
@@ -183,13 +183,6 @@ define(function (require) {
 
             }
 
-
-            function destroyDetails() {
-
-                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
-                detailsIsOpen = false;
-            }
-
             function createDetailsElement( bin, pos ) {
 
                 var $details;
@@ -223,14 +216,15 @@ define(function (require) {
                 detailsIsOpen = true;
             }
 
+
             function createAnnotation() {
 
-                if (detailsIsOpen) {
+                if ( detailsIsOpen ) {
                     destroyDetails();
                     return;
                 }
 
-                if ( !that.accessibility.write ) {
+                if ( !that.layerSpec.accessibility.write ) {
                     return;
                 }
 
@@ -294,7 +288,7 @@ define(function (require) {
 
                         $aggregate = $(html);
 
-                        if (bin.length === 1 && that.accessibility.modify) {
+                        if (bin.length === 1 && that.layerSpec.accessibility.modify) {
 
                             $aggregate.draggable({
 
@@ -394,7 +388,7 @@ define(function (require) {
                 defunctTiles = {},
                 i, tile, tilekey;
 
-            if ( !this.accessibility.read ) {
+            if ( !this.layerSpec.accessibility.read ) {
                 return;
             }
 
