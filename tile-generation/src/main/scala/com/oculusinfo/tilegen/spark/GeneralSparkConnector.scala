@@ -31,7 +31,7 @@ import org.apache.spark.SparkConf
 class GeneralSparkConnector (master: String,
                              sparkHome: String,
                              user: Option[String],
-                             jars: Seq[Object] = SparkConnector.getDefaultLibrariesFromMaven,
+                             jars: Seq[Object] = SparkConnector.getLibrariesFromClasspath,
                              sparkArgs: Map[String, String])
 		extends SparkConnector(jars)
 {

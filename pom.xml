@@ -131,10 +131,10 @@
     <module>math-utilities</module>
     <module>binning-utilities</module>
     <module>tile-generation</module>
-	<module>tile-generation-assembly</module>
     <module>tile-service</module>
     <module>tile-client</module>
     <module>tile-examples</module>
     <module>tile-client-template</module>
+    <module>tile-packaging</module>
   </modules>
 </project>
