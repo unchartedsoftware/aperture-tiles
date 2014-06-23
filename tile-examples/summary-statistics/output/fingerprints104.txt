@@ -1,5 +1,0 @@
-
-Field: fp
-Fieldtype: Qualitative
-Running tests: none
-
