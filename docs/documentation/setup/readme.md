@@ -19,7 +19,7 @@ This project has the following prerequisites:
 
 - **Operating System**: Linux or OS X.
 - **Languages**:
-	-   [**Scala**](http://www.scala-lang.org/) version 2.9.3
+	-   [**Scala**](http://www.scala-lang.org/) version 2.10.3
 	-   [**Java**](http://www.java.com/) (JDK version 1.7+)
 - **Cluster Computing**: To facilitate large tiling jobs, Aperture Tiles supports a cluster computing framework. Note that if you only intend to run small jobs (data sets that fit in the memory of a single machine) or are willing to take a long time to complete them, you can skip the Hadoop/HDFS/HBase installation and run Spark on a single node and read/write to your local file system.
 	-   **Hadoop/HDFS** (Optional) - Choose your preferred flavor  ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html), [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop), [HortonWorks](http://hortonworks.com/), etc.). Use in conjunction with HBase.

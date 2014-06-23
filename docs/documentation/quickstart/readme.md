@@ -48,10 +48,12 @@ Set the following environment variables:
 
 ###<a name="julia-set-data-generation"></a>Julia Set Data Generation
 
-For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you must use the provided Tile Generator utility to create the Julia set data.
+For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
 1. Extract the contents of the [tile-generator.zip](../../download/tile-generator.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
-2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. The rest of the flags pass in the correct classes, data set limits, number of output files (5) and total number of data points (10M) in the Julia set.
+2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. Note that you may need to create this directory in your local file system or HDFS beforehand.
+	
+	The rest of the flags pass in the correct classes, data set limits, number of output files (5) and total number of data points (10M) in the Julia set.
 
 ```
 ./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
@@ -102,7 +104,7 @@ oculus.binning.source.location
 
 ####<a name="hbase-connection"></a>HBase Connection Details (Optional)
 
-These properties should only be included if you are using Hadoop/HDFS and HBase.
+These properties should only be included if you are using Hadoop/HDFS and HBase. Note that these optional components must be used if you want to run the tile generation job on a multi-computer cluster. 
 
 ```
 hbase.zookeeper.quorum
@@ -132,8 +134,10 @@ When the tile generation is complete, you should have a folder containing six su
 Note that for this example, the tile folder will be named `julia.x.y.v`. The output folder is always named using the the following values in the **julia.bd** file:
 
 ```
-<oculus.binning.name>.<oculus.binning.xField>.<oculus.binning.yField>.<oculus.binning.valueField>
+[<oculus.binning.prefix>.]<oculus.binning.name>.<oculus.binning.xField>.<oculus.binning.yField>.<oculus.binning.valueField>
 ``` 
+
+Note that the `oculus.binning.prefix` value is only included if you set it in the property file. This is useful if you want to run a second tile generation without overwriting the already generated version.
 
 ##<a name="tile-server-configuration"></a>Tile Server Configuration
 
@@ -145,8 +149,8 @@ For typical Aperture Tiles projects, you will need to edit the **web.xml**  and 
 
 To configure the Tile Client application to display the AVRO files containing your source data, you must edit two types of configuration files:
 
-- Map Properties (`aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/maps`), which specifies the attributes of the base map or plot on which your data is displayed
-- Layer Properties (`aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/layers`), each of which specifies the attributes of a single layer that can be overlaid on your base map or plot
+- Map Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/maps*), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
+- Layer Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/layers*), which specifies the layers that can be overlaid on your base map or plot.
 
 Both files are available in the [tile-client-template.zip](../../download/Tile Client Template) utility. Extract the contents of the file to access them.
 
@@ -171,12 +175,13 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 To edit the layer properties for you project:
 
 1. Access the **crossplot-layers.json.example** file in `tile-client-template/WEB-INF/classes/layers`, remove the **.example** extension and open the file for editing.
-2. Edit the `id` property so it matches the name given to the folder in which your AVRO tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
+2. Edit the `id` property so it matches the name given to the directory (file system or HDFS) in which your AVRO tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
 3. In the `pyramid` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Make sure the values you specify here match the range you specified in the map properties.
 4. If your AVRO tiles are saved to your local machine, add or edit the following values in the `data` section:
 	- `type`: Enter **file**
-	- `root.path`: Specify the path to which you generated the AVRO tiles.  
+	- `root.path`: Specify the *root* path to which you generated the AVRO tiles. Note that the `id` you specified in step 2 is the leaf folder that contains the AVRO tiles. Set the `root.path` to the folder above that (e.g., */data/tiles/*).  
 5. If your AVRO tiles are saved to HBase, add or edit the following values in the `data` section:
+	- `type`: Set the `hbase`
 	- `hbase.zookeeper.quorum`: Zookeeper quorum location needed 
    to connect to HBase. 
 	- `hbase.zookeeper.port`: Port through which to connect 
