@@ -109,7 +109,8 @@ define(function (require) {
 
             function createDetailsContent( $details, annotation ) {
 
-                var html = "";
+                var html = "",
+                    $closeButton;
 
                 // remove any previous view
                 $( "."+ANNOTATION_DETAILS_CONTENT_CLASS ).remove();
@@ -128,7 +129,13 @@ define(function (require) {
                      +    '</div>'
                      + '</div>';
 
+                // create close button
+                $closeButton = $('<div class="'+ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS+'"></div>');
+                $closeButton.click( destroyDetails );
+                // append content
                 $details.append( html );
+                // add close button last to overlap
+                $details.append( $closeButton );
             }
 
             function createDetailsCarouselUI( $details, bin ) {
@@ -185,23 +192,18 @@ define(function (require) {
 
             function createDetailsElement( bin, pos ) {
 
-                var $details, $closeButton;
+                var $details;
 
                 // remove any previous details
                 $( "."+ANNOTATION_DETAILS_CLASS ).remove();
                 // create details div
                 $details = $('<div class="'+ANNOTATION_DETAILS_CLASS+'"></div>');
-                // create close button
-                $closeButton = $('<div class="'+ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS+'"></div>');
-                $closeButton.click( destroyDetails );
                 // create display for first annotation
                 createDetailsContent( $details, bin[0], bin.length > 1 );
                 // if more than one annotation, create carousel ui
                 if ( bin.length > 1 ) {
                     createDetailsCarouselUI( $details, bin );
                 }
-                // add close button last to overlap
-                $details.append( $closeButton );
                 // make details draggable and resizable
                 $details.draggable().resizable({
                     minHeight: 128,
