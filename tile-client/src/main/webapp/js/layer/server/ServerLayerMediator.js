@@ -165,7 +165,7 @@ define(function (require) {
                 });
 
                 // set z index here so callback is executed
-                layerState.setZIndex( i );
+                layerState.setZIndex( i+1 );
 
                 // Request ramp image from server.
                 requestRampImage( layerState, layer.getLayerInfo(), 0 );

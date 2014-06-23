@@ -389,7 +389,7 @@ define(function (require) {
         $layerControlRoot.draggable({
             "revert": function(valid) {
                 if( !valid ) {
-                    //Dropped in an invalid location
+                    // dropped in an invalid location
                     $(this).css({'box-shadow':"none", "z-index": 0});
                 }
                 return !valid;
