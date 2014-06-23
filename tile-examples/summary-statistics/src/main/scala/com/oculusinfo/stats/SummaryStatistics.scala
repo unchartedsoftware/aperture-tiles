@@ -34,7 +34,6 @@ import com.oculusinfo.stats.qualitative.Frequency
 import com.oculusinfo.stats.util.analyze
 import com.oculusinfo.stats.util.JSONwriter
 import com.oculusinfo.stats.util.Parsing
-import com.oculusinfo.stats.customAnalytics.Fingerprints
 import org.apache.spark.AccumulableParam
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkConf
