@@ -10,8 +10,6 @@ Aperture Tiles Components
 
 Aperture-Tiles implements a data flow which breaks the visualization process into three distinct components: tile generation, tile server, and tile client. This flexible framework allows third parties to leverage or replace the pieces of Aperture Tiles as they see fit. For example, using Aperture Tiles AVRO tile data format third parties can produce their own tile data using their own analytics. Using the Tile Server standards based [Tile Map Services](http://en.wikipedia.org/wiki/Tile_Map_Service) third party tile clients can integrate Aperture Tiles.
 
-![Aperture Tiles Architectural Overview](../../img/arch-overview.png)
-
 Distributed Tile Generation
 ---------------------------
 
