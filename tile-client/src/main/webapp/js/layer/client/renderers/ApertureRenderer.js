@@ -38,12 +38,16 @@ define(function (require) {
 
         init: function( map ) {
 
+            var that = this;
             this._super( map );
             this.opacity = 1.0;
             this.visibility = true;
             this.nodeLayer = {};
             this.X_CENTRE_OFFSET = 128;
             this.Y_CENTRE_OFFSET = 128;
+            this.map.on('zoomend', function() {
+                that.redraw( [] );
+            });
         },
 
         setOpacity: function( opacity ) {
