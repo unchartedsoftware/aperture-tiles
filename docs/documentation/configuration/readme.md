@@ -41,12 +41,13 @@ Edit the **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
 		
 ###<a name="tileproperties"></a>Tile Properties
 
-Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies:
+Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as:
 
 - The location of your Spark master
 - The name under which the Aperture Tiles web service should appear in the Spark web interface.  
 -  The home directory of Spark
 -  Any JARs you want to add to the Spark context
+-  The location of your map, layer and annotation directories
 
 ###<a name="maps"></a>Maps
 
@@ -87,6 +88,8 @@ The PyramidConfig parameters describe the minimum and maximum values on the X an
 	"maxY" : 2.0
 	},
 ```
+
+Note also that the layer and map pyramid configurations much match each other.
 
 #####<a name="cross-axisconfig"></a>AxisConfig
 
@@ -304,6 +307,8 @@ For geographic maps, the `type` should always be set to *WebMercator*. No minimu
 	"type": "WebMercator"
 },
 ```
+
+Note also that the layer and map pyramid configurations much match each other.
 
 ####<a name="layer-data"></a>Data
 

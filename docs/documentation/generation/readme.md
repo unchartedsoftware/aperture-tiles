@@ -10,7 +10,7 @@ Tile Generation
 
 Aperture Tiles provides a distributed framework for processing your large-scale data built on the Apache Spark engine to create a set of tiles that summarize and aggregate your data at various levels in a pyramid structure. 
 
-At the highest level in the tile set pyramid, there is only a single tile summarizing all data. At each subsequent level, there are 2^(z-1) tiles, where z is the level number starting at 1 for the highest level. At each level, the tiles are laid out row wise across the base map or plot, starting at the upper left. Each tile summarizes the data located in that particular tile.
+At the highest level (level 0) in the tile set pyramid, there is only a single tile summarizing all data. On each lower level, there are up to 4^z tiles, where z is the (with lower numbers indicating higher levels. At each level, the tiles are laid out row wise across the base map or plot, starting at the lower left. Each tile summarizes the data located in that particular tile.
 
 ![Tile Layout](../../img/tile-layout.png)
 
@@ -25,8 +25,8 @@ There are three ways to turn your source data into a set of AVRO tiles:
 	- Min and max ranges
 	- Time series
 	- Top keywords 
-- Creating custom tile-based analytics using the *RDDBinner* and *ObjectifiedBinner* APIs.
-- Using third-party tools, provided they adhere to the Aperture Tiles AVRO schema (documentation coming soon).
+- Creating custom tile-based analytics using the *RDDBinner* APIs.
+- Using third-party tools, provided they adhere to the Aperture Tiles AVRO schema. Basic schema files are available in `binning-utilities/src/main/resources`.
 
 ##<a name="prerequisites"></a>Prerequisites
 
@@ -35,7 +35,7 @@ There are three ways to turn your source data into a set of AVRO tiles:
 See the [Installation documentation](../setup) for full details on the required third-party tools.
 
 - **Languages**:
-	- Scala version 2.9.3
+	- Scala version 2.10.3
 - **Cluster Computing**:
 	- Hadoop/HDFS (Optional) - Choose your preferred version and use in conjunction with HBase.
 	- HBase (Optional) - Use in conjunction with Hadoop/HDFS.
@@ -104,7 +104,7 @@ sparkhome
    machine too).
    Defaults to the value of the environment variable, SPARK_HOME.
 
-user
+user (optional)
    Username passed to the job title so people know who is running the job.
    Defaults to the username of the current user.
 ```
@@ -140,7 +140,7 @@ The rest of the configuration properties describe the data set to be tiled.
 
 ```
 oculus.binning.source.location
-   Path to the source data file or files to be tiled.
+   Path (local file system or HDFS) to the source data file or files to be tiled. 
 
 oculus.binning.prefix
    Prefix to be added to the name of every pyramid location. Used to separate
@@ -204,7 +204,7 @@ The properties file defines the tiling job parameters for each layer in your vis
 
 ```
 oculus.binning.name
-   Name of the output data tile set pyramid.
+   Metadata name of the output data tile set pyramid. Used a plot label.
 
 oculus.binning.projection
    Type of projection to use when binning data.  Possible values are:
@@ -216,7 +216,7 @@ oculus.binning.xField
 
 oculus.binning.yField
    Field to use as the Y axis value.  
-   Defaults to none (i.e., a density strip of x data).
+   Defaults to none.
 
 oculus.binning.valueField
    Field to use as the bin value.
@@ -262,7 +262,7 @@ Once you have written each of the required components, you should run your custo
 
 ####<a name="record-parser"></a>Record Parser
 
-The Record Parser should process, sanitize and transform your source data into a format that can be handled by the Binner, which will create the pyramid for your Aperture Tiles visual analytic. It is important to build error handling and error correction capabilities into the Parser.
+The Record Parser processes, sanitizes and transforms your source data into a format that can be handled by the Binner, which will create the pyramid for your Aperture Tiles visual analytic. It is important to build error handling and error correction capabilities into the Parser.
 
 See the following file for an example of a custom Record Parser. Record Parsers should be written in Scala. 
 
@@ -270,9 +270,9 @@ See the following file for an example of a custom Record Parser. Record Parsers 
 /tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicRecordParser.scala`
 ```
 
-#####Record File
+#####Record Type
 
-The Record Parser calls the Record file, which defines the schema of your transformed data. See the following file for an example of a custom Record file. Record files are generally written in Java, but can also be written in Scala.
+The Record Parser calls the Record type, which defines the schema of your transformed data. See the following file for an example of a custom Record file. Record files are generally written in Java, but can also be written in Scala.
 
 ```
 /tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterDemoTopicRecord.java`

@@ -22,22 +22,15 @@ This project has the following prerequisites:
 	-   [**Scala**](http://www.scala-lang.org/) version 2.10.3
 	-   [**Java**](http://www.java.com/) (JDK version 1.7+)
 - **Cluster Computing**: To facilitate large tiling jobs, Aperture Tiles supports a cluster computing framework. Note that if you only intend to run small jobs (data sets that fit in the memory of a single machine) or are willing to take a long time to complete them, you can skip the Hadoop/HDFS/HBase installation and run Spark on a single node and read/write to your local file system.
-	-   **Hadoop/HDFS** (Optional) - Choose your preferred flavor  ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html), [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop), [HortonWorks](http://hortonworks.com/), etc.). Use in conjunction with HBase.
+	-   **Hadoop/HDFS** (Optional) - Choose your preferred flavor  ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work). Use in conjunction with HBase.
 	-   **HBase** (Optional) - [Apache HBase](http://hbase.apache.org/) Non-relational database for Hadoop/HDFS that lets you store particularly large data sources and tile sets.
 	-   **Apache Spark** - [Apache Spark](http://spark.incubator.apache.org/) version 0.9.0 or greater (version 1.0.0 recommended). When you set up Spark, you have to configure the version of Hadoop with which it will be working (if applicable).
 -  **Web Server**: the Tile Server and client are built using the [Restlet](http://restlet.org/) web framework, and require a servlet compatible web server. Choose your preferred implementation ([**Apache Tomcat**](http://tomcat.apache.org/) or [**Jetty**](http://www.eclipse.org/jetty/)).
--   **Build Automation**: All Aperture Tiles projects build with [**Apache Maven**](http://maven.apache.org/) version 3.1.0 (other versions may work). Ensure Maven is configured properly on the system on which you are building Aperture Tiles.
-
-###<a name="environment-variables"></a>Environment Variables
-Set the following environment variables:
-
-- `SPARK_HOME` - the location of the Spark installation`
-- `SPARK_MEM` - the amount of memory to allocation to Spark`
-- `MASTER` - the node on which the cluster is installed`
+-   **Build Automation**: All Aperture Tiles projects build with [**Apache Maven**](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work). Ensure Maven is configured properly on the system on which you are building Aperture Tiles.
 
 ##<a name="source-code"></a>Source Code
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the ApertureJS source code, which you can also download from [GitHub](http://aperturejs.com/). To install both projects:
+The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the ApertureJS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperture-tiles). To install both projects:
 
 1. Run the `mvn install` command in the `aperture` folder found in the root ApertureJS directory.
 2. Run the `mvn install` command in the root Aperture Tiles directory.

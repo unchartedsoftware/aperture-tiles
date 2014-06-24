@@ -25,7 +25,7 @@ To create the Aperture Tiles Julia set project, you first need to install [Apach
 
 If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
 
-- Your preferred flavor of Hadoop/HDFS ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and  [HortonWorks](http://hortonworks.com/), etc. can also be used), which allows you to configure a cluster of machines across which you can distribute Aperture Tiles analytic jobs 
+- Your preferred flavor of Hadoop/HDFS ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work), which allows you to configure a cluster of machines across which you can distribute Aperture Tiles analytic jobs 
 - [Apache HBase](http://hbase.apache.org/), which acts as a data store for your Hadoop/HDFS  cluster
 
 Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
@@ -181,7 +181,7 @@ To edit the layer properties for your project:
 	- `type`: Enter **file**
 	- `root.path`: Specify the *root* path to which you generated the AVRO tiles. Note that the `id` you specified in step 2 is the leaf folder that contains the AVRO tiles. Set the `root.path` to the folder above that (e.g., */data/tiles/*).  
 5. If your AVRO tiles are saved to HBase, add or edit the following values in the `data` section:
-	- `type`: Enter **hbase**
+	- `type`: Enter *hbase*
 	- `hbase.zookeeper.quorum`: Zookeeper quorum location needed 
    to connect to HBase (ex: `my-zk-server1.example.com, my-zk-server2.example.com, my-zk-server3.example.com`). 
 	- `hbase.zookeeper.port`: Port through which to connect 
