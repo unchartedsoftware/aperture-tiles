@@ -394,6 +394,108 @@ The Tile Client uses ApertureJS services and a client-side visualization library
 	"restEndpoint" : "%host%/new-project/rest"
 ```
 
+##Client-Side Rendering
+
+The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
+
+The custom renderers built to support this functionality are based on the following renderers in `/tile-client/src/main/webapp/js/layer/view/client/`:
+
+- ApertureRenderer.js, which uses the ApertureJS framework to render tiles
+- HtmlRenderer.js, which uses an HTML framework to render tiles
+
+A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw carousels on each tile that contain multiple ways to view the top 10 Twitter topics used in the geographic area that they cover. The custom renderers for this application are available in `/src/main/webapp/js/layer/view/client/impl`.
+
+For example, the TagsByTimeHtml.js renderer is based on the HtmlRenderer.js framework. Lines 45-55 of this file use the init function to get the raw source data.
+
+```javascript
+init: function( map) {
+
+            this._super( map );
+            this.nodeLayer = new ClientNodeLayer({
+                map: this.map,
+                xAttr: 'longitude',
+                yAttr: 'latitude',
+                idKey: 'tilekey'
+            });
+            this.createLayer();
+        },
+```
+
+Then in lines 93-150, the source data is attached to an HTML layer.
+
+```
+this.nodeLayer.addLayer( new HtmlLayer({
+
+                html: function() {
+
+                    var tilekey = this.tilekey,
+                        html = '',
+                        $html = $('<div id="'+tilekey+'" class="aperture-tile"></div>'),
+                        $elem,
+                        $translate,
+                        values = this.bin.value,
+                        value,
+                        maxPercentage, relativePercent,
+                        visibility,
+                        i, j,
+                        tag,
+                        count = TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED );
+
+                    // create translate button
+                    $translate = that.createTranslateLabel( tilekey );
+
+                    $html.append( $translate );
+
+                    for (i=0; i<count; i++) {
+
+                        value = values[i];
+                        tag = TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), NUM_LETTERS_IN_TAG );
+                        maxPercentage = TwitterUtil.getMaxPercentageByType( value, 'PerHour' );
+
+                        html = '<div class="tags-by-time" style="top:' +  getYOffset( values, i ) + 'px;">';
+
+                        // create count chart
+                        html += '<div class="tags-by-time-left">';
+                        for (j=0; j<24; j++) {
+                            relativePercent = ( TwitterUtil.getPercentageByType( value, j, 'PerHour' ) / maxPercentage ) * 100;
+                            visibility = (relativePercent > 0) ? '' : 'hidden';
+                            html += '<div class="tags-by-time-bar" style="visibility:'+visibility+';height:'+relativePercent+'%; top:'+(100-relativePercent)+'%;"></div>';
+                        }
+                        html += '</div>';
+
+                        // create tag label
+                        html += '<div class="tags-by-time-right">';
+                        html +=     '<div class="tags-by-time-label">'+tag+'</div>';
+                        html += '</div>';
+
+                        html += '</div>';
+
+                        $elem = $(html);
+
+                        that.setMouseEventCallbacks( $elem, this, value );
+                        that.addClickStateClasses( $elem, value.topic );
+
+                        $html.append( $elem );
+                    }
+
+                    return $html;
+                }
+            }));
+```
+
+The layer file should then be updated to specify that client-side rendering should be used and to pass in the names of the custom renderers:
+
+```
+"renderers": [
+                        {
+                            "domain": "client",
+                            "renderers": [ "CustomRendererName1",
+                                           "CustomerRendererName2"
+                            ]
+                        }
+                    ]
+``` 
+
 ##<a name="deployment"></a>Deployment
 
 Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your Apache Tomcat or Jetty server.
