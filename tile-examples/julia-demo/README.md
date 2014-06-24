@@ -4,7 +4,7 @@ This demo displays the points in an example Julia set fractal dataset on an X/Y 
 
 ## Setup and Building
 
-Before running this sample, the tile data needs to be downloaded locally. Download [TODO](http://TODO) and place the file in `src/main/resources`. Ensure the filename is `julia.x.y.v.zip`.
+Before running this sample, the tile data needs to be downloaded locally. Download http://assets.oculusinfo.com/tiles/downloads/tilesets/julia.x.y.v.zip and place the file in `src/main/resources`. Ensure the filename is `julia.x.y.v.zip`.
 
 To build the demo first ensure that the entire aperture-tiles project is built by running the following from the root aperture-tiles project directory:
 
