@@ -113,10 +113,10 @@ repeat
 intervalSpec
 
 	type
-		Type of interval along the axis "percentage", "fixed" or "value".
+		How the following increment value is calculated based on the axis range. Accepted values include "percentage", "%", "value" or "#".
 
 	increment
-		Value or percentage of units by which to increment the intervals.
+		Value or percentage of units by which to increment the intervals. How this is applied is dependent on the specified type.
 
 	pivot
 		Value or percentage from which all other values are incremented.
@@ -128,14 +128,20 @@ intervalSpec
 unitSpec
 
 	type
-		Unit label along the specified axis. Options include "decimal", "time"
-		and "degrees".
+		Determines the individual axis label strings formats. Options include:
+		"billions": 150.25B
+        "millions": 34.45M
+        "thousands": 323.26K
+        "decimal": 234243.32
+        "integer": 563554
+        "time": MM/DD/YYYY
+        "degrees": 34.56&#176 <--- #### should be a degree symbol ####
 
 	decimals
-		Number of decimals to display for each unit, if applicable.
+		Number of decimals to display for each unit. Applicable to "billions", "millions", "thousands" and "decimal" types.
 	
 	allowStepDown
-		Indicates whether the units can step down if they are below range.	
+		Indicates whether the units can step down if they are below range. Applicable to "billions", "millions", "thousands" types.
 ```
 
 ####<a name="geographic-maps"></a>Geographic Maps
@@ -414,7 +420,7 @@ The custom renderers built to support this functionality are based on the follow
 - ApertureRenderer.js, which uses the ApertureJS framework to render tiles
 - HtmlRenderer.js, which uses an HTML framework to render tiles
 
-A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw carousels on each tile that contain multiple ways to view the top 10 Twitter topics used in the geographic area that they cover. The custom renderers for this application are available in `/src/main/webapp/js/layer/view/client/impl`.
+A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics-sample/twitter-sample-client/`. The Twitter Topics application uses client-side rendering to draw carousels on each tile that contain multiple ways to view the top 10 Twitter topics used in the geographic area that they cover. The custom renderers for this application are available in `/src/main/webapp/js/layer/view/client/impl`.
 
 For example, the TagsByTimeHtml.js renderer is based on the HtmlRenderer.js framework. Lines 45-55 of this file use the init function to get the raw source data.
 
