@@ -95,6 +95,11 @@ define(function (require) {
                             layer.setVisibility( layerState.isEnabled() );
                             break;
 
+                        case "z-index":
+
+                            layer.setZIndex( layerState.getZIndex() );
+                            break;
+
                         case "tileFocus":
 
                             layer.setTileFocus( layerState.getTileFocus() );

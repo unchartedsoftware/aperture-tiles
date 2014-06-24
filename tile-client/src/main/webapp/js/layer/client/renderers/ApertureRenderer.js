@@ -60,6 +60,10 @@ define(function (require) {
             this.nodeLayer.all().redraw();
         },
 
+        setZIndex: function( zIndex ) {
+            this.map.setLayerIndex( this.nodeLayer.olLayer_, zIndex );
+        },
+
         redraw: function( data ) {
             this.nodeLayer.all( data ).where( data ).redraw();
         }

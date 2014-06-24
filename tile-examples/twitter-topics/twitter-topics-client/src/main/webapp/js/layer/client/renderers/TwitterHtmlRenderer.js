@@ -144,7 +144,7 @@ define(function (require) {
                 $translate = $('<div id="'+this.getTranslateLabelId(tilekey)+'" class="translate-label">translate</div>');
 
             if ( !translation ) {
-                $translate.addClass('greyed');
+                $translate.addClass('translate-label-greyed');
             }
 
             if ( tilekey === this.layerState.getTileFocus() ) {

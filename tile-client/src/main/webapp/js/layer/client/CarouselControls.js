@@ -216,7 +216,7 @@ define(function (require) {
             var i;
 
             this.controlMap = {};
-            this.$carousel = $('<div class="' +CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
+            this.$carousel = $('<div class="' + CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
 
             for (i=0; i<layerStates.length; i++) {
                 layerStates[i].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[i] ) );
@@ -224,8 +224,6 @@ define(function (require) {
                     layerStates[i].setCarouselEnabled( true );
                 }
             }
-
-
         },
 
         noop: function() {

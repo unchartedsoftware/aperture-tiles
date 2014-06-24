@@ -37,7 +37,7 @@ define(function (require) {
     HtmlNodeLayer = Class.extend({
         ClassName: "HtmlNodeLayer",
 
-        Z_INDEX_OFFSET : 100,
+        Z_INDEX : 1000,
 
         init: function( spec ) {
 
@@ -46,8 +46,6 @@ define(function (require) {
             this.yAttr_ = spec.yAttr || null;
             this.idKey_=  spec.idKey || null;
             this.propagate = spec.propagate === undefined ? true : spec.propagate;
-
-            this.Z_INDEX = this.map_.getZIndex() + this.Z_INDEX_OFFSET;
 
             this.createLayerRoot();
             this.nodes_ = [];
@@ -98,7 +96,7 @@ define(function (require) {
 
         createNodeRoot : function(data) {
             var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] );
-            return $('<div style="position:absolute; left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
+            return $('<div style="position:absolute;left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
         },
 
 

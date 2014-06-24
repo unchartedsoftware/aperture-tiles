@@ -261,7 +261,7 @@ define(function (require) {
                 html: function() {
 
                     var DOWNSCALE_OFFSET = 1.5,
-                        MAX_FONT_SIZE = 24 * DOWNSCALE_OFFSET,
+                        MAX_FONT_SIZE = 20 * DOWNSCALE_OFFSET,
                         MIN_FONT_SIZE = 8 * DOWNSCALE_OFFSET,
                         HORIZONTAL_OFFSET = 10,
                         VERTICAL_OFFSET = 24,

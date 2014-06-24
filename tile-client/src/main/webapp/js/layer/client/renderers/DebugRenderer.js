@@ -30,9 +30,7 @@
 
 /**
  * A simple test layer to test the client side of client rendering.
- *
- * This layer simply puts the tile coordinates and another string in 
- * the middle of each tile.
+ * This layer simply puts the tile coordinates in the middle of each tile.
  */
 define(function (require) {
     "use strict";
@@ -52,12 +50,26 @@ define(function (require) {
         init: function ( map ) {
 
             this._super( map );
+            this.createNodeLayer(); // instantiate the node layer data object
+            this.createLayer();     // instantiate the html visualization layer
+        },
+
+
+        createNodeLayer: function() {
+
+            // instantiate node layer object
             this.nodeLayer = new HtmlNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
+        },
+
+
+        createLayer : function() {
+
+            // instantiate html debug layer
             this.nodeLayer.addLayer( new HtmlLayer({
                 html: function () {
                     return '<div>' + this.tilekey + '</div>';

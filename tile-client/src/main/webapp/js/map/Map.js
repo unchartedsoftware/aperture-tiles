@@ -158,6 +158,11 @@ define(function (require) {
                 // attach, and refresh it by toggling visibility
                 olMap_.baseLayer = newBaseLayer.olLayer_;
                 olMap_.setBaseLayer( newBaseLayer.olLayer_ );
+
+                //if ( newBaseLayerConfig.type !== 'Google' ) {
+                    this.setLayerIndex( newBaseLayer.olLayer_, -1 );
+                //}
+
                 olMap_.baseLayer.setVisibility(false);
                 olMap_.baseLayer.setVisibility(true);
             }

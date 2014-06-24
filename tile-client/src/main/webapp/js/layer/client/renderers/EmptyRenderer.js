@@ -29,10 +29,7 @@
 
 
 /**
- * A simple test layer to test the client side of client rendering.
- *
- * This layer simply puts the tile coordinates and another string in 
- * the middle of each tile.
+ * An empty client-renderer. This is used to give an empty panel in the client rendering carousel
  */
 define(function (require) {
     "use strict";
@@ -49,18 +46,6 @@ define(function (require) {
 		
         init: function ( map ) {
             this._super( map );
-        },
-
-        setOpacity: function( opacity ) {
-            return true;
-        },
-
-        setVisibility: function( visible ) {
-            return true;
-        },
-
-        redraw: function() {
-            return true;
         }
 
     });

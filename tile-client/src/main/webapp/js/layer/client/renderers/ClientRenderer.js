@@ -54,6 +54,10 @@ define(function (require) {
             return true;
         },
 
+        setZIndex: function( zIndex ) {
+            return true;
+        },
+
         redraw: function() {
             return true;
         }

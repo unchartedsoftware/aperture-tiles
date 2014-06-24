@@ -388,7 +388,7 @@ define(function (require) {
 
     Axis = Class.extend({
 
-        Z_INDEX_OFFSET : 2000,
+        Z_INDEX: 2001,
 
         /**
          * Construct an axis
@@ -424,8 +424,6 @@ define(function (require) {
             this.min = spec.min;
             this.max = spec.max;
             this.repeat = spec.repeat || defaults.repeat;
-
-            this.Z_INDEX = this.Z_INDEX_OFFSET + this.map.getZIndex();
 
             this.position = spec.position || defaults.position;
             this.id = spec.id || ( this.mapId + "-" + this.position + "-axis" );

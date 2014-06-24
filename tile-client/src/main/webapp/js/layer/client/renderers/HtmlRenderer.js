@@ -50,6 +50,10 @@ define(function (require) {
             this.nodeLayer.getRootElement().css( 'visibility', visibility );
         },
 
+        setZIndex: function( zIndex ) {
+            this.nodeLayer.getRootElement().css( 'zIndex', zIndex );
+        },
+
         redraw: function( data ) {
             this.nodeLayer.all( data ).redraw();
         }

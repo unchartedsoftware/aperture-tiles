@@ -74,6 +74,14 @@ define(function (require) {
         },
 
 
+        setZIndex: function( zIndex ) {
+            var i;
+            for (i=0; i<this.renderers.length; i++) {
+                this.renderers[i].setZIndex( zIndex );
+            }
+        },
+
+
         setTileFocus: function( tilekey ) {
             return true;
         },

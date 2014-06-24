@@ -655,8 +655,8 @@ define(function (require) {
                     if ( baseLayer.type !== previousBaseLayer.type ) {
                         if ( baseLayer.type === "BlankBase" ) {
                             controlsMapping.layerContent.animate({height: "0px", "padding-bottom": "0px"});
-                        } else {
-                            controlsMapping.layerContent.animate({height: "30px", "padding-bottom": "10px"});
+                        } else if ( previousBaseLayer.type === "BlankBase" ) {
+                            controlsMapping.layerContent.animate({height: "44px", "padding-bottom": "10px"});
                         }
                     }
                     break;
