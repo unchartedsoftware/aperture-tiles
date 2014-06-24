@@ -210,7 +210,7 @@ require(['./ApertureConfig',
 				            annotationLayerMediator,
                             clientLayerDeferreds,
                             serverLayerDeferreds,
-                            annotationrLayerDeferreds;
+                            annotationLayerDeferreds;
 
 				        // Initialize our map choice panel
 				        if (maps.length > 1) {
@@ -281,7 +281,7 @@ require(['./ApertureConfig',
 				        // Create client, server and annotation layers
 				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
 				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap, serverLayerMediator );
-                        annotationrLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap, annotationLayerMediator );
+                        annotationLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap, annotationLayerMediator );
 
                         $.when( clientLayerDeferreds, serverLayerDeferreds, annotationrLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
 
@@ -290,7 +290,8 @@ require(['./ApertureConfig',
                             $.merge( sharedStates, baseLayerMediator.getLayerStates() );
                             $.merge( sharedStates, clientLayerMediator.getLayerStates() );
                             $.merge( sharedStates, serverLayerMediator.getLayerStates() );
-
+                            $.merge( sharedStates, annotationLayerMediator.getLayerStates() );
+                            
                             // create layer controls
                             new LayerControls( 'layer-controls-content', sharedStates ).noop();
                             // create the carousel controls

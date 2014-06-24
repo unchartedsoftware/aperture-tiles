@@ -1,0 +1,50 @@
+@charset "UTF-8";
+
+
+.tile {
+	position:relative;	
+	height: 256px;
+	width: 256px;
+	-webkit-backface-visibility: hidden; 
+			backface-visibility: hidden;
+}
+
+
+.topics-label {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	vertical-align: middle;
+	font-size: 28px;
+	line-height: 18px;
+	height:18px;
+	color: white;
+	text-shadow:
+	    -2px -2px 2px #000,
+	     2px -2px 2px #000,
+	    -2px  2px 2px #000,
+	     2px  5px 5px #000;
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+	-webkit-transform: scale(0.75);
+       -moz-transform: scale(0.75);
+        -ms-transform: scale(0.75);
+            transform: scale(0.75);
+}
+
+
+.topics-label:hover {
+	cursor: pointer;
+	-webkit-filter: grayscale(0) brightness(1);
+	-webkit-transform: scale(1);
+       -moz-transform: scale(1);
+        -ms-transform: scale(1);
+            transform: scale(1);
+}
+
+.clicked {
+
+	color: blue;
+}

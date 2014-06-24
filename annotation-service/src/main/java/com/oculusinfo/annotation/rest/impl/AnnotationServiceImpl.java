@@ -54,6 +54,7 @@ import java.io.FileReader;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -62,15 +63,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class AnnotationServiceImpl implements AnnotationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationServiceImpl.class);
       
-    private List<AnnotationInfo>         _annotationLayers;
-    private Map<String, AnnotationInfo>  _annotationLayersById;
-    private Map<String, UUID>  			 _defaultFilterUuidById;
-    private Map< UUID, Map<String, Integer> > _filtersByUuid;
+    private List<AnnotationInfo> _annotationLayers;
+    private HashMap<String, AnnotationInfo> _annotationLayersById;
+    private ConcurrentHashMap<String, UUID> _defaultFilterUuidById;
+    private ConcurrentHashMap<UUID, Map<String, Integer>> _filtersByUuid;
 
-    private FactoryProvider<PyramidIO>         _pyramidIOFactoryProvider;
-    private FactoryProvider<AnnotationIO>      _annotationIOFactoryProvider;
+    private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+    private FactoryProvider<AnnotationIO>  _annotationIOFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _tileSerializerFactoryProvider;
-    private FactoryProvider<TilePyramid>       _tilePyramidFactoryProvider;
+    private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
         
     protected AnnotationSerializer _dataSerializer;
     protected AnnotationIndexer _indexer;
@@ -88,8 +89,8 @@ public class AnnotationServiceImpl implements AnnotationService {
     							  AnnotationSerializer serializer ) {
 
 		_annotationLayers = new ArrayList<>();
-		_annotationLayersById = new HashMap<>();
-		_defaultFilterUuidById = new HashMap<>();
+		_annotationLayersById = new LinkedHashMap<>();
+		_defaultFilterUuidById = new ConcurrentHashMap<>();
 		_filtersByUuid = new ConcurrentHashMap<>();
 		
 		_pyramidIOFactoryProvider = pyramidIOFactoryProvider;

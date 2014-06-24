@@ -21,6 +21,7 @@
 	<module>julia-demo</module>
 	<module>twitter-demo</module>
 	<module>twitter-topics</module>
+    <module>twitter-topics-sample</module>
 	<module>twitter-heatmap</module>
 	<module>summary-statistics</module>
   </modules>

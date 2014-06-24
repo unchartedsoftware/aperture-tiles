@@ -1,0 +1,150 @@
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Twitter Custom Processing Utilities 0.3-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ twitter-demo-day-utilities ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 11 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ twitter-demo-day-utilities ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-scala-plugin:2.15.2:compile (default) @ twitter-demo-day-utilities ---
+[INFO] Checking for multiple versions of scala
+[WARNING]  Expected all dependencies to require Scala version: 2.10.3
+[WARNING]  org.apache.spark:spark-core_2.10:0.9.0-incubating requires scala version: 2.10.3
+[WARNING]  org.spark-project.akka:akka-actor_2.10:2.2.3-shaded-protobuf requires scala version: 2.10.2
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] includes = [**/*.scala,**/*.java,]
+[INFO] excludes = []
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ twitter-demo-day-utilities ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /home/nkronenfeld/git/xdata/twitter-demo-day/twitter-demo-day-utilities/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ twitter-demo-day-utilities ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-scala-plugin:2.15.2:testCompile (default) @ twitter-demo-day-utilities ---
+[INFO] Checking for multiple versions of scala
+[WARNING]  Expected all dependencies to require Scala version: 2.10.3
+[WARNING]  org.apache.spark:spark-core_2.10:0.9.0-incubating requires scala version: 2.10.3
+[WARNING]  org.spark-project.akka:akka-actor_2.10:2.2.3-shaded-protobuf requires scala version: 2.10.2
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] includes = [**/*.scala,**/*.java,]
+[INFO] excludes = []
+[INFO] /home/nkronenfeld/git/xdata/twitter-demo-day/twitter-demo-day-utilities/src/test/java:-1: info: compiling
+[INFO] /home/nkronenfeld/git/xdata/twitter-demo-day/twitter-demo-day-utilities/src/test/scala:-1: info: compiling
+[INFO] Compiling 6 source files to /home/nkronenfeld/git/xdata/twitter-demo-day/twitter-demo-day-utilities/target/test-classes at 1399485006950
+[INFO] prepare-compile in 0 s
+[INFO] compile in 23 s
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ twitter-demo-day-utilities ---
+[INFO] 
+[INFO] --- scalatest-maven-plugin:1.0-M2:test (test) @ twitter-demo-day-utilities ---
+WARNING: -p has been deprecated and will be reused for a different (but still very cool) purpose in ScalaTest 2.0. Please change all uses of -p to -R.
+[36mRun starting. Expected test count is: 13[0m
+[32mDiscoverySuite:[0m
+[32mTwitterDemoTilingTestSuite:[0m
+log4j: reset attribute= "false".
+log4j: Threshold ="null".
+log4j: Level value for root is  [FINE].
+log4j: root level set to DEBUG
+log4j: Class name: [org.apache.log4j.ConsoleAppender]
+log4j: Parsing layout of class: "org.apache.log4j.PatternLayout"
+log4j: Setting property [conversionPattern] to [[%p] %d{dd MMM yyyy HH:mm:ss} - %C - %m%n].
+log4j: Adding appender named [stdout] to category [root].
+[INFO] 07 May 2014 13:50:33 - akka.event.slf4j.Slf4jLogger$$anonfun$receive$1$$anonfun$applyOrElse$3 - Starting remoting
+[INFO] 07 May 2014 13:50:33 - akka.event.slf4j.Slf4jLogger$$anonfun$receive$1$$anonfun$applyOrElse$3 - Remoting started; listening on addresses :[akka.tcp://spark@hadoop-s1.oculus.local:52196]
+[WARN] 07 May 2014 13:50:34 - org.apache.hadoop.util.NativeCodeLoader - Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[32m- Test record creation[0m
+[32m- Test record binning[0m
+Writing tile set from
+MappedRDD[19] at map at RDDBinner.scala:276 (1 partitions)
+  MapPartitionsRDD[18] at groupByKey at RDDBinner.scala:275 (1 partitions)
+    ShuffledRDD[17] at groupByKey at RDDBinner.scala:275 (1 partitions)
+      MappedRDD[16] at map at RDDBinner.scala:271 (1 partitions)
+        MapPartitionsRDD[15] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+          ShuffledRDD[14] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+            MapPartitionsRDD[13] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+              MapPartitionsRDD[12] at mapPartitions at RDDBinner.scala:234 (1 partitions)
+                MapPartitionsRDD[11] at mapPartitions at TwitterDemoTilingTests.scala:418 (1 partitions)
+                  ParallelCollectionRDD[10] at parallelize at TwitterDemoTilingTests.scala:418 (1 partitions)
+Could not parse json source.  Source is:
+null
+Calculating metadata
+Input tiles: 1
+Writing tile set from
+MappedRDD[28] at map at RDDBinner.scala:276 (1 partitions)
+  MapPartitionsRDD[27] at groupByKey at RDDBinner.scala:275 (1 partitions)
+    ShuffledRDD[26] at groupByKey at RDDBinner.scala:275 (1 partitions)
+      MappedRDD[25] at map at RDDBinner.scala:271 (1 partitions)
+        MapPartitionsRDD[24] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+          ShuffledRDD[23] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+            MapPartitionsRDD[22] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+              MapPartitionsRDD[21] at mapPartitions at RDDBinner.scala:234 (1 partitions)
+                MapPartitionsRDD[11] at mapPartitions at TwitterDemoTilingTests.scala:418 (1 partitions)
+                  ParallelCollectionRDD[10] at parallelize at TwitterDemoTilingTests.scala:418 (1 partitions)
+Calculating metadata
+Input tiles: 4
+Writing tile set from
+MappedRDD[37] at map at RDDBinner.scala:276 (1 partitions)
+  MapPartitionsRDD[36] at groupByKey at RDDBinner.scala:275 (1 partitions)
+    ShuffledRDD[35] at groupByKey at RDDBinner.scala:275 (1 partitions)
+      MappedRDD[34] at map at RDDBinner.scala:271 (1 partitions)
+        MapPartitionsRDD[33] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+          ShuffledRDD[32] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+            MapPartitionsRDD[31] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+              MapPartitionsRDD[30] at mapPartitions at RDDBinner.scala:234 (1 partitions)
+                MapPartitionsRDD[11] at mapPartitions at TwitterDemoTilingTests.scala:418 (1 partitions)
+                  ParallelCollectionRDD[10] at parallelize at TwitterDemoTilingTests.scala:418 (1 partitions)
+Calculating metadata
+Input tiles: 4
+Writing tile set from
+MappedRDD[46] at map at RDDBinner.scala:276 (1 partitions)
+  MapPartitionsRDD[45] at groupByKey at RDDBinner.scala:275 (1 partitions)
+    ShuffledRDD[44] at groupByKey at RDDBinner.scala:275 (1 partitions)
+      MappedRDD[43] at map at RDDBinner.scala:271 (1 partitions)
+        MapPartitionsRDD[42] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+          ShuffledRDD[41] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+            MapPartitionsRDD[40] at reduceByKey at RDDBinner.scala:270 (1 partitions)
+              MapPartitionsRDD[39] at mapPartitions at RDDBinner.scala:234 (1 partitions)
+                MapPartitionsRDD[11] at mapPartitions at TwitterDemoTilingTests.scala:418 (1 partitions)
+                  ParallelCollectionRDD[10] at parallelize at TwitterDemoTilingTests.scala:418 (1 partitions)
+Calculating metadata
+Input tiles: 4
+[32m- Metadata serialization[0m
+[32mTwitterDemoTestSuite:[0m
+[32m- Aggregation[0m
+[32m- Convert[0m
+[32m- Convert many tags[0m
+[32m- Convert type[0m
+[32m- Maximum[0m
+[32m- Minimum[0m
+[32m- bin to string conversion[0m
+[32mTwitterDemoParserTestSuite:[0m
+[32m- Base line parsing[0m
+[32m- Tag parsing[0m
+[32m- Word parsing[0m
+[36mRun completed in 10 seconds, 295 milliseconds.[0m
+[36mTotal number of tests run: 13[0m
+[36mSuites: completed 4, aborted 0[0m
+[36mTests: succeeded 13, failed 0, ignored 0, pending 0[0m
+[32mAll tests passed.[0m
+[INFO] 
+[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ twitter-demo-day-utilities ---
+[INFO] Building jar: /home/nkronenfeld/git/xdata/twitter-demo-day/twitter-demo-day-utilities/target/twitter-utilities.jar
+[INFO] 
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ twitter-demo-day-utilities ---
+[INFO] Installing /home/nkronenfeld/git/xdata/twitter-demo-day/twitter-demo-day-utilities/target/twitter-utilities.jar to /home/nkronenfeld/.m2/repository/com/oculusinfo/twitter-demo-day-utilities/0.3-SNAPSHOT/twitter-demo-day-utilities-0.3-SNAPSHOT.jar
+[INFO] Installing /home/nkronenfeld/git/xdata/twitter-demo-day/twitter-demo-day-utilities/pom.xml to /home/nkronenfeld/.m2/repository/com/oculusinfo/twitter-demo-day-utilities/0.3-SNAPSHOT/twitter-demo-day-utilities-0.3-SNAPSHOT.pom
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 42.451s
+[INFO] Finished at: Wed May 07 13:50:43 EDT 2014
+[INFO] Final Memory: 20M/981M
+[INFO] ------------------------------------------------------------------------

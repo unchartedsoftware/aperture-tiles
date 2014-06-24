@@ -690,7 +690,6 @@ define(function (require) {
 
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStates.length; i += 1) {
-            console.log(sortedLayerStates[i].getId() + " : " + sortedLayerStates[i].getZIndex() );
             addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap, layerStateMap );
         }
 
