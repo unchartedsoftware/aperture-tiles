@@ -410,94 +410,142 @@ transform
 
 ##<a name="clientconfig"></a>Tile Client Configuration
 
-
 ##<a name="clientside"></a>Client-Side Rendering
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 
-The custom renderers built to support this functionality are based on the following renderers in `/tile-client/src/main/webapp/js/layer/view/client/`:
+The custom renderers built to support this functionality are based on the following renderers in `/tile-client/src/main/webapp/js/layer/client/renderers/`:
 
 - ApertureRenderer.js, which uses the ApertureJS framework to render tiles
 - HtmlRenderer.js, which uses an HTML framework to render tiles
 
-A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics-sample/twitter-sample-client/`. The Twitter Topics application uses client-side rendering to draw carousels on each tile that contain multiple ways to view the top 10 Twitter topics used in the geographic area that they cover. The custom renderers for this application are available in `/src/main/webapp/js/layer/view/client/impl`.
+A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw carousels on each tile that contain multiple ways to view the top 5 Twitter topics used in the geographic area that they cover. The custom renderers for this application are available in `/src/main/webapp/js/layer/client/renderers/`.
 
-For example, the TagsByTimeHtml.js renderer is based on the HtmlRenderer.js framework. Lines 45-55 of this file use the init function to get the raw source data.
+For example, the TopTopicsHtml.js renderer is based on the HtmlRenderer.js framework. Lines 45-47 of this file use the init function to get the raw source data.
 
 ```javascript
-init: function( map) {
+init: function( map ) {
 
             this._super( map );
-            this.nodeLayer = new ClientNodeLayer({
+            this.createNodeLayer(); // instantiate the node layer data object
+            this.createLayer();     // instantiate the html visualization layer
+        },
+```
+
+The registerLayer method is overriden at line 50. If you are attaching an event listener to the layer state, include it in this section. Call addListener on line 60 (not in the constructor, as the layer state will not have been attached by the time the constructor has been called).
+
+```javascript
+ registerLayer: function( layerState ) {
+
+            var that = this; // preserve 'this' context
+
+            this._super( layerState ); // call parent class method
+
+            /*
+                Lets attach the layer state listener. This will be called whenever
+                the layer state changes.
+            */
+            this.layerState.addListener( function(fieldName) {
+
+                var layerState = that.layerState;
+
+                if ( fieldName === "clickState" ) {
+                    // if a click occurs, lets remove styling from any previous label
+                    $(".topic-label, .clicked").removeClass('clicked');
+                    // in this demo we only want to style this layer if the click comes from this layer
+                    if ( layerState.getClickState().type === "html" ) {
+                        // add class to the object to adjust the styling
+                        layerState.getClickState().$elem.addClass('clicked');
+                    }
+                }
+            });
+
+        },
+```
+
+At line 78, the HTML node layer is instantiated. This holds the tile data as it comes in from the tile service. The X and Y coordinate mappings are set and used to position the individual nodes on the map. In this example, the data is geospatial and located under the `latitude` and `longitude` keys. The `idKey` attribute is used as a unique identification key for internal managing of the data. In this case, it is the tilekey.
+
+```javascript
+createNodeLayer: function() {
+
+            this.nodeLayer = new HtmlNodeLayer({
                 map: this.map,
                 xAttr: 'longitude',
                 yAttr: 'latitude',
                 idKey: 'tilekey'
             });
-            this.createLayer();
-        },
+},
 ```
 
 Then in lines 93-150, the source data is attached to an HTML layer.
 
 ```
-this.nodeLayer.addLayer( new HtmlLayer({
+createLayer : function() {
+
+            var that = this;
+
+            /*
+                Utility function for positioning the labels
+            */
+            function getYOffset( numTopics, index ) {
+                var SPACING =  36;
+                return 108 - ( (( numTopics - 1) / 2 ) - index ) * SPACING;
+            }
+
+            /*
+                Here we create and attach an individual html layer to the html node layer. For every individual node
+                of data in the node layer, the html function will be executed with the 'this' context that of the node.
+             */
+            this.nodeLayer.addLayer( new HtmlLayer({
 
                 html: function() {
 
-                    var tilekey = this.tilekey,
-                        html = '',
-                        $html = $('<div id="'+tilekey+'" class="aperture-tile"></div>'),
-                        $elem,
-                        $translate,
-                        values = this.bin.value,
-                        value,
-                        maxPercentage, relativePercent,
-                        visibility,
-                        i, j,
-                        tag,
-                        count = TwitterUtil.getTagCount( values, NUM_TAGS_DISPLAYED );
+                    var MAX_TOPICS = 5,             // we only want to display a maximum of 5 topics
+                        values = this.bin.value,    // the values associated with the bin (in this example there is only
+                                                    // one bin per tile)
+                        numTopics = Math.min( values.length, MAX_TOPICS ),
+                        $html = $('<div class="tile"></div>'), // this isn't necessary, but wrapping the tile html in a
+                                                               // 256*256 div lets us use 'bottom' and 'right' positioning
+                                                               // if we so choose
+                        topic,
+                        $topic,
+                        i;
 
-                    // create translate button
-                    $translate = that.createTranslateLabel( tilekey );
+                    /*
+                        Iterate over the top 5 available topics and create the html elements.
+                    */
+                    for (i=0; i<numTopics; i++) {
 
-                    $html.append( $translate );
+                        topic = values[i].topic;
+                        $topic = $('<div class="topics-label" style=" top:' +  getYOffset( numTopics, i ) + 'px;">' + topic + '</div>');
 
-                    for (i=0; i<count; i++) {
+                        /*
+                            Attach a mouse click event listener
+                        */
+                        $topic.click( function() {
 
-                        value = values[i];
-                        tag = TwitterUtil.trimLabelText( that.getTopic( value, tilekey ), NUM_LETTERS_IN_TAG );
-                        maxPercentage = TwitterUtil.getMaxPercentageByType( value, 'PerHour' );
+                            /*
+                                We could simply do the styling in this function here, but to coordinate with the other
+                                renderers lets use the layerState object. The layerState will broadcast any change to
+                                all listeners.
+                            */
+                            that.layerState.setClickState({
+                                topic: topic,
+                                $elem: $(this),
+                                type: "html"
+                            });
+                            event.stopPropagation(); // stop the click from propagating deeper
+                        });
 
-                        html = '<div class="tags-by-time" style="top:' +  getYOffset( values, i ) + 'px;">';
-
-                        // create count chart
-                        html += '<div class="tags-by-time-left">';
-                        for (j=0; j<24; j++) {
-                            relativePercent = ( TwitterUtil.getPercentageByType( value, j, 'PerHour' ) / maxPercentage ) * 100;
-                            visibility = (relativePercent > 0) ? '' : 'hidden';
-                            html += '<div class="tags-by-time-bar" style="visibility:'+visibility+';height:'+relativePercent+'%; top:'+(100-relativePercent)+'%;"></div>';
-                        }
-                        html += '</div>';
-
-                        // create tag label
-                        html += '<div class="tags-by-time-right">';
-                        html +=     '<div class="tags-by-time-label">'+tag+'</div>';
-                        html += '</div>';
-
-                        html += '</div>';
-
-                        $elem = $(html);
-
-                        that.setMouseEventCallbacks( $elem, this, value );
-                        that.addClickStateClasses( $elem, value.topic );
-
-                        $html.append( $elem );
+                        $html.append( $topic );
                     }
 
+                    // return the jQuery object. You can also return raw html as a string.
                     return $html;
                 }
             }));
+
+        }
 ```
 
 The layer file should then be updated to specify that client-side rendering should be used and to pass in the names of the custom renderers:
