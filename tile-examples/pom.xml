@@ -19,7 +19,6 @@
 	<module>demo-website</module>
 	<module>julia-demo</module>
 	<module>twitter-topics</module>
-	<module>twitter-topics-sample</module>
   </modules>
 
 </project>

@@ -67,9 +67,8 @@
                     "renderers": [
                         {
                             "domain": "client",
-                            "renderers": [ "TopTagsWordCloudHtml",
-                                           "TagsByTimeHtml",
-                                           "EmptyRenderer"
+                            "renderers": [ "TopTopicsHtml",
+                                           "TopTopicsAperture"
                             ]
                         }
                     ]
