@@ -76,8 +76,6 @@ The Aperture Tiles project includes a CSVBinner tool designed to process numeric
 - A Base property file, which describes the general characteristics of the data. 
 - Tiling property files, each of which describes the specific attributes you want to tile
 
-
-
 Run the tile generation using the **spark-run** script by using a command similar to:
 
 ```
@@ -250,45 +248,202 @@ Several example property files can be found in the *aperture-tiles/tile-generati
 
 ###<a name="custom-tiling"></a>Custom Tiling
 
-If your source data is not character delimited or if it contains non-numeric fields, you may need to create custom code to parse it and perform tile generation. A good example of custom code for the purposes of tile generation can be found in the Twitter Topics project in *tile-examples/twitter-topics/*, which displays a Twitter message heatmap and aggregates the top words mentioned in tweets for each tile and bin.
+If your source data is not character delimited or if it contains non-numeric fields, you may need to create custom code to parse it and perform tile generation. A good example of custom code for the purposes of tile generation can be found in the Twitter Topics project in *tile-examples/twitter-topics-sample/*, which displays a Twitter message heatmap and aggregates the top words mentioned in tweets for each tile and bin.
 
-In general, creating a custom tile generation process involves the following components:
+In general, creating custom tile generation code involves the following processes:
 
-- Record Parser
-- Binner
-- Serializer
+- Describing Your Data
+- Binning Your Data
 
 Once you have written each of the required components, you should run your custom Binner to create a set of AVRO tiles that you will use in your Aperture Tiles visual analytic.
 
-####<a name="record-parser"></a>Record Parser
+####<a name="record-parser"></a>Describing Your Data
 
-The Record Parser processes, sanitizes and transforms your source data into a format that can be handled by the Binner, which will create the pyramid for your Aperture Tiles visual analytic. It is important to build error handling and error correction capabilities into the Parser.
+The first step in creating a custom tile generation process is deciding how your data should be structured so it can be handled by the Binner. There are several modules required for this step:
 
-See the following file for an example of a custom Record Parser. Record Parsers should be written in Scala. 
+- Bin Descriptor
+- Serializer
+
+#####Bin Descriptor
+
+The Bin Descriptor is called by the Binner. It determines how to aggregate multiple data points that are saved to the same bin. 
+
+See the following file for an example of a custom Bin Descriptor. Bin Descriptors should be written in Scala.
 
 ```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicRecordParser.scala`
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala
 ```
 
-#####Record Type
+######Types
 
-The Record Parser calls the Record type, which defines the schema of your transformed data. See the following file for an example of a custom Record file. Record files are generally written in Java, but can also be written in Scala.
+The Bin Descriptor requires two types:
+
+- A processing type, which is the record type used when processing the tiles and aggregating them together. It should contain all the information needed for calculations performed during the binning job.
+- A binning type, which is the final form that gets written to the tiles. 
+
+As shown in line 47, the processing type is a map used add to add all similar topic records together. The binning type is a list containing only the topics with the highest counts.
+
+```scala
+extends BinDescriptor[Map[String, TwitterDemoTopicRecord], JavaList[TwitterDemoTopicRecord]] {
+```
+
+######Data Aggregation and Record Creation
+
+One particularly important section of the Bin Descriptor code (lines 51 - 64) compares two values with the same map, determines how to aggregate them, then creates a new record.
+
+```scala
+def aggregateBins (a: Map[String, TwitterDemoTopicRecord],
+	  b: Map[String, 
+      TwitterDemoTopicRecord]): Map[String, TwitterDemoTopicRecord] = {
+  a.keySet.union(b.keySet).map(tag => {
+    val aVal = a.get(tag)
+    val bVal = b.get(tag)
+    if (aVal.isEmpty) {
+  (tag -> bVal.get)
+    } else if (bVal.isEmpty) {
+  (tag -> aVal.get)
+    } else {
+  (tag -> addRecords(aVal.get, bVal.get))
+    }
+  }).toMap
+}
+```
+
+######Calculating Custom Aggregation Methods
+
+Lines 66-80 are used to calculate the minimum and maximum values and write them to the metadata by level. These sections enable you to perform analytics over the whole data set, such as averages. 
+
+```scala
+def defaultMin: JavaList[TwitterDemoTopicRecord] = new ArrayList()
+  def min (a: JavaList[TwitterDemoTopicRecord],
+	   b: JavaList[TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] = {
+    val both = a.asScala.toList ++ b.asScala.toList
+    val min = minOfRecords(both.toArray : _*)
+    List(min).asJava
+  }
+
+  def defaultMax: JavaList[TwitterDemoTopicRecord] = new ArrayList()
+  def max (a: JavaList[TwitterDemoTopicRecord],
+	   b: JavaList[TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] = {
+    val both = a.asScala.toList ++ b.asScala.toList
+    val max = maxOfRecords(both.toArray : _*)
+    List(max).asJava
+  }
+```
+
+Standard binner templates are available in:
 
 ```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterDemoTopicRecord.java`
+tile-generation\src\main\scala\com\oculusinfo\tilegen\tiling
 ```
 
-####<a name="binner"></a>Binner
+######Recording
+
+Another section (lines 103 -104) creates the list of the top 10 Twitter words for each tile. It takes the values of a map, sorts them by count and returns the top 10 in the list. The processing type is used to keep a list longer than 10, most of which is ignored when the binning type is used to write the data to the tiles.
+
+```scala
+def convert (value: Map[String, TwitterDemoTopicRecord]): 
+JavaList[TwitterDemoTopicRecord] =
+    value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
+```
+
+######Serializer
+
+Lastly, the binDescriptor defines the Serializer to determine how to write tiles.
+
+```
+def getSerializer: TileSerializer[JavaList[TwitterDemoTopicRecord]] = 
+new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec())
+```
+
+####<a name="serializer"></a>Serializer
+
+The Serializer determines how how to write topic records to the AVRO tile set format used by Aperture Tiles. The Serializer has four components, each of which is generally written in Java (Scala is also supported):
+
+- Serializer
+- Serialization Factory
+- Serialization Factory Module
+- Serialization Factory Provider 
+
+See the following sections for examples of each custom Serializer component.
+
+#####Serializer
+
+For list type or array type records, you need to write an AVRO description of the piece and a java class. A java class example is available 
+in:
+
+```
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/binning/TwitterTopicAvroSerializer.java
+```
+
+This class inherits from the GenericAVROArraySerializer.java (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and defines:
+
+- setEntryValue - which sets the value of one entry in the list from the AVRO file
+- getEntryValue - which retrieves the value of one entry in the list from the AVRO file
+
+The definition of the AVRO schema is located in the following folder, where the *name* is set to **entryType**.
+
+```
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/srcmain/resources/twitterTopicEntry.avsc
+```
+
+For records that aren't list types, inherit from the GenericAvroSerializer.java (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and define:
+
+-getrecordschemafile
+-getvalue
+-setvalue
+
+The definition of the AVRO schema is based on the template in the following folder, where the *name* is set to **recordType**.
+
+```
+/binning-utilities/src/main/resources/doubleData.avsc
+```
+
+#####Serialization Factory
+
+The Serialization produces the data, gets configuration information (e.g., changes the AVRO compression codec) and hands back the serializer of choice at right time.
+
+```
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactory.java
+```
+
+#####Serialization Factory Module
+
+The Factory Module notifies Guice about the factory provided on create calls.
+
+```
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterSerializationFactoryModule.java
+```
+
+#####Serialization Factory Provider
+
+The Factory Provider produces the factory.
+
+```
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactoryProvider.java
+```
+
+####<a name="binner"></a>Binning Your Data
 
 The Binner should take your parsed source data, bin it across each of the levels you want in your visual analytic and create a set of pyramid tiles. 
 
 See the following file for an example of a custom Binner. Binners should be written in Scala. 
 
 ```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala
 ```
 
-There are two particularly important sections of the Binner code in this example. The first (lines 91 - 104) retrieves the raw data from the Record Parser and creates a mapping of Twitter topics to latitude and longitude coordinates, which determines to what bins the topics will be applied.
+#####<a name="record-parser"></a>Record Parser
+
+The Record Parser processes, sanitizes and transforms your source data into a format that can be handled by the Binner, which will create the pyramid for your Aperture Tiles visual analytic. It is important to build error handling and error correction capabilities into the Parser.
+
+See the following file for an example of a custom Record Parser. Record Parsers should be written in Scala. 
+
+```
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicRecordParser.scala`
+```
+
+Lines 91 - 104 in the Binner retrieve the raw data from the Record Parser and creates a mapping of Twitter topics to latitude and longitude coordinates, which determines to what bins the topics will be applied. 
 
 ```scala
 val data = rawDataWithTopics.mapPartitions(i => {     
@@ -307,15 +462,13 @@ val data = rawDataWithTopics.mapPartitions(i => {
 data.cache
 ```
 
-The second section (lines 112 - 115) specifies the following details about the binning job:
-- How to process your transformed data
-- How to write the tiles created from your transformed data
+#####Binning
+
+Lines 112 - 113 determine how to process your transformed data. They take the raw string data and turn it into RDD of pairs, where the first element is an index type (in this case caertesian, which is two doubles) and the second is the processing type from the Bin Descriptor. This transforms data into indexed records, which describes what tile and bin the data goes in (where in raw space data lies).
 
 ```scala
 val tiles = binner.processDataByLevel(data, new CartesianIndexScheme, binDesc,
                                       tilePyramid, levelSet, bins=1)
-tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc, 
-					pyramidName, pyramidDescription)
 ```
 
 Where binner.processDataByLevel accepts the following properties:
@@ -348,7 +501,16 @@ bins
 	Number of bins on each axis.
 ```
 
-And where tileIO.writeTileSet accepts the following properties:
+#####Tile IO
+
+Lines 114 - 115 specify how to write the tiles created from your transformed data.
+
+```
+tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc, 
+					pyramidName, pyramidDescription)
+```
+
+Where tileIO.writeTileSet accepts the following properties:
 
 ```
 tilePyramid
@@ -370,90 +532,4 @@ pyramidName
 
 pyramidDescription
 	Description of the finished pyramid. Stored in the tile metadata. 
-```
-
-#####Bin Descriptor
-
-The Bin Descriptor is called by the Binner. It determines how to aggregate multiple data points that are saved to the same bin.
-
-See the following file for an example of a custom Bin Descriptor. Bin Descriptors should be written in Scala.
-
-```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen
-```
-
-There are two particularly important sections of the Bin Descriptor code in this example. The first (lines 51 - 64) compares two values with the same map, determines how to aggregate them, then creates a new record.
-
-```scala
-def aggregateBins (a: Map[String, TwitterDemoTopicRecord],
-	  b: Map[String, 
-      TwitterDemoTopicRecord]): Map[String, TwitterDemoTopicRecord] = {
-  a.keySet.union(b.keySet).map(tag => {
-    val aVal = a.get(tag)
-    val bVal = b.get(tag)
-    if (aVal.isEmpty) {
-  (tag -> bVal.get)
-    } else if (bVal.isEmpty) {
-  (tag -> aVal.get)
-    } else {
-  (tag -> addRecords(aVal.get, bVal.get))
-    }
-  }).toMap
-}
-```
-
-The second section (lines 103 -104) creates the list of the top 10 Twitter words for each tile. It takes the values of a map, sorts them by count and returns the top 10 in the list.
-
-```scala
-def convert (value: Map[String, TwitterDemoTopicRecord]): 
-JavaList[TwitterDemoTopicRecord] =
-    value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
-```
-
-Lastly, the binDescriptor call the Serializer to determine how to write tiles.
-
-```
-def getSerializer: TileSerializer[JavaList[TwitterDemoTopicRecord]] = 
-new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec())
-```
-  
-####<a name="serializer"></a>Serializer
-
-The Serializer determines how how to write topic records to the AVRO tile set format used by Aperture Tiles. The Serializer has four components, each of which is generally written in Java (Scala is also supported):
-
-- Serializer
-- Serialization Factory
-- Serialization Factory Module
-- Serialization Factory Provider 
-
-See the following sections for examples of each custom Serializer component. 
-
-#####Serializer
-
-```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/binning/TwitterTopicAvroSerializer.java
-```
-
-#####Serialization Factory
-
-The Serialization produces the data, gets configuration information (e.g., changes the AVRO compression codec) and hands back the serializer of choice at right time.
-
-```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactory.java
-```
-
-#####Serialization Factory Module
-
-The Factory Module notifies Guice about the factory provided on create calls.
-
-```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterSerializationFactoryModule.java
-```
-
-#####Serialization Factory Provider
-
-The Factory Provider produces the factory.
-
-```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactoryProvider.java
 ```
