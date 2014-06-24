@@ -78,7 +78,7 @@
             }
         },
         {
-            "title" : "Amount (BTC)",
+            "title" : "Destination",
             "position" : "left",
             "repeat" : false,
             "intervalSpec" : {

@@ -13,7 +13,7 @@
         }
     },
     "aperture.io" : {
-    	"rpcEndpoint" : "/aperture/rpc",
-        "restEndpoint" : "/${project.build.finalName}/rest"
+    	"rpcEndpoint" : "",
+        "restEndpoint" : "rest"
     }
 }
