@@ -14,7 +14,9 @@
         "all layers that can be so displayed should be leaf nodes.  Non-leaf nodes exist ",
         "solely to organize and group layers as described above.",
         "",
-        "NOTE: Local tile sets are stored at //kraken/xdata/data/twitter/tiles/2014.02-0.4.SA" 
+        "NOTE: Tile sets are stored at:",
+        "http://assets.oculusinfo.com/tiles/downloads/tilesets/twitter-heatmap.zip",
+        "http://assets.oculusinfo.com/tiles/downloads/tilesets/twitter-curated-topics.zip"
     ],
     "layers": [
         {
