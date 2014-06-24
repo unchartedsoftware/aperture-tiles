@@ -63,7 +63,7 @@
 			  </includes>
             </resources>
           </webResources>
-      	  <warName>twitter-topics</warName>
+      	  <warName>twitter-topics-sample</warName>
 	  	  <overlays>
 	    	<overlay>
 	      	  <groupId>com.oculusinfo</groupId>
@@ -79,7 +79,7 @@
 		<version>7.2.0.v20101020</version>
 		<configuration>
 	  	  <webAppConfig>
-	    	<contextPath>/twitter-topics</contextPath>
+	    	<contextPath>/twitter-topics-sample</contextPath>
 	    	<baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
 	      			Use the development (source) code
 	      	  <resourcesAsCSV>
