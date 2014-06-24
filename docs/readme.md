@@ -11,21 +11,21 @@ The critical first step in exploring a new dataset is to gain a general understa
 
 There are several classes of user that need this overview of "big data" in order to effectively explore and understand it.
 
-- Data Scientists: need to design and apply the correct analytics that best address the character of the data.
-- Visualization Designers: must select the appropriate visual metaphors and interactions to represent the data.
-- Analysts: need to understand the data in order to know which datasets to select, and which tools to use to approach a given analytic question.
+* **Data Scientists:** need to design and apply the correct analytics that best address the character of the data.
+* **Visualization Designers:** must select the appropriate visual metaphors and interactions to represent the data.
+* **Analysts:** need to understand the data in order to know which datasets to select, and which tools to use to approach a given analytic question.
 
-There is a clear need for new, powerful tools to aid these types of users in exploring, characterizing, and analyzing 'big data'. Aperture Tiles provides this aid with browser-based interactive visual analytics that scale to data sets with billions or more of data points.
+There is a clear need for new, powerful tools to aid these types of users in exploring, characterizing, and analyzing 'big data.' Aperture Tiles provides this aid with browser-based, interactive visual analytics that scale to data sets with billions or more of data points.
 
 ### Web Tile Rendering for Big Data Visual Analytics
 
-The widespread adoption of web-based maps provides a familiar set of interactions for exploring abstract large data spaces. Aperture Tiles builds on these techniques to provide tools for big data visual analytics that use tile-based rendering.  This provides an interactive experience that is similar to geographic, web-based maps. 
+The widespread adoption of web-based maps provides a familiar set of interactions for exploring large, abstract data spaces. Aperture Tiles builds on these techniques to provide tools for big data visual analytics that use tile-based rendering.  This provides an interactive experience that is similar to geographic, web-based maps. 
 
 Tile-based geographic maps provide a solid framework to construct large scale visualization:
 
-- continuous data along two dimensions
-- use of data layering and legends
-- use of axes and scales
+* Continuous data along two dimensions
+* Use of data layering and legends
+* Use of axes and scales
 
 Web delivery of maps using tiled rendering has benefitted from years of work. With widespread use, map interactions have become familiar and make exploration of large data spaces easy and even enjoyable. By using this familiar interaction method, Aperture Tiles can provide a big data exploration experience that is just as easy and enjoyable.
 
@@ -41,7 +41,7 @@ Aperture Tiles is under ongoing development and is freely available for download
 
 ###Interested in Learning More?
 
-- [Tour](/tour/overview/): Take our tour to learn more about the methodology behind Aperture Tiles.
-- [Documentation](/documentation/quickstart/): Learn how to install, implement, and test your Aperture Tiles applications.
-	- [Quick Start](/documentation/quickstart/): our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
-- [Download](download/): For details on downloading pre-packaged versions or aquiring the Aperture Tiles source code visit our download page.
+* [Tour](/tour/overview/): Take our tour to learn more about Aperture Tiles.
+* [Documentation](/documentation/quickstart/): Learn how to install, implement, and test your Aperture Tiles applications.
+	* [Quick Start](/documentation/quickstart/): our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
+* [Download](download/): For details on downloading pre-packaged versions or aquiring the Aperture Tiles source code visit our download page.
