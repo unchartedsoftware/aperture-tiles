@@ -17,7 +17,7 @@
   </parent>
 
   <modules>
-    <module>twitter-topics-client</module>
-    <module>twitter-topics-utilities</module>
+    <module>twitter-sample-client</module>
+    <module>twitter-sample-utilities</module>
   </modules>
 </project>

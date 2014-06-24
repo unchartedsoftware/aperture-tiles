@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>twitter-topics-utilities</artifactId>
+  <artifactId>twitter-sample-utilities</artifactId>
   <name>Twitter Custom Processing Utilities</name>
   <description>A server-side service for sending tiles from tile pyramids to web clients</description>
 

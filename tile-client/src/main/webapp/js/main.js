@@ -283,7 +283,7 @@ require(['./ApertureConfig',
 				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap, serverLayerMediator );
                         annotationLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap, annotationLayerMediator );
 
-                        $.when( clientLayerDeferreds, serverLayerDeferreds, annotationrLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
+                        $.when( clientLayerDeferreds, serverLayerDeferreds, annotationLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
 
                             var sharedStates = [];
 
@@ -291,7 +291,7 @@ require(['./ApertureConfig',
                             $.merge( sharedStates, clientLayerMediator.getLayerStates() );
                             $.merge( sharedStates, serverLayerMediator.getLayerStates() );
                             $.merge( sharedStates, annotationLayerMediator.getLayerStates() );
-                            
+
                             // create layer controls
                             new LayerControls( 'layer-controls-content', sharedStates ).noop();
                             // create the carousel controls
