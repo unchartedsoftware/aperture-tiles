@@ -419,17 +419,17 @@ The custom renderers built to support this functionality are based on the follow
 - ApertureRenderer.js, which uses the ApertureJS framework to render tiles
 - HtmlRenderer.js, which uses an HTML framework to render tiles
 
-A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw carousels on each tile that contain multiple ways to view the top 5 Twitter topics used in the geographic area that they cover. The custom renderers for this application are available in `/src/main/webapp/js/layer/client/renderers/`.
+A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw the top 5 words occuring in each tile. As multiple renderers are attached to this client-side layer, a carousel interface is activated to allow the user to switch between them. The custom renderers for this application are available in `/src/main/webapp/js/layer/client/renderers/`.
 
 For example, the TopTopicsHtml.js renderer is based on the HtmlRenderer.js framework. Lines 45-47 of this file use the init function to get the raw source data.
 
 ```javascript
 init: function( map ) {
 
-            this._super( map );
-            this.createNodeLayer(); // instantiate the node layer data object
-            this.createLayer();     // instantiate the html visualization layer
-        },
+	this._super( map );
+	this.createNodeLayer(); // instantiate the node layer data object
+	this.createLayer();     // instantiate the html visualization layer
+},
 ```
 
 The registerLayer method is overriden at line 50. If you are attaching an event listener to the layer state, include it in this section. Call addListener on line 60 (not in the constructor, as the layer state will not have been attached by the time the constructor has been called).
@@ -437,30 +437,30 @@ The registerLayer method is overriden at line 50. If you are attaching an event 
 ```javascript
  registerLayer: function( layerState ) {
 
-            var that = this; // preserve 'this' context
+	var that = this; // preserve 'this' context
 
-            this._super( layerState ); // call parent class method
+	this._super( layerState ); // call parent class method
 
-            /*
-                Lets attach the layer state listener. This will be called whenever
-                the layer state changes.
-            */
-            this.layerState.addListener( function(fieldName) {
+	/*
+		Lets attach the layer state listener. This will be called whenever
+		the layer state changes.
+	*/
+	this.layerState.addListener( function(fieldName) {
 
-                var layerState = that.layerState;
+		var layerState = that.layerState;
 
-                if ( fieldName === "clickState" ) {
-                    // if a click occurs, lets remove styling from any previous label
-                    $(".topic-label, .clicked").removeClass('clicked');
-                    // in this demo we only want to style this layer if the click comes from this layer
-                    if ( layerState.getClickState().type === "html" ) {
-                        // add class to the object to adjust the styling
-                        layerState.getClickState().$elem.addClass('clicked');
-                    }
-                }
-            });
+		if ( fieldName === "clickState" ) {
+			// if a click occurs, lets remove styling from any previous label
+			$(".topic-label, .clicked").removeClass('clicked');
+			// in this demo we only want to style this layer if the click comes from this layer
+			if ( layerState.getClickState().type === "html" ) {
+				// add class to the object to adjust the styling
+				layerState.getClickState().$elem.addClass('clicked');
+			}
+		}
+	});
 
-        },
+},
 ```
 
 At line 78, the HTML node layer is instantiated. This holds the tile data as it comes in from the tile service. The X and Y coordinate mappings are set and used to position the individual nodes on the map. In this example, the data is geospatial and located under the `latitude` and `longitude` keys. The `idKey` attribute is used as a unique identification key for internal managing of the data. In this case, it is the tilekey.
@@ -468,12 +468,12 @@ At line 78, the HTML node layer is instantiated. This holds the tile data as it 
 ```javascript
 createNodeLayer: function() {
 
-            this.nodeLayer = new HtmlNodeLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey'
-            });
+	this.nodeLayer = new HtmlNodeLayer({
+		map: this.map,
+		xAttr: 'longitude',
+		yAttr: 'latitude',
+		idKey: 'tilekey'
+	});
 },
 ```
 
@@ -552,13 +552,13 @@ The layer file should then be updated to specify that client-side rendering shou
 
 ```
 "renderers": [
-                        {
-                            "domain": "client",
-                            "renderers": [ "CustomRendererName1",
-                                           "CustomerRendererName2"
-                            ]
-                        }
-                    ]
+	{
+		"domain": "client",
+		"renderers": [ "CustomRendererName1",
+					   "CustomerRendererName2"
+		]
+	}
+]
 ``` 
 
 ##<a name="deployment"></a>Deployment
