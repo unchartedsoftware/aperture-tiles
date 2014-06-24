@@ -22,9 +22,10 @@ To begin configuring your Tile Server and Tile Client:
 
 1. Create a copy of the *aperture-tiles/tile-client-template* directory and give it a unique name (e.g., *new-project*).
 2. Update the Maven POM (*new-project/***pom.xml**) to change the following tags:
-	- \<artifactId\> (line 4): Change from *tile-client-template* to *new-project*
-	- \<name\> (line 6): Enter an appropriate project description.
-	- \<version\> (line 14): Enter an appropriate project version number.
+	- \<groupId\> (line 5): Enter an appropriate group ID
+	- \<version\> (line 6): Enter an appropriate project version number.
+	- \<artifactId\> (line 7): Change from *tile-client-template* to *new-project*
+	- \<name\> (line 10): Enter an appropriate project description. 
 
 ##<a name="server-config"></a>Tile Server Configuration
 
@@ -217,6 +218,23 @@ The BaseLayer parameters use map provider APIs to determine what features to inc
                 }
             }
         }
+```
+
+The next example shows a TMS layer configuration that uses the Oculus World Graphite map set. You can use these maps in offline mode by first downloading the [map tiles WAR](http://aperturejs.com/downloads/) on [aperturejs.com](http://aperturejs.com/).
+
+```javascript
+{
+        "type": "TMS",
+        "url" : "http://aperture.oculusinfo.com/map-world-graphite/",
+        "options" : {
+          "name" : "Open Graphite",
+          "layername": "world-graphite",
+          "osm": 0,
+          "type": "png",
+          "serverResolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172],
+          "resolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172]
+        }
+      }
 ```
 
 #####<a name="geo-axisconfig"></a>AxisConfig
