@@ -30,9 +30,9 @@ If you later intend to create Aperture Tiles projects using particularly large d
 
 Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
 
-###<a name="aperture-tiles-utilities"></a>Aperture Tiles Utilities
+###<a name="aperture-tiles-utilities"></a>Aperture Tiles Packaged Distribution
 
-Save the following Aperture Tiles utilities available on the [Download](../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
+Save the following Aperture Tiles distribution available on the [Download](../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
 - [Tile Generator](../../download/tile-generator.zip): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
 - [Tile Client Template](../../download/tile-client-template.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
@@ -44,7 +44,7 @@ Set the following environment variables:
 
 - `SPARK_HOME` - the location of the Spark installation
 - `SPARK_MEM` - the amount of memory to allocation to Spark
-- `MASTER` - the node on which the cluster is installed
+- `MASTER` - the node on which the cluster is installed (set to `local` for running Spark on a single machine)
 
 ###<a name="julia-set-data-generation"></a>Julia Set Data Generation
 
@@ -99,7 +99,7 @@ oculus.tileio.type
 	installations.
 oculus.binning.source.location
 	Path of the source data files in your local file system
-	(ex: `/data/julia`) or HDFS path (ex: `hdfs://my-hadoop-master.example.com/data/julia`).
+	(ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).
 ```
 
 ####<a name="hbase-connection"></a>HBase Connection Details (Optional)
@@ -141,7 +141,7 @@ Note that the `oculus.binning.prefix` value is only included if you set it in th
 
 ##<a name="tile-server-configuration"></a>Tile Server Configuration
 
-For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](../../download/Tile Client Template) utility.
+For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](../../download/Tile Client Template) distribution.
 
 For typical Aperture Tiles projects, you will need to edit the **web.xml**  and **tile.properties** files in this directory. For more information on editing these files, see the [Tile Generation](../generation/) topic on this website.
 
@@ -152,7 +152,7 @@ To configure the Tile Client application to display the AVRO files containing yo
 - Map Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/maps*), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
 - Layer Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/layers*), which specifies the layers that can be overlaid on your base map or plot.
 
-Both files are available in the [tile-client-template.zip](../../download/Tile Client Template) utility. Extract the contents of the file to access them.
+Both files are available in the [tile-client-template.zip](../../download/Tile Client Template) distribution. Extract the contents of the file to access them.
 
 ###<a name="map-properties"></a>Map Properties
 
