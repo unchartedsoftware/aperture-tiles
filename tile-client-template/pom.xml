@@ -1,25 +1,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.oculusinfo</groupId>
+  <version>0.3-SNAPSHOT</version>
   <artifactId>tile-client-template</artifactId>
+
   <packaging>war</packaging>
   <name>Aperture-Tiles Web Client Template</name>
   <url>http://github.com/oculusinfo/aperture-tiles</url>
   <description>
-    Copy this maven project as a starting template for a basic tile client.
+    Copy this maven project as a starting template for a basic tile client. Edit the group id, version, and artifact id
   </description>
-
-  <parent>
-    <artifactId>aperture-tiles</artifactId>
-    <groupId>com.oculusinfo</groupId>
-    <version>0.3-SNAPSHOT</version>
-  </parent>
 
   <dependencies>
     <dependency>
       <groupId>com.oculusinfo</groupId>
       <artifactId>tile-client</artifactId>
-      <version>${project.version}</version>
+      <version>0.3-SNAPSHOT</version>
       <type>war</type>
     </dependency>
   </dependencies>
@@ -29,18 +27,7 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
-        <targetPath>../jettyFilteredResources</targetPath>
-        <filtering>true</filtering>
-        <includes>
-          <include>aperture-config.json</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
         <filtering>false</filtering>
-        <excludes>
-        	<exclude>aperture-config.json</exclude>
-        </excludes>
       </resource>
     </resources>
     <plugins>
@@ -77,7 +64,7 @@
             <contextPath>/${project.artifactId}</contextPath>
             <baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
               Use the development (source) code
-              <resourcesAsCSV>src/main/webapp,${project.parent.basedir}/tile-client/src/main/webapp,${project.build.directory}/jettyFilteredResources,${project.build.directory}/${project.build.finalName}</resourcesAsCSV>
+              <resourcesAsCSV>src/main/webapp,${project.build.directory}/${project.build.finalName}</resourcesAsCSV>
             </baseResource>
           </webAppConfig>        
         </configuration>
