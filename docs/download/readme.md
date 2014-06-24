@@ -13,19 +13,17 @@ The Aperture Tiles source code is available on GitHub. Aperture Tiles is under o
 
 <a href="https://github.com/oculusinfo/aperture-tiles" class="download-link">Aperture Tiles Source Code</a>
 
-Please note that Aperture Tiles is dependent on ApertureJS, an agile, extensible visualization framework library project also created by Oculus Info. Like Aperture Tiles, the ApertureJS source code is under ongoing development and is freely available for download under the The MIT License. The ApertureJS source code is available on GitHub.
+Please note that Aperture Tiles is dependent on ApertureJS, an agile, extensible visualization framework library project. Like Aperture Tiles, the ApertureJS source code is under ongoing development and is freely available for download under the The MIT License. The ApertureJS source code is available on GitHub.
 
 <a href="https://github.com/oculusinfo/aperturejs" class="download-link">ApertureJS Source Code</a>
 
 For information on full installations of Aperture Tiles (and ApertureJS), see the [Installation](../setup/) page.
 
-## Packaged Utilities ##
+## Packaged Distribution ##
 
-The following utilities can be used in conjunction with the [Quick Start](../documentation/quickstart) documentation to help you quickly provision a sample data set, transform it and create an Aperture Tiles project that allows you to visualize it in any web browser.
+The following pre-built distribution can be used to quickly generate and display tiles without having to build the software. See the [Quick Start](../documentation/quickstart) documentation to help you quickly learn how to process a data set, transform it and create an Aperture Tiles project that allows you to visualize it in a web browser.
 
-- **Tile Generator**: Enables you to create a sample data set (for a Julia set fractal) and generate a set of tiles that can be viewed using the template Tile Client available below.
+- **Tile Generator**: Enables you to generate a set of tiles that can be viewed using the template Tile Client available below. This version was built for Apache Spark 1.0 and CDH 4.6.
 	<br/><br/><a href="http://www.oculusinfo.com/assets/downloads/tiles/tile-generator.zip" class="download-link">Tile Generator</a><br/><br/>
-- **Tile Client Template**: An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
+- **Tile Client Template**: An example Tile Client that you can quickly copy and deploy to your web server after minimal modification to display tiles in a browser.
 	<br/><br/><a href="http://www.oculusinfo.com/assets/downloads/tiles/tile-client-template.zip" class="download-link">Tile Client Template</a>
-
-The full Aperture Tiles source code, is not required for this example. 
