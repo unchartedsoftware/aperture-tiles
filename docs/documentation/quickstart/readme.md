@@ -7,15 +7,15 @@ layout: default
 
 # Quick Start Guide
 
-The following instructions walk you through the process of creating an Aperture Tiles project that displays the points in a Julia set fractal on an X/Y plot with five zoom levels.
-
-![Aperture Tiles Julia Set Project](../../img/julia-set.png "Aperture Tiles Julia Set Project")
-
-This Quick Start Guide covers the following processes:
+The following guide provides a short tutorial that walks you through the process of creating and configuring an Aperture Tiles project.  This Quick Start Guide covers the following processes:
 
 1. Generating a sample data set to analyze
 2. Tiling and storing the sample data set
 3. Configuring a client to serve and display the tiles in a web client
+
+At the end of this guide you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
+
+![Aperture Tiles Julia Set Project](../../img/julia-set.png "Aperture Tiles Julia Set Project")
 
 ##<a name="prerequisites"></a>Prerequisites
 
