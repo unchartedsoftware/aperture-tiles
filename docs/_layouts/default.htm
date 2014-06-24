@@ -55,6 +55,17 @@
 							</div>
 							<div class="submenu-item-label">Components</div>
 						</div>
+						{% if page.subtitle == 'Process' %}
+						<div class="submenu-item" onclick="window.location.assign('');">
+							<div class="submenu-item-background selected">
+						{% else %}
+						<div class="submenu-item" onclick="window.location.assign('../process/');">
+							<div class="submenu-item-background">
+						{% endif %}
+								<div class="submenu-item-number">3</div>
+							</div>
+							<div class="submenu-item-label">Process</div>
+						</div>
 					</div>
 			{% elsif page.section == 'Documentation' %}
 					<div id="submenu">
@@ -123,6 +134,8 @@
 						{% include tour-overview.htm %}
 					{% elsif page.section == "Tour" and page.subtitle == "Components" %}
 						{% include tour-components.htm %}
+					{% elsif page.section == "Tour" and page.subtitle == "Process" %}
+						{% include tour-process.htm %}
 					{% elsif page.section == "Documentation" and page.subtitle == "Quick Start" %}
 						{% include documentation-quickstart.htm %}
 					{% elsif page.section == "Documentation" and page.subtitle == "Installation" %}

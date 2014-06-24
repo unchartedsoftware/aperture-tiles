@@ -21,7 +21,10 @@ The fastest way to create these the Tile Server and Tile Client is with the Tile
 To begin configuring your Tile Server and Tile Client:
 
 1. Create a copy of the *aperture-tiles/tile-client-template* directory and give it a unique name (e.g., *new-project*).
-2. Update the Maven POM (*new-project/***pom.xml**) to change the  \<artifactId\> tag content (line 4) from *tile-client-template* to *new-project" and edit the \<name\> tag content (line 6) from *Aperture-Tiles Web Client Template* to an appropriate project description.
+2. Update the Maven POM (*new-project/***pom.xml**) to change the following tags:
+	- \<artifactId\> (line 4): Change from *tile-client-template* to *new-project*
+	- \<name\> (line 6): Enter an appropriate project description.
+	- \<version\> (line 14): Enter an appropriate project version number.
 
 ##<a name="server-config"></a>Tile Server Configuration
 
@@ -384,17 +387,7 @@ transform
 ##<a name="clientconfig"></a>Tile Client Configuration
 
 
-###<a name="configaperture"></a>Aperture Configuration
-
-The Tile Client uses ApertureJS services and a client-side visualization library. To communicate with the Tile Server, the Tile Client must specify the Aperture services endpoints.  This configuration is specified in *new-project/src/main/resources/**aperture-config.json***. Edit the `aperture.io` setting specifying the `restEndpoint` to use the correct URL for the *new-project*.  For example:
-
-```javascript
-"aperture.io" : {
-	"rpcEndpoint" : "%host%/aperture/rpc",
-	"restEndpoint" : "%host%/new-project/rest"
-```
-
-##Client-Side Rendering
+##<a name="clientside"></a>Client-Side Rendering
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 
@@ -498,6 +491,6 @@ The layer file should then be updated to specify that client-side rendering shou
 
 ##<a name="deployment"></a>Deployment
 
-Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your Apache Tomcat or Jetty server.
+Once you have finished configuring the map and layer properties, copy the `/new-project/` folder to your Apache Tomcat or Jetty server.
 
-Access the `/tile-client-template/` directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
+Access the `/new-project/` directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
