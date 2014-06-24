@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>twitter-topics</artifactId>
   <packaging>pom</packaging>
-  <name>Twitter Track Topics Demo</name>
+  <name>Twitter Topics Demo</name>
   <url>http://github.com/oculusinfo/aperture-tiles</url>
   <description>
     A project for custom binning and display of twitter data.
