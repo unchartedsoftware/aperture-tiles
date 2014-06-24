@@ -22,21 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
+/* global activityLogger */
 define(function (require) {
     "use strict";
 
-    var ActivityLogger = require( '../../libjs/draper.activity_logger-2.0'),
-        instance = null;
-
-    return {
-
-        getInstance : function() {
-            if ( !instance ) {
-                instance = new ActivityLogger().echo( true ).testing( true );
-            }
-            return instance;
-        }
-    };
+    var logger = null;
+    if ( !logger ) {
+        logger = new activityLogger( "./js/libjs/draper.activity_worker-2.1.1.js" ).echo( true ).testing( true );
+    }
+    return logger;
 
 });

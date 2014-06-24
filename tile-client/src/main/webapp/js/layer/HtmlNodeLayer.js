@@ -53,8 +53,6 @@ define(function (require) {
 
             this.layers_ = [];
             this.subset_ = [];
-
-            //this.map_.on( 'zoomend', $.proxy(this.clear, this) );
         },
 
 

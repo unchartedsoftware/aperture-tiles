@@ -34,6 +34,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        activityLogger = require('../logging/DraperActivityLogger'),
         LayerState;
 
     
@@ -132,6 +133,8 @@ define(function (require) {
          */
         setZIndex: function (zIndex) {
             if (this.zIndex !== zIndex) {
+
+                activityLogger.logUserActivity( "Reorder layer z-index from " + this.zIndex + "to" + zIndex, "sort_data",  activityLogger.WF_EXPLORE );
                 this.zIndex = zIndex;
                 this.notify("zIndex", this.listeners);
             }
@@ -150,6 +153,7 @@ define(function (require) {
         setEnabled: function (enabled) {
             if (this.enabled !== enabled) {
                 this.enabled = enabled;
+                activityLogger.logUserActivity( "Toggle layer visibility to " + (enabled ? "visible" : "invisible"), "filter_data",  activityLogger.WF_EXPLORE );
                 this.notify("enabled", this.listeners);
             }
         },
@@ -169,6 +173,7 @@ define(function (require) {
         setOpacity: function (opacity) {
             if (this.opacity !== opacity) {
                 this.opacity = opacity;
+                activityLogger.logUserActivity( "Adjust layer opacity to " + opacity, "filter_data",  activityLogger.WF_EXPLORE );
                 this.notify("opacity", this.listeners);
             }
         }

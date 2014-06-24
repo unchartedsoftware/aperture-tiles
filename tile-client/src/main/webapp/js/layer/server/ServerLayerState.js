@@ -37,6 +37,7 @@ define(function (require) {
 
 
     var LayerState = require('../LayerState'),
+        activityLogger = require('../../logging/DraperActivityLogger'),
         arraysEqual,
         ServerLayerState;
 
@@ -110,8 +111,6 @@ define(function (require) {
             this.rampMinMax = [0,10];
         },
 
-
-
         /**
          * @returns {Array} - A 2 element array containing the min and max filter values.  These values range
          * from [0.0 - 1.0], representing a fraction of the total data range.
@@ -146,6 +145,7 @@ define(function (require) {
         setRampType: function (rampType) {
             if (this.rampType !== rampType) {
                 this.rampType = rampType;
+                activityLogger.logUserActivity( "Setting ramp type to " + rampType, "filter_data",  activityLogger.WF_EXPLORE );
                 this.notify("rampType", this.listeners);
             }
         },
@@ -163,6 +163,7 @@ define(function (require) {
         setRampFunction: function (rampFunction) {
             if (this.rampFunction !== rampFunction) {
                 this.rampFunction = rampFunction;
+                activityLogger.logUserActivity( "Setting ramp function to " + rampFunction, "filter_data",  activityLogger.WF_EXPLORE );
                 this.notify("rampFunction", this.listeners);
             }
         },

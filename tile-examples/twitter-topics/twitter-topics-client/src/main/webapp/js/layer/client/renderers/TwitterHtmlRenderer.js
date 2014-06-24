@@ -32,6 +32,7 @@ define(function (require) {
     var HtmlRenderer = require('./HtmlRenderer'),
         TwitterUtil = require('./TwitterUtil'),
         DetailsOnDemand = require('./DetailsOnDemandHtml'),
+        activityLogger = require('../../../logging/DraperActivityLogger'),
         TwitterHtmlRenderer;
 
 
@@ -183,6 +184,21 @@ define(function (require) {
         },
 
 
+        hoverOn: function( data, value ) {
+            this.layerState.setHoverState({
+                tag: value.topic,
+                translatedTag: value.topicEnglish,
+                data: data,
+                value : value
+            });
+        },
+
+
+        hoverOff: function() {
+            this.layerState.setHoverState({});
+        },
+
+
         setMouseEventCallbacks: function( $element, data, value ) {
 
             var that = this;
@@ -204,6 +220,14 @@ define(function (require) {
                     // prevent event from going further
                     event.stopPropagation();
                  });
+            });
+
+            $element.mouseover( function( event ) {
+                that.hoverOn( data, value );
+            });
+
+            $element.mouseout( function( event ) {
+                that.hoverOff();
             });
 
         },

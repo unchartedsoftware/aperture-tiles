@@ -37,6 +37,7 @@ define(function (require) {
 
 
     var LayerState = require('../LayerState'),
+        activityLogger = require('../../logging/DraperActivityLogger'),
         objectsEqual,
         ClientLayerState;
 
@@ -99,6 +100,7 @@ define(function (require) {
             this.defaultRendererIndex = 0;
         },
 
+
         setRendererCount: function(count) {
             if (this.rendererCount !== count) {
                 this.rendererCount = count;
@@ -131,12 +133,17 @@ define(function (require) {
 
             if ( renderersByTile[tilekey] !== index ) {
 
+                activityLogger.logUserActivity( "Changing tile " + tilekey + " renderer id from "
+                                                + renderersByTile[tilekey] + " to " + index,
+                                                "filter_data",  activityLogger.WF_EXPLORE );
+
                 if ( index === this.defaultRendererIndex ) {
                     // if matches default, delete it, it will default appropriately
                     delete renderersByTile[tilekey];
                 } else {
                     renderersByTile[tilekey] = index;
                 }
+
                 this.notify("tileRendererIndex", this.listeners);
             }
         },
@@ -166,6 +173,8 @@ define(function (require) {
             if (this.tileFocus !== tilekey) {
                 this.previousTileFocus = this.tileFocus;
                 this.tileFocus = tilekey;
+                activityLogger.logUserActivity( "Hover off tile " + this.previousTileFocus, "filter_data",  activityLogger.WF_EXPLORE );
+                activityLogger.logUserActivity( "Hover on tile " + this.tileFocus, "filter_data",  activityLogger.WF_EXPLORE );
                 this.notify("tileFocus", this.listeners);
             }
         },

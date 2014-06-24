@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-/* global OpenLayers */
+/* global OpenLayers activityLogger */
 require(['./ApertureConfig',
          './customization',
          './ui/OverlayButton',

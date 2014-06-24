@@ -185,16 +185,16 @@ define(function (require) {
             $opacitySliderContainer = $('<div class="' + sliderClass + '"></div>'),
             $opacitySliderLabel = $('<div class="slider-label">Opacity</div>'),
             $opacitySlider = $('<div class="opacity-slider-bar"></div>').slider({
-                 range: "min",
-                 min: 0,
-                 max: OPACITY_RESOLUTION,
-                 value: layerState.getOpacity() * OPACITY_RESOLUTION,
-                 change: function () {
-                     layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
-                 },
-                 slide: function () {
-                     layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
-                 }
+                range: "min",
+                min: 0,
+                max: OPACITY_RESOLUTION,
+                value: layerState.getOpacity() * OPACITY_RESOLUTION,
+                change: function () {
+                    layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
+                },
+                slide: function () {
+                    layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
+                }
              });
 
         $opacitySliderContainer.append( $opacitySliderLabel );
