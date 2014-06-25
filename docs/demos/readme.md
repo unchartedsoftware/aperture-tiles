@@ -59,3 +59,7 @@ This demo illustrates:
 
 -   Seamless zoom and pan interaction on cross-plots
 -   Use of Aperture tiles for exploratory data analysis by plotting *all the data*
+
+Julia Set Example
+-----------------
+This demo is used in the quickstart guide to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
