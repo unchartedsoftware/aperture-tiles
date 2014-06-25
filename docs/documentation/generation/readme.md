@@ -34,11 +34,11 @@ See the [Installation documentation](../setup) for full details on the required 
 	- Scala version 2.10.3
 - **Cluster Computing**:
 	- Apache Spark version 0.9.0 or greater (version 1.0.0 recommended)
-	- Hadoop/HDFS/HBase (Optional) - Choose your preferred version and use in conjunction with HBase.
+	- Hadoop/HDFS/HBase (Optional) - Choose your preferred version
 
 ###<a name="spark-config"></a>Apache Spark Configuration
 
-Apache Spark must be configured to use the same version of Hadoop that you have installed.  One can either [download the correct version directly](http://spark.apache.org/downloads.html), or if no version is listed for the correct flavour of hadoop, one can [build spark](http://spark.apache.org/docs/latest/building-with-maven.html).   
+Apache Spark must be configured to use the same version of Hadoop that you have installed.  Either [download the correct version directly](http://spark.apache.org/downloads.html), or if no version is listed for the correct flavour of hadoop, you can [build spark](http://spark.apache.org/docs/latest/building-with-maven.html) to support your hadoop version.   
 
 ####<a name="spark-script"></a>spark-run Script
 
@@ -50,7 +50,7 @@ If you want to use this script, you must first set the following environment var
 SCALA_HOME - the path to the scala installation directory
 SPARK_HOME - the path to the spark installation directory
 ```
-Note that in the source code, this script only exists after building, and that it looks for tile-generation jar files in one's local maven repository.  Therefore, in order to use this script from the source code, one first needs to run **mvn install**.
+Note that in the source code, this script only exists after building the project, and that it looks for tile-generation jar files in your local maven repository.  Therefore, in order to use this script from the source code, you first needs to run **mvn install**.
 
 ##<a name="tiling-job"></a>Running a Tiling Job
 
@@ -286,7 +286,7 @@ JavaList[TwitterDemoTopicRecord] =
 
 ######Data Aggregation and Record Creation
 
-The Bin Descriptor defines how data is aggregated.  For instance, in example BinDescriptor (lines 51 - 64 of `TwitterTopicBinDescriptor`) compares two maps, creating a new map with keys that exist in either, and the sum of the values of both.
+The Bin Descriptor defines how data is aggregated.  For instance, the example BinDescriptor (lines 51 - 64 of `TwitterTopicBinDescriptor`) compares two maps, creating a new map with keys that exist in either, and the sum of the values of both.
 
 ```scala
 def aggregateBins (a: Map[String, TwitterDemoTopicRecord],
@@ -345,7 +345,7 @@ new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec())
 
 ####<a name="serializer"></a>Serializer
 
-The Serializer determines how how to read and write tiles in a tile set. The Serializer requires some supporting classes for the tile server to use it.
+The Serializer determines how to read and write tiles in a tile set. The Serializer requires some supporting classes for the tile server to use it.
 
 - Serializer
 - Serialization Factory
@@ -477,13 +477,13 @@ binDescriptor
 	A Bin Descriptor, as described above, which defines how to aggregate two records, how to convert them into the form written, and how to determine the extrema of the dataset.
  
 tilePyramid
-	The projection to use to transform from from the raw data index into tiles and bins.  Two types are predefined, an `/binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid`, which is a linear transformation into an arbitrarily sized space, and `/binning-utilities/src/main/java/com/oculusinof/binning/impl/WebMercatorTilePyramid`, which is a standard geographical projection.
+	The projection to use to transform from the raw data index into tiles and bins.  Two types are predefined, an `/binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid`, which is a linear transformation into an arbitrarily sized space, and `/binning-utilities/src/main/java/com/oculusinof/binning/impl/WebMercatorTilePyramid`, which is a standard geographical projection.
 
 levelSet
 	Specifies which levels to process at the same time. It is generally
     recommended you process levels 1-9 together, then any additional
-    levels one at a time afterwards.  This arrangement is most likely 
-	to make proper use of system resources.
+    levels one at a time afterwards.  This arrangement typically 
+	makes effective use of system resources.
 
 bins
 	Number of bins on each axis.  Optional, defaults to 256
