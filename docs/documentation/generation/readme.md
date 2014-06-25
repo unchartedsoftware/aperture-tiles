@@ -10,7 +10,7 @@ Tile Generation
 
 Aperture Tiles provides a distributed framework for processing your large-scale data built on the Apache Spark engine to create a set of tiles that summarize and aggregate your data at various levels in a pyramid structure. 
 
-At the highest level (level 0) in the tile set pyramid, there is only a single tile summarizing all data. On each lower level, there are up to 4^z tiles, where z is the (with lower numbers indicating higher levels. At each level, the tiles are laid out row wise across the base map or plot, starting at the lower left. Each tile summarizes the data located in that particular tile.
+At the highest level (level 0) in the tile set pyramid, there is only a single tile summarizing all data. On each lower level, there are up to 4^z tiles, where z is the zoom level (with lower numbers indicating higher levels. At each level, the tiles are laid out row wise across the base map or plot, starting at the lower left. Each tile summarizes the data located in that particular tile.
 
 ![Tile Layout](../../img/tile-layout.png)
 
@@ -20,11 +20,7 @@ Each tile is an AVRO record object containing an array of values (typically 256 
 
 There are three ways to turn your source data into a set of AVRO tiles:
 
-- Using the built-in CSVBinner tool, which can produce tiles that aggregate numeric data by:
-	- Summation
-	- Min and max ranges
-	- Time series
-	- Top keywords 
+- Using the built-in CSVBinner tool, which can produce tiles that aggregate numeric data by summation, min, or max.
 - Creating custom tile-based analytics using the *RDDBinner* APIs.
 - Using third-party tools, provided they adhere to the Aperture Tiles AVRO schema. Basic schema files are available in `binning-utilities/src/main/resources`.
 
@@ -37,21 +33,16 @@ See the [Installation documentation](../setup) for full details on the required 
 - **Languages**:
 	- Scala version 2.10.3
 - **Cluster Computing**:
-	- Hadoop/HDFS (Optional) - Choose your preferred version and use in conjunction with HBase.
-	- HBase (Optional) - Use in conjunction with Hadoop/HDFS.
-	- Apache Spark version 0.7.2 or greater (version 1.0.0 recommended)
-
-###<a name="source-code"></a>Aperture Tiles Source Code
-
-The tile generation process requires certain Aperture Tiles .jar files to be installed in your local Maven repository. Make sure you have correctly installed the Aperture Tiles project as outlined in the [Installation documentation](../setup).
+	- Apache Spark version 0.9.0 or greater (version 1.0.0 recommended)
+	- Hadoop/HDFS/HBase (Optional) - Choose your preferred version and use in conjunction with HBase.
 
 ###<a name="spark-config"></a>Apache Spark Configuration
 
-Apache Spark determines which version of Hadoop to use by looking in *\$SPARK\_HOME/project/**SparkBuild.scala***. Instructions for what to change are contained therein.
+Apache Spark must be configured to use the same version of Hadoop that you have installed.  One can either [download the correct version directly](http://spark.apache.org/downloads.html), or if no version is listed for the correct flavour of hadoop, one can [build spark](http://spark.apache.org/docs/latest/building-with-maven.html).   
 
 ####<a name="spark-script"></a>spark-run Script
 
-The Aperture Tiles source code contains a **spark-run** script (*aperture-tiles/tile-generation/scripts/**spark-run***) designed to help you build your own tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters. 
+The Tile Generator distribution package, and the Aperture Tiles source code, both contain a **spark-run** script (*bin/**spark-run.sh*** and *aperture-tiles/tile-generation/scripts/**spark-run***, respectively) designed to help you build your own tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters. 
 
 If you want to use this script, you must first set the following environment variables:
 
@@ -59,13 +50,7 @@ If you want to use this script, you must first set the following environment var
 SCALA_HOME - the path to the scala installation directory
 SPARK_HOME - the path to the spark installation directory
 ```
-
-If you plan to store your tile set in HBase, you must edit the **spark-run** script to specify the version of HBase you are using. Find the line after `\# framework-related jars` and edit the version accordingly. For example if the version of HBase is Cloudera 4.4.0 edit the line as:
-
-```
-# framework-related jars
-addToSparkClasspath org.apache.hbase hbase 0.94.6-cdh4.4.0
-```
+Note that in the source code, this script only exists after building, and that it looks for tile-generation jar files in one's local maven repository.  Therefore, in order to use this script from the source code, one first needs to run **mvn install**.
 
 ##<a name="tiling-job"></a>Running a Tiling Job
 
@@ -266,30 +251,42 @@ The first step in creating a custom tile generation process is deciding how your
 
 #####Bin Descriptor
 
-The Bin Descriptor is called by the Binner. It determines how to aggregate multiple data points that are saved to the same bin. 
+The Bin Descriptor is used throughout the tiling process. It defines the data format used, how individual data records in a bin are combined, and how the maximum and minimum values are determined (the latter is often needed when rendering data to tiles). 
 
-See the following file for an example of a custom Bin Descriptor. Bin Descriptors should be written in Scala.
+See the following file for an example of a custom Bin Descriptor.
 
 ```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinDescriptor.scala
 ```
 
 ######Types
 
-The Bin Descriptor requires two types:
+The Bin Descriptor describes the type of data using two types:
 
 - A processing type, which is the record type used when processing the tiles and aggregating them together. It should contain all the information needed for calculations performed during the binning job.
 - A binning type, which is the final form that gets written to the tiles. 
 
-As shown in line 47, the processing type is a map used add to add all similar topic records together. The binning type is a list containing only the topics with the highest counts.
+This separation allows one to keep extra information when tiling that may be needed for aggregation, but is no longer needed once the tile is complete.
+
+For example, if one wanted to record an average, the processing type might include both the number of records, and the total sum of their values, while the binning type would be simply the average.
+
+Another example is shown in line 47 of `TwitterTopicBinDescriptor`, the processing type is a map used add to add all similar topic records together. The binning type is a list containing only the topics with the highest counts.
 
 ```scala
 extends BinDescriptor[Map[String, TwitterDemoTopicRecord], JavaList[TwitterDemoTopicRecord]] {
 ```
 
+The Bin Descriptor describes how to convert from the processing type into the binning type via the `convert` function.  In `TwitterTopicBinDescriptor`, this is found on lines 103 and 104.  In this case, it takes the processing type, a map from topic to topic records, finds the 10 most used topics, and records their topic records, in order.  All but the top ten are thrown out - but were necessary during processing, so that a topic that was eleventh on several different machines (and hence in the top ten overall) wasn't lost.
+
+```scala
+def convert (value: Map[String, TwitterDemoTopicRecord]): 
+JavaList[TwitterDemoTopicRecord] =
+    value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
+```
+
 ######Data Aggregation and Record Creation
 
-One particularly important section of the Bin Descriptor code (lines 51 - 64) compares two values with the same map, determines how to aggregate them, then creates a new record.
+The Bin Descriptor defines how data is aggregated.  For instance, in example BinDescriptor (lines 51 - 64 of `TwitterTopicBinDescriptor`) compares two maps, creating a new map with keys that exist in either, and the sum of the values of both.
 
 ```scala
 def aggregateBins (a: Map[String, TwitterDemoTopicRecord],
@@ -311,7 +308,7 @@ def aggregateBins (a: Map[String, TwitterDemoTopicRecord],
 
 ######Calculating Custom Aggregation Methods
 
-Lines 66-80 are used to calculate the minimum and maximum values and write them to the metadata by level. These sections enable you to perform analytics over the whole data set, such as averages. 
+Lines 66-80  of `TwitterTopicBinDescriptor` are used to calculate the minimum and maximum values and write them to the metadata by level. 
 
 ```scala
 def defaultMin: JavaList[TwitterDemoTopicRecord] = new ArrayList()
@@ -331,20 +328,10 @@ def defaultMin: JavaList[TwitterDemoTopicRecord] = new ArrayList()
   }
 ```
 
-Standard binner templates are available in:
+Standard Bin Descriptors are available in:
 
 ```
-tile-generation\src\main\scala\com\oculusinfo\tilegen\tiling
-```
-
-######Recording
-
-Another section (lines 103 -104) creates the list of the top 10 Twitter words for each tile. It takes the values of a map, sorts them by count and returns the top 10 in the list. The processing type is used to keep a list longer than 10, most of which is ignored when the binning type is used to write the data to the tiles.
-
-```scala
-def convert (value: Map[String, TwitterDemoTopicRecord]): 
-JavaList[TwitterDemoTopicRecord] =
-    value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
+tile-generation\src\main\scala\com\oculusinfo\tilegen\tiling\BinDescriptor.scala
 ```
 
 ######Serializer
@@ -358,7 +345,7 @@ new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec())
 
 ####<a name="serializer"></a>Serializer
 
-The Serializer determines how how to write topic records to the AVRO tile set format used by Aperture Tiles. The Serializer has four components, each of which is generally written in Java (Scala is also supported):
+The Serializer determines how how to read and write tiles in a tile set. The Serializer requires some supporting classes for the tile server to use it.
 
 - Serializer
 - Serialization Factory
@@ -369,15 +356,17 @@ See the following sections for examples of each custom Serializer component.
 
 #####Serializer
 
-For list type or array type records, you need to write an AVRO description of the piece and a java class. A java class example is available 
-in:
+The Serializer implements the `com.oculusinfo.binning.io.serialization.TileSerializer` interface.  More specifically, to read and write the AVRO tiles that are most commonly used, it should inherit from either `com.oculusinfo.binning.io.serialization.GenericAvroSerializer` or`com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer`.  Use the latter if your bin type is an array of records, the former if it is a single record. 
+
+An example of a serializer of tiles whose bins are an array of records is available in:
 
 ```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/binning/TwitterTopicAvroSerializer.java
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/binning/TwitterTopicAvroSerializer.java
 ```
 
 This class inherits from the GenericAVROArraySerializer.java (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and defines:
 
+- getEntrySchemaFile - which points to a file containing the AVRO description of a single record
 - setEntryValue - which sets the value of one entry in the list from the AVRO file
 - getEntryValue - which retrieves the value of one entry in the list from the AVRO file
 
@@ -389,11 +378,11 @@ The definition of the AVRO schema is located in the following folder, where the 
 
 For records that aren't list types, inherit from the GenericAvroSerializer.java (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and define:
 
--getrecordschemafile
--getvalue
+-getRecordSchemaFile
+-getValue
 -setvalue
 
-The definition of the AVRO schema is based on the template in the following folder, where the *name* is set to **recordType**.
+The definition of the AVRO schema can be based on the template in the following folder, where the *name* is set to **recordType**.
 
 ```
 /binning-utilities/src/main/resources/doubleData.avsc
@@ -401,49 +390,53 @@ The definition of the AVRO schema is based on the template in the following fold
 
 #####Serialization Factory
 
-The Serialization produces the data, gets configuration information (e.g., changes the AVRO compression codec) and hands back the serializer of choice at right time.
+The Serialization Factory gets configuration information (e.g., the AVRO compression codec) and hands back the serializer of choice when needed.
 
 ```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactory.java
-```
-
-#####Serialization Factory Module
-
-The Factory Module notifies Guice about the factory provided on create calls.
-
-```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterSerializationFactoryModule.java
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactory.java
 ```
 
 #####Serialization Factory Provider
 
-The Factory Provider produces the factory.
+The Factory Provider is an object that can be injected by Guice, and that produces the factory.
 
 ```
 /tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactoryProvider.java
 ```
 
+#####Serialization Factory Module
+
+The Factory Module tells Guice which factory provider(s) to use to create serialization factories.
+
+```
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterSerializationFactoryModule.java
+```
+
 ####<a name="binner"></a>Binning Your Data
 
-The Binner should take your parsed source data, bin it across each of the levels you want in your visual analytic and create a set of pyramid tiles. 
+There are three steps in binning your data:
 
-See the following file for an example of a custom Binner. Binners should be written in Scala. 
+- Transforming the data into the form required by the binner
+- Running the binner to transform the data into tiles
+- Writing the tiles
 
-```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala
-```
-
-#####<a name="record-parser"></a>Record Parser
-
-The Record Parser processes, sanitizes and transforms your source data into a format that can be handled by the Binner, which will create the pyramid for your Aperture Tiles visual analytic. It is important to build error handling and error correction capabilities into the Parser.
-
-See the following file for an example of a custom Record Parser. Record Parsers should be written in Scala. 
+See the following file for an example of a custom Binner.
 
 ```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicRecordParser.scala`
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala
 ```
 
-Lines 91 - 104 in the Binner retrieve the raw data from the Record Parser and creates a mapping of Twitter topics to latitude and longitude coordinates, which determines to what bins the topics will be applied. 
+#####<a name="parsing-data"></a>Parsing your data
+
+The binner expects your data as pairs of `(index, record)`, where `index` is an object indicating where in space the record lies, and `record` is a data record, of the  processing type your bin descriptor defines.
+
+There are two predefined index types, defined by `com.oculusinfo.tilegen.tiling.CartesianIndexScheme` and `com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme` (both found in `/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala`).  With a Cartesian index, the index type is a pair of doubles.  With the IPv4 index, the index type is an array of 4 bytes - the 4 values in an IPv4 address.  Generally, unless you are specifically tiling against computer addresses, the cartesian type will be prefferable.  
+The end result of your parsing will therefore be:
+
+```val data: RDD[((Double, Double), PROCESSING_TYPE)]```
+where `PROCESSING_TYPE` is the processing type from your bin descriptor.
+
+Lines 91 - 104 in the `TwitterTopicBinner` retrieve the raw data from the Record Parser and creates a mapping from (longitude, latitude) pairs to Twitter topic records.
 
 ```scala
 val data = rawDataWithTopics.mapPartitions(i => {     
@@ -464,46 +457,47 @@ data.cache
 
 #####Binning
 
-Lines 112 - 113 determine how to process your transformed data. They take the raw string data and turn it into RDD of pairs, where the first element is an index type (in this case caertesian, which is two doubles) and the second is the processing type from the Bin Descriptor. This transforms data into indexed records, which describes what tile and bin the data goes in (where in raw space data lies).
+Lines 112 - 113 of `TwitterTopicBinner` transforms the data into tiles.
 
 ```scala
 val tiles = binner.processDataByLevel(data, new CartesianIndexScheme, binDesc,
                                       tilePyramid, levelSet, bins=1)
 ```
 
-Where binner.processDataByLevel accepts the following properties:
+Binner.processDataByLevel is defined in `/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala` on line 229.  It accepts the following properties:
 
 ```
 data
-	Paired index that describes how the data should be handled while being
-    processed (processing type) and while being binned (binning type).
+	A distributed collection of (index, record) pairs, as described above.
 
-cartesianIndexScheme
-	Used to convert the index to a set X/Y coordinates that can be plotted.
+indexScheme
+	Used to convert the index to a set X/Y coordinates that can be plotted.  When using a CartesianIndexScheme, the coordinates are taken as given.
 
-binDesc
-	Determines how aggregate two records of the same processing type and how to
-    handle that aggregate value to determine what should be written to the
-    tile. Calls the BinDescriptor.
+binDescriptor
+	A Bin Descriptor, as described above, which defines how to aggregate two records, how to convert them into the form written, and how to determine the extrema of the dataset.
  
 tilePyramid
-	Type of projection built from the set of bins and levels. Either uses
-    the raw data X/Y coordinates directly (linear), or transforms a set of
-    longitude/latitude values into caresian coordinates (web mercator).
+	The projection to use to transform from from the raw data index into tiles and bins.  Two types are predefined, an `/binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid`, which is a linear transformation into an arbitrarily sized space, and `/binning-utilities/src/main/java/com/oculusinof/binning/impl/WebMercatorTilePyramid`, which is a standard geographical projection.
 
 levelSet
-	Specifies the number of levels to process at a time. It is generally
+	Specifies which levels to process at the same time. It is generally
     recommended you process levels 1-9 together, then any additional
-    levels one at a time afterwards to ensure proper use of system
-    resources.
+    levels one at a time afterwards.  This arrangement is most likely 
+	to make proper use of system resources.
 
 bins
-	Number of bins on each axis.
+	Number of bins on each axis.  Optional, defaults to 256
+
+consolidationPartitions
+	The number of reducers to use when aggregating data records into bins and tiles.  Optiona, defaults to the same number of partitions as the original data set, but can be altered if one encounters problems with the tiling job due to lack of resources.
+
+isDensityStrip
+	This should be true if doing a one-dimentional tiling job.  Defaults to false.
 ```
 
-#####Tile IO
+#####Writing tiiles
 
-Lines 114 - 115 specify how to write the tiles created from your transformed data.
+Lines 114 - 115 of `TwitterTopicBinner` specify how to write the tiles created from your transformed data.
 
 ```
 tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc, 
@@ -518,14 +512,13 @@ tilePyramid
     tilePyramid specified in binner.processDataByLevel.
 
 pyramidID
-	The local filesystem or Hbase to which to write the tiles.
+	The ID to apply to the tile set when writing it.  If writing to the local filesystem, this will be the base directory into which to write the tiles.  If writing to HBase, it will be the name of the table to write.
 
 tiles
 	The binned data set produced by binner.processDataByLevel.
 
-binDesc
-	Determines what should be written to the tiles. Calls the BinDescriptor.
-    Must match the binDesc specified in binner.processDataByLevel.
+binDescriptor
+	The bin descriptor describing the dataset.  This must match the bin descriptor used when creating the tiles.
 
 pyramidName
 	Name of the finished pyramid. Stored in the tile metadata.
