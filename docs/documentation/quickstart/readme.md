@@ -34,8 +34,8 @@ Otherwise, if your data set is sufficiently small (i.e., it can fit in the memor
 
 Save the following Aperture Tiles distribution available on the [Download](../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
-- [Tile Generator](../../download/tile-generator.zip): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
-- [Tile Client Template](../../download/tile-client-template.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
+- [Tile Generator](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3-dist.zip): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
+- [Tile Client Template](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../setup/) page.
 
@@ -50,7 +50,7 @@ Set the following environment variables:
 
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
-1. Extract the contents of the [tile-generator.zip](../../download/tile-generator.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
+1. Extract the contents of the [tile-generator.zip](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3-dist.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
 2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. Note that you may need to create this directory in your local file system or HDFS beforehand.
 	
 	The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.
@@ -141,7 +141,7 @@ Note that the `oculus.binning.prefix` value is only included if you set it in th
 
 ##<a name="tile-server-configuration"></a>Tile Server Configuration
 
-For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](../../download/Tile Client Template) distribution.
+For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution.
 
 For typical Aperture Tiles projects, you will need to edit the **web.xml**  and **tile.properties** files in this directory. For more information on editing these files, see the [Tile Generation](../generation/) topic on this website.
 
@@ -152,16 +152,16 @@ To configure the Tile Client application to display the AVRO files containing yo
 - Map Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/maps*), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
 - Layer Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/layers*), which specifies the layers that can be overlaid on your base map or plot.
 
-Both files are available in the [tile-client-template.zip](../../download/Tile Client Template) distribution. Extract the contents of the file to access them.
+Both files are available in the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution. Extract the contents of the file to access them.
 
 ###<a name="map-properties"></a>Map Properties
 
 To edit the map properties for your project:
 
-1. Access the **crossplot-maps.json.example** file in `tile-client-template/WEB-INF/classes/maps`, remove the **.example** extension and open the file for editing.
-2. In the `PyramidConfig` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Points in the Julia set will range from **-2** to **2** along both axes.
-3. In the `MapConfig` > `options` section, set the `numZoomLevels` to **6**, as this is the number of zoom levels you created when generating the Julia set tiles.
-4. Save the file.
+1. Access the **crossplot-maps.json.example** file in `tile-client-template/WEB-INF/classes/maps`, remove the **.example** extension and delete the example geographic json file in the same directory. It is not needed for this example.
+3. Open the crossplot json file for editing. In the `PyramidConfig` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Points in the Julia set will range from **-2** to **2** along both axes.
+4. In the `MapConfig` > `options` section, set the `numZoomLevels` to **6**, as this is the number of zoom levels you created when generating the Julia set tiles.
+5. Save the file.
 
 Note that for typical Aperture Tiles projects, you can also use this file to configure other base map/plot properties, such as:
 
@@ -174,8 +174,8 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 
 To edit the layer properties for your project:
 
-1. Access the **crossplot-layers.json.example** file in `tile-client-template/WEB-INF/classes/layers`, remove the **.example** extension and open the file for editing.
-2. Edit the `id` property so it matches the name given to the directory (file system directory or HBase table name) in which your AVRO tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
+1. Access the **crossplot-layers.json.example** file in `tile-client-template/WEB-INF/classes/layers`, remove the **.example** extension and delete the example geographic json file in the same directory. It is not needed for this example.
+2. Open the crossplot json file for editing. Edit the `id` property so it matches the name given to the directory (file system directory or HBase table name) in which your AVRO tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
 3. In the `pyramid` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Make sure the values you specify here match the range you specified in the map properties.
 4. If your AVRO tiles are saved to your local machine, add or edit the following values in the `data` section:
 	- `type`: Enter **file**
