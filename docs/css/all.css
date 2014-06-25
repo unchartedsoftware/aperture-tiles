@@ -66,8 +66,6 @@ pre {
 	font-family: Consolas, "Courier New", Courier, monospace;
 	/*background: #FCFCFA;*/
     background: #dee5e5;
-	margin: 10px 0 10px 0;
-	padding: 10px;
 	/*border: 1px solid #ccc;*/
     border: 1px solid #8f8170;
 	-moz-border-radius: 2px;
@@ -92,7 +90,7 @@ pre.code {
 pre code {
 	background: #dee5e5;
 }
-/*start del here*/
+
 code .jscomment {
     color: #398f29;
     background #dee5e5;
@@ -105,8 +103,6 @@ code .jscontent{
     color: #8f4060;
     background #dee5e5;
 }
-
-/*end delete here*/
 #content-strip {
 	position: relative;
 	max-width: 1000px; 

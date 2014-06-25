@@ -56,7 +56,7 @@ For a typical Aperture Tiles project, you will work with your own custom data se
 	The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.
 
 ```
-./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
+./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000`
 ```
 
 Check your output folder for five part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.

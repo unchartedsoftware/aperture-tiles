@@ -113,10 +113,12 @@ repeat
 intervalSpec
 
 	type
-		How the following increment value is calculated based on the axis range. Accepted values include "percentage", "%", "value" or "#".
+		How the following increment value is calculated based on the axis range.
+		Accepted values include "percentage", "%", "value" or "#".
 
 	increment
-		Value or percentage of units by which to increment the intervals. How this is applied is dependent on the specified type.
+		Value or percentage of units by which to increment the intervals. How
+		this is applied is dependent on the specified type.
 
 	pivot
 		Value or percentage from which all other values are incremented.
@@ -138,10 +140,12 @@ unitSpec
         "degrees": 34.56&#176 <--- #### should be a degree symbol ####
 
 	decimals
-		Number of decimals to display for each unit. Applicable to "billions", "millions", "thousands" and "decimal" types.
+		Number of decimals to display for each unit. Applicable to "billions",
+		"millions", "thousands" and "decimal" types.
 	
 	allowStepDown
-		Indicates whether the units can step down if they are below range. Applicable to "billions", "millions", "thousands" types.
+		Indicates whether the units can step down if they are below range.
+		Applicable to "billions", "millions", "thousands" types.
 ```
 
 ####<a name="geographic-maps"></a>Geographic Maps
@@ -304,8 +308,12 @@ The Metadata parameters uniquely identify the layer.
 
 ```
 id
-	Must match the name of the folder to which the tiles were saved during the  generation process, which is composed of the following parameters from the Tiing Property File:
-	<oculus.binning.name>.<oculus.binning.xField>.<oculus.binning.yField>.<oculus.binning.valueField>  
+	Must match the name of the folder to which the tiles were saved during the
+	generation process, which is composed of the following parameters from the
+	Tiing Property File:
+	
+	<oculus.binning.name>.<oculus.binning.xField>.<oculus.binning.yField>.
+	<oculus.binning.valueField>  
 
 description
 	Description of the layer
@@ -355,7 +363,8 @@ pyramidio
 		Root path in which the tiles are stored. Not used for HBase.
 
 	extension
-		Name of the compressed file in which tiles are stored. Only used for ZIP files.
+		Name of the compressed file in which tiles are stored. Only used for ZIP
+		files.
 
 	hbase.zookeeper.quorum
 		Zookeeper quorum location needed to connect to HBase.
@@ -380,13 +389,18 @@ renderer
 	Used for server-side rendering.
 
 	type
-		'heatmap': Renders to a heat-map, based on a standard avro double-valued tile
-		'doubleseries': Renders to a series of heat-maps, based on a standard avro double-series-valued tile
-		'doublestatistics': Renders tile's total hit and % coverage as text to the tile
-		'textscore': Renders to an image showing scored words, with bars based on their score
+		'heatmap': Renders to a heat-map, based on a standard avro double-valued 
+				   tile
+		'doubleseries': Renders to a series of heat-maps, based on a standard avro
+						double-series-valued tile
+		'doublestatistics': Renders tile's total hit and % coverage as text to the
+							tile
+		'textscore': Renders to an image showing scored words, with bars based on
+					 their score
 
 	ramp
-		Determines the color scale applied to the data points based on their concentration. The default color scales are:
+		Determines the color scale applied to the data points based on their
+		concentration. The default color scales are:
 		'br': A blue-green ramp.
 		'inv-br': Inverted blue-green ramp.
 		'ware': A red-yellow-green ramp.
@@ -395,7 +409,8 @@ renderer
 		'inv-grey': Inverse greyscale ramp.
 
 	opacity
-		Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).
+		Opacity of the rendered tile layer expressed as a decimal ranging from 0
+		(completely transparent) to 1 (completely opaque).
 
 renderers
 	List of custom renderers required to perform client-side rendering. 
@@ -403,7 +418,8 @@ renderers
 transform
 
 	name
-		Type of transformations that can be applied to the data values when determining color: 
+		Type of transformations that can be applied to the data values when
+		determining color: 
 		"linear" does not perform a transformation.
 		"log10" takes logarithms of raw values before applying a color ramp.
 ```
