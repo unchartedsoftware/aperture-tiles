@@ -225,11 +225,15 @@ require(['./ApertureConfig',
                             // ... Next, insert contents
                             for (i=0; i<maps.length; ++i) {
                                 mapButton = $('<a/>').attr({
-                                    href: '?map='+i
+                                    'href': '?map='+i,
+	                                'class': 'maps-link'
                                 });
                                 mapButton.append(maps[i].description+'<br>');
                                 mapsOverlay.getContentElement().append( mapButton );
                             }
+				        } else {
+					        // Only one map. Remove the maps div.
+					        $("#maps").remove();
 				        }
 
 				        // Initialize our map...
