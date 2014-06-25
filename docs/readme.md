@@ -7,15 +7,15 @@ layout: default
 Aperture Tiles <span class="tagline">tile-based visual analytics for big data</span>
 =======================================================
 
-The critical first step in exploring a new dataset is to gain a general understanding of the data that suggests initial hypotheses to be tested.  However, data can come in any format, and often in such volume that gaining this characterization becomes a challenging task.  
+Aperture Tiles provides the ability to create browser-based, interactive tools any analyst can use to explore data sets containing billions of data points (or more). 
+ 
+Business and government leaders today have more data than ever at hand to make smart, informed decisions. However making sense of such massive amounts of data is an extremely challenging task. As a result data is often not used to its full potential.
+ 
+Aperture Tiles uses a tile-based method to structure, analyze, visualize and interact with data using an interface similar to web-based map applications. This approach allows analysts to easily see and navigate all of the data without losing detail, and seamlessly "zoom in" to a more localized portion of that data.
+ 
+Custom analytic overlays can be applied to the data at every scale, ranging from the entire dataset to a very small portion of it. Seeing all of the data reveals informative patterns and provides important context to understanding insights identified by computational analytics. 
 
-There are several classes of user that need this overview of "big data" in order to effectively explore and understand it.
-
-* **Data Scientists:** need to design and apply the correct analytics that best address the character of the data.
-* **Visualization Designers:** must select the appropriate visual metaphors and interactions to represent the data.
-* **Analysts:** need to understand the data in order to know which datasets to select, and which tools to use to approach a given analytic question.
-
-There is a clear need for new, powerful tools to aid these types of users in exploring, characterizing, and analyzing 'big data.' Aperture Tiles provides this aid with browser-based, interactive visual analytics that scale to data sets with billions or more of data points.
+Aperture Tiles is open source, and free to use under the MIT License. 
 
 ### Web Tile Rendering for Big Data Visual Analytics
 
