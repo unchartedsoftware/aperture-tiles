@@ -23,18 +23,30 @@
  */
 package com.oculusinfo.annotation;
 
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.AnnotationManipulator;
-import com.oculusinfo.annotation.data.impl.JSONAnnotation;
-import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.util.Pair;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
-import java.util.*;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.AnnotationManipulator;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileAndBinIndices;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.util.Pair;
 
 
 public class AnnotationTestsBase {
@@ -184,10 +196,7 @@ public class AnnotationTestsBase {
 		final Random rand = new Random();
 		
 		double [] xy = randomPosition();
-		
-		Date date = new Date();
-		Long timestamp = new Timestamp( date.getTime() ).getTime();
-		
+
 		try {
             JSONObject anno = new JSONObject();
             anno.put("x", xy[0]);

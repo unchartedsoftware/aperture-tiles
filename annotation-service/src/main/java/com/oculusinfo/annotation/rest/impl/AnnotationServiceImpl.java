@@ -24,6 +24,29 @@
 package com.oculusinfo.annotation.rest.impl;
 
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -35,34 +58,43 @@ import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.rest.AnnotationInfo;
 import com.oculusinfo.annotation.rest.AnnotationService;
-import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileAndBinIndices;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 
 
 @Singleton
 public class AnnotationServiceImpl implements AnnotationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationServiceImpl.class);
-      
+
+    // These two functions are used to check and cast the type of the tile serializer we use.
+
+    // Just wrapping the Map.class, which is the same as the complex class listed due to 
+    // type erasure.
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Class<Map<String, List<Pair<String, Long>>>> getRuntimeBinClass () {
+        return (Class) Map.class;
+    }
+    public static TypeDescriptor getRuntimeTypeDescriptor () {
+        return new TypeDescriptor(Map.class,
+                                  new TypeDescriptor(String.class),
+                                  new TypeDescriptor(List.class,
+                                                     new TypeDescriptor(Pair.class,
+                                                                        new TypeDescriptor(String.class),
+                                                                        new TypeDescriptor(Long.class))));
+    }
+
+
+
     private List<AnnotationInfo> _annotationLayers;
     private HashMap<String, AnnotationInfo> _annotationLayersById;
     private ConcurrentHashMap<String, UUID> _defaultFilterUuidById;
@@ -557,7 +589,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		removeTilesFromIO( layer, tilesToRemove );
 	}
 
-	
+
 	protected void writeTilesToIO( String layer, List<TileData<Map<String, List<Pair<String,Long>>>>> tiles ) {
 		
 		if ( tiles.size() == 0 ) return;
@@ -565,7 +597,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 		try {
 			AnnotationConfiguration config = getConfiguration(layer);
 			PyramidIO io = config.produce(PyramidIO.class);	
-			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce(TileSerializer.class);
+
+            TileSerializer<Map<String, List<Pair<String, Long>>>> serializer =
+                    SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+                                                           getRuntimeBinClass(),
+                                                           getRuntimeTypeDescriptor());
 
 			//io.initializeForWrite( layer );
 			io.writeTiles( layer, serializer, tiles );
@@ -642,7 +678,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 		try {
 			AnnotationConfiguration config = getConfiguration( layer );
 			PyramidIO io = config.produce( PyramidIO.class );
-			TileSerializer<Map<String, List<Pair<String,Long>>>> serializer = config.produce( TileSerializer.class );
+            TileSerializer<Map<String, List<Pair<String, Long>>>> serializer =
+                    SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+                                                           getRuntimeBinClass(),
+                                                           getRuntimeTypeDescriptor());
 
 			//io.initializeForRead( layer, 0, 0, null );
 			tiles = io.readTiles( layer, serializer, indices );

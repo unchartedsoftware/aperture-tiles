@@ -167,7 +167,7 @@ public class PyramidMetaDataTests {
 
 	@Test
 	public void testMetaDataWriting () throws JSONException {
-		PyramidMetaData original = new PyramidMetaData("n", "d", 13, "s", "p", 1, 2,
+		PyramidMetaData original = new PyramidMetaData("n", "d", 13, 13, "s", "p", 1, 2,
 		                                               new Rectangle2D.Double(0, 0, 1, 2),
 		                                               Arrays.asList(new Pair<Integer, String>(0, "12"),
 		                                                             new Pair<Integer, String>(1, "9")),
