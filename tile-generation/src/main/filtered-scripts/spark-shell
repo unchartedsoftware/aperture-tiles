@@ -14,25 +14,25 @@ fi
 
 
 function addJarToSpark {
-  groupId=$1
-  artifactId=$2
-  version=$3
+  scriptGroupId=$1
+  scriptArtifactId=$2
+  scriptVersion=$3
   qualifier=$4
-  echo Group: ${groupId}
-  echo artifact: ${artifactId}
-  echo version: ${version}
+  echo Group: ${scriptGroupId}
+  echo artifact: ${scriptArtifactId}
+  echo version: ${scriptVersion}
   echo qualifer: ${qualifier}
 
-  groupDir=`echo ${groupId} | sed 's|\.|/|g'`
+  groupDir=`echo ${scriptGroupId} | sed 's|\.|/|g'`
   repo=${HOME}/.m2/repository
-  jardir=${repo}/${groupDir}/${artifactId}/${version}
+  jardir=${repo}/${groupDir}/${scriptArtifactId}/${scriptVersion}
   if [ X${qualifier} = X ]
   then
 	  echo No qualifer
-	  jar=${jardir}/${artifactId}-${version}.jar
+	  jar=${jardir}/${scriptArtifactId}-${scriptVersion}.jar
   else
 	  echo qualifer
-	  jar=${jardir}/${artifactId}-${version}-${qualifier}.jar
+	  jar=${jardir}/${scriptArtifactId}-${scriptVersion}-${qualifier}.jar
   fi
 
 
@@ -58,14 +58,15 @@ function addJarToSpark {
 
 # Set up the spark classpath
 # our own jars
-addJarToSpark com.oculusinfo math-utilities 0.3-SNAPSHOT
-addJarToSpark com.oculusinfo binning-utilities 0.3-SNAPSHOT
-addJarToSpark com.oculusinfo tile-generation 0.3-SNAPSHOT
-addJarToSpark com.oculusinfo tile-service 0.3-SNAPSHOT classes
+addJarToSpark com.oculusinfo math-utilities ${project.version}
+addJarToSpark com.oculusinfo binning-utilities ${project.version}
+addJarToSpark com.oculusinfo tile-generation ${project.version}
+addJarToSpark com.oculusinfo tile-service ${project.version} classes
 
 # framework-related jars
-addJarToSpark org.apache.hbase hbase 0.94.15-cdh4.6.0
-addJarToSpark org.scala-lang scala-library 2.10.3
+addJarToSpark org.apache.hbase hbase ${hbase-version}
+addJarToSpark org.scala-lang scala-library ${scala-version}
+#json version is derived indirectly, can't be coded here.
 addJarToSpark org.json json 20090211
 
 

@@ -85,6 +85,7 @@
 
 
 	<build>
+		<!-- Store version number in a way that lets code access it. -->
 		<resources>
 			<resource>
 				<directory>src/main/filtered-resources</directory>
@@ -92,7 +93,27 @@
 			</resource>
 		</resources>
 
+
 		<plugins>
+			<!-- Copy scripts, with filtering to insert build numbers, into
+			     the scripts directory. -->
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions><execution>
+					<id>copy-resources</id>
+					<phase>package</phase>
+					<goals><goal>copy-resources</goal></goals>
+					<configuration>
+						<outputDirectory>${basedir}/scripts</outputDirectory>
+						<resources><resource>
+							<directory>src/main/filtered-scripts</directory>
+							<filtering>true</filtering>
+						</resource></resources>
+					</configuration>
+				</execution></executions>
+			</plugin>
+
 			<plugin>
 				<groupId>org.scala-tools</groupId>
 				<artifactId>maven-scala-plugin</artifactId>

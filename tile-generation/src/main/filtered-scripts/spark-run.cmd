@@ -16,10 +16,11 @@ rem Set up the Spark classpath
 rem Start it empty
 set SPARK_CLASSPATH=
 
-call:addToSparkClasspath com.oculusinfo math-utilities 0.3-SNAPSHOT "%SPARK_CLASSPATH%" SPARK_CLASSPATH
-call:addToSparkClasspath com.oculusinfo binning-utilities 0.3-SNAPSHOT "%SPARK_CLASSPATH%" SPARK_CLASSPATH
-call:addToSparkClasspath com.oculusinfo tile-generation 0.3-SNAPSHOT "%SPARK_CLASSPATH%" SPARK_CLASSPATH
-call:addToSparkClasspath org.apache.hadoop. hadoop-common 2.0.0-cdh4.4.0 "%SPARK_CLASSPATH%" SPARK_CLASSPATH
+call:addToSparkClasspath com.oculusinfo math-utilities ${project.version} "%SPARK_CLASSPATH%" SPARK_CLASSPATH
+call:addToSparkClasspath com.oculusinfo binning-utilities ${project.version} "%SPARK_CLASSPATH%" SPARK_CLASSPATH
+call:addToSparkClasspath com.oculusinfo tile-generation ${project.version} "%SPARK_CLASSPATH%" SPARK_CLASSPATH
+call:addToSparkClasspath org.apache.hadoop. hadoop-common ${hadoop-common-version} "%SPARK_CLASSPATH%" SPARK_CLASSPATH
+rem avro and commons-compress versions are derived indirectly, can't be coded here.
 call:addToSparkClasspath org.apache.avro avro 1.7.4 "%SPARK_CLASSPATH%" SPARK_CLASSPATH
 call:addToSparkClasspath org.apache.commons commons-compress 1.4.1 "%SPARK_CLASSPATH%" SPARK_CLASSPATH
 
