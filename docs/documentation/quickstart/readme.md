@@ -149,8 +149,8 @@ For typical Aperture Tiles projects, you will need to edit the **web.xml**  and 
 
 To configure the Tile Client application to display the AVRO files containing your source data, you must edit two types of configuration files:
 
-- Map Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/maps*), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
-- Layer Properties (*aperture-tiles/tile-client-template/target/tile-client-template/WEB-INF/classes/layers*), which specifies the layers that can be overlaid on your base map or plot.
+- Map Properties (within the tile-client-template.zip at `WEB-INF/classes/maps` or within the source at `tile-client-template/src/main/resources/maps`), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
+- Layer Properties (within the tile-client-template.zip at `WEB-INF/classes/layers` or within the source at `tile-client-template/src/main/resources/layers`), which specifies the layers that can be overlaid on your base map or plot.
 
 Both files are available in the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution. Extract the contents of the file to access them.
 
