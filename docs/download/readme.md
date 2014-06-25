@@ -17,7 +17,7 @@ Please note that Aperture Tiles is dependent on ApertureJS, an agile, extensible
 
 <a href="https://github.com/oculusinfo/aperturejs" class="download-link">ApertureJS Source Code</a>
 
-For information on full installations of Aperture Tiles (along with ApertureJS), see the [Installation](../setup/) page.
+For information on full installations of Aperture Tiles (along with ApertureJS), see the [Installation](../documentation/setup/) page.
 
 ## Packaged Distribution ##
 

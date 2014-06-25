@@ -67,7 +67,7 @@ Choose the appropriate map type and remove the **.example** suffix from the file
 The following groups of parameters should be configured for your custom cross plot map:
 
 - [Metadata](#cross-metadata)
-- [PyramidConfig](cross-pyramidconfig)
+- [PyramidConfig](#cross-pyramidconfig)
 - [AxisConfig](#cross-axisconfig)
 
 #####<a name="cross-metadata"></a>Metadata
