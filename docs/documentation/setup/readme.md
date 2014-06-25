@@ -22,15 +22,14 @@ This project has the following prerequisites:
 	-   [**Scala**](http://www.scala-lang.org/) version 2.10.3
 	-   [**Java**](http://www.java.com/) (JDK version 1.7+)
 - **Cluster Computing**: To facilitate large tiling jobs, Aperture Tiles supports a cluster computing framework. Note that if you only intend to run small jobs (data sets that fit in the memory of a single machine) or are willing to take a long time to complete them, you can skip the Hadoop/HDFS/HBase installation and run Spark on a single node and read/write to your local file system.
-	-   **Hadoop/HDFS** (Optional) - Distributed file system for storing large data sets. Choose your preferred flavor  ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work). Use in conjunction with HBase.
-	-   **HBase** (Optional) - [Apache HBase](http://hbase.apache.org/) Non-relational database for Hadoop/HDFS that lets you scale to tile sets with high zoom levels that result in billions or more tiles. 
 	-   **Apache Spark** - [Apache Spark](http://spark.incubator.apache.org/) distributed computing framework for distributing tile generation across a cluster of machines.  Aperture Tiles requires version 0.9.0 or greater (version 1.0.0 recommended). Note: when you set up Spark, you need to configure the version of Hadoop with which it will be working (if applicable).
+	-   **Hadoop/HDFS/HBase** (Optional) - Distributed computing stack.  HDFS is a file system for storing large data sets. Choose your preferred flavor  ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work). HBase is a non-relational database that sits atop Hadoop/HDFS. 
 -  **Web Server**: the Tile Server and client are built using the [Restlet](http://restlet.org/) web framework, and require a servlet compatible web server. Choose your preferred implementation ([**Apache Tomcat**](http://tomcat.apache.org/) or [**Jetty**](http://www.eclipse.org/jetty/)).
 -   **Build Automation**: All Aperture Tiles projects build with [**Apache Maven**](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work). Ensure Maven is configured properly on the system on which you are building Aperture Tiles.
 
 ##<a name="source-code"></a>Source Code
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the ApertureJS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperture-tiles). To install both projects:
+The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the ApertureJS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs). To install both projects:
 
 1. Run the `mvn install` command in the `aperture` folder found in the root ApertureJS directory.
 2. Run the `mvn install` command in the root Aperture Tiles directory.
@@ -67,7 +66,7 @@ If you plan to run Apache Spark only in standalone mode on single machine, you c
 
 ####<a name="compiling"></a>Compiling the Aperture Tiles Projects
 
-Before you compile the Aperture Tiles source code, you must install the ApertureJS project. Run the `mvn install` command in the `aperture` folder in the ApertureJS root directory.
+Before you compile the Aperture Tiles source code, you must install the ApertureJS project. Run the `mvn install` command in the `aperture` folder in the aperture subdirectory of the ApertureJS root directory.
 
 Once the ApertureJS installation is complete, run the `mvn install` command again, this time in the root Aperture Tiles directory. This will compile all the project components and install .jar files for each project into your local maven repostitory on your build machine.
 

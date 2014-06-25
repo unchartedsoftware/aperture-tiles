@@ -22,17 +22,17 @@ To begin configuring your Tile Server and Tile Client:
 
 1. Create a copy of the *aperture-tiles/tile-client-template* directory and give it a unique name (e.g., *new-project*).
 2. Update the Maven POM (*new-project/***pom.xml**) to change the following tags:
-	- \<groupId\> (line 5): Enter an appropriate group ID
-	- \<version\> (line 6): Enter an appropriate project version number.
-	- \<artifactId\> (line 7): Change from *tile-client-template* to *new-project*
-	- \<name\> (line 10): Enter an appropriate project description. 
+	- <groupId\> (line 5): Enter an appropriate group ID
+	- <version\> (line 6): Enter an appropriate project version number.
+	- <artifactId\> (line 7): Change from *tile-client-template* to *new-project*
+	- <name\> (line 10): Enter an appropriate project description. 
 
 ##<a name="server-config"></a>Tile Server Configuration
 
 The Tiler Server in your new template relies on the following configuration files:
 
-- [Web XML](#webxml), which passes modules to Guice.
-- [Tile Properties](#tileproperties), which specifies the location of your Spark installation.
+- [Web XML](#webxml), which defines which modules Guice will use.
+- [Tile Properties](#tileproperties), which specifies constants used by Guice during initialization, including the location of your Spark installation, and the location of some server configuration files.
 - [Maps](#maps), which defines the base maps on which your data is projected.
 - [Layers](#layer), which defines the individual layers of data that can be overlaid on your base map. The layers file also indicates whether rendering should be performed by the server or the client.
 
@@ -81,7 +81,7 @@ The Metadata parameters uniquely identify the base map.
 
 #####<a name="cross-pyramidconfig"></a>PyramidConfig
 
-The PyramidConfig parameters describe the minimum and maximum values on the X and Y axes in your cross plot. The values that you provide in this section must match the values in your data source. The `type` should always be set to *AreaOfInterest* for cross plot maps. 
+The PyramidConfig parameters describe the minimum and maximum values on the X and Y axes in your cross plot. The values that you provide in this section must match the values in your data source. The `type` should always be set to *AreaOfInterest* for non-geographic cross plot maps. 
 
 ```json
 "PyramidConfig": {
@@ -93,7 +93,7 @@ The PyramidConfig parameters describe the minimum and maximum values on the X an
 	},
 ```
 
-Note also that the layer and map pyramid configurations much match each other.
+Note also that the layer and map pyramid configurations ***must*** match each other.
 
 #####<a name="cross-axisconfig"></a>AxisConfig
 
