@@ -16,7 +16,6 @@
   </parent>
 	
   <modules>
-	<module>demo-website</module>
 	<module>julia-demo</module>
 	<module>twitter-topics</module>
   </modules>
