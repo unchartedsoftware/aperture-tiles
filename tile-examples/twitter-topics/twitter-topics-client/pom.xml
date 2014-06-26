@@ -11,7 +11,7 @@
   <parent>
     <artifactId>twitter-topics</artifactId>
     <groupId>com.oculusinfo</groupId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3</version>
   </parent>
 
   <dependencies>

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.oculusinfo</groupId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.3</version>
   <artifactId>tile-client-template</artifactId>
 
   <packaging>war</packaging>
@@ -17,7 +17,7 @@
     <dependency>
       <groupId>com.oculusinfo</groupId>
       <artifactId>tile-client</artifactId>
-      <version>0.3-SNAPSHOT</version>
+      <version>0.3</version>
       <type>war</type>
     </dependency>
   </dependencies>

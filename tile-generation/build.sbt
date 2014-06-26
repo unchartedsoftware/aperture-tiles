@@ -6,7 +6,7 @@ organization:="com.oculusinfo"
 
 name:="tile-generation"
 
-version:="0.3-SNAPSHOT"
+version:="0.3"
 
 scalaVersion:="2.10.3"
 
@@ -36,7 +36,7 @@ scalacOptions += "-unchecked"
 
 libraryDependencies ++= Seq(
 	"org.apache.spark" % "spark-core_2.10" % "0.9.0-incubating",
-	"com.oculusinfo" % "binning-utilities" % "0.3-SNAPSHOT",
+	"com.oculusinfo" % "binning-utilities" % "0.3",
 	"org.apache.spark" % "spark-streaming_2.10" % "0.9.0-incubating",
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test"
 )
