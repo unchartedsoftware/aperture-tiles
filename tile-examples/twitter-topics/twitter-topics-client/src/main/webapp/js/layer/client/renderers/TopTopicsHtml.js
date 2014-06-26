@@ -61,13 +61,13 @@ define(function (require) {
 
                 var layerState = that.layerState;
 
-                if ( fieldName === "clickState" ) {
+                if ( fieldName === "click" ) {
                     // if a click occurs, lets remove styling from any previous label
                     $(".topic-label, .clicked").removeClass('clicked');
                     // in this demo we only want to style this layer if the click comes from this layer
-                    if ( layerState.getClickState().type === "html" ) {
+                    if ( layerState.get('click').type === "html" ) {
                         // add class to the object to adjust the styling
-                        layerState.getClickState().$elem.addClass('clicked');
+                        layerState.get('click').$elem.addClass('clicked');
                     }
                 }
             });
@@ -142,7 +142,7 @@ define(function (require) {
                                 renderers lets use the layerState object. The layerState will broadcast any change to
                                 all listeners.
                             */
-                            that.layerState.setClickState({
+                            that.layerState.set( 'click', {
                                 topic: topic,
                                 $elem: $(this),
                                 type: "html"

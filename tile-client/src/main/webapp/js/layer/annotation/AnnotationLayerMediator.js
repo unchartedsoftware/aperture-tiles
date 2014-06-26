@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        AnnotationLayerState = require('./AnnotationLayerState'),
+        LayerState = require('../LayerState'),
         AnnotationLayerMediator;
 
 
@@ -60,11 +60,10 @@ define(function (require) {
                 var layerSpec = layer.getLayerSpec(),
                     layerState;
 
-                layerState = new AnnotationLayerState( layer.id );
-                layerState.setName( layerSpec.name || layer.id );
-                layerState.setEnabled( true );
-                layerState.setOpacity( 1.0 );
-                layerState.setZIndex( 500+i );
+                layerState = new LayerState( layer.id, layer.name, 'annotation' );
+                layerState.set( 'enabled', true );
+                layerState.set( 'opacity', 1.0 );
+                layerState.set( 'zIndex', 500+i );
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {
@@ -73,12 +72,12 @@ define(function (require) {
 
                         case "opacity":
 
-                            layer.setOpacity( layerState.getOpacity() );
+                            layer.setOpacity( layerState.get('opacity') );
                             break;
 
                         case "enabled":
 
-                            layer.setVisibility( layerState.isEnabled() );
+                            layer.setVisibility( layerState.get('enabled') );
                             break;
                     }
 

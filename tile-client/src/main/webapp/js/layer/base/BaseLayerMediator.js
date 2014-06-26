@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        BaseLayerState = require('./BaseLayerState'),
+        LayerState = require('../LayerState'),
         BaseLayerMediator;
 
 
@@ -53,14 +53,12 @@ define(function (require) {
 
             var layerState;
             // Create a layer state object for the base map.
-            layerState = new BaseLayerState( map.id );
-
+            layerState = new LayerState( map.id, "Base Layer", 'base' );
             layerState.BASE_LAYERS = map.baseLayers;
-            layerState.setName("Base Layer");
-            layerState.setEnabled( true );
-            layerState.setOpacity( 1.0 );
-            layerState.setZIndex( -1 );
-            layerState.setBaseLayerIndex( 0 );
+            layerState.set( 'enabled', true );
+            layerState.set( 'opacity', 1.0 );
+            layerState.set( 'zIndex', -1 );
+            layerState.set( 'baseLayerIndex', 0 );
 
             // Register a callback to handle layer state change events.
             layerState.addListener( function( fieldName ) {
@@ -69,20 +67,20 @@ define(function (require) {
 
                     case "opacity":
 
-                        map.setOpacity( layerState.getOpacity() );
+                        map.setOpacity( layerState.get('opacity') );
                         break;
 
                     case "enabled":
 
-                        map.setVisibility( layerState.isEnabled() );
+                        map.setVisibility( layerState.get('enabled') );
                         break;
 
                     case "baseLayerIndex":
 
-                        map.setBaseLayerIndex( layerState.getBaseLayerIndex() );
-                        if ( layerState.BASE_LAYERS[ layerState.getBaseLayerIndex() ].type !== "BlankBase" ) {
-                            map.setOpacity( layerState.getOpacity() );
-                            map.setVisibility( layerState.isEnabled() );
+                        map.setBaseLayerIndex( layerState.get('baseLayerIndex') );
+                        if ( layerState.BASE_LAYERS[ layerState.get('baseLayerIndex') ].type !== "BlankBase" ) {
+                            map.setOpacity( layerState.get('opacity') );
+                            map.setVisibility( layerState.get('enabled') );
                         }
                         break;
                 }

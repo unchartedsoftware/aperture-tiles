@@ -34,10 +34,88 @@ define(function (require) {
 
 
     var Class = require('../class'),
-        activityLogger = require('../logging/DraperActivityLogger'),
+        objectsEqual,
+        arraysEqual,
+        isEqual,
         LayerState;
 
-    
+
+    /**
+     * Compares objects for equality.
+     *
+     * @param {Object} a - First object under comparison
+     * @param {Object} b - Second object under comparison
+     * @returns {boolean} true if they are equal, false otherwise.
+     */
+    objectsEqual = function (a, b) {
+
+        var keyA, keyB, found;
+
+        if ( $.isEmptyObject(a) !== $.isEmptyObject(b) ) {
+            return false;
+        }
+
+        for ( keyA in a ) {         // iterate through a
+            if ( a.hasOwnProperty(keyA) ) {
+                found = false;
+                for ( keyB in b ) { // iterate through b
+                    if ( b.hasOwnProperty(keyB) ) {
+                        if ( a[keyA] === b[keyB] ) {
+                            found = true; // found and equal
+                        }
+                    }
+                }
+                if ( !found ) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+
+    /**
+     * Compares arrays for equality.
+     *
+     * @param {Array} a - First array under comparison
+     * @param {Array} b - Second array under comparison
+     * @returns {boolean} true if they are equal, false otherwise.
+     */
+    arraysEqual = function (a, b) {
+        var i;
+        if (a === b) {
+            return true;
+        }
+        if (a === null || b === null) {
+            return false;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+        for (i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    isEqual = function( a, b ) {
+
+        if ( $.isArray( a ) ) {
+            // is array
+            return arraysEqual( a, b );
+        }
+
+        if ( $.isPlainObject( a ) ) {
+            // is object
+            return objectsEqual( a, b );
+        }
+
+        // primitive
+        return a === b;
+    };
+
 
     LayerState = Class.extend({
         ClassName: "LayerState",
@@ -47,14 +125,34 @@ define(function (require) {
          *
          * @param {string} id - The immutable ID of the layer.
          */
-        init: function (id) {
-            this.domain = null;
+        init: function (id, name, domain) {
+            this.domain = domain;
             this.id = id;
-            this.zIndex = 0;
-            this.name = id; // for now just set name to to he id
-            this.enabled = false;
-            this.opacity = 1.0;
+            this.name = name;
             this.listeners = [];
+        },
+
+        /**
+         * @returns {string} - The ID of this layer state object.
+         */
+        getId: function () {
+            return this.id;
+        },
+
+        /**
+         * @returns {string} - The simple name of the layer.  This can appear in user facing elements and
+         * should be formatted accordingly.
+         */
+        getName: function () {
+            return this.name;
+        },
+
+
+        /**
+         * @returns {string} - The domain of this layer state object.
+         */
+        getDomain: function () {
+            return this.domain;
         },
 
 
@@ -80,6 +178,7 @@ define(function (require) {
             this.listeners.push(listener);
         },
 
+
         /**
          * Removes a callback if it exists.
          *
@@ -92,90 +191,70 @@ define(function (require) {
             }
         },
 
-        /**
-         * @returns {string} - The ID of this layer state object.
-         */
-        getId: function () {
-            return this.id;
-        },
 
-        /**
-         * @returns {string} - The simple name of the layer.  This can appear in user facing elements and
-         * should be formatted accordingly.
-         */
-        getName: function () {
-            return this.name;
-        },
+        set: function( key, value0, value1 ) {
 
-        /**
-         * @param name - The simple name of the layer.  This can appear in user facing elements and should be formatted
-         * accordingly.
-         */
-        setName: function (name) {
-            if (this.name !== name) {
-                this.name = name;
-                this.notify("name", this.listeners);
+            if ( key === 'id' || key === 'domain' || key === 'name' ) {
+                console.log( 'Warning: layer state ' + key + ' attribute is immutable' );
+                return;
+            }
+
+            if ( value1 === undefined ) {
+
+                if ( !isEqual( this[key], value0 ) ) {
+                    if (value0 === null) {
+                        delete this[key];
+                    } else {
+                        this[key] = value0;
+                    }
+                    this.notify( key, this.listeners );
+                }
+
+            } else {
+
+                this[key] = ( this[key] === undefined ) ? {} : this[key];
+
+                if ( !isEqual( this[key][value0], value1 ) ) {
+                    if (value1 === null) {
+                        delete this[key][value0];
+                    } else {
+                        this[key][value0] = value1;
+                    }
+                    this.notify( key, this.listeners );
+                }
+
             }
         },
 
-        /**
-         * @returns {number} - The Z index of the layer.  Layers are drawn starting at 0, going from lowest
-         * to highest.
-         */
-        getZIndex: function () {
-            return this.zIndex;
-        },
 
+        get: function( key0, key1 ) {
 
-        /**
-         * @param {number} - The Z index of the layer.  Layers are drawn starting at 0, going from lowest
-         * to highest.
-         */
-        setZIndex: function (zIndex) {
-            if (this.zIndex !== zIndex) {
-
-                activityLogger.logUserActivity( "Reorder layer z-index from " + this.zIndex + "to" + zIndex, "sort_data",  activityLogger.WF_EXPLORE );
-                this.zIndex = zIndex;
-                this.notify("zIndex", this.listeners);
+            if ( key1 === undefined ) {
+                return ( this[key0] !== undefined ) ? this[key0] : null;
             }
+
+            return ( this[key0] !== undefined )
+                ? ( this[key0][key1] !== undefined )
+                    ? this[key0][key1] : null
+                : null;
         },
 
-        /**
-         * @returns {boolean} - TRUE if the layer should be treated as visible, FALSE otherwise.
-         */
-        isEnabled: function () {
-            return this.enabled;
-        },
 
-        /**
-         * @param {boolean} enabled - TRUE if the layer is visible, FALSE otherwise.
-         */
-        setEnabled: function (enabled) {
-            if (this.enabled !== enabled) {
-                this.enabled = enabled;
-                activityLogger.logUserActivity( "Toggle layer visibility to " + (enabled ? "visible" : "invisible"), "filter_data",  activityLogger.WF_EXPLORE );
-                this.notify("enabled", this.listeners);
+        has: function( key0, key1 ) {
+
+            function hasValue( attr ) {
+                if ( attr === undefined || attr === null ||
+                   ( $.isPlainObject( attr ) && $.isEmptyObject( attr ) ) ||
+                   ( $.isArray( attr ) && attr.length === 0 ) ) {
+                    return false;
+                }
+                return true;
             }
-        },
 
-        /**
-         * @returns {number} - A floating point value from 0.0 - 1.0 representing the opacity of the layer,
-         * where 0.0 is transparent and 1.0 is opaque.
-         */
-        getOpacity: function () {
-            return this.opacity;
-        },
-
-        /**
-         * @param {number} opacity - A floating point value from 0.0 - 1.0 representing the opacity of the layer, where 0.0 is
-         * transparent and 1.0 is opaque.
-         */
-        setOpacity: function (opacity) {
-            if (this.opacity !== opacity) {
-                this.opacity = opacity;
-                activityLogger.logUserActivity( "Adjust layer opacity to " + opacity, "filter_data",  activityLogger.WF_EXPLORE );
-                this.notify("opacity", this.listeners);
+            if ( key1 === undefined ) {
+                return hasValue( this[key0] );
             }
+            return hasValue( this[key0] ) && hasValue( this[key0][key1] );
         }
 
     });
