@@ -246,7 +246,7 @@ In general, creating custom tile generation code involves the following processe
 
 Once you have written each of the required components, you should run your custom Binner to create a set of AVRO tiles that you will use in your Aperture Tiles visual analytic.
 
-####<a name="record-parser"></a>Describing Your Data
+####<a name="describing-your-data"></a>Describing Your Data
 
 The first step in creating a custom tile generation process is deciding how your data should be structured so it can be handled by the Binner. There are several modules required for this step:
 
@@ -416,7 +416,7 @@ The Factory Module tells Guice which factory provider(s) to use to create serial
 /tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterSerializationFactoryModule.java
 ```
 
-####<a name="binner"></a>Binning Your Data
+####<a name="binning-your-data"></a>Binning Your Data
 
 There are three steps in binning your data:
 
