@@ -1,4 +1,4 @@
-        ---
+---
 section: Documentation
 subtitle: Generation
 permalink: documentation/generation/index.html
@@ -50,7 +50,9 @@ If you want to use this script, you must first set the following environment var
 SCALA_HOME - the path to the scala installation directory
 SPARK_HOME - the path to the spark installation directory
 ```
-Note that in the source code, this script only exists after building the project, and that it looks for tile-generation jar files in your local maven repository.  Therefore, in order to use this script from the source code, you first needs to run **mvn install**.
+Note that in the source code, this script only exists after building the project, and that it looks for tile-generation jar files in your local maven repository. Therefore in order to use this script from the source code, you first need to run:
+
+    mvn install
 
 ##<a name="tiling-job"></a>Running a Tiling Job
 
@@ -172,13 +174,15 @@ oculus.binning.parsing.<field>.fieldScaling
              is used, just as with fieldAggregation)
 
 oculus.binning.parsing.<field>.fieldAggregation
-   Method of aggregation to be used on values of the X field. Describes how values from multiple data points in the same bin should be aggregated together to create a single value for the bin.
+   Method of aggregation to be used on values of the X field. Describes how
+   values from multiple data points in the same bin should be aggregated together
+   to create a single value for the bin.
    Default is addition.  Other possible aggregation types are:
        min - find the minimum value
        max - find the maximum value
-       log - treat the number as a  logarithmic value; aggregation of a and b is 
-             log_base(base^a+base^b).  Base is taken from property
-             oculus.binning.parsing.<field>.fieldBase, and defaults to e
+       log - treat the number as a logarithmic value; aggregation of a and b is 
+             log_base(base^a+base^b). Base is taken from property
+             oculus.binning.parsing.<field>.fieldBase, and defaults to e.
 ```
 
 ####<a name="tiling-properties"></a>Tiling Properties File
@@ -338,7 +342,7 @@ tile-generation\src\main\scala\com\oculusinfo\tilegen\tiling\BinDescriptor.scala
 
 Lastly, the binDescriptor defines the Serializer to determine how to write tiles.
 
-```
+```scala
 def getSerializer: TileSerializer[JavaList[TwitterDemoTopicRecord]] = 
 new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec())
 ```
@@ -430,11 +434,19 @@ See the following file for an example of a custom Binner.
 
 The binner expects your data as pairs of `(index, record)`, where `index` is an object indicating where in space the record lies, and `record` is a data record, of the  processing type your bin descriptor defines.
 
-There are two predefined index types, defined by `com.oculusinfo.tilegen.tiling.CartesianIndexScheme` and `com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme` (both found in `/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala`).  With a Cartesian index, the index type is a pair of doubles.  With the IPv4 index, the index type is an array of 4 bytes - the 4 values in an IPv4 address.  Generally, unless you are specifically tiling against computer addresses, the cartesian type will be prefferable.  
-The end result of your parsing will therefore be:
+There are two predefined index types, defined by `com.oculusinfo.tilegen.tiling.CartesianIndexScheme` and `com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme` found in:
 
-```val data: RDD[((Double, Double), PROCESSING_TYPE)]```
-where `PROCESSING_TYPE` is the processing type from your bin descriptor.
+```
+/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
+```
+
+With a Cartesian index, the index type is a pair of doubles.  With the IPv4 index, the index type is an array of 4 bytes - the 4 values in an IPv4 address.  Generally, unless you are specifically tiling against computer addresses, the cartesian type will be preferable. The end result of your parsing will therefore be:
+
+```
+val data: RDD[((Double, Double), PROCESSING_TYPE)]
+```
+
+Where `PROCESSING_TYPE` is the processing type from your bin descriptor.
 
 Lines 92 - 107 in the `TwitterTopicBinner` retrieve the raw data from the Record Parser and creates a mapping from (longitude, latitude) pairs to Twitter topic records.
 
@@ -466,32 +478,49 @@ val tiles = binner.processDataByLevel(data, new CartesianIndexScheme, binDesc,
                                       tilePyramid, levelSet, bins=1)
 ```
 
-Binner.processDataByLevel is defined in `/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala` on line 229.  It accepts the following properties:
+Binner.processDataByLevel is defined in the following file on line 229.
+
+```
+/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
+```
+
+It accepts the following properties:
 
 ```
 data
 	A distributed collection of (index, record) pairs, as described above.
 
 indexScheme
-	Used to convert the index to a set X/Y coordinates that can be plotted.  When using a CartesianIndexScheme, the coordinates are taken as given.
+	Used to convert the index to a set X/Y coordinates that can be plotted.
+	When using a CartesianIndexScheme, the coordinates are taken as given.
 
 binDescriptor
-	A Bin Descriptor, as described above, which defines how to aggregate two records, how to convert them into the form written, and how to determine the extrema of the dataset.
+	A Bin Descriptor, as described above, which defines how to aggregate two
+	records, how to convert them into the form written, and how to determine
+	the extrema of the dataset.
  
 tilePyramid
-	The projection to use to transform from the raw data index into tiles and bins.  Two types are predefined, an `/binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid`, which is a linear transformation into an arbitrarily sized space, and `/binning-utilities/src/main/java/com/oculusinof/binning/impl/WebMercatorTilePyramid`, which is a standard geographical projection.
+	The projection to use to transform from the raw data index into tiles and
+	bins. Two types are predefined, an `/binning-utilities/src/main/java/com/
+	oculusinof/binning/impl/AOITilePyramid`, which is a linear transformation
+	into an arbitrarily sized space, and `/binning-utilities/src/main/java/com/
+	oculusinof/binning/impl/WebMercatorTilePyramid`, which is a standard
+	geographical projection.
 
 levelSet
 	Specifies which levels to process at the same time. It is generally
-    recommended you process levels 1-9 together, then any additional
-    levels one at a time afterwards.  This arrangement typically 
-	makes effective use of system resources.
+    recommended you process levels 1-9 together, then any additional levels
+	one at a time afterwards.  This arrangement typically makes effective use
+	of system resources.
 
 bins
 	Number of bins on each axis.  Optional, defaults to 256
 
 consolidationPartitions
-	The number of reducers to use when aggregating data records into bins and tiles.  Optiona, defaults to the same number of partitions as the original data set, but can be altered if one encounters problems with the tiling job due to lack of resources.
+	The number of reducers to use when aggregating data records into bins and
+	tiles.  Optiona, defaults to the same number of partitions as the original
+	data set, but can be altered if one encounters problems with the tiling job
+	due to lack of resources.
 
 isDensityStrip
 	This should be true if doing a one-dimentional tiling job.  Defaults to false.
@@ -501,7 +530,7 @@ isDensityStrip
 
 Lines 118 - 119 of `TwitterTopicBinner` specify how to write the tiles created from your transformed data.
 
-```
+```scala
 tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc, 
 					pyramidName, pyramidDescription)
 ```
@@ -514,13 +543,16 @@ tilePyramid
     tilePyramid specified in binner.processDataByLevel.
 
 pyramidID
-	The ID to apply to the tile set when writing it.  If writing to the local filesystem, this will be the base directory into which to write the tiles.  If writing to HBase, it will be the name of the table to write.
+	The ID to apply to the tile set when writing it. If writing to the local
+	filesystem, this will be the base directory into which to write the tiles.
+	If writing to HBase, it will be the name of the table to write.
 
 tiles
 	The binned data set produced by binner.processDataByLevel.
 
 binDescriptor
-	The bin descriptor describing the dataset.  This must match the bin descriptor used when creating the tiles.
+	The bin descriptor describing the dataset.  This must match the bin
+	descriptor used when creating the tiles.
 
 pyramidName
 	Name of the finished pyramid. Stored in the tile metadata.
