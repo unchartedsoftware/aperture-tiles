@@ -10,3 +10,7 @@ oculus.binning.parsing.x.index=0
 oculus.binning.parsing.y.index=1
 oculus.binning.parsing.v.index=2
 oculus.binning.parsing.v.fieldAggregation=min
+
+# General output properties
+oculus.tileio.type=file
+oculus.binning.name=tilesets/julia
