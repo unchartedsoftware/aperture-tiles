@@ -7,7 +7,7 @@ layout: default
 
 # Quick Start Guide
 
-The following guide provides a short tutorial that walks you through the process of creating and configuring an Aperture Tiles project.  This Quick Start Guide covers the following processes:
+The following guide provides a short tutorial that walks you through the process of creating and configuring an Aperture Tiles project. This Quick Start Guide covers the following processes:
 
 1. Generating a sample data set to analyze
 2. Tiling and storing the sample data set
@@ -26,7 +26,7 @@ To create the Aperture Tiles Julia set project, you first need to install [Apach
 If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
 
 - Your preferred flavor of Hadoop/HDFS ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work), which allows you to configure a cluster of machines across which you can distribute Aperture Tiles analytic jobs 
-- [Apache HBase](http://hbase.apache.org/), which acts as a data store for your Hadoop/HDFS  cluster
+- [Apache HBase](http://hbase.apache.org/), which acts as a data store for your Hadoop/HDFS cluster
 
 Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
 
@@ -56,7 +56,7 @@ For a typical Aperture Tiles project, you will work with your own custom data se
 	The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.
 
 ```
-./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000`
+./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
 ```
 
 Check your output folder for five part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
@@ -83,6 +83,7 @@ These properties specify the location of your Spark installation.
 ```
 spark
 	URI of the Spark master. Set to "local" for standalone Spark installations.
+
 sparkhome
 	File system location of Spark. Defaults to the value of the SPARK_HOME
 	environment variable.
@@ -95,8 +96,13 @@ These properties specify the location of your Julia set data and where to save t
 ```
 oculus.tileio.type
 	Specify whether the tiles should be saved locally (file) or to HBase
-	(hbase). Note that local tile IO is supported only for standalone Spark
-	installations.
+	(hbase). Local tile IO is supported only for standalone Spark installations.
+
+	NOTE: This parameter is not currently in the example .bd file provided for
+	this demo. When this parameter is absent, the tile generator automatically
+	writes to HBase. To write to the local filesystem, manually add this
+	parameter to the .bd file and set its value to "file".
+
 oculus.binning.source.location
 	Path of the source data files in your local file system
 	(ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).
@@ -108,16 +114,18 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
 
 ```
 hbase.zookeeper.quorum
-	Zookeeper quorum location needed to connect to HBase
+	Zookeeper quorum location needed to connect to HBase.
+
 hbase.zookeeper.port
-	Port through which to connect to zookeeper. Typically defaults to 2181. 
+	Port through which to connect to zookeeper. Typically defaults to 2181.
+
 hbase.master
-	Location of the HBase master to which to save the tiles
+	Location of the HBase master to which to save the tiles.
 ```
 
 ###<a name="tiling-property-file-configuration"></a>Tiling Property File Configuration
 
-Access the **julia-tiling.bd** file in your `tile-generator/examples` folder and edit the `oculus.binning.name` to specify the name of the output tile set. Use `julia` for this example.
+Access the **julia-tiling.bd** file in your `tile-generator/examples` folder and edit the `oculus.binning.name` to specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use `julia` for this example.
 
 Note that for a typical Aperture Tiles project, you will need to edit additional properties to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
 
@@ -143,7 +151,7 @@ Note that the `oculus.binning.prefix` value is only included if you set it in th
 
 For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution.
 
-For typical Aperture Tiles projects, you will need to edit the **web.xml**  and **tile.properties** files in this directory. For more information on editing these files, see the [Tile Generation](../generation/) topic on this website.
+For typical Aperture Tiles projects, you will need to edit the **web.xml** and **tile.properties** files in this directory. For more information on editing these files, see the [Tile Generation](../generation/) topic on this website.
 
 ##<a name="tile-client-configuration"></a>Tile Client Configuration
 
@@ -179,7 +187,7 @@ To edit the layer properties for your project:
 3. In the `pyramid` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Make sure the values you specify here match the range you specified in the map properties.
 4. If your AVRO tiles are saved to your local machine, add or edit the following values in the `data` section:
 	- `type`: Enter **file**
-	- `root.path`: Specify the *root* path to which you generated the AVRO tiles. Note that the `id` you specified in step 2 is the leaf folder that contains the AVRO tiles. Set the `root.path` to the folder above that (e.g., */data/tiles/*).  
+	- `root.path`: Specify the *root* path to which you generated the AVRO tiles. Note that the `id` you specified in step 2 is the leaf folder that contains the AVRO tiles. Set the `root.path` to the folder above that (e.g., */data/tiles/*).
 5. If your AVRO tiles are saved to HBase, add or edit the following values in the `data` section:
 	- `type`: Enter *hbase*
 	- `hbase.zookeeper.quorum`: Zookeeper quorum location needed 
