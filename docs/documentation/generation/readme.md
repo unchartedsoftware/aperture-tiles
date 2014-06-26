@@ -191,7 +191,10 @@ The properties file defines the tiling job parameters for each layer in your vis
 
 ```
 oculus.binning.name
-   Metadata name of the output data tile set pyramid. Used a plot label.
+   Name (path) of the output data tile set pyramid. If you are writing to a
+   file system, use a relative path instead of an absolute path. If you are
+   writing to HBase, this is used as a table name. Also written to the tile
+   set metadata and used as a plot label.
 
 oculus.binning.projection
    Type of projection to use when binning data.  Possible values are:

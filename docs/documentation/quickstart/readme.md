@@ -125,7 +125,7 @@ hbase.master
 
 ###<a name="tiling-property-file-configuration"></a>Tiling Property File Configuration
 
-Access the **julia-tiling.bd** file in your `tile-generator/examples` folder and edit the `oculus.binning.name` to specify the name of the output tile set. Use `julia` for this example.
+Access the **julia-tiling.bd** file in your `tile-generator/examples` folder and edit the `oculus.binning.name` to specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use `julia` for this example.
 
 Note that for a typical Aperture Tiles project, you will need to edit additional properties to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
 
