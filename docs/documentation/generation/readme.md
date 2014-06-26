@@ -1,4 +1,4 @@
----
+        ---
 section: Documentation
 subtitle: Generation
 permalink: documentation/generation/index.html
@@ -373,7 +373,7 @@ This class inherits from the GenericAVROArraySerializer.java (`/binning-utilitie
 The definition of the AVRO schema is located in the following folder, where the *name* is set to **entryType**.
 
 ```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/srcmain/resources/twitterTopicEntry.avsc
+/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/resources/twitterTopicEntry.avsc
 ```
 
 For records that aren't list types, inherit from the GenericAvroSerializer.java (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and define:
@@ -436,28 +436,30 @@ The end result of your parsing will therefore be:
 ```val data: RDD[((Double, Double), PROCESSING_TYPE)]```
 where `PROCESSING_TYPE` is the processing type from your bin descriptor.
 
-Lines 91 - 104 in the `TwitterTopicBinner` retrieve the raw data from the Record Parser and creates a mapping from (longitude, latitude) pairs to Twitter topic records.
+Lines 92 - 107 in the `TwitterTopicBinner` retrieve the raw data from the Record Parser and creates a mapping from (longitude, latitude) pairs to Twitter topic records.
 
 ```scala
-val data = rawDataWithTopics.mapPartitions(i => {     
-	val recordParser = new TwitterTopicRecordParser(endTimeSecs)
-	i.flatMap(line => {
-		try {
-			recordParser.getRecordsByTopic(line)
-    	}
-		catch {
-			// Ignore bad records
-			case _: Throwable => Seq[((Double, Double), Map[String,
-									   TwitterDemoTopicRecord])]()
-		}
-	})
-})
+val data = rawDataWithTopics.mapPartitions(i =>
+	{
+		val recordParser = new TwitterTopicRecordParser(endTimeSecs)
+		i.flatMap(line =>
+			{
+				try {
+					recordParser.getRecordsByTopic(line)
+				} catch {
+					// Just ignore bad records, there aren't many
+					case _: Throwable => Seq[((Double, Double), Map[String, TwitterDemoTopicRecord])]()
+				}
+			}
+		)
+	}
+)
 data.cache
 ```
 
 #####Binning
 
-Lines 112 - 113 of `TwitterTopicBinner` transforms the data into tiles.
+Lines 116 - 117 of `TwitterTopicBinner` transforms the data into tiles.
 
 ```scala
 val tiles = binner.processDataByLevel(data, new CartesianIndexScheme, binDesc,
@@ -497,7 +499,7 @@ isDensityStrip
 
 #####Writing tiiles
 
-Lines 114 - 115 of `TwitterTopicBinner` specify how to write the tiles created from your transformed data.
+Lines 118 - 119 of `TwitterTopicBinner` specify how to write the tiles created from your transformed data.
 
 ```
 tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc, 

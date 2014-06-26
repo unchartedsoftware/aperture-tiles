@@ -1,95 +1,113 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-  <artifactId>twitter-topics-utilities</artifactId>
-  <name>Twitter Custom Processing Utilities</name>
-  <description>A server-side service for sending tiles from tile pyramids to web clients</description>
+	<artifactId>twitter-topics-utilities</artifactId>
+	<name>Twitter Custom Processing Utilities</name>
+	<description>A server-side service for sending tiles from tile pyramids to web clients</description>
 
-  <parent>
-    <artifactId>twitter-topics</artifactId>
-    <groupId>com.oculusinfo</groupId>
-    <version>0.3-SNAPSHOT</version>
-  </parent>
+	<parent>
+		<artifactId>twitter-topics</artifactId>
+		<groupId>com.oculusinfo</groupId>
+		<version>0.3-SNAPSHOT</version>
+	</parent>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
-      <artifactId>tile-generation</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.oculusinfo</groupId>
-      <artifactId>tile-service</artifactId>
-      <version>${project.version}</version>
-      <classifier>classes</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${dependency-scala-version}</artifactId>
-      <version>1.9.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>com.oculusinfo</groupId>
+			<artifactId>tile-generation</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.oculusinfo</groupId>
+			<artifactId>tile-service</artifactId>
+			<version>${project.version}</version>
+			<classifier>classes</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_${dependency-scala-version}</artifactId>
+			<version>1.9.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>scala</id>
-      <name>Scala Tools</name>
-      <url>http://scala-tools.org/repo-releases/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>scala</id>
+			<name>Scala Tools</name>
+			<url>http://scala-tools.org/repo-releases/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 
-  <build>
-    <finalName>twitter-utilities</finalName>
-    <plugins>
-      <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
-        <version>2.15.2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+	<build>
+		<finalName>twitter-utilities</finalName>
 
-      <!-- Enable scalatest plugin -->
-      <plugin>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest-maven-plugin</artifactId>
-        <version>1.0-M2</version>
-        <configuration>
-          <reportsDirectory>
-            ${project.build.directory}/surefire-reports
-          </reportsDirectory>
-          <junitxml>.</junitxml>
-		  <stdout>F</stdout>
-          <filereports>WDF TestSuite.txt</filereports>
-        </configuration>
-        <executions>
-          <execution>
-            <id>test</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+		<plugins>
+			<!-- Copy scripts, with filtering to insert build numbers, into
+			     the scripts directory. -->
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions><execution>
+					<id>copy-resources</id>
+					<phase>package</phase>
+					<goals><goal>copy-resources</goal></goals>
+					<configuration>
+						<outputDirectory>${basedir}/scripts</outputDirectory>
+						<resources><resource>
+							<directory>src/main/filtered-scripts</directory>
+							<filtering>true</filtering>
+						</resource></resources>
+					</configuration>
+				</execution></executions>
+			</plugin>
 
-    </plugins>
-  </build>
+			<plugin>
+				<groupId>org.scala-tools</groupId>
+				<artifactId>maven-scala-plugin</artifactId>
+				<version>2.15.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Enable scalatest plugin -->
+			<plugin>
+				<groupId>org.scalatest</groupId>
+				<artifactId>scalatest-maven-plugin</artifactId>
+				<version>1.0-M2</version>
+				<configuration>
+					<reportsDirectory>
+						${project.build.directory}/surefire-reports
+					</reportsDirectory>
+					<junitxml>.</junitxml>
+					<stdout>F</stdout>
+					<filereports>WDF TestSuite.txt</filereports>
+				</configuration>
+				<executions>
+					<execution>
+						<id>test</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
-
