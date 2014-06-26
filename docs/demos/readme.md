@@ -7,13 +7,13 @@ layout: default
 Aperture Tile Demonstrations
 ============================
 
-The following demos illustrate the utility of tile based visual analytics and the possibilities of create interactive visualization for big data. All source code for the demos is provided in the tile-examples directory of the project.
+The following demos illustrate the utility of tile based visual analytics and the possibilities of create interactive visualization for big data.
 
 
 Tile-based Heatmap of Twitter Messages
 --------------------------------------
 
-This Aperture tile demo shows the scalability of map oriented big data plots using heatmaps. The application shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer.
+This Aperture tile demo shows the scalability of map-oriented big data plots using heatmaps. The application shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer.
 
 This demo illustrates:
 
@@ -21,6 +21,7 @@ This demo illustrates:
 -   Server side rendering of tiled heatmaps
 -   Rich layer controls for interactive filtering of tile data and user color ramp selection
 
+[> Explore the Twitter Heatmap demo](https://tiles.oculusinfo.com/twitter-heatmap/)
 
 Tile-based Topic Tracking in Twitter Messages
 ---------------------------------------------
@@ -35,11 +36,14 @@ This demo illustrates:
 -   Server and client side rendering of tile visualizations
 -   Integration with advanced analytics incorporated in generated tile data
 
+[> Explore the Twitter Topics demo](https://tiles.oculusinfo.com/twitter-topics/)
+
+The source code for this demo is provided in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project.
 
 Tile-based Sentiment Analysis of Twitter Messages
 -------------------------------------------------
 
-This Aperture tile demo shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer. An "aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region summarizinh the top topics discussed in the Twitter messages and the sentiment of the Tweet (positive, neutral and negative). Histograms of topics show sentiment trends.
+This Aperture tile demo shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer. An "aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region summarizing the top topics discussed in the Twitter messages and the sentiment of the Tweet (positive, neutral and negative). Histograms of topics show sentiment trends.
 
 This demo illustrates:
 
@@ -49,6 +53,7 @@ This demo illustrates:
 -   Server and client side rendering of tile visualizations
 -   Integration with advanced analytics incorporated in generated tile data
 
+[> Explore the Twitter Sentiment demo](https://tiles.oculusinfo.com/twitter-sentiment/)
 
 Big Data Plots of Bitcoin for Exploratory Data Analysis
 -------------------------------------------------------
@@ -60,6 +65,13 @@ This demo illustrates:
 -   Seamless zoom and pan interaction on cross-plots
 -   Use of Aperture tiles for exploratory data analysis by plotting *all the data*
 
+[> Explore the Bitcoin demo](https://tiles.oculusinfo.com/bitcoin-demo/)
+
 Julia Set Example
 -----------------
-This demo is used in the quickstart guide to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
+
+This demo is used in the Quick Start guide to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
+
+[> Explore the Julia Set demo](https://tiles.oculusinfo.com/julia-demo/)
+
+The source code for this demo is provided in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project.
