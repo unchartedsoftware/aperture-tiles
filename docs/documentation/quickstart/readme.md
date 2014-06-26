@@ -34,8 +34,8 @@ Otherwise, if your data set is sufficiently small (i.e., it can fit in the memor
 
 Save the following Aperture Tiles distribution available on the [Download](../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
-- [Tile Generator](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3-dist.zip): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
-- [Tile Client Template](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
+- [Tile Generator](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3.1-dist.zip): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
+- [Tile Client Template](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3.1-dist.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../setup/) page.
 
@@ -50,7 +50,7 @@ Set the following environment variables:
 
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
-1. Extract the contents of the [tile-generator.zip](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3-dist.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
+1. Extract the contents of the [tile-generator.zip](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3.1-dist.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
 2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. Note that you may need to create this directory in your local file system or HDFS beforehand.
 	
 	The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.
@@ -149,7 +149,7 @@ Note that the `oculus.binning.prefix` value is only included if you set it in th
 
 ##<a name="tile-server-configuration"></a>Tile Server Configuration
 
-For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution.
+For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3.1-dist.zip) distribution.
 
 For typical Aperture Tiles projects, you will need to edit the **web.xml** and **tile.properties** files in this directory. For more information on editing these files, see the [Tile Generation](../generation/) topic on this website.
 
@@ -160,7 +160,7 @@ To configure the Tile Client application to display the AVRO files containing yo
 - Map Properties (within the tile-client-template.zip at `WEB-INF/classes/maps` or within the source at `tile-client-template/src/main/resources/maps`), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
 - Layer Properties (within the tile-client-template.zip at `WEB-INF/classes/layers` or within the source at `tile-client-template/src/main/resources/layers`), which specifies the layers that can be overlaid on your base map or plot.
 
-Both files are available in the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution. Extract the contents of the file to access them.
+Both files are available in the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3.1-dist.zip) distribution. Extract the contents of the file to access them.
 
 ###<a name="map-properties"></a>Map Properties
 
