@@ -3,63 +3,73 @@
 "http://java.sun.com/dtd/web-app_2_3.dtd" >
 
 <web-app>
-  <display-name>Data Tile Server</display-name>
+	<display-name>Data Tile Server</display-name>
 
-  <!-- Module Configuration -->
-  <!-- If you have your own Guice module(s), put them here as a colon-separated
-       list. -->
-  <context-param>
-    <param-name>guice-modules</param-name>
-    <param-value>
-      <!-- A :-separated list of modules, so there must be a : after all but 
-	   the last module listed. -->
+	<!-- Module Configuration -->
+	<!-- If you have your own Guice module(s), put them here as a colon-separated
+	     list. -->
+	<context-param>
+		<param-name>guice-modules</param-name>
+		<param-value>
+			<!-- A :-separated list of modules, so there must be a : after all but 
+			     the last module listed. -->
 
-      <!-- Storage type __________________________________________________ -->
-      <!-- Pick one of the modules below.  Note that appropriate properties 
-	   must be set in tile.properties to match the storage module 
-	   chosen. -->
-      <!-- To read tiles from HBase -->
-      <!-- com.oculusinfo.tile.io.HBaseModule: -->
-      <!-- To read tiles from the file system -->
-      com.oculusinfo.tile.io.FileSystemModule:
-      <!-- To read tiles from a .jar file -->
-      <!-- com.oculusinfo.tile.io.ResourceStreamModule: -->
-      <!-- To read tiles from a .zip file -->
-      <!-- com.oculusinfo.tile.io.ZipResourceStreamModule: -->
-      <!-- To read tiles from a SQLite database -->
-      <!-- com.oculusinfo.tile.io.SQLiteModule: -->
+			<!-- Pyramid factory module - override to add custom TilePyramids -->
+			com.oculusinfo.tile.init.TilePyramidFactoryModule:
+			<!-- Renderer factory module - override to add custom server-side 
+			     renderers. -->
+			com.oculusinfo.tile.init.ImageRendererFactoryModule:
+			<!-- Serialization factory module - override to add custom tile 
+			     serializers -->
+			com.oculusinfo.tile.init.TileSerializationFactoryModule:
+			<!-- Pyramid IO factory module - override to add custom PyramidIO 
+			     implementations -->
+			<!-- Standard implementation -->
+			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+			<!-- For tiling requiring a spark connection
+			     com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
+			-->
+			<!-- LayerConfiguration factory module - override to add custom layer configuration 
+			     parameters -->
+			com.oculusinfo.tile.init.StandardLayerConfigurationModule:
 
-      <!-- Sets up the REST interface by which clients can retrieve tiles -->
-      com.oculusinfo.tile.rest.RestConfigModule:
-      <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.TileModule:
-      oculus.aperture.capture.PhantomCaptureModule:
-      oculus.aperture.cms.couchdb.CouchDbModule
-    </param-value>
-  </context-param>
+			<!-- For any operation requiring a spark connection (including live
+			     tiling or drill-through to raw data)
+			     com.oculusinfo.tile.spark.SparkModule:
+			-->
 
-  <!-- Config File Location -->
-  <!-- Provide the path to the config defaults override properties file here to
-       override the default values -->
-  <context-param>
-    <param-name>apertureConfig</param-name>
-    <param-value>res:///tile.properties</param-value>
-  </context-param>
+			<!-- Sets up the REST interface by which clients can retrieve tiles -->
+			com.oculusinfo.tile.rest.RestConfigModule:
+			<!-- Sets up the tile-rendering service -->
+			com.oculusinfo.tile.rest.TileModule:
+			oculus.aperture.capture.PhantomCaptureModule:
+			oculus.aperture.cms.couchdb.CouchDbModule
+		</param-value>
+	</context-param>
 
-  <!-- Run all requests through the Guice servlet filter -->
-  <filter>
-    <filter-name>guiceFilter</filter-name>
-    <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
-  </filter>
+	<!-- Config File Location -->
+	<!-- Provide the path to the config defaults override properties file here to
+	     override the default values -->
+	<context-param>
+		<param-name>apertureConfig</param-name>
+		<param-value>res:///tile.properties</param-value>
+	</context-param>
 
-  <filter-mapping>
-    <filter-name>guiceFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
+	<!-- Run all requests through the Guice servlet filter -->
+	<filter>
+		<filter-name>guiceFilter</filter-name>
+		<filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+	</filter>
 
-  <!-- Servlet config must run on app deployment -->
-  <listener>
-    <listener-class>oculus.aperture.ApertureServerConfig</listener-class>
-  </listener>
+	<filter-mapping>
+		<filter-name>guiceFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- Servlet config must run on app deployment -->
+	<listener>
+		<!-- Required with a spark connection, harmless in all other cases -->
+		<listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
+	</listener>
 
 </web-app>

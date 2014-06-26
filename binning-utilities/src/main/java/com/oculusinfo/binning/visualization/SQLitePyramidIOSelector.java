@@ -24,18 +24,13 @@
  */
 package com.oculusinfo.binning.visualization;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
+
+import javax.swing.*;
+import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 
 
@@ -47,61 +42,61 @@ import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
  * 
  */
 public class SQLitePyramidIOSelector extends JPanel implements PyramidIOSelector {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 
 
-    private String            _dbPath;
-    private SQLitePyramidIO   _io;
-    private JTextField        _dbPathField;
+	private String            _dbPath;
+	private SQLitePyramidIO   _io;
+	private JTextField        _dbPathField;
 
 
 
-    public SQLitePyramidIOSelector () {
-        _dbPath = null;
-        _io = null;
+	public SQLitePyramidIOSelector () {
+		_dbPath = null;
+		_io = null;
 
-        JLabel dbPathLabel = new JLabel("Database path:");
-        _dbPathField = new JTextField();
-        setLayout(new GridBagLayout());
-        add(dbPathLabel,  new GridBagConstraints(0, 0, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        add(_dbPathField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		JLabel dbPathLabel = new JLabel("Database path:");
+		_dbPathField = new JTextField();
+		setLayout(new GridBagLayout());
+		add(dbPathLabel,  new GridBagConstraints(0, 0, 1, 1, 0.5, 0.0, GridBagConstraints.EAST,   GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		add(_dbPathField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
-        _dbPathField.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange (PropertyChangeEvent arg0) {
-                setDBPath(_dbPathField.getText());
-            }
-        });
-    }
+		_dbPathField.addPropertyChangeListener(new PropertyChangeListener() {
+				@Override
+				public void propertyChange (PropertyChangeEvent arg0) {
+					setDBPath(_dbPathField.getText());
+				}
+			});
+	}
 
-    private void setDBPath (String dbPath) {
-        if (!objectsEqual(_dbPath, dbPath)) {
-            _dbPath = dbPath;
-            SQLitePyramidIO oldIO = _io;
-            try {
-                _io = new SQLitePyramidIO(_dbPath);
-            } catch (Exception e) {
-                _io = null;
-                if (null == oldIO)
-                    return;
-            }
-            firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
-        }
-    }
+	private void setDBPath (String dbPath) {
+		if (!objectsEqual(_dbPath, dbPath)) {
+			_dbPath = dbPath;
+			SQLitePyramidIO oldIO = _io;
+			try {
+				_io = new SQLitePyramidIO(_dbPath);
+			} catch (Exception e) {
+				_io = null;
+				if (null == oldIO)
+					return;
+			}
+			firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
+		}
+	}
 
-    @Override
-    public PyramidIO getPyramidIO () {
-        return _io;
-    }
+	@Override
+	public PyramidIO getPyramidIO () {
+		return _io;
+	}
 
-    @Override
-    public JPanel getPanel () {
-        return this;
-    }
+	@Override
+	public JPanel getPanel () {
+		return this;
+	}
 
-    private static boolean objectsEqual (Object a, Object b) {
-        if (null == a) return null == b;
-        return a.equals(b);
-    }
+	private static boolean objectsEqual (Object a, Object b) {
+		if (null == a) return null == b;
+		return a.equals(b);
+	}
 }

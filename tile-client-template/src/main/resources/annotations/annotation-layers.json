@@ -1,0 +1,39 @@
+{
+    "layers": [ 
+        { 
+            "id" : "example.table",
+            "name" : "Example",
+            "description": "Description here",
+            "pyramid" : {
+                "type" : "AreaOfInterest",
+                "minX" : 1.0,
+                "maxX" : 6336769,
+                "minY" : 0,
+                "maxY" : 500000
+             },
+             "data": {
+                "pyramidio": {
+                    "type": "hbase",
+                    "hbase.zookeeper.quorum": "hadoop-s1.oculus.local",
+                    "hbase.zookeeper.port": "2181",
+                    "hbase.master": "hadoop-s1.oculus.local:60000"
+                },
+                "serializer": {
+                    "type": "string->[(string, long)]-j"
+                }
+            },
+            "groups": [ "Urgent", "High", "Medium", "Low" ],
+            "filter" : {
+                    "Urgent": 10,
+                    "High": 10,
+                    "Medium": 10,
+                    "Low" : 10
+            },
+            "accessibility": {
+        		"read": true,
+            	"write": false,
+            	"modify": false
+            },
+        }
+    ]
+}

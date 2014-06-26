@@ -5,29 +5,29 @@
 
 <log4j:configuration debug="true">
 
-		<appender name='stdout' class='org.apache.log4j.ConsoleAppender'>
-				<layout class='org.apache.log4j.PatternLayout'>
-						<!-- param name='ConversionPattern' value='%-10r %-5p %-20c{1} %x - %m%n'/ -->
-						<param name="ConversionPattern"   value="[%p] %d{dd MMM yyyy HH:mm:ss} - %C - %m%n"/>
-				</layout>
-		</appender>
+	<appender name='stdout' class='org.apache.log4j.ConsoleAppender'>
+		<layout class='org.apache.log4j.PatternLayout'>
+			<!-- param name='ConversionPattern' value='%-10r %-5p %-20c{1} %x - %m%n'/ -->
+			<param name="ConversionPattern"   value="[%p] %d{dd MMM yyyy HH:mm:ss} - %C - %m%n"/>
+		</layout>
+	</appender>
 
-		<appender name="General" class="org.apache.log4j.DailyRollingFileAppender">
-				<param name="file" value="tileserver.log"/>
-				<param name="append" value="false"/>
-				<param name="encoding" value="UTF-8"/>
+	<appender name="General" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="tileserver.log"/>
+		<param name="append" value="false"/>
+		<param name="encoding" value="UTF-8"/>
 
-				<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
 
-				<layout class="org.apache.log4j.PatternLayout">
-						<param name="ConversionPattern"   value="%5p; %d{dd MMM yyyy HH:mm:ss}; %C; %m%n"/>
-				</layout>
-		</appender>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"   value="%5p; %d{dd MMM yyyy HH:mm:ss}; %C; %m%n"/>
+		</layout>
+	</appender>
 
-		<root>
-				<priority value="FINE"/>
-				<appender-ref ref="stdout"/>
-				<!-- appender-ref ref="General"/ -->
-		</root>
+	<root>
+		<priority value="FINE"/>
+		<appender-ref ref="stdout"/>
+		<!-- appender-ref ref="General"/ -->
+	</root>
 
 </log4j:configuration>

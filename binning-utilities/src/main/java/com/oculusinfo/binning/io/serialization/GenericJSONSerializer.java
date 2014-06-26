@@ -24,7 +24,6 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,26 +31,25 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+
 
 public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
-    private static final long serialVersionUID = 2617903534522413550L;
-
-
-
-    abstract protected T getValue (Object bin) throws JSONException;
-	abstract protected JSONArray translateToJSON (T value);
+	private static final long serialVersionUID = 2617903534522413550L;
 
 	protected GenericJSONSerializer () {
 	}
+
+	abstract protected T getValue (Object bin) throws JSONException;
+	abstract protected Object translateToJSON (T value);
 
 	public String getFileExtension(){
 		return "json";
@@ -62,22 +60,36 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 
 		String jsonString = convertStreamToString(rawData);
 		try {
-			JSONObject json = new JSONObject(jsonString);
-			JSONObject metaData = json.getJSONObject("metadata");
-			JSONObject tileSize = metaData.getJSONObject("tilesize");
-			int xBins = tileSize.getInt("width");
-			int yBins = tileSize.getInt("height");
-			int level = json.getInt("z");
-			int x = json.getInt("x");
-			int y = json.getInt("y");
+			
+			JSONObject json = new JSONObject(jsonString);			
+			int level = json.getInt("level");
+			int x = json.getInt("xIndex");
+			int y = json.getInt("yIndex");
+			int xBins = json.getInt("xBinCount");
+			int yBins = json.getInt("yBinCount");
+
 			JSONArray bins = json.getJSONArray("bins");
 
 			List<T> values = new ArrayList<T>();
 			for (int i = 0; i < bins.length(); i++) {
 				values.add(getValue(bins.get(i)));
 			}
-			TileIndex defn = new TileIndex(level, x, y, xBins, yBins);
-			return new TileData<T>(defn, values);
+
+
+			TileIndex tileIndex = new TileIndex(level, x, y, xBins, yBins);
+			TileData<T> tile = new TileData<T>( tileIndex, values);
+			
+			if (json.has("meta")) {
+				JSONObject metaData = json.getJSONObject("meta");
+				String[] keys = JSONObject.getNames(metaData);
+				if (null != keys) {
+					for (String key: keys) {
+						tile.setMetaData(key, metaData.getString(key));
+					}
+				}
+			}
+
+			return tile;
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -101,58 +113,48 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 	}
 
 	@Override
-	public void serialize (TileData<T> tile, TilePyramid pyramid, OutputStream stream) throws IOException {
+	public void serialize (TileData<T> tile, OutputStream stream) throws IOException {
 
-		TileIndex idx = tile.getDefinition();
-		int z = idx.getLevel();
-		int x = idx.getX();
-		int y = idx.getY();
-
-		TileIndex tileIndex = new TileIndex(z, x, y);
-		Rectangle2D bbox = pyramid.getTileBounds(tileIndex);
-		double centerLon = bbox.getCenterX();
-		double centerLat = bbox.getCenterY();
+		TileIndex tileIndex = tile.getDefinition();
 
 		try {
 			JSONObject jsonEntry = new JSONObject();
-			jsonEntry.put("longitude", centerLon);
-			jsonEntry.put("latitude", centerLat);
-			jsonEntry.put("x", x);
-			jsonEntry.put("y", y);
-			jsonEntry.put("z", z);
-
-
+			
+			jsonEntry.put("level", tileIndex.getLevel() );
+			jsonEntry.put("xIndex", tileIndex.getX() );
+			jsonEntry.put("yIndex", tileIndex.getY() );			
+			jsonEntry.put("xBinCount", tileIndex.getXBins() );
+			jsonEntry.put("yBinCount", tileIndex.getYBins() );
+			
 			JSONArray bins = new JSONArray();
 			for (T value: tile.getData()) {
-				if (value == null)continue;
-				bins.put(translateToJSON(value));
+				
+				if (value == null) {
+					bins.put( new JSONObject() );
+				} else {
+					bins.put( translateToJSON(value) );
+				}				
 			}
+			
 			jsonEntry.put("bins", bins);
 
-			JSONObject metadataEntry = new JSONObject();
-			jsonEntry.put("metadata", metadataEntry);
-			JSONObject tileSize = new JSONObject();
-			tileSize.put("width", 1);
-			tileSize.put("height", 1);
-			metadataEntry.put("tilesize", tileSize);
+			JSONObject metaData = new JSONObject();
+			Collection<String> keys = tile.getMetaDataProperties();
+			if (null != keys) {
+				for (String key: keys) {
+					String value = tile.getMetaData(key);
+					if (null != value)
+						metaData.put(key, value);
+				}
+			}
+			jsonEntry.put("meta", metaData);
+
 			OutputStreamWriter writer = new OutputStreamWriter(stream, "UTF-8");
 			writer.write(jsonEntry.toString());
 			writer.close();
+			
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-
 	}
-
-
-	//	@override
-	//	public JSONObject translateToJSON (Map<String, Integer> value) {
-	//		JSONArray outputMap = new JSONArray();
-	//		for (Entry<String, Integer> entry: value.getEntryMap()) {
-	//			JSONObject entryObj = new JSONObject();
-	//			entryObj.put(entry.getKey(), entry.getValue());
-	//			outputMap.put(entryObj);
-	//		}
-	//		return outputMap;
-	//	}
 }

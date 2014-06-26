@@ -35,111 +35,152 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class FileSystemPyramidIO implements PyramidIO {
-    private String _rootPath;
-    private String _extension;
+	private String _rootPath;
+	private String _extension;
 
 
 
 	public FileSystemPyramidIO (String rootPath, String extension){
-		_rootPath = rootPath;
+		//if there's no root path, then it should be based on a relative path, so make sure to set root path to '.'
+		if (rootPath == null || rootPath.trim().length() == 0) {
+			rootPath = "./";
+		}
+		
+		//make sure the root path ends with a slash
+		_rootPath = (rootPath.trim().endsWith("/"))? rootPath : rootPath.trim() + "/";
 		_extension = extension;
 	}
 
-    public Object getRootPath () {
-        return _rootPath;
-    }
+	public Object getRootPath () {
+		return _rootPath;
+	}
+	
+	private File getLevelDir (String basePath, TileIndex tile) {
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/",
+		                              _rootPath + basePath,
+		                              tile.getLevel() ));
+	}
+	
+	private File getXDir (String basePath, TileIndex tile) {
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/%d/",
+		                              _rootPath + basePath,
+		                              tile.getLevel(), tile.getX() ));
+	}
 
 	private File getTileFile (String basePath, TileIndex tile) {
-        return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
-                                              + "/%d/%d/%d." + _extension,
-                                      _rootPath + basePath,
-                                      tile.getLevel(), tile.getX(), tile.getY()));
-    }
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/%d/%d." + _extension,
+		                              _rootPath + basePath,
+		                              tile.getLevel(), tile.getX(), tile.getY()));
+	}
 
-    private File getMetaDataFile (String basePath) {
-        return new File(_rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME);
-    }
+	private File getMetaDataFile (String basePath) {
+		return new File(_rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME);
+	}
 
-    @Override
-    public void initializeForWrite (String basePath) throws IOException {
-    }
+	@Override
+	public void initializeForWrite (String basePath) throws IOException {
+	}
 
-    @Override
-    public <T> void writeTiles (String basePath, TilePyramid tilePyramid, TileSerializer<T> serializer,
-                                Iterable<TileData<T>> data) throws IOException {
-        for (TileData<T> tile: data) {
-            File tileFile = getTileFile(basePath, tile.getDefinition());
-            File parent = tileFile.getParentFile();
-            if (!parent.exists()) parent.mkdirs();
+	@Override
+	public <T> void writeTiles (String basePath, TileSerializer<T> serializer,
+	                            Iterable<TileData<T>> data) throws IOException {
+		for (TileData<T> tile: data) {
+			File tileFile = getTileFile(basePath, tile.getDefinition());
+			File parent = tileFile.getParentFile();
+			if (!parent.exists()) parent.mkdirs();
 
-            FileOutputStream fileStream = new FileOutputStream(tileFile);
-            serializer.serialize(tile, tilePyramid, fileStream);
-            fileStream.close();
-        }
-    }
+			FileOutputStream fileStream = new FileOutputStream(tileFile);
+			serializer.serialize(tile, fileStream);
+			fileStream.close();
+		}
+	}
 
-    @Override
-    public void writeMetaData (String basePath, String metaData) throws IOException {
-        FileOutputStream stream = new FileOutputStream(getMetaDataFile(basePath));
-        stream.write(metaData.getBytes());
-        stream.close();
-    }
+	@Override
+	public void writeMetaData (String basePath, String metaData) throws IOException {
+		FileOutputStream stream = new FileOutputStream(getMetaDataFile(basePath));
+		stream.write(metaData.getBytes());
+		stream.close();
+	}
 
-    @Override
-    public void initializeForRead(String pyramidId, int tileSize,
-    		Properties dataDescription) {
-    	// Noop
-    }
+	@Override
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
+		// Noop
+	}
 
-    @Override
-    public <T> List<TileData<T>> readTiles (String basePath,
-                                            TileSerializer<T> serializer,
-                                            Iterable<TileIndex> tiles) throws IOException {
-        List<TileData<T>> results = new LinkedList<TileData<T>>();
-        for (TileIndex tile: tiles) {
-            File tileFile = getTileFile(basePath, tile);
+	@Override
+	public <T> List<TileData<T>> readTiles (String basePath,
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException {
+		List<TileData<T>> results = new LinkedList<TileData<T>>();
+		for (TileIndex tile: tiles) {
+			File tileFile = getTileFile(basePath, tile);
 
-            if (tileFile.exists() && tileFile.isFile()) {
-                FileInputStream stream = new FileInputStream(tileFile);
-                TileData<T> data = serializer.deserialize(tile, stream);
-                results.add(data);
-                stream.close();
-            }
-        }
-        return results;
-    }
+			if (tileFile.exists() && tileFile.isFile()) {
+				FileInputStream stream = new FileInputStream(tileFile);
+				TileData<T> data = serializer.deserialize(tile, stream);
+				results.add(data);
+				stream.close();
+			}
+		}
+		return results;
+	}
 
-    @Override
-    public InputStream getTileStream (String basePath, TileIndex tile) throws IOException {
-        File tileFile = getTileFile(basePath, tile);
+	@Override
+	public <T> InputStream getTileStream (String basePath,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException {
+		File tileFile = getTileFile(basePath, tile);
 
-        if (tileFile.exists() && tileFile.isFile()) {
-            return new FileInputStream(tileFile);
-        } else {
-            return null;
-        }
-    }
+		if (tileFile.exists() && tileFile.isFile()) {
+			return new FileInputStream(tileFile);
+		} else {
+			return null;
+		}
+	}
 
-    @Override
-    public String readMetaData (String basePath) throws IOException {
-        File metaDataFile = getMetaDataFile(basePath);
-        if (!metaDataFile.exists()) return null;
+	@Override
+	public String readMetaData (String basePath) throws IOException {
+		File metaDataFile = getMetaDataFile(basePath);
+		if (!metaDataFile.exists()) return null;
 
-        FileInputStream stream = new FileInputStream(metaDataFile);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String rawMetaData = "";
-        String line;
-        while (null != (line = reader.readLine())) {
-            rawMetaData = rawMetaData + line;
-        }
-        reader.close();
-        return rawMetaData;
-    }
+		FileInputStream stream = new FileInputStream(metaDataFile);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+		String rawMetaData = "";
+		String line;
+		while (null != (line = reader.readLine())) {
+			rawMetaData = rawMetaData + line;
+		}
+		reader.close();
+		return rawMetaData;
+	}
+	
+	@Override
+	public void removeTiles (String basePath, Iterable<TileIndex> tiles ) throws IOException {		
+		for (TileIndex tile: tiles) {
+			// delete tile
+			File tileFile = getTileFile(basePath, tile);
+			tileFile.delete();
+			// if x directory is empty, delete it as well
+			File xDir = getXDir(basePath, tile);
+			if ( xDir.isDirectory() && xDir.list().length == 0 ) {
+				xDir.delete();
+			}
+			// if level directory is empty, delete it as well
+			File levelDir = getLevelDir(basePath, tile);
+			if ( levelDir.isDirectory() && levelDir.list().length == 0 ) {
+				levelDir.delete();
+			}
+
+		}
+	}
+    
 }

@@ -84,6 +84,31 @@ define(function (require) {
             }
 
             return all;
+        },
+
+        toString: function () {
+            var srep = "", index;
+
+            while (this.hasNext()) {
+                if (srep.length > 0) {
+                    srep = srep + "|";
+                }
+                index = this.next();
+                srep = srep + "["+index.xIndex+"/"+index.xBinCount+","+index.yIndex+"/"+index.yBinCount+", lvl "+index.level+"]";
+            }
+
+            return srep;
+        },
+
+        toTileBounds: function () {
+            return {
+                'minX': this.minTile.xIndex,
+                'maxX': this.maxTile.xIndex,
+                'minY': this.minTile.yIndex,
+                'maxY': this.maxTile.yIndex,
+                'minZ': this.level,
+                'maxZ': this.level
+            };
         }
     });
 

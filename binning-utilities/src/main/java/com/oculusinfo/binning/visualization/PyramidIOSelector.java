@@ -25,15 +25,14 @@
 package com.oculusinfo.binning.visualization;
 
 
-
-import javax.swing.JPanel;
-
 import com.oculusinfo.binning.io.PyramidIO;
+
+import javax.swing.*;
 
 
 
 public interface PyramidIOSelector {
-    public PyramidIO getPyramidIO ();
+	public PyramidIO getPyramidIO ();
 
-    public JPanel getPanel ();
+	public JPanel getPanel ();
 }

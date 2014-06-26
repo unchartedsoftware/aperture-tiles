@@ -24,19 +24,12 @@
  */
 package com.oculusinfo.geometry.cartesian;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Point;
+import com.oculusinfo.math.linearalgebra.Vector;
+
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-import com.oculusinfo.math.linearalgebra.Vector;
 
 public class VisualSplineTest extends JFrame {
     private static final long serialVersionUID = 1L;

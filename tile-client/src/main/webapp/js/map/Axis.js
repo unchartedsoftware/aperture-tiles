@@ -30,528 +30,506 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('./AxisUtil'),
-        updateMutableAttributes,
-        checkInputSpec,
-        MARKER_LABEL_SPACING = 5,
-        AXIS_LABEL_SPACING = 10,
+        AXIS_TITLE_CLASS = "axis-title-label",
+        AXIS_DIV_CLASS_SUFFIX = "-axis",
+        AXIS_HEADER_CLASS = "axis-header",
+        AXIS_HEADER_CLASS_SUFFIX = "-axis-header",
+        AXIS_CONTENT_CLASS = "axis-content",
+        AXIS_CONTENT_CLASS_SUFFIX = "-axis-content",
+        AXIS_LABEL_CLASS = "axis-marker-label",
+        AXIS_POSITIONED_LABEL_CLASS_SUFFIX = "-axis-marker-label" ,
+        AXIS_MARKER_CLASS = "axis-marker",
+        AXIS_MARKER_SUFFIX = "-axis-marker",
+        AXIS_POSITION_SUFFIX = "-axis",
+        SPACING_BETWEEN_MARKER_AND_LABEL = 5,
         Axis;
 
 
-
-    /** Private function
-     * Updates mutable spec attributes and set change flag to true if they are different
-     * from previous call. Change flag is used to determine whether or not to redraw the axis
+    /**
+     * Creates and returns a dummy marker label element to measure. This function
+     * is used for measuring, as the real label func sizes the labels to the current
+     * max measurements
      */
-    updateMutableAttributes = function(axis) {
+    function createDummyMarkerLabelHTML( that, marker) {
 
-        var totalPixelSpan,
-            newPixelMin,
-            newPixelMax,
-            newZoom,
-            newAxisLength;
+        return '<div class="' + AXIS_LABEL_CLASS
+               + ' ' + that.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
+               + 'style="position:absolute;">'
+               + AxisUtil.formatText( marker.label, that.unitSpec )
+               + '</div>';
+    }
 
-        // update zoom
-        newZoom = axis.olMap.getZoom();
-        if ( newZoom !== axis.zoom ) {
-            // zoom changed
-            axis.zoom = newZoom;
-            axis.changeFlag = true;
+    /**
+     * Creates and returns a marker label element with proper CSS
+     */
+    function createMarkerLabelHTML( that, marker ) {
+
+        var primaryPosition,
+            secondaryPosition;
+
+        if (that.isXAxis) {
+            // if x axis, add half of label length as text is anchored from bottom
+            primaryPosition = marker.pixel - that.MAX_LABEL_UNROTATED_WIDTH*0.5;
+            secondaryPosition =  that.LARGE_MARKER_LENGTH
+                + SPACING_BETWEEN_MARKER_AND_LABEL;
+        } else {
+            primaryPosition = marker.pixel - that.MAX_LABEL_HEIGHT*0.5;
+            secondaryPosition =  that.LARGE_MARKER_LENGTH
+                + SPACING_BETWEEN_MARKER_AND_LABEL;
         }
 
-        totalPixelSpan = {
-            x: axis.tileSize * Math.pow(2, axis.zoom),
-            y: axis.olMap.viewPortDiv.clientHeight
-        };
+        return '<div class="' + AXIS_LABEL_CLASS + ' '
+            + that.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
+            + 'style="position:absolute;'
+            + 'text-align: center; '    // center text horizontally
+            + 'width: ' + that.MAX_LABEL_WIDTH + 'px;'
+            + 'height: ' + that.MAX_LABEL_HEIGHT + 'px;'
+            + 'line-height: ' + that.MAX_LABEL_HEIGHT + 'px;'   // center text vertically
+            + that.leftOrTop + ":" + primaryPosition + 'px;'
+            + that.oppositePosition + ":" + secondaryPosition + 'px;">'
+            + AxisUtil.formatText( marker.label, that.unitSpec )
+            +'</div>';
+    }
 
-        // update pixel min
-        newPixelMin = totalPixelSpan[axis.xOrY] - axis.olMap.maxPx[axis.xOrY];
-        if ( newPixelMin !== axis.pixelMin ) {
-            // zoom changed
-            axis.pixelMin = newPixelMin;
-            axis.changeFlag = true;
+    /**
+     * Creates and returns a large marker element with proper CSS
+     */
+    function createLargeMarkerHTML( that, marker ) {
+
+        return '<div class="' + AXIS_MARKER_CLASS
+               + ' large-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
+               + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+               + 'style="position:absolute;'
+               + that.leftOrTop + ":" + (marker.pixel - that.LARGE_MARKER_HALF_WIDTH) + 'px;">'
+               + '</div>';
+    }
+
+    /**
+     * Creates and returns a major marker element with proper CSS
+     */
+    function createMediumMarkerHTML( that, marker ) {
+
+        return '<div class="' + AXIS_MARKER_CLASS
+               + ' medium-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
+               + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+               + 'style="position:absolute;'
+               + that.leftOrTop + ":" + (marker.pixel - that.MEDIUM_MARKER_HALF_WIDTH) + 'px;">'
+               + '</div>';
+    }
+
+
+    /**
+     * Creates and returns a major marker element with proper CSS
+     */
+    function createSmallMarkerHTML( that, marker ) {
+
+        return '<div class="' + AXIS_MARKER_CLASS
+               + ' small-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
+               + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+               + 'style="position:absolute;'
+               + that.leftOrTop + ":" + (marker.pixel - that.SMALL_MARKER_HALF_WIDTH) + 'px;">'
+               + '</div>';
+    }
+
+
+    /**
+     * This function is used to create temporary elements to determine the required run-time
+     * dimensions. This should only be called once as these dimensions will never change
+     */
+    function calcElementDimensions( that ) {
+
+        var $temp;
+
+        function measureLabelRotation( $label ) {
+
+            var matrix, values, angle;
+            matrix = $label.css("-webkit-transform") ||
+                     $label.css("-moz-transform")    ||
+                     $label.css("-ms-transform")     ||
+                     $label.css("-o-transform")      ||
+                     $label.css("transform") || 'none';
+            if(matrix !== 'none') {
+                values = matrix.split('(')[1].split(')')[0].split(',');
+                angle = Math.atan2(values[1], values[0]);
+            } else {
+                angle = 0;
+            }
+            that.ROTATION_RADIANS = Math.abs(angle);
         }
 
-        // update pixel max
-        newPixelMax = totalPixelSpan[axis.xOrY] - axis.olMap.minPx[axis.xOrY];
-        if ( newPixelMax !== axis.pixelMax ) {
-            // zoom changed
-            axis.pixelMax = newPixelMax;
-            axis.changeFlag = true;
+        function measureLabelMaxDimensions( $label ) {
+
+            var sinW = $label.width() * Math.sin(that.ROTATION_RADIANS),
+                sinH = $label.height() * Math.sin(that.ROTATION_RADIANS),
+                cosW = $label.width() * Math.cos(that.ROTATION_RADIANS),
+                cosH = $label.height() * Math.cos(that.ROTATION_RADIANS);
+
+            that.MAX_LABEL_WIDTH = Math.max( sinH + cosW, that.MAX_LABEL_WIDTH );
+            that.MAX_LABEL_HEIGHT = Math.max( cosH + sinW, that.MAX_LABEL_HEIGHT );
+            that.MAX_LABEL_UNROTATED_WIDTH = Math.max( $label.width(), that.MAX_LABEL_UNROTATED_WIDTH );
         }
+
+        // initialized all measurements to zero
+        that.LARGE_MARKER_LENGTH = 0;
+        that.LARGE_MARKER_HALF_WIDTH = 0;
+        that.MEDIUM_MARKER_HALF_WIDTH = 0;
+        that.SMALL_MARKER_HALF_WIDTH = 0;
+        that.MAX_LABEL_WIDTH = 0;
+        that.MAX_LABEL_HEIGHT = 0;
+        that.MAX_LABEL_UNROTATED_WIDTH = 0;
+        that.ROTATION_RADIANS = 0;
+        that.HEADER_WIDTH = that.isXAxis ? that.$header.height() : that.$header.width();
+
+        // measure large markers
+        $temp = $(createLargeMarkerHTML( that, {pixel:0} )).hide().appendTo(that.$content);
+        that.LARGE_MARKER_LENGTH = $temp[that.markerWidthOrHeight]();
+        that.LARGE_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]()*0.5 );
+        $temp.remove();
+        // measure medium markers
+        $temp = $(createMediumMarkerHTML( that, {pixel:0} )).hide().appendTo(that.$content);
+        that.MEDIUM_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]() * 0.5);
+        $temp.remove();
+        // measure small markers
+        $temp = $(createSmallMarkerHTML( that, {pixel:0} )).hide().appendTo(that.$content);
+        that.SMALL_MARKER_HALF_WIDTH = Math.floor( $temp[that.axisWidthOrHeight]() * 0.5);
+        $temp.remove();
+
+        // label measurements
+        $temp = $(createDummyMarkerLabelHTML( that, {pixel:0, label:that.max } )).appendTo(that.$content);
+        // get angle first, it is used in label measurements
+        measureLabelRotation( $temp );
+        // measure max label
+        measureLabelMaxDimensions( $temp );
+        $temp.remove();
+        // measure min label
+        $temp = $(createDummyMarkerLabelHTML( that, {pixel:0, label:that.min} )).appendTo(that.$content);
+        measureLabelMaxDimensions( $temp );
+        $temp.remove();
+    }
+
+
+    /**
+     * Creates and returns the axis label element with proper CSS
+     */
+    function createTitle( that ) {
+
+        var rotation = "",
+            transformOrigin ="";
+        if (!that.isXAxis) {
+            if (that.position === "left") {
+                rotation = "rotate(" + (-90) + "deg)";
+                transformOrigin = "top left";
+            } else {
+                rotation = "rotate(" + 90 + "deg)";
+                transformOrigin = "bottom left";
+            }
+        }
+        return $('<span class="'+AXIS_TITLE_CLASS+'"'
+            + 'style="position:absolute;'
+            + '-webkit-transform: ' + rotation + ";"
+            + '-moz-transform: ' + rotation + ";"
+            + '-ms-transform: ' + rotation + ";"
+            + '-o-transform: ' + rotation + ";"
+            + 'transform: ' + rotation + ";"
+            + '-webkit-transform-origin: ' + transformOrigin + ";"
+            + '-moz-transform-origin: ' + transformOrigin + ";"
+            + '-ms-transform-origin: ' + transformOrigin + ";"
+            + '-o-transform-origin: ' + transformOrigin + ";"
+            + 'transform-origin: ' + transformOrigin + ";"
+            + '">' + that.title + '</div>');
+    }
+
+
+    /**
+     * Creates and returns the axis header jquery object
+     */
+    function createHeader( that ) {
+
+        var marginLeft = 0,
+            marginRight = 0,
+            marginTop = 0,
+            marginBottom = 0;
+        // add margins in case other axis exist, this prevents ugly shadow overlaps
+        if (that.isXAxis) {
+            marginLeft = that.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
+            marginRight = that.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
+        } else {
+            marginTop = that.$map.find('.top' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
+            marginBottom = that.$map.find('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
+        }
+        // return jquery element
+        return $('<div class="'+ AXIS_HEADER_CLASS
+               + " " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
+               + 'style="z-index:'+(that.Z_INDEX+1)+';'
+               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px; '+marginLeft+'px;">');
+    }
+
+
+    /**
+     * Creates and returns the empty axis content jquery object
+     */
+    function createContent( that ) {
+
+        return $('<div class="'+ AXIS_CONTENT_CLASS
+               + " " + that.position + AXIS_CONTENT_CLASS_SUFFIX
+               + '"  style="z-index:'+that.Z_INDEX+';">');
+    }
+
+
+    /**
+     * Creates and returns the axis parent div jquery object
+     */
+    function createAxis( that ) {
+
+        var $axis;
+
+        // enable / disable functions
+        function horizontalSlide() {
+            that.setEnabled( !that.isEnabled() );
+            that.setContentDimension();
+            that.$content.animate({width: 'toggle'});
+            that.map.redrawAxes();
+        }
+        function verticalSlide()  {
+            that.setEnabled( !that.isEnabled() );
+            that.setContentDimension();
+            that.$content.animate({height: 'toggle'});
+            that.map.redrawAxes();
+        }
+
+        // create axis title, header, and container and append them to root
+        that.$title = createTitle( that );
+        that.$header = createHeader( that ).append( that.$title );
+        that.$content = createContent( that );
+        $axis = $('<div class="'+ that.position + AXIS_DIV_CLASS_SUFFIX + '"></div>')
+                    .append( that.$content )
+                        .append( that.$header );
+
+        // set enable / disable callbacks
+        if (that.isXAxis) {
+            that.$header.click(verticalSlide);
+            that.$content.click(verticalSlide);
+        } else {
+            that.$header.click(horizontalSlide);
+            that.$content.click(horizontalSlide);
+        }
+
+        // return root
+        return $axis;
+    }
+
+    function updateAxisTitle( that ) {
 
         // update axis length
-        newAxisLength = $("#" + axis.parentId).css(axis.widthOrHeight).replace('px', ''); // strip px suffix
-        if ( newAxisLength !== axis.axisLength ) {
-            // zoom changed
-            axis.axisLength = newAxisLength;
-            axis.changeFlag = true;
+        var $title = that.$title,
+            axisLength = that.$map.css( that.axisWidthOrHeight ).replace('px', ''), // strip px suffix
+            padding;
+        // add position offset for vertical axes
+        if (!that.isXAxis) {
+            if (that.position === 'left') {
+                $title.css(that.leftOrTop, axisLength + "px");
+            } else {
+                $title.css(that.leftOrTop, -$title.width()*0.5 + "px");
+            }
         }
-    };
+        // calc padding
+        padding = (axisLength*0.5 - $title.width()*0.5);
+        // add padding for hover hit box
+        $title.css('padding-left', padding + "px");
+        $title.css('padding-right', padding + "px" );
+    }
 
-    /** Private function
-     * Check spec object for all parameters, if any are missing, fill with defaults
+    /**
+     * Creates the axis marker elements with proper CSS
      */
-    checkInputSpec = function(spec) {
+    function updateAxisContent( that ) {
 
-        var temp;
+        var marker,
+            markers,
+            markerSize,
+            markersHTML = "",
+            markersBySize,
+            i;
 
-        // must have a parent id
-        if (spec.parentId === undefined ) {
-            return false;
-        }
-        // must have an open layers map
-        if (spec.olMap === undefined) {
-            return false;
-        }
-        // must have a min and max value
-        if (spec.min === undefined || spec.max === undefined) {
-            return false;
-        }
-        // ensure max is greater than min
-        if (spec.min > spec.max) {
-            // swap values
-            temp = spec.min;
-            spec.min = spec.max;
-            spec.max = temp;
-        }
-        // ensure position is valid
-        if ( (spec.position).toLowerCase() !== "top" &&
-             (spec.position).toLowerCase() !== "bottom" &&
-             (spec.position).toLowerCase() !== "left" &&
-             (spec.position).toLowerCase() !== "right") {
+        // generate array of marker labels and pixel locations
+        markersBySize = AxisUtil.getMarkers( that );
 
-            spec.position = "bottom";
-        }
-        // set id if none is specified
-        if (spec.id === undefined ) {
-            spec.id = spec.parentId + "-" + spec.position + "-axis";
-        }
-        // set default title if none is supplied
-        if (spec.title === undefined) {
-            spec.title = "";
-        }
-        // set default interval spec if none supplied
-        if (spec.intervalSpec === undefined) {
-            spec.intervalSpec = {
-                type: "percentage",
-                value: 10,
-                pivot: 0,
-                allowScaleByZoom: true,
-                isMercatorProjected: false
-            };
-        }
-        if (spec.intervalSpec.type === undefined) {
-            spec.intervalSpec.type = "percentage";
-        }
-        if (spec.intervalSpec.value === undefined || spec.intervalSpec.value === 0) {
-            spec.intervalSpec.value = 10;
-        }
-        if (spec.intervalSpec.value < 0 ) {
-             spec.intervalSpec.value = Math.abs(spec.intervalSpec.value);
-        }
-        if (spec.intervalSpec.pivot === undefined) {
-            spec.intervalSpec.pivot = 0;
-        }
-        if (spec.intervalSpec.allowScaleByZoom === undefined) {
-            spec.intervalSpec.allowScaleByZoom = true;
-        }
-        if (spec.intervalSpec.isMercatorProjected === undefined) {
-            spec.intervalSpec.isMercatorProjected = false;
+        // iterate through markers, by marker type
+        for ( markerSize in markersBySize ) {
+            if (markersBySize.hasOwnProperty(markerSize)) {
+
+                markers = markersBySize[markerSize];
+
+                for (i = 0; i < markers.length; i++) {
+
+                    marker = markers[i];
+
+                    switch (markerSize) {
+                        case 'large':
+                            markersHTML += createLargeMarkerHTML( that, marker );
+                            markersHTML += createMarkerLabelHTML( that, marker );
+                            break;
+                        case 'medium':
+                            markersHTML += createMediumMarkerHTML( that, marker );
+                            break;
+                        case "small":
+                            markersHTML += createSmallMarkerHTML( that, marker );
+                            break;
+                    }
+
+                }
+            }
         }
 
-        // set default unit spec if none supplied
-        if (spec.unitSpec === undefined) {
-            spec.unitSpec = {
-                type: 'decimal',
-                divisor: 1000,
-                decimals: 2,
-                allowStepDown: true
-            };
-        }
-        if (spec.unitSpec.type === undefined) {
-            spec.unitSpec.type = 'decimal';
-        }
-        if (spec.unitSpec.divisor === undefined) {
-            spec.unitSpec.divisor = 1000;
-        }
-        if (spec.unitSpec.decimals === undefined) {
-            spec.unitSpec.decimals = 2;
-        }
-        if (spec.unitSpec.allowStepDown === undefined) {
-            spec.unitSpec.allowStepDown = true;
-        }
-
-        // set default formatting
-        if (spec.majorMarkerLength === undefined) {
-            spec.majorMarkerLength = 10;
-        }
-        if (spec.majorMarkerWidth === undefined) {
-            spec.majorMarkerWidth = 1;
-        }
-        if (spec.majorMarkerColour === undefined) {
-            spec.majorMarkerColour = "#7E7E7E";
-        }
-        if (spec.markerLabelColour === undefined) {
-            spec.markerLabelColour = "#7E7E7E";
-        }
-        if (spec.axisLabelColour === undefined) {
-            spec.axisLabelColour = "#7E7E7E";
-        }
-        if (spec.fontFamily === undefined) {
-            spec.fontFamily = "Tahoma, Verdana, Segoe, sans-serif";
-        }
-        if (spec.markerLabelFontSize === undefined) {
-            spec.markerLabelFontSize = "0.75em";
-        }
-        if (spec.axisLabelFontSize === undefined) {
-            spec.axisLabelFontSize = "0.95em";
-        }
-
-        return true;
-    };
+        // append all markers and labels at once
+        that.$content[0].innerHTML = markersHTML;
+    }
 
 
     Axis = Class.extend({
+
+        Z_INDEX: 2001,
+
         /**
          * Construct an axis
          * @param spec Axis specification object:
-         *             {
-         *
-         *                  title:      axis label text,        ex. "Longitude"
-         *                  type:       axis label type,        ex. 'x' or 'y'
-         *                  parentId:   container for axis,     ex. worldMap.mapSpec.id
-         *                  id:         id for axis,            ex. "map-x-axis"
-         *                  olMap:      OpenLayers map binding  ex. worldMap.map.olMap_
-         *                  min:        minimum axis value      ex. worldMap.mapSpec.options.mapExtents[0]
-         *                  max:        maximum axis value      ex. worldMap.mapSpec.options.mapExtents[2]
-         *                  intervalSpec: {
-         *                      type:   type of interval        ex. "fixed" or "percentage",
-         *                      value:  fixed / percentage increment of the axis
-         *                                                      ex. 10
-         *                      pivot:  the fixed value / percentage that all other values are incremented from
-         *                                                      ex. 0
-         *                      allowScaleByZoom: if the axis should be scaled by the zoom factor
-         *                                                      ex. false
-         *                      isMercatorProjected: whether or not to project value by mercator projection
-         *                                                      ex. true
-         *                  },
-         *                  intervals:  number of ticks between min and max value at zoom level 1
-         *                                                      ex. 6
-         *                  unitSpec: {
-         *                      type:       type of units parse in FormatAxis.js
-         *                                                      ex.'degrees', 'time', 'decimal', 'B', 'M', 'K'
-         *                      divisor:    unit divisor        ex. undefined or 1000
-         *                      decimals:   number of decimals  ex. 2
-         *                      allowStepDown: if the units can step down if they are below range
-         *                                                  ex. true .001M => 1K
-         *                  },
-         *                  repeat:     whether or not the axis will repeat
-         *                                                  ex. true or false
-         *
          */
         init: function (spec) {
 
             var that = this,
-                key;
+                defaults = {
+                    title : "Default Axis Title",
+                    position : "bottom",
+                    repeat: false,
+                    isOpen : true,
+                    intervalSpec : {
+                        type: "percentage",
+                        increment: 10,
+                        pivot: 0,
+                        allowScaleByZoom: true
+                    },
+                    unitSpec : {
+                        type: 'decimal',
+                        divisor: 1000,
+                        decimals: 2,
+                        allowStepDown: true
+                    }
+                },
+                isOpen = ( spec.isOpen !== undefined ) ? spec.isOpen : defaults.isOpen;
 
-            // check input spec, fill in any missing values
-            this.good = checkInputSpec(spec);
+            this.mapId = spec.mapId;
+            this.map = spec.map;
+            this.$map = this.map.getElement();
 
-            // copy properties to the axis object
-            for (key in spec) {
-                if (spec.hasOwnProperty(key)) {
-                    this[key] = spec[key];
-                }
-            }
+            this.min = spec.min;
+            this.max = spec.max;
+            this.repeat = spec.repeat || defaults.repeat;
+
+            this.position = spec.position || defaults.position;
+            this.id = spec.id || ( this.mapId + "-" + this.position + "-axis" );
+
+            this.title = spec.title || defaults.title;
+
+            this.intervalSpec = spec.intervalSpec || {};
+            this.intervalSpec.type = spec.intervalSpec.type || defaults.intervalSpec.type;
+            this.intervalSpec.increment = spec.intervalSpec.increment || defaults.intervalSpec.increment;
+            this.intervalSpec.pivot = spec.intervalSpec.pivot || defaults.intervalSpec.pivot;
+            this.intervalSpec.allowScaleByZoom = spec.intervalSpec.allowScaleByZoom || defaults.intervalSpec.allowScaleByZoom;
+
+            this.unitSpec = spec.unitSpec || {};
+            this.unitSpec.type = spec.unitSpec.type || defaults.unitSpec.type;
+            this.unitSpec.divisor = spec.unitSpec.divisor || defaults.unitSpec.divisor;
+            this.unitSpec.decimals = spec.unitSpec.decimals || defaults.unitSpec.decimals;
+            this.unitSpec.allowStepDown = spec.unitSpec.allowStepDown || defaults.unitSpec.allowStepDown;
 
             // generate more attributes
-            this.isXAxis = (spec.position === 'top' || spec.position === 'bottom');
-            this.xOrY = this.isXAxis ? 'x' : 'y';
-            this.widthOrHeight = this.isXAxis ? "width" : "height";
-            this.tileSize = this.isXAxis ? spec.olMap.getTileSize().w : spec.olMap.getTileSize().h;
+            this.isXAxis = (this.position === 'top' || this.position === 'bottom');
+            this.axisWidthOrHeight = this.isXAxis ? "width" : "height";
+            this.markerWidthOrHeight = this.isXAxis ? "height" : "width";
+            this.leftOrTop = this.isXAxis ? "left" : "top";
+            this.horizontalOrVertical = (this.isXAxis) ? 'horizontal' : 'vertical';
+            this.oppositePosition = (this.position === 'left') ? 'right' :
+                                        (this.position === 'right') ? 'left' :
+                                            (this.position === 'top') ? 'bottom' : 'top';
 
-            this.majorMarkerLength = spec.majorMarkerLength;
-            this.majorMarkerWidth = spec.majorMarkerWidth;
-
-            this.majorMarkerColour = spec.majorMarkerColour;
-            this.markerLabelColour = spec.markerLabelColour;
-            this.axisLabelColour = spec.axisLabelColour;
-
-            this.fontFamily = spec.fontFamily;
-
-            this.markerLabelFontSize = spec.markerLabelFontSize;
-            this.axisLabelFontSize = spec.axisLabelFontSize;
-
-            this.markerLabelRotation = spec.markerLabelRotation;
-
-            this.maxLabelLength = 0;
-
-            this.olMap.events.register('mousemove', this.olMap, function(event) {
+            // axis will redraw on map movement
+            this.map.on('move', function() {
                 that.redraw();
             });
-
-            this.olMap.events.register('zoomend', this.olMap, function(event) {
-                that.redraw();
-            });
-
-            this.redraw();
+            // generate the core html elements
+            this.$axis = createAxis( this );
+            this.$map.append( this.$axis );
+            // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
+            this.enabled = true;
+            // calculate the dimensions of the individual elements once
+            calcElementDimensions( this );
+            // check if axis starts open or closed
+            if ( !isOpen ) {
+                // trigger close and skip animation;
+                this.$header.click();
+                this.$content.finish();
+            }
+            // allow events to propagate below to map except 'click'
+            this.map.enableEventToMapPropagation( this.$axis );
+            this.map.disableEventToMapPropagation( this.$axis, ['onclick', 'ondblclick'] );
         },
+
+        /**
+         *  Returns true if the axis is currently enabled, false if not
+         */
+        isEnabled: function() {
+            return this.enabled;
+        },
+
+
+        /**
+         *  Enable or disable the axis
+         */
+        setEnabled: function( enabled ) {
+            this.enabled = enabled;
+        },
+
+
+        /**
+         *  Returns the dimension of the content div of the axis
+         */
+        getContentDimension: function() {
+            var dim = this.isXAxis ? this.MAX_LABEL_HEIGHT : this.MAX_LABEL_WIDTH;
+            return dim + SPACING_BETWEEN_MARKER_AND_LABEL*2 + this.LARGE_MARKER_LENGTH + this.HEADER_WIDTH;
+        },
+
+
+        /**
+         * Iterates over all axes on the map, determines the max content size, and sets the content dimension
+         * to that size.
+         */
+        setContentDimension: function() {
+
+            var axes = this.map.getAxes(),
+                dim = this.isXAxis ? 'height' : 'width',
+                maxAxisLabelDim = 0,
+                i;
+            for (i=0; i<axes.length; i++) {
+                maxAxisLabelDim = Math.max( axes[i].getContentDimension() || 0, maxAxisLabelDim );
+            }
+            this.$content[dim]( maxAxisLabelDim );
+        },
+
 
         /**
          * Checks if the mutable spec attributes have changed, if so, redraws
-         * axis.
+         * that.
          */
         redraw: function() {
 
-            var axis = {},
-                markers = [],
-                that = this;
-
-            /**
-             * Creates and returns the axis label element with proper CSS
-             */
-            function createAxisLabel() {
-
-                var positionDir,
-                    rotation;
-
-                if (that.isXAxis) {
-                    positionDir = "left";
-                } else {
-                    positionDir = "top";
-                    if (that.position === "left") {
-                        rotation = "rotate(" + (-90) + "deg)";
-                    } else {
-                        rotation = "rotate(" + 90 + "deg)";
-                    }
-                }
-
-                return $('<div class="' + that.id + '-label"'
-                    + 'style="position:absolute;'
-                    + 'font-family: ' + that.fontFamily + ';'
-                    + 'font-size:' + that.axisLabelFontSize + ';'
-                    + 'color:' + that.axisLabelColour + ';'
-                    + positionDir + ':' + (that.axisLength*0.5) + 'px;'
-                    + '-webkit-transform: ' + rotation + ";"
-                    + '-moz-transform: ' + rotation + ";"
-                    + '-ms-transform: ' + rotation + ";"
-                    + '-o-transform: ' + rotation + ";"
-                    + 'transform: ' + rotation + ";"
-                    + '">' + that.title + '</div>');
+            // always update title position (in case of window resize)
+            updateAxisTitle( this );
+            // exit early if no markers are visible
+            if ( !this.isEnabled() ) {
+                return;
             }
-
-            /**
-             * Creates the axis main div elements with proper CSS
-             */
-            function addAxisMainElements() {
-
-                // get parent element
-                axis.parentContainer = $("#" + that.parentId);
-
-                // ensure parent container has a div to add margins for the axes
-                if ( axis.parentContainer.parent('.axis-margin-container').length === 0 ) {
-                   axis.parentContainer.wrap("<div class='axis-margin-container' style='position:relative; width:" + that.axisLength + "px';></div>");
-                }
-                axis.marginContainer = $('.axis-margin-container');
-
-                // get axis container
-                axis.container = $("#"+ that.id);
-                if (axis.container.length === 0) {
-                    // if container does not exist, make it
-                    axis.container = $('<div class="axis container" id="' + that.id + '"></div>');
-                } else {
-                    // if the axis exists, clear it out, we need to redraw the markers
-                    axis.container.empty();
-                }
-
-                // add axis to parent container
-                axis.parentContainer.append(axis.container);
-
-                // create the axis title label
-                axis.label = createAxisLabel();
-
-                // add axis label to container
-                axis.container.append(axis.label);
-            }
-
-            /**
-             * Creates and returns a marker label element with proper CSS
-             */
-            function createMarkerLabel(marker) {
-
-                var rotation = "";
-                if (that.markerLabelRotation !== undefined) {
-                    rotation = '-webkit-transform: rotate(' + that.markerLabelRotation + 'deg);'
-                            + '-moz-transform: rotate(' + that.markerLabelRotation + 'deg);'
-                            + '-ms-transform: rotate(' + that.markerLabelRotation + 'deg);'
-                            + '-o-transform: rotate(' + that.markerLabelRotation + 'deg);'
-                            + 'transform: rotate(' + that.markerLabelRotation + 'deg);';
-                }
-
-                return $('<div class="' + that.id + '-marker-label"'
-                       + 'style="position:absolute;'
-                       + 'font-family: ' + that.fontFamily + ';'
-                       + 'font-size:' + that.markerLabelFontSize + ';'
-                       + 'color:' + that.markerLabelColour + ';'
-                       + rotation
-                       + '">' + AxisUtil.formatText( marker.label, that.unitSpec ) + '</div>');
-            }
-
-            /**
-             * Creates and returns a major marker element with proper CSS
-             */
-            function createMajorMarker(marker) {
-
-                var lengthDim,
-                    positionDir;
-
-                if (that.isXAxis) {
-                    lengthDim = 'height';
-                    positionDir = 'left';
-                } else {
-                    lengthDim = 'width';
-                    positionDir = 'bottom';
-                }
-
-                return $('<div class="' + that.id + 'major-marker"'
-                    + 'style="position:absolute;'
-                    + 'color:' + that.majorMarkerColour + ';'
-                    + that.position + ":" + (-that.majorMarkerLength) + "px;"
-                    + lengthDim + ":" + that.majorMarkerLength + "px;"
-                    + 'border-' + positionDir + ":" + that.majorMarkerWidth + "px solid" + that.majorMarkerColour + ";"
-                    + positionDir + ":" + (marker.pixel - that.majorMarkerWidth*0.5) + "px;"
-                    + '"></div>');
-
-            }
-
-            /**
-             * Creates the axis marker elements with proper CSS
-             */
-            function addAxisMarkerElements() {
-
-                var majorMarker,
-                    markerLabel,
-                    labelLength,
-                    labelOffset,
-                    markerLabelCSS = {},
-                    i;
-
-                for( i = 0; i < markers.length; i += 1 ) {
-
-                    // create a major marker
-                    majorMarker = createMajorMarker(markers[i]);
-
-                    // create marker label
-                    markerLabel = createMarkerLabel(markers[i]);
-
-                    // append marker to axis container
-                    axis.container.append(majorMarker);
-                    axis.container.append(markerLabel);
-
-                    // append before this code as it needs to know the width and height
-                    // of the marker labels
-                    if (that.isXAxis) {
-                        // get label position
-                        markerLabelCSS[that.position] = (-markerLabel.height() - (that.majorMarkerLength + MARKER_LABEL_SPACING)) + "px";
-                        // centre label under tick
-                        markerLabelCSS.left = (markers[i].pixel - (markerLabel.width()*0.5)) +"px";
-                        labelLength = markerLabel.height();
-                    }
-                    else {
-                        // get label position
-                        markerLabelCSS[that.position] = (-markerLabel.width() - (that.majorMarkerLength + MARKER_LABEL_SPACING)) + "px";
-                        // centre label on tick
-                        markerLabelCSS.bottom = (markers[i].pixel - (markerLabel.height()*0.5)) + "px";
-                        // get text alignment
-                        if (that.position === "left") {
-                            markerLabelCSS["text-align"] = "right";
-                        } else {
-                            markerLabelCSS["text-align"] = "left";
-                        }
-                        labelLength = markerLabel.width() + axis.label.height();
-                    }
-
-                    // get marker label css
-                    markerLabel.css(markerLabelCSS);
-                    // find max label length to position axis title label
-                    if (that.maxLabelLength < labelLength) {
-                        that.maxLabelLength = labelLength;
-                    }
-                }
-
-                labelOffset = that.maxLabelLength + 20 // for some reason the spacing is a bit off on the
-                            + MARKER_LABEL_SPACING
-                            + that.majorMarkerLength
-                            + AXIS_LABEL_SPACING
-                            + axis.label.height();
-
-                if (that.isXAxis) {
-                    labelOffset += 20;
-                }
-
-                // position axis label
-                axis.label.css( that.position, -labelOffset + 'px' );
-
-                // add margin space for axis
-                axis.marginContainer.css('margin-' + that.position, labelOffset + 'px');
-
-                // div container may change size, this updates properties accordingly
-                that.olMap.updateSize();
-            }
-
-            if (this.good) {
-                // update mutable spec attributes
-                updateMutableAttributes(this);
-                // only redraw if it has changed since last redraw
-                if (this.changeFlag) {
-                    // generate array of marker labels and pixel locations
-                    markers = AxisUtil.getMarkers(this);
-                    // generate the main axis DOM elements
-                    addAxisMainElements();
-                    // add each marker to correct pixel location in axis DOM elements
-                    addAxisMarkerElements();
-                    // reset change flag
-                    this.changeFlag = false;
-                }
-            }
-
-        },
-
-        /**
-         * Given an axis spec and pixel location, returns axis value.
-         *
-         * @param pixelLocation     Pixel location of axis query
-         */
-        getAxisValueForPixel : function(pixelLocation) {
-
-            var mapPixelSpan,
-                tickValue,
-                value;
-
-            if (this.good) {
-
-                updateMutableAttributes(this);
-
-                // The size used here is not the display width.
-                mapPixelSpan = this.tileSize*(Math.pow(2, this.zoom));
-
-                if (this.isXAxis){
-                    tickValue = pixelLocation + this.pixelMin;
-                    value = (tickValue * ((this.max-this.min)) / mapPixelSpan) + this.min;
-                }
-                else {
-                    tickValue = (this.axisLength - pixelLocation - this.pixelMax + mapPixelSpan);
-                    value = ((tickValue * ((this.max-this.min))) / mapPixelSpan) + this.min;
-                }
-
-                if (!this.isXAxis && this.intervalSpec.isMercatorProjected) {
-                    // find the gudermannian value where this current linear value is
-                    value = AxisUtil.scaleLinearToGudermannian( value, this );
-                }
-
-                // return axis value, rollover if necessary
-                return AxisUtil.formatText( AxisUtil.getMarkerRollover( this, value ), this.unitSpec );
-            }
+            // add each marker to correct pixel location in axis DOM elements
+            updateAxisContent( this );
         }
 
     });

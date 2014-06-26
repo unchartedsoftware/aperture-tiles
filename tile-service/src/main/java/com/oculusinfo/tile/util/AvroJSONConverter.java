@@ -25,11 +25,6 @@
 package com.oculusinfo.tile.util;
 
 
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.FileReader;
@@ -44,6 +39,10 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 
 
 /**
@@ -52,39 +51,39 @@ import org.json.JSONObject;
  * @author nkronenfeld
  */
 public class AvroJSONConverter {
-    /**
-     * Convert an Avro input stream into a JSON object
-     * 
-     * @param stream The input data
-     * @return A JSON representation of the input data
-     * @throws IOException
-     * @throws JSONException
-     */
-    public static JSONObject convert (InputStream stream) throws IOException, JSONException {
-        SeekableInput input = new SeekableByteArrayInput(IOUtils.toByteArray(stream));
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+	/**
+	 * Convert an Avro input stream into a JSON object
+	 * 
+	 * @param stream The input data
+	 * @return A JSON representation of the input data
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static JSONObject convert (InputStream stream) throws IOException, JSONException {
+		SeekableInput input = new SeekableByteArrayInput(IOUtils.toByteArray(stream));
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-        // Conversion code taken from org.apache.avro.tool.DataFileReadTool
-        GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-        FileReader<Object> fileReader = DataFileReader.openReader(input, reader);
-        try {
-            Schema schema = fileReader.getSchema();
-            DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
-            JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, output);
-            for (Object datum: fileReader) {
-                encoder.configure(output);
-                writer.write(datum, encoder);
-                encoder.flush();
-                // For some reason, we only contain one record, but the 
-                // decoding thinks we contain more and fails; so just break 
-                // after our first one.
-                break;
-            }
-            output.flush();
-        } finally {
-            fileReader.close();
-        }
-        String jsonString = output.toString();
-        return new JSONObject(jsonString);
-    }
+		// Conversion code taken from org.apache.avro.tool.DataFileReadTool
+		GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+		FileReader<Object> fileReader = DataFileReader.openReader(input, reader);
+		try {
+			Schema schema = fileReader.getSchema();
+			DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+			JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, output);
+			for (Object datum: fileReader) {
+				encoder.configure(output);
+				writer.write(datum, encoder);
+				encoder.flush();
+				// For some reason, we only contain one record, but the 
+				// decoding thinks we contain more and fails; so just break 
+				// after our first one.
+				break;
+			}
+			output.flush();
+		} finally {
+			fileReader.close();
+		}
+		String jsonString = output.toString("UTF-8");
+		return new JSONObject(jsonString);
+	}
 }

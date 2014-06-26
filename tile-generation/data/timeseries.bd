@@ -1,0 +1,23 @@
+# spark connection details
+spark=local
+sparkhome=/opt/spark
+
+# general output properties
+oculus.tileio.type=file
+oculus.binning.name=timeseries_1M_10V
+oculus.binning.source.location=file:///datasets/multivar_timeseries
+
+oculus.binning.parsing.separator=,
+oculus.binning.parsing.x.index=0
+oculus.binning.parsing.v.index=1
+
+oculus.binning.xField=x
+oculus.binning.valueField=v
+oculus.binning.levels.0=1
+oculus.binning.levels.1=2
+oculus.binning.levels.2=3
+oculus.binning.levels.3=4
+oculus.binning.levels.4=5
+
+oculus.binning.projection=EPSG:4326
+oculus.binning.projection.autobounds=true

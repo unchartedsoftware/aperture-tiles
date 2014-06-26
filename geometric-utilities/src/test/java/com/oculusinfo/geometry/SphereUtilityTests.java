@@ -24,11 +24,9 @@
  */
 package com.oculusinfo.geometry;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
 import com.oculusinfo.math.linearalgebra.Vector;
+import junit.framework.Assert;
+import org.junit.Test;
 
 public class SphereUtilityTests {
     private static final double EPSILON = 1E-12;

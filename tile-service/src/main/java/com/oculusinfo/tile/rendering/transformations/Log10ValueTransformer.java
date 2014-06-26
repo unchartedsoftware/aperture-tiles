@@ -25,14 +25,21 @@
 package com.oculusinfo.tile.rendering.transformations;
 
 public class Log10ValueTransformer implements IValueTransformer {
-	private double _loggedMax = 0;
-	
+	private double _loggedMax;
+	private double _layerMax; 
+
 	public Log10ValueTransformer(double max){
 		_loggedMax = Math.log10(max);
+		_layerMax = max;
 	}
 	
 	@Override
 	public double transform(double value) {
 		return Math.log10(value)/_loggedMax;
+	}
+
+	@Override
+	public double getMaximumValue () {
+		return _layerMax;
 	}
 }

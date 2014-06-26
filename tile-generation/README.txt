@@ -69,16 +69,16 @@ The following properties must be defined in the base property file if they are
 used at all (if one uses a non-hbase tileio type, for instance, one doesn't 
 need to set the hbase connection configuration properties):
 
-    spark.connection.url
+    spark
         The location of the spark master.  Use "local" for spark standalone.
         Defaults to "spark://localhost:7077"  <-- TODO change default in code!
  
-    spark.connection.home
+    sparkhome
         The file system location of Spark in the remote location (and,
         necessarily, on the local machine too)
         Defaults to "/opt/spark-0.7.2"   <-- TODO change default in code!
 
-    spark.connection.user
+    user
         A user name to stick in the job title so people know who is running the job
  
     oculus.tileio.type

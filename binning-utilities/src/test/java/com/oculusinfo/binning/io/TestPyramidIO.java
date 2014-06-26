@@ -36,7 +36,6 @@ import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 
@@ -46,89 +45,96 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
  * @author nkronenfeld
  */
 public class TestPyramidIO implements PyramidIO {
-    private Map<String, byte[]> _data;
+	private Map<String, byte[]> _data;
 
-    public TestPyramidIO () {
-        _data = new HashMap<String, byte[]>();
-    }
+	public TestPyramidIO () {
+		_data = new HashMap<String, byte[]>();
+	}
 
-    private String getMetaDataKey (String basePath) {
-        return basePath+".metaData";
-    }
-    private String getTileKey (String basePath, TileIndex index) {
-        return basePath+"."+index.toString();
-    }
+	private String getMetaDataKey (String basePath) {
+		return basePath+".metaData";
+	}
+	private String getTileKey (String basePath, TileIndex index) {
+		return basePath+"."+index.toString();
+	}
 
 
-    @Override
-    public void initializeForWrite (String pyramidId) throws IOException {
-    }
+	@Override
+	public void initializeForWrite (String pyramidId) throws IOException {
+	}
 
-    @Override
-    public <T> void writeTiles (String pyramidId, TilePyramid tilePyramid,
-                                TileSerializer<T> serializer,
-                                Iterable<TileData<T>> data) throws IOException {
-        for (TileData<T> tile: data) {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            serializer.serialize(tile, tilePyramid, stream);
-            stream.flush();
-            stream.close();
+	@Override
+	public <T> void writeTiles (String pyramidId,
+	                            TileSerializer<T> serializer,
+	                            Iterable<TileData<T>> data) throws IOException {
+		for (TileData<T> tile: data) {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			serializer.serialize(tile, stream);
+			stream.flush();
+			stream.close();
 
-            String key = getTileKey(pyramidId, tile.getDefinition());
-            _data.put(key, stream.toByteArray());
-        }
-    }
+			String key = getTileKey(pyramidId, tile.getDefinition());
+			_data.put(key, stream.toByteArray());
+		}
+	}
 
-    @Override
-    public void writeMetaData (String pyramidId, String metaData) throws IOException {
-        String key = getMetaDataKey(pyramidId);
-        _data.put(key, metaData.getBytes());
-    }
+	@Override
+	public void writeMetaData (String pyramidId, String metaData) throws IOException {
+		String key = getMetaDataKey(pyramidId);
+		_data.put(key, metaData.getBytes());
+	}
 
-    @Override
-    public void initializeForRead(String pyramidId, int tileSize,
-    		Properties dataDescription) {
-    	// Noop
-    }
+	@Override
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
+		// Noop
+	}
 
-    @Override
-    public <T> List<TileData<T>> readTiles (String pyramidId,
-                                            TileSerializer<T> serializer,
-                                            Iterable<TileIndex> tiles) throws IOException {
-        List<TileData<T>> results = new ArrayList<TileData<T>>();
-        for (TileIndex index: tiles) {
-            String key = getTileKey(pyramidId, index);
-            if (_data.containsKey(key)) {
-                byte[] data = _data.get(key);
-                ByteArrayInputStream stream = new ByteArrayInputStream(data);
-                results.add(serializer.deserialize(index, stream));
-            } else {
-                results.add(null);
-            }
-        }
-        return results;
-    }
+	@Override
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException {
+		List<TileData<T>> results = new ArrayList<TileData<T>>();
+		for (TileIndex index: tiles) {
+			String key = getTileKey(pyramidId, index);
+			if (_data.containsKey(key)) {
+				byte[] data = _data.get(key);
+				ByteArrayInputStream stream = new ByteArrayInputStream(data);
+				results.add(serializer.deserialize(index, stream));
+			} else {
+				results.add(null);
+			}
+		}
+		return results;
+	}
 
-    @Override
-    public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException {
-        String key = getTileKey(pyramidId, tile);
-        if (_data.containsKey(key)) {
-            byte[] data = _data.get(key);
-            return new ByteArrayInputStream(data);
-        } else {
-            return null;
-        }
-    }
+	@Override
+	public <T> InputStream getTileStream (String pyramidId,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException {
+		String key = getTileKey(pyramidId, tile);
+		if (_data.containsKey(key)) {
+			byte[] data = _data.get(key);
+			return new ByteArrayInputStream(data);
+		} else {
+			return null;
+		}
+	}
 
-    @Override
-    public String readMetaData (String pyramidId) throws IOException {
-        String key = getMetaDataKey(pyramidId);
-        if (_data.containsKey(key)) {
-            byte[] data = _data.get(key);
-            return new String(data);
-        } else {
-            return null;
-        }
-    }
+	@Override
+	public String readMetaData (String pyramidId) throws IOException {
+		String key = getMetaDataKey(pyramidId);
+		if (_data.containsKey(key)) {
+			byte[] data = _data.get(key);
+			return new String(data);
+		} else {
+			return null;
+		}
+	}
+	
+	@Override
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
+		throw new IOException("removeTiles not currently supported for TestPyramidIO");
+	}
+
 
 }

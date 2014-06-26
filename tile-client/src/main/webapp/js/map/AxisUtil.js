@@ -25,59 +25,7 @@
 
 define({
 
-    /**
-     * Converts a data value from a linear function to its equivolent gudermannian value
-     * This converts the linear number to the equivolent gudermannian value where the current
-     * linear value is!
-     *
-     * @param value     data value on between axis.min and axis.max
-     * @param axis  axis object
-     */
-    scaleLinearToGudermannian: function(value, axis) {
-        "use strict";
-        var temp,
-            gudermannian = function(y) {
-                // converts a y value from -PI(bottom) to PI(top) into the
-                // mercator projection latitude
-                var sinh = function (arg) {
-                    return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
-                };
-                return Math.atan(sinh(y)) * 57.2957795;
-            };
-
-        // convert value to between -1  and 1
-        temp = ((( value - axis.min ) / (axis.max-axis.min) ) * 2) - 1;
-        // convert to -PI to PI
-        temp = gudermannian( temp * Math.PI );
-        // convert mercator latitude from -85.05 to 85.05 back to data range
-        return ( (((temp / 85.05)+1)/2) * (axis.max - axis.min)) + axis.min;
-    },
-
-    /**
-     * Converts a data value from a gudermannian function to a linear function
-     * This converts the gudermannian number to the equivolent linear value where the current
-     * gudermannian value is!
-     *
-     * @param value data value on between axis.min and axis.max
-     * @param axis  axis object
-     */
-    scaleGudermannianToLinear: function(value, axis) {
-        "use strict";
-        var temp,
-            gudermannianInv = function( latitude ) {
-                // converts a latitude value from -85.05 to 85.05 into
-                // a y value from -PI(bottom) to PI(top)
-                var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
-                    sin = Math.sin(latitude * 0.0174532925 * sign);
-
-                return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
-            };
-        // convert from linear latitude value to mercator projected value
-        // convert y value from -PI to PI to -1 to 1
-        temp = (gudermannianInv( (((( value - axis.min ) / (axis.max-axis.min) ) * 2) - 1)*85.05 ) / Math.PI);
-        // convert value to proper axis data range
-        return ( ((temp+1)/2) * (axis.max - axis.min)) + axis.min;
-    },
+    MARKER_TYPE_ORDER : ['large', 'small', 'medium', 'small'],
 
     /**
      * Formats axis marker label text
@@ -85,10 +33,16 @@ define({
      * @param value         the value of the label
      * @param labelSpec     format spec of label
      */
-    formatText : function(value, labelSpec){
+    formatText : function(value, unitSpec){
         "use strict";
+
+        function formatInteger (value) {
+            return Math.round(value);
+        }
+
         function formatNumber (value, decimals) {
-            return parseFloat(value).toFixed(decimals);
+            var func = (value < 0) ? 'ceil' : 'floor';
+            return (Math[func](value * 100) / 100).toFixed(decimals);
         }
 
         function formatThousand (value, decimals, allowStepDown) {
@@ -106,7 +60,7 @@ define({
             if (allowStepDown && Math.abs(Number(numberStr)) < 1 && value !== 0){
                 return formatNumber(value, decimals );
             }
-            return numberStr + 'K';
+            return value === 0 ? numberStr : numberStr + 'K';
         }
 
         function formatMillion(value, decimals, allowStepDown) {
@@ -127,7 +81,7 @@ define({
             if (allowStepDown && Math.abs(Number(numberStr)) < 1 && value !== 0){
                 return formatThousand(value, decimals, allowStepDown);
             }
-            return numberStr + 'M';
+            return value === 0 ? numberStr : numberStr + 'M';
         }
 
         function formatBillion(value, decimals, allowStepDown) {
@@ -149,7 +103,7 @@ define({
             if (allowStepDown && Math.abs(Number(numberStr)) < 1 && value !== 0){
                 return formatMillion(value, decimals, allowStepDown);
             }
-            return numberStr + 'B';
+            return value === 0 ? numberStr : numberStr + 'B';
 
         }
 
@@ -164,31 +118,56 @@ define({
         }
 
         function formatDegrees(value, decimals){
-            return parseFloat(value.toFixed(decimals)) + "\u00b0";
+            return formatNumber(value, decimals) + "\u00b0";
         }
 
-        if (labelSpec){
+        if (unitSpec){
 
-            if (labelSpec.type === 'degrees'){
-                return formatDegrees(value, labelSpec.decimals );
-            }
-            if (labelSpec.type === 'time'){
-                return formatTime(value, labelSpec.divisor);
-            }
-            // Millions to 2 decimal places
-            if (labelSpec.type === 'decimal'){
-                return formatNumber(value, labelSpec.decimals);
-            }
-            if (labelSpec.type === 'B'){
-                return formatBillion(value, labelSpec.decimals, labelSpec.allowStepDown);
-            }
-            if (labelSpec.type === 'M'){
-                return formatMillion(value, labelSpec.decimals, labelSpec.allowStepDown);
-            }
-            if (labelSpec.type === 'K'){
-                return formatThousand(value, labelSpec.decimals, labelSpec.allowStepDown);
+            switch ( unitSpec.type.toLowerCase() ) {
+
+                case 'degrees':
+                case 'degree':
+                case 'deg':
+
+                    return formatDegrees(value, unitSpec.decimals );
+
+                case 'time':
+                case 'date':
+
+                    return formatTime(value, unitSpec.divisor);
+
+                case 'k':
+                case 'thousand':
+                case 'thousands':
+
+                    return formatThousand(value, unitSpec.decimals, unitSpec.allowStepDown);
+
+                case 'm':
+                case 'million':
+                case 'millions':
+
+                    return formatMillion(value, unitSpec.decimals, unitSpec.allowStepDown);
+
+                case 'b':
+                case 'billion':
+                case 'billions':
+
+                    return formatBillion(value, unitSpec.decimals, unitSpec.allowStepDown);
+
+                case 'i':
+                case 'int':
+                case 'integer':
+
+                    return formatInteger(value);
+
+                //case 'decimal':
+                //case 'd':
+                default:
+
+                    return formatNumber(value, unitSpec.decimals);
             }
         }
+
         return value;
     },
 
@@ -223,6 +202,8 @@ define({
      * labels and pixel locations
      *
      * @param axis      axis object
+     * @param vx        viewport x pixel of mouse
+     * @param vy        viewport y pixel of mouse
      */
     getMarkers : function(axis) {
         "use strict";
@@ -231,23 +212,23 @@ define({
         // number and zoom level
         var that = this,
             increment,
-            pivot,
-            mapPixelSpan = axis.tileSize*(Math.pow(2,axis.zoom));
+            subIncrement,
+            startingMarkerTypeIndex = 0,
+            pivot;
+
+        function roundToDecimals( num ) {
+            var numDec = axis.unitSpec.decimals || 2,
+                pow10 = Math.pow( 10, numDec );
+            return Math.round( num * pow10) / pow10;
+        }
 
         function getPixelPosition( value ) {
             // given an axis value, get the pixel position on the page
             var pixelPosition;
-
             if (axis.isXAxis) {
-                pixelPosition = Math.round( (( (value - axis.min)*mapPixelSpan )/(axis.max-axis.min) ) - axis.pixelMin );
+                pixelPosition = axis.map.getViewportPixelFromCoord( value, 0 ).x;
             } else {
-
-                if (axis.intervalSpec.isMercatorProjected) {
-                    // find the linear value where this current gudermannian value is
-                    value = that.scaleGudermannianToLinear( value, axis);
-                }
-
-                pixelPosition = Math.round( (( (value - axis.min)*mapPixelSpan )/(axis.max-axis.min) ) + axis.pixelMax - mapPixelSpan );
+                pixelPosition = axis.map.getViewportPixelFromCoord( 0, value ).y;
             }
             return pixelPosition;
         }
@@ -258,31 +239,32 @@ define({
                 minIncrement; // the minimum increment that is visible
 
             if (axis.isXAxis) {
-                minCull = ( ( axis.pixelMin * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
+                minCull = axis.map.getCoordFromViewportPixel( 0, 0 ).x;
             } else {
-                minCull = ( ( ( mapPixelSpan - axis.pixelMax ) * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
+                minCull = axis.map.getCoordFromViewportPixel( 0, axis.map.getViewportHeight() ).y;
             }
+
             if ( !axis.repeat && minCull < axis.min ) {
                 // prevent roll-over
                 minCull = axis.min;
             }
 
-            if (!axis.isXAxis && axis.intervalSpec.isMercatorProjected) {
-                // find the gudermannian value where this current linear value is
-                minCull = that.scaleLinearToGudermannian( minCull, axis );
-            }
-
             minIncrement = pivot;
 
+            // because the marker increments go from min to max, we need to ensure that the
+            // marker type is correct for the first thick, this is set with 'startingMarkerTypeIndex'
             if (pivot < minCull) {
                 // cull above pivot
                 while (minIncrement < minCull) {
-                    minIncrement += increment;
+                    minIncrement += subIncrement;
+                    startingMarkerTypeIndex++;
                 }
             } else {
                 // cull below pivot
-                while (minIncrement-increment >= minCull) {
-                    minIncrement -= increment;
+                // NOTE: rounding here to prevent accumulated precision errors that truncate first axis 'tick'
+                while ( roundToDecimals(minIncrement-subIncrement) >= minCull) {
+                    minIncrement -= subIncrement;
+                    startingMarkerTypeIndex--;
                 }
             }
 
@@ -295,19 +277,13 @@ define({
                 maxIncrement; // the minimum increment that is visible
 
             if (axis.isXAxis) {
-                maxCull = ( ( ( parseInt( axis.axisLength, 10 ) + axis.pixelMin ) * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
+                maxCull = axis.map.getCoordFromViewportPixel( axis.map.getViewportWidth(), 0 ).x;
             } else {
-                maxCull = ( ( ( parseInt( axis.axisLength, 10 ) + mapPixelSpan - axis.pixelMax ) * (axis.max-axis.min) ) / mapPixelSpan ) + axis.min;
-
+                maxCull = axis.map.getCoordFromViewportPixel( 0, 0 ).y;
             }
             if ( !axis.repeat && maxCull > axis.max ) {
                 // prevent roll-over
                 maxCull = axis.max;
-            }
-
-            if (!axis.isXAxis && axis.intervalSpec.isMercatorProjected) {
-                // find the gudermannian value where this current linear value is
-                maxCull = that.scaleLinearToGudermannian( maxCull, axis );
             }
 
             maxIncrement = pivot;
@@ -315,12 +291,13 @@ define({
             if (pivot > maxCull) {
                 // cull below pivot
                 while (maxIncrement > maxCull) {
-                    maxIncrement -= increment;
+                    maxIncrement -= subIncrement;
                 }
             } else {
                 // cull above pivot
-                while (maxIncrement+increment <= maxCull) {
-                    maxIncrement += increment;
+                // NOTE: rounding here to prevent accumulated precision errors that truncate last axis 'tick'
+                while ( roundToDecimals(maxIncrement+subIncrement) <= maxCull) {
+                    maxIncrement += subIncrement;
                 }
             }
 
@@ -329,48 +306,61 @@ define({
 
         function fillArrayByIncrement(start, end) {
 
-            var markers = [],
-                i,
-                rawValue,// raw value along axis, used for pixel position
-                roundedValue;   // value rounded to n decimals
+            var markers = {
+                    large: [],
+                    medium: [],
+                    small: []
+                },
+                mod = function(val, n) {
+                    // this modulos works correctly for negative numbers
+                    return ((val%n)+n)%n;
+                },
+                i = mod( startingMarkerTypeIndex, that.MARKER_TYPE_ORDER.length ),
+                value;
 
-            for (i = start; i <= end; i+=increment) {
-                // differentiate between the raw and rounded value, calculate pixel position
-                // from raw value or else marks are noticeably non-uniform at high zoom levels
-                rawValue = i;
-                roundedValue = i;
+            for (value = start; value <= end; value+=subIncrement) {
 
-                if (i % 1 !== 0) {
-                    // round to proper decimal place, toFixed converts to string, so convert back
-                    roundedValue = parseFloat( (Math.round(i * 100) / 100).toFixed(axis.unitSpec.decimals) );
-                }
-
-                markers.push({
-                    label : that.getMarkerRollover(axis, roundedValue),
-                    pixel : getPixelPosition(rawValue)
+                markers[ that.MARKER_TYPE_ORDER[i] ].push({
+                    label : that.getMarkerRollover(axis, value),
+                    pixel : getPixelPosition(value)
                 });
+                i = (i + 1) % that.MARKER_TYPE_ORDER.length;
             }
 
             return markers;
         }
 
-        // get increment and pivot value from axis
-        if ( axis.intervalSpec.type === "fixed" ) {
-            // use fixed interval
-            increment = axis.intervalSpec.value;
-            pivot = axis.intervalSpec.pivot;
-        } else {
-            // use percentage
-            increment = (axis.max-axis.min)*(axis.intervalSpec.value * 0.01);
-            pivot = (axis.max-axis.min)*(axis.intervalSpec.pivot*0.01) + axis.min;
+        switch (axis.intervalSpec.type.toLowerCase()) {
+
+            case "value":
+            case "fixed":
+            case "#":
+                // use fixed interval
+                increment = axis.intervalSpec.increment;
+                pivot = axis.intervalSpec.pivot;
+                break;
+
+            //case "percent":
+            //case " percentage":
+            //case "%":
+            default:
+                // use percentage
+                increment = (axis.max-axis.min)*(axis.intervalSpec.increment * 0.01);
+                pivot = (axis.max-axis.min)*(axis.intervalSpec.pivot*0.01) + axis.min;
+                break;
         }
+
         // scale increment if specified
         if ( axis.intervalSpec.allowScaleByZoom ) {
             // scale increment by zoom
-            increment = increment/Math.pow(2,Math.max(axis.zoom-1,0));
+            increment = increment/Math.pow(2, Math.max( axis.map.getZoom()-1, 0 ) );
         }
 
+        // get sub increment for small / medium label-less ticks
+        subIncrement = increment / that.MARKER_TYPE_ORDER.length;
+
         // add all points between minimum visible value and maximum visible value
-        return fillArrayByIncrement( getMinIncrement(), getMaxIncrement() );
+        return fillArrayByIncrement( getMinIncrement(), getMaxIncrement());
+
     }
 });

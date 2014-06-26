@@ -33,104 +33,141 @@
  * binning-utilities.
  */
 define(function (require) {
-    "use strict";
+	"use strict";
 
 
 
-    var Class = require('../class'),
-        AoITilePyramid;
+	var Class = require('../class'),
+	    AoITilePyramid;
 
-		
-		
-    AoITilePyramid = Class.extend({
-        ClassName: "AoITilePyramid",
-        init: function (minX, minY, maxX, maxY) {
-            this.minX = minX;
-            this.minY = minY;
-            this.maxX = maxX;
-            this.maxY = maxY;
-        },
+	
+	
+	AoITilePyramid = Class.extend({
+		ClassName: "AoITilePyramid",
+		init: function (minX, minY, maxX, maxY) {
+			this.minX = minX;
+			this.minY = minY;
+			this.maxX = maxX;
+			this.maxY = maxY;
+		},
 
-        getProjection: "EPSG:4326",
-        getTileScheme: "TMS",
+		getProjection: "EPSG:4326",
+		getTileScheme: "TMS",
 
-        rootToTile: function (x, y, level, bins) {
-            var numDivs, tileX, tileY;
+		rootToFractionalTile: function (root) {
+			var numDivs, tileX, tileY;
 
-            numDivs = 1 << level;
-            tileX = Math.floor(numDivs * (x - this.minX) / (this.maxX - this.minX));
-            tileY = Math.floor(numDivs * (y - this.minY) / (this.maxY - this.minY));
+			numDivs = 1 << root.level;
+			tileX = numDivs * (root.xIndex - this.minX) / (this.maxX - this.minX);
+			tileY = numDivs * (root.yIndex - this.minY) / (this.maxY - this.minY);
 
-            if (!bins) {
-                bins = 256;
-            }
+			return {
+				'level': root.level,
+				'xIndex': tileX,
+				'yIndex': tileY
+			};
+		},
 
-            return {level:     level,
-                    xIndex:    tileX,
-                    yIndex:    tileY,
-                    xBinCount: bins,
-                    yBinCount: bins};
-        },
+		fractionalTileToRoot: function (tile) {
+			var pow2, tileXSize, tileYSize;
 
-        rootToBin: function (x, y, tile) {
-            var pow2, tileXSize, tileYSize, xInTile, yInTile, binX, binY;
+			pow2 = 1 << tile.level;
+			tileXSize = (this.maxX - this.minX) / pow2;
+			tileYSize = (this.maxY - this.minY) / pow2;
 
-            pow2 = 1 << tile.level;
-            tileXSize = (this.maxX - this.minX) / pow2;
-            tileYSize = (this.maxY - this.minY) / pow2;
+			return {
+				level: tile.level,
+				xIndex: this.minX + tileXSize * tile.xIndex,
+				yIndex: this.minY + tileYSize * tile.yIndex
+			};
+		},
 
-            xInTile = x - this.minX - tile.xIndex * tileXSize;
-            yInTile = y - this.minY - tile.yIndex * tileYSize;
+		rootToTile: function (x, y, level, bins) {
+			var numDivs, tileX, tileY;
 
-            binX = Math.floor(xInTile * tile.xBinCount / tileXSize);
-            binY = Math.floor(yInTile * tile.yBinCount / tileYSize);
+			numDivs = 1 << level;
+			tileX = Math.floor(numDivs * (x - this.minX) / (this.maxX - this.minX));
+			tileY = Math.floor(numDivs * (y - this.minY) / (this.maxY - this.minY));
 
-            return {x: binX,
-                    y: tile.yBinCount - 1 - binY};
-        },
+			if (!bins) {
+				bins = 256;
+			}
 
-        getTileBounds: function (tile) {
-            var pow2, tileXSize, tileYSize;
+			return {level:     level,
+			        xIndex:    tileX,
+			        yIndex:    tileY,
+			        xBinCount: bins,
+			        yBinCount: bins};
+		},
 
-            pow2 = 1 << tile.level;
-            tileXSize = (this.maxX - this.minX) / pow2;
-            tileYSize = (this.maxY - this.minY) / pow2;
+		rootToBin: function (x, y, tile) {
+			var pow2, tileXSize, tileYSize, xInTile, yInTile, binX, binY;
 
-            return {minX: this.minX + tileXSize * tile.xIndex,
-                    minY: this.minY + tileYSize * tile.yIndex,
-                    maxX: this.minX + tileXSize * (tile.xIndex + 1),
-                    maxY: this.minY + tileYSize * (tile.yIndex + 1),
-                    centerX: this.minX + tileXSize * (tile.xIndex + 0.5),
-                    centerY: this.minY + tileYSize * (tile.yIndex + 0.5),
-                    width: tileXSize,
-                    height: tileYSize};
-        },
+			pow2 = 1 << tile.level;
+			tileXSize = (this.maxX - this.minX) / pow2;
+			tileYSize = (this.maxY - this.minY) / pow2;
 
-        getBinBounds: function (tile, bin) {
-            var pow2, tileXSize, tileYSize, binXSize, binYSize, adjustedY,
-                left, bottom;
+			xInTile = x - this.minX - tile.xIndex * tileXSize;
+			yInTile = y - this.minY - tile.yIndex * tileYSize;
 
-            pow2 = 1 << tile.level;
-            tileXSize = (this.maxX - this.minX) / pow2;
-            tileYSize = (this.maxY - this.minY) / pow2;
-            binXSize = tileXSize / tile.xBinCount;
-            binYSize = tileYSize / tile.yBinCount;
+			binX = Math.floor(xInTile * tile.xBinCount / tileXSize);
+			binY = Math.floor(yInTile * tile.yBinCount / tileYSize);
 
-            adjustedY = tile.yBinCount - 1 - bin.y;
+			return {x: binX,
+			        y: tile.yBinCount - 1 - binY};
+		},
 
-            left = this.minX + tileXSize * tile.xIndex;
-            bottom = this.minY + tileYSize * tile.yIndex;
+		getTileBounds: function (tile) {
+			var pow2, tileXSize, tileYSize;
 
-            return {minX: left + binXSize * bin.x,
-                    minY: bottom + binYSize * adjustedY,
-                    maxX: left + binXSize * (bin.x + 1),
-                    maxY: bottom + binYSize * (adjustedY + 1),
-                    centerX: left + binXSize * (bin.x + 0.5),
-                    centerY: bottom + binYSize * (adjustedY + 0.5),
-                    width: binXSize,
-                    height: binYSize};
-        }
-    });
+			pow2 = 1 << tile.level;
+			tileXSize = (this.maxX - this.minX) / pow2;
+			tileYSize = (this.maxY - this.minY) / pow2;
 
-    return AoITilePyramid;
+			return {minX: this.minX + tileXSize * tile.xIndex,
+			        minY: this.minY + tileYSize * tile.yIndex,
+			        maxX: this.minX + tileXSize * (tile.xIndex + 1),
+			        maxY: this.minY + tileYSize * (tile.yIndex + 1),
+			        centerX: this.minX + tileXSize * (tile.xIndex + 0.5),
+			        centerY: this.minY + tileYSize * (tile.yIndex + 0.5),
+			        width: tileXSize,
+			        height: tileYSize};
+		},
+
+		getBinBounds: function (tile, bin) {
+			var pow2, tileXSize, tileYSize, binXSize, binYSize, adjustedY,
+			    left, bottom;
+
+			pow2 = 1 << tile.level;
+			tileXSize = (this.maxX - this.minX) / pow2;
+			tileYSize = (this.maxY - this.minY) / pow2;
+			binXSize = tileXSize / tile.xBinCount;
+			binYSize = tileYSize / tile.yBinCount;
+
+			adjustedY = tile.yBinCount - 1 - bin.y;
+
+			left = this.minX + tileXSize * tile.xIndex;
+			bottom = this.minY + tileYSize * tile.yIndex;
+
+			return {minX: left + binXSize * bin.x,
+			        minY: bottom + binYSize * adjustedY,
+			        maxX: left + binXSize * (bin.x + 1),
+			        maxY: bottom + binYSize * (adjustedY + 1),
+			        centerX: left + binXSize * (bin.x + 0.5),
+			        centerY: bottom + binYSize * (adjustedY + 0.5),
+			        width: binXSize,
+			        height: binYSize};
+		},
+		toJSON: function () {
+			return {
+				"type": "AreaOfInterest",
+				"minX": this.minX,
+				"maxX": this.maxX,
+				"minY": this.minY,
+				"maxY": this.maxY
+			};
+		}
+	});
+
+	return AoITilePyramid;
 });

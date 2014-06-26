@@ -11,13 +11,25 @@
        ID here, one also has to change it in the tile-generation build.sbt
        file - both for the project version and also aperture-tile 
        dependencies. -->
-  <version>0.2</version>
+  <version>0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Aperture-Tiles</name>
   <url>http://github.com/oculusinfo/aperture-tiles</url>
   <description>A root project containing all the pieces of the Aperture Tiles system</description>
 
+  <scm>
+	<url>https://github.com/oculusinfo/aperture-tiles</url>
+	<connection>scm:git:https://github.com/oculusinfo/aperture-tiles.git</connection>
+  </scm>
+  <licenses>
+  	<license>
+	  <name>The MIT License (MIT)</name>
+	  <url>http://opensource.org/licenses/MIT</url>
+	  <distribution>repo</distribution>
+	</license>
+  </licenses>
+	
   <repositories>
     <repository>
       <id>cloudera-releases</id>
@@ -36,14 +48,18 @@
          http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH-Version-and-Packaging-Information/cdhvd_topic_8.html
     -->
 
-    <!-- cloudera version 5.0.0 beta 1
-         from http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH5/latest/CDH-Version-and-Packaging-Information/cdhvd_topic_8.html -->
+    <!-- cloudera version 5.0.0 beta 1 -->
+	<!--
     <hadoop-common-version>2.2.0-cdh5.0.0-beta-1</hadoop-common-version>
     <hadoop-core-version>2.2.0-mr1-cdh5.0.0-beta-1</hadoop-core-version>
-    <!-- HBasse version should be the following, but the jar doesn't exist in the cloudera maven repo.
-    Instead, we are using the latest version which does exist: -->
-    <!-- <hbase-version>0.94.6-cdh4.5.0</hbase-version> -->
     <hbase-version>0.95.2-cdh5.0.0-beta-1</hbase-version>
+	-->
+
+
+    <!-- cloudera version 4.6.0 -->
+    <hadoop-common-version>2.0.0-cdh4.6.0</hadoop-common-version>
+    <hadoop-core-version>2.0.0-mr1-cdh4.6.0</hadoop-core-version>
+    <hbase-version>0.94.15-cdh4.6.0</hbase-version>
 
 
     <!-- cloudera version 4.5.0
@@ -89,9 +105,10 @@
     <hbase-version>0.94.2-cdh4.2.0</hbase-version>
     -->
 
-    <aperture-version>1.0.4</aperture-version>
-    <scala-version>2.9.3</scala-version>
-    <spark-version>0.8.1-incubating</spark-version>
+    <aperture-version>1.0.7-SNAPSHOT</aperture-version>
+    <dependency-scala-version>2.10</dependency-scala-version>
+	<scala-version>2.10.3</scala-version>
+    <spark-version>1.0.0</spark-version>
   </properties>
  
   <build>
@@ -99,7 +116,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>3.1</version>
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
@@ -109,6 +126,7 @@
   </build>
 
   <modules>
+    <module>annotation-service</module>
     <module>geometric-utilities</module>
     <module>math-utilities</module>
     <module>binning-utilities</module>
@@ -117,5 +135,6 @@
     <module>tile-client</module>
     <module>tile-examples</module>
     <module>tile-client-template</module>
+    <module>tile-packaging</module>
   </modules>
 </project>

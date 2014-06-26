@@ -24,14 +24,12 @@
  */
 package com.oculusinfo.tile.rendering.color;
 
-import java.lang.IllegalArgumentException;
+import com.oculusinfo.binning.util.JsonUtilities;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.json.JSONObject;
-
-import com.oculusinfo.tile.util.JsonUtilities;
 
 /**
  * 

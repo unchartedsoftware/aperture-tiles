@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,98 +46,132 @@ import org.apache.avro.io.DatumWriter;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
-    private static final long serialVersionUID = 5775555328063499845L;
+	private static final long serialVersionUID = 5775555328063499845L;
 
 
+	private CodecFactory _compressionCodec;
+	private TypeDescriptor _typeDescription;
+	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
+		_compressionCodec = compressionCodec;
+		_typeDescription = typeDescription;
+	}
 
-    protected GenericAvroSerializer () {
-    }
-
-    abstract protected String getRecordSchemaFile ();
-    abstract protected Map<String, String> getTileMetaData ();
-    abstract protected T getValue (GenericRecord bin);
-    abstract protected void setValue (GenericRecord bin, T value) throws IOException ;
+	abstract protected String getRecordSchemaFile ();
+	abstract protected T getValue (GenericRecord bin);
+	abstract protected void setValue (GenericRecord bin, T value) throws IOException ;
     
-    public String getFileExtension(){
-    	return "avro";
-    }
+	public String getFileExtension(){
+		return "avro";
+	}
     
-    protected Schema getRecordSchema () throws IOException {
-        return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
-    }
-    protected Schema getTileSchema () throws IOException {
-        return new AvroSchemaComposer().add(getRecordSchema()).addResource("tile.avsc").resolved();
-    }
+	protected Schema getRecordSchema () throws IOException {
+		return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
+	}
+	protected Schema getTileSchema () throws IOException {
+		return new AvroSchemaComposer().add(getRecordSchema()).addResource("tile.avsc").resolved();
+	}
 
-    @Override
-    public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
+	@Override
+	public TypeDescriptor getBinTypeDescription () {
+		return _typeDescription;
+	}
 
-    	DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>();
-    	DataFileStream<GenericRecord> dataFileReader = new DataFileStream<GenericRecord>(stream, reader);
+	protected Map<String, String> getTileMetaData (TileData<T> tile) {
+		Collection<String> keys = tile.getMetaDataProperties();
+		if (null == keys || keys.isEmpty()) return null;
+		Map<String, String> metaData = new HashMap<String, String>();
+		for (String key: keys) {
+			String value = tile.getMetaData(key);
+			if (null != value)
+				metaData.put(key, value);
+		}
+		return metaData;
+	}
+
+	@Override
+	public TileData<T> deserialize (TileIndex index, InputStream stream) throws IOException {
+
+		DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>();
+		DataFileStream<GenericRecord> dataFileReader = new DataFileStream<GenericRecord>(stream, reader);
     	
-        try {
+		try {
         	
-        	GenericRecord r = dataFileReader.next();
-        	
-            int xBins = (Integer) r.get("xBinCount");
-            int yBins = (Integer) r.get("yBinCount");
+			GenericRecord r = dataFileReader.next();
+
+			int level = (Integer) r.get("level");
+			int xIndex = (Integer) r.get("xIndex");
+			int yIndex = (Integer) r.get("yIndex");
+			int xBins = (Integer) r.get("xBinCount");
+			int yBins = (Integer) r.get("yBinCount");
+			Map<?, ?> meta = (Map<?, ?>) r.get("meta");
+			
                     
-            @SuppressWarnings("unchecked")
-            GenericData.Array<GenericRecord> bins = (GenericData.Array<GenericRecord>) r.get("values");
+			@SuppressWarnings("unchecked")
+			GenericData.Array<GenericRecord> bins = (GenericData.Array<GenericRecord>) r.get("values");
 
-            // Warning suppressed because Array.newInstance definitionally returns 
-            // something of the correct type, or throws an exception 
-            List<T> data = new ArrayList<T>(xBins*yBins);
-            int i = 0;
-            for (GenericRecord bin: bins) {
-                data.add(getValue(bin));
-                if (i >= xBins*yBins) break;
-            }
-            TileIndex newTileIndex = new TileIndex(index.getLevel(), index.getX(), index.getY(), xBins, yBins);
-            TileData<T> newTile = new TileData<T>(newTileIndex, data);
-            return newTile;
-        } finally {
-        	dataFileReader.close();
-        	stream.close();
-        }
-    }
+			// Warning suppressed because Array.newInstance definitionally returns 
+			// something of the correct type, or throws an exception 
+			List<T> data = new ArrayList<T>(xBins*yBins);
+			int i = 0;
+			for (GenericRecord bin: bins) {
+				data.add(getValue(bin));
+				if (i >= xBins*yBins) break;
+			}
+			TileIndex newTileIndex = new TileIndex(level, xIndex, yIndex, xBins, yBins);
+			TileData<T> newTile = new TileData<T>(newTileIndex, data);
+			if (null != meta) {
+    			for (Object key: meta.keySet()) {
+    				if (null != key) {
+    					Object value = meta.get(key);
+    					if (null != value) {
+    						newTile.setMetaData(key.toString(), value.toString());
+    					}
+    				}
+    			}
+			}
+			return newTile;
+		} finally {
+			dataFileReader.close();
+			stream.close();
+		}
+	}
 
-    @Override
-    public void serialize (TileData<T> tile, TilePyramid pyramid, OutputStream stream) throws IOException {
-        Schema recordSchema = getRecordSchema();
-        Schema tileSchema = getTileSchema();
+	@Override
+	public void serialize (TileData<T> tile, OutputStream stream) throws IOException {
+		Schema recordSchema = getRecordSchema();
+		Schema tileSchema = getTileSchema();
 
-        List<GenericRecord> bins = new ArrayList<GenericRecord>();
+		List<GenericRecord> bins = new ArrayList<GenericRecord>();
 
-        for (T value: tile.getData()){
-        	if (value == null)continue;
-            GenericRecord bin = new GenericData.Record(recordSchema);
-            setValue(bin, value);
-            bins.add(bin);
-        }
+		for (T value: tile.getData()){
+			if (value == null)continue;
+			GenericRecord bin = new GenericData.Record(recordSchema);
+			setValue(bin, value);
+			bins.add(bin);
+		}
 
-        GenericRecord tileRecord = new GenericData.Record(tileSchema);
-        TileIndex idx = tile.getDefinition();
-        tileRecord.put("level", idx.getLevel());
-        tileRecord.put("xIndex", idx.getX());
-        tileRecord.put("yIndex", idx.getY());
-        tileRecord.put("xBinCount", idx.getXBins());
-        tileRecord.put("yBinCount", idx.getYBins());
-        tileRecord.put("values", bins);
-        tileRecord.put("default", null);
-        tileRecord.put("meta", getTileMetaData());
+		GenericRecord tileRecord = new GenericData.Record(tileSchema);
+		TileIndex idx = tile.getDefinition();
+		tileRecord.put("level", idx.getLevel());
+		tileRecord.put("xIndex", idx.getX());
+		tileRecord.put("yIndex", idx.getY());
+		tileRecord.put("xBinCount", idx.getXBins());
+		tileRecord.put("yBinCount", idx.getYBins());
+		tileRecord.put("values", bins);
+		tileRecord.put("default", null);
+		tileRecord.put("meta", getTileMetaData(tile));
 
-        DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
+		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
-			dataFileWriter.setCodec(CodecFactory.bzip2Codec());
+			dataFileWriter.setCodec(_compressionCodec);
 			dataFileWriter.create(tileSchema, stream);
 			dataFileWriter.append(tileRecord);
 			dataFileWriter.close();
 			stream.close();
 		} catch (IOException e) {throw new RuntimeException("Error serializing",e);}	
-    }
+	}
 }

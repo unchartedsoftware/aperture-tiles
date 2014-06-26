@@ -24,21 +24,18 @@
  */
 package com.oculusinfo.tile.rest;
 
+import org.restlet.data.MediaType;
+import org.restlet.representation.OutputRepresentation;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import javax.imageio.ImageIO;
-
-import org.restlet.data.MediaType;
-import org.restlet.representation.OutputRepresentation;
-
 /**
  * @author dgray
- *
  */
 public class ImageOutputRepresentation extends OutputRepresentation {
-	
 	private BufferedImage _image;
 	
 	/**
@@ -59,5 +56,4 @@ public class ImageOutputRepresentation extends OutputRepresentation {
 		// TODO: create a constant map of MediaType to ImageIO file type for the "png".
 		ImageIO.write(_image, "png", outputStream);
 	}
-
 }

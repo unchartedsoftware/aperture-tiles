@@ -17,12 +17,10 @@
 
 package org.apache.spark
 
-import org.scalatest.Suite
-import org.scalatest.BeforeAndAfterEach
+import _root_.io.netty.util.internal.logging.{Slf4JLoggerFactory, InternalLoggerFactory}
 import org.scalatest.BeforeAndAfterAll
-
-import org.jboss.netty.logging.InternalLoggerFactory
-import org.jboss.netty.logging.Slf4JLoggerFactory
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.Suite
 
 /** Manages a local `sc` {@link SparkContext} variable, correctly stopping it after each test. */
 trait LocalSparkContext extends BeforeAndAfterEach with BeforeAndAfterAll { self: Suite =>
@@ -53,7 +51,6 @@ object LocalSparkContext {
     }
     // To avoid Akka rebinding to the same port, since it doesn't unbind immediately on shutdown
     System.clearProperty("spark.driver.port")
-    System.clearProperty("spark.hostPort")
   }
 
   /** Runs `f` by passing in `sc` and ensures that `sc` is stopped. */

@@ -13,16 +13,25 @@
   <parent>
     <artifactId>aperture-tiles</artifactId>
     <groupId>com.oculusinfo</groupId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
 
   <dependencies>
+
     <dependency>
       <groupId>com.oculusinfo</groupId>
       <artifactId>tile-service</artifactId>
       <version>${project.version}</version>
       <type>war</type>
     </dependency>
+
+    <dependency>
+      <groupId>com.oculusinfo</groupId>
+      <artifactId>annotation-service</artifactId>
+      <version>${project.version}</version>
+      <!--<type>war</type>-->
+    </dependency>
+
   </dependencies>
 
   <build>

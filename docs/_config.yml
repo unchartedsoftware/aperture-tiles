@@ -1,0 +1,11 @@
+markdown: rdiscount
+
+rdiscount:
+  extensions:
+    - autolink
+
+kramdown:
+  input: GFM
+  
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "tables"]

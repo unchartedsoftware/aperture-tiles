@@ -36,50 +36,50 @@ package com.oculusinfo.binning;
  * @author nkronenfeld
  */
 public class TileAndBinIndices {
-    private TileIndex _tile;
-    private BinIndex _bin;
-    public TileAndBinIndices (TileIndex tile, BinIndex bin) {
-        _tile = tile;
-        _bin = bin;
-    }
+	private TileIndex _tile;
+	private BinIndex _bin;
+	public TileAndBinIndices (TileIndex tile, BinIndex bin) {
+		_tile = tile;
+		_bin = bin;
+	}
 
 
 
-    /**
-     * Get the tile containing the bin specifically represented by this object.
-     */
-    public TileIndex getTile () {
-        return _tile;
-    }
+	/**
+	 * Get the tile containing the bin specifically represented by this object.
+	 */
+	public TileIndex getTile () {
+		return _tile;
+	}
 
-    /**
-     * Get the specific bin represented by this object.
-     */
-    public BinIndex getBin () {
-        return _bin;
-    }
+	/**
+	 * Get the specific bin represented by this object.
+	 */
+	public BinIndex getBin () {
+		return _bin;
+	}
 
 
 
-    @Override
-    public String toString () {
-        return _tile.toString()+":"+_bin.toString();
-    }
+	@Override
+	public String toString () {
+		return _tile.toString()+":"+_bin.toString();
+	}
 
-    @Override
-    public int hashCode() {
-        return _tile.hashCode()+7*_bin.hashCode();
-    }
+	@Override
+	public int hashCode() {
+		return _tile.hashCode()+7*_bin.hashCode();
+	}
 
-    @Override
-    public boolean equals (Object obj) {
-        if (this == obj) return true;
-        if (null == obj) return false;
-        if (!(obj instanceof TileAndBinIndices)) return false;
+	@Override
+	public boolean equals (Object obj) {
+		if (this == obj) return true;
+		if (null == obj) return false;
+		if (!(obj instanceof TileAndBinIndices)) return false;
         
-        TileAndBinIndices tb = (TileAndBinIndices) obj;
-        if (!_tile.equals(tb.getTile())) return false;
-        if (!_bin.equals(tb.getBin())) return false;
-        return true;
-    }
+		TileAndBinIndices tb = (TileAndBinIndices) obj;
+		if (!_tile.equals(tb.getTile())) return false;
+		if (!_bin.equals(tb.getBin())) return false;
+		return true;
+	}
 }

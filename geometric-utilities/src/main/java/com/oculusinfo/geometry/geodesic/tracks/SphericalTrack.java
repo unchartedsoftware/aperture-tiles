@@ -24,13 +24,13 @@
  */
 package com.oculusinfo.geometry.geodesic.tracks;
 
-import java.util.List;
-
 import com.oculusinfo.geometry.SphereUtilities;
 import com.oculusinfo.geometry.geodesic.Position;
 import com.oculusinfo.geometry.geodesic.PositionCalculationParameters;
 import com.oculusinfo.geometry.geodesic.PositionCalculationType;
 import com.oculusinfo.geometry.geodesic.Track;
+
+import java.util.List;
 
 public class SphericalTrack extends Track {
 

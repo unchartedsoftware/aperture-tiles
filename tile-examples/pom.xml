@@ -12,13 +12,12 @@
   <parent>
     <artifactId>aperture-tiles</artifactId>
     <groupId>com.oculusinfo</groupId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
-
-  
+	
   <modules>
-    <module>demo-website</module>
-    <module>bitcoin-demo</module>
-    <module>twitter-demo</module>
+	<module>julia-demo</module>
+	<module>twitter-topics</module>
   </modules>
+
 </project>

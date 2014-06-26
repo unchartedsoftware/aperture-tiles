@@ -22,64 +22,67 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.examples.apps
 
 
 
 import java.io.FileInputStream
 import java.util.Properties
+import java.io.File
+import java.io.IOException
+import java.io.ObjectInputStream
+import java.io.FilenameFilter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Calendar
+
 import scala.collection.JavaConverters._
-import org.apache.spark._
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.tiling.ValueOrException
-import com.oculusinfo.tilegen.util.PropertiesWrapper
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+import scala.reflect.ClassTag
+import scala.util.{Try, Success, Failure}
+
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
-import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.DStream
-import com.oculusinfo.tilegen.datasets.ProcessingStrategy
-import org.apache.spark.streaming.Seconds
-import com.oculusinfo.tilegen.tiling.DataSource
+
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.LongWritable
 import org.apache.hadoop.io.Text
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
-import com.oculusinfo.tilegen.tiling.RecordParser
-import com.oculusinfo.tilegen.tiling.FieldExtractor
-import java.text.SimpleDateFormat
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
-import java.util.Date
+
+import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.Time
-import com.oculusinfo.tilegen.datasets.StreamingProcessor
-import java.util.Calendar
-import com.oculusinfo.tilegen.datasets.StreamingCSVDataset
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.datasets.CSVRecordParser
-import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
-import com.oculusinfo.tilegen.tiling.TileIO
 import org.apache.spark.streaming.dstream.FileInputDStream
 import org.apache.spark.streaming.dstream.InputDStream
-import scala.collection.mutable.HashSet
-import java.io.File
-import org.apache.spark.rdd.UnionRDD
-import java.io.IOException
-import java.io.ObjectInputStream
-import scala.collection.mutable.HashMap
-import java.io.FilenameFilter
+import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.streaming.dstream.LocalFileInputDStream
+
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.binning.impl.AOITilePyramid
+
+import com.oculusinfo.tilegen.spark.SparkConnector
+import com.oculusinfo.tilegen.spark.GeneralSparkConnector
+import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
+import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
+import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
+import com.oculusinfo.tilegen.datasets.CSVRecordParser
+import com.oculusinfo.tilegen.datasets.Dataset
+import com.oculusinfo.tilegen.datasets.StreamingProcessingStrategy
+import com.oculusinfo.tilegen.datasets.StreamingProcessor
+import com.oculusinfo.tilegen.datasets.StreamingCSVDataset
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.HBaseTileIO
+import com.oculusinfo.tilegen.tiling.LocalTileIO
+import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
+import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.util.PropertiesWrapper
+
 
 
 
@@ -137,413 +140,336 @@ import java.io.FilenameFilter
  * 
  */
 
-
-/**
- * This is a custom DStream so that we can read directly from the local
- * filesystem using java io rather than using hadoop io. It is almost identical
- * to the org.apache.spark.streaming.dstream.FileInputDStream
- */
-class LocalFileInputDStream(
-    @transient ssc_ : StreamingContext,
-    directory: String,
-    filter: (File, String) => Boolean = LocalFileInputDStream.defaultFilter,
-    newFilesOnly: Boolean = true) 
-  extends InputDStream[String](ssc_) {
-  
-  // Latest file mod time seen till any point of time
-  private val lastModTimeFiles = new HashSet[String]()
-  private var lastModTime = 0L
-
-  @transient private var path_ : File = null
-  @transient private var files = new HashMap[Time, Array[File]]
-  
-  override def start() {
-    if (newFilesOnly) {
-      lastModTime = graph.zeroTime.milliseconds
-    } else {
-      lastModTime = 0
-    }
-    logDebug("LastModTime initialized to " + lastModTime + ", new files only = " + newFilesOnly)
-  }
-  
-  override def stop() { }
-
-  /**
-   * Finds the files that were modified since the last time this method was called and makes
-   * a union RDD out of them. Note that this maintains the list of files that were processed
-   * in the latest modification time in the previous call to this method. This is because the
-   * modification time returned by the FileStatus API seems to return times only at the
-   * granularity of seconds. And new files may have the same modification time as the
-   * latest modification time in the previous call to this method yet was not reported in
-   * the previous call.
-   */
-  override def compute(validTime: Time): Option[RDD[String]] = {
-    assert(validTime.milliseconds >= lastModTime, "Trying to get new files for really old time [" + validTime + " < " + lastModTime)
-
-    // Create the filter for selecting new files
-    val newFilter = new FilenameFilter() {
-      // Latest file mod time seen in this round of fetching files and its corresponding files
-      var latestModTime = 0L
-      val latestModTimeFiles = new HashSet[String]()
-
-      override def accept(dir: File, name: String): Boolean = {
-        if (!filter(dir, name)) {  // Reject file if it does not satisfy filter
-          logDebug("Rejected by filter " + path)
-          return false
-        } else {              // Accept file only if
-          val file = new File(dir, name)
-          val modTime = file.lastModified()
-          logDebug("Mod time for " + path + " is " + modTime)
-          if (modTime < lastModTime) {
-            logDebug("Mod time less than last mod time")
-            return false  // If the file was created before the last time it was called
-          } else if (modTime == lastModTime && lastModTimeFiles.contains(path.toString)) {
-            logDebug("Mod time equal to last mod time, but file considered already")
-            return false  // If the file was created exactly as lastModTime but not reported yet
-          } else if (modTime > validTime.milliseconds) {
-            logDebug("Mod time more than valid time")
-            return false  // If the file was created after the time this function call requires
-          }
-          if (modTime > latestModTime) {
-            latestModTime = modTime
-            latestModTimeFiles.clear()
-            logDebug("Latest mod time updated to " + latestModTime)
-          }
-          latestModTimeFiles += path.toString
-          logDebug("Accepted " + path)
-          return true
-        }        
-      }
-    }
-    
-    logDebug("Finding new files at time " + validTime + " for last mod time = " + lastModTime)
-    val newFiles = path.listFiles(newFilter)
-    logInfo("New files at time " + validTime + ":\n" + newFiles.mkString("\n"))
-    if (newFiles.size > 0) {
-      // Update the modification time and the files processed for that modification time
-      if (lastModTime != newFilter.latestModTime) {
-        lastModTime = newFilter.latestModTime
-        lastModTimeFiles.clear()
-      }
-      lastModTimeFiles ++= newFilter.latestModTimeFiles
-      logDebug("Last mod time updated to " + lastModTime)
-    }
-    files += ((validTime, newFiles))
-    Some(filesToRDD(newFiles))
-  }
-
-  /** Clear the old time-to-files mappings along with old RDDs */
-  override def clearOldMetadata(time: Time) {
-    super.clearOldMetadata(time)
-    val oldFiles = files.filter(_._1 <= (time - rememberDuration))
-    files --= oldFiles.keys
-    logInfo("Cleared " + oldFiles.size + " old files that were older than " +
-      (time - rememberDuration) + ": " + oldFiles.keys.mkString(", "))
-    logDebug("Cleared files are:\n" +
-      oldFiles.map(p => (p._1, p._2.mkString(", "))).mkString("\n"))
-  }
-
-  /** Generate one RDD from an array of files */
-  def filesToRDD(files: Seq[File]): RDD[String] = {
-    def getFileRDD(file: File): RDD[String] = {
-      val source = scala.io.Source.fromFile(file)
-      val lines = source.getLines.toArray
-      val rdd = context.sparkContext.makeRDD(lines)
-      source.close()
-      rdd
-    }
-    new UnionRDD(
-      context.sparkContext,
-      files.map(getFileRDD(_))
-    )
-  }
-
-  private def path: File = {
-    if (path_ == null) path_ = new File(directory)
-    path_
-  }
-
-  @throws(classOf[IOException])
-  private def readObject(ois: ObjectInputStream) {
-    logDebug(this.getClass().getSimpleName + ".readObject used")
-    ois.defaultReadObject()
-    generatedRDDs = new HashMap[Time, RDD[String]] ()
-    files = new HashMap[Time, Array[File]]
-  }
-
-}
-
-object LocalFileInputDStream {
-  def defaultFilter(dir: File, name: String): Boolean = !name.startsWith(".") && !name.endsWith("_COPYING_")
-}
-
 /**
  * A simple data source for binning of generic CSV data based on a
  * property-style configuration file
  */
-class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingContext) extends DataSource {
+class StreamingCSVDataSource (properties: PropertiesWrapper, ssc: StreamingContext) {
+	def getDataName: String = properties.getString("oculus.binning.source.name", "The name of the source", Some("unknown"))
+	def getDataFiles: Seq[String] = properties.getStringSeq("oculus.binning.source.location", "The path from which to get the CSV data. Either a directory, all "+
+		                                                        "of whose contents should be part of this dataset, or a single file.")
+	def getIdealPartitions: Option[Int] = properties.getIntOption("oculus.binning.source.partitions", "The number of partitions to use when reducing data, if needed")
 
-  def getDataName: String = properties.getProperty("oculus.binning.source.name", "unknown")
-  def getDataFiles: Seq[String] = properties.getSeqProperty("oculus.binning.source.location")
-  override def getIdealPartitions: Option[Int] = properties.getIntOptionProperty("oculus.binning.source.partitions")
+	//determines if the source location is a local file or not
+	private val useLocalIO: Boolean = {
+		val file = new File(getDataFiles.head)
+		file.exists && file.isDirectory
+	}
 
-  //determines if the source location is a local file or not
-  private val useLocalIO: Boolean = {
-    val file = new File(getDataFiles.head)
-    file.exists && file.isDirectory
-  }
-
-  //a file filter to get rid of any files that end in "_COPYING_"
-  val fileFilter: Path => Boolean = path => {
-    !path.getName().startsWith(".") && !path.getName().endsWith("_COPYING_")
-  }
-  
-  def getDataStream: DStream[String] = {
-    if (useLocalIO) {
-      val inputStream = new LocalFileInputDStream(ssc, getDataFiles.head)
-      ssc.registerInputStream(inputStream)
-      inputStream
-    }
-    else {
-      ssc.fileStream[LongWritable, Text, TextInputFormat](getDataFiles.head, fileFilter, true).map(_._2.toString)
-    }
-  }
-  
-  def start() = { ssc.start }
-  def stop() = { ssc.stop }
-  
+	//a file filter to get rid of any files that end in "_COPYING_"
+	val fileFilter: Path => Boolean = path => {
+		!path.getName().startsWith(".") && !path.getName().endsWith("_COPYING_")
+	}
+	
+	def getDataStream: DStream[String] = {
+		if (useLocalIO) {
+			new LocalFileInputDStream(ssc, getDataFiles.head)
+		}
+		else {
+			ssc.fileStream[LongWritable, Text, TextInputFormat](getDataFiles.head, fileFilter, true).map(_._2.toString)
+		}
+	}
+	
+	def start() = { ssc.start() }
+	def stop() = { ssc.stop() }
+	
 }
 
 /**
  * A streaming strategy that takes a given preparsed dstream and then windows it
  * up over the given window and slide durations.
  */
-class WindowedProcessingStrategy(stream: DStream[(Double, Double, Double)], windowDurSec: Int, slideDurSec: Int)
-extends StreamingProcessingStrategy[Double] {
-  protected def getData: DStream[(Double, Double, Double)] = stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
+class WindowedProcessingStrategy[IT: ClassTag] (stream: DStream[(IT, Double)],
+                                                windowDurSec: Int,
+                                                slideDurSec: Int)
+		extends StreamingProcessingStrategy[IT, Double] {
+	protected def getData: DStream[(IT, Double)] =
+		stream.window(Seconds(windowDurSec), Seconds(slideDurSec))
 }
 
 
 object StreamingCSVBinner {
 
-  /**
-   * Preparsing function that changes a stream of csv files into the required
-   * DStream[(Double, Double, Double)]. All data is cached at the end so that
-   * any windowed operations after will start from here.
-   */
-  def getParsedStream(properties: PropertiesWrapper, source: StreamingCSVDataSource, parser: CSVRecordParser, extractor: CSVFieldExtractor): DStream[(Double, Double, Double)] = {
-    val localXVar = properties.getOptionProperty("oculus.binning.xField").get
-    val localYVar = properties.getProperty("oculus.binning.yField", "zero")
-    val localZVar = properties.getProperty("oculus.binning.valueField", "count")
+	/**
+	 * Preparsing function that changes a stream of csv files into the required
+	 * DStream[(Double, Double, Double)]. All data is cached at the end so that
+	 * any windowed operations after will start from here.
+	 */
+	def getParsedStream[IT: ClassTag] (properties: CSVRecordPropertiesWrapper,
+	                                   source: StreamingCSVDataSource,
+	                                   indexer: CSVIndexExtractor[IT]): DStream[(IT, Double)] = {
+		val localZVar = properties.getString("oculus.binning.valueField", "The field to use for the value to tile", Some("count"))
 
-    val strm = source.getDataStream
-    val data = strm.mapPartitions(iter =>
-	  // Parse the records from the raw data
-      parser.parseRecords(iter, localXVar, localYVar)
-	).filter(r =>
-	  // Filter out unsuccessful parsings
-	  r.hasValue
-	).map(_.get).mapPartitions(iter =>
-	  iter.map(t => (extractor.getFieldValue(localXVar)(t),
-	                     extractor.getFieldValue(localYVar)(t),
-		                 extractor.getFieldValue(localZVar)(t)))
-	).filter(record =>
-	  record._1.hasValue && record._2.hasValue && record._3.hasValue
-	).map(record =>
-      (record._1.get, record._2.get, record._3.get)
-    )
+		val strm = source.getDataStream
+		val data = strm.mapPartitions(iter =>
+			{
+				// Parse the records from the raw data
+				val parser = new CSVRecordParser(properties)
+				// determine which fields we need
+				val fields = if ("count" == localZVar) {
+					indexer.fields
+				} else {
+					indexer.fields :+ localZVar
+				}
+				parser.parseRecords(iter, fields:_*)
+					.map(_._2) // We don't need the original record (in _1)
+			}
+		).filter(r =>
+			// Filter out unsuccessful parsings
+			r.isSuccess
+		).map(_.get).mapPartitions(iter =>
+			{
+				val extractor = new CSVFieldExtractor(properties)
 
-    data.cache
-  }
+				iter.map(t =>
+					{
+						// Determine our index value
+						val indexValue = Try(
+							{
+								val indexFields = indexer.fields
+								val fieldValues = indexFields.map(field =>
+									(field -> extractor.getFieldValue(field)(t))
+								).map{case (k, v) => (k, v.get)}.toMap
+								indexer.calculateIndex(fieldValues)
+							}
+						)
 
-  
-  def getBatchJob(batchName: String, props: Map[String, String]) = {
-    val nameProp = props.get("name")
-    val timeProp = props.get("time")
-    
-    val name = if (nameProp.isDefined) nameProp.get else batchName
-    val time = if (timeProp.isDefined) timeProp.get.toInt else -1
-    
-    if (time > 0)
-    	Some((name, time))
-    else
-    	None
-  }
-  
-  def dtFormatter = new SimpleDateFormat("yyyyDDDHHmm")
+						// Determine and add in our binnable value
+						(indexValue,
+						 extractor.getFieldValue(localZVar)(t))
+					}
+				)
+			}
+		).filter(record =>
+			record._1.isSuccess && record._2.isSuccess
+		).map(record =>
+			(record._1.get, record._2.get)
+		)
 
-  def getTimeString(time: Long, intervalTimeSec: Int): String = {
-    //round the time to the last interval time
-    val previousIntervalTime = (time / (intervalTimeSec * 1000)) * (intervalTimeSec * 1000)
-    dtFormatter.format(new Date(previousIntervalTime))
-  }
-  
-  /**
-   * Selects between an HBaseTileIO and LocalTileIO depending on 'oculus.tileio.type'
-   */
-  def getTileIO(properties: PropertiesWrapper): TileIO = {
-    properties.getProperty("oculus.tileio.type", "hbase") match {
-      case "hbase" => {
-        val quorum = properties.getOptionProperty("hbase.zookeeper.quorum").get
-        val port = properties.getProperty("hbase.zookeeper.port", "2181")
-        val master = properties.getOptionProperty("hbase.master").get
-        new HBaseTileIO(quorum, port, master)
-      }
-      case _ => {
-        val extension =
-            properties.getProperty("oculus.tileio.file.extension",
-                                          "avro")
-        new LocalTileIO(extension)
-      }
-    }
-  }
+		data.cache
+	}
 
-  /**
-   * Returns a sequence of (name: String, time: Int) jobs. 
-   */
-  def getBatchJobs(properties: PropertiesWrapper): Seq[(String, Int)] = {
-    val batchJobs = {
-      val basePropName = "oculus.binning.source.batches"
-      val batchJobNames = properties.getSeqPropertyNames(basePropName)
-	  
-	  var jobs = batchJobNames.flatMap(batchName => {
-	    val pathName = basePropName + "." + batchName
-	    getBatchJob(batchName, properties.getSeqPropertyMap(pathName))
-	  })
-    
-      //make sure there's at least one basic job
-	  if (jobs.isEmpty) {
-	    jobs :+ ("", 1)
-	  }
-	  else {
-        jobs
-	  }
-    }
-
-    //print out the list of batch jobs 
-    println("Jobs:")
-    batchJobs.foreach{job =>
-      println("  " + job._1 + ": every " + job._2 + " seconds")
-    }
-    
-    batchJobs
-  }
-  
-  /**
-   * The actual processing function for the streaming dataset. This bins up the data and then writes it out.
-   */
-  def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT], job: (String, Int), tileIO: TileIO): Unit = {
-	val binner = new RDDBinner
-	binner.debug = true
 	
-    //go through each of the level sets and process them 
-	dataset.getLevels.map(levels => {
-	  val procFcn:  Time => RDD[(Double, Double, BT)] => Unit =
-	    (time: Time) => (rdd: RDD[(Double, Double, BT)]) => {
-	    if (rdd.count > 0) {
-	      val stime = System.currentTimeMillis()
-	      println("processing level: " + levels)
-	      val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
-	      val tiles = binner.processDataByLevel(rdd,
-			        	    dataset.getBinDescriptor,
-						    dataset.getTilePyramid,
-						    levels,
-						    dataset.getBins,
-						    dataset.getConsolidationPartitions)
-          tileIO.writeTileSet(dataset.getTilePyramid,
-			  jobName,
-			  tiles,
-			  dataset.getBinDescriptor,
-			  jobName,
-			  dataset.getDescription)
-				  
-		  //grab the final processing time and print out some time stats
-		  val ftime = System.currentTimeMillis()
-	      val timeInfo = new StringBuilder().append("Levels ").append(levels).append(" for job ").append(jobName).append(" finished\n")
-	          .append("  Preprocessing: ").append((stime - time.milliseconds)).append("ms\n")
-	          .append("  Processing: ").append((ftime - stime)).append("ms\n")
-	          .append("  Total: ").append((ftime - time.milliseconds)).append("ms\n")
-	      println(timeInfo)
-	    }
-	    else {
-	      println("No data to process")
-  		}
-	  }
-      dataset.processWithTime(procFcn, None)
-    })
-  }
-  
-  def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT] with StreamingProcessor[BT], tileIO: TileIO, job: (String, Int)): Unit =
-    processDataset(dataset, job, tileIO)(dataset.binTypeManifest)
-  
-  
-  def main (args: Array[String]): Unit = {
-	  Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-	  Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
-	  Logger.getLogger("org.eclipse.jetty.server").setLevel(Level.WARN)
-    if (args.size<1) {
-      println("Usage:")
-      println("\tStreamingCSVBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
-      System.exit(1)
-    }
+	def getBatchJob(batchName: String, props: Map[String, String]) = {
+		val nameProp = props.get("name")
+		val timeProp = props.get("time")
+		
+		val name = if (nameProp.isDefined) nameProp.get else batchName
+		val time = if (timeProp.isDefined) timeProp.get.toInt else -1
+		
+		if (time > 0)
+			Some((name, time))
+		else
+			None
+	}
+	
+	def dtFormatter = new SimpleDateFormat("yyyyDDDHHmm")
 
-    // Read default properties
-    var argIdx = 0
-    var defProps = new Properties()
+	def getTimeString(time: Long, intervalTimeSec: Int): String = {
+		//round the time to the last interval time
+		val previousIntervalTime = (time / (intervalTimeSec * 1000)) * (intervalTimeSec * 1000)
+		dtFormatter.format(new Date(previousIntervalTime))
+	}
+	
+	/**
+	 * Selects between an HBaseTileIO and LocalTileIO depending on 'oculus.tileio.type'
+	 */
+	def getTileIO(properties: PropertiesWrapper): TileIO = {
+		properties.getString("oculus.tileio.type",
+		                     "Where to put tiles",
+		                     Some("hbase")) match {
+			case "hbase" => {
+				val quorum = properties.getStringOption("hbase.zookeeper.quorum",
+				                                        "The HBase zookeeper quorum").get
+				val port = properties.getString("hbase.zookeeper.port",
+				                                "The HBase zookeeper port",
+				                                Some("2181"))
+				val master = properties.getStringOption("hbase.master",
+				                                        "The HBase master").get
+				new HBaseTileIO(quorum, port, master)
+			}
+			case _ => {
+				val extension =
+					properties.getString("oculus.tileio.file.extension",
+					                     "The extension with which to write tiles",
+					                     Some("avro"))
+				new LocalTileIO(extension)
+			}
+		}
+	}
 
-    while ("-d" == args(argIdx)) {
-      argIdx = argIdx + 1
-      val stream = new FileInputStream(args(argIdx))
-      defProps.load(stream)
-      stream.close()
-      argIdx = argIdx + 1
-    }
-    val defaultProperties = new PropertiesWrapper(defProps)
+	/**
+	 * Returns a sequence of (name: String, time: Int) jobs. 
+	 */
+	def getBatchJobs(properties: PropertiesWrapper): Seq[(String, Int)] = {
+		val batchJobs = {
+			val basePropName = "oculus.binning.source.batches"
+			val batchJobNames = properties.getSeqPropertyNames(basePropName)
+			
+			var jobs = batchJobNames.flatMap(batchName =>
+				{
+					val pathName = basePropName + "." + batchName
+					getBatchJob(batchName, properties.getSeqPropertyMap(pathName))
+				}
+			)
 
-    val connector = new PropertyBasedSparkConnector(defaultProperties)
-    val sc = connector.getSparkContext("Pyramid Binning")
-    
-    val batchDuration = defaultProperties.getIntProperty("oculus.binning.source.pollTime", 60)
-    val ssc = new StreamingContext(sc, Seconds(batchDuration))
+			//make sure there's at least one basic job
+			if (jobs.isEmpty) {
+				jobs :+ ("", 1)
+			}
+			else {
+				jobs
+			}
+		}
 
-    val tileIO = getTileIO(defaultProperties)
+		//print out the list of batch jobs
+		println("Jobs:")
+		batchJobs.foreach{job =>
+			println("  " + job._1 + ": every " + job._2 + " seconds")
+		}
 
-    val batchJobs = getBatchJobs(defaultProperties)
-    
-    // Run for each real properties file
-    while (argIdx < args.size) {
-      val props = new Properties(defProps)
-      val propStream = new FileInputStream(args(argIdx))
-      props.load(propStream)
-      propStream.close()
-      
-      val properties = new CSVRecordPropertiesWrapper(props)
-      val source = new StreamingCSVDataSource(properties, ssc)
-      val parser = new CSVRecordParser(properties)
-      val extractor = new CSVFieldExtractor(properties)
+		batchJobs
+	}
+	
+	/**
+	 * The actual processing function for the streaming dataset. This bins up the data and then writes it out.
+	 */
+	def processDataset[IT: ClassTag, PT: ClassTag, BT]
+		(dataset: Dataset[IT, PT, BT] with StreamingProcessor[IT, PT],
+		 job: (String, Int), tileIO: TileIO): Unit = {
+		val binner = new RDDBinner
+		binner.debug = true
+		
+		//go through each of the level sets and process them
+		dataset.getLevels.map(levels =>
+			{
+				val procFcn:  Time => RDD[(IT, PT)] => Unit =
+					(time: Time) => (rdd: RDD[(IT, PT)]) =>
+				{
+					if (rdd.count > 0) {
+						val stime = System.currentTimeMillis()
+						println("processing level: " + levels)
+						val jobName = job._1 + "." + getTimeString(time.milliseconds, job._2) + "." + dataset.getName
+						val tiles = binner.processDataByLevel(rdd,
+						                                      dataset.getIndexScheme,
+						                                      dataset.getBinDescriptor,
+						                                      dataset.getTilePyramid,
+						                                      levels,
+						                                      (dataset.getNumXBins max dataset.getNumYBins),
+						                                      dataset.getConsolidationPartitions)
+						tileIO.writeTileSet(dataset.getTilePyramid,
+						                    jobName,
+						                    tiles,
+						                    dataset.getBinDescriptor,
+						                    jobName,
+						                    dataset.getDescription)
+						
+						//grab the final processing time and print out some time stats
+						val ftime = System.currentTimeMillis()
+						val timeInfo = new StringBuilder().append("Levels ").append(levels)
+							.append(" for job ").append(jobName).append(" finished\n")
+							.append("  Preprocessing: ").append((stime - time.milliseconds)).append("ms\n")
+							.append("  Processing: ").append((ftime - stime)).append("ms\n")
+							.append("  Total: ").append((ftime - time.milliseconds)).append("ms\n")
+						println(timeInfo)
+					} else {
+						println("No data to process")
+					}
+				}
+				dataset.processWithTime(procFcn, None)
+			}
+		)
+	}
+	
+	def processDatasetGeneric[IT: ClassTag, PT, BT]
+		(dataset: Dataset[IT, PT, BT] with StreamingProcessor[IT, PT],
+		 tileIO: TileIO,
+		 job: (String, Int)): Unit =
+		processDataset(dataset, job, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
+	
+	
+	def processIndex[IT: ClassTag] (ssc: StreamingContext,
+	                                tileIO: TileIO,
+	                                batchJobs: Seq[(String, Int)],
+	                                properties: CSVRecordPropertiesWrapper,
+	                                indexer: CSVIndexExtractor[IT]) = {
+		val source = new StreamingCSVDataSource(properties, ssc)
 
-      //preparse the stream before we start to process the actual data
-      val parsedStream = getParsedStream(properties, source, parser, extractor)
-        
-      //loop through each batch job, setup each streaming window, and process it
-      batchJobs.foreach{job =>
-        //grab the actual preparsed dstream  
-        val windowDurTimeSec = job._2
-        val slideDurTimeSec = job._2
-        
-        //create a the windowed strategy for the job
-        val strategy = new WindowedProcessingStrategy(parsedStream, windowDurTimeSec, slideDurTimeSec)
-        
-        val dataset = new StreamingCSVDataset(props, 256)
-        dataset.initialize(strategy)
+		//preparse the stream before we start to process the actual data
+		val parsedStream = getParsedStream(properties, source, indexer)
+			
+		//loop through each batch job, setup each streaming window, and process it
+		batchJobs.foreach{job =>
+			//grab the actual preparsed dstream
+			val windowDurTimeSec = job._2
+			val slideDurTimeSec = job._2
 
-        processDatasetGeneric(dataset, tileIO, job)
-      }
+			//create a the windowed strategy for the job
+			val strategy = new WindowedProcessingStrategy(parsedStream, windowDurTimeSec, slideDurTimeSec)
 
-      argIdx = argIdx + 1
-    }
-    
-    ssc.start
-    
-  }
+			val dataset = new StreamingCSVDataset(indexer, properties, 256, 256)(indexer.indexTypeManifest)
+			dataset.initialize(strategy)
+
+			processDatasetGeneric(dataset, tileIO, job)
+		}
+	}
+
+	def processIndexGeneric[IT] (ssc: StreamingContext,
+	                             tileIO: TileIO,
+	                             batchJobs: Seq[(String, Int)],
+	                             properties: CSVRecordPropertiesWrapper,
+	                             indexer: CSVIndexExtractor[IT]) =
+		processIndex(ssc, tileIO, batchJobs, properties, indexer)(indexer.indexTypeManifest)
+
+	def main (args: Array[String]): Unit = {
+		Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
+		Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
+		Logger.getLogger("org.eclipse.jetty.server").setLevel(Level.WARN)
+		if (args.size<1) {
+			println("Usage:")
+			println("\tStreamingCSVBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
+			System.exit(1)
+		}
+
+		// Read default properties
+		var argIdx = 0
+		var defProps = new Properties()
+
+		while ("-d" == args(argIdx)) {
+			argIdx = argIdx + 1
+			val stream = new FileInputStream(args(argIdx))
+			defProps.load(stream)
+			stream.close()
+			argIdx = argIdx + 1
+		}
+		val defaultProperties = new PropertiesWrapper(defProps)
+
+		val connector = defaultProperties.getSparkConnector()
+		val sc = connector.getSparkContext("Pyramid Binning")
+		
+		val batchDuration = defaultProperties.getInt("oculus.binning.source.pollTime", "The time (in seconds) between each check for new data", Some(60))
+		val ssc = new StreamingContext(sc, Seconds(batchDuration))
+
+		val tileIO = getTileIO(defaultProperties)
+
+		val batchJobs = getBatchJobs(defaultProperties)
+		
+		// Run for each real properties file
+		while (argIdx < args.size) {
+			val props = new Properties(defProps)
+			val propStream = new FileInputStream(args(argIdx))
+			props.load(propStream)
+			propStream.close()
+			
+			val properties = new CSVRecordPropertiesWrapper(props)
+			val indexer = CSVIndexExtractor.fromProperties(properties)
+
+			processIndexGeneric(ssc, tileIO, batchJobs, properties, indexer)
+
+			argIdx = argIdx + 1
+		}
+		
+		ssc.start
+	}
+
 }

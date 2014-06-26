@@ -22,16 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.live
 
 
 
+import java.awt.geom.Point2D
+
+import scala.reflect.ClassTag
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-
-import java.awt.geom.Point2D
 
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
@@ -44,40 +46,47 @@ import com.oculusinfo.tilegen.tiling.BinDescriptor
 
 
 
-class LiveTileGenerator[PT: ClassManifest,
-                        BT: ClassManifest] (data: RDD[(Double, Double, PT)],
-                                            pyramidScheme: TilePyramid,
-                                            binDescriptor: BinDescriptor[PT, BT],
-                                            numXBins: Int = 256,
-                                            numYBins: Int = 256) {
-  var densityStrip: Boolean = false
+class LiveTileGenerator[PT: ClassTag,
+                        BT: ClassTag] (data: RDD[(Double, Double, PT)],
+                                       pyramidScheme: TilePyramid,
+                                       binDescriptor: BinDescriptor[PT, BT],
+                                       numXBins: Int = 256,
+                                       numYBins: Int = 256) {
+	var densityStrip: Boolean = false
 
-  def getTile (tileLevel: Int, tileX: Int, tileY: Int): TileData[BT] = {
-    // Localize some of our fields to avoid the need for serialization
-    val localPyramidScheme = pyramidScheme
-    val localBinDescriptor = binDescriptor
-    val targetTile = new TileIndex(tileLevel, tileX, tileY, numXBins, numYBins)
+	def getTile (tileLevel: Int, tileX: Int, tileY: Int): TileData[BT] = {
+		// Localize some of our fields to avoid the need for serialization
+		val localPyramidScheme = pyramidScheme
+		val localBinDescriptor = binDescriptor
+		val targetTile = new TileIndex(tileLevel, tileX, tileY, numXBins, numYBins)
 
-    val bins = data.filter(record => {
-      val tile = localPyramidScheme.rootToTile(record._1, record._2, tileLevel)
-      tileX == tile.getX() && tileY == tile.getY()
-    }).map(record => {
-      val bin = localPyramidScheme.rootToBin(record._1, record._2, targetTile)
-      (bin, record._3)
-    }).reduceByKey(localBinDescriptor.aggregateBins(_, _)).collect()
+		val bins = data.filter(record =>
+			{
+				val tile = localPyramidScheme.rootToTile(record._1, record._2, tileLevel)
+				tileX == tile.getX() && tileY == tile.getY()
+			}
+		).map(record =>
+			{
+				val bin = localPyramidScheme.rootToBin(record._1, record._2, targetTile)
+				(bin, record._3)
+			}
+		).reduceByKey(localBinDescriptor.aggregateBins(_, _)).collect()
 
-    val tile = if (densityStrip) new DensityStripData[BT](targetTile)
-               else new TileData[BT](targetTile)
-    for (x <- 0 until numXBins) {
-      for (y <- 0 until numYBins) {
-        tile.setBin(x, y, binDescriptor.defaultBinValue)
-      }
-    }
-    bins.foreach(p => {
-      val bin = p._1
-      val value = p._2
-      tile.setBin(bin.getX(), bin.getY(), binDescriptor.convert(value))
-    })
-    tile
-  }
+		val tile = if (densityStrip) new DensityStripData[BT](targetTile)
+		else new TileData[BT](targetTile)
+		val defaultBinValue = binDescriptor.convert(binDescriptor.defaultProcessedBinValue)
+		for (x <- 0 until numXBins) {
+			for (y <- 0 until numYBins) {
+				tile.setBin(x, y, defaultBinValue)
+			}
+		}
+		bins.foreach(p =>
+			{
+				val bin = p._1
+				val value = p._2
+				tile.setBin(bin.getX(), bin.getY(), binDescriptor.convert(value))
+			}
+		)
+		tile
+	}
 }

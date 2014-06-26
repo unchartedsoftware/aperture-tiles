@@ -24,12 +24,12 @@
  */
 package com.oculusinfo.tile.rendering.transformations;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationProperty;
+import com.oculusinfo.factory.properties.DoubleProperty;
+import com.oculusinfo.factory.properties.StringProperty;
 
-import com.oculusinfo.tile.util.JsonUtilities;
+import java.util.List;
 
 /**
  * A factory for creating {@link IValueTransformer} objects.
@@ -37,55 +37,80 @@ import com.oculusinfo.tile.util.JsonUtilities;
  * @author cregnier
  *
  */
-public class ValueTransformerFactory {
+public class ValueTransformerFactory extends ConfigurableFactory<IValueTransformer> {
+	public static final StringProperty TRANSFORM_NAME    = new StringProperty("name",
+		    "The type of transformation to apply to the data.",
+		    "linear",
+		    new String[] {"linear", "log10", "minmax"});
+	public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("max",
+		    "The maximum value to allow in the input data, when using a minmax transformation",
+		    Double.MAX_VALUE);
+	public static final DoubleProperty TRANSFORM_MINIMUM = new DoubleProperty("min",
+		    "The minimum value to allow in the input data, when using a minmax transformation",
+		    Double.MIN_VALUE);
+	public static final DoubleProperty LAYER_MAXIMUM     = new DoubleProperty("layerMax",
+		    "For use by the server only",
+		    Double.MAX_VALUE);
+	public static final DoubleProperty LAYER_MINIMUM     = new DoubleProperty("layerMin",
+		    "For use by the server only",
+		    Double.MIN_VALUE);
 
-	private static final Logger logger = LoggerFactory.getLogger(ValueTransformerFactory.class);
-	
-	/**
-	 * The default transform type.
-	 */
-	public static final String DEFAULT_TRANSFORM_NAME = "linear";
-	
-	/**
-	 * Creates a new {@link IValueTransformer} based on the parameters in tranformParams.
-	 *  
-	 * @param transformParams
-	 * 	This object can be a couple of different types.
-	 *  <br><br>String: Treats the transformParams as just a simple name. For example: "log10", or "linear"
-	 *  <br><br>{@link JSONObject}: Treats the transformParams as a group of parameters to supply data to
-	 *  the selected value transformer. The 'name' parameter is required or else
-	 *  {@link #DEFAULT_TRANSFORM_NAME} will be used.
-	 *  <br><br>{@link JSONArray}: Treats the transformParams as a single element String or JSONObject.
-	 *  <br><br>Anything else: Treats the transformParams as the default type. 
-	 * @param levelMin
-	 * 	The minimum value seen in the level data.
-	 * @param levelMax
-	 * 	The maximum value seen in the level data.
-	 * @return
-	 * 	Returns the new {@link IValueTransformer}
-	 */
-	public static IValueTransformer create(Object transformParams, double levelMin, double levelMax) {
-		IValueTransformer t;
-		
-		String name = JsonUtilities.getName(transformParams);
-		if (name == null) {
-			logger.warn("layers.transform name was invalid. Using default.");
-			name = DEFAULT_TRANSFORM_NAME;
+
+
+	public ValueTransformerFactory (ConfigurableFactory<?> parent, List<String> path) {
+		this(null, parent, path);
+	}
+
+	public ValueTransformerFactory (String name, ConfigurableFactory<?> parent, List<String> path) {
+		super(name, IValueTransformer.class, parent, path);
+
+		addProperty(TRANSFORM_NAME);
+		addProperty(TRANSFORM_MAXIMUM);
+		addProperty(TRANSFORM_MINIMUM);
+		addProperty(LAYER_MAXIMUM);
+		addProperty(LAYER_MINIMUM);
+	}
+
+	private double _layerMaximum;
+	private double _layerMinimum;
+	// Extrema are calculated properties; we must allow a way to set them.
+	public void setExtrema (double min, double max) {
+		_layerMaximum = max;
+		_layerMinimum = min;
+	}
+
+	@Override
+	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
+		if (LAYER_MAXIMUM.equals(property)) {
+			return property.getType().cast(_layerMaximum);
+		} else if (LAYER_MINIMUM.equals(property)) {
+			return property.getType().cast(_layerMinimum);
 		}
-		
-		//if the transformParams is a JSONObject then cast it, else use an empty one (null object pattern)
-		JSONObject transform = (transformParams instanceof JSONObject)? (JSONObject)transformParams : new JSONObject();
-		
-		if(name.equalsIgnoreCase("log10")){ 
-			t = new Log10ValueTransformer(levelMax);
-		}else if (name.equalsIgnoreCase("minmax")) {
-			double min = JsonUtilities.getDoubleOrElse(transform, "min", levelMin);
-			double max = JsonUtilities.getDoubleOrElse(transform, "max", levelMax);
-			t = new LinearCappedValueTransformer(min, max);
-		}else { //if 'linear'
-			t = new LinearCappedValueTransformer(levelMin, levelMax);
+		return super.getPropertyValue(property);
+	}
+
+	@Override
+	protected IValueTransformer create () {
+		String name = getPropertyValue(TRANSFORM_NAME);
+		double layerMax = getPropertyValue(LAYER_MAXIMUM);
+
+		if ("log10".equals(name)) {
+			return new Log10ValueTransformer(layerMax);
+		} else if ("minmax".equals(name)) {
+			double max;
+			if (hasPropertyValue(TRANSFORM_MAXIMUM)) max = getPropertyValue(TRANSFORM_MINIMUM);
+			else max = layerMax;
+
+			double min;
+			if (hasPropertyValue(TRANSFORM_MINIMUM)) min = getPropertyValue(TRANSFORM_MINIMUM);
+			else min = getPropertyValue(LAYER_MINIMUM);
+
+			return new LinearCappedValueTransformer(min, max, layerMax);
+		} else {
+			// Linear is default, even if passed an unknown type.
+			double min = getPropertyValue(LAYER_MINIMUM);
+			return new LinearCappedValueTransformer(min, layerMax, layerMax);
 		}
-		return t;
 	}
 
 }

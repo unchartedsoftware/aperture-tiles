@@ -24,56 +24,42 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.avro.generic.GenericRecord;
-
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
 import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.generic.GenericRecord;
+
+import java.io.IOException;
 
 public class StringDoublePairArrayAvroSerializer
-    extends GenericAvroArraySerializer<Pair<String, Double>>
+	extends GenericAvroArraySerializer<Pair<String, Double>>
 {
-    private static final long serialVersionUID = -4688654654297779433L;
+	private static final long serialVersionUID = -5333430562560214105L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Pair.class,
+		   new TypeDescriptor(String.class),
+		   new TypeDescriptor(Double.class));
 
 
 
-    public static final Map<String,String> META;
-    static {
-        Map<String,String> map = new HashMap<String, String>();
-        map.put("source", "Oculus Binning Utilities");
-        map.put("data-type", "string-int pair array");
-        META = Collections.unmodifiableMap(map);
-    }
+	public StringDoublePairArrayAvroSerializer(CodecFactory compressionCodec) {
+		super(compressionCodec, TYPE_DESCRIPTOR);
+	}
 
+	@Override
+	protected String getEntrySchemaFile () {
+		return "stringDoublePairEntry.avsc";
+	}
 
+	@Override
+	protected Pair<String, Double> getEntryValue (GenericRecord entry) {
+		return new Pair<String, Double>(entry.get("key").toString(), (Double) entry.get("value"));
+	}
 
-    public StringDoublePairArrayAvroSerializer() {
-        super();
-    }
-
-    @Override
-    protected String getEntrySchemaFile () {
-        return "stringDoublePairEntry.avsc";
-    }
-
-    @Override
-    protected Map<String, String> getTileMetaData () {
-        return META;
-    }
-
-    @Override
-    protected Pair<String, Double> getEntryValue (GenericRecord entry) {
-        return new Pair<String, Double>(entry.get("key").toString(), (Double) entry.get("value"));
-    }
-
-    @Override
-    protected void setEntryValue (GenericRecord avroEntry,
-                                  Pair<String, Double> rawEntry) throws IOException {
-        avroEntry.put("key", rawEntry.getFirst());
-        avroEntry.put("value", rawEntry.getSecond());
-    }
+	@Override
+	protected void setEntryValue (GenericRecord avroEntry,
+	                              Pair<String, Double> rawEntry) throws IOException {
+		avroEntry.put("key", rawEntry.getFirst());
+		avroEntry.put("value", rawEntry.getSecond());
+	}
 }

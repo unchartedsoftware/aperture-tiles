@@ -24,28 +24,38 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
+import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
+import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
-import com.oculusinfo.binning.util.Pair;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>>{
-    private static final long serialVersionUID = -6779123604244971240L;
+public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>> {
+	private static final long serialVersionUID = -7445619308538292627L;
+	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(List.class,
+		   new TypeDescriptor(Pair.class,
+		                      new TypeDescriptor(String.class),
+		                      new TypeDescriptor(Integer.class)));
 
 
 
-    public StringIntPairArrayJSONSerializer() {
+	public StringIntPairArrayJSONSerializer() {
 		super();
 	}
 
 	@Override
-	public JSONArray translateToJSON (List<Pair<String, Integer>> value) {
+	public TypeDescriptor getBinTypeDescription () {
+		return TYPE_DESCRIPTOR;
+	}
+
+	
+	@Override
+	public Object translateToJSON (List<Pair<String, Integer>> value) {
 		JSONArray outputMap = new JSONArray();
 
 		try {

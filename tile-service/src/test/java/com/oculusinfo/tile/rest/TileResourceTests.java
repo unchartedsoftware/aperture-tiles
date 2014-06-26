@@ -24,12 +24,11 @@
  */
 package com.oculusinfo.tile.rest;
 
+import com.oculusinfo.tile.rest.tile.TileResource.ExtensionType;
+import com.oculusinfo.tile.rest.tile.TileResource.ResponseType;
 import org.junit.Assert;
 import org.junit.Test;
 import org.restlet.data.MediaType;
-
-import com.oculusinfo.tile.rest.tile.TileResource.ExtensionType;
-import com.oculusinfo.tile.rest.tile.TileResource.ResponseType;
 
 public class TileResourceTests {
 	@Test

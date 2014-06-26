@@ -22,28 +22,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.examples.apps
 
 
 
 import java.io.FileInputStream
 import java.util.Properties
+
 import scala.collection.JavaConverters._
-import org.apache.spark._
+import scala.reflect.ClassTag
+
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.tiling.ValueOrException
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.tiling.SqliteTileIO
 
 
 
@@ -63,16 +67,16 @@ import com.oculusinfo.tilegen.tiling.TileIO
  *      which to write them
  *
  * 
- *  spark.connection.url
+ *  spark
  *      The location of the spark master.
  *      Defaults to "localhost"
  *
- *  spark.connection.home
+ *  sparkhome
  *      The file system location of Spark in the remote location (and,
  *      necessarily, on the local machine too)
  *      Defaults to "/srv/software/spark-0.7.2"
  * 
- *  spark.connection.user
+ *  user
  *      A user name to stick in the job title so people know who is running the
  *      job
  *
@@ -93,109 +97,119 @@ import com.oculusinfo.tilegen.tiling.TileIO
 
 
 
-class PropertyBasedSparkConnector (properties: PropertiesWrapper)
-extends GeneralSparkConnector(
-  properties.getProperty("spark.connection.url", "local"),
-  properties.getProperty("spark.connection.home", "/srv/software/spark-0.7.2"),
-  properties.getOptionProperty("spark.connection.user"),
-  {
-    val jars = properties.getSeqProperty("spark.connection.classpath")
-    if (jars.isEmpty) {
-      SparkConnector.getDefaultLibrariesFromMaven
-    } else {
-      jars
-    }
-  }
-)
-{
-}
-
-
-
-
 object CSVBinner {
-  def getTileIO(properties: PropertiesWrapper): TileIO = {
-    properties.getProperty("oculus.tileio.type", "hbase") match {
-      case "hbase" => {
-        val quorum = properties.getOptionProperty("hbase.zookeeper.quorum").get
-        val port = properties.getProperty("hbase.zookeeper.port", "2181")
-        val master = properties.getOptionProperty("hbase.master").get
-        new HBaseTileIO(quorum, port, master)
-      }
-      case _ => {
-        val extension =
-            properties.getProperty("oculus.tileio.file.extension",
-                                          "avro")
-        new LocalTileIO(extension)
-      }
-    }
-  }
-  
-  def processDataset[BT: ClassManifest, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit = {
-  	val binner = new RDDBinner
-	binner.debug = true
-	dataset.getLevels.map(levels => {
-	  val procFcn: RDD[(Double, Double, BT)] => Unit =
-	    rdd => {
-	      val tiles = binner.processDataByLevel(rdd,
-						    dataset.getBinDescriptor,
-						    dataset.getTilePyramid,
-						    levels,
-						    dataset.getBins,
-						    dataset.getConsolidationPartitions)
-              tileIO.writeTileSet(dataset.getTilePyramid,
-				  dataset.getName,
-				  tiles,
-				  dataset.getBinDescriptor,
-				  dataset.getName,
-				  dataset.getDescription)
-	    }
-	  dataset.process(procFcn, None)
-	})
-  }
-  
-  /**
-   * This function is simply for pulling out the generic params from the DatasetFactory,
-   * so that they can be used as params for other types.
-   */
-  def processDatasetGeneric[BT, PT] (dataset: Dataset[BT, PT], tileIO: TileIO): Unit =
-    processDataset(dataset, tileIO)(dataset.binTypeManifest)
+	def getTileIO(properties: PropertiesWrapper): TileIO = {
+		properties.getString("oculus.tileio.type",
+		                     "Where to put tiles",
+		                     Some("hbase")) match {
+			case "hbase" => {
+				val quorum = properties.getStringOption("hbase.zookeeper.quorum",
+				                                        "The HBase zookeeper quorum").get
+				val port = properties.getString("hbase.zookeeper.port",
+				                                "The HBase zookeeper port",
+				                                Some("2181"))
+				val master = properties.getStringOption("hbase.master",
+				                                        "The HBase master").get
+				new HBaseTileIO(quorum, port, master)
+			}
+			case "sqlite" => {
+				val path =
+					properties.getString("oculus.tileio.sqlite.path",
+					                     "The path to the database",
+					                     Some(""))
+				new SqliteTileIO(path)
+				
+			}
+			case _ => {
+				val extension =
+					properties.getString("oculus.tileio.file.extension",
+					                     "The extension with which to write tiles",
+					                     Some("avro"))
+				new LocalTileIO(extension)
+			}
+		}
+	}
+	
+	def processDataset[IT: ClassTag,
+	                   PT: ClassTag, 
+	                   BT] (dataset: Dataset[IT, PT, BT],
+	                        tileIO: TileIO): Unit = {
+		val binner = new RDDBinner
+		binner.debug = true
+		dataset.getLevels.map(levels =>
+			{
+				val procFcn: RDD[(IT, PT)] => Unit =
+					rdd =>
+				{
+					val tiles = binner.processDataByLevel(rdd,
+					                                      dataset.getIndexScheme,
+					                                      dataset.getBinDescriptor,
+					                                      dataset.getTilePyramid,
+					                                      levels,
+					                                      (dataset.getNumXBins max dataset.getNumYBins),
+					                                      dataset.getConsolidationPartitions,
+					                                      dataset.isDensityStrip)
+					tileIO.writeTileSet(dataset.getTilePyramid,
+					                    dataset.getName,
+					                    tiles,
+					                    dataset.getBinDescriptor,
+					                    dataset.getName,
+					                    dataset.getDescription)
+				}
+				dataset.process(procFcn, None)
+			}
+		)
+	}
 
-  
-  def main (args: Array[String]): Unit = {
-    if (args.size<1) {
-      println("Usage:")
-      println("\tCSVBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
-      System.exit(1)
-    }
+	/**
+	 * This function is simply for pulling out the generic params from the DatasetFactory,
+	 * so that they can be used as params for other types.
+	 */
+	def processDatasetGeneric[IT, PT, BT] (dataset: Dataset[IT, PT, BT],
+	                                       tileIO: TileIO): Unit =
+		processDataset(dataset, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
 
-    // Read default properties
-    var argIdx = 0
-    var defProps = new Properties()
+	
+	def main (args: Array[String]): Unit = {
+		if (args.size<1) {
+			println("Usage:")
+			println("\tCSVBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
+			System.exit(1)
+		}
 
-    while ("-d" == args(argIdx)) {
-      argIdx = argIdx + 1
-      val stream = new FileInputStream(args(argIdx))
-      defProps.load(stream)
-      stream.close()
-      argIdx = argIdx + 1
-    }
-    val defaultProperties = new PropertiesWrapper(defProps)
+		// Read default properties
+		var argIdx = 0
+		var defProps = new Properties()
 
-    val connector = new PropertyBasedSparkConnector(defaultProperties)
-    val sc = connector.getSparkContext("Pyramid Binning")
-    val tileIO = getTileIO(defaultProperties)
+		while ("-d" == args(argIdx)) {
+			argIdx = argIdx + 1
+			val stream = new FileInputStream(args(argIdx))
+			defProps.load(stream)
+			stream.close()
+			argIdx = argIdx + 1
+		}
+		val defaultProperties = new PropertiesWrapper(defProps)
+		val connector = defaultProperties.getSparkConnector()
+		val sc = connector.getSparkContext("Pyramid Binning")
+		val tileIO = getTileIO(defaultProperties)
 
-    // Run for each real properties file
-    while (argIdx < args.size) {
-      val props = new Properties(defProps)
-      val propStream = new FileInputStream(args(argIdx))
-      props.load(propStream)
-      propStream.close()
+		// Run for each real properties file
+		val startTime = System.currentTimeMillis()
+		while (argIdx < args.size) {
+			val fileStartTime = System.currentTimeMillis()
+			val props = new Properties(defProps)
+			val propStream = new FileInputStream(args(argIdx))
+			props.load(propStream)
+			propStream.close()
 
-      processDatasetGeneric(DatasetFactory.createDataset(sc, props, true), tileIO)
+			processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true), tileIO)
 
-      argIdx = argIdx + 1
-    }
-  }
+			val fileEndTime = System.currentTimeMillis()
+			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
+
+			argIdx = argIdx + 1
+		}
+		val endTime = System.currentTimeMillis()
+		println("Finished binning all sets in "+((endTime-startTime)/60000.0)+" minutes")
+	}
 }

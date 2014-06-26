@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2013-2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
@@ -30,7 +30,7 @@ var aperture = (function(aperture){
 
 /**
  * Source: base.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Defines the Aperture namespace and base functions.
  */
 
@@ -49,7 +49,7 @@ aperture = (function(aperture) {
 	 * The aperture release version number.
 	 * @type String
 	 */
-	aperture.VERSION = '1.0.0';
+	aperture.VERSION = '1.0.7-SNAPSHOT';
 
 	return aperture;
 
@@ -126,7 +126,7 @@ var findFieldChainValue = function( chain, indexes ) {
 
 /**
  * Source: util.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Defines utility functions for Aperture.
  */
 
@@ -243,7 +243,7 @@ aperture.util = (function(ns) {
 	 *      the three arguments
 	 *      <span class="fixedFont">(item, indexOrKey, collection)</span>.
 	 *
-	 * @param until
+	 * @param [until=true]
 	 *      the return value to test for when deciding whether to break iteration.
 	 *
 	 * @param [context]
@@ -257,8 +257,13 @@ aperture.util = (function(ns) {
 	 * @function
 	 */
 	ns.forEachUntil = function ( obj, operation, until, context ) {
-		if ( obj == null ) return;
+		if ( obj == null || operation == null ) return;
 
+		// default to true
+		if (arguments.length === 2) {
+			until = true;
+		}
+		
 		var result;
 
 		// array-like?
@@ -694,7 +699,7 @@ aperture.util = (function(ns) {
 
 /**
  * Source: Class.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Simple JavaScript Inheritance
  */
 
@@ -1026,7 +1031,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: config.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview APIs for interacting with Configurations
  */
 
@@ -1091,7 +1096,7 @@ aperture.config = (function() {
 }());
 /**
  * Source: log.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Logging API implementation
  */
 
@@ -1100,7 +1105,21 @@ aperture.config = (function() {
  */
 
 /**
- * @namespace Aperture logging API
+ * @namespace Aperture logging API. Multiple appenders can be added to log to different
+ * destinations at a specified minimum log level. The logWindowErrors function can be 
+ * configured to log unhandled JavaScript errors as well. Logging can be configured
+ * in the aperture config file (<a href="#constructor">see example</a>) or programmatically.
+ * 
+ * @example 
+ * // example aperture config file section 
+ * aperture.log : {
+ *   level : 'info',
+ *   logWindowErrors : {log: true, preventDefault: true},
+ *     appenders : {
+ *       consoleAppender : {level: 'info'},
+ *       notifyAppender : {level: 'error'}
+ *   }
+ * }
  */
 aperture.log = (function() {
 
@@ -1147,6 +1166,11 @@ aperture.log = (function() {
 		// The global logging level
 		globalLevel = LEVEL.INFO,
 
+		// Log window errors too.
+		logWinErrs = false,
+		eatWinErrs = false,
+		otherWinErrHandler,
+		
 		// The current indentation level.
 		prefix = '',
 		eightSpaces = '        ',
@@ -1371,6 +1395,36 @@ aperture.log = (function() {
 				}
 				
 				return prefix;
+			},
+			
+			/**
+			 * Specifies whether or not to intercept and log Javascript errors, or if no arguments
+			 * are supplied returns true or false indicating the current state.
+			 * 
+			 * @param {Boolean} [log] whether or not to log window errors.
+			 * @param {Boolean} [preventDefault=false] whether or not to prevent the browser's default.
+			 * 
+			 */
+			logWindowErrors : function(log, preventDefault) {
+				if (log == null) {
+					return logWinErrs;
+				}
+				
+				// force it to a boolean.
+				log = !!log;
+
+				if (logWinErrs !== log) {
+					logWinErrs = log;
+					eatWinErrs = !!preventDefault;
+					
+					if (logWinErrs) {
+						otherWinErrHandler = window.onerror;
+						window.onerror = onErr;
+					} else {
+						window.onerror = otherWinErrHandler;
+						otherWinErrHandler = undefined;
+					}
+				}
 			}
 		};
 
@@ -1444,6 +1498,13 @@ aperture.log = (function() {
 		if( logConfig.level ) {
 			api.level( logConfig.level );
 		}
+		
+		// log JS errors?
+		var winErrs = logConfig.logWindowErrors;
+		
+		if (winErrs) {
+			api.logWindowErrors( !!winErrs.log, winErrs.preventDefault );
+		}
 
 		// For all defined appenders...
 		aperture.util.forEach( logConfig.appenders, function(value, key) {
@@ -1460,12 +1521,23 @@ aperture.log = (function() {
 			}
 		});
 	});
+	
+	function onErr(msg, url, line) {
+		api.error(msg + ' ' + url + ':' + line);
+		
+		// chain on
+		if (otherWinErrHandler) {
+			otherWinErrHandler.apply(this, arguments);
+		}
+		
+		return eatWinErrs;
+	}
 
 	return api;
 }());
 /**
  * Source: Canvas.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview The base canvas classes.
  */
 
@@ -2048,7 +2120,7 @@ function(namespace) {
 
 /**
  * Source: Animation.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Animation APIs
  */
 
@@ -2134,7 +2206,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Layer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Abstract Layer Class Implementation
  */
 
@@ -2179,6 +2251,8 @@ function(namespace) {
 		// Initialize unique properties.
 		node.uid      = (nextUid++).toString();
 		node.parent   = parent;
+		node.next     = null;
+		node.prev     = null;
 		node.layer    = layer;
 		node.kids     = {};
 		node.userData = {};
@@ -2253,16 +2327,19 @@ function(namespace) {
 	 * store references their adjacent nodes rather than externalizing that in a list structure.
 	 */
 	function linkNode( node, prev ) {
-		
-		// assume next is handled. this is a private and optimized process.
 		if (prev == null) {
+			// Insert node at head of layer's node list
+			node.next = node.layer.nodes_;
 			node.layer.nodes_ = node;
 			node.prev = null;
-			node.next = null;
 		} else {
+			// Insert node elsewhere
+			node.next = prev.next;
 			prev.next = node;
 			node.prev = prev;
-			node.next = null;
+		}
+		if (node.next) {
+			node.next.prev = node;
 		}
 	}
 
@@ -2280,7 +2357,7 @@ function(namespace) {
 		
 		if (c.next) {
 			c.next.prev = c.prev;
-		}
+		} 
 	}
 	
 	/**
@@ -2310,9 +2387,10 @@ function(namespace) {
 		
 		// DATA CHANGED? SORT *ALL* CHANGES OUT AND RETURN
 		// if our data changes, we have to execute a full pass through everything
-		// to sort into add/changed/removed. EVERYTHING is touched. this could be made more
+		// to sort into add/changed/removed. Adds and removes are always processed, and changes
+		// are only marked if the hints dictate a data changed happened. this could be made more
 		// efficient if data models exposed chg fns to the user - i.e. w/ adds, joins etc.
-		if (myChangeSet.dataChanged) {
+		if (this.dataChangeHints) {
 			var allParents  = (this.parentLayer_ && this.parentLayer_.nodes_) || this.rootNode_,
 				adds = myChangeSet.added,
 				rmvs = myChangeSet.removed,
@@ -2327,7 +2405,7 @@ function(namespace) {
 			for (dad = allParents; dad != null; dad = dad.next) {
 				var existing = indexNodes(dad.kids[myUid]),
 					newkids = dad.kids[myUid] = [];
-				
+
 				// for all my new items, look for matches in existing.
 				forEach( this.dataItems( dad.data ), function( dataItem ) {
 					c = null;
@@ -2367,15 +2445,14 @@ function(namespace) {
 						c.data = dataItem;
 						c.idFn = idFunction;
 
-						// only process further if showing.
-						if (updateVisibility(c)) {
+						// only process further if showing and hints say data actually changed
+						if (updateVisibility(c) && this.dataChangeHints.changed) {
 							chgs.push(c);
 						}
 						
 					// else make new
 					} else {
 						adds.push( c = addNode( this, dad, prev, dataItem ) );
-						
 					}
 					
 					prev = c;
@@ -2686,6 +2763,42 @@ function(namespace) {
 
 			/**
 			 * ${protected}
+			 * Returns one or more values transformed using registered mappings. This method
+			 * is similar to valueFor but excludes the data lookup.
+			 *
+			 * @param {Object|String,Object} properties
+			 *      Named property values to transform using the layer's mapping, supplied
+			 *      as an object or a name argument and value argument.
+			 *
+			 * @returns the values of the visual properties as an object if called with an object,
+			 * 		or as a single transformed value if called with name, value arguments. If
+			 * 		no mapping exists this method will return undefined.
+			 */
+			transform : function( properties, value, filterData, filterIndex ) {
+				var mapping;
+				
+				if (properties) {
+					if (arguments.length > 1) {
+						if (mapping = this.maps_[properties]) {
+							return mapping.value( value, filterData, filterIndex );
+						}
+					} else {
+						var mapped = {};
+						var maps = this.maps_;
+						
+						forEach(properties, function(value, value) {
+							if (mapping = maps[name]) {
+								mapped[name] = mapping.value( value, filterData, filterIndex );
+							}
+						});
+						
+						return mapped;
+					}
+				}
+			},
+
+			/**
+			 * ${protected}
 			 * Returns the values for a supplied set of visual properties given the object that
 			 * will be the source of the data for the mapping.  If the name of the property
 			 * does not have a corresponding mapping undefined will be returned.
@@ -2804,15 +2917,19 @@ function(namespace) {
 						this.idFunction = data && data.length && data[0].id? getId : null;
 					}
 					
-					// mark changed for next render loop.
-					this.dataChanged = true;
+					// mark everything changed for next render loop.
+					this.dataChangeHints = {
+						delta: true,
+						changed: true
+					};
 				}
 				
 				return new aperture.Layer.LogicalNodeSet(this);
 			},
 			
 			/**
-			 * TODO: implement. Adds to the logical set of all layer nodes, returning the set of added items.
+			 * Adds to the logical set of all layer nodes, returning the set of added items. The idFunction, 
+			 * if given via join or all, remains unchanged.
 			 * 
 			 * @param {Array|Object} data
 			 *      the array of data objects, from which each node will be mapped.  May be an array 
@@ -2824,7 +2941,70 @@ function(namespace) {
 			 *      the set of added layer nodes.
 			 */
 			add : function( data ) {
-				
+				if (this.hasLocalData && this.dataItems.values) {
+					// Existing dataset to add to
+					var newData = this.dataItems.values.concat(data);
+					this.dataItems = function() {
+						return newData;
+					};
+					this.dataItems.values = newData;
+
+					this.dataChangeHints = this.dataChangeHints || {};
+					this.dataChangeHints.delta = true;
+
+					// return a nodeset filtered to the new data
+					return new aperture.Layer.LogicalNodeSet(this).where(data);
+				} else if (this.hasLocalData) {
+					// Local data is a function operator on the parent, illegal call to add
+					throw new Error('Can only add data to a layer with a dataset already specified');
+				} else {
+					// No local data, this add is the same as calling all
+					return this.all(data);
+				}
+			},
+
+			/**
+			 * ${protected}
+			 * Removes the contents of a nodeset from this layer's data. This is used internally
+			 * by the framework, {@link aperture.Layer.NodeSet#remove} should be used instead of
+			 * this method.
+			 * 
+			 * @param {aperture.Layer.NodeSet} nodeset
+			 *      The set of data nodes to remove from this layer.
+			 *
+			 * @returns {aperture.Layer.NodeSet} the removed nodeset
+			 */
+			removeNodeSet : function ( nodeset ) {
+				if (this.hasLocalData && this.dataItems.values) {
+					var removeIter = nodeset.data(),
+						removedArray = [],
+						node;
+
+					// Create searchable array of values to remove from iter
+					while (node = removeIter.next()) {
+						removedArray.push(node);
+					}
+
+					// filter out values to remove
+					var newData = util.filter(this.dataItems.values, function(value) {
+						return !util.has(removedArray, value);
+					});
+
+					this.dataItems = function() {
+						return newData;
+					};
+					this.dataItems.values = newData;
+
+					// Mark delta changes, no changes to existing data
+					this.dataChangeHints = this.dataChangeHints || {};
+					this.dataChangeHints.delta = true;
+
+					// return a nodeset filtered to the new data
+					return nodeset;
+				} else {
+					// Local data is a function operator on the parent, illegal call to add
+					throw new Error('Can only remove data from a layer with a dataset already specified');
+				}
 			},
 			
 			/**
@@ -2854,15 +3034,20 @@ function(namespace) {
 				var chgs = myChangeSet.changed = [],
 					adds = myChangeSet.added = [],
 					rmvs = myChangeSet.removed = [];
-				
-				// is data changed locally or in a parent that we subselect from?
-				myChangeSet.dataChanged = this.dataChanged || (parentChangeSet.dataChanged && hasLocalData && !this.dataItems.values);
 
-				
-				// reset now that we're going to process.
-				this.dataChanged = false;
+				// If "changes" in parent changeset represent actual *data* changes, mark our change hints to
+				// reflect this. Will result in full reprocess of data
+				if (parentChangeSet.dataChanged && hasLocalData && !this.dataItems.values) {
+					this.dataChangeHints = this.dataChangeHints || {};
+					this.dataChangeHints.changed = true;
+				}
 
+				// Mark set of "changes" in this changeset as actual *data* changes not just requests to redraw
+				// if data in this layer was actually changed or flag is cascading down from parent and this layer's
+				// data is computed via data subselect
+				myChangeSet.dataChanged = this.dataChangeHints && this.dataChangeHints.changed;
 				
+
 				// SHORTCUT REMOVAL
 				// if we rendered local data last time and not this, or vice versa,
 				// we need to destroy everything and rebuild to respect new orders of data.
@@ -2976,7 +3161,7 @@ function(namespace) {
 				// adds always propagate down, but not changes if they are not visible.
 				// form the list here of everything that need drawing/redrawing.
 				if (adds.length !== 0) {
-					var draw = myChangeSet.updates = myChangeSet.changed.splice();
+					var draw = myChangeSet.updates = myChangeSet.changed.slice();
 					
 					// on construction we did not create graphics unless it was visible
 					forEach(adds, function(c) {
@@ -3010,6 +3195,9 @@ function(namespace) {
 					log.debug(clist);
 					log.debug(rlist);
 				}
+
+				// Done processing changes, reset hints
+				this.dataChangeHints = null;
 				
 				return myChangeSet;
 			},
@@ -3516,7 +3704,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Class.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Implements the ability to wrap any root layer as a vizlet.
  *
  */
@@ -3569,7 +3757,7 @@ function(namespace) {
 						anchorPoint: [0,0],
 						userData: {},
 						graphics : aperture.canvas.NO_GRAPHICS,
-						kids: []
+						kids: {}
 					};
 
 			// an actual element?
@@ -3706,7 +3894,7 @@ function(namespace) {
 }(aperture.vizlet || {}));
 /**
  * Source: BarLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Bar Layer
  */
 aperture = (
@@ -3834,34 +4022,39 @@ function(namespace) {
 				var maxLength = orientation == 'vertical'?node.height:node.width;
 				
 				for (index=0; index < numBars; index++){
-					// Check if the point is visible.
+					var width = this.valueFor('width', node.data, 2, index),
+						length = this.valueFor('length', node.data, 0, index),
+						xp = this.valueFor('x', node.data, 0, index) * node.width,
+						yp = this.valueFor('y', node.data, 0, index) * node.height,
+						xd = orientation === 'vertical'? width:length,
+						yd = orientation === 'vertical'? length:width;
+					
 					var isVisible = this.valueFor('bar-visible', node.data, true, index, seriesId);
 
-					if (isVisible){
-						var startValue = this.valueFor('x', node.data, 0, index),
-							width = this.valueFor('width', node.data, 2, index),
-							length = this.valueFor('length', node.data, 0, index),
-							startPt = (startValue * node.width) + (node.position[0]||0),
-							yPoint = (this.valueFor('y', node.data, 0, index) * node.height) + (node.position[1]||0),
-					        offsetX = this.valueFor('offset-x', node.data, 0, index),
-					        offsetY = this.valueFor('offset-y', node.data, 0, index);
+					xp += this.valueFor('offset-x', node.data, 0, index);
+                    yp += this.valueFor('offset-y', node.data, 0, index);
 
-
-						var barSpec = {
-								id : index,
-								x : startPt + offsetX,
-								y : yPoint + offsetY,
-								size : {
-									width : orientation == 'vertical'?width:length,
-									height : orientation == 'vertical'?length:width
-								},
-								strokeWidth : 1,
-								orientation : orientation,
-								visible : isVisible,
-								node : node
-						};
-						barSpecs.push(barSpec);
+					if (xd < 0) {
+						xp += xd;
+						xd = -xd;
 					}
+					
+					if (yd < 0) {
+						yp += yd;
+						yd = -yd;
+					}
+					
+					var barSpec = {
+							id : index,
+							x : xp+ (node.position[0]||0),
+							y : yp+ (node.position[1]||0),
+							size : {width: xd, height: yd},
+							strokeWidth : 1,
+							orientation : orientation,
+							visible : isVisible,
+							node : node
+					};
+					barSpecs.push(barSpec);
 				}
 				seriesSpec[seriesId] = barSpecs; 
 			}
@@ -3895,14 +4088,22 @@ function(namespace) {
 							node.userData.bars = {};
 						}
 						
-						var barSeriesData = barSpec.node.data;
-						var lineStroke = this.valueFor('stroke', barSeriesData, 'none', index);
-						var barLayout =	this.valueFor('bar-layout', barSeriesData, null, index);
-
 						// Check if this bar already exists for this node. If it does
 						// we want to do an update. Otherwise we'll create a new graphic
 						// object for it.
 						var bar = node.userData.bars[index];
+
+						if (!barSpec.visible){
+							if (bar) {
+								node.graphics.remove(bar);
+								delete node.userData.bars[index];
+							}
+							continue;
+						}
+
+						var barSeriesData = barSpec.node.data;
+						var lineStroke = this.valueFor('stroke', barSeriesData, 'none', index);
+						var barLayout =	this.valueFor('bar-layout', barSeriesData, null, index);
 
 						// Check if the visual exceeds the current context size,
 						// culling if necessary.
@@ -3958,7 +4159,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Color.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Color APIs
  */
 
@@ -4586,8 +4787,205 @@ function(namespace) {
 
 }(aperture || {}));
 /**
+ * Source: Date.js
+ * Copyright (c) 2013-2014 Oculus Info Inc.
+ * @fileOverview Aperture Date APIs
+ */
+
+/**
+ * @ignore
+ * Ensure namespace exists
+ */
+aperture = (
+/** @private */
+function(namespace) {
+
+	var util = aperture.util;
+
+	var dateFields = ['FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'];
+
+	namespace.Date = aperture.Class.extend( 'aperture.Date', {
+		/** @private */
+		_utc: true,
+		/** @private */
+		_date: null,
+
+		/**
+		 * @class 
+		 *
+		 * @constructs
+		 * @description
+		 * Constructs a new Date object. By default the date will be represented (e.g. via 
+		 * methods like get('Hours')) in UTC.
+		 *
+		 * @param {String|Number|Date} date
+		 *      the date value (as a string to be parsed, number of milliseconds past epoch,
+		 *      or existing aperture/javascript Date object)
+		 * @param {Object} [options]
+		 *      an optional options object. Currently only supports local: true which directs
+		 *      the date object to represent time units in local time.
+		 *
+		 * @returns {this}
+		 *      a new Date
+		 */
+		init: function(date, options) {
+			if (Object.prototype.toString.call(date) === '[object Date]') {
+				this._date = date;
+			} else {
+				this._date = new Date(date.valueOf());
+			}
+			this._utc = !(options && options.local);
+		},
+
+		/**
+		 * Returns the unit value (e.g. year, minute, etc) of the date. If no unit given, returns
+		 * a hash of all date unit fields to values
+		 *
+		 * @param {String} [unit]
+		 *  If given, one of 'FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'.
+		 *  If not specified, will return an object containing values for all fields.
+		 *
+		 * @returns {Number|Object}
+		 *  If a unit is given, returns the numerical value. If no unit, returns an object containing
+		 *  values for each field where the keys are the supported unit names.
+		 */
+		get: function(unit) {
+			if (unit) {
+				var getter = 'get' + (this._utc ? 'UTC' : '') + unit;
+				if (!this._date[getter]) {
+					throw new Error('Unrecognized date unit: ' + unit);
+				}
+				return this._date[getter]();
+			} else {
+				var self = this, 
+					result = {};
+				util.forEach(dateFields, function(unit) {
+					result[unit] = self.get(unit);
+				});
+				return result;
+			}
+		},
+
+		/**
+		 * Sets one or more units of this date to a given value. Supports setting one unit at a time
+		 * or multiple units at once. This function mutates the Date object.
+		 *
+		 * @example
+		 * // Set only the year to 1997
+		 * date.set(1997, 'FullYear');
+		 *
+		 * // Date and Hour
+		 * date.set({
+		 *   Date: 18,
+		 *   Hours: 7
+		 * });
+		 *
+		 * @param {Number|Object} value
+		 *  If a number is given it must be combined with a unit. The number + unit will be used to set
+		 *  the desired value. If an object is given it must contain keys from the set of allowed units.
+		 *
+		 * @param {String} [unit]
+		 *  Optional, one of 'FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		set: function(value, unit) {
+			var prefix = (this._utc ? 'setUTC' : 'set');
+
+			if (util.isObject(value)) {
+				var newValues = util.extend(this.get(), value);
+				this._date[prefix+'FullYear']( newValues.FullYear, newValues.Month, newValues.Date );
+				this._date[prefix+'Hours']( newValues.Hours, newValues.Minutes, newValues.Seconds, newValues.Milliseconds );
+			} else {
+				if (!this._date[prefix+unit]) {
+					throw new Error('Unrecognized date unit: ' + unit);
+				}
+				this._date[prefix+unit](value);
+			}
+
+			return this;
+		},
+
+		/**
+		 * Alters the date's timezone, sets to UTC. The actual date-time represented by this object
+		 * remains unchanged. Calling this only affects the numbers returned via get('Hours'), etc.
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		utc: function() {
+			this._utc = true;
+			return this;
+		},
+
+
+
+		/**
+		 * Alters the date's timezone, sets to the local timezone. The actual date-time represented by this object
+		 * remains unchanged. Calling this only affects the numbers returned via get('Hours'), etc.
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		local: function() {
+			this._utc = false;
+			return this;
+		},
+
+		/**
+		 * Returns the number of milliseconds since the Unix Epoch. Equivalent to JavaScript built-in Date
+		 * .valueOf() and .getTime().
+		 *
+		 * @returns {Number}
+		 *  The number of milliseconds since the unix epoch.
+		 */
+		valueOf: function() {
+			return this._date.valueOf();
+		},
+
+		/**
+		 * Adds the specified value and unit of time to this Date object.
+		 *
+		 * @example
+		 * // Adds 12 hours to the date
+		 * date.add(12, 'Hours');
+		 *
+		 * @param {Number} value
+		 *  The numerical value of the value/unit combination to add to the current date.allowed units.
+		 *
+		 * @param {String} unit
+		 *  One of 'FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'
+		 *
+		 * @returns {this}
+		 *  The modified date object.
+		 */
+		add: function(value, unit) {
+			var normalizedUnit = (this._utc ? 'UTC' : '') + unit;
+			this._date['set'+normalizedUnit]( this._date['get'+normalizedUnit]() + value);
+			return this;
+		},
+
+		/**
+		 * JavaScript standard toString function. Delegates to JavaScript built-in Date object's
+		 * toString or toUTCString depending on date's timezone setting.
+		 *
+		 * @returns {String}
+		 *  String representation of the current date.
+		 */
+		toString: function() {
+			if (this._utc) {
+				return this._date.toUTCString();
+			} else {
+				return this._date.toString();
+			}
+		}
+	});
+
+	return namespace;
+}(aperture || {}));/**
  * Source: Format.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Formats values.
  */
 
@@ -4599,6 +4997,8 @@ function(namespace) {
 aperture = (
 /** @private */
 function(namespace) {
+
+	var util = namespace.util;
 
 	// TODO: extend these to take precise format specifications as a string.
 
@@ -4649,7 +5049,7 @@ function(namespace) {
 			 * of doing so:
 			 *
 			 * @example
-			 * var hourFormat = aperture.Format.getTimeFormat( 'Hours' );
+			 * var hourFormat = aperture.Format.getTimeFormat( {precision: 'Hours'} );
 			 *
 			 * // displays 'Date'
 			 * alert( hourFormat.nextOrder() );
@@ -4680,6 +5080,11 @@ function(namespace) {
 		{
 			/**
 			 * @private
+			 */
+			decimals : 0,
+			
+			/**
+			 * @private
 			 *
 			 * @param {Number} [precision]
 			 *      The optional precision of the value to format. For numbers this
@@ -4693,7 +5098,14 @@ function(namespace) {
 					if (isNaN(precision)) {
 						aperture.log.warn('Invalid precision "' + precision + '" in NumberFormat');
 					} else {
-						this.precision = precision;
+						var p = this.precision = Number(precision);
+						if (p < 1) {
+							var s = p.toString();
+							var i = s.indexOf('.');
+							if (i !== -1) {
+								this.decimals = s.length-1-i;
+							}
+						}
 					}
 				}
 			},
@@ -4717,7 +5129,14 @@ function(namespace) {
 					value = Number(value);
 				}
 
-				return String(value);
+				var s = value.toFixed(this.decimals);
+				var i = s.indexOf('.');
+				
+				for (i = (i!==-1?i:s.length)-3; i > 0; i -= 3) {
+					s = s.substring(0, i).concat(',').concat(s.substring(i));
+				}
+				
+				return s;
 			}
 		}
 	);
@@ -4752,7 +5171,7 @@ function(namespace) {
 	 *
 	 * @name aperture.NumberFormat
 	 */
-	namespace.CurrencyFormat = namespace.Format.extend( 'aperture.CurrencyFormat',
+	namespace.CurrencyFormat = namespace.NumberFormat.extend( 'aperture.CurrencyFormat',
 		{
 			/**
 			 * @private
@@ -4771,13 +5190,20 @@ function(namespace) {
 			init : function (precision, prefix, suffix) {
 				if (precision) {
 					if (isNaN(precision)) {
-						aperture.log.warn('Invalid precision "' + precision + '" in NumberFormat');
+						aperture.log.warn('Invalid precision "' + precision + '" in CurrencyFormat');
 					} else {
-						this.precision = precision;
+						var p = this.precision = Number(precision);
+						if (p < 1) {
+							var s = p.toString();
+							var i = s.indexOf('.');
+							if (i !== -1) {
+								this.decimals = s.length-1-i;
+							}
+						}
 					}
 				}
-				this.prefix = (prefix) ? prefix : '';
-				this.suffix = (suffix) ? suffix : '';
+				this.prefix = prefix || '';
+				this.suffix = suffix || '';
 			},
 
 			/**
@@ -4818,9 +5244,10 @@ function(namespace) {
 				
 				var sign = (value < 0) ? '-' : '';
 				
-				var s = number.toString();
+				var s = number.toFixed(this.decimals);
+				var i = s.indexOf('.');
 				
-				for (var i = s.length-3; i > 0; i -= 3) {
+				for (i = (i!==-1?i:s.length)-3; i > 0; i -= 3) {
 					s = s.substring(0, i).concat(',').concat(s.substring(i));
 				}
 				
@@ -4864,38 +5291,38 @@ function(namespace) {
 			return num < 10? '0' + num : String(num);
 		}
 		function hh12( date ) {
-			var h = date.getHours();
+			var h = date.get('Hours');
 			return h? (h < 13? String(h) : String(h - 12)) : '12';
 		}
 		function ampm( date ) {
-			return date.getHours() < 12? 'am' : 'pm';
+			return date.get('Hours') < 12? 'am' : 'pm';
 		}
 		function millis( date ) {
-			return ':' + ((date.getSeconds()*1000 + date.getMilliseconds())/1000) + 's';
+			return ':' + ((date.get('Seconds')*1000 + date.get('Milliseconds'))/1000) + 's';
 		}
 		function ss( date ) {
-			return ':' + pad2(date.getSeconds()) + 's';
+			return ':' + pad2(date.get('Seconds')) + 's';
 		}
 		function hhmm( date ) {
-			return hh12(date) + ':' + pad2(date.getMinutes()) + ampm(date);
+			return hh12(date) + ':' + pad2(date.get('Minutes')) + ampm(date);
 		}
 		function hh( date ) {
 			return hh12(date) + ampm(date);
 		}
 		function mondd( date ) {
-			return months[date.getMonth()] + ' '+ date.getDate();
+			return months[date.get('Month')] + ' '+ date.get('Date');
 		}
 		function day( date ) {
-			return days[date.getDay()] + ' ' + mondd(date);
+			return days[date.get('Day')] + ' ' + mondd(date);
 		}
 		function mon( date ) {
-			return months[date.getMonth()];
+			return months[date.get('Month')];
 		}
 		function year( date ) {
-			return String(date.getFullYear());
+			return String(date.get('FullYear'));
 		}
 		function yy( date ) {
-			return "'" + String(date.getFullYear()).substring(start, end);
+			return "'" + String(date.get('FullYear')).substring(start, end);
 		}
 
 		return {
@@ -4928,24 +5355,42 @@ function(namespace) {
 	namespace.TimeFormat = namespace.Format.extend( 'aperture.TimeFormat',
 
 		{
+			/** @private */
+			_utc: true,
+
 			/**
 			 * @private
 			 *
-			 * @param {String} [precision]
+			 * @param {Object|String} [options]
+			 *      Optional options hash to affect time formatting behaviour. For backwards 
+			 *      compatibility also supports passing precision (see below) as a string
+			 *
+			 * @param {String} [options.precision]
 			 *      The optional precision of the value to format. For times this
 			 *      will be a Date field reference, such as 'FullYear' or 'Seconds'.
+			 *
+			 * @param {Boolean} [options.local]
+			 *      When true, causes the formatter to display times using the local 
+			 *      timezone (vs the default UTC)
 			 *
 			 * @returns {aperture.TimeFormat}
 			 *      A new time format object.
 			 */
-			init : function ( precision ) {
-				if (precision) {
-					this.order = timeOrders[precision];
-
-					if (!this.order) {
-						aperture.log.warn('Invalid precision "' + precision + '" in TimeFormat');
+			init : function ( options ) {
+				if (util.isString(options)) {
+					options = {
+						precision: options
 					}
 				}
+				if (options && options.precision) {
+					this.order = timeOrders[options.precision];
+
+					if (!this.order) {
+						aperture.log.warn('Invalid precision "' + options.precision + '" in TimeFormat');
+					}
+				}
+
+				this._utc = !(options && options.local);
 			},
 
 			/**
@@ -4962,8 +5407,8 @@ function(namespace) {
 
 				// precision based formatting?
 				if ( value != null ) {
-					if (!value.getTime) {
-						value = new Date(value);
+					if (!value.typeOf || !value.typeOf(aperture.Date)) {
+						value = new aperture.Date(value, {local: !this._utc});
 					}
 					if ( this.order ) {
 						return this.order.format( value );
@@ -4989,9 +5434,17 @@ function(namespace) {
 	/**
 	 * Returns a time format object, suitable for formatting dates and times.
 	 *
-	 * @param {String} [precision]
+	 * @param {Object|String} [options]
+	 *      Optional options hash to affect time formatting behaviour. For backwards 
+	 *      compatibility also supports passing precision (see below) as a string
+	 *
+	 * @param {String} [options.precision]
 	 *      The optional precision of the value to format. For times this
 	 *      will be a Date field reference, such as 'FullYear' or 'Seconds'.
+	 *
+	 * @param {Boolean} [options.local]
+	 *      When true, causes the formatter to display times using the local 
+	 *      timezone (vs the default UTC)
 	 *
 	 * @returns {aperture.Format}
 	 *      a time format object.
@@ -4999,8 +5452,8 @@ function(namespace) {
 	 * @name aperture.Format.getTimeFormat
 	 * @function
 	 */
-	namespace.Format.getTimeFormat = function( precision ) {
-		return new namespace.TimeFormat( precision );
+	namespace.Format.getTimeFormat = function( options ) {
+		return new namespace.TimeFormat( options );
 	};
 
 	return namespace;
@@ -5009,7 +5462,7 @@ function(namespace) {
 
 /**
  * Source: IconLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Icon Layer Implementation
  */
 
@@ -5026,7 +5479,8 @@ function(namespace) {
 			'x' : 0,
 			'y' : 0,
 			'width' : 24,
-			'height' : 24
+			'height' : 24,
+			'opacity': ''
 		},
 		ontoDefaults = {
 			'ontology' : 'aperture-hscb',
@@ -5044,22 +5498,25 @@ function(namespace) {
 			 * @class Represents a layer of point located icons representing ontological
 			 * types with attributes. Icons may vary in size.<br><br>
 			 *
-			 * In addition to core {@link aperture.Layer Layer} properties, icon layer properties include all icon 
+			 * In addition to core {@link aperture.Layer Layer} properties, icon layer properties include all icon
 			 * <a href='aperture.palette.html#.icon'>palette</a> properties, and the following:
-			 * 
+			 *
 			 * @mapping {String} url
 			 *   The url of the icon to use. This optional property is provided for situations when a
 			 *   specific image is desired, outside of the ontological resolution of types to symbols.
-			 *   
-			 * @mapping {Number} anchor-x
-			 *   The x-anchor point in the range [0,1] for the icon.
-			 * 
-			 * @mapping {Number} anchor-x
-			 *   The y-anchor point in the range [0,1] for the icon.
-			 *      
-			 * @mapping {Number} icon-count
+			 *
+			 * @mapping {Number=0.5} anchor-x
+			 *   The x-anchor point in the range [0,1] for the icon, where 0.5 is the centre.
+			 *
+			 * @mapping {Number=0.5} anchor-y
+			 *   The y-anchor point in the range [0,1] for the icon, where 0.5 is the centre.
+			 *
+			 * @mapping {Number=1.0} opacity
+			 *   How opaque the icon will be in the range [0,1].
+			 *
+			 * @mapping {Number=1} icon-count
 			 *   The number of icons to be drawn.
-			 * 
+			 *
 			 * @constructs
 			 * @factoryMade
 			 * @extends aperture.Layer
@@ -5086,7 +5543,7 @@ function(namespace) {
 					var node = toProcess[i],
 						data = node.data,
 						gfx = node.graphics,
-						w = node.width, 
+						w = node.width,
 						h = node.height,
 						icons = node.userData.icons || (node.userData.icons = []),
 						index;
@@ -5102,7 +5559,7 @@ function(namespace) {
 						rattrs.src = this.valueFor('url', data, '', index);
 						if (!rattrs.src) {
 							var oattrs = this.valuesFor(ontoDefaults, data);
-							
+
 							if (oattrs.format !== 'svg') {
 								oattrs.width = rattrs.width;
 								oattrs.height = rattrs.height;
@@ -5110,38 +5567,31 @@ function(namespace) {
 							rattrs.src = aperture.palette.icon(oattrs);
 						}
 
-						// culling
-						if (rattrs.x > w || rattrs.x + rattrs.width < 0 ||
-								rattrs.y > h || rattrs.y + rattrs.height < 0) {
-							// Only draw points that are within the bounds of the current node.
-							// TODO: this will repurpose existing but changes the visual to item match.
-							continue;
+						var visual = icons[visiblePoints];
+
+						// PROCESS GRAPHICS.
+						if (visual) {
+							gfx.update(visual, rattrs, changeSet.transition);
 						} else {
-							var visual = icons[visiblePoints];
+							visual = gfx.image(
+									rattrs.src,
+									rattrs.x,
+									rattrs.y,
+									rattrs.width,
+									rattrs.height);
 
-							// PROCESS GRAPHICS.
-							if (visual) {
-								gfx.update(visual, rattrs, changeSet.transition);
-							} else {
-								visual = gfx.image(
-										rattrs.src,
-										rattrs.x,
-										rattrs.y,
-										rattrs.width,
-										rattrs.height);
-
-								gfx.apparate(visual, changeSet.transition);
-								icons.push(visual);								
-							}
-
-							gfx.data( visual, data );
-							visiblePoints++;
+							gfx.update(visual, rattrs);
+							gfx.apparate(visual, changeSet.transition);
+							icons.push(visual);
 						}
+
+						gfx.data( visual, data );
+						visiblePoints++;
 					}
 					// Remove any obsolete visuals.
 					if (icons.length > visiblePoints){
 						gfx.removeAll(icons.splice(visiblePoints));
-					}		
+					}
 				}
 			}
 		}
@@ -5153,7 +5603,7 @@ function(namespace) {
 
 /**
  * Source: LabelLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Text Layer
  */
 
@@ -5199,6 +5649,9 @@ function(namespace) {
 		 * @mapping {Number=0} offset-y
 		 *   The offset along the y-axis by which to shift the text after it has been positioned at (x,y).
 
+		 * @mapping {Number=1.0} opacity
+		 *   How opaque the label will be in the range [0,1].
+
 		 * @mapping {'middle'|'start'|'end'} text-anchor
 		 *   How the label is aligned with respect to its x position.
 
@@ -5224,6 +5677,9 @@ function(namespace) {
 		 *   
 		 * @mapping {Number=3} font-outline-width
 		 *   The width of the outline drawn around each character of text, if font-outline is not none.
+		 *   
+		 * @mapping {Number=1.0} font-outline-opacity
+		 *   How opaque the font outline will be.
 		 *   
 		 * @constructs
 		 * @factoryMade
@@ -5274,11 +5730,12 @@ function(namespace) {
 
 					// Make the outline and fill colour the same.
 					var fillColor = this.valueFor('fill', node.data, '#000000', index);
+					var opacity = this.valueFor('opacity', node.data, '', index);
 					var outlineColor = this.valueFor('font-outline', node.data, 'none', index);
 					var xPoint = (this.valueFor('x', node.data, 0, index) * node.width) + (node.position[0]||0);
 					var yPoint = (this.valueFor('y', node.data, 0, index) * node.height) + (node.position[1]||0);
 					var outlineWidth = outlineColor !== 'none' && this.valueFor('font-outline-width', node.data, 3, index);
-
+					
 					var connect = this.valueFor('connect', node.data, false, index);
 
 					var str = this.valueFor('text', node.data, '', index);
@@ -5329,7 +5786,8 @@ function(namespace) {
 							'font-size': fontSize,
 							'font-weight': fontWeight,
 							'text-anchor': textAnchor,
-							'transform': transform
+							'transform': transform,
+							'opacity': opacity
 							};
 					var fattr;
 
@@ -5343,6 +5801,18 @@ function(namespace) {
 							'fill': fillColor
 						}, attr);
 						
+						var oopacity = 
+							this.valueFor('font-outline-opacity', node.data, 1.0, index);
+						
+						if (oopacity !== '' && oopacity != null && oopacity !== 1) {
+							if (opacity !== '' && opacity != null) {
+								oopacity = Math.min(1.0, opacity * oopacity);
+							}
+						} else {
+							oopacity = opacity;
+						}
+						
+						attr['opacity']= oopacity !== 1? oopacity : '';
 						attr['stroke-width']= outlineWidth;
 						attr['stroke']= outlineColor;
 						attr['stroke-linecap']= 'round';
@@ -5406,7 +5876,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: LinkLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Link Layer Implementation
  */
 
@@ -5615,7 +6085,7 @@ function(namespace) {
 
 /**
  * Source: MapKey.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Map Keys for mapping from one space (e.g. data) into another (e.g. visual)
  */
 
@@ -5635,8 +6105,8 @@ function(namespace) {
 			/**
 			 * @class A MapKey object maps from a Range object, representing a variable in
 			 * data, to a color or numeric visual property such as a size or coordinate.
-			 * MapKey is abstract. Instances are constructed by calling 
-			 * {@link aperture.Range range.mapKey()}, and are used by {@link aperture.Mapping mappings}.
+			 * MapKey is abstract. Instances are constructed by calling
+			 * {@link aperture.Range range.mappedTo()}, and are used by {@link aperture.Mapping mappings}.
 			 *
 			 * @constructs
 			 * @factoryMade
@@ -5871,7 +6341,7 @@ function(namespace) {
 
 /**
  * Source: Mapping.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Mappings are used to define supply pipelines for visual
  * properties of layers.
  */
@@ -6159,18 +6629,50 @@ function(namespace) {
 				value = this.dataAccessor.apply( dataItem, index || [] );
 			}
 
+			return this.value( value, dataItem, index );
+		},
+
+		/**
+		 * Maps a raw value by transforming it and applying filters, returning
+		 * a visual property value.
+		 * 
+		 * @param {Object} value
+		 *   The source value to map. 
+		 *   
+		 * @param {Object} [context]
+		 *   The optional context to supply to any filters. If omitted the value
+		 *   of this in the filter call will be the Mapping instance.
+		 *
+		 * @param {Array} [index] 
+		 *   Optional indices to pass to the filters.
+		 *  
+		 * @returns {Object}
+		 *   A transformed and filtered value.
+		 */
+		value : function( value, context, index ) {
+			
 			// Transform
 			if( this.transformation ) {
-				// If have a mapper, call it
 				value = this.transformation.map( value );
 			}
 
+			return this.filteredValue( value, context, index );
+		},
+		
+		/**
+		 * @protected
+		 * Execute the filter.
+		 */
+		filteredValue : function( value, context, index ) {
+			
 			// Filter
 			if( this.filters.length ) {
+				context = context || this;
 				var args = [value].concat(index);
+				
 				forEach( this.filters, function(filter) {
 					// Apply the filter
-					value = filter.apply(dataItem, args);
+					value = filter.apply(context, args);
 					// Update value in args for next filter
 					args[0] = value;
 				});
@@ -6178,6 +6680,7 @@ function(namespace) {
 
 			return value;
 		}
+		
 	});
 
 	return namespace;
@@ -6185,7 +6688,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: NodeLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Node Layer
  */
 
@@ -6279,7 +6782,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: NodeSet.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Node Sets refer to sets or subsets of layer nodes.
  */
 
@@ -6552,8 +7055,9 @@ function(namespace) {
 			// PROCESS TEST
 			// string test arg? a field name.
 			if (isString(test)) {
-				test = test === 'id'? getId : function() {
-					return this[test];
+				var propName = test;
+				test = propName === 'id'? getId : function() {
+					return this[propName];
 				};
 						
 			// no test arg? shift args.
@@ -6745,10 +7249,16 @@ function(namespace) {
 		},
 		
 		/**
-		 * TODO
+		 * Removes the data within this set from the host layer. This provides a 
+		 * mechanism to remove data from a layer without needing to reset all of the
+		 * layer's data via a call to {@link aperture.Layer#all}.
+		 *
+		 * @returns {this}
+		 *    this set after removing it from the host layer
 		 */
 		remove : function( ) {
-			
+			this._layer.removeNodeSet(this);
+			return this;
 		},
 		
 		/**
@@ -6975,6 +7485,20 @@ function(namespace) {
 		 * override
 		 */
 		where : NEVER,
+
+		/**
+		 * @private
+		 * override
+		 */
+		remove : function () {
+			var i, sets = this._sets, n = sets.length;
+			
+			for (i=0; i<n; i++) {
+				sets[i].remove();
+			}
+			
+			return this;
+		},
 		
 		/**
 		 * @private
@@ -7038,7 +7562,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: RadialLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview The Radial Layer Implementation
  */
 
@@ -7657,7 +8181,7 @@ function(namespace) {
 
 /**
  * Source: Range.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview The Range implementation
  */
 
@@ -7782,6 +8306,15 @@ function(namespace) {
 			 */
 
 			/**
+			 * See the mappedTo function.
+			 *
+			 * @deprecated
+			 */
+			mapKey : function ( to ) {
+				return this.mappedTo( to );
+			},
+
+			/**
 			 * Creates a key for mapping from this model range to a visual property
 			 * range. This method is abstract and implemented by specific types
 			 * of ranges.
@@ -7793,7 +8326,7 @@ function(namespace) {
 			 * @returns {aperture.MapKey}
 			 *      a new map key.
 			 *
-			 * @name aperture.Range.prototype.mapKey
+			 * @name aperture.Range.prototype.mappedTo
 			 * @function
 			 */
 
@@ -7831,6 +8364,24 @@ function(namespace) {
 				}
 
 				return this.view;
+			},
+
+			/**
+			 * Returns the start of the range. For scalars this will be the minimum of the extents, and
+			 * for ordinals it will be the first case. To reset the start and end extents use the reset function.
+			 */
+			start : function() {
+				return this.get()[0];
+			},
+
+			/**
+			 * Returns the end of the range. For scalars this will be the maximum of the extents, and
+			 * for ordinals it will be the last case. To reset the start and end extents use the reset function.
+			 */
+			end : function() {
+				var e = this.get();
+
+				return e && e[e.length-1];
 			},
 
 			/**
@@ -8108,16 +8659,28 @@ function(namespace) {
 			 * @returns {aperture.MapKey}
 			 *      a new map key.
 			 */
-			mapKey : function ( to ) {
+			mappedTo : function ( to ) {
 
 				// allow for array wrapping or not.
 				if (arguments.length > 1) {
 					to = Array.prototype.slice.call(arguments);
 				}
 				// diagnose problems early so they don't cascade later
-				if ( to.length === 0 || (util.isNumber(to[0]) && isNaN(to[0])) || (!util.isNumber(to[0]) && !to[0].blend) ) {
-					aperture.log.error('Mappings of Scalar ranges must map to numbers or objects with a blend function.');
+				if ( to.length === 0 || (util.isNumber(to[0]) && isNaN(to[0]))) {
+					aperture.log.error('Cannot map a scalar range to array length zero or NaN values.');
 					return;
+				}
+
+				if ( !util.isNumber(to[0]) && !to[0].blend ) {
+					// assume colors are strings
+					if (util.isString(to[0])) {
+						to = util.map(to, function(s) {
+							return new aperture.Color(s);
+						});
+					} else {
+						aperture.log.error('Mappings of Scalar ranges must map to numbers or objects with a blend function.');
+						return;
+					}
 				}
 
 				return new namespace.ScalarMapKey( this, to );
@@ -8475,6 +9038,14 @@ function(namespace) {
 			},
 
 			// override to use extents instead of the result of get.
+			start : function() {
+				this.get();
+				return this.extents && this.extents[0];
+			},
+			end : function() {
+				this.get();
+				return this.extents && this.extents[1];
+			},
 			map : function( value ) {
 
 				// call function to update if necessary.
@@ -8562,10 +9133,10 @@ function(namespace) {
 			},
 
 			// Implemented to create an ordinal mapping.
-			mapKey : function ( to ) {
+			mappedTo : function ( to ) {
 
 				// co-opt this method from ordinal
-				return namespace.Ordinal.prototype.mapKey.call( this, to );
+				return namespace.Ordinal.prototype.mappedTo.call( this, to );
 			},
 
 			// Implemented to map a scalar value to an ordinal value by finding its band.
@@ -8694,26 +9265,60 @@ function(namespace) {
 	var timeOrders = (function () {
 
 		function roundY( date, base ) {
-			date.setFullYear(Math.floor(date.getFullYear() / base) * base, 0,1);
-			date.setHours(0,0,0,0);
+			date.set({
+				FullYear: Math.floor(date.get('FullYear') / base) * base, 
+				Month: 0,
+				Date: 1, 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
 		function roundM( date, base ) {
-			date.setMonth(Math.floor(date.getMonth() / base) * base, 1);
-			date.setHours(0,0,0,0);
+			date.set({
+				Month: Math.floor(date.get('Month') / base) * base,
+				Date: 1, 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
 		function roundW( date, base ) {
-			date.setDate(date.getDate() - date.getDay());
-			date.setHours(0,0,0,0);
+			date.set({
+				Date: date.get('Date') - date.get('Day'), 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
 		function roundD( date, base ) {
-			date.setDate(1 + Math.floor((date.getDate() - 1) / base) * base);
-			date.setHours(0,0,0,0);
+			date.set({
+				Date: 1 + Math.floor((date.get('Date') - 1) / base) * base, 
+				Hours: 0,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
-		function roundF( date, base ) {
-			this.setter.call(date, Math.floor(this.getter.call(date) / base) * base, 0,0,0);
+		function roundH( date, base ) {
+			date.set({
+				Hours: Math.floor(date.get('Hours') / base) * base,
+				Minutes: 0,
+				Seconds: 0,
+				MilliSeconds: 0});
 		}
-		function add( date, value ){
-			this.setter.call(date, this.getter.call(date) + value);
+		function roundMin( date, base ) {
+			date.set({
+				Minutes: Math.floor(date.get('Minutes') / base) * base,
+				Seconds: 0,
+				MilliSeconds: 0});
+		}
+		function roundS( date, base ) {
+			date.set({
+				Seconds: Math.floor(date.get('Seconds') / base) * base,
+				MilliSeconds: 0});
+		}
+		function roundMs( date, base ) {
+			date.set({MilliSeconds: Math.floor(date.get('Milliseconds') / base) * base});
 		}
 
 		// define using logical schema...
@@ -8723,10 +9328,10 @@ function(namespace) {
 				{ field: 'Month', span: /*31 days*/26784e5, round: roundM, steps: [ 3, 1 ] },
 				{ field: 'Date', span: 864e5, round: roundW, steps: [ 7 ] },
 				{ field: 'Date', span: 864e5, round: roundD, steps: [ 1 ] },
-				{ field: 'Hours', span:36e5, round: roundF, steps: [ 12, 6, 3, 1 ] },
-				{ field: 'Minutes', span: 6e4, round: roundF, steps: [ 30, 15, 5, 1 ] },
-				{ field: 'Seconds', span: 1e3, round: roundF, steps: [ 30, 15, 5, 1 ] },
-				{ field: 'Milliseconds', span: 1, round: roundF, steps: [ 500, 250, 100, 50, 25, 10, 5, 1 ] }
+				{ field: 'Hours', span:36e5, round: roundH, steps: [ 12, 6, 3, 1 ] },
+				{ field: 'Minutes', span: 6e4, round: roundMin, steps: [ 30, 15, 5, 1 ] },
+				{ field: 'Seconds', span: 1e3, round: roundS, steps: [ 30, 15, 5, 1 ] },
+				{ field: 'Milliseconds', span: 1, round: roundMs, steps: [ 500, 250, 100, 50, 25, 10, 5, 1 ] }
 				// below seconds, normal scalar band rules apply
 		], timeOrders = [], last, dateProto = Date.prototype;
 
@@ -8738,13 +9343,7 @@ function(namespace) {
 					span   : order.span * step,
 					next   : last,
 					base   : step,
-					field  : {
-						round  : order.round,
-						add    : add,
-						getter : dateProto['get' + order.field],
-						setter : dateProto['set' + order.field]
-					},
-					format : new namespace.TimeFormat( order.field )
+					round  : order.round
 				});
 			});
 		});
@@ -8763,6 +9362,9 @@ function(namespace) {
 
 		/** @lends aperture.TimeScalar.prototype */
 		{
+			/** @private */
+			_utc: true,
+
 			/**
 			 * @class Extends a scalar model property range with
 			 * modest specialization of formatting and banding for
@@ -8865,16 +9467,12 @@ function(namespace) {
 				if (!order) {
 					var interval = Math.max(1, (end - start) / spec), len;
 
-					// find minimum order.
+					// find first under interval.
 					for (len = timeOrders.length; i < len; i++) {
-						if ((order = timeOrders[i]).span <= interval) {
+						if ((order = timeOrders[i]).span < interval) {
+							order = order.next || order; // then pick the next higher
 							break;
 						}
-					}
-
-					// pick closer order of the min and next up
-					if (order.next && order.next.span - interval < interval - order.span) {
-						order = order.next;
 					}
 
 					// step in base units. in years? use multiple of base then.
@@ -8883,17 +9481,17 @@ function(namespace) {
 
 				// only auto update format if we haven't had it overridden.
 				if (this.autoFormat) {
-					this.formatter_ = order.format;
+					this.formatter_ = new namespace.TimeFormat( {precision: order.name, local: !this._utc} )
 				}
 
 				// round the start date
-				var date = new Date(start), field = order.field, band, bands = [];
-				field.round(date, base);
+				var date = new aperture.Date(start, {local: !this._utc}), band, bands = [];
+				order.round(date, base);
 
 				// stepping function for bands, in milliseconds
 				// (this arbitrary threshold limit kills any chance of an infinite loop, jic.)
 				while (i++ < 1000) {
-					var next = date.getTime();
+					var next = date.valueOf();
 
 					// last limit is this
 					if (band) {
@@ -8908,13 +9506,47 @@ function(namespace) {
 					// create band (set limit next round)
 					bands.push(band = {min: next});
 
-					field.add(date, base);
+					date.add(base, order.name);
 				}
 
 				return bands;
 			}
 		}
 	);
+
+	/**
+	 * Returns a new time scalar view which operates in the local timezone. This
+	 * applies to banding and time display.
+	 *
+	 * @returns {aperture.TimeScalar}
+	 *      a new view of this Range.
+	 *
+	 * @name aperture.TimeScalar.prototype.local
+	 * @function
+	 */
+	namespace.TimeScalar.addView( 'local', {
+		init : function () {
+			this._utc = false;
+			this.formatter._utc = false;
+		}
+	});
+
+	/**
+	 * Returns a new time scalar view which operates in the UTC timezone. This
+	 * applies to banding and time display.
+	 *
+	 * @returns {aperture.TimeScalar}
+	 *      a new view of this Range.
+	 *
+	 * @name aperture.TimeScalar.prototype.utc
+	 * @function
+	 */
+	namespace.TimeScalar.addView( 'utc', {
+		init : function () {
+			this._utc = true;
+			this.formatter._utc = true;
+		}
+	});
 
 	namespace.Ordinal = namespace.Range.extend( 'aperture.Ordinal',
 
@@ -9045,7 +9677,7 @@ function(namespace) {
 			 * @returns {aperture.MapKey}
 			 *      a new map key.
 			 */
-			mapKey : function ( to ) {
+			mappedTo : function ( to ) {
 
 				// allow for array wrapping or not.
 				if (arguments.length > 1) {
@@ -9139,10 +9771,10 @@ function(namespace) {
 			},
 
 			// Implemented to create an ordinal mapping.
-			mapKey : function ( to ) {
+			mappedTo : function ( to ) {
 
 				// co-opt this method from scalar
-				return namespace.Scalar.prototype.mapKey.call( this, to );
+				return namespace.Scalar.prototype.mappedTo.call( this, to );
 			},
 
 			// Implemented to map an ordinal value to a scalar value.
@@ -9166,7 +9798,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: SankeyPathLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Link Layer Implementation
  */
 
@@ -9178,7 +9810,7 @@ function(namespace) {
 aperture = (
 /** @private */
 function(namespace) {
-	
+
 	var _sankeyCache = {};
 	/**
 	 * Processes some user constants, translating into dash array.
@@ -9187,6 +9819,7 @@ function(namespace) {
 		switch (style) {
 		case 'none':
 			attrs.opacity = 0;
+			break;
 		case '':
 		case 'solid':
 			return '';
@@ -9195,11 +9828,14 @@ function(namespace) {
 		case 'dotted':
 			return '. ';
 		}
-		
+
 		return style;
 	}
 
+
 	function removeSankeys(links){
+		var i;
+
 		for (i=0; i<links.length; i++) {
 			var link = links[i];
 			var linkData   = link.data;
@@ -9208,86 +9844,89 @@ function(namespace) {
 			}
 		}
 	}
-	function preProcessor(links){
-		var sourceMap = {},
+
+
+	function stackLinks(links){
+		var i, sourceMap = {},
 			targetMap = {};
 		var n = links.length;
-		
+		var map = this.mappings()['stroke-width'];
+		var minWidth = 1;
+
+		// need to enforce a zero bottom range for individual links or the total will be wrong.
+		// real bottom range is still used as a minimum width in rendering but not stacked offsets
+		if (map && map.using()) {
+			minWidth = map.using().to()[0];
+
+			if (minWidth > 0) {
+				map = aperture.util.viewOf(map);
+				map.using(aperture.util.viewOf(map.using()));
+				map.using().toArray = map.using().toArray.slice();
+				map.using().toArray[0] = 0;
+			}
+		}
+
 		for (i=0; i<n; i++) {
 			var link = links[i];
 			var linkData   = link.data;
 			var sourceData = this.valueFor('source', linkData, null);
 			var targetData = this.valueFor('target', linkData, null);
-			var sankeyAnchor = this.valueFor('sankey-anchor', linkData, 'top');
+			var width = map.valueFor(linkData) || 0;
 
 			var flowSpec = {
 				'source': {
-					'id' : sourceData.id,
-					'x' : this.valueFor('node-x', sourceData, 0, linkData),
-					'y': this.valueFor('node-y', sourceData, 0, linkData) ,
-					'r': this.valueFor('source-offset', sourceData, 0, linkData),
-					'links' : sourceData.links
+					uid : this.valueFor('node-uid', sourceData, '', linkData),
+					duplicateId : this.valueFor('node-id', sourceData, '', linkData),
+					x : this.valueFor('node-x', sourceData, 0, linkData),
+					y : this.valueFor('node-y', sourceData, 0, linkData) ,
+					r : this.valueFor('source-offset', sourceData, 0, linkData)
 				},
 				'target' : {
-					'id' : targetData.id,
+					uid : this.valueFor('node-uid', targetData, '', linkData),
+					duplicateId : this.valueFor('node-id', targetData, '', linkData),
 					'x': this.valueFor('node-x', targetData, 0, linkData),
 					'y': this.valueFor('node-y', targetData, 0, linkData),
-					'r': this.valueFor('target-offset', targetData, 0, linkData),
-					'links' : targetData.links
+					'r': this.valueFor('target-offset', targetData, 0, linkData)
 				},
 				'link' : link,
-				'sankey-anchor' : sankeyAnchor
+				'width' : width
 			};
-			
-			if (sourceMap[sourceData.id] == null){
-				sourceMap[sourceData.id] = {
-						'outflows':[]};
+
+			var src = sourceMap[sourceData.uid];
+			if (src == null) {
+				src = sourceMap[sourceData.uid] = {'outflows':[]};
 			}
-			sourceMap[sourceData.id].outflows.push(flowSpec);
-			
-			if (targetMap[targetData.id] == null){
-				targetMap[targetData.id] = {
-						'inflows':[]};
+			src.outflows.push(flowSpec);
+			src.anchor = this.valueFor('sankey-anchor', sourceData, 'top');
+
+			var trg = targetMap[targetData.uid];
+			if (trg == null) {
+				trg = targetMap[targetData.uid] = {'inflows':[]};
 			}
-			targetMap[targetData.id].inflows.push(flowSpec);
+			trg.inflows.push(flowSpec);
+			trg.anchor = this.valueFor('sankey-anchor', targetData, 'top');
 		}
+
 		// Order the source endpoints based on the target endpoints's y-position.
-		var flows, key;
-		for (key in sourceMap){
-			if (sourceMap.hasOwnProperty(key)) {
-				flows = sourceMap[key].outflows;
-				flows.sort(function(a, b) {
-					return a.target.y <= b.target.y? -1 : 1;
-				});
-			}
-		}
+		aperture.util.forEach(sourceMap, function(source) {
+			var flows = source.outflows;
+			flows.sort(function(a, b) {
+				return a.target.y <= b.target.y ? -1 : 1;
+			});
+		});
 
 		// Order the incoming flows of each target node by the flow's target y-position.
-		for (key in targetMap){
-			if (targetMap.hasOwnProperty(key)) {
-				flows = targetMap[key].inflows;
-				flows.sort(function(a, b) {
-					return a.source.y <= b.source.y? -1 : 1;
-				});
-			}
-		}		
-		return {'sourceMap' : sourceMap, 'targetMap' : targetMap};
-	}
-	
-	function getFlowOffset(flowSpec){
-		// Find the matching link.
-		var matchLink = null,
-			target = flowSpec.target;
+		aperture.util.forEach(targetMap, function(target) {
+			var flows = target.inflows;
+			flows.sort(function(a, b) {
+				return a.source.y <= b.source.y ? -1 : 1;
+			});
+		});
 
-		for (var i=0; i < target.links.length; i++){
-			if (target.links[i].id == flowSpec.link.data.id){
-				matchLink = target.links[i];
-				break;
-			}
-		}
-		return Math.round(this.valueFor('stroke-width', matchLink, 0));		
+		return {sourceMap : sourceMap, targetMap : targetMap, minWidth: minWidth};
 	}
-	
+
+
 	function calcFlowPath(source, target){
 		//TODO: Account for different flow styles and layout orientations.
 
@@ -9296,25 +9935,15 @@ function(namespace) {
 				'x' : 0.5*(target.x + source.x),
 				'y' : 0.5*(target.y + source.y)
 		};
-		
+
 		var path = 'M' + source.x + ',' + source.y;
 		// Calculate the control points.
 		path += 'C' + midPt.x + ',' + source.y + ',' + midPt.x + ',' + target.y + ',' + target.x + ',' + target.y;
-		
+
 		return path;
 	}
 
-	function getStackedWidth(links, sankeyAnchor){
-		var width = 0;
-		if (sankeyAnchor == 'middle'){
-			for (var i=0; i < links.length; i++){
-				width += this.valueFor('stroke-width', links[i], 0);
-			}
-			return width;
-		}
-		// 'top' is the default anchor.
-		return 0;
-	}
+
 	// assumes pre-existence of layer.
 	namespace.SankeyPathLayer = aperture.Layer.extend( 'aperture.SankeyPathLayer',
 
@@ -9325,52 +9954,58 @@ function(namespace) {
 			 *
 			 * @mapping {String='#aaa'} stroke
 			 *  The color of the link.
-			 * 
+			 *
 			 * @mapping {Number=1} stroke-width
 			 *  The width of the link line.
-			 * 
+			 *
 			 * @mapping {'solid'|'dotted'|'dashed'|'none'| String} stroke-style
 			 *  The link line style as a predefined option or custom dot/dash/space pattern such as '--.-- '.
 			 *  A 'none' value will result in the link not being drawn.
-			 * 
+			 *
 			 * @mapping {'line'|'arc'} link-style
 			 *  The type of line that should be used to draw the link, currently limited to
 			 *  a straight line or clockwise arc of consistent degree.
-			 * 
-			 * @mapping {'top'|'middle'| String='top'} sankey-anchor
-			 *  The relative position that the Sankey flows will start drawing from. 'top' will draw the flows top-down starting from the given node location.
-			 *  'middle' will center the flows about the given node position.
-			 *  
+			 *
+			 * @mapping {'top'|'middle'|'bottom' String='top'} sankey-anchor
+			 *  The relative position that the Sankey flows will start drawing from on a node. 'top' will draw the flows top-down starting from the given node location,
+			 *  'middle' will center the flows about the given node position, whereas 'bottom' will be bottom up.
+			 *
 			 * @mapping {Boolean=true} visible
 			 *  The visibility of a link.
-			 * 
+			 *
 			 * @mapping {Number=1} opacity
 			 *  The opacity of a link. Values for opacity are bound with the range [0,1], with 1 being opaque.
-			 * 
+			 *
 			 * @mapping {Object} source
 			 *  The source node data object representing the starting point of the link. The source node
-			 *  data object is supplied for node mappings 'node-x', 'node-y', and 'source-offset' for
+			 *  data object is supplied for node mappings 'node-uid', 'node-id', 'node-x', 'node-y', and 'source-offset' for
 			 *  convenience of shared mappings.
-			 * 
+			 *
 			 * @mapping {Number=0} source-offset
 			 *  The distance from the source node position at which to begin the link. The source-offset
 			 *  mapping is supplied the source node as a data object when evaluated.
-			 * 
+			 *
 			 * @mapping {Object} target
 			 *  The target node data object representing the ending point of the link. The target node
-			 *  data object is supplied for node mappings 'node-x', 'node-y', and 'target-offset' for
+			 *  data object is supplied for node mappings 'node-uid', 'node-id', 'node-x', 'node-y', and 'target-offset' for
 			 *  convenience of shared mappings.
-			 * 
+			 *
 			 * @mapping {Number=0} target-offset
 			 *  The distance from the target node position at which to begin the link. The target-offset
 			 *  mapping is supplied the target node as a data object when evaluated.
-			 * 
+			 *
+			 * @mapping {String} node-uid
+			 *  A node's unique identifier.
+			 *
+			 * @mapping {String} node-id
+			 *  A node's secondary id. This does not need to be unique and can be used for type or property identification.
+			 *
 			 * @mapping {Number} node-x
 			 *  A node's horizontal position, evaluated for both source and target nodes.
-			 * 
+			 *
 			 * @mapping {Number} node-y
 			 *  A node's vertical position, evaluated for both source and target nodes.
-			 * 
+			 *
 			 * @constructs
 			 * @factoryMade
 			 * @extends aperture.Layer
@@ -9388,109 +10023,149 @@ function(namespace) {
 			 * Render implementation
 			 */
 			render : function( changeSet ) {
-				var i, 
-					links = changeSet.updates, 
-					n = links.length,
+				var i,
+					links = changeSet.updates,
 					transition = changeSet.transition;
-				
-				//DEBUG
-				// TODO: Parameterize these later.
-				var offset=0;
 
-				
-				// Remove any obsoelete visuals.
+				// Remove any obsolete visuals.
 				if (changeSet.removed.length > 0){
 					removeSankeys(changeSet.removed);
 				}
+
 				// PRE-PROCESSING
 				// Iterate through each link and create a map describing the
 				// source and target endpoints for each flow.
-				var specMap = preProcessor.call(this, links);
+				var specMap = stackLinks.call(this, links);
 				var sourceMap = specMap.sourceMap;
 				var targetMap = specMap.targetMap;
-				
+				var minWidth = specMap.minWidth;
+
 				// Iterate through each source node and create the flows.
 				var nIndex=0;
 				var paths = [];
-				
-				var width=0, totalOffset=0;
+
+				var totalOffset, flowSpec, flowWidth;
+				var targetPt, sourcePt;
+
+
 
 				// For each target node, iterate over all the incoming flows
 				// and determine the stacked, flow endpoint positions.
-				for (var key in targetMap){
-					var targetSpecList = targetMap[key].inflows;
-					
-					width=totalOffset=0;
-					for (nIndex = 0; nIndex < targetSpecList.length; nIndex++){
-						var flowSpec = targetSpecList[nIndex];
-						
-						width = getStackedWidth.call(this, flowSpec.target.links, flowSpec['sankey-anchor']);
-						var flowWidth = getFlowOffset.call(this, flowSpec);
-						totalOffset += flowWidth*0.5;
-						
-						targetPt = {
-									'x' : flowSpec.target.x - flowSpec.target.r,
-									'y' : flowSpec.target.y + totalOffset - 0.5*width
-						};
-						if (targetMap[flowSpec.target.id]['stackPts'] == null){
-							targetMap[flowSpec.target.id] = {'stackPts' : {}};
+				aperture.util.forEach(targetMap, function(target) {
+					var targetSpecList = target.inflows;
+
+					totalOffset=0;
+
+					if (target.anchor === 'middle' || target.anchor === 'bottom') {
+						for (nIndex = 0; nIndex < targetSpecList.length; nIndex++){
+							totalOffset -= targetSpecList[nIndex].width;
 						}
-						targetMap[flowSpec.target.id].stackPts[flowSpec.source.id] = targetPt;
-						totalOffset += flowWidth*0.5;
+						if (target.anchor === 'middle') {
+							totalOffset *= 0.5;
+						}
 					}
-				}
-				
+
+					var sourceEndpointMap = {};
+					for (nIndex = 0; nIndex < targetSpecList.length; nIndex++){
+						flowSpec = targetSpecList[nIndex];
+						flowWidth = Math.max(minWidth, flowSpec.width);
+						var updateTargetOffset = true;
+
+						var targetY;
+						if (sourceEndpointMap.hasOwnProperty(flowSpec.source.duplicateId)) {
+							targetY = sourceEndpointMap[flowSpec.source.duplicateId];
+							updateTargetOffset = false;
+						} else {
+							targetY = flowSpec.target.y + totalOffset + flowWidth * 0.5;
+							sourceEndpointMap[flowSpec.source.duplicateId] = targetY;
+						}
+
+						flowSpec.targetPt = {
+							x : flowSpec.target.x - flowSpec.target.r,
+							y : targetY
+						};
+
+						if (updateTargetOffset) {
+							totalOffset += flowSpec.width;
+						}
+					}
+				});
+
 				// For each source node, iterate overall all the outgoing flows
 				// and determine the stacked, flow endpoint positions.
 				// Then couple these source endpoints with the target endpoints
 				// from above and calculate the bezier path for that flow.
-				for (var key in sourceMap){
-					var sourceSpecList = sourceMap[key].outflows;
-					
-					width=totalOffset=0;
-					for (nIndex = 0; nIndex < sourceSpecList.length; nIndex++){
-						var flowSpec = sourceSpecList[nIndex];
-						width = getStackedWidth.call(this, flowSpec.source.links, flowSpec['sankey-anchor']);
-						var flowWidth = getFlowOffset.call(this, flowSpec);
-						totalOffset += flowWidth*0.5;
+				aperture.util.forEach(sourceMap, function(source) {
+					var sourceSpecList = source.outflows;
 
-						sourcePt = {
-									'x' : flowSpec.source.x + flowSpec.source.r,
-									'y' : flowSpec.source.y + totalOffset - 0.5*width
-						};
-						
-						var path = calcFlowPath(sourcePt, targetMap[flowSpec.target.id].stackPts[flowSpec.source.id]);
-						
-						paths.push({
-							'link': flowSpec.link,
-							'path' : path
-						});
-						totalOffset += flowWidth*0.5;
+					totalOffset=0;
+
+					if (source.anchor === 'middle' || source.anchor === 'bottom') {
+						for (nIndex = 0; nIndex < sourceSpecList.length; nIndex++){
+							totalOffset -= sourceSpecList[nIndex].width;
+						}
+						if (source.anchor === 'middle') {
+							totalOffset *= 0.5;
+						}
 					}
-				}
-				
+
+					var targetEndpointMap = {};
+					for (nIndex = 0; nIndex < sourceSpecList.length; nIndex++){
+						flowSpec = sourceSpecList[nIndex];
+						targetPt = flowSpec.targetPt;
+						var updateSourceOffset = true;
+
+						var sourceY;
+						if (targetEndpointMap.hasOwnProperty(flowSpec.target.duplicateId)) {
+							sourceY = targetEndpointMap[flowSpec.target.duplicateId];
+							updateSourceOffset = false;
+						} else {
+							sourceY = flowSpec.source.y + totalOffset + flowWidth * 0.5;
+							targetEndpointMap[flowSpec.target.duplicateId] = sourceY;
+						}
+
+						if (targetPt) {
+							flowWidth = Math.max(minWidth, flowSpec.width);
+							sourcePt = {
+								x : flowSpec.source.x + flowSpec.source.r,
+								y : sourceY
+							};
+
+							if (updateSourceOffset) {
+								totalOffset += flowSpec.width;
+							}
+
+							paths.push({
+								'link': flowSpec.link,
+								'path' : calcFlowPath(sourcePt, targetPt),
+								width : flowWidth
+							});
+						}
+					}
+				});
+
 				// Iterate over the list of flow paths and render.
-				for (var i=0; i < paths.length; i++){
-					var link = paths[i].link;
-					var linkData   = link.data;
-					var path = paths[i].path;
+				for (i=0; i < paths.length; i++){
+					var path = paths[i];
+					var link = path.link;
+					var linkData = link.data;
 
 					var attrs = {
 						'opacity': this.valueFor('opacity', linkData, 1),
 						'stroke' : this.valueFor('stroke', linkData, 'link'),
-						'stroke-width' : this.valueFor('stroke-width', linkData, 1),
+						'stroke-width' : path.width
 					};
 
 					// extra processing on stroke style
-					attrs['stroke-dasharray'] = strokeStyle(attrs, this.valueFor('stroke-style', linkData, ''));
+					attrs['stroke-dasharray'] = strokeStyle(attrs, this.valueFor('stroke-style', linkData, '')) || undefined;
 
 					// now render it.
 					if (_sankeyCache[linkData.id]){
-						attrs.path = path;
+						attrs.path = path.path;
 						var updateLink = _sankeyCache[linkData.id];
 						link.graphics.update(updateLink, attrs, transition);
 					} else {
-						_sankeyCache[linkData.id] = link.graphics.path(path).attr( attrs );
+						_sankeyCache[linkData.id] = link.graphics.path(path.path).attr( attrs );
 					}
 				}
 			}
@@ -9499,9 +10174,10 @@ function(namespace) {
 
 	return namespace;
 
-}(aperture || {}));/**
+}(aperture || {}));
+/**
  * Source: Set.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview The Set implementation
  */
 
@@ -9816,7 +10492,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: Animation.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Animation APIs
  */
 
@@ -9902,7 +10578,7 @@ function(namespace) {
 }(aperture || {}));
 /**
  * Source: filter.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Filter API Implementations
  */
 
@@ -9988,7 +10664,7 @@ aperture.filter = (function(namespace) {
 }(aperture.filter || {}));
 /**
  * Source: io.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview APIs for client / server interaction.
  */
 
@@ -10005,7 +10681,9 @@ aperture.io = (function() {
 
 	var id = 0,
 		securityFn,
-		restEndpoint = "%host%/rest";
+		restEndpoint = "%host%/rest",
+		pendingRequests = 0,
+		handlers = [];
 
 
 	// Register to receive RPC endpoint url from config
@@ -10061,6 +10739,11 @@ aperture.io = (function() {
 
 				// Success callback processes response and calls user's callback
 				innerSuccess = function(results, textStatus, jqXHR) {
+					pendingRequests -= 1;
+					aperture.util.forEach(handlers, function(handler) {
+						handler.onRequestComplete(pendingRequests);
+					});
+
 					if( callback ) {
 						// Return results data object plus a hash of
 						// other available data.  Also include a success
@@ -10075,10 +10758,16 @@ aperture.io = (function() {
 
 				// Error callback processes response and calls user's callback
 				innerError = function(jqXHR, textStatus, errorThrown) {
-					if( callback ) {
-						// Provide callback with data returned by server, if any
-						var responseData = jqXHR.responseText;
+					var responseData = jqXHR.responseText;
+					
+					pendingRequests -= 1;
+					aperture.util.forEach(handlers, function(handler) {
+						handler.onRequestComplete(pendingRequests);
+					});
 
+					aperture.log.error((errorThrown||textStatus||'unspecified error') + (responseData? (' : ' + responseData): ''));
+					
+					if( callback ) {
 						// Check content-type for json, parse if json
 						var ct = jqXHR.getResponseHeader( "content-type" );
 						if( responseData && ct && ct.indexOf('json') > -1 ) {
@@ -10120,6 +10809,10 @@ aperture.io = (function() {
 				if( opts.contentType ) {
 					params.contentType = opts.contentType;
 				}
+
+                if( opts.async != null ) {
+                    params.async = opts.async;
+                }
 				
 				if( opts.postData && method === "POST" ) {
 					params.data = opts.postData;
@@ -10142,8 +10835,30 @@ aperture.io = (function() {
 				}
 			}
 
+			pendingRequests += 1;
+
 			//  Make the AJAX call using jQuery
 			$.ajax( params );
+		},
+
+		addRestListener : function( listener ) {
+			if( listener && typeof listener !== "function") {
+				return;
+			}
+
+			handlers.push(listener);
+		},
+
+		removeRestListener : function( listener ) {
+			if( listener && typeof listener !== "function") {
+				return;
+			}
+
+			handlers.splice(aperture.util.indexOf(handlers, listener), 1);
+		},
+
+		getPendingRequests : function() {
+			return pendingRequests;
 		},
 
 		/**
@@ -10163,7 +10878,7 @@ aperture.io = (function() {
 }());
 /**
  * Source: palette.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Defines the palette functions for Aperture.
  */
 
@@ -10532,8 +11247,169 @@ aperture.palette = (function(ns) {
 }(aperture.palette || {}));
 
 /**
+ * Copyright (C) 2013 Oculus Info Inc.
+ * http://www.oculusinfo.com/
+ * 
+ * Released under the MIT License.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+aperture.tooltip = (function(ns) {
+
+	var tooltipExists = false;
+	var tooltipDiv = null;
+	var tooltipInnerDiv = null;
+	var tooltipID = "apertureTooltip";
+	var tooltipTimer = null;
+	var tooltipPending = false;
+	var tooltipVisible = false;
+	
+	var overridingMouseMove = false;
+	var oldMouseMove = null;
+	
+	var assertTooltip = function() {
+		if (!tooltipExists) {
+			tooltipDiv = document.createElement("div");
+			tooltipDiv.style.zIndex = '999999999';
+			tooltipDiv.style.position = 'absolute';
+			tooltipDiv.id = tooltipID;
+			tooltipDiv.style.display = "none";
+			
+			tooltipInnerDiv = document.createElement("div");
+			tooltipInnerDiv.setAttribute("class", "apertureTooltip");
+
+			tooltipDiv.appendChild(tooltipInnerDiv);
+			
+			window.document.body.appendChild(tooltipDiv);
+			tooltipExists = true;
+		}
+	};
+	
+	var positionTooltip = function(posx,posy) {
+		var w = $(window).width();
+		var h = $(window).height();
+		var ew = 'E';
+		var ns = 'S';
+		if (posx<w/2) {
+			tooltipDiv.style.left = (posx+2) + "px";
+			tooltipDiv.style.right = '';
+			ew = 'E';
+		} else {
+			posx = w-posx;
+			tooltipDiv.style.left = '';
+			tooltipDiv.style.right = (posx+2) + "px";
+			ew = 'W';
+		}
+		if (posy>h/2) {
+			posy = h-posy;
+			tooltipDiv.style.top = "";
+			tooltipDiv.style.bottom = (posy+2) + "px";
+			ns = 'N';
+		} else {
+			tooltipDiv.style.top = (posy+2) + "px";
+			tooltipDiv.style.bottom = "";
+			ns = 'S';
+		}
+		tooltipInnerDiv.setAttribute("class", "apertureTooltip"+ns+ew);
+	};
+	
+	var setTooltipVisible = function(spec, posx, posy) {
+		positionTooltip(posx, posy);
+		tooltipDiv.style.display = "";
+		tooltipPending = false;
+		tooltipVisible = true;
+	};
+	
+	var getEventXY = function(e) {
+		var posx=0, posy=0;
+		if (e.pageX || e.pageY) {
+			posx = e.pageX;
+			posy = e.pageY;
+		} else if (e.clientX || e.clientY) {
+			posx = e.clientX + document.body.scrollLeft
+				+ document.documentElement.scrollLeft;
+			posy = e.clientY + document.body.scrollTop
+				+ document.documentElement.scrollTop;
+		}
+		return [posx,posy];
+	};
+	
+	var overrideMouseMove = function(target) {
+		if (!overridingMouseMove) {
+			oldMouseMove = document.onmousemove;
+			document.onmousemove = function(event) {
+				var pos = getEventXY(event);
+				positionTooltip(pos[0], pos[1]);
+				return true;
+			};
+			overridingMouseMove = true;
+		}
+	};
+
+	var cancelMouseMoveOverride = function() {
+		if (overridingMouseMove) {
+			document.onmousemove = oldMouseMove;
+			overridingMouseMove = false;
+		}
+	};
+	
+	var cancelTooltip = function() {
+		if (tooltipPending) {
+			clearTimeout(tooltipTimer);
+			tooltipPending = false;
+		}
+		tooltipDiv.style.display = "none";
+		tooltipVisible = false;
+		cancelMouseMoveOverride();
+	};
+
+	ns.showTooltip = function(spec) {
+		var pos = getEventXY(spec.event.source);
+		
+		assertTooltip();
+		if (tooltipVisible) {
+			if (tooltipInnerDiv.innerHTML==spec.html) {
+				return;
+			}
+		}
+		cancelTooltip();
+		tooltipInnerDiv.innerHTML = spec.html;
+		if (spec.delay) {
+			tooltipPending = true;
+			tooltipTimer = setTimeout(function(){setTooltipVisible(spec, pos[0], pos[1]);}, spec.delay);
+		} else {
+			setTooltipVisible(spec, pos[0], pos[1]);
+		}
+		overrideMouseMove(spec.event.source.target);
+	};
+	
+	ns.hideTooltip = function() {
+		assertTooltip();
+		cancelTooltip();
+	};
+	
+	return ns;
+	
+}(aperture.tooltip || {}));/**
  * Source: AjaxAppender.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Logging AJAX Appender Implementation
  */
 
@@ -10639,7 +11515,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: AlertBoxAppender.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Logging Alert Box Appender Implementation
  */
 
@@ -10687,7 +11563,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: BufferingAppender.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Logging Buffering Appender Implementation
  */
 
@@ -10760,7 +11636,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: ConsoleAppender.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Logging Console Appender Implementation
  */
 
@@ -10891,7 +11767,7 @@ aperture.log = (function(ns) {
 }(aperture.log || {}));
 /**
  * Source: DOMAppender.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Logging DOM Appender Implementation
  */
 
@@ -10954,8 +11830,134 @@ aperture.log = (function(ns) {
 	return ns;
 }(aperture.log || {}));
 /**
+ * Source: NotifyAppender.js
+ * Copyright (c) 2013 Oculus Info Inc.
+ * @fileOverview Aperture Notification Logging Appender Implementation
+ */
+
+/**
+ * @namespace
+ * @ignore
+ * Ensure namespace exists
+ */
+aperture.log = (function(ns) {
+	
+	var NotifyAppender = aperture.log.Appender.extend(
+	{
+		init : function(spec) {
+			aperture.log.Appender.prototype.init.call(this, (spec && spec.level) || aperture.log.LEVEL.ERROR);
+
+			var parent = null;
+			var p = spec && spec.parentId;
+			
+			// look for a specified parent.
+			if (p && aperture.util.isString(p)) {
+				if (p.charAt(0) !== '#') {
+					p = '#' + p;
+				}
+				
+				parent = $(p);
+			}
+			
+			// default parent is the body element
+			if (parent == null || parent.length === 0) {
+				parent = $('body');
+			}
+
+			// look for an existing instance (should never be one).
+			this._panel = $('.aperture-log-notify', parent);
+			
+			if (this._panel.length === 0) { 
+				var panel = this._panel = $('<div class="aperture-log-notify"></div>').appendTo(parent)
+					.css('display', 'none');
+				
+				// Add the list
+				var scroll = $('<ol class="aperture-log-notify-scrollpane"></ol>').appendTo( panel );
+				var list = $('<ol class="aperture-log-notify-list"></ol>').appendTo( scroll );
+				
+				// Add a close button
+				$('<button type="button">\u00D7</button>')
+					.addClass('aperture-log-notify-button')
+					.addClass('aperture-log-notify-close')
+					.appendTo( panel )
+					.click( function() {
+						panel.css('display', 'none');
+						
+						// make new items old on close
+						$('.aperture-log-new', panel)
+							.removeClass('aperture-log-new')
+							.addClass('aperture-log-old');
+					});
+				
+				// Add a clear button
+				$('<button type="button">\u21BA</button>')
+					.addClass('aperture-log-notify-button')
+					.addClass('aperture-log-notify-clear')
+					.appendTo( panel )
+					.click( function() { 
+						list.empty(); 
+					});
+			}
+		},
+
+		logString : function( level, message ) {
+			var panel = this._panel;
+			
+			if(panel.css('display') === 'none') {
+				panel.css('display', '');
+			}
+			
+			var scroll = $('.aperture-log-notify-scrollpane', panel);
+			var list = $('.aperture-log-notify-list', panel);
+			
+			var kids = list.children();
+			
+			// no more than a thousand lines.
+			if (kids.length === 1000) {
+				kids.first().remove();
+			}
+			
+			// Append a list item styled by the log level to the list
+			var currListItem = $('<li></li>')
+				.text('[' + level + '] ' + message)
+				.addClass('aperture-log-new')
+				.addClass('aperture-log-' + level)
+				.appendTo(list);
+			
+			var scrollTo = Math.max(0, list.outerHeight() - scroll.outerHeight());
+			scroll.scrollTop(scrollTo);
+		}
+	});
+
+	/**
+	 * @name aperture.log.addNotifyAppender
+	 * @function
+	 *
+	 * @description Creates and adds a notification appender to the logging system. The Notify Appender
+	 * logs all messages to a panel attached to the document body (or other container), typically at the
+	 * bottom of the screen.  The panel pops up whenever a new
+	 * message is logged at the required minimum log level and
+	 * has an ordered list of log messages with "Clear" and "Close" buttons.
+	 * The components of the console REQUIRE CSS styles for proper appearance.
+	 * Log messages may also optionally be styled by level.
+	 * Here is an <a href="../../../log.css">model CSS file</a> for NotifyAppender.
+	 *
+	 * 
+	 * @param {Object} spec specification object describing the properties of the appender.
+	 * @param {String} [spec.parentId] the optional DOM id of the parent for the notify panel, which defaults to body. 
+	 * @param {aperture.log.LEVEL} [spec.level] the optional initial appender logging threshold level, which defaults to ERROR.
+	 *
+	 * @returns {aperture.log.Appender} a new Notify appender instance
+	 */
+	ns.addNotifyAppender = function(spec) {
+		return ns.addAppender( new NotifyAppender(spec) );
+	};
+
+	return ns;
+}(aperture.log || {}));
+/**
  * Source: capture.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Capture Service API
  */
 
@@ -10972,12 +11974,9 @@ aperture.capture = (function() {
 	var callbackWrapper = function( callback ) {
 		return function(result, info) {
 			if( info.success ) {
-				// Success, get the location ref header
-				var image = info.xhr && info.xhr.getResponseHeader && info.xhr.getResponseHeader("Location");
-				callback( image );
+				callback( result, info );
 			} else {
-				// TODO Support an error callback?
-				callback( null );
+				callback( null, info );
 			}
 		};
 	};
@@ -11042,9 +12041,9 @@ aperture.capture = (function() {
 	 *
 	 * @param {DOMElement} element
 	 *            DOM element to capture
-	 * @param {Function(String)} callback
-	 *            the callback to call when the image (or error) is ready. On error will
-	 *            be called with null.
+	 * @param {Function(Object)} callback
+	 *            The callback to call when the image is ready, with the document
+	 *            descriptor suitable for use with aperture.store.
 	 * @param {Object} settings
 	 *            A set of key/value pairs that configure the image
 	 *            capture
@@ -11140,9 +12139,9 @@ aperture.capture = (function() {
 		 *
 		 * @param {String} url 
 		 *            URL of the page to be captured
-		 * @param {Function(String)} callback
-		 *            The callback to call when the image is ready.  On error will
-		 *            be called with null.
+		 * @param {Function(Object)} callback
+		 *            The callback to call when the image is ready, with the document
+		 *            descriptor suitable for use with aperture.store.
 		 * @param {Object} settings
 		 *            A set of key/value pairs that configure the image
 		 *            capture
@@ -11231,8 +12230,177 @@ aperture.capture = (function() {
 	};
 }());
 /**
+ * Source: graph.js
+ * Copyright (c) 2013-2014 Oculus Info Inc.
+ * @fileOverview Defines graph utility functions for Aperture.
+ */
+
+/**
+ * @namespace Aperture graph utility functions.
+ */
+aperture.graph = (function(ns) {
+
+	var util = aperture.util;
+
+	/**
+	 * @name aperture.graph.linkNodes
+	 * @function
+	 * @description
+	 * 
+	 * Takes an array of nodes and links in typical data representation
+	 * form with id references and creates an enhanced view of them with direct
+	 * object references. Links are enhanced with an object reference to each
+	 * node, source and target, and given a unique id if they don't already have one.
+	 * Nodes are enhanced with arrays linksOut and linksIn if directed or array links
+	 * if undirected. The existing node and link arrays are updated in place with
+	 * the enhanced node and link views, where each updated node or link has the original
+	 * node or link as its prototype. Using views enables any original properties of the
+	 * node or link to be extended without modification to the original objects.
+	 *
+	 * @param nodes
+	 *      an array of nodes
+	 *
+	 * @param links
+	 *      an array of links
+	 *
+	 * @param [options]
+	 *      an optional set of directives
+	 *
+	 * @param [options.nodeId='id']
+	 *      the node field representing the id
+	 *
+	 * @param [options.linkId='id']
+	 *      the link field representing the id, or the name of one to create
+	 *
+	 * @param [options.sourceId='sourceId']
+	 *      the link field representing the source node id
+	 *
+	 * @param [options.targetId='targetId']
+	 *      the link field representing the target node id
+	 *
+	 * @param [options.nodeMap]
+	 *      the optional node map updated with enhanced nodes and used to lookup nodes
+	 *      when enhancing links
+	 *
+	 * @param [options.undirected=false]
+	 *      if undirected, each node will be given a single list of links instead
+	 *      of one for linksIn and linksOut
+	 */
+	ns.linkNodes = function(nodes, links, options) {
+		// options with default fallbacks
+		var nid = (options && options.nodeId) || 'id';
+		var lid = (options && options.sourceId) || 'id';
+		var sid = (options && options.sourceId) || 'sourceId';
+		var tid = (options && options.targetId) || 'targetId';
+		var und = (options && options.undirected) || false;
+		var map = (options && options.nodeMap) || {};
+
+		// name of link arrays on each node
+		var olk = und? 'links' : 'linksOut';
+		var ilk = und? 'links' : 'linksIn';
+
+		var i, node;
+
+		// replace each node with an enhanced view of it and create a map of them
+		for (i=0; i < nodes.length; i++) {
+			node = nodes[i] = util.viewOf(nodes[i]);
+			node[olk]= [];
+
+			if (!und) {
+				node[ilk]= [];
+			}
+
+			map[node[nid]] = node;
+		}
+
+		var link;
+
+		// replace each link with an enhanced view of it
+		for (i=0; i < links.length; i++) {
+			link = links[i] = util.viewOf(links[i]);
+
+			// make sure it has an id
+			if (link[lid] == null) {
+				link[lid] = link[sid] + '-' + link[tid];
+			}
+
+			// give link node refs and add link to nodes' lists
+			link.source = map[link[sid]];
+			link.target = map[link[tid]];
+
+			link.source[olk].push(util.extend(util.viewOf(link), {other: link.target}));
+			link.target[ilk].push(util.extend(util.viewOf(link), {other: link.source}));
+		}
+
+		return this;
+	};
+
+	/**
+	 * @name aperture.graph.weightNodes
+	 * @function
+	 * @description
+	 * 
+	 * Takes an array of nodes and a specification of weights to sum from link weight and set
+	 * in the node objects.
+	 *
+	 * @param nodes
+	 *      an array of nodes
+	 *
+	 * @param [weights = {weight:{links: 'weight'}, weightIn:{linksIn: 'weight'}, weightOut:{linksOut: 'weight'}}]
+	 *      the specification of weights to calculate
+	 *
+	 * @param [sum]
+	 *      the optional name of a node field to set with the sum of all calculated weights
+	 */
+	ns.weightNodes = function(nodes, weights, sum) {
+		if (nodes && nodes.length) {
+			if (util.isString(weights)) {
+				sum = weights;
+				weights = null;
+			}
+
+			if (!util.isObject(weights)) {
+				weights = {};
+
+				if (nodes[0].links) weights.weight = {links: 'weight'};
+				if (nodes[0].linksIn) weights.weightIn = {linksIn: 'weight'};
+				if (nodes[0].linksOut) weights.weightOut = {linksOut: 'weight'};
+			}
+
+			sum = util.isString(sum) && sum.length > 0? sum: null;
+
+			// sum of weight for
+			util.forEach(nodes, function(node) {
+				var sumWeight = 0;
+
+				util.forEach(weights, function(weightSpec, weightField) {
+					util.forEach(weightSpec, function(srcWeightField, linksField) {
+						var nodeWeight = 0;
+
+						util.forEach(node[linksField], function(link) {
+							nodeWeight += link[srcWeightField];
+						});
+
+						sumWeight += (node[weightField] = nodeWeight);
+					});
+				});
+
+				if (sum !== null) {
+					node[sum] = sumWeight;
+				}
+			});
+		}
+
+		return this;
+	};
+
+	return ns;
+
+}(aperture.graph || {}));
+
+/**
  * Source: layout.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Layout API Implementations
  */
 
@@ -11240,10 +12408,11 @@ aperture.capture = (function() {
  * @class Aperture layout APIs. Provides access to a server-side layout service. Depending on the layout type specified in the parameters,
  * the corresponding layout service and algorithm is chosen.<br>
  * <p>
- *  Each layout accepts a data object containing two arrays. The first contains a list of nodes, the second, a list of links between the nodes (if applicable). 
+ *  Each layout accepts a data object containing two arrays. The first contains a list of nodes, the second, a list of links between the nodes (if applicable).
  *  <pre>{
  *   nodes : [],
  *   links : [],
+ *   defaultNodeSize : {width: w, height: h} // optional. can also be specified per node
  *  };
  *  </pre>
  *<span class="fixedFont"><span class="light">{Array} </span><b>nodes</b></span><br>
@@ -11251,8 +12420,8 @@ aperture.capture = (function() {
  *  An example point object would be defined as follows:
  *<pre>{
  *   id: 'Node_1',
- *   width: 20, //The width of given node in the layout.
- *   height: 20 //The height of given node in the layout.
+ *   width: 20, // The width of given node in the layout.
+ *   height: 20 // The height of given node in the layout.
  *}</pre>
  *
  *<span class="fixedFont"><span class="light">{Array} </span><b>links</b></span><br>
@@ -11267,16 +12436,30 @@ aperture.capture = (function() {
  * @requires an Aperture layout service, jQuery, json2 as a JSON shim if running old browsers<br>
 */
 aperture.layout = (function(namespace) {
-	var u = aperture.util,
-	
+	var u = aperture.util;
+	var nodeFields = ['id','x','y','width','height','weight','tag'];
+	var linkFields = ['sourceId','targetId'];
+
+	function strip(obj, fields) {
+		var n= {};
+
+		u.forEach(fields, function(f){
+			if (obj[f] !== undefined) {
+				n[f] = obj[f];
+			}
+		});
+
+		return n;
+	}
+
 	// common handler
-	doLayout = function(type, data, extents, options, callback) {
+	function doLayout(type, data, extents, options, callback) {
 
 		// in array, main layout options are first, then any other layout processes.
 		if (u.isFunction(options)) {
 			callback = options;
 			options = undefined;
-			
+
 		// just the regular object form
 		} else if (!u.isArray(options)) {
 			if (options) {
@@ -11286,23 +12469,50 @@ aperture.layout = (function(namespace) {
 				options = {type: type};
 			}
 		}
-		
-		aperture.io.rest('/layout', 'POST', callback, {
+
+
+	    var nodeMap= {};
+        var nodes = aperture.util.map(data.nodes, function(node) {
+        	nodeMap[node.id] = node;
+        	return strip(node, nodeFields);
+        });
+
+        var links = aperture.util.map(data.links, function(link) {
+        	return strip(link, linkFields);
+        });
+
+		function mapback(response) {
+	        aperture.util.forEach(response.nodes, function(n) {
+	        	var fn = nodeMap[n.id];
+	        	if (fn) {
+	        		fn.x = n.x;
+	        		fn.y = n.y;
+	        		fn.tag = n.tag;
+	        	}
+	        });
+
+			if (callback) {
+				callback.apply(this, arguments);
+			}
+		}
+
+		aperture.io.rest('/layout', 'POST', mapback, {
 			postData : {
-				nodes: data.nodes,
-				links: data.links,
+				nodes: nodes,
+				links: links,
+				defaultNodeSize: data.defaultNodeSize,
 				extents: extents,
 				layout: options
 			},
 			contentType: 'application/json'
-		});			
-	};
-	
-	
+		});
+	}
+
+
 	/**
 	 * @name aperture.layout.circle
 	 * @function
-	 * @description Arranges nodes around a central, circular path.		 
+	 * @description Arranges nodes around a central, circular path.
 	 * @param {Object} data
 	 *  The object containing the list of nodes and links.
 	 * @param {Object} data.nodes
@@ -11324,13 +12534,13 @@ aperture.layout = (function(namespace) {
 	namespace.circle = function(data, extents, options, callback){
 		doLayout('circle', data, extents, options, callback);
 	};
-	
+
 	/**
 	 * @name aperture.layout.radial
 	 * @function
 	 * @description Similar to the 'circle' layout, this arranges nodes around a circular path, however,
 	 * nodes with high connectivity are made more visually prominent by isolating and positioning
-	 * them as separate, satellite clusters around the central path.  
+	 * them as separate, satellite clusters around the central path.
 	 * @param {Object} data
 	 *  The object containing the list of nodes and links.
 	 * @param {Object} data.nodes
@@ -11352,16 +12562,16 @@ aperture.layout = (function(namespace) {
 	namespace.radial = function(data, extents, options, callback){
 		doLayout('radial', data, extents, options, callback);
 	};
-	
+
 	/**
 	 * @name aperture.layout.organic
 	 * @function
-	 * @description The organic layout style is based on the force-directed layout paradigm. Nodes are 
-	 * given mutually repulsive forces, and the connections between nodes are considered to be springs 
-	 * attached to the pair of nodes. The layout algorithm simulates physical forces and rearranges the 
+	 * @description The organic layout style is based on the force-directed layout paradigm. Nodes are
+	 * given mutually repulsive forces, and the connections between nodes are considered to be springs
+	 * attached to the pair of nodes. The layout algorithm simulates physical forces and rearranges the
 	 * positions of the nodes such that the sum of the forces emitted by the nodes and the links reaches
 	 * a (local) minimum.
-	 * <br> 
+	 * <br>
 	 * Resulting layouts often expose the inherent symmetric and clustered structure of a graph, and have
 	 * a well-balanced distribution of nodes with few edge crossings.
 	 * @param {Object} data
@@ -11387,7 +12597,7 @@ aperture.layout = (function(namespace) {
 	namespace.organic = function(data, extents, options, callback){
 		doLayout('organic', data, extents, options, callback);
 	};
-	
+
 	/**
 	 * @name aperture.layout.vtree
 	 * @function
@@ -11417,7 +12627,7 @@ aperture.layout = (function(namespace) {
 	namespace.vtree = function(data, extents, options, callback){
 		doLayout('vtree', data, extents, options, callback);
 	};
-	
+
 	/**
 	 * @name aperture.layout.htree
 	 * @function
@@ -11452,14 +12662,14 @@ aperture.layout = (function(namespace) {
 	 * @name aperture.layout.tag
 	 * @function
 	 * @description Executes a deconflicted layout of node tags. Tag layout
-	 *  can be used to strategically label (or otherwise graphically annotate) only 
-	 *  the most important nodes in a dense display at a readable scale without occlusion. 
+	 *  can be used to strategically label (or otherwise graphically annotate) only
+	 *  the most important nodes in a dense display at a readable scale without occlusion.
 	 *  If the nodes have not yet been laid out, an alternative
-	 *  to using this method is to use the multipass layout method. 
-	 * 
+	 *  to using this method is to use the multipass layout method.
+	 *
 	 *  The alignments that the implementation may consider for the annotation
-	 *  may be specified by the alignments option. Alignments are: any, 
-	 *  topAny, bottomAny, leftAny, rightAny, 
+	 *  may be specified by the alignments option. Alignments are: any,
+	 *  topAny, bottomAny, leftAny, rightAny,
 	 *  bottomLeft, bottomCenter, bottomRight, middleLeft, middleRight,
 	 *  topLeft, topCenter, or topRight.
 	 *
@@ -11482,7 +12692,7 @@ aperture.layout = (function(namespace) {
 	 *  is thus flagged with visible = false. This option is only useful when the caller
 	 *  uses deconfliction to find the optimal position for annotations but still wishes
 	 *  to always display all of them.
-	 * 
+	 *
 	 * @param {Function} callback
 	 *  The callback for handling the response from the layout service.
 	 * @returns
@@ -11496,8 +12706,8 @@ aperture.layout = (function(namespace) {
 	/**
 	 * @name aperture.layout.multipass
 	 * @function
-	 * @description 
-	 * 
+	 * @description
+	 *
 	 * Executes a series of layouts, such as a node layout followed by a tag layout.
 	 *
 	 * @param {Object} data
@@ -11511,7 +12721,7 @@ aperture.layout = (function(namespace) {
 	 * @param {Array} layouts
 	 *  An array of layout objects, each with at minimum a field of name type indicating
 	 *  the type of layout, and optionally any other fields indicating options.
-	 * 
+	 *
 	 * @param {Function} callback
 	 *  The callback for handling the response from the layout service.
 	 * @returns
@@ -11524,10 +12734,11 @@ aperture.layout = (function(namespace) {
 
 
 	return namespace;
-	
-}(aperture.layout || {}));/**
+
+}(aperture.layout || {}));
+/**
  * Source: pubsub.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Publish / Subscribe (PubSub) API implementation
  */
 
@@ -11611,7 +12822,7 @@ aperture.pubsub = (function() {
 }());
 /**
  * Source: store.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Content Service API
  */
 
@@ -11622,9 +12833,34 @@ aperture.pubsub = (function() {
  */
 aperture.store = (function() {
 
+	function get(descriptor, callback, action) {
+		var url = this.url(descriptor, action);
+		
+		if (url) {
+			var innerCallback = callback && function( result, info ) {
+				if( info.success ) {
+					// Call user's callback with the document data
+					// TODO Get the latest revision via ETAG
+					callback( result, descriptor );
+				} else {
+					// TODO Better error handling?
+					callback(null, descriptor);
+				}
+			};
 
-	return {
+			// Make the call
+			aperture.io.rest(url, "GET", innerCallback);
+			
+		} else {
+			callback(null, descriptor);
+		}		
+	}
+
+	var api = {
 		/**
+		 * @name aperture.store.store
+		 * @function
+		 * @description
 		 * Store a data item in the CMS.
 		 * @param {String|Object} data the data item to store.  Can be a string or a javascript object.
 		 * If a string it will be stored as is.  If an object, it will be converted to JSON
@@ -11699,6 +12935,9 @@ aperture.store = (function() {
 		},
 
 		/**
+		 * @name aperture.store.url
+		 * @function
+		 * @description
 		 * Gets the url of a document in the store given a descriptor.
 		 *
 		 * @param {Object} descriptor an object describing the document to get
@@ -11707,8 +12946,12 @@ aperture.store = (function() {
 		 * @param {String} descriptor.id the id of the document to get
 		 * @param {String} [descriptor.rev] the revision of the document to get.  If not
 		 * provided, the most recent revision will be retrieved.
+		 * @param {String='get'|'remove'|'pop'} [action='get'] the action to perform, which defaults to get 
+		 * @param {String} [downloadAs] the local filename of the document if is to be downloaded 
+		 * rather than opened by the browser. Do not specify this argument if the document should
+		 * be subject to normal browser MIME type viewing.
 		 */
-		getURL : function(descriptor) {
+		url : function(descriptor, action, downloadAs) {
 			if( !descriptor || descriptor.id == null || descriptor.id === '' ) {
 				aperture.log.error('get from store must specify an id');
 				return;
@@ -11718,16 +12961,24 @@ aperture.store = (function() {
 			descriptor.store = descriptor.store || 'aperture';
 
 			// Construct the url
-			var url = '/cms/'+descriptor.store+'/'+descriptor.id;
+			var url = aperture.io.restUrl('/cms/'+descriptor.store+'/'+descriptor.id
+				+ '?action='+ (action||'get'));
+			
 			// Have a rev?  Use it
 			if( descriptor.rev ) {
-				url += '?rev='+descriptor.rev;
+				url += '&rev='+descriptor.rev;
+			}
+			if (downloadAs) {
+				url += '&downloadAs='+encodeURI(downloadAs);
 			}
 
 			return url;
 		},
 		
 		/**
+		 * @name aperture.store.get
+		 * @function
+		 * @description
 		 * Gets a document from the server given a descriptor.
 		 *
 		 * @param {Object} descriptor an object describing the document to get
@@ -11742,202 +12993,920 @@ aperture.store = (function() {
 		 * document descriptor.
 		 */
 		get : function(descriptor, callback) {
-			var url = getURL(descriptor);
-			
-			if (url) {
-				var innerCallback = callback && function( result, info ) {
-					if( info.success ) {
-						// Call user's callback with the document data
-						// TODO Get the latest revision via ETAG
-						callback( result, descriptor );
-					} else {
-						// TODO Better error handling?
-						callback(null, descriptor);
-					}
-				};
-
-				// Make the call
-				aperture.io.rest(uri, "GET", innerCallback);
-				
-			} else {
-				callback(null, descriptor);
-			}
+			return get(descriptor, callback, 'get');
+		},
+		
+		/**
+		 * @name aperture.store.remove
+		 * @function
+		 * @description
+		 * Removes a document from the server given a descriptor, optionally fetching it.
+		 *
+		 * @param {Object} descriptor an object describing the document to get
+		 * @param {String} [descriptor.store] the name of the content store to use.  If not
+		 * provided the default will be used.
+		 * @param {String} descriptor.id the id of the document to get
+		 * @param {String} [descriptor.rev] the revision of the document to get.  If not
+		 * provided, the most recent revision will be retrieved.
+		 *
+		 * @param {Function(data,descriptor)} [callback] a callback to be called when the document
+		 * data is available.  The callback will be provided with the data and a hash of the
+		 * document descriptor.
+		 * 
+		 * @param {boolean=false} fetch optionally return the removed document.
+		 */
+		remove : function(descriptor, callback, fetch) {
+			return get(descriptor, callback, fetch? 'pop':'remove');
 		}
 	};
 
+	/**
+	 * deprecated
+	 * @private
+	 */
+	api.getURL = api.url;
+	
+	return api;
 }());/**
- * Copyright (c) 2014 Oculus Info Inc.
- * http://www.oculusinfo.com/
- * 
- * Released under the MIT License.
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to do
- * so, subject to the following conditions:
-
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
-
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Source: esri.js
+ * Copyright (c) 2013-2014 Oculus Info Inc.
+ * @fileOverview Aperture Map APIs
+ *
+ *This code was written to integrate maps created using the Esri JS/ArcGIS Javascript library 
+ * into Aperture.
+ *
  */
 
-aperture.tooltip = (function(ns) {
+/**
+ * @namespace Geospatial vizlet layers. If not used the geospatial package may be excluded.
+ * @requires OpenLayers or ESRI
+ */
+aperture.geo = (
+/** @private */
+function(ns) {
+function esriMaps() {
+	aperture.log.info('Loading ESRI map api implementation...');
+	
+	var SpatialReference = require("esri/SpatialReference"), 
+		Extent = require("esri/geometry/Extent"), 
+		Point = require("esri/geometry/Point"), 
+		EsriMapType = require("esri/map"), 
+		ArcGISDynamicMapServiceLayer = require( "esri/layers/ArcGISDynamicMapServiceLayer");
 
-	var tooltipExists = false;
-	var tooltipDiv = null;
-	var tooltipInnerDiv = null;
-	var tooltipID = "apertureTooltip";
-	var tooltipTimer = null;
-	var tooltipPending = false;
-	var tooltipVisible = false;
-	
-	var overridingMouseMove = false;
-	var oldMouseMove = null;
-	
-	var assertTooltip = function() {
-		if (!tooltipExists) {
-			tooltipDiv = document.createElement("div");
-			tooltipDiv.style.zIndex = '999999999';
-			tooltipDiv.style.position = 'absolute';
-			tooltipDiv.id = tooltipID;
-			tooltipDiv.style.display = "none";
-			
-			tooltipInnerDiv = document.createElement("div");
-			tooltipInnerDiv.setAttribute("class", "apertureTooltip");
-
-			tooltipDiv.appendChild(tooltipInnerDiv);
-			
-			window.document.body.appendChild(tooltipDiv);
-			tooltipExists = true;
-		}
-	};
-	
-	var positionTooltip = function(posx,posy) {
-		var w = $(window).width();
-		var h = $(window).height();
-		var ew = 'E';
-		var ns = 'S';
-		if (posx<w/2) {
-			tooltipDiv.style.left = (posx-30-2) + "px";
-			tooltipDiv.style.right = '';
-			ew = 'E';
-		} else {
-			tooltipDiv.style.left = '';
-			tooltipDiv.style.right = (w-(posx+30-2)) + "px";
-			ew = 'W';
-		}
-		if (posy>h/2) {
-			tooltipDiv.style.top = "";
-			tooltipDiv.style.bottom = (h-posy+10) + "px";
-			ns = 'N';
-		} else {
-			tooltipDiv.style.top = (posy+10+2) + "px";
-			tooltipDiv.style.bottom = "";
-			ns = 'S';
-		}
-		tooltipInnerDiv.setAttribute("class", "apertureTooltip"+ns+ew);
-	}
-	
-	var setTooltipVisible = function(spec, posx, posy) {
-		positionTooltip(posx, posy);
-		tooltipDiv.style.display = "";
-		tooltipPending = false;
-		tooltipVisible = true;
-	};
-	
-	var getEventXY = function(e) {
-		var posx=0, posy=0;
-		if (e.pageX || e.pageY) 	{
-			posx = e.pageX;
-			posy = e.pageY;
-		} else if (e.clientX || e.clientY) 	{
-			posx = e.clientX + document.body.scrollLeft
-				+ document.documentElement.scrollLeft;
-			posy = e.clientY + document.body.scrollTop
-				+ document.documentElement.scrollTop;
-		}
-		return [posx,posy];
-	};
-	
-	var overrideMouseMove = function(target) {
-		if (!overridingMouseMove) {
-			oldMouseMove = document.onmousemove;
-			document.onmousemove = function(event) {
-				var pos = getEventXY(event);
-				positionTooltip(pos[0], pos[1]);
-				return true;
-			};
-			overridingMouseMove = true;
-		}
-	};
-
-	var cancelMouseMoveOverride = function() {
-		if (overridingMouseMove) {
-			document.onmousemove = oldMouseMove;
-			overridingMouseMove = false;
-		}
-	};
-	
-	var cancelTooltip = function() {
-		if (tooltipPending) {
-			clearTimeout(tooltipTimer);
-			tooltipPending = false;
-		}
-		tooltipDiv.style.display = "none";
-		tooltipVisible = false;
-		cancelMouseMoveOverride();
-	};
-
-	ns.showTooltip = function(spec) {
-		var pos = getEventXY(spec.event.source);
-		
-		assertTooltip();
-		if (tooltipVisible) {
-			if (tooltipInnerDiv.innerHTML==spec.html) {
-				return;
+	// util is always defined by this point
+	var util = aperture.util, esri = 'ESRI_CANVAS';
+	//
+	// Searchers through a set of layers to find
+	// the base layer's index.
+	var getBaseLayerIndex = function(map) {
+		var i, layers = map.layers;
+		for(i=0; i < layers.length; i++) {
+			if(layers[i].isBaseLayer==true){
+				return(i);
 			}
 		}
-		cancelTooltip();
-		tooltipInnerDiv.innerHTML = spec.html;
-		if (spec.delay) {
-			tooltipPending = true;
-			tooltipTimer = setTimeout(function(){setTooltipVisible(spec, pos[0], pos[1]);}, spec.delay);
-		} else {
-			setTooltipVisible(spec, pos[0], pos[1]);
-		}
-		overrideMouseMove(spec.event.source.target);
 	};
 	
-	ns.hideTooltip = function() {
-		assertTooltip();
-		cancelTooltip();
+
+	define("ApertureEsriTMSLayer", [ "dojo/_base/declare","esri/SpatialReference", "esri/geometry/Extent", "esri/layers/TileInfo", "esri/layers/TiledMapServiceLayer" ], 
+									function(declare, SpatialReference, Extent, TileInfo, TiledMapServiceLayer) {
+		return declare(TiledMapServiceLayer, {
+			constructor : function(config) {
+				if (typeof config.esriOptions == 'undefined') {
+					return aperture.log.error('Esri options must be specfied for Esri TMS layers');
+				}
+			
+				if (typeof config.esriOptions.wkid !== 'undefined') {
+					this.spatialReference = new SpatialReference({
+						wkid : config.wkid
+					});
+					if (typeof config.extent !== 'undefined') {
+						var extentConfig = config.extent;
+						extentConfig.spatialReference = this.spatialReference;
+						var ext = new Extent(extentConfig);
+						this.initialExtent = this.fullExtent = ext;
+					}
+				}
+
+				// Could do a mixin but will get properties we don't want
+				this.urlPrefix = config.urlPrefix;
+				this.urlVersion = config.urlVersion;
+				this.urlLayer = config.urlLayer;
+				this.urlType = config.urlType;
+				this.maxScale = config.esriOptions.maxScale;
+				this.minScale = config.esriOptions.minScale;
+				this.opacity = config.esriOptions.opacity;
+
+				if ((typeof config.esriOptions.tiles !== 'undefined') && (typeof config.esriOptions.lods !== 'undefined')) {
+					var tileConfig = config.esriOptions.tiles;
+					tileConfig.lods = config.esriOptions.lods;
+					this.tileInfo = new TileInfo(tileConfig);
+				}
+
+				this.loaded = true;
+				this.onLoad(this);
+			},
+
+			getTileUrl : function(level, row, col) {
+				row = Math.pow(2, level) - row - 1;
+				return 	this.urlPrefix + "/" +
+						this.urlVersion + "/" + 
+						this.urlLayer + "/" + 
+						level + "/" + 
+						col + "/" + 
+						row	+ this.urlType;
+			}
+		});
+	});		
+
+	// if basic Canvas ever implements stuff for real we should override where it makes sense
+	var EsriCanvas = aperture.canvas.Canvas.extend( 'aperture.geo.EsriCanvas', {
+			init : function(root, map) {
+				aperture.canvas.Canvas.prototype.init.call(this, root);
+				this.esriMap_ = map;
+			}
+		}
+	);
+	//
+	aperture.canvas.handle( esri, EsriCanvas );
+	//
+//			    /**
+//			     * @private
+//			     * Base of Map Layer classes
+//			     */
+	var EsriMapLayer = aperture.Layer.extend( '[private].EsriMapLayer', {
+		init : function(spec, mappings) {
+			aperture.Layer.prototype.init.call(this, spec, mappings);
+	//
+			if (spec.extent) {
+				spec.extent = OpenLayers.Bounds.fromArray(spec.extent);
+			}
+			if ( !this.canvas_ ) {
+				throw new Error('Map layer must be constructed by a parent layer through an addLayer call');
+			}
+		},
+	//
+		/**
+		 * OpenLayers layer
+		 */
+		esriLayer_ : null, // Assumption that a single OpenLayers layer can be used for all rendering
+	//
+	//
+		/**
+		 * Canvas type is OpenLayers
+		 */
+		canvasType : esri,
+	//
+		/**
+		 * @private
+		 */
+		data : function(value) {
+			if( value ) {
+				throw new Error('Cannot add data to a base map layer');
+			}
+		},
+	//
+		/**
+		 * @private
+		 */
+		render : function(changeSet) {
+			// Must force no render logic so the layer doesn't try to monkey around with data
+		},
+//			        
+		/**
+		 * @private
+		 */
+		remove : function() {
+			aperture.Layer.prototype.remove.call(this);
+	//
+			// hook into open layers to remove
+			//ESRI TODO REMOVE CALL
+			//this.canvas_.olMap_.removeLayer(this.olLayer_);
+		}
+	});
+	//    
+
+	// deprecated
+	var tileTypeAliases = {
+			tms : 'TMS',
+			wms : 'WMS'
+		};
+	//    
+	//    
+	var MapTileLayer = EsriMapLayer.extend( 'aperture.geo.MapTileLayer', 
+	/** @lends aperture.geo.MapTileLayer# */
+	{
+		/**
+		 * @class The base class for Aperture Map layers that displays one or more image tiles 
+		 * from one of a variety of standards based sources.
+		 *
+		 * @augments aperture.Layer
+		 * @constructs
+		 * @factoryMade
+		 */
+		init : function(spec, mappings) {
+			EsriMapLayer.prototype.init.call(this, spec, mappings);
+	//
+			spec.options = spec.options || {};
+			
+			if (spec.options.isBaseLayer == null) {
+				spec.options.isBaseLayer = false;
+			}
+		}		
+	});
+	//
+		ns.MapTileLayer = MapTileLayer;
+	//
+
+	ns.MapTileLayer.TMS = MapTileLayer.extend( 'aperture.geo.MapTileLayer.TMS', 
+			/** @lends aperture.geo.MapTileLayer.TMS# */
+			{
+
+				init : function(spec, mappings) {
+					MapTileLayer.prototype.init.call(this, spec, mappings);
+					var ApertureEsriTMSLayer = require("ApertureEsriTMSLayer");
+					this.esriLayer = new ApertureEsriTMSLayer(spec);
+					this.canvas_.esriMap_.addLayer(this.esriLayers);			
+				}		
+			});
+
+	//
+	/**********************************************************************/
+	/*
+	 * The list of OpenLayers vector layer styles that can be mapped in Aperture
+	 */
+	var availableStyles = {
+			'fillColor' : 'fill',
+			'fillOpacity': 'opacity',
+			'strokeColor': 'stroke',
+			'strokeOpacity': 'stroke-opacity',
+			'strokeWidth': 'stroke-width',
+			'strokeLinecap': 'stroke-linecap',
+			'strokeDashstyle': 'stroke-style', // needs translation?
+//					'graphicZIndex', ??
+			'label': 'label',
+			'pointRadius': 'radius',
+			'cursor': 'cursor',
+			'externalGraphic': '' // overridden below
 	};
+	//
+	/*
+	 * Default values for all settable styles (used if not mapped)
+	 * TODO Allow this to be overridden by configuration
+	 */
+	var vectorStyleDefaults = {
+		fillColor: '#999999',
+		fillOpacity: '1',
+		strokeColor: '#333333',
+		strokeOpacity: '1',
+		strokeWidth: 1,
+		strokeLinecap: 'round',
+		strokeDashstyle: 'solid',
+		graphicZIndex: 0,
+		// Must have a non-undefined label or else OpenLayers writes "undefined"
+		label: '',
+		// Must have something defined here or IE throws errors trying to do math on "undefined"
+		pointRadius: 0,
+		cursor: ''
+	};
+	//
+	/*
+	 * Styles that are fixed and cannot be altered
+	 * TODO Allow this to be overridden by configuration
+	 */
+	var fixedStyles = {
+		fontFamily: 'Arial, Helvetica, sans-serif',
+		fontSize: 10
+	//
+		// If we allow the following to be customizable by the user
+		// this prevents us from using the default of the center of the image!
+		//graphicXOffset:
+		//graphicYOffset:
+	};
+	//
+	// returns private function for use by map external layer
+	var makeHandler = (function() {
+		
+		// event hooks for features.
+		function makeCallback( type ) {
+			var stopKey;
+			
+			switch (type) {
+			case 'click':
+			case 'dblclick':
+				stopKey = 'stopClick';
+				break;
+			case 'mousedown':
+			case 'touchstart': // ?
+				stopKey = 'stopDown';
+				break;
+			case 'mouseup':
+				stopKey = 'stopUp';
+				break;
+			}
+			if (stopKey) {
+				return function(feature) {
+					this.handler_[stopKey] = this.trigger(type, {
+						data: feature.attributes,
+						eventType: type
+					});
+				};
+			} else {
+				return function(feature) {
+					this.trigger(type, {
+						data: feature.attributes,
+						eventType: type
+					});
+				};
+			}
+		}
+
+		var featureEvents = {
+			'mouseout' : 'out',
+			'mouseover' : 'over'
+		};
+		
+		return function (events) {
+			var handlers = {}, active;
+			
+			if (this.handler_) {
+				this.handler_.deactivate();
+				this.handler_= null;
+			}
+			
+			aperture.util.forEach(events, function(fn, event) {
+				handlers[ featureEvents[event] || event ] = makeCallback(event);
+				active = true;
+			}); 
+	//
+			if (active) {
+
+			}
+		};
+	}());
+	
+	//
+	// default property values for map nodes.
+	var mapNodeProps = {
+		'longitude' : 0,
+		'latitude' : 0
+	};
+	
+	var updateContentFrame = function(mapNodeLayer) {
+		var contentFrame = mapNodeLayer.contentFrame;
+		var esriMap = mapNodeLayer.mapCanvas.esriMap_;
+		var extent = esriMap.geographicExtent;
+		var apiProjection = new SpatialReference(4326);
+		var topLeft = new Point(extent.xmin , extent.ymax, apiProjection );
+		var bottomRight = new Point( extent.xmax, extent.ymin, apiProjection);
+		
+		var screenTL = esriMap.toScreen(topLeft);
+		var screenBR = esriMap.toScreen(bottomRight);
+		
+		//If we render the aperture SVG elements into a div that is a 3x3 grid of the actual viewport
+		//then when we pan (move the div) the elements that are outside the viewport are rendered correctly.
+		var returnHeight = screenBR.y * 3;
+		var returnWidth  = screenBR.x * 3;
+		
+		screenBR.x = screenBR.x * -1;
+		screenBR.y = screenBR.y * -1;
+		mapNodeLayer.corrective = { x:screenBR.x,y:screenBR.y};
+		var canvasSize =  {h: returnHeight, w : returnWidth};
+
+		mapNodeLayer._canvasWidth = canvasSize.w;
+		mapNodeLayer._canvasHeight = canvasSize.h;
+		
+		OpenLayers.Util.modifyDOMElement(contentFrame, null, mapNodeLayer.corrective, canvasSize, 'absolute');
+		mapNodeLayer.corrective.x = mapNodeLayer.corrective.x * -1;
+		mapNodeLayer.corrective.y = mapNodeLayer.corrective.y * -1;
+	};
+	
+	//
+	/*
+	 * TODO: Create a generic container layer that just creates a canvas for children
+	 * to use.  Map lat/lon to [0,1] ranges and then renderers can scale x/y based on
+	 * size of canvas.  Then can make MapNodeLayer derive from this layer.  This layer
+	 * could be used as parent for a layer drawing a series of points/labels, for
+	 * example.
+	 */
+	//
+	var MapNodeLayer = aperture.PlotLayer.extend( 'aperture.geo.MapNodeLayer',
+	/** @lends aperture.geo.MapNodeLayer# */
+	{
+		/**
+		 * @class A layer that draws child layer items at point locations.
+		 * 
+		 * @mapping {Number} longitude
+		 *   The longitude at which to locate a node
+		 *   
+		 * @mapping {Number} latitude
+		 *   The latitude at which to locate a node
+		 *
+		 * @augments aperture.PlotLayer
+		 * @constructs
+		 * @factoryMade
+		 */
+		init: function(spec, mappings) {
+			this.robId = "MapNodeLayer";
+			aperture.PlotLayer.prototype.init.call(this, spec, mappings);
+			
+			if (mappings && mappings.map) {
+				this.canvas_.esriMap_ = mappings.map;
+			}
+
+			// because we declare ourselves as an open layers canvas layer this will be 
+			// the parenting open layers canvas, which holds the map reference. Note however that
+			// since we are really a vector canvas layer we override that a ways below.
+			this.mapCanvas = this.canvas_;
+			if (!this.mapCanvas.esriMap_) {
+				aperture.log.error('MapNodeLayer must be added to a map.');
+				return;
+			}
+			
+			var that = this;
+
+			
+			var appendControl = document.getElementById('map_container');
+			this.contentFrame = document.createElement('div');
+			this.contentFrame.style.position = 'absolute';
+			
+			appendControl.appendChild(this.contentFrame);
+			
+			this.mapCanvas.esriMap_.on("load", function() {
+				that.mapCanvas.esriMap_.graphics.enableMouseEvents();						
+				updateContentFrame(that);
+			});					
+				
+			var renderHandler = function() {						
+				updateContentFrame(that);
+				that.contentFrame.style.visibility = "visible";
+				that.all().redraw();						
+			};
+			
+			var hideHandler = function() {
+				that.contentFrame.style.visibility = "hidden";
+			};
+			
+			var panHandler = function(extent) {
+				var newY = extent.delta.y - that.corrective.y;
+				var newX = extent.delta.x - that.corrective.x;
+				that.contentFrame.style.top  = newY + "px";
+				that.contentFrame.style.left = newX + "px";
+			};
+			
+			this.mapCanvas.esriMap_.on("zoom-start", hideHandler);
+			this.mapCanvas.esriMap_.on("zoom-end", renderHandler);
+			this.mapCanvas.esriMap_.on("pan-end", renderHandler);
+			this.mapCanvas.esriMap_.on("pan", panHandler);			
+													
+			// because we parent vector graphics but render into a specialized open layers
+			// canvas we need to help bridge the two by pre-creating this canvas with the
+			// right parentage.
+			var EsriVectorCanvas = aperture.canvas.type(aperture.canvas.VECTOR_CANVAS);
+	//
+			this.canvas_ = new EsriVectorCanvas( this.contentFrame );
+			this.mapCanvas.canvases_.push( this.canvas_ );
+		},				
+
+		update : function() {
+			updateContentFrame(this);
+		},
+						
+	//
+		/**
+		 * @private
+		 */
+		canvasType : esri,
+	//
+		/**
+		 * @private
+		 */
+		render : function( changeSet ) {
+			// just need to update positions
+			aperture.util.forEach(changeSet.updates, function( node ) {
+				// If lon,lat is specified pass the position to children
+				// Otherwise let the children render at (x,y)=(0,0)
+				var lat = this.valueFor('latitude', node.data, null);
+				var lon = this.valueFor('longitude', node.data, null);
+	//
+				// Find pixel x/y from lon/lat
+				var px = {x:0,y:0};
+				if (lat != null && lon != null) {
+					var mapPoint = new Point( lon, lat, apiProjection );
+					px = this.vizlet_.esriMap_.toScreen(mapPoint);
+					px.x += this.corrective.x;
+					px.y += this.corrective.y;
+				}
+	//
+				node.position = [px.x,px.y];
+				node.userData.width = this._canvasWidth;
+				node.userData.height = this._canvasHeight;							
+	//
+				// Update width/height
+	//
+			}, this);
+			
+			
+			// will call renderChild for each child.
+//					this.zoomed = false;
+			aperture.PlotLayer.prototype.render.call(this, changeSet);
+//					
+//					//Copy the rendered elements into the Esri Graphics layer
+//					var svgElement = document.getElementById('map_graphics_layer');
+//					var removeElements = [];
+//					for (var index = 0; index < svgElement.children.length; index++) {
+//						removeElements.push(svgElement.children[index]);
+//					}
+//					
+//					for (var index = 0; index < removeElements.length; index++) {
+//						svgElement.removeChild(removeElements[index]);
+//					}
+//										
+//					var copyElements = this.contentFrame.children[0].children;					
+//					for (var index = 0; index < copyElements.length; index++) {
+//						var clonedNode = copyElements[index].cloneNode(true);
+//						svgElement.appendChild(clonedNode);
+//					}
+			
+//					//The appendChild call removes the element from the children array so must
+//					//clone the array
+//					var tempArray = [];
+//					for (var index = 0; index < copyElements.length; index++) {
+//						tempArray.push(copyElements[index]);
+//					}
+//					
+//					for (var index = 0; index < tempArray.length; index++) {
+//						svgElement.appendChild(tempArray[index]);						
+//					}
+	//
+		},
+	//
+		/**
+		 * @private
+		 */
+		renderChild : function(layer, changeSet) {
+			// Pass size information to children (so LineSeriesLayer can render correctly)
+			aperture.util.forEach( changeSet.updates, function (node) {
+				if (node) {
+					node.width = node.parent.userData.width;
+					node.height = node.parent.userData.height;
+				}
+			});
+			layer.render( changeSet );
+		},
+	//
+		/**
+		 * Given a location returns its pixel coordinates in container space.
+		 */
+		getXY: function(lon,lat) {
+			var mapPoint = new Point( lon, lat, apiProjection );
+			var screenPoint = this.vizlet_.esriMap_.toScreen(mapPoint);
+			return screenPoint;
+		},
+	//
+		getExtent: function() {
+//					var extent =  this.vizlet_.esriMap_.extent;
+			return {left: 0, right:0, top:0, bottom:0};
+		}
+	});
+	//
+	ns.MapNodeLayer = MapNodeLayer;
+	//
+	//
+	/************************************************************************************/
+	//
+	//
+
+	//
+	/*
+	 * The projection that the API expects unless instructed otherwise.  All layers
+	 * and data are to be expressed in this projection.
+	 */
+	var apiProjection = new SpatialReference(4326);
+	//
+	/*
+	 * Default map options
+	 */
+	var defaultMapConfig = {
+		options : {
+			projection : apiProjection,
+			displayProjection : apiProjection
+		}
+	};
+	//
+	/**
+	 * Call on zoom completion.
+	 */
+	function notifyZoom() {
+		this.trigger('zoom', {
+			eventType : 'zoom',
+			layer : this
+		});
+	}
+	//
+	function notifyPan() {
+		this.trigger('panend', {
+			eventType : 'panend',
+			layer : this
+		});
+	}
+
+	var EsriMapVizletLayer = aperture.PlotLayer.extend( 'aperture.geo.EsriMapVizletLayer',
+	// documented as Map, since it currently cannot function as a non-vizlet layer.
+	/**
+	 * @lends aperture.geo.Map#
+	 */
+	{
+		/**
+		 * @class A map vizlet is capable of showing geographic and geographically located data.  It
+		 * contains a base map and additional child geo layers can be added. The base map is
+		 * typically configured as a system-wide default, although can be overridden via the
+		 * spec object passed into this constructor.  This layer does not require or support any
+		 * mapped properties. 
+		 *
+		 *
+		 * @constructs
+		 * @augments aperture.PlotLayer
+		 *
+		 * @param {Object|String|Element} spec
+		 *      A specification object detailing options for the map construction, or
+		 *      a string specifying the id of the DOM element container for the vizlet, or
+		 *      a DOM element itself. A
+		 *      specification object, if provided, includes optional creation options for the
+		 *      map layer.  These options can include base map configuration, map projection settings,
+		 *      zoom level and visible area restrictions, and initial visible bounds.  Other than an id,
+		 *      the following options do not need to be included if they are already configured via the 
+		 *      aperture.config system.
+		 * @param {String|Element} spec.id
+		 *      If the spec parameter is an object, a string specifying the id of the DOM
+		 *      element container for the vizlet or a DOM element itself.
+		 * @param {Object} [spec.options]
+		 *      Object containing options to pass directly to the Openlayers map.
+		 * @param {String} [spec.options.projection]
+		 *      A string containing the EPSG projection code for the projection that should be
+		 *      used for the map.
+		 * @param {String} [spec.options.displayProjection]
+		 *      A string containing the EPSG projection code for the projection that should be
+		 *      used for displaying map data to the user, for example mouse hover coordinate overlays.
+		 * @param {String} [spec.options.units]
+		 *      The units used by the projection set above
+		 * @param {Array} [spec.options.maxExtent]
+		 *      A four-element array containing the maximum allowed extent (expressed in units of projection
+		 *      specified above) of the map given the limits of the projection.
+		 * @param {Object} [spec.baseLayer]
+		 *      Object containing information about the base map layer that should be created.
+		 * @param {Object} spec.baseLayer.{TYPE}
+		 *      The base layer specification where {TYPE} is the class of MapTileLayer 
+		 *      (e.g. {@link aperture.geo.MapTileLayer.TMS TMS}) and
+		 *      its value is the specification for it.
+		 * @param {Object} [mappings]
+		 *      An optional initial set of property mappings.
+		 */
+		init : function(spec, mappings) {
+	//
+			// clone - we will be modifying, filling in defaults.
+			this.spec = spec = util.extend({}, spec);
+	//
+			// pass clone onto parent.
+			aperture.PlotLayer.prototype.init.call(this, spec, mappings);
+	//
+	//
+			// PROCESS SPEC
+			// Clone provided options and fill in defaults
+			spec.options = util.extend({}, defaultMapConfig.options || {}, spec.options);
+	//
+			// Ensure projections are in OpenLayers class format
+			if( util.isString(spec.options.projection) ) {
+				spec.options.projection = new OpenLayers.Projection(spec.options.projection);
+			}
+			if( util.isString(spec.options.displayProjection) ) {
+				spec.options.displayProjection = new OpenLayers.Projection(spec.options.displayProjection);
+			}
+	//
+			// Ensure maxExtent is an OpenLayer bounds object
+			if( util.isArray(spec.options.maxExtent) ) {
+				spec.options.maxExtent = OpenLayers.Bounds.fromArray(spec.options.maxExtent);
+			}
+			
+			// If map to have no controls, initialize with new empty array, not array from defaultMapConfig
+			if(util.isString(spec.options.controls)||(util.isArray(spec.options.controls)&&(spec.options.controls.length==0))){
+				spec.options.controls = [];  
+			}
+	//
+			// Clone provided base layer information and fill in defaults
+			spec.baseLayer = util.extend({}, defaultMapConfig.baseLayer || {}, spec.baseLayer);
+	//
+			// CREATE MAP
+			// Create the map without a parent
+						
+			this.esriMap_ = new EsriMapType("map", defaultMapConfig.esriOptions );
+			this.canvas_.canvases_.push(new EsriCanvas( this.canvas_.root(), this.esriMap_ ) );
+
+			this.basemapLayer = new ArcGISDynamicMapServiceLayer("http://192.168.0.152:6080/arcgis/rest/services/Natural_Earth_SERVICE_BLACK_WM/Natural_Earth_SERVICE_BLACK_WM/MapServer");
+			this.esriMap_.addLayer(this.basemapLayer);
+			
+			var type = '', config = null;
+			
+			for (type in spec.baseLayer) {
+				if (spec.baseLayer.hasOwnProperty(type)) {
+					config = spec.baseLayer[type];
+					break;
+				}
+			}
+	// 
+			if (!config) {
+				//Do nothing				
+			} else {
+				config.options = config.options || {};
+				config.options.isBaseLayer = true;
+				
+				var resolvedType = tileTypeAliases[type] || type;
+	//
+				if (MapTileLayer[resolvedType]) {
+					this.addLayer( MapTileLayer[resolvedType], {}, config );
+				} else {
+					aperture.log.warn('WARNING: unrecognized map base layer type: '+ type);
+					//Do nothing
+				}
+			}
+			
+			// Add mouse event handlers that pass click and dblclick events
+			// through to layer event handers
+			var that = this,
+				handler = function( event ) {
+					that.trigger(event.type, {
+						eventType: event.type
+					});
+				};
+	//
+			// XXX Set an initial viewpoint so OpenLayers doesn't whine
+			// If we don't do this OpenLayers dies on nearly all lat/lon and pixel operations
+//					this.zoomTo(0,0,1);
+//			//
+			this.esriMap_.on('zoom-end', function() {
+				notifyZoom.apply(that);
+			});
+			this.esriMap_.on('pan-end', function() {
+				notifyPan.apply(that);
+			});
+		},
+	//
+		/**
+		 * @private
+		 * The map requires a DOM render context
+		 */
+		canvasType : aperture.canvas.DIV_CANVAS,
+	//
+		/**
+		 * Zooms to the max extent of the map.
+		 */
+		zoomToMaxExtent: function() {
+			//Do not know how to implement this in ESRI
+			//this.olMap_.zoomToMaxExtent();
+		},
+		
+		setOpacity: function(opacity) {
+			if (this.basemapLayer) {
+				this.basemapLayer.setOpacity(opacity);
+			}
+		},
+		
+		getOpacity : function() {
+			return this.basemapLayer ? this.basemapLayer.opacity : -1;
+		},
+		
+		on: function(eventType, handler) {
+			return this.esriMap_.on(eventType, handler);
+		},
+		
+		
+		getExtent: function() {
+			var bounds = null;
+			if (this.esriMap_.extent) {
+				bounds = {};
+				bounds.left = this.esriMap_.extent.xmin;
+				bounds.bottom = this.esriMap_.extent.ymin;
+				bounds.right = this.esriMap_.extent.xmax;
+				bounds.top = this.esriMap_.extent.ymax;
+			}
+			return bounds;
+		},
+		
+		/**
+		 * Zooms in one zoom level, keeps center the same.
+		 */
+		zoomIn: function() {
+			var maxZoom = this.esriMap_.getMaxZoom();
+			var currentZoom = this.esriMap_.getZoom();
+			if ((maxZoom !== -1) && (currentZoom < maxZoom)) {
+				this.esriMap_.setZoom(currentZoom + 1);
+			}			
+		},
+	//
+		/**
+		 * Zooms out one zoom level, keeps center the same (if possible).
+		 */
+		zoomOut: function() {
+			var minZoom = this.esriMap_.getMinZoom();
+			var currentZoom = this.esriMap_.getZoom();
+			if ((minZoom !== -1) && (currentZoom > minZoom)) {
+				this.esriMap_.setZoom(currentZoom - 1);
+			}
+		},
+	//
+		/**
+		 * Returns the zoom level as an integer.
+		 */
+		getZoom: function() {
+			return this.esriMap_.getZoom();
+		},
+	//
+		/**
+		 * Sets the map extents give a center point in lon/lat and a zoom level
+		 * Always accepts center as lon/lat, regardless of map's projection
+		 * @param lat latitude to zoom to
+		 * @param lon longitude to zoom to
+		 * @param zoom zoom level (map setup dependent)
+		 */
+		zoomTo : function( lat, lon, zoom ) {
+			var mapPoint = new Point( lon, lat, apiProjection );
+			this.esriMap_.centerAndZoom(mapPoint, zoom);
+		},
+	//
+		/**
+		 * Sets visible extents of the map in lat/lon (regardless of current coordinate
+		 * system)
+		 * @param left left longitude of extent
+		 * @param top top latitude of extent
+		 * @param right right longitude of extent
+		 * @param bottom bottom latitude of extent
+		 */
+		setExtents : function( left, top, right, bottom ) {
+			var extent = new Extent(left, bottom,right, top , new SpatialReference({ wkid: 4326 })); 
+			this.esriMap_.setExtent(extent);
+		}
+	});
+	//
+	/**
+	 * @private
+	 */
+	// MapVizletLayer is currently documented as Map, since it does not currently function as a non-vizlet layer.
+	var EsriMap = aperture.vizlet.make( EsriMapVizletLayer );
+	ns.Map = EsriMap;
+	//
+	//
+	/*
+	 * Register for config notification
+	 */
+	aperture.config.register('aperture.map', function(config) {
+		if( config['aperture.map'] ) {
+			if( config['aperture.map'].defaultMapConfig ) {
+				// override local defaults with any configured defaults.
+				util.extend( defaultMapConfig, config['aperture.map'].defaultMapConfig );
+			}
+	//
+			aperture.log.info('Map configuration set.');
+		}
+	});
+}
+
+	// load the esri map implementation if the default mapType is configured to be esri.
+	aperture.config.register('aperture.map', function(config) {
+		if( config['aperture.map'] ) {
+			if( config['aperture.map'].defaultMapConfig ) {
+				mapType = config['aperture.map'].defaultMapConfig.mapType;
+				
+				if ((mapType && mapType.toLowerCase()) === 'esri') {
+					esriMaps();
+				}
+			}
+		}
+	});
 	
 	return ns;
-	
-}(aperture.tooltip || {}));/**
+}(aperture.geo || {}));
+
+/**
  * Source: map.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Map APIs
  */
 
 /**
  * @namespace Geospatial vizlet layers. If not used the geospatial package may be excluded.
- * @requires OpenLayers
+ * @requires OpenLayers or ESRI
  */
 aperture.geo = (
 /** @private */
 function(ns) {
-
+function openLayersMaps() {
+	if (!window.OpenLayers) {
+		aperture.log.info('OpenLayers js not present. Skipping default map api implementation.');
+		return;
+	}
+	
+	aperture.log.info('Loading OpenLayers map api implementation...');
+	
 	// util is always defined by this point
 	var util = aperture.util, ol = 'OPEN_LAYERS_CANVAS';
 
@@ -11976,6 +13945,9 @@ function(ns) {
 			}
 			if ( !this.canvas_ ) {
 				throw new Error('Map layer must be constructed by a parent layer through an addLayer call');
+			}
+			if (this.canvas_.olMap_ === undefined) {
+				this.canvas_.olMap_ = spec.parent.olMap_;
 			}
 		},
 
@@ -12943,6 +14915,8 @@ function(ns) {
 			this._layer = new DivOpenLayer(spec.name || ('NodeLayer_' + this.uid), {});
 			mapCanvas.olMap_.addLayer(this._layer);
 			this._layer.setZIndex(999); // Change z as set by OpenLayers to be just under controls
+			// Turn off pointer events on the divs/svg to allow click through to map layers below
+			this._layer.div.style.pointerEvents = 'none';
 
 			// because we parent vector graphics but render into a specialized open layers
 			// canvas we need to help bridge the two by pre-creating this canvas with the
@@ -13268,6 +15242,19 @@ function(ns) {
 		},
 
 		/**
+         * Smoothly pans the map to a given center point in lat/lon.
+         * @param lat latitude to pan to
+         * @param lon longitude to pan to
+         */
+        panTo : function( lat, lon ) {
+            var center = new OpenLayers.LonLat(lon,lat);
+            if( this.olMap_.getProjection() !== apiProjection.projCode ) {
+                center.transform(apiProjection, this.olMap_.projection);
+            }
+            this.olMap_.panTo( center );
+        },
+
+		/**
 		 * Sets visible extents of the map in lat/lon (regardless of current coordinate
 		 * system)
 		 * @param left left longitude of extent
@@ -13305,12 +15292,28 @@ function(ns) {
 			aperture.log.info('Map configuration set.');
 		}
 	});
+}
 
+	// load the default map implementation if the default mapType is unconfigured or configured to be openlayers.
+	aperture.config.register('aperture.map', function(config) {
+		if( config['aperture.map'] ) {
+			if( config['aperture.map'].defaultMapConfig ) {
+				var olMapType = 'openlayers';
+				
+				mapType = config['aperture.map'].defaultMapConfig.mapType || olMapType;
+				
+				if (mapType.toLowerCase() === olMapType) {
+					openLayersMaps();
+				}
+			}
+		}
+	});
+	
 	return ns;
 }(aperture.geo || {}));
 /**
  * Source: AxisLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Axis Layer
  */
 
@@ -13329,14 +15332,14 @@ function(namespace) {
 	var DEFAULT_TICK_LENGTH = 4,
 		DEFAULT_TICK_WIDTH = 1,
 		palette = aperture.palette.color,
-	
+
 	createTitleLayer = function(node){
 		// Lazy creation of the title LabelLayer.
 		this.titleLayer = this.addLayer(aperture.LabelLayer);
 		// Detach the title of the axis from inheriting any parent x-mappings.
 		// We don't want the label to be able to pan horizontally.
-		this.titleLayer.map('x').from('x').only().using(this.DEFAULT_RANGE.mapKey([0,1]));
-		this.titleLayer.map('y').from('y').using(this.DEFAULT_RANGE.mapKey([1,0]));
+		this.titleLayer.map('x').from('x').only().using(this.DEFAULT_RANGE.mappedTo([0,1]));
+		this.titleLayer.map('y').from('y').using(this.DEFAULT_RANGE.mappedTo([1,0]));
 		this.titleLayer.map('text').from('text');
 		this.titleLayer.map('text-anchor').asValue('middle');
 
@@ -13486,14 +15489,14 @@ function(namespace) {
 			var tickArray = {ticks:axisRange.get()};
 			var xPos=0,yPos=0;
 			var tickLabels = [];
-	
+
 			// Check if the label layer is visible.
 			if (this.labelLayer){
 				if (type === 'y'){
 					// We use a default mapper for the x-coordinate of the labels so that we can
 					// align the vertical labels with the left side of the chart by mapping them
 					// to zero.
-					this.labelLayer.map('x').from('labels[].x').using(this.DEFAULT_RANGE.mapKey([0,1]));
+					this.labelLayer.map('x').from('labels[].x').using(this.DEFAULT_RANGE.mappedTo([0,1]));
 					this.labelLayer.map('y').from('labels[].y');
 					//this.labelLayer.map('text-anchor').asValue('end');
 				}
@@ -13502,27 +15505,24 @@ function(namespace) {
 					// We use a default mapper for the y-coordinate of the labels so that we can
 					// align the horizontal labels with the bottom of the chart by mapping them
 					// to zero.
-					this.labelLayer.map('y').from('labels[].y').using(this.DEFAULT_RANGE.mapKey([1,0]));
+					this.labelLayer.map('y').from('labels[].y').using(this.DEFAULT_RANGE.mappedTo([1,0]));
 					//this.labelLayer.map('text-anchor').asValue('middle');
 				}
-	
+
 				// Setup optional font attribute mappings. Default values are provided by label layer
 				// if no explicit value is provided locally.
 				this.labelLayer.map('font-family').asValue(this.valueFor('font-family', node.data, null));
 				this.labelLayer.map('font-size').asValue(this.valueFor('font-size',node.data,null));
 				this.labelLayer.map('font-weight').asValue(this.valueFor('font-weight', node.data, null));
 			}
-	
+
 			// Draw the tick marks for a banded or ordinal range.
 			var hasBands = axisRange.typeOf(/banded/),
-				mappedValue, tickId, tick, tickMin, tickLimit,
-				bandwidth = 0;
-			if (tickArray.ticks.length > 1){
-				// Calculate the distance between bands by sampling the first 2 intervals.
-				bandwidth = (this.valueFor('x', tickArray, 0, 1)-this.valueFor('x', tickArray, 0, 0))*node.width;
-			}
-	
+				mappedValue, tickId, tick, tickMin, tickLimit;
+
 			if (hasBands || axisRange.typeOf(aperture.Ordinal)){
+				var tickLast = false;
+
 				for (tickId=0; tickId < tickArray.ticks.length; tickId++){
 					tick = tickArray.ticks[tickId];
 					if (!tick) {
@@ -13530,6 +15530,26 @@ function(namespace) {
 					}
 					tickMin = hasBands?tick.min:tick;
 					tickLimit = hasBands?tick.limit:tick;
+
+					if (tickMin === -Number.MAX_VALUE) {
+						if (tickId === 0 && hasBands && this.valueFor('tick-first', null, 'band') === 'edge') {
+							tickMin = axisRange.start();
+						} else {
+							continue;
+						}
+					}
+
+					if (tickId === tickArray.ticks.length - 1) {
+						tickLast = true;
+						if (tickLimit === Number.MAX_VALUE) {
+							if (hasBands && this.valueFor('tick-last', null, 'band') === 'edge') {
+								tickLimit = axisRange.end();
+							} else {
+								tickLast = false;
+							}
+						}
+					}
+
 					if (type === 'x'){
 						mappedValue = this.valueFor('x', tickArray, 0, tickId);
 						xPos = (mappedValue*node.width) + left;
@@ -13537,20 +15557,24 @@ function(namespace) {
 						if (xPos < left || xPos > right){
 							continue;
 						}
-	
+
 						path += 'M' + xPos + ',' + yPos + 'L' + xPos + ',' + (yPos+tickLength);
 						tickLabels.push({'x':tickMin,'y':0, 'text':axisRange.format(tickMin)});
 						// If we're on the last tick, and there is a bounded upper limit,
 						// include a tick mark for the upper boundary value as well.
-						if (tickId == tickArray.ticks.length-1 && tickLimit != Number.MAX_VALUE){
-							// Create a fake data source so that the mapped value will account
-							// for any filters.
-							mappedValue = this.valueFor('x', {'ticks':[{'min':tickLimit}]}, 0, 0);
-							xPos = (mappedValue*node.width) + left;
-							path += 'M' + xPos + ',' + yPos + 'L' + xPos + ',' + (yPos+tickLength);
-							// If this is a banded scalar, we want to show the label.
-							if (axisRange.typeOf(aperture.Scalar)){
-								tickLabels.push({'x':tickLimit,'y':0, 'text':axisRange.format(tickLimit)});
+						if (tickLast) {
+							var mapX = this.mappings()['x'];
+
+							if (mapX) {
+								var isScalar = axisRange.typeOf(aperture.Scalar);
+								// if scalar pick upper limit, if ordinal pick end of list.
+								mappedValue = isScalar? mapX.value(tickLimit) : mapX.filteredValue(1);
+								xPos = (mappedValue*node.width) + left;
+								path += 'M' + xPos + ',' + yPos + 'L' + xPos + ',' + (yPos+tickLength);
+								// If this is a banded scalar, we want to show the label.
+								if (isScalar) {
+									tickLabels.push({'x':tickLimit,'y':0, 'text':axisRange.format(tickLimit)});
+								}
 							}
 						}
 					}
@@ -13559,10 +15583,10 @@ function(namespace) {
 						xPos = left - (tickLength + offset) - (0.5*ruleWidth);
 						yPos = (mappedValue*h) + top;
 						path += 'M' + xPos + ',' + yPos + 'L' + (xPos+tickLength) + ',' + yPos;
-	
+
 						// If we're on the last tick, and there is a bounded upper limit,
 						// include a tick mark for the upper boundary value as well.
-						if (tickId == tickArray.ticks.length-1 && tickLimit != Number.MAX_VALUE){
+						if (tickLast){
 							mappedValue = this.valueFor('y', {'ticks':[{'min':tickLimit}]}, 0, 0);
 							yPos = (mappedValue*h) + top;
 							path += 'M' + xPos + ',' + yPos + 'L' + (xPos+tickLength) + ',' + yPos;
@@ -13572,7 +15596,7 @@ function(namespace) {
 					}
 				}
 			}
-	
+
 			// Draw the tick marks for a scalar range.
 			else {
 				for (tickId=0; tickId < tickArray.ticks.length; tickId++){
@@ -13590,7 +15614,7 @@ function(namespace) {
 							path += 'M' + xPos + ',' + yPos + 'L' + xPos + ',' + (yPos+tickLength);
 							tickLabels.push({'x':tick,'y':0, 'text':axisRange.format(tick)});
 						}
-	
+
 						else if (type === 'y'){
 							xPos = left - (tickLength + offset) - ruleWidth;
 							// Calculate the axis position in a top-down fashion since the origin
@@ -13599,7 +15623,7 @@ function(namespace) {
 							if (yPos < top || yPos > bottom){
 								continue;
 							}
-							
+
 							path += 'M' + xPos + ',' + yPos + 'L' + (xPos+tickLength) + ',' + yPos;
 							tickLabels.push({'x':0,'y':tick, 'text':axisRange.format(tick)});
 						}
@@ -13659,54 +15683,62 @@ function(namespace) {
 	{
 		/**
 		 * @augments aperture.PlotLayer
-		 * @class An AxisLayer provides visual representation of a single axis 
-		 * for its parent {@link aperture.chart.ChartLayer ChartLayer}. AxisLayers are not added 
+		 * @class An AxisLayer provides visual representation of a single axis
+		 * for its parent {@link aperture.chart.ChartLayer ChartLayer}. AxisLayers are not added
 		 * to a chart in conventional layer fashion, rather they are instantiated the first time
 		 * they are referenced via chart.{@link aperture.chart.ChartLayer#xAxis xAxis} or
 		 * chart.{@link aperture.chart.ChartLayer#yAxis yAxis}
 
 		 * @mapping {String} stroke
 		 *   The color of the axis rule and ticks.
-		 * 
+		 *
 		 * @mapping {Number=0} rule-width
 		 *   The width of the line (in pixels) used to visually represent the baseline of an axis. Typically, the
 		 *   parent {@link aperture.chart.ChartLayer ChartLayer} will have a border visible, which subsequently provides
 		 *   the baseline for the axis, thus 'rule-width' is set to zero by default. If no border is present in
 		 *   the parent chart, then this property should be assigned a non-zero value.
 		 *   Tick marks will extend perpendicularly out from this line.
-		 * 
+		 *
 		 * @mapping {Number=0} tick-length
 		 *   The length of a tick mark on the chart axis.
-		 * 
+		 *
 		 * @mapping {Number=0} tick-width
 		 *   The width of a tick mark on the chart axis.
-		 * 
+		 *
 		 * @mapping {Number=0} tick-offset
 		 *   The gap (in pixels) between the beginning of the tick mark and the axis it belongs too.
-		 * 
+		 *
+		 * @mapping {'band'|'edge'} tick-first
+		 *   When an axis range is banded but not rounded, the default behavior is to mark the first tick
+		 *   at the start of the first whole band. Specifying 'edge' will force a tick at the edge of the axis range.
+		 *
+		 * @mapping {'band'|'edge'} tick-last
+		 *   When an axis range is banded but not rounded, the default behavior is to mark the last tick
+		 *   at the end of the last whole band. Specifying 'edge' will force a tick at the edge of the axis range.
+		 *
 		 * @mapping {Number=0} label-offset-x
 		 *   The horizontal gap (in pixels) between the end of a tick mark, and the beginning of the tick mark's label.
-		 * 
+		 *
 		 * @mapping {Number=0} label-offset-y
 		 *   The vertical gap (in pixels) between the end of a tick mark, and the beginning of the tick mark's label.
-		 * 
+		 *
 		 * @mapping {Number} margin
 		 *   The space (in pixels) to allocate for this axis.
 		 *   For vertical (y) axes, this refers to the width reserved for the axis.
 		 *   For horizontal (x) axes, this refers to the height reserved for the axis.
-		 * 
+		 *
 		 * @mapping {String} title
 		 *   The text of the axis title.
-		 * 
+		 *
 		 * @mapping {String='Arial'} font-family
 		 *   The font family used to render all the text of this layer.
-		 * 
+		 *
 		 * @mapping {Number=10} font-size
 		 *   The font size (in pixels) used to render all the text of this layer.
-		 * 
+		 *
 		 * @mapping {String='normal'} font-weight
 		 *   The font weight used to render all the text of this layer.
-		 * 
+		 *
 		 * @constructs
 		 * @factoryMade
 		 */
@@ -13738,7 +15770,7 @@ function(namespace) {
 				createAxis.call(this, node);
 			}, this);
 
-			
+
 			// will call renderChild for each child.
 			aperture.PlotLayer.prototype.render.call(this, changeSet);
 		},
@@ -13770,7 +15802,7 @@ function(namespace) {
 
 				// (may be better to use these constant values instead).
 				var anchorMap = {left: 'start', right: 'end', middle: 'middle'};
-						
+
 				if (layer === this.labelLayer){
 					var vAlign = this.valueFor('text-anchor-y', null, 'bottom');
 					var textAlign = this.valueFor('text-anchor', null, null);
@@ -13884,7 +15916,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: BarSeriesLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Bar Chart Layer
  */
 
@@ -13921,8 +15953,6 @@ function(namespace) {
 			xValue = this.valueFor('x', barSeriesData, 0, index),
 			yValue = this.valueFor('y', barSeriesData, 0, index),
 			strokeWidth = this.valueFor('stroke-width', barSeriesData, 1),
-			orientation = this.valueFor('orientation', null, 'vertical'),
-			borderWidth = this.valueFor('border-width', barSeriesData, 1),
 			barLayout = this.valueFor('bar-layout', null, this.DEFAULT_BAR_LAYOUT),
 			canvasY = yValue*h;
 		
@@ -13959,7 +15989,6 @@ function(namespace) {
 			}
 		}
 		else {
-			var canvasY = yValue*h;
 			// Take the y-point and calculate the height of the corresponding bar.
 			// We subtract the stroke width of the top and bottom borders so that
 			// the bar doesn't blead over the border.
@@ -14184,7 +16213,8 @@ function(namespace) {
 						y : yPoint,
 						size : renderBarDim,
 						strokeWidth : strokeWidth,
-						orientation : orientation
+						orientation : orientation,
+						visible: true
 					};
 					barSpecs.push(barSpec);
 				}
@@ -14200,7 +16230,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: ChartLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Chart Layer
  */
 
@@ -14310,8 +16340,8 @@ function(namespace) {
 			if (!this.titleLayer){
 				this.titleLayer = this.addLayer(aperture.LabelLayer);
 				this.titleLayer.map('text-anchor').asValue('middle');
-				this.titleLayer.map('x').from('x').only().using(this.DEFAULT_RANGE.mapKey([0,1]));
-				this.titleLayer.map('y').from('y').only().using(this.DEFAULT_RANGE.mapKey([1,0]));
+				this.titleLayer.map('x').from('x').only().using(this.DEFAULT_RANGE.mappedTo([0,1]));
+				this.titleLayer.map('y').from('y').only().using(this.DEFAULT_RANGE.mappedTo([1,0]));
 				this.titleLayer.map('text').from('text');
 				this.titleLayer.map('text-anchor-y').asValue('top');
 				this.titleLayer.map('orientation').asValue(null);
@@ -14415,7 +16445,7 @@ function(namespace) {
 	{
 		/**
 		 * @augments aperture.PlotLayer
-		 * 
+		 *
 		 * @class The underlying base layer for charts. Type-specific
 		 * charts are created by adding child layers (e.g. {@link aperture.chart.LineSeriesLayer LineSeriesLayer},
 		 * {@link aperture.chart.BarSeriesLayer BarSeriesLayer}) to this layer. Axes and "rules" / grid lines
@@ -14424,32 +16454,32 @@ function(namespace) {
 		 *
 		 * @mapping {Number} width
 		 *   The width of the chart.
-		 *   
+		 *
 		 * @mapping {Number} height
 		 *   The height of the chart.
-		 *   
+		 *
 		 * @mapping {String} stroke
 		 *   The line colour used to plot the graph.
-		 * 
+		 *
 		 * @mapping {Number=1} stroke-width
 		 *   The width of the line used to plot the graph.
-		 *   
-		 * @mapping {Number=1} border-width 
+		 *
+		 * @mapping {Number=1} border-width
 		 *   The width of the border (if any) around the chart. Setting this value to zero will hide the
 		 *   chart borders.
-		 *   
+		 *
 		 * @mapping {String='border'} border-stroke
 		 *   The line colour used to draw the chart border.
-		 * 
+		 *
 		 * @mapping {'vertical', 'horizontal'} orientation
 		 *   The direction that data points are plotted.
 		 *   E.g. A bar chart with a <span class="fixedFont">'vertical'</span> orientation will have bars drawn top-down.
 		 *   A bar chart with a <span class="fixedFont">'horizontal'</span> orientation will have bars drawn left-right
-		 *   
-		 * @mapping {Number} title-margin 
+		 *
+		 * @mapping {Number} title-margin
 		 *   The vertical space allocated to the chart title (in pixels).
-		 *   
-		 * @mapping {Object} title-spec 
+		 *
+		 * @mapping {Object} title-spec
 		 *   Defines the attributes of the chart's main title. For example:<br>
 		 *<pre>{
 		 *   text: 'Main Chart Title',
@@ -14568,21 +16598,21 @@ function(namespace) {
 							parentData.width, parentData.height] : null);
 				}
 			}, this);
-			
-			
+
+
 			layer.render( changeSet );
 		},
 
 		/**
 		 * This method retrieves the {@link aperture.chart.RuleLayer} with the given index.
 		 * @param {Number} index
-		 *  the index of the RuleLayer to retrieve. If no index is provided, a list of all 
-		 *  RuleLayers is returned. 
+		 *  the index of the RuleLayer to retrieve. If no index is provided, a list of all
+		 *  RuleLayers is returned.
 		 *
 		 * @returns {aperture.chart.RuleLayer|Array}
 		 *  the RuleLayer for the given index. If no order is specified, a list of all RuleLayer is returned.
 		 * @function
-		 */		
+		 */
 		ruleLayer : function(index) {
 			var ruleLayers = this.ruleLayers || [];
 			if (index == undefined) {
@@ -14592,10 +16622,10 @@ function(namespace) {
 				index = 0;
 			}
 			var layer = ruleLayers[index];
-			
+
 			if (!layer) {
 				layer = ruleLayers[index] = this.addLayer(aperture.chart.RuleLayer);
-				// Since we only allow panning along the x-axis, we only want to allow 
+				// Since we only allow panning along the x-axis, we only want to allow
 				// rule layers for the x-axis to pan.
 				var that = this;
 				layer.map('rule').filter(function( value ){
@@ -14607,23 +16637,23 @@ function(namespace) {
 						}
 					}
 				);
-				
+
 				this.ruleLayers = ruleLayers;
 				layer.toBack(); // Send the rule layer to the back.
 			}
 			return layer;
 		},
-		
+
 		/**
 		 * This method retrieves the {@link aperture.chart.AxisLayer} of the given order for the X axis.
-		 * 
-		 * @param {Number} [order] 
+		 *
+		 * @param {Number} [order]
 		 *  the order of the axis to be retrieved (e.g. the primary axis would be order=0), or
-		 *  -1 to retrieve an array of all axes. If no order is provided, the primary axis is returned. 
+		 *  -1 to retrieve an array of all axes. If no order is provided, the primary axis is returned.
 		 *
 		 * @returns {aperture.chart.AxisLayer|Array}
 		 *  the AxisLayer for the given order, or a list of all X AxisLayers.
-		 */		
+		 */
 		xAxis : function (order) {
 			if (order === -1) {
 				return this.axisArray.x;
@@ -14631,7 +16661,7 @@ function(namespace) {
 				// Currently, charts only support secondary axes.
 				order = 0;
 			}
-			
+
 			var axisLayer = this.axisArray.x[order];
 			if (!axisLayer){
 				axisLayer = this.addLayer( aperture.chart.AxisLayer );
@@ -14641,17 +16671,17 @@ function(namespace) {
 			}
 			return axisLayer;
 		},
-		
+
 		/**
 		 * This method retrieves the {@link aperture.chart.AxisLayer} of the given order for the Y axis.
-		 * 
-		 * @param {Number} [order] 
+		 *
+		 * @param {Number} [order]
 		 *  the order of the axis to be retrieved (e.g. the primary axis would be order=0), or
-		 *  -1 to retrieve an array of all axes. If no order is provided, the primary axis is returned. 
+		 *  -1 to retrieve an array of all axes. If no order is provided, the primary axis is returned.
 		 *
 		 * @returns {aperture.chart.AxisLayer|Array}
 		 *  the AxisLayer for the given order, or a list of all Y axis AxisLayers.
-		 */		
+		 */
 		yAxis : function (order) {
 			if (order === -1) {
 				return this.axisArray.y;
@@ -14684,7 +16714,7 @@ function(namespace) {
 	/**
 	 * @class Chart is a {@link aperture.chart.ChartLayer ChartLayer} vizlet, suitable for adding to the DOM.
 	 * See the layer class for a list of supported mappings.
-	 * 
+	 *
 	 * @augments aperture.chart.ChartLayer
 	 * @name aperture.chart.Chart
 	 *
@@ -14738,11 +16768,13 @@ function(namespace) {
 			var bandCount = this.width / 100;
 			// update bands
 			if (this.axisArray.x[0]){
+				// XXX: This re-creation of banding creating an additional view.proto
+				// depth on every call. After some time, proto depth >> 1000
 				var mapKeyX = this.mappings().x.transformation;
 				var rangeX = mapKeyX.from();
 				// Reband the range to reflect the desired zoom level.
 				var bandedX = rangeX.banded(bandCount*this.zoomValue);
-				mapKeyX = bandedX.mapKey([0,1]);
+				mapKeyX = bandedX.mappedTo([0,1]);
 				this.map('x').using(mapKeyX);
 				this.xAxis(0).all(mapKeyX);
 				// Update the rule layers of the x-axis, if any.
@@ -14755,6 +16787,8 @@ function(namespace) {
 			}
 
 			// TODO: Does secondary axis logic belong here?
+			// XXX: No, this code has the effect of clobbering the banding/views
+			// applied to the secondary axis on creation
 			if (this.axisArray.x[1]){
 				var nextOrder = bandedX.formatter().nextOrder();
 				if (nextOrder){
@@ -14762,7 +16796,7 @@ function(namespace) {
 						'span' : 1,
 						'units' : nextOrder
 					});
-					this.xAxis(1).all(secBandedX.mapKey([0,1]));
+					this.xAxis(1).all(secBandedX.mappedTo([0,1]));
 				}
 				// If the next time order is undefined, hide the secondary axis.
 				this.xAxis(1).map('visible').asValue(!!nextOrder);
@@ -14810,9 +16844,10 @@ function(namespace) {
 
 	return namespace;
 
-}(aperture.chart || {}));/**
+}(aperture.chart || {}));
+/**
  * Source: LineSeriesLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture LineSeriesLayer Layer
  */
 
@@ -15039,7 +17074,7 @@ function(namespace) {
 						if (path === prevPath){
 							// No data change, update attributes and continue
 							if (segment.attr('stroke') != segmentInfo.stroke){
-								attrSet['stroke'] = segmentInfo.stroke;
+								attrSet.stroke = segmentInfo.stroke;
 							}
 							if (segment.attr('stroke-width') != strokeWidth){
 								attrSet['stroke-width'] = strokeWidth;
@@ -15083,7 +17118,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: RuleLayer.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview Aperture Rule Layer
  */
 
@@ -15229,7 +17264,7 @@ function(namespace) {
 }(aperture.chart || {}));
 /**
  * Source: Raphael.js
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * @fileOverview A Raphael canvas implementation.
  */
 
@@ -15961,6 +17996,10 @@ function(namespace) {
 	R.fn.container = function() {
 
 		var node = elem( 'g' );
+
+		// Ensure vector containers are clickable
+		// Some vizlets disable pointer events on top-level SVG to allow click-through
+		node.style.pointerEvents = 'auto';
 		
 		// The container MUST have a UNIQUE ID, otherwise the
 		// mouse events will not be triggered properly.

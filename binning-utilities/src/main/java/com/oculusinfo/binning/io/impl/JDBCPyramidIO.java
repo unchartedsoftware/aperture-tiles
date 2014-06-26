@@ -40,7 +40,6 @@ import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
@@ -86,13 +85,20 @@ public class JDBCPyramidIO implements PyramidIO {
 				sb.append(toTableName(pyramidId));
 				sb.append(" (");
 				sb.append(COL_ZOOM_LVL);
-				sb.append(" INTEGER, ");
+				sb.append(" INTEGER NOT NULL, ");
 				sb.append(COL_TILE_COLUMN);
-				sb.append(" INTEGER, ");
+				sb.append(" INTEGER NOT NULL, ");
 				sb.append(COL_TILE_ROW);
-				sb.append(" INTEGER, ");
+				sb.append(" INTEGER NOT NULL, ");
 				sb.append(COL_TILE_DATA);
-				sb.append(" BLOB)");
+				sb.append(" BLOB,");
+				sb.append(" CONSTRAINT pk_TileIndex PRIMARY KEY (");
+				sb.append(COL_ZOOM_LVL);
+				sb.append(",");
+				sb.append(COL_TILE_COLUMN);
+				sb.append(",");
+				sb.append(COL_TILE_ROW);
+				sb.append("))");
 				
 				stmt = _connection.createStatement();
 				stmt.executeUpdate(sb.toString());
@@ -152,9 +158,9 @@ public class JDBCPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> void writeTiles(String pyramidId, TilePyramid tilePyramid,
-			TileSerializer<T> serializer, Iterable<TileData<T>> data)
-			throws IOException {
+	public <T> void writeTiles(String pyramidId,
+	                           TileSerializer<T> serializer, Iterable<TileData<T>> data)
+		throws IOException {
 		PreparedStatement ps = null;
 
 		try {
@@ -178,7 +184,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			int count = 0;
 			for (TileData<T> tile : data) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				serializer.serialize(tile, tilePyramid, baos);
+				serializer.serialize(tile, baos);
 
 				TileIndex index = tile.getDefinition();
 
@@ -212,23 +218,48 @@ public class JDBCPyramidIO implements PyramidIO {
 
 	}
 
+	protected boolean metaDataExistsFor(String pyramidId) {
+		String metadata = null;
+		try {
+			metadata = readMetaData(pyramidId);
+		} catch (IOException e) {
+			metadata = null;
+		}
+		return metadata != null;
+	}
+	
 	@Override
 	public void writeMetaData(String pyramidId, String metaData)
-			throws IOException {
+		throws IOException {
 		Statement stmt = null;
 		try {
 			StringBuilder sb = new StringBuilder();
-			sb.append("INSERT INTO ");
-			sb.append(TABLE_METADATA);
-			sb.append(" (");
-			sb.append(COL_PYRAMID_ID);
-			sb.append(", ");
-			sb.append(COL_METADATA);
-			sb.append(") VALUES('");
-			sb.append(toTableName(pyramidId));
-			sb.append("','");
-			sb.append(metaData);
-			sb.append("')");
+			if (metaDataExistsFor(pyramidId)) {
+				sb.append("UPDATE ");
+				sb.append(TABLE_METADATA);
+				sb.append(" SET ");
+				sb.append(COL_METADATA);
+				sb.append(" = '");
+				sb.append(metaData);
+				sb.append("' WHERE ");
+				sb.append(COL_PYRAMID_ID);
+				sb.append(" = '");
+				sb.append(toTableName(pyramidId));
+				sb.append("';");
+			}
+			else {
+				sb.append("INSERT INTO ");
+				sb.append(TABLE_METADATA);
+				sb.append(" (");
+				sb.append(COL_PYRAMID_ID);
+				sb.append(", ");
+				sb.append(COL_METADATA);
+				sb.append(") VALUES('");
+				sb.append(toTableName(pyramidId));
+				sb.append("','");
+				sb.append(metaData);
+				sb.append("')");
+			}
 			
 			stmt = _connection.createStatement();
 			stmt.execute(sb.toString());
@@ -245,16 +276,15 @@ public class JDBCPyramidIO implements PyramidIO {
 		}
 	}
 
-    @Override
-    public void initializeForRead(String pyramidId, int tileSize,
-    		Properties dataDescription) {
-    	// Noop
-    }
+	@Override
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
+		// Noop
+	}
 
 	@Override
 	public <T> List<TileData<T>> readTiles(String pyramidId,
-			TileSerializer<T> serializer, Iterable<TileIndex> tiles)
-			throws IOException {
+	                                       TileSerializer<T> serializer, Iterable<TileIndex> tiles)
+		throws IOException {
 		PreparedStatement ps = null;
 		try {
 			if (!tableExists(pyramidId)) {
@@ -290,7 +320,7 @@ public class JDBCPyramidIO implements PyramidIO {
 				byte[] tileBytes = resultSet.getBytes(COL_TILE_DATA);
 
 				TileData<T> data = serializer.deserialize(tile,
-						new ByteArrayInputStream(tileBytes));
+				                                          new ByteArrayInputStream(tileBytes));
 				results.add(data);
 			}
 			return results;
@@ -302,56 +332,58 @@ public class JDBCPyramidIO implements PyramidIO {
 				try {
 					ps.close();
 				} catch (SQLException e) {
-				    throw new IOException(e);
+					throw new IOException(e);
 				}
 			}
 		}
 	}
 
 	@Override
-	public InputStream getTileStream (String pyramidId, TileIndex tile) throws IOException {
-        PreparedStatement ps = null;
-        try {
-            if (!tableExists(pyramidId)) {
-                // TODO: Right thing to return when the table doesn't exist?
-                return null;
-            }
+	public <T> InputStream getTileStream (String pyramidId,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException {
+		PreparedStatement ps = null;
+		try {
+			if (!tableExists(pyramidId)) {
+				// TODO: Right thing to return when the table doesn't exist?
+				return null;
+			}
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT ");
-            sb.append(COL_TILE_DATA);
-            sb.append(" FROM ");
-            sb.append(toTableName(pyramidId));
-            sb.append(" WHERE ");
-            sb.append(COL_ZOOM_LVL);
-            sb.append(" = ? AND ");
-            sb.append(COL_TILE_COLUMN);
-            sb.append(" = ? AND ");
-            sb.append(COL_TILE_ROW);
-            sb.append(" = ?");
+			StringBuilder sb = new StringBuilder();
+			sb.append("SELECT ");
+			sb.append(COL_TILE_DATA);
+			sb.append(" FROM ");
+			sb.append(toTableName(pyramidId));
+			sb.append(" WHERE ");
+			sb.append(COL_ZOOM_LVL);
+			sb.append(" = ? AND ");
+			sb.append(COL_TILE_COLUMN);
+			sb.append(" = ? AND ");
+			sb.append(COL_TILE_ROW);
+			sb.append(" = ?");
 
-            ps = _connection.prepareStatement(sb.toString());
-            ps.setInt(1, tile.getLevel());
-            ps.setInt(2, tile.getX());
-            ps.setInt(3, tile.getY());
+			ps = _connection.prepareStatement(sb.toString());
+			ps.setInt(1, tile.getLevel());
+			ps.setInt(2, tile.getX());
+			ps.setInt(3, tile.getY());
 
-            ResultSet resultSet = ps.executeQuery();
-            if (resultSet.next()) {
-                byte[] tileBytes = resultSet.getBytes(COL_TILE_DATA);
-                return new ByteArrayInputStream(tileBytes);
-            }
-        } catch (Exception e) {
-            throw new IOException("Error reading tiles.", e);
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                    throw new IOException(e);
-                }
-            }
-        }
-        return null;
+			ResultSet resultSet = ps.executeQuery();
+			if (resultSet.next()) {
+				byte[] tileBytes = resultSet.getBytes(COL_TILE_DATA);
+				return new ByteArrayInputStream(tileBytes);
+			}
+		} catch (Exception e) {
+			throw new IOException("Error reading tiles.", e);
+		} finally {
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (SQLException e) {
+					throw new IOException(e);
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -375,7 +407,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			
 			stmt = _connection.createStatement();
 			ResultSet resultSet = stmt.executeQuery(sb
-					.toString());
+			                                        .toString());
 			if (!resultSet.next())
 				return null;
 
@@ -391,6 +423,11 @@ public class JDBCPyramidIO implements PyramidIO {
 				}
 			}
 		}
+	}
+	
+	@Override
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
+		throw new IOException("removeTiles not currently supported for JDBCPyramidIO");
 	}
 
 }

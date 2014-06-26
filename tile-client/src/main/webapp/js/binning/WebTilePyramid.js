@@ -33,187 +33,209 @@
  * WebMercatorTilePyramid in binning-utilities.
  */
 define (function (require) {
-    "use strict";
+	"use strict";
 
 
 
-    var Class = require('../class'),
-        WebMercatorTilePyramid,
-        PI                       = Math.PI,
-        EPSG_900913_SCALE_FACTOR = 20037508.342789244,
-		EPSG_900913_LATITUDE	 = 85.05,
-        DEGREES_TO_RADIANS       = PI / 180.0,	// Factor for changing degrees to radians      
-        RADIANS_TO_DEGREES       = 180.0 / PI,	// Factor for changing radians to degrees
-        rootToTileMercator, sinh, tileToLon, tileToLat,
-        linearToGudermannian,
-        gudermannianToLinear;
+	var Class = require('../class'),
+	    WebMercatorTilePyramid,
+	    PI                       = Math.PI,
+	    EPSG_900913_SCALE_FACTOR = 20037508.342789244,
+	    EPSG_900913_LATITUDE	 = 85.05112878,
+	    DEGREES_TO_RADIANS       = PI / 180.0,	// Factor for changing degrees to radians      
+	    RADIANS_TO_DEGREES       = 180.0 / PI,	// Factor for changing radians to degrees
+	    rootToTileMercator, sinh, tileToLon, tileToLat,
+	    linearToGudermannian,
+	    gudermannianToLinear;
 
 
+	rootToTileMercator = function (lon, lat, level) {
+		var latR = lat * DEGREES_TO_RADIANS,
+		    pow2 = 1 << level,
+		    x    = (lon + 180.0) / 360.0 * pow2,
+		    y    = (pow2 * (1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / PI) / 2);
+		return {x: x, y: pow2-y};
+	};
 
-    rootToTileMercator = function (lon, lat, level) {
-        var latR = lat * DEGREES_TO_RADIANS,
-            pow2 = 1 << level,
-            x    = (lon + 180.0) / 360.0 * pow2,
-            y    = (pow2 * (1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / PI)
-                    / 2);
-        return {x: x, y: pow2-y};
-    };
+	tileToLon = function (x, level) {
+		var pow2 = 1 << level;
+		return x / pow2 * 360.0 - 180.0;
+	};
 
-    tileToLon = function (x, level) {
-        var pow2 = 1 << level;
-        return x / pow2 * 360.0 - 180.0;
-    };
+	sinh = function (arg) {
+		return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
+	};
 
-    sinh = function (arg) {
-        return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
-    };
+	tileToLat = function (y, level) {
+		var pow2 = 1 << level,
+		    n    = -PI + (2.0 * PI * y) / pow2;
+		return Math.atan(sinh(n)) * RADIANS_TO_DEGREES;
+	};
 
-    tileToLat = function (y, level) {
-        var pow2 = 1 << level,
-            n    = -PI + (2.0 * PI * y) / pow2;
-        return Math.atan(sinh(n)) * RADIANS_TO_DEGREES;
-    };
+	linearToGudermannian = function(value) {
+		var gudermannian = function(y) {
+			// converts a y value from -PI(bottom) to PI(top) into the
+			// mercator projection latitude
+			var sinh = function (arg) {
+				return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
+			};
+			return Math.atan(sinh(y)) * RADIANS_TO_DEGREES;
+		};
+		return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );
+	};
 
-    linearToGudermannian = function(value) {
-        var gudermannian = function(y) {
-                // converts a y value from -PI(bottom) to PI(top) into the
-                // mercator projection latitude
-                var sinh = function (arg) {
-                    return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
-                };
-                return Math.atan(sinh(y)) * RADIANS_TO_DEGREES;
-            };
-        return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );
-    };
+	gudermannianToLinear = function(value) {
+		var gudermannianInv = function( latitude ) {
+			// converts a latitude value from -EPSG_900913_LATITUDE to EPSG_900913_LATITUDE into
+			// a y value from -PI(bottom) to PI(top)
+			var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
+			    sin = Math.sin(latitude * DEGREES_TO_RADIANS * sign);
 
-    gudermannianToLinear = function(value) {
-        var gudermannianInv = function( latitude ) {
-                // converts a latitude value from -EPSG_900913_LATITUDE to EPSG_900913_LATITUDE into
-                // a y value from -PI(bottom) to PI(top)
-                var sign = ( latitude !== 0 ) ? latitude / Math.abs(latitude) : 0,
-                    sin = Math.sin(latitude * DEGREES_TO_RADIANS * sign);
+			return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
+		};
+		return (gudermannianInv( value ) / Math.PI) * EPSG_900913_LATITUDE;
+	};
 
-                return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
-            };
-        return (gudermannianInv( value ) / Math.PI) * EPSG_900913_LATITUDE;
-    };
+	WebMercatorTilePyramid = Class.extend({
 
-    WebMercatorTilePyramid = Class.extend({
-        ClassName: "WebMercatorTilePyramid",
-        getProjection: "EPSG:900913",
-        getTileScheme: "TMS",
+		ClassName: "WebMercatorTilePyramid",
+		getProjection: "EPSG:900913",
+		getTileScheme: "TMS",
 
-        getEPSG_900913Bounds: function (tile, bin) {
-            var pow2          = 1 << tile.level,
-                tileIncrement = 1.0/pow2,
-                minX          = tile.xIndex * tileIncrement - 0.5,
-                minY          = tile.yIndex * tileIncrement - 0.5,
-                maxX, maxY, binXInc, binYInc;
+		getEPSG_900913Bounds: function (tile, bin) {
+			var pow2          = 1 << tile.level,
+			    tileIncrement = 1.0/pow2,
+			    minX          = tile.xIndex * tileIncrement - 0.5,
+			    minY          = tile.yIndex * tileIncrement - 0.5,
+			    maxX, maxY, binXInc, binYInc;
 
-            if (bin) {
-                maxX = minX + tileIncrement;
-                maxY = minY + tileIncrement;
-            } else {
-                binXInc = tileIncrement / tile.xBinCount;
-                binYInc = tileIncrement / tile.yBinCount;
-                minX = minX + bin.x * binXInc;
-                minY = minY + (tile.yBinCount - bin.y - 1) * binYInc;
-                maxX = minX + binXInc;
-                maxY = minY + binYInc;
-            }
+			if (bin) {
+				maxX = minX + tileIncrement;
+				maxY = minY + tileIncrement;
+			} else {
+				binXInc = tileIncrement / tile.xBinCount;
+				binYInc = tileIncrement / tile.yBinCount;
+				minX = minX + bin.x * binXInc;
+				minY = minY + (tile.yBinCount - bin.y - 1) * binYInc;
+				maxX = minX + binXInc;
+				maxY = minY + binYInc;
+			}
 
-            return {
-                minX:    minX * 2.0 * EPSG_900913_SCALE_FACTOR,
-                minY:    minY * 2.0 * EPSG_900913_SCALE_FACTOR,
-                maxX:    maxX * 2.0 * EPSG_900913_SCALE_FACTOR,
-                maxY:    maxY * 2.0 * EPSG_900913_SCALE_FACTOR,
-                centerX: (minX + maxX) * EPSG_900913_SCALE_FACTOR,
-                centerY: (minY + maxY) * EPSG_900913_SCALE_FACTOR,
-                width:   (maxX - minX) * 2.0 * EPSG_900913_SCALE_FACTOR,
-                height:  (maxY - minY) * 2.0 * EPSG_900913_SCALE_FACTOR
-            };
-        },
+			return {
+				minX:    minX * 2.0 * EPSG_900913_SCALE_FACTOR,
+				minY:    minY * 2.0 * EPSG_900913_SCALE_FACTOR,
+				maxX:    maxX * 2.0 * EPSG_900913_SCALE_FACTOR,
+				maxY:    maxY * 2.0 * EPSG_900913_SCALE_FACTOR,
+				centerX: (minX + maxX) * EPSG_900913_SCALE_FACTOR,
+				centerY: (minY + maxY) * EPSG_900913_SCALE_FACTOR,
+				width:   (maxX - minX) * 2.0 * EPSG_900913_SCALE_FACTOR,
+				height:  (maxY - minY) * 2.0 * EPSG_900913_SCALE_FACTOR
+			};
+		},
 
-        rootToTile: function (lon, lat, level, bins) {
-            if (!bins) {
-                bins = 256;
-            }
+		rootToFractionalTile: function (root) {
+			var tileMercator = rootToTileMercator(root.xIndex, root.yIndex, root.level);
+			return {
+				'level': root.level,
+				'xIndex': tileMercator.x,
+				'yIndex': tileMercator.y
+			};
+		},
 
-            var tileMercator = rootToTileMercator(lon, lat, level);
+		fractionalTileToRoot: function (tile) {
+			return {
+				level: tile.level,
+				xIndex: tileToLon(tile.xIndex, tile.level),
+				yIndex: tileToLat(tile.yIndex, tile.level)
+			};
+		},
 
-            return {
-                level:     level,
-                xIndex:    Math.floor(tileMercator.x),
-                yIndex:    Math.floor(tileMercator.y),
-                xBinCount: bins,
-                yBinCount: bins
-            };
-        },
+		rootToTile: function (lon, lat, level, bins) {
+			if (!bins) {
+				bins = 256;
+			}
 
-        rootToBin: function (x, y, tile) {
-            var tileMercator = rootToTileMercator(x, y, tile.level);
-            return {
-                x: Math.floor((tileMercator.x - tile.xIndex) * tile.xBinCount),
-                y: tile.yBinCount - 1 - Math.floor((tileMercator.y - tile.yIndex)
-                                                  * tile.yBinCount)
-            };
-        },
+			var tileMercator = rootToTileMercator(lon, lat, level);
 
-        getTileBounds: function (tile) {
-            var level = tile.level,
-                north = tileToLat(tile.yIndex+1, level),
-                south = tileToLat(tile.yIndex, level),
-                east  = tileToLon(tile.xIndex+1, level),
-                west  = tileToLon(tile.xIndex, level),
-                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
-                // coordinates  back into their equivalent linear counterparts. Interpolate these,
-                // then convert to the equivalent gudermannian coordinate.
-                linNorth = gudermannianToLinear(north),
-                linSouth = gudermannianToLinear(south),
-                gudCentreY = linearToGudermannian( (linNorth+linSouth)/2.0 );
+			return {
+				level:     level,
+				xIndex:    Math.floor(tileMercator.x),
+				yIndex:    Math.floor(tileMercator.y),
+				xBinCount: bins,
+				yBinCount: bins
+			};
+		},
 
-            return {
-                minX:    west,
-                minY:    south,
-                maxX:    east,
-                maxY:    north,
-                centerX: (east+west)/2.0,
-                centerY: gudCentreY,
-                width:   (east-west),
-                height:  (north-south)
-            };
-        },
+		rootToBin: function (x, y, tile) {
+			var tileMercator = rootToTileMercator(x, y, tile.level);
+			return {
+				x: Math.floor((tileMercator.x - tile.xIndex) * tile.xBinCount),
+				y: tile.yBinCount - 1 - Math.floor((tileMercator.y - tile.yIndex)
+				                                   * tile.yBinCount)
+			};
+		},
 
-        getBinBounds: function (tile, bin) {
-            var level   = tile.level,
-                binXInc = 1.0 / tile.xBinCount,
-                baseX   = tile.xIndex + bin.x * binXInc,
-                binYInc = 1.0 / tile.yBinCount,
-                baseY   = tile.yIndex + (tile.yBinCount - 1 - bin.y) * binYInc,
-                north   = tileToLat(baseY + binYInc, level),
-                south   = tileToLat(baseY, level),
-                east    = tileToLon(baseX + binXInc, level),
-                west    = tileToLon(baseX, level),
-                // as mercator latitude cannot be linearly interpolated, convert the gudermannian
-                // coordinates  back into their equivalent linear counterparts. Interpolate these,
-                // then convert to the equivalent gudermannian coordinate.
-                linNorth = gudermannianToLinear(north),
-                linSouth = gudermannianToLinear(south),
-                gudCentreY = linearToGudermannian( (linNorth+linSouth)/2.0 );
+		getTileBounds: function (tile) {
+			var level = tile.level,
+			    north = tileToLat(tile.yIndex+1, level),
+			    south = tileToLat(tile.yIndex, level),
+			    east  = tileToLon(tile.xIndex+1, level),
+			    west  = tileToLon(tile.xIndex, level),
+			    // as mercator latitude cannot be linearly interpolated, convert the gudermannian
+			    // coordinates back into their equivalent linear counterparts. Interpolate these,
+			    // then convert to the equivalent gudermannian coordinate.
+			    linNorth = gudermannianToLinear(north),
+			    linSouth = gudermannianToLinear(south),
+			    centerY = linearToGudermannian( (linNorth+linSouth)/2.0 );
 
-            return {
-                minX:    west,
-                minY:    south,
-                maxX:    east,
-                maxY:    north,
-                centerX: (east+west)/2.0,
-                centerY: gudCentreY,
-                width:   (east-west),
-                height:  (north-south)
-            };
-        }
-    });
+			return {
+				minX:    west,
+				minY:    south,
+				maxX:    east,
+				maxY:    north,
+				centerX: (east+west)/2.0,
+				centerY: centerY,
+				width:   (east-west),
+				height:  (north-south)
+			};
+		},
 
-    return WebMercatorTilePyramid;
+		getBinBounds: function (tile, bin) {
+			var level   = tile.level,
+			    binXInc = 1.0 / tile.xBinCount,
+			    baseX   = tile.xIndex + bin.x * binXInc,
+			    binYInc = 1.0 / tile.yBinCount,
+			    baseY   = tile.yIndex + (tile.yBinCount - 1 - bin.y) * binYInc,
+			    north   = tileToLat(baseY + binYInc, level),
+			    south   = tileToLat(baseY, level),
+			    east    = tileToLon(baseX + binXInc, level),
+			    west    = tileToLon(baseX, level),
+			    // as mercator latitude cannot be linearly interpolated, convert the gudermannian
+			    // coordinates back into their equivalent linear counterparts. Interpolate these,
+			    // then convert to the equivalent gudermannian coordinate.
+			    linNorth = gudermannianToLinear(north),
+			    linSouth = gudermannianToLinear(south),
+			    centerY = linearToGudermannian( (linNorth+linSouth)/2.0 );
+
+			return {
+				minX:    west,
+				minY:    south,
+				maxX:    east,
+				maxY:    north,
+				centerX: (east+west)/2.0,
+				centerY: centerY,
+				width:   (east-west),
+				height:  (north-south)
+			};
+		},
+
+		toJSON: function () {
+			return {
+				"type": "WebMercator"
+			};
+		}
+	});
+
+	return WebMercatorTilePyramid;
 });
 

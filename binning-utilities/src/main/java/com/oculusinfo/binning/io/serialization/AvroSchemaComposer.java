@@ -24,6 +24,7 @@
 package com.oculusinfo.binning.io.serialization;
 
 
+import org.apache.avro.Schema;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,8 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.avro.Schema;
 
 
 
@@ -48,102 +47,102 @@ import org.apache.avro.Schema;
  * **/
 public class AvroSchemaComposer {
 
-    private final Map<String, Schema> schemas    = new HashMap<String, Schema>();
-    private Schema                    mostRecent = null;
+	private final Map<String, Schema> schemas    = new HashMap<String, Schema>();
+	private Schema                    mostRecent = null;
 
 
 
-    /** Return the most recently add item. **/
-    public Schema resolved () {
-        return mostRecent;
-    }
+	/** Return the most recently add item. **/
+	public Schema resolved () {
+		return mostRecent;
+	}
 
-    private String resolveSchema (String sc) {
-        String result = sc;
-        for (Map.Entry<String, Schema> entry: schemas.entrySet())
-            result = replace(result, entry.getKey(), entry.getValue()
-                                                          .toString());
-        return result;
-    }
+	private String resolveSchema (String sc) {
+		String result = sc;
+		for (Map.Entry<String, Schema> entry: schemas.entrySet())
+			result = replace(result, entry.getKey(), entry.getValue()
+			                 .toString());
+		return result;
+	}
 
-    private static String replace (String str, String pattern, String replace) {
-        StringBuffer result = new StringBuffer();
-        int e = str.indexOf(pattern, 0);
-        if (e < 0) {
-            return str;
-        }
+	private static String replace (String str, String pattern, String replace) {
+		StringBuffer result = new StringBuffer();
+		int e = str.indexOf(pattern, 0);
+		if (e < 0) {
+			return str;
+		}
 
-        result.append(str.substring(0, e - 1));
-        result.append(replace);
-        result.append(str.substring(e + pattern.length() + 1));
-        return result.toString();
-    }
-
-
-
-    /** Register a new schema with this repository. **/
-    public AvroSchemaComposer add (Schema schema) {
-        for (String alias: schema.getAliases()) {
-            schemas.put(alias, schema);
-        }
-        schemas.put(schema.getFullName(), schema);
-        mostRecent = schema;
-        return this;
-    }
+		result.append(str.substring(0, e - 1));
+		result.append(replace);
+		result.append(str.substring(e + pattern.length() + 1));
+		return result.toString();
+	}
 
 
-    /** Load a schema, directly from the string. **/
-    public AvroSchemaComposer add (String schemaString) {
-        try {
-            String completeSchema = resolveSchema(schemaString);
-            Schema schema = new Schema.Parser().parse(completeSchema);
-            this.add(schema);
-        } catch (Exception e) {
-            throw new RuntimeException("Error loading schema:" + schemaString,
-                                       e);
-        }
-        return this;
-    }
 
-    /** Load a schema from an input stream. **/
-    public AvroSchemaComposer add (InputStream in) throws IOException {
-        StringBuffer out = new StringBuffer();
-        byte[] b = new byte[4096];
-        for (int n; (n = in.read(b)) != -1;) {
-            out.append(new String(b, 0, n));
-        }
-        return add(out.toString());
-    }
-
-    /** Load a schema from a file. **/
-    public AvroSchemaComposer add (File file) throws IOException {
-        FileInputStream fis = new FileInputStream(file);
-        try {
-            return add(fis);
-        } catch (Exception e) {
-            fis.close();
-            throw new RuntimeException(
-                                       "Error loading schema " + file.getName(),
-                                       e.getCause());
-        }
-    }
+	/** Register a new schema with this repository. **/
+	public AvroSchemaComposer add (Schema schema) {
+		for (String alias: schema.getAliases()) {
+			schemas.put(alias, schema);
+		}
+		schemas.put(schema.getFullName(), schema);
+		mostRecent = schema;
+		return this;
+	}
 
 
-    /** Load a schema from a file (specified as a string). **/
-    public AvroSchemaComposer addFile (String file) throws IOException {
-        return add(new File(file));
-    }
+	/** Load a schema, directly from the string. **/
+	public AvroSchemaComposer add (String schemaString) {
+		try {
+			String completeSchema = resolveSchema(schemaString);
+			Schema schema = new Schema.Parser().parse(completeSchema);
+			this.add(schema);
+		} catch (Exception e) {
+			throw new RuntimeException("Error loading schema:" + schemaString,
+			                           e);
+		}
+		return this;
+	}
+
+	/** Load a schema from an input stream. **/
+	public AvroSchemaComposer add (InputStream in) throws IOException {
+		StringBuffer out = new StringBuffer();
+		byte[] b = new byte[4096];
+		for (int n; (n = in.read(b)) != -1;) {
+			out.append(new String(b, 0, n));
+		}
+		return add(out.toString());
+	}
+
+	/** Load a schema from a file. **/
+	public AvroSchemaComposer add (File file) throws IOException {
+		FileInputStream fis = new FileInputStream(file);
+		try {
+			return add(fis);
+		} catch (Exception e) {
+			fis.close();
+			throw new RuntimeException(
+			                           "Error loading schema " + file.getName(),
+			                           e.getCause());
+		}
+	}
 
 
-    /** Load a schema via the class-loader resource mechanism. **/
-    public AvroSchemaComposer addResource (String path) throws IOException {
-        try {
-            add(AvroSchemaComposer.class.getClassLoader()
-                                        .getResourceAsStream(path));
-        } catch (Exception e) {
-            throw new RuntimeException("Error loading schema " + path,
-                                       e.getCause());
-        }
-        return this;
-    }
+	/** Load a schema from a file (specified as a string). **/
+	public AvroSchemaComposer addFile (String file) throws IOException {
+		return add(new File(file));
+	}
+
+
+	/** Load a schema via the class-loader resource mechanism. **/
+	public AvroSchemaComposer addResource (String path) throws IOException {
+		try {
+			add(AvroSchemaComposer.class.getClassLoader()
+			    .getResourceAsStream(path));
+		} catch (Exception e) {
+			throw new RuntimeException("Error loading schema " + path,
+			                           e.getCause());
+		}
+		return this;
+	}
 }

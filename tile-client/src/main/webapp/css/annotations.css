@@ -1,0 +1,210 @@
+@charset "UTF-8";
+
+
+.annotation-bin {
+    pointer-events:none;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+    border: 1px solid #FF0000;
+}
+
+.point-annotation-aggregate {
+    position:absolute;
+}
+
+.point-annotation {
+    position:absolute;
+    -webkit-border-radius: 30px;
+       -moz-border-radius: 30px;
+            border-radius: 30px; 
+    width: 8px;
+    height: 8px;
+    -webkit-transition: 0.1s ease-in-out;
+       -moz-transition: 0.1s ease-in-out;
+        -ms-transition: 0.1s ease-in-out;
+            transition: 0.1s ease-in-out;
+}
+
+.point-annotation-front {
+
+    background-color: #09CFFF;
+    margin: -2px 2px 2px -2px;
+    z-index: 1;
+}
+
+.point-annotation-back {
+    
+    pointer-events:none;
+    background-color: #fff;
+    border: 2px solid #000;
+    margin: -4px 0 0 -4px;
+    z-index: 0;
+}
+
+.point-annotation-aggregate:hover .point-annotation {
+
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+.point-annotation-aggregate:hover .point-annotation-front {
+
+    margin: -6px 2px 2px -6px;
+}
+
+.point-annotation-aggregate:hover .point-annotation-back {
+
+    margin: -8px 0 0 -8px;
+}
+
+.annotation-details {
+
+    position:absolute;
+    background-color:#111111;
+    width: 384px;
+    z-index: 2001;
+    border: 1px solid #333333;
+    box-shadow: 0px 5px 15px #000;
+}
+
+
+.annotation-details-content {
+
+    position:relative;
+    height:100%;
+}
+
+
+.annotation-details-head {
+
+    position:relative;
+    padding: 0 10px 0 10px;
+    background-color: #222222;
+    font-size: 18px;
+    color: #D3D3D3;
+    width:100%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+
+.annotation-details-body {
+
+    position:relative;   
+    font-size: 14px;
+    background-color:#111111;
+    padding: 5px 15px 5px 15px;
+    overflow: auto;
+    height: calc(100% - 32px);
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+
+}
+
+
+.annotation-details-aggregate {
+
+    padding-bottom: 28px;
+}
+
+.annotation-details-label {
+
+    position:relative;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    color: #D3D3D3;
+    text-shadow:
+        -1px -1px 1px #000,
+         1px -1px 1px #000,
+        -1px  1px 1px #000,
+         1px  1px 1px #000; 
+}
+
+
+.annotation-details-close-button {
+    position:absolute;
+    right:3px;
+    top:3px;
+    width:12px;
+    height:12px;
+    background: transparent url(../images/close_icon.png) no-repeat center top;
+    -webkit-filter: brightness(0.5);
+    
+    -webkit-transform: scale(0.75);
+       -moz-transform: scale(0.75);
+        -ms-transform: scale(0.75);
+            transform: scale(0.75);
+            
+    -webkit-transition: 0.1s ease-in-out;
+       -moz-transition: 0.1s ease-in-out;
+        -ms-transition: 0.1s ease-in-out;
+            transition: 0.1s ease-in-out;
+}
+
+.annotation-details-close-button:hover {
+    cursor: pointer;
+    -webkit-filter: brightness(1);
+    -webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+.annotation-carousel {
+
+    position:absolute;
+    pointer-events:none;
+    width:100%;
+    height:100%;
+    top:0px;
+    left:0px;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.annotation-carousel-ui-chevron {
+    position: absolute;
+    pointer-events: all;
+    bottom: -10px;
+    height:50px;
+    width:20px;
+    -webkit-transform: scale(0.5); 
+    -webkit-transition: -webkit-transform .1s ease-in-out;
+       -moz-transition:    -moz-transform .1s ease-in-out;
+            transition:         transform .1s ease-in-out;
+}
+
+.annotation-carousel-ui-chevron-left {
+    left: calc(50% - 70px);
+    background: transparent url(../images/chevron_L.png) no-repeat center top;
+}
+
+.annotation-carousel-ui-chevron-right {
+    right: calc(50% - 70px);
+    background: transparent url(../images/chevron_R.png) no-repeat center top;
+}
+
+.annotation-carousel-ui-chevron:hover {
+    cursor: pointer;
+    -webkit-transform: scale(0.7);  
+}
+
+.annotation-carousel-ui-text-index {
+    position:absolute;
+    bottom: 6px;
+    width: 100%;
+    text-align:center;
+    pointer-events:none;
+    font-size:16px;
+    color: #ffffff;
+    text-shadow:
+        -1px -1px 2px #000,
+         1px -1px 2px #000,
+        -1px  1px 2px #000,
+         1px  1px 2px #000; 
+}

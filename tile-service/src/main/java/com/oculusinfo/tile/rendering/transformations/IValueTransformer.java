@@ -30,5 +30,6 @@ package com.oculusinfo.tile.rendering.transformations;
  *
  */
 public interface IValueTransformer {
-	public double transform(double value);
+	public double transform (double value);
+	public double getMaximumValue ();
 }
