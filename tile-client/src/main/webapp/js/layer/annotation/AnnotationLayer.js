@@ -54,7 +54,6 @@ define(function (require) {
 
         init: function( spec, map ) {
 
-            var that = this;
             this._super( spec, map );
             this.service = new AnnotationService( spec.layer );
             this.pendingTiles = {};
@@ -62,10 +61,6 @@ define(function (require) {
 
             // set callbacks
             this.map.on('moveend', $.proxy( this.update, this ) );
-            this.map.on('zoomend', function() {
-                that.nodeLayer.clear();
-                that.update();
-            });
 
             this.createLayer();
             this.update();
