@@ -534,15 +534,6 @@ public class TwitterDemoTopicRecord implements Serializable {
 				countDaily, countPer6hrs, countPerHour, recentTweets, endTimeSecs);		
 	}
 
-	private static TwitterDemoTopicRecord addTweetsToRecord(
-			TwitterDemoTopicRecord record, List<Pair<String, Long>> newTweets) {
-
-		for (Pair<String, Long> newTweet : newTweets) {
-			record = addTweetToRecord(record, newTweet);
-		}
-		return record;
-	}
-
 	private static void minInPlace(List<Integer> accumulatedMin,
 			List<Integer> newMin) {
 		for (int i = 0; i < newMin.size(); ++i) {

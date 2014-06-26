@@ -122,7 +122,7 @@ public class DataServiceImpl implements DataService {
 
 		// Create our dataset
 		DatasetFactory factory = new DatasetFactory(sc, null, null);
-		CSVDataset dataset;
+		CSVDataset<?> dataset;
 		try {
 			factory.readConfiguration(datasetDescription);
 			dataset = factory.produce(CSVDataset.class);

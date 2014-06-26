@@ -31,7 +31,7 @@ import com.oculusinfo.binning.io.serialization.StandardTileSerializerFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.twitter.binning.TwitterDemoAvroSerializer;
+import com.oculusinfo.twitter.binning.TwitterTopicAvroSerializer;
 
 public class TwitterTileSerializationFactory extends StandardTileSerializerFactory {
     public static StringProperty TWITTER_SERIALIZER_TYPE = new StringProperty("type",
@@ -91,7 +91,7 @@ public class TwitterTileSerializationFactory extends StandardTileSerializerFacto
                     codec = CodecFactory.bzip2Codec();
                     break;
             }
-            return new TwitterDemoAvroSerializer(codec);
+            return new TwitterTopicAvroSerializer(codec);
         } else {
             return super.create();
         }

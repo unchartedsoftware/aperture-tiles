@@ -28,6 +28,7 @@ import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.tilegen.datasets.CSVDataset;
+
 import org.apache.spark.SparkContext;
 
 import java.util.List;
@@ -48,7 +49,9 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?>> {
 		this(context, null, parent, path);
 	}
 
-	protected DatasetFactory (SparkContext context, String name, 
+	// This supresses the warnings on the cast to CSVDataset.class, because it can't be properly
+	@SuppressWarnings({"unchecked", "rawtypes"})
+    protected DatasetFactory (SparkContext context, String name, 
 	                          ConfigurableFactory<?> parent, List<String> path) {
 		super(name, (Class) CSVDataset.class, parent, path);
 		_context = context;

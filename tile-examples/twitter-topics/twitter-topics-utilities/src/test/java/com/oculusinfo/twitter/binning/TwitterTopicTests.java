@@ -26,12 +26,11 @@ package com.oculusinfo.twitter.binning;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-
-import com.oculusinfo.binning.util.Pair;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.oculusinfo.binning.util.Pair;
 
 public class TwitterTopicTests {
 
@@ -430,7 +429,6 @@ public class TwitterTopicTests {
 															0, 0, 0, 0),
 													new ArrayList<Pair<String, Long>>(),
 													_endTimeSecs);
-		TwitterDemoTopicRecord d = TwitterDemoTopicRecord.maxOfRecords(a, b);
         Assert.assertEquals(c, TwitterDemoTopicRecord.maxOfRecords(a, b));
     }  
 

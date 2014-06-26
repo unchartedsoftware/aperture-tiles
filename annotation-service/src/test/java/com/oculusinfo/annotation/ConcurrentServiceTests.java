@@ -143,7 +143,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
     		_data = data;
     	}
 
-        public synchronized AnnotationData clone() {
+        public synchronized AnnotationData<?> clone() {
 
             JSONObject json = _data.toJSON();
             return JSONAnnotation.fromJSON( json );
