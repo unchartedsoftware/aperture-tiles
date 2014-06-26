@@ -33,6 +33,7 @@
                 <include>com.oculusinfo:math-utilities:jar:${project.version}</include>
                 <include>org.apache.hbase:hbase:jar:${hbase-version}</include>
                 <include>org.scala-lang:scala-library:jar:${scala-version}</include>
+                <include>org.json:json:jar:20090211</include>
             </includes>
         </dependencySet>
     </dependencySets>

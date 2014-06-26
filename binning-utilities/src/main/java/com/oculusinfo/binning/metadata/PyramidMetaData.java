@@ -109,7 +109,7 @@ public class PyramidMetaData {
 		if (null != minZoom)
 			_metaData.put("minzoom", minZoom);
 		if (null != maxZoom)
-			_metaData.put("maxZoom", maxZoom);
+			_metaData.put("maxzoom", maxZoom);
 		if (null != bounds) {
 			JSONArray metaDataBounds = new JSONArray();
 			metaDataBounds.put(bounds.getMinX());
@@ -445,6 +445,8 @@ public class PyramidMetaData {
 	 */
 	public PyramidMetaData addLevel (int level, String min, String max) throws JSONException {
 		JSONObject newBase = JsonUtilities.deepClone(_metaData);
+		newBase.put("minzoom", (int) Math.min(level, getMinZoom()));
+		newBase.put("maxzoom", (int) Math.max(level, getMaxZoom()));
 		if (!newBase.has("meta"))
 			newBase.put("meta", new JSONObject());
 		JSONObject meta = newBase.getJSONObject("meta");
