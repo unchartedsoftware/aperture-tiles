@@ -28,7 +28,6 @@ package com.oculusinfo.twitter.binning;
 
 
 import com.esotericsoftware.kryo.Kryo;
-
 import com.oculusinfo.tilegen.kryo.TileRegistrator;
 
 
@@ -37,7 +36,7 @@ public class TwitterTileRegistrator extends TileRegistrator {
 	@Override
 	public void registerClasses (Kryo kryo) {
 		super.registerClasses(kryo);
-		kryo.register(TwitterDemoRecord.class);
+		kryo.register(TwitterDemoTopicRecord.class);
 		kryo.register(int[].class);
 		kryo.register(long[].class);
 		kryo.register(String[].class);

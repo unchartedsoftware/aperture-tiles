@@ -15,13 +15,13 @@ fi
 # export SPARK_CLASSPATH=$SCALA_HOME/libexec/lib/'*'
 
 function addToSparkClasspath {
-  groupId=$1
-  artifactId=$2
-  version=$3
-  groupDir=`echo ${groupId} | sed 's|\.|/|g'`
+  scriptGroupId=$1
+  scriptArtifactId=$2
+  scriptVersion=$3
+  groupDir=`echo ${scriptGroupId} | sed 's|\.|/|g'`
   repo=${HOME}/.m2/repository
-  jardir=${repo}/${groupDir}/${artifactId}/${version}
-  jar=${jardir}/${artifactId}-${version}.jar
+  jardir=${repo}/${groupDir}/${scriptArtifactId}/${scriptVersion}
+  jar=${jardir}/${scriptArtifactId}-${scriptVersion}.jar
 
   # Testing for existence of jar
   if [ ! -e ${jar} ]
@@ -46,21 +46,21 @@ function addToSparkClasspath {
 # Set up the spark classpath
 
 # Twitter-specific jars
-addToSparkClasspath com.oculusinfo twitter-utilities 0.3-SNAPSHOT
+addToSparkClasspath com.oculusinfo twitter-utilities ${project.version}
 
 # other oculus binning jars
-addToSparkClasspath com.oculusinfo math-utilities 0.3-SNAPSHOT
-addToSparkClasspath com.oculusinfo binning-utilities 0.3-SNAPSHOT
-addToSparkClasspath com.oculusinfo tile-generation 0.3-SNAPSHOT
-addToSparkClasspath com.oculusinfo twitter-demo-day-utilities 0.3-SNAPSHOT
+addToSparkClasspath com.oculusinfo math-utilities ${project.version}
+addToSparkClasspath com.oculusinfo binning-utilities ${project.version}
+addToSparkClasspath com.oculusinfo tile-generation ${project.version}
+addToSparkClasspath com.oculusinfo twitter-demo-day-utilities ${project.version}
 
 # framework-related jars
-addToSparkClasspath org.apache.hbase hbase 0.94.15-cdh4.6.0
+addToSparkClasspath org.apache.hbase hbase ${hbase-version}
 
 # additional stuff needed to use avro serialization
 
 # and just to make sure, scala itself
-addToSparkClasspath org.scala-lang scala-library 2.10.3
+addToSparkClasspath org.scala-lang scala-library ${scala-version}
 
 
 
