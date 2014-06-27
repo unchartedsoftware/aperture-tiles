@@ -57,8 +57,7 @@ define(function (require) {
 
             function register( layer ) {
 
-                var layerSpec = layer.getLayerSpec(),
-                    layerState;
+                var layerState;
 
                 layerState = new LayerState( layer.id, layer.name, 'annotation' );
                 layerState.set( 'enabled', true );
