@@ -37,7 +37,7 @@ define(function (require) {
 
 
     function DESCRIPTION_MAP( layerState, fieldName ) {
-        return "Setting " + fieldName + " attribute to " + layerState.get( fieldName ) + " for layer " + layerState.getId();
+        return "Setting " + fieldName + " to " + JSON.stringify( layerState.get( fieldName ) ) + " for layer " + layerState.getId();
     }
 
     function ACTION_MAP( fieldName ) {
@@ -59,11 +59,11 @@ define(function (require) {
     return {
 
         start: function() {
-            logger.mute(['SYS', 'USER']);
+            logger.unmute(['SYS', 'USER']);
         },
 
         stop: function() {
-            logger.unmute(['SYS', 'USER']);
+            logger.mute(['SYS', 'USER']);
         },
 
         getListener: function( layerState ) {

@@ -131,7 +131,7 @@ define(function (require) {
             this.id = id;
             this.name = name;
             this.listeners = [];
-            this.addListener( activityLogger.getListener() );
+            this.addListener( activityLogger.getListener( this ) );
         },
 
         /**
