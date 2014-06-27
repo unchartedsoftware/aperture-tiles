@@ -9,25 +9,27 @@ Aperture Tiles <span class="tagline">tile-based visual analytics for big data</s
 
 Aperture Tiles provides the ability to create browser-based, interactive tools any analyst can use to explore data sets containing billions of data points (or more). 
  
-Business and government leaders today have more data than ever at hand to make smart, informed decisions. However making sense of such massive amounts of data is an extremely challenging task. As a result data is often not used to its full potential.
+Business and government leaders, operators and analysts today have more data than ever at hand to make smart, informed decisions. This information comes from various places, including social media, sensor data, financial transactions, cyber and open-source data. However making sense of such massive amounts of data is an extremely challenging task. As a result data is often not used to its full potential.
  
-Aperture Tiles uses a tile-based method to structure, analyze, visualize and interact with data using an interface similar to web-based map applications. This approach allows analysts to easily see and navigate all of the data without losing detail, and seamlessly "zoom in" to a more localized portion of that data.
+Aperture Tiles uses a pyramid of tiles to structure, analyze, visualize and interact with a user interface similar to web-based geographic map applications. This approach allows analysts to easily see and navigate all of the data without losing detail, and seamlessly "zoom in" to a more localized portion of that data.
  
-Custom analytic overlays can be applied to the data at every scale, ranging from the entire dataset to a very small portion of it. Seeing all of the data reveals informative patterns and provides important context to understanding insights identified by computational analytics. 
+Tailored analytic overlays (e.g., alerts, pattern detection, feature extraction) can be applied to the data at every scale, ranging from the entire dataset to a very small portion of it. Seeing all of the data reveals informative patterns and provides important context to understanding insights identified by computational analytics. 
 
 Aperture Tiles is open source, and free to use under the MIT License. 
 
-### Web Tile Rendering for Big Data Visual Analytics
+### Easy-to-Use Big Data Visual Analytics
 
-The widespread adoption of web-based maps provides a familiar set of interactions for exploring large, abstract data spaces. Aperture Tiles builds on these techniques to provide tools for big data visual analytics that use tile-based rendering.  This provides an interactive experience that is similar to geographic, web-based maps. 
+The widespread adoption of web-based geographic maps provides a familiar set of zoom/pan interactions that can be similarly used for working with extremely large, abstract data spaces. Aperture Tiles builds on these techniques to provide tools for big data visual analytics that use tile-based rendering and analytics. 
 
-Tile-based geographic maps provide a solid framework to construct large scale visualization:
+Tile-based geographic maps provide an interactive experience and solid framework to construct large scale visualization, including:
 
 * Continuous data along two dimensions
 * Use of data layering and legends
 * Use of axes and scales
 
-Web delivery of maps using tiled rendering has benefitted from years of work. With widespread use, map interactions have become familiar and make exploration of large data spaces easy and even enjoyable. By using this familiar interaction method, Aperture Tiles can provide a big data exploration experience that is just as easy and enjoyable.
+With widespread use, map interactions have become familiar and make exploration of large data spaces easy and even enjoyable.
+
+### Tile-Based Visual Analytics
 
 Tile-based visual analytics (TBVA) is a technique that divides the data into evenly sized hierarchical tiles, and then calculates and applies an analytic to the data contained in each tile. For example, if examining a large Twitter dataset, the data would be divided into equally sized tiles across the geographic area.  Then, an analytic is applied to each tile, such as the top five Twitter hashtags for the bounded region. As the user zooms into the map, Aperture Tiles presents a new layer of tiles that each contain a smaller portion of the full dataset.  In each new zoom layer, the analytic applied to each tile becomes more localized.
 
@@ -42,7 +44,7 @@ Aperture Tiles is under ongoing development and is freely available for download
 ###Interested in Learning More?
 
 * [Tour](tour/overview/): Take our tour to learn more about Aperture Tiles.
-* [Documentation](documentation/quickstart/): Learn how to install, implement, and test your Aperture Tiles applications.
+* [Documentation](documentation/quickstart/): Learn how to install, implement and test your Aperture Tiles applications.
 	* [Quick Start](documentation/quickstart/): Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
-* [Live Examples](/demos/): See our demos page to see live examples of the capabilities of Aperture Tiles.
+* [Live Examples](demos/): See our demos page to see live examples of the capabilities of Aperture Tiles.
 * [Download](download/): For details on downloading pre-packaged versions or aquiring the Aperture Tiles source code visit our download page.
