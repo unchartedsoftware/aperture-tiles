@@ -63,10 +63,10 @@ define(function (require) {
 
                 case "tileFocus":
 
-                    var tilekey = layerState.getTileFocus(),
+                    var tilekey = layerState.get('tileFocus'),
                         topLeft;
 
-                    if ( layerState.getCarouselEnabled() ) {
+                    if ( layerState.get('carouselEnabled') ) {
                         // if carousel is enabled, update its tile position
                         topLeft = map.getTopLeftMapPixelForTile( tilekey );
                         $carousel.css({
@@ -81,7 +81,7 @@ define(function (require) {
 
                     // empty carousel
                     $carousel.empty().css('visibility', 'hidden');
-                    if ( layerState.getCarouselEnabled() ) {
+                    if ( layerState.get('carouselEnabled') ) {
                         // create carousel UI
                         $carousel.css('visibility', 'visible');
                         createCarousel( $carousel, map, controlMap, layerState );
@@ -94,9 +94,9 @@ define(function (require) {
 
     updateDotIndices = function( controlMap, layerState ) {
 
-        var tilekey = layerState.getTileFocus(),
+        var tilekey = layerState.get('tileFocus'),
             count = controlMap.dots.length,
-            index = layerState.getRendererByTile( tilekey ),
+            index = layerState.get('rendererByTile', tilekey) || 0,
             i;
 
         for (i=0; i<count; i++) {
@@ -119,14 +119,14 @@ define(function (require) {
             chevron.mousedown( function() {
                 chevron.click( function() {
 
-                    var tilekey = layerState.getTileFocus(),
-                        prevIndex = layerState.getRendererByTile( tilekey ),
+                    var tilekey = layerState.get('tileFocus'),
+                        prevIndex = layerState.get( 'rendererByTile', tilekey ) || 0,
                         mod = function (m, n) {
                             return ((m % n) + n) % n;
                         },
-                        newIndex = mod( prevIndex + inc, layerState.getRendererCount() );
+                        newIndex = mod( prevIndex + inc, layerState.get('rendererCount') );
 
-                    layerState.setRendererByTile( tilekey, newIndex );
+                    layerState.set( 'rendererByTile', tilekey, newIndex );
                     updateDotIndices( controlMap, layerState );
                 });
             });
@@ -157,6 +157,7 @@ define(function (require) {
         var indexClass,
             $indexContainer,
             $dots = [],
+            rendererCount = layerState.get('rendererCount'),
             i;
 
         function generateCallbacks( dot, index ) {
@@ -166,7 +167,7 @@ define(function (require) {
             dot.mousedown( function() {
                 dot.click( function() {
 
-                    layerState.setRendererByTile( layerState.getTileFocus(), index );
+                    layerState.set( 'rendererByTile', layerState.get('tileFocus'), index );
                     updateDotIndices( controlMap, layerState );
                 });
             });
@@ -175,7 +176,7 @@ define(function (require) {
         $indexContainer = $("<div class='"+DOT_CONTAINER_CLASS+"'></div>");
         $carousel.append( $indexContainer );
 
-        for (i=0; i < layerState.getRendererCount(); i++) {
+        for (i=0; i < rendererCount; i++) {
 
             indexClass = (i === 0) ? DOT_CLASS_SELECTED : DOT_CLASS_DEFAULT;
             $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
@@ -192,7 +193,7 @@ define(function (require) {
 
     createCarousel = function( $carousel, map, controlMap, layerState ) {
 
-        if ( layerState.getRendererCount() > 1 ) {
+        if ( layerState.get('rendererCount') > 1 ) {
             // only create chevrons and indices if there is more than 1 layer
             createChevrons( $carousel, map, controlMap, layerState );
             createIndexDots( $carousel, map, controlMap, layerState );
@@ -221,7 +222,7 @@ define(function (require) {
             for (i=0; i<layerStates.length; i++) {
                 layerStates[i].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[i] ) );
                 if (i === 0) {
-                    layerStates[i].setCarouselEnabled( true );
+                    layerStates[i].set( 'carouselEnabled', true );
                 }
             }
         },
