@@ -42,6 +42,14 @@ define(function (require) {
 
     var Class = require('../class'),
         AxisUtil = require('../map/AxisUtil'),
+        TOOLTIP_SETTINGS_BUTTON = "Open filter settings menu",
+        TOOLTIP_SETTINGS_BACK_BUTTON = "Return to layer controls menu",
+        TOOLTIP_VISIBILITY_BUTTON = "Toggle layer visibility",
+        TOOLTIP_OPACITY_SLIDER = "Adjust layer opacity",
+        TOOLTIP_FILTER_SLIDER = "Filter layer values",
+        TOOLTIP_BASELAYER_BUTTON = "Change base layer",
+        TOOLTIP_RAMP_TYPE_BUTTON = "Change ramp color scale",
+        TOOLTIP_RAMP_FUNCTION_BUTTON = "Change ramp function",
         LayerControls,
         addLayer,
         showLayerSettings,
@@ -137,9 +145,15 @@ define(function (require) {
      */
     createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping ) {
 
-        var $settingsButton = $('<button class="settings-link">settings</button>');
+        var $settingsButton = $('<button class="settings-link" title>settings</button>');
         $settingsButton.click(function () {
             showLayerSettings( $layerControlsContainer, $layerContent, layerState );
+        });
+        $settingsButton.tooltip({
+            content: TOOLTIP_SETTINGS_BUTTON,
+            show: { delay: 800 },
+            open: function() { layerState.set('settingsButtonTooltip', 'open'); },
+            close: function() { layerState.set('settingsButtonTooltip', 'close'); }
         });
         controlsMapping.settingsLink = $settingsButton;
         return $settingsButton;
@@ -154,7 +168,7 @@ define(function (require) {
      */
     createVisibilityButton = function( layerState, controlsMapping ) {
 
-        var $toggleDiv = $('<div class="layer-toggle"></div>'),
+        var $toggleDiv = $('<div class="layer-toggle" title></div>'),
             $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.getId() + '">')
                              .add($('<label for="layer-toggle-box-' + layerState.getId() + '"></label>'));
 
@@ -167,6 +181,12 @@ define(function (require) {
             if (layerState.getDomain() === "client") {
                 layerState.set( 'carouselEnabled', value );
             }
+        });
+        $toggleBox.tooltip({
+            content: TOOLTIP_VISIBILITY_BUTTON,
+            show: { delay: 800 },
+            open: function() { layerState.set('visibilityButtonTooltip', 'open'); },
+            close: function() { layerState.set('visibilityButtonTooltip', 'close'); }
         });
         controlsMapping.enabledCheckbox = $toggleBox;
         return $toggleDiv;
@@ -184,7 +204,7 @@ define(function (require) {
         var sliderClass = ( layerState.getDomain() === 'server' ) ? "opacity-slider" : "base-opacity-slider",
             $opacitySliderContainer = $('<div class="' + sliderClass + '"></div>'),
             $opacitySliderLabel = $('<div class="slider-label">Opacity</div>'),
-            $opacitySlider = $('<div class="opacity-slider-bar"></div>').slider({
+            $opacitySlider = $('<div class="opacity-slider-bar" title></div>').slider({
                  range: "min",
                  min: 0,
                  max: OPACITY_RESOLUTION,
@@ -196,6 +216,13 @@ define(function (require) {
                      layerState.set( 'opacity', $opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
                  }
              });
+
+        $opacitySlider.tooltip({
+            content: TOOLTIP_OPACITY_SLIDER,
+            show: { delay: 800 },
+            open: function() { layerState.set('opacitySliderTooltip', 'open'); },
+            close: function() { layerState.set('opacitySliderTooltip', 'close'); }
+        });
 
         $opacitySliderContainer.append( $opacitySliderLabel );
         $opacitySliderContainer.append( $opacitySlider );
@@ -215,7 +242,7 @@ define(function (require) {
         var filterRange = layerState.get('filterRange'),
             $filterSliderContainer = $('<div class="filter-slider"></div>'),
             $filterLabel = $('<div class="slider-label">Filter</div>'),
-            $filterSlider = $('<div class="filter-slider-img"></div>'),
+            $filterSlider = $('<div class="filter-slider-img" title></div>'),
             $filterAxis;
 
         $filterSliderContainer.append( $filterLabel );
@@ -229,6 +256,13 @@ define(function (require) {
                 var result = $filterSlider.slider("option", "values");
                 layerState.set( 'filterRange', [result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
             }
+        });
+
+        $filterSlider.tooltip({
+            content: TOOLTIP_FILTER_SLIDER,
+            show: { delay: 800 },
+            open: function() { layerState.set('filterSliderTooltip', 'open'); },
+            close: function() { layerState.set('filterSliderTooltip', 'close'); }
         });
 
         // Disable the background for the range slider
@@ -413,7 +447,7 @@ define(function (require) {
      */
     createBaseLayerButtons = function( $layerContent, layerState, controlsMapping ) {
 
-        var $baseLayerButtonSet = $('<div class="baselayer-fieldset"></div>'),
+        var $baseLayerButtonSet = $('<div class="baselayer-fieldset" title></div>'),
             $radioButton,
             $radioLabel,
             baseLayer,
@@ -426,6 +460,13 @@ define(function (require) {
             layerState.set( 'baseLayerIndex', index );
 
         }
+
+        $baseLayerButtonSet.tooltip({
+            content: TOOLTIP_BASELAYER_BUTTON,
+            show: { delay: 800 },
+            open: function() { layerState.set('baselayerFieldsetTooltip', 'open'); },
+            close: function() { layerState.set('baselayerFieldsetTooltip', 'close'); }
+        });
 
         for (i=0; i<layerState.BASE_LAYERS.length; i++) {
 
@@ -552,16 +593,31 @@ define(function (require) {
         $settingsContainer.append($settingsContent);
 
         // create back button
-        $backButton = $('<button class="settings-link">back</button>');
+        $backButton = $('<button class="settings-link" title>back</button>');
+        $backButton.tooltip({
+            content: TOOLTIP_SETTINGS_BACK_BUTTON,
+            show: { delay: 800 },
+            open: function() { layerState.set('settingsBackButtonTooltip', 'open'); },
+            close: function() { layerState.set('settingsBackButtonTooltip', 'close'); }
+        });
         $backButton.click(function () {
             replaceChildren( $layerControlsContainer, oldChildren );
         });
+
+
         $settingsTitleBar.append($backButton);
 
         // add the ramp types radio buttons
-        $rampTypes = $('<div class="settings-ramp-types"/>');
+        $rampTypes = $('<div class="settings-ramp-types" title />');
         // add title to ramp types div
         $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
+        $rampTypes.tooltip({
+            content: TOOLTIP_RAMP_TYPE_BUTTON,
+            show: { delay: 800 },
+            open: function() { layerState.set('rampTypesTooltip', 'open'); },
+            close: function() { layerState.set('rampTypesTooltip', 'close'); }
+        });
+
         $settingsContent.append($rampTypes);
         // create left and right columns
         $leftSpan = $('<span class="settings-ramp-span-left"></span>');
@@ -590,8 +646,14 @@ define(function (require) {
         $rampTypes.find('input[name="ramp-types"][value="' + layerState.get('rampType') + '"]').prop('checked', true);
 
         // Add the ramp function radio buttons
-        $rampFunctions = $('<div class="settings-ramp-functions"/>');
+        $rampFunctions = $('<div class="settings-ramp-functions" title/>');
         $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
+        $rampFunctions.tooltip({
+            content: TOOLTIP_RAMP_FUNCTION_BUTTON,
+            show: { delay: 800 },
+            open: function() { layerState.set('rampFunctionsTooltip', 'open'); },
+            close: function() { layerState.set('rampFunctionsTooltip', 'close'); }
+        });
         $settingsContent.append($rampFunctions);
 
         for (i=0; i<layerState.RAMP_FUNCTIONS.length; i++) {
