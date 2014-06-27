@@ -7,3 +7,4 @@ target
 update.sh
 phantomjs.exe
 *.iml
+docs/_site
