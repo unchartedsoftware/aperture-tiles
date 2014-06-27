@@ -112,9 +112,15 @@ define(function (require) {
         var $leftChevron,
             $rightChevron;
 
-        function generateCallbacks( chevron, inc ) {
+        function generateCallbacks( chevron, inc, side ) {
 
-            chevron.mouseout( function() { chevron.off('click'); });
+            chevron.mouseover( function() {
+                layerState.set( 'carouselChrevonHover', {side:side} );
+            });
+            chevron.mouseout( function() {
+                chevron.off('click');
+                layerState.set( 'carouselChrevonHover', {} );
+            });
             chevron.mousemove( function() { chevron.off('click'); });
             chevron.mousedown( function() {
                 chevron.click( function() {
@@ -133,11 +139,11 @@ define(function (require) {
         }
 
         $leftChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_LEFT+"'></div>");
-        generateCallbacks( $leftChevron, -1 );
+        generateCallbacks( $leftChevron, -1, 'left' );
         $carousel.append( $leftChevron );
 
         $rightChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_RIGHT+"'></div>");
-        generateCallbacks( $rightChevron, 1 );
+        generateCallbacks( $rightChevron, 1, 'right' );
         $carousel.append( $rightChevron );
 
         // allow all events to propagate to map except 'click'
@@ -162,7 +168,13 @@ define(function (require) {
 
         function generateCallbacks( dot, index ) {
 
-            dot.mouseout( function() { dot.off('click'); });
+            dot.mouseover( function() {
+                layerState.set( 'carouselIndexHover', {index:index} );
+            });
+            dot.mouseout( function() {
+                dot.off('click');
+                layerState.set( 'carouselIndexHover', {} );
+            });
             dot.mousemove( function() { dot.off('click'); });
             dot.mousedown( function() {
                 dot.click( function() {

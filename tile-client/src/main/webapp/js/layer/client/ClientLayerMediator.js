@@ -61,9 +61,14 @@ define(function (require) {
 
                 function updateTileFocus( x, y ) {
 
-                    var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
-                    layerState.set( 'previousTileFocus', layerState.get('tileFocus') );
-                    layerState.set( 'tileFocus', tilekey );
+                    var tilekey = layer.map.getTileKeyFromViewportPixel( x, y ),
+                        previousTilekey = layerState.set( 'tileFocus', tilekey );
+
+                    if ( tilekey !== previousTilekey ) {
+                        layerState.set( 'previousTileFocus', previousTilekey );
+                        layerState.set( 'tileFocus', tilekey );
+                    }
+
                 }
 
                 // Create a layer state object for the base map.

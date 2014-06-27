@@ -87,6 +87,14 @@ define(function (require) {
 
             });
 
+            map.on('zoomend', function() {
+                layerState.set('zoom', map.getZoom() );
+            });
+
+            map.on('moveend', function( event ) {
+                layerState.set('pan', [event.xy.x, event.xy.y] );
+            });
+
             // Add the layer to the layer state array.
             this.layerStates.push( layerState );
         }
