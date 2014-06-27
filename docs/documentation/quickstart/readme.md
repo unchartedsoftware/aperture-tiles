@@ -51,7 +51,7 @@ Set the following environment variables:
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
 1. Extract the contents of the [tile-generator.zip](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3.1-dist.zip), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
-2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. Note that you may need to create this directory in your local file system or HDFS beforehand.
+2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data.
 	
 	The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.
 
