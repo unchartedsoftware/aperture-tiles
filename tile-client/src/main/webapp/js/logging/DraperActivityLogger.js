@@ -26,10 +26,54 @@
 define(function (require) {
     "use strict";
 
-    var logger = null;
-    if ( !logger ) {
-        logger = new activityLogger( "./js/libjs/draper.activity_worker-2.1.1.js" ).echo( true ).testing( true );
+
+
+    var ActivityLogger = activityLogger,
+        logger = new ActivityLogger( "./js/libjs/draper.activity_worker-2.1.1.js" )
+                        .echo( true )
+                            .testing( true )
+                                .mute( ['SYS', 'USER'] );
+
+
+
+    function DESCRIPTION_MAP( layerState, fieldName ) {
+        return "Setting " + fieldName + " attribute to " + layerState.get( fieldName ) + " for layer " + layerState.getId();
     }
-    return logger;
+
+    function ACTION_MAP( fieldName ) {
+        switch ( fieldName ) {
+            case 'opacity': return 'filter_data';
+            case 'enabled': return "filter_data";
+            default:        return 'missing_action';
+        }
+    }
+
+    function WORKFLOW_MAP( fieldName ) {
+        switch ( fieldName ) {
+            case 'opacity': return logger.WF_EXPLORE;
+            case 'enabled': return logger.WF_EXPLORE;
+            default:        return logger.WF_OTHER;
+        }
+    }
+
+    return {
+
+        start: function() {
+            logger.mute(['SYS', 'USER']);
+        },
+
+        stop: function() {
+            logger.unmute(['SYS', 'USER']);
+        },
+
+        getListener: function( layerState ) {
+
+            return function( fieldName ) {
+
+                logger.logUserActivity( DESCRIPTION_MAP( layerState, fieldName ), ACTION_MAP( fieldName ), WORKFLOW_MAP( fieldName ) );
+            };
+        }
+
+    };
 
 });

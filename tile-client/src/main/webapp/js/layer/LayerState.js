@@ -34,6 +34,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        activityLogger = require('../logging/DraperActivityLogger'),
         objectsEqual,
         arraysEqual,
         isEqual,
@@ -130,6 +131,7 @@ define(function (require) {
             this.id = id;
             this.name = name;
             this.listeners = [];
+            this.addListener( activityLogger.getListener() );
         },
 
         /**

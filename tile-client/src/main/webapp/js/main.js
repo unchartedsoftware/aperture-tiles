@@ -40,7 +40,8 @@ require(['./ApertureConfig',
          './layer/client/CarouselControls',
          './layer/annotation/AnnotationService',
          './layer/annotation/AnnotationLayerFactory',
-         './layer/annotation/AnnotationLayerMediator'
+         './layer/annotation/AnnotationLayerMediator',
+         './logging/DraperActivityLogger'
         ],
 
         function (configureAperture,
@@ -59,7 +60,8 @@ require(['./ApertureConfig',
                   CarouselControls,
                   AnnotationService,
                   AnnotationLayerFactory,
-                  AnnotationLayerMediator) {
+                  AnnotationLayerMediator,
+                  DraperActivityLogger) {
 
 	        "use strict";
 
@@ -300,6 +302,9 @@ require(['./ApertureConfig',
                             new LayerControls( 'layer-controls-content', sharedStates ).noop();
                             // create the carousel controls
                             new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
+
+                            // once everything is loaded, begin logging
+                            DraperActivityLogger.start();
 
                         });
 
