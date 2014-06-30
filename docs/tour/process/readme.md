@@ -8,7 +8,7 @@ layout: default
 Aperture Tiles Process
 =======================
 
-Aperture Tiles uses a multi-stage process to develop tile-based visual analytics. 
+Aperture Tiles uses a multi-stage process to develop tile-based visual analytics. For a detailed description of the steps required to develop custom visual analytics, see the [Quick Start Guide](../../documentation/quickstart/).
 
 Aggregation Stage
 -----------------
