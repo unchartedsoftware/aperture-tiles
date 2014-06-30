@@ -34,6 +34,7 @@ See the [Installation documentation](../setup) for full details on the required 
 	- Scala version 2.10.3
 - **Cluster Computing**:
 	- Apache Spark version 0.9.0 or greater (version 1.0.0 recommended)
+      NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
 	- Hadoop/HDFS/HBase (Optional) - Choose your preferred version
 
 ###<a name="spark-config"></a>Apache Spark Configuration

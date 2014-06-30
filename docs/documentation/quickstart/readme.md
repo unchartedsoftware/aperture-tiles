@@ -21,7 +21,7 @@ At the end of this guide you will have successfully created an example Aperture 
 
 The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. 
 
-To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 0.9.0 or greater (version 1.0.0 recommended). Spark is a distributed cluster computing framework on which Aperture Tiles builds to enable fast data and tile generation at scale.
+To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 0.9.0 or greater (version 1.0.0 recommended). Spark is a distributed cluster computing framework on which Aperture Tiles builds to enable fast data and tile generation at scale.  NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
 
 If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
 
