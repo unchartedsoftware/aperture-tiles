@@ -424,7 +424,6 @@ define(function (require) {
             var index = parseInt( $(this).val(), 10 );
             layerState.set( 'previousBaseLayerIndex', layerState.get('baseLayerIndex') );
             layerState.set( 'baseLayerIndex', index );
-
         }
 
         for (i=0; i<layerState.BASE_LAYERS.length; i++) {

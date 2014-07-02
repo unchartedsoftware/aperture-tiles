@@ -35,26 +35,61 @@ define(function (require) {
                                 .mute( ['SYS', 'USER'] );
 
 
-
     function DESCRIPTION_MAP( layerState, fieldName ) {
         return "Setting " + fieldName + " to " + JSON.stringify( layerState.get( fieldName ) ) + " for layer " + layerState.getId();
     }
 
     function ACTION_MAP( fieldName ) {
         switch ( fieldName ) {
-            case 'opacity': return 'filter_data';
-            case 'enabled': return "filter_data";
-            default:        return 'missing_action';
+            case 'opacity':             return 'filter_data';
+            case 'enabled':             return "filter_data";
+            case 'zIndex':              return "filter_data";
+            case 'filterRange':         return "filter_data";
+            case 'rampType':            return "filter_data";
+            case 'rampFunction':        return "filter_data";
+            case 'tileFocus':           return "filter_data";
+            case 'previousTileFocus':   return "filter_data";
+            case 'translate':           return "filter_data";
+            case 'baseLayerIndex':      return "filter_data";
+            case 'carouselEnabled':     return "filter_data";
+            case 'rendererByTile':      return "filter_data";
+            default:                    return 'missing_action';
         }
     }
 
     function WORKFLOW_MAP( fieldName ) {
         switch ( fieldName ) {
-            case 'opacity': return logger.WF_EXPLORE;
-            case 'enabled': return logger.WF_EXPLORE;
-            default:        return logger.WF_OTHER;
+            case 'opacity':             return logger.WF_EXPLORE;
+            case 'enabled':             return logger.WF_EXPLORE;
+            case 'zIndex':              return logger.WF_EXPLORE;
+            case 'filterRange':         return logger.WF_EXPLORE;
+            case 'rampType':            return logger.WF_EXPLORE;
+            case 'rampFunction':        return logger.WF_EXPLORE;
+            case 'tileFocus':           return logger.WF_EXPLORE;
+            case 'previousTileFocus':   return logger.WF_EXPLORE;
+            case 'translate':           return logger.WF_EXPLORE;
+            case 'baseLayerIndex':      return logger.WF_EXPLORE;
+            case 'carouselEnabled':     return logger.WF_EXPLORE;
+            case 'rendererByTile':      return logger.WF_EXPLORE;
+            default:                    return logger.WF_OTHER;
         }
     }
+
+    function IGNORE_MAP( fieldName ) {
+        switch ( fieldName ) {
+
+            case 'previousBaseLayerIndex':
+            case 'rampMinMax':
+            case 'rampImageUrl':
+            case 'rendererCount':
+            case 'defaultRendererIndex':
+
+                return true;
+
+            default: return false;
+        }
+    }
+
 
     return {
 
@@ -70,7 +105,9 @@ define(function (require) {
 
             return function( fieldName ) {
 
-                logger.logUserActivity( DESCRIPTION_MAP( layerState, fieldName ), ACTION_MAP( fieldName ), WORKFLOW_MAP( fieldName ) );
+                if ( !IGNORE_MAP( fieldName ) ) {
+                    logger.logUserActivity( DESCRIPTION_MAP( layerState, fieldName ), ACTION_MAP( fieldName ), WORKFLOW_MAP( fieldName ) );
+                }
             };
         }
 

@@ -115,11 +115,13 @@ define(function (require) {
         function generateCallbacks( chevron, inc, side ) {
 
             chevron.mouseover( function() {
-                layerState.set( 'carouselChrevonHover', {side:side} );
+                layerState.set( 'hover', {
+                    target: 'carousel-'+side+'-chevron'
+                });
             });
             chevron.mouseout( function() {
                 chevron.off('click');
-                layerState.set( 'carouselChrevonHover', {} );
+                layerState.set( 'hover', null );
             });
             chevron.mousemove( function() { chevron.off('click'); });
             chevron.mousedown( function() {
@@ -169,11 +171,13 @@ define(function (require) {
         function generateCallbacks( dot, index ) {
 
             dot.mouseover( function() {
-                layerState.set( 'carouselIndexHover', {index:index} );
+                layerState.set( 'hover', {
+                    target: 'carousel-index-dot-'+index
+                });
             });
             dot.mouseout( function() {
                 dot.off('click');
-                layerState.set( 'carouselIndexHover', {} );
+                layerState.set( 'hover', null );
             });
             dot.mousemove( function() { dot.off('click'); });
             dot.mousedown( function() {
