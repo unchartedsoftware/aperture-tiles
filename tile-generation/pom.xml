@@ -30,6 +30,12 @@
 			<artifactId>spark-streaming_${dependency-scala-version}</artifactId>
 			<version>${spark-version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-graphx_${dependency-scala-version}</artifactId>
+			<version>${spark-version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.oculusinfo</groupId>
