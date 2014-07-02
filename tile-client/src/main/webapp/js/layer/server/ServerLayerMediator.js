@@ -93,7 +93,7 @@ define(function (require) {
                     var meta =  layer.getLayerInfo().meta,
                         minArray = meta.levelMinFreq || meta.levelMinimums,
                         maxArray = meta.levelMaxFreq || meta.levelMaximums,
-                        min = minArray[level],
+                        min = minArray ? minArray[level] : 0,
                         max = maxArray[level];
                     return [ parseFloat(min), parseFloat(max) ];
                 }
