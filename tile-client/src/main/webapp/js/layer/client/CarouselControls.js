@@ -34,6 +34,7 @@ define(function (require) {
 
 
     var Class = require('../../class'),
+        Util = require('../../util/Util'),
         CAROUSEL_CLASS = 'carousel-ui-pane',
         DOT_CONTAINER_CLASS = "carousel-ui-dot-container",
         DOT_CLASS = 'carousel-ui-dot',
@@ -156,10 +157,10 @@ define(function (require) {
         $carousel.append( $rightChevron );
 
         // allow all events to propagate to map except 'click'
-        map.enableEventToMapPropagation( $leftChevron );
-        map.enableEventToMapPropagation( $rightChevron );
-        map.disableEventToMapPropagation( $leftChevron, ['onclick', 'ondblclick'] );
-        map.disableEventToMapPropagation( $rightChevron, ['onclick', 'ondblclick'] );
+        Util.enableEventPropagation( $leftChevron );
+        Util.enableEventPropagation( $rightChevron );
+        Util.disableEventPropagation( $leftChevron, ['onclick', 'ondblclick'] );
+        Util.disableEventPropagation( $rightChevron, ['onclick', 'ondblclick'] );
 
         controlMap.leftChevron = $leftChevron;
         controlMap.rightChevron = $rightChevron;
@@ -212,8 +213,8 @@ define(function (require) {
             generateCallbacks( $dots[i], i );
             $indexContainer.append( $dots[i] );
             // allow all events to propagate to map except 'click'
-            map.enableEventToMapPropagation( $dots[i] );
-            map.disableEventToMapPropagation( $dots[i], ['onclick', 'ondblclick'] );
+            Util.enableEventPropagation( $dots[i] );
+            Util.disableEventPropagation( $dots[i], ['onclick', 'ondblclick'] );
         }
 
         controlMap.dots = $dots;
