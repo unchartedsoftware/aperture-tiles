@@ -41,6 +41,7 @@ define(function (require) {
     "use strict";
 
     var Class = require('../class'),
+        Util = require('../util/Util'),
         AxisUtil = require('../map/AxisUtil'),
         TOOLTIP_SETTINGS_BUTTON = "Open filter settings menu",
         TOOLTIP_SETTINGS_BACK_BUTTON = "Return to layer controls menu",
@@ -66,11 +67,33 @@ define(function (require) {
         replaceChildren,
         makeLayerStateObserver,
         replaceLayers,
-        sortLayers;
+        sortLayers,
+        tooltipOpenFunc,
+        tooltipCloseFunc;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
     FILTER_RESOLUTION = 100.0;
+
+
+    tooltipOpenFunc = function( layerState, target ) {
+        return function() {
+            layerState.set('tooltip', {
+                target: target,
+                state: 'open'
+            });
+        };
+    };
+
+
+    tooltipCloseFunc = function( layerState, target ) {
+        return function() {
+            layerState.set('tooltip', {
+                target: target,
+                state: 'close'
+            });
+        };
+    };
 
     /**
      * Replaces node's children and returns the replaced for storage. Fades out old content,
@@ -145,16 +168,16 @@ define(function (require) {
      */
     createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping ) {
 
-        var $settingsButton = $('<button class="settings-link" title>settings</button>');
+        var $settingsButton = $('<button class="settings-link">settings</button>');
+        // set callback
         $settingsButton.click(function () {
             showLayerSettings( $layerControlsContainer, $layerContent, layerState );
         });
-        $settingsButton.tooltip({
-            content: TOOLTIP_SETTINGS_BUTTON,
-            show: { delay: 800 },
-            open: function() { layerState.set('settingsButtonTooltip', 'open'); },
-            close: function() { layerState.set('settingsButtonTooltip', 'close'); }
-        });
+        // set tooltip
+        Util.enableTooltip( $settingsButton,
+                         TOOLTIP_SETTINGS_BUTTON,
+                         tooltipOpenFunc( layerState, 'layer-controls-setting-button' ),
+                         tooltipCloseFunc( layerState, 'layer-controls-setting-button' ) );
         controlsMapping.settingsLink = $settingsButton;
         return $settingsButton;
     };
@@ -168,13 +191,14 @@ define(function (require) {
      */
     createVisibilityButton = function( layerState, controlsMapping ) {
 
-        var $toggleDiv = $('<div class="layer-toggle" title></div>'),
+        var $toggleDiv = $('<div class="layer-toggle"></div>'),
             $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.getId() + '">')
                              .add($('<label for="layer-toggle-box-' + layerState.getId() + '"></label>'));
 
         $toggleDiv.append( $toggleBox );
         // Initialize the button from the model and register event handler.
         $toggleBox.prop("checked", layerState.get('enabled'));
+        // set click callback
         $toggleBox.click(function () {
             var value = $toggleBox.prop("checked");
             layerState.set( 'enabled', value );
@@ -182,12 +206,12 @@ define(function (require) {
                 layerState.set( 'carouselEnabled', value );
             }
         });
-        $toggleBox.tooltip({
-            content: TOOLTIP_VISIBILITY_BUTTON,
-            show: { delay: 800 },
-            open: function() { layerState.set('visibilityButtonTooltip', 'open'); },
-            close: function() { layerState.set('visibilityButtonTooltip', 'close'); }
-        });
+        // set tooltip
+        Util.enableTooltip( $toggleBox,
+                         TOOLTIP_VISIBILITY_BUTTON,
+                         tooltipOpenFunc( layerState, 'layer-controls-visibility-button' ),
+                         tooltipCloseFunc( layerState, 'layer-controls-visibility-button' ) );
+
         controlsMapping.enabledCheckbox = $toggleBox;
         return $toggleDiv;
     };
@@ -204,7 +228,7 @@ define(function (require) {
         var sliderClass = ( layerState.getDomain() === 'server' ) ? "opacity-slider" : "base-opacity-slider",
             $opacitySliderContainer = $('<div class="' + sliderClass + '"></div>'),
             $opacitySliderLabel = $('<div class="slider-label">Opacity</div>'),
-            $opacitySlider = $('<div class="opacity-slider-bar" title></div>').slider({
+            $opacitySlider = $('<div class="opacity-slider-bar"></div>').slider({
                  range: "min",
                  min: 0,
                  max: OPACITY_RESOLUTION,
@@ -216,13 +240,11 @@ define(function (require) {
                      layerState.set( 'opacity', $opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
                  }
              });
-
-        $opacitySlider.tooltip({
-            content: TOOLTIP_OPACITY_SLIDER,
-            show: { delay: 800 },
-            open: function() { layerState.set('opacitySliderTooltip', 'open'); },
-            close: function() { layerState.set('opacitySliderTooltip', 'close'); }
-        });
+        // set tooltip
+        Util.enableTooltip( $opacitySlider,
+                         TOOLTIP_OPACITY_SLIDER,
+                         tooltipOpenFunc( layerState, 'layer-controls-opacity-slider' ),
+                         tooltipCloseFunc( layerState, 'layer-controls-opacity-slider' ) );
 
         $opacitySliderContainer.append( $opacitySliderLabel );
         $opacitySliderContainer.append( $opacitySlider );
@@ -242,7 +264,7 @@ define(function (require) {
         var filterRange = layerState.get('filterRange'),
             $filterSliderContainer = $('<div class="filter-slider"></div>'),
             $filterLabel = $('<div class="slider-label">Filter</div>'),
-            $filterSlider = $('<div class="filter-slider-img" title></div>'),
+            $filterSlider = $('<div class="filter-slider-img"></div>'),
             $filterAxis;
 
         $filterSliderContainer.append( $filterLabel );
@@ -257,13 +279,11 @@ define(function (require) {
                 layerState.set( 'filterRange', [result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
             }
         });
-
-        $filterSlider.tooltip({
-            content: TOOLTIP_FILTER_SLIDER,
-            show: { delay: 800 },
-            open: function() { layerState.set('filterSliderTooltip', 'open'); },
-            close: function() { layerState.set('filterSliderTooltip', 'close'); }
-        });
+        // set tooltip
+        Util.enableTooltip( $filterSlider,
+                         TOOLTIP_FILTER_SLIDER,
+                         tooltipOpenFunc( layerState, 'layer-controls-filter-slider' ),
+                         tooltipCloseFunc( layerState, 'layer-controls-filter-slider' ) );
 
         // Disable the background for the range slider
         $( ".ui-slider-range", $filterSlider ).css({"background": "none"});
@@ -372,7 +392,6 @@ define(function (require) {
 
         $layerControlRoot.draggable({
             "revert": function(valid) {
-
                 var $that = $(this);
                 if( !valid ) {
                     // dropped in an invalid location
@@ -386,7 +405,7 @@ define(function (require) {
                 controlsMapping.startPosition = $layerControlRoot.position();
             },
             "drag": function() {
-               $(this).css({'box-shadow':"0 5px 15px #000", "z-index": 1000});
+                $(this).css({'box-shadow':"0 5px 15px #000", "z-index": 1000});
             }
         });
 
@@ -447,7 +466,7 @@ define(function (require) {
      */
     createBaseLayerButtons = function( $layerContent, layerState, controlsMapping ) {
 
-        var $baseLayerButtonSet = $('<div class="baselayer-fieldset" title></div>'),
+        var $baseLayerButtonSet = $('<div class="baselayer-fieldset"></div>'),
             $radioButton,
             $radioLabel,
             baseLayer,
@@ -458,15 +477,7 @@ define(function (require) {
             var index = parseInt( $(this).val(), 10 );
             layerState.set( 'previousBaseLayerIndex', layerState.get('baseLayerIndex') );
             layerState.set( 'baseLayerIndex', index );
-
         }
-
-        $baseLayerButtonSet.tooltip({
-            content: TOOLTIP_BASELAYER_BUTTON,
-            show: { delay: 800 },
-            open: function() { layerState.set('baselayerFieldsetTooltip', 'open'); },
-            close: function() { layerState.set('baselayerFieldsetTooltip', 'close'); }
-        });
 
         for (i=0; i<layerState.BASE_LAYERS.length; i++) {
 
@@ -482,6 +493,12 @@ define(function (require) {
             $radioButton = $( '<input type="radio" class="baselayer-radio-button" name="baselayer-radio-button" id="'+(baseLayer.options.name+i)+'"'
                             + 'value="' + i + '"' + ( isActiveBaseLayer ? 'checked>' : '>' ) );
             $radioButton.on( 'click', onClick );
+            // set tooltip
+            Util.enableTooltip( $radioButton,
+                                TOOLTIP_BASELAYER_BUTTON,
+                                tooltipOpenFunc( layerState, 'layer-controls-baselayer-button' ),
+                                tooltipCloseFunc( layerState, 'layer-controls-baselayer-button' ) );
+
             // create radio label
             $radioLabel = $('<label for="'+(baseLayer.options.name+i)+'">' + baseLayer.options.name + '</label>');
             $baseLayerButtonSet.append( $radioButton ).append( $radioLabel );
@@ -572,6 +589,7 @@ define(function (require) {
             $rightSpan,
             $rampTypes,
             $rampFunctions,
+            $settingValue,
             id,
             oldChildren,
             $backButton,
@@ -593,17 +611,15 @@ define(function (require) {
         $settingsContainer.append($settingsContent);
 
         // create back button
-        $backButton = $('<button class="settings-link" title>back</button>');
-        $backButton.tooltip({
-            content: TOOLTIP_SETTINGS_BACK_BUTTON,
-            show: { delay: 800 },
-            open: function() { layerState.set('settingsBackButtonTooltip', 'open'); },
-            close: function() { layerState.set('settingsBackButtonTooltip', 'close'); }
-        });
+        $backButton = $('<button class="settings-link">back</button>');
+        // set tooltip
+        Util.enableTooltip( $backButton,
+                            TOOLTIP_SETTINGS_BACK_BUTTON,
+                            tooltipOpenFunc( layerState, 'layer-controls-setting-back-button' ),
+                            tooltipCloseFunc( layerState, 'layer-controls-setting-back-button' ) );
         $backButton.click(function () {
             replaceChildren( $layerControlsContainer, oldChildren );
         });
-
 
         $settingsTitleBar.append($backButton);
 
@@ -611,12 +627,6 @@ define(function (require) {
         $rampTypes = $('<div class="settings-ramp-types" title />');
         // add title to ramp types div
         $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
-        $rampTypes.tooltip({
-            content: TOOLTIP_RAMP_TYPE_BUTTON,
-            show: { delay: 800 },
-            open: function() { layerState.set('rampTypesTooltip', 'open'); },
-            close: function() { layerState.set('rampTypesTooltip', 'close'); }
-        });
 
         $settingsContent.append($rampTypes);
         // create left and right columns
@@ -631,11 +641,16 @@ define(function (require) {
             id = layerState.RAMP_TYPES[i].id;
             // add half types to left, and half to right
             span = (i < layerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
-            span.append($('<div class="settings-values"></div>')
-                    .append($('<input type="radio" name="ramp-types" value="' + id + '" id="'+id+'">')
-                        .add($('<label for="' + id + '">' + name + '</label>')
-                )
-            ));
+            $settingValue = $('<div class="settings-values"></div>')
+                                .append($('<input type="radio" name="ramp-types" value="' + id + '" id="'+id+'">')
+                                    .add($('<label for="' + id + '">' + name + '</label>') ) );
+            // set tooltip
+            Util.enableTooltip( $settingValue,
+                                TOOLTIP_RAMP_TYPE_BUTTON,
+                                tooltipOpenFunc( layerState, 'layer-controls-ramp-type-'+id ),
+                                tooltipCloseFunc( layerState, 'layer-controls-ramp-type-'+id ) );
+
+            span.append( $settingValue );
         }
 
         // Update model on button changes
@@ -648,22 +663,22 @@ define(function (require) {
         // Add the ramp function radio buttons
         $rampFunctions = $('<div class="settings-ramp-functions" title/>');
         $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
-        $rampFunctions.tooltip({
-            content: TOOLTIP_RAMP_FUNCTION_BUTTON,
-            show: { delay: 800 },
-            open: function() { layerState.set('rampFunctionsTooltip', 'open'); },
-            close: function() { layerState.set('rampFunctionsTooltip', 'close'); }
-        });
+
         $settingsContent.append($rampFunctions);
 
         for (i=0; i<layerState.RAMP_FUNCTIONS.length; i++) {
             name = layerState.RAMP_FUNCTIONS[i].name;
             id = layerState.RAMP_FUNCTIONS[i].id;
-            $rampFunctions.append($('<div class="settings-values"></div>')
-                            .append($('<input type="radio" name="ramp-functions" value="' + id + '" id="'+id+'">')
-                                .add($('<label for="' + id + '">' + name + '</label>')
-                )
-            ));
+            $settingValue = $('<div class="settings-values"></div>')
+                                .append($('<input type="radio" name="ramp-functions" value="' + id + '" id="'+id+'">')
+                                    .add($('<label for="' + id + '">' + name + '</label>') ) );
+            // set tooltip
+            Util.enableTooltip( $settingValue,
+                                TOOLTIP_RAMP_FUNCTION_BUTTON,
+                                tooltipOpenFunc( layerState, 'layer-controls-ramp-function-'+id ),
+                                tooltipCloseFunc( layerState, 'layer-controls-ramp-function-'+id ) );
+
+            $rampFunctions.append( $settingValue );
         }
 
         $rampFunctions.change( function () {
