@@ -36,7 +36,63 @@ define(function (require) {
 
 
     function DESCRIPTION_MAP( layerState, fieldName ) {
-        return "Setting " + fieldName + " to " + JSON.stringify( layerState.get( fieldName ) ) + " for layer " + layerState.getId();
+        var value = layerState.get( fieldName ),
+            id = layerState.getId();
+
+        switch ( fieldName ) {
+            case 'opacity':             return 'Setting opacity to ' + value + ' for layer ' + id;
+            case 'enabled':             return 'Setting visibility to ' + value + ' for layer ' + id;
+            case 'zIndex':              return 'Setting zIndex to ' + value + ' for layer ' + id;
+            case 'filterRange':         return 'Filtering range from ' + value[0] + ' to ' + value[1] + ' for layer ' + id;
+            case 'rampType':            return 'Setting ramp type to ' + value + ' for layer ' + id;
+            case 'rampFunction':        return 'Setting ramp function to ' + value + ' for layer ' + id;
+            case 'tileFocus':           return 'Hover on tile ' + value;
+            case 'previousTileFocus':   return 'Hover off of tile ' + value;
+            case 'translate':           return 'Translating over tile ' + value;
+            case 'baseLayerIndex':      return 'Setting baselayer to ' + layerState.BASE_LAYERS[value];
+            case 'carouselEnabled':     return ( value ? 'Enabling' : 'Disabling' ) + ' carousel';
+            case 'rendererByTile':      return 'Swapping client rendering for tile ' + value;
+            case 'zoom':                return 'Zooming to level ' + value;
+            case 'pan':                 return 'Panning map, delta vector [' + value.dx + ', ' + value.dy + ']';
+            case 'drag':
+
+                if (value.state === "drag") {
+                    return 'Dragging layer ' + value.target + " controls";
+                }
+                return 'Dropping layer ' + value.target + " controls";
+
+            case 'tooltip':
+
+                if (value.state === "open") {
+                    return 'Tooltip open on ' + value.target;
+                }
+                return 'Tooltip close on ' + value.target;
+
+            case 'click':
+
+                if (!value) {
+                    return "Click off";
+                }
+
+                if ( value.target === 'client-layer' ) {
+                    return "Click on topic '" + value.tag + "' in tile " + value.data.tilekey;
+                }
+                return "Click on " + value.target;
+
+            case 'hover':
+
+                if (!value) {
+                    return "Hover off";
+                }
+
+                if ( value.target === 'client-layer' ) {
+                    return "Hover on topic '" + value.tag + ' in tile ' + value.data.tilekey;
+                }
+                return "Hover on " + value.target;
+
+            default:                    return "Processing '" + fieldName + "' event, value of " + JSON.stringify( layerState.get( fieldName ) );
+        }
+
     }
 
     function ACTION_MAP( fieldName ) {

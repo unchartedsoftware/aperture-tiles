@@ -30,6 +30,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        Util = require('../util/Util'),
         HtmlNodeLayer;
 
 
@@ -87,7 +88,7 @@ define(function (require) {
             this.map_.getRootElement().append( this.$root_ );
             if ( this.propagate ) {
                 // allow mouse events to propagate through to map
-                this.map_.enableEventToMapPropagation( this.$root_ );
+                Util.enableEventPropagation( this.$root_ );
             }
         },
 

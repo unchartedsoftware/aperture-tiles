@@ -29,6 +29,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        Util = require('../util/Util'),
         AxisUtil = require('./AxisUtil'),
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
@@ -470,8 +471,8 @@ define(function (require) {
                 this.$content.finish();
             }
             // allow events to propagate below to map except 'click'
-            this.map.enableEventToMapPropagation( this.$axis );
-            this.map.disableEventToMapPropagation( this.$axis, ['onclick', 'ondblclick'] );
+            Util.enableEventPropagation( this.$axis );
+            Util.disableEventPropagation( this.$axis, ['onclick', 'ondblclick'] );
         },
 
         /**

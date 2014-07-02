@@ -51,7 +51,10 @@ define(function (require) {
 
         registerLayers: function( map ) {
 
-            var layerState;
+            var layerState,
+                zoomOrPan,
+                prevState;
+
             // Create a layer state object for the base map.
             layerState = new LayerState( map.id, "Base Layer", 'base' );
             layerState.BASE_LAYERS = map.baseLayers;
@@ -87,12 +90,27 @@ define(function (require) {
 
             });
 
-            map.on('zoomend', function() {
-                layerState.set('zoom', map.getZoom() );
+            map.on('movestart', function( event ) {
+                zoomOrPan = ( event.object.dragging ) ? 'pan' : 'zoom';
+                if ( zoomOrPan === 'pan' ) {
+                    prevState = {
+                        x: event.object.maxPx.x,
+                        y: event.object.maxPx.y
+                    };
+                }
             });
 
             map.on('moveend', function( event ) {
-                layerState.set('pan', [event.xy.x, event.xy.y] );
+                var obj;
+                if ( zoomOrPan === 'zoom' ) {
+                    obj = map.getZoom();
+                } else {
+                    obj = {
+                        dx: event.object.maxPx.x - prevState.x,
+                        dy: event.object.maxPx.y - prevState.y
+                    };
+                }
+                layerState.set( zoomOrPan, obj );
             });
 
             // Add the layer to the layer state array.

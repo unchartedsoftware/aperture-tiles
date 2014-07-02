@@ -233,67 +233,6 @@ define(function (require) {
         },
 
 
-        /**
-         * Allows the given DOMElement or jQuery object events to propagate through
-         * and interact with the underlying Map
-         */
-        enableEventToMapPropagation: function( elem, events ) {
-
-            var //that = this,
-                domElement = (elem instanceof jQuery) ? elem[0] : elem,
-                i;
-
-            function propagateEvent( event ) {
-                var newEvent = new event.constructor(event.type, event),
-                    below;
-                $(elem).css('pointer-events', 'none');
-                below = document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
-                if (below) {
-                    below.dispatchEvent(newEvent);
-                }
-                $(elem).css('pointer-events', 'all');
-            }
-
-            if (!events) {
-                domElement.onmousedown = propagateEvent;
-                domElement.onmouseup = propagateEvent;
-                domElement.onmousemove = propagateEvent;
-                domElement.onwheel = propagateEvent;
-                domElement.onmousewheel = propagateEvent;
-                domElement.onscroll = propagateEvent;
-                domElement.onclick = propagateEvent;
-                domElement.ondblclick = propagateEvent;
-            } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = propagateEvent;
-                }
-            }
-
-        },
-
-
-        disableEventToMapPropagation: function( elem, events ) {
-
-            var domElement = (elem instanceof jQuery) ? elem[0] : elem,
-                i;
-            if (!events) {
-                domElement.onmousedown = null;
-                domElement.onmouseup = null;
-                domElement.onmousemove = null;
-                domElement.onwheel = null;
-                domElement.onmousewheel = null;
-                domElement.onscroll = null;
-                domElement.onclick = null;
-                domElement.ondblclick = null;
-            } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = null;
-                }
-            }
-        },
-
 		setAxisSpecs: function (axes) {
 
 			var i, spec;
@@ -680,6 +619,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 				this.map.olMap_.events.register(eventType, this.map.olMap_, callback );
@@ -718,6 +658,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 
@@ -747,6 +688,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 
