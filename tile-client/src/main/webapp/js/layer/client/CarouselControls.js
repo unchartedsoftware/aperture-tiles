@@ -43,6 +43,9 @@ define(function (require) {
         CHEVRON_CLASS = "carousel-ui-chevron",
         CHEVRON_CLASS_LEFT = "carousel-ui-chevron-left",
         CHEVRON_CLASS_RIGHT = "carousel-ui-chevron-right",
+        TOOLTIP_CHEVRON_RIGHT = "Next rendering",
+        TOOLTIP_CHEVRON_LEFT = "Previous rendering",
+        TOOLTIP_INDEX_DOT = "Rendering by index",
         Z_INDEX = 2000,
         makeLayerStateObserver,
         createChevrons,
@@ -140,12 +143,24 @@ define(function (require) {
             });
         }
 
-        $leftChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_LEFT+"'></div>");
-        generateCallbacks( $leftChevron, -1, 'left' );
+        $leftChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_LEFT+"' title></div>");
+        $leftChevron.tooltip({
+            content: TOOLTIP_CHEVRON_LEFT,
+            open: function() { layerState.set('carouselChevronTooltip', 'open'); },
+            close: function() { layerState.set('carouselChevronTooltip', 'close'); },
+            show: { delay: 800 }
+        });
+        generateCallbacks( $leftChevron, -1 );
         $carousel.append( $leftChevron );
 
-        $rightChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_RIGHT+"'></div>");
-        generateCallbacks( $rightChevron, 1, 'right' );
+        $rightChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_RIGHT+"' title></div>");
+        $rightChevron.tooltip({
+            content: TOOLTIP_CHEVRON_RIGHT,
+            open: function() { layerState.set('carouselChevronTooltip', 'open'); },
+            close: function() { layerState.set('carouselChevronTooltip', 'close'); },
+            show: { delay: 800 }
+        });
+        generateCallbacks( $rightChevron, 1 );
         $carousel.append( $rightChevron );
 
         // allow all events to propagate to map except 'click'
@@ -167,6 +182,14 @@ define(function (require) {
             $dots = [],
             rendererCount = layerState.get('rendererCount'),
             i;
+
+        function tooltipOpen() {
+            layerState.set('carouselIndexTooltip', 'open');
+        }
+
+        function tooltipClose() {
+            layerState.set('carouselIndexTooltip', 'close');
+        }
 
         function generateCallbacks( dot, index ) {
 
@@ -195,7 +218,13 @@ define(function (require) {
         for (i=0; i < rendererCount; i++) {
 
             indexClass = (i === 0) ? DOT_CLASS_SELECTED : DOT_CLASS_DEFAULT;
-            $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
+            $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"' title></div>");
+            $dots[i].tooltip({
+                content: TOOLTIP_INDEX_DOT,
+                show: { delay: 800 },
+                open: tooltipOpen,
+                close: tooltipClose
+            });
             generateCallbacks( $dots[i], i );
             $indexContainer.append( $dots[i] );
             // allow all events to propagate to map except 'click'
