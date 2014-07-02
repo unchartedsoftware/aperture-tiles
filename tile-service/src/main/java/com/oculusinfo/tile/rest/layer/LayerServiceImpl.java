@@ -170,7 +170,8 @@ public class LayerServiceImpl implements LayerService {
                     LOGGER.warn("Could not determine renderer from configuration {}", config, e);
                 }
             }
-            throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
+            if (null == rendererConfig)
+                throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
         }
 
         // Combine the renderer configuration with the data configuration
