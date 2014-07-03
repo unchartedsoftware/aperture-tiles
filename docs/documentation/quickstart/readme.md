@@ -19,6 +19,43 @@ At the end of this guide you will have successfully created an example Aperture 
 
 ##<a name="prerequisites"></a>Prerequisites
 
+There are two ways you can begin this Quick Start example:
+
+1. You can download a [virtual machine](#virtual-machine) (VM) preloaded with the third-party tools needed to perform the tile generation and web application deployment.
+2. You can manually install all of the third-party tools on your [local system](#local-system).
+
+Once you have a machine configured with all of the third-party prerequisites, you must perform the following steps:
+
+1. Download and install the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities).
+2. Set the [Spark environment variables](#environment-variables).
+3. Generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
+
+###<a name="virtual-machine"></a>Virtual Machine
+
+We have created a virtual machine that has been preconfigured with the third-party tools needed to walk through this Quick Start example. To use this virtual machine:
+
+1. Download and install [Oracle VM VirtualBox](https://www.virtualbox.org/).
+2. Save the virtual machine on the [Download](../../download/) page to your local system.
+3. Open Oracle VM VirtualBox and select **Import Appliance** from the **File** menu.
+4. Browse to the location of the virtual machine you downloaded and click **Open**.
+5. Click **Next** on the Appliance to import dialog.
+6. Click **Import** on the Appliance settings dialog.
+
+You can access your virtual machine in two ways:
+
+- Directly through the Oracle VM VirtualBox Manager
+- Via ssh with the following command, using the username **vagrant** and password **vagrant**:
+
+    ```
+    ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@localhost
+    ```
+
+Access port 8080 (`http://{vm-machine-name}:8080/`) on your virtual machine (which is forwarded to port 8888 (`http://localhost:8888/` on your local machine) in any web browser for a brief description of the virtual machine's configuration and links to preloaded demonstrations.
+
+When you are ready to proceed, skip to the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities) section.
+
+###<a name="local-system"></a>Local System
+
 The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. 
 
 To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 0.9.0 or greater (version 1.0.0 recommended). Spark is a distributed cluster computing framework on which Aperture Tiles builds to enable fast data and tile generation at scale.  NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
@@ -167,7 +204,8 @@ Both files are available in the [tile-client-template.zip](http://assets.oculusi
 To edit the map properties for your project:
 
 1. Access the **crossplot-maps.json.example** file in `tile-client-template/WEB-INF/classes/maps`, remove the **.example** extension and delete the example geographic json file in the same directory. It is not needed for this example.
-3. Open the crossplot json file for editing. In the `PyramidConfig` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Points in the Julia set will range from **-2** to **2** along both axes.
+2. Open the crossplot json file for editing. In the `PyramidConfig` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Points in the Julia set will range from **-2** to **2** along both axes.
+3. In the `AxisConfig` section for both axes, it is useful to set the `intervalSpec` `type` to **percentage** and the *increment* value to **20**. 
 4. In the `MapConfig` > `options` section, set the `numZoomLevels` to **6**, as this is the number of zoom levels you created when generating the Julia set tiles.
 5. Save the file.
 
@@ -183,7 +221,7 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 To edit the layer properties for your project:
 
 1. Access the **crossplot-layers.json.example** file in `tile-client-template/WEB-INF/classes/layers`, remove the **.example** extension and delete the example geographic json file in the same directory. It is not needed for this example.
-2. Open the crossplot json file for editing. Edit the `id` property so it matches the name given to the directory (file system directory or HBase table name) in which your AVRO tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
+2. Open the crossplot json file for editing. Edit the children `id` property (*not* the layer `id` property) so it matches the name given to the directory (file system directory or HBase table name) in which your AVRO tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
 3. In the `pyramid` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Make sure the values you specify here match the range you specified in the map properties.
 4. If your AVRO tiles are saved to your local machine, add or edit the following values in the `data` section:
 	- `type`: Enter **file**
@@ -206,6 +244,6 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 
 ##<a name="deployment"></a>Deployment
 
-Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your Apache Tomcat or Jetty server webapps directory.
+Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory. If you are using the virtual machine provided on the [Download](../../download/) page, copy the entire directory to the `/opt/jetty/webapps` folder on the VM.
 
-Access the `/tile-client-template` web directory on the server from any web browser to to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com` then the url would be `http://www.example.com/tile-client-template`.
+Access the `/tile-client-template` web directory on the server from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com`, the URL would be `http://www.example.com/tile-client-template`. If you are using the VM, browse to `http://localhost:8888/tile-client-template/` on your local machine or `http://{vm-machine-name}:8080/tile-client-template/` on the virtual machine.

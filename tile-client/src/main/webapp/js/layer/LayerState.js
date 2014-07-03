@@ -100,6 +100,14 @@ define(function (require) {
         return true;
     };
 
+
+    /**
+     * Compares any two variables for equality.
+     *
+     * @param {*} a - First variable under comparison
+     * @param {*} b - Second variable under comparison
+     * @returns {boolean} true if they are equal, false otherwise.
+     */
     isEqual = function( a, b ) {
 
         if ( $.isArray( a ) ) {
