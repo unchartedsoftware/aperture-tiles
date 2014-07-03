@@ -42,18 +42,18 @@ import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
 
 private[tilegen]
 class TwitterTopicRecordLine (val createdAt: Date,
-                             val userId: String,
-                             val userName: String,
-                             val tweetId: String,
-                             val text: String,
-                             val tags: Array[String],
-                             val latitude: Double,
-                             val longitude: Double,
-                             val country: String,
-                             val placeName: String,
-                             val placeType: String,
-                             val topics: Array[String],
-                             val topicsEng: Array[String]) {}
+                              val userId: String,
+                              val userName: String,
+                              val tweetId: String,
+                              val text: String,
+                              val tags: Array[String],
+                              val latitude: Double,
+                              val longitude: Double,
+                              val country: String,
+                              val placeName: String,
+                              val placeType: String,
+                              val topics: Array[String],
+                              val topicsEng: Array[String]) {}
 
 object TwitterTopicRecordParser {
 }

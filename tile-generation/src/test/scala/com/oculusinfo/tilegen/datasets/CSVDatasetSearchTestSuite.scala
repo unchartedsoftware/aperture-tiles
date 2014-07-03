@@ -26,6 +26,7 @@ package com.oculusinfo.tilegen.datasets
 
 
 
+import java.lang.{Double => JavaDouble}
 import java.io.File
 import java.io.PrintWriter
 import java.util.Properties
@@ -38,10 +39,13 @@ import org.scalatest.FunSuite
 
 import org.apache.spark.SharedSparkContext
 
+import com.oculusinfo.binning.TileData
+
+import com.oculusinfo.tilegen.tiling.AnalysisDescription
 
 
 class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
-	var dataset: CSVDataset[(Double, Double)] = null;
+	var dataset: CSVDataset[(Double, Double), Double, Int, Int, JavaDouble] = null;
 
 
 	def unwrapTry[T] (attempt: Try[T]): T = {
@@ -87,9 +91,15 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 			readProps.setProperty("oculus.binning.parsing.e.index", "4")
 			val csvProps = new CSVRecordPropertiesWrapper(readProps);
 			val csvIndexer = new CartesianIndexExtractor("x", "y")
+			val csvValuer = new CountValueExtractor
+			val dataAnalytics:
+					Option[AnalysisDescription[((Double, Double), Double), Int]] = None
+			val tileAnalytics:
+					Option[AnalysisDescription[TileData[JavaDouble], Int]] = None
 
 			// Put our dataset together
-			dataset = new CSVDataset(csvIndexer, csvProps, 1, 1);
+			dataset = new CSVDataset(csvIndexer, csvValuer, csvProps, 1, 1,
+			                         dataAnalytics, tileAnalytics);
 			dataset.initialize(sc, false, true, false)
 
 			test()

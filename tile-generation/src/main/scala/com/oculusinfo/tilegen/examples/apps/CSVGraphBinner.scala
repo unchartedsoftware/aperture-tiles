@@ -144,165 +144,8 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  */
 
 
-class CSVGraphProcessingStrategy[IT: ClassTag] (sc: SparkContext,
-                                                cacheRaw: Boolean,
-                                                cacheFilterable: Boolean,
-                                                cacheProcessed: Boolean,
-                                                properties: CSVRecordPropertiesWrapper,
-                                                indexer: CSVIndexExtractor[IT])
-			extends StaticProcessingStrategy[IT, Double](sc) {
-	
-	// This is a weird initialization problem that requires some
-	// documentation to explain.
-	// What we really want here is for rawData to be initialized in the
-	// getData method, below.  However, this method is called from
-	// StaticProcessingStrategy.rdd, which is called during the our
-	// parent's <init> call - which happens before we event get to this
-	// line.  So when we get here, if we assigned rawData directly in
-	// getData, this line below, having to assign rawData some value,
-	// would overwrite it.
-	// We could just say rawData = rawData (that does work, I checked),
-	// but that seemed semantically too confusing to abide. So instead,
-	// getData sets rawData2, which can the be assigned to rawData before
-	// it gets written in its own initialization (since initialization
-	// lines are run in order).
-	private var rawData: RDD[String] = rawData2
-	private var rawData2: RDD[String] = null
-
-	private lazy val filterableData: RDD[(String, List[Double])] = {
-		val localProperties = properties
-		val data = rawData.mapPartitions(iter =>
-			{
-				val parser = new GraphRecordParser(localProperties)
-				// Parse the records from the raw data, parsing all fields
-				// The funny end syntax tells scala to treat fields as a varargs
-				parser.parseGraphRecords(iter, localProperties.fields:_*)
-					.filter(_._2.isSuccess).map{case (record, fields) => (record, fields.get)}
-			}
-		)
-		if (cacheFilterable)
-			data.persist(StorageLevel.MEMORY_AND_DISK)
-		data
-	}
-
-	def getRawData = rawData
-	def getFilterableData = filterableData
-
-	def getData: RDD[(IT, Double)] = {
-		val localProperties = properties
-		val localIndexer = indexer
-		val localZVar = properties.getString("oculus.binning.valueField",
-											"The field to use for the value to tile",
-											Some("count"))
-		rawData2 = {
-			val source = new CSVDataSource(properties)
-			val data = source.getData(sc);
-			if (cacheRaw)
-				data.persist(StorageLevel.MEMORY_AND_DISK)
-			data
-		}
-
-		val data = rawData2.mapPartitions(iter =>
-			{
-				val parser = new GraphRecordParser(localProperties)
-				// Determine which fields we need
-				val fields = if ("count" == localZVar) {
-					localIndexer.fields
-				} else {
-					localIndexer.fields :+ localZVar
-				}
-
-				// Parse the records from the raw data
-				parser.parseGraphRecords(iter, fields:_*)
-					.map(_._2) // We don't need the original record (in _1)
-			}
-		).filter(r =>
-			// Filter out unsuccessful parsings
-			r.isSuccess
-		).map(_.get).mapPartitions(iter =>
-			{
-				val extractor = new CSVFieldExtractor(localProperties)
-
-				iter.map(t =>
-					{
-						// Determine our index value
-						val indexValue = Try(
-							{
-								val indexFields = localIndexer.fields
-								val fieldValues = indexFields.map(field =>
-									(field -> extractor.getFieldValue(field)(t))
-								).map{case (k, v) => (k, v.get)}.toMap
-								localIndexer.calculateIndex(fieldValues)
-							}
-						)
-
-						// Determine and add in our binnable value
-						(indexValue,
-						 extractor.getFieldValue(localZVar)(t))
-					}
-				)
-			}
-		).filter(record =>
-			record._1.isSuccess && record._2.isSuccess
-		).map(record =>
-			(record._1.get, record._2.get)
-		)
-
-		if (cacheProcessed)
-			data.persist(StorageLevel.MEMORY_AND_DISK)
-
-		data
-	}
-}
-
-
-/**
- * Handles basic RDD's using a ProcessingStrategy. 
- */
-class CSVGraphDataset[IT: ClassTag](indexer:  CSVIndexExtractor[IT],
-                                    properties: CSVRecordPropertiesWrapper,
-                                    tileWidth: Int,
-                                    tileHeight: Int)
-		extends CSVDatasetBase[IT](indexer, properties, tileWidth, tileHeight) {
-	// Just some Filter type aliases from Queries.scala
-	import com.oculusinfo.tilegen.datasets.FilterAware._
-
-	type STRATEGY_TYPE = CSVGraphProcessingStrategy[IT]
-	protected var strategy: STRATEGY_TYPE = null
-
-	def getRawData: RDD[String] = strategy.getRawData
-
-	def getRawFilteredData (filterFcn: Filter):	RDD[String] = {
-		strategy.getFilterableData
-			.filter{ case (record, fields) => filterFcn(fields)}
-			.map(_._1)
-	}
-	def getRawFilteredJavaData(filterFcn: Filter): JavaRDD[String] =
-		JavaRDD.fromRDD(getRawFilteredData(filterFcn))
-
-	def getFieldFilterFunction (field: String, min: Double, max: Double): Filter = {
-		val localProperties = properties
-		new FilterFunction with Serializable {
-			def apply (valueList: List[Double]): Boolean = {
-				val index = localProperties.fieldIndices(field)
-				val value = valueList(index)
-				min <= value && value <= max
-			}
-			override def toString: String = "%s Range[%.4f, %.4f]".format(field, min, max)
-		}
-	}
-
-	def initialize (sc: SparkContext,
-	                cacheRaw: Boolean,
-	                cacheFilterable: Boolean,
-	                cacheProcessed: Boolean): Unit =
-		initialize(new CSVGraphProcessingStrategy[IT](sc, cacheRaw, cacheFilterable, cacheProcessed, properties, indexer))	
-}
-
-
 
 object CSVGraphBinner {
-	
 	private var _graphDataType = "nodes"
 	private var _lineLevelThres = 4		// [level] threshold to determine whether to use 'point' vs 'tile' 
 										// based line segment binning.  Levels above this thres use tile-based binning.
@@ -386,8 +229,10 @@ object CSVGraphBinner {
 	}	
 	
 	def processDataset[IT: ClassTag,
-	                   PT: ClassTag, 
-	                   BT] (dataset: Dataset[IT, PT, BT],
+	                   PT: ClassTag,
+	                   DT: ClassTag,
+	                   AT: ClassTag,
+	                   BT] (dataset: Dataset[IT, PT, DT, AT, BT],
 	                        tileIO: TileIO): Unit = {
 
 		if (_graphDataType == "edges") {
@@ -395,14 +240,16 @@ object CSVGraphBinner {
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
-					val procFcn: RDD[(IT, PT)] => Unit =
+					val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 						rdd =>
 					{
 						val bUsePointBinner = (levels.max <= _lineLevelThres)	// use point-based vs tile-based line-segment binning?
 						
 						val tiles = binner.processDataByLevel(rdd,
 						                                      dataset.getIndexScheme,
-						                                      dataset.getBinDescriptor,
+						                                      dataset.getBinningAnalytic,
+						                                      dataset.getTileAnalytics,
+						                                      dataset.getDataAnalytics,
 						                                      dataset.getTilePyramid,
 						                                      levels,
 						                                      (dataset.getNumXBins max dataset.getNumYBins),
@@ -413,7 +260,9 @@ object CSVGraphBinner {
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
-						                    dataset.getBinDescriptor,
+						                    dataset.getValueScheme,
+						                    dataset.getTileAnalytics,
+						                    dataset.getDataAnalytics,
 						                    dataset.getName,
 						                    dataset.getDescription)
 					}
@@ -426,12 +275,14 @@ object CSVGraphBinner {
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
-					val procFcn: RDD[(IT, PT)] => Unit =
+					val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 						rdd =>
 					{
 						val tiles = binner.processDataByLevel(rdd,
 						                                      dataset.getIndexScheme,
-						                                      dataset.getBinDescriptor,
+						                                      dataset.getBinningAnalytic,
+						                                      dataset.getTileAnalytics,
+						                                      dataset.getDataAnalytics,
 						                                      dataset.getTilePyramid,
 						                                      levels,
 						                                      (dataset.getNumXBins max dataset.getNumYBins),
@@ -440,7 +291,9 @@ object CSVGraphBinner {
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
-						                    dataset.getBinDescriptor,
+						                    dataset.getValueScheme,
+						                    dataset.getTileAnalytics,
+						                    dataset.getDataAnalytics,
 						                    dataset.getName,
 						                    dataset.getDescription)
 					}
@@ -454,61 +307,14 @@ object CSVGraphBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, BT] (dataset: Dataset[IT, PT, BT],
-	                                       tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
+	def processDatasetGeneric[IT, PT, DT, AT, BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	                                               tileIO: TileIO): Unit =
+		processDataset(dataset, tileIO)(dataset.indexTypeTag,
+		                                dataset.binTypeTag,
+		                                dataset.dataAnalysisTypeTag,
+		                                dataset.tileAnalysisTypeTag)
 
-		
-	private def getDataset[T: ClassTag] (indexer: CSVIndexExtractor[T],
-	                                     properties: CSVRecordPropertiesWrapper,
-	                                     tileWidth: Int,
-	                                     tileHeight: Int): CSVGraphDataset[T] =
-		new CSVGraphDataset(indexer, properties, tileWidth, tileHeight)		
 
-	
-	private def getDatasetGeneric[T] (indexer: CSVIndexExtractor[T],
-	                                  properties: CSVRecordPropertiesWrapper,
-	                                  tileWidth: Int,
-	                                  tileHeight: Int): CSVGraphDataset[T] =
-		getDataset(indexer, properties, tileWidth, tileHeight)(indexer.indexTypeManifest)		
-
-		
-	def createDataset(sc: SparkContext,
-	                   dataDescription: Properties,
-	                   cacheRaw: Boolean,
-	                   cacheFilterable: Boolean,
-	                   cacheProcessed: Boolean,
-	                   tileWidth: Int = 256,
-	                   tileHeight: Int = 256): Dataset[_, _, _] = {
-		// Wrap parameters more usefully
-		val properties = new CSVRecordPropertiesWrapper(dataDescription)
-
-		// Determine indexing information
-		val indexer = createIndexExtractor(properties)
-		
-		// init parameters for binning graph edges (note, not used for binning graph's nodes) 
-		_lineLevelThres = properties.getInt("oculus.binning.line.level.threshold",
-									"Level threshold to determine whether to use 'point' vs 'tile'"+
-									" based line segment binning (levels above this thres use tile-based binning)",
-									Some(4))
-									
-		_lineMinBins = properties.getInt("oculus.binning.line.min.bins",
-									"Min line segment length (in bins) for a given level.  Shorter line segments will be discarded",
-									Some(2))
-									
-		_lineMaxBins = properties.getInt("oculus.binning.line.max.bins",
-									"Max line segment length (in bins) for a given level.  Longer line segments will be discarded",
-									Some(1024))
-									
-		_bLinesAsArcs = properties.getBoolean("oculus.binning.line.style.arcs",
-									"Draw line segments as straight lines (default) or as clock-wise arcs.",
-									Some(false))								
-
-		val dataset:CSVGraphDataset[_] = getDatasetGeneric(indexer, properties, tileWidth, tileHeight)
-		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
-		dataset
-	}
-	
 	def main (args: Array[String]): Unit = {
 		if (args.size<1) {
 			println("Usage:")
@@ -527,10 +333,12 @@ object CSVGraphBinner {
 			stream.close()
 			argIdx = argIdx + 1
 		}
+		defProps.setProperty("oculus.binning.index.type", "graph")
+
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
 		val sc = connector.getSparkContext("Pyramid Binning")
-		val tileIO = getTileIO(defaultProperties)
+		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file
 		val startTime = System.currentTimeMillis()
@@ -540,20 +348,40 @@ object CSVGraphBinner {
 			val propStream = new FileInputStream(args(argIdx))
 			props.load(propStream)
 			propStream.close()
-			
+
+			// init parameters for binning graph edges (note, not used for 
+			// binning graph's nodes)
+			// Level threshold to determine whether to use 'point' vs 'tile'
+			// based line segment binning (levels above this thres use 
+			// tile-based binning
+			_lineLevelThres = Try(props.getProperty("oculus.binning.line.level.threshold").toInt).getOrElse(4)
+
+			// Min line segment length (in bins) for a given level.  Shorter 
+			// line segments will be discarded
+			_lineMinBins = Try(props.getProperty("oculus.binning.line.min.bins").toInt).getOrElse(2)
+
+			// Max line segment length (in bins) for a given level.  Longer 
+			// line segments will be discarded
+			_lineMaxBins = Try(props.getProperty("oculus.binning.line.max.bins").toInt).getOrElse(1024)
+
+			// Draw line segments as straight lines (default) or as clock-wise arcs.
+			_bLinesAsArcs = Try(props.getProperty("oculus.binning.line.style.arcs").toBoolean).getOrElse(false)
+
 			// check if hierarchical mode is enabled
 			var valTemp = props.getProperty("oculus.binning.hierarchical.clusters","false");
 			var hierarchicalClusters = if (valTemp=="true") true else false
 			
 			if (!hierarchicalClusters) {
 				// regular tile generation
-				processDatasetGeneric(createDataset(sc, props, false, false, true), tileIO)			
+				processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true), tileIO)
 			}
 			else {
 				// hierarchical-based tile generation
 				var nn = 0;
-				var levelsList:scala.collection.mutable.MutableList[String] = scala.collection.mutable.MutableList()
-				var sourcesList:scala.collection.mutable.MutableList[String] = scala.collection.mutable.MutableList()
+				var levelsList:scala.collection.mutable.MutableList[String] =
+					scala.collection.mutable.MutableList()
+				var sourcesList:scala.collection.mutable.MutableList[String] =
+					scala.collection.mutable.MutableList()
 				do {
 					// Loop through all "sets" of tile generation levels.  
 					// (For each set, we will generate tiles based on a
@@ -562,7 +390,8 @@ object CSVGraphBinner {
 					
 					if (valTemp != null) {
 						levelsList += valTemp	// save tile gen level set in a list
-						//... and temporarily overwrite tiling levels as empty in preparation for hierarchical tile gen
+						// ... and temporarily overwrite tiling levels as empty 
+						// in preparation for hierarchical tile gen
 						props.setProperty("oculus.binning.levels."+nn, "")	
 						
 						// get clustered data for this hierarchical level and save to list
@@ -586,7 +415,8 @@ object CSVGraphBinner {
 					// set raw data source
 					props.setProperty("oculus.binning.source.location", sourcesList(m))
 					// perform tile generation
-					processDatasetGeneric(createDataset(sc, props, false, false, true), tileIO)
+					processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true),
+					                      tileIO)
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")
 				}	

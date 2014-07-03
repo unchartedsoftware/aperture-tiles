@@ -98,52 +98,25 @@ import com.oculusinfo.tilegen.tiling.SqliteTileIO
 
 
 object CSVBinner {
-	def getTileIO(properties: PropertiesWrapper): TileIO = {
-		properties.getString("oculus.tileio.type",
-		                     "Where to put tiles",
-		                     Some("hbase")) match {
-			case "hbase" => {
-				val quorum = properties.getStringOption("hbase.zookeeper.quorum",
-				                                        "The HBase zookeeper quorum").get
-				val port = properties.getString("hbase.zookeeper.port",
-				                                "The HBase zookeeper port",
-				                                Some("2181"))
-				val master = properties.getStringOption("hbase.master",
-				                                        "The HBase master").get
-				new HBaseTileIO(quorum, port, master)
-			}
-			case "sqlite" => {
-				val path =
-					properties.getString("oculus.tileio.sqlite.path",
-					                     "The path to the database",
-					                     Some(""))
-				new SqliteTileIO(path)
-				
-			}
-			case _ => {
-				val extension =
-					properties.getString("oculus.tileio.file.extension",
-					                     "The extension with which to write tiles",
-					                     Some("avro"))
-				new LocalTileIO(extension)
-			}
-		}
-	}
-	
+
 	def processDataset[IT: ClassTag,
 	                   PT: ClassTag, 
-	                   BT] (dataset: Dataset[IT, PT, BT],
+	                   DT: ClassTag,
+	                   AT: ClassTag,
+	                   BT] (dataset: Dataset[IT, PT, DT, AT, BT],
 	                        tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 		dataset.getLevels.map(levels =>
 			{
-				val procFcn: RDD[(IT, PT)] => Unit =
+				val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 					rdd =>
 				{
 					val tiles = binner.processDataByLevel(rdd,
 					                                      dataset.getIndexScheme,
-					                                      dataset.getBinDescriptor,
+					                                      dataset.getBinningAnalytic,
+					                                      dataset.getTileAnalytics,
+					                                      dataset.getDataAnalytics,
 					                                      dataset.getTilePyramid,
 					                                      levels,
 					                                      (dataset.getNumXBins max dataset.getNumYBins),
@@ -152,7 +125,8 @@ object CSVBinner {
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,
 					                    tiles,
-					                    dataset.getBinDescriptor,
+					                    dataset.getValueScheme,
+					                    None, None,
 					                    dataset.getName,
 					                    dataset.getDescription)
 				}
@@ -165,9 +139,12 @@ object CSVBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, BT] (dataset: Dataset[IT, PT, BT],
-	                                       tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
+	def processDatasetGeneric[IT, PT, DT, AT, BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	                                               tileIO: TileIO): Unit =
+		processDataset(dataset, tileIO)(dataset.indexTypeTag,
+		                                dataset.binTypeTag,
+		                                dataset.dataAnalysisTypeTag,
+		                                dataset.tileAnalysisTypeTag)
 
 	
 	def main (args: Array[String]): Unit = {
@@ -191,7 +168,7 @@ object CSVBinner {
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
 		val sc = connector.getSparkContext("Pyramid Binning")
-		val tileIO = getTileIO(defaultProperties)
+		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file
 		val startTime = System.currentTimeMillis()
