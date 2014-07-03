@@ -49,8 +49,9 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?,?,?,?,?>>
 		this(context, null, parent, path);
 	}
 
-	// This supresses the warnings on the cast to CSVDataset.class, because it can't be properly
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	// No way to pass a parameterized class back, such a thing doesn't exist in Java.
+	// The "(Class) CSVDataset.class" is the best we can do.
+	@SuppressWarnings({ "unchecked", "rawtypes" })
     protected DatasetFactory (SparkContext context, String name, 
 	                          ConfigurableFactory<?> parent, List<String> path) {
 		super(name, (Class) CSVDataset.class, parent, path);

@@ -252,12 +252,16 @@ object TileToImageConverter {
 	                        scale: (Double, JavaDouble, Double) => Int,
 	                        levels: Seq[Int],
 	                        metaData: PyramidMetaData): Unit = {
-		val levelMins = metaData.getLevelMinimums.asScala.map(p => (p._1 -> p._2.toDouble))
-		val levelMaxes = metaData.getLevelMaximums.asScala.map(p => (p._1 -> p._2.toDouble))
+        val levelMins = metaData.getValidZoomLevels().asScala.map(level =>
+          (level -> metaData.getCustomMetaData(level.toString, "minimum").toInt)
+        ).toMap
+        val levelMaxs = metaData.getValidZoomLevels().asScala.map(level =>
+          (level -> metaData.getCustomMetaData(level.toString, "maximum").toInt)
+        ).toMap
 		def colorFcn (tile: TileIndex, bin: BinIndex, image: Int, value: Option[JavaDouble]): Int = {
 			val level = tile.getLevel()
 			val min = levelMins(level)
-			val max = levelMaxes(level)
+			val max = levelMaxs(level)
 			val result = scale(min, value.getOrElse(new JavaDouble(Double.NaN)), max)
 			new java.awt.Color(result, result, result).getRGB()
 		}
@@ -275,17 +279,17 @@ object TileToImageConverter {
 	                        scale: (Double, JavaDouble, Double) => Int,
 	                        levels: Seq[Int],
 	                        metaData: PyramidMetaData): Unit = {
-		val levelMins = metaData.getLevelMinimums.asScala.map(p =>
-			(p._1 -> p._2.drop("list(".size).dropRight(")".size).split(",").map(_.trim.toDouble))
-		).toMap
-		val levelMaxes = metaData.getLevelMaximums.asScala.map(p =>
-			(p._1 -> p._2.drop("list(".size).dropRight(")".size).split(",").map(_.trim.toDouble))
-		).toMap
+        val levelMins = metaData.getValidZoomLevels().asScala.map(_.intValue).map(level =>
+          (level -> metaData.getCustomMetaData(level.toString, "minimum").toInt)
+        ).toMap
+        val levelMaxs = metaData.getValidZoomLevels().asScala.map(_.intValue).map(level =>
+          (level -> metaData.getCustomMetaData(level.toString, "maximum").toInt)
+        ).toMap
 
 		def colorFcn (tile: TileIndex, bin: BinIndex, image: Int, value: Option[JavaDouble]): Int = {
 			val level = tile.getLevel()
-			val min = levelMins(level)(image)
-			val max = levelMaxes(level)(image)
+            val min = levelMins(level)
+            val max = levelMaxs(level)
 			val result = scale(min, value.getOrElse(new JavaDouble(Double.NaN)), max)
 			val problem = "%.4f, %.4f, %.4f: %d".format(min, value.getOrElse(min), max, result)
 			try {
