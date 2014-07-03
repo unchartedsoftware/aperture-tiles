@@ -158,7 +158,7 @@ trait TileIO extends Serializable {
 		// Record the min and max level we write, so we can add that to the 
 		// metadata
 		val minLevel = data.context.accumulator(Int.MaxValue)(new IntMinAccumulatorParam)
-		val maxLevel = data.context.accumulator(Int.MinValue)(new IntMinAccumulatorParam)
+		val maxLevel = data.context.accumulator(Int.MinValue)(new IntMaxAccumulatorParam)
 
 		// Record and report the total number of tiles we write, because it's 
 		// basically free and easy
@@ -400,28 +400,6 @@ object TestTableEquality {
 		testEquality("Minimum zooms", metaData1.getMinZoom(),    metaData2.getMinZoom())
 		testEquality("Maximum zooms", metaData1.getMaxZoom(),    metaData2.getMaxZoom())
 		testEquality("Bounds",        metaData1.getBounds(),     metaData2.getBounds())
-		testEquality("Number of minimum entries",
-		             metaData1.getLevelMinimums().size, metaData2.getLevelMinimums().size)
-		val minLvls = (metaData1.getLevelMinimums.keySet.asScala
-			               union metaData2.getLevelMinimums.keySet.asScala)
-		minLvls.map(level =>
-			{
-				testEquality("Minimum entry for level "+level,
-				             metaData1.getLevelMinimum(level),
-				             metaData2.getLevelMinimum(level))
-			}
-		)
-		testEquality("Number of maximum entries",
-		             metaData1.getLevelMaximums.size, metaData2.getLevelMaximums.size)
-		val maxLvls = (metaData1.getLevelMaximums.keySet.asScala
-			               union metaData2.getLevelMaximums.keySet.asScala)
-		maxLvls.map(level =>
-			{
-				testEquality("Maximum entry for level "+level,
-				             metaData1.getLevelMaximum(level),
-				             metaData2.getLevelMaximum(level))
-			}
-		)
 		println("Tile differences:")
 		if (collectedDiffs.isEmpty)
 			println("No differences found!")
