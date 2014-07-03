@@ -520,6 +520,7 @@ public class PyramidMetaData {
 	public String getLevelMinimum (int level) {
 		return getLevelExtremum(false, level);
 	}
+*/
 
 		newBase.put("minzoom", (int) Math.min(level, getMinZoom()));
 		newBase.put("maxzoom", (int) Math.max(level, getMaxZoom()));
@@ -527,5 +528,4 @@ public class PyramidMetaData {
 	public String toString () {
 		return _metaData.toString();
 	}
-*/
 }
