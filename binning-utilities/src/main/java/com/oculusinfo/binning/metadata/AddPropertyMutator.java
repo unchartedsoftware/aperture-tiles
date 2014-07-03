@@ -26,8 +26,6 @@ package com.oculusinfo.binning.metadata;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
-
 
 
 public class AddPropertyMutator extends JsonMutator {
@@ -41,7 +39,7 @@ public class AddPropertyMutator extends JsonMutator {
 
     @Override
     public void mutateJson (JSONObject json) throws JSONException {
-        List<JSONObject> tree = getTree(json, _path, 0, true);
+        LocationInformation tree = getTree(json, _path, null, 0, true).get(0);
         JSONObject parent = tree.get(tree.size()-1);
         if (!parent.has(_path[_path.length-1])) {
             parent.put(_path[_path.length-1], _value);
