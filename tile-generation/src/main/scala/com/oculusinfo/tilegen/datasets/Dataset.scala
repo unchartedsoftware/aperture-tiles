@@ -104,18 +104,16 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, B
 	 * Creates a blank metadata describing this dataset
 	 */
 	def createMetaData (pyramidId: String): PyramidMetaData = {
-		val tileSize = (getNumXBins max getNumYBins)
 		val tilePyramid = getTilePyramid
 		val fullBounds = tilePyramid.getTileBounds(
 			new TileIndex(0, 0, 0, getNumXBins, getNumYBins)
 		)
 		new PyramidMetaData(pyramidId,
 		                    getDescription,
-		                    tileSize,
+		                    getNumXBins, getNumYBins,
 		                    tilePyramid.getTileScheme(),
 		                    tilePyramid.getProjection(),
-		                    0,
-		                    scala.Int.MaxValue,
+		                    null,
 		                    fullBounds,
 		                    new ArrayList[Pair[JavaInt, String]](),
 		                    new ArrayList[Pair[JavaInt, String]]())

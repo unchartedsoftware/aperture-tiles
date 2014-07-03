@@ -26,10 +26,12 @@
 package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
+import java.lang.{Integer => JavaInt}
 import java.io.File
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.collection.mutable.{HashSet => MutableSet}
 import scala.util.{Try, Success, Failure}
 
 import org.apache.spark._
@@ -51,8 +53,6 @@ import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySeriali
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.datasets.ValueDescription
-import com.oculusinfo.tilegen.spark.IntMinAccumulatorParam
-import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO
@@ -152,17 +152,15 @@ trait TileIO extends Serializable {
 	                              dataAnalytics: Option[AnalysisDescription[_, DT]],
 	                              name: String = "unknown",
 	                              description: String = "unknown"): Unit = {
+
 		// Do any needed initialization
 		getPyramidIO.initializeForWrite(baseLocation)
-
-		// Record the min and max level we write, so we can add that to the 
-		// metadata
-		val minLevel = data.context.accumulator(Int.MaxValue)(new IntMinAccumulatorParam)
-		val maxLevel = data.context.accumulator(Int.MinValue)(new IntMaxAccumulatorParam)
 
 		// Record and report the total number of tiles we write, because it's 
 		// basically free and easy
 		val tileCount = data.context.accumulator(0)
+		// Record all levels we write
+		val levelSet = data.context.accumulableCollection(MutableSet[Int]())
 
 		println("Writing tile set from")
 		println(data.toDebugString)
@@ -183,23 +181,22 @@ trait TileIO extends Serializable {
 						// Update minimum and maximum values for metadata
 						val level = index.getLevel()
 						tileCount += 1
-						minLevel += level
-						maxLevel += level
+						levelSet += level
 					}
 				)
 			}
 		)
 		println("Input tiles: "+tileCount)
+		println("Input levels: "+levelSet.value)
 
 		// Don't alter metadata if there was no data added.
-		// Ideally, we'd still alter levels, but that's stored in our min/max list,
-		// so since we have no min/max info for levels with no data, we just don't store them.
+		// Ideally, we'd still alter levels.
 		if (tileCount.value > 0) {
 			val sampleTile = data.first.getDefinition()
 
 			val metaData =
 				combineMetaData(pyramider, baseLocation,
-				                (minLevel.value, maxLevel.value),
+				                levelSet.value.toSet,
 				                tileAnalytics, dataAnalytics,
 				                sampleTile.getXBins, sampleTile.getYBins,
 				                name, description)
@@ -213,7 +210,7 @@ trait TileIO extends Serializable {
 	 */
 	def combineMetaData[BT, DT, AT](pyramider: TilePyramid,
 	                                baseLocation: String,
-	                                levelBounds: (Int, Int),
+	                                newLevels: Set[Int],
 	                                tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	                                dataAnalytics: Option[AnalysisDescription[_, DT]],
 	                                tileSizeX: Int,
@@ -227,11 +224,16 @@ trait TileIO extends Serializable {
 
 		var metaData = oldMetaData match {
 			case None => {
-				new PyramidMetaData(name, description, tileSizeX, tileSizeY, scheme, projection,
-				                    levelBounds._1, levelBounds._2, bounds,
+				new PyramidMetaData(name, description, tileSizeX, tileSizeY,
+				                    scheme, projection,
+				                    newLevels.toList.sorted.map(new JavaInt(_)).asJava,
+				                    bounds,
 				                    null, null)
 			}
-			case Some(metaData) => metaData
+			case Some(metaData) => {
+				metaData.addValidZoomLevels(newLevels.map(new JavaInt(_)))
+				metaData
+			}
 		}
 		tileAnalytics.map(_.applyTo(metaData))
 		dataAnalytics.map(_.applyTo(metaData))
