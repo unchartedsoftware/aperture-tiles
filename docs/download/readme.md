@@ -21,7 +21,13 @@ For information on full installations of Aperture Tiles (along with ApertureJS),
 
 ## Virtual Machine ##
 
-This virtual machine (VM) has been preconfigured with all of the third-party prerequisites required to begin a basic Aperture Tiles project. Before downloading the VM, install [Oracle VM VirtualBox](https://www.virtualbox.org/) on your machine. For more information on the basic Aperture Tiles project and on using the VM, see the [Quick Start](../documentation/quickstart/#virtual-machine) documentation.
+This virtual machine (VM) has been preconfigured with all of the third-party prerequisites required to begin a basic Aperture Tiles project:
+
+- Apache Spark version 1.0.0 (Cloudera Distribution 4)
+- Java (JDK version 1.7)
+- Jetty version 9.2.1
+
+Before downloading the VM, install [Oracle VM VirtualBox](https://www.virtualbox.org/) on your machine. For more information on the basic Aperture Tiles project and on using the VM, see the [Quick Start](../documentation/quickstart/#virtual-machine) documentation.
 
 <a href="http://assets.oculusinfo.com/tiles/downloads/tile-vm-0.3.1.ova" class="download-link">Virtual Machine</a>
 

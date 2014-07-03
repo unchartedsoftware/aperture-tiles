@@ -45,7 +45,10 @@ You can access your virtual machine in two ways:
 
 - Directly through the Oracle VM VirtualBox Manager
 - Via ssh with the following command, using the username **vagrant** and password **vagrant**:
-  `ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@localhost`
+
+    ```
+    ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@localhost
+    ```
 
 Access port 8080 (`http://{vm-machine-name}:8080/`) on your virtual machine (which is forwarded to port 8888 (`http://localhost:8888/` on your local machine) in any web browser for a brief description of the virtual machine's configuration and links to preloaded demonstrations.
 
