@@ -249,14 +249,16 @@ object DatasetFactory {
 		 cacheProcessed: Boolean,
 		 indexer: CSVIndexExtractor[IT],
 		 valuer: CSVValueExtractor[PT, BT],
-		 properties: CSVRecordPropertiesWrapper,
+		 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 tileWidth: Int,
 		 tileHeight: Int,
-		 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
-		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]]):
+		 levels: Seq[Seq[Int]],
+		 properties: CSVRecordPropertiesWrapper):
 			CSVDataset[IT, PT, DT, AT, BT] = {
-		val dataset = new CSVDataset(indexer, valuer, properties, tileWidth, tileHeight,
-		                             dataAnalytics, tileAnalytics)
+		val dataset = new CSVDataset(indexer, valuer,
+		                             dataAnalytics, tileAnalytics,
+		                             tileWidth, tileHeight, levels, properties)
 		dataset.initialize(sc, cacheRaw, cacheFilterable, cacheProcessed)
 		dataset
 	}
@@ -268,23 +270,25 @@ object DatasetFactory {
 		 cacheProcessed: Boolean,
 		 indexer: CSVIndexExtractor[IT],
 		 valuer: CSVValueExtractor[PT, BT],
-		 properties: CSVRecordPropertiesWrapper,
 		 tileWidth: Int,
 		 tileHeight: Int,
-		 dataAnalyticsWithTag: (Option[AnalysisDescription[(IT, PT), DT]], ClassTag[DT]),
-		 tileAnalyticsWithTag: (Option[AnalysisDescription[TileData[BT], AT]], ClassTag[AT])):
+		 levels: Seq[Seq[Int]],
+		 properties: CSVRecordPropertiesWrapper,
+		 dataAnalytic: AnalysisWithTag[(IT, PT), DT],
+		 tileAnalytic: AnalysisWithTag[TileData[BT], AT]):
 			CSVDataset[IT, PT, DT, AT, BT] = {
 		newDataset(sc, cacheRaw, cacheFilterable, cacheProcessed,
 		           indexer,
 		           valuer,
-		           properties,
+		           dataAnalytic.analysis,
+		           tileAnalytic.analysis,
 		           tileWidth,
 		           tileHeight,
-		           dataAnalyticsWithTag._1,
-		           tileAnalyticsWithTag._1)(indexer.indexTypeTag,
-		                                    valuer.valueTypeTag,
-		                                    dataAnalyticsWithTag._2,
-		                                    tileAnalyticsWithTag._2)
+		           levels,
+		           properties)(indexer.indexTypeTag,
+		                       valuer.valueTypeTag,
+		                       dataAnalytic.analysisTypeTag,
+		                       tileAnalytic.analysisTypeTag)
 	}
 
 	// CreateDataset, but with labeled types
@@ -294,16 +298,22 @@ object DatasetFactory {
 	                                              cacheProcessed: Boolean,
 	                                              indexer: CSVIndexExtractor[IT],
 	                                              valuer: CSVValueExtractor[PT, BT],
-	                                              properties: CSVRecordPropertiesWrapper,
 	                                              tileWidth: Int,
-	                                              tileHeight: Int):
-			CSVDataset[IT, PT, _, _, BT] =
+	                                              tileHeight: Int,
+	                                              levels: Seq[Seq[Int]],
+	                                              properties: CSVRecordPropertiesWrapper):
+			CSVDataset[IT, PT, _, _, BT] = {
+		val dataAnalytic =
+			CSVDataAnalyticExtractor.fromProperties(properties,
+			                                        indexer.indexTypeTag,
+			                                        valuer.valueTypeTag)
+		val tileAnalytic =
+			CSVTileAnalyticExtractor.fromProperties(sc, properties, valuer, levels)
+
 		addGenericAnalytics(sc, cacheRaw, cacheFilterable, cacheProcessed,
-		                    indexer, valuer, properties, tileWidth, tileHeight,
-		                    CSVDataAnalyticExtractor.fromProperties(properties,
-		                                                            indexer.indexTypeTag,
-		                                                            valuer.valueTypeTag),
-		                    CSVTileAnalyticExtractor.fromProperties(properties))
+		                    indexer, valuer, tileWidth, tileHeight, levels, properties,
+		                    dataAnalytic, tileAnalytic)
+	}
 
 	def createDataset (sc: SparkContext,
 	                   dataDescription: Properties,
@@ -316,11 +326,30 @@ object DatasetFactory {
 		// Wrap parameters more usefully
 		val properties = new CSVRecordPropertiesWrapper(dataDescription)
 
+		val levels = properties.getStringPropSeq("oculus.binning.levels",
+		                                         "The levels to bin").map(lvlString =>
+			{
+				lvlString.split(',').map(levelRange =>
+					{
+						val extrema = levelRange.split('-')
+
+						if ((0 == extrema.size) || (levelRange==""))
+							Seq[Int]()
+						else if (1 == extrema.size)
+							Seq[Int](extrema(0).toInt)
+						else
+							Range(extrema(0).toInt, extrema(1).toInt+1).toSeq
+					}
+				).fold(Seq[Int]())(_ ++ _)
+			}
+		).filter(levelSeq =>
+			levelSeq != Seq[Int]()	// discard empty entries
+		)
 		// Determine index and value information
 		val indexer = CSVIndexExtractor.fromProperties(properties)
 		val valuer = CSVValueExtractor.fromProperties(properties)
 
 		createDatasetGeneric(sc, cacheRaw, cacheFilterable, cacheProcessed,
-		                     indexer, valuer, properties, tileWidth, tileHeight)
+		                     indexer, valuer, tileWidth, tileHeight, levels, properties)
 	}
 }

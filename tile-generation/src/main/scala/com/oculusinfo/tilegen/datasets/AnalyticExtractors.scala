@@ -31,22 +31,63 @@ import java.lang.{Double => JavaDouble}
 
 import scala.reflect.ClassTag
 
+import org.apache.spark.SparkContext
+
 import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TileIndex
 
 import com.oculusinfo.tilegen.tiling.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
+
 object CSVDataAnalyticExtractor {
-	def fromProperties[IT, PT, DT] (properties: PropertiesWrapper,
+	def fromProperties[IT, PT] (properties: PropertiesWrapper,
 	                                indexType: ClassTag[IT],
 	                                processingType: ClassTag[PT]):
-			(Option[AnalysisDescription[(IT, PT), DT]], ClassTag[DT]) =
-		(None, ClassTag.apply(classOf[Int]))
+			AnalysisWithTag[(IT, PT), _] = {
+		val analysis: Option[AnalysisDescription[(IT, PT), Int]] = None
+		new AnalysisWithTag[(IT, PT), Int](analysis)
+	}
 }
 
 object CSVTileAnalyticExtractor {
-	def fromProperties[AT, BT] (properties: PropertiesWrapper):
-			(Option[AnalysisDescription[TileData[BT], AT]], ClassTag[AT]) =
-		(None, ClassTag.apply(classOf[Int]))
+	def fromProperties[BT] (sc: SparkContext,
+	                        properties: PropertiesWrapper,
+	                        valuer: CSVValueExtractor[_, BT],
+	                        levels: Seq[Seq[Int]]):
+			AnalysisWithTag[TileData[BT], _] =
+	{
+		val metaDataKeys = (levels.flatMap(lvls => lvls).toSet.map((level: Int) =>
+			                    (""+level -> ((index: TileIndex) => (index.getLevel == level)))
+		                    ) + ("global" -> ((index: TileIndex) => true))
+		).toMap
+
+		val binType = ClassTag.unapply(valuer.valueTypeTag).get
+
+		if (binType == classOf[Double]) {
+			val convertFcn: BT => Double = bt => bt.asInstanceOf[Double]
+			val minAnalytic =
+				new AnalysisDescriptionTileWrapper[BT, Double](sc,
+				                                               convertFcn,
+				                                               new MinimumDoubleTileAnalytic,
+				                                               metaDataKeys)
+			val maxAnalytic =
+				new AnalysisDescriptionTileWrapper[BT, Double](sc,
+				                                               convertFcn,
+				                                               new MaximumDoubleTileAnalytic,
+				                                               metaDataKeys)
+			new AnalysisWithTag(Some(new CompositeAnalysisDescription(minAnalytic, maxAnalytic)))
+		} else {
+			new AnalysisWithTag[TileData[BT], Int](None)
+		}
+	}
+}
+
+class AnalysisWithTag[BT, AT: ClassTag] (val analysis: Option[AnalysisDescription[BT, AT]]) {
+	val analysisTypeTag: ClassTag[AT] = implicitly[ClassTag[AT]]
 }

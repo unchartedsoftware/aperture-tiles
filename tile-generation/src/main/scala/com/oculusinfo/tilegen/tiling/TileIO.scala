@@ -191,7 +191,6 @@ trait TileIO extends Serializable {
 		)
 		println("Input tiles: "+tileCount)
 
-		println("Calculating metadata")
 		// Don't alter metadata if there was no data added.
 		// Ideally, we'd still alter levels, but that's stored in our min/max list,
 		// so since we have no min/max info for levels with no data, we just don't store them.

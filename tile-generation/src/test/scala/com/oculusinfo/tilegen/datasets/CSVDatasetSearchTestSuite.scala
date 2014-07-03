@@ -96,10 +96,11 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 					Option[AnalysisDescription[((Double, Double), Double), Int]] = None
 			val tileAnalytics:
 					Option[AnalysisDescription[TileData[JavaDouble], Int]] = None
+			val levels = Seq(Seq(0))
 
 			// Put our dataset together
-			dataset = new CSVDataset(csvIndexer, csvValuer, csvProps, 1, 1,
-			                         dataAnalytics, tileAnalytics);
+			dataset = new CSVDataset(csvIndexer, csvValuer, dataAnalytics, tileAnalytics,
+			                         1, 1, levels, csvProps)
 			dataset.initialize(sc, false, true, false)
 
 			test()

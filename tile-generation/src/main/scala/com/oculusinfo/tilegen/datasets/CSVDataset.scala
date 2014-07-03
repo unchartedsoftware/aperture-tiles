@@ -314,34 +314,16 @@ abstract class CSVDatasetBase[IT: ClassTag,
                               BT]
 	(indexer: CSVIndexExtractor[IT],
 	 valuer: CSVValueExtractor[PT, BT],
-	 properties: CSVRecordPropertiesWrapper,
+	 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
+	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	 tileWidth: Int,
 	 tileHeight: Int,
-	 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
-	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
+	 levels: Seq[Seq[Int]],
+	 properties: CSVRecordPropertiesWrapper)
 		extends Dataset[IT, PT, DT, AT, BT] {
 
 	private val description = properties.getStringOption("oculus.binning.description",
 	                                                     "The description to put in the tile metadata")
-	private val levels = properties.getStringPropSeq("oculus.binning.levels",
-	                                                 "The levels to bin").map(lvlString =>
-		{
-			lvlString.split(',').map(levelRange =>
-				{
-					val extrema = levelRange.split('-')
-
-					if ((0 == extrema.size) || (levelRange==""))
-						Seq[Int]()
-					else if (1 == extrema.size)
-						Seq[Int](extrema(0).toInt)
-					else
-						Range(extrema(0).toInt, extrema(1).toInt+1).toSeq
-				}
-			).fold(Seq[Int]())(_ ++ _)
-		}
-	).filter(levelSeq => {
-		         levelSeq != Seq[Int]()	// discard empty entries
-	         })
 	
 
 	private val consolidationPartitions =
@@ -578,14 +560,16 @@ class CSVStaticProcessingStrategy[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag]
 class CSVDataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	(indexer: CSVIndexExtractor[IT],
 	 valuer: CSVValueExtractor[PT, BT],
-	 properties: CSVRecordPropertiesWrapper,
+	 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
+	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	 tileWidth: Int,
 	 tileHeight: Int,
-	 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
-	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
+	 levels: Seq[Seq[Int]],
+	 properties: CSVRecordPropertiesWrapper)
 		extends CSVDatasetBase[IT, PT, DT, AT, BT](indexer, valuer,
-		                                           properties, tileWidth, tileHeight,
-		                                           dataAnalytics, tileAnalytics) {
+		                                           dataAnalytics, tileAnalytics,
+		                                           tileWidth, tileHeight, levels, properties)
+{
 	// Just some Filter type aliases from Queries.scala
 	import com.oculusinfo.tilegen.datasets.FilterAware._
 
@@ -643,14 +627,15 @@ class CSVDataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 class StreamingCSVDataset[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag, AT: ClassTag]
 	(indexer: CSVIndexExtractor[IT],
 	 valuer: CSVValueExtractor[PT, BT],
-	 properties: CSVRecordPropertiesWrapper,
+	 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
+	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	 tileWidth: Int,
 	 tileHeight: Int,
-	 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
-	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
+	 levels: Seq[Seq[Int]],
+	 properties: CSVRecordPropertiesWrapper)
 		extends CSVDatasetBase[IT, PT, DT, AT, BT](indexer, valuer,
-		                                           properties, tileWidth, tileHeight,
-		                                           dataAnalytics, tileAnalytics)
+		                                           dataAnalytics, tileAnalytics,
+		                                           tileWidth, tileHeight, levels, properties)
 		with StreamingProcessor[IT, PT, DT]  {
 	
 	type STRATEGY_TYPE = StreamingProcessingStrategy[IT, PT, DT]
