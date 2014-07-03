@@ -146,7 +146,7 @@ class ForceDirectedLayout extends Serializable {
 		val sy = 100.0/(maxY-minY);
 		
 		val finalNodePositions = graphXY.vertices.map(n => {
-			(n._1, ((n._2._1 - minX)*sx, (n._2._2 - minY)*sx))
+			(n._1, ((n._2._1 - minX)*sx, (n._2._2 - minY)*sy))
 		})
 	
 		println("Force-directed layout completed with " + iteration + " iterations.")	
