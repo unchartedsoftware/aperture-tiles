@@ -53,7 +53,8 @@ object GraphLayout {
 //		val minProgress = argParser.getDouble("xf", "Percent of vertices that must change communites for the algorithm to consider progress relative to total vertices in a level. default=0.15", Some(0.15))
 //		val progressCounter = argParser.getInt("y", "Number of times the algorithm can fail to make progress before exiting. default=1", Some(1))
 		val edgedelimiter = argParser.getString("d", "Specify input file edge delimiter. default is tab-delimited", Some("\t"))
-
+		val maxIterations = argParser.getInt("i", "Max number of iterations for force-directed algorithm", Some(10000))
+		
 		//opt[Boolean]('z',"ipaddress") action {(x,c)=> c.copy(ipaddress=x)} text("Set to true to convert ipaddresses to Long ids. Defaults to false")	    
 
 		var edgeFile = source
@@ -66,8 +67,6 @@ object GraphLayout {
 		} else {
 			sc.textFile(edgeFile, partitions)
 		}
-
-		val count1 = rawData.count
 
 		// store data a distributed edge list  
 		//val inputHashFunc = if (ipaddress) (id: String) => IpAddress.toLong(id) else (id: String) => id.toLong
@@ -89,7 +88,7 @@ object GraphLayout {
 		val graph = Graph.fromEdges(edgeRDD, None)
 		
 		val layouter = new ForceDirectedLayout()
-		val nodePositions = layouter.determineLayout(sc, graph)
+		val nodePositions = layouter.determineLayout(sc, graph, maxIterations)
 		
 		// save results
 		nodePositions.saveAsTextFile(output)

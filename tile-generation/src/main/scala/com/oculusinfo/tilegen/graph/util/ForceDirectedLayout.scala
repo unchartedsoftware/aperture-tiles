@@ -45,7 +45,7 @@ import scala.util.Random
  */ 
 class ForceDirectedLayout extends Serializable {
 	
-	def determineLayout[VD: ClassTag](sc: SparkContext, graph: Graph[VD,Long]): VertexRDD[(Double, Double)] = {
+	def determineLayout[VD: ClassTag](sc: SparkContext, graph: Graph[VD,Long], maxIterations: Int): VertexRDD[(Double, Double)] = {
 		
 		graph.cache		
 		
@@ -124,15 +124,15 @@ class ForceDirectedLayout extends Serializable {
 		val theta = 1.0 //Double.parseDouble(System.getProperty("dashboard.layouts.FFD.theta", "1.0")); // theta parameter for the Quigley-Eades algorithm, used to choose node/pseudo-node comparison
 		var iteration = 0
 
-		val max_iterations = 10000.0 //Integer.parseInt(System.getProperty("dashboard.layouts.FFD.max.iterations", "10000"));
 		do {
 			val results = doForceLayoutStep(sc, graphXY, k, theta, temperature)
 			graphXY.unpersistVertices(false)
 			
 			iteration += 1
-			temperature *= (1.0 - iteration/max_iterations) // RHS approaches 1 as you iterate making the scale 0
+			temperature *= (1.0 - iteration/maxIterations) // RHS approaches 1 as you iterate making the scale 0
 			step = results._1
 			graphXY = Graph(results._2, graphEdges)
+			println("Finished iteration " + iteration + " with largest step " + step)	
 			
 		} while ((step > stepLimit) && (temperature > 0.0))
 		
@@ -149,7 +149,7 @@ class ForceDirectedLayout extends Serializable {
 			(n._1, ((n._2._1 - minX)*sx, (n._2._2 - minY)*sx))
 		})
 	
-		println("Force-directed layout completed with " + iteration + " iterations.");	
+		println("Force-directed layout completed with " + iteration + " iterations.")	
 	
 		VertexRDD(finalNodePositions)
 	}
@@ -272,7 +272,7 @@ class ForceDirectedLayout extends Serializable {
 		val newNodePositions = (graph.vertices).innerJoin(								//innerJoin adds displacements to current node positions
 								displacements.map(data => (data._1, data._2)))(			//converts RDD data format to (nodeID, (x,y))		
 								(id, xyA, xyR) => (xyA._1 + xyR._1, xyA._2 + xyR._2))	//innerJoin aggregate func
-								
+		
 		graph.unpersistVertices(false)
 		(largestStep, newNodePositions)	// final results for new node positions
 	}
