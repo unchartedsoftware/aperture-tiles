@@ -54,9 +54,12 @@ public class PyramidMetaDataVersionMutator {
 
 	public static void updateMetaData (JSONObject rawMetaData, String targetVersion) throws JSONException {
 	    String sourceVersion = getMetaDataVersion(rawMetaData);
-	    for (PyramidMetaDataVersionMutator mutator: getMutators(sourceVersion, targetVersion)) {
-	        mutator.apply(rawMetaData);
-	    }
+        List<PyramidMetaDataVersionMutator> mutators = getMutators(sourceVersion, targetVersion);
+        if (null != mutators) {
+            for (PyramidMetaDataVersionMutator mutator: mutators) {
+                mutator.apply(rawMetaData);
+            }
+        }
 	}
 
 	private static String getMetaDataVersion (JSONObject rawMetaData) {
