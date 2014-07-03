@@ -306,7 +306,7 @@ object DatasetFactory {
 			                                        indexer.indexTypeTag,
 			                                        valuer.valueTypeTag)
 		val tileAnalytic =
-			CSVTileAnalyticExtractor.fromProperties(sc, properties, valuer, levels)
+			CSVTileAnalyticExtractor.fromProperties(sc, properties, indexer, valuer, levels)
 
 		addGenericAnalytics(sc, cacheRaw, cacheFilterable, cacheProcessed,
 		                    indexer, valuer, tileWidth, tileHeight, levels, properties,

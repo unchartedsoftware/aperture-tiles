@@ -164,6 +164,7 @@ trait TileIO extends Serializable {
 
 		println("Writing tile set from")
 		println(data.toDebugString)
+		println("Writing tile set to "+baseLocation)
 
 		// write each tile, storing away info we'll need to write the metadata
 		data.mapPartitions(_.grouped(1024)).foreach(group =>

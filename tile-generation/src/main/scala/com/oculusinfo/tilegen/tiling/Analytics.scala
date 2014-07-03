@@ -39,6 +39,8 @@ import org.apache.spark.AccumulatorParam
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 
@@ -303,7 +305,7 @@ class AnalysisDescriptionTileWrapper[RT, AT: ClassTag]
 
 
 // /////////////////////////////////////////////////////////////////////////////
-// Some standard analytic aggregation functions
+// Some standard analytic functions
 //
 class SumDoubleAnalytic extends Analytic[Double] {
 	def aggregate (a: Double, b: Double): Double = a + b
@@ -396,4 +398,55 @@ class CategoryValueBinningAnalytic(categoryNames: Seq[String])
 			new Pair[String, JavaDouble](categoryNames(i), value(i))
 		).toSeq.asJava
 	}
+}
+
+/**
+ * This analytic stores the CIDR block represented by a given tile.
+ */
+object IPv4CIDRBlockAnalysis extends Serializable {
+	def convertParam (pyramid: TilePyramid)(tile: TileData[_]): String = {
+		val index = tile.getDefinition()
+		// The CIDR block level is just our zoom level.
+		val level = index.getLevel()
+		// Figure out the IP address of our lower left corner
+		val bounds = pyramid.getTileBounds(index)
+		val x = bounds.getMinX().toLong
+		val y = bounds.getMinY().toLong
+		val yExpand = Range(0, 16).map(i => ((y >> i) & 0x1L) << (2*i+1)).reduce(_ + _)
+		val xExpand = Range(0, 16).map(i => ((x >> i) & 0x1L) << (2*i  )).reduce(_ + _)
+		val ipAddress = xExpand + yExpand
+		// Determine the CIDR block from the IP address and level
+		val blockAddress = ((ipAddress >> (32-level)) & 0xffffffffL) << (32-level)
+		(    (0xff & (blockAddress >> 24))+"."+
+			 (0xff & (blockAddress >> 16))+"."+
+			 (0xff & (blockAddress >> 8))+"."+
+			 (0xff & blockAddress)+"/"+level)
+	}
+
+	/**
+     * Get an analysis description for an analysis that stores the CIDR block 
+     * of an IPv4-indexed tile, using the standard IPv4 tile pyramid.
+     */
+	def getDescription[BT] (sc: SparkContext): AnalysisDescription[TileData[BT], String] =
+		getDescription(sc, new AOITilePyramid(0, 0, 0xffffL.toDouble, 0xffffL.toDouble))
+
+	/**
+     * Get an analysis description for an analysis that stores the CIDR block 
+     * of an IPv4-indexed tile, with an arbitrary tile pyramid.
+     */
+	def getDescription[BT] (sc: SparkContext, pyramid: TilePyramid): AnalysisDescription[TileData[BT], String] =
+		new MonolithicAnalysisDescription[TileData[BT], String](
+			sc,
+			convertParam(pyramid),
+			new StringAnalytic("CIDR Block"),
+			// No accumulators are appropriate for CIDR block metadata
+			Map[String, TileIndex => Boolean]())
+}
+
+
+class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
+	def name = analyticName
+	def aggregate (a: String, b: String): String = a+b
+	def defaultProcessedValue: String = ""
+	def defaultUnprocessedValue: String = ""
 }
