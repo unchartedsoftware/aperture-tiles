@@ -192,8 +192,8 @@ define(function (require) {
     createVisibilityButton = function( layerState, controlsMapping ) {
 
         var $toggleDiv = $('<div class="layer-toggle"></div>'),
-            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.getId() + '">')
-                             .add($('<label for="layer-toggle-box-' + layerState.getId() + '"></label>'));
+            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.get( 'id' ) + '">')
+                             .add($('<label for="layer-toggle-box-' + layerState.get( 'id' ) + '"></label>'));
 
         $toggleDiv.append( $toggleBox );
         // Initialize the button from the model and register event handler.
@@ -202,7 +202,7 @@ define(function (require) {
         $toggleBox.click(function () {
             var value = $toggleBox.prop("checked");
             layerState.set( 'enabled', value );
-            if (layerState.getDomain() === "client") {
+            if (layerState.get( 'domain' ) === "client") {
                 layerState.set( 'carouselEnabled', value );
             }
         });
@@ -225,7 +225,7 @@ define(function (require) {
      */
     createOpacitySlider = function( layerState, controlsMapping ) {
 
-        var sliderClass = ( layerState.getDomain() === 'server' ) ? "opacity-slider" : "base-opacity-slider",
+        var sliderClass = ( layerState.get( 'domain' ) === 'server' ) ? "opacity-slider" : "base-opacity-slider",
             $opacitySliderContainer = $('<div class="' + sliderClass + '"></div>'),
             $opacitySliderLabel = $('<div class="slider-label">Opacity</div>'),
             $opacitySlider = $('<div class="opacity-slider-bar"></div>').slider({
@@ -388,7 +388,7 @@ define(function (require) {
      */
     addLayerDragCallbacks = function( sortedLayers, $layerControlsContainer, $layerControlRoot, layerState, layerStateMap, controlsMap ) {
 
-        var controlsMapping = controlsMap[ layerState.getId() ];
+        var controlsMapping = controlsMap[ layerState.get( 'id' ) ];
 
         $layerControlRoot.draggable({
             "revert": function(valid) {
@@ -410,7 +410,7 @@ define(function (require) {
         });
 
         $layerControlRoot.droppable({
-            "accept": ".layer-controls-"+layerState.getDomain(),
+            "accept": ".layer-controls-"+layerState.get( 'domain' ),
             "hoverClass": "layer-drag-hover",
             "drop": function(event, ui) {
 
@@ -520,9 +520,9 @@ define(function (require) {
      */
     addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layerStateMap ) {
         var layerState = sortedLayers[index],
-            id = layerState.getId(),
-            name = layerState.getName() || layerState.getId(),
-            domain = layerState.getDomain(),
+            id = layerState.get( 'id' ),
+            name = layerState.get( 'name' ) || layerState.get( 'id' ),
+            domain = layerState.get( 'domain' ),
             $layerControlRoot,
             $layerControlTitleBar,
             $layerContent,
@@ -603,7 +603,7 @@ define(function (require) {
         // create title div
         $settingsTitleBar = $('<div class="settings-title"></div>');
         // add title span to div
-        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + '</span>'));
+        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.get( 'name' ) + '</span>'));
         $settingsContainer.append($settingsTitleBar);
 
         // create content div
@@ -696,7 +696,7 @@ define(function (require) {
     makeLayerStateObserver = function (layerState, controlsMap, layerStates, $layersControlListRoot) {
         return function (fieldName) {
 
-            var controlsMapping = controlsMap[ layerState.getId() ],
+            var controlsMapping = controlsMap[ layerState.get( 'id' ) ],
                 baseLayer, previousBaseLayer;
 
             switch (fieldName) {

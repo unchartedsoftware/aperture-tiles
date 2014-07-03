@@ -156,7 +156,9 @@ define(function (require) {
             var that = this,
                 olBounds,
                 yFunction,
-                previousZIndex = null;
+                previousZIndex = null,
+                previousOpacity = null,
+                previousVisibility = null;
 
             // y transformation function for non-density strips
             function passY( yInput ) {
@@ -217,6 +219,8 @@ define(function (require) {
             // Remove any old version of this layer
             if ( this.layer ) {
                 previousZIndex = this.map.getLayerIndex( this.layer.olLayer_ );
+                previousOpacity = this.layer.olLayer_.opacity;
+                previousVisibility = this.layer.olLayer_.visibility;
                 this.layer.remove();
                 this.layer = null;
             }
@@ -238,9 +242,19 @@ define(function (require) {
                 }
             );
 
-            if ( previousZIndex ) {
+            if ( previousZIndex !== null ) {
                 // restore previous index
                 this.map.setLayerIndex( this.layer.olLayer_, previousZIndex );
+            }
+
+            if ( previousOpacity !== null ) {
+                // restore previous opacity
+                this.layer.olLayer_.setOpacity( previousOpacity );
+            }
+
+            if ( previousVisibility !== null ) {
+                // restore previous visibility
+                this.layer.olLayer_.setVisibility( previousVisibility );
             }
         }
     });

@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        LayerState = require('../LayerState'),
+        SharedObject = require('../../util/SharedObject'),
         ClientLayerMediator;
 
 
@@ -67,7 +67,10 @@ define(function (require) {
                 }
 
                 // Create a layer state object for the base map.
-                layerState = new LayerState( layer.id, layer.name, 'client' );
+                layerState = new SharedObject();
+                layerState.set( 'id', layer.id );
+                layerState.set( 'name', layer.name );
+                layerState.set( 'domain', 'client' );
                 layerState.set( 'enabled', true );
                 layerState.set( 'opacity', 1.0 );
                 layerState.set( 'zIndex', 1000+i );

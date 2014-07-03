@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        LayerState = require('../LayerState'),
+        SharedObject = require('../../util/SharedObject'),
         requestRampImage,
         ServerLayerMediator;
 
@@ -49,7 +49,7 @@ define(function (require) {
     requestRampImage = function ( layerState, layerInfo, level ) {
 
         var legendData = {
-                layer: layerState.getId(),  // layer id
+                layer: layerState.get( 'id' ),  // layer id
                 id: layerInfo.id,           // config id
                 level: level,
                 width: 128,
@@ -116,8 +116,17 @@ define(function (require) {
                 // Create a layer state object.  Values are initialized to those provided
                 // by the layer specs, which are defined in the layers.json file, or are
                 // defaulted to appropriate starting values.
-                layerState = new LayerState( layer.id, layer.name, 'server' );
-
+                layerState = new SharedObject();
+                layerState.set( 'id', layer.id );
+                layerState.set( 'name', layer.name );
+                layerState.set( 'domain', 'server' );
+                layerState.set( 'enabled', layerSpec.renderer.enabled );
+                layerState.set( 'opacity', layerSpec.renderer.opacity );
+                layerState.set( 'rampFunction', layerSpec.transform.name );
+                layerState.set( 'rampType', layerSpec.renderer.ramp );
+                layerState.set( 'rampMinMax', getLevelMinMax( map.getZoom() ) );
+                layerState.set( 'rampImageUrl', "" );
+                layerState.set( 'filterRange', layerSpec.legendrange );
 
                 /**
                  * Valid ramp type strings.
@@ -133,7 +142,6 @@ define(function (require) {
                     {id: "single-gradient", name: "Single Gradient"}
                 ];
 
-
                 /**
                  * Valid ramp function strings.
                  */
@@ -141,15 +149,6 @@ define(function (require) {
                     {id: "linear", name: "Linear"},
                     {id: "log10", name: "Log 10"}
                 ];
-
-
-                layerState.set( 'enabled', layerSpec.renderer.enabled );
-                layerState.set( 'opacity', layerSpec.renderer.opacity );
-                layerState.set( 'rampFunction', layerSpec.transform.name );
-                layerState.set( 'rampType', layerSpec.renderer.ramp );
-                layerState.set( 'rampMinMax', getLevelMinMax( map.getZoom() ) );
-                layerState.set( 'rampImageUrl', "" );
-                layerState.set( 'filterRange', layerSpec.legendrange );
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function (fieldName) {

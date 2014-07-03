@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        LayerState = require('../LayerState'),
+        SharedObject = require('../../util/SharedObject'),
         AnnotationLayerMediator;
 
 
@@ -59,7 +59,10 @@ define(function (require) {
 
                 var layerState;
 
-                layerState = new LayerState( layer.id, layer.name, 'annotation' );
+                layerState = new SharedObject();
+                layerState.set( 'id', layer.id );
+                layerState.set( 'name', layer.name );
+                layerState.set( 'domain', 'annotation' );
                 layerState.set( 'enabled', true );
                 layerState.set( 'opacity', 1.0 );
                 layerState.set( 'zIndex', 500+i );

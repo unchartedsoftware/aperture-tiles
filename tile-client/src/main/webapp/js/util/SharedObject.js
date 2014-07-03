@@ -25,8 +25,8 @@
 
 
 /**
- * Captures the visual state of a layer in the system, and provides a notification
- * mechanism to allow external code to react to changes to it.
+ * A Shared Object class that stores any given values, while notifying all registered
+ * listeners of any changes within the object.
  */
 define(function (require) {
     "use strict";
@@ -37,7 +37,8 @@ define(function (require) {
         objectsEqual,
         arraysEqual,
         isEqual,
-        LayerState;
+        notify,
+        SharedObject;
 
 
     /**
@@ -125,65 +126,39 @@ define(function (require) {
     };
 
 
-    LayerState = Class.extend({
-        ClassName: "LayerState",
+    /**
+     * @param {string} fieldName - Name of the modified field.
+     * @param {Array} listeners - Array of {valueChange} listeners to execute.
+     */
+    notify = function (fieldName, listeners) {
+        var i;
+        for (i = 0; i < listeners.length; i += 1) {
+            listeners[i](fieldName);
+        }
+    };
+
+
+    SharedObject = Class.extend({
+        ClassName: "SharedObject",
 
         /**
-         * Initializes a LayerState object with default values.
+         * Initializes a shared object.
          *
-         * @param {string} id - The immutable ID of the layer.
+         * @param {string} id - The immutable ID of the object.
          */
-        init: function (id, name, domain) {
-            this.domain = domain;
-            this.id = id;
-            this.name = name;
+        init: function () {
             this.listeners = [];
         },
 
-        /**
-         * @returns {string} - The ID of this layer state object.
-         */
-        getId: function () {
-            return this.id;
-        },
 
         /**
-         * @returns {string} - The simple name of the layer.  This can appear in user facing elements and
-         * should be formatted accordingly.
-         */
-        getName: function () {
-            return this.name;
-        },
-
-
-        /**
-         * @returns {string} - The domain of this layer state object.
-         */
-        getDomain: function () {
-            return this.domain;
-        },
-
-
-        /**
-         * @param {string} fieldName - Name of the modified field.
-         * @param {Array} listeners - Array of {valueChange} listeners to execute.
-         */
-        notify : function (fieldName, listeners) {
-            var i;
-            for (i = 0; i < listeners.length; i += 1) {
-                listeners[i](fieldName);
-            }
-        },
-
-
-        /**
-         * Registers a listener that will be executed whenever a layer state value
+         * Registers a listener that will be executed whenever a shared object key
          * is modified.
          *
          * @param {valueChange} listener - The listener to register.
          */
-        addListener: function (listener) {
-            this.listeners.push(listener);
+        addListener: function( listener ) {
+            this.listeners.push( listener );
         },
 
 
@@ -192,20 +167,15 @@ define(function (require) {
          *
          * @param {valueChange} listener - The callback to remove.
          */
-        removeListener: function (listener) {
-            var index = this.listeners.indexOf(listener);
-            if (index > -1) {
+        removeListener: function( listener ) {
+            var index = this.listeners.indexOf( listener );
+            if ( index > -1 ) {
                 this.listeners.splice(index, 1);
             }
         },
 
 
         set: function( key, value0, value1 ) {
-
-            if ( key === 'id' || key === 'domain' || key === 'name' ) {
-                console.log( 'Warning: layer state ' + key + ' attribute is immutable' );
-                return;
-            }
 
             if ( value1 === undefined ) {
 
@@ -215,7 +185,7 @@ define(function (require) {
                     } else {
                         this[key] = value0;
                     }
-                    this.notify( key, this.listeners );
+                    notify( key, this.listeners );
                 }
 
             } else {
@@ -228,7 +198,7 @@ define(function (require) {
                     } else {
                         this[key][value0] = value1;
                     }
-                    this.notify( key, this.listeners );
+                    notify( key, this.listeners );
                 }
 
             }
@@ -268,5 +238,5 @@ define(function (require) {
     });
 
 
-    return LayerState;
+    return SharedObject;
 });
