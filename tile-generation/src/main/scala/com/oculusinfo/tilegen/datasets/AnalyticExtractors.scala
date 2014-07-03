@@ -39,6 +39,7 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.tilegen.tiling.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.IPv4CIDRBlockAnalysis
 import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
 import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -47,8 +48,8 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 object CSVDataAnalyticExtractor {
 	def fromProperties[IT, PT] (properties: PropertiesWrapper,
-	                                indexType: ClassTag[IT],
-	                                processingType: ClassTag[PT]):
+	                            indexType: ClassTag[IT],
+	                            processingType: ClassTag[PT]):
 			AnalysisWithTag[(IT, PT), _] = {
 		val analysis: Option[AnalysisDescription[(IT, PT), Int]] = None
 		new AnalysisWithTag[(IT, PT), Int](analysis)
@@ -56,10 +57,11 @@ object CSVDataAnalyticExtractor {
 }
 
 object CSVTileAnalyticExtractor {
-	def fromProperties[BT] (sc: SparkContext,
-	                        properties: PropertiesWrapper,
-	                        valuer: CSVValueExtractor[_, BT],
-	                        levels: Seq[Seq[Int]]):
+	def fromProperties[IT, PT, BT] (sc: SparkContext,
+	                                properties: PropertiesWrapper,
+	                                indexer: CSVIndexExtractor[IT],
+	                                valuer: CSVValueExtractor[_, BT],
+	                                levels: Seq[Seq[Int]]):
 			AnalysisWithTag[TileData[BT], _] =
 	{
 		val metaDataKeys = (levels.flatMap(lvls => lvls).toSet.map((level: Int) =>
@@ -69,6 +71,12 @@ object CSVTileAnalyticExtractor {
 
 		val binType = ClassTag.unapply(valuer.valueTypeTag).get
 
+		val indexAnalytic: Option[AnalysisDescription[TileData[BT], String]] =
+			if (indexer.isInstanceOf[IPv4IndexExtractor]) {
+				Some(IPv4CIDRBlockAnalysis.getDescription(sc))
+			} else {
+				None
+			}
 		if (binType == classOf[Double]) {
 			val convertFcn: BT => Double = bt => bt.asInstanceOf[Double]
 			val minAnalytic =
@@ -81,9 +89,14 @@ object CSVTileAnalyticExtractor {
 				                                               convertFcn,
 				                                               new MaximumDoubleTileAnalytic,
 				                                               metaDataKeys)
-			new AnalysisWithTag(Some(new CompositeAnalysisDescription(minAnalytic, maxAnalytic)))
+			val minMaxAnalytic = new CompositeAnalysisDescription(minAnalytic, maxAnalytic)
+			val analytic = 
+				indexAnalytic
+					.map(new CompositeAnalysisDescription(minMaxAnalytic, _))
+					.getOrElse(minMaxAnalytic)
+			new AnalysisWithTag(Some(analytic))
 		} else {
-			new AnalysisWithTag[TileData[BT], Int](None)
+			new AnalysisWithTag[TileData[BT], String](indexAnalytic)
 		}
 	}
 }

@@ -107,13 +107,20 @@ object CSVBinner {
 	                        tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
+
+		val tileAnalytics = dataset.getTileAnalytics
+		val dataAnalytics = dataset.getDataAnalytics
+
+		println("Tiling dataset "+dataset.getName)
+		println("\tTile analytics: "+tileAnalytics)
+		println("\tData analytics: "+dataAnalytics)
+
 		dataset.getLevels.map(levels =>
 			{
+				println("\tProcessing levels "+levels)
 				val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 					rdd =>
 				{
-					val tileAnalytics = dataset.getTileAnalytics
-					val dataAnalytics = dataset.getDataAnalytics
 					val tiles = binner.processDataByLevel(rdd,
 					                                      dataset.getIndexScheme,
 					                                      dataset.getBinningAnalytic,
@@ -124,6 +131,7 @@ object CSVBinner {
 					                                      (dataset.getNumXBins max dataset.getNumYBins),
 					                                      dataset.getConsolidationPartitions,
 					                                      dataset.isDensityStrip)
+
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,
 					                    tiles,
