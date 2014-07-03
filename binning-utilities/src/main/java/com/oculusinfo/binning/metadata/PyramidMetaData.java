@@ -520,10 +520,10 @@ public class PyramidMetaData {
 	public String getLevelMinimum (int level) {
 		return getLevelExtremum(false, level);
 	}
+*/
 
 	@Override
 	public String toString () {
 		return _metaData.toString();
 	}
-*/
 }
