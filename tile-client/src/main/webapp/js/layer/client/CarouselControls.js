@@ -34,6 +34,7 @@ define(function (require) {
 
 
     var Class = require('../../class'),
+        Util = require('../../util/Util'),
         CAROUSEL_CLASS = 'carousel-ui-pane',
         DOT_CONTAINER_CLASS = "carousel-ui-dot-container",
         DOT_CLASS = 'carousel-ui-dot',
@@ -52,7 +53,28 @@ define(function (require) {
         createIndexDots,
         createCarousel,
         updateDotIndices,
-        CarouselControls;
+        CarouselControls,
+        tooltipOpenFunc,
+        tooltipCloseFunc;
+
+    tooltipOpenFunc = function( layerState, target ) {
+        return function() {
+            layerState.set('tooltip', {
+                target: target,
+                state: 'open'
+            });
+        };
+    };
+
+
+    tooltipCloseFunc = function( layerState, target ) {
+        return function() {
+            layerState.set('tooltip', {
+                target: target,
+                state: 'close'
+            });
+        };
+    };
 
 
     /**
@@ -135,31 +157,31 @@ define(function (require) {
             });
         }
 
-        $leftChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_LEFT+"' title></div>");
-        $leftChevron.tooltip({
-            content: TOOLTIP_CHEVRON_LEFT,
-            open: function() { layerState.set('carouselChevronTooltip', 'open'); },
-            close: function() { layerState.set('carouselChevronTooltip', 'close'); },
-            show: { delay: 800 }
-        });
+        $leftChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_LEFT+"'></div>");
+        // set tooltip
+        Util.enableTooltip( $leftChevron,
+                         TOOLTIP_CHEVRON_LEFT,
+                         tooltipOpenFunc( layerState, 'carousel-left-chevron' ),
+                         tooltipCloseFunc( layerState, 'carousel-left-chevron' ) );
+
         generateCallbacks( $leftChevron, -1 );
         $carousel.append( $leftChevron );
 
-        $rightChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_RIGHT+"' title></div>");
-        $rightChevron.tooltip({
-            content: TOOLTIP_CHEVRON_RIGHT,
-            open: function() { layerState.set('carouselChevronTooltip', 'open'); },
-            close: function() { layerState.set('carouselChevronTooltip', 'close'); },
-            show: { delay: 800 }
-        });
+        $rightChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_RIGHT+"'></div>");
+        // set tooltip
+        Util.enableTooltip( $rightChevron,
+                         TOOLTIP_CHEVRON_RIGHT,
+                         tooltipOpenFunc( layerState, 'carousel-right-chevron' ),
+                         tooltipCloseFunc( layerState, 'carousel-right-chevron' ) );
+
         generateCallbacks( $rightChevron, 1 );
         $carousel.append( $rightChevron );
 
         // allow all events to propagate to map except 'click'
-        map.enableEventToMapPropagation( $leftChevron );
-        map.enableEventToMapPropagation( $rightChevron );
-        map.disableEventToMapPropagation( $leftChevron, ['onclick', 'ondblclick'] );
-        map.disableEventToMapPropagation( $rightChevron, ['onclick', 'ondblclick'] );
+        Util.enableEventPropagation( $leftChevron );
+        Util.enableEventPropagation( $rightChevron );
+        Util.disableEventPropagation( $leftChevron, ['onclick', 'ondblclick'] );
+        Util.disableEventPropagation( $rightChevron, ['onclick', 'ondblclick'] );
 
         controlMap.leftChevron = $leftChevron;
         controlMap.rightChevron = $rightChevron;
@@ -174,14 +196,6 @@ define(function (require) {
             $dots = [],
             rendererCount = layerState.get('rendererCount'),
             i;
-
-        function tooltipOpen() {
-            layerState.set('carouselIndexTooltip', 'open');
-        }
-
-        function tooltipClose() {
-            layerState.set('carouselIndexTooltip', 'close');
-        }
 
         function generateCallbacks( dot, index ) {
 
@@ -202,18 +216,18 @@ define(function (require) {
         for (i=0; i < rendererCount; i++) {
 
             indexClass = (i === 0) ? DOT_CLASS_SELECTED : DOT_CLASS_DEFAULT;
-            $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"' title></div>");
-            $dots[i].tooltip({
-                content: TOOLTIP_INDEX_DOT,
-                show: { delay: 800 },
-                open: tooltipOpen,
-                close: tooltipClose
-            });
+            $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
+            // set tooltip
+            Util.enableTooltip( $dots[i],
+                             TOOLTIP_INDEX_DOT,
+                             tooltipOpenFunc( layerState, 'carousel-index-'+i ),
+                             tooltipCloseFunc( layerState, 'carousel-index-'+i ) );
+
             generateCallbacks( $dots[i], i );
             $indexContainer.append( $dots[i] );
             // allow all events to propagate to map except 'click'
-            map.enableEventToMapPropagation( $dots[i] );
-            map.disableEventToMapPropagation( $dots[i], ['onclick', 'ondblclick'] );
+            Util.enableEventPropagation( $dots[i] );
+            Util.disableEventPropagation( $dots[i], ['onclick', 'ondblclick'] );
         }
 
         controlMap.dots = $dots;
