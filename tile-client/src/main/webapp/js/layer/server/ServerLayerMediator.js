@@ -90,11 +90,11 @@ define(function (require) {
                     layerSpec;
 
                 function getLevelMinMax( level ) {
-                    var meta =  layer.getLayerInfo().meta,
-                        minArray = meta.levelMinFreq || meta.levelMinimums,
-                        maxArray = meta.levelMaxFreq || meta.levelMaximums,
-                        min = minArray ? minArray[level] : 0,
-                        max = maxArray[level];
+                	var meta =  layer.getLayerInfo().meta,
+                    	minArray = meta.levelMinFreq || meta.levelMinimums || meta[level],
+                    	maxArray = meta.levelMaxFreq || meta.levelMaximums || meta[level],
+                    	min = minArray ? ($.isArray(minArray) ? minArray[level] : minArray.minimum) : 0,
+                    	max = $.isArray(maxArray) ? maxArray[level] : maxArray.maximum;
                     return [ parseFloat(min), parseFloat(max) ];
                 }
 
