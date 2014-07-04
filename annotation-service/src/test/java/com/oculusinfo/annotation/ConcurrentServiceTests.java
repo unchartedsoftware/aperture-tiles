@@ -66,7 +66,6 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 
 	protected AnnotationService _service;
 
-    ConcurrentMap<String, List<Double>> _readTimesPerEntry = new ConcurrentHashMap<>();
     List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
     Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
     Random _random = new Random( System.currentTimeMillis() );
@@ -169,8 +168,6 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
             for ( int i=0; i<NUM_ENTRIES; i++ ) {
                 _annotations.add( new AnnotationWrapper( generateJSONAnnotation() ) );
             }
-            // add name to read times map
-            _readTimesPerEntry.put( _name, new LinkedList<Double>() );
 		}
 		
 		public void run() {
@@ -257,29 +254,30 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
         private void write( AnnotationWrapper annotation ) {
 
             AnnotationData<?> clone = annotation.clone();
+            long start = System.currentTimeMillis();
             _service.write( TEST_LAYER_NAME, annotation.clone() );
+            long end = System.currentTimeMillis();
+            double time = ((end-start)/1000.0);
             if ( VERBOSE )
-                System.out.println( "Thread " + _name + " successfully wrote " + clone.getUUID() );
+                System.out.println( "Thread " + _name + " successfully wrote " + clone.getUUID() + " in " + time + " sec" );
             addAnnotationToPublic( annotation );
         }
 
         private void read() {
 
-            long start = System.currentTimeMillis();
             TileIndex tile = getRandomTile();
+            long start = System.currentTimeMillis();
             Map<BinIndex, List<AnnotationData<?>>> scan = readRandom( tile );
+            long end = System.currentTimeMillis();
+            double time = ((end-start)/1000.0);
 
             int annotationCount = 0;
             for (List<AnnotationData<?>> annotations : scan.values()) {
                 annotationCount += annotations.size();
             }
 
-            long end = System.currentTimeMillis();
-            double time = ((end-start)/1000.0);
-            _readTimesPerEntry.get( _name ).add( time );
-
             if ( VERBOSE )
-                System.out.println( "Thread " + _name + " read " + scan.size() +" bins with " + annotationCount + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time );
+                System.out.println( "Thread " + _name + " read " + scan.size() +" bins with " + annotationCount + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time + " sec" );
         }
 
         private void modify( AnnotationWrapper annotation ) {
@@ -288,10 +286,13 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
             AnnotationData<?> newAnnotation =  editAnnotation( oldAnnotation );
 
             try {
+                long start = System.currentTimeMillis();
                 _service.modify( TEST_LAYER_NAME, newAnnotation );
+                long end = System.currentTimeMillis();
+                double time = ((end-start)/1000.0);
                 annotation.update( newAnnotation );
                 if ( VERBOSE )
-                    System.out.println( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() );
+                    System.out.println( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() + " in " + time + " sec" );
 
             } catch (Exception e) {
 
@@ -305,15 +306,18 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 
             AnnotationData<?> clone = annotation.clone();
             try {
+                long start = System.currentTimeMillis();
                 _service.remove( TEST_LAYER_NAME, clone.getCertificate() );
+                long end = System.currentTimeMillis();
+                double time = ((end-start)/1000.0);
                 removeAnnotationFromPublic(annotation);
                 if (VERBOSE)
-                    System.out.println("Thread " + _name + " successfully removed " + clone.getUUID());
+                    System.out.println("Thread " + _name + " successfully removed " + clone.getUUID() + " in " + time + " sec");
 
             } catch (Exception e) {
 
                 if (VERBOSE)
-                    System.out.println("Thread " + _name + " unsuccessfully removed " + clone.getUUID());
+                    System.out.println("Thread " + _name + " unsuccessfully removed " + clone.getUUID() );
             }
         }
 
@@ -351,12 +355,11 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
 	public void concurrentTest() {
 
         try {
-        /*
-            This text is designed to mimic a high user write / modify / read / remove traffic.
-            All test threads begin with a list of annotations that will be written. Once an annotation
-            is written, its existence becomes public and any other thread may read / modify / remove it.
-
-         */
+            /*
+                This test is designed to mimic a high user write / modify / read / remove traffic.
+                All test threads begin with a list of annotations that will be written. Once an annotation
+                is written, its existence becomes public and any other thread may read / modify / remove it.
+            */
             long start = System.currentTimeMillis();
 
             List<Thread> threads = new LinkedList<>();
@@ -386,17 +389,7 @@ public class ConcurrentServiceTests extends AnnotationTestsBase {
             double time = ((end - start) / 1000.0);
             System.out.println("Completed in " + time + " seconds");
 
-            double sum = 0;
-            int count = 0;
-            for (List<Double> t : _readTimesPerEntry.values()) {
-                for (Double d : t) {
-                    sum += d;
-                    count++;
-                }
-            }
-            System.out.println("Average read times of " + (sum / count) + " seconds per scan");
         } finally {
-
 
             try {
 
