@@ -522,8 +522,6 @@ public class PyramidMetaData {
 	}
 */
 
-		newBase.put("minzoom", (int) Math.min(level, getMinZoom()));
-		newBase.put("maxzoom", (int) Math.max(level, getMaxZoom()));
 	@Override
 	public String toString () {
 		return _metaData.toString();
