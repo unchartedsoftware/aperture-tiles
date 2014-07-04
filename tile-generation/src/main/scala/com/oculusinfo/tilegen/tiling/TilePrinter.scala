@@ -31,9 +31,12 @@ import java.lang.{Double => JavaDouble}
 
 import scala.collection.mutable.MutableList
 
-import com.oculusinfo.binning.TileData
+import org.apache.avro.file.CodecFactory
 
+import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.tilegen.util.ArgumentParser
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 
 
 
@@ -54,8 +57,7 @@ object TilePrinter {
 		                             "The level of data to print")
 		val tileIO = TileIO.fromArguments(argParser)
 
-		val binDesc = new StandardDoubleBinDescriptor
-		val tiles = tileIO.readTileSet(sc, binDesc.getSerializer, baseLocation,
+		val tiles = tileIO.readTileSet(sc, new DoubleAvroSerializer(CodecFactory.bzip2Codec()), baseLocation,
 		                               List(level)).collect()
 
 		val printer = new TilePrinter()

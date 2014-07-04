@@ -42,8 +42,6 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
-
 
 
 class LiveTileTestSuite extends FunSuite with SharedSparkContext {

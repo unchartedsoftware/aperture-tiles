@@ -110,12 +110,12 @@ trait TileAnalytic[T] extends Analytic[T] {
 	 * Convert an analytic value to a string representation thereof.
 	 * This is a one-way conversion, and is used to store values in
 	 * tile metadata.
-     */
+	 */
 	def valueToString (value: T): String = value.toString
 
 	/**
-     * Convert a value to a property map, indexed by our name
-     */
+	 * Convert a value to a property map, indexed by our name
+	 */
 	def toMap (value: T): Map[String, String] =
 		Map(name -> valueToString(value))
 
@@ -161,8 +161,8 @@ object AnalysisDescription {
 	{
 		getGlobalOnlyMetadataMap(name) ++
 		(for (level <- min to max) yield
-			             (level+"."+name -> ((t: TileIndex) => level == t.getLevel)))
-    }
+			 (level+"."+name -> ((t: TileIndex) => level == t.getLevel)))
+	}
 
 	def getGlobalOnlyMetadataMap (name: String) :
 			Map[String, TileIndex => Boolean] =
@@ -177,7 +177,7 @@ trait AnalysisDescription[RT, AT] {
 	def analytic: TileAnalytic[AT]
 	// Add a data point to appropriate accumulators
 	def accumulate (tile: TileIndex, data: AT): Unit
-	// Get accumulatoed metadata info in a form that can be applied 
+	// Get accumulatoed metadata info in a form that can be applied
 	// directly to metadata.
 	def toMap: Map[String, String]
 	// Apply accumulated metadata info to actual metadata
@@ -232,7 +232,7 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 	).reduceOption(_ ++ _).getOrElse(Map[String, String]())
 
 	def applyTo (metaData: PyramidMetaData): Unit = {
-		toMap.foreach{case (key, value) => 
+		toMap.foreach{case (key, value) =>
 			{
 				metaData.setCustomMetaData(value, key.split("\\.") :_*)
 			}
@@ -281,12 +281,12 @@ object AnalysisDescriptionTileWrapper {
 	                        analytic: TileAnalytic[AT]): TileData[BT] => AT =
 	{
 		tile: TileData[BT] => {
-			 val index = tile.getDefinition
-			 (for (x <- 0 until index.getXBins;
-			       y <- 0 until index.getYBins)
-			  yield convertFcn(tile.getBin(x, y))
-			 ).reduce((a, b) => analytic.aggregate(a, b))
-		 }
+			val index = tile.getDefinition
+				(for (x <- 0 until index.getXBins;
+				      y <- 0 until index.getYBins)
+				 yield convertFcn(tile.getBin(x, y))
+				).reduce((a, b) => analytic.aggregate(a, b))
+		}
 	}
 }
 class AnalysisDescriptionTileWrapper[RT, AT: ClassTag]
@@ -342,14 +342,16 @@ trait StandardDoubleBinningAnalytic extends BinningAnalytic[Double, JavaDouble] 
 	def finish (value: Double): JavaDouble = new JavaDouble(value)
 }
 
-class SumDoubleArrayAnalytic extends Analytic[Seq[Double]] {
+abstract class StandardDoubleArrayAnalytic extends Analytic[Seq[Double]] {
+	def aggregateElements (a: Double, b: Double): Double
+
 	def aggregate (a: Seq[Double], b: Seq[Double]): Seq[Double] = {
 		val alen = a.length
 		val blen = b.length
 		val len = alen max blen
 		Range(0, len).map(n =>
 			{
-				if (n < alen && n < blen) a(n) + b(n)
+				if (n < alen && n < blen) aggregateElements(a(n), b(n))
 				else if (n < alen) a(n)
 				else b(n)
 			}
@@ -357,6 +359,19 @@ class SumDoubleArrayAnalytic extends Analytic[Seq[Double]] {
 	}
 	def defaultProcessedValue: Seq[Double] = Seq[Double]()
 	def defaultUnprocessedValue: Seq[Double] = Seq[Double]()
+}
+trait StandardDoubleArrayTileAnalytic extends TileAnalytic[Seq[Double]] {
+	override def valueToString (value: Seq[Double]): String = value.mkString("[", ",", "]")
+}
+
+class SumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
+	def aggregateElements (a: Double, b: Double): Double = a + b
+}
+class MinimumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
+	def aggregateElements (a: Double, b: Double): Double = a min b
+}
+class MaximumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
+	def aggregateElements (a: Double, b: Double): Double = a max b
 }
 
 trait StandardDoubleArrayBinningAnalytic extends BinningAnalytic[Seq[Double],
@@ -372,6 +387,17 @@ class StringScoreAnalytic extends Analytic[Map[String, Double]] {
 		).toMap
 	def defaultProcessedValue: Map[String, Double] = Map[String, Double]()
 	def defaultUnprocessedValue: Map[String, Double] = Map[String, Double]()
+}
+
+trait StandardStringScoreBinningAnalytic extends BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]]
+{
+	def finish (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] = {
+		value.toSeq.map(p => new Pair(p._1, new JavaDouble(p._2))).asJava
+	}
+}
+
+trait StandardStringScoreTileAnalytic extends TileAnalytic[Map[String, Double]] {
+	override def valueToString (value: Map[String, Double]): String = value.map(p => "\""+p._1+"\":"+p._2).mkString("[", ",", "]")
 }
 
 class CategoryValueAnalytic(categoryNames: Seq[String])
@@ -424,16 +450,16 @@ object IPv4CIDRBlockAnalysis extends Serializable {
 	}
 
 	/**
-     * Get an analysis description for an analysis that stores the CIDR block 
-     * of an IPv4-indexed tile, using the standard IPv4 tile pyramid.
-     */
+	 * Get an analysis description for an analysis that stores the CIDR block 
+	 * of an IPv4-indexed tile, using the standard IPv4 tile pyramid.
+	 */
 	def getDescription[BT] (sc: SparkContext): AnalysisDescription[TileData[BT], String] =
 		getDescription(sc, new AOITilePyramid(0, 0, 0xffffL.toDouble, 0xffffL.toDouble))
 
 	/**
-     * Get an analysis description for an analysis that stores the CIDR block 
-     * of an IPv4-indexed tile, with an arbitrary tile pyramid.
-     */
+	 * Get an analysis description for an analysis that stores the CIDR block 
+	 * of an IPv4-indexed tile, with an arbitrary tile pyramid.
+	 */
 	def getDescription[BT] (sc: SparkContext, pyramid: TilePyramid): AnalysisDescription[TileData[BT], String] =
 		new MonolithicAnalysisDescription[TileData[BT], String](
 			sc,
