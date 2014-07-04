@@ -23,7 +23,9 @@
  */
 package com.oculusinfo.binning.metadata;
 
+import com.oculusinfo.binning.metadata.updaters.MetaDataF0p0T1p0;
 import com.oculusinfo.binning.util.Pair;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,10 +42,41 @@ import java.util.List;
  * @author nkronenfeld
  */
 public class PyramidMetaDataVersionMutator {
-	static Collection<PyramidMetaDataVersionMutator> ALL_MUTATORS = new ArrayList<>();
+	public static final String CURRENT_VERSION = "1.0";
+    protected static Collection<PyramidMetaDataVersionMutator> ALL_MUTATORS = new ArrayList<>();
+	static {
+	    MetaDataF0p0T1p0.register();
+	}
 
 	public static List<PyramidMetaDataVersionMutator> getMutators (String startVersion, String endVersion) {
 		return getMutators(startVersion, endVersion, new ArrayList<>(ALL_MUTATORS));
+	}
+
+	public static void updateMetaData (JSONObject rawMetaData, String targetVersion) throws JSONException {
+	    String sourceVersion = getMetaDataVersion(rawMetaData);
+        List<PyramidMetaDataVersionMutator> mutators = getMutators(sourceVersion, targetVersion);
+        if (null != mutators) {
+            for (PyramidMetaDataVersionMutator mutator: mutators) {
+                mutator.apply(rawMetaData);
+            }
+        }
+	}
+
+	private static String getMetaDataVersion (JSONObject rawMetaData) {
+	    // Real version
+	    // return rawMetaData.optString("version", "0.0");
+	    // Temporary version until we regenerate data with real version number
+
+	    try {
+	        JSONObject metaMeta = rawMetaData.getJSONObject("meta");
+    	    if (metaMeta.has("levelMaximums")) {
+    	        return "0.0";
+    	    } else if (metaMeta.has("global")) {
+    	        return "1.0";
+    	    }
+	    } catch (Exception e) {
+	    }
+	    return "0.0";
 	}
 
 	private static List<PyramidMetaDataVersionMutator> getMutators (String startVersion, String endVersion,

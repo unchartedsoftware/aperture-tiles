@@ -36,6 +36,7 @@ import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
+import org.apache.avro.file.CodecFactory
 
 import org.apache.spark._
 import org.apache.spark.SparkContext._
@@ -45,11 +46,14 @@ import org.apache.spark.rdd.RDD
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
+
+import com.oculusinfo.tilegen.datasets.SeriesValueExtractor
 
 
 
@@ -191,8 +195,8 @@ class GenericSeriesBinner[T: ClassTag] (source: DataSource,
 
 				// Consolidate bins
 				// This is all copied from GeneralBinner, and should be consolidated into that class
-				val binDesc = new StandardDoubleArrayBinDescriptor
-				val reduced = bins.reduceByKey(binDesc.aggregateBins(_, _),
+				val binAnalytic = new SumDoubleArrayAnalytic with StandardDoubleArrayBinningAnalytic
+				val reduced = bins.reduceByKey(binAnalytic.aggregate(_, _),
 				                               getNumSplits(consolidationPartitions, bins)).map(record =>
 					(record._1._1, (record._1._2, record._2))
 				)
@@ -208,7 +212,7 @@ class GenericSeriesBinner[T: ClassTag] (source: DataSource,
 						val xLimit = index.getXBins()
 						val yLimit = index.getYBins()
 						val tile = new TileData[JavaList[JavaDouble]](index)
-						val defaultBinValue = binDesc.convert(binDesc.defaultProcessedBinValue)
+						val defaultBinValue = binAnalytic.finish(binAnalytic.defaultProcessedValue)
 
 						for (x <- 0 until xLimit) {
 							for (y <- 0 until yLimit) {
@@ -220,7 +224,7 @@ class GenericSeriesBinner[T: ClassTag] (source: DataSource,
 							{
 								val bin = p._1
 								val value = p._2
-								tile.setBin(bin.getX(), bin.getY(), binDesc.convert(value))
+								tile.setBin(bin.getX(), bin.getY(), binAnalytic.finish(value))
 							}
 						)
 
@@ -229,7 +233,9 @@ class GenericSeriesBinner[T: ClassTag] (source: DataSource,
 				)
 
 				// write tiles
-				tileIO.writeTileSet(pyramider, pyramidName, tiles, binDesc, name, description)
+				tileIO.writeTileSet(pyramider, pyramidName, tiles,
+				                    new SeriesValueExtractor(Array[String]()),
+				                    None, None, name, description)
 			}
 		)
 	}

@@ -68,3 +68,11 @@ class DoubleMaxAccumulatorParam extends AccumulatorParam[Double] {
 	def addInPlace(t1: Double, t2: Double): Double = t1 max t2
 	def zero(initialValue: Double) = Double.MinValue
 }
+class IntMinAccumulatorParam extends AccumulatorParam[Int] {
+	def addInPlace(t1: Int, t2: Int): Int = t1 min t2
+	def zero(initialValue: Int) = Int.MaxValue
+}
+class IntMaxAccumulatorParam extends AccumulatorParam[Int] {
+	def addInPlace(t1: Int, t2: Int): Int = t1 max t2
+	def zero(initialValue: Int) = Int.MinValue
+}

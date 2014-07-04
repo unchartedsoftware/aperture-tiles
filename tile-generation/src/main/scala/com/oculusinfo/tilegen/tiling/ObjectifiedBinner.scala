@@ -28,13 +28,20 @@ package com.oculusinfo.tilegen.tiling
 
 
 import java.lang.{Double => JavaDouble}
+import java.util.{List => JavaList}
 
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
+import org.apache.avro.file.CodecFactory
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.AOITilePyramid
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
@@ -42,9 +49,7 @@ import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.spark.SparkConnector
 
-import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.impl.AOITilePyramid
-
+import com.oculusinfo.tilegen.datasets.CountValueExtractor
 
 
 
@@ -202,13 +207,7 @@ class ObjectifiedBinnerBase[T: ClassTag] (source: DataSource,
 	 * partitions.
 	 */
 	def getMaxLevel (args: Array[String]): Int =
-		args.map(arg => {
-			         try {
-				         Some(arg.toInt)
-			         } catch {
-				         case e: Exception => None
-			         }
-		         }).filter(_.isDefined).map(_.get).reduce(_ max _)
+		args.map(arg =>	Try(arg.toInt)).filter(_.isSuccess).map(_.get).reduce(_ max _)
 
 
 	/**
@@ -272,7 +271,27 @@ class ObjectifiedBinnerBase[T: ClassTag] (source: DataSource,
 		val table = pyramidName+"."+xVar+"."+yVar+(if ("count".equals(resultField)) "" else "."+resultField)
 
 		binner.debug = debug
-		
+
+		val levelRange = Try(
+			levelSets.map(_.map(level => (level, level))
+				              .reduce((a, b) => (a._1 min b._1, a._2 max b._2))
+			).reduce((a, b) => (a._1 min b._1, a._2 max b._2))
+		)
+		val metaDataLevels = levelRange.map(range =>
+			AnalysisDescription.getStandardLevelMetadataMap("maximum", range._1, range._2)
+		).getOrElse(
+			AnalysisDescription.getGlobalOnlyMetadataMap("maximum")
+		)
+
+		val tileAnalytics =
+			new AnalysisDescriptionTileWrapper(
+				sc,
+				((v: JavaDouble) => v.doubleValue),
+				new MaximumDoubleAnalytic with TileAnalytic[Double] {
+					def name = "maximum"
+				},
+				metaDataLevels)
+
 		if (execute) {
 			println("Running binner")
 			val getCoordinates: T => Try[(Double, Double)] = t => Try(
@@ -283,10 +302,14 @@ class ObjectifiedBinnerBase[T: ClassTag] (source: DataSource,
 			                       getCoordinates,
 			                       resultFcn,
 			                       new CartesianIndexScheme,
-			                       new StandardDoubleBinDescriptor,
+			                       new SumDoubleAnalytic with StandardDoubleBinningAnalytic,
+			                       Some(tileAnalytics),
+			                       None,
+			                       new CountValueExtractor,
 			                       pyramider,
 			                       consolidationPartitions,
-			                       table, tileIO,
+			                       table,
+			                       tileIO,
 			                       levelSets,
 			                       name = table,
 			                       description = "Binned "+pyramidName+" data showing "+xVar+" vs. "+yVar)

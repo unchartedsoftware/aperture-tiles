@@ -114,7 +114,6 @@ public class CacheConfigModule extends ServletModule {
 			CacheManager.create(inp);
 
 			Closeables.close(inp, false);
-
 		} catch (IOException e) {
 			// Failed to load properties, error
 			addError(e);

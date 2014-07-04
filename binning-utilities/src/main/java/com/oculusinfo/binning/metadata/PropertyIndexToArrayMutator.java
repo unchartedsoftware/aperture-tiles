@@ -23,25 +23,43 @@
  */
 package com.oculusinfo.binning.metadata;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class RemovePropertyMutator extends JsonMutator {
-	private String[] _path;
-	public RemovePropertyMutator (String... path) {
-		_path = path;
-	}
+abstract public class PropertyIndexToArrayMutator<T> extends JsonMutator {
+    private String[] _fromPath;
+    private String[] _toPath;
+    private String _value;
+    public PropertyIndexToArrayMutator (String[] fromPath, String[] toPath, String value) {
+        _fromPath = fromPath;
+        _toPath = toPath;
+        _value = value;
+    }
 
-	@Override
-	public void mutateJson (JSONObject json) throws JSONException {
-	    for (LocationInformation tree: getTree(json, _path, null, 0, false)) {
-    		// Make sure the node to remove exists
-    		int size = tree.size();
-    		if (size == _path.length) {
-    			// It does; remove our target node
-    			tree.get(size-1).remove(_path[size-1]);
-    			cleanTree(tree, _path);
-    		}
-	    }
-	}
+    @Override
+    public void mutateJson (JSONObject json) throws JSONException {
+        JSONArray values = new JSONArray();
+
+        // get the values to put in the array
+        List<LocationInformation> sources = getTree(json, _fromPath, null, 0, false);
+        List<T> sortedValues = new ArrayList<>();
+        for (LocationInformation source: sources) {
+            String value = JsonMutator.substitute(_value, source._matches);
+            sortedValues.add(mutateValue(value));
+        }
+        sort(sortedValues);
+        for (T value: sortedValues)
+            values.put(value);
+
+        LocationInformation toTree = getTree(json, _toPath, null, 0, true).get(0);
+        toTree.get(toTree.size()-1).put(_toPath[_toPath.length-1], values);
+    }
+
+
+    abstract protected T mutateValue (String value);
+    abstract protected void sort (List<T> values);
 }
