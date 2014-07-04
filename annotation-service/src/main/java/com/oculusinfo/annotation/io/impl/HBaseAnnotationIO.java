@@ -71,17 +71,18 @@ public class HBaseAnnotationIO implements AnnotationIO {
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
     						  String hbaseMaster) throws IOException {
-    	
+
         Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
-        Logger.getLogger("org.apache.hadoop.hbase.zookeeper").setLevel(Level.WARN);
-        Logger.getLogger("org.apache.hadoop.hbase.client").setLevel(Level.WARN);
-    	
+        Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
+
         _config = HBaseConfiguration.create();
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);
         _connection = HConnectionManager.createConnection(_config);
+
+
     }
     
     /**
