@@ -301,6 +301,7 @@ require(['./ApertureConfig',
                             // create the carousel controls
                             new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
 
+                            aperture.capture.initialize();
                         });
 
 			        }

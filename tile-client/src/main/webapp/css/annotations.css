@@ -1,16 +1,21 @@
 @charset "UTF-8";
 
-
 .annotation-bin {
-    pointer-events:none;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-    border: 1px solid #FF0000;
+
+    position:absolute;
+    width: 0px;
+    height: 0px;
 }
 
 .point-annotation-aggregate {
     position:absolute;
+    width: 0px;
+    height: 0px;
+    z-index: 0;
+}
+
+.point-annotation-aggregate:hover {
+    z-index: 1;
 }
 
 .point-annotation {
@@ -30,7 +35,7 @@
 
     background-color: #09CFFF;
     margin: -2px 2px 2px -2px;
-    z-index: 1;
+    z-index: 2;
 }
 
 .point-annotation-back {
@@ -39,52 +44,55 @@
     background-color: #fff;
     border: 2px solid #000;
     margin: -4px 0 0 -4px;
-    z-index: 0;
+    z-index: 1;
 }
 
 .point-annotation-aggregate:hover .point-annotation {
 
     cursor: pointer;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
 }
 
 .point-annotation-aggregate:hover .point-annotation-front {
 
-    margin: -6px 2px 2px -6px;
+    margin: -4px 2px 2px -4px;
 }
 
 .point-annotation-aggregate:hover .point-annotation-back {
 
-    margin: -8px 0 0 -8px;
+    margin: -6px 0 0 -6px;
 }
+
+/********************************************/
+/*            Annotaition Details           */
+/********************************************/
 
 .annotation-details {
 
     position:absolute;
     background-color:#111111;
-    width: 384px;
     z-index: 2001;
     border: 1px solid #333333;
     box-shadow: 0px 5px 15px #000;
+    height: 196px; 
 }
 
 
 .annotation-details-content {
 
-    position:relative;
-    height:100%;
+    position:relative; 
+    height: 100%;
 }
 
 
 .annotation-details-head {
 
     position:relative;
-    padding: 0 10px 0 10px;
+    padding-left: 10px;
     background-color: #222222;
     font-size: 18px;
     color: #D3D3D3;
-    width:100%;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -93,18 +101,75 @@
 
 .annotation-details-body {
 
-    position:relative;   
-    font-size: 14px;
-    background-color:#111111;
-    padding: 5px 15px 5px 15px;
-    overflow: auto;
-    height: calc(100% - 32px);
+    position:relative;
+    background-color: #111111;
+    margin: 5px 0 0 0;
+    padding: 0 15px 0 15px;
+    height: calc(100% - 37px);
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+}
+
+
+.annotation-details-loader {
+
+    position:relative;
+    overflow: hidden;
+    height: 100%; 
+    width: 384px;
+    margin: 0 auto;
+}
+
+.annotation-loader-gif {
+
+    height: 100%;   
+    width: 384px;
+    background-image: url(../images/ajax_loader.gif);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.annotation-details-img {
+
+    position:relative;
+    overflow: hidden;
+    width: 384px;
+    margin: 0 auto;
+}
+
+.twitter-capture {
+
+    margin-top: -28px;
+    margin-bottom: -180px;
+}
+
+.twitter-external-link {
+
+    position:absolute;
+    top: 0px;
+    right: 0px;
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    background-size: 32px 32px;
+    background-image: url(../images/external_link.png);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #4099FF;  
+    box-shadow: 0px 2px 5px #000;
 
 }
 
+.twitter-external-link:hover {
+
+    cursor:pointer;
+    background-color: #62AAFF;
+
+}
 
 .annotation-details-aggregate {
 
@@ -123,6 +188,7 @@
         -1px  1px 1px #000,
          1px  1px 1px #000; 
 }
+
 
 
 .annotation-details-close-button {
@@ -161,7 +227,9 @@
     width:100%;
     height:100%;
     top:0px;
-    left:0px;
+    left:0px;   
+    -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -170,9 +238,9 @@
 .annotation-carousel-ui-chevron {
     position: absolute;
     pointer-events: all;
-    bottom: -10px;
-    height:50px;
-    width:20px;
+    bottom: -11px;
+    height: 50px;
+    width: 20px;
     -webkit-transform: scale(0.5); 
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;
@@ -207,4 +275,14 @@
          1px -1px 2px #000,
         -1px  1px 2px #000,
          1px  1px 2px #000; 
+}
+
+.clicked-aggregate {
+
+    z-index: 1;
+}
+
+.clicked-annotation {
+
+    background-color: #D33CFF;
 }
