@@ -139,21 +139,17 @@ define(function (require) {
 
         function generateCallbacks( chevron, inc ) {
 
-            chevron.mouseout( function() { chevron.off('click'); });
-            chevron.mousemove( function() { chevron.off('click'); });
-            chevron.mousedown( function() {
-                chevron.click( function() {
+            chevron.click( function() {
 
-                    var tilekey = layerState.get('tileFocus'),
-                        prevIndex = layerState.get( 'rendererByTile', tilekey ) || 0,
-                        mod = function (m, n) {
-                            return ((m % n) + n) % n;
-                        },
-                        newIndex = mod( prevIndex + inc, layerState.get('rendererCount') );
+                var tilekey = layerState.get('tileFocus'),
+                    prevIndex = layerState.get( 'rendererByTile', tilekey ) || 0,
+                    mod = function (m, n) {
+                        return ((m % n) + n) % n;
+                    },
+                    newIndex = mod( prevIndex + inc, layerState.get('rendererCount') );
 
-                    layerState.set( 'rendererByTile', tilekey, newIndex );
-                    updateDotIndices( controlMap, layerState );
-                });
+                layerState.set( 'rendererByTile', tilekey, newIndex );
+                updateDotIndices( controlMap, layerState );
             });
         }
 
@@ -198,15 +194,9 @@ define(function (require) {
             i;
 
         function generateCallbacks( dot, index ) {
-
-            dot.mouseout( function() { dot.off('click'); });
-            dot.mousemove( function() { dot.off('click'); });
-            dot.mousedown( function() {
-                dot.click( function() {
-
-                    layerState.set( 'rendererByTile', layerState.get('tileFocus'), index );
-                    updateDotIndices( controlMap, layerState );
-                });
+            dot.click( function() {
+                layerState.set( 'rendererByTile', layerState.get('tileFocus'), index );
+                updateDotIndices( controlMap, layerState );
             });
         }
 
