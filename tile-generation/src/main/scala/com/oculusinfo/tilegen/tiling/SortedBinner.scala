@@ -65,17 +65,18 @@ class SortedBinner {
 	 * but minimal, data into an RDD of tiles on the given levels.
 	 *
 	 * @param data The data to be processed
-     * @param binAnalytic A description of how raw values are aggregated into 
-     *                    bin values
-     * @param tileAnalytics A description of analytics that can be run on each
-     *                      tile, and how to aggregate them
-     * @param dataAnalytics A description of analytics that can be run on the
-     *                      raw data, and recorded (in the aggregate) on each
-     *                      tile.
+	 * @param binAnalytic A description of how raw values are aggregated into 
+	 *                    bin values
+	 * @param tileAnalytics A description of analytics that can be run on each
+	 *                      tile, and how to aggregate them
+	 * @param dataAnalytics A description of analytics that can be run on the
+	 *                      raw data, and recorded (in the aggregate) on each
+	 *                      tile.
 	 * @param tileScheme A description of how raw values are transformed to bin
 	 *                   coordinates
 	 * @param levels A list of levels on which to create tiles
-	 * @param bins The number of bins per coordinate on each tile
+	 * @param xBins The number of bins along the horizontal axis of each tile
+	 * @param yBins The number of bins along the vertical axis of each tile
 	 * @param consolidationPartitions The number of partitions to use when
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
@@ -89,7 +90,8 @@ class SortedBinner {
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 tileScheme: TilePyramid,
 		 levels: Seq[Int],
-		 bins: Int = 256,
+		 xBins: Int = 256,
+		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
 		 isDensityStrip: Boolean = false):
 			RDD[TileData[BT]] =
@@ -99,14 +101,14 @@ class SortedBinner {
 				val (x, y) = indexScheme.toCartesian(index)
 				levels.map(level =>
 					{
-						val tile = tileScheme.rootToTile(x, y, level, bins)
+						val tile = tileScheme.rootToTile(x, y, level, xBins, yBins)
 						val bin = tileScheme.rootToBin(x, y, tile)
 						(tile, bin)
 					}
 				)
 			}
 		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
-		            mapOverLevels, bins, consolidationPartitions, isDensityStrip)
+		            mapOverLevels, xBins, yBins, consolidationPartitions, isDensityStrip)
 	}
 
 
@@ -121,7 +123,8 @@ class SortedBinner {
 	 * @param indexToTiles A function that spreads a data point out over the
 	 *                     tiles and bins of interest
 	 * @param levels A list of levels on which to create tiles
-	 * @param bins The number of bins per coordinate on each tile
+	 * @param xBins The number of bins along the horizontal axis of each tile
+	 * @param yBins The number of bins along the vertical axis of each tile
 	 * @param consolidationPartitions The number of partitions to use when
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
@@ -133,7 +136,8 @@ class SortedBinner {
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
-		 bins: Int = 256,
+		 xBins: Int = 256,
+		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
 		 isDensityStrip: Boolean = false):
 			RDD[TileData[BT]] =
@@ -157,7 +161,7 @@ class SortedBinner {
 
 		// Go through each partition, transforming it directly to tiles of the
 		// processing type
- 		val tiledByPartition = data.mapPartitions(iter =>
+		val tiledByPartition = data.mapPartitions(iter =>
 			{
 				val partitionResults = MutableMap[TileIndex, TileData[PT]]()
 
@@ -201,16 +205,16 @@ class SortedBinner {
 		val partitions = consolidationPartitions.getOrElse(tiledByPartition.partitions.size)
 		val processTypeTiles = tiledByPartition.reduceByKey(combineTiles(_, _))
 
-		// In our last step, we need to do several things simultaneously, so that the 
+		// In our last step, we need to do several things simultaneously, so that the
 		// TileData object is treated as immutable.
 		//   (1) We need to combine metadata with the proper tile
 		//   (2) We need to transform to our proper bin type
 		//   (3) We need to add in any tile analytics
 		//
-		// The first, because it requires a join with another RDD, must come first - we 
-		// need to transform each RDD into a common form, and then essentially joni the 
-		// two.  It's not precisely a join, because a join only joins keys which have 
-		// values in each input set, whereas we want every value in the tile set, 
+		// The first, because it requires a join with another RDD, must come first - we
+		// need to transform each RDD into a common form, and then essentially joni the
+		// two.  It's not precisely a join, because a join only joins keys which have
+		// values in each input set, whereas we want every value in the tile set,
 		// associated with values (if they exist) in the metadata set.
 		//
 		// cf stands for 'common form'
@@ -267,12 +271,12 @@ class SortedBinner {
 					{
 						val metaData = p._2.get
 						metaData.map{
-						  case (key, value) => output.setMetaData(key, value)
+							case (key, value) => output.setMetaData(key, value)
 						}
 					}
 				)
 
-				// Calculate and add in any tile-level metadata we've been told to 
+				// Calculate and add in any tile-level metadata we've been told to
 				// calculate
 				tileAnalytics.map(ta =>
 					{
@@ -371,7 +375,6 @@ object SortedBinnerTest {
 			{
 				val procFcn: RDD[(IT, PT, Option[DT])] => Unit = rdd =>
 				{
-					val bins = (dataset.getNumXBins max dataset.getNumYBins)
 					val tiles = binner.processDataByLevel(
 						rdd,
 						dataset.getIndexScheme,
@@ -380,7 +383,8 @@ object SortedBinnerTest {
 						dataset.getDataAnalytics,
 						dataset.getTilePyramid,
 						levels,
-						bins,
+						dataset.getNumXBins,
+						dataset.getNumYBins,
 						dataset.getConsolidationPartitions)
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,

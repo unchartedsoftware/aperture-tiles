@@ -74,29 +74,29 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 
 	@Override
 	public TileIndex rootToTile (Point2D point, int level) {
-		return rootToTile(point.getX(), point.getY(), level, 256);
+		return rootToTile(point.getX(), point.getY(), level, 256, 256);
 	}
 
 	@Override
-	public TileIndex rootToTile (Point2D point, int level, int bins) {
-		return rootToTile(point.getX(), point.getY(), level, bins);
+	public TileIndex rootToTile (Point2D point, int level, int xBins, int yBins) {
+		return rootToTile(point.getX(), point.getY(), level, xBins, yBins);
 	}
 
 	@Override
 	public TileIndex rootToTile (double x, double y, int level) {
-		return rootToTile(x, y, level, 256);
+		return rootToTile(x, y, level, 256, 256);
 	}
 
 	@Override
-	public TileIndex rootToTile (double x, double y, int level, int bins) {
+	public TileIndex rootToTile (double x, double y, int level, int xBins, int yBins) {
 		int numDivs = 1 << level;
 
 		int tileX = (int) Math.floor(numDivs*(x-_minX)*_recipDiffX);
 		int tileY = (int) Math.floor(numDivs*(y-_minY)*_recipDiffY);		
-//		int tileX = (int) Math.floor(numDivs*(x-_minX)/(_maxX - _minX));
-//		int tileY = (int) Math.floor(numDivs*(y-_minY)/(_maxY - _minY));
+		//		int tileX = (int) Math.floor(numDivs*(x-_minX)/(_maxX - _minX));
+		//		int tileY = (int) Math.floor(numDivs*(y-_minY)/(_maxY - _minY));
 
-		return new TileIndex(level, tileX, tileY, bins, bins);
+		return new TileIndex(level, tileX, tileY, xBins, yBins);
 	}
 
 	@Override
@@ -112,15 +112,15 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 		int binX = (int) Math.floor((numDivs*(x-_minX)*_recipDiffX - tile.getX())*tile.getXBins());
 		int binY = (int) Math.floor((numDivs*(y-_minY)*_recipDiffY - tile.getY())*tile.getYBins());		
 		
-//		int pow2 = 1 << tile.getLevel();
-//		double tileXSize = (_maxX-_minX)/pow2;
-//		double tileYSize = (_maxY-_minY)/pow2;
-//
-//		double xInTile = x-_minX - tile.getX()*tileXSize;
-//		double yInTile = y-_minY - tile.getY()*tileYSize;
-//
-//		int binX = (int) Math.floor(xInTile*tile.getXBins()/tileXSize);
-//		int binY = (int) Math.floor(yInTile*tile.getYBins()/tileYSize);
+		//		int pow2 = 1 << tile.getLevel();
+		//		double tileXSize = (_maxX-_minX)/pow2;
+		//		double tileYSize = (_maxY-_minY)/pow2;
+		//
+		//		double xInTile = x-_minX - tile.getX()*tileXSize;
+		//		double yInTile = y-_minY - tile.getY()*tileYSize;
+		//
+		//		int binX = (int) Math.floor(xInTile*tile.getXBins()/tileXSize);
+		//		int binY = (int) Math.floor(yInTile*tile.getYBins()/tileYSize);
 
 		return new BinIndex(binX, tile.getYBins()-1-binY);
 	}

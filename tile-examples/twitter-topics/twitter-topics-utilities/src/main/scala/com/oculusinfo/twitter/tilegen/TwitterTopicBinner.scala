@@ -138,7 +138,7 @@ object TwitterTopicBinner {
 		val tileAnalyticsTag: ClassTag[AT] = tileAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
 		val dataAnalyticsTag: ClassTag[DT] = dataAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
 
-		processData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, 
+		processData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics,
 		            endTime, pyramidId, pyramidName, pyramidDescription, topicList)(tileAnalyticsTag, dataAnalyticsTag)
 	}
 
@@ -197,7 +197,8 @@ object TwitterTopicBinner {
 				                                      dataAnalytics,
 				                                      tilePyramid,
 				                                      levelSet,
-				                                      bins=1)
+				                                      xBins=1,
+				                                      yBins=1)
 				tileIO.writeTileSet(tilePyramid,
 				                    pyramidId,
 				                    tiles,

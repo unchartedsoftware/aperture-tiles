@@ -100,7 +100,7 @@ import com.oculusinfo.tilegen.tiling.SqliteTileIO
 object CSVBinner {
 
 	def processDataset[IT: ClassTag,
-	                   PT: ClassTag, 
+	                   PT: ClassTag,
 	                   DT: ClassTag,
 	                   AT: ClassTag,
 	                   BT] (dataset: Dataset[IT, PT, DT, AT, BT],
@@ -128,7 +128,8 @@ object CSVBinner {
 					                                      dataAnalytics,
 					                                      dataset.getTilePyramid,
 					                                      levels,
-					                                      (dataset.getNumXBins max dataset.getNumYBins),
+					                                      dataset.getNumXBins,
+					                                      dataset.getNumYBins,
 					                                      dataset.getConsolidationPartitions,
 					                                      dataset.isDensityStrip)
 

@@ -35,10 +35,7 @@ import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper;
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam;
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam;
 import com.oculusinfo.tilegen.spark.MinMaxAccumulableParam;
-import com.oculusinfo.tilegen.tiling.FieldExtractor;
-import com.oculusinfo.tilegen.tiling.GenericSeriesBinner;
 import com.oculusinfo.tilegen.tiling.HBaseTileIO;
-import com.oculusinfo.tilegen.tiling.RecordParser;
 import com.oculusinfo.tilegen.tiling.SingleTileToImageConverter;
 import com.oculusinfo.tilegen.tiling.TileIO;
 import com.oculusinfo.tilegen.tiling.TileSeriesToImagesConverter;
@@ -67,11 +64,8 @@ public class TileRegistrator implements KryoRegistrator {
 		kryo.register(DoubleMaxAccumulatorParam.class);
 
 		// com.oculusinfo.tilegen.tiling
-		kryo.register(RecordParser.class);
-		kryo.register(FieldExtractor.class);
 		kryo.register(TileIO.class);
 		kryo.register(HBaseTileIO.class);
-		kryo.register(GenericSeriesBinner.class);
 		kryo.register(TileToImageConverter.class);
 		kryo.register(SingleTileToImageConverter.class);
 		kryo.register(TileSeriesToImagesConverter.class);

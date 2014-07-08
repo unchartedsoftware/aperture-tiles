@@ -187,7 +187,7 @@ object CSVTimeRangeBinner {
 		binner.debug = true
 		dataset.getLevels.map(levels =>
 			{
-				val localIndexer: TimeRangeCSVIndexExtractor[IT] = 
+				val localIndexer: TimeRangeCSVIndexExtractor[IT] =
 					dataset
 						.asInstanceOf[CSVDataset[IT, PT, DT, AT, BT]]
 						.getIndexer
@@ -231,7 +231,8 @@ object CSVTimeRangeBinner {
 							                                      dataset.getDataAnalytics,
 							                                      dataset.getTilePyramid,
 							                                      levels,
-							                                      (dataset.getNumXBins max dataset.getNumYBins),
+							                                      dataset.getNumXBins,
+							                                      dataset.getNumYBins,
 							                                      dataset.getConsolidationPartitions,
 							                                      dataset.isDensityStrip)
 							// TODO: This doesn't actually write the tiles, does it?

@@ -97,7 +97,7 @@ object TileIO {
 				                    Some(""))
 			)
 			case _ => new LocalTileIO(
-				argParser.getString(Array("tileextension", "oculus.tileio.file.extension"), 
+				argParser.getString(Array("tileextension", "oculus.tileio.file.extension"),
 				                    "The extension used for each tile file.  Default is "+
 					                    "\"avro\"",
 				                    Some("avro"))
@@ -156,7 +156,7 @@ trait TileIO extends Serializable {
 		// Do any needed initialization
 		getPyramidIO.initializeForWrite(baseLocation)
 
-		// Record and report the total number of tiles we write, because it's 
+		// Record and report the total number of tiles we write, because it's
 		// basically free and easy
 		val tileCount = data.context.accumulator(0)
 		// Record all levels we write

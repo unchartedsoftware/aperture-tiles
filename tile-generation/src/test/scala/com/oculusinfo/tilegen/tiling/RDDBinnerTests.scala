@@ -76,7 +76,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		                       pyramidId,
 		                       tileIO,
 		                       List(List(1)),
-		                       bins=4)
+		                       xBins=4, yBins=4)
 
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 4))
 		assert(tile00.isEmpty)

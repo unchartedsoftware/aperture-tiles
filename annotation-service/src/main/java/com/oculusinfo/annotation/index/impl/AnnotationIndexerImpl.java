@@ -64,7 +64,7 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
     	double y = ( yExists ) ? data.getY() : 0;
     	
     	// map from raw x and y to tile and bin
-    	TileIndex tile = pyramid.rootToTile( x, y, level, NUM_BINS );
+    	TileIndex tile = pyramid.rootToTile( x, y, level, NUM_BINS, NUM_BINS );
 		BinIndex bin = pyramid.rootToBin( x, y, tile );
 
 		// insert -1's for uni-variate annotations

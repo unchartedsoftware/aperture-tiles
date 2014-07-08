@@ -147,12 +147,12 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 object CSVGraphBinner {
 	private var _graphDataType = "nodes"
-	private var _lineLevelThres = 4		// [level] threshold to determine whether to use 'point' vs 'tile' 
-										// based line segment binning.  Levels above this thres use tile-based binning.
+	private var _lineLevelThres = 4		// [level] threshold to determine whether to use 'point' vs 'tile'
+			// based line segment binning.  Levels above this thres use tile-based binning.
 	private var _lineMinBins = 2		// [bins] min line segment length for a given level.
 	private var _lineMaxBins = 1024		// [bins] max line segment length for a given level.
 	private var _bLinesAsArcs = false	// [Boolean] switch to draw line segments as straight lines (default) or as clock-wise arcs.
-	
+		
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
 		properties.getString("oculus.tileio.type",
 		                     "Where to put tiles",
@@ -186,19 +186,19 @@ object CSVGraphBinner {
 	}
 
 	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
-					
+		
 		_graphDataType = properties.getString("oculus.binning.graph.data",
-		                                     "The type of graph data to tile (nodes or edges). "+
-			                                     "Default is nodes.",
-		                                     Some("nodes"))
-		                                     
+		                                      "The type of graph data to tile (nodes or edges). "+
+			                                      "Default is nodes.",
+		                                      Some("nodes"))
+		
 		// NOTE!  currently, indexType is assumed to be cartesian for graph data
-//		val indexType = properties.getString("oculus.binning.index.type",
-//		                                     "The type of index to use in the data.  Currently "+
-//			                                     "suppoted options are cartesian (the default) "+
-//			                                     "and ipv4.",
-//		                                     Some("cartesian"))
-			
+		//		val indexType = properties.getString("oculus.binning.index.type",
+		//		                                     "The type of index to use in the data.  Currently "+
+		//			                                     "suppoted options are cartesian (the default) "+
+		//			                                     "and ipv4.",
+		//		                                     Some("cartesian"))
+		
 		_graphDataType match {
 			case "nodes" => {
 				val xVar = properties.getString("oculus.binning.xField",
@@ -210,23 +210,23 @@ object CSVGraphBinner {
 				new CartesianIndexExtractor(xVar, yVar)
 			}
 			case "edges" => {
-				// edges require two cartesian endpoints 
+				// edges require two cartesian endpoints
 				val xVar1 = properties.getString("oculus.binning.xField",
-				                                "The field to use for the X axis for edge start pt",
-				                                Some(CSVDatasetBase.ZERO_STR))
+				                                 "The field to use for the X axis for edge start pt",
+				                                 Some(CSVDatasetBase.ZERO_STR))
 				val yVar1 = properties.getString("oculus.binning.yField",
-				                                "The field to use for the Y axis for edge start pt",
-				                                Some(CSVDatasetBase.ZERO_STR))
+				                                 "The field to use for the Y axis for edge start pt",
+				                                 Some(CSVDatasetBase.ZERO_STR))
 				val xVar2 = properties.getString("oculus.binning.xField2",
-				                                "The field to use for the X axis for edge end pt",
-				                                Some(CSVDatasetBase.ZERO_STR))
+				                                 "The field to use for the X axis for edge end pt",
+				                                 Some(CSVDatasetBase.ZERO_STR))
 				val yVar2 = properties.getString("oculus.binning.yField2",
-				                                "The field to use for the Y axis for edge end pt",
-				                                Some(CSVDatasetBase.ZERO_STR))				                                
+				                                 "The field to use for the Y axis for edge end pt",
+				                                 Some(CSVDatasetBase.ZERO_STR))
 				new LineSegmentIndexExtractor(xVar1, yVar1, xVar2, yVar2)
-			}			
+			}
 		}
-	}	
+	}
 	
 	def processDataset[IT: ClassTag,
 	                   PT: ClassTag,
@@ -252,7 +252,8 @@ object CSVGraphBinner {
 						                                      dataset.getDataAnalytics,
 						                                      dataset.getTilePyramid,
 						                                      levels,
-						                                      (dataset.getNumXBins max dataset.getNumYBins),
+						                                      dataset.getNumXBins,
+						                                      dataset.getNumYBins,
 						                                      dataset.getConsolidationPartitions,
 						                                      dataset.isDensityStrip,
 						                                      bUsePointBinner,
@@ -285,7 +286,8 @@ object CSVGraphBinner {
 						                                      dataset.getDataAnalytics,
 						                                      dataset.getTilePyramid,
 						                                      levels,
-						                                      (dataset.getNumXBins max dataset.getNumYBins),
+						                                      dataset.getNumXBins,
+						                                      dataset.getNumYBins,
 						                                      dataset.getConsolidationPartitions,
 						                                      dataset.isDensityStrip)
 						tileIO.writeTileSet(dataset.getTilePyramid,
@@ -349,18 +351,18 @@ object CSVGraphBinner {
 			props.load(propStream)
 			propStream.close()
 
-			// init parameters for binning graph edges (note, not used for 
+			// init parameters for binning graph edges (note, not used for
 			// binning graph's nodes)
 			// Level threshold to determine whether to use 'point' vs 'tile'
-			// based line segment binning (levels above this thres use 
+			// based line segment binning (levels above this thres use
 			// tile-based binning
 			_lineLevelThres = Try(props.getProperty("oculus.binning.line.level.threshold").toInt).getOrElse(4)
 
-			// Min line segment length (in bins) for a given level.  Shorter 
+			// Min line segment length (in bins) for a given level.  Shorter
 			// line segments will be discarded
 			_lineMinBins = Try(props.getProperty("oculus.binning.line.min.bins").toInt).getOrElse(2)
 
-			// Max line segment length (in bins) for a given level.  Longer 
+			// Max line segment length (in bins) for a given level.  Longer
 			// line segments will be discarded
 			_lineMaxBins = Try(props.getProperty("oculus.binning.line.max.bins").toInt).getOrElse(1024)
 
@@ -383,16 +385,16 @@ object CSVGraphBinner {
 				var sourcesList:scala.collection.mutable.MutableList[String] =
 					scala.collection.mutable.MutableList()
 				do {
-					// Loop through all "sets" of tile generation levels.  
+					// Loop through all "sets" of tile generation levels.
 					// (For each set, we will generate tiles based on a
 					// given subset of hierarchically-clustered data)
 					valTemp = props.getProperty("oculus.binning.levels."+nn)
 					
 					if (valTemp != null) {
 						levelsList += valTemp	// save tile gen level set in a list
-						// ... and temporarily overwrite tiling levels as empty 
-						// in preparation for hierarchical tile gen
-						props.setProperty("oculus.binning.levels."+nn, "")	
+							// ... and temporarily overwrite tiling levels as empty
+							// in preparation for hierarchical tile gen
+						props.setProperty("oculus.binning.levels."+nn, "")
 						
 						// get clustered data for this hierarchical level and save to list
 						var sourceTemp = props.getProperty("oculus.binning.source.levels."+nn)
@@ -406,7 +408,7 @@ object CSVGraphBinner {
 					}
 					
 				} while (valTemp != null)
-				
+					
 				// Loop through all hierarchical levels, and perform tile generation
 				var m = 0
 				for (m <- 0 until nn) {
@@ -419,8 +421,8 @@ object CSVGraphBinner {
 					                      tileIO)
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")
-				}	
-								    				
+				}
+				
 			}
 
 			val fileEndTime = System.currentTimeMillis()

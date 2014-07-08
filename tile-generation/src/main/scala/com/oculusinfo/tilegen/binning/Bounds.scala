@@ -43,9 +43,9 @@ class Bounds (val level: Int,
               val indexBounds: Rectangle[Int],
               val next: Option[Bounds]) {
 
-	private def getLocalAreaBounds (pyramid: TilePyramid, bins: Int): Rectangle[Double] = {
+	private def getLocalAreaBounds (pyramid: TilePyramid, xBins: Int, yBins: Int): Rectangle[Double] = {
 		def rectFromIdx (level: Int, x: Int, y: Int): Rectangle[Double] = {
-			val idx = new TileIndex(level, x, y, bins, bins)
+			val idx = new TileIndex(level, x, y, xBins, yBins)
 			Rectangle.fromJava(pyramid.getTileBounds(idx))
 		}
 
@@ -63,10 +63,10 @@ class Bounds (val level: Int,
 	 * Get a test that can be serialized across the network, and used on each
 	 * node to test the relevancy of any given data point
 	 */
-	def getSerializableContainmentTest (pyramid: TilePyramid, bins: Int = 256):
+	def getSerializableContainmentTest (pyramid: TilePyramid, xBins: Int = 256, yBins: Int = 256):
 			(Double, Double) => Boolean = {
-		val ourAreaBounds = getLocalAreaBounds(pyramid, bins)
-		val continuedContainmentTest = next.map(_.getSerializableContainmentTest(pyramid, bins))
+		val ourAreaBounds = getLocalAreaBounds(pyramid, xBins, yBins)
+		val continuedContainmentTest = next.map(_.getSerializableContainmentTest(pyramid, xBins, yBins))
 
 		(x: Double, y: Double) =>
 		ourAreaBounds.contains(x, y) || continuedContainmentTest.map(_(x, y)).getOrElse(false)
@@ -78,23 +78,24 @@ class Bounds (val level: Int,
 	 * described bounds.  This function can be serialized across the network.
 	 * 
 	 * @param pyramid A tile pyramid describing the tile/bin structure of space
-	 * @param bins The number of bins per tile in each axis
+	 * @param xBins The number of bins per tile along the horizontal axis
+	 * @param yBins The number of bins per tile along the vertical axis
 	 */
-	def getSpreaderFunction[T] (pyramid: TilePyramid, bins: Int = 256) :
+	def getSpreaderFunction[T] (pyramid: TilePyramid, xBins: Int = 256, yBins: Int = 256) :
 			(Double, Double) => TraversableOnce[(TileIndex, BinIndex)] =
-		getSpreaderFunctionInternal[T](pyramid, bins)
+		getSpreaderFunctionInternal[T](pyramid, xBins, yBins)
 
-	private def getSpreaderFunctionInternal[T] (pyramid: TilePyramid, bins: Int = 256) :
+	private def getSpreaderFunctionInternal[T] (pyramid: TilePyramid, xBins: Int = 256, yBins: Int = 256) :
 			(Double, Double) => Seq[(TileIndex, BinIndex)] = {
-		val ourAreaBounds = getLocalAreaBounds(pyramid, bins)
-		val continuedSpreaderFcn = next.map(_.getSpreaderFunctionInternal[T](pyramid, bins))
+		val ourAreaBounds = getLocalAreaBounds(pyramid, xBins, yBins)
+		val continuedSpreaderFcn = next.map(_.getSpreaderFunctionInternal[T](pyramid, xBins, yBins))
 		val localLevel = level
 
 		(x, y) => {
 			val optionRest = continuedSpreaderFcn.map(_(x, y))
 			val rest = if (optionRest.isDefined) optionRest.get else Seq[(TileIndex, BinIndex)]()
 			if (ourAreaBounds.contains(x, y)) {
-				val tile = pyramid.rootToTile(x, y, localLevel, bins)
+				val tile = pyramid.rootToTile(x, y, localLevel, xBins, yBins)
 				val bin = pyramid.rootToBin(x, y, tile)
 				(tile, bin) +: rest
 			} else {

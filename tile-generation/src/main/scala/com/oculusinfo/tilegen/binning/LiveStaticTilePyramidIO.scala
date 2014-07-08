@@ -158,12 +158,12 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 				val binningAnalytic = dataset.getBinningAnalytic
 				val pyramid = dataset.getTilePyramid
 
-				val bins = tiles.head.getXBins()
+				val xBins = tiles.head.getXBins()
+				val yBins = tiles.head.getXBins()
 				val bounds = tilesToBounds(pyramid, tiles)
 
-				val boundsTest = bounds.getSerializableContainmentTest(pyramid,
-				                                                       bins)
-				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, bins)
+				val boundsTest = bounds.getSerializableContainmentTest(pyramid, xBins, yBins)
+				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, xBins, yBins)
 				val spreaderFcn: IT => TraversableOnce[(TileIndex, BinIndex)] =
 					index => {
 						val cartesianIndex = indexScheme.toCartesian(index)
@@ -181,8 +181,7 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 						                                       binningAnalytic,
 						                                       dataset.getTileAnalytics,
 						                                       dataset.getDataAnalytics,
-						                                       spreaderFcn,
-						                                       bins)
+						                                       spreaderFcn)
 					}
 				).collect
 
