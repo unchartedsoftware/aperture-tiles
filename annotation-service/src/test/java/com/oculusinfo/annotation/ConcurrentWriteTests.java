@@ -23,9 +23,18 @@
  */
 package com.oculusinfo.annotation;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
 import com.oculusinfo.annotation.init.DefaultAnnotationIOFactoryProvider;
@@ -36,8 +45,6 @@ import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.annotation.rest.impl.AnnotationServiceImpl;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
@@ -48,15 +55,6 @@ import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider;
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 
 public class ConcurrentWriteTests extends AnnotationTestsBase {

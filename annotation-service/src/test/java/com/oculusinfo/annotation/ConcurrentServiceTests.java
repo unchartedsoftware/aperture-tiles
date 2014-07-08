@@ -23,6 +23,20 @@
  */
 package com.oculusinfo.annotation;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
+import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
@@ -48,15 +62,6 @@ import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider;
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 
 public class ConcurrentServiceTests extends AnnotationTestsBase {
