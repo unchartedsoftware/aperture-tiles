@@ -397,7 +397,8 @@ object TestTableEquality {
 
 		def testEquality[T] (description: String, a: T, b: T): Unit =
 			if (!a.equals(b)) println(description+" differ") else println(description+" match")
-		testEquality("Tile sizes",    metaData1.getTileSize(),   metaData2.getTileSize())
+		testEquality("Tile size (x)", metaData1.getTileSizeX(),  metaData2.getTileSizeX())
+		testEquality("Tile size (y)", metaData1.getTileSizeY(),  metaData2.getTileSizeY())
 		testEquality("Schemes",       metaData1.getScheme(),     metaData2.getScheme())
 		testEquality("Projections",   metaData1.getProjection(), metaData2.getProjection())
 		testEquality("Minimum zooms", metaData1.getMinZoom(),    metaData2.getMinZoom())
