@@ -94,10 +94,17 @@ public class MetaDataRenderer implements TileDataImageRenderer {
             int centerX = width/2;
             int centerY = height/2;
             g.setColor(new Color(255, 255, 128, 192));
+            
+            int maxlen = 0;
+            for (int i=0; i<n; ++i) {
+            	maxlen = Math.max(maxlen, texts.get(i).length());
+            }
+            int posX = centerX - maxlen / 2 * 6;
+            
             for (int i=0; i<n; ++i) {
                 double offset = (2*i + 1 - n) / 2.0;
                 int baseline = (int) Math.round(centerY + offset * 16 - 2);
-                g.drawString(texts.get(i), centerX, baseline);
+                g.drawString(texts.get(i), posX, baseline);
             }
         }
 
