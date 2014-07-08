@@ -154,25 +154,21 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 	 *         (with coordinates [0 to getXBins()*2^level, 0 to
 	 *         getYBins()*2^level])
 	 */
-	public static BinIndex tileBinIndexToUniversalBinIndex (TileIndex tile, BinIndex bin) {
-		// Tiles go from lower left to upper right
-		// Bins go from upper left to lower right
-		int pow2 = 1 << tile.getLevel();
-		int tileLeft = tile.getX() * tile.getXBins();
-		int tileTop = (pow2 - tile.getY() - 1) * tile.getYBins();
-		return new BinIndex(tileLeft + bin.getX(), tileTop + bin.getY());
-	}
-	
-	// Same function as above but assumes number of bins is 256
-	// TODO -- should generalize this to take in binNumber as a bitshift so is applicable if num of bins is any power of 2?
-	public static BinIndex tileBinIndexToUniversalBinIndex256 (TileIndex tile, BinIndex bin) {
-		// Tiles go from lower left to upper right
-		// Bins go from upper left to lower right
-		int pow2 = 1 << tile.getLevel();
-		int tileLeft = tile.getX() << 8;
-		int tileTop = (pow2 - tile.getY() - 1) << 8;
-		return new BinIndex(tileLeft + bin.getX(), tileTop + bin.getY());
-	}
+    public static BinIndex tileBinIndexToUniversalBinIndex (TileIndex tile, BinIndex bin) {
+        // Tiles go from lower left to upper right
+        // Bins go from upper left to lower right
+        int pow2 = 1 << tile.getLevel();
+
+        int tileLeft, tileTop;
+
+        int xBins = tile.getXBins();
+        tileLeft = tile.getX() * xBins;
+
+        int yBins = tile.getYBins();
+        tileTop = (pow2 - tile.getY() - 1) * yBins;
+
+        return new BinIndex(tileLeft + bin.getX(), tileTop + bin.getY());
+    }
 
 	/**
 	 * Translates from the root position of the entire data set to a bin
@@ -189,50 +185,30 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 	 *         tile), and bin relative to the root position of this tile (with
 	 *         coordinates [0 to getXBins(), 0 to getYBins()])
 	 */
-	public static TileAndBinIndices universalBinIndexToTileBinIndex (TileIndex sampleTile,
-	                                                                 BinIndex bin) {
-		// Tiles go from lower left to upper right
-		// Bins go from upper left to lower right
-		int level = sampleTile.getLevel();
-		int pow2 = 1 << level;
+    public static TileAndBinIndices universalBinIndexToTileBinIndex (TileIndex sampleTile,
+                                                                     BinIndex bin) {
+        // Tiles go from lower left to upper right
+        // Bins go from upper left to lower right
+        int level = sampleTile.getLevel();
+        int pow2 = 1 << level;
 
-		int xBins = sampleTile.getXBins();
-		int tileX = bin.getX()/xBins;
-		int tileLeft = tileX * xBins;
+        int tileX, tileY, tileLeft, tileTop;
 
-		int yBins = sampleTile.getYBins();
-		int tileY = pow2 - bin.getY()/yBins - 1;
-		int tileTop = (pow2 - tileY - 1) * yBins;
+        int xBins = sampleTile.getXBins();
+        tileX = bin.getX()/xBins;
+        tileLeft = tileX * xBins;
 
-		BinIndex tileBin = new BinIndex(bin.getX()-tileLeft, bin.getY()-tileTop);
-		TileIndex tile = new TileIndex(level, tileX, tileY, xBins, yBins);
+        int yBins = sampleTile.getYBins();
+        tileY = pow2 - bin.getY()/yBins - 1;
+        tileTop = (pow2 - tileY - 1) * yBins;
 
-		return new TileAndBinIndices(tile, tileBin);
-	}
+        BinIndex tileBin = new BinIndex(bin.getX() - tileLeft, bin.getY() - tileTop);
+        TileIndex tile = new TileIndex(level, tileX, tileY, xBins, yBins);
 
-	// Same function as above but assumes number of bins per tile is 256
-	// TODO -- should generalize this to take in binNumber as a bitshift so is applicable if num of bins is any power of 2?
-	public static TileAndBinIndices universalBinIndexToTileBinIndex256 (TileIndex sampleTile, 
-																		BinIndex bin) {
-		// Tiles go from lower left to upper right
-		// Bins go from upper left to lower right
-		int level = sampleTile.getLevel();
-		int pow2 = 1 << level;
+        return new TileAndBinIndices(tile, tileBin);
+    }
 
-		//int xBins = sampleTile.getXBins();
-		int tileX = bin.getX() >> 8;
-		int tileLeft = tileX << 8;
 
-		//int yBins = sampleTile.getYBins();
-		int tileY = pow2 - (bin.getY() >> 8) - 1;
-		int tileTop = (pow2 - tileY - 1) << 8;
-
-		BinIndex tileBin = new BinIndex(bin.getX() - tileLeft, bin.getY() - tileTop);
-		TileIndex tile = new TileIndex(level, tileX, tileY, 256, 256);
-
-		return new TileAndBinIndices(tile, tileBin);
-	}
-	
 
 	/**
 	 * {@inheritDoc}

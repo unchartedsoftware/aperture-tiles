@@ -429,12 +429,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] =
 	{
-		val tileBinToUniBin = {
-			if (256 == xBins && 256 == yBins)
-				(TileIndex.tileBinIndexToUniversalBinIndex256)_ 	// use this version if bins == 256
-			else
-				(TileIndex.tileBinIndexToUniversalBinIndex)_
-		}
+		val tileBinToUniBin = (TileIndex.tileBinIndexToUniversalBinIndex)_
 
 		val localMinBins = minBins
 		val localMaxBins = maxBins
@@ -635,12 +630,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 linesAsArcs: Boolean = false): RDD[TileData[BT]] =
 	{
 		
-		val uniBinToTileBin = {
-			if (256 == xBins && 256 == yBins)
-				(TileIndex.universalBinIndexToTileBinIndex256)_ 	// use this version if bins == 256
-			else
-				(TileIndex.universalBinIndexToTileBinIndex)_
-		}
+		val uniBinToTileBin = (TileIndex.universalBinIndexToTileBinIndex)_
 		val calcLinePixels = {
 			if (linesAsArcs)
 				RDDLineBinner.endpointsToArcBins
@@ -776,12 +766,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] = {
 		
-		val uniBinToTileBin = {
-			if (256 == xBins && 256 == yBins)
-				(TileIndex.universalBinIndexToTileBinIndex256)_ 	// use this version if bins == 256
-			else
-				(TileIndex.universalBinIndexToTileBinIndex)_
-		}
+		val uniBinToTileBin = (TileIndex.universalBinIndexToTileBinIndex)_
 		val calcLinePixels = {
 			if (linesAsArcs)
 				RDDLineBinner.endpointsToArcBins
