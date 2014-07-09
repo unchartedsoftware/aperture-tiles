@@ -113,7 +113,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test simple filtering") {
-		val filter = dataset.getFieldFilterFunction("b", 3, 7)
+		val filter = dataset.getFieldDoubleValueFilterFunction("b", 3, 7)
 		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(5 === results.size)
@@ -125,9 +125,9 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test and filters") {
-		val bFilter = dataset.getFieldFilterFunction("b", 3, 7)
-		val cFilter = dataset.getFieldFilterFunction("c", 2, 7)
-		val dFilter = dataset.getFieldFilterFunction("d", 1, 8)
+		val bFilter = dataset.getFieldDoubleValueFilterFunction("b", 3, 7)
+		val cFilter = dataset.getFieldDoubleValueFilterFunction("c", 2, 7)
+		val dFilter = dataset.getFieldDoubleValueFilterFunction("d", 1, 8)
 		val filter = FilterFunctions.and(bFilter, cFilter, dFilter)
 		val results = dataset.getRawFilteredData(filter).collect().toSet
 
@@ -137,8 +137,8 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test or filters") {
-		val bFilter = dataset.getFieldFilterFunction("b", 8, 9)
-		val cFilter = dataset.getFieldFilterFunction("c", 6, 7)
+		val bFilter = dataset.getFieldDoubleValueFilterFunction("b", 8, 9)
+		val cFilter = dataset.getFieldDoubleValueFilterFunction("c", 6, 7)
 		val filter = FilterFunctions.or(bFilter, cFilter)
 		val results = dataset.getRawFilteredData(filter).collect().toSet
 

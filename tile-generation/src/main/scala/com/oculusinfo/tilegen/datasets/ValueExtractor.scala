@@ -31,6 +31,7 @@ import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
 import scala.reflect.ClassTag
+import scala.util.{Try, Success, Failure}
 
 import org.apache.avro.file.CodecFactory;
 
@@ -125,7 +126,7 @@ abstract class CSVValueExtractor[PT: ClassTag, BT]
 	def fields: Array[String]
 
 	// Get the value from the field values
-	def calculateValue (fieldValues: Map[String, Double]): PT
+	def calculateValue (fieldValues: Map[String, Any]): PT
 
 	def getBinningAnalytic: BinningAnalytic[PT, BT]
 }
@@ -134,7 +135,7 @@ class CountValueExtractor extends CSVValueExtractor[Double, JavaDouble] {
 	def name: String = "count"
 	def description: String = "A count of relevant records"
 	def fields: Array[String] = Array[String]()
-	def calculateValue (fieldValues: Map[String, Double]): Double = 1.0
+	def calculateValue (fieldValues: Map[String, Any]): Double = 1.0
 	def getSerializer: TileSerializer[JavaDouble] =
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] =
@@ -147,11 +148,24 @@ class FieldValueExtractor (fieldName: String,
 	def name: String = fieldName
 	def description: String = "The aggregate value of field "+fieldName
 	def fields: Array[String] = Array(fieldName)
-	def calculateValue (fieldValues: Map[String, Double]): Double =
-		fieldValues.get(fieldName).getOrElse(binningAnalytic.defaultUnprocessedValue)
+	def calculateValue (fieldValues: Map[String, Any]): Double =
+		Try(fieldValues.get(fieldName).get.asInstanceOf[Double]).getOrElse(binningAnalytic.defaultUnprocessedValue)
 	def getSerializer: TileSerializer[JavaDouble] =
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] = binningAnalytic
+}
+
+class StringValueExtractor (fieldName: String,
+                            binningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]])
+		extends CSVValueExtractor[Map[String, Double], JavaList[Pair[String, JavaDouble]]] {
+	def name: String = fieldName
+	def description: String = "The most common values of "+fieldName
+	def fields: Array[String] = Array(fieldName)
+	def calculateValue (fieldValues: Map[String, Any]): Map[String, Double] =
+		Map(fieldValues.get(fieldName).toString -> 1.0)
+	def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] =
+		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
+	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] = binningAnalytic
 }
 
 class MultiFieldValueExtractor (fieldNames: Array[String])
@@ -160,8 +174,8 @@ class MultiFieldValueExtractor (fieldNames: Array[String])
 	def name: String = "field map: "+fieldNames.mkString(",")
 	def description: String = "The aggregate value map of the fields "+fieldNames.mkString(",")
 	def fields = fieldNames
-	def calculateValue (fieldValues: Map[String, Double]): Seq[Double] =
-		fieldNames.map(field => fieldValues(field))
+	def calculateValue (fieldValues: Map[String, Any]): Seq[Double] =
+		fieldNames.map(field => Try(fieldValues(field).asInstanceOf[Double]).getOrElse(0.0))
 	def getSerializer =
 		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[Pair[String, JavaDouble]]] =
@@ -174,8 +188,8 @@ class SeriesValueExtractor (fieldNames: Array[String])
 	def name: String = "series: "+fieldNames.mkString(",")
 	def description: String = "The series of the fields "+fieldNames.mkString(",")
 	def fields = fieldNames
-	def calculateValue (fieldValues: Map[String, Double]): Seq[Double] =
-		fieldNames.map(field => fieldValues(field))
+	def calculateValue (fieldValues: Map[String, Any]): Seq[Double] =
+		fieldNames.map(field => Try(fieldValues(field).asInstanceOf[Double]).getOrElse(0.0))
 	def getSerializer =
 		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[JavaDouble]] =

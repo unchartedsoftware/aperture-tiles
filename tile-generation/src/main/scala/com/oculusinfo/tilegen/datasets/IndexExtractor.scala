@@ -138,7 +138,7 @@ abstract class CSVIndexExtractor[T: ClassTag] extends Serializable {
 	def indexScheme: IndexScheme[T]
 	
 	// Get the index value from the field values
-	def calculateIndex (fieldValues: Map[String, Double]): T
+	def calculateIndex (fieldValues: Map[String, Any]): T
 
 	// Indicate if the index implies a density strip
 	def isDensityStrip: Boolean
@@ -161,8 +161,8 @@ class CartesianIndexExtractor(xVar: String, yVar: String)
 	def name = xVar + "." + yVar
 	def description = xVar + " vs. " + yVar
 	def indexScheme = scheme
-	def calculateIndex (fieldValues: Map[String, Double]): (Double, Double) =
-		(fieldValues(xVar), fieldValues(yVar))
+	def calculateIndex (fieldValues: Map[String, Any]): (Double, Double) =
+		(fieldValues(xVar).asInstanceOf[Double], fieldValues(yVar).asInstanceOf[Double])
 	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
 }
 
@@ -176,8 +176,11 @@ class LineSegmentIndexExtractor
 	def name =  xVar + "." + yVar  //xVar + "." + yVar + "." + xVar2 + "." + yVar2
 	def description = xVar + " vs. " + yVar  //xVar + " vs. " + yVar + "and" + xVar2 + "vs" + yVar2
 	def indexScheme = scheme
-	def calculateIndex(fieldValues: Map[String, Double]): (Double, Double, Double, Double) =
-		(fieldValues(xVar), fieldValues(yVar), fieldValues(xVar2), fieldValues(yVar2))
+	def calculateIndex(fieldValues: Map[String, Any]): (Double, Double, Double, Double) =
+		(fieldValues(xVar).asInstanceOf[Double],
+		 fieldValues(yVar).asInstanceOf[Double],
+		 fieldValues(xVar2).asInstanceOf[Double],
+		 fieldValues(yVar2).asInstanceOf[Double])
 	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
 }
 
@@ -188,8 +191,13 @@ class IPv4IndexExtractor (ipField: String) extends CSVIndexExtractor[Array[Byte]
 	def name = ipField
 	def description = ipField
 	def indexScheme = scheme
-	def calculateIndex (fieldValues: Map[String, Double]): Array[Byte] = {
-		val address = fieldValues(ipField).round.toLong
+	def calculateIndex (fieldValues: Map[String, Any]): Array[Byte] = {
+		val address = fieldValues(ipField) match {
+			case value: Long => value
+			case value: Int => value.toLong
+			case value: Double => value.round.toLong
+			case _ => 0L
+		}
 		Array(((address & 0xff000000L) >> 24).toByte,
 		      ((address & 0xff0000L) >> 16).toByte,
 		      ((address & 0xff00L) >> 8).toByte,
@@ -217,7 +225,9 @@ class TimeRangeCartesianIndexExtractor
 	def description = xVar + " vs. " + yVar
 	def indexScheme = scheme
 	def timeIndexScheme = scheme
-	def calculateIndex (fieldValues: Map[String, Double]): (Double, Double, Double) =
-		(floorDate(fieldValues(timeVar)), fieldValues(xVar), fieldValues(yVar))
+	def calculateIndex (fieldValues: Map[String, Any]): (Double, Double, Double) =
+		(floorDate(fieldValues(timeVar).asInstanceOf[Double]),
+		 fieldValues(xVar).asInstanceOf[Double],
+		 fieldValues(yVar).asInstanceOf[Double])
 	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
 }

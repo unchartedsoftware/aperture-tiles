@@ -38,8 +38,8 @@ import org.json.JSONException
 // object, and immediately importing its contents, is to have the Filter
 // type alias available everywhere in this file.
 object FilterAware {
-	type Filter = List[Double] => Boolean
-	type FilterFunction = Function1[List[Double], Boolean]
+	type Filter = List[Any] => Boolean
+	type FilterFunction = Function1[List[Any], Boolean]
 }
 import com.oculusinfo.tilegen.datasets.FilterAware._
 
@@ -49,7 +49,7 @@ import com.oculusinfo.tilegen.datasets.FilterAware._
 class OrFunction(operands: Filter*)
 		extends FilterFunction
 		with Serializable {
-	def apply (value: List[Double]): Boolean =
+	def apply (value: List[Any]): Boolean =
 		operands.map(_(value)).reduce(_ || _)
 	override def toString: String = operands.mkString("or(", ", ", ")")
 }
@@ -58,7 +58,7 @@ class OrFunction(operands: Filter*)
 class AndFunction(operands: Filter*)
 		extends FilterFunction
 		with Serializable {
-	def apply (value: List[Double]): Boolean =
+	def apply (value: List[Any]): Boolean =
 		operands.map(_(value)).reduce(_ && _)
 	override def toString: String = operands.mkString("and(", ", ", ")")
 }
@@ -102,8 +102,9 @@ object FilterFunctions {
 					    val range = query.getJSONObject(name)
 					    val min = range.getDouble("min")
 					    val max = range.getDouble("max")
-					    dataset.getFieldFilterFunction(name, min, max)
+					    dataset.getFieldDoubleValueFilterFunction(name, min, max)
 				    }
 			    }
-		    })
+		    }
+		)
 }

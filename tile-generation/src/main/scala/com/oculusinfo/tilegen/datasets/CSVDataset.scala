@@ -268,7 +268,7 @@ class CSVFieldExtractor (properties: CSVRecordPropertiesWrapper) {
 		("constant" == fieldType || "zero" == fieldType)
 	}
 
-	def getFieldValue (field: String)(record: List[Double]) : Try[Double] =
+	def getFieldValue (field: String)(record: List[Any]) : Try[Any] =
 		if ("count" == field) Try(1.0)
 		else if ("zero" == field) Try(0.0)
 		else Try(record(properties.fieldIndices(field)))
@@ -472,7 +472,7 @@ class CSVStaticProcessingStrategy[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag]
 	private var rawData: RDD[String] = rawData2
 	private var rawData2: RDD[String] = null
 
-	private lazy val filterableData: RDD[(String, List[Double])] = {
+	private lazy val filterableData: RDD[(String, List[Any])] = {
 		val localProperties = properties
 		val data = rawData.mapPartitions(iter =>
 			{
@@ -587,13 +587,13 @@ class CSVDataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	def getRawFilteredJavaData (filterFcn: Filter): JavaRDD[String] =
 		JavaRDD.fromRDD(getRawFilteredData(filterFcn))
 
-	def getFieldFilterFunction (field: String, min: Double, max: Double): Filter = {
+	def getFieldDoubleValueFilterFunction (field: String, min: Double, max: Double): Filter = {
 		val localProperties = properties
 		new FilterFunction with Serializable {
-			def apply (valueList: List[Double]): Boolean = {
+			def apply (valueList: List[Any]): Boolean = {
 				val index = localProperties.fieldIndices(field)
-				val value = valueList(index)
-				min <= value && value <= max
+				val value = Try(valueList(index).asInstanceOf[Double])
+				value.isSuccess && min <= value.get && value.get <= max
 			}
 			override def toString: String = "%s Range[%.4f, %.4f]".format(field, min, max)
 		}

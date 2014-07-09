@@ -71,7 +71,7 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 
 	// Convert a string to a double value according to field semantics
 	def parseValue (value: String, field: String, parseType: String,
-	                dateFormats: Map[String, SimpleDateFormat]): Double = {
+	                dateFormats: Map[String, SimpleDateFormat]): Any = {
 		if ("int" == parseType) {
 			value.toInt.toDouble
 		} else if ("long" == parseType) {
@@ -98,6 +98,8 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 			val propValue = propPairs.filter(kv => property.trim == kv(0).trim).map(kv =>
 				if (kv.size > 1) kv(1) else "").takeRight(1)(0)
 			parseValue(propValue, field, propType, dateFormats)
+		} else if ("string" == parseType) {
+			value
 		} else {
 			value.toDouble
 		}
@@ -106,7 +108,7 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 	def getRecordFilter: Array[String] => Boolean = fields => true
 
 	def parseRecords (raw: Iterator[String], variables: String*):
-			Iterator[(String, Try[List[Double]])] =
+			Iterator[(String, Try[List[Any]])] =
 	{
 		// This method generally is only called on workers, therefore
 		// properties can't really be documented here.
@@ -162,7 +164,7 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 										 "oculus.binning.parsing." + field + ".fieldBase",
 										 "", Some(math.exp(1.0))
 									 )
-									 value = math.log(value) / math.log(base)
+									 value = math.log(value.asInstanceOf[Double]) / math.log(base)
 								 }
 								 value
 							 }
