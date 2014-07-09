@@ -241,7 +241,7 @@ Several example property files can be found in the *aperture-tiles/tile-generati
 
 ###<a name="custom-tiling"></a>Custom Tiling
 
-If your source data is not character delimited or if it contains non-numeric fields, you may need to create custom code to parse it and perform tile generation. A good example of custom code for the purposes of tile generation can be found in the Twitter Topics project in *tile-examples/twitter-topics-sample/*, which displays a Twitter message heatmap and aggregates the top words mentioned in tweets for each tile and bin.
+If your source data is not character delimited or if it contains non-numeric fields, you may need to create custom code to parse it and perform tile generation. A good example of custom code for the purposes of tile generation can be found in the Twitter Topics project in *tile-examples/twitter-topics/*, which displays a Twitter message heatmap and aggregates the top words mentioned in tweets for each tile and bin.
 
 In general, creating custom tile generation code involves the following processes:
 
@@ -252,108 +252,98 @@ Once you have written each of the required components, you should run your custo
 
 ####<a name="describing-your-data"></a>Describing Your Data
 
-The first step in creating a custom tile generation process is deciding how your data should be structured so it can be handled by the Binner. There are several modules required for this step:
+The first step in creating a custom tile generation process is deciding how your data should be structured. The following modules are required for this step:
 
-- Bin Descriptor
+- Binning Analytic
 - Serializer
 
-#####Bin Descriptor
+#####Binning Analytic
 
-The Bin Descriptor is used throughout the tiling process. It defines the data format used, how individual data records in a bin are combined, and how the maximum and minimum values are determined (the latter is often needed when rendering data to tiles). 
+The Binning Analytic is used throughout the tiling process to define:
 
-See the following file for an example of a custom Bin Descriptor.
+- The data format used
+- How individual data records in a bin are combined
+ 
+See the following file for an example of a custom Bin Analytic.
 
 ```
-/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinDescriptor.scala
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinningAnalytic.scala
 ```
 
 ######Types
 
-The Bin Descriptor describes the type of data using two types:
+The Binning Analytic uses two types of data:
 
-- A processing type, which is the record type used when processing the tiles and aggregating them together. It should contain all the information needed for calculations performed during the binning job.
-- A binning type, which is the final form that gets written to the tiles. 
+- A processing type, which is used when processing the tiles and aggregating them together. It should contain all the information needed for calculations performed during the binning job. The processing type allows you to keep information that may be needed for aggregation, but not needed once the tile is complete.
+- A binning type, which is the final form written to the tiles. 
 
-This separation allows one to keep extra information when tiling that may be needed for aggregation, but is no longer needed once the tile is complete.
+For example, to record an average, the processing type might include the number of records and the total sum of their values, while the binning type would simply be the average.
 
-For example, if one wanted to record an average, the processing type might include both the number of records, and the total sum of their values, while the binning type would be simply the average.
-
-Another example is shown in line 47 of `TwitterTopicBinDescriptor`, the processing type is a map used add to add all similar topic records together. The binning type is a list containing only the topics with the highest counts.
+Another example is shown in line 41 of `TwitterTopicBinningAnalytic.scala`:
 
 ```scala
-extends BinDescriptor[Map[String, TwitterDemoTopicRecord], JavaList[TwitterDemoTopicRecord]] {
+extends BinningAnalytic[Map[String, TwitterDemoTopicRecord], JavaList[TwitterDemoTopicRecord]]
 ```
 
-The Bin Descriptor describes how to convert from the processing type into the binning type via the `convert` function.  In `TwitterTopicBinDescriptor`, this is found on lines 103 and 104.  In this case, it takes the processing type, a map from topic to topic records, finds the 10 most used topics, and records their topic records, in order.  All but the top ten are thrown out - but were necessary during processing, so that a topic that was eleventh on several different machines (and hence in the top ten overall) wasn't lost.
+Here the processing type is a map used to add all similar topic records together, while the binning type is a list containing only the topics with the highest counts.
+
+The Binning Analytic should also describe how to convert the processing type into the binning type. In `TwitterTopicBinningAnalytic.scala`, this is accomplished with a `finish` function (lines 65-66):
 
 ```scala
-def convert (value: Map[String, TwitterDemoTopicRecord]): 
-JavaList[TwitterDemoTopicRecord] =
-    value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
+def finish (value: Map[String, TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] =
+	value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
 ```
+
+The `finish` function takes the processing type, which maps topics to topic records, finds the 10 most used topics and stores their topic records in order. While the rest of the topics are discarded, they were necessary during processing (e.g., so as to not lose a topic that was eleventh on several different machines -- and hence in the top ten overall).
 
 ######Data Aggregation and Record Creation
 
-The Bin Descriptor defines how data is aggregated.  For instance, the example BinDescriptor (lines 51 - 64 of `TwitterTopicBinDescriptor`) compares two maps, creating a new map with keys that exist in either, and the sum of the values of both.
+The Binning Analytic defines how data is aggregated. For example, lines 43-48 of `TwitterTopicBinningAnalytic.scala` compare two maps and create a new map that contains keys that exist in either and the sum of the their values.
 
 ```scala
-def aggregateBins (a: Map[String, TwitterDemoTopicRecord],
-	  b: Map[String, 
-      TwitterDemoTopicRecord]): Map[String, TwitterDemoTopicRecord] = {
-  a.keySet.union(b.keySet).map(tag => {
-    val aVal = a.get(tag)
-    val bVal = b.get(tag)
-    if (aVal.isEmpty) {
-  (tag -> bVal.get)
-    } else if (bVal.isEmpty) {
-  (tag -> aVal.get)
-    } else {
-  (tag -> addRecords(aVal.get, bVal.get))
-    }
-  }).toMap
+def aggregate (a: Map[String, TwitterDemoTopicRecord],
+	           b: Map[String, TwitterDemoTopicRecord]): Map[String, TwitterDemoTopicRecord] = {
+	a ++ b.map{case (k, v) =>
+		k -> a.get(k).map(TwitterDemoTopicRecord.addRecords(_, v)).getOrElse(v)
+	}
 }
 ```
 
 ######Calculating Custom Aggregation Methods
 
-Lines 66-80  of `TwitterTopicBinDescriptor` are used to calculate the minimum and maximum values and write them to the metadata by level. 
+Lines 91-109  of `TwitterTopicBinner.scala` (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
 
 ```scala
-def defaultMin: JavaList[TwitterDemoTopicRecord] = new ArrayList()
-  def min (a: JavaList[TwitterDemoTopicRecord],
-	   b: JavaList[TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] = {
-    val both = a.asScala.toList ++ b.asScala.toList
-    val min = minOfRecords(both.toArray : _*)
-    List(min).asJava
-  }
+val minAnalysis:
+		AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
+					 		List[TwitterDemoTopicRecord]] =
+	new TwitterTopicListAnalysis(
+		sc, new TwitterMinRecordAnalytic,
+		Range(levelBounds._1, levelBounds._2+1).map(level =>
+			(level+".min" -> ((index: TileIndex) => (level == index.getLevel())))
+		).toMap + ("global.min" -> ((index: TileIndex) => true))
+	)
 
-  def defaultMax: JavaList[TwitterDemoTopicRecord] = new ArrayList()
-  def max (a: JavaList[TwitterDemoTopicRecord],
-	   b: JavaList[TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] = {
-    val both = a.asScala.toList ++ b.asScala.toList
-    val max = maxOfRecords(both.toArray : _*)
-    List(max).asJava
-  }
+val maxAnalysis:
+		AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
+		                    List[TwitterDemoTopicRecord]] =
+	new TwitterTopicListAnalysis(
+		sc, new TwitterMaxRecordAnalytic,
+		Range(levelBounds._1, levelBounds._2+1).map(level =>
+			(level+".max" -> ((index: TileIndex) => (level == index.getLevel())))
+		).toMap + ("global.max" -> ((index: TileIndex) => true))
+	)
 ```
 
-Standard Bin Descriptors are available in:
+Standard Bin Analytics are available in:
 
 ```
-tile-generation\src\main\scala\com\oculusinfo\tilegen\tiling\BinDescriptor.scala
-```
-
-######Serializer
-
-Lastly, the binDescriptor defines the Serializer to determine how to write tiles.
-
-```scala
-def getSerializer: TileSerializer[JavaList[TwitterDemoTopicRecord]] = 
-new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec())
+tile-generation\src\main\scala\com\oculusinfo\tilegen\tiling\Analytics.scala
 ```
 
 ####<a name="serializer"></a>Serializer
 
-The Serializer determines how to read and write tiles in a tile set. The Serializer requires some supporting classes for the tile server to use it.
+The Serializer determines how to read and write tiles in a tile set. For the tile server to use, some supporting classes are required.
 
 - Serializer
 - Serialization Factory
@@ -364,7 +354,10 @@ See the following sections for examples of each custom Serializer component.
 
 #####Serializer
 
-The Serializer implements the `com.oculusinfo.binning.io.serialization.TileSerializer` interface.  More specifically, to read and write the AVRO tiles that are most commonly used, it should inherit from either `com.oculusinfo.binning.io.serialization.GenericAvroSerializer` or`com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer`.  Use the latter if your bin type is an array of records, the former if it is a single record. 
+The Serializer implements the `com.oculusinfo.binning.io.serialization.TileSerializer` interface. To read and write the AVRO tiles that are most commonly used, it should inherit from:
+
+- `com.oculusinfo.binning.io.serialization.GenericAvroSerializer` if your bin type is a single record 
+- `com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer` if your bin type is an array of records record. 
 
 An example of a serializer of tiles whose bins are an array of records is available in:
 
@@ -372,23 +365,23 @@ An example of a serializer of tiles whose bins are an array of records is availa
 /tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/binning/TwitterTopicAvroSerializer.java
 ```
 
-This class inherits from the GenericAVROArraySerializer.java (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and defines:
+This class inherits from the `GenericAVROArraySerializer.java` (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and defines:
 
-- getEntrySchemaFile - which points to a file containing the AVRO description of a single record
-- setEntryValue - which sets the value of one entry in the list from the AVRO file
-- getEntryValue - which retrieves the value of one entry in the list from the AVRO file
+- `getEntrySchemaFile`, which points to a file containing the AVRO description of a single record
+- `setEntryValue`, which sets the value of one entry in the list from the AVRO file
+- `getEntryValue`, which retrieves the value of one entry in the list from the AVRO file
 
 The definition of the AVRO schema is located in the following folder, where the *name* is set to **entryType**.
 
 ```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/resources/twitterTopicEntry.avsc
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/resources/twitterTopicEntry.avsc
 ```
 
-For records that aren't list types, inherit from the GenericAvroSerializer.java (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and define:
+For records that aren't list types, inherit from the `GenericAvroSerializer.java` (`/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/`) and define:
 
--getRecordSchemaFile
--getValue
--setvalue
+- `getRecordSchemaFile`
+- `getValue`
+- `setvalue`
 
 The definition of the AVRO schema can be based on the template in the following folder, where the *name* is set to **recordType**.
 
@@ -406,15 +399,15 @@ The Serialization Factory gets configuration information (e.g., the AVRO compres
 
 #####Serialization Factory Provider
 
-The Factory Provider is an object that can be injected by Guice, and that produces the factory.
+The Factory Provider is an object that produces the factory and can be injected by Guice.
 
 ```
-/tile-examples/twitter-topics-sample/twitter-sample-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactoryProvider.java
+/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactoryProvider.java
 ```
 
 #####Serialization Factory Module
 
-The Factory Module tells Guice which factory provider(s) to use to create serialization factories.
+The Factory Module tells Guice which factory providers to use to create serialization factories.
 
 ```
 /tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterSerializationFactoryModule.java
@@ -424,8 +417,8 @@ The Factory Module tells Guice which factory provider(s) to use to create serial
 
 There are three steps in binning your data:
 
-- Transforming the data into the form required by the binner
-- Running the binner to transform the data into tiles
+- Parsing your data into the form required by the Binner
+- Running the Binner to transform the data into tiles
 - Writing the tiles
 
 See the following file for an example of a custom Binner.
@@ -434,25 +427,28 @@ See the following file for an example of a custom Binner.
 /tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala
 ```
 
-#####<a name="parsing-data"></a>Parsing your data
+#####<a name="parsing-data"></a>Parsing your Data
 
-The binner expects your data as pairs of `(index, record)`, where `index` is an object indicating where in space the record lies, and `record` is a data record, of the  processing type your bin descriptor defines.
+The Binner expects your data as pairs of `(index, record)`, where:
 
-There are two predefined index types, defined by `com.oculusinfo.tilegen.tiling.CartesianIndexScheme` and `com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme` found in:
+- `index` is an object indicating where in space the record lies
+- `record` is a data record of the processing type your Binning Analytic defines
+
+There are two predefined index types defined by `com.oculusinfo.tilegen.tiling.CartesianIndexScheme` and `com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme` found in:
 
 ```
 /tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
 ```
 
-With a Cartesian index, the index type is a pair of doubles.  With the IPv4 index, the index type is an array of 4 bytes - the 4 values in an IPv4 address.  Generally, unless you are specifically tiling against computer addresses, the cartesian type will be preferable. The end result of your parsing will therefore be:
+With a Cartesian index, the index type is a pair of doubles. With the IPv4 index, the index type is an array of 4 bytes: the 4 values in an IPv4 address. Unless you are tiling against computer addresses, the Cartesian type is preferable. The end result of your parsing will therefore be:
 
-```
+```scala
 val data: RDD[((Double, Double), PROCESSING_TYPE)]
 ```
 
-Where `PROCESSING_TYPE` is the processing type from your bin descriptor.
+Where `PROCESSING_TYPE` is the processing type from your Binning Analytic.
 
-Lines 92 - 107 in the `TwitterTopicBinner` retrieve the raw data from the Record Parser and creates a mapping from (longitude, latitude) pairs to Twitter topic records.
+Lines 165 - 178 in `TwitterTopicBinner.scala` retrieve the raw data from the Record Parser and create a mapping from (longitude, latitude) pairs to Twitter topic records.
 
 ```scala
 val data = rawDataWithTopics.mapPartitions(i =>
@@ -475,14 +471,21 @@ data.cache
 
 #####Binning
 
-Lines 116 - 117 of `TwitterTopicBinner` transforms the data into tiles.
+Lines 193 - 201 of `TwitterTopicBinner.scala` transform the data into tiles:
 
 ```scala
-val tiles = binner.processDataByLevel(data, new CartesianIndexScheme, binDesc,
-                                      tilePyramid, levelSet, bins=1)
+val tiles = binner.processDataByLevel(data,
+				                      new CartesianIndexScheme,
+				                      new TwitterTopicBinningAnalytic,
+				                      tileAnalytics,
+				                      dataAnalytics,
+				                      tilePyramid,
+				                      levelSet,
+				                      xBins=1,
+				                      yBins=1)
 ```
 
-Binner.processDataByLevel is defined in the following file on line 229.
+Binner.processDataByLevel is defined in the following file on line 237.
 
 ```
 /tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
@@ -492,51 +495,63 @@ It accepts the following properties:
 
 ```
 data
-	A distributed collection of (index, record) pairs, as described above.
+	A distributed collection of (index, record) pairs as described above.
 
 indexScheme
-	Used to convert the index to a set X/Y coordinates that can be plotted.
-	When using a CartesianIndexScheme, the coordinates are taken as given.
+	Used to convert the index to a set X/Y coordinates that can be plotted. When
+	using a CartesianIndexScheme, the coordinates are taken as given.
 
-binDescriptor
-	A Bin Descriptor, as described above, which defines how to aggregate two
-	records, how to convert them into the form written, and how to determine
-	the extrema of the dataset.
- 
-tilePyramid
+binAnalytic
+	A Binning Analytic that, as described above, defines how to aggregate two
+	records, convert them into the form written and determine the extrema of the
+	dataset.
+
+tileAnalytics
+
+dataAnalytics
+
+tileScheme
 	The projection to use to transform from the raw data index into tiles and
-	bins. Two types are predefined, an `/binning-utilities/src/main/java/com/
-	oculusinof/binning/impl/AOITilePyramid`, which is a linear transformation
-	into an arbitrarily sized space, and `/binning-utilities/src/main/java/com/
-	oculusinof/binning/impl/WebMercatorTilePyramid`, which is a standard
-	geographical projection.
+	bins. Two types are predefined:
+	- /binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid,
+	  which is a linear transformation into an arbitrarily sized space
+	- /binning-utilities/src/main/java/com/oculusinof/binning/impl/
+	  WebMercatorTilePyramid, which is a standard geographical projection.
 
-levelSet
+levels
 	Specifies which levels to process at the same time. It is generally
-    recommended you process levels 1-9 together, then any additional levels
-	one at a time afterwards.  This arrangement typically makes effective use
-	of system resources.
+    recommended you process levels 1-9 together, then run additional levels	one
+	at a time afterward. This arrangement typically makes effective use of
+	system resources.
 
-bins
-	Number of bins on each axis.  Optional, defaults to 256
+xBins		(Optional)
+	Number of bins on the X axis.  Defaults to 256
 
-consolidationPartitions
+yBins		(Optional)
+	Number of bins on the Y axis.  Defaults to 256
+
+consolidationPartitions		(Optional)
 	The number of reducers to use when aggregating data records into bins and
-	tiles.  Optiona, defaults to the same number of partitions as the original
-	data set, but can be altered if one encounters problems with the tiling job
-	due to lack of resources.
+	tiles. Defaults to the same number of partitions as the original data set.
+	Alter if you encounter problems with the tiling job due to lack	of resources.
 
 isDensityStrip
-	This should be true if doing a one-dimentional tiling job.  Defaults to false.
+	Set to true if running a one-dimentional tiling job. Defaults to false.
 ```
 
 #####Writing tiiles
 
-Lines 118 - 119 of `TwitterTopicBinner` specify how to write the tiles created from your transformed data.
+Lines 202 - 209 of `TwitterTopicBinner.scala` specify how to write the tiles created from your transformed data.
 
 ```scala
-tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc, 
-					pyramidName, pyramidDescription)
+tileIO.writeTileSet(tilePyramid,
+				    pyramidId,
+				    tiles,
+				    new TwitterTopicValueDescription,
+				    tileAnalytics,
+				    dataAnalytics,
+				    pyramidName,
+				    pyramidDescription)
 ```
 
 Where tileIO.writeTileSet accepts the following properties:
@@ -544,15 +559,21 @@ Where tileIO.writeTileSet accepts the following properties:
 ```
 tilePyramid
 	Type of projection built from the set of bins and levels. Must match the
-    tilePyramid specified in binner.processDataByLevel.
+    tileScheme specified in binner.processDataByLevel.
 
-pyramidID
+pyramidId
 	The ID to apply to the tile set when writing it. If writing to the local
 	filesystem, this will be the base directory into which to write the tiles.
 	If writing to HBase, it will be the name of the table to write.
 
 tiles
 	The binned data set produced by binner.processDataByLevel.
+
+TwitterTopicValueDescription
+
+tileAnalytics
+
+dataAnalytics
 
 binDescriptor
 	The bin descriptor describing the dataset.  This must match the bin
