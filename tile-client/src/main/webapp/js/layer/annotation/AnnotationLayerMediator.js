@@ -67,6 +67,10 @@ define(function (require) {
                 layerState.set( 'opacity', 1.0 );
                 layerState.set( 'zIndex', 500+i );
 
+                // register layerstate with renderer and details implementations
+                layer.renderer.registerLayer( layerState );
+                layer.details.registerLayer( layerState );
+
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {
 
@@ -81,8 +85,41 @@ define(function (require) {
 
                             layer.setVisibility( layerState.get('enabled') );
                             break;
+
+                        case "create":
+
+                            layer.createAnnotation( layerState.get('create') );
+                            break;
+
+                        case "modify":
+
+                            layer.modifyAnnotation( layerState.get('modify') );
+                            break;
+
+                        case "remove":
+
+                            layer.removeAnnotation( layerState.get('remove') );
+                            break;
+
+                        case "click":
+
+                            if ( layerState.has('click') ) {
+                                layer.createDetails( layerState.get('click') );
+                            } else {
+                                layer.destroyDetails();
+                            }
+                            break;
                     }
 
+                });
+
+                // clear click state if map is clicked
+                layer.map.on( 'click', function() {
+                    if ( layerState.has('click') ) {
+                        layerState.set( 'click', null );
+                    } else {
+                        layerState.set( 'create', event.xy );
+                    }
                 });
 
                 // Add the layer to the layer state array.

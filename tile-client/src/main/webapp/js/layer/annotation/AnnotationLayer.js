@@ -31,279 +31,109 @@ define(function (require) {
 
     var Layer = require('../Layer'),
         AnnotationService = require('./AnnotationService'),
-        AnnotationDetails = require('./AnnotationDetails'),
-        HtmlNodeLayer = require('../HtmlNodeLayer'),
-        HtmlLayer = require('../HtmlLayer'),
-        //NUM_BINS_PER_DIM = 8,
+        DETAILS_VERTICAL_OFFSET = 26,
         AnnotationLayer;
 
 
 
     AnnotationLayer = Layer.extend({
 
-        init: function( spec, map ) {
+        init: function( spec, renderer, details, map ) {
 
             this._super( spec, map );
             this.service = new AnnotationService( spec.layer );
+
+            this.renderer = renderer;
+            this.details = details;
+
             this.pendingTiles = {};
             this.tiles = [];
 
             // set callbacks
             this.map.on('moveend', $.proxy( this.update, this ) );
 
-            this.createLayer();
             this.update();
         },
 
 
         setOpacity: function( opacity ) {
-            this.nodeLayer.getRootElement().css( 'opacity', opacity );
+
+            this.renderer.setOpacity( opacity );
         },
 
 
         setVisibility: function( visible ) {
-            var visibility = visible ? 'visible' : 'hidden';
-            this.nodeLayer.getRootElement().css( 'visibility', visibility );
+
+            this.renderer.setVisibility( visible );
         },
 
 
-        getAnnotationHtml : function ( bin, tilePosition ) {
+        createDetails: function( clickState ) {
 
-            var ANNOTATION_POINT_CLASS = "point-annotation",
-                ANNOTATION_AGGREGATE_POINT_CLASS = "point-annotation-aggregate",
-                ANNOTATION_POINT_FILL_CLASS = "point-annotation-front",
-                ANNOTATION_POINT_BORDER_CLASS = "point-annotation-back",
-                CLICKED_ANNOTATION_CLASS = "clicked-annotation",
-                CLICKED_AGGREGATE_CLASS = "clicked-aggregate",
-                html = '',
-                pos,
-                offset,
-                $annotation,
-                i;
+            var $details = this.details.createDisplayDetails( clickState.bin, clickState.$bin );
 
-            // aggregation div
-            html += '<div class="'+ANNOTATION_AGGREGATE_POINT_CLASS+'">';
-
-            // for each annotation in the bin
-            for (i=0; i<bin.length; i++) {
-
-                // get annotations position in viewport space
-                pos = this.map.getViewportPixelFromCoord( bin[i].x, bin[i].y );
-                // get relative position from tile top left
-                offset = {
-                    x : pos.x - tilePosition.x,
-                    y : pos.y - tilePosition.y
-                };
-
-                html += '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_FILL_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>' +
-                        '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_BORDER_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>';
-            }
-
-            html += '</div>';
-
-            // create element
-            $annotation = $( html );
-            // attach click event handler
-            $annotation.click( function() {
-                // on click highlight annotation
-                $( '.'+ANNOTATION_AGGREGATE_POINT_CLASS ).removeClass( CLICKED_AGGREGATE_CLASS );
-                $( '.'+ANNOTATION_POINT_FILL_CLASS ).removeClass( CLICKED_ANNOTATION_CLASS );
-                $annotation.addClass( CLICKED_AGGREGATE_CLASS );
-                $annotation.find( '.'+ANNOTATION_POINT_FILL_CLASS ).addClass( CLICKED_ANNOTATION_CLASS );
+            $details.css({
+                left: clickState.position.x - ( $details.outerWidth() / 2 ),
+                top: clickState.position.y - ( $details.outerHeight() + DETAILS_VERTICAL_OFFSET )
             });
-
-            return $annotation;
         },
 
 
-        getDetailsHeaderHtml : function( annotation ) {
+        destroyDetails: function( clickState ) {
 
-            return $('<div class="twitter-details-header">'+annotation.data.user+'</div>');
+            this.details.destroyDetails();
         },
 
 
-        getDetailsBodyHtml : function( annotation ) {
-
-            var captureSettings = {
-                    format : 'PNG',
-                    captureWidth : 384,
-                    cache : false
-                },
-                $temporaryContent = $('<div class="twitter-details-loader">'
-                                     +    '<div class="twitter-loader-gif"></div>'
-                                     +'</div>'),
-                captureURL = aperture.capture.inline( 'https://mobile.twitter.com/justinbieber',
-                                                      captureSettings,
-                                                      null ),
-                $img = $('<img class="twitter-capture" src="'+captureURL+'">');
-
-            $img.load( function() {
-
-                var $content = $('<div class="twitter-details-img" style="opacity:0"></div>').append( $img );
-
-                $content.mouseenter( function() {
-
-                    var $externalLink = $('<div class="twitter-external-link"></div>');
-                    $externalLink.click( function() {
-                        window.open('https://www.twitter.com/justinbieber');
-                    });
-                    $content.append( $externalLink );
-
-                });
-
-                $content.mouseleave( function() {
-                    var $externalLink = $('.twitter-external-link');
-                    $externalLink.remove();
-                });
-
-                // swap content
-                $temporaryContent.replaceWith( $content );
-                // fade content in
-                $content.animate({opacity:1});
-            });
-
-            return $temporaryContent;
-        },
-
-
-        createLayer : function() {
+        createAnnotation: function( position ) {
 
             var that = this,
-                detailsIsOpen = false;
+                coord,
+                tilekey;
 
-            function createAnnotation() {
-
-                var pos,
-                    tilekey;
-
-                function DEBUG_ANNOTATION( pos ) {
-                    return {
-                        x: pos.x,
-                        y: pos.y,
-                        group: that.layerSpec.groups[ Math.floor( that.layerSpec.groups.length*Math.random() ) ],
-                        range: {
-                            min: 0,
-                            max: that.map.getZoom()
-                        },
-                        level: that.map.getZoom(),
-                        data: {
-                            user: "justinbieber"
-                        }
-                    };
-                }
-
-                if ( detailsIsOpen ) {
-                    AnnotationDetails.destroyDetails();
-                    detailsIsOpen = false;
-                    return;
-                }
-
-                if ( !that.layerSpec.accessibility.write ) {
-                    return;
-                }
-
-                // get position and tilekey for annotation
-                pos = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y );
-                tilekey = that.map.getTileKeyFromViewportPixel( event.xy.x, event.xy.y );
-                // write annotation
-                that.service.writeAnnotation( DEBUG_ANNOTATION( pos ), that.updateCallback(tilekey) );
+            // temp for debug writing
+            function DEBUG_ANNOTATION( coord ) {
+                return {
+                    x: coord.x,
+                    y: coord.y,
+                    group: that.layerSpec.groups[ Math.floor( that.layerSpec.groups.length*Math.random() ) ],
+                    range: {
+                        min: 0,
+                        max: that.map.getZoom()
+                    },
+                    level: that.map.getZoom(),
+                    data: {
+                        user: "justinbieber"
+                    }
+                };
             }
 
+            if ( !this.layerSpec.accessibility.write ) {
+                return;
+            }
 
-            this.nodeLayer = new HtmlNodeLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey',
-                propagate: false
+            // get position and tilekey for annotation
+            coord = this.map.getCoordFromViewportPixel( position.x, position.y );
+            tilekey = this.map.getTileKeyFromViewportPixel( position.x, position.y );
+            // write annotation
+            this.service.writeAnnotation( DEBUG_ANNOTATION( coord ), this.updateCallback(tilekey) );
+        },
+
+
+        modifyAnnotation: function( annotation ) {
+
+            this.service.modifyAnnotation( annotation, function() {
+                // TODO: request old and new tile locations in case of failure
+                return true;
             });
 
+        },
 
-            this.nodeLayer.addLayer( new HtmlLayer({
 
-                html: function() {
-
-                    var data = this,
-                        $tile = $(''),
-                        key,
-                        tilePos;
-
-                    // get tile position
-                    tilePos = that.map.getViewportPixelFromCoord( data.longitude, data.latitude );
-
-                    function createAnnotationBin( bin ) {
-
-                        var ANNOTATION_BIN_CLASS = "annotation-bin",
-                            $bin = $('<div class="'+ANNOTATION_BIN_CLASS+'"></div>'),
-                            $annotation = that.getAnnotationHtml( bin, tilePos );
-
-                        // add details click event
-                        $annotation.click( function( event ) {
-
-                            var $details = AnnotationDetails.createDetails( bin, $bin,
-                                                                            $.proxy( that.getDetailsHeaderHtml, that ),
-                                                                            $.proxy( that.getDetailsBodyHtml, that ) ),
-                                offset = $bin.offset(),
-                                relX = event.pageX - offset.left,
-                                relY = event.pageY - offset.top;
-
-                            $details.css({
-                                left: relX -( $details.outerWidth()/2 ),
-                                top: relY - ( $details.outerHeight() + 26 )
-                            });
-
-                            detailsIsOpen = true;
-                        });
-
-                        // add drag modify event
-                        if ( bin.length === 1 && that.layerSpec.accessibility.modify ) {
-
-                            $bin.draggable({
-
-                                stop: function( event ) {
-
-                                    var annotation = bin[0],
-                                        offset = that.map.getElement().offset(),
-                                        pos = that.map.getCoordFromViewportPixel( event.clientX - offset.left,
-                                                                                  event.clientY - offset.top );
-
-                                    annotation.x = pos.x;
-                                    annotation.y = pos.y;
-
-                                    that.service.modifyAnnotation( annotation, function() {
-                                        // TODO: request old and new tile locations in case of failure
-                                        return true;
-                                    });
-
-                                    // prevent click from firing
-                                    $( event.toElement ).one('click', function(e) {
-                                        e.stopImmediatePropagation();
-                                    });
-                                }
-                            });
-                        }
-
-                        $bin.append( $annotation );
-                        return $bin;
-                    }
-
-                    // for each bin
-                    for (key in data.bins) {
-                        if (data.bins.hasOwnProperty(key)) {
-                            $tile = $tile.add( createAnnotationBin( data.bins[key] ) );
-                        }
-                    }
-
-                    return $tile;
-                }
-
-            }));
-
-            that.map.on('click', function() {
-                $('.point-annotation-aggregate').removeClass('clicked-aggregate');
-                $('.point-annotation-front').removeClass('clicked-annotation');
-                createAnnotation();
-            });
+        removeAnnotation: function( annotation ) {
+            var  pixel = this.map.getViewportPixelFromCoord( annotation.x, annotation.y ),
+                 tilekey = this.map.getTileKeyFromViewportPixel( pixel.x, pixel.y );
+            this.service.removeAnnotation( annotation.certificate, this.updateCallback(tilekey) );
         },
 
 
@@ -383,12 +213,21 @@ define(function (require) {
             };
         },
 
+
         transformTileToBins: function (tileData, tilekey) {
 
             var tileRect = this.map.getPyramid().getTileBounds( tileData.tile );
 
+            function uuid() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
+                    return v.toString(16);
+                });
+            }
+
             return {
                 bins : tileData.annotations,
+                uuid : uuid(),
                 tilekey : tilekey,
                 longitude: tileRect.minX,
                 latitude: tileRect.maxY
@@ -428,7 +267,8 @@ define(function (require) {
                 }
 
                 // clear visual representation
-                that.nodeLayer.remove( tilekey );
+                //that.nodeLayer.remove( tilekey );
+
                 // add to data cache
                 currentTiles[tilekey] = that.transformTileToBins( data, tilekey );
 
@@ -442,12 +282,10 @@ define(function (require) {
                 that.redraw( tileArray );
             };
 
-
         },
 
-
         redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
+            this.renderer.redraw( data );
         }
 
 
