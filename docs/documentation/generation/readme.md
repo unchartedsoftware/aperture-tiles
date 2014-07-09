@@ -8,19 +8,19 @@ layout: default
 Tile Generation
 ===============
 
-Aperture Tiles provides a distributed framework for processing your large-scale data built on the Apache Spark engine to create a set of tiles that summarize and aggregate your data at various levels in a pyramid structure. 
+Using a distributed framework built on the Apache Spark engine, Aperture Tiles enables you to create a set of visual tiles that summarize and aggregate your large-scale data at various levels in a pyramid structure. 
 
-At the highest level (level 0) in the tile set pyramid, there is only a single tile summarizing all data. On each lower level, there are up to 4^z tiles, where z is the zoom level (with lower numbers indicating higher levels. At each level, the tiles are laid out row wise across the base map or plot, starting at the lower left. Each tile summarizes the data located in that particular tile.
+At the highest level in the tile set pyramid (level 0), a single tile summarizes all of your data. On each lower level, there are up to 4^z tiles, where z is the zoom level (with lower numbers indicating higher levels). At each level, the tiles are laid out row wise across the base map or plot, starting at the lower left. Each tile summarizes the data it comprises.
 
 ![Tile Layout](../../img/tile-layout.png)
 
-Each tile is an AVRO record object containing an array of values (typically 256 x 256). Each bin element in the array contains an aggregation of all the data points that fall within it.
+Each tile is an AVRO record object containing an array of bins (typically 256 x 256). Each bin contains an aggregation of all the data points that fall within it.
 
 ![Tile Grid](../../img/tile-grid.png)
 
 There are three ways to turn your source data into a set of AVRO tiles:
 
-- Using the built-in CSVBinner tool, which can produce tiles that aggregate numeric data by summation, min, or max.
+- Using the built-in CSVBinner tool, which can produce tiles that aggregate numeric data by summation or take the minimum or maximum value.
 - Creating custom tile-based analytics using the *RDDBinner* APIs.
 - Using third-party tools, provided they adhere to the Aperture Tiles AVRO schema. Basic schema files are available in `binning-utilities/src/main/resources`.
 
@@ -39,11 +39,11 @@ See the [Installation documentation](../setup) for full details on the required 
 
 ###<a name="spark-config"></a>Apache Spark Configuration
 
-Apache Spark must be configured to use the same version of Hadoop that you have installed.  Either [download the correct version directly](http://spark.apache.org/downloads.html), or if no version is listed for the correct flavour of hadoop, you can [build spark](http://spark.apache.org/docs/latest/building-with-maven.html) to support your hadoop version.   
+Apache Spark must be configured specifically for the version of Hadoop you have installed. [Download the correct version directly](http://spark.apache.org/downloads.html) or, if no version is listed for the correct flavor of Hadoop, [build Spark](http://spark.apache.org/docs/latest/building-with-maven.html) to support your Hadoop version.   
 
 ####<a name="spark-script"></a>spark-run Script
 
-The Tile Generator distribution package, and the Aperture Tiles source code, both contain a **spark-run** script (*bin/**spark-run.sh*** and *aperture-tiles/tile-generation/scripts/**spark-run***, respectively) designed to help you build your own tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters. 
+The Tile Generator distribution package and the Aperture Tiles source code both contain a **spark-run** script (*bin/**spark-run.sh*** and *aperture-tiles/tile-generation/scripts/**spark-run*** respectively) designed to help you build your own tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters. 
 
 If you want to use this script, you must first set the following environment variables:
 
@@ -51,7 +51,8 @@ If you want to use this script, you must first set the following environment var
 SCALA_HOME - the path to the scala installation directory
 SPARK_HOME - the path to the spark installation directory
 ```
-Note that in the source code, this script only exists after building the project, and that it looks for tile-generation jar files in your local maven repository. Therefore in order to use this script from the source code, you first need to run:
+
+Note that in the source code, this script only exists after you build the project. The built script looks for tile generation JAR files in your local maven repository. Therefore, to use this script from the source code, you must first run the following command:
 
     mvn install
 
@@ -61,7 +62,7 @@ Note that in the source code, this script only exists after building the project
 
 The Aperture Tiles project includes a CSVBinner tool designed to process numeric, character-separated (e.g., CSV) tabular data. The CSVBinner accepts two types of property files to define the tile set you want to create:
 
-- A Base property file, which describes the general characteristics of the data. 
+- A Base property file, which describes the general characteristics of the data
 - Tiling property files, each of which describes the specific attributes you want to tile
 
 Run the tile generation using the **spark-run** script by using a command similar to:
@@ -87,10 +88,9 @@ spark
 
 sparkhome
    Location of Spark in the remote location (and, necessarily, on the local
-   machine too).
-   Defaults to the value of the environment variable, SPARK_HOME.
+   machine too). Defaults to the value of the environment variable, SPARK_HOME.
 
-user (optional)
+user	(Optional)
    Username passed to the job title so people know who is running the job.
    Defaults to the username of the current user.
 ```
@@ -138,52 +138,75 @@ oculus.binning.parsing.separator
    data files. Default is a tab.
 
 oculus.binning.parsing.<field>.index
-   Column number of the described field in the input data files
+   Column number of the described field in the input data files.
    This field is mandatory for every field type to be used
 
 oculus.binning.parsing.<field>.fieldType
-   Type of value expected in the column specified by 
-   oculus.binning.parsing.<field>.index.
-   Default is to treat the column as containing real, double-precision values.
-   Other possible types are:
-       constant or zero - contains 0.0 (the column does not need to exist)
-       int  - contains integers
-       long - containe double-precision integers
-       date - contains dates.  Date are parsed and transformed into
-              milliseconds since the standard Java start date (using
-			  SimpleDateFormatter).
-              Default format is yyMMddHHmm, but this can be overridden using
-              the oculus.binning.parsing.<field>.dateFormat
-       propertyMap - contains property maps.  Further information
-                     required to retrieve the specific property.  All 
-                     of the following properties must be present to 
-                     read the property:
-          oculus.binning.parsing.<field>.property 
-             Name of the property
-          oculus.binning.parsing.<field>.propertyType
-             Equivalent to fieldType
-          oculus.binning.parsing.<field>.propertySeparator
-             Character or string used to separate properties
-          oculus.binning.parsing.<field>.propertyValueSeparator
-             Character or string used to separate property keys from their
-             values
+   Type of value expected in the column specified by oculus.binning.parsing
+   .<field>.index.
+
+   Default treats the column as containing real, double-precision values. Other
+   possible types are:
+
+       - constant or zero
+			Contains 0.0 (the column does not need to exist)
+
+       - int
+       		Contains integers
+
+       - long
+	       	Contains double-precision integers
+
+       - date
+	       	Contains dates. Date are parsed and transformed into milliseconds
+			since the standard Java start date (using SimpleDateFormatter).
+			Default format is yyMMddHHmm, but this can be overridden using the
+			oculus.binning.parsing.<field>.dateFormat
+
+       	- propertyMap
+	       	Contains property maps. Further information required to retrieve the
+			specific property. All of the following properties must be present
+			to read the property:
+          	
+			- oculus.binning.parsing.<field>.property 
+             	Name of the property
+
+          	- oculus.binning.parsing.<field>.propertyType
+             	Equivalent to fieldType
+
+          	- oculus.binning.parsing.<field>.propertySeparator
+             	Character or string used to separate properties
+
+          	- oculus.binning.parsing.<field>.propertyValueSeparator
+             	Character or string used to separate property keys from their
+             	values
 
 oculus.binning.parsing.<field>.fieldScaling
-   How field values should be scaled. Default is to leave values as they are.
-   Other possibilities are:
-       log - take the log of the value (oculus.binning.parsing.<field>.fieldBase
-             is used, just as with fieldAggregation)
+   How field values should be scaled.
+
+   Default leaves values as they are. Other possibilities are:
+
+   	- log
+	   	take the log of the value (oculus.binning.parsing.<field>.fieldBase is
+		used, just as with fieldAggregation)
 
 oculus.binning.parsing.<field>.fieldAggregation
-   Method of aggregation to be used on values of the X field. Describes how
-   values from multiple data points in the same bin should be aggregated together
-   to create a single value for the bin.
+   Method of aggregation used on values of the X field. Describes how values from
+   multiple data points in the same bin should be aggregated together to create a
+   single value for the bin.
+
    Default is addition.  Other possible aggregation types are:
-       min - find the minimum value
-       max - find the maximum value
-       log - treat the number as a logarithmic value; aggregation of a and b is 
-             log_base(base^a+base^b). Base is taken from property
-             oculus.binning.parsing.<field>.fieldBase, and defaults to e.
+
+	- min
+		Find the minimum value
+
+	- max
+		Find the maximum value
+
+	- log
+		Treat the number as a logarithmic value; aggregation of a and b is
+		log_base(base^a+base^b). Base is taken from property
+		oculus.binning.parsing.<field>.fieldBase, and defaults to e.
 ```
 
 ####<a name="tiling-properties"></a>Tiling Properties File
@@ -199,19 +222,21 @@ oculus.binning.name
 
 oculus.binning.projection
    Type of projection to use when binning data.  Possible values are:
-       EPSG:4326 - bin linearly over the whole range of values found (default)
-       EPSG:900913 - web-mercator projection (used for geographic values only)
+
+   - EPSG:4326
+   		Bin linearly over the whole range of values found (default)
+
+   - EPSG:900913
+	   Web-mercator projection (used for geographic values only)
 
 oculus.binning.xField
    Field to use as the X axis value.
 
 oculus.binning.yField
-   Field to use as the Y axis value.  
-   Defaults to none.
+   Field to use as the Y axis value. Defaults to none.
 
 oculus.binning.valueField
-   Field to use as the bin value.
-   Default is to count entries only.
+   Field to use as the bin value. Default is to count entries only.
 
 oculus.binning.levels.<order>
    Array property. For example, if you want to bin levels in three groups, 
@@ -494,7 +519,7 @@ Binner.processDataByLevel is defined in the following file on line 237.
 It accepts the following properties:
 
 ```
-data
+bareData
 	A distributed collection of (index, record) pairs as described above.
 
 indexScheme
@@ -507,8 +532,13 @@ binAnalytic
 	dataset.
 
 tileAnalytics
+	Analytics used to perform custom aggregations on tile data (e.g., get the
+	minimum and maximum values) and write them to the metadata by level.
 
 dataAnalytics
+	Analytics used to perform custom aggregations on raw data that would
+	otherwise be lost by the processing type (e.g., recording the maximum
+	individual value) and write them to the metadata by level.
 
 tileScheme
 	The projection to use to transform from the raw data index into tiles and
@@ -554,14 +584,18 @@ tileIO.writeTileSet(tilePyramid,
 				    pyramidDescription)
 ```
 
-Where tileIO.writeTileSet accepts the following properties:
+Binner.processDataByLevel is defined in the following file on line 180.
 
 ```
-tilePyramid
+/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
+```
+
+```
+tileScheme
 	Type of projection built from the set of bins and levels. Must match the
     tileScheme specified in binner.processDataByLevel.
 
-pyramidId
+writeLocation
 	The ID to apply to the tile set when writing it. If writing to the local
 	filesystem, this will be the base directory into which to write the tiles.
 	If writing to HBase, it will be the name of the table to write.
@@ -569,19 +603,22 @@ pyramidId
 tiles
 	The binned data set produced by binner.processDataByLevel.
 
-TwitterTopicValueDescription
-
-tileAnalytics
-
-dataAnalytics
-
-binDescriptor
+valueScheme
 	The bin descriptor describing the dataset.  This must match the bin
 	descriptor used when creating the tiles.
 
-pyramidName
+tileAnalytics	(Optional)
+	Analytics used to perform custom aggregations on tile data (e.g., get the
+	minimum and maximum values) and write them to the metadata by level.
+
+dataAnalytics	(Optional)
+	Analytics used to perform custom aggregations on raw data that would
+	otherwise be lost by the processing type (e.g., recording the maximum
+	individual value) and write them to the metadata by level.
+
+name
 	Name of the finished pyramid. Stored in the tile metadata.
 
-pyramidDescription
+description
 	Description of the finished pyramid. Stored in the tile metadata. 
 ```
