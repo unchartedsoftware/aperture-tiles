@@ -30,7 +30,7 @@ import com.oculusinfo.binning.metadata.AddPropertyMutator;
 import com.oculusinfo.binning.metadata.PropertyIndexToArrayMutator;
 import com.oculusinfo.binning.metadata.PropertyRelocationMutator;
 import com.oculusinfo.binning.metadata.PyramidMetaDataVersionMutator;
-import com.oculusinfo.binning.metadata.RemovePropertyMutator;
+//import com.oculusinfo.binning.metadata.RemovePropertyMutator;
 
 public class MetaDataF0p0T1p0 extends PyramidMetaDataVersionMutator {
     public static void register () {
@@ -74,8 +74,8 @@ public class MetaDataF0p0T1p0 extends PyramidMetaDataVersionMutator {
               new PropertyRelocationMutator("Y tile size",
                                             new String[] {"tilesize"},
                                             new String[] {"tilesizey"}, true),
-              new RemovePropertyMutator(new String[] {"minzoom"}),
-              new RemovePropertyMutator(new String[] {"maxzoom"}),
+              //new RemovePropertyMutator(new String[] {"minzoom"}),
+              //new RemovePropertyMutator(new String[] {"maxzoom"}),
               new AddPropertyMutator("1.0", new String[] {"version"})
                 );
     }
