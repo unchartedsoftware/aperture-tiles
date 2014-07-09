@@ -31,21 +31,10 @@ define(function (require) {
 
     var Layer = require('../Layer'),
         AnnotationService = require('./AnnotationService'),
+        AnnotationDetails = require('./AnnotationDetails'),
         HtmlNodeLayer = require('../HtmlNodeLayer'),
         HtmlLayer = require('../HtmlLayer'),
         //NUM_BINS_PER_DIM = 8,
-        ANNOTATION_DETAILS_CLASS = 'annotation-details',
-        ANNOTATION_DETAILS_CONTENT_CLASS = "annotation-details-content",
-        ANNOTATION_DETAILS_HEAD_CLASS = "annotation-details-head",
-        ANNOTATION_DETAILS_BODY_CLASS = "annotation-details-body",
-        ANNOTATION_DETAILS_AGGREGATE_CLASS = "annotation-details-aggregate",
-        ANNOTATION_DETAILS_LABEL_CLASS = "annotation-details-label",
-        ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS = "annotation-details-close-button",
-        ANNOTATION_CAROUSEL_CLASS = "annotation-carousel",
-        ANNOTATION_CHEVRON_CLASS = "annotation-carousel-ui-chevron",
-        ANNOTATION_CHEVRON_LEFT_CLASS = "annotation-carousel-ui-chevron-left",
-        ANNOTATION_CHEVRON_RIGHT_CLASS = "annotation-carousel-ui-chevron-right",
-        ANNOTATION_INDEX_CLASS = "annotation-carousel-ui-text-index",
         AnnotationLayer;
 
 
@@ -66,210 +55,146 @@ define(function (require) {
             this.update();
         },
 
+
         setOpacity: function( opacity ) {
             this.nodeLayer.getRootElement().css( 'opacity', opacity );
         },
+
 
         setVisibility: function( visible ) {
             var visibility = visible ? 'visible' : 'hidden';
             this.nodeLayer.getRootElement().css( 'visibility', visibility );
         },
 
-        getDetailsTitle : function() {
-            return true;
+
+        getAnnotationHtml : function ( bin, tilePosition ) {
+
+            var ANNOTATION_POINT_CLASS = "point-annotation",
+                ANNOTATION_AGGREGATE_POINT_CLASS = "point-annotation-aggregate",
+                ANNOTATION_POINT_FILL_CLASS = "point-annotation-front",
+                ANNOTATION_POINT_BORDER_CLASS = "point-annotation-back",
+                CLICKED_ANNOTATION_CLASS = "clicked-annotation",
+                CLICKED_AGGREGATE_CLASS = "clicked-aggregate",
+                html = '',
+                pos,
+                offset,
+                $annotation,
+                i;
+
+            // aggregation div
+            html += '<div class="'+ANNOTATION_AGGREGATE_POINT_CLASS+'">';
+
+            // for each annotation in the bin
+            for (i=0; i<bin.length; i++) {
+
+                // get annotations position in viewport space
+                pos = this.map.getViewportPixelFromCoord( bin[i].x, bin[i].y );
+                // get relative position from tile top left
+                offset = {
+                    x : pos.x - tilePosition.x,
+                    y : pos.y - tilePosition.y
+                };
+
+                html += '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_FILL_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>' +
+                        '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_BORDER_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>';
+            }
+
+            html += '</div>';
+
+            // create element
+            $annotation = $( html );
+            // attach click event handler
+            $annotation.click( function() {
+                // on click highlight annotation
+                $( '.'+ANNOTATION_AGGREGATE_POINT_CLASS ).removeClass( CLICKED_AGGREGATE_CLASS );
+                $( '.'+ANNOTATION_POINT_FILL_CLASS ).removeClass( CLICKED_ANNOTATION_CLASS );
+                $annotation.addClass( CLICKED_AGGREGATE_CLASS );
+                $annotation.find( '.'+ANNOTATION_POINT_FILL_CLASS ).addClass( CLICKED_ANNOTATION_CLASS );
+            });
+
+            return $annotation;
         },
 
-        getDetailsContent : function() {
-            return true;
+
+        getDetailsHeaderHtml : function( annotation ) {
+
+            return $('<div class="twitter-details-header">'+annotation.data.user+'</div>');
         },
+
+
+        getDetailsBodyHtml : function( annotation ) {
+
+            var captureSettings = {
+                    format : 'PNG',
+                    captureWidth : 384,
+                    cache : false
+                },
+                $temporaryContent = $('<div class="twitter-details-loader">'
+                                     +    '<div class="twitter-loader-gif"></div>'
+                                     +'</div>'),
+                captureURL = aperture.capture.inline( 'https://mobile.twitter.com/justinbieber',
+                                                      captureSettings,
+                                                      null ),
+                $img = $('<img class="twitter-capture" src="'+captureURL+'">');
+
+            $img.load( function() {
+
+                var $content = $('<div class="twitter-details-img" style="opacity:0"></div>').append( $img );
+
+                $content.mouseenter( function() {
+
+                    var $externalLink = $('<div class="twitter-external-link"></div>');
+                    $externalLink.click( function() {
+                        window.open('https://www.twitter.com/justinbieber');
+                    });
+                    $content.append( $externalLink );
+
+                });
+
+                $content.mouseleave( function() {
+                    var $externalLink = $('.twitter-external-link');
+                    $externalLink.remove();
+                });
+
+                // swap content
+                $temporaryContent.replaceWith( $content );
+                // fade content in
+                $content.animate({opacity:1});
+            });
+
+            return $temporaryContent;
+        },
+
 
         createLayer : function() {
 
             var that = this,
                 detailsIsOpen = false;
 
-            function DEBUG_ANNOTATION( pos ) {
-                return {
-                    x: pos.x,
-                    y: pos.y,
-                    group: that.layerSpec.groups[ Math.floor( that.layerSpec.groups.length*Math.random() ) ],
-                    range: {
-                        min: 0,
-                        max: that.map.getZoom()
-                    },
-                    level: that.map.getZoom(),
-                    data: {
-                        user: "justinbieber"
-                    }
-                };
-            }
-
-            function destroyDetails() {
-
-                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
-                detailsIsOpen = false;
-            }
-
-            function createDetailsContent( $details, annotation ) {
-
-                var $detailsHeader,
-                    $detailsBody,
-                    $detailsContent,
-                    $closeButton,
-                    captureSettings, captureURL;
-
-                // remove any previous view
-                $( "."+ANNOTATION_DETAILS_CONTENT_CLASS ).remove();
-
-                captureSettings = {
-                    format : 'PNG',
-                    captureWidth : 384,
-                    cache : false
-                };
-
-                captureURL = aperture.capture.inline( 'https://mobile.twitter.com/justinbieber',
-                                                      captureSettings,
-                                                      null );
-
-                $('<img class="twitter-capture" border="0" width="384" src="'+captureURL+'">').load(function() {
-
-                    var $imgDiv = $('<div class="annotation-details-img" style="opacity:0"></div>');
-                    $detailsBody.empty();
-                    $detailsBody.append( $imgDiv.append( $(this) ) );
-                    $imgDiv.animate({opacity:1});
-
-                    $imgDiv.mouseenter( function() {
-
-                        var $externalLink = $('<div class="twitter-external-link"></div>');
-                        $externalLink.click( function() {
-                            window.open('https://www.twitter.com/justinbieber');
-                        });
-                        $imgDiv.append( $externalLink );
-
-                    });
-
-                    $imgDiv.mouseleave( function() {
-                        var $externalLink = $('.twitter-external-link');
-                        $externalLink.remove();
-                    });
-                });
-
-                $detailsContent = $('<div class="'+ANNOTATION_DETAILS_CONTENT_CLASS+'"></div>');
-                $detailsHeader = $('<div class="'+ANNOTATION_DETAILS_HEAD_CLASS+'">'
-                                 +     '<div class="'+ANNOTATION_DETAILS_LABEL_CLASS+'">'+annotation.data.user+'</div>'
-                                 + '</div>');
-                $detailsBody = $('<div class="'+ANNOTATION_DETAILS_BODY_CLASS+'"></div>');
-
-                $detailsContent.append( $detailsHeader );
-                $detailsContent.append( $detailsBody );
-                // temporary loading body
-                $detailsBody.append('<div class="annotation-details-loader">'
-                                   +    '<div class="annotation-loader-gif"></div>'
-                                   +'</div>');
-
-                // create close button
-                $closeButton = $('<div class="'+ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS+'"></div>');
-                $closeButton.click( function() {
-                    $('.point-annotation-aggregate').removeClass('clicked-aggregate');
-                    $('.point-annotation-front').removeClass('clicked-annotation');
-                    destroyDetails();
-                    event.stopPropagation();
-                });
-                // append content
-                $details.append( $detailsContent );
-                // close button
-                $details.append( $closeButton );
-            }
-
-            function createDetailsCarouselUI( $details, bin ) {
-
-                var $carousel,
-                    $leftChevron,
-                    $rightChevron,
-                    $indexText,
-                    index = 0;
-
-                function mod( m, n ) {
-                    return ((m % n) + n) % n;
-                }
-
-                function indexText() {
-                    return (index+1) +' of '+ bin.length;
-                }
-
-                // remove any previous details
-                $( "."+ANNOTATION_CAROUSEL_CLASS ).remove();
-
-                $details.addClass( ANNOTATION_DETAILS_AGGREGATE_CLASS );
-
-                $leftChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_LEFT_CLASS+"'></div>");
-                $rightChevron = $("<div class='"+ANNOTATION_CHEVRON_CLASS+" "+ANNOTATION_CHEVRON_RIGHT_CLASS+"'></div>");
-
-                $leftChevron.click( function() {
-                    index = mod( index-1, bin.length );
-                    createDetailsContent( $details, bin[index] );
-                    $indexText.text( indexText() );
-                    event.stopPropagation();
-                });
-                $rightChevron.click( function() {
-                    index = mod( index+1, bin.length );
-                    createDetailsContent( $details, bin[index] );
-                    $indexText.text( indexText() );
-                    event.stopPropagation();
-                });
-
-                $indexText = $('<div class="'+ANNOTATION_INDEX_CLASS+'">'+ indexText() +'</div>');
-                $carousel = $('<div class="'+ANNOTATION_CAROUSEL_CLASS+'"></div>');
-
-                $carousel.append( $leftChevron );
-                $carousel.append( $rightChevron );
-                $carousel.append( $indexText );
-                $details.append( $carousel );
-            }
-
-            function createDetailsElement( bin, pos, $bin ) {
-
-                var $details;
-
-                // remove any previous details
-                $( "."+ANNOTATION_DETAILS_CLASS ).remove();
-                // create details div
-                $details = $('<div class="'+ANNOTATION_DETAILS_CLASS+'"></div>');
-                // create display for first annotation
-                createDetailsContent( $details, bin[0], bin.length > 1 );
-                // if more than one annotation, create carousel ui
-                if ( bin.length > 1 ) {
-                    createDetailsCarouselUI( $details, bin );
-                }
-
-                $bin.append( $details );
-
-                // make details draggable and resizable
-
-                $details.draggable().resizable({
-                    minHeight: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).height(),
-                    minWidth: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).width()
-                });
-                //that.map.getRootElement().append( $details );
-
-                $details.css({
-                    left: pos.x -( $details.outerWidth()/2 ),
-                    top: pos.y - ( $details.outerHeight() + 26 )
-                });
-
-            }
-
-            function createDetails( bin, pos, $bin ) {
-
-                createDetailsElement( bin, pos, $bin );
-                detailsIsOpen = true;
-            }
-
-
             function createAnnotation() {
 
+                var pos,
+                    tilekey;
+
+                function DEBUG_ANNOTATION( pos ) {
+                    return {
+                        x: pos.x,
+                        y: pos.y,
+                        group: that.layerSpec.groups[ Math.floor( that.layerSpec.groups.length*Math.random() ) ],
+                        range: {
+                            min: 0,
+                            max: that.map.getZoom()
+                        },
+                        level: that.map.getZoom(),
+                        data: {
+                            user: "justinbieber"
+                        }
+                    };
+                }
+
                 if ( detailsIsOpen ) {
-                    destroyDetails();
+                    AnnotationDetails.destroyDetails();
+                    detailsIsOpen = false;
                     return;
                 }
 
@@ -277,8 +202,10 @@ define(function (require) {
                     return;
                 }
 
-                var pos = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y ),
-                    tilekey = that.map.getTileKeyFromViewportPixel( event.xy.x, event.xy.y );
+                // get position and tilekey for annotation
+                pos = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y );
+                tilekey = that.map.getTileKeyFromViewportPixel( event.xy.x, event.xy.y );
+                // write annotation
                 that.service.writeAnnotation( DEBUG_ANNOTATION( pos ), that.updateCallback(tilekey) );
             }
 
@@ -304,51 +231,41 @@ define(function (require) {
                     // get tile position
                     tilePos = that.map.getViewportPixelFromCoord( data.longitude, data.latitude );
 
-                    function createAggregateHtml( bin ) {
+                    function createAnnotationBin( bin ) {
 
-                        var html = '',
-                            avgPos = { x:0, y:0 },
-                            annoPos,
-                            offset,
-                            $bin = $('<div class="annotation-bin" style="position:absolute;"></div>'),
-                            $aggregate,
-                            i;
+                        var ANNOTATION_BIN_CLASS = "annotation-bin",
+                            $bin = $('<div class="'+ANNOTATION_BIN_CLASS+'"></div>'),
+                            $annotation = that.getAnnotationHtml( bin, tilePos );
 
-                        html += '<div class="point-annotation-aggregate" style="position:absolute;">';
+                        // add details click event
+                        $annotation.click( function( event ) {
 
-                        // for each annotation
-                        for (i=0; i<bin.length; i++) {
+                            var $details = AnnotationDetails.createDetails( bin, $bin,
+                                                                            $.proxy( that.getDetailsHeaderHtml, that ),
+                                                                            $.proxy( that.getDetailsBodyHtml, that ) ),
+                                offset = $bin.offset(),
+                                relX = event.pageX - offset.left,
+                                relY = event.pageY - offset.top;
 
-                            annoPos = that.map.getViewportPixelFromCoord( bin[i].x, bin[i].y );
+                            $details.css({
+                                left: relX -( $details.outerWidth()/2 ),
+                                top: relY - ( $details.outerHeight() + 26 )
+                            });
 
-                            offset = {
-                                x : annoPos.x - tilePos.x,
-                                y : annoPos.y - tilePos.y
-                            };
+                            detailsIsOpen = true;
+                        });
 
-                            avgPos.x += offset.x;
-                            avgPos.y += offset.y;
-
-                            html += '<div class="point-annotation point-annotation-front" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>' +
-                                    '<div class="point-annotation point-annotation-back" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>';
-
-                        }
-
-                        html += '</div>';
-
-                        $aggregate = $(html);
-                        $bin.append( $aggregate );
-
-                        if (bin.length === 1 && that.layerSpec.accessibility.modify) {
+                        // add drag modify event
+                        if ( bin.length === 1 && that.layerSpec.accessibility.modify ) {
 
                             $bin.draggable({
 
                                 stop: function( event ) {
-                                    var $element = $(this).find('.point-annotation-back'),
-                                        annotation = bin[0],
-                                        offset = $element.offset(),
-                                        dim = $element.width()/2,
-                                        pos = that.map.getCoordFromViewportPixel( offset.left+dim, offset.top+dim );
+
+                                    var annotation = bin[0],
+                                        offset = that.map.getElement().offset(),
+                                        pos = that.map.getCoordFromViewportPixel( event.clientX - offset.left,
+                                                                                  event.clientY - offset.top );
 
                                     annotation.x = pos.x;
                                     annotation.y = pos.y;
@@ -358,29 +275,22 @@ define(function (require) {
                                         return true;
                                     });
 
-                                    $( event.toElement ).one('click', function(e){ e.stopImmediatePropagation(); } );
+                                    // prevent click from firing
+                                    $( event.toElement ).one('click', function(e) {
+                                        e.stopImmediatePropagation();
+                                    });
                                 }
                             });
                         }
 
-                        avgPos.x /= bin.length;
-                        avgPos.y /= bin.length; //= that.map.getMapHeight() - ( avgPos.y / bin.length );
-
-                        $aggregate.click( function() {
-                            $('.point-annotation-aggregate').removeClass('clicked-aggregate');
-                            $('.point-annotation-front').removeClass('clicked-annotation');
-                            $aggregate.addClass('clicked-aggregate');
-                            $aggregate.find('.point-annotation-front').addClass('clicked-annotation');
-                            createDetails( bin, avgPos, $bin );
-                        });
-
+                        $bin.append( $annotation );
                         return $bin;
                     }
 
                     // for each bin
                     for (key in data.bins) {
                         if (data.bins.hasOwnProperty(key)) {
-                            $tile = $tile.add( createAggregateHtml( data.bins[key] ) );
+                            $tile = $tile.add( createAnnotationBin( data.bins[key] ) );
                         }
                     }
 
@@ -388,44 +298,6 @@ define(function (require) {
                 }
 
             }));
-
-            /* debug bin visualizing
-            this.nodeLayer.addLayer( new HtmlLayer({
-                html : function() {
-
-                    var data = this,
-                        html = '',
-                        key;
-
-                    function createBinHtml( binkey ) {
-                        var BIN_SIZE = 256/NUM_BINS_PER_DIM,
-                            parsedValues = binkey.split(/[,\[\] ]/),
-                            bX = parseInt(parsedValues[1], 10),
-                            bY = parseInt(parsedValues[3], 10),
-                            left = BIN_SIZE*bX,
-                            top = BIN_SIZE*bY;
-                        return '<div class="annotation-bin"' +
-                               'style="position:absolute;' +
-                               'z-index:-1;'+
-                               'left:'+left+'px; top:'+top+'px;'+
-                               'width:'+BIN_SIZE+'px; height:'+BIN_SIZE+'px;'+
-                               'pointer-events:none;' +
-                               'border: 1px solid #FF0000;' +
-                               '-webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;">'+
-                               '</div>';
-                    }
-
-                    // for each bin
-                    for (key in data.bins) {
-                        if (data.bins.hasOwnProperty(key)) {
-                            html += createBinHtml( key );
-                        }
-                    }
-                    return html;
-
-                }
-            }));
-            */
 
             that.map.on('click', function() {
                 $('.point-annotation-aggregate').removeClass('clicked-aggregate');
