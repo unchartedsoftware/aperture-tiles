@@ -380,19 +380,55 @@ trait StandardDoubleArrayBinningAnalytic extends BinningAnalytic[Seq[Double],
 		value.map(v => new JavaDouble(v)).asJava
 }
 
-class StringScoreAnalytic extends Analytic[Map[String, Double]] {
-	def aggregate (a: Map[String, Double], b: Map[String, Double]): Map[String, Double] =
-		(a.keySet union b.keySet).map(key =>
-			key -> (a.getOrElse(key, 0.0) + b.getOrElse(key, 0.0))
-		).toMap
+/**
+ * Standard string score ordering
+ * 
+ * @param aggregationLimit A pair whose first element is the number of elements 
+ *                         to keep when aggregating, and whose second element 
+ *                         is a sorting function by which to sort them.
+ */
+class StringScoreAnalytic
+	(aggregationLimit: Option[Int] = None,
+	 order: Option[((String, Double), (String, Double)) => Boolean] = None)
+		extends Analytic[Map[String, Double]]
+{
+	def aggregate (a: Map[String, Double],
+	               b: Map[String, Double]): Map[String, Double] = {
+		val combination =
+			(a.keySet union b.keySet).map(key =>
+				key -> (a.getOrElse(key, 0.0) + b.getOrElse(key, 0.0))
+			)
+		val sorted: Iterable[(String, Double)] = order.map(fcn =>
+			combination.toList.sortWith(fcn)
+		).getOrElse(combination)
+
+		aggregationLimit.map(limit =>
+			sorted.take(limit)
+		).getOrElse(sorted)
+			.toMap
+	}
 	def defaultProcessedValue: Map[String, Double] = Map[String, Double]()
 	def defaultUnprocessedValue: Map[String, Double] = Map[String, Double]()
 }
 
-trait StandardStringScoreBinningAnalytic extends BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]]
+class StandardStringScoreBinningAnalytic
+	(aggregationLimit: Option[Int] = None,
+	 order: Option[((String, Double), (String, Double)) => Boolean] = None,
+	 storageLimit: Option[Int] = None)
+		extends StringScoreAnalytic(aggregationLimit, order)
+		with BinningAnalytic[Map[String, Double],
+		                     JavaList[Pair[String, JavaDouble]]]
 {
 	def finish (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] = {
-		value.toSeq.map(p => new Pair(p._1, new JavaDouble(p._2))).asJava
+		val valueSeq =
+			order
+				.map(fcn => value.toSeq.sortWith(fcn))
+				.getOrElse(value.toSeq)
+				.map(p => new Pair(p._1, new JavaDouble(p._2)))
+		storageLimit
+			.map(valueSeq.take(_))
+			.getOrElse(valueSeq)
+			.asJava
 	}
 }
 

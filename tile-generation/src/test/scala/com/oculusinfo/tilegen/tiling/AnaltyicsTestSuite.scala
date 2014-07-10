@@ -142,4 +142,35 @@ class AnalyticsTestSuite extends FunSuite {
 		println("value: \""+analytic.valueToString(a)+"\"")
 		assert("[\"a\":1.0,\"b\":2.0,\"c\":3.0,\"d\":4.0]" === analytic.valueToString(a))
 	}
+
+	test("String score processing limits") {
+		val a1 = new StringScoreAnalytic(Some(5), Some(_._2 < _._2))
+		val a2 = new StringScoreAnalytic(Some(5), Some(_._2 > _._2))
+
+		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
+		val b = Map("c" -> 1.0, "d" -> 2.0, "e" -> 5.0, "f" -> 0.0)
+
+		assert(Map("f" -> 0.0, "a" -> 1.0, "b" -> 2.0, "c" -> 4.0, "e" -> 5.0)
+			       === a1.aggregate(a, b))
+		assert(Map("a" -> 1.0, "b" -> 2.0, "c" -> 4.0, "e" -> 5.0, "d" -> 6.0)
+			       === a2.aggregate(a, b))
+	}
+
+	test("String score storage limits") {
+		val ba1 = new StandardStringScoreBinningAnalytic(Some(5),
+		                                                 Some(_._2 < _._2),
+		                                                 Some(3))
+		val ba2 = new StandardStringScoreBinningAnalytic(Some(5),
+		                                                 Some(_._2 > _._2),
+		                                                 Some(3))
+
+		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
+
+		assert(List(("a", 1.0), ("b", 2.0), ("c", 3.0)) ===
+			       ba1.finish(a).asScala
+			       .map(p => (p.getFirst, p.getSecond.doubleValue)))
+		assert(List(("d", 4.0), ("c", 3.0), ("b", 2.0)) ===
+			       ba2.finish(a).asScala
+			       .map(p => (p.getFirst, p.getSecond.doubleValue)))
+	}
 }
