@@ -139,12 +139,10 @@
     height:12px;
     background: transparent url(../images/close_icon.png) no-repeat center top;
     opacity: 0.5;
-
     -webkit-transform: scale(0.75);
        -moz-transform: scale(0.75);
         -ms-transform: scale(0.75);
             transform: scale(0.75);
-
     -webkit-transition: 0.1s ease-in-out;
        -moz-transition: 0.1s ease-in-out;
         -ms-transition: 0.1s ease-in-out;
@@ -182,6 +180,9 @@
     height: 50px;
     width: 20px;
     -webkit-transform: scale(0.5);
+       -moz-transform: scale(0.5);
+        -ms-transform: scale(0.5);
+            transform: scale(0.5);
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;
             transition:         transform .1s ease-in-out;

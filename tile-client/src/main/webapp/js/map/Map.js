@@ -124,8 +124,8 @@ define(function (require) {
             this.$map.append( this.$root );
 
             this.on('move', function() {
-                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
-                var translate = "translate("+ pos.x +"px, " + pos.y + "px)";
+                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() ),
+                    translate = "translate("+ pos.x +"px, " + pos.y + "px)";
                 that.$root.css({
                     "-webkit-transform": translate,
                     "-moz-transform": translate,
