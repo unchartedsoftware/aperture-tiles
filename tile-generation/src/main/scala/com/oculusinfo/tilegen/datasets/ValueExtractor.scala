@@ -51,6 +51,7 @@ import com.oculusinfo.tilegen.tiling.MaximumDoubleAnalytic
 import com.oculusinfo.tilegen.tiling.SumDoubleAnalytic
 import com.oculusinfo.tilegen.tiling.SumDoubleArrayAnalytic
 import com.oculusinfo.tilegen.tiling.StandardDoubleArrayBinningAnalytic
+import com.oculusinfo.tilegen.tiling.StandardStringScoreBinningAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
@@ -77,34 +78,76 @@ object CSVValueExtractor {
 			new MultiFieldValueExtractor(fieldNames)
 		} else {
 			// Single field; figure out what type.
-			field match {
-				case None | Some("count") => {
-					new CountValueExtractor
-				}
-				case _ => {
-					val fieldAggregation =
-						properties.getString("oculus.binning.parsing." + field.get
-							                     + ".fieldAggregation",
-						                     "The way to aggregate the value field when binning",
-						                     Some("add"))
+			if (field.isDefined) {
+				val fieldType = properties.getString("oculus.binning.parsing."+field+".fieldType",
+				                                     "The type of the "+field+" field",
+				                                     Some(if ("constant" == field || "zero" == field) "constant"
+				                                          else ""))
+				fieldType match {
+					case "string" => {
+						val aggregationLimit = properties.getIntOption(
+							"oculus.binning.parsing."+field.get+".limit.aggregation",
+							"The maximum number of elements to keep internally when "+
+								"calculating bins")
+						val order = properties.getStringOption(
+							"oculus.binning.parsing."+field.get+".order",
+							"How to order elements.  Possible values are: \"alpha\" for "+
+								"alphanumeric ordering of strings, \"reverse-alpha\" "+
+								"similarly, \"high\" for ordering by score from high to "+
+								"low, \"low\" for ordering by score from low to high, "+
+								"and \"random\" or \"none\" for no ordering.") match {
+							case Some("alpha") =>
+								Some((a: (String, Double), b: (String, Double)) =>
+									a._1.compareTo(b._1)>0
+								)
+							case Some("reverse-alpha") =>
+								Some((a: (String, Double), b: (String, Double)) =>
+									a._1.compareTo(b._1)>0
+								)
+							case Some("high") =>
+								Some((a: (String, Double), b: (String, Double)) =>
+									a._2 > b._2
+								)
+							case Some("low") =>
+								Some((a: (String, Double), b: (String, Double)) =>
+									a._2 < b._2
+								)
+							case _ => None
+						}
+						val binLimit = properties.getIntOption(
+							"oculus.binning.parsing."+field.get+".limit.bins",
+							"The maximum number of entries to write to the tiles in a given bin")
+						val analytic = new StandardStringScoreBinningAnalytic(aggregationLimit, order, binLimit)
 
-					val binningAnalytic = if ("log" == fieldAggregation) {
-						val base =
-							properties.getDouble("oculus.binning.parsing." + field.get
-								                     + ".fieldBase",
-							                     "The base to use when taking value the "+
-								                     "logarithm of values.  Default is e.",
-							                     Some(math.exp(1.0)))
-						new SumLogDoubleAnalytic(base) with StandardDoubleBinningAnalytic
-					} else if ("min" == fieldAggregation)
-						new MinimumDoubleAnalytic with StandardDoubleBinningAnalytic
-					else if ("max" == fieldAggregation)
-						new MaximumDoubleAnalytic with StandardDoubleBinningAnalytic
-					else
-						new SumDoubleAnalytic with StandardDoubleBinningAnalytic
+						new StringValueExtractor(field.get, analytic)
+					}
+					case _ => {
+						val fieldAggregation =
+							properties.getString("oculus.binning.parsing." + field.get
+								                     + ".fieldAggregation",
+							                     "The way to aggregate the value field when binning",
+							                     Some("add"))
 
-					new FieldValueExtractor(field.get, binningAnalytic);
+						val binningAnalytic = if ("log" == fieldAggregation) {
+							val base =
+								properties.getDouble("oculus.binning.parsing." + field.get
+									                     + ".fieldBase",
+								                     "The base to use when taking value the "+
+									                     "logarithm of values.  Default is e.",
+								                     Some(math.exp(1.0)))
+							new SumLogDoubleAnalytic(base) with StandardDoubleBinningAnalytic
+						} else if ("min" == fieldAggregation)
+							new MinimumDoubleAnalytic with StandardDoubleBinningAnalytic
+						else if ("max" == fieldAggregation)
+							new MaximumDoubleAnalytic with StandardDoubleBinningAnalytic
+						else
+							new SumDoubleAnalytic with StandardDoubleBinningAnalytic
+
+						new FieldValueExtractor(field.get, binningAnalytic);
+					}
 				}
+			} else {
+				new CountValueExtractor
 			}
 		}
 	}
