@@ -465,46 +465,88 @@ class CategoryValueBinningAnalytic(categoryNames: Seq[String])
 /**
  * This analytic stores the CIDR block represented by a given tile.
  */
-object IPv4CIDRBlockAnalysis extends Serializable {
-	def convertParam (pyramid: TilePyramid)(tile: TileData[_]): String = {
+object IPv4Analytics extends Serializable {
+	import IPv4ZCurveIndexScheme._
+
+	private val EPSILON = 1E-10
+	def getCIDRBlock (pyramid: TilePyramid)(tile: TileData[_]): String = {
+		// Figure out the IP address of our corners
 		val index = tile.getDefinition()
-		// The CIDR block level is just our zoom level.
-		val level = index.getLevel()
-		// Figure out the IP address of our lower left corner
 		val bounds = pyramid.getTileBounds(index)
-		val x = bounds.getMaxX().toLong
-		val y = bounds.getMaxY().toLong
-		val yExpand = Range(0, 16).map(i => ((y >> i) & 0x1L) << (2*i+1)).reduce(_ + _)
-		val xExpand = Range(0, 16).map(i => ((x >> i) & 0x1L) << (2*i  )).reduce(_ + _)
-		val ipAddress = xExpand + yExpand
-		// Determine the CIDR block from the IP address and level
-		val blockAddress = ((ipAddress >> (32-level)) & 0xffffffffL) << (32-level)
-		(    (0xff & (blockAddress >> 24))+"."+
-			 (0xff & (blockAddress >> 16))+"."+
-			 (0xff & (blockAddress >> 8))+"."+
-			 (0xff & blockAddress)+"/"+level)
+		val llAddr = ipArrayToLong(reverse(bounds.getMinX(), bounds.getMinY()))
+		val urAddr = ipArrayToLong(reverse(bounds.getMaxX()-EPSILON, bounds.getMaxY()-EPSILON))
+
+		// Figure out how many significant bits they have in common
+		val significant = 0xffffffffL & ~(llAddr ^ urAddr)
+		// That is the number of blocks
+		val block = 32 - 
+			(for (i <- 0 to 32) yield (i, ((1L << i) & significant) != 0))
+				.find(_._2)
+				.getOrElse((32, false))._1
+		// And apply that to either to get the common address
+		val addr = longToIPArray(llAddr & significant)
+		ipArrayToString(addr)+"/"+block
 	}
 
-	/**
-	 * Get an analysis description for an analysis that stores the CIDR block 
-	 * of an IPv4-indexed tile, using the standard IPv4 tile pyramid.
-	 */
-	def getDescription[BT] (sc: SparkContext): AnalysisDescription[TileData[BT], String] =
-		getDescription(sc, new AOITilePyramid(0, 0, 0xffffL.toDouble, 0xffffL.toDouble))
+	def getIPAddress (pyramid: TilePyramid, max: Boolean)(tile: TileData[_]): Long = {
+		val index = tile.getDefinition()
+		val bounds = pyramid.getTileBounds(index)
+		if (max) {
+			ipArrayToLong(reverse(bounds.getMaxX()-EPSILON, bounds.getMaxY()-EPSILON))
+		} else {
+			ipArrayToLong(reverse(bounds.getMinX(), bounds.getMinY()))
+		}
+	}
 
 	/**
 	 * Get an analysis description for an analysis that stores the CIDR block 
 	 * of an IPv4-indexed tile, with an arbitrary tile pyramid.
 	 */
-	def getDescription[BT] (sc: SparkContext, pyramid: TilePyramid): AnalysisDescription[TileData[BT], String] =
+	def getCIDRBlockAnalysis[BT] (sc: SparkContext,
+	                              pyramid: TilePyramid = getDefaultIPPyramid):
+			AnalysisDescription[TileData[BT], String] =
 		new MonolithicAnalysisDescription[TileData[BT], String](
 			sc,
-			convertParam(pyramid),
+			getCIDRBlock(pyramid),
 			new StringAnalytic("CIDR Block"),
 			// No accumulators are appropriate for CIDR block metadata
 			Map[String, TileIndex => Boolean]())
-}
 
+
+	def getMinIPAddressAnalysis[BT] (sc: SparkContext,
+	                                 pyramid: TilePyramid = getDefaultIPPyramid):
+			AnalysisDescription[TileData[BT], Long] =
+		new MonolithicAnalysisDescription[TileData[BT], Long](
+			sc,
+			getIPAddress(pyramid, false),
+			new TileAnalytic[Long] {
+				def name = "Minimum IP Address"
+				def aggregate (a: Long, b: Long): Long = a min b
+				def defaultProcessedValue: Long = 0L
+				def defaultUnprocessedValue: Long = 0xffffffffL
+				override def valueToString (value: Long): String =
+					ipArrayToString(longToIPArray(value))
+			},
+			// No accumulators are appropriate for IP address ranges
+			Map[String, TileIndex => Boolean]())
+
+	def getMaxIPAddressAnalysis[BT] (sc: SparkContext,
+	                                 pyramid: TilePyramid = getDefaultIPPyramid):
+			AnalysisDescription[TileData[BT], Long] =
+		new MonolithicAnalysisDescription[TileData[BT], Long](
+			sc,
+			getIPAddress(pyramid, true),
+			new TileAnalytic[Long] {
+				def name = "Maximum IP Address"
+				def aggregate (a: Long, b: Long): Long = a max b
+				def defaultProcessedValue: Long = 0xffffffffL
+				def defaultUnprocessedValue: Long = 0L
+				override def valueToString (value: Long): String =
+					ipArrayToString(longToIPArray(value))
+			},
+			// No accumulators are appropriate for IP address ranges
+			Map[String, TileIndex => Boolean]())
+}
 
 class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
 	def name = analyticName

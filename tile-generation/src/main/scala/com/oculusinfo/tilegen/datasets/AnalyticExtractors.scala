@@ -39,7 +39,7 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.tilegen.tiling.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
-import com.oculusinfo.tilegen.tiling.IPv4CIDRBlockAnalysis
+import com.oculusinfo.tilegen.tiling.IPv4Analytics
 import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
 import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -71,11 +71,19 @@ object CSVTileAnalyticExtractor {
 
 		val binType = ClassTag.unapply(valuer.valueTypeTag).get
 
-		val indexAnalytic: Option[AnalysisDescription[TileData[BT], String]] =
+		val indexAnalytic: AnalysisWithTag[TileData[BT], _] =
 			if (indexer.isInstanceOf[IPv4IndexExtractor]) {
-				Some(IPv4CIDRBlockAnalysis.getDescription(sc))
+				new AnalysisWithTag(
+					Some(new CompositeAnalysisDescription(
+						     IPv4Analytics.getCIDRBlockAnalysis[BT](sc),
+						     new CompositeAnalysisDescription(
+							     IPv4Analytics.getMinIPAddressAnalysis[BT](sc),
+							     IPv4Analytics.getMaxIPAddressAnalysis[BT](sc)
+						     )
+					     ))
+				)
 			} else {
-				None
+				new AnalysisWithTag[TileData[BT], Int](None)
 			}
 		if (binType == classOf[Double]) {
 			val convertFcn: BT => Double = bt => bt.asInstanceOf[Double]
@@ -91,12 +99,12 @@ object CSVTileAnalyticExtractor {
 				                                               metaDataKeys)
 			val minMaxAnalytic = new CompositeAnalysisDescription(minAnalytic, maxAnalytic)
 			val analytic = 
-				indexAnalytic
+				indexAnalytic.analysis
 					.map(new CompositeAnalysisDescription(minMaxAnalytic, _))
 					.getOrElse(minMaxAnalytic)
 			new AnalysisWithTag(Some(analytic))
 		} else {
-			new AnalysisWithTag[TileData[BT], String](indexAnalytic)
+			indexAnalytic
 		}
 	}
 }

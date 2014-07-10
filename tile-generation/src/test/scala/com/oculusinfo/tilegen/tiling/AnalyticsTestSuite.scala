@@ -143,50 +143,52 @@ class AnalyticsTestSuite extends FunSuite {
 		assert("[\"a\":1.0,\"b\":2.0,\"c\":3.0,\"d\":4.0]" === analytic.valueToString(a))
 	}
 
-	def longToByteArray (value: Long): Array[Byte] =
-		Array[Byte](((value&0xff000000)>>24).toByte,
-		            ((value&0xff0000)>>16).toByte,
-		            ((value&0xff00)>>8).toByte,
-		            ((value&0xff)).toByte)
-
 	test("IPv4 CIDR Block Analytic") {
+		import IPv4ZCurveIndexScheme._
+
 		val indexScheme = new IPv4ZCurveIndexScheme
-		val pyramid = new AOITilePyramid(0.0, 0.0, 65535.0000001, 65535.0000001)
-		val converter = IPv4CIDRBlockAnalysis.convertParam(pyramid)(_)
+		val pyramid = IPv4ZCurveIndexScheme.getDefaultIPPyramid
+		val converter = IPv4Analytics.getCIDRBlock(pyramid)(_)
 
 		// Can't test level 32 - tile pyramids won't work at level 32, because
 		// tile indices are stored as integers instead of longs.
-		for (i <- 0 to 31) {
-			val fullAddress1 = longToByteArray(0xffffffffL)
-			val fullAddress2 = longToByteArray((0xffffffff00000000L >> i) & 0xffffffffL)
-			val fullAddress3 = longToByteArray(0xffffffffL >> i)
-			val fullAddress4 = longToByteArray((0x100000000L >> i) & 0xffffffffL)
-			val expectedFull = fullAddress2.map(part => (0xff & part.toInt).toString).mkString(".")
-			val expectedOne = fullAddress4.map(part => (0xff & part.toInt).toString).mkString(".")
+		for (i <- 0 to 16) {
+			val fullAddress1 = longToIPArray(0xffffffffL)
+			val fullAddress2 = longToIPArray((0xffffffff00000000L >> i) & 0xffffffffL)
+			val fullAddress3 = longToIPArray(0xffffffffL >> (2*i))
+			val fullAddress4 = longToIPArray((0x100000000L >> i) & 0xffffffffL)
+			val expectedFull = ipArrayToString(fullAddress2)
+			val expectedOne = ipArrayToString(fullAddress4)
 
 			val cartesian1 = indexScheme.toCartesian(fullAddress1)
 			val index1 = pyramid.rootToTile(cartesian1._1, cartesian1._2, i)
 			val tile1 = new TileData[Int](index1)
 			val value1 = converter(tile1)
-			assert(expectedFull+"/"+i === value1)
+			val expected1 = ipArrayToString(longToIPArray((0xffffffff00000000L >> (2*i)) & 0xffffffff))+"/"+(2*i)
+			assert(expected1 === value1)
 
 			val cartesian2 = indexScheme.toCartesian(fullAddress2)
 			val index2 = pyramid.rootToTile(cartesian2._1, cartesian2._2, i)
 			val tile2 = new TileData[Int](index2)
 			val value2 = converter(tile2)
-			assert(expectedFull+"/"+i === value2)
+			val expected2 = ipArrayToString(longToIPArray((0xffffffff00000000L >> i) & 0xffffffff))+"/"+(2*i)
+			assert(expected2 === value2)
 
 			val cartesian3 = indexScheme.toCartesian(fullAddress3)
 			val index3 = pyramid.rootToTile(cartesian3._1, cartesian3._2, i)
 			val tile3 = new TileData[Int](index3)
 			val value3 = converter(tile3)
-			assert("0.0.0.0/"+i === value3)
+			val expected3 = "0.0.0.0/"+(2*i)
+			assert(expected3 === value3)
 
 			val cartesian4 = indexScheme.toCartesian(fullAddress4)
 			val index4 = pyramid.rootToTile(cartesian4._1, cartesian4._2, i)
 			val tile4 = new TileData[Int](index4)
 			val value4 = converter(tile4)
-			assert(expectedOne+"/"+i === value4)
+			val expected4 = expectedOne+"/"+(2*i)
+			assert(expected4 === value4)
+
+			println
 		}
 	}
 

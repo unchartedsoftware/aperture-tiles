@@ -27,6 +27,10 @@ package com.oculusinfo.tilegen.tiling
 
 
 
+import com.oculusinfo.binning.impl.AOITilePyramid
+
+
+
 trait IndexScheme[T] {
 	def toCartesian (t: T): (Double, Double)
 	
@@ -40,6 +44,34 @@ class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializab
 	def toCartesianEndpoints (coords: (Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._1, coords._2, coords._2) 	//TODO -- redundant, see note above
 }
 
+object IPv4ZCurveIndexScheme {
+	def getDefaultIPPyramid =
+		new AOITilePyramid(0, 0, 0x10000L.toDouble, 0x10000L.toDouble)
+
+	def ipArrayToLong (ip: Array[Byte]): Long =
+		ip.map(_.toLong & 0xffL).foldLeft(0L)(256L*_+_)
+
+	def longToIPArray (ip: Long): Array[Byte] =
+		Array[Byte]((0xff & (ip >> 24)).toByte,
+		            (0xff & (ip >> 16)).toByte,
+		            (0xff & (ip >>  8)).toByte,
+		            (0xff &  ip       ).toByte)
+
+	def ipArrayToString (ip: Array[Byte]): String =
+		ip.map(_.toInt & 0xff).mkString(".")
+
+	def stringToIPArray (ip: String): Array[Byte] =
+		ip.split("\\.").map(_.toInt.toByte)
+
+	def reverse (x: Double, y: Double): Array[Byte] = {
+		val xL = x.toLong
+		val yL = y.toLong
+		val yExpand = Range(0, 16).map(i => ((yL >> i) & 0x1L) << (2*i+1)).reduce(_ + _)
+		val xExpand = Range(0, 16).map(i => ((xL >> i) & 0x1L) << (2*i  )).reduce(_ + _)
+		val ipAddress = xExpand + yExpand
+		longToIPArray(ipAddress)
+	}
+}
 class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
 	def toCartesian (ipAddress: Array[Byte]): (Double, Double) = {
 		def getXDigit (byte: Byte): Long =
