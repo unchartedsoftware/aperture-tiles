@@ -22,7 +22,7 @@
     position:absolute;
     -webkit-border-radius: 30px;
        -moz-border-radius: 30px;
-            border-radius: 30px; 
+            border-radius: 30px;
     width: 8px;
     height: 8px;
     -webkit-transition: 0.1s ease-in-out;
@@ -39,7 +39,7 @@
 }
 
 .point-annotation-back {
-    
+
     pointer-events:none;
     background-color: #fff;
     border: 2px solid #000;
@@ -76,12 +76,12 @@
     z-index: 2001;
     border: 1px solid #333333;
     box-shadow: 0px 5px 15px #000;
-    height: 196px; 
+    height: 196px;
 }
 
 .annotation-details-content {
 
-    position:relative; 
+    position:relative;
     height: 100%;
 }
 
@@ -127,23 +127,24 @@
         -1px -1px 1px #000,
          1px -1px 1px #000,
         -1px  1px 1px #000,
-         1px  1px 1px #000; 
+         1px  1px 1px #000;
 }
 
 .annotation-details-close-button {
+    cursor: pointer;
     position:absolute;
     right:3px;
     top:3px;
     width:12px;
     height:12px;
     background: transparent url(../images/close_icon.png) no-repeat center top;
-    -webkit-filter: brightness(0.5);
-    
+    opacity: 0.5;
+
     -webkit-transform: scale(0.75);
        -moz-transform: scale(0.75);
         -ms-transform: scale(0.75);
             transform: scale(0.75);
-            
+
     -webkit-transition: 0.1s ease-in-out;
        -moz-transition: 0.1s ease-in-out;
         -ms-transition: 0.1s ease-in-out;
@@ -151,7 +152,7 @@
 }
 
 .annotation-details-close-button:hover {
-    cursor: pointer;
+    opacity: 1;
     -webkit-filter: brightness(1);
     -webkit-transform: scale(1.0);
        -moz-transform: scale(1.0);
@@ -166,8 +167,8 @@
     width:100%;
     height:100%;
     top:0px;
-    left:0px;   
-    -webkit-backface-visibility: hidden; 
+    left:0px;
+    -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
@@ -180,7 +181,7 @@
     bottom: -11px;
     height: 50px;
     width: 20px;
-    -webkit-transform: scale(0.5); 
+    -webkit-transform: scale(0.5);
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;
             transition:         transform .1s ease-in-out;
@@ -198,7 +199,7 @@
 
 .annotation-carousel-ui-chevron:hover {
     cursor: pointer;
-    -webkit-transform: scale(0.7);  
+    -webkit-transform: scale(0.7);
 }
 
 .annotation-carousel-ui-text-index {
@@ -213,7 +214,7 @@
         -1px -1px 2px #000,
          1px -1px 2px #000,
         -1px  1px 2px #000,
-         1px  1px 2px #000; 
+         1px  1px 2px #000;
 }
 
 .clicked-aggregate {
