@@ -110,7 +110,7 @@ define(function (require) {
                     // update certificate on success
                     annotation.certificate = result;
                 }
-                callback( result, statusInfo );
+                callback( annotation, statusInfo );
             });
 
         },
@@ -134,7 +134,7 @@ define(function (require) {
                     // update certificate on success
                     annotation.certificate = result;
                 }
-                callback( result, statusInfo );
+                callback( annotation, statusInfo );
             });
 
         },

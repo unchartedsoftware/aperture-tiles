@@ -89,7 +89,7 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 
 	@Override
 	public TileIndex rootToTile (double x, double y, int level, int xBins, int yBins) {
-		int numDivs = 1 << level;
+		long numDivs = 1L << level;
 
 		int tileX = (int) Math.floor(numDivs*(x-_minX)*_recipDiffX);
 		int tileY = (int) Math.floor(numDivs*(y-_minY)*_recipDiffY);		
@@ -107,7 +107,7 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 	@Override
 	public BinIndex rootToBin (double x, double y, TileIndex tile) {
 	
-		int numDivs = 1 << tile.getLevel();
+		long numDivs = 1L << tile.getLevel();
 		
 		int binX = (int) Math.floor((numDivs*(x-_minX)*_recipDiffX - tile.getX())*tile.getXBins());
 		int binY = (int) Math.floor((numDivs*(y-_minY)*_recipDiffY - tile.getY())*tile.getYBins());		
@@ -127,7 +127,7 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 
 	@Override
 	public Rectangle2D getTileBounds (TileIndex tile) {
-		int pow2 = 1 << tile.getLevel();
+		long pow2 = 1L << tile.getLevel();
 		double tileXSize = (_maxX-_minX)/pow2;
 		double tileYSize = (_maxY-_minY)/pow2;
 
@@ -138,7 +138,7 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 
 	@Override
 	public Rectangle2D getBinBounds(TileIndex tile, BinIndex bin) {
-		int pow2 = 1 << tile.getLevel();
+		long pow2 = 1L << tile.getLevel();
 		double tileXSize = (_maxX-_minX)/pow2;
 		double tileYSize = (_maxY-_minY)/pow2;
 		double binXSize = tileXSize/tile.getXBins();

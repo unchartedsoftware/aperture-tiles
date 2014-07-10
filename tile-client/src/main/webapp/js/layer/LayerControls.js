@@ -273,7 +273,7 @@ define(function (require) {
             range: true,
             min: 0,
             max: FILTER_RESOLUTION,
-            values: [filterRange[0] * FILTER_RESOLUTION, filterRange[1] * FILTER_RESOLUTION],
+            values: filterRange,
             change: function () {
                 var result = $filterSlider.slider("option", "values");
                 layerState.set( 'filterRange', [result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);

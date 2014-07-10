@@ -32,7 +32,7 @@ define(function (require) {
 	"use strict";
 
 
-	
+
 	var Class = require('../class'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
@@ -45,7 +45,7 @@ define(function (require) {
 
 	Map = Class.extend({
 		ClassName: "Map",
-		
+
 		init: function (id, spec) {
 
             var that = this;
@@ -76,7 +76,7 @@ define(function (require) {
 
 
 			// Initialize the map
-			this.map = new aperture.geo.Map({ 
+			this.map = new aperture.geo.Map({
 				id: this.id,
                 options: {
                     controls: [
@@ -124,8 +124,15 @@ define(function (require) {
             this.$map.append( this.$root );
 
             this.on('move', function() {
-                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
-                that.$root.css({ "-webkit-transform":"translate("+ pos.x +"px, " + pos.y + "px)"});
+                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() ),
+                    translate = "translate("+ pos.x +"px, " + pos.y + "px)";
+                that.$root.css({
+                    "-webkit-transform": translate,
+                    "-moz-transform": translate,
+                    "-ms-transform": translate,
+                    "-o-transform": translate,
+                    "transform": translate
+                });
             });
 
             this.trigger('move'); // fire initial move event

@@ -44,10 +44,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
-public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
+public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	
 	private static final String  ROOT_PATH = ".\\annotation-service\\src\\test\\";
 	private static final String  BASE_PATH = TEST_LAYER_NAME;
@@ -106,25 +108,29 @@ public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
     		
     		/*
 	    	 *  Write annotations
-	    	 */ 	
-	    	System.out.println("Writing "+NUM_ENTRIES+" to file system");	
+	    	 */
+            if (VERBOSE)
+	    	    System.out.println("Writing "+NUM_ENTRIES+" to file system");
 	    	_tileIO.writeTiles(BASE_PATH, _tileSerializer, tiles );
 	    	_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
 	        
 	    	/*
 	    	 *  Read and check all annotations
 	    	 */
-	    	System.out.println( "Reading all annotations" );
+            if (VERBOSE)
+                System.out.println( "Reading all annotations" );
 	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
 	    	List<AnnotationData<?>> allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
 	    	if (VERBOSE) printTiles( allTiles );
 	    	if (VERBOSE) printData( allData );
-	    	
-	    	System.out.println( "Comparing annotations" );	    	
+
+            if (VERBOSE)
+                System.out.println( "Comparing annotations" );
 	    	Assert.assertTrue( compareTiles( allTiles, tiles, true ) );
 	    	Assert.assertTrue( compareData( allData, annotations, true ) );
-	    	
-	    	System.out.println("Removing "+NUM_ENTRIES+" from file system");	
+
+            if (VERBOSE)
+                System.out.println("Removing "+NUM_ENTRIES+" from file system");
 	    	_tileIO.removeTiles(BASE_PATH, tileIndices );
 	    	_dataIO.removeData(BASE_PATH, dataIndices );
 	       
@@ -141,7 +147,16 @@ public class AnnotationFileSystemIOTests extends AnnotationTestsBase {
     		
 			System.out.println("Error: " + e.getMessage());
 			
-		}
+		} finally {
+
+            if (VERBOSE)
+                System.out.println("Deleting temporary directories");
+            File testDir = new File( ROOT_PATH + BASE_PATH );
+            for ( File f : testDir.listFiles( ) ) {
+                f.delete();
+            }
+            testDir.delete();
+        }
     }
 
 

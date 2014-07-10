@@ -64,7 +64,7 @@ import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider;
 
 
-public class ConcurrentServiceTests extends AnnotationTestsBase {
+public class AnnotationServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
 	static final int NUM_THREADS = 8;

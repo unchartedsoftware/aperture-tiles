@@ -472,8 +472,8 @@ object IPv4CIDRBlockAnalysis extends Serializable {
 		val level = index.getLevel()
 		// Figure out the IP address of our lower left corner
 		val bounds = pyramid.getTileBounds(index)
-		val x = bounds.getMinX().toLong
-		val y = bounds.getMinY().toLong
+		val x = bounds.getMaxX().toLong
+		val y = bounds.getMaxY().toLong
 		val yExpand = Range(0, 16).map(i => ((y >> i) & 0x1L) << (2*i+1)).reduce(_ + _)
 		val xExpand = Range(0, 16).map(i => ((x >> i) & 0x1L) << (2*i  )).reduce(_ + _)
 		val ipAddress = xExpand + yExpand

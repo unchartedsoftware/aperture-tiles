@@ -1,23 +1,28 @@
 @charset "UTF-8";
 
-
 .annotation-bin {
-    pointer-events:none;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-    border: 1px solid #FF0000;
+
+    position:absolute;
+    width: 0px;
+    height: 0px;
 }
 
 .point-annotation-aggregate {
     position:absolute;
+    width: 0px;
+    height: 0px;
+    z-index: 0;
+}
+
+.point-annotation-aggregate:hover {
+    z-index: 1;
 }
 
 .point-annotation {
     position:absolute;
     -webkit-border-radius: 30px;
        -moz-border-radius: 30px;
-            border-radius: 30px; 
+            border-radius: 30px;
     width: 8px;
     height: 8px;
     -webkit-transition: 0.1s ease-in-out;
@@ -30,85 +35,86 @@
 
     background-color: #09CFFF;
     margin: -2px 2px 2px -2px;
-    z-index: 1;
+    z-index: 2;
 }
 
 .point-annotation-back {
-    
+
     pointer-events:none;
     background-color: #fff;
     border: 2px solid #000;
     margin: -4px 0 0 -4px;
-    z-index: 0;
+    z-index: 1;
 }
 
 .point-annotation-aggregate:hover .point-annotation {
 
     cursor: pointer;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
 }
 
 .point-annotation-aggregate:hover .point-annotation-front {
 
-    margin: -6px 2px 2px -6px;
+    -webkit-filter: brightness(1.5);
+    margin: -4px 2px 2px -4px;
 }
 
 .point-annotation-aggregate:hover .point-annotation-back {
 
-    margin: -8px 0 0 -8px;
+    margin: -6px 0 0 -6px;
 }
+
+/********************************************/
+/*            Annotation Details           */
+/********************************************/
 
 .annotation-details {
 
     position:absolute;
     background-color:#111111;
-    width: 384px;
     z-index: 2001;
     border: 1px solid #333333;
     box-shadow: 0px 5px 15px #000;
+    height: 196px;
 }
-
 
 .annotation-details-content {
 
     position:relative;
-    height:100%;
+    height: 100%;
 }
-
 
 .annotation-details-head {
 
     position:relative;
-    padding: 0 10px 0 10px;
+    padding-left: 10px;
     background-color: #222222;
     font-size: 18px;
     color: #D3D3D3;
-    width:100%;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
-
 
 .annotation-details-body {
 
-    position:relative;   
-    font-size: 14px;
-    background-color:#111111;
-    padding: 5px 15px 5px 15px;
-    overflow: auto;
-    height: calc(100% - 32px);
+    position:relative;
+    background-color: #111111;
+    margin: 5px 0 5px 0;
+    padding: 0 15px 0 15px;
+    height: calc(100% - 42px);
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
-
 }
-
 
 .annotation-details-aggregate {
 
-    padding-bottom: 28px;
+    padding-bottom: 23px;
 }
 
 .annotation-details-label {
@@ -121,24 +127,22 @@
         -1px -1px 1px #000,
          1px -1px 1px #000,
         -1px  1px 1px #000,
-         1px  1px 1px #000; 
+         1px  1px 1px #000;
 }
 
-
 .annotation-details-close-button {
+    cursor: pointer;
     position:absolute;
     right:3px;
     top:3px;
     width:12px;
     height:12px;
     background: transparent url(../images/close_icon.png) no-repeat center top;
-    -webkit-filter: brightness(0.5);
-    
+    opacity: 0.5;
     -webkit-transform: scale(0.75);
        -moz-transform: scale(0.75);
         -ms-transform: scale(0.75);
             transform: scale(0.75);
-            
     -webkit-transition: 0.1s ease-in-out;
        -moz-transition: 0.1s ease-in-out;
         -ms-transition: 0.1s ease-in-out;
@@ -146,7 +150,7 @@
 }
 
 .annotation-details-close-button:hover {
-    cursor: pointer;
+    opacity: 1;
     -webkit-filter: brightness(1);
     -webkit-transform: scale(1.0);
        -moz-transform: scale(1.0);
@@ -162,6 +166,8 @@
     height:100%;
     top:0px;
     left:0px;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -170,10 +176,13 @@
 .annotation-carousel-ui-chevron {
     position: absolute;
     pointer-events: all;
-    bottom: -10px;
-    height:50px;
-    width:20px;
-    -webkit-transform: scale(0.5); 
+    bottom: -11px;
+    height: 50px;
+    width: 20px;
+    -webkit-transform: scale(0.5);
+       -moz-transform: scale(0.5);
+        -ms-transform: scale(0.5);
+            transform: scale(0.5);
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;
             transition:         transform .1s ease-in-out;
@@ -191,7 +200,7 @@
 
 .annotation-carousel-ui-chevron:hover {
     cursor: pointer;
-    -webkit-transform: scale(0.7);  
+    -webkit-transform: scale(0.7);
 }
 
 .annotation-carousel-ui-text-index {
@@ -206,5 +215,15 @@
         -1px -1px 2px #000,
          1px -1px 2px #000,
         -1px  1px 2px #000,
-         1px  1px 2px #000; 
+         1px  1px 2px #000;
+}
+
+.clicked-aggregate {
+
+    z-index: 1;
+}
+
+.clicked-annotation {
+
+    background-color: #D33CFF;
 }

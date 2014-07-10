@@ -124,7 +124,7 @@ define(function (require) {
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {
-                    layerState.set( 'click', {} );
+                    layerState.set( 'click', null );
                 });
 
                 // set tile focus callbacks
