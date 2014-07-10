@@ -79,6 +79,8 @@ define(function (require) {
         getAnnotationHtml : function ( bin, tilePosition ) {
 
             var html = '',
+                positionMap = {},
+                positionKey,
                 position,
                 offset,
                 i;
@@ -96,9 +98,13 @@ define(function (require) {
                     x : position.x - tilePosition.x,
                     y : position.y - tilePosition.y
                 };
-
-                html += '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_FILL_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>' +
-                        '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_BORDER_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>';
+                // prevent creating two annotations on the exact same pixel
+                positionKey = Math.floor(offset.x) + "," + Math.floor(offset.y);
+                if ( !positionMap[positionKey] ) {
+                    positionMap[positionKey] = true;
+                    html += '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_FILL_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>' +
+                            '<div class="'+ANNOTATION_POINT_CLASS+' '+ANNOTATION_POINT_BORDER_CLASS+'" style="left:'+offset.x+'px; top:'+offset.y+'px;"></div>';
+                }
             }
 
             html += '</div>';
