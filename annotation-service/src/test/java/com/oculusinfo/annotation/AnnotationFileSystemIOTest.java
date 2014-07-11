@@ -95,7 +95,7 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	
 	
     @Test
-    public void testHBaseIO() {
+    public void testFileSystemIO() {
     	
     	
         List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
@@ -139,8 +139,9 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	    	
 	    	Assert.assertTrue( allTiles.size() == 0 );
 	    	Assert.assertTrue( allData.size() == 0 );
-	    	
-	    	System.out.println( "Complete" );
+
+            if (VERBOSE)
+                System.out.println( "Complete" );
 	    	
 	
     	} catch (Exception e) {
@@ -151,11 +152,16 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 
             if (VERBOSE)
                 System.out.println("Deleting temporary directories");
-            File testDir = new File( ROOT_PATH + BASE_PATH );
-            for ( File f : testDir.listFiles( ) ) {
-                f.delete();
+
+            try {
+                File testDir = new File( ROOT_PATH + BASE_PATH );
+                for ( File f : testDir.listFiles() ) {
+                    f.delete();
+                }
+                testDir.delete();
+            } catch ( Exception e ) {
+                // swallow exception
             }
-            testDir.delete();
         }
     }
 
