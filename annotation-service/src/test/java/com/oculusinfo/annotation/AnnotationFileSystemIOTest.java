@@ -51,7 +51,7 @@ import java.util.Map;
 
 public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	
-	private static final String  ROOT_PATH = ".\\annotation-service\\src\\test\\";
+	private static final String  ROOT_PATH = ".\\";
 	private static final String  BASE_PATH = TEST_LAYER_NAME;
 	private static final String  TILE_EXT = "json";
 	private static final String  DATA_EXT = "json";
