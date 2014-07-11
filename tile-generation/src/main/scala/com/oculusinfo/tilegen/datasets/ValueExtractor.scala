@@ -82,69 +82,78 @@ object CSVValueExtractor {
 				val fieldType = properties.getString("oculus.binning.parsing."+field+".fieldType",
 				                                     "The type of the "+field+" field",
 				                                     Some(if ("constant" == field || "zero" == field) "constant"
-				                                          else ""))
-				fieldType match {
-					case "string" => {
-						val aggregationLimit = properties.getIntOption(
-							"oculus.binning.parsing."+field.get+".limit.aggregation",
-							"The maximum number of elements to keep internally when "+
-								"calculating bins")
-						val order = properties.getStringOption(
-							"oculus.binning.parsing."+field.get+".order",
-							"How to order elements.  Possible values are: \"alpha\" for "+
-								"alphanumeric ordering of strings, \"reverse-alpha\" "+
-								"similarly, \"high\" for ordering by score from high to "+
-								"low, \"low\" for ordering by score from low to high, "+
-								"and \"random\" or \"none\" for no ordering.") match {
-							case Some("alpha") =>
-								Some((a: (String, Double), b: (String, Double)) =>
-									a._1.compareTo(b._1)>0
-								)
-							case Some("reverse-alpha") =>
-								Some((a: (String, Double), b: (String, Double)) =>
-									a._1.compareTo(b._1)>0
-								)
-							case Some("high") =>
-								Some((a: (String, Double), b: (String, Double)) =>
-									a._2 > b._2
-								)
-							case Some("low") =>
-								Some((a: (String, Double), b: (String, Double)) =>
-									a._2 < b._2
-								)
-							case _ => None
-						}
-						val binLimit = properties.getIntOption(
-							"oculus.binning.parsing."+field.get+".limit.bins",
-							"The maximum number of entries to write to the tiles in a given bin")
-						val analytic = new StandardStringScoreBinningAnalytic(aggregationLimit, order, binLimit)
-
-						new StringValueExtractor(field.get, analytic)
+				                                          else "")).toLowerCase
+				if ("string" == fieldType || "substring" == fieldType) {
+					val aggregationLimit = properties.getIntOption(
+						"oculus.binning.parsing."+field.get+".limit.aggregation",
+						"The maximum number of elements to keep internally when "+
+							"calculating bins")
+					val order = properties.getStringOption(
+						"oculus.binning.parsing."+field.get+".order",
+						"How to order elements.  Possible values are: \"alpha\" for "+
+							"alphanumeric ordering of strings, \"reverse-alpha\" "+
+							"similarly, \"high\" for ordering by score from high to "+
+							"low, \"low\" for ordering by score from low to high, "+
+							"and \"random\" or \"none\" for no ordering.") match {
+						case Some("alpha") =>
+							Some((a: (String, Double), b: (String, Double)) =>
+								a._1.compareTo(b._1)>0
+							)
+						case Some("reverse-alpha") =>
+							Some((a: (String, Double), b: (String, Double)) =>
+								a._1.compareTo(b._1)>0
+							)
+						case Some("high") =>
+							Some((a: (String, Double), b: (String, Double)) =>
+								a._2 > b._2
+							)
+						case Some("low") =>
+							Some((a: (String, Double), b: (String, Double)) =>
+								a._2 < b._2
+							)
+						case _ => None
 					}
-					case _ => {
-						val fieldAggregation =
-							properties.getString("oculus.binning.parsing." + field.get
-								                     + ".fieldAggregation",
-							                     "The way to aggregate the value field when binning",
-							                     Some("add"))
+					val binLimit = properties.getIntOption(
+						"oculus.binning.parsing."+field.get+".limit.bins",
+						"The maximum number of entries to write to the tiles in a given bin")
+					val analytic = new StandardStringScoreBinningAnalytic(aggregationLimit, order, binLimit)
 
-						val binningAnalytic = if ("log" == fieldAggregation) {
-							val base =
-								properties.getDouble("oculus.binning.parsing." + field.get
-									                     + ".fieldBase",
-								                     "The base to use when taking value the "+
-									                     "logarithm of values.  Default is e.",
-								                     Some(math.exp(1.0)))
-							new SumLogDoubleAnalytic(base) with StandardDoubleBinningAnalytic
-						} else if ("min" == fieldAggregation)
-							new MinimumDoubleAnalytic with StandardDoubleBinningAnalytic
-						else if ("max" == fieldAggregation)
-							new MaximumDoubleAnalytic with StandardDoubleBinningAnalytic
-						else
-							new SumDoubleAnalytic with StandardDoubleBinningAnalytic
-
-						new FieldValueExtractor(field.get, binningAnalytic);
+					if ("string" == fieldType) new StringValueExtractor(field.get, analytic)
+					else {
+						val delimiter = properties.getString(
+							"oculus.binning.parsing."+field.get+".substring.delimiter",
+							"The delimiter by which to split the field's value into substrings")
+						val index = properties.getInt(
+							"oculus.binning.parsing."+field.get+".substring.index",
+							"The index of the desired substring within the "+
+								"substrings of the field value.  Negative "+
+								"values indicate place from the right-hand-"+
+								"side, rather than the left")
+						new SubstringValueExtractor(field.get, delimiter, index, analytic)
 					}
+				} else {
+					val fieldAggregation =
+						properties.getString("oculus.binning.parsing." + field.get
+							                     + ".fieldAggregation",
+						                     "The way to aggregate the value field when binning",
+						                     Some("add"))
+
+					val binningAnalytic = if ("log" == fieldAggregation) {
+						val base =
+							properties.getDouble("oculus.binning.parsing." + field.get
+								                     + ".fieldBase",
+							                     "The base to use when taking value the "+
+								                     "logarithm of values.  Default is e.",
+							                     Some(math.exp(1.0)))
+						new SumLogDoubleAnalytic(base) with StandardDoubleBinningAnalytic
+					} else if ("min" == fieldAggregation)
+						new MinimumDoubleAnalytic with StandardDoubleBinningAnalytic
+					else if ("max" == fieldAggregation)
+						new MaximumDoubleAnalytic with StandardDoubleBinningAnalytic
+					else
+						new SumDoubleAnalytic with StandardDoubleBinningAnalytic
+
+					new FieldValueExtractor(field.get, binningAnalytic);
 				}
 			} else {
 				new CountValueExtractor
@@ -187,7 +196,8 @@ class CountValueExtractor extends CSVValueExtractor[Double, JavaDouble] {
 
 class FieldValueExtractor (fieldName: String,
                            binningAnalytic: BinningAnalytic[Double, JavaDouble])
-		extends CSVValueExtractor[Double, JavaDouble] {
+		extends CSVValueExtractor[Double, JavaDouble]
+{
 	def name: String = fieldName
 	def description: String = "The aggregate value of field "+fieldName
 	def fields: Array[String] = Array(fieldName)
@@ -200,12 +210,35 @@ class FieldValueExtractor (fieldName: String,
 
 class StringValueExtractor (fieldName: String,
                             binningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]])
-		extends CSVValueExtractor[Map[String, Double], JavaList[Pair[String, JavaDouble]]] {
+		extends CSVValueExtractor[Map[String, Double], JavaList[Pair[String, JavaDouble]]]
+{
 	def name: String = fieldName
 	def description: String = "The most common values of "+fieldName
 	def fields: Array[String] = Array(fieldName)
 	def calculateValue (fieldValues: Map[String, Any]): Map[String, Double] =
 		Map(fieldValues.get(fieldName).toString -> 1.0)
+	def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] =
+		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
+	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] = binningAnalytic
+}
+
+class SubstringValueExtractor (fieldName: String,
+                               delimiter: String,
+                               index: Int,
+                               binningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]])
+		extends CSVValueExtractor[Map[String, Double], JavaList[Pair[String, JavaDouble]]]
+{
+	def name: String = fieldName
+	def description: String = "The most common values of "+fieldName
+	def fields: Array[String] = Array(fieldName)
+	def calculateValue (fieldValues: Map[String, Any]): Map[String, Double] = {
+		val value = fieldValues.get(fieldName).toString
+		val subValues = value.split(delimiter)
+		val entry = 
+			if (index < 0) subValues(subValues.length+index)
+			else subValues(index)
+		Map(entry -> 1.0)
+	}
 	def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] =
 		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] = binningAnalytic
