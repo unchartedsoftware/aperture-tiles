@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.oculusinfo.annotation.filter.AnnotationFilter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,9 +99,10 @@ public class AnnotationServiceImpl implements AnnotationService {
     private List<AnnotationInfo> _annotationLayers;
     private HashMap<String, AnnotationInfo> _annotationLayersById;
     private ConcurrentHashMap<String, UUID> _defaultFilterUuidById;
-    private ConcurrentHashMap<UUID, Map<String, Integer>> _filtersByUuid;
+    private ConcurrentHashMap<UUID, AnnotationFilter> _filtersByUuid;
 
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+    private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
     private FactoryProvider<AnnotationIO>  _annotationIOFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _tileSerializerFactoryProvider;
     private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
@@ -117,6 +119,7 @@ public class AnnotationServiceImpl implements AnnotationService {
                                   FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
 					    	      FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
 					    		  FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+                                  FactoryProvider<AnnotationFilter> filterFactoryProvider,
 					    		  AnnotationIndexer indexer,
     							  AnnotationSerializer serializer ) {
 
@@ -124,12 +127,13 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_annotationLayersById = new LinkedHashMap<>();
 		_defaultFilterUuidById = new ConcurrentHashMap<>();
 		_filtersByUuid = new ConcurrentHashMap<>();
-		
+
 		_pyramidIOFactoryProvider = pyramidIOFactoryProvider;
         _annotationIOFactoryProvider = annotationIOFactoryProvider;
 		_tileSerializerFactoryProvider = tileSerializerFactoryProvider;
 		_tilePyramidFactoryProvider = tilePyramidFactoryProvider;
-		
+        _filterFactoryProvider = filterFactoryProvider;
+
 		_dataSerializer = serializer;
 		_indexer = indexer;
 		
@@ -215,19 +219,19 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 	public Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex query ) {
 		
-		Map<String, Integer> filters;		
+		AnnotationFilter filter;
 		/*
 		 * If user has specified a filter, use it, otherwise use default
 		 */
         id = ( id == null ) ? _defaultFilterUuidById.get( layer ) : id;
-		filters = _filtersByUuid.get( id );
+        filter = _filtersByUuid.get( id );
 
 		_lock.readLock().lock();
     	try {
 
     		AnnotationConfiguration config = getConfiguration( layer );
     		TilePyramid pyramid = config.produce( TilePyramid.class );
-    		return getDataFromTiles( layer, query, filters, pyramid );
+    		return getDataFromTiles( layer, query, filter, pyramid );
     		
     	} catch ( Exception e ) {
     		throw new IllegalArgumentException( e.getMessage() );
@@ -381,7 +385,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 	private Map<String, Integer> getFiltersFromJSON( JSONObject jsonFilters ) {
 		
 		Map<String, Integer> filters = new HashMap<>();
-		
 		try {
 			Iterator<?> priorities = jsonFilters.keys();
 	        while( priorities.hasNext() ) {
@@ -512,7 +515,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 	
-	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, Map<String, Integer> filter, TilePyramid pyramid ) {
+	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, AnnotationFilter filter, TilePyramid pyramid ) {
 		
 		// wrap index into list 
 		List<TileIndex> indices = new LinkedList<>();
@@ -524,29 +527,26 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
 		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {					
-			if ( filter != null ) {
-				// filter provided
-				certificates.addAll( AnnotationManipulator.getFilteredCertificatesFromTile( tile, filter ) );
-			} else {
-				// no filter provided
-				certificates.addAll(  AnnotationManipulator.getAllCertificatesFromTile( tile ) );
-			}
+            // apply filter to the tile
+            certificates.addAll( filter.filterTile( tile ) );
 		}
 		
 		// read data from io
-		List<AnnotationData<?>> data = readDataFromIO( layer, certificates );
+		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
+        // apply filter to annotations
+        List<AnnotationData<?>> filteredAnnotations =  filter.filterAnnotations( annotations );
 
 		// assemble data by bin
 		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();
-		for ( AnnotationData<?> d : data ) {
+		for ( AnnotationData<?> annotation : filteredAnnotations ) {
 			// get index 
-			BinIndex binIndex = _indexer.getIndex( d, tileIndex.getLevel(), pyramid ).getBin();
+			BinIndex binIndex = _indexer.getIndex( annotation, tileIndex.getLevel(), pyramid ).getBin();
 			if (!dataByBin.containsKey( binIndex)) {
 				// no data under this bin, add list to map
 				dataByBin.put( binIndex, new LinkedList<AnnotationData<?>>() );
 			}
 			// add data to list, under bin
-			dataByBin.get( binIndex ).add( d );
+			dataByBin.get( binIndex ).add( annotation );
 		}
 		return dataByBin;
 	}

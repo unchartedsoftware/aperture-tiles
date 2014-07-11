@@ -43,6 +43,7 @@ public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfi
 	public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");    
     public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList(Arrays.asList("data","pyramidio"));
     public static final List<String> ANNOTATION_IO_PATH = Collections.unmodifiableList(Arrays.asList("data","pyramidio"));
+    public static final List<String> FILTER_PATH = Collections.unmodifiableList(Arrays.asList("filter"));
     public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList(Arrays.asList("data","serializer"));
 
 
@@ -68,6 +69,7 @@ public class AnnotationConfiguration extends ConfigurableFactory<AnnotationConfi
 		addChildFactory(tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH));
 		addChildFactory(pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH));
         addChildFactory(annotationIOFactoryProvider.createFactory(this, ANNOTATION_IO_PATH));
+        addChildFactory(pyramidIOFactoryProvider.createFactory(this, FILTER_PATH));
 		addChildFactory(serializationFactoryProvider.createFactory(this, SERIALIZER_PATH));
 	}
 
