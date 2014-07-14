@@ -121,6 +121,28 @@ define(function (require) {
                     domElement[events[i]] = null;
                 }
             }
+        },
+
+        // Registers a click handler that only fires if the click didn't
+        // involve a map drag. Since the map is moving under the mouse cursor
+        // the browser will still register a click despite mouse movement. This
+        // guards against that.
+        dragSensitiveClick : function( node, handler, threshold ) {
+            var dragStart = {x: null, y: null};
+
+            threshold = threshold || 10;
+
+            node.on('mousedown', function(evt) {
+                dragStart.x = evt.pageX;
+                dragStart.y = evt.pageY;
+            });
+
+            node.on('click', function(evt) {
+                if (Math.abs(dragStart.x-evt.pageX) < threshold &&
+                    Math.abs(dragStart.y-evt.pageY) < threshold ) {
+                    handler.call(this, evt);
+                }
+            });
         }
 
     };
