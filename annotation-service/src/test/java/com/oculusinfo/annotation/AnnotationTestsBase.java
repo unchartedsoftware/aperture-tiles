@@ -53,9 +53,10 @@ public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "annotations-unit-test";
 	static final double   EPSILON = 0.001;
-	static final int      NUM_ENTRIES = 10;
-	static final double[] BOUNDS = {1+EPSILON, 0+EPSILON, 6336769-EPSILON, 500000-EPSILON};
-            //{-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
+	static final int      NUM_ENTRIES = 50;
+	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
+	        //{1+EPSILON, 0+EPSILON, 6336769-EPSILON, 500000-EPSILON};
+
 
 	/*
 	 * Annotation list printing utility functions
@@ -206,16 +207,11 @@ public class AnnotationTestsBase {
             anno.put("level", level );
 
             JSONObject range = new JSONObject();
-            range.put("min", level );
+            range.put("min", 0 );
             range.put("max", level );
             anno.put("range", range );
 
             anno.put("group", randomGroup() );
-
-            //JSONObject certificate = new JSONObject();
-            //certificate.put("uuid", UUID.randomUUID() );
-            //certificate.put("timestamp", timestamp.toString() );
-            //anno.put("certificate", certificate );
 
             JSONObject data = new JSONObject();
             data.put("comment", randomComment() );

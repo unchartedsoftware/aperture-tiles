@@ -41,7 +41,6 @@ define(function (require) {
         init: function( spec, renderer, details, map ) {
 
             this._super( spec, map );
-            this.service = new AnnotationService( spec.layer );
 
             this.renderer = renderer;
             this.details = details;
@@ -51,8 +50,6 @@ define(function (require) {
 
             // set callbacks
             this.map.on('moveend', $.proxy( this.update, this ) );
-
-            this.update();
         },
 
 
@@ -116,13 +113,13 @@ define(function (require) {
             coord = this.map.getCoordFromViewportPixel( position.x, position.y );
             tilekey = this.map.getTileKeyFromViewportPixel( position.x, position.y );
             // write annotation
-            this.service.writeAnnotation( DEBUG_ANNOTATION( coord ), this.updateCallback(tilekey) );
+            AnnotationService.writeAnnotation( this.layerInfo, DEBUG_ANNOTATION( coord ), this.updateCallback(tilekey) );
         },
 
 
         modifyAnnotation: function( annotation ) {
 
-            this.service.modifyAnnotation( annotation, function() {
+            AnnotationService.modifyAnnotation( this.layerInfo, annotation, function() {
                 // TODO: request old and new tile locations in case of failure
                 return true;
             });
@@ -133,7 +130,7 @@ define(function (require) {
         removeAnnotation: function( annotation ) {
             var  pixel = this.map.getViewportPixelFromCoord( annotation.x, annotation.y ),
                  tilekey = this.map.getTileKeyFromViewportPixel( pixel.x, pixel.y );
-            this.service.removeAnnotation( annotation.certificate, this.updateCallback(tilekey) );
+            AnnotationService.removeAnnotation( this.layerInfo, annotation.certificate, this.updateCallback(tilekey) );
         },
 
 
@@ -151,7 +148,7 @@ define(function (require) {
                 defunctTiles = {},
                 i, tile, tilekey;
 
-            if ( !this.layerSpec.accessibility.read ) {
+            if ( !this.layerInfo || !this.layerSpec.accessibility.read ) {
                 return;
             }
 
@@ -196,8 +193,8 @@ define(function (require) {
                 }
             }
 
-            // Request needed tiles from dataService
-            this.service.getAnnotations( neededTiles, this.getCallback() );
+            // Request needed tiles from service
+            AnnotationService.getAnnotations( this.layerInfo, neededTiles, this.getCallback() );
         },
 
 
@@ -206,10 +203,15 @@ define(function (require) {
             var that = this;
 
             return function( data ) {
+
+                if ( !that.layerInfo ) {
+                    return;
+                }
+
                 // set as pending
                 that.pendingTiles[tilekey] = true;
                 // set force update flag to ensure this tile overrides any other pending requests
-                that.service.getAnnotations( [tilekey], that.getCallback( true ) );
+                AnnotationService.getAnnotations( this.layerInfo, [tilekey], that.getCallback( true ) );
             };
         },
 
@@ -283,6 +285,28 @@ define(function (require) {
             };
 
         },
+
+
+        configure: function( callback ) {
+
+            var that = this;
+
+            AnnotationService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
+                if (statusInfo.success) {
+                    if ( that.layerInfo ) {
+                        // if a previous configuration exists, release it
+                        AnnotationService.unconfigureLayer( that.layerInfo, function() {
+                            return true;
+                        });
+                    }
+                    // set layer info
+                    that.layerInfo = layerInfo;
+                }
+
+                callback( layerInfo, statusInfo );
+            });
+        },
+
 
         redraw: function( data ) {
             this.renderer.redraw( data );

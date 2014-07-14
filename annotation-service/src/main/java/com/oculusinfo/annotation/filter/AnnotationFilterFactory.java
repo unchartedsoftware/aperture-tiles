@@ -58,6 +58,7 @@ public class AnnotationFilterFactory extends ConfigurableFactory<AnnotationFilte
         super(name, AnnotationFilter.class, parent, path);
 
         _product = null;
+
         List<String> annotationTypes = getFilterTypes(children);
 
         //use the first factory name for the first child as the default type
@@ -66,7 +67,7 @@ public class AnnotationFilterFactory extends ConfigurableFactory<AnnotationFilte
             defaultType = annotationTypes.get(0);
         }
 
-        //set up the PYRAMID_IO_TYPE property to use all the associated children factory names.
+        //set up the FILTER_TYPE property to use all the associated children factory names.
         FILTER_TYPE = new StringProperty("type",
                 "The type annotation filter to be instantiated",
                 defaultType,

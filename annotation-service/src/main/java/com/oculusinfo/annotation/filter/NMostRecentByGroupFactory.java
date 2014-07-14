@@ -38,21 +38,21 @@ public class NMostRecentByGroupFactory extends ConfigurableFactory<AnnotationFil
 	private static final Logger LOGGER = LoggerFactory.getLogger(NMostRecentByGroupFactory.class);
 
 	
-	public static JSONProperty COUNTS_BY_PRIORITY = new JSONProperty("countsByPriority",
+	public static JSONProperty COUNTS_BY_GROUP = new JSONProperty("countsByGroup",
 			"Indicates the number of annotations to read for each bin, by priority",
 			null);
 
 	public NMostRecentByGroupFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
 		super(factoryName, AnnotationFilter.class, parent, path);
 		
-		addProperty(COUNTS_BY_PRIORITY);
+		addProperty(COUNTS_BY_GROUP);
 	}
 
 	@Override
 	protected AnnotationFilter create() {
 		try {
-			JSONObject countsByPriority = getPropertyValue(COUNTS_BY_PRIORITY);
-			return new NMostRecentByGroupFilter(countsByPriority);
+			JSONObject countsByGroup = getPropertyValue(COUNTS_BY_GROUP);
+			return new NMostRecentByGroupFilter(countsByGroup);
 		}
 		catch (Exception e) {
 			LOGGER.error("Error trying to create NMostRecentByPriorityFactory", e);

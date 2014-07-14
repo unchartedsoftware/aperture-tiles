@@ -41,14 +41,14 @@ public class NMostRecentByGroupFilter implements AnnotationFilter {
         _countsByGroup = getFilterMap( filterConfig );
     }
 
-    private Map<String, Integer> getFilterMap( JSONObject countsByPriorityJson ) {
+    private Map<String, Integer> getFilterMap( JSONObject countsByGroupJson ) {
         Map<String, Integer> filters = new HashMap<>();
         try {
-            Iterator<?> priorities = countsByPriorityJson.keys();
-            while( priorities.hasNext() ) {
+            Iterator<?> groups = countsByGroupJson.keys();
+            while( groups.hasNext() ) {
 
-                String priority = (String)priorities.next();
-                int count = countsByPriorityJson.getInt(priority);
+                String priority = (String)groups.next();
+                int count = countsByGroupJson.getInt(priority);
                 filters.put( priority, count );
             }
 

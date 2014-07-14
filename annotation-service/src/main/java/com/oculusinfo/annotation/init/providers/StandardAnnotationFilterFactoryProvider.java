@@ -29,7 +29,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.filter.AnnotationFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
@@ -57,7 +56,7 @@ public class StandardAnnotationFilterFactoryProvider implements FactoryProvider<
 
 	/**
 	 * Concatenates two string lists together.
-	 * @return If either of the input lists are null, then the other is returned, othwerise
+	 * @return If either of the input lists are null, then the other is returned, otherwise
 	 * a new list is created that contains both lists.
 	 */
 	private static List<String> getMergedPath(List<String> path1, List<String> path2) {
@@ -77,8 +76,8 @@ public class StandardAnnotationFilterFactoryProvider implements FactoryProvider<
 	
 	
 	@Inject
-	public StandardAnnotationFilterFactoryProvider(Set<DelegateFactoryProviderTarget<AnnotationIO>> providers) {
-		for (DelegateFactoryProviderTarget<AnnotationIO> provider : providers) {
+	public StandardAnnotationFilterFactoryProvider(Set<DelegateFactoryProviderTarget<AnnotationFilter>> providers) {
+		for (DelegateFactoryProviderTarget<AnnotationFilter> provider : providers) {
 			childFactories.add(new ChildProvider(provider, provider.getPath(), provider.getFactoryName()));
 		}
 	}
