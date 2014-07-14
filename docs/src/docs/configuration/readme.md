@@ -197,7 +197,7 @@ maxExtent
 
 The BaseLayer parameters use map provider APIs to determine what features to include on the base map. In the following example, the Google Maps API is used to define the style of the base map.
 
-```json 
+```json
 "baseLayer" : {
             "Google" : {
                 "options" : {

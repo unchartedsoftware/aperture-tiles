@@ -66,21 +66,6 @@ img.vid-thumbnail {
 	border: 1px solid #cba;
 }
 
-pre {
-	overflow: auto;
-	font-size: 14px;
-	font-family: Consolas, "Courier New", Courier, monospace;
-	/*background: #FCFCFA;*/
-    background: #dee5e5;
-	margin: 10px 0 10px 0;
-	padding: 10px;
-	/*border: 1px solid #ccc;*/
-    border: 1px solid #8f8170;
-	-moz-border-radius: 2px;
-	-webkit-border-radius: 2px;
-	border-radius: 2px;
-}
-
 pre.code {
 	overflow: auto;
 	font-size: 14px;

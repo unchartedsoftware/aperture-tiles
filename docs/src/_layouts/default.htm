@@ -4,11 +4,15 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 		<title>{{ page.section }} | {{ site.product }}</title>
 		<link rel="stylesheet" type="text/css" href="{{page.rootPath}}css/all.css">
+		<link rel="stylesheet" type="text/css" href="{{page.rootPath}}css/syntaxhighlighter_3.0.83/shCore.css">
+		<link rel="stylesheet" type="text/css" href="{{page.rootPath}}css/syntaxhighlighter_3.0.83/shThemeDefault.css">
 <!--	<link rel="stylesheet" type="text/css" href="{{page.rootPath}}jstests/test.css"> 
 		<link rel="stylesheet" href="{{page.rootPath}}prettify/default.css"> -->
 		<link rel="SHORTCUT ICON" href="{{page.rootPath}}img/resources/aperture-16x16.ico"/>
 <!--	<script src="{{page.rootPath}}lib/jquery.js"></script> -->
 		<script src="{{page.rootPath}}lib/ga.js"></script>
+		<script src="{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shCore.js"></script>
+		<script src="{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shAutoloader.js"></script>
 	</head>
 	<body>
 		<div id="header"></div>
@@ -23,10 +27,22 @@
 				</div>
 				<div id="all">
 					<div id="content">
-						{{ content }}
+						{{ content | replace: '<pre><code class="sql">', '<pre class="brush: sql">' | replace: '<pre><code class="scala">', '<pre class="brush: scala">' | replace: '<pre><code class="javascript">', '<pre class="brush: js">' | replace: '<pre><code class="java">', '<pre class="brush: java">' | replace: '<pre><code class="json">', '<pre class="brush: js">' | replace: '<pre><code class="xml">', '<pre class="brush: xml">' | replace: '<pre><code>', '<pre class="code">' }}
 					</div>
 				</div>
 			</div>
 		</div>
 	</body>
+	<script type="text/javascript">
+		SyntaxHighlighter.autoloader(
+			['java','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushJScript.js'],
+			['js','jscript','javascript','json','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushJScript.js'],
+			['sql','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushSql.js'],
+			['scala','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushScala.js'],
+			['xml','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushXml.js']
+		)
+		SyntaxHighlighter.defaults['gutter'] = false;
+		SyntaxHighlighter.defaults['toolbar'] = false;
+		SyntaxHighlighter.all()
+	</script>
 </html>

@@ -1,6 +1,6 @@
 ---
 section: Tour
-subtitle: Components
+subtitle: System Description
 permalink: tour/components/index.html
 layout: submenu
 ---
