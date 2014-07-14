@@ -62,14 +62,14 @@ define( function (require) {
             $.when( rendererDeferred, detailsDeferred ).done( function( renderer, details ) {
 
                 annotationLayer = new AnnotationLayer( layerJSON, renderer, details, map );
-                /*
+
                 annotationLayer.configure( function( layerInfo ) {
                       // update layer and resolve deferred
-                      annotationLayer.update( layerInfo );
-                      annotationLayer.resolve( annotationLayer );
+                      annotationLayer.update();
+                      annotationLayerDeferred.resolve( annotationLayer );
                 });
-                */
-                annotationLayerDeferred.resolve( annotationLayer );
+
+                //annotationLayerDeferred.resolve( annotationLayer );
             });
 
             return annotationLayerDeferred;

@@ -23,14 +23,15 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.io.File;
+import java.util.*;
 
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.annotation.init.DefaultAnnotationFilterFactoryProvider;
+import com.oculusinfo.annotation.init.providers.StandardAnnotationFilterFactoryProvider;
+import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
+import com.oculusinfo.annotation.rest.AnnotationInfo;
+import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -70,6 +71,8 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 	static final int NUM_THREADS = 8;
 
 	protected AnnotationService _service;
+    protected UUID _uuid;
+    protected AnnotationInfo _layerSpec;
 
     List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
     Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
@@ -81,8 +84,8 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
     	
     	try {
 
-            String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
-            //String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
+            //String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
+            String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
 
             Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.add( DefaultPyramidIOFactoryProvider.HBASE.create() );
@@ -94,8 +97,14 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
             annotationIoSet.add( DefaultAnnotationIOFactoryProvider.FILE_SYSTEM.create() );
             FactoryProvider<AnnotationIO> annotationIoFactoryProvider = new StandardAnnotationIOFactoryProvider( annotationIoSet );
 
+            Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
+            filterIoSet.add( DefaultAnnotationFilterFactoryProvider.EMPTY.create() );
+            filterIoSet.add( DefaultAnnotationFilterFactoryProvider.N_MOST_RECENT_BY_GROUP.create() );
+            FactoryProvider<AnnotationFilter> filterFactoryProvider = new StandardAnnotationFilterFactoryProvider( filterIoSet );
+
             FactoryProvider<TileSerializer<?>> serializerFactoryProvider = new StandardTileSerializationFactoryProvider();
             FactoryProvider<TilePyramid> pyramidFactoryProvider = new StandardTilePyramidFactoryProvider();
+
             AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
             AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
 
@@ -104,8 +113,12 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
                                                   annotationIoFactoryProvider,
                                                   serializerFactoryProvider,
                                                   pyramidFactoryProvider,
+                                                  filterFactoryProvider,
                                                   annotationIndexer,
-                                                  annotationSerializer );
+                                                  annotationSerializer);
+
+            _layerSpec = _service.list().get(0);
+            _uuid = _service.configureLayer(_layerSpec.getID(), _layerSpec.getRawData());
 
     	} catch (Exception e) {
             throw e;
@@ -260,7 +273,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 
             AnnotationData<?> clone = annotation.clone();
             long start = System.currentTimeMillis();
-            _service.write( TEST_LAYER_NAME, annotation.clone() );
+            _service.write( _layerSpec.getID(), annotation.clone() );
             long end = System.currentTimeMillis();
             double time = ((end-start)/1000.0);
             if ( VERBOSE )
@@ -292,7 +305,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 
             try {
                 long start = System.currentTimeMillis();
-                _service.modify( TEST_LAYER_NAME, newAnnotation );
+                _service.modify( _layerSpec.getID(), newAnnotation );
                 long end = System.currentTimeMillis();
                 double time = ((end-start)/1000.0);
                 annotation.update( newAnnotation );
@@ -312,16 +325,16 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
             AnnotationData<?> clone = annotation.clone();
             try {
                 long start = System.currentTimeMillis();
-                _service.remove( TEST_LAYER_NAME, clone.getCertificate() );
+                _service.remove( _layerSpec.getID(), clone.getCertificate() );
                 long end = System.currentTimeMillis();
                 double time = ((end-start)/1000.0);
                 removeAnnotationFromPublic(annotation);
-                if (VERBOSE)
+                if ( VERBOSE )
                     System.out.println("Thread " + _name + " successfully removed " + clone.getUUID() + " in " + time + " sec");
 
             } catch (Exception e) {
 
-                if (VERBOSE)
+                if ( VERBOSE )
                     System.out.println("Thread " + _name + " unsuccessfully removed " + clone.getUUID() );
             }
         }
@@ -392,22 +405,40 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 
             long end = System.currentTimeMillis();
             double time = ((end - start) / 1000.0);
-            System.out.println("Completed in " + time + " seconds");
+            if ( VERBOSE )
+                System.out.println("Completed in " + time + " seconds");
 
         } finally {
 
             try {
 
-                AnnotationConfiguration config = _service.getConfiguration( TEST_LAYER_NAME );
+                AnnotationConfiguration config = _service.getConfiguration( _layerSpec.getID() );
                 PyramidIO tileIo = config.produce( PyramidIO.class );
                 AnnotationIO dataIo = config.produce( AnnotationIO.class );
                 if ( tileIo instanceof HBasePyramidIO ) {
-                    System.out.println("Dropping tile HBase table");
-                    ((HBasePyramidIO)tileIo).dropTable( TEST_LAYER_NAME );
+                    if ( VERBOSE )
+                        System.out.println("Dropping tile HBase table");
+                    ((HBasePyramidIO)tileIo).dropTable( _layerSpec.getID() );
                 }
                 if ( dataIo instanceof HBaseAnnotationIO ) {
-                    System.out.println("Dropping data HBase table");
-                    ((HBaseAnnotationIO)dataIo).dropTable( TEST_LAYER_NAME );
+                    if ( VERBOSE )
+                        System.out.println("Dropping data HBase table");
+                    ((HBaseAnnotationIO)dataIo).dropTable( _layerSpec.getID() );
+                }
+
+                if ( tileIo instanceof FileSystemPyramidIO &&
+                     dataIo instanceof FileSystemAnnotationIO ) {
+                    if ( VERBOSE )
+                        System.out.println("Deleting temporary file system folders");
+                    try {
+                        File testDir = new File( ".\\" + _layerSpec.getID() );
+                        for ( File f : testDir.listFiles() ) {
+                            f.delete();
+                        }
+                        testDir.delete();
+                    } catch ( Exception e ) {
+                        // swallow exception
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -421,7 +452,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 		
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( null, TEST_LAYER_NAME, tile );
+    	Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( _uuid, _layerSpec.getID(), tile );
     	return scan;
 
 	}
@@ -437,7 +468,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 	
 	private Map<BinIndex, List<AnnotationData<?>>> readRandom( TileIndex tile ) {
 
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( null, TEST_LAYER_NAME, tile );
+		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( _uuid, _layerSpec.getID(), tile );
     	return scan;
 	}
 

@@ -21,60 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.rest;
+package com.oculusinfo.annotation.filter;
 
-import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.util.Pair;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 
-
-public interface AnnotationService {
-	
-	/*
-	 * Write an annotation to the storage service
-	 * 
-	 */
-	public abstract Pair<String,Long> write( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
-	
-	
-	/*
-	 * Modify an annotation in the storage service
-	 * 
-	 */
-	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
-	
-	
-	/*
-	 * Read annotations from the storage service
-	 * 
-	 */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex tile ) throws IllegalArgumentException;
-	
-	
-	/*
-	 * Remove an annotation from the storage service
-	 * 
-	 */
-	public abstract void remove( String layer, Pair<String, Long> certificate ) throws IllegalArgumentException;
-
-	
-	/*
-	 * Configuration interface 
-	 */
-	public abstract AnnotationConfiguration getConfiguration( String layer );
-	public abstract UUID configureLayer (String layerId, JSONObject configuration );
-    public abstract void unconfigureLayer (String layerId, UUID uuid );
-
-    /*
-     * List Layers interface
-     */
-	public abstract List<AnnotationInfo> list();
+/**
+ * This class represents a single annotation
+ */
+public interface AnnotationFilter {
+    
+	public List<Pair<String, Long>> filterTile( TileData<Map<String, List<Pair<String, Long>>>> tile );
+    public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations );
 }

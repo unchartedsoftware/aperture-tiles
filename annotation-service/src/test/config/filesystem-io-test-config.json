@@ -10,7 +10,7 @@
              "data": {
                 "pyramidio": {
                     "type": "file-system",
-                    "root.path": ".\\annotation-service\\src\\test\\",
+                    "root.path": ".\\",
                     "extension": "json"
                 },
                 "serializer": {
@@ -19,11 +19,14 @@
             },
             "groups": [ "Urgent", "High", "Medium", "Low" ],
             "filter" : {
-                    "Urgent": 10,
-                    "High": 10,
-                    "Medium": 10,
-                    "Low" : 10
-            }  
+                "type": "n-most-recent-by-group",
+                "countsByGroup": {
+                    "Urgent": 100,
+                    "High": 100,
+                    "Medium": 100,
+                    "Low" : 100
+                }
+            }
         }
     ]
 }
