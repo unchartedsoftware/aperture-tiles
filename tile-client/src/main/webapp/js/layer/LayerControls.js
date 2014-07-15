@@ -450,8 +450,8 @@ define(function (require) {
                 });
                 // swap z-indexes
                 otherZ = dropLayerState.get('zIndex');
-                dropLayerState.setZIndex( dragLayerState.get('zIndex') );
-                dragLayerState.setZIndex(otherZ);
+                dropLayerState.set( 'zIndex', dragLayerState.get('zIndex') );
+                dragLayerState.set( 'zIndex', otherZ);
             }
         });
     };
