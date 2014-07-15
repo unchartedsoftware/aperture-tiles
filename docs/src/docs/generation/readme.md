@@ -126,7 +126,8 @@ The rest of the configuration properties describe the data set to be tiled.
 
 ```
 oculus.binning.source.location
-   Path (local file system or HDFS) to the source data file or files to be tiled. 
+   Path (local file system or HDFS) to the source data file or files to be 
+   tiled.
 
 oculus.binning.prefix
    Prefix to be added to the name of every pyramid location. Used to separate
@@ -164,9 +165,9 @@ oculus.binning.parsing.<field>.fieldType
 			oculus.binning.parsing.<field>.dateFormat
 
        	- propertyMap
-	       	Contains property maps. Further information required to retrieve the
-			specific property. All of the following properties must be present
-			to read the property:
+	       	Contains property maps. Further information required to retrieve
+			the	specific property. All of the following properties must be 
+			present	to read the property:
           	
 			- oculus.binning.parsing.<field>.property 
              	Name of the property
@@ -191,9 +192,9 @@ oculus.binning.parsing.<field>.fieldScaling
 		used, just as with fieldAggregation)
 
 oculus.binning.parsing.<field>.fieldAggregation
-   Method of aggregation used on values of the X field. Describes how values from
-   multiple data points in the same bin should be aggregated together to create a
-   single value for the bin.
+   Method of aggregation used on values of the X field. Describes how values
+   from multiple data points in the same bin should be aggregated together to
+   create a single value for the bin.
 
    Default is addition.  Other possible aggregation types are:
 
@@ -307,7 +308,8 @@ For example, to record an average, the processing type might include the number 
 Another example is shown in line 41 of `TwitterTopicBinningAnalytic.scala`:
 
 ```scala
-extends BinningAnalytic[Map[String, TwitterDemoTopicRecord], JavaList[TwitterDemoTopicRecord]]
+extends BinningAnalytic[Map[String, TwitterDemoTopicRecord], 
+					    JavaList[TwitterDemoTopicRecord]]
 ```
 
 Here the processing type is a map used to add all similar topic records together, while the binning type is a list containing only the topics with the highest counts.
@@ -523,13 +525,13 @@ bareData
 	A distributed collection of (index, record) pairs as described above.
 
 indexScheme
-	Used to convert the index to a set X/Y coordinates that can be plotted. When
-	using a CartesianIndexScheme, the coordinates are taken as given.
+	Used to convert the index to a set X/Y coordinates that can be plotted.
+	When using a CartesianIndexScheme, the coordinates are taken as given.
 
 binAnalytic
 	A Binning Analytic that, as described above, defines how to aggregate two
-	records, convert them into the form written and determine the extrema of the
-	dataset.
+	records, convert them into the form written and determine the extrema of
+	the dataset.
 
 tileAnalytics
 	Analytics used to perform custom aggregations on tile data (e.g., get the
@@ -543,7 +545,8 @@ dataAnalytics
 tileScheme
 	The projection to use to transform from the raw data index into tiles and
 	bins. Two types are predefined:
-	- /binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid,
+	- /binning-utilities/src/main/java/com/oculusinof/binning/impl/
+	  AOITilePyramid,
 	  which is a linear transformation into an arbitrarily sized space
 	- /binning-utilities/src/main/java/com/oculusinof/binning/impl/
 	  WebMercatorTilePyramid, which is a standard geographical projection.
@@ -563,13 +566,14 @@ yBins		(Optional)
 consolidationPartitions		(Optional)
 	The number of reducers to use when aggregating data records into bins and
 	tiles. Defaults to the same number of partitions as the original data set.
-	Alter if you encounter problems with the tiling job due to lack	of resources.
+	Alter if you encounter problems with the tiling job due to lack	of
+	resources.
 
 isDensityStrip
 	Set to true if running a one-dimentional tiling job. Defaults to false.
 ```
 
-#####Writing tiiles
+#####Writing Tiles
 
 Lines 202 - 209 of `TwitterTopicBinner.scala` specify how to write the tiles created from your transformed data.
 
@@ -589,6 +593,8 @@ Binner.processDataByLevel is defined in the following file on line 180.
 ```
 /tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
 ```
+
+It accepts the following properties:
 
 ```
 tileScheme

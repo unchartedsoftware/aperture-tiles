@@ -199,52 +199,52 @@ The BaseLayer parameters use map provider APIs to determine what features to inc
 
 ```json
 "baseLayer" : {
-            "Google" : {
-                "options" : {
-                    "name" : "Google Black",
-                    "type" : "styled",
-                    "style" : [
-                        { "stylers" : [ { "invert_lightness" : true },
-                                        { "saturation" : -100 },
-                                        { "visibility" : "simplified" } ] },
-                        { "featureType" : "landscape.natural.landcover",
-                          "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "road",
-                          "stylers" : [ { "visibility" : "on" } ] },
-                        { "featureType" : "landscape.man_made",
-                          "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "transit",
-                          "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "poi",
-                          "stylers" : [ { "visibility" : "off" } ] },
-                        { "featureType" : "administrative.country",
-                          "elementType" : "geometry",
-                          "stylers" : [ { "visibility" : "on" },
-                                        { "lightness" : -56 } ] },
-                        { "elementType" : "labels",
-                          "stylers" : [ { "lightness" : -46 },
-                                        { "visibility" : "on" } ] }
-                    ]
-                }
-            }
-        }
+	"Google" : {
+		"options" : {
+			"name" : "Google Black",
+			"type" : "styled",
+			"style" : [
+				{ "stylers" : [ { "invert_lightness" : true },
+								{ "saturation" : -100 },
+								{ "visibility" : "simplified" } ] },
+				{ "featureType" : "landscape.natural.landcover",
+				  "stylers" : [ { "visibility" : "off" } ] },
+				{ "featureType" : "road",
+				  "stylers" : [ { "visibility" : "on" } ] },
+				{ "featureType" : "landscape.man_made",
+				  "stylers" : [ { "visibility" : "off" } ] },
+				{ "featureType" : "transit",
+				  "stylers" : [ { "visibility" : "off" } ] },
+				{ "featureType" : "poi",
+				  "stylers" : [ { "visibility" : "off" } ] },
+				{ "featureType" : "administrative.country",
+				  "elementType" : "geometry",
+				  "stylers" : [ { "visibility" : "on" },
+								{ "lightness" : -56 } ] },
+				{ "elementType" : "labels",
+				  "stylers" : [ { "lightness" : -46 },
+								{ "visibility" : "on" } ] }
+			]
+		}
+	}
+}
 ```
 
 The next example shows a TMS layer configuration that uses the Oculus World Graphite map set. You can use these maps in offline mode by first downloading the [map tiles WAR](http://aperturejs.com/downloads/) on [aperturejs.com](http://aperturejs.com/).
 
 ```javascript
 {
-        "type": "TMS",
-        "url" : "http://aperture.oculusinfo.com/map-world-graphite/",
-        "options" : {
-          "name" : "Open Graphite",
-          "layername": "world-graphite",
-          "osm": 0,
-          "type": "png",
-          "serverResolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172],
-          "resolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172]
-        }
-      }
+	"type": "TMS",
+	"url" : "http://aperture.oculusinfo.com/map-world-graphite/",
+	"options" : {
+	  "name" : "Open Graphite",
+	  "layername": "world-graphite",
+	  "osm": 0,
+	  "type": "png",
+	  "serverResolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172],
+	  "resolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172]
+	}
+}
 ```
 
 #####<a name="geo-axisconfig"></a>AxisConfig
@@ -389,14 +389,14 @@ renderer
 	Used for server-side rendering.
 
 	type
-		'heatmap': Renders to a heat-map, based on a standard avro double-valued 
-				   tile
-		'doubleseries': Renders to a series of heat-maps, based on a standard avro
-						double-series-valued tile
-		'doublestatistics': Renders tile's total hit and % coverage as text to the
-							tile
-		'textscore': Renders to an image showing scored words, with bars based on
-					 their score
+		'heatmap': Renders to a heat-map, based on a standard avro double-
+				   valued tile
+		'doubleseries': Renders to a series of heat-maps, based on a standard
+						avro double-series-valued tile
+		'doublestatistics': Renders tile's total hit and % coverage as text to 
+							the	tile
+		'textscore': Renders to an image showing scored words, with bars based 
+					 on their score
 
 	ramp
 		Determines the color scale applied to the data points based on their
@@ -409,8 +409,8 @@ renderer
 		'inv-grey': Inverse greyscale ramp.
 
 	opacity
-		Opacity of the rendered tile layer expressed as a decimal ranging from 0
-		(completely transparent) to 1 (completely opaque).
+		Opacity of the rendered tile layer expressed as a decimal ranging from
+		0 (completely transparent) to 1 (completely opaque).
 
 renderers
 	List of custom renderers required to perform client-side rendering. 
@@ -498,70 +498,70 @@ Then in lines 93-150, the source data is attached to an HTML layer.
 ```javascript
 createLayer : function() {
 
-            var that = this;
+	var that = this;
 
-            /*
-                Utility function for positioning the labels
-            */
-            function getYOffset( numTopics, index ) {
-                var SPACING =  36;
-                return 108 - ( (( numTopics - 1) / 2 ) - index ) * SPACING;
-            }
+	/*
+		Utility function for positioning the labels
+	*/
+	function getYOffset( numTopics, index ) {
+		var SPACING =  36;
+		return 108 - ( (( numTopics - 1) / 2 ) - index ) * SPACING;
+	}
 
-            /*
-                Here we create and attach an individual html layer to the html node layer. For every individual node
-                of data in the node layer, the html function will be executed with the 'this' context that of the node.
-             */
-            this.nodeLayer.addLayer( new HtmlLayer({
+	/*
+		Here we create and attach an individual html layer to the html node layer. For every individual node
+		of data in the node layer, the html function will be executed with the 'this' context that of the node.
+	 */
+	this.nodeLayer.addLayer( new HtmlLayer({
 
-                html: function() {
+		html: function() {
 
-                    var MAX_TOPICS = 5,             // we only want to display a maximum of 5 topics
-                        values = this.bin.value,    // the values associated with the bin (in this example there is only
-                                                    // one bin per tile)
-                        numTopics = Math.min( values.length, MAX_TOPICS ),
-                        $html = $('<div class="tile"></div>'), // this isn't necessary, but wrapping the tile html in a
-                                                               // 256*256 div lets us use 'bottom' and 'right' positioning
-                                                               // if we so choose
-                        topic,
-                        $topic,
-                        i;
+			var MAX_TOPICS = 5,             // we only want to display a maximum of 5 topics
+				values = this.bin.value,    // the values associated with the bin (in this example there is only
+											// one bin per tile)
+				numTopics = Math.min( values.length, MAX_TOPICS ),
+				$html = $('<div class="tile"></div>'), // this isn't necessary, but wrapping the tile html in a
+													   // 256*256 div lets us use 'bottom' and 'right' positioning
+													   // if we so choose
+				topic,
+				$topic,
+				i;
 
-                    /*
-                        Iterate over the top 5 available topics and create the html elements.
-                    */
-                    for (i=0; i<numTopics; i++) {
+			/*
+				Iterate over the top 5 available topics and create the html elements.
+			*/
+			for (i=0; i<numTopics; i++) {
 
-                        topic = values[i].topic;
-                        $topic = $('<div class="topics-label" style=" top:' +  getYOffset( numTopics, i ) + 'px;">' + topic + '</div>');
+				topic = values[i].topic;
+				$topic = $('<div class="topics-label" style=" top:' +  getYOffset( numTopics, i ) + 'px;">' + topic + '</div>');
 
-                        /*
-                            Attach a mouse click event listener
-                        */
-                        $topic.click( function() {
+				/*
+					Attach a mouse click event listener
+				*/
+				$topic.click( function() {
 
-                            /*
-                                We could simply do the styling in this function here, but to coordinate with the other
-                                renderers lets use the layerState object. The layerState will broadcast any change to
-                                all listeners.
-                            */
-                            that.layerState.setClickState({
-                                topic: topic,
-                                $elem: $(this),
-                                type: "html"
-                            });
-                            event.stopPropagation(); // stop the click from propagating deeper
-                        });
+					/*
+						We could simply do the styling in this function here, but to coordinate with the other
+						renderers lets use the layerState object. The layerState will broadcast any change to
+						all listeners.
+					*/
+					that.layerState.setClickState({
+						topic: topic,
+						$elem: $(this),
+						type: "html"
+					});
+					event.stopPropagation(); // stop the click from propagating deeper
+				});
 
-                        $html.append( $topic );
-                    }
+				$html.append( $topic );
+			}
 
-                    // return the jQuery object. You can also return raw html as a string.
-                    return $html;
-                }
-            }));
+			// return the jQuery object. You can also return raw html as a string.
+			return $html;
+		}
+	}));
 
-        }
+}
 ```
 
 The layer file should then be updated to specify that client-side rendering should be used and to pass in the names of the custom renderers:
