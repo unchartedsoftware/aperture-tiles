@@ -24,37 +24,37 @@
 package com.oculusinfo.annotation.filter.impl;
 
 import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.util.Pair;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import java.util.*;
 
 
-/**
- * This class represents a single annotation
- */
-public class EmptyFilter implements AnnotationFilter {
+public class ScriptableFilter extends EmptyFilter {
 
-    public EmptyFilter() {}
+    private String _script;
 
-	public List<Pair<String, Long>> filterTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
-
-        List<Pair<String, Long>> filtered = new LinkedList<>();
-        // for each bin
-        for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
-            if (bin != null) {
-                // for each group
-                for (Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.entrySet()) {
-                    filtered.addAll(binEntry.getValue());
-                }
-            }
-        }
-        return filtered;
+    public ScriptableFilter( String script ) {
+        _script = script;
     }
 
     public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
-        return annotations;
+
+        List<AnnotationData<?>> filtered = new LinkedList<>();
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("javascript");
+        try
+        {
+            for ( AnnotationData<?> annotation : annotations ) {
+
+                String func = "var annotation = "+ annotation.toJSON().toString() +"; "+ _script;
+                Boolean result = (Boolean)engine.eval( func );
+                if (result) {
+                    filtered.add( annotation );
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return filtered;
     }
 }

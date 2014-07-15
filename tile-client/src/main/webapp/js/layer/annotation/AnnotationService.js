@@ -39,8 +39,9 @@ define(function (require) {
 
         /**
          * send a GET request to the server to pull all annotation data for an array of tilekeys
-         * @param tilekeys   array of tile identification keys
-         * @param callback  the callback that is called upon receiving data from server
+         * @param layerInfo    annotation layer info
+         * @param tilekeys     array of tile identification keys
+         * @param callback     the callback that is called upon receiving data from server
          */
         getAnnotations: function( layerInfo, tilekeys, callback) {
 
@@ -55,8 +56,9 @@ define(function (require) {
 
          /**
          * send a GET request to the server to pull all annotation data for a specific tilekey
-         * @param tilekey   tile identification key
-         * @param callback  the callback that is called upon receiving data from server
+         * @param layerInfo    annotation layer info
+         * @param tilekey      tile identification key
+         * @param callback     the callback that is called upon receiving data from server
          */
         getAnnotation: function( layerInfo, tilekey, callback ) {
 
@@ -81,6 +83,7 @@ define(function (require) {
 
         /**
          * write the annotation to the server
+         * @param layerInfo    annotation layer info
          * @param annotation   annotation to be written
          * @param callback     the callback that is called upon receiving data from server
          */
@@ -98,15 +101,14 @@ define(function (require) {
                 }
                 callback( annotation, statusInfo );
             });
-
         },
 
 
         /**
-         * modifiy an the annotation on the server
-         * @param oldAnnotation   old state of the annotation to be modified
-         * @param newAnnotation   new state of the annotation to be modified
-         * @param callback        the callback that is called upon receiving data from server
+         * modify an the annotation on the server
+         * @param layerInfo     annotation layer info
+         * @param certificate   annotation to be modified
+         * @param callback      the callback that is called upon receiving data from server
          */
         modifyAnnotation: function( layerInfo, annotation, callback ) {
 
@@ -128,8 +130,9 @@ define(function (require) {
 
         /**
          * remove the annotation from the server
-         * @param annotation   annotation to be removed
-         * @param callback     the callback that is called upon receiving data from server
+         * @param layerInfo     annotation layer info
+         * @param certificate   certificate of annotation to be removed
+         * @param callback      the callback that is called upon receiving data from server
          */
         removeAnnotation: function( layerInfo, certificate, callback ) {
 
@@ -144,7 +147,7 @@ define(function (require) {
 
         /**
          * Set new server side annotation configuration
-         * @param filters      configuration spec to be passed to server
+         * @param layerSpec    configuration spec to be passed to server
          * @param callback     the callback that is called upon receiving data from server
          */
         configureLayer: function( layerSpec, callback ) {
@@ -176,8 +179,8 @@ define(function (require) {
 
         /**
          * send a POST request to the server
-         * @param type   type of annotation service: "WRITE", "MODIFY", or "REMOVE"
-         * @param data   annotation data to send server
+         * @param layerInfo annotation layer info
+         * @param request   request json to POST to server
          * @param callback  the callback that is called upon receiving data from server
          */
         postRequest: function( layerInfo, request, callback ) {
@@ -193,32 +196,36 @@ define(function (require) {
                                  postData: request,
                                  contentType: 'application/json'
                              });
+        },
+
+
+        /**
+         * Receive all annotation layers from server
+         * @param callback     the callback that is called upon receiving data from server
+         */
+        requestLayers : function() {
+
+            var annotationDeferred = $.Deferred();
+
+            // Request the layer information
+            aperture.io.rest('/annotation',
+                             'POST',
+                             function (layers) {
+                                 annotationDeferred.resolve(layers);
+                             },
+                             {
+                                 postData: {
+                                     "type": "list"
+                                 },
+                                 contentType: 'application/json'
+                             });
+
+            return annotationDeferred;
         }
 
     };
 
-    /**
-     * Receive all annotation layers from server
-     * @param callback     the callback that is called upon receiving data from server
-     */
-    AnnotationService.requestLayers = function() {
-        var annotationDeferred = $.Deferred();
 
-        // Request the layer information
-        aperture.io.rest('/annotation',
-                         'POST',
-                         function (layers) {
-                             annotationDeferred.resolve(layers);
-                         },
-                         {
-                             postData: {
-                                 "type": "list"
-                             },
-                             contentType: 'application/json'
-                         });
-
-        return annotationDeferred;
-    };
 
     return AnnotationService;
 });

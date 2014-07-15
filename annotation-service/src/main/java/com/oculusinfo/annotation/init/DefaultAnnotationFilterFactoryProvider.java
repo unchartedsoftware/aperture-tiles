@@ -27,6 +27,7 @@ package com.oculusinfo.annotation.init;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.filter.EmptyFilterFactory;
 import com.oculusinfo.annotation.filter.NMostRecentByGroupFactory;
+import com.oculusinfo.annotation.filter.ScriptableFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 
@@ -45,7 +46,8 @@ import java.util.List;
  */
 public enum DefaultAnnotationFilterFactoryProvider {
 	EMPTY ("empty"),
-	N_MOST_RECENT_BY_GROUP ("n-most-recent-by-group");
+	N_MOST_RECENT_BY_GROUP ("n-most-recent-by-group"),
+    SCRIPTABLE ("scriptable");
 
 	//-------------------------------------
 
@@ -87,10 +89,11 @@ public enum DefaultAnnotationFilterFactoryProvider {
 			ConfigurableFactory<AnnotationFilter> factory = null;
 			if (factoryType.equals("empty")) {
 				factory = new EmptyFilterFactory(factoryName, parent, path);
-			}
-			else if (factoryType.equals("n-most-recent-by-group")) {
+			} else if (factoryType.equals("n-most-recent-by-group")) {
 				factory = new NMostRecentByGroupFactory(factoryName, parent, path);
-			}
+			} else if (factoryType.equals("scriptable")) {
+                factory = new ScriptableFilterFactory(factoryName, parent, path);
+            }
 			return factory;
 		}
 	

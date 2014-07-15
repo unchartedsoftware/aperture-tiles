@@ -20,9 +20,9 @@
 
 .point-annotation {
     position:absolute;
-    -webkit-border-radius: 30px;
-       -moz-border-radius: 30px;
-            border-radius: 30px;
+    -webkit-border-radius: 8px;
+       -moz-border-radius: 8px;
+            border-radius: 8px;
     width: 8px;
     height: 8px;
     -webkit-transition: 0.1s ease-in-out;
@@ -41,7 +41,7 @@
 .point-annotation-back {
 
     pointer-events:none;
-    background-color: #fff;
+    background-color: #000;
     border: 2px solid #000;
     margin: -4px 0 0 -4px;
     z-index: 1;

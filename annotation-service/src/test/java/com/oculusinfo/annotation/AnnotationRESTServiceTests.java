@@ -23,16 +23,17 @@
  */
 package com.oculusinfo.annotation;
 
-import org.apache.http.HttpResponse;
+import com.oculusinfo.binning.util.JsonUtilities;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.json.JSONArray;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -42,7 +43,11 @@ import java.util.List;
 public class AnnotationRESTServiceTests extends AnnotationTestsBase {
 
     static final int NUM_THREADS = 8;
-    static final int NUM_WRITES = 25000;
+    static final int NUM_WRITES = 10000;
+
+    static final String URL = "http://localhost:8080/twitter-community-demo/";
+    static final String REST_ENDPOINT = "rest/annotation";
+    static final String LAYER_NAME = "twitter.community.centralnodes.annotations.debug";
 
     public class AnnotationTestClient implements Runnable {
 
@@ -56,13 +61,13 @@ public class AnnotationRESTServiceTests extends AnnotationTestsBase {
         public void write( JSONObject annotationJSON ) throws IOException {
 
             HttpClient client = new DefaultHttpClient();
-            HttpPost post = new HttpPost("http://localhost:8080/bitcoin-demo/rest/annotation");
+            HttpPost post = new HttpPost( URL + REST_ENDPOINT);
             try {
 
                 StringEntity input = new StringEntity(
                                 "{"+
                                 "\"type\": \"write\","+
-                                "\"layer\":\"test-annotations-0\","+
+                                "\"layer\":\"" + LAYER_NAME + "\","+
                                 "\"annotation\":" + annotationJSON.toString() +
                                 "}");
 
@@ -74,6 +79,101 @@ public class AnnotationRESTServiceTests extends AnnotationTestsBase {
 
                 throw new IOException( e );
             }
+        }
+
+
+        protected JSONArray randomLineage( int level, int growthFactor ) {
+
+            JSONArray arr = new JSONArray();
+            try {
+                JSONObject node = new JSONObject();
+                node.put("index", JSONObject.NULL);
+                node.put("count", growthFactor);
+                arr.put(node);
+
+                for (int i=0; i<=level; i++) {
+                    node = new JSONObject();
+                    node.put("index", _rand.nextInt( growthFactor ));
+                    if (i!=level) {
+                        node.put("count", growthFactor);
+                    } else {
+                        node.put("count", JSONObject.NULL);
+                    }
+                    arr.put(node);
+                }
+
+            } catch ( Exception e ) {
+                e.printStackTrace();
+            }
+
+            return arr;
+        }
+
+        protected String getUser( int growthFactor, JSONArray lineage ) {
+
+            try {
+
+                int index = 1;
+                for (int i = 1; i<lineage.length(); i++) {
+                    int child = lineage.getJSONObject( i ).getInt("index");
+                    index = growthFactor * (index-1) + 2 + child;
+                }
+                return "user_" + (index-2);
+
+            } catch ( Exception e ) {
+                e.printStackTrace();
+            }
+            return "user_error";
+        }
+
+        protected String getParent( int growthFactor, JSONArray lineage ) {
+
+            JSONArray parentLineage = new JSONArray();
+            try {
+                for (int i=0; i<lineage.length()-1; i++) {
+                    parentLineage.put( JsonUtilities.deepClone( lineage.getJSONObject(i) ) );
+                }
+            } catch ( Exception e ) {
+                e.printStackTrace();
+            }
+            return getUser( growthFactor, parentLineage );
+        }
+
+        /*
+	     * Annotation index generation function
+	     */
+        protected JSONObject generateJSON() {
+
+            double [] xy = randomPosition();
+
+            try {
+                JSONObject anno = new JSONObject();
+                anno.put("x", xy[0]);
+                anno.put("y", xy[1]);
+
+                int level = (int)(_rand.nextDouble() * 10);
+                anno.put("level", level );
+
+                JSONObject range = new JSONObject();
+                range.put("min", level );
+                range.put("max", level );
+                anno.put("range", range );
+
+                anno.put("group", "Central Node" );
+
+                JSONObject data = new JSONObject();
+                JSONArray lineage = randomLineage( level, 3 );
+                data.put("user",  getUser(3, lineage) );
+                data.put("parent",  getParent(3, lineage) );
+                data.put("lineage", lineage );
+                anno.put("data", data);
+                return anno;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
         }
 
         public void run() {
