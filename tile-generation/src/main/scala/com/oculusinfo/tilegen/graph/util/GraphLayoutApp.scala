@@ -35,7 +35,7 @@ import com.oculusinfo.tilegen.graph.util.ForceDirectedLayout
 import com.oculusinfo.tilegen.spark.MavenReference
 import com.oculusinfo.tilegen.spark.SparkConnector
 
-object GraphLayout {
+object GraphLayoutApp {
 
 	def main(args: Array[String]) {
 
@@ -60,6 +60,8 @@ object GraphLayout {
 		var edgeFile = source
 		var outputdir = output
 		var ipaddress = false
+		//sc.setCheckpointDir("hdfs://hadoop-s1/user/dgiesbrecht/checkpoint_dir")	//dgdg
+		val fileStartTime = System.currentTimeMillis()
 
 		// read the input data 
 		val rawData = if (0 == partitions) {
@@ -89,10 +91,13 @@ object GraphLayout {
 		
 		val layouter = new ForceDirectedLayout()
 		val nodePositions = layouter.determineLayout(sc, graph, maxIterations)
-		
+				
 		// save results
 		nodePositions.saveAsTextFile(output)
-
+		
+		val fileEndTime = System.currentTimeMillis()
+		println("Finished graph layout job in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
+		
 		println("DONE!!")
 	}
 	
