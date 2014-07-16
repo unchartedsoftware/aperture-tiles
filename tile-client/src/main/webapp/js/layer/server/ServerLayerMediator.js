@@ -91,11 +91,11 @@ define(function (require) {
 
                 function getLevelMinMax( level ) {
                 	var meta =  layer.getLayerInfo().meta,
-                    	minArray = meta.levelMinFreq || meta.levelMinimums || meta[level],
-                    	maxArray = meta.levelMaxFreq || meta.levelMaximums || meta[level],
+                    	minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[level])),
+                    	maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[level])),
                     	min = minArray ? ($.isArray(minArray) ? minArray[level] : minArray.minimum) : 0,
-                    	max = $.isArray(maxArray) ? maxArray[level] : maxArray.maximum;
-                    return [ parseFloat(min), parseFloat(max) ];
+                    	max = maxArray ? ($.isArray(maxArray) ? maxArray[level] : maxArray.maximum) : 0;
+	                return [ parseFloat(min), parseFloat(max) ];
                 }
 
                 // Make a callback to regen the ramp image on map zoom changes
