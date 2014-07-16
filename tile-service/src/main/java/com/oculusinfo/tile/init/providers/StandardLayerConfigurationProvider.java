@@ -26,6 +26,7 @@ package com.oculusinfo.tile.init.providers;
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
@@ -40,6 +41,8 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
     @Inject
     private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
+    @Inject
+    private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
 
 
 
@@ -47,7 +50,8 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
     public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, null, path);
+                                      _rendererFactoryProvider, 
+                                      _tileTransformerFactoryProvider, null, path);
     }
 
     @Override
@@ -55,7 +59,8 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
                                                                   List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, parent, path);
+                                      _rendererFactoryProvider, 
+                                      _tileTransformerFactoryProvider, parent, path);
     }
 
     @Override
@@ -64,6 +69,7 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
                                                                   List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, factoryName, parent, path);
+                                      _rendererFactoryProvider, 
+                                      _tileTransformerFactoryProvider, factoryName, parent, path);
     }
 }
