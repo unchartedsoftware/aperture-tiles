@@ -1,0 +1,14 @@
+- label: Quick Start
+  path: ../quickstart/
+
+- label: Installation
+  path: ../installation/
+
+- label: Generation
+  path: ../generation/
+
+- label: Configuration
+  path: ../configuration/
+
+- label: User Guide
+  path: ../userguide/

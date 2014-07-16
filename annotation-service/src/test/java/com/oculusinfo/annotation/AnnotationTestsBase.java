@@ -53,10 +53,11 @@ public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "annotations-unit-test";
 	static final double   EPSILON = 0.001;
-	static final int      NUM_ENTRIES = 10;
-	static final double[] BOUNDS = {1+EPSILON, 0+EPSILON, 6336769-EPSILON, 500000-EPSILON};
-            //{-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
+	static final int      NUM_ENTRIES = 50;
+	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
+	        //{1+EPSILON, 0+EPSILON, 6336769-EPSILON, 500000-EPSILON};
 
+    final Random _rand = new Random();
 	/*
 	 * Annotation list printing utility functions
 	 */
@@ -193,8 +194,6 @@ public class AnnotationTestsBase {
 	 */
 	protected JSONObject generateJSON() {
 
-		final Random rand = new Random();
-		
 		double [] xy = randomPosition();
 
 		try {
@@ -202,20 +201,15 @@ public class AnnotationTestsBase {
             anno.put("x", xy[0]);
             anno.put("y", xy[1]);
 
-            int level = (int)(rand.nextDouble() * 10);
+            int level = (int)(_rand.nextDouble() * 10);
             anno.put("level", level );
 
             JSONObject range = new JSONObject();
-            range.put("min", level );
+            range.put("min", 0 );
             range.put("max", level );
             anno.put("range", range );
 
             anno.put("group", randomGroup() );
-
-            //JSONObject certificate = new JSONObject();
-            //certificate.put("uuid", UUID.randomUUID() );
-            //certificate.put("timestamp", timestamp.toString() );
-            //anno.put("certificate", certificate );
 
             JSONObject data = new JSONObject();
             data.put("comment", randomComment() );
@@ -227,7 +221,6 @@ public class AnnotationTestsBase {
 		}
 		
 		return null;
-				
 	}
 	
 	/*
@@ -269,46 +262,30 @@ public class AnnotationTestsBase {
 	
 	
 	protected double[] randomPosition() {
-		
-		final Random rand = new Random();
+
 		double [] xy = new double[2];
-		xy[0] = BOUNDS[0] + (rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
-		xy[1] = BOUNDS[1] + (rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));		
-		
-		/*
-		int univariateCase = (int)(rand.nextDouble() * 10);
-		switch (univariateCase) {
-		
-			case 0: 
-				xy[1] = -1;
-				break;
-			case 1: 
-				xy[0] = -1;
-				break;
-		}
-		*/			
+		xy[0] = BOUNDS[0] + (_rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
+		xy[1] = BOUNDS[1] + (_rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
 		return xy;		
 	}
 	
 	
 	protected String randomGroup() {
-		
-		final Random rand = new Random();
+
 		String groups[] = {"Urgent", "High", "Medium", "Low"};
-		int index = (int)(rand.nextDouble() * 3);
+		int index = (int)(_rand.nextDouble() * 3);
 		return groups[ index ];
 	}
 	
 	
 	protected String randomComment() {
-		int LENGTH = 256;		
-		Random rng = new Random();
+		int LENGTH = 256;
 		String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 	    char[] text = new char[LENGTH];
 	    for (int i = 0; i < LENGTH; i++)
 	    {
-	        text[i] = CHARACTERS.charAt(rng.nextInt(CHARACTERS.length()));
+	        text[i] = CHARACTERS.charAt(_rand.nextInt(CHARACTERS.length()));
 	    }
 	    return new String(text);
 	}

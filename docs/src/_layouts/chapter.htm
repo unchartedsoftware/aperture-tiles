@@ -1,0 +1,29 @@
+---
+layout: default
+rootPath: ../../../
+---
+
+{% comment %} Get path and filename containing submenu items {% endcomment %}
+	{% capture submenuItem %}{{ page.section | downcase }}MenuItem{% endcapture %}
+	{% capture dataFile %}{{ submenuItem }}s{% endcapture %}
+
+{% comment %} Get path and filename containing sidebar content {% endcomment %}
+	{% capture includeContext %}{{ rootPath }}{{ page.section | downcase }}-{{ page.subtitle | replace: ' ', '' | camelcase }}.htm{% endcapture %}	
+		
+<div id="submenu">
+		{% for submenuItem in site.data.submenus.[dataFile] %}
+			<div class="submenu-item" onclick="window.location.assign('{{ submenuItem.path }}');">
+				<div class="submenu-item-background{%if page.subtitle == submenuItem.label %} selected{% endif %}">
+					<div class="submenu-item-number">{{ forloop.index }}</div>
+				</div>
+				<div class="submenu-item-label">{{ submenuItem.label }}</div>				
+			</div>
+		{% endfor %}
+	
+</div>
+<div id="content">
+	{% include {{ includeContext }} %}	
+	<div class="content-body">
+		{{ content }}
+	</div>
+</div>

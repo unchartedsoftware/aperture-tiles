@@ -1,0 +1,11 @@
+- label: Tour
+  path: tour/overview/
+  
+- label: Docs
+  path: docs/quickstart/
+
+- label: Demos
+  path: demos/
+
+- label: Download
+  path: download/
