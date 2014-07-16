@@ -318,8 +318,8 @@ object DatasetFactory {
 	                   cacheRaw: Boolean,
 	                   cacheFilterable: Boolean,
 	                   cacheProcessed: Boolean,
-	                   tileWidth: Int = 256,
-	                   tileHeight: Int = 256): Dataset[_, _, _, _, _] = {
+	                   width: Option[Int] = None,
+	                   height: Option[Int] = None): Dataset[_, _, _, _, _] = {
 
 		// Wrap parameters more usefully
 		val properties = new CSVRecordPropertiesWrapper(dataDescription)
@@ -343,11 +343,17 @@ object DatasetFactory {
 		).filter(levelSeq =>
 			levelSeq != Seq[Int]()	// discard empty entries
 		)
+		val xBins = width.getOrElse(properties.getInt("oculus.binning.xbins",
+		                                              "The number of bins per tile along the horizontal axis",
+		                                              Some(256)))
+		val yBins = height.getOrElse(properties.getInt("oculus.binning.ybins",
+		                                               "The number of bins per tile along the vertical axis",
+		                                               Some(256)))
 		// Determine index and value information
 		val indexer = CSVIndexExtractor.fromProperties(properties)
 		val valuer = CSVValueExtractor.fromProperties(properties)
 
 		createDatasetGeneric(sc, cacheRaw, cacheFilterable, cacheProcessed,
-		                     indexer, valuer, tileWidth, tileHeight, levels, properties)
+		                     indexer, valuer, xBins, yBins, levels, properties)
 	}
 }

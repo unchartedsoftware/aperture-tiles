@@ -98,7 +98,7 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 			val propValue = propPairs.filter(kv => property.trim == kv(0).trim).map(kv =>
 				if (kv.size > 1) kv(1) else "").takeRight(1)(0)
 			parseValue(propValue, field, propType, dateFormats)
-		} else if ("string" == parseType) {
+		} else if ("string" == parseType || "substring" == parseType) {
 			value
 		} else {
 			value.toDouble

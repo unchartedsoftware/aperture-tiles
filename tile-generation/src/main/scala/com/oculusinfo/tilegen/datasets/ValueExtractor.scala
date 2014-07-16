@@ -79,17 +79,18 @@ object CSVValueExtractor {
 		} else {
 			// Single field; figure out what type.
 			if (field.isDefined) {
-				val fieldType = properties.getString("oculus.binning.parsing."+field+".fieldType",
-				                                     "The type of the "+field+" field",
-				                                     Some(if ("constant" == field || "zero" == field) "constant"
+				val fieldName = field.get
+				val fieldType = properties.getString("oculus.binning.parsing."+fieldName+".fieldType",
+				                                     "The type of the "+fieldName+" field",
+				                                     Some(if ("constant" == fieldName || "zero" == fieldName) "constant"
 				                                          else "")).toLowerCase
 				if ("string" == fieldType || "substring" == fieldType) {
 					val aggregationLimit = properties.getIntOption(
-						"oculus.binning.parsing."+field.get+".limit.aggregation",
+						"oculus.binning.parsing."+fieldName+".limit.aggregation",
 						"The maximum number of elements to keep internally when "+
 							"calculating bins")
 					val order = properties.getStringOption(
-						"oculus.binning.parsing."+field.get+".order",
+						"oculus.binning.parsing."+fieldName+".order",
 						"How to order elements.  Possible values are: \"alpha\" for "+
 							"alphanumeric ordering of strings, \"reverse-alpha\" "+
 							"similarly, \"high\" for ordering by score from high to "+
@@ -114,33 +115,33 @@ object CSVValueExtractor {
 						case _ => None
 					}
 					val binLimit = properties.getIntOption(
-						"oculus.binning.parsing."+field.get+".limit.bins",
+						"oculus.binning.parsing."+fieldName+".limit.bins",
 						"The maximum number of entries to write to the tiles in a given bin")
 					val analytic = new StandardStringScoreBinningAnalytic(aggregationLimit, order, binLimit)
 
-					if ("string" == fieldType) new StringValueExtractor(field.get, analytic)
+					if ("string" == fieldType) new StringValueExtractor(fieldName, analytic)
 					else {
 						val delimiter = properties.getString(
-							"oculus.binning.parsing."+field.get+".substring.delimiter",
+							"oculus.binning.parsing."+fieldName+".substring.delimiter",
 							"The delimiter by which to split the field's value into substrings")
 						val index = properties.getInt(
-							"oculus.binning.parsing."+field.get+".substring.index",
+							"oculus.binning.parsing."+fieldName+".substring.entry",
 							"The index of the desired substring within the "+
 								"substrings of the field value.  Negative "+
 								"values indicate place from the right-hand-"+
 								"side, rather than the left")
-						new SubstringValueExtractor(field.get, delimiter, index, analytic)
+						new SubstringValueExtractor(fieldName, delimiter, index, analytic)
 					}
 				} else {
 					val fieldAggregation =
-						properties.getString("oculus.binning.parsing." + field.get
+						properties.getString("oculus.binning.parsing." + fieldName
 							                     + ".fieldAggregation",
 						                     "The way to aggregate the value field when binning",
 						                     Some("add"))
 
 					val binningAnalytic = if ("log" == fieldAggregation) {
 						val base =
-							properties.getDouble("oculus.binning.parsing." + field.get
+							properties.getDouble("oculus.binning.parsing." + fieldName
 								                     + ".fieldBase",
 							                     "The base to use when taking value the "+
 								                     "logarithm of values.  Default is e.",
@@ -153,7 +154,7 @@ object CSVValueExtractor {
 					else
 						new SumDoubleAnalytic with StandardDoubleBinningAnalytic
 
-					new FieldValueExtractor(field.get, binningAnalytic);
+					new FieldValueExtractor(fieldName, binningAnalytic);
 				}
 			} else {
 				new CountValueExtractor
@@ -235,8 +236,8 @@ class SubstringValueExtractor (fieldName: String,
 		val value = fieldValues.get(fieldName).toString
 		val subValues = value.split(delimiter)
 		val entry = 
-			if (index < 0) subValues(subValues.length+index)
-			else subValues(index)
+				if (index < 0) subValues(subValues.length+index)
+				else subValues(index)
 		Map(entry -> 1.0)
 	}
 	def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] =

@@ -34,6 +34,8 @@ import org.apache.spark.SparkContext;
 import java.util.List;
 import java.util.Properties;
 
+import scala.Int;
+import scala.Some;
 
 
 /**
@@ -62,9 +64,10 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?,?,?,?,?>>
 	protected CSVDataset<?,?,?,?,?> createInstance () {
 		Properties datasetProps = JsonUtilities.jsonObjToProperties(getConfigurationNode());
 		// Width and height are irrelevant for record queries, so we just set them to 1.
+		Some<Object> dimension = new Some<Object>(Int.unbox(new Integer(1)));
 		CSVDataset<?,?,?,?,?> dataset =
 			(CSVDataset<?,?,?,?,?>) com.oculusinfo.tilegen.datasets.DatasetFactory.createDataset(
-				       _context, datasetProps, false, true, false, 1, 1);
+				               _context, datasetProps, false, true, false, dimension, dimension);
 
 		return dataset;
 	}

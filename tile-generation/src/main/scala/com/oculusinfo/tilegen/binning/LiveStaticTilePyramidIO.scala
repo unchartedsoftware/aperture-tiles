@@ -92,7 +92,7 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 				if (!datasets.contains(pyramidId)) {
 					datasets(pyramidId) =
 						DatasetFactory.createDataset(sc, dataDescription,
-						                             false, false, true, width, height)
+						                             false, false, true, Some(width), Some(height))
 				}
 			}
 		}
