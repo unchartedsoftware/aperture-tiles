@@ -36,6 +36,7 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
@@ -57,7 +58,8 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 	private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
 	@Inject
 	private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
-
+	@Inject
+    private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
 
 
 	private FactoryProvider<PyramidIO> _cachingProvider;
@@ -101,14 +103,16 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 		public CachingLayerConfiguration (ConfigurableFactory<?> parent,
 		                                  List<String> path) {
 			super(_cachingProvider, _serializationFactoryProvider,
-			      _rendererFactoryProvider, parent, path);
+			      _rendererFactoryProvider, _tileTransformerFactoryProvider, 
+			      parent, path);
 		}
 
 
 		public CachingLayerConfiguration (String name, ConfigurableFactory<?> parent,
 		                                  List<String> path) {
 			super(_cachingProvider, _serializationFactoryProvider,
-			      _rendererFactoryProvider, name, parent, path);
+			      _rendererFactoryProvider, _tileTransformerFactoryProvider, 
+			      name, parent, path);
 		}
 
 		@Override

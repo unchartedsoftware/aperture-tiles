@@ -174,7 +174,8 @@ abstract public class ConfigurableFactory<T> {
 		try {
 			return property.unencodeJSON(new JSONNode(_configurationNode, property.getName()));
 		} catch (JSONException e) {
-			// Must not have been there.  Ignore, leaving as default.
+			// Must not have been there.  Ignore, leaving as default. 
+			LOGGER.info("Property {} from configuration {} not found. Using default", property, _configurationNode);
 		} catch (ConfigurationException e) {
 			// Error within configuration.
 			// Use default, but also warn about it.
