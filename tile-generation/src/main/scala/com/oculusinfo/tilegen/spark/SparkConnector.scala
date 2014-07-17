@@ -51,9 +51,12 @@ object SparkConnector {
 
 	def getLibrariesFromClasspath = {
 		val allSparkLibs = System.getenv("SPARK_CLASSPATH")
-		// we have to do some stupid name-mangling on windows
+		// When running on windows paths are ';' separated.  Cygwin paths are normally
+		// the same as linux, but we have to force them to the windows style in the
+		// spark-run script, otherwise Java/Scala won't recognize them (scala/java exe are windows
+		// programs and expect windows paths).
 		val os = System.getProperty("os.name").toLowerCase()
-		if (os.contains("windows")) {
+		if (os.contains("windows") || os.contains("cygwin")) {
 			allSparkLibs.split(";").filter(!_.isEmpty).toSeq
 		} else {
 			allSparkLibs.split(":").filter(!_.isEmpty).toSeq
