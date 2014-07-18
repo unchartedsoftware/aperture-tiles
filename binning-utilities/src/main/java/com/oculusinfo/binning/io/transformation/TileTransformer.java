@@ -31,23 +31,36 @@ import com.oculusinfo.binning.TileData;
 
 
 /**
- * A TileTransformer is an interface that can take a JSON representation of 
+ * A TileTransformer is an interface that can take a JSON representation of
  * 		a tile and perform a transform on it. This can include a filter on the data or
  *		perform an action on all sets of the data in a uniform way.  The resulting tile
  *		is passed back in JSON format
- * 
+ *
  * @author tlachapelle
  */
 public interface TileTransformer {
 
-	/**
-	 * Transforms the tile data in JSON format based on transform type and returns result  
-	 * 
-	 * @param JSONObject representing the tile data in JSON form to be transformed
-	 * 
-	 * @return JSONObject representing the fully transformed tile based on the transform type
-	 */
-	public JSONObject Transform (JSONObject json) throws JSONException;
+    /**
+     * Transforms the tile data in JSON format based on transform type and returns result
+     *
+     * @param JSONObject representing the tile data in JSON form to be transformed
+     * @return JSONObject representing the fully transformed tile based on the transform type
+     */
+    public JSONObject Transform(JSONObject json) throws JSONException;
 
-	
-	}
+
+    /**
+     * Same transformation on the raw tile form
+     * @param data
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    //takes tile data x returns tile data x generified on function level
+    public <T> TileData<T> Transform(TileData<T> data) throws Exception;
+}
+
+
+
+
+

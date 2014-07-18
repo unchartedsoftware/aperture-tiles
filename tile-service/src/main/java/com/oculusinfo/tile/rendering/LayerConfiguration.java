@@ -111,6 +111,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		         "For server use only, on a tile-by-tile basis",
 		         null);
 
+
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
 		Collections.unmodifiableSet(new HashSet<>(Arrays.asList((ConfigurationProperty<?>) RANGE_MIN,
 		                                                        (ConfigurationProperty<?>) RANGE_MAX,
