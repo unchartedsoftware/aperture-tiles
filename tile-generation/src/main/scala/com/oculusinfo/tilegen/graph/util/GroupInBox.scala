@@ -275,7 +275,20 @@ class GroupInBox extends Serializable {
 		    }
 		}
 		
-		//TODO -- could also expand all these rectangles to ensure they fit the 'parent' rectangle with as little wasted space as possible?
+		// ---- Expand rectangles out to better fit parent layout (to reduce amount of wasted space)
+		val expandFactor = Math.min(screenW/centreAreaNext(2), screenH/centreAreaNext(3))
+		if (expandFactor > 1.0) {
+			val width2 = screenW/2
+			val height2 = screenH/2
+			for (n <- 0 until numGroups) {
+    			val x = (rects(n)._1 - width2)*expandFactor + width2
+    			val y = (rects(n)._2 - height2)*expandFactor + height2
+    			val w = rects(n)._3*expandFactor
+    			val h = rects(n)._4*expandFactor
+    			rects(n) = (x, y, w, h) 
+			}
+		}
+		
 		sortedGroups.map(p => p._1).zip(rects)	//result format is List[(groupID, rectangle)]
 	}
 }
