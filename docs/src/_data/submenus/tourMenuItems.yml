@@ -1,8 +1,8 @@
 - label: Overview
-  path: ../overview/
+  path: tour/overview/
 
 - label: System Description
-  path: ../components/
+  path: tour/components/
 
 - label: Process
-  path: ../process/
+  path: tour/process/
