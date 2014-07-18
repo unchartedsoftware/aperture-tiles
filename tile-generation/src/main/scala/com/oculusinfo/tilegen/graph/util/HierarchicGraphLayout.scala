@@ -62,12 +62,10 @@ class HierarchicGraphLayout extends Serializable {
 		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0") 
 		
 		val boxLayouter = new GroupInBox()	//group-in-a-box layout scheme
-		
-		//start at highest level,
-		//	get ID's, degrees, and internal nodes -- do GIB algo once, and store results as (id, rectangle global_coords)
-		
+				
 		// init results for 'parent group' rectangle with group ID 0   (rectangle format is bottem-left corner, width, height of rectangle) 
 		var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))  
+		//var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
 		
 		var totalNumNodes = 0L
 		var level = maxHierarchyLevel
@@ -75,11 +73,11 @@ class HierarchicGraphLayout extends Serializable {
 			println("Starting GroupInBox Layout for hierarchy level " + level)
 
 			val lastLevelLayout = sc.parallelize(localLastLevelLayout)
-			//do next level down ...
-			// 	get ID's, degrees, internal nodes AND L+1 community level -- group by L+1 community level, do GIB algo once per
-			//	L+1 community, then consolidate results and save in format (id, rectangle global_coords)
-			// ...
-			
+			// For each hierarchical level > 0, get community ID's, community degree (num outgoing edges), 
+			// and num internal nodes, and the parent community ID.
+			// Group by parent community, and do Group-in-Box layout once for each parent community.
+			// Then consolidate results and save in format (community id, rectangle in 'global coordinates') 
+
 			// parse node data ... and re-format as (parent communityID, (communityID,numInternalNodes, community degree))
 			val parsedNodeData = parseNodeData(sc, sourceDir + "/level_" + level + "_vertices",	partitions, delimiter)
 			val groups = if (level == maxHierarchyLevel) {
@@ -117,15 +115,19 @@ class HierarchicGraphLayout extends Serializable {
 			level -= 1
 		}
 				
-		//do Level 0...
+		// Do Level 0...
+		// For lowest hierarchical level, get raw node ID's, parent community ID's, 
+		// and corresponding intra-community edges for each parent community
+		// Group nodes and intra-community edges by parent community, and do Force-directed layout for 
+		// each parent community.
+		// Then consolidate results and save final results in format (node id, node location in 'global coordinates') 
+
 		println("Starting Force Directed Layout for hierarchy level 0")
 		
 		val forceDirectedLayouter = new ForceDirected()	//force-directed layout scheme
 		
 		val lastLevelLayout = sc.parallelize(localLastLevelLayout)
 
-		//  get ID's, degrees, internal nodes AND L+1 community level -- group by L+1 community level
-		//	do Force-directed algo once per L+1 community, then consolidate results and save in final format (id, id x,y coords)
 		// parse edge data
 		val edges = parseEdgeData(sc, sourceDir + "/level_" + level + "_edges", partitions, delimiter)
 		
