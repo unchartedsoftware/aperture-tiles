@@ -28,14 +28,12 @@ package com.oculusinfo.tilegen.datasets
 
 
 import java.lang.{Double => JavaDouble}
-
+import java.util.{List => JavaList}
+import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
-
 import org.apache.spark.SparkContext
-
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
-
 import com.oculusinfo.tilegen.tiling.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
@@ -43,6 +41,9 @@ import com.oculusinfo.tilegen.tiling.IPv4Analytics
 import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
 import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.tiling.MinimumDoubleArrayTileAnalytic
+import com.oculusinfo.tilegen.tiling.MaximumDoubleArrayTileAnalytic
+import scala.collection.convert.Wrappers.SeqWrapper
 
 
 
@@ -102,8 +103,30 @@ object CSVTileAnalyticExtractor {
 				indexAnalytic.analysis
 					.map(new CompositeAnalysisDescription(minMaxAnalytic, _))
 					.getOrElse(minMaxAnalytic)
+			new AnalysisWithTag(Some(analytic))		
+	} else if (valuer.isInstanceOf[SeriesValueExtractor] || valuer.isInstanceOf[MultiFieldValueExtractor]) {
+	  	// TODO: The above ^^^ needs to be handled more gracefully as it won't scale new vector-based extractors
+	  	// are added.
+		  val convertFcn: BT => Seq[Double] = { bt =>
+		    for (b <- bt.asInstanceOf[JavaList[JavaDouble]]) yield b.asInstanceOf[Double]	    	    
+		  }
+			val minAnalytic =
+				new AnalysisDescriptionTileWrapper[BT, Seq[Double]](sc,
+				                                               convertFcn,
+				                                               new MinimumDoubleArrayTileAnalytic,
+				                                               metaDataKeys)
+			val maxAnalytic =
+				new AnalysisDescriptionTileWrapper[BT, Seq[Double]](sc,
+				                                               convertFcn,
+				                                               new MaximumDoubleArrayTileAnalytic,
+				                                               metaDataKeys)
+			val minMaxAnalytic = new CompositeAnalysisDescription(minAnalytic, maxAnalytic)
+			val analytic = 
+				indexAnalytic.analysis
+					.map(new CompositeAnalysisDescription(minMaxAnalytic, _))
+					.getOrElse(minMaxAnalytic)
 			new AnalysisWithTag(Some(analytic))
-		} else {
+	} else {
 			indexAnalytic
 		}
 	}

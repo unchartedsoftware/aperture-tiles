@@ -39,17 +39,12 @@ public class EmptyFilter implements AnnotationFilter {
 
     public EmptyFilter() {}
 
-	public List<Pair<String, Long>> filterTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
+	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin ) {
 
         List<Pair<String, Long>> filtered = new LinkedList<>();
-        // for each bin
-        for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
-            if (bin != null) {
-                // for each group
-                for (Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.entrySet()) {
-                    filtered.addAll(binEntry.getValue());
-                }
-            }
+        // for each group
+        for (Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.entrySet()) {
+            filtered.addAll(binEntry.getValue());
         }
         return filtered;
     }

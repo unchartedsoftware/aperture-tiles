@@ -73,10 +73,14 @@ object CSVValueExtractor {
 			                           "Multiple fields to use for the values of a tile.")
 
 		if (field.isEmpty && fields.isDefined) {
-			// No single field defined, but multiple ones - use the mutiples.
+			// No single field defined, but multiple ones - use the multiples.
 			val fieldNames = fields.get.split(",")
-			new MultiFieldValueExtractor(fieldNames)
-		} else {
+			// TODO: NDK will be refactoring code in the near future to allow a more flexible means of
+			// specifying the extractors to use.  Once that's done the code can gracefully instantiate
+			// either of the vector extractors.  We'll just leave it commented out for now.
+			// new MultiFieldValueExtractor(fieldNames)
+		  new SeriesValueExtractor(fieldNames)		    
+	  } else {
 			// Single field; figure out what type.
 			if (field.isDefined) {
 				val fieldName = field.get
@@ -262,8 +266,8 @@ class MultiFieldValueExtractor (fieldNames: Array[String])
 class SeriesValueExtractor (fieldNames: Array[String])
 		extends CSVValueExtractor[Seq[Double], JavaList[JavaDouble]]
 {
-	def name: String = "series: "+fieldNames.mkString(",")
-	def description: String = "The series of the fields "+fieldNames.mkString(",")
+	def name: String = "series"
+	def description: String = "The series of the fields"
 	def fields = fieldNames
 	def calculateValue (fieldValues: Map[String, Any]): Seq[Double] =
 		fieldNames.map(field => Try(fieldValues(field).asInstanceOf[Double]).getOrElse(0.0))

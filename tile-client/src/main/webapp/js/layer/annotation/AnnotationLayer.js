@@ -30,6 +30,7 @@ define(function (require) {
 
 
     var Layer = require('../Layer'),
+        Util = require('../../util/Util'),
         AnnotationService = require('./AnnotationService'),
         DETAILS_VERTICAL_OFFSET = 26,
         AnnotationLayer;
@@ -41,14 +42,10 @@ define(function (require) {
         init: function( spec, renderer, details, map ) {
 
             this._super( spec, map );
-
             this.renderer = renderer;
             this.details = details;
-
             this.pendingTiles = {};
             this.tiles = [];
-
-            // set callbacks
             this.map.on('moveend', $.proxy( this.update, this ) );
         },
 
@@ -68,7 +65,7 @@ define(function (require) {
         createDetails: function( clickState ) {
 
             var $details = this.details.createDisplayDetails( clickState.bin, clickState.$bin );
-
+            // position details over click
             $details.css({
                 left: clickState.position.x - ( $details.outerWidth() / 2 ),
                 top: clickState.position.y - ( $details.outerHeight() + DETAILS_VERTICAL_OFFSET )
@@ -100,7 +97,7 @@ define(function (require) {
                     },
                     level: that.map.getZoom(),
                     data: {
-                        user: "justinbieber"
+                        user: "debug"
                     }
                 };
             }
@@ -113,7 +110,9 @@ define(function (require) {
             coord = this.map.getCoordFromViewportPixel( position.x, position.y );
             tilekey = this.map.getTileKeyFromViewportPixel( position.x, position.y );
             // write annotation
-            AnnotationService.writeAnnotation( this.layerInfo, DEBUG_ANNOTATION( coord ), this.updateCallback(tilekey) );
+            AnnotationService.writeAnnotation( this.layerInfo,
+                                               DEBUG_ANNOTATION( coord ),
+                                               this.updateCallback(tilekey) );
         },
 
 
@@ -207,7 +206,6 @@ define(function (require) {
                 if ( !that.layerInfo ) {
                     return;
                 }
-
                 // set as pending
                 that.pendingTiles[tilekey] = true;
                 // set force update flag to ensure this tile overrides any other pending requests
@@ -220,16 +218,9 @@ define(function (require) {
 
             var tileRect = this.map.getPyramid().getTileBounds( tileData.tile );
 
-            function uuid() {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                    var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-            }
-
             return {
                 bins : tileData.annotations,
-                uuid : uuid(),
+                uuid : Util.generateUuid(),
                 tilekey : tilekey,
                 longitude: tileRect.minX,
                 latitude: tileRect.maxY
@@ -267,9 +258,6 @@ define(function (require) {
                     // receiving data from old request, ignore it
                     return;
                 }
-
-                // clear visual representation
-                //that.nodeLayer.remove( tilekey );
 
                 // add to data cache
                 currentTiles[tilekey] = that.transformTileToBins( data, tilekey );

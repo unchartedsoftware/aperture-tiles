@@ -367,11 +367,21 @@ trait StandardDoubleArrayTileAnalytic extends TileAnalytic[Seq[Double]] {
 class SumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
 	def aggregateElements (a: Double, b: Double): Double = a + b
 }
+
 class MinimumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
 	def aggregateElements (a: Double, b: Double): Double = a min b
 }
+
+class MinimumDoubleArrayTileAnalytic extends MinimumDoubleArrayAnalytic with TileAnalytic[Seq[Double]] {
+	def name = "minimums"
+}
+
 class MaximumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
 	def aggregateElements (a: Double, b: Double): Double = a max b
+}
+
+class MaximumDoubleArrayTileAnalytic extends MaximumDoubleArrayAnalytic with TileAnalytic[Seq[Double]] {
+	def name = "maximums"
 }
 
 trait StandardDoubleArrayBinningAnalytic extends BinningAnalytic[Seq[Double],
