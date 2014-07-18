@@ -48,15 +48,25 @@ object ClusteredGraphLayoutApp {
 		val sourceDir = argParser.getString("source", "The source directory where to find clustered graph data")
 		val outputDir = argParser.getString("output", "The output location where to save data")
 		val partitions = argParser.getInt("partitions", "The number of partitions into which to read the raw data", Some(0))
-		val consolidationPartitions = argParser.getInt("p", "The number of partitions for data processing. default=based on input partitions", Some(0))
-		val dataDelimiter = argParser.getString("d", "Specify input file edge delimiter. default is tab-delimited", Some(","))
+		val consolidationPartitions = argParser.getInt("p", "The number of partitions for data processing. Default=based on input partitions", Some(0))
+		val dataDelimiter = argParser.getString("d", "Delimiter for the source graph data. Default is comma-delimited", Some(","))
 		val maxIterations = argParser.getInt("i", "Max number of iterations for force-directed algorithm", Some(500))
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
-	
+		val borderOffset = argParser.getInt("border","Percent of boundingBox width and height to leave as whitespace when laying out leaf nodes. Default is 5 percent", Some(5))
+		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))	
+		
 		val fileStartTime = System.currentTimeMillis()
 		
 		val layouter = new HierarchicGraphLayout()
-		val nodePositions = layouter.determineLayout(sc, maxIterations, maxHierarchyLevel, partitions, consolidationPartitions, sourceDir, dataDelimiter)
+		val nodePositions = layouter.determineLayout(sc, 
+													maxIterations, 
+													maxHierarchyLevel, 
+													partitions, 
+													consolidationPartitions, 
+													sourceDir, 
+													dataDelimiter,
+													(layoutLength,layoutLength),
+													borderOffset)
 		
 		nodePositions.saveAsTextFile(outputDir)	// save results -- format is (nodeID, x coord, y coord) 
 		

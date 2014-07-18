@@ -37,16 +37,27 @@ import org.apache.spark.graphx._
 /**
  *  Hierarchical graph layout algorithm
  *  
- */ 
+ *  sc = spark context
+ *  maxIterations = max iterations to use for force-directed layout algorithm. Default = 500
+ *  partitions = The number of partitions into which to read the raw data. Default = 0 (automatically chosen by Spark)
+ *  consolidationPartitions = The number of partitions for data processing. Default= 0 (chosen based on input partitions)
+ *	sourceDir = The source directory where to find clustered graph data
+ * 	delimiter = Delimiter for the source graph data. Default is comma-delimited
+ *  layoutDimensions = Total desired width and height of the node layout region. Default is (256.0, 256.0)
+ *	borderOffset = percent of boundingBox width and height to leave as whitespace when laying out leaf nodes.  Default is 5 percent
+ **/ 
 class HierarchicGraphLayout extends Serializable {
 
 	def determineLayout(sc: SparkContext, 
-						maxIterations: Int, 
+						maxIterations: Int = 500, 
 						maxHierarchyLevel: Int, 
 						partitions: Int = 0,
 						consolidationPartitions: Int = 0,
 						sourceDir: String,
-						delimiter: String): RDD[(Long, Double, Double)] = {	
+						delimiter: String = ",",
+						layoutDimensions: (Double, Double) = (256.0, 256.0),
+						borderOffset: Int = 5): RDD[(Long, Double, Double)] = {	
+		
 		
 		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0") 
 		
@@ -54,11 +65,9 @@ class HierarchicGraphLayout extends Serializable {
 		
 		//start at highest level,
 		//	get ID's, degrees, and internal nodes -- do GIB algo once, and store results as (id, rectangle global_coords)
-		val screenW = 1024.0	// total width of node layout region (arbitrary units)
-		val screenH = 1024.0	// total height of node layout region 	// TODO ... expose API parameters for this?
-		//var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,screenW,screenH)))	// init results for 'parent group' rectangle with group ID 0
-																					// bottem-left corner, width, heigth of rectangle 
-		var localLastLevelLayout = Seq(0L -> (0.0,0.0,screenW,screenH))
+		
+		// init results for 'parent group' rectangle with group ID 0   (rectangle format is bottem-left corner, width, height of rectangle) 
+		var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))  
 		
 		var totalNumNodes = 0L
 		var level = maxHierarchyLevel
@@ -168,8 +177,6 @@ class HierarchicGraphLayout extends Serializable {
 			val commEdges = p._2._1._2 
 			val parentRectangle = p._2._2
 			//data format is (parent communityID, Iterable(communityID,numInternalNodes, community degree))
-			val borderOffset = 5	// percent of whitespace to leave along sides of bounding rectangle when laying out raw nodes
-									// TODO ... expose this as an API parameter
 			val coords = forceDirectedLayouter.run(commNodes, commEdges, parentRectangle, borderOffset, maxIterations)
 			coords
 		})
