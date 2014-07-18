@@ -101,11 +101,27 @@ define(function (require) {
      */
     destroyNode = function( that, node ) {
 
-        // no node position specified,
+        function deleteElement( ) {
+            var $element = $(this);
+
+            $element.empty();
+
+            /*
+            if ( $element.parent() !== node.$root &&
+                 $element.parent().children().length === 0 ) {
+                 console.log('deleting parent');
+                 $element.parent().remove();
+            }
+            */
+        }
+
+        // no node position specified
         if ( !that.xAttr_ || !that.yAttr_ ) {
             // destroy elements
-            if (node.$element) {
-                node.$element.remove();
+            if ( node.$elements ) {
+                console.log('deleting');
+                node.$elements.remove();
+                //node.$element.remove();
             }
             return;
         }
@@ -138,6 +154,7 @@ define(function (require) {
         return null;
     };
 
+
     /**
      * Removes a node by idKey, ensuring layer variables are adjusted accordingly.
      */
@@ -154,6 +171,7 @@ define(function (require) {
             delete nodesById[ key ];
         }
     };
+
 
     /**
      * Removes a node, ensuring layer variables are adjusted accordingly.
@@ -526,6 +544,15 @@ define(function (require) {
                 layers = this.layers_,
                 i;
 
+            // remove any prior elements, do this here rather than
+            // inside HtmlLayer in case multiple layers are attached
+            for (i=0; i<subset.length; i++) {
+                if ( subset[i].$elements ) {
+                    subset[i].$elements.remove();
+                }
+            }
+
+            // redraw layers
             for (i=0; i<layers.length; i++) {
                 layers[i].redraw( subset );
             }

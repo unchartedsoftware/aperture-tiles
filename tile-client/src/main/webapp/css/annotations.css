@@ -1,12 +1,5 @@
 @charset "UTF-8";
 
-.annotation-bin {
-
-    position:absolute;
-    width: 0px;
-    height: 0px;
-}
-
 .point-annotation-aggregate {
     position:absolute;
     width: 0px;
@@ -31,15 +24,13 @@
             transition: 0.1s ease-in-out;
 }
 
-.point-annotation-front {
-
+.point-annotation-fill {
     background-color: #09CFFF;
     margin: -2px 2px 2px -2px;
     z-index: 2;
 }
 
-.point-annotation-back {
-
+.point-annotation-border {
     pointer-events:none;
     background-color: #000;
     border: 2px solid #000;
@@ -48,29 +39,33 @@
 }
 
 .point-annotation-aggregate:hover .point-annotation {
-
     cursor: pointer;
     width: 12px;
     height: 12px;
 }
 
-.point-annotation-aggregate:hover .point-annotation-front {
-
+.point-annotation-aggregate:hover .point-annotation-fill {
     -webkit-filter: brightness(1.5);
     margin: -4px 2px 2px -4px;
 }
 
-.point-annotation-aggregate:hover .point-annotation-back {
-
+.point-annotation-aggregate:hover .point-annotation-border {
     margin: -6px 0 0 -6px;
 }
 
+.clicked-aggregate {
+    z-index: 1;
+}
+
+.clicked-annotation {
+    -webkit-filter: brightness(2);
+}
+
 /********************************************/
-/*            Annotation Details           */
+/*            Annotation Details            */
 /********************************************/
 
 .annotation-details {
-
     position:absolute;
     background-color:#111111;
     z-index: 2001;
@@ -80,13 +75,11 @@
 }
 
 .annotation-details-content {
-
     position:relative;
     height: 100%;
 }
 
 .annotation-details-head {
-
     position:relative;
     padding-left: 10px;
     background-color: #222222;
@@ -98,7 +91,6 @@
 }
 
 .annotation-details-body {
-
     position:relative;
     background-color: #111111;
     margin: 5px 0 5px 0;
@@ -113,21 +105,7 @@
 }
 
 .annotation-details-aggregate {
-
     padding-bottom: 23px;
-}
-
-.annotation-details-label {
-
-    position:relative;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    color: #D3D3D3;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }
 
 .annotation-details-close-button {
@@ -158,8 +136,11 @@
             transform: scale(1.0);
 }
 
-.annotation-carousel {
+/********************************************/
+/*            Annotation Carousel           */
+/********************************************/
 
+.annotation-carousel {
     position:absolute;
     pointer-events:none;
     width:100%;
@@ -216,14 +197,4 @@
          1px -1px 2px #000,
         -1px  1px 2px #000,
          1px  1px 2px #000;
-}
-
-.clicked-aggregate {
-
-    z-index: 1;
-}
-
-.clicked-annotation {
-
-    background-color: #D33CFF;
 }

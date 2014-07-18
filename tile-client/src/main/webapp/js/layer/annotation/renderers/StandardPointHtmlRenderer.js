@@ -32,11 +32,10 @@ define(function (require) {
     var HtmlAnnotationRenderer = require('./HtmlAnnotationRenderer'),
         HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
-        ANNOTATION_BIN_CLASS = "annotation-bin",
         ANNOTATION_POINT_CLASS = "point-annotation",
         ANNOTATION_AGGREGATE_POINT_CLASS = "point-annotation-aggregate",
-        ANNOTATION_POINT_FILL_CLASS = "point-annotation-front",
-        ANNOTATION_POINT_BORDER_CLASS = "point-annotation-back",
+        ANNOTATION_POINT_FILL_CLASS = "point-annotation-fill",
+        ANNOTATION_POINT_BORDER_CLASS = "point-annotation-border",
         CLICKED_ANNOTATION_CLASS = "clicked-annotation",
         CLICKED_AGGREGATE_CLASS = "clicked-aggregate",
         StandardPointHtmlRenderer;
@@ -68,21 +67,22 @@ define(function (require) {
 
                     if (value) {
                         // add click classes
-                        value.$annotation.addClass( CLICKED_AGGREGATE_CLASS );
-                        value.$annotation.find( '.'+ANNOTATION_POINT_FILL_CLASS ).addClass( CLICKED_ANNOTATION_CLASS );
+                        value.$bin.addClass( CLICKED_AGGREGATE_CLASS );
+                        value.$bin.find( '.'+ANNOTATION_POINT_FILL_CLASS ).addClass( CLICKED_ANNOTATION_CLASS );
                     }
                 }
             });
         },
 
 
-        getAnnotationHtml : function ( bin, tilePosition ) {
+        getAnnotationHtml : function ( bin ) {
 
             var html = '',
                 positionMap = {},
                 positionKey,
                 position,
                 offset,
+                $aggregate,
                 i;
 
             // aggregation div
@@ -95,8 +95,8 @@ define(function (require) {
                 position = this.map.getViewportPixelFromCoord( bin[i].x, bin[i].y );
                 // get relative position from tile top left
                 offset = {
-                    x : position.x - tilePosition.x,
-                    y : position.y - tilePosition.y
+                    x : position.x,
+                    y : this.map.getMapHeight() - position.y
                 };
                 // prevent creating two annotations on the exact same pixel
                 positionKey = Math.floor(offset.x) + "," + Math.floor(offset.y);
@@ -109,7 +109,54 @@ define(function (require) {
 
             html += '</div>';
 
-            return $( html );
+            // create the jQuery element
+            $aggregate = $(html);
+
+            // add details click event
+            $aggregate.click( function( event ) {
+
+                var offset = $aggregate.offset(),
+                    position = {
+                        x: event.pageX - offset.left,
+                        y: event.pageY - offset.top
+                    };
+
+                that.layerState.set('click', {
+                    bin : bin,
+                    $bin : $aggregate,
+                    position : position
+                });
+                event.stopPropagation();
+            });
+
+            // add drag modify event
+            /*
+            if ( bin.length === 1 ) {
+
+                $aggregate.draggable({
+
+                    stop: function( event ) {
+
+                        var annotation = bin[0],
+                            offset = that.map.getElement().offset(),
+                            pos = that.map.getCoordFromViewportPixel( event.clientX - offset.left,
+                                                                      event.clientY - offset.top );
+
+                        annotation.x = pos.x;
+                        annotation.y = pos.y;
+
+                        that.layerState.set('modify', annotation );
+
+                        // prevent click from firing
+                        $( event.toElement ).one('click', function(e) {
+                            e.stopImmediatePropagation();
+                        });
+                    }
+                });
+            }
+            */
+
+            return $aggregate;
         },
 
 
@@ -119,88 +166,14 @@ define(function (require) {
 
             this.nodeLayer = new HtmlNodeLayer({
                 map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
                 idKey: 'uuid',
                 propagate: false
             });
 
             this.nodeLayer.addLayer( new HtmlLayer({
-
                 html: function() {
-
-                    var data = this,
-                        $html = $(''),
-                        key,
-                        tilePos;
-
-                    // get tile position
-                    tilePos = that.map.getViewportPixelFromCoord( data.longitude, data.latitude );
-
-                    function createAnnotationBin( bin ) {
-
-                        var $bin = $('<div class="'+ANNOTATION_BIN_CLASS+'"></div>'),
-                            $annotation = that.getAnnotationHtml( bin, tilePos );
-
-                        // add details click event
-                        $annotation.click( function( event ) {
-
-                            var offset = $bin.offset(),
-                                position = {
-                                    x: event.pageX - offset.left,
-                                    y: event.pageY - offset.top
-                                };
-
-                            that.layerState.set('click', {
-                                bin : bin,
-                                $bin : $bin,
-                                $annotation : $annotation,
-                                position : position
-                            });
-                            event.stopPropagation();
-                        });
-
-                        // add drag modify event
-                        /*
-                        if ( bin.length === 1 ) {
-
-                            $bin.draggable({
-
-                                stop: function( event ) {
-
-                                    var annotation = bin[0],
-                                        offset = that.map.getElement().offset(),
-                                        pos = that.map.getCoordFromViewportPixel( event.clientX - offset.left,
-                                                                                  event.clientY - offset.top );
-
-                                    annotation.x = pos.x;
-                                    annotation.y = pos.y;
-
-                                    that.layerState.set('modify', annotation );
-
-                                    // prevent click from firing
-                                    $( event.toElement ).one('click', function(e) {
-                                        e.stopImmediatePropagation();
-                                    });
-                                }
-                            });
-                        }
-                        */
-
-                        $bin.append( $annotation );
-                        return $bin;
-                    }
-
-                    // for each bin
-                    for (key in data.bins) {
-                        if (data.bins.hasOwnProperty(key)) {
-                            $html = $html.add( createAnnotationBin( data.bins[key] ) );
-                        }
-                    }
-
-                    return $html;
+                    return that.getAnnotationHtml( this );
                 }
-
             }));
         }
 

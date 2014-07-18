@@ -216,11 +216,17 @@ define(function (require) {
 
         transformTileToBins: function (tileData, tilekey) {
 
-            var tileRect = this.map.getPyramid().getTileBounds( tileData.tile );
+            var binkey, bins = tileData.annotations,
+                tileRect = this.map.getPyramid().getTileBounds( tileData.tile );
+
+            for (binkey in bins) {
+                if ( bins.hasOwnProperty( binkey )) {
+                    bins[binkey].uuid = Util.generateUuid();
+                }
+            }
 
             return {
                 bins : tileData.annotations,
-                uuid : Util.generateUuid(),
                 tilekey : tilekey,
                 longitude: tileRect.minX,
                 latitude: tileRect.maxY
@@ -251,8 +257,9 @@ define(function (require) {
 
                 var tilekey = that.createTileKey( data.tile ),
                     currentTiles = that.tiles,
-                    key,
-                    tileArray = [];
+                    bins, bin,
+                    key, binkey,
+                    binArray = [];
 
                 if ( !that.pendingTiles[tilekey] && !forceUpdate ) {
                     // receiving data from old request, ignore it
@@ -265,11 +272,17 @@ define(function (require) {
                 // convert all tiles from object to array and redraw
                 for (key in currentTiles) {
                     if ( currentTiles.hasOwnProperty( key )) {
-                        tileArray.push( currentTiles[key] );
+                        bins = currentTiles[key].bins;
+
+                        for (binkey in bins) {
+                            if ( bins.hasOwnProperty( binkey )) {
+                                binArray.push( bins[binkey] );
+                            }
+                        }
                     }
                 }
 
-                that.redraw( tileArray );
+                that.redraw( binArray );
             };
 
         },

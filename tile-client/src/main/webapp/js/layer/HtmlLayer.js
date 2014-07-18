@@ -52,45 +52,6 @@ define(function (require) {
         return result;
     };
 
-    /*
-    evaluateHtml = function( html ) {
-
-        var $elements,
-            i;
-
-        if ( html instanceof jQuery ) {
-
-            // jQuery element
-            $elements = html;
-
-        } else if ( typeof html === 'string' ) {
-
-            // html string
-            $elements = $(html);
-
-        } else if ( $.isArray( html ) ) {
-
-            // array of html, recurse
-            $elements = $([]);
-            for ( i=0; i<html.length; i++ ) {
-                $elements = $elements.add( evaluateHtml( html[i] ) );
-            }
-
-        } else if ( $.isPlainObject( html ) ) {
-
-            //
-            evaluateHtml( html.child );
-            evaluateHtml( html.parent );
-
-        } else {
-
-            console.warn("HtmlLayer .html attribute did not evaluated to type '"+( typeof html )+"' and was ignored" );
-            $elements = $([]);
-        }
-
-        return $elements;
-    }
-    */
 
     evaluateHtml = function( node, html, css ) {
 
@@ -116,6 +77,7 @@ define(function (require) {
 
             this.html_ = spec.html || null;
             this.css_ = spec.css || {};
+            this.$nodes_ = {};
         },
 
 
@@ -146,14 +108,15 @@ define(function (require) {
 
                 node = nodes[i];
 
-                // remove any prior elements
-                if ( node.$elements ) {
-                    node.$elements.remove();
-                }
                 // create elements
                 node.$elements = evaluateHtml( node, this.html_, this.css_ );
-                // append elements to tile root
-                node.$root.append( node.$elements );
+
+                // html function could return an already appended node
+                if ( node.$root.has( node.$elements ).length === 0 ) {
+                    // append elements to tile root
+                    node.$root.append( node.$elements );
+                }
+
             }
         }
 
