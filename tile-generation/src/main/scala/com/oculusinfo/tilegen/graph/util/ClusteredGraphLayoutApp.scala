@@ -56,11 +56,9 @@ object ClusteredGraphLayoutApp {
 		val fileStartTime = System.currentTimeMillis()
 		
 		val layouter = new HierarchicGraphLayout()
-		layouter.determineLayout(sc, maxIterations, maxHierarchyLevel, partitions, consolidationPartitions, sourceDir, dataDelimiter)
-		//val nodePositions = layouter.determineLayout(sc, maxIterations, maxHierarchyLevel, partitions, sourceDir, dataDelimiter)
+		val nodePositions = layouter.determineLayout(sc, maxIterations, maxHierarchyLevel, partitions, consolidationPartitions, sourceDir, dataDelimiter)
 		
-//		// save results
-//		nodePositions.saveAsTextFile(outputDir)
+		nodePositions.saveAsTextFile(outputDir)	// save results -- format is (nodeID, x coord, y coord) 
 		
 		val fileEndTime = System.currentTimeMillis()
 		println("Finished hierarchic graph layout job in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

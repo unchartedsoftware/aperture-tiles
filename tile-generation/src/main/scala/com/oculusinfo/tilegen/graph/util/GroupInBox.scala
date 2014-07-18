@@ -25,15 +25,15 @@
 
 package com.oculusinfo.tilegen.graph.util
 
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
+//import org.apache.spark.SparkContext
+//import org.apache.spark.SparkContext._
+//import org.apache.spark.rdd.RDD
 //import org.apache.spark.graphx._
 
 /**
  *  A treemap space-filling graph layout algorithm.
- *  Based on the Group-in-a-Box paper by Rodrigues et al, and the Fitted Rectangles
- *  paper by Chaturvedi et al
+ *  Based on the 'Group-in-a-Box' paper by Rodrigues et al, and the 'Fitted Rectangles'
+ *  paper by Chaturvedi et al, but uses a spiral layout of community rectangles
  */ 
 class GroupInBox extends Serializable {
 
@@ -61,7 +61,7 @@ class GroupInBox extends Serializable {
 			
 		}).toList.sortBy(_._3).reverse	//sort by descending community degree
 		
-		
+		val numGroups = sortedGroups.size
 		var alpha = 1.0	// starting alpha 	//TODO -- could expose this as an API parameter?
 		val screenW = parentRect._3
 		val screenH = parentRect._4
@@ -70,7 +70,7 @@ class GroupInBox extends Serializable {
 		val minAspRatio = 0.25 //; %1/6;    %1/4	//TODO -- could expose this as an API parameter? (also a parameter controlling the width of successive 'spiral levels'?)
 		// note: lower value for minAspRatio allows for better space-filling, but the potential trade-off is narrower rectangles
 		
-		var rects = new Array[(Double, Double, Double, Double)](sortedGroups.size)	// init array of rectangle results
+		var rects = new Array[(Double, Double, Double, Double)](numGroups)	// init array of rectangle results
 		
 		var nPrev = 0
 		var n = 0
@@ -79,18 +79,19 @@ class GroupInBox extends Serializable {
 		var currLabel = 0 	// 0 = center, 1 = H_D, 2 = V_R, 3 = H_U, 4 = V_L
 		var labelToResume = 0
 		var regionsTried = Array(0,0,0,0)
-		var H_D = new Array[Double](4)	// represents unfilled lower horizontal rectangle region 
-		var H_U = new Array[Double](4)	// represents unfilled upper horizontal rectangle region 
-		var V_R = new Array[Double](4)	// represents unfilled right vertical rectangle region
-		var V_L = new Array[Double](4)	// represents unfilled left vertical rectangle region
-		var currRect = new Array[Double](4)	// current rectangle results
-		var centreArea = new Array[Double](4)
-		var centreAreaNext = new Array[Double](4)
+		var H_D = Array(0.0,0.0,0.0,0.0)	// represents unfilled lower horizontal rectangle region 
+		var H_U = Array(0.0,0.0,0.0,0.0)	// represents unfilled upper horizontal rectangle region 
+		var V_R = Array(0.0,0.0,0.0,0.0)	// represents unfilled right vertical rectangle region
+		var V_L = Array(0.0,0.0,0.0,0.0)	// represents unfilled left vertical rectangle region
+		var currRect = Array(0.0,0.0,0.0,0.0)	// current rectangle results
+		var centreArea = Array(0.0,0.0,0.0,0.0)
+		var centreAreaNext = Array(0.0,0.0,0.0,0.0)
 		
-		if (sortedGroups.size == 1) {	// if only 1 group to layout
+		if (numGroups == 1) {	// if only 1 group to layout
 			rects(0) = parentRect	
 			bDone = true
 		}
+		println("Starting Group-In-Box layout on " + numGroups + " communities...")
 		
 		while (!bDone) {
 			var bSaveRect = false
@@ -234,7 +235,10 @@ class GroupInBox extends Serializable {
 		        currLabel = labelToResume
 		        labelToResume = 0
 		      }
-		      if (n == sortedGroups.size-1) bDone = true;	// finished!
+		      if (n == numGroups-1) {
+		     	  bDone = true;	// finished!
+		     	  println("Group-In-Box layout finished with alpha = " + alpha)
+		      }
 		      //println(n) 
 		      n = n + 1
 		    }
@@ -243,7 +247,7 @@ class GroupInBox extends Serializable {
 		          // no progression since started this spiral level, therefore reset and start again with a lower alpha value
 		          n = 0;
 		          alpha = alpha*0.9;
-		          println("GroupInBox ran out of space, resetting algorithm with alpha = " + alpha + " and retrying ...")
+		          println("Group-In-Box ran out of space, resetting with alpha = " + alpha + " and retrying...")
 		          bDone = false;         
 		          
 		          currLabel = 0 
@@ -254,8 +258,7 @@ class GroupInBox extends Serializable {
 		          V_L = Array(0.0, 0.0, 0.0, 0.0)	
 		        }  
 		        else {  
-		          println("Ok!  Starting next level of spiral...")
-		
+		          //println("Ok!  Starting next level of spiral...")	
 		          bDone = false         
 		
 		          currLabel = 1 
@@ -273,7 +276,6 @@ class GroupInBox extends Serializable {
 		}
 		
 		//TODO -- could also expand all these rectangles to ensure they fit the 'parent' rectangle with as little wasted space as possible?
-		
 		sortedGroups.map(p => p._1).zip(rects)	//result format is List[(groupID, rectangle)]
 	}
 }

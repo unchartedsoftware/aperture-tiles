@@ -46,11 +46,11 @@ class HierarchicGraphLayout extends Serializable {
 						partitions: Int = 0,
 						consolidationPartitions: Int = 0,
 						sourceDir: String,
-						delimiter: String) = {//: VertexRDD[(Double, Double)] = {	
+						delimiter: String): RDD[(Long, Double, Double)] = {	
 		
 		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0") 
 		
-		val boxLayouter = new GroupInBox()
+		val boxLayouter = new GroupInBox()	//group-in-a-box layout scheme
 		
 		//start at highest level,
 		//	get ID's, degrees, and internal nodes -- do GIB algo once, and store results as (id, rectangle global_coords)
@@ -85,21 +85,16 @@ class HierarchicGraphLayout extends Serializable {
 				totalNumNodes = groups.map(_._2._2).reduce(_ + _)	
 			}			
 						
-			val groupsByParent = if (consolidationPartitions==0) {
+			val groupsByParent = if (consolidationPartitions==0) {		// group by parent community ID
 				groups.groupByKey()
 			} else {
 				groups.groupByKey(consolidationPartitions)
 			}
 			
-			//val countG = groupsByParent.count		//temp
-			//val countL = lastLevelLayout.count	//temp
-			
 			val joinedGroups = groupsByParent.join(lastLevelLayout)
 //			joinedGroups.cache
 //			joinedGroups.count
 //			lastLevelLayout.unpersist(blocking=false)
-			
-			//val countJ = joinedGroups.count		//temp
 			
 			val levelLayout = joinedGroups.flatMap(n => {
 				val data = n._2._1
@@ -108,33 +103,79 @@ class HierarchicGraphLayout extends Serializable {
 				val rects = boxLayouter.run(data, totalNumNodes, parentRectangle)
 				rects
 			})
-			//val countL2 = levelLayout.count	//temp
 			
 			localLastLevelLayout = levelLayout.collect
 			level -= 1
 		}
 				
-		// TODO .... do level=0 here!!!
 		//do Level 0...
+		println("Starting Force Directed Layout for hierarchy level 0")
+		
+		val forceDirectedLayouter = new ForceDirected()	//force-directed layout scheme
+		
+		val lastLevelLayout = sc.parallelize(localLastLevelLayout)
+
 		//  get ID's, degrees, internal nodes AND L+1 community level -- group by L+1 community level
 		//	do Force-directed algo once per L+1 community, then consolidate results and save in final format (id, id x,y coords)
 		// parse edge data
-		var edges = parseEdgeData(sc, sourceDir + "/level_" + level + "_edges", partitions, delimiter)
+		val edges = parseEdgeData(sc, sourceDir + "/level_" + level + "_edges", partitions, delimiter)
 		
-		// parse node data ... and re-format as (parent communityID, (communityID, numInternalNodes, community degree))
-		var nodes = parseNodeData(sc, sourceDir + "/level_" + level + "_vertices", partitions, delimiter)
-						.map(node => (node._2._1, (node._1, node._2._2, node._2._3)))
-						
-		if ((consolidationPartitions > 0) && (consolidationPartitions != partitions)) {
-			// re-partition the data into 'consolidationPartitions' partitions
-			edges = edges.coalesce(consolidationPartitions, shuffle = true)	
-			nodes = nodes.coalesce(consolidationPartitions, shuffle = true)			
+		// parse node data ... format is (node ID, parent community ID)
+		val nodes = parseNodeData(sc, sourceDir + "/level_" + level + "_vertices", partitions, delimiter)
+					.map(node => (node._1, node._2._1))
+		
+		val graph = Graph(nodes, edges)
+		
+		// find all intra-community edges and store with parent community ID as map key
+		val edgesByParent = graph.triplets.flatMap(et => {
+			val srcParentID = et.srcAttr	// parent community for edge's source node
+			val dstParentID = et.dstAttr	// parent community for edge's destination node
+			
+			if (srcParentID == dstParentID) {
+				// this is an INTRA-community edge (so save result with parent community ID as key)
+				Iterator( (srcParentID, (et.srcId, et.dstId, et.attr)) )
+			}
+			else {
+				// this is an INTER-community edge (so disregard for force-directed layout of leaf communities)
+				Iterator.empty
+			}		
+		})
+		
+		val groupedEdges = if (consolidationPartitions==0) {	// group intra-community edges by parent community ID
+			edgesByParent.groupByKey()
+		} else {
+			edgesByParent.groupByKey(consolidationPartitions)
+		}
+				
+		val swappedNodes = nodes.map(n => (n._2, n._1))	// swap so parent ID is the key, and raw node ID is the value
+		val nodesByParent = if (consolidationPartitions==0) {	// group by parent community ID
+			swappedNodes.groupByKey()
+		} else {
+			swappedNodes.groupByKey(consolidationPartitions)
 		}
 		
-		println("Starting Force Directed Layout for hierarchy level 0")
-		
-//TODO		doForceDirectedLayout(nodes)	
-		
+		//join raw nodes, with intra-community edges, with parent rectangle locations (key is parent community ID)
+		val joinedData = nodesByParent.leftOuterJoin(groupedEdges).map({case (parentID, (nodeIDs, edgesOption)) =>
+			// create a dummy edge for any communities without intra-cluster edges
+			// (ie for leaf communities containing only 1 node)
+			val edgeResults = edgesOption.getOrElse(Iterable( (-1L, -1L, 0L) ))
+			(parentID, (nodeIDs, edgeResults))
+		}).join(lastLevelLayout)
+			
+		val finalNodeCoords = joinedData.flatMap(p => {
+			val parentID = p._1
+			val commNodes = p._2._1._1		// List of raw node IDs in a given community
+			val commEdges = p._2._1._2 
+			val parentRectangle = p._2._2
+			//data format is (parent communityID, Iterable(communityID,numInternalNodes, community degree))
+			val borderOffset = 5	// percent of whitespace to leave along sides of bounding rectangle when laying out raw nodes
+									// TODO ... expose this as an API parameter
+			val coords = forceDirectedLayouter.run(commNodes, commEdges, parentRectangle, borderOffset, maxIterations)
+			coords
+		})
+			
+		//finalNodeCoords.count
+		finalNodeCoords	
 	}
 
 	//----------------------
