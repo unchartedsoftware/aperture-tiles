@@ -51,13 +51,41 @@ object SparkConnector {
 
 	def getLibrariesFromClasspath = {
 		val allSparkLibs = System.getenv("SPARK_CLASSPATH")
-		// we have to do some stupid name-mangling on windows
-		val os = System.getProperty("os.name").toLowerCase()
-		if (os.contains("windows")) {
-			allSparkLibs.split(";").filter(!_.isEmpty).toSeq
+		if (null == allSparkLibs) {
+			Seq[String]()
 		} else {
-			allSparkLibs.split(":").filter(!_.isEmpty).toSeq
+			// we have to do some stupid name-mangling on windows
+			val os = System.getProperty("os.name").toLowerCase()
+			if (os.contains("windows")) {
+				allSparkLibs.split(";").filter(!_.isEmpty).toSeq
+			} else {
+				allSparkLibs.split(":").filter(!_.isEmpty).toSeq
+			}
 		}
+	}
+
+	def getLibrariesFromClassLoader = {
+		val loader = classOf[SparkConnector].getClassLoader
+		if (loader.isInstanceOf[java.net.URLClassLoader]) {
+			loader.asInstanceOf[java.net.URLClassLoader].getURLs.toSeq
+		} else {
+			Seq[String]()
+		}
+	}
+
+	def getDefaultLibraries = {
+		println("Checking classpath")
+		val classpath = getLibrariesFromClasspath
+		val libraries = if (classpath.isEmpty) {
+			println("Classpath empty; checking class loader")
+			getLibrariesFromClassLoader
+		} else {
+			println("Classpath ok")
+			classpath
+		}
+		println("Default Libraries:")
+		libraries.foreach(lib => println("\t"+lib))
+		libraries
 	}
 
 	def getDefaultVersions = {
