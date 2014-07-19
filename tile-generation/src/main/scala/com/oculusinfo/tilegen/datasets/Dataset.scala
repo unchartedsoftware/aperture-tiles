@@ -315,9 +315,6 @@ object DatasetFactory {
 
 	def createDataset (sc: SparkContext,
 	                   dataDescription: Properties,
-	                   cacheRaw: Boolean,
-	                   cacheFilterable: Boolean,
-	                   cacheProcessed: Boolean,
 	                   width: Option[Int] = None,
 	                   height: Option[Int] = None): Dataset[_, _, _, _, _] = {
 
@@ -343,6 +340,18 @@ object DatasetFactory {
 		).filter(levelSeq =>
 			levelSeq != Seq[Int]()	// discard empty entries
 		)
+		val cacheRaw = properties.getBoolean("oculus.binning.caching.raw",
+		                                     "Whether or not to cache the raw data for multiple raw "+
+			                                     "data requests.",
+		                                     Some(false))
+		val cacheFilterable = properties.getBoolean("oculus.binning.caching.filterable",
+		                                            "Whether or not to cache parsed, but unprocessed, data, "+
+			                                            "for use in searching raw data",
+		                                            Some(false))
+		val cacheProcessed = properties.getBoolean("oculus.binning.caching.processed",
+		                                           "Whether or not to cache parsed, processed data for "+
+			                                           "multiple binning runs",
+		                                           Some(false))
 		val xBins = width.getOrElse(properties.getInt("oculus.binning.xbins",
 		                                              "The number of bins per tile along the horizontal axis",
 		                                              Some(256)))
@@ -351,8 +360,14 @@ object DatasetFactory {
 		                                               Some(256)))
 		// Determine index and value information
 		val indexer = CSVIndexExtractor.fromProperties(properties)
-		val valuer = CSVValueExtractor.fromProperties(properties)
+		val valuer = CSVValueExtractor.fromProperties(properties, CSVValueExtractor.standardFactories)
 
+		println("Creating dataset")
+		println("\tRaw data caching: "+cacheRaw)
+		println("\tFilterable data caching: "+cacheFilterable)
+		println("\tProcessed data caching: "+cacheProcessed)
+		println("\tX bins per tile: "+xBins)
+		println("\tY bins per tile: "+yBins)
 		createDatasetGeneric(sc, cacheRaw, cacheFilterable, cacheProcessed,
 		                     indexer, valuer, xBins, yBins, levels, properties)
 	}
