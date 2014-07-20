@@ -26,6 +26,9 @@
 			     implementations -->
 			<!-- Standard implementation -->
 			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+			<!-- Tile Transformer factory module - override to add custom tile
+				 Transformer -->
+			com.oculusinfo.tile.init.TileTransformerFactoryModule:
 			<!-- For tiling requiring a spark connection
 			     com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
 			-->

@@ -21,35 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.filter.impl;
+package com.oculusinfo.tile.init.providers;
 
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.util.Pair;
-import java.util.LinkedList;
+
+
 import java.util.List;
-import java.util.Map;
+
+import com.oculusinfo.binning.io.transformation.TileTransformer;
+import com.oculusinfo.binning.io.transformation.StandardTileTransformerFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.tile.init.FactoryProvider;
 
 
-/**
- * This class represents a single annotation
- */
-public class EmptyFilter implements AnnotationFilter {
 
-    public EmptyFilter() {}
+public class StandardTileTransformerFactoryProvider implements FactoryProvider<TileTransformer> {
+	@Override
+	public ConfigurableFactory<TileTransformer> createFactory (List<String> path) {
+		return new StandardTileTransformerFactory(null, path);
+	}
 
-	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin ) {
+	@Override
+	public ConfigurableFactory<TileTransformer> createFactory (ConfigurableFactory<?> parent,
+	                                                     List<String> path) {
+		return new StandardTileTransformerFactory(parent, path);
+	}
 
-        List<Pair<String, Long>> filtered = new LinkedList<>();
-        // for each group
-        for (Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.entrySet()) {
-            filtered.addAll(binEntry.getValue());
-        }
-        return filtered;
-    }
-
-    public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
-        return annotations;
-    }
+	@Override
+	public ConfigurableFactory<TileTransformer> createFactory (String factoryName,
+	                                                     ConfigurableFactory<?> parent,
+	                                                     List<String> path) {
+		return new StandardTileTransformerFactory(factoryName, parent, path);
+	}
+	
 }

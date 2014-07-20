@@ -58,26 +58,21 @@ public class NMostRecentByGroupFilter implements AnnotationFilter {
         return filters;
     }
 
-	public List<Pair<String, Long>> filterTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
+	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin ) {
 
         List<Pair<String, Long>> filtered = new LinkedList<>();
-        // for each bin
-        for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
+        // go through filter list get certificates by group and by count
+        for (Map.Entry<String, Integer> f : _countsByGroup.entrySet()) {
 
-            if (bin != null) {
-                // go through filter list get certificates by group and by count
-                for (Map.Entry<String, Integer> f : _countsByGroup.entrySet() ) {
+            String group = f.getKey();
+            Integer count = f.getValue();
 
-                    String group = f.getKey();
-                    Integer count = f.getValue();
+            // get all certificates from the bin
+            List<Pair<String, Long>> certificates = AnnotationManipulator.getCertificatesFromBin(bin, group);
 
-                    List<Pair<String, Long>> certificates = AnnotationManipulator.getCertificatesFromBin(bin, group);
-
-                    // certificates are sorted, so simply cut the tail off to get the n newest
-                    filtered.addAll( certificates.subList( 0, count < certificates.size() ? count : certificates.size() ) );
-                    }
-                }
-            }
+            // certificates are sorted, so simply cut the tail off to get the n newest
+            filtered.addAll(certificates.subList(0, count < certificates.size() ? count : certificates.size()));
+        }
         return filtered;
     }
 

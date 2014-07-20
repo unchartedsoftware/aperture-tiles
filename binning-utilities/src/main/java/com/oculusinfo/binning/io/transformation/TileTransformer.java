@@ -21,35 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.filter.impl;
+package com.oculusinfo.binning.io.transformation;
 
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.filter.AnnotationFilter;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.util.Pair;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 
 /**
- * This class represents a single annotation
+ * A TileTransformer is an interface that can take a JSON representation of 
+ * 		a tile and perform a transform on it. This can include a filter on the data or
+ *		perform an action on all sets of the data in a uniform way.  The resulting tile
+ *		is passed back in JSON format
+ * 
+ * @author tlachapelle
  */
-public class EmptyFilter implements AnnotationFilter {
+public interface TileTransformer {
 
-    public EmptyFilter() {}
+	/**
+	 * Transforms the tile data in JSON format based on transform type and returns result  
+	 * 
+	 * @param JSONObject representing the tile data in JSON form to be transformed
+	 * 
+	 * @return JSONObject representing the fully transformed tile based on the transform type
+	 */
+	public JSONObject Transform (JSONObject json) throws JSONException;
 
-	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin ) {
-
-        List<Pair<String, Long>> filtered = new LinkedList<>();
-        // for each group
-        for (Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.entrySet()) {
-            filtered.addAll(binEntry.getValue());
-        }
-        return filtered;
-    }
-
-    public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
-        return annotations;
-    }
-}
+	
+	}

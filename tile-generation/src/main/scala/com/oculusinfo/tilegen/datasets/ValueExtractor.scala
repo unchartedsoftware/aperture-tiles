@@ -400,7 +400,10 @@ class SeriesValueExtractor (fieldNames: Array[String])
 		extends CSVValueExtractor[Seq[Double], JavaList[JavaDouble]]
 {
 	def name: String = "series"
-	def description: String = "The series of the fields "+fieldNames.mkString(",")
+	def description: String = 
+		("The series of the fields "+
+			 (if (fieldNames.size > 3) fieldNames.take(3).mkString("(", ",", ")...")
+			  else fieldNames.mkString("(", ",", ")")))
 	def fields = fieldNames
 	def calculateValue (fieldValues: Map[String, Any]): Seq[Double] =
 		fieldNames.map(field => Try(fieldValues(field).asInstanceOf[Double]).getOrElse(0.0))
@@ -442,7 +445,8 @@ class IndirectSeriesValueExtractor (keyField: String,
 	def description: String = 
 		("A series of values associated with certain keys, where key and "+
 			 "value each come from distinct columns.  Relevant keys are "+
-			 validKeys.mkString("(", ",", ")"))
+			 (if (validKeys.size > 3) validKeys.take(3).mkString("(", ",", ")...")
+			  else validKeys.mkString("(", ",", ")")))
 	def fields = Array(keyField, valueField)
 	def calculateValue (fieldValues: Map[String, Any]): Seq[Double] =
 		validKeys.map(key =>

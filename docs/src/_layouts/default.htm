@@ -1,28 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 		<title>{{ page.section }} | {{ site.product }}</title>
-		<link rel="stylesheet" type="text/css" href="{{page.rootPath}}css/all.css">
-		<link rel="stylesheet" type="text/css" href="{{page.rootPath}}css/syntaxhighlighter_3.0.83/shCore.css">
-		<link rel="stylesheet" type="text/css" href="{{page.rootPath}}css/syntaxhighlighter_3.0.83/shThemeDefault.css">
-<!--	<link rel="stylesheet" type="text/css" href="{{page.rootPath}}jstests/test.css"> 
-		<link rel="stylesheet" href="{{page.rootPath}}prettify/default.css"> -->
-		<link rel="SHORTCUT ICON" href="{{page.rootPath}}img/resources/aperture-16x16.ico"/>
-<!--	<script src="{{page.rootPath}}lib/jquery.js"></script> -->
-		<script src="{{page.rootPath}}lib/ga.js"></script>
-		<script src="{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shCore.js"></script>
-		<script src="{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shAutoloader.js"></script>
+		
+		<link rel="stylesheet" type="text/css" href="{{site.baseurl}}/css/all.css">
+		<link rel="stylesheet" type="text/css" href="{{site.baseurl}}/css/syntaxhighlighter_3.0.83/shCore.css">
+		<link rel="stylesheet" type="text/css" href="{{site.baseurl}}/css/syntaxhighlighter_3.0.83/shThemeDefault.css">
+
+		<link rel="SHORTCUT ICON" href="{{site.baseurl}}/img/resources/aperture-16x16.ico"/>
+		
+		<script src="{{site.baseurl}}/lib/jquery.js"></script>
+		<script src="{{site.baseurl}}/lib/ga.js"></script>
+		<script src="{{site.baseurl}}/lib/syntaxhighlighter_3.0.83/shCore.js"></script>
+		<script src="{{site.baseurl}}/lib/syntaxhighlighter_3.0.83/shAutoloader.js"></script>
 	</head>
 	<body>
 		<div id="header"></div>
 			<div id="content-strip">
 				<div id="header-logo">
-					<a href="{{ page.rootPath }}"><img src="{{page.rootPath}}img/resources/{{ site.product | replace: ' ', '' | downcase }}.png"/></a>
+					<a href="{{ page.rootPath }}/"><img src="{{site.baseurl}}/img/resources/{{ site.product | replace: ' ', '' | downcase }}.png"/></a>
 				</div>
 				<div id="header-menu">
 					{% for mainMenuItem in site.data.mainMenuItems %}
-						<a href="{{page.rootPath}}{{ mainMenuItem.path }}"{% if page.section == mainMenuItem.label %} class="selected"{% endif %}>{{ mainMenuItem.label }}</a>
+						<a href="{{site.baseurl}}/{{ mainMenuItem.path }}"{% if page.section == mainMenuItem.label %} class="selected"{% endif %}>{{ mainMenuItem.label }}</a>
 					{% endfor %}
 				</div>
 				<div id="all">
@@ -35,11 +36,11 @@
 	</body>
 	<script type="text/javascript">
 		SyntaxHighlighter.autoloader(
-			['java','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushJScript.js'],
-			['js','jscript','javascript','json','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushJScript.js'],
-			['sql','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushSql.js'],
-			['scala','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushScala.js'],
-			['xml','{{page.rootPath}}lib/syntaxhighlighter_3.0.83/shBrushXml.js']
+			['java','{{site.baseurl}}/lib/syntaxhighlighter_3.0.83/shBrushJScript.js'],
+			['js','jscript','javascript','json','{{site.baseurl}}/lib/syntaxhighlighter_3.0.83/shBrushJScript.js'],
+			['sql','{{site.baseurl}}/lib/syntaxhighlighter_3.0.83/shBrushSql.js'],
+			['scala','{{site.baseurl}}/lib/syntaxhighlighter_3.0.83/shBrushScala.js'],
+			['xml','{{site.baseurl}}/lib/syntaxhighlighter_3.0.83/shBrushXml.js']
 		)
 		SyntaxHighlighter.defaults['gutter'] = false;
 		SyntaxHighlighter.defaults['toolbar'] = false;

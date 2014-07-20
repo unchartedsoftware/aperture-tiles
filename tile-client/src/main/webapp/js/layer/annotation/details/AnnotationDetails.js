@@ -44,6 +44,7 @@ define(function (require) {
         AnnotationDetails;
 
 
+
     createRootElement = function() {
         return $('<div class="'+ANNOTATION_DETAILS_CLASS+'"></div>');
     };

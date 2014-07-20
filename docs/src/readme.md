@@ -1,7 +1,7 @@
 ---
 section: Home
 permalink: index.html
-layout: home
+layout: section
 ---
 
 Aperture Tiles <span class="tagline">tile-based visual analytics for big data</span>
