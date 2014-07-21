@@ -101,27 +101,11 @@ define(function (require) {
      */
     destroyNode = function( that, node ) {
 
-        function deleteElement( ) {
-            var $element = $(this);
-
-            $element.empty();
-
-            /*
-            if ( $element.parent() !== node.$root &&
-                 $element.parent().children().length === 0 ) {
-                 console.log('deleting parent');
-                 $element.parent().remove();
-            }
-            */
-        }
-
         // no node position specified
         if ( !that.xAttr_ || !that.yAttr_ ) {
             // destroy elements
-            if ( node.$elements ) {
-                console.log('deleting');
+            if (node.$elements) {
                 node.$elements.remove();
-                //node.$element.remove();
             }
             return;
         }
@@ -154,7 +138,6 @@ define(function (require) {
         return null;
     };
 
-
     /**
      * Removes a node by idKey, ensuring layer variables are adjusted accordingly.
      */
@@ -171,7 +154,6 @@ define(function (require) {
             delete nodesById[ key ];
         }
     };
-
 
     /**
      * Removes a node, ensuring layer variables are adjusted accordingly.
@@ -259,8 +241,12 @@ define(function (require) {
                     defunctNodesById = {};
 
                 // keep list of current nodes, to track which ones are not in the new set
-                for (i=0; i<nodes.length; ++i) {
-                    defunctNodesById[ nodes[i].data[idKey] ] = true;
+                // use existing id's, not the ids INSIDE the nodes, as these may be intentionally
+                // changed to force a redraw
+                for (key in nodesById) {
+                    if (nodesById.hasOwnProperty( key )) {
+                        defunctNodesById[ key ] = true;
+                    }
                 }
 
                 // only root will execute the following code

@@ -77,7 +77,6 @@ define(function (require) {
 
             this.html_ = spec.html || null;
             this.css_ = spec.css || {};
-            this.$nodes_ = {};
         },
 
 
@@ -110,13 +109,8 @@ define(function (require) {
 
                 // create elements
                 node.$elements = evaluateHtml( node, this.html_, this.css_ );
-
-                // html function could return an already appended node
-                if ( node.$root.has( node.$elements ).length === 0 ) {
-                    // append elements to tile root
-                    node.$root.append( node.$elements );
-                }
-
+                // append elements to tile root
+                node.$root.append( node.$elements );
             }
         }
 
