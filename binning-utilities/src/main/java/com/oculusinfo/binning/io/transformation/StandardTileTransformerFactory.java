@@ -38,6 +38,7 @@ import com.oculusinfo.binning.io.transformation.TileTransformer;
  * 
  * @author tlachapelle
  */
+
 public class StandardTileTransformerFactory extends ConfigurableFactory<TileTransformer> {
 	
 
