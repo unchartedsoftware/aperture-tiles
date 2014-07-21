@@ -67,32 +67,33 @@ define(function (require) {
 
                     if (value) {
                         // add click classes
-                        value.$bin.addClass( CLICKED_AGGREGATE_CLASS );
-                        value.$bin.find( '.'+ANNOTATION_POINT_FILL_CLASS ).addClass( CLICKED_ANNOTATION_CLASS );
+                        value.$annotation.addClass( CLICKED_AGGREGATE_CLASS );
+                        value.$annotation.find( '.'+ANNOTATION_POINT_FILL_CLASS ).addClass( CLICKED_ANNOTATION_CLASS );
                     }
                 }
             });
         },
 
 
-        getAnnotationHtml : function ( bin ) {
+        getAnnotationHtml : function ( annotations ) {
 
-            var html = '',
+            var that = this,
+                html = '',
                 positionMap = {},
                 positionKey,
                 position,
                 offset,
-                $aggregate,
+                $annotations,
                 i;
 
             // aggregation div
             html += '<div class="'+ANNOTATION_AGGREGATE_POINT_CLASS+'">';
 
-            // for each annotation in the bin
-            for (i=0; i<bin.length; i++) {
+            // for each annotation
+            for (i=0; i<annotations.length; i++) {
 
                 // get annotations position in viewport space
-                position = this.map.getViewportPixelFromCoord( bin[i].x, bin[i].y );
+                position = this.map.getViewportPixelFromCoord( annotations[i].x, annotations[i].y );
                 // get relative position from tile top left
                 offset = {
                     x : position.x,
@@ -110,20 +111,20 @@ define(function (require) {
             html += '</div>';
 
             // create the jQuery element
-            $aggregate = $(html);
+            $annotations = $(html);
 
             // add details click event
-            $aggregate.click( function( event ) {
+            $annotations.click( function( event ) {
 
-                var offset = $aggregate.offset(),
+                var offset = $annotations.offset(),
                     position = {
                         x: event.pageX - offset.left,
                         y: event.pageY - offset.top
                     };
 
                 that.layerState.set('click', {
-                    bin : bin,
-                    $bin : $aggregate,
+                    annotations : annotations,
+                    $annotations : $annotations,
                     position : position
                 });
                 event.stopPropagation();
@@ -133,7 +134,7 @@ define(function (require) {
             /*
             if ( bin.length === 1 ) {
 
-                $aggregate.draggable({
+                $annotations.draggable({
 
                     stop: function( event ) {
 
@@ -156,7 +157,7 @@ define(function (require) {
             }
             */
 
-            return $aggregate;
+            return $annotations;
         },
 
 
@@ -172,7 +173,7 @@ define(function (require) {
 
             this.nodeLayer.addLayer( new HtmlLayer({
                 html: function() {
-                    return that.getAnnotationHtml( this );
+                    return that.getAnnotationHtml( this.annotations );
                 }
             }));
         }

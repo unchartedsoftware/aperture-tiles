@@ -45,8 +45,7 @@ public class ScriptableFilter extends EmptyFilter {
 
         try
         {
-            long start = System.currentTimeMillis();
-
+            /*
             int size = annotations.size();
             List<String> annotationStrings = new ArrayList<>( size );
             int totalLength = 0;
@@ -90,8 +89,8 @@ public class ScriptableFilter extends EmptyFilter {
                     filtered.add( annotations.get(i) );
                 }
             }
-            /*
-            int size = annotations.size();
+            */
+
             for ( AnnotationData<?> annotation : annotations ) {
 
                 String func = "var annotation = "+ annotation.toJSON().toString() +"; "+ _script;
@@ -100,12 +99,6 @@ public class ScriptableFilter extends EmptyFilter {
                     filtered.add( annotation );
                 }
             }
-            */
-            long end = System.currentTimeMillis();
-            double time = ((end-start)/1000.0);
-
-            System.out.println( time + " secs for " + size + " annotations, or " + (size/time) + " filtered per sec" );
-
         } catch (Exception e) {
             e.printStackTrace();
         }

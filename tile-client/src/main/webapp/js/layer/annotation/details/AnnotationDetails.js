@@ -62,15 +62,15 @@ define(function (require) {
             this.map = map;
         },
 
-        createWriteDetailsImpl: function( annotation, $bin ) {
+        createWriteDetailsImpl: function( annotation, $annotations ) {
             return null;
         },
 
-        createDisplayDetailsImpl: function( bin, $bin ) {
+        createDisplayDetailsImpl: function( annotations, $annotations ) {
             return null;
         },
 
-        createEditDetailsImpl: function( annotation, $bin ) {
+        createEditDetailsImpl: function( annotation, $annotations ) {
             return null;
         },
 
@@ -78,7 +78,7 @@ define(function (require) {
             this.layerState = layerState;
         },
 
-        createWriteDetails: function( annotation, $bin ) {
+        createWriteDetails: function( annotation, $annotations ) {
             this.destroyDetails();
             return createRootElement()
                        .append( createContentElement()
@@ -86,22 +86,22 @@ define(function (require) {
                        .append( this.createCloseButton() );
         },
 
-        createDisplayDetails: function( bin, $bin ) {
+        createDisplayDetails: function( annotations, $annotations ) {
             var $details;
             this.destroyDetails();
             $details = createRootElement()
                          .append( createContentElement()
-                             .append( this.createDisplayDetailsImpl( bin[0] ) ) )
+                             .append( this.createDisplayDetailsImpl( annotations[0] ) ) )
                          .append( this.createCloseButton() );
 
             // if more than one annotation, create carousel ui
-            if ( bin.length > 1 ) {
+            if ( annotations.length > 1 ) {
                 $details.addClass( ANNOTATION_DETAILS_AGGREGATE_CLASS );
-                $details.append( this.createCarouselUI( bin ) );
+                $details.append( this.createCarouselUI( annotations ) );
             }
 
             // append now so later measurements are valid
-            $bin.append( $details );
+            $annotations.append( $details );
 
             // make details draggable and resizable
             $details.draggable().resizable({
@@ -132,7 +132,7 @@ define(function (require) {
             return $closeButton;
         },
 
-        createCarouselUI: function( bin ) {
+        createCarouselUI: function( annotations ) {
 
             var that = this,
                 $carousel,
@@ -146,16 +146,15 @@ define(function (require) {
             }
 
             function indexText() {
-                return (index+1) +' of '+ bin.length;
+                return (index+1) +' of '+ annotations.length;
             }
 
             function createClickFunc( inc ) {
                 return function() {
                     // change index
-                    index = mod( index+inc, bin.length );
-                    console.log(index);
+                    index = mod( index+inc, annotations.length );
                     // swap content
-                    $( '.'+ANNOTATION_DETAILS_CONTENT_CLASS ).html( that.createDisplayDetailsImpl( bin[index] ) );
+                    $( '.'+ANNOTATION_DETAILS_CONTENT_CLASS ).html( that.createDisplayDetailsImpl( annotations[index] ) );
                     // update index text
                     $indexText.text( indexText() );
                     // prevent event from propagating

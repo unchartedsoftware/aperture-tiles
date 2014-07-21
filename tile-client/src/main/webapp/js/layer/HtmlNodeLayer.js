@@ -36,7 +36,6 @@ define(function (require) {
         createNode,
         destroyNode,
         doesNodeExist,
-        getNodeById,
         getNodeByData,
         removeNodeById,
         removeNode,
