@@ -50,7 +50,9 @@ define(function (require) {
                     // wait until tooltip actually opens before calling
                     pendingCallback = setTimeout( function() {
                         tooltipOpened = true;
-                        openFunc();
+                        if (openFunc) {
+                            openFunc();
+                        }
                     }, 800);
                 },
                 close: function() {
@@ -58,7 +60,9 @@ define(function (require) {
                     clearTimeout( pendingCallback );
                     if ( tooltipOpened ) {
                         // only call if the tooltip actually opened
-                        closeFunc();
+                        if (closeFunc) {
+                            closeFunc();
+                        }
                     }
                     // clear flags on close
                     tooltipOpened = false;
