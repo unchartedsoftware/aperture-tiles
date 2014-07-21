@@ -374,8 +374,13 @@ object CSVGraphBinner {
 			var hierarchicalClusters = if (valTemp=="true") true else false
 			
 			if (!hierarchicalClusters) {
+				// If the user hasn't explicitly set us not to cache, cache processed data to make
+				// multiple runs more efficient
+				if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
+					props.setProperty("oculus.binning.caching.processed", "true")
+
 				// regular tile generation
-				processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true), tileIO)
+				processDatasetGeneric(DatasetFactory.createDataset(sc, props), tileIO)
 			}
 			else {
 				// hierarchical-based tile generation
@@ -416,8 +421,12 @@ object CSVGraphBinner {
 					props.setProperty("oculus.binning.levels."+m, levelsList(m))
 					// set raw data source
 					props.setProperty("oculus.binning.source.location", sourcesList(m))
+					// If the user hasn't explicitly set us not to cache, cache processed data to make
+					// multiple runs more efficient
+					if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
+						props.setProperty("oculus.binning.caching.processed", "true")
 					// perform tile generation
-					processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true),
+					processDatasetGeneric(DatasetFactory.createDataset(sc, props),
 					                      tileIO)
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")

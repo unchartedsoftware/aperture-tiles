@@ -13,3 +13,5 @@ redcarpet:
 product: Aperture Tiles
 
 destination: ../_site/
+
+baseurl: ""

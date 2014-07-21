@@ -1,14 +1,11 @@
 ---
 layout: default
-rootPath: ../
 ---
 
-{% comment %} Get path and filename containing sidebar content {% endcomment %}
-{% capture includeContext %}{{ rootPath }}{{ page.section | downcase }}.htm{% endcapture %}
+{% comment %} Get filename containing sidebar content {% endcomment %}
+	{% capture includeContext %}{{ page.section | downcase }}.html{% endcapture %}
 
-<div class="content">
-	{% include {{ includeContext }} %}
-	<div class="content-body">
-		{{ content }}
-	</div>
+{% include {{ includeContext }} %}
+<div class="content-body">
+	{{ content }}
 </div>

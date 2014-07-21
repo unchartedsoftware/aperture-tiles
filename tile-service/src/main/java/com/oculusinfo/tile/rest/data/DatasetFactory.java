@@ -65,9 +65,12 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?,?,?,?,?>>
 		Properties datasetProps = JsonUtilities.jsonObjToProperties(getConfigurationNode());
 		// Width and height are irrelevant for record queries, so we just set them to 1.
 		Some<Object> dimension = new Some<Object>(Int.unbox(new Integer(1)));
+		// If it's not set or unset explicitly, set filterable caching to true
+		if (!datasetProps.stringPropertyNames().contains("oculus.binning.caching.filterable"))
+			datasetProps.setProperty("oculus.binning.caching.filterable", "true");
 		CSVDataset<?,?,?,?,?> dataset =
 			(CSVDataset<?,?,?,?,?>) com.oculusinfo.tilegen.datasets.DatasetFactory.createDataset(
-				               _context, datasetProps, false, true, false, dimension, dimension);
+				               _context, datasetProps, dimension, dimension);
 
 		return dataset;
 	}

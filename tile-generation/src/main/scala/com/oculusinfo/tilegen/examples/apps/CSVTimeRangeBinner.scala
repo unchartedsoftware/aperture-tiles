@@ -309,7 +309,12 @@ object CSVTimeRangeBinner {
 			props.load(propStream)
 			propStream.close()
 
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true),
+			// If the user hasn't explicitly set us not to cache, cache processed data to make
+			// multiple runs more efficient
+			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
+				props.setProperty("oculus.binning.caching.processed", "true")
+
+			processDatasetGeneric(DatasetFactory.createDataset(sc, props),
 			                      tileIO, new CSVRecordPropertiesWrapper(props))
 			argIdx += 1
 		}

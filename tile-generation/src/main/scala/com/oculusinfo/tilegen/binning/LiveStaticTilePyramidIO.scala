@@ -90,9 +90,10 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 		if (!datasets.contains(pyramidId)) {
 			datasets.synchronized {
 				if (!datasets.contains(pyramidId)) {
+					if (!dataDescription.stringPropertyNames.contains("oculus.binning.caching.processed"))
+						dataDescription.setProperty("oculus.binning.caching.processed", "true")
 					datasets(pyramidId) =
-						DatasetFactory.createDataset(sc, dataDescription,
-						                             false, false, true, Some(width), Some(height))
+						DatasetFactory.createDataset(sc, dataDescription, Some(width), Some(height))
 				}
 			}
 		}

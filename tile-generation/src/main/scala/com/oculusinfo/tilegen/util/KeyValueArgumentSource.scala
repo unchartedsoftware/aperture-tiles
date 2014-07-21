@@ -538,7 +538,7 @@ abstract class KeyValueArgumentSource {
 	// Complex argument functions
 	// These functions standardize some arguments across applications
 	//
-	def getSparkConnector (jars: Seq[Object] = SparkConnector.getLibrariesFromClasspath): SparkConnector = {
+	def getSparkConnector (jars: Seq[Object] = SparkConnector.getDefaultLibraries): SparkConnector = {
 		val sparkArgs = properties.filter(kv =>
 			{
 				kv._1.startsWith("spark") && "spark" != kv._1 && "sparkhome" != kv._1
