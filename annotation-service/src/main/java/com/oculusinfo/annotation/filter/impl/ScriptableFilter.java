@@ -42,8 +42,55 @@ public class ScriptableFilter extends EmptyFilter {
 
         List<AnnotationData<?>> filtered = new LinkedList<>();
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("javascript");
+
         try
         {
+            /*
+            int size = annotations.size();
+            List<String> annotationStrings = new ArrayList<>( size );
+            int totalLength = 0;
+            for ( int i=0; i<size; i++ ) {
+                String annoStr = annotations.get(i).toJSON().toString();
+                if ( i != size-1 ) {
+                    annoStr += ",";
+                }
+                annotationStrings.add( annoStr );
+                totalLength += annoStr.length();
+            };
+
+            String scriptPrefix = "(function() { var annotations = [";
+
+            String scriptPostfix = "];"
+                                +"var len = annotations.length, "
+                                +"results = java.lang.reflect.Array.newInstance(java.lang.Boolean, len),"
+                                +"result, i, annotation;"
+                                +"for(i=0; i<len; i++) {"
+                                    +"annotation = annotations[i];"
+                                    +"result = " + _script + ";"
+                                    +"results[i] = result;"
+                                +"}"
+                                +"return results; })();";
+
+            StringBuilder script = new StringBuilder( scriptPrefix.length()
+                                                            + totalLength
+                                                            + scriptPostfix.length() );
+            // create script
+            script.append( scriptPrefix );
+            for ( String annoStr : annotationStrings ) {
+                script.append( annoStr );
+            }
+            script.append( scriptPostfix );
+
+            //String func = "var annotation = "+ annotation.toJSON().toString() +"; "+ _script;
+            Boolean[] results = (Boolean[])engine.eval( script.toString() );
+
+            for ( int i=0; i<results.length; i++ ) {
+                if (results[i]) {
+                    filtered.add( annotations.get(i) );
+                }
+            }
+            */
+
             for ( AnnotationData<?> annotation : annotations ) {
 
                 String func = "var annotation = "+ annotation.toJSON().toString() +"; "+ _script;

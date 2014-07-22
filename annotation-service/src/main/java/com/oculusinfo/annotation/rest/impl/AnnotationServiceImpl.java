@@ -511,9 +511,14 @@ public class AnnotationServiceImpl implements AnnotationService {
 				
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
-		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {					
-            // apply filter to the tile
-            certificates.addAll( filter.filterTile( tile ) );
+		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {
+            // for each bin
+            for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
+                // apply filter
+                if (bin != null) {
+                    certificates.addAll( filter.filterBin( bin ) );
+                }
+            }
 		}
 		
 		// read data from io

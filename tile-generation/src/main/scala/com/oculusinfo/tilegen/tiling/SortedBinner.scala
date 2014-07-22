@@ -444,7 +444,12 @@ object SortedBinnerTest {
 			props.load(propStream)
 			propStream.close()
 
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true), tileIO)
+			// If the user hasn't explicitly set us not to cache, cache processed data to make
+			// multiple runs more efficient
+			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
+				props.setProperty("oculus.binning.caching.processed", "true")
+
+			processDatasetGeneric(DatasetFactory.createDataset(sc, props), tileIO)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

@@ -98,10 +98,7 @@ public class AnnotationManipulator {
         return removedAny;
     }
 
-    
-    
-    
-    
+
     static public void addDataToTile( TileData<Map<String, List<Pair<String, Long>>>> tile, BinIndex binIndex, AnnotationData<?> data ) {
 
         Map<String, List<Pair<String, Long>>> bin = tile.getBin( binIndex.getX(), binIndex.getY() );
@@ -165,29 +162,6 @@ public class AnnotationManipulator {
         }
         return allCertificates;
     }
-       
-    
-    static public List<Pair<String, Long>> getFilteredCertificatesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile, Map<String, Integer> filter ) {
 
-        List<Pair<String, Long>> filtered = new LinkedList<>();
-        // for each bin
-        for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
-
-            if (bin != null) {
-                // go through filter list get certificates by group and by count
-                for (Map.Entry<String, Integer> f : filter.entrySet() ) {
-
-                    String group = f.getKey();
-                    Integer count = f.getValue();
-
-                    List<Pair<String, Long>> certificates = getCertificatesFromBin( bin, group );
-
-                    // certificates are sorted, so simply cut the tail off to get the n newest
-                    filtered.addAll( certificates.subList( 0, count < certificates.size() ? count : certificates.size() ) );
-                }
-            }
-        }
-        return filtered;
-    }    
 
 }

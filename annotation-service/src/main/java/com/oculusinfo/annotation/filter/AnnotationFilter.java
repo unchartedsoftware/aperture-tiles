@@ -39,6 +39,6 @@ import java.util.UUID;
  */
 public interface AnnotationFilter {
     
-	public List<Pair<String, Long>> filterTile( TileData<Map<String, List<Pair<String, Long>>>> tile );
+	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin );
     public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations );
 }

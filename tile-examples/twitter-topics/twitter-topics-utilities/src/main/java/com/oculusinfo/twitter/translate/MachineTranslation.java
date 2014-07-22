@@ -96,7 +96,7 @@ public class MachineTranslation {
 			
 			// Buffer the result into a string
 			BufferedReader rd = new BufferedReader(
-				new InputStreamReader(conn.getInputStream()));
+				new InputStreamReader(conn.getInputStream(), "UTF-8"));
 			StringBuilder sb = new StringBuilder();
 			String line;
 			while ((line = rd.readLine()) != null) {

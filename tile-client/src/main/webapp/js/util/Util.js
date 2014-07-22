@@ -28,6 +28,14 @@ define(function (require) {
 
     return {
 
+        generateUuid: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
+        },
+
+
         enableTooltip: function( $elem, message, openFunc, closeFunc ) {
 
             var tooltipOpened = false,
@@ -42,7 +50,9 @@ define(function (require) {
                     // wait until tooltip actually opens before calling
                     pendingCallback = setTimeout( function() {
                         tooltipOpened = true;
-                        openFunc();
+                        if (openFunc) {
+                            openFunc();
+                        }
                     }, 800);
                 },
                 close: function() {
@@ -50,7 +60,9 @@ define(function (require) {
                     clearTimeout( pendingCallback );
                     if ( tooltipOpened ) {
                         // only call if the tooltip actually opened
-                        closeFunc();
+                        if (closeFunc) {
+                            closeFunc();
+                        }
                     }
                     // clear flags on close
                     tooltipOpened = false;
