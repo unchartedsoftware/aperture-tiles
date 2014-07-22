@@ -281,11 +281,11 @@ class GroupInBox extends Serializable {
 		if ((numGroups > 1) && (centreAreaNext(2) > 0.0) && (centreAreaNext(3) > 0.0)) {
 			val expandFactor = Math.min(screenW/centreAreaNext(2), screenH/centreAreaNext(3))
 			if (expandFactor > 1.0) {
-				val width2 = screenW/2
-				val height2 = screenH/2
+				val widthTmp = screenW/2 + parentRect._1
+				val heightTmp = screenH/2 + parentRect._2
 				for (n <- 0 until numGroups) {
-	    			val x = (rects(n)._1 - width2)*expandFactor + width2
-	    			val y = (rects(n)._2 - height2)*expandFactor + height2
+	    			val x = (rects(n)._1 - widthTmp)*expandFactor + widthTmp
+	    			val y = (rects(n)._2 - heightTmp)*expandFactor + heightTmp
 	    			val w = rects(n)._3*expandFactor
 	    			val h = rects(n)._4*expandFactor
 	    			rects(n) = (x, y, w, h)
