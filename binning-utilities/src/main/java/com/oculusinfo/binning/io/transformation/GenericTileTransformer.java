@@ -50,7 +50,7 @@ public class GenericTileTransformer implements TileTransformer{
 	}
 
     @Override
-    public <T> TileData<T> Transform(TileData<T> data) throws Exception {
+    public <T> TileData<T> Transform(TileData<T> data, Class<? extends T> type) throws Exception {
         return data;
     }
 

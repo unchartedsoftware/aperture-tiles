@@ -119,7 +119,7 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 	}
 
     public <T> TileData<T> Transform (TileData<T> inputData, Class<? extends T> type) throws Exception {
-        if (!List.class.isAssignableFrom(type)) throw new InvalidArgument("This transformer only works on lists, dummy");
+        if (!List.class.isAssignableFrom(type)) throw new InvalidArgument("This transformer only works on lists");
 
         //list of indices to keep
         TileData<List<Double>> resultData;
