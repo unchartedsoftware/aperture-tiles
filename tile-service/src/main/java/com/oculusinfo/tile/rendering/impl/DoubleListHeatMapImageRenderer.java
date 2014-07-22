@@ -71,7 +71,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
     //public <T> TileData<T> Transform (TileData<T> inputData, Class<? extends T> type)
     public static Class<List<Double>> getRuntimeBinClass () {
-        return (Class<List<Double>>) new ArrayList<Double>().getClass();
+        return (Class) List.class;
     }
 
     public static TypeDescriptor getRuntimeTypeDescriptor () {
@@ -199,7 +199,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             ColorRamp colorRamp = config.produce(ColorRamp.class);
 
             TileTransformer tileTransformer = config.produce(TileTransformer.class);
-            TileData<List<Double>> transformedContents= tileTransformer.Transform(data, List.class);
+            TileData<List<Double>> transformedContents= tileTransformer.Transform(data, getRuntimeBinClass());
 
             for(int ty = 0; ty < numBinsHigh; ty++){
                 for(int tx = 0; tx < numBinsWide; tx++){
