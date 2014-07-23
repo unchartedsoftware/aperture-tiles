@@ -38,7 +38,8 @@ package com.oculusinfo.tilegen.graph.util
 class GroupInBox extends Serializable {
 
 	def run(groups: Iterable[(Long, Long, Int)], 
-			parentRect: (Double, Double, Double, Double)): List[(Long, (Double, Double, Double, Double))] = {
+			parentRect: (Double, Double, Double, Double),
+			numNodesThres: Int = 1000): List[(Long, (Double, Double, Double, Double))] = {
 		
 		//format of groups is assumed to be (groupID, numInternalNodes, community degree))
 		val totalNumNodes = groups.map(_._2).reduce(_ + _)	// total number of internal nodes in all groups
@@ -74,6 +75,7 @@ class GroupInBox extends Serializable {
 		var nPrev = 0
 		var n = 0
 		var bDone = false
+		var bDoExpansion = false
 		var bNextSpiralLevel = false
 		var currLabel = 0 	// 0 = center, 1 = H_D, 2 = V_R, 3 = H_U, 4 = V_L
 		var labelToResume = 0
@@ -88,6 +90,12 @@ class GroupInBox extends Serializable {
 		
 		if (numGroups == 1) {	// if only 1 group to layout
 			rects(0) = parentRect	
+			bDone = true
+		}
+		else if (totalNumNodes < numNodesThres) {
+			for (n <- 0 until numGroups) {	// size of groups is below threshold, so simply set all rectangles = parent rectangle
+				rects(n) = parentRect
+			}
 			bDone = true
 		}
 		else {
@@ -237,7 +245,8 @@ class GroupInBox extends Serializable {
 		        labelToResume = 0
 		      }
 		      if (n == numGroups-1) {
-		     	  bDone = true;	// finished!
+		     	  bDone = true	// finished!
+		     	  bDoExpansion = true
 		     	  println("Group-In-Box layout finished with alpha = " + alpha)
 		      }
 		      //println(n) 
@@ -277,7 +286,7 @@ class GroupInBox extends Serializable {
 		}
 		
 		// ---- Expand rectangles out to better fit parent layout (to reduce amount of wasted space)
-		if ((numGroups > 1) && (centreAreaNext(2) > 0.0) && (centreAreaNext(3) > 0.0)) {
+		if (bDoExpansion && (centreAreaNext(2) > 0.0) && (centreAreaNext(3) > 0.0)) {
 			val expandFactor = Math.min(screenW/centreAreaNext(2), screenH/centreAreaNext(3))
 			if (expandFactor > 1.0) {
 				val widthTmp = screenW/2 + parentRect._1
