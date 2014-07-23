@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.tilegen.preprocessing;
+package com.oculusinfo.tilegen.graph.util;
 
 import java.util.HashMap;
 
