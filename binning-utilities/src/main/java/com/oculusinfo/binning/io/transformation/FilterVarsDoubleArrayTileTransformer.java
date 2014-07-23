@@ -66,7 +66,7 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 			}
 		}
 		catch (JSONException e) {
-			_logger.warn("Exception getting varaibles for filter varialbles transformer", e);
+			_logger.warn("Exception getting variables for filter variables transformer", e);
 		}
 	}
 
@@ -99,7 +99,7 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 				JSONArray resultValuesInSingleBin = new JSONArray();
 					
 				// just loop through variable indexes in _variables			
-				for (int varIndex = 0; varIndex < _variables.size(); varIndex++) {	
+				for (int varIndex = 0; varIndex < _variables.size(); varIndex++) {
 					JSONObject value = valuesInBin.getJSONObject(_variables.get(varIndex));
 					JSONObject resultValue = new JSONObject();
 						

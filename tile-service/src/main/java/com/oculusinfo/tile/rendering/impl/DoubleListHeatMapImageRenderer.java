@@ -99,6 +99,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
     private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
         String rawValue = parameter.getPropertyValue(property);
+        System.out.println("RawValue: " + rawValue);
         try {
             return Double.parseDouble(rawValue);
         } catch (NumberFormatException|NullPointerException e) {
@@ -199,7 +200,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             ColorRamp colorRamp = config.produce(ColorRamp.class);
 
             TileTransformer tileTransformer = config.produce(TileTransformer.class);
-            TileData<List<Double>> transformedContents= tileTransformer.Transform(data, getRuntimeBinClass());
+            TileData<List<Double>> transformedContents = tileTransformer.Transform(data, getRuntimeBinClass());
 
             for(int ty = 0; ty < numBinsHigh; ty++){
                 for(int tx = 0; tx < numBinsWide; tx++){
@@ -239,8 +240,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
         } catch (Exception e) {
-            LOGGER.debug("Tile is corrupt: " + layer + ":" + index);
-            LOGGER.debug("Tile error: ", e);
+            LOGGER.error("Tile error: " + layer + ":" + index, e);
             bi = null;
         }
         return bi;
