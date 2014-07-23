@@ -67,7 +67,6 @@ class HierarchicGraphLayout extends Serializable {
 		var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))  
 		//var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
 		
-		var totalNumNodes = 0L
 		var level = maxHierarchyLevel
 		while (level > 0) {
 			println("Starting GroupInBox Layout for hierarchy level " + level)
@@ -85,12 +84,7 @@ class HierarchicGraphLayout extends Serializable {
 			}
 			else {
 				parsedNodeData.map(node => (node._2._1, (node._1, node._2._2, node._2._3)))	
-			}
-	
-			if (level == maxHierarchyLevel) {
-				// calc total number of nodes in graph (total should be the same for all levels, so only need to do once)
-				totalNumNodes = groups.map(_._2._2).reduce(_ + _)	
-			}			
+			}		
 						
 			val groupsByParent = if (consolidationPartitions==0) {		// group by parent community ID
 				groups.groupByKey()
@@ -107,7 +101,7 @@ class HierarchicGraphLayout extends Serializable {
 				val data = n._2._1
 				val parentRectangle = n._2._2
 				//data format is (parent communityID, Iterable(communityID,numInternalNodes, community degree))				
-				val rects = boxLayouter.run(data, totalNumNodes, parentRectangle)
+				val rects = boxLayouter.run(data, parentRectangle)
 				rects
 			})
 			

@@ -38,11 +38,10 @@ package com.oculusinfo.tilegen.graph.util
 class GroupInBox extends Serializable {
 
 	def run(groups: Iterable[(Long, Long, Int)], 
-			totalNumNodes: Long,
 			parentRect: (Double, Double, Double, Double)): List[(Long, (Double, Double, Double, Double))] = {
 		
 		//format of groups is assumed to be (groupID, numInternalNodes, community degree))
-		
+		val totalNumNodes = groups.map(_._2).reduce(_ + _)	// total number of internal nodes in all groups
 		if (totalNumNodes <= 0)	throw new IllegalArgumentException("totalNumNodes must be > 0, but = " + totalNumNodes)
 		
 		val bUseWeightedConnectedness = true	//TODO -- could expose an API parameter for this?
@@ -290,7 +289,7 @@ class GroupInBox extends Serializable {
 	    			val h = rects(n)._4*expandFactor
 	    			rects(n) = (x, y, w, h)
 	    			if ((rects(n)._3 > parentRect._3) || (rects(n)._4 > parentRect._4)) {
-	    				throw new RuntimeException ("Internal rectangle size is bigger than parent rectangle.")	//dgdg
+	    				throw new RuntimeException ("Internal rectangle size is bigger than parent rectangle.")
 					}
 				}
 			}
