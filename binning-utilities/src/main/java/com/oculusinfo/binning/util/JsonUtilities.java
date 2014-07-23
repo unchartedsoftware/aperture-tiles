@@ -24,13 +24,18 @@
  */
 package com.oculusinfo.binning.util;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 
 /**
@@ -340,6 +345,16 @@ public class JsonUtilities {
 		return val;
 	}
 
+
+
+	/**
+     * Transform a JSON object into a properties object, concatenating levels
+     * into keys using a period.
+     * 
+     * @param jsonObj
+     *            The JSON object to translate
+     * @return The same data, in properties form
+     */
 	public static Properties jsonObjToProperties (JSONObject jsonObj) {
 		Properties properties = new Properties();
 
@@ -379,4 +394,154 @@ public class JsonUtilities {
 			}
 		}
 	}
+
+
+
+    /**
+     * Transform a JSON object into a properties object, concatenating levels
+     * into keys using a period.
+     * 
+     * @param jsonObj
+     *            The JSON object to translate
+     * @return The same data, in properties form
+     */
+    public static JSONObject propertiesObjToJSON (Properties properties) {
+        JSONObject json = new JSONObject();
+
+        for (Object keyObj: properties.keySet()) {
+            String key = keyObj.toString();
+            try {
+                addKey(json, key, properties.getProperty(key));
+            } catch (JSONException e) {
+                LOGGER.warn("Error transfering property {} from properties file to json", key, e);
+            }
+        }
+
+        return json;
+    }
+
+    private static void addKey (JSONObject json, String key, String value) throws JSONException {
+        int keyBreak = key.indexOf(".");
+        if (-1 == keyBreak) {
+            // At leaf object.
+            if (json.has(key)) {
+                throw new JSONException("Duplicate key "+key);
+            }
+            json.put(key, value);
+        } else {
+            String keyCAR = key.substring(0, keyBreak);
+            String keyCDR = key.substring(keyBreak+1);
+            String keyCADR;
+
+            int cdrBreak = keyCDR.indexOf(".");
+            if (-1 == cdrBreak) {
+                keyCADR = keyCDR;
+            } else {
+                keyCADR = keyCDR.substring(0, cdrBreak);
+            }
+
+            // See if our next element can be an array element.
+            boolean arrayOk;
+            try {
+                Integer.parseInt(keyCADR);
+                arrayOk = true;
+            } catch (NumberFormatException e) {
+                arrayOk = false;
+            }
+
+            if (json.has(keyCAR)) {
+                Object elt = json.get(keyCAR);
+                if (elt instanceof JSONArray) {
+                    JSONArray arrayElt = (JSONArray) elt;
+                    if (arrayOk) {
+                        addKey(arrayElt, keyCDR, value);
+                    } else {
+                        JSONObject arrayTrans = new JSONObject();
+                        for (int i=0; i<arrayElt.length(); ++i) {
+                            arrayTrans.put(""+i, arrayElt.get(i));
+                        }
+                        json.put(keyCAR, arrayTrans);
+                        addKey(arrayTrans, keyCDR, value);
+                    }
+                } else if (elt instanceof JSONObject) {
+                    addKey((JSONObject) elt, keyCDR, value);
+                } else {
+                    throw new JSONException("Attempt to put both object and value in JSON object at key "+keyCAR);
+                }
+            } else {
+                if (arrayOk) {
+                    JSONArray arrayElt = new JSONArray();
+                    json.put(keyCAR, arrayElt);
+                    addKey(arrayElt, keyCDR, value);
+                } else {
+                    JSONObject elt = new JSONObject();
+                    json.put(keyCAR, elt);
+                    addKey(elt, keyCDR, value);
+                }
+            }
+        }
+    }
+
+    private static void addKey (JSONArray json, String key, String value) throws JSONException {
+        int keyBreak = key.indexOf(".");
+        if (-1 == keyBreak) {
+            // At leaf object.
+            int index = Integer.parseInt(key);
+            json.put(index, value);
+        } else {
+            String keyCAR = key.substring(0, keyBreak);
+            String keyCDR = key.substring(keyBreak+1);
+            String keyCADR;
+
+            int cdrBreak = keyCDR.indexOf(".");
+            if (-1 == cdrBreak) {
+                keyCADR = keyCDR;
+            } else {
+                keyCADR = keyCDR.substring(0, cdrBreak);
+            }
+
+            // See if our next element can be an array element.
+            boolean arrayOk;
+            try {
+                Integer.parseInt(keyCADR);
+                arrayOk = true;
+            } catch (NumberFormatException e) {
+                arrayOk = false;
+            }
+
+            int index = Integer.parseInt(keyCAR);
+            Object raw;
+            try {
+                raw = json.get(index);
+            } catch (JSONException e) {
+                raw = null;
+            }
+
+            if (raw instanceof JSONArray) {
+                JSONArray arrayElt = (JSONArray) raw;
+                if (arrayOk) {
+                    addKey(arrayElt, keyCDR, value);
+                } else {
+                    JSONObject arrayTrans = new JSONObject();
+                    for (int i=0; i<arrayElt.length(); ++i) {
+                        arrayTrans.put(""+i, arrayElt.get(i));
+                    }
+                    json.put(index, arrayTrans);
+                    addKey(arrayTrans, keyCDR, value);
+                }
+            } else if (raw instanceof JSONObject) {
+                addKey((JSONObject) raw, keyCDR, value);
+            } else {
+                if (arrayOk) {
+                    JSONArray arrayElt = new JSONArray();
+                    json.put(index, arrayElt);
+                    addKey(arrayElt, keyCDR, value);
+                } else {
+                    JSONObject elt = new JSONObject();
+                    json.put(index, elt);
+                    addKey(elt, keyCDR, value);
+                }
+            }
+        }
+    }
 }

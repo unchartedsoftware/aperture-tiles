@@ -1,0 +1,8 @@
+- label: Overview
+  path: tour/overview/
+
+- label: System Description
+  path: tour/components/
+
+- label: Process
+  path: tour/process/

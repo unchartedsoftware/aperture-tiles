@@ -1,32 +1,14 @@
 Aperture Tile-Based Visual Analytics
 ==============
 
-New tools for raw data characterization of 'big data' are required to suggest initial hypotheses 
-for testing. The widespread adoption of web-based maps provides a familiar set of interactions for 
-exploring abstract large data spaces. Building on these techniques, Aperture-Tiles provides 
-browser-based interactive visual analytics that allow visualization of billions or more points of 
-data.
+Aperture Tiles provides the ability to create browser-based, interactive tools any analyst can use to explore data sets containing billions of data points (or more).
 
-Aperture Tile-Based Visual Analytics Components
-==============
+Business and government leaders, operators and analysts today have more data than ever at hand to make smart, informed decisions. This information comes from various places, including social media, sensor data, financial transactions, cyber and open-source data. However making sense of such massive amounts of data is an extremely challenging task. As a result data is often not used to its full potential.
 
-The project consists of three main components.
+Aperture Tiles uses a pyramid of tiles to structure, analyze, visualize and interact with a user interface similar to web-based geographic map applications. This approach allows analysts to easily see and navigate all of the data without losing detail, and seamlessly "zoom in" to a more localized portion of that data.
 
-Spark Tile Generation Analytic
---------
-* Apache Spark based analytic for computing data tile set
-* Converts raw data files into AVRO data tile files with metadata descriptor files
-* AVRO data tiles summarize the tile contents
+Tailored analytic overlays (e.g., alerts, pattern detection, feature extraction) can be applied to the data at every scale, ranging from the entire dataset to a very small portion of it. Seeing all of the data reveals informative patterns and provides important context to understanding insights identified by computational analytics.
 
-Aperture Tile Server
---------
-* Defines a REST API for requesting tiles and rendering properties
-* Retrieves AVRO data tile files and renders to PNG files for display in tile clients
-* Optional: Apache HBase distributed file system for storage of tile files
+Aperture Tiles is open source, and free to use under the MIT License.
 
-Aperture Tile Client
---------
-* Web clients that display interactive tiles
-* Requests tiles from Aperture Tile Server
-
-To find out more, see the [Distributed Tiling Overview](https://github.com/oculusinfo/aperture-tiles/releases/download/0.1.0/distributed-tiling-overview.pdf) or take a look at our [wiki](../../wiki/Aperture-Tile-Based-Visual-Analytics).
+For an overview, developer documentation and live examples see the [Aperture Tiles project website](https://tiles.oculusinfo.com) or [docs folder](docs/) in the source code.

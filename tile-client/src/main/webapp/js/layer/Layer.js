@@ -44,6 +44,7 @@ define(function (require) {
         init: function ( spec, map ) {
 
             this.id = spec.layer;
+            this.name = spec.name || spec.layer;
             this.map = map;
             this.layerSpec = spec;
             this.layerInfo = null;

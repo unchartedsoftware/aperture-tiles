@@ -32,7 +32,7 @@ define(function (require) {
 	"use strict";
 
 
-	
+
 	var Class = require('../class'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
@@ -45,7 +45,7 @@ define(function (require) {
 
 	Map = Class.extend({
 		ClassName: "Map",
-		
+
 		init: function (id, spec) {
 
             var that = this;
@@ -76,7 +76,7 @@ define(function (require) {
 
 
 			// Initialize the map
-			this.map = new aperture.geo.Map({ 
+			this.map = new aperture.geo.Map({
 				id: this.id,
                 options: {
                     controls: [
@@ -124,8 +124,15 @@ define(function (require) {
             this.$map.append( this.$root );
 
             this.on('move', function() {
-                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
-                that.$root.css({ "-webkit-transform":"translate("+ pos.x +"px, " + pos.y + "px)"});
+                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() ),
+                    translate = "translate("+ pos.x +"px, " + pos.y + "px)";
+                that.$root.css({
+                    "-webkit-transform": translate,
+                    "-moz-transform": translate,
+                    "-ms-transform": translate,
+                    "-o-transform": translate,
+                    "transform": translate
+                });
             });
 
             this.trigger('move'); // fire initial move event
@@ -232,67 +239,6 @@ define(function (require) {
             return $('.olMapViewport')[0];
         },
 
-
-        /**
-         * Allows the given DOMElement or jQuery object events to propagate through
-         * and interact with the underlying Map
-         */
-        enableEventToMapPropagation: function( elem, events ) {
-
-            var //that = this,
-                domElement = (elem instanceof jQuery) ? elem[0] : elem,
-                i;
-
-            function propagateEvent( event ) {
-                var newEvent = new event.constructor(event.type, event),
-                    below;
-                $(elem).css('pointer-events', 'none');
-                below = document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
-                if (below) {
-                    below.dispatchEvent(newEvent);
-                }
-                $(elem).css('pointer-events', 'all');
-            }
-
-            if (!events) {
-                domElement.onmousedown = propagateEvent;
-                domElement.onmouseup = propagateEvent;
-                domElement.onmousemove = propagateEvent;
-                domElement.onwheel = propagateEvent;
-                domElement.onmousewheel = propagateEvent;
-                domElement.onscroll = propagateEvent;
-                domElement.onclick = propagateEvent;
-                domElement.ondblclick = propagateEvent;
-            } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = propagateEvent;
-                }
-            }
-
-        },
-
-
-        disableEventToMapPropagation: function( elem, events ) {
-
-            var domElement = (elem instanceof jQuery) ? elem[0] : elem,
-                i;
-            if (!events) {
-                domElement.onmousedown = null;
-                domElement.onmouseup = null;
-                domElement.onmousemove = null;
-                domElement.onwheel = null;
-                domElement.onmousewheel = null;
-                domElement.onscroll = null;
-                domElement.onclick = null;
-                domElement.ondblclick = null;
-            } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = null;
-                }
-            }
-        },
 
 		setAxisSpecs: function (axes) {
 
@@ -680,6 +626,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 				this.map.olMap_.events.register(eventType, this.map.olMap_, callback );
@@ -718,6 +665,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 
@@ -747,6 +695,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 

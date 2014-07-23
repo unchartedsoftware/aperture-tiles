@@ -25,6 +25,9 @@
       <!-- Pyramid IO factory module - override to add custom PyramidIO 
            implementations -->
       com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+	  <!-- Tile Transformer factory module - override to add custom tile
+           Transformer -->
+      com.oculusinfo.tile.init.TileTransformerFactoryModule:
       <!-- LayerConfiguration factory module - override to add custom layer configuration 
            parameters -->
       com.oculusinfo.tile.init.StandardLayerConfigurationModule:

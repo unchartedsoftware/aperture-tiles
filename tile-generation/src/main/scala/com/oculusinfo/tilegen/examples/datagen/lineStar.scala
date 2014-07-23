@@ -40,7 +40,6 @@ import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 
 import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.util.ArgumentParser
 
 /**

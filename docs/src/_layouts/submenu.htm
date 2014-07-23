@@ -1,0 +1,13 @@
+---
+layout: default
+---
+
+{% comment %} Get filename containing sidebar content {% endcomment %}
+		{% capture includeContext %}{{ page.section | downcase }}-{{ page.subtitle | replace: ' ', '' }}.html{% endcapture %}
+
+{% include submenu.html %}
+
+{% include {{ includeContext }} %}	
+<div class="content-body">
+	{{ content }}
+</div>

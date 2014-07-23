@@ -58,9 +58,7 @@ import com.oculusinfo.binning.util.Pair
 
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
 import com.oculusinfo.tilegen.util.Rectangle
 
 
@@ -70,7 +68,7 @@ import com.oculusinfo.tilegen.util.Rectangle
  * This class reads and caches a data set for live queries of its tiles
  */
 class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
-	private val datasets = MutableMap[String, Dataset[_, _, _]]()
+	private val datasets = MutableMap[String, Dataset[_, _, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
 
 
@@ -92,9 +90,10 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 		if (!datasets.contains(pyramidId)) {
 			datasets.synchronized {
 				if (!datasets.contains(pyramidId)) {
+					if (!dataDescription.stringPropertyNames.contains("oculus.binning.caching.processed"))
+						dataDescription.setProperty("oculus.binning.caching.processed", "true")
 					datasets(pyramidId) =
-						DatasetFactory.createDataset(sc, dataDescription,
-						                             false, false, true, width, height)
+						DatasetFactory.createDataset(sc, dataDescription, Some(width), Some(height))
 				}
 			}
 		}
@@ -148,24 +147,24 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	                   serializer: TileSerializer[BT],
 	                   javaTiles: JavaIterable[TileIndex]):
 			JavaList[TileData[BT]] = {
-		def inner[IT: ClassTag, PT: ClassTag]: JavaList[TileData[BT]] = {
+		def inner[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag]: JavaList[TileData[BT]] = {
 			val tiles: Iterable[TileIndex] = javaTiles.asScala
 
 			if (!datasets.contains(pyramidId) ||
 				    tiles.isEmpty) {
 				null
 			} else {
-				val dataset = datasets(pyramidId).asInstanceOf[Dataset[IT, PT, BT]]
+				val dataset = datasets(pyramidId).asInstanceOf[Dataset[IT, PT, DT, AT, BT]]
 				val indexScheme = dataset.getIndexScheme
-				val binDescriptor = dataset.getBinDescriptor
+				val binningAnalytic = dataset.getBinningAnalytic
 				val pyramid = dataset.getTilePyramid
 
-				val bins = tiles.head.getXBins()
+				val xBins = tiles.head.getXBins()
+				val yBins = tiles.head.getXBins()
 				val bounds = tilesToBounds(pyramid, tiles)
 
-				val boundsTest = bounds.getSerializableContainmentTest(pyramid,
-				                                                       bins)
-				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, bins)
+				val boundsTest = bounds.getSerializableContainmentTest(pyramid, xBins, yBins)
+				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, xBins, yBins)
 				val spreaderFcn: IT => TraversableOnce[(TileIndex, BinIndex)] =
 					index => {
 						val cartesianIndex = indexScheme.toCartesian(index)
@@ -177,72 +176,41 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 				val binner = new RDDBinner
 				binner.debug = true
 
-				val results = dataset.transformRDD[TileData[BT]](
+				val results: Array[TileData[BT]] = dataset.transformRDD[TileData[BT]](
 					rdd => {
-						binner.processData[IT, PT, BT](rdd, binDescriptor,
-						                               spreaderFcn, bins)
-					}
-				).map(tile =>
-					// Get the min and max for each tile while we're still distributed
-					{
-						val index = tile.getDefinition()
-						var max = binDescriptor.defaultMax
-						var min = binDescriptor.defaultMin
-						for (x <- 0 until index.getXBins())
-							for (y <- 0 until index.getYBins()) {
-								val value = tile.getBin(x, y)
-								max = binDescriptor.max(max, value)
-								min = binDescriptor.min(min, value)
-							}
-						(tile, min, max)
+						binner.processData[IT, PT, AT, DT, BT](rdd,
+						                                       binningAnalytic,
+						                                       dataset.getTileAnalytics,
+						                                       dataset.getDataAnalytics,
+						                                       spreaderFcn)
 					}
 				).collect
 
 				// Update metadata for these levels
 				val datasetMetaData = getMetaData(pyramidId).get
 
-				val mins = MutableMap[Int, BT]()
-				datasetMetaData.getLevelMinimums().asScala.foreach{case (level, min) =>
-					mins(level) = binDescriptor.stringToBin(min)
-				}
-
-				val maxs = MutableMap[Int, BT]()
-				datasetMetaData.getLevelMaximums().asScala.foreach{case (level, max) =>
-					maxs(level) = binDescriptor.stringToBin(max)
-				}
-
-				results.foreach{ case (tile, min, max) =>
-					{
-						val level = tile.getDefinition().getLevel()
-						mins(level) = binDescriptor.min(mins.getOrElse(level,
-						                                               binDescriptor.defaultMin),
-						                                min)
-						maxs(level) = binDescriptor.max(maxs.getOrElse(level,
-						                                               binDescriptor.defaultMax),
-						                                max)
-					}
-				}
-
-				def convertAndSort (extrema: Seq[(Int, BT)]): JavaList[Pair[JavaInt, String]] =
-					extrema.map{case (a, b) =>
-						new Pair[JavaInt, String](new JavaInt(a), binDescriptor.binToString(b))
-					}.sortBy(_.getFirst()).asJava
-
 				val newDatasetMetaData =
 					new PyramidMetaData(datasetMetaData.getName(),
 					                    datasetMetaData.getDescription(),
-					                    datasetMetaData.getTileSize(),
+					                    datasetMetaData.getTileSizeX(),
+					                    datasetMetaData.getTileSizeY(),
 					                    datasetMetaData.getScheme(),
 					                    datasetMetaData.getProjection(),
-					                    datasetMetaData.getMinZoom(),
-					                    datasetMetaData.getMaxZoom(),
+					                    datasetMetaData.getValidZoomLevels(),
 					                    datasetMetaData.getBounds(),
-					                    convertAndSort(mins.toSeq),
-					                    convertAndSort(maxs.toSeq))
+					                    null, null)
+				dataset.getTileAnalytics.map(_.applyTo(newDatasetMetaData))
+				dataset.getDataAnalytics.map(_.applyTo(newDatasetMetaData))
+				newDatasetMetaData.addValidZoomLevels(
+					results.map(tile =>
+						new JavaInt(tile.getDefinition().getLevel())
+					).toSet.asJava
+				)
+
 				metaData(pyramidId) = newDatasetMetaData
 
 				// Finally, return our tiles
-				results.map(_._1).toList.asJava
+				results.toList.asJava
 			}
 		}
 

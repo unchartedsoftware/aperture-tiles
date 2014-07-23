@@ -38,11 +38,6 @@ function addToSparkClasspath {
   fi
 }
 
-
-
-
-
-
 # Set up the spark classpath
 # our own jars
 addToSparkClasspath com.oculusinfo math-utilities ${project.version}
@@ -55,7 +50,9 @@ addToSparkClasspath org.scala-lang scala-library ${scala-version}
 #json version is derived indirectly, can't be coded here.
 addToSparkClasspath org.json json 20090211
 
-
+if [ ${OSTYPE} == "cygwin" ]; then
+	export SPARK_CLASSPATH="$(cygpath -p -w "${SPARK_CLASSPATH}")"
+fi
 
 # export MASTER=local[8]
 # export SPARK_MEM=4g

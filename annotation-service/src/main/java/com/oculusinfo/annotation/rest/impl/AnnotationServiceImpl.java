@@ -40,6 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.binning.util.JsonUtilities;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -93,14 +95,12 @@ public class AnnotationServiceImpl implements AnnotationService {
                                                                         new TypeDescriptor(Long.class))));
     }
 
-
-
     private List<AnnotationInfo> _annotationLayers;
-    private HashMap<String, AnnotationInfo> _annotationLayersById;
-    private ConcurrentHashMap<String, UUID> _defaultFilterUuidById;
-    private ConcurrentHashMap<UUID, Map<String, Integer>> _filtersByUuid;
+    private Map<String, AnnotationInfo> _annotationLayersById;
+    private Map<UUID, JSONObject> _configurationssByUuid;
 
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+    private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
     private FactoryProvider<AnnotationIO>  _annotationIOFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _tileSerializerFactoryProvider;
     private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
@@ -117,19 +117,20 @@ public class AnnotationServiceImpl implements AnnotationService {
                                   FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
 					    	      FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
 					    		  FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+                                  FactoryProvider<AnnotationFilter> filterFactoryProvider,
 					    		  AnnotationIndexer indexer,
     							  AnnotationSerializer serializer ) {
 
 		_annotationLayers = new ArrayList<>();
-		_annotationLayersById = new LinkedHashMap<>();
-		_defaultFilterUuidById = new ConcurrentHashMap<>();
-		_filtersByUuid = new ConcurrentHashMap<>();
-		
+		_annotationLayersById = new HashMap<>();
+        _configurationssByUuid = new HashMap<>();
+
 		_pyramidIOFactoryProvider = pyramidIOFactoryProvider;
         _annotationIOFactoryProvider = annotationIOFactoryProvider;
 		_tileSerializerFactoryProvider = tileSerializerFactoryProvider;
 		_tilePyramidFactoryProvider = tilePyramidFactoryProvider;
-		
+        _filterFactoryProvider = filterFactoryProvider;
+
 		_dataSerializer = serializer;
 		_indexer = indexer;
 		
@@ -214,20 +215,14 @@ public class AnnotationServiceImpl implements AnnotationService {
 	
 
 	public Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex query ) {
-		
-		Map<String, Integer> filters;		
-		/*
-		 * If user has specified a filter, use it, otherwise use default
-		 */
-        id = ( id == null ) ? _defaultFilterUuidById.get( layer ) : id;
-		filters = _filtersByUuid.get( id );
 
 		_lock.readLock().lock();
     	try {
 
-    		AnnotationConfiguration config = getConfiguration( layer );
+    		AnnotationConfiguration config = getConfiguration( layer, id );
     		TilePyramid pyramid = config.produce( TilePyramid.class );
-    		return getDataFromTiles( layer, query, filters, pyramid );
+            AnnotationFilter filter = config.produce( AnnotationFilter.class );
+    		return getDataFromTiles( layer, query, filter, pyramid );
     		
     	} catch ( Exception e ) {
     		throw new IllegalArgumentException( e.getMessage() );
@@ -271,19 +266,33 @@ public class AnnotationServiceImpl implements AnnotationService {
 	public List<AnnotationInfo> list () {
 	    return _annotationLayers;
 	}
-	
 
-	public AnnotationConfiguration getConfiguration( String layer ) {
+
+    public AnnotationConfiguration getConfiguration( String layer ) {
+
+        return getConfiguration( layer, null );
+    }
+
+	public AnnotationConfiguration getConfiguration( String layer, UUID uuid ) {
 					
 		try {
 			AnnotationConfiguration configFactory = new AnnotationConfiguration( _pyramidIOFactoryProvider,
                                                                                  _annotationIOFactoryProvider,
 																				 _tileSerializerFactoryProvider,
 																				 _tilePyramidFactoryProvider,
+                                                                                 _filterFactoryProvider,
 																				 null, 
 																				 null );
-			
-			configFactory.readConfiguration( _annotationLayersById.get( layer ).getRawData() );
+            JSONObject baseLayerConfig;
+            if ( uuid != null ) {
+                // copy layer info
+                baseLayerConfig = JsonUtilities.deepClone( _annotationLayersById.get( layer ).getRawData() );
+                // overlay configuration
+                JsonUtilities.overlayInPlace( baseLayerConfig, _configurationssByUuid.get( uuid ) );
+            } else {
+                baseLayerConfig = _annotationLayersById.get( layer ).getRawData();
+            }
+			configFactory.readConfiguration( baseLayerConfig );
 			return configFactory.produce( AnnotationConfiguration.class );
 			
 		} catch (ConfigurationException e) {
@@ -294,19 +303,22 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 	}
 
+
 	@Override
-	public UUID configureFilter (String layerId, JSONObject filters ) {
+	public UUID configureLayer (String layerId, JSONObject overrideConfiguration ) {
 
         UUID uuid = UUID.randomUUID();
-        _filtersByUuid.put( uuid, getFiltersFromJSON( filters ) );
+        _configurationssByUuid.put( uuid, overrideConfiguration );
         return uuid;
 	}
 
-    @Override
-    public void unconfigureFilter (String layerId, UUID uuid ) {
 
-        _filtersByUuid.remove( uuid );
+    @Override
+    public void unconfigureLayer (String layerId, UUID uuid ) {
+
+        _configurationssByUuid.remove( uuid );
     }
+
 
 	private File[] getConfigurationFiles (String location) {
     	try {
@@ -342,7 +354,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     			for (int i=0; i<configurations.length(); ++i) {    	
     				
     				AnnotationInfo info = new AnnotationInfo(configurations.getJSONObject(i));
-    				addConfiguration(info);
+                    addInfoAndInitializeLayer(info);
     			}
 	    	} catch (FileNotFoundException e) {
 	    		LOGGER.error("Cannot find annotation configuration file {} ", file, e);
@@ -352,15 +364,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 	    	}
 		}
     }
-	
-	private void addConfiguration (AnnotationInfo info) {
+
+	private void addInfoAndInitializeLayer (AnnotationInfo info) {
 
         _annotationLayers.add(info);
         _annotationLayersById.put(info.getID(), info);
-        // set default filter
-        UUID uuid = UUID.randomUUID();
-        _defaultFilterUuidById.put( info.getID(), uuid );
-        _filtersByUuid.put( uuid, getFiltersFromJSON( info.getFilterConfiguration() ) );
 
         try {
             // ensure both the tile and data io's exist
@@ -377,27 +385,7 @@ public class AnnotationServiceImpl implements AnnotationService {
         }
 
     }
-	
-	private Map<String, Integer> getFiltersFromJSON( JSONObject jsonFilters ) {
-		
-		Map<String, Integer> filters = new HashMap<>();
-		
-		try {
-			Iterator<?> priorities = jsonFilters.keys();
-	        while( priorities.hasNext() ) {
-	        	
-	        	String priority = (String)priorities.next();		            
-	            int count = jsonFilters.getInt( priority );
-	            filters.put( priority, count );
-	        }
-	        
-		} catch (Exception e) {
-    		throw new IllegalArgumentException( e.getMessage() );
-		}
-		return filters;
-	}
-	
-	
+
 	
 	/*
 	 * 
@@ -512,7 +500,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 	
-	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, Map<String, Integer> filter, TilePyramid pyramid ) {
+	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, AnnotationFilter filter, TilePyramid pyramid ) {
 		
 		// wrap index into list 
 		List<TileIndex> indices = new LinkedList<>();
@@ -523,30 +511,32 @@ public class AnnotationServiceImpl implements AnnotationService {
 				
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
-		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {					
-			if ( filter != null ) {
-				// filter provided
-				certificates.addAll( AnnotationManipulator.getFilteredCertificatesFromTile( tile, filter ) );
-			} else {
-				// no filter provided
-				certificates.addAll(  AnnotationManipulator.getAllCertificatesFromTile( tile ) );
-			}
+		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {
+            // for each bin
+            for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
+                // apply filter
+                if (bin != null) {
+                    certificates.addAll( filter.filterBin( bin ) );
+                }
+            }
 		}
 		
 		// read data from io
-		List<AnnotationData<?>> data = readDataFromIO( layer, certificates );
+		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
+        // apply filter to annotations
+        List<AnnotationData<?>> filteredAnnotations =  filter.filterAnnotations( annotations );
 
 		// assemble data by bin
 		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();
-		for ( AnnotationData<?> d : data ) {
+		for ( AnnotationData<?> annotation : filteredAnnotations ) {
 			// get index 
-			BinIndex binIndex = _indexer.getIndex( d, tileIndex.getLevel(), pyramid ).getBin();
+			BinIndex binIndex = _indexer.getIndex( annotation, tileIndex.getLevel(), pyramid ).getBin();
 			if (!dataByBin.containsKey( binIndex)) {
 				// no data under this bin, add list to map
 				dataByBin.put( binIndex, new LinkedList<AnnotationData<?>>() );
 			}
 			// add data to list, under bin
-			dataByBin.get( binIndex ).add( d );
+			dataByBin.get( binIndex ).add( annotation );
 		}
 		return dataByBin;
 	}

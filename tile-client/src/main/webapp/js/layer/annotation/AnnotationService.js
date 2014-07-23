@@ -32,47 +32,35 @@ define(function (require) {
 
 
 
-    var Class = require('../../class'),
-        AnnotationService;
+    var AnnotationService;
 
 
-
-    AnnotationService = Class.extend({
-        ClassName: "AnnotationService",
-
-
-        /**
-         * Construct an AnnotationService
-         */
-        init: function ( layer ) {
-
-            this.layer = layer;
-            this.uuid = "default"; // use default filters
-        },
-
+    AnnotationService = {
 
         /**
          * send a GET request to the server to pull all annotation data for an array of tilekeys
-         * @param tilekeys   array of tile identification keys
-         * @param callback  the callback that is called upon receiving data from server
+         * @param layerInfo    annotation layer info
+         * @param tilekeys     array of tile identification keys
+         * @param callback     the callback that is called upon receiving data from server
          */
-        getAnnotations: function(tilekeys, callback) {
+        getAnnotations: function( layerInfo, tilekeys, callback) {
 
             var i;
             if ( !$.isArray( tilekeys ) ) {
                 tilekeys = [ tilekeys ];
             }
             for (i=0; i<tilekeys.length; ++i) {
-                this.getAnnotation( tilekeys[i], callback );
+                this.getAnnotation( layerInfo, tilekeys[i], callback );
             }
         },
 
          /**
          * send a GET request to the server to pull all annotation data for a specific tilekey
-         * @param tilekey   tile identification key
-         * @param callback  the callback that is called upon receiving data from server
+         * @param layerInfo    annotation layer info
+         * @param tilekey      tile identification key
+         * @param callback     the callback that is called upon receiving data from server
          */
-        getAnnotation: function( tilekey, callback ) {
+        getAnnotation: function( layerInfo, tilekey, callback ) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
@@ -82,8 +70,8 @@ define(function (require) {
             // request data from server
             aperture.io.rest(
                 '/annotation/'+
-                 this.layer+'/'+
-                 this.uuid+'/'+
+                 layerInfo.layer+'/'+
+                 layerInfo.uuid+'/'+
                  level+'/'+
                  xIndex+'/'+
                  yIndex+'.json',
@@ -95,46 +83,46 @@ define(function (require) {
 
         /**
          * write the annotation to the server
+         * @param layerInfo    annotation layer info
          * @param annotation   annotation to be written
          * @param callback     the callback that is called upon receiving data from server
          */
-        writeAnnotation: function( annotation, callback ) {
+        writeAnnotation: function( layerInfo, annotation, callback ) {
 
             var request = {
                     type: "WRITE",
                     annotation: annotation
                 };
 
-            this.postRequest( request, function( result, statusInfo ) {
+            this.postRequest( layerInfo, request, function( result, statusInfo ) {
                 if (statusInfo.success) {
                     // update certificate on success
                     annotation.certificate = result;
                 }
-                callback( result, statusInfo );
+                callback( annotation, statusInfo );
             });
-
         },
 
 
         /**
-         * modifiy an the annotation on the server
-         * @param oldAnnotation   old state of the annotation to be modified
-         * @param newAnnotation   new state of the annotation to be modified
-         * @param callback        the callback that is called upon receiving data from server
+         * modify an the annotation on the server
+         * @param layerInfo     annotation layer info
+         * @param certificate   annotation to be modified
+         * @param callback      the callback that is called upon receiving data from server
          */
-        modifyAnnotation: function( annotation, callback ) {
+        modifyAnnotation: function( layerInfo, annotation, callback ) {
 
             var request = {
                     type: "MODIFY",
                     annotation: annotation
                 };
 
-            this.postRequest( request, function( result, statusInfo ) {
+            this.postRequest( layerInfo, request, function( result, statusInfo ) {
                 if (statusInfo.success) {
                     // update certificate on success
                     annotation.certificate = result;
                 }
-                callback( result, statusInfo );
+                callback( annotation, statusInfo );
             });
 
         },
@@ -142,84 +130,63 @@ define(function (require) {
 
         /**
          * remove the annotation from the server
-         * @param annotation   annotation to be removed
-         * @param callback     the callback that is called upon receiving data from server
+         * @param layerInfo     annotation layer info
+         * @param certificate   certificate of annotation to be removed
+         * @param callback      the callback that is called upon receiving data from server
          */
-        removeAnnotation: function( certificate, callback ) {
+        removeAnnotation: function( layerInfo, certificate, callback ) {
 
             var request = {
                     type: "REMOVE",
                     certificate: certificate
                 };
 
-            this.postRequest( request, callback );
+            this.postRequest( layerInfo, request, callback );
         },
 
 
         /**
-         * Set new server side annotation filters
-         * @param filters      filters to be passed to server
+         * Set new server side annotation configuration
+         * @param layerSpec    configuration spec to be passed to server
          * @param callback     the callback that is called upon receiving data from server
          */
-        configureFilter: function( filter, callback ) {
+        configureLayer: function( layerSpec, callback ) {
 
-            var that = this,
-                request = {
-                    type : "FILTER-CONFIG",
-                    uuid: this.uuid,
-                    filter: filter
+            var request = {
+                    type : "CONFIGURE",
+                    configuration: layerSpec
                 };
 
-            this.postRequest( request, function( result, statusInfo ) {
-                // on return, un-configure old filter
-                var oldUuid = that.uuid;
-                if (statusInfo.success) {
-                    // if previous config is not default, un-configure it
-                    if ( oldUuid !== "default" ) {
-                        that.unconfigureFilter( oldUuid, function(){ return true; } );
-                    }
-                    that.uuid = result.uuid;
-                }
-                callback( result, statusInfo );
-            });
+            this.postRequest( layerSpec, request, callback );
         },
 
 
         /**
          * Release server side annotation filters
-         * @param uuid      filter uuid to be released
+         * @param layerInfo the annotation layer info to be unconfigured
          * @param callback  the callback that is called upon receiving data from server
          */
-        unconfigureFilter: function( uuid, callback ) {
+        unconfigureLayer: function( layerInfo, callback ) {
 
             var request = {
-                    type : "FILTER-UNCONFIG",
-                    uuid: uuid
+                    type : "UNCONFIGURE",
+                    uuid: layerInfo.uuid
                 };
 
-            this.postRequest( request, callback );
-        },
-
-        /**
-         * Receive all annotation layers from server
-         * @param callback     the callback that is called upon receiving data from server
-         */
-        requestLayers: function( callback ) {
-
-            this.postRequest( {type: "LIST"}, callback );
+            this.postRequest( layerInfo, request, callback );
         },
 
 
         /**
          * send a POST request to the server
-         * @param type   type of annotation service: "WRITE", "MODIFY", or "REMOVE"
-         * @param data   annotation data to send server
+         * @param layerInfo annotation layer info
+         * @param request   request json to POST to server
          * @param callback  the callback that is called upon receiving data from server
          */
-        postRequest: function( request, callback ) {
+        postRequest: function( layerInfo, request, callback ) {
 
             // append layer id to request
-            request.layer = this.layer;
+            request.layer = layerInfo.layer;
 
             // Request the layer information
             aperture.io.rest('/annotation',
@@ -229,33 +196,36 @@ define(function (require) {
                                  postData: request,
                                  contentType: 'application/json'
                              });
+        },
 
+
+        /**
+         * Receive all annotation layers from server
+         * @param callback     the callback that is called upon receiving data from server
+         */
+        requestLayers : function() {
+
+            var annotationDeferred = $.Deferred();
+
+            // Request the layer information
+            aperture.io.rest('/annotation',
+                             'POST',
+                             function (layers) {
+                                 annotationDeferred.resolve(layers);
+                             },
+                             {
+                                 postData: {
+                                     "type": "list"
+                                 },
+                                 contentType: 'application/json'
+                             });
+
+            return annotationDeferred;
         }
 
-    });
-
-    /**
-     * Receive all annotation layers from server
-     * @param callback     the callback that is called upon receiving data from server
-     */
-    AnnotationService.requestLayers = function() {
-        var annotationDeferred = $.Deferred();
-
-        // Request the layer information
-        aperture.io.rest('/annotation',
-                         'POST',
-                         function (layers) {
-                             annotationDeferred.resolve(layers);
-                         },
-                         {
-                             postData: {
-                                 "type": "list"
-                             },
-                             contentType: 'application/json'
-                         });
-
-        return annotationDeferred;
     };
+
+
 
     return AnnotationService;
 });

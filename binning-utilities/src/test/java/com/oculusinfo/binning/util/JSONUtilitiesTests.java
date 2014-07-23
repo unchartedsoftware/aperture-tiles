@@ -121,4 +121,20 @@ public class JSONUtilitiesTests {
 		Assert.assertEquals("2.2", props.getProperty("b.d.5"));
 		Assert.assertEquals(Properties.class, props.getClass());
 	}
+
+	@Test
+	public void testPropertyToJSONConversion () throws Exception {
+	    Properties p = new Properties();
+	    p.setProperty("a", "aval");
+        p.setProperty("b.0", "bval0");
+        p.setProperty("b.2", "bval2");
+        p.setProperty("c.1", "cval1");
+        p.setProperty("c.a", "cvala");
+        p.setProperty("c.b.a", "cbaval");
+        p.setProperty("c.b.b", "cbbval");
+
+        JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
+        JSONObject actual = JsonUtilities.propertiesObjToJSON(p);
+        Assert.assertEquals(expected.toString(), actual.toString());
+	}
 }

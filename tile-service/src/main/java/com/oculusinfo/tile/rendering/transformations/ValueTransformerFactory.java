@@ -41,7 +41,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<IValueTransform
 	public static final StringProperty TRANSFORM_NAME    = new StringProperty("name",
 		    "The type of transformation to apply to the data.",
 		    "linear",
-		    new String[] {"linear", "log10", "minmax"});
+		    new String[] {"linear", "log10", "minmax", "half-sigmoid", "sigmoid"});
 	public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("max",
 		    "The maximum value to allow in the input data, when using a minmax transformation",
 		    Double.MAX_VALUE);
@@ -98,7 +98,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<IValueTransform
 			return new Log10ValueTransformer(layerMax);
 		} else if ("minmax".equals(name)) {
 			double max;
-			if (hasPropertyValue(TRANSFORM_MAXIMUM)) max = getPropertyValue(TRANSFORM_MINIMUM);
+			if (hasPropertyValue(TRANSFORM_MAXIMUM)) max = getPropertyValue(TRANSFORM_MAXIMUM);
 			else max = layerMax;
 
 			double min;
@@ -106,6 +106,12 @@ public class ValueTransformerFactory extends ConfigurableFactory<IValueTransform
 			else min = getPropertyValue(LAYER_MINIMUM);
 
 			return new LinearCappedValueTransformer(min, max, layerMax);
+		} else if ("half-sigmoid".equals(name)) {
+            double min = getPropertyValue(LAYER_MINIMUM);
+		    return new HalfSigmoidValueTransformer(min, layerMax);
+		} else if ("sigmoid".equals(name)) {
+            double min = getPropertyValue(LAYER_MINIMUM);
+            return new SigmoidValueTransformer(min, layerMax);
 		} else {
 			// Linear is default, even if passed an unknown type.
 			double min = getPropertyValue(LAYER_MINIMUM);

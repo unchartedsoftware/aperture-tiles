@@ -30,6 +30,7 @@ import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.binning.util.Pair;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;
@@ -91,19 +92,19 @@ public class AnnotationResource extends ApertureServerResource {
                 jsonResult.put("uuid", certificate.getFirst() );
                 jsonResult.put("timestamp", certificate.getSecond().toString() );
 
-			} else if ( requestType.equals("filter-config") ) {
+			} else if ( requestType.equals("configure") ) {
 				
 				String layer = json.getString("layer");
-				JSONObject data = json.getJSONObject("data");
-				JSONObject jsonFilters = data.getJSONObject("filter");
-				UUID uuid = _service.configureFilter(layer, jsonFilters);
+				JSONObject jsonFilters = json.getJSONObject("configuration");
+				UUID uuid = _service.configureLayer(layer, jsonFilters);
+                jsonResult.put("layer", layer);
                 jsonResult.put("uuid", uuid);
 
-			} else if ( requestType.equals("filter-unconfig") ) {
+			} else if ( requestType.equals("unconfigure") ) {
 
                 String layer = json.getString("layer");
                 UUID uuid = UUID.fromString(json.getString("uuid"));
-                _service.unconfigureFilter( layer, uuid );
+                _service.unconfigureLayer( layer, uuid );
 
             } else if ( requestType.equals("list") ) {
 				

@@ -29,6 +29,7 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
@@ -111,7 +112,14 @@ public class TileServiceImpl implements TileService {
 
 			InputStream tile = pyramidIO.getTileStream(layer, serializer, index);
 			if (null == tile) return null;
-			return AvroJSONConverter.convert(tile);
+			
+			TileTransformer transformer = config.produce(TileTransformer.class);
+			
+			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
+			JSONObject transformJSON = transformer.Transform(deserializedJSON);
+			
+			return transformJSON;
+			
 		} catch (IOException e) {
 			_logger.warn("Exception getting tile for {}", index, e);
 		} catch (JSONException e) {

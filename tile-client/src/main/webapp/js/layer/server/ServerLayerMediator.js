@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        ServerLayerState = require('./ServerLayerState'),
+        SharedObject = require('../../util/SharedObject'),
         requestRampImage,
         ServerLayerMediator;
 
@@ -49,7 +49,7 @@ define(function (require) {
     requestRampImage = function ( layerState, layerInfo, level ) {
 
         var legendData = {
-                layer: layerState.getId(),  // layer id
+                layer: layerState.get( 'id' ),  // layer id
                 id: layerInfo.id,           // config id
                 level: level,
                 width: 128,
@@ -60,7 +60,7 @@ define(function (require) {
         aperture.io.rest('/legend',
                          'POST',
                          function (legendString, status) {
-                            layerState.setRampImageUrl(legendString);
+                            layerState.set( 'rampImageUrl', legendString);
                          },
                          {
                              postData: legendData,
@@ -90,12 +90,12 @@ define(function (require) {
                     layerSpec;
 
                 function getLevelMinMax( level ) {
-                    var meta =  layer.getLayerInfo().meta,
-                        minArray = meta.levelMinFreq || meta.levelMinimums,
-                        maxArray = meta.levelMaxFreq || meta.levelMaximums,
-                        min = minArray[level],
-                        max = maxArray[level];
-                    return [ parseFloat(min), parseFloat(max) ];
+                	var meta =  layer.getLayerInfo().meta,
+                    	minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[level])),
+                    	maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[level])),
+                    	min = minArray ? ($.isArray(minArray) ? minArray[level] : minArray.minimum) : 0,
+                    	max = maxArray ? ($.isArray(maxArray) ? maxArray[level] : maxArray.maximum) : 0;
+	                return [ parseFloat(min), parseFloat(max) ];
                 }
 
                 // Make a callback to regen the ramp image on map zoom changes
@@ -103,24 +103,52 @@ define(function (require) {
                     // set ramp image
                     requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
                     // set ramp level
-                    layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
+                    layerState.set( 'rampMinMax', getLevelMinMax( map.getZoom() ) );
                 }
 
                 layerSpec = layer.getLayerSpec();
+                layerSpec.renderer.opacity  = layerSpec.renderer.opacity || 1.0;
+                layerSpec.renderer.enabled = ( layerSpec.renderer.enabled !== undefined ) ? layerSpec.renderer.enabled : true;
+                layerSpec.renderer.ramp = layerSpec.renderer.ramp || "ware";
+                layerSpec.transform.name = layerSpec.transform.name || 'linear';
+                layerSpec.legendrange = layerSpec.legendrange || [0,100];
 
                 // Create a layer state object.  Values are initialized to those provided
                 // by the layer specs, which are defined in the layers.json file, or are
                 // defaulted to appropriate starting values.
-                layerState = new ServerLayerState( layer.id );
-                layerState.setName( layerSpec.name || layer.id );
-                layerState.setEnabled( true );
-                layerState.setOpacity( layerSpec.renderer.opacity );
-                layerState.setRampFunction( layerSpec.transform.name );
-                layerState.setRampType( layerSpec.renderer.ramp );
-                layerState.setRampMinMax( getLevelMinMax( map.getZoom() ) );
-                if (layerSpec.legendrange) {
-                    layerState.setFilterRange( [ layerSpec.legendrange[0]/100, layerSpec.legendrange[1]/100 ] );
-                }
+                layerState = new SharedObject();
+                layerState.set( 'id', layer.id );
+                layerState.set( 'name', layer.name );
+                layerState.set( 'domain', 'server' );
+                layerState.set( 'enabled', layerSpec.renderer.enabled );
+                layerState.set( 'opacity', layerSpec.renderer.opacity );
+                layerState.set( 'rampFunction', layerSpec.transform.name );
+                layerState.set( 'rampType', layerSpec.renderer.ramp );
+                layerState.set( 'rampMinMax', getLevelMinMax( map.getZoom() ) );
+                layerState.set( 'rampImageUrl', "" );
+                layerState.set( 'filterRange', layerSpec.legendrange );
+
+                /**
+                 * Valid ramp type strings.
+                 */
+                layerState.RAMP_TYPES = [
+                    {id: "ware", name: "Ware"},
+                    {id: "inv-ware", name: "Inverse Ware"},
+                    {id: "br", name: "Blue/Red"},
+                    {id: "inv-br", name: "Inverse Blue/Red"},
+                    {id: "grey", name: "Grey"},
+                    {id: "inv-grey", name: "Inverse Grey"},
+                    {id: "flat", name: "Flat"},
+                    {id: "single-gradient", name: "Single Gradient"}
+                ];
+
+                /**
+                 * Valid ramp function strings.
+                 */
+                layerState.RAMP_FUNCTIONS = [
+                    {id: "linear", name: "Linear"},
+                    {id: "log10", name: "Log 10"}
+                ];
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function (fieldName) {
@@ -129,17 +157,17 @@ define(function (require) {
 
                         case "opacity":
 
-                            layer.setOpacity( layerState.getOpacity() );
+                            layer.setOpacity( layerState.get('opacity') );
                             break;
 
                         case "enabled":
 
-                            layer.setVisibility( layerState.isEnabled() );
+                            layer.setVisibility( layerState.get('enabled') );
                             break;
 
                         case "rampType":
 
-                            layer.setRampType( layerState.getRampType(), function() {
+                            layer.setRampType( layerState.get('rampType'), function() {
                                 // once configuration is received that the server has been re-configured, request new image
                                 requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
                             });
@@ -147,24 +175,24 @@ define(function (require) {
 
                         case"rampFunction":
 
-                            layer.setRampFunction( layerState.getRampFunction() );
+                            layer.setRampFunction( layerState.get('rampFunction') );
                             break;
 
                         case "filterRange":
 
-                            layer.setFilterRange( layerState.getFilterRange() );
+                            layer.setFilterRange( layerState.get('filterRange') );
                             break;
 
                         case "zIndex":
 
-                            layer.setZIndex( layerState.getZIndex() );
+                            layer.setZIndex( layerState.get('zIndex') );
                             break;
 
                     }
                 });
 
                 // set z index here so callback is executed
-                layerState.setZIndex( i+1 );
+                layerState.set( 'zIndex', i+1 );
 
                 // Request ramp image from server.
                 requestRampImage( layerState, layer.getLayerInfo(), 0 );

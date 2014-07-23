@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        AnnotationLayerState = require('./AnnotationLayerState'),
+        SharedObject = require('../../util/SharedObject'),
         AnnotationLayerMediator;
 
 
@@ -57,14 +57,19 @@ define(function (require) {
 
             function register( layer ) {
 
-                var layerSpec = layer.getLayerSpec(),
-                    layerState;
+                var layerState;
 
-                layerState = new AnnotationLayerState( layer.id );
-                layerState.setName( layerSpec.name || layer.id );
-                layerState.setEnabled( true );
-                layerState.setOpacity( 1.0 );
-                layerState.setZIndex( 500+i );
+                layerState = new SharedObject();
+                layerState.set( 'id', layer.id );
+                layerState.set( 'name', layer.name );
+                layerState.set( 'domain', 'annotation' );
+                layerState.set( 'enabled', true );
+                layerState.set( 'opacity', 1.0 );
+                layerState.set( 'zIndex', 500+i );
+
+                // register layerstate with renderer and details implementations
+                layer.renderer.registerLayer( layerState );
+                layer.details.registerLayer( layerState );
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {
@@ -73,15 +78,48 @@ define(function (require) {
 
                         case "opacity":
 
-                            layer.setOpacity( layerState.getOpacity() );
+                            layer.setOpacity( layerState.get('opacity') );
                             break;
 
                         case "enabled":
 
-                            layer.setVisibility( layerState.isEnabled() );
+                            layer.setVisibility( layerState.get('enabled') );
+                            break;
+
+                        case "create":
+
+                            layer.createAnnotation( layerState.get('create') );
+                            break;
+
+                        case "modify":
+
+                            layer.modifyAnnotation( layerState.get('modify') );
+                            break;
+
+                        case "remove":
+
+                            layer.removeAnnotation( layerState.get('remove') );
+                            break;
+
+                        case "click":
+
+                            if ( layerState.has('click') ) {
+                                layer.createDetails( layerState.get('click') );
+                            } else {
+                                layer.destroyDetails();
+                            }
                             break;
                     }
 
+                });
+
+                // clear click state if map is clicked
+                layer.map.on( 'click', function() {
+                    if ( layerState.has('click') ) {
+                        layerState.set( 'click', null );
+                    } else {
+                        layerState.set( 'create', event.xy );
+                    }
                 });
 
                 // Add the layer to the layer state array.

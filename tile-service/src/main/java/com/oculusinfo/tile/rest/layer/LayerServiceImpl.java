@@ -123,7 +123,7 @@ public class LayerServiceImpl implements LayerService {
         } catch (IOException e) {
             LOGGER.error("Couldn't read metadata: {}", layerId, e);
         }
-        return new PyramidMetaData(new JSONObject());
+        return null;
     }
 
     /*
@@ -170,7 +170,8 @@ public class LayerServiceImpl implements LayerService {
                     LOGGER.warn("Could not determine renderer from configuration {}", config, e);
                 }
             }
-            throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
+            if (null == rendererConfig)
+                throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
         }
 
         // Combine the renderer configuration with the data configuration
@@ -270,9 +271,9 @@ public class LayerServiceImpl implements LayerService {
             // Set level-specific properties in the configuration
             if (null != tile) {
                 PyramidMetaData metadata = getMetaData(layerId, pyramidIO);
-                config.setLevelProperties(tile,
-                                          metadata.getLevelMinimum(tile.getLevel()),
-                                          metadata.getLevelMaximum(tile.getLevel()));
+                String minimum = metadata.getCustomMetaData(""+tile.getLevel(), "minimum");
+                String maximum = metadata.getCustomMetaData(""+tile.getLevel(), "maximum");
+                config.setLevelProperties(tile, minimum, maximum);
             }
 
             return config;

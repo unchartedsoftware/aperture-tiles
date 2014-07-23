@@ -231,6 +231,7 @@ class SegmentBinPlotterTestSuite extends FunSuite with SharedSparkContext {
 			                               ,((1.25, 1.25), (2.75, 1.25))
 		                          ))
 		val pyramider = new AOITilePyramid(0.0, 0.0, 4.1, 4.1)
+/*
 		val segmentBinner = new LineSegmentPointBinner(pyramider);
 		val tiles = segmentBinner.processData(data, List(0, 1)).collect()
 		val printer = new TilePrinter
@@ -242,6 +243,7 @@ class SegmentBinPlotterTestSuite extends FunSuite with SharedSparkContext {
 				assert(actual == expected)
 			}
 		)
+ */
 	}
 }
 

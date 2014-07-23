@@ -60,14 +60,14 @@ define(function (require) {
 
                 switch (fieldName) {
 
-                    case "clickState":
+                    case "click":
                         // if a click occurs, lets redraw all nodes to ensure that any click change is refreshed
                         that.nodeLayer.all().redraw( new aperture.Transition( 100 ) );
                         break;
 
-                    case "hoverState":
+                    case "hover":
                         // if a hover occurs, only redraw the relevant tile
-                        that.nodeLayer.all().where('tilekey', layerState.getHoverState().tilekey ).redraw( new aperture.Transition( 100 ) );
+                        that.nodeLayer.all().where('tilekey', layerState.get('hover').tilekey ).redraw( new aperture.Transition( 100 ) );
                         break;
                 }
             });
@@ -113,10 +113,9 @@ define(function (require) {
             this.tagLabels.map('font-outline-width').asValue( 3 );      // outline width
             this.tagLabels.map('fill').from( function( index ) {
                 // change the fill colour dynamically based on the click state
-                var clickState;
-                if ( that.layerState.hasClickState() ) {
-                    clickState = that.layerState.getClickState();
-                    if ( this.tilekey === clickState.tilekey && index === clickState.index ) {
+                var click = that.layerState.get('click');
+                if ( click && !$.isEmptyObject( click ) ) {
+                    if ( this.tilekey === click.tilekey && index === click.index ) {
                         return "blue";
                     }
                 }
@@ -124,10 +123,9 @@ define(function (require) {
             });
             this.tagLabels.map('font-size').from( function( index ) {
                 // change the fill colour dynamically based on the hover state
-                var hoverState;
-                if ( that.layerState.hasHoverState() ) {
-                    hoverState = that.layerState.getHoverState();
-                    if ( this.tilekey === hoverState.tilekey && index === hoverState.index ) {
+                var hover = that.layerState.get('hover');
+                if ( hover && !$.isEmptyObject( hover ) ) {
+                    if ( this.tilekey === hover.tilekey && index === hover.index ) {
                         return 28;
                     }
                 }
@@ -161,7 +159,7 @@ define(function (require) {
                     Modifying the layerState will broadcast any change to
                     all listeners.
                 */
-                that.layerState.setClickState({
+                that.layerState.set('click', {
                     tilekey: event.data.tilekey,
                     index: event.index[0],
                     type: "aperture"
@@ -173,10 +171,11 @@ define(function (require) {
                     Modifying the layerState will broadcast any change to
                     all listeners.
                 */
-                that.layerState.setHoverState({
+                that.layerState.set('hover',{
                     tilekey: event.data.tilekey,
                     index: event.index[0],
-                    type: "aperture"
+                    type: "aperture",
+                    state: "on"
                 });
             });
             this.tagLabels.on('mouseout', function(event) {
@@ -184,7 +183,10 @@ define(function (require) {
                     Modifying the layerState will broadcast any change to
                     all listeners.
                 */
-                that.layerState.setHoverState({});
+                that.layerState.set('hover', {
+                    tilekey: event.data.tilekey,
+                    state:"off"
+                });
             });
         }
 

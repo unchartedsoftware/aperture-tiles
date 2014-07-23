@@ -218,18 +218,18 @@ class BoundsTestSuite extends FunSuite {
 	}
 
 
-	def assertTBSetsEquivalent (label: String, bins: Int,
+	def assertTBSetsEquivalent (label: String, xBins: Int, yBins: Int,
 	                            actual: TraversableOnce[(TileIndex, BinIndex)],
 	                            expected: Set[(Int, Int, Int, Int, Int)]): Unit = {
 		actual.foreach(indices =>
 			{
-				assert(bins === indices._1.getXBins())
-				assert(bins === indices._1.getYBins())
+				assert(xBins === indices._1.getXBins())
+				assert(yBins === indices._1.getYBins())
 			}
 		)
 		val expectedSet = expected.map(datum =>
 			{
-				(new TileIndex(datum._1, datum._2, datum._3, bins, bins),
+				(new TileIndex(datum._1, datum._2, datum._3, xBins, yBins),
 				 new BinIndex(datum._4, datum._5))
 			}
 		)
@@ -257,32 +257,32 @@ class BoundsTestSuite extends FunSuite {
 
 		val pyramid = new AOITilePyramid(0.0, 0.0, 16.0, 16.0)
 		val bins = 4
-		val spreaderFcn = b1.getSpreaderFunction[Double](pyramid, bins)
+		val spreaderFcn = b1.getSpreaderFunction[Double](pyramid, bins, bins)
 
-		assertTBSetsEquivalent("0, 0", bins,
+		assertTBSetsEquivalent("0, 0", bins, bins,
 		                       spreaderFcn(0, 0),
 		                       Set((2, 0, 0, 0, 3),
 		                           (3, 0, 0, 0, 3),
 		                           (4, 0, 0, 0, 3)))
 
-		assertTBSetsEquivalent("2, 2", bins,
+		assertTBSetsEquivalent("2, 2", bins, bins,
 		                       spreaderFcn(2, 2),
 		                       Set((4, 2, 2, 0, 3),
 		                           (3, 1, 1, 0, 3),
 		                           (2, 0, 0, 2, 1)))
 
-		assertTBSetsEquivalent("2.25, 1.25", bins,
+		assertTBSetsEquivalent("2.25, 1.25", bins, bins,
 		                       spreaderFcn(2.25, 1.25),
 		                       Set((3, 1, 0, 0, 1),
 		                           (2, 0, 0, 2, 2)))
 
-		assertTBSetsEquivalent("6.5, 1.5", bins,
+		assertTBSetsEquivalent("6.5, 1.5", bins, bins,
 		                       spreaderFcn(6.5, 1.5),
 		                       Set((2, 1, 0, 2, 2)))
 
-		assertTBSetsEquivalent("9, 9", bins,
+		assertTBSetsEquivalent("9, 9", bins, bins,
 		                       spreaderFcn(9.0, 9.0),
-		                        Set[(Int, Int, Int, Int, Int)]())
+		                       Set[(Int, Int, Int, Int, Int)]())
 	}
 
 	test("Spreading function - serialization") {
@@ -293,12 +293,12 @@ class BoundsTestSuite extends FunSuite {
 			// won't be able to find them - just to be sure
 			val pyramid = new AOITilePyramid(0.0, 0.0, 1.0, 1.0)
 			val bins = 4
-			b.getSpreaderFunction[Double](pyramid, bins)
+			b.getSpreaderFunction[Double](pyramid, bins, bins)
 		}
 
-		assertTBSetsEquivalent("initial", 4,
+		assertTBSetsEquivalent("initial", 4, 4,
 		                       initialSpreaderFcn(0, 0),
-		                        Set((1, 0, 0, 0, 3)))
+		                       Set((1, 0, 0, 0, 3)))
 
 		// Try serializing and deserializing it
 		val baos = new ByteArrayOutputStream()
@@ -318,7 +318,7 @@ class BoundsTestSuite extends FunSuite {
 			ois.readObject.asInstanceOf[(Double, Double) => TraversableOnce[(TileIndex, BinIndex)]]
 		val streamedSpreaderFcn = getStreamedSpreaderFcn[Double]
 
-		assertTBSetsEquivalent("serialized", 4,
+		assertTBSetsEquivalent("serialized", 4, 4,
 		                       streamedSpreaderFcn(0, 0),
 		                       Set((1, 0, 0, 0, 3)))
 	}

@@ -65,8 +65,8 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     public void setup () {
     	try {
     		_dataIO = new HBaseAnnotationIO("hadoop-s1.oculus.local",
-										"2181",
-									    "hadoop-s1.oculus.local:60000");
+										    "2181",
+									        "hadoop-s1.oculus.local:60000");
     		
     		_tileIO = new HBasePyramidIO("hadoop-s1.oculus.local",
 										 "2181",

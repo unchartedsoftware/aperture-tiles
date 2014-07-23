@@ -36,7 +36,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        ClientLayerState = require('./ClientLayerState'),
+        SharedObject = require('../../util/SharedObject'),
         ClientLayerMediator;
 
 
@@ -62,17 +62,20 @@ define(function (require) {
                 function updateTileFocus( x, y ) {
 
                     var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
-                    layerState.setTileFocus( tilekey );
+                    layerState.set( 'previousTileFocus', layerState.get('tileFocus') );
+                    layerState.set( 'tileFocus', tilekey );
                 }
 
                 // Create a layer state object for the base map.
-                layerState = new ClientLayerState( layer.id );
-                layerState.setName( layer.getLayerSpec().name || layer.id );
-                layerState.setEnabled( true );
-                layerState.setOpacity( 1.0 );
-                layerState.setZIndex( 1000+i );
-                layerState.setRendererCount( layer.renderers.length );
-                layerState.setDefaultRendererIndex( 0 );
+                layerState = new SharedObject();
+                layerState.set( 'id', layer.id );
+                layerState.set( 'name', layer.name );
+                layerState.set( 'domain', 'client' );
+                layerState.set( 'enabled', true );
+                layerState.set( 'opacity', 1.0 );
+                layerState.set( 'zIndex', 1000+i );
+                layerState.set( 'rendererCount', layer.renderers.length );
+                layerState.set( 'defaultRendererIndex', 0 );
                 // register layer state with each renderer
                 for (j=0; j< layer.renderers.length; j++) {
                     layer.renderers[j].registerLayer( layerState );
@@ -87,33 +90,33 @@ define(function (require) {
 
                         case "opacity":
 
-                            layer.setOpacity( layerState.getOpacity() );
+                            layer.setOpacity( layerState.get( 'opacity' ) );
                             break;
 
                         case "enabled":
 
-                            layer.setVisibility( layerState.isEnabled() );
+                            layer.setVisibility( layerState.get( 'enabled' ) );
                             break;
 
                         case "z-index":
 
-                            layer.setZIndex( layerState.getZIndex() );
+                            layer.setZIndex( layerState.get( 'zIndex' ) );
                             break;
 
                         case "tileFocus":
 
-                            layer.setTileFocus( layerState.getTileFocus() );
+                            layer.setTileFocus( layerState.get( 'tileFocus' ) );
                             break;
 
                         case "defaultRendererIndex":
 
-                            layer.setDefaultRendererIndex( layerState.getDefaultRendererIndex() );
+                            layer.setDefaultRendererIndex( layerState.get( 'defaultRendererIndex' ) );
                             break;
 
-                        case "tileRendererIndex":
+                        case "rendererByTile":
 
-                            tilekey = layerState.getTileFocus();
-                            layer.setTileRenderer( tilekey, layerState.getRendererByTile( tilekey ) );
+                            tilekey = layerState.get( 'tileFocus' );
+                            layer.setTileRenderer( tilekey, layerState.get( 'rendererByTile', tilekey ) );
                             break;
                     }
 
@@ -121,7 +124,7 @@ define(function (require) {
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {
-                    layerState.setClickState( {} );
+                    layerState.set( 'click', null );
                 });
 
                 // set tile focus callbacks

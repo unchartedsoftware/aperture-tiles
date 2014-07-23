@@ -26,8 +26,6 @@ package com.oculusinfo.binning.metadata;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
-
 public class RemovePropertyMutator extends JsonMutator {
 	private String[] _path;
 	public RemovePropertyMutator (String... path) {
@@ -36,14 +34,14 @@ public class RemovePropertyMutator extends JsonMutator {
 
 	@Override
 	public void mutateJson (JSONObject json) throws JSONException {
-		List<JSONObject> tree = getTree(json, _path, 0, false);
-
-		// Make sure the node to remove exists
-		int size = tree.size();
-		if (size == _path.length) {
-			// It does; remove our target node
-			tree.get(size-1).remove(_path[size-1]);
-			cleanTree(tree, _path);
-		}
+	    for (LocationInformation tree: getTree(json, _path, null, 0, false)) {
+    		// Make sure the node to remove exists
+    		int size = tree.size();
+    		if (size == _path.length) {
+    			// It does; remove our target node
+    			tree.get(size-1).remove(_path[size-1]);
+    			cleanTree(tree, _path);
+    		}
+	    }
 	}
 }

@@ -42,14 +42,14 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 
-import com.oculusinfo.tilegen.tiling.BinDescriptor
+import com.oculusinfo.tilegen.tiling.BinningAnalytic
 
 
 
 class LiveTileGenerator[PT: ClassTag,
                         BT: ClassTag] (data: RDD[(Double, Double, PT)],
                                        pyramidScheme: TilePyramid,
-                                       binDescriptor: BinDescriptor[PT, BT],
+                                       binAnalytic: BinningAnalytic[PT, BT],
                                        numXBins: Int = 256,
                                        numYBins: Int = 256) {
 	var densityStrip: Boolean = false
@@ -57,7 +57,7 @@ class LiveTileGenerator[PT: ClassTag,
 	def getTile (tileLevel: Int, tileX: Int, tileY: Int): TileData[BT] = {
 		// Localize some of our fields to avoid the need for serialization
 		val localPyramidScheme = pyramidScheme
-		val localBinDescriptor = binDescriptor
+		val localBinAnalytic = binAnalytic
 		val targetTile = new TileIndex(tileLevel, tileX, tileY, numXBins, numYBins)
 
 		val bins = data.filter(record =>
@@ -70,11 +70,11 @@ class LiveTileGenerator[PT: ClassTag,
 				val bin = localPyramidScheme.rootToBin(record._1, record._2, targetTile)
 				(bin, record._3)
 			}
-		).reduceByKey(localBinDescriptor.aggregateBins(_, _)).collect()
+		).reduceByKey(localBinAnalytic.aggregate(_, _)).collect()
 
 		val tile = if (densityStrip) new DensityStripData[BT](targetTile)
 		else new TileData[BT](targetTile)
-		val defaultBinValue = binDescriptor.convert(binDescriptor.defaultProcessedBinValue)
+		val defaultBinValue = localBinAnalytic.finish(localBinAnalytic.defaultProcessedValue)
 		for (x <- 0 until numXBins) {
 			for (y <- 0 until numYBins) {
 				tile.setBin(x, y, defaultBinValue)
@@ -84,7 +84,7 @@ class LiveTileGenerator[PT: ClassTag,
 			{
 				val bin = p._1
 				val value = p._2
-				tile.setBin(bin.getX(), bin.getY(), binDescriptor.convert(value))
+				tile.setBin(bin.getX(), bin.getY(), localBinAnalytic.finish(value))
 			}
 		)
 		tile

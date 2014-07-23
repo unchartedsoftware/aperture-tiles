@@ -26,10 +26,12 @@
 package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
+import java.lang.{Integer => JavaInt}
 import java.io.File
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.collection.mutable.{HashSet => MutableSet}
 import scala.util.{Try, Success, Failure}
 
 import org.apache.spark._
@@ -50,6 +52,7 @@ import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerial
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.tilegen.datasets.ValueDescription
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO
@@ -72,22 +75,33 @@ object TileIO {
 	 * A standard way of creating a tile IO from command-line arguments
 	 */
 	def fromArguments (argParser: KeyValueArgumentSource): TileIO = {
-		argParser.getString("io",
-		                    "TileIO type - either hbase "
-			                    +"or file (DEFAULT).\n",
-		                    Some("file")) match {
+		argParser.getString(Array("io", "oculus.tileio.type"),
+		                    "TileIO type - where to put tiles.  Legal values are "+
+			                    "hbase, sqlite, or file (DEFAULT).",
+		                    Some("file")
+		) match {
 			case "hbase" => new HBaseTileIO(
-				argParser.getString("zookeeperquorum",
-				                    "The name of the zookeeper quorum machine"),
-				argParser.getString("zookeeperport",
+				argParser.getString(Array("zookeeperquorum", "hbase.zookeeper.quorum"),
+				                    "The name of the zookeeper quorum machine",
+				                    None),
+				argParser.getString(Array("zookeeperport", "hbase.zookeeper.port"),
 				                    "The port on which zookeeper is listening",
 				                    Some("2181")),
-				argParser.getString("hbasemaster",
-				                    "The master machine for hbase"));
+				argParser.getString(Array("hbasemaster", "hbase.master"),
+				                    "The master machine for hbase",
+				                    None)
+			)
+			case "sqlite" => new SqliteTileIO(
+				argParser.getString(Array("sqlitepath", "oculus.tileio.sqlite.path"),
+				                    "The path to the sqlite database",
+				                    Some(""))
+			)
 			case _ => new LocalTileIO(
-				argParser.getString("tileextension",
-				                    "The extension used for each tile file.  Default is \"avro\"",
-				                    Some("avro")))
+				argParser.getString(Array("tileextension", "oculus.tileio.file.extension"),
+				                    "The extension used for each tile file.  Default is "+
+					                    "\"avro\"",
+				                    Some("avro"))
+			)
 		}
 	}
 }
@@ -130,33 +144,35 @@ trait TileIO extends Serializable {
 	/**
 	 * Write all tiles contained in the given data
 	 */
-	def writeTileSet[PT, BT] (pyramider: TilePyramid,
-	                          baseLocation: String,
-	                          data: RDD[TileData[BT]],
-	                          binDesc: BinDescriptor[PT, BT],
-	                          name: String = "unknown",
-	                          description: String = "unknown"): Map[Int, (BT, BT)] = {
+	def writeTileSet[BT, AT, DT] (pyramider: TilePyramid,
+	                              baseLocation: String,
+	                              data: RDD[TileData[BT]],
+	                              valueDesc: ValueDescription[BT],
+	                              tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+	                              dataAnalytics: Option[AnalysisDescription[_, DT]],
+	                              name: String = "unknown",
+	                              description: String = "unknown"): Unit = {
+
 		// Do any needed initialization
 		getPyramidIO.initializeForWrite(baseLocation)
 
-		// Set up some accumulators to figure out needed metadata
-		val minMaxAccumulable = new LevelMinMaxAccumulableParam[BT](binDesc.min,
-		                                                            binDesc.defaultMin,
-		                                                            binDesc.max,
-		                                                            binDesc.defaultMax)
-		val minMaxAccum = data.context.accumulable(minMaxAccumulable.zero(Map()))(minMaxAccumulable)
-		// And this is just for reporting, because it's basically free and easy
+		// Record and report the total number of tiles we write, because it's
+		// basically free and easy
 		val tileCount = data.context.accumulator(0)
+		// Record all levels we write
+		val levelSet = data.context.accumulableCollection(MutableSet[Int]())
 
 		println("Writing tile set from")
 		println(data.toDebugString)
+		println("Writing tile set to "+baseLocation)
 
 		// write each tile, storing away info we'll need to write the metadata
 		data.mapPartitions(_.grouped(1024)).foreach(group =>
 			{
 				val pyramidIO = getPyramidIO
+				val serializer = valueDesc.getSerializer
 				// Write out tje group of tiles
-				pyramidIO.writeTiles(baseLocation, binDesc.getSerializer, group)
+				pyramidIO.writeTiles(baseLocation, serializer, group)
 
 				// And collect stats on them
 				group.foreach(tile =>
@@ -166,41 +182,42 @@ trait TileIO extends Serializable {
 						// Update minimum and maximum values for metadata
 						val level = index.getLevel()
 						tileCount += 1
-						for (x <- 0 until index.getXBins()) {
-							for (y <- 0 until index.getYBins()) {
-								minMaxAccum += (level -> tile.getBin(x, y))
-							}
-						}
+						levelSet += level
 					}
 				)
 			}
 		)
-
-		// Calculate overall tile set characteristics
-		val sampleTile = data.first.getDefinition()
-		val minMax = minMaxAccum.value
-
-		println("Calculating metadata")
 		println("Input tiles: "+tileCount)
-		
-		val metaData = combineMetaData(pyramider, baseLocation, minMax, sampleTile.getXBins, name, description)
-		writeMetaData(baseLocation, metaData)
+		println("Input levels: "+levelSet.value)
 
-		// Return the min/maxes so the data isn't lost from converting it to a
-		// string in PyramidMetaData
-		minMax
+		// Don't alter metadata if there was no data added.
+		// Ideally, we'd still alter levels.
+		if (tileCount.value > 0) {
+			val sampleTile = data.first.getDefinition()
+
+			val metaData =
+				combineMetaData(pyramider, baseLocation,
+				                levelSet.value.toSet,
+				                tileAnalytics, dataAnalytics,
+				                sampleTile.getXBins, sampleTile.getYBins,
+				                name, description)
+			writeMetaData(baseLocation, metaData)
+		}
 	}
 	
 	/**
 	 * Takes a map of levels to (mins, maxes) and combines them with the current metadata
 	 * that already exists, or creates a new one if none exists.
 	 */
-	def combineMetaData[BT](pyramider: TilePyramid,
-	                        baseLocation: String,
-	                        minsMaxes: Map[Int, (BT, BT)],
-	                        tileSize: Int,
-	                        name: String = "unknown",
-	                        description: String = "unknown"): PyramidMetaData = {
+	def combineMetaData[BT, DT, AT](pyramider: TilePyramid,
+	                                baseLocation: String,
+	                                newLevels: Set[Int],
+	                                tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+	                                dataAnalytics: Option[AnalysisDescription[_, DT]],
+	                                tileSizeX: Int,
+	                                tileSizeY: Int,
+	                                name: String = "unknown",
+	                                description: String = "unknown"): PyramidMetaData = {
 		val bounds = pyramider.getTileBounds(new TileIndex(0, 0, 0))
 		val projection = pyramider.getProjection()
 		val scheme = pyramider.getTileScheme()
@@ -208,22 +225,19 @@ trait TileIO extends Serializable {
 
 		var metaData = oldMetaData match {
 			case None => {
-				new PyramidMetaData(name, description, tileSize, scheme, projection,
-				                    minsMaxes.keys.min, minsMaxes.keys.max,
+				new PyramidMetaData(name, description, tileSizeX, tileSizeY,
+				                    scheme, projection,
+				                    newLevels.toList.sorted.map(new JavaInt(_)).asJava,
 				                    bounds,
-				                    minsMaxes.map(p => new Pair[Integer, String](p._1, p._2._1.toString)).toList
-					                    .sortBy(_.getFirst).asJava,
-				                    minsMaxes.map(p => new Pair[Integer, String](p._1, p._2._2.toString)).toList
-					                    .sortBy(_.getFirst).asJava)
+				                    null, null)
 			}
 			case Some(metaData) => {
-				var newMetaData = metaData
-				minsMaxes.foreach(mm =>
-					newMetaData = newMetaData.addLevel(mm._1, mm._2._1.toString, mm._2._2.toString)
-				)
-				newMetaData
+				metaData.addValidZoomLevels(newLevels.map(new JavaInt(_)))
+				metaData
 			}
 		}
+		tileAnalytics.map(_.applyTo(metaData))
+		dataAnalytics.map(_.applyTo(metaData))
 
 		metaData
 	}
@@ -238,35 +252,6 @@ trait TileIO extends Serializable {
 	def writeMetaData (baseLocation: String, metaData: PyramidMetaData): Unit =
 		getPyramidIO.writeMetaData(baseLocation, metaData.toString)
 	
-}
-
-class LevelMinMaxAccumulableParam[T] (minFcn: (T, T) => T, defaultMin: T,
-                                      maxFcn: (T, T) => T, defaultMax: T)
-		extends AccumulableParam[Map[Int, (T, T)], (Int, T)]
-		with Serializable {
-	private val defaultValue = (defaultMin, defaultMax)
-	def addAccumulator (currentValue: Map[Int, (T, T)],
-	                    addition: (Int, T)): Map[Int, (T, T)] = {
-		val level = addition._1
-		val value = addition._2
-		val curMinMax = currentValue.getOrElse(level, defaultValue)
-		currentValue + ((level, (minFcn(curMinMax._1, value), maxFcn(curMinMax._2, value))))
-	}
-
-	def addInPlace (a: Map[Int, (T, T)], b: Map[Int, (T, T)]): Map[Int, (T, T)] = {
-		val keys = a.keySet union b.keySet
-		keys.map(key =>
-			{
-				val aVal = a.getOrElse(key, defaultValue)
-				val bVal = b.getOrElse(key, defaultValue)
-
-				(key -> (minFcn(aVal._1, bVal._1), maxFcn(aVal._2, bVal._2)))
-			}
-		).toMap
-	}
-
-	def zero (initialValue: Map[Int, (T, T)]): Map[Int, (T, T)] =
-		Map[Int, (T, T)]()
 }
 
 
@@ -412,34 +397,13 @@ object TestTableEquality {
 
 		def testEquality[T] (description: String, a: T, b: T): Unit =
 			if (!a.equals(b)) println(description+" differ") else println(description+" match")
-		testEquality("Tile sizes",    metaData1.getTileSize(),   metaData2.getTileSize())
+		testEquality("Tile size (x)", metaData1.getTileSizeX(),  metaData2.getTileSizeX())
+		testEquality("Tile size (y)", metaData1.getTileSizeY(),  metaData2.getTileSizeY())
 		testEquality("Schemes",       metaData1.getScheme(),     metaData2.getScheme())
 		testEquality("Projections",   metaData1.getProjection(), metaData2.getProjection())
 		testEquality("Minimum zooms", metaData1.getMinZoom(),    metaData2.getMinZoom())
 		testEquality("Maximum zooms", metaData1.getMaxZoom(),    metaData2.getMaxZoom())
 		testEquality("Bounds",        metaData1.getBounds(),     metaData2.getBounds())
-		testEquality("Number of minimum entries",
-		             metaData1.getLevelMinimums().size, metaData2.getLevelMinimums().size)
-		val minLvls = (metaData1.getLevelMinimums.keySet.asScala
-			               union metaData2.getLevelMinimums.keySet.asScala)
-		minLvls.map(level =>
-			{
-				testEquality("Minimum entry for level "+level,
-				             metaData1.getLevelMinimum(level),
-				             metaData2.getLevelMinimum(level))
-			}
-		)
-		testEquality("Number of maximum entries",
-		             metaData1.getLevelMaximums.size, metaData2.getLevelMaximums.size)
-		val maxLvls = (metaData1.getLevelMaximums.keySet.asScala
-			               union metaData2.getLevelMaximums.keySet.asScala)
-		maxLvls.map(level =>
-			{
-				testEquality("Maximum entry for level "+level,
-				             metaData1.getLevelMaximum(level),
-				             metaData2.getLevelMaximum(level))
-			}
-		)
 		println("Tile differences:")
 		if (collectedDiffs.isEmpty)
 			println("No differences found!")

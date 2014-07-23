@@ -42,20 +42,35 @@ define( function (require) {
 		createLayer: function( layerJSON, map ) {
 
 			var annotationLayer,
+			    rendererDeferred,
+			    detailsDeferred,
 			    annotationLayerDeferred = $.Deferred();
+
+            function loadModule( arg ) {
+                var requireDeferred = $.Deferred();
+                require( [arg], function( RendererModule ) {
+                    requireDeferred.resolve( new RendererModule( map ) );
+                });
+                return requireDeferred;
+            }
 
             layerJSON.layer = layerJSON.id;
 
-            annotationLayer = new AnnotationLayer( layerJSON, map );
+            rendererDeferred = loadModule( "./renderers/" +  layerJSON.renderers.layer );
+            detailsDeferred = loadModule( "./details/" +  layerJSON.renderers.details );
 
-            /*
-            annotationLayer.configure( function( layerInfo ) {
-                  // update layer and resolve deferred
-                  annotationLayer.update( layerInfo );
-                  annotationLayer.resolve( annotationLayer );
+            $.when( rendererDeferred, detailsDeferred ).done( function( renderer, details ) {
+
+                annotationLayer = new AnnotationLayer( layerJSON, renderer, details, map );
+
+                annotationLayer.configure( function( layerInfo ) {
+                      // update layer and resolve deferred
+                      annotationLayer.update();
+                      annotationLayerDeferred.resolve( annotationLayer );
+                });
+
+                //annotationLayerDeferred.resolve( annotationLayer );
             });
-            */
-            annotationLayerDeferred.resolve( annotationLayer );
 
             return annotationLayerDeferred;
 

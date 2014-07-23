@@ -83,8 +83,7 @@ public class HBasePyramidIO implements PyramidIO {
 		throws IOException {
 
         Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
-        Logger.getLogger("org.apache.hadoop.hbase.zookeeper").setLevel(Level.WARN);
-        Logger.getLogger("org.apache.hadoop.hbase.client").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
 
         _config = HBaseConfiguration.create();
 		_config.set("hbase.zookeeper.quorum", zookeeperQuorum);
