@@ -106,7 +106,26 @@ public class JSONUtilitiesTests {
 		Assert.assertEquals(3.3, result.getJSONArray("e").getDouble(5), 1E-12);
 		Assert.assertEquals("bb3", result.getJSONArray("e").getJSONObject(6).getString("b1"));
 	}
-    
+
+	@Test
+	public void testArrayOverlayTruncation () throws Exception {
+	    JSONArray base = new JSONArray("['a', 'b', 'c', 'd', 'e', 'f']");
+	    JSONArray overlay = new JSONArray("[1, 2, null, 4]");
+	    JSONArray result = JsonUtilities.overlayInPlace(base, overlay);
+
+        Assert.assertEquals(4, base.length());
+        Assert.assertEquals(1, base.getInt(0));
+        Assert.assertEquals(2, base.getInt(1));
+        Assert.assertEquals("c", base.getString(2));
+        Assert.assertEquals(4, base.getInt(3));
+        
+        Assert.assertEquals(4, result.length());
+        Assert.assertEquals(1, result.getInt(0));
+        Assert.assertEquals(2, result.getInt(1));
+        Assert.assertEquals("c", result.getString(2));
+        Assert.assertEquals(4, result.getInt(3));
+	}
+
 	@Test
 	public void testPropertyClass () throws Exception {
 		JSONObject base = new JSONObject("{a: 'a', b: {c: 'c', d:['a', 'a1', 1, 2, 1.1, 2.2]}}");

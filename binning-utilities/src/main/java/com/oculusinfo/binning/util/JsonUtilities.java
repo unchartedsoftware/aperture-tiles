@@ -160,6 +160,7 @@ public class JsonUtilities {
         if (null == base) return deepClone(overlay);
 
         try {
+            // Overlay elements in both or just in the overlay
             for (int i=0; i<overlay.length(); ++i) {
                 Object value = overlay.get(i);
                 if (JSON_NULL.equals(value)) {
@@ -180,6 +181,11 @@ public class JsonUtilities {
                     base.put(i, value);
                 }
             }
+
+            // Remove extra elements not in the overlay
+            while (base.length() > overlay.length())
+                base.remove(overlay.length());
+
             return base;
         } catch (JSONException e) {
             LOGGER.error("Weird JSON exception cloning object", e);
