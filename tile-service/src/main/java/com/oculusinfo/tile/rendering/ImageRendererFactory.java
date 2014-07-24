@@ -38,7 +38,7 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
                                                                     "The type of renderer that will be used to render the data on the server",
                                                                     "heatmap",
                                                                     new String[] {
-                                                                      "heatmap", "toptextscores", "textscores",
+                                                                      "heatmap", "listheatmap", "toptextscores", "textscores",
                                                                       "doubleeseries", "doublestatistics", "metadata" });
 
 
@@ -64,7 +64,9 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 		rendererType = rendererType.toLowerCase();
 
 		if ("heatmap".equals(rendererType)) {
-			return new DoublesImageRenderer();
+            return new DoublesImageRenderer();
+        } else if ("listheatmap".equals(rendererType)) {
+            return new DoubleListHeatMapImageRenderer();
 		} else if ("toptextscores".equals(rendererType)) {
 			return new TopTextScoresImageRenderer();
 		} else if ("textscores".equals(rendererType)) {

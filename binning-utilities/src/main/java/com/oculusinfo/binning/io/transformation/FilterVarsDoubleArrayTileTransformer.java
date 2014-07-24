@@ -29,6 +29,7 @@ package com.oculusinfo.binning.io.transformation;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oculusinfo.binning.TileData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
@@ -44,10 +45,10 @@ import org.json.JSONObject;
  * 
  */
 
-public class FilterVarsDoubleArrayTileTransformer implements TileTransformer {
+public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer{
 	private static final Logger _logger = LoggerFactory.getLogger(FilterVarsDoubleArrayTileTransformer.class);
 	
-	private List<Integer> _variables = new ArrayList<Integer>();
+	private List<Integer> _variables = new ArrayList<>();
 	
 	public FilterVarsDoubleArrayTileTransformer(JSONObject variables){
 		// Get the JSONArray out of the variables JSONObject
@@ -64,7 +65,7 @@ public class FilterVarsDoubleArrayTileTransformer implements TileTransformer {
 			}
 		}
 		catch (JSONException e) {
-			_logger.warn("Exception getting varaibles for filter varialbles transformer", e);
+			_logger.warn("Exception getting variables for filter variables transformer", e);
 		}
 	}
 
@@ -97,7 +98,7 @@ public class FilterVarsDoubleArrayTileTransformer implements TileTransformer {
 				JSONArray resultValuesInSingleBin = new JSONArray();
 					
 				// just loop through variable indexes in _variables			
-				for (int varIndex = 0; varIndex < _variables.size(); varIndex++) {	
+				for (int varIndex = 0; varIndex < _variables.size(); varIndex++) {
 					JSONObject value = valuesInBin.getJSONObject(_variables.get(varIndex));
 					JSONObject resultValue = new JSONObject();
 						
@@ -114,6 +115,43 @@ public class FilterVarsDoubleArrayTileTransformer implements TileTransformer {
 			}
 		}
 		return resultJSON;
-	}	
+	}
+
+    @Override
+    public <T> TileData<T> Transform (TileData<T> inputData, Class<? extends T> type) throws Exception {
+        if (!List.class.isAssignableFrom(type)) throw new IllegalArgumentException("This transformer only works on lists");
+
+        //list of indices to keep
+        TileData<List<Double>> resultData;
+
+        //If there are none to keep, return empty list
+        if (_variables == null) {
+            resultData = null;
+        } else {
+            resultData = new TileData<>(inputData.getDefinition());
+
+            for (int binXIndex = 0; binXIndex < inputData.getDefinition().getXBins(); binXIndex++) {
+                for (int binYIndex = 0; binYIndex < inputData.getDefinition().getYBins(); binYIndex++) {
+                    Object rawBinVal = inputData.getBin(binXIndex, binYIndex);
+                    if (rawBinVal instanceof List) {
+                        List<?> listBinVal = (List<?>) rawBinVal;
+                        List<Double> newData = new ArrayList<>();
+
+                        for ( int varIndex : _variables ) {
+                            Object rawVarVal = ( varIndex < listBinVal.size() ) ? listBinVal.get(varIndex) : null;
+                            if (rawVarVal instanceof Number) {
+                                newData.add( ((Number)rawVarVal).doubleValue() );
+                            } else {
+                                newData.add(0.0);
+                            }
+                        }
+                        resultData.setBin(binXIndex, binYIndex, newData);
+                    }
+                }
+            }
+        }
+
+        return (TileData) resultData;
+    }
 
 }

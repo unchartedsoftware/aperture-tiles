@@ -26,6 +26,7 @@ package com.oculusinfo.binning.io.transformation;
 
 
 
+import com.oculusinfo.binning.TileData;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,7 +36,7 @@ import org.json.JSONObject;
  * 		and thus simply passes back the tile data JSON passed in.
  * 
  */
-public class GenericTileTransformer implements TileTransformer {
+public class GenericTileTransformer implements TileTransformer{
 	
 
 	public GenericTileTransformer(){		
@@ -47,5 +48,10 @@ public class GenericTileTransformer implements TileTransformer {
 	public JSONObject Transform (JSONObject json) throws JSONException {
 		return json;
 	}
+
+    @Override
+    public <T> TileData<T> Transform(TileData<T> data, Class<? extends T> type) throws Exception {
+        return data;
+    }
 
 }
