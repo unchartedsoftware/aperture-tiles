@@ -687,7 +687,10 @@ define(function (require) {
 
         $rampFunctions.find('input[name="ramp-functions"][value="' + layerState.get('rampFunction') + '"]').prop('checked', true);
 
-        $settingsContent.append( settingsCustomization( layerState ) );
+        // if settings customization is provided, add it
+        if ( settingsCustomization ) {
+            $settingsContent.append( settingsCustomization( layerState ) );
+        }
 
         replaceChildren($layerControlsContainer, $settingsContainer);
     };

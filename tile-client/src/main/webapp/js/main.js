@@ -249,7 +249,6 @@ require(['./ApertureConfig',
 
 				        worldMap = new Map("map", mapConfig);   // create map
 				        worldMap.setAxisSpecs( MapService.getAxisConfig(mapConfig) ); // set axes
-                        worldMap.setTileBorderStyle( mapConfig );
 
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {
