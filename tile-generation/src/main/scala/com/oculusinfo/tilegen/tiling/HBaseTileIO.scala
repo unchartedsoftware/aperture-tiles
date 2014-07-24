@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 import scala.collection.mutable.{HashSet => MutableSet}
+import scala.collection.mutable.{Map => MutableMap}
 
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -53,8 +54,11 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.impl.HBasePyramidIO
+import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.metadata.PyramidMetaData
 
+import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.datasets.ValueDescription
 import com.oculusinfo.tilegen.util.ArgumentParser
 
@@ -106,7 +110,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// We need some TableInputFormat constants in here.
 		import org.apache.hadoop.hbase.mapred.TableInputFormat._
 
-		val conf = getPyramidIO.getConfiguration()
+		val conf = pyramidIO.getConfiguration()
 		conf.set(TableInputFormat.INPUT_TABLE, baseLocation)
 		val admin = new HBaseAdmin(conf)
 
@@ -165,9 +169,10 @@ class HBaseTileIO (zookeeperQuorum: String,
 		val tileCount = data.context.accumulator(0)
 		// Record the levels we write
 		val levelSet = data.context.accumulableCollection(MutableSet[Int]())
+		// record tile sizes
+		val xbins = data.context.accumulator(0)(new IntMaxAccumulatorParam)
+		val ybins = data.context.accumulator(0)(new IntMaxAccumulatorParam)
 
-		println("Writing tile set to HBase from")
-		println(data.toDebugString)
 
 		// Turn each tile into a table row, noting mins, maxes, and counts as
 		// we go.  Note that none of the min/max/count accumulation is actually
@@ -181,9 +186,11 @@ class HBaseTileIO (zookeeperQuorum: String,
 						val index = tile.getDefinition()
 						val level = index.getLevel()
 
-						// Update count, level bounds
+						// Update count, level bounds, tile sizes
 						tileCount += 1
 						levelSet += level
+						xbins += index.getXBins
+						ybins += index.getYBins
 
 						// Create a Put (a table write object) that will write this tile
 						val baos = new ByteArrayOutputStream()
@@ -216,6 +223,8 @@ class HBaseTileIO (zookeeperQuorum: String,
 		HBaseTiles.saveAsHadoopDataset(jobConfig)
 		println("Input tiles: "+tileCount)
 		println("Input levels: "+levelSet.value)
+		println("X bins: "+xbins.value)
+		println("Y bins: "+ybins.value)
 
 
 
@@ -223,12 +232,11 @@ class HBaseTileIO (zookeeperQuorum: String,
 		// Ideally, we'd still alter levels
 		if (tileCount.value > 0) {
 			println("Calculating metadata")
-			val sampleTile = data.first.getDefinition()
 			val metaData =
 				combineMetaData(pyramider, baseLocation,
 				                levelSet.value.toSet,
 				                tileAnalytics, dataAnalytics,
-				                sampleTile.getXBins, sampleTile.getYBins,
+				                xbins.value, ybins.value,
 				                name, description)
 			writeMetaData(baseLocation, metaData)
 		}

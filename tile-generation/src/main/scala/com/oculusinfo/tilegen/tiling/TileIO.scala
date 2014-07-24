@@ -53,6 +53,7 @@ import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySeriali
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.datasets.ValueDescription
+import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO
@@ -161,6 +162,9 @@ trait TileIO extends Serializable {
 		val tileCount = data.context.accumulator(0)
 		// Record all levels we write
 		val levelSet = data.context.accumulableCollection(MutableSet[Int]())
+		// record tile sizes
+		val xbins = data.context.accumulator(0)(new IntMaxAccumulatorParam)
+		val ybins = data.context.accumulator(0)(new IntMaxAccumulatorParam)
 
 		println("Writing tile set from")
 		println(data.toDebugString)
@@ -178,28 +182,30 @@ trait TileIO extends Serializable {
 				group.foreach(tile =>
 					{
 						val index = tile.getDefinition()
-
-						// Update minimum and maximum values for metadata
 						val level = index.getLevel()
+
+						// Update count, level bounds, tile sizes
 						tileCount += 1
 						levelSet += level
+						xbins += index.getXBins
+						ybins += index.getYBins
 					}
 				)
 			}
 		)
 		println("Input tiles: "+tileCount)
+		println("X bins: "+xbins.value)
+		println("Y bins: "+ybins.value)
 		println("Input levels: "+levelSet.value)
 
 		// Don't alter metadata if there was no data added.
 		// Ideally, we'd still alter levels.
 		if (tileCount.value > 0) {
-			val sampleTile = data.first.getDefinition()
-
 			val metaData =
 				combineMetaData(pyramider, baseLocation,
 				                levelSet.value.toSet,
 				                tileAnalytics, dataAnalytics,
-				                sampleTile.getXBins, sampleTile.getYBins,
+				                xbins.value, ybins.value,
 				                name, description)
 			writeMetaData(baseLocation, metaData)
 		}
