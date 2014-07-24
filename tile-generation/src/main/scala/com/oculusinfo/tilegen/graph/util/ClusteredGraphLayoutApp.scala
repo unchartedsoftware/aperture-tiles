@@ -54,6 +54,7 @@ object ClusteredGraphLayoutApp {
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
 		val borderOffset = argParser.getInt("border","Percent of boundingBox width and height to leave as whitespace when laying out leaf nodes. Default is 5 percent", Some(5))
 		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))	
+		val numNodesThres = argParser.getInt("nthres", "Community size threshold to use for switching from group-in-box to force-directed layout schemes", Some(1000))
 		
 		val fileStartTime = System.currentTimeMillis()
 		
@@ -66,7 +67,8 @@ object ClusteredGraphLayoutApp {
 													sourceDir, 
 													dataDelimiter,
 													(layoutLength,layoutLength),
-													borderOffset)
+													borderOffset,
+													numNodesThres)
 		
 		nodePositions.saveAsTextFile(outputDir)	// save results -- format is (nodeID, x coord, y coord) 
 		
