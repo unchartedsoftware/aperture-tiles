@@ -112,6 +112,7 @@ define(function (require) {
                 layerSpec.renderer.ramp = layerSpec.renderer.ramp || "ware";
                 layerSpec.transform.name = layerSpec.transform.name || 'linear';
                 layerSpec.legendrange = layerSpec.legendrange || [0,100];
+                layerSpec.transformer = layerSpec.transformer || {};
 
                 // Create a layer state object.  Values are initialized to those provided
                 // by the layer specs, which are defined in the layers.json file, or are
@@ -127,6 +128,8 @@ define(function (require) {
                 layerState.set( 'rampMinMax', getLevelMinMax( map.getZoom() ) );
                 layerState.set( 'rampImageUrl', "" );
                 layerState.set( 'filterRange', layerSpec.legendrange );
+                layerState.set( 'transformerType', layerSpec.transformer.type || "generic" );
+                layerState.set( 'transformerData', layerSpec.transformer.data || {} );
 
                 /**
                  * Valid ramp type strings.
@@ -181,6 +184,16 @@ define(function (require) {
                         case "filterRange":
 
                             layer.setFilterRange( layerState.get('filterRange') );
+                            break;
+
+                        case "transformerType":
+
+                            layer.setTransformerType( layerState.get('transformerType') );
+                            break;
+
+                        case "transformerData":
+
+                            layer.setTransformerData( layerState.get('transformerData') );
                             break;
 
                         case "zIndex":

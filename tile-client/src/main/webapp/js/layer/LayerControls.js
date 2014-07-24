@@ -166,12 +166,12 @@ define(function (require) {
      * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping ) {
+    createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) {
 
         var $settingsButton = $('<button class="settings-link">settings</button>');
         // set callback
         $settingsButton.click(function () {
-            showLayerSettings( $layerControlsContainer, $layerContent, layerState );
+            showLayerSettings( $layerControlsContainer, $layerContent, layerState, settingsCustomization );
         });
         // set tooltip
         Util.enableTooltip( $settingsButton,
@@ -518,7 +518,7 @@ define(function (require) {
      * @param {JQuery } $layerControlsContainer - The parent element in the document tree to add the controls to.
      * @param {Object} controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layerStateMap ) {
+    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization ) {
         var layerState = sortedLayers[index],
             id = layerState.get( 'id' ),
             name = layerState.get( 'name' ) || layerState.get( 'id' ),
@@ -550,7 +550,7 @@ define(function (require) {
 
         // create settings button, only for server layers
         if ( domain === 'server' ) {
-            $layerContent.append( createSettingsButton( $layerControlsContainer, $layerContent, layerState, controlsMapping ) );
+            $layerContent.append( createSettingsButton( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) );
         }
 
         // add visibility toggle box
@@ -578,7 +578,7 @@ define(function (require) {
      * @param {object} $layerControlsContainer - The parent node to attach the layer panel to.
      * @param {object} layerState - The layer state model the panel will read from and update.
      */
-    showLayerSettings = function( $layerControlsContainer, $layerContent, layerState ) {
+    showLayerSettings = function( $layerControlsContainer, $layerContent, layerState, settingsCustomization ) {
 
         var $settingsContainer,
             $settingsTitleBar,
@@ -607,7 +607,7 @@ define(function (require) {
         $settingsContainer.append($settingsTitleBar);
 
         // create content div
-        $settingsContent = $('<div class="settings-content"></div>');
+        $settingsContent = $('<div class="settings-content"></div>') ;
         $settingsContainer.append($settingsContent);
 
         // create back button
@@ -624,7 +624,7 @@ define(function (require) {
         $settingsTitleBar.append($backButton);
 
         // add the ramp types radio buttons
-        $rampTypes = $('<div class="settings-ramp-types" title />');
+        $rampTypes = $('<div class="settings-ramp-types"/>');
         // add title to ramp types div
         $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
 
@@ -661,7 +661,7 @@ define(function (require) {
         $rampTypes.find('input[name="ramp-types"][value="' + layerState.get('rampType') + '"]').prop('checked', true);
 
         // Add the ramp function radio buttons
-        $rampFunctions = $('<div class="settings-ramp-functions" title/>');
+        $rampFunctions = $('<div class="settings-ramp-functions"/>');
         $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
 
         $settingsContent.append($rampFunctions);
@@ -686,6 +686,11 @@ define(function (require) {
         });
 
         $rampFunctions.find('input[name="ramp-functions"][value="' + layerState.get('rampFunction') + '"]').prop('checked', true);
+
+        // if settings customization is provided, add it
+        if ( settingsCustomization ) {
+            $settingsContent.append( settingsCustomization( layerState ) );
+        }
 
         replaceChildren($layerControlsContainer, $settingsContainer);
     };
@@ -751,7 +756,7 @@ define(function (require) {
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function ( layerStates, $layerControlsContainer, controlsMap, layerStateMap ) {
+    replaceLayers = function ( layerStates, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization ) {
         var sortedLayerStates = sortLayers( layerStates ),
             i, key;
 
@@ -769,7 +774,7 @@ define(function (require) {
 
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStates.length; i += 1) {
-            addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap, layerStateMap );
+            addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization );
         }
 
         // append a spacer element at the bottom, padding causes jitter in overlay animation
@@ -806,7 +811,7 @@ define(function (require) {
          * @param controlsId - The DOM element id used as the container for the controls panel elements.
          * @param layerStates - The list of layers the layer controls reflect and modify.
          */
-        init: function ( controlsId, layerStates ) {
+        init: function ( controlsId, layerStates, settingsCustomization ) {
 
             var i;
 
@@ -818,7 +823,7 @@ define(function (require) {
             this.$layerControlsRoot = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers( layerStates, this.$layerControlsRoot, this.controlsMap, this.layerStateMap );
+            replaceLayers( layerStates, this.$layerControlsRoot, this.controlsMap, this.layerStateMap, settingsCustomization );
 
             for (i=0; i<layerStates.length; i++) {
 
