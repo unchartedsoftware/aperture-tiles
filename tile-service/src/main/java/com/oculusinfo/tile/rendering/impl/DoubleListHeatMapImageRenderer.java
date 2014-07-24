@@ -69,7 +69,6 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 
-    //public <T> TileData<T> Transform (TileData<T> inputData, Class<? extends T> type)
     public static Class<List<Double>> getRuntimeBinClass () {
         return (Class) List.class;
     }
@@ -78,28 +77,9 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
         return new TypeDescriptor(List.class, new TypeDescriptor(Double.class));
     }
 
-	/**
-	 * This function returns the sum of values from keys which are not being excluded
-	 */
-
-	protected long getValueSumToDraw (int[] cellData, int[] excludedIndices) {
-		long sum = 0;
-
-		for(int i = 0; i < cellData.length; i++){
-			if(!ArrayUtils.contains(excludedIndices, i)){
-				sum = sum + cellData[i];
-			}
-		}
-		return sum;
-	}
-
-	protected long getValueSumToDraw (int[] cellData) {
-		return getValueSumToDraw(cellData, new int[0]);
-	}
 
     private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
         String rawValue = parameter.getPropertyValue(property);
-        System.out.println("RawValue: " + rawValue);
         try {
             return Double.parseDouble(rawValue);
         } catch (NumberFormatException|NullPointerException e) {
@@ -108,20 +88,17 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
         }
     }
 
+
 	@Override
 	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
 		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
 		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
 		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-		return new Pair<Double, Double>(minimumValue,  maximumValue);
+		return new Pair<>(minimumValue,  maximumValue);
 	}
 
 
-
 	/* (non-Javadoc)
-	 * @see TileDataImageRenderer#render(LayerConfiguration)
-	 */
-		/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
     public BufferedImage render (LayerConfiguration config) {
@@ -170,7 +147,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             // Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
             if (tileDatas.size() < 1) {
-                LOGGER.info("Missing tile " + index + " for layer " + layer);
+                _logger.info("Missing tile " + index + " for layer " + layer);
                 return null;
             }
 
@@ -240,7 +217,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
         } catch (Exception e) {
-            LOGGER.error("Tile error: " + layer + ":" + index, e);
+            _logger.error("Tile error: " + layer + ":" + index, e);
             bi = null;
         }
         return bi;

@@ -140,6 +140,9 @@ require(['./ApertureConfig',
 			        layer.renderers.forEach(function (renderer, index, renderers) {
 				        if (domain === renderer.domain) {
 					        config = cloneObject(renderer);
+					        if (layer.data.transformer) {
+					            config.transformer = cloneObject(layer.data.transformer);
+					        }
 					        config.layer = layer.id;
 					        config.name = layer.name;
 					        return;
@@ -297,7 +300,7 @@ require(['./ApertureConfig',
                             $.merge( sharedStates, annotationLayerMediator.getLayerStates() );
 
                             // create layer controls
-                            new LayerControls( 'layer-controls-content', sharedStates ).noop();
+                            new LayerControls( 'layer-controls-content', sharedStates, UICustomization.customizeSettings ).noop();
                             // create the carousel controls
                             new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
                         });

@@ -127,6 +127,18 @@ define(function (require) {
         },
 
 
+        setTransformerType: function ( transformerType ) {
+            this.layerSpec.transformer.type = transformerType;
+            this.configure( $.proxy( this.update, this ) );
+        },
+
+
+        setTransformerData: function ( transformerData ) {
+            this.layerSpec.transformer.data = transformerData;
+            this.configure( $.proxy( this.update, this ) );
+        },
+
+
         configure: function( callback ) {
 
             var that = this;

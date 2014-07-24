@@ -84,8 +84,10 @@ public class TileServiceImpl implements TileService {
 
 			bi = tileRenderer.render(config);
 		} catch (ConfigurationException e) {
-			_logger.info("No renderer specified for tile request.");
-		}
+			_logger.warn("No renderer specified for tile request.");
+		} catch (IllegalArgumentException e) {
+            _logger.warn("Renderer configuration not recognized.");
+        }
 
 		if (bi == null){
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -116,17 +118,13 @@ public class TileServiceImpl implements TileService {
 			TileTransformer transformer = config.produce(TileTransformer.class);
 			
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
-			JSONObject transformJSON = transformer.Transform(deserializedJSON);
+            return transformer.Transform(deserializedJSON);
 			
-			return transformJSON;
-			
-		} catch (IOException e) {
+		} catch (IOException | JSONException | ConfigurationException e) {
 			_logger.warn("Exception getting tile for {}", index, e);
-		} catch (JSONException e) {
-			_logger.warn("Exception getting tile for {}", index, e);
-		} catch (ConfigurationException e) {
-			_logger.warn("Exception getting tile for {}", index, e);
-		}
+		}  catch (IllegalArgumentException e) {
+            _logger.warn("Renderer configuration not recognized.");
+        }
 		return null;
 	}
 }
