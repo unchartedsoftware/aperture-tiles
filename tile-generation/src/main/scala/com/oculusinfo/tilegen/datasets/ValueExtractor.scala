@@ -95,6 +95,12 @@ trait ValueExtractorFactory {
 		                     Some(if ("constant" == field || "zero" == field) "constant"
 		                          else "")).toLowerCase
 
+	def getPropertyType (field: String, properties: PropertiesWrapper): String =
+		properties.getString("oculus.binning.parsing."+field+".propertyType",
+		                     "The type of the "+field+" field",
+		                     Some(if ("constant" == field || "zero" == field) "constant"
+		                          else "")).toLowerCase
+
 	def handles (field: Option[String], fields: Option[String],
 	             properties: PropertiesWrapper): Boolean
 	def constructValueExtractor (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _]
@@ -147,9 +153,22 @@ class CountValueExtractor extends CSVValueExtractor[Double, JavaDouble] {
 
 class FieldValueExtractorFactory  extends ValueExtractorFactory {
 	def handles (field: Option[String], fields: Option[String],
-	             properties: PropertiesWrapper): Boolean = {
-		(field.isDefined && !getFieldType(field.get, properties).startsWith("string"))
-	}
+	             properties: PropertiesWrapper): Boolean =
+		field match {
+			case Some(fieldName) => {
+				def matches (fieldType: String): Boolean =
+					fieldType match {
+						case "int" => true
+						case "long" => true
+						case "date" => true
+						case "double" => true
+						case "propertyMap" => matches(getPropertyType(fieldName, properties))
+						case _ => false
+					}
+				matches(getFieldType(fieldName, properties))
+			}
+		  case _ => false
+		}
 
 	def constructValueExtractor (field: String, properties: PropertiesWrapper) = {
 		val fieldAggregation =
@@ -305,7 +324,7 @@ class SubstringValueExtractorFactory extends StringValueExtractorFactory {
 					Seq[(Int, Int)]((indexRange.substring(0, indexRange.length-1).trim.toInt, -1))
 				} else if (indexRange.contains(separator)) {
 					val extrema = indexRange.split(':')
-					Seq[(Int, Int)]((extrema(0).toInt, extrema(1).toInt+1))
+					Seq[(Int, Int)]((extrema(0).toInt, extrema(1).toInt))
 				} else if ("" == indexRange) {
 					Seq[(Int, Int)]()
 				} else {
@@ -333,14 +352,14 @@ class SubstringValueExtractor (fieldName: String,
 	def description: String = "The most common values of "+fieldName
 	def fields: Array[String] = Array(fieldName)
 	def calculateValue (fieldValues: Map[String, Any]): Map[String, Double] = {
-		val value = fieldValues.get(fieldName).toString
+		val value = fieldValues(fieldName).toString
 		val subValues = value.split(parsingDelimiter)
 		val len = subValues.length
 		val entryIndices = indices.flatMap(extrema =>
 			{
 				val (start, end) = extrema
-				val modStart = if (start < 0) len-start else start
-				val modEnd = if (end < 0) len-end else end
+				val modStart = if (start < 0) len+start else start
+				val modEnd = if (end < 0) len+end else end
 
 				modStart to modEnd
 			}
