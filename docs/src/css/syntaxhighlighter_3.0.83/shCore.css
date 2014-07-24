@@ -44,7 +44,7 @@
   vertical-align: baseline !important;
   width: auto !important;
   box-sizing: content-box !important;
-  font-family: "Courier New";
+  font-family: Consolas, "Courier New", Courier, monospace;
   font-weight: normal !important;
   font-style: normal !important;
   font-size: 1em !important;
@@ -53,11 +53,11 @@
 }
 
 .syntaxhighlighter {
-  width: 100% !important;
+  
   margin: 1em 0 1em 0 !important;
   position: relative !important;
   overflow: auto !important;
-  font-size: 1em !important;
+  font-size: 0.85em !important;
 }
 .syntaxhighlighter.source {
   overflow: hidden !important;

@@ -33,8 +33,63 @@ define(function (require) {
         Util = require('../../util/Util'),
         AnnotationService = require('./AnnotationService'),
         DETAILS_VERTICAL_OFFSET = 26,
+        addDataToMap,
+        removeDataFromMap,
         AnnotationLayer;
 
+
+    /**
+     * Adds a given data entry to the data map
+     */
+    addDataToMap = function( dataMap, entry ) {
+
+        var key = entry.id,
+            annotations = entry.annotations,
+            dataEntry;
+
+        // store key in data map, and update uuid for redraw
+        dataMap[key] = dataMap[key] || {
+            id: key,
+            annotations: []
+        };
+        dataEntry = dataMap[key];
+        // update uuid whenever data changes to flag a redraw
+        dataEntry.uuid = Util.generateUuid();
+        // add annotations
+        dataEntry.annotations = dataEntry.annotations.concat( annotations );
+    };
+
+
+    /**
+     * Removes all tile data entries from the data map
+     */
+    removeDataFromMap = function( dataMap, tile ) {
+
+        var i, j, index, id, entry,
+            annotations, annotation,
+            dataEntry;
+
+        for (i=0; i<tile.length; i++) {
+
+            entry = tile[i];
+            id = entry.id;
+            annotations = entry.annotations;
+            dataEntry = dataMap[id];
+
+            for (j=0; j<annotations.length; j++) {
+
+                annotation = annotations[j];
+
+                // remove annotation from data entry
+                index = dataEntry.annotations.indexOf( annotation );
+                dataEntry.annotations.splice( index, 1 );
+                // if no more annotations in entry, remove entry
+                if (dataEntry.annotations.length === 0) {
+                    delete dataMap[id];
+                }
+            }
+        }
+    };
 
 
     AnnotationLayer = Layer.extend({
@@ -44,8 +99,24 @@ define(function (require) {
             this._super( spec, map );
             this.renderer = renderer;
             this.details = details;
+
+            // tiles that have been requested from server, removing a tile from
+            // this list will result in the client ignoring it upon receiving it
             this.pendingTiles = {};
-            this.tiles = [];
+
+            // tile map, stores tile data under each tilekey. Each tile entry is
+            // an array organized such that a single entry is a single node in the
+            // renderer's node layer
+            this.tiles = {};
+
+            // if idKey is specified, group annotations by its value, else group
+            // annotations by bin
+            this.idKey = spec.idKey || null;
+
+            // if an idKey is specified, data will most likely span across tiles
+            // and as such this attribute will hold the organized data
+            this.dataMap = {};
+
             this.map.on('moveend', $.proxy( this.update, this ) );
         },
 
@@ -64,7 +135,7 @@ define(function (require) {
 
         createDetails: function( clickState ) {
 
-            var $details = this.details.createDisplayDetails( clickState.bin, clickState.$bin );
+            var $details = this.details.createDisplayDetails( clickState.annotations, clickState.$annotations );
             // position details over click
             $details.css({
                 left: clickState.position.x - ( $details.outerWidth() / 2 ),
@@ -186,6 +257,12 @@ define(function (require) {
             // Remove all old defunct tiles references
             for (tilekey in defunctTiles) {
                 if (defunctTiles.hasOwnProperty(tilekey)) {
+
+                    if ( this.idKey ) {
+                        // if idKey is used, remove entries from data map
+                        removeDataFromMap( this.dataMap, currentTiles[tilekey] );
+                    }
+
                     // remove from memory and pending list
                     delete currentTiles[tilekey];
                     delete pendingTiles[tilekey];
@@ -214,20 +291,6 @@ define(function (require) {
         },
 
 
-        transformTileToBins: function (tileData, tilekey) {
-
-            var tileRect = this.map.getPyramid().getTileBounds( tileData.tile );
-
-            return {
-                bins : tileData.annotations,
-                uuid : Util.generateUuid(),
-                tilekey : tilekey,
-                longitude: tileRect.minX,
-                latitude: tileRect.maxY
-            };
-        },
-
-
         /**
          * @param annotationData annotation data received from server of the form:
          *  {
@@ -247,12 +310,76 @@ define(function (require) {
 
             var that = this;
 
+            function organizeDataByKey( data, currentTile, currentData ) {
+
+                // organize all data by key for this tile
+                var bins = data.annotations,
+                    bin, binkey,
+                    key, annotation,
+                    tileEntry, i,
+                    tileMap = {};
+
+                // assemble by data by key
+                for ( binkey in bins ) {
+                    if ( bins.hasOwnProperty( binkey )) {
+
+                        bin = bins[binkey];
+
+                        for (i=0; i<bin.length; i++) {
+
+                            annotation = bin[i];
+                            // get key value
+                            key = annotation.data[that.idKey];
+                            // create entry under key value in tile
+                            tileMap[key] = tileMap[key] || {
+                                id: key,
+                                annotations: []
+                            };
+                            tileMap[key].annotations.push( annotation );
+                        }
+                    }
+                }
+
+                // convert map into an array of the keyed values
+                // and store in tile
+                for (key in tileMap) {
+                    if ( tileMap.hasOwnProperty( key )) {
+                        // add entry to tile array
+                        tileEntry = tileMap[key];
+                        currentTile.push( tileEntry );
+
+                        addDataToMap( currentData, tileEntry );
+                    }
+                }
+                return currentData;
+            }
+
+            function organizeDataByBin( data, currentTile, currentTiles ) {
+
+                var bins = data.annotations,
+                    binkey;
+
+                // assemble annotation data by bin
+                for ( binkey in bins ) {
+                    if ( bins.hasOwnProperty( binkey )) {
+
+                        currentTile.push({
+                            uuid: Util.generateUuid(),
+                            annotations: bins[binkey]
+                        });
+
+                    }
+                }
+                return currentTiles;
+            }
+
             return function( data ) {
 
                 var tilekey = that.createTileKey( data.tile ),
                     currentTiles = that.tiles,
-                    key,
-                    tileArray = [];
+                    currentData = that.dataMap,
+                    key, dataSource,
+                    dataArray = [];
 
                 if ( !that.pendingTiles[tilekey] && !forceUpdate ) {
                     // receiving data from old request, ignore it
@@ -260,16 +387,24 @@ define(function (require) {
                 }
 
                 // add to data cache
-                currentTiles[tilekey] = that.transformTileToBins( data, tilekey );
+                currentTiles[tilekey] = [];
 
-                // convert all tiles from object to array and redraw
-                for (key in currentTiles) {
-                    if ( currentTiles.hasOwnProperty( key )) {
-                        tileArray.push( currentTiles[key] );
+                if ( that.idKey ) {
+                    // organize data by key
+                    dataSource = organizeDataByKey( data, currentTiles[tilekey], currentData );
+                } else {
+                    // organize data by bin
+                    dataSource = organizeDataByBin( data, currentTiles[tilekey], currentTiles );
+                }
+
+                // assemble array of data and redraw
+                for (key in dataSource) {
+                    if ( dataSource.hasOwnProperty( key )) {
+                        dataArray = dataArray.concat( dataSource[key] );
                     }
                 }
 
-                that.redraw( tileArray );
+                that.redraw( dataArray );
             };
 
         },
@@ -290,7 +425,6 @@ define(function (require) {
                     // set layer info
                     that.layerInfo = layerInfo;
                 }
-
                 callback( layerInfo, statusInfo );
             });
         },

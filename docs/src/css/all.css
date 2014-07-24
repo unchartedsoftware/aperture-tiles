@@ -10,6 +10,13 @@ body {
 	padding-top: 15px;
 	color: #4E443C;
 }
+ul {
+    padding-left:30px;
+}​
+
+li {
+	margin: 0 0 5px 0;
+}
 h1 {
 	font-family: Georgia,"Times New Roman",serif;
 	font-weight: normal;
@@ -66,6 +73,11 @@ img.vid-thumbnail {
 	border: 1px solid #cba;
 }
 
+code{
+	font-size: 0.9em !important;
+	
+}
+
 pre.code {
 	overflow: auto;
 	font-size: 14px;
@@ -79,6 +91,30 @@ pre.code {
 	-moz-border-radius: 2px;
 	-webkit-border-radius: 2px;
 	border-radius: 2px;
+}
+pre.command,
+pre.path {
+	overflow: auto;
+	font-size: 14px;
+	font-family: Consolas, "Courier New", Courier, monospace;
+	/*background: #FCFCFA;*/
+    background: #dee5e5;
+	margin: 10px 0 10px 0;
+	padding: 10px;
+	/*border: 1px solid #ccc;*/
+    border: 1px solid #8f8170;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	border-radius: 2px;
+	line-height: 1.1em;
+	white-space: pre;           /* CSS 2.0 */
+	white-space: pre-wrap;      /* CSS 2.1 */
+	white-space: pre-line;      /* CSS 3.0 */
+	white-space: -pre-wrap;     /* Opera 4-6 */
+	white-space: -o-pre-wrap;   /* Opera 7 */
+	white-space: -moz-pre-wrap; /* Mozilla */
+	white-space: -hp-pre-wrap;  /* HP Printers */
+	word-wrap: break-word;      /* IE 5+ */
 }
 pre code {
 	background: #dee5e5;
@@ -362,3 +398,20 @@ a.download-link {
 	color: #9E876F;
 }
 
+sup,
+sub {
+	height: 0;
+	line-height: 1;
+	vertical-align: baseline;
+	_vertical-align: bottom;
+	position: relative;
+	
+}
+
+sup {
+	bottom: 1ex;
+}
+
+sub {
+	top: .5ex;
+}
