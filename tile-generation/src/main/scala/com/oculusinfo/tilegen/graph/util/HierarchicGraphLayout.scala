@@ -189,57 +189,6 @@ class HierarchicGraphLayout extends Serializable {
 			coords
 		})				
 					
-					
-//dgdg non-threshold method....		
-//		val graph = Graph(nodes, edges)
-//		
-//		// find all intra-community edges and store with parent community ID as map key
-//		val edgesByParent = graph.triplets.flatMap(et => {
-//			val srcParentID = et.srcAttr	// parent community for edge's source node
-//			val dstParentID = et.dstAttr	// parent community for edge's destination node
-//			
-//			if (srcParentID == dstParentID) {
-//				// this is an INTRA-community edge (so save result with parent community ID as key)
-//				Iterator( (srcParentID, (et.srcId, et.dstId, et.attr)) )
-//			}
-//			else {
-//				// this is an INTER-community edge (so disregard for force-directed layout of leaf communities)
-//				Iterator.empty
-//			}		
-//		})
-//		
-//		val groupedEdges = if (consolidationPartitions==0) {	// group intra-community edges by parent community ID
-//			edgesByParent.groupByKey()
-//		} else {
-//			edgesByParent.groupByKey(consolidationPartitions)
-//		}
-//				
-//		val swappedNodes = nodes.map(n => (n._2, n._1))	// swap so parent ID is the key, and raw node ID is the value
-//		val nodesByParent = if (consolidationPartitions==0) {	// group by parent community ID
-//			swappedNodes.groupByKey()
-//		} else {
-//			swappedNodes.groupByKey(consolidationPartitions)
-//		}
-//		
-//		//join raw nodes, with intra-community edges, with parent rectangle locations (key is parent community ID)
-//		val joinedData = nodesByParent.leftOuterJoin(groupedEdges).map({case (parentID, (nodeIDs, edgesOption)) =>
-//			// create a dummy edge for any communities without intra-cluster edges
-//			// (ie for leaf communities containing only 1 node)
-//			val edgeResults = edgesOption.getOrElse(Iterable( (-1L, -1L, 0L) ))
-//			(parentID, (nodeIDs, edgeResults))
-//		}).join(lastLevelLayout)
-//			
-//		val finalNodeCoords = joinedData.flatMap(p => {
-//			val parentID = p._1
-//			val commNodes = p._2._1._1		// List of raw node IDs in a given community
-//			val commEdges = p._2._1._2 
-//			val parentRectangle = p._2._2
-//			//data format is (parent communityID, Iterable(communityID,numInternalNodes, community degree))
-//			val coords = forceDirectedLayouter.run(commNodes, commEdges, parentRectangle, borderOffset, maxIterations)
-//			coords
-//		})
-			
-		finalNodeCoords.count	//dgdg
 		finalNodeCoords	
 	}
 
