@@ -37,6 +37,7 @@ define(function (require) {
 
     var LayerMediator = require('../LayerMediator'),
         SharedObject = require('../../util/SharedObject'),
+        Util = require('../../util/Util'),
         BaseLayerMediator;
 
 
@@ -55,6 +56,7 @@ define(function (require) {
             // Create a layer state object for the base map.
             layerState = new SharedObject();
             layerState.set( 'id', map.id );
+            layerState.set( 'uuid', Util.generateUuid() );
             layerState.set( 'name', "Base Layer" );
             layerState.set( 'domain', 'base' );
             layerState.BASE_LAYERS = map.baseLayers;

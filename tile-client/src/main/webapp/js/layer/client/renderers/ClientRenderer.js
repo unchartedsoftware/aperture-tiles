@@ -37,9 +37,10 @@ define(function (require) {
         ClassName: "ClientRenderer",
 
 
-        init: function(map) {
+        init: function( map, spec ) {
 
             this.map = map;
+            this.spec = spec;
         },
 
         registerLayer: function( layerState ) {

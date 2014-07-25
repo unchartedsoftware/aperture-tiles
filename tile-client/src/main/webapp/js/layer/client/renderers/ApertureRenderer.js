@@ -36,10 +36,10 @@ define(function (require) {
     ApertureRenderer = ClientRenderer.extend({
         ClassName: "ApertureRenderer",
 
-        init: function( map ) {
+        init: function( map, spec ) {
 
             var that = this;
-            this._super( map );
+            this._super( map, spec );
             this.opacity = 1.0;
             this.visibility = true;
             this.nodeLayer = {};

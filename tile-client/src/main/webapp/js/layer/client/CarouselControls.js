@@ -252,11 +252,16 @@ define(function (require) {
             this.controlMap = {};
             this.$carousel = $('<div class="' + CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
 
+            // TODO: only have carousel controls appear for top client layer
             for (i=0; i<layerStates.length; i++) {
-                layerStates[i].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[i] ) );
-                if (i === 0) {
-                    layerStates[i].set( 'carouselEnabled', true );
+
+                if ( layerStates[i].get('rendererCount') > 1 ) {
+                    layerStates[i].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[i] ) );
+                    if (i === 0) {
+                        layerStates[i].set( 'carouselEnabled', true );
+                    }
                 }
+
             }
         },
 

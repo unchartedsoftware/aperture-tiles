@@ -37,6 +37,7 @@ define(function (require) {
 
     var LayerMediator = require('../LayerMediator'),
         SharedObject = require('../../util/SharedObject'),
+        Util = require('../../util/Util'),
         requestRampImage,
         ServerLayerMediator;
 
@@ -119,6 +120,7 @@ define(function (require) {
                 // defaulted to appropriate starting values.
                 layerState = new SharedObject();
                 layerState.set( 'id', layer.id );
+                layerState.set( 'uuid', Util.generateUuid() );
                 layerState.set( 'name', layer.name );
                 layerState.set( 'domain', 'server' );
                 layerState.set( 'enabled', layerSpec.renderer.enabled );

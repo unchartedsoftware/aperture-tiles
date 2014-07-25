@@ -43,6 +43,7 @@ define(function (require) {
         };
     };
 
+
     ClientLayer = Layer.extend({
 
 
@@ -195,6 +196,8 @@ define(function (require) {
                 this.tileServices[i].requestData( tilesByRenderer[i],
                                                   tileViewBounds,
                                                   makeRedrawFunc( this.renderers[i], this.tileServices[i] ) );
+                // force a redraw here, this will ensure that all removed nodes are erased
+                this.renderers[i].redraw( this.tileServices[i].getDataArray() );
             }
         }
 

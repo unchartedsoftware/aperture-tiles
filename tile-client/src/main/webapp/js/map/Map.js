@@ -34,6 +34,7 @@ define(function (require) {
 
 
 	var Class = require('../class'),
+	    //Util = require('../util/Util'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
 	    TileIterator = require('../binning/TileIterator'),
@@ -119,6 +120,13 @@ define(function (require) {
                                  spec.MapConfig.zoomTo[1],
                                  spec.MapConfig.zoomTo[2] );
             }
+
+            /*
+            Util.enableTooltip( this.getRootElement(), function() {
+
+            });
+            */
+
 		},
 
 

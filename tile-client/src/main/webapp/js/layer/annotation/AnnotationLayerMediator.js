@@ -37,6 +37,7 @@ define(function (require) {
 
     var LayerMediator = require('../LayerMediator'),
         SharedObject = require('../../util/SharedObject'),
+        Util = require('../../util/Util'),
         AnnotationLayerMediator;
 
 
@@ -61,6 +62,7 @@ define(function (require) {
 
                 layerState = new SharedObject();
                 layerState.set( 'id', layer.id );
+                layerState.set( 'uuid', Util.generateUuid() );
                 layerState.set( 'name', layer.name );
                 layerState.set( 'domain', 'annotation' );
                 layerState.set( 'enabled', true );

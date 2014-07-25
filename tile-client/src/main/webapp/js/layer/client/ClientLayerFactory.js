@@ -46,16 +46,16 @@ define( function (require) {
                 clientLayerDeferred = $.Deferred(),
                 i;
 
-            function loadModule( arg ) {
+            function loadModule( module, spec ) {
                 var requireDeferred = $.Deferred();
-                require( [arg], function( RendererModule ) {
-                    requireDeferred.resolve( new RendererModule( map ) );
+                require( [module], function( RendererModule ) {
+                    requireDeferred.resolve( new RendererModule( map, spec ) );
                 });
                 return requireDeferred;
             }
 
             for (i=0; i<renderers.length; i++) {
-                rendererDeferreds.push( loadModule( "./renderers/" + renderers[i] ) );
+                rendererDeferreds.push( loadModule( "./renderers/" + renderers[i].type, renderers[i].spec ) );
             }
 
             $.when.apply( $, rendererDeferreds ).done( function() {

@@ -168,7 +168,7 @@ define(function (require) {
      */
     createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) {
 
-        var $settingsButton = $('<button class="settings-link">settings</button>');
+        var $settingsButton = $('<button class="layer-controls-button">settings</button>');
         // set callback
         $settingsButton.click(function () {
             showLayerSettings( $layerControlsContainer, $layerContent, layerState, settingsCustomization );
@@ -192,8 +192,8 @@ define(function (require) {
     createVisibilityButton = function( layerState, controlsMapping ) {
 
         var $toggleDiv = $('<div class="layer-toggle"></div>'),
-            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.get( 'id' ) + '">')
-                             .add($('<label for="layer-toggle-box-' + layerState.get( 'id' ) + '"></label>'));
+            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.get( 'uuid' ) + '">')
+                             .add($('<label for="layer-toggle-box-' + layerState.get( 'uuid' ) + '"></label>'));
 
         $toggleDiv.append( $toggleBox );
         // Initialize the button from the model and register event handler.
@@ -388,7 +388,7 @@ define(function (require) {
      */
     addLayerDragCallbacks = function( sortedLayers, $layerControlsContainer, $layerControlRoot, layerState, layerStateMap, controlsMap ) {
 
-        var controlsMapping = controlsMap[ layerState.get( 'id' ) ];
+        var controlsMapping = controlsMap[ layerState.get( 'uuid' ) ];
 
         $layerControlRoot.draggable({
             "revert": function(valid) {
@@ -520,7 +520,7 @@ define(function (require) {
      */
     addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization ) {
         var layerState = sortedLayers[index],
-            id = layerState.get( 'id' ),
+            uuid = layerState.get( 'uuid' ),
             name = layerState.get( 'name' ) || layerState.get( 'id' ),
             domain = layerState.get( 'domain' ),
             $layerControlRoot,
@@ -528,12 +528,12 @@ define(function (require) {
             $layerContent,
             controlsMapping;
 
-        controlsMap[id] = {};
-        layerStateMap[id] = layerState;
-        controlsMapping = controlsMap[id];
+        controlsMap[uuid] = {};
+        layerStateMap[uuid] = layerState;
+        controlsMapping = controlsMap[uuid];
 
         // create layer root
-        $layerControlRoot = $('<div id="layer-controls-' + id + '" class="layer-controls-layer layer-controls-'+domain+'"></div>');
+        $layerControlRoot = $('<div id="layer-controls-' + uuid + '" class="layer-controls-layer layer-controls-'+domain+'"></div>');
         $layerControlsContainer.append( $layerControlRoot );
         controlsMapping.layerRoot = $layerControlRoot;
         // add layer dragging / dropping callbacks to swap layer z-index
@@ -611,7 +611,7 @@ define(function (require) {
         $settingsContainer.append($settingsContent);
 
         // create back button
-        $backButton = $('<button class="settings-link">back</button>');
+        $backButton = $('<button class="layer-controls-button">back</button>');
         // set tooltip
         Util.enableTooltip( $backButton,
                             TOOLTIP_SETTINGS_BACK_BUTTON,
@@ -701,7 +701,7 @@ define(function (require) {
     makeLayerStateObserver = function (layerState, controlsMap, layerStates, $layersControlListRoot) {
         return function (fieldName) {
 
-            var controlsMapping = controlsMap[ layerState.get( 'id' ) ],
+            var controlsMapping = controlsMap[ layerState.get( 'uuid' ) ],
                 baseLayer, previousBaseLayer;
 
             switch (fieldName) {

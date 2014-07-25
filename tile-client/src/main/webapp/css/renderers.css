@@ -1,0 +1,209 @@
+@charset "UTF-8";
+
+.aperture-tile {
+	position:relative;
+	-webkit-backface-visibility: hidden;
+			backface-visibility: hidden;
+	height: 256px;
+	width: 256px;
+}
+
+
+/********************************************/
+/* 		     Meta Data Renderer  	     	*/
+/********************************************/
+
+
+.meta-entry-parent {
+	position: relative;
+    float: right;
+    right: 50%;
+}
+
+.meta-entry {
+	float: right;
+    right: -50%;
+    position: relative;
+    text-align: center;
+    -webkit-transform: scale(0.8);
+       -moz-transform: scale(0.8);
+        -ms-transform: scale(0.8);
+            transform: scale(0.8);
+    -webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;    
+    z-index:1;
+}
+
+.meta-entry-label {
+    position: relative;
+    color: #FFFFFF;
+	z-index: 1;
+	text-shadow:
+	    -1px -1px 2px #000,
+	     1px -1px 2px #000,
+	    -1px  1px 2px #000,
+	     1px  1px 2px #000,
+	     0px  0px 2px #000,
+	     0px  5px 5px #000;	
+}
+
+.meta-entry:hover {
+	cursor: pointer;
+	-webkit-filter: grayscale(0);
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+
+/********************************************/
+/* 		     Text Score Renderer  	     	*/
+/********************************************/
+
+
+.text-score-entry-parent {
+	position: relative;
+    float: right;
+    right: 50%;
+    margin-top:-8px;
+}
+
+.text-score-entry {
+	float: right;
+    right: -50%;
+    position: relative;
+    text-align:center;
+    -webkit-transform: scale(0.667);
+       -moz-transform: scale(0.667);
+        -ms-transform: scale(0.667);
+            transform: scale(0.667);
+    -webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;    
+    z-index:1;
+}
+
+.text-score-entry-label {
+    position: relative;
+    color: #FFFFFF;
+    line-height: 42px;
+	top: -8px;
+	white-space: nowrap;
+	z-index: 1;
+	text-shadow:
+	    -1px -1px 2px #000,
+	     1px -1px 2px #000,
+	    -1px  1px 2px #000,
+	     1px  1px 2px #000,
+	     0px  0px 2px #000,
+	     0px  5px 5px #000;	
+}
+
+.text-score-entry:hover {
+	cursor: pointer;
+	-webkit-filter: grayscale(0);
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+.text-score-count-bar {
+
+	position:absolute;
+	height: 9px;
+	width: 150px;
+	margin-left: 50%;
+	bottom: 0px;
+	border: 2px solid #000000;
+	box-shadow: 1px 1px 5px #000;
+	z-index: 0;
+
+}
+
+.text-score-count-sub-bar {
+	height:100%;
+	float:left;
+	background-color: #FFFFFF;
+}
+
+
+.count-summary {
+	position:absolute;
+	top: 10px;
+	right: 10px;
+	text-align: right;
+	color: #ffffff;
+	font-size: 0.8em;
+	text-shadow:
+	    -1px -1px 2px #000,
+	     1px -1px 2px #000,
+	    -1px  1px 2px #000,
+	     1px  1px 2px #000,
+	     0px  0px 2px #000;
+}
+
+
+/********************************************/
+/* 		     Word Cloud Renderer  	     	*/
+/********************************************/
+
+
+.word-cloud-word {
+	cursor: pointer;
+	position:absolute;
+	color: #FFFFFF;
+	text-shadow:
+	    -1px -1px 2px #000,
+	     1px -1px 2px #000,
+	    -1px  1px 2px #000,
+	     1px  1px 2px #000,
+	     0px  0px 2px #000,
+	     0px  5px 5px #000;
+	-webkit-transform: scale(0.9);
+       -moz-transform: scale(0.9);
+        -ms-transform: scale(0.9);
+            transform: scale(0.9);
+	-webkit-transition: -webkit-transform 0.1s ease-in-out;
+       -moz-transition:    -moz-transform 0.1s ease-in-out;
+       	-ms-transition:     -ms-transform 0.1s ease-in-out;
+            transition:         transform 0.1s ease-in-out;
+}
+
+.word-cloud-word-temp {
+	position:relative;
+	display: inline-block;
+	color: #FFFFFF;
+	-webkit-transform: scale(0.9);
+       -moz-transform: scale(0.9);
+        -ms-transform: scale(0.9);
+            transform: scale(0.9);
+}
+
+.word-cloud-word:hover {
+	color: #FFFFFF;
+	-webkit-transform: scale(1.0);
+       -moz-transform: scale(1.0);
+        -ms-transform: scale(1.0);
+            transform: scale(1.0);
+}
+
+
+/********************************************/
+/* 		             Other     		    	*/
+/********************************************/
+
+.greyed {
+	color: #777;
+}
+
+.clicked {
+}
+
+.clear {
+    clear: both;
+}

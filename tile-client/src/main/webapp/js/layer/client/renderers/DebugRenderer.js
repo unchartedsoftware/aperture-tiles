@@ -47,9 +47,9 @@ define(function (require) {
     DebugRenderer = HtmlRenderer.extend({
         ClassName: "DebugLayer",
 		
-        init: function ( map ) {
+        init: function ( map, spec ) {
 
-            this._super( map );
+            this._super( map, spec );
             this.createNodeLayer(); // instantiate the node layer data object
             this.createLayer();     // instantiate the html visualization layer
         },
