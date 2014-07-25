@@ -54,12 +54,14 @@ object ClusteredGraphLayoutApp {
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
 		val borderOffset = argParser.getInt("border","Percent of boundingBox width and height to leave as whitespace when laying out leaf nodes. Default is 5 percent", Some(5))
 		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))	
-		val numNodesThres = argParser.getInt("nthres", "Community size threshold to use for switching from group-in-box to force-directed layout schemes", Some(1000))
+		val numNodesThres = argParser.getInt("nthres", "Community size threshold to use for grouping sub-communities together into one force-directed layout task", Some(1000))
+		val nodeAreaPercent = argParser.getInt("narea", "Used for Hiearchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 20 percent", Some(20))
 		
 		val fileStartTime = System.currentTimeMillis()
 		
-		val layouter = new HierarchicGraphLayout()
-		val nodePositions = layouter.determineLayout(sc, 
+		// Hierarchical Force-Directed layout scheme
+		val layouter = new HierarchicFDLayout()
+		val graphWithCoords = layouter.determineLayout(sc, 
 													maxIterations, 
 													maxHierarchyLevel, 
 													partitions, 
@@ -67,11 +69,41 @@ object ClusteredGraphLayoutApp {
 													sourceDir, 
 													dataDelimiter,
 													(layoutLength,layoutLength),
-													borderOffset,
-													numNodesThres)
+													nodeAreaPercent)
+													
+		// re-format results into tab-delimited strings for saving to text file											
+		val resultsNodes = graphWithCoords.vertices.map(node => {
+			val (id, (x, y)) = node
+			
+			("node\t" + id + "\t" + x + "\t" + y)
+		})
+
+		val resultsEdges = graphWithCoords.triplets.map(et => {
+			val srcID = et.srcId
+			val dstID = et.dstId
+			val srcCoords = et.srcAttr
+			val dstCoords = et.dstAttr
+			
+			("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr)
+		})
+				
+		val resultsAll = resultsNodes.union(resultsEdges)	// put both node and edge results into one RDD
 		
-		nodePositions.saveAsTextFile(outputDir)	// save results -- format is (nodeID, x coord, y coord) 
+		resultsAll.saveAsTextFile(outputDir)	// save results to outputDir										
 		
+		// Hierarchical Group-In-Box layout scheme											
+//		val layouter = new HierarchicGIBLayout()
+//		val nodePositions = layouter.determineLayout(sc, 
+//													maxIterations, 
+//													maxHierarchyLevel, 
+//													partitions, 
+//													consolidationPartitions, 
+//													sourceDir, 
+//													dataDelimiter,
+//													(layoutLength,layoutLength),
+//													borderOffset,
+//													numNodesThres)
+													
 		val fileEndTime = System.currentTimeMillis()
 		println("Finished hierarchic graph layout job in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
 		

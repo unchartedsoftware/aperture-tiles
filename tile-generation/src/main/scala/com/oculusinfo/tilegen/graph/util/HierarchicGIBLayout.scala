@@ -35,7 +35,7 @@ import org.apache.spark.graphx._
 //import scala.util.Random
 
 /**
- *  Hierarchical graph layout algorithm
+ *  Hierarchical Group-In-Box layout algorithm
  *  
  *  sc = spark context
  *  maxIterations = max iterations to use for force-directed layout algorithm. Default = 500
@@ -47,7 +47,7 @@ import org.apache.spark.graphx._
  *	borderOffset = percent of boundingBox width and height to leave as whitespace when laying out leaf nodes.  Default is 5 percent
  *	numNodesThres = threshold used to determine when to layout underlying communities/nodes with GIB or FD layout.  Default is 1000 nodes
  **/ 
-class HierarchicGraphLayout extends Serializable {
+class HierarchicGIBLayout extends Serializable {
 
 	def determineLayout(sc: SparkContext, 
 						maxIterations: Int = 500, 
@@ -127,27 +127,28 @@ class HierarchicGraphLayout extends Serializable {
 		// parse edge data
 		val edges = parseEdgeData(sc, sourceDir + "/level_" + level + "_edges", partitions, delimiter)
 		
-		// parse node data ... format is (node ID, parent community ID)
+		// parse node data ... format is (node ID, parent community ID, internal number of nodes)
 		val nodes = parseNodeData(sc, sourceDir + "/level_" + level + "_vertices", partitions, delimiter)
-					.map(node => (node._1, node._2._1))
+					.map(node => (node._1, node._2._1, node._2._2))
 					
-		// swap so parent ID is the key, and raw node ID is the value, join with parent rectangle, and store
+		// swap so parent ID is the key, join with parent rectangle, and store
 		// as (node ID, parent rect)
-		val nodesWithRectangles = nodes.map(n => (n._2, n._1))
+		val nodesWithRectangles = nodes.map(n => (n._2, (n._1, n._3)))
 									   .join(lastLevelLayout)
 									   .map(n => { 
-									  	   val id = n._2._1
+									  	   val id = n._2._1._1
+									  	   val numInternalNodes = n._2._1._2
 									  	   //val parentId = n._1
 									  	   val parentRect = n._2._2
-									  	   (id, parentRect)
+									  	   (id, (parentRect, numInternalNodes))
 									   })
 									   
 		val graph = Graph(nodesWithRectangles, edges)	// create graph with parent rectangle as Vertex attribute
 
 		// find all intra-community edges and store with parent rectangle as map key
 		val edgesByRect = graph.triplets.flatMap(et => {
-			val srcParentRect = et.srcAttr	// parent rect for edge's source node
-			val dstParentRect = et.dstAttr	// parent rect for edge's destination node
+			val srcParentRect = et.srcAttr._1	// parent rect for edge's source node
+			val dstParentRect = et.dstAttr._1	// parent rect for edge's destination node
 			
 			if (srcParentRect == dstParentRect) {
 				// this is an INTRA-community edge (so save result with parent community ID as key)
@@ -165,31 +166,31 @@ class HierarchicGraphLayout extends Serializable {
 			edgesByRect.groupByKey(consolidationPartitions)
 		}
 		
-		// now re-map nodes by (parent rect, node ID) and group by parent rectangle
+		// now re-map nodes by (parent rect, (node ID, numInternalNodes)) and group by parent rectangle
 		val groupedNodes = if (consolidationPartitions==0) {	
-			nodesWithRectangles.map(n => (n._2, n._1)).groupByKey()
+			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2))).groupByKey()
 		} else {
-			nodesWithRectangles.map(n => (n._2, n._1)).groupByKey(consolidationPartitions)
+			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2))).groupByKey(consolidationPartitions)
 		}
 			
 		//join raw nodes with intra-community edges (key is parent rectangle)
-		val joinedData = groupedNodes.leftOuterJoin(groupedEdges).map({case (parentRect, (nodeIDs, edgesOption)) =>
+		val joinedData = groupedNodes.leftOuterJoin(groupedEdges).map({case (parentRect, (nodeData, edgesOption)) =>
 			// create a dummy edge for any communities without intra-cluster edges
 			// (ie for leaf communities containing only 1 node)
 			val edgeResults = edgesOption.getOrElse(Iterable( (-1L, -1L, 0L) ))
-			(parentRect, (nodeIDs, edgeResults))
+			(parentRect, (nodeData, edgeResults))
 		})
 		
 		// perform force-directed layout algorithm on all nodes and edges in a given parent rectangle
 		val finalNodeCoords = joinedData.flatMap(p => {
 			val parentRectangle = p._1
-			val communityNodes = p._2._1		// List of raw node IDs in a given community
+			val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
 			val communityEdges = p._2._2 
 			val coords = forceDirectedLayouter.run(communityNodes, communityEdges, parentRectangle, borderOffset, maxIterations)
 			coords
 		})				
 					
-		finalNodeCoords	
+		finalNodeCoords.map(data => (data._1, data._2, data._3))	// store coordinate results as (nodeId, x, y)
 	}
 
 	//----------------------
@@ -237,7 +238,4 @@ class HierarchicGraphLayout extends Serializable {
 		})
 		nodes
 	}
-			
-			
-
 }
