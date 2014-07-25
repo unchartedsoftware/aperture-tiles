@@ -449,6 +449,7 @@ class CSVStaticProcessingStrategy[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag]
 	(sc: SparkContext,
 	 indexer: CSVIndexExtractor[IT],
 	 valuer: CSVValueExtractor[PT, BT],
+	 filter: Option[Map[String, Any] => Boolean],
 	 dataAnalytics: Option[AnalysisDescription[(IT, PT), DT]],
 	 properties: CSVRecordPropertiesWrapper,
 	 cacheRaw: Boolean,
@@ -498,6 +499,7 @@ class CSVStaticProcessingStrategy[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag]
 		val localIndexer = indexer
 		val localValuer = valuer
 		val localDataAnalytics = dataAnalytics
+		val localFilter = filter
 		// Determine which fields we need
 		val fields = localIndexer.fields ++ localValuer.fields
 
@@ -527,17 +529,19 @@ class CSVStaticProcessingStrategy[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag]
 				val indexFields = localIndexer.fields
 				val valueFields = localValuer.fields
 
-				iter.map(t =>
-					{
-						Try{
-							val fieldValues = fields.map(field =>
-								(field -> extractor.getFieldValue(field)(t).get)
-							).toMap
+				val fieldValueMaps = iter.map(t =>
+					Try (
+						fields.map(field => (field -> extractor.getFieldValue(field)(t).get)).toMap
+					)
+				).filter(_.isSuccess).map(_.get)
 
-							(localIndexer.calculateIndex(fieldValues),
-							 localValuer.calculateValue(fieldValues))
-						}
-					}
+				val filtered = localFilter.map(fieldValueMaps.filter(_)).getOrElse(fieldValueMaps)
+
+				filtered.map(fieldValues =>
+					Try (
+						(localIndexer.calculateIndex(fieldValues),
+						 localValuer.calculateValue(fieldValues))
+					)
 				)
 			}
 		).filter(_.isSuccess).map(_.get).map{case (index, value) =>
@@ -599,6 +603,22 @@ class CSVDataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		}
 	}
 
+	private def getFilter: Option[Map[String, Any] => Boolean] = {
+		val filterField = properties.getStringOption(
+			"oculus.binning.source.filter.field",
+			"A field to use for filtering data.")
+		val filterRegex = properties.getStringOption(
+			"oculus.binning.source.filter.regex",
+			"A regular expression describing the values of the given filter "+
+				"field that are to be kept (not removed).")
+		filterField.flatMap(field => filterRegex.map(regex => (field, regex))).map{
+			case (field: String, regex: String) => {
+				(fields: Map[String, Any]) =>
+				fields.contains(field) && fields(field).toString.matches(regex)
+			}
+		}
+	}
+
 	def initialize (sc: SparkContext,
 	                cacheRaw: Boolean,
 	                cacheFilterable: Boolean,
@@ -606,12 +626,12 @@ class CSVDataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		initialize(new CSVStaticProcessingStrategy(sc,
 		                                           indexer,
 		                                           valuer,
+		                                           getFilter,
 		                                           dataAnalytics,
 		                                           properties,
 		                                           cacheRaw,
 		                                           cacheFilterable,
 		                                           cacheProcessed))
-	
 }
 
 
