@@ -144,6 +144,8 @@ class HierarchicFDLayout extends Serializable {
 		
 			// perform force-directed layout algorithm on all nodes and edges in a given parent rectangle
 			if (level > 0) {
+				val currAreaPercent = Math.min(nodeAreaPercent + (level-1)*5,80)	// use more area for communities at higher hierarchical levels
+																					// TODO -- test this further!
 				val levelLayout = joinedData.flatMap(p => {
 					val parentRectangle = p._1
 					val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
@@ -154,7 +156,7 @@ class HierarchicFDLayout extends Serializable {
 														   borderOffset, 
 														   maxIterations,
 														   true,
-														   nodeAreaPercent)
+														   currAreaPercent)
 					// convert x,y coords and community radii to square bounding boxes for next hierarchical level
 					val rects = convertNodeCirclesToRectangles(coords)	
 					rects
