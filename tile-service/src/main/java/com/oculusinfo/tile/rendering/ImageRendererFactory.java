@@ -39,7 +39,7 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
                                                                     "heatmap",
                                                                     new String[] {
                                                                       "heatmap", "listheatmap", "toptextscores", "textscores",
-                                                                      "doubleeseries", "doublestatistics", "metadata" });
+                                                                      "doublestatistics", "metadata" });
 
 
 
@@ -71,8 +71,6 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 			return new TopTextScoresImageRenderer();
 		} else if ("textscores".equals(rendererType)) {
 			return new TopAndBottomTextScoresImageRenderer();
-		} else if ("doubleeseries".equals(rendererType)) {
-			return new DoublesSeriesImageRenderer();
 		} else if ("doublestatistics".equals(rendererType)) {
 			return new DoublesStatisticImageRenderer();
 		} else if ("metadata".equals(rendererType)) {
