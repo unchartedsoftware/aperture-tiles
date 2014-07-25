@@ -26,6 +26,8 @@
 package com.oculusinfo.tile.rendering;
 
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.DoubleProperty;
+import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 import com.oculusinfo.tile.rendering.impl.*;
@@ -34,13 +36,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRenderer> {
-    public static StringProperty RENDERER_TYPE = new StringProperty("type",
-                                                                    "The type of renderer that will be used to render the data on the server",
-                                                                    "heatmap",
-                                                                    new String[] {
-                                                                      "heatmap", "listheatmap", "toptextscores", "textscores",
-                                                                      "doublestatistics", "metadata" });
-
+    public static StringProperty RENDERER_TYPE        = new StringProperty("type",
+                                                                           "The type of renderer that will be used to render the data on the server",
+                                                                           "heatmap",
+                                                                           new String[] {"heatmap", "listheatmap", "toptextscores", "textscores",
+                                                                                         "doublestatistics", "metadata"});
+    public ListProperty<String>  METADATA_COMPONENTS  = new ListProperty<>(new StringProperty("component",
+                                                                                              "A component of the metadata to show",
+                                                                                              null),
+                                                                           "components",
+                                                                           "A list of the labels of metadata information to show");
+    public DoubleProperty        HORIZONTAL_ALIGNMENT = new DoubleProperty("halign",
+                                                                           "The alignment of the displayed information, with 0.0 being on the left hand side of the tile, and 1.0 being on the right",
+                                                                           0.5);
+    public DoubleProperty        VERTICAL_ALIGNMENT   = new DoubleProperty("valign",
+                                                                           "The alignment of the displayed information, with 0.0 being on the bottom of the tile, and 1.0 being on the top",
+                                                                           0.5);
 
 
 	public ImageRendererFactory (ConfigurableFactory<?> parent,
@@ -53,6 +64,10 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 		super(name, TileDataImageRenderer.class, parent, path);
 
 		addProperty(RENDERER_TYPE);
+		addProperty(METADATA_COMPONENTS);
+		addProperty(HORIZONTAL_ALIGNMENT);
+		addProperty(VERTICAL_ALIGNMENT);
+
 		addChildFactory(new ColorRampFactory(this, new ArrayList<String>()));
 	}
 
@@ -74,7 +89,10 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 		} else if ("doublestatistics".equals(rendererType)) {
 			return new DoublesStatisticImageRenderer();
 		} else if ("metadata".equals(rendererType)) {
-		    return new MetaDataRenderer();
+		    List<String> components = getPropertyValue(METADATA_COMPONENTS);
+            double halign = getPropertyValue(HORIZONTAL_ALIGNMENT);
+            double valign = getPropertyValue(VERTICAL_ALIGNMENT);
+		    return new MetaDataRenderer(components, halign, valign);
 		} else {
 			return null;
 		}

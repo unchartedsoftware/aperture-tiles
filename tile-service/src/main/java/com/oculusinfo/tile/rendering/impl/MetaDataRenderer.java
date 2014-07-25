@@ -29,6 +29,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,6 +48,17 @@ import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
 public class MetaDataRenderer implements TileDataImageRenderer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetaDataRenderer.class);
+    private static final double TEXT_SCALE_FACTOR = 6.0;
+
+    private List<String> _components;
+    private double _horizontalAlignment;
+    private double _verticalAlignment;
+
+    public MetaDataRenderer (List<String> components, double halign, double valign) {
+        _components = components;
+        _horizontalAlignment = halign;
+        _verticalAlignment = valign;
+    }
 
     @Override
     public BufferedImage render (LayerConfiguration config) {
@@ -82,8 +94,18 @@ public class MetaDataRenderer implements TileDataImageRenderer {
             List<String> texts = new ArrayList<>();
 
             for (TileData<?> tile: tiles) {
-                for (String property: tile.getMetaDataProperties()) {
-                    texts.add(property+": "+tile.getMetaData(property));
+                Collection<String> metadataProperties = tile.getMetaDataProperties();
+                if (null == _components || _components.isEmpty()) {
+                    // No preset components to show; just show everything.
+                    for (String property: metadataProperties) {
+                        texts.add(property+": "+tile.getMetaData(property));
+                    }
+                } else {
+                    // Show preset components in the order they appear in our component list
+                    for (String component: _components) {
+                        if (metadataProperties.contains(component))
+                            texts.add(component+": "+tile.getMetaData(component));
+                    }
                 }
             }
 
@@ -91,19 +113,23 @@ public class MetaDataRenderer implements TileDataImageRenderer {
 
             g.setClip(null);
 
-            int centerX = width/2;
-            int centerY = height/2;
+            int baselineX = (int) (width*_horizontalAlignment);
+            int baselineY = (int) (height*_verticalAlignment);
+//            int centerX = width/2;
+//            int centerY = height/2;
             g.setColor(new Color(255, 255, 128, 192));
             
             int maxlen = 0;
             for (int i=0; i<n; ++i) {
             	maxlen = Math.max(maxlen, texts.get(i).length());
             }
-            int posX = centerX - maxlen / 2 * 6;
+            int posX = baselineX - (int) ((maxlen*_horizontalAlignment)*TEXT_SCALE_FACTOR);
+//            int posX = centerX - maxlen / 2 * 6;
             
             for (int i=0; i<n; ++i) {
-                double offset = (2*i + 1 - n) / 2.0;
-                int baseline = (int) Math.round(centerY + offset * 16 - 2);
+                double offset = i+(1-n)*_verticalAlignment;
+//                double offset = (2*i + 1 - n) / 2.0;
+                int baseline = (int) Math.round(baselineY + offset * 16 - 2);
                 g.drawString(texts.get(i), posX, baseline);
             }
         }
