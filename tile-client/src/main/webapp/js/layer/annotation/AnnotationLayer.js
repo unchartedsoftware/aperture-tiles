@@ -258,8 +258,8 @@ define(function (require) {
             for (tilekey in defunctTiles) {
                 if (defunctTiles.hasOwnProperty(tilekey)) {
 
-                    if ( this.idKey ) {
-                        // if idKey is used, remove entries from data map
+                    if ( this.idKey && !pendingTiles[tilekey] ) {
+                        // if idKey is used, and the tile isn't just pending, remove entries from data map
                         removeDataFromMap( this.dataMap, currentTiles[tilekey] );
                     }
 
@@ -376,6 +376,7 @@ define(function (require) {
             return function( data ) {
 
                 var tilekey = that.createTileKey( data.tile ),
+                    pendingTiles = that.pendingTiles,
                     currentTiles = that.tiles,
                     currentData = that.dataMap,
                     key, dataSource,
@@ -385,6 +386,9 @@ define(function (require) {
                     // receiving data from old request, ignore it
                     return;
                 }
+
+                // remove from pending list
+                delete pendingTiles[tilekey];
 
                 // add to data cache
                 currentTiles[tilekey] = [];
