@@ -77,9 +77,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final ListProperty<Integer> LEGEND_RANGE    = new ListProperty<>(new IntegerProperty("", "", -1),
 		         "legendrange",
 		         "The value bounds to use for coloration");
-	public static final IntegerProperty       CURRENT_IMAGE   = new IntegerProperty("currentImage",
-		          "used to determine which of a series of potential images should be displayed.  Ordinarily, this parameter is for programatic use only.",
-		          -1);
 	public static final IntegerProperty       COARSENESS      = new IntegerProperty("coarseness",
 		          "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
 		          1);
@@ -151,7 +148,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(SHORT_NAME);
 		addProperty(TRANSFORM);
 		addProperty(LEGEND_RANGE);
-		addProperty(CURRENT_IMAGE);
 		addProperty(OUTPUT_WIDTH);
 		addProperty(OUTPUT_HEIGHT);
 		addProperty(LINE_NUMBER);

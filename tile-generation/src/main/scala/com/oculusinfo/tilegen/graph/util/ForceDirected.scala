@@ -33,73 +33,108 @@ import scala.util.Random
  *  Converted from the 'FFDLayouter' code in ApertureJS
  *  
  *  notes:
+ *  - nodes = List of (node ID, number of internal nodes) -- num of internal nodes is only applicable
+ *  	for hierarchical force-directed applications (ie if each 'node' represents a community). In this
+ *   	case it is recommended to set bUseNodeSizes = true
  *  - boundingBox = bottem-left corner, width, height of bounding region for layout of nodes
  *  - borderOffset = percent of boundingBox width and height to leave as whitespace when laying out nodes
- */ 
+ *  - maxIterations = max number of iterations to use for force-directed algorithm
+ *  - bUseNodeSizes = uses 'number of internal nodes' attribute to size each node as a circle
+ *  - nodeAreaPercent = if bUseNodeSizes = true, then this parameter is used to determine the area of all node
+ *  	'circles' within the boundingBox vs whitespace 
+ *  
+ **/ 
 class ForceDirected extends Serializable {
 
-	def run(nodes: Iterable[(Long)], edges: Iterable[(Long, Long, Long)],
+	def run(nodes: Iterable[(Long, Long)], 
+			edges: Iterable[(Long, Long, Long)],
 			boundingBox: (Double, Double, Double, Double), 
-			borderOffset: Int = 0, maxIterations: Int = 1000): Array[(Long, Double, Double)] = {
+			borderOffset: Int = 0, 
+			maxIterations: Int = 1000,
+			bUseNodeSizes: Boolean = false,
+			nodeAreaPercent: Int = 20): Array[(Long, Double, Double, Double)] = {
 		
+		val nodeOverlapRepulsionFactor = 100.0	// constant used if node 'circles' overlap (adapted from ForceAtlas2 algorithm)
 		val numNodes = nodes.size
 		if (numNodes == 0) throw new IllegalArgumentException("number of nodes must be > 0")
 		
-		val boundingBoxFinal = calcFinalBoundingBox(boundingBox, borderOffset)
+		val invTotalInternalNodes = if (bUseNodeSizes) {	// inverse of total number of internal nodes in all groups
+			1.0 / (nodes.map(_._2).reduce(_ + _))
+		}
+		else {
+			0L
+		}
+		
+		var boundingBoxFinal = if ((!bUseNodeSizes) && (borderOffset > 0)) {
+			calcFinalBoundingBox(boundingBox, borderOffset)
+		}
+		else {
+			boundingBox
+		}
+		var boundingBoxArea = boundingBoxFinal._3 * boundingBoxFinal._4
+		val nodeAreaFactor = nodeAreaPercent*0.01
 		
 		if (numNodes == 1) {
 			//---- Special case: only one node to layout, so place in centre of boundingBox
 			val x = boundingBox._1 + boundingBox._3*0.5	
 			val y = boundingBox._2 + boundingBox._4*0.5
-			return Array( (nodes.last, x, y) )
+			val radius = if (bUseNodeSizes) {
+				val wTmp = boundingBox._3*0.5
+				val hTmp = boundingBox._4*0.5
+				Math.sqrt(wTmp*wTmp + hTmp*hTmp)
+			}
+			else {
+				0.0
+			}
+			return Array( (nodes.last._1, x, y, radius) )
 		}
-		if (numNodes == 2) {
+		if ((numNodes == 2) && !bUseNodeSizes) {
 			//---- Special case: only two nodes to layout, so place bottem-left and top-right corners
 			val nodeList = nodes.toList
 			val x = boundingBox._1
 			val y = boundingBox._2
 			val x1 = boundingBox._1 + boundingBox._3
 			val y1 = boundingBox._2 + boundingBox._4
-			return Array( (nodeList(0), x, y), (nodeList(1), x1, y1) )
+			return Array( (nodeList(0)._1, x, y, 0.0), (nodeList(1)._1, x1, y1, 0.0) )
 		}
 			
-		//---- Initially assign random co-ordinates for all nodes
+		//---- Initially assign random co-ordinates for all nodes (random number between 0 and 1) 
+		// and also assign radii for each node based on internal community size (if applicable)
+		
 		// TODO -- try other initial layout schemes to try and reduce number of needed iterations?
 		//Eg, place nodes with highest degree in centre, and others farther away ... perhaps in a spiral-like layout similar to Group-in-Box
 		val randSeed = 911
 		var random = new Random(randSeed)
-		var nodeCoords = nodes.map(n => (n, random.nextDouble, random.nextDouble)).toArray
-		
-		//---- Normalize random x,y coords so ranges are between 0 to 1 
-		var maxX = Double.MinValue
-		var minX = Double.MaxValue
-		var maxY = Double.MinValue
-		var minY = Double.MaxValue
-		
-		for (n <- 0 until numNodes) {
-			val (x,y) = (nodeCoords(n)._2, nodeCoords(n)._3)
-			maxX = Math.max(maxX, x)
-			minX = Math.min(minX, x)
-			maxY = Math.max(maxY, y)
-			minY = Math.min(minY, y)			
+		var nodeCoords = if (bUseNodeSizes) {
+			nodes.map(n => {
+				val numInternalNodes = n._2
+				val nodeArea = nodeAreaFactor * boundingBoxArea * numInternalNodes * invTotalInternalNodes
+				val nodeRadius = Math.sqrt(nodeArea * 0.31831)	//0.31831 = 1/pi
+				(n._1, random.nextDouble, random.nextDouble, nodeRadius)
+			}).toArray
+		} else {
+			nodes.map(n => (n._1, random.nextDouble, random.nextDouble, 0.0)).toArray
 		}
-
-		var sx = 1.0 / (maxX - minX)
-		var sy = 1.0 / (maxY - minY)
 		
+		if (bUseNodeSizes) {
+			// Shrink bounding box a bit to ensure node 'circles' don't extend beyond the edges of parent box too much
+			val borderWeightFactor = 0.5 // between 0 and 1 ... 0 = no shrinking, 1 = max shrinking  
+			val borderAdjust = nodeCoords.map(_._4).reduce(_ max _) * borderWeightFactor
+			boundingBoxFinal = (boundingBoxFinal._1+borderAdjust, boundingBoxFinal._2+borderAdjust, boundingBoxFinal._3 - 2.0*borderAdjust, boundingBoxFinal._4 - 2.0*borderAdjust)
+			boundingBoxArea = boundingBoxFinal._3 * boundingBoxFinal._4
+		}
+		
+		// normalize starting coords so they are within the width and height of the bounding box
 		for (n <- 0 until numNodes) {
-			val (id,x,y) = nodeCoords(n)
-			nodeCoords(n) = (id, (x-minX)*sx, (y-minY)*sy)		
+			val (id,x,y, radius) = nodeCoords(n)
+			nodeCoords(n) = (id, x*boundingBoxFinal._3, y*boundingBoxFinal._4, radius)		
 		}
 				
 		//----- Init variables for controlling force-directed step-size
-		val width = 1.0
-		val height = 1.0
-		val areaWH = width * height
-		val k2 = areaWH/numNodes
+		val k2 = boundingBoxArea/numNodes
 		val k_inv = 1.0/Math.sqrt(k2)
-		var temperature = 0.5*Math.min(width, height)
-		val stepLimit = Math.min(width,height)/1000.0
+		var temperature = 0.5*Math.min(boundingBoxFinal._3, boundingBoxFinal._4)
+		val stepLimit = Math.min(boundingBoxFinal._3, boundingBoxFinal._4)/1000.0
 
 		//----- Re-format edge data to reference node array indices instead of actual node ID labels (for faster array look-ups below)
 		val edgesArray = reformatEdges(edges, nodeCoords.map(n => n._1))
@@ -117,29 +152,70 @@ class ForceDirected extends Serializable {
 			var deltaXY = Array.fill[(Double, Double)](numNodes)((0.0,0.0))	
 			
 			//---- Calc repulsion forces between all nodes
-			for (n1 <- 0 until numNodes) {
-				for (n2 <- 0 until numNodes) {
-					if (n1 != n2) {
-						val xDist = nodeCoords(n1)._2 - nodeCoords(n2)._2
-						val yDist = nodeCoords(n1)._3 - nodeCoords(n2)._3
-						val normSq = xDist*xDist + yDist*yDist	// norm of distance between two nodes
-						if (normSq > 0.0) {
-							val repulseForce = k2/normSq	// repulsion force
-							deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
-						}
-					} 
+			if (bUseNodeSizes) {
+				// account for node sizes, by adjusting distance between nodes by node radii
+				for (n1 <- 0 until numNodes) {
+					for (n2 <- 0 until numNodes) {
+						if (n1 != n2) {
+							val xDist = nodeCoords(n1)._2 - nodeCoords(n2)._2
+							val yDist = nodeCoords(n1)._3 - nodeCoords(n2)._3
+							// calc distance between two nodes (corrected for node radii)
+							val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(n1)._4 - nodeCoords(n2)._4	
+							if (dist > 0.0) {
+								val repulseForce = k2/(dist*dist)	// repulsion force
+								deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
+							}
+							else if (dist < 0.0) {
+								val repulseForce = nodeOverlapRepulsionFactor*k2	// extra strong repulsion force if node circles overlap!
+																					// (but no repulsion if dist == 0)
+								deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
+							}
+						} 
+					}
 				}
 			}
+			else {
+				for (n1 <- 0 until numNodes) {
+					for (n2 <- 0 until numNodes) {
+						if (n1 != n2) {
+							val xDist = nodeCoords(n1)._2 - nodeCoords(n2)._2
+							val yDist = nodeCoords(n1)._3 - nodeCoords(n2)._3
+							val normSq = xDist*xDist + yDist*yDist	// norm of distance between two nodes
+							if (normSq > 0.0) {
+								val repulseForce = k2/normSq	// repulsion force
+								deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
+							}
+						} 
+					}
+				}
+			}		
 			
 			//---- Calc attraction forces due to all edges
-			for (e1 <- 0 until numEdges) {
-			    val (srcE, dstE) = edgesArray(e1)	//get node indices for edge endpoints
-			    
-			    val xDist = nodeCoords(dstE)._2 - nodeCoords(srcE)._2
-			    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
-			    val attractForce = Math.sqrt(xDist*xDist + yDist*yDist) * k_inv
-			    deltaXY(srcE) = (deltaXY(srcE)._1 + xDist*attractForce, deltaXY(srcE)._2 + yDist*attractForce)
-			    deltaXY(dstE) = (deltaXY(dstE)._1 - xDist*attractForce, deltaXY(dstE)._2 - yDist*attractForce)			
+			if (bUseNodeSizes) {
+				// account for node sizes, by adjusting distance between nodes by node radii
+				for (e1 <- 0 until numEdges) {
+				    val (srcE, dstE) = edgesArray(e1)	//get node indices for edge endpoints
+				    
+				    val xDist = nodeCoords(dstE)._2 - nodeCoords(srcE)._2
+				    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
+				    val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(dstE)._4 - nodeCoords(srcE)._4
+				    if (dist > 0) {	// only calc attraction force if node circles don't overlap
+					    val attractForce = dist * k_inv
+					    deltaXY(srcE) = (deltaXY(srcE)._1 + xDist*attractForce, deltaXY(srcE)._2 + yDist*attractForce)
+					    deltaXY(dstE) = (deltaXY(dstE)._1 - xDist*attractForce, deltaXY(dstE)._2 - yDist*attractForce)			
+				    }
+				}
+			}
+			else {
+				for (e1 <- 0 until numEdges) {
+				    val (srcE, dstE) = edgesArray(e1)	//get node indices for edge endpoints
+				    
+				    val xDist = nodeCoords(dstE)._2 - nodeCoords(srcE)._2
+				    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
+				    val attractForce = Math.sqrt(xDist*xDist + yDist*yDist) * k_inv
+				    deltaXY(srcE) = (deltaXY(srcE)._1 + xDist*attractForce, deltaXY(srcE)._2 + yDist*attractForce)
+				    deltaXY(dstE) = (deltaXY(dstE)._1 - xDist*attractForce, deltaXY(dstE)._2 - yDist*attractForce)			
+				}				
 			}
 			
 			//---- Calc final displacements and save results for this iteration
@@ -155,7 +231,7 @@ class ForceDirected extends Serializable {
 			    largestStep = Math.max(largestStep, deltaDist);	// save largest step for this iteration
 			    
 			    // save new node coord locations
-			    nodeCoords(n) = (nodeCoords(n)._1, nodeCoords(n)._2 + deltaXY(n)._1, nodeCoords(n)._3 + deltaXY(n)._2)
+			    nodeCoords(n) = (nodeCoords(n)._1, nodeCoords(n)._2 + deltaXY(n)._1, nodeCoords(n)._3 + deltaXY(n)._2, nodeCoords(n)._4)
 			}
 			
 			temperature = temperature*(1.0 - iterations.toDouble/maxIterations)	// 'cool' the temperature towards 0 (ie simulated annealing)
@@ -168,14 +244,15 @@ class ForceDirected extends Serializable {
 				bDone = true
 				println("Finished layout algorithm in " + iterations + " iterations.")
 			}
+
 			iterations += 1
 		}
 		
 		//---- Do final scaling of XY co-ordinates to fit within bounding box
-		maxX = Double.MinValue
-		minX = Double.MaxValue
-		maxY = Double.MinValue
-		minY = Double.MaxValue
+		var maxX = Double.MinValue
+		var minX = Double.MaxValue
+		var maxY = Double.MinValue
+		var minY = Double.MaxValue
 		
 		for (n <- 0 until numNodes) {
 			val (x,y) = (nodeCoords(n)._2, nodeCoords(n)._3)
@@ -184,14 +261,27 @@ class ForceDirected extends Serializable {
 			maxY = Math.max(maxY, y)
 			minY = Math.min(minY, y)			
 		}
-
-		sx = boundingBoxFinal._3 / (maxX - minX)
-		sy = boundingBoxFinal._4 / (maxY - minY)
 		
-		for (n <- 0 until numNodes) {
-			val (id,x,y) = nodeCoords(n)
-			nodeCoords(n) = (id, (x-minX)*sx + boundingBoxFinal._1, (y-minY)*sy + boundingBoxFinal._2)		
-		}
+		// TODO -- note:  with this scheme, we *could* end up with circles overlapping after final scaling if sx or sy < 1),
+		// need to investigate further... 
+//		if (bUseNodeSizes) {
+//			// need to use the same scaleFactor for both x and y coords so node 'circles' don't get distorted
+//			val scaleFactor = Math.min(boundingBoxFinal._3 / (maxX - minX),  boundingBoxFinal._4 / (maxY - minY))
+//			
+//			for (n <- 0 until numNodes) {
+//				val (id,x,y, radius) = nodeCoords(n)
+//				nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBoxFinal._1, (y-minY)*scaleFactor + boundingBoxFinal._2, radius)		
+//			}	
+//		}
+//		else {
+			val sx = boundingBoxFinal._3 / (maxX - minX)
+			val sy = boundingBoxFinal._4 / (maxY - minY)
+			
+			for (n <- 0 until numNodes) {
+				val (id,x,y, radius) = nodeCoords(n)
+				nodeCoords(n) = (id, (x-minX)*sx + boundingBoxFinal._1, (y-minY)*sy + boundingBoxFinal._2, radius)		
+			}		
+//		}
 						
 		nodeCoords	// return final node coordinates
 	}
@@ -222,5 +312,5 @@ class ForceDirected extends Serializable {
 				
 		}).toArray
 	}
-
+	
 }
