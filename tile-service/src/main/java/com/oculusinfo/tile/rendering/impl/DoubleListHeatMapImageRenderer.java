@@ -24,32 +24,28 @@
  */
 package com.oculusinfo.tile.rendering.impl;
 
-        import com.oculusinfo.binning.TileData;
-        import com.oculusinfo.binning.TileIndex;
-        import com.oculusinfo.binning.io.PyramidIO;
-        import com.oculusinfo.binning.io.serialization.TileSerializer;
-        import com.oculusinfo.binning.io.transformation.FilterVarsDoubleArrayTileTransformer;
-        import com.oculusinfo.binning.io.transformation.TileTransformer;
-        import com.oculusinfo.binning.metadata.PyramidMetaData;
-        import com.oculusinfo.binning.util.Pair;
-        import com.oculusinfo.binning.util.TypeDescriptor;
-        import com.oculusinfo.factory.ConfigurationException;
-        import com.oculusinfo.factory.properties.StringProperty;
-        import com.oculusinfo.tile.rendering.LayerConfiguration;
-        import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-        import com.oculusinfo.tile.rendering.color.ColorRamp;
-        import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
-        import org.codehaus.jettison.json.JSONObject;
-        import org.slf4j.Logger;
-        import org.slf4j.LoggerFactory;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.List;
 
-        import java.awt.*;
-        import java.awt.image.BufferedImage;
-        import java.util.ArrayList;
-        import java.util.Collections;
-        import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-        import org.apache.commons.lang.ArrayUtils;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.transformation.TileTransformer;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
+import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rendering.color.ColorRamp;
+import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
 
 /**
  * A server side to render List<Pair<String, Int>> tiles.
@@ -69,6 +65,9 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 
+    // This is the only way to get a generified class; because of type erasure,
+    // it is definitionally accurate.
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Class<List<Double>> getRuntimeBinClass () {
         return (Class) List.class;
     }
@@ -83,7 +82,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
         try {
             return Double.parseDouble(rawValue);
         } catch (NumberFormatException|NullPointerException e) {
-            LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
+            LOGGER.info("Bad {} value {} for {}, defaulting to {}", propName, rawValue, layer, def);
             return def;
         }
     }
@@ -145,13 +144,17 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
                 }
             }
 
-            // Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
+            // Missing tiles are commonplace and we didn't find any data up the
+            // tree either. We don't want a big long error for that.
             if (tileDatas.size() < 1) {
                 _logger.info("Missing tile " + index + " for layer " + layer);
                 return null;
             }
 
             TileData<List<Double>> data = tileDatas.get(0);
+            TileTransformer tileTransformer = config.produce(TileTransformer.class);
+            TileData<List<Double>> transformedContents = tileTransformer.Transform(data, getRuntimeBinClass());
+
             int xBins = data.getDefinition().getXBins();
             int yBins = data.getDefinition().getYBins();
 
@@ -175,9 +178,6 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             double xScale = ((double) bi.getWidth())/numBinsWide;
             double yScale = ((double) bi.getHeight())/numBinsHigh;
             ColorRamp colorRamp = config.produce(ColorRamp.class);
-
-            TileTransformer tileTransformer = config.produce(TileTransformer.class);
-            TileData<List<Double>> transformedContents = tileTransformer.Transform(data, getRuntimeBinClass());
 
             for(int ty = 0; ty < numBinsHigh; ty++){
                 for(int tx = 0; tx < numBinsWide; tx++){

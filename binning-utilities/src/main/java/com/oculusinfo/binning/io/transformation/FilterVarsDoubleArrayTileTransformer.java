@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
@@ -117,41 +118,37 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 		return resultJSON;
 	}
 
+	// No way to check this, so we have to hope and pray :-(
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public <T> TileData<T> Transform (TileData<T> inputData, Class<? extends T> type) throws Exception {
         if (!List.class.isAssignableFrom(type)) throw new IllegalArgumentException("This transformer only works on lists");
 
         //list of indices to keep
-        TileData<List<Double>> resultData;
+        TileData<List<Double>> resultTile;
 
         //If there are none to keep, return empty list
         if (_variables == null) {
-            resultData = null;
+            resultTile = null;
         } else {
-            resultData = new TileData<>(inputData.getDefinition());
+            List<List<Double>> rawData = (List) inputData.getData();
+            List<List<Double>> transformedData = new ArrayList<>(rawData.size());
 
-            for (int binXIndex = 0; binXIndex < inputData.getDefinition().getXBins(); binXIndex++) {
-                for (int binYIndex = 0; binYIndex < inputData.getDefinition().getYBins(); binYIndex++) {
-                    Object rawBinVal = inputData.getBin(binXIndex, binYIndex);
-                    if (rawBinVal instanceof List) {
-                        List<?> listBinVal = (List<?>) rawBinVal;
-                        List<Double> newData = new ArrayList<>();
+            for (List<Double> rawEntry: rawData) {
+                int size = rawEntry.size();
+                List<Double> transformedEntry = new ArrayList<>(_variables.size());
 
-                        for ( int varIndex : _variables ) {
-                            Object rawVarVal = ( varIndex < listBinVal.size() ) ? listBinVal.get(varIndex) : null;
-                            if (rawVarVal instanceof Number) {
-                                newData.add( ((Number)rawVarVal).doubleValue() );
-                            } else {
-                                newData.add(0.0);
-                            }
-                        }
-                        resultData.setBin(binXIndex, binYIndex, newData);
-                    }
+                for ( int varIndex : _variables ) {
+                    if (varIndex < size)
+                        transformedEntry.add(rawEntry.get(varIndex));
                 }
+                transformedData.add(transformedEntry);
             }
+
+            resultTile = new TileData<>(inputData.getDefinition(), transformedData);
         }
 
-        return (TileData) resultData;
+        return (TileData) resultTile;
     }
 
 }
