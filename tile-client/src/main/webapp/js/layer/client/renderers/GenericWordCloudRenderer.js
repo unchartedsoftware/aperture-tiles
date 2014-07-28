@@ -68,7 +68,7 @@ define(function (require) {
 
         addClickStateClassesGlobal: function() {
 
-            var selectedValue = this.layerState.get('click')[this.spec.valueKey],
+            var selectedValue = this.layerState.get('click')[this.spec.entryKey],
                 $elements = $(".word-cloud-word");
 
             $elements.filter( function() {
@@ -313,8 +313,9 @@ define(function (require) {
                                 + 'width:'+cloudWord.width+'px;'
                                 + 'height:'+cloudWord.height+'px;">'+cloudWord.word+'</div>');
 
-                        that.setMouseEventCallbacks( $elem, this, value, spec.countKey );
+                        that.setMouseEventCallbacks( $elem, this, value, spec.entryKey, spec.countKey );
                         that.addClickStateClasses( $elem, value, spec.entryKey );
+
                         $html.append( $elem );
                     }
 

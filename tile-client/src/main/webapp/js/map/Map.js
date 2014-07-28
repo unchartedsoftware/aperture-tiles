@@ -34,7 +34,6 @@ define(function (require) {
 
 
 	var Class = require('../class'),
-	    //Util = require('../util/Util'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
 	    TileIterator = require('../binning/TileIterator'),
@@ -120,12 +119,6 @@ define(function (require) {
                                  spec.MapConfig.zoomTo[1],
                                  spec.MapConfig.zoomTo[2] );
             }
-
-            /*
-            Util.enableTooltip( this.getRootElement(), function() {
-
-            });
-            */
 
 		},
 
@@ -608,7 +601,10 @@ define(function (require) {
 
 
         panToCoord: function( x, y ) {
-            this.map.panTo( y, x );
+            var viewportPixel = this.getViewportPixelFromCoord( x, y ),
+                lonlat = this.map.olMap_.getLonLatFromViewPortPx( viewportPixel );
+
+            this.map.olMap_.panTo( lonlat );
         },
 
 
