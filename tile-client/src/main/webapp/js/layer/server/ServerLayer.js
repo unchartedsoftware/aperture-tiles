@@ -26,8 +26,6 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
-
-
 define(function (require) {
     "use strict";
 

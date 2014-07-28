@@ -76,11 +76,11 @@ define(function (require) {
                 layerState.set( 'enabled', true );
                 layerState.set( 'opacity', 1.0 );
                 layerState.set( 'zIndex', 1000+i );
-                layerState.set( 'rendererCount', layer.renderers.length );
+                layerState.set( 'rendererCount', layer.views.length );
                 layerState.set( 'defaultRendererIndex', 0 );
                 // register layer state with each renderer
-                for (j=0; j< layer.renderers.length; j++) {
-                    layer.renderers[j].registerLayer( layerState );
+                for (j=0; j< layer.views.length; j++) {
+                    layer.views[j].renderer.registerLayer( layerState );
                 }
 
                 // Register a callback to handle layer state change events.

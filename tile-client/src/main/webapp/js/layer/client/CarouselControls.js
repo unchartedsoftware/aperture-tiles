@@ -247,21 +247,16 @@ define(function (require) {
          */
         init: function ( layerStates, map ) {
 
-            var i;
+            if (layerStates.length < 1) {
+                return;
+            }
 
             this.controlMap = {};
             this.$carousel = $('<div class="' + CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
 
-            // TODO: only have carousel controls appear for top client layer
-            for (i=0; i<layerStates.length; i++) {
-
-                if ( layerStates[i].get('rendererCount') > 1 ) {
-                    layerStates[i].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[i] ) );
-                    if (i === 0) {
-                        layerStates[i].set( 'carouselEnabled', true );
-                    }
-                }
-
+            if ( layerStates[0].get('rendererCount') > 1 ) {
+                layerStates[0].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[0] ) );
+                layerStates[0].set( 'carouselEnabled', true );
             }
         },
 

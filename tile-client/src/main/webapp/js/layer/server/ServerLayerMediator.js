@@ -51,7 +51,7 @@ define(function (require) {
 
         var legendData = {
                 layer: layerState.get( 'id' ),  // layer id
-                id: layerInfo.id,           // config id
+                id: layerInfo.id,               // config id
                 level: level,
                 width: 128,
                 height: 1,

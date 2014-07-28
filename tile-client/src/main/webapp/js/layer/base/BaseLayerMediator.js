@@ -23,13 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global define, console, $, aperture*/
 
-/**
- * Populates the LayerState model based on the contents of a the layer, and makes the appropriate
- * modifications to it as the LayerState model changes.
- */
 define(function (require) {
     "use strict";
 
@@ -84,6 +78,7 @@ define(function (require) {
 
                         map.setBaseLayerIndex( layerState.get('baseLayerIndex') );
                         if ( layerState.BASE_LAYERS[ layerState.get('baseLayerIndex') ].type !== "BlankBase" ) {
+                            // if switching to a non-blank baselayer, ensure opacity and visibility is restored
                             map.setOpacity( layerState.get('opacity') );
                             map.setVisibility( layerState.get('enabled') );
                         }

@@ -47,38 +47,40 @@ define(function (require) {
     ClientLayer = Layer.extend({
 
 
-        init: function ( spec, renderers, map ) {
+        init: function ( spec, views, map ) {
 
-            this._super( spec, map );
-            this.renderers = renderers;
-            this.tileServices = [];
+            this.id = spec[0].layer;
+            this.name = spec[0].name || spec[0].layer;
+            this.map = map;
+            this.layerSpec = spec;
+            this.layerInfo = {};
+            this.views = views;
             this.renderersByTile = {};
             this.defaultRendererIndex = 0;
-            this.map.on('move', $.proxy(this.update, this));
         },
 
 
         setOpacity: function( opacity ) {
 
             var i;
-            for (i=0; i<this.renderers.length; i++) {
-                this.renderers[i].setOpacity( opacity );
+            for (i=0; i<this.views.length; i++) {
+                this.views[i].renderer.setOpacity( opacity );
             }
         },
 
 
         setVisibility: function( visible ) {
             var i;
-            for (i=0; i<this.renderers.length; i++) {
-                this.renderers[i].setVisibility( visible );
+            for (i=0; i<this.views.length; i++) {
+                this.views[i].renderer.setVisibility( visible );
             }
         },
 
 
         setZIndex: function( zIndex ) {
             var i;
-            for (i=0; i<this.renderers.length; i++) {
-                this.renderers[i].setZIndex( zIndex );
+            for (i=0; i<this.views.length; i++) {
+                this.views[i].renderer.setZIndex( zIndex );
             }
         },
 
@@ -103,40 +105,67 @@ define(function (require) {
 
         configure: function( callback ) {
 
-            var that = this;
+            var that = this,
+                layerSpecs = this.layerSpec,
+                layerInfos = this.layerInfo,
+                deferreds = [],
+                i;
 
-            LayerService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
+            function configureView( layerSpec ) {
 
-                var i;
-                if (statusInfo.success) {
-                    if ( that.layerInfo ) {
-                        // if a previous configuration exists, release it
-                        LayerService.unconfigureLayer( that.layerInfo, function() {
-                            return true;
-                        });
+                var layerDeferred = $.Deferred();
+
+                LayerService.configureLayer( layerSpec, function( layerInfo, statusInfo ) {
+
+                    var layerId = layerInfo.layer;
+
+                    if (statusInfo.success) {
+
+                        if ( layerInfos[layerId] ) {
+                            // if a previous configuration exists, release it
+                            LayerService.unconfigureLayer( layerInfos[layerId], function() {
+                                return true;
+                            });
+                        }
+
+                        // set layer info
+                        layerInfos[ layerId ] = layerInfo;
+                        // resolve deferred
+                        layerDeferred.resolve();
                     }
-                    // set layer info
-                    that.layerInfo = layerInfo;
-                    // create tile service for each renderer
-                    // TODO: add support for different services (multiple layerInfos)
-                    for (i=0; i<that.renderers.length; i++) {
-                        that.tileServices[i] = new TileService( that.getLayerInfo(), that.map.getPyramid() );
-                    }
-                    that.update();
+                });
+                return layerDeferred;
+            }
+
+            for ( i=0; i<layerSpecs.length; i++ ) {
+                deferreds.push( configureView( layerSpecs[i] ) );
+            }
+
+            $.when.apply( $, deferreds ).done( function() {
+
+                var i, view;
+
+                for (i=0; i<that.views.length; i++) {
+                    view = that.views[i];
+                    view.service = new TileService( layerInfos[ view.id ], that.map.getPyramid() );
                 }
 
-                callback( layerInfo, statusInfo );
+                // attach callback now
+                that.map.on('move', $.proxy(that.update, that));
+                that.update();
+                callback( layerInfos );
             });
+
         },
 
 
         setTileRenderer: function( tilekey, newIndex ) {
 
             var oldIndex = this.getTileRenderer( tilekey ),
-                oldRenderer = this.renderers[oldIndex],
-                newRenderer = this.renderers[newIndex],
-                oldService = this.tileServices[oldIndex],
-                newService = this.tileServices[newIndex];
+                oldRenderer = this.views[oldIndex].renderer,
+                newRenderer = this.views[newIndex].renderer,
+                oldService = this.views[oldIndex].service,
+                newService = this.views[newIndex].service;
 
             // update internal state
             if ( newIndex === this.defaultRendererIndex ) {
@@ -168,15 +197,12 @@ define(function (require) {
         update: function() {
 
             var tiles, tilekey,
+                view, renderer, service,
                 rendererIndex,
                 tilesByRenderer = [],
                 tileViewBounds, i;
 
-            if (this.renderers.length === 0 || this.tileServices.length === 0) {
-                return;
-            }
-
-            for (i=0; i<this.renderers.length; ++i) {
+            for (i=0; i<this.views.length; ++i) {
                 tilesByRenderer[i] = [];
             }
 
@@ -191,13 +217,17 @@ define(function (require) {
                 tilesByRenderer[rendererIndex].push( tiles[i] );
             }
 
-            for (i=0; i<this.renderers.length; ++i) {
+            for (i=0; i<this.views.length; ++i) {
+
+                view = this.views[i];
+                renderer = view.renderer;
+                service = view.service;
                 // find which tiles we need for each view from respective
-                this.tileServices[i].requestData( tilesByRenderer[i],
-                                                  tileViewBounds,
-                                                  makeRedrawFunc( this.renderers[i], this.tileServices[i] ) );
+                service.requestData( tilesByRenderer[i],
+                                     tileViewBounds,
+                                     makeRedrawFunc( renderer, service ) );
                 // force a redraw here, this will ensure that all removed nodes are erased
-                this.renderers[i].redraw( this.tileServices[i].getDataArray() );
+                renderer.redraw( service.getDataArray() );
             }
         }
 

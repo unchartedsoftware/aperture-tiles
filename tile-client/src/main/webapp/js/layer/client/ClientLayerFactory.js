@@ -27,55 +27,118 @@
 define( function (require) {
     "use strict";
 
+
+
 	var LayerFactory = require('../LayerFactory'),
 	    ClientLayer = require('./ClientLayer'),
+	    loadRendererModule,
+	    loadAllRendererModules,
+	    assembleViews,
 	    ClientLayerFactory;
 
+
+
+    loadRendererModule = function( module, spec, map ) {
+
+        var requireDeferred = $.Deferred();
+        require( [module], function( RendererModule ) {
+            requireDeferred.resolve( new RendererModule( map, spec ) );
+        });
+        return requireDeferred;
+    };
+
+
+    loadAllRendererModules = function( layerJSON, map ) {
+
+        var renderer,
+            renderers,
+            rendererPath,
+            deferreds = [],
+            i, j;
+
+        for (i=0; i<layerJSON.length; i++) {
+
+            renderers = layerJSON[i].renderers;
+            for (j=0; j<renderers.length; j++) {
+
+                renderer = renderers[j];
+                rendererPath = "./renderers/" + renderer.type;
+                deferreds.push( loadRendererModule( rendererPath, renderer.spec, map ) );
+            }
+        }
+        return deferreds;
+    };
+
+
+    assembleViews = function( layerJSON, rendererObjs ) {
+
+        var layerId,
+            renderers,
+            views = [],
+            i, j, k = 0;
+
+        for (i=0; i<layerJSON.length; i++) {
+
+            layerId = layerJSON[i].layer;
+            renderers = layerJSON[i].renderers;
+
+            for (j=0; j<renderers.length; j++) {
+
+                views.push({
+                    id: layerId,
+                    renderer: rendererObjs[k++]
+                });
+            }
+        }
+        return views;
+    };
 
 
     ClientLayerFactory = LayerFactory.extend({
         ClassName: "ClientLayerFactory",
 
 
+        // override base function so that all client rendering
+        // instances in config file are group into a single layer
+        createLayers: function( layerJSON, map, layerMediator ) {
 
-        createLayer: function(layerJSON, map) {
+            var rendererDeferreds,
+                factoryDeferred = $.Deferred();
 
-            var renderers = layerJSON.renderers,
-                rendererDeferreds = [],
-                clientLayer,
-                clientLayerDeferred = $.Deferred(),
-                i;
-
-            function loadModule( module, spec ) {
-                var requireDeferred = $.Deferred();
-                require( [module], function( RendererModule ) {
-                    requireDeferred.resolve( new RendererModule( map, spec ) );
-                });
-                return requireDeferred;
+            if ( layerJSON.length === 0 ) {
+                factoryDeferred.resolve([]);
+                return factoryDeferred;
             }
 
-            for (i=0; i<renderers.length; i++) {
-                rendererDeferreds.push( loadModule( "./renderers/" + renderers[i].type, renderers[i].spec ) );
-            }
+            // load all renderer modules and grab deferreds
+            rendererDeferreds = loadAllRendererModules( layerJSON, map );
 
+            // once all modules are loaded
             $.when.apply( $, rendererDeferreds ).done( function() {
 
-                // once everything has loaded
-                var renderers = Array.prototype.slice.call( arguments, 0 );
+                var rendererObjs = Array.prototype.slice.call( arguments, 0 ),
+                    clientLayer,
+                    views = [];
+
+                // assemble views from renderer objects
+                views = assembleViews( layerJSON, rendererObjs );
                 // create the layer
-                clientLayer = new ClientLayer( layerJSON, renderers, map );
+                clientLayer = new ClientLayer( layerJSON, views, map );
                 // send configuration request
-                clientLayer.configure( function( layerInfo ) {
+                clientLayer.configure( function() {
+                    // once layer is configured
+                    layerMediator.registerLayers( [clientLayer] );
                     // resolve deferred
-                    clientLayerDeferred.resolve( clientLayer );
+                    factoryDeferred.resolve( [clientLayer] );
                 });
+
             });
 
-            return clientLayerDeferred;
+            return factoryDeferred;
         }
 
-
     });
+
 
     return ClientLayerFactory;
 
