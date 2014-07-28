@@ -133,7 +133,7 @@ public class JsonUtilities {
                     }
                 } else if (value instanceof JSONArray) {
                     if (base.has(key) && base.get(key) instanceof JSONArray) {
-                        overlayInPlace((JSONArray) base.get(key), (JSONArray) value);
+                        base.put(key, overlay((JSONArray) base.get(key), (JSONArray) value));
                     } else {
                         base.put(key, deepClone((JSONArray) value));
                     }
@@ -149,17 +149,21 @@ public class JsonUtilities {
     }
 
     /**
-     * Overlays one JSON array, in place, over another, deeply.
+     * Overlays one JSON array over another, deeply. This does not work in
+     * place, but passes back a new array
      * 
-     * @param base The array to alter
-     * @param overlay The array defining how the base will be altered.
+     * @param base
+     *            The array to alter
+     * @param overlay
+     *            The array defining how the base will be altered.
      * @return The base array, with the overlay now overlaid upon it.
      */
-    public static JSONArray overlayInPlace (JSONArray base, JSONArray overlay) {
+    public static JSONArray overlay (JSONArray base, JSONArray overlay) {
         if (null == overlay) return base;
         if (null == base) return deepClone(overlay);
 
         try {
+            JSONArray result = new JSONArray();
             // Overlay elements in both or just in the overlay
             for (int i=0; i<overlay.length(); ++i) {
                 Object value = overlay.get(i);
@@ -167,26 +171,22 @@ public class JsonUtilities {
                     // Null array element; ignore, don't everlay
                 } else if (value instanceof JSONObject) {
                     if (base.length() > i && base.get(i) instanceof JSONObject) {
-                        overlayInPlace((JSONObject) base.get(i), (JSONObject) value);
+                        result.put(i, overlayInPlace((JSONObject) base.get(i), (JSONObject) value));
                     } else {
-                        base.put(i, deepClone((JSONObject) value));
+                        result.put(i, deepClone((JSONObject) value));
                     }
                 } else if (value instanceof JSONArray) {
                     if (base.length() > i && base.get(i) instanceof JSONArray) {
-                        overlayInPlace((JSONArray) base.get(i), (JSONArray) value);
+                        result.put(i, overlay((JSONArray) base.get(i), (JSONArray) value));
                     } else {
-                        base.put(i, deepClone((JSONArray) value));
+                        result.put(i, deepClone((JSONArray) value));
                     }
                 } else {
-                    base.put(i, value);
+                    result.put(i, value);
                 }
             }
 
-            // Remove extra elements not in the overlay
-            while (base.length() > overlay.length())
-                base.remove(overlay.length());
-
-            return base;
+            return result;
         } catch (JSONException e) {
             LOGGER.error("Weird JSON exception cloning object", e);
             return null;

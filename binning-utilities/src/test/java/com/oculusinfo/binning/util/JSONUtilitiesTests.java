@@ -111,14 +111,8 @@ public class JSONUtilitiesTests {
 	public void testArrayOverlayTruncation () throws Exception {
 	    JSONArray base = new JSONArray("['a', 'b', 'c', 'd', 'e', 'f']");
 	    JSONArray overlay = new JSONArray("[1, 2, null, 4]");
-	    JSONArray result = JsonUtilities.overlayInPlace(base, overlay);
+	    JSONArray result = JsonUtilities.overlay(base, overlay);
 
-        Assert.assertEquals(4, base.length());
-        Assert.assertEquals(1, base.getInt(0));
-        Assert.assertEquals(2, base.getInt(1));
-        Assert.assertEquals("c", base.getString(2));
-        Assert.assertEquals(4, base.getInt(3));
-        
         Assert.assertEquals(4, result.length());
         Assert.assertEquals(1, result.getInt(0));
         Assert.assertEquals(2, result.getInt(1));
