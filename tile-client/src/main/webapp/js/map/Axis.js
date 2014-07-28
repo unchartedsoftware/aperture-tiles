@@ -282,21 +282,40 @@ define(function (require) {
      */
     function createAxis( that ) {
 
-        var $axis;
+        var $axis,
+            enableSlide,
+            disableSlide,
+            horizontalSlide,
+            verticalSlide;
 
-        // enable / disable functions
-        function horizontalSlide() {
+        enableSlide = function() {
+            // set enable / disable callbacks
+            if (that.isXAxis) {
+                that.$header.click(verticalSlide);
+                that.$content.click(verticalSlide);
+            } else {
+                that.$header.click(horizontalSlide);
+                that.$content.click(horizontalSlide);
+            }
+        };
+        disableSlide = function() {
+            that.$header.off('click');
+            that.$content.off('click');
+        };
+        horizontalSlide = function() {
             that.setEnabled( !that.isEnabled() );
             that.setContentDimension();
-            that.$content.animate({width: 'toggle'});
+            disableSlide();
+            that.$content.animate({width: 'toggle'}, {complete: function(){ enableSlide();} });
             that.map.redrawAxes();
-        }
-        function verticalSlide()  {
+        };
+        verticalSlide = function() {
             that.setEnabled( !that.isEnabled() );
             that.setContentDimension();
-            that.$content.animate({height: 'toggle'});
+            disableSlide();
+            that.$content.animate({height: 'toggle'}, {complete: function(){ enableSlide();} });
             that.map.redrawAxes();
-        }
+        };
 
         // create axis title, header, and container and append them to root
         that.$title = createTitle( that );
@@ -306,14 +325,8 @@ define(function (require) {
                     .append( that.$content )
                         .append( that.$header );
 
-        // set enable / disable callbacks
-        if (that.isXAxis) {
-            that.$header.click(verticalSlide);
-            that.$content.click(verticalSlide);
-        } else {
-            that.$header.click(horizontalSlide);
-            that.$content.click(horizontalSlide);
-        }
+        // enable callbacks
+        enableSlide();
 
         // return root
         return $axis;
