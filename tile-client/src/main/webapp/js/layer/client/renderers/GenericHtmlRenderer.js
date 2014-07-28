@@ -73,15 +73,16 @@ define(function (require) {
         },
 
 
-        addClickStateClasses: function( $elem, value, valueKey ) {
+        addClickStateClasses: function( $elem, value, entryKey ) {
 
             // if user has clicked a tag entry, ensure newly created nodes are styled accordingly
-            var selectedValue = this.layerState.has('click') ? this.layerState.get('click')[valueKey] : null;
+            var selectedValue = this.layerState.has('click') ? this.layerState.get('click')[entryKey] : null,
+                $elements = $elem.add( $elem.find('*') );
             if ( selectedValue ) {
-                if ( selectedValue !== value ) {
-                    $elem.addClass('greyed');
+                if ( selectedValue !== value[entryKey] ) {
+                    $elements.addClass('greyed');
                 } else {
-                    $elem.addClass('clicked');
+                    $elements.addClass('clicked');
                 }
             }
         },
@@ -99,12 +100,15 @@ define(function (require) {
         },
 
 
-        clickOn: function( data, value ) {
+        clickOn: function( data, value, entryKey ) {
 
-            this.layerState.set('click', {
+            var click = {
                 data: data,
                 value : value
-            });
+            };
+
+            click[entryKey] = value[entryKey];
+            this.layerState.set('click', click );
         },
 
 
@@ -113,7 +117,7 @@ define(function (require) {
         },
 
 
-        setMouseEventCallbacks: function( $element, data, value, countKey ) {
+        setMouseEventCallbacks: function( $element, data, value, entryKey, countKey ) {
 
             var that = this;
 
@@ -132,7 +136,7 @@ define(function (require) {
 
             Util.dragSensitiveClick( $element, function( event ) {
                 // process click
-                that.clickOn( data, value );
+                that.clickOn( data, value, entryKey );
                 // create details here so that only 1 is created
                 //that.createDetailsOnDemand();
                 // prevent event from going further

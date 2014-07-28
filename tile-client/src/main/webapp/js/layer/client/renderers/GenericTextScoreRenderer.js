@@ -51,8 +51,8 @@ define(function (require) {
 
         addClickStateClassesGlobal: function() {
 
-            var selectedValue = this.layerState.get('click')[this.spec.valueKey],
-                $elements = $(".text-score-entry");
+            var selectedValue = this.layerState.get('click')[this.spec.entryKey],
+                $elements = $(".text-score-entry-parent").find('*');
 
             $elements.filter( function() {
                 return $(this).text() !== selectedValue;
@@ -67,7 +67,7 @@ define(function (require) {
 
         removeClickStateClassesGlobal: function() {
 
-            $(".text-score-entry").removeClass('greyed clicked');
+            $(".text-score-entry-parent").find('*').removeClass('greyed clicked');
         },
 
 
@@ -204,7 +204,7 @@ define(function (require) {
                         $parent.append( $entry );
                         $parent = $parent.add('<div class="clear"></div>');
 
-                        that.setMouseEventCallbacks( $entry, this, value, spec.countKey );
+                        that.setMouseEventCallbacks( $entry, this, value, spec.entryKey, spec.countKey );
                         that.addClickStateClasses( $entry, value, spec.entryKey );
 
                         $html.append( $parent );

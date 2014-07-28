@@ -90,8 +90,7 @@ define(function (require) {
 
         createLayer : function() {
 
-            var that = this,
-                spec = this.spec;
+            var spec = this.spec;
 
             /*
                 Utility function for positioning the labels
@@ -147,7 +146,7 @@ define(function (require) {
 
                         html =     '<div class="meta-entry">';
                         // create entry label
-                        html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px;">'+keyVals[i].key+'</div>';
+                        html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px;">'+keyVals[i].key+':</div>';
                         html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px;">'+keyVals[i].value+'</div>';
 
                         html +=    '</div>';
@@ -157,8 +156,8 @@ define(function (require) {
                         $parent.append( $entry );
                         $parent = $parent.add('<div class="clear"></div>');
 
-                        that.setMouseEventCallbacks( $entry, this, keyVals[i].value );
-                        that.addClickStateClasses( $entry, keyVals[i].value );
+                        //that.setMouseEventCallbacks( $entry, this, value, spec.entryKey, spec.countKey );
+                        //that.addClickStateClasses( $entry, value, spec.entryKey );
 
                         $html.append( $parent );
                     }

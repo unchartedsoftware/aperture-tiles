@@ -293,6 +293,11 @@ require(['./ApertureConfig',
 
                             var sharedStates = [];
 
+                            // customize layers
+                            if (UICustomization.customizeLayers) {
+                                UICustomization.customizeLayers( clientLayers, serverLayers, annotationLayers );
+                            }
+
                             $.merge( sharedStates, baseLayerMediator.getLayerStates() );
                             $.merge( sharedStates, clientLayerMediator.getLayerStates() );
                             $.merge( sharedStates, serverLayerMediator.getLayerStates() );
