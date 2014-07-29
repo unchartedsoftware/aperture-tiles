@@ -132,7 +132,7 @@ define(function (require) {
         function animateToNewSize( container, previousHeight, callback ) {
             var newHeight = container.outerHeight();
             container.css( "height", previousHeight );
-            container.animate( {"height": newHeight} )
+            container.animate( {"height": newHeight}, 200 )
                 .promise()
                     .done( callback );
         }

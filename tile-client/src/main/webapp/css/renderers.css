@@ -2,8 +2,7 @@
 
 .aperture-tile {
 	position:relative;
-	-webkit-backface-visibility: hidden;
-			backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 	height: 256px;
 	width: 256px;
 }

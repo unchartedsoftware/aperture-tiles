@@ -147,8 +147,6 @@
     height:100%;
     top:0px;
     left:0px;
-    -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;

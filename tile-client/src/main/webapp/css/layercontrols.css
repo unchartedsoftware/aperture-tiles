@@ -54,8 +54,6 @@
 .layer-controls-layer {
     position:relative;
     background-color: #111111;
-    -webkit-backface-visibility: hidden; 
-            backface-visibility: hidden;
 }
 
 .layer-drag-hover {
