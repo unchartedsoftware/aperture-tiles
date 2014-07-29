@@ -250,7 +250,7 @@ define(function (require) {
             marginRight = 0,
             marginTop = 0,
             marginBottom = 0;
-        // add margins in case other axis exist, this prevents ugly shadow overlaps
+        // add margins in case other axis exist, this prevents border overlap
         if (that.isXAxis) {
             marginLeft = that.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
             marginRight = that.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
@@ -259,10 +259,20 @@ define(function (require) {
             marginBottom = that.$map.find('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
         }
         // return jquery element
-        return $('<div class="'+ AXIS_HEADER_CLASS
-               + " " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
-               + 'style="z-index:'+(that.Z_INDEX+1)+';'
-               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px; '+marginLeft+'px;">');
+        return $('<div class="'+ AXIS_HEADER_CLASS + " " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
+               + 'style="z-index:'+(that.Z_INDEX+2)+';'
+               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px; '+marginLeft+'px;"></div>');
+    }
+
+
+    /**
+     * Creates and returns the axis header jquery object
+     */
+    function createHeaderBack( that ) {
+
+        // return jquery element
+        return $('<div class="'+ AXIS_HEADER_CLASS + " " + AXIS_HEADER_CLASS + "-back " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
+               + 'style="z-index:'+(that.Z_INDEX+1)+';"></div>' );
     }
 
 
@@ -273,7 +283,7 @@ define(function (require) {
 
         return $('<div class="'+ AXIS_CONTENT_CLASS
                + " " + that.position + AXIS_CONTENT_CLASS_SUFFIX
-               + '"  style="z-index:'+that.Z_INDEX+';">');
+               + '"  style="z-index:'+that.Z_INDEX+';"></div>');
     }
 
 
@@ -323,7 +333,8 @@ define(function (require) {
         that.$content = createContent( that );
         $axis = $('<div class="'+ that.position + AXIS_DIV_CLASS_SUFFIX + '"></div>')
                     .append( that.$content )
-                        .append( that.$header );
+                        .append( that.$header )
+                            .append( createHeaderBack( that ) );
 
         // enable callbacks
         enableSlide();
@@ -358,9 +369,7 @@ define(function (require) {
      */
     function updateAxisContent( that ) {
 
-        var marker,
-            markers,
-            markerSize,
+        var markers,
             markersHTML = "",
             markersBySize,
             i;
@@ -368,31 +377,21 @@ define(function (require) {
         // generate array of marker labels and pixel locations
         markersBySize = AxisUtil.getMarkers( that );
 
-        // iterate through markers, by marker type
-        for ( markerSize in markersBySize ) {
-            if (markersBySize.hasOwnProperty(markerSize)) {
-
-                markers = markersBySize[markerSize];
-
-                for (i = 0; i < markers.length; i++) {
-
-                    marker = markers[i];
-
-                    switch (markerSize) {
-                        case 'large':
-                            markersHTML += createLargeMarkerHTML( that, marker );
-                            markersHTML += createMarkerLabelHTML( that, marker );
-                            break;
-                        case 'medium':
-                            markersHTML += createMediumMarkerHTML( that, marker );
-                            break;
-                        case "small":
-                            markersHTML += createSmallMarkerHTML( that, marker );
-                            break;
-                    }
-
-                }
-            }
+        // large markers
+        markers = markersBySize.large;
+        for (i = 0; i < markers.length; i++) {
+            markersHTML += createLargeMarkerHTML( that, markers[i] );
+            markersHTML += createMarkerLabelHTML( that, markers[i] );
+        }
+        // medium markers
+        markers = markersBySize.medium;
+        for (i = 0; i < markers.length; i++) {
+            markersHTML += createMediumMarkerHTML( that, markers[i] );
+        }
+        // small markers
+        markers = markersBySize.small;
+        for (i = 0; i < markers.length; i++) {
+            markersHTML += createSmallMarkerHTML( that, markers[i] );
         }
 
         // append all markers and labels at once
@@ -487,6 +486,7 @@ define(function (require) {
             Util.enableEventPropagation( this.$axis );
             Util.disableEventPropagation( this.$axis, ['onclick', 'ondblclick'] );
         },
+
 
         /**
          *  Returns true if the axis is currently enabled, false if not
