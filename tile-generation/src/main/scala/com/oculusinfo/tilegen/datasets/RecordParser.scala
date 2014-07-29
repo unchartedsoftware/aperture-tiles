@@ -39,7 +39,7 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
 object CSVRecordParser {
 	def fromProperties (properties: CSVRecordPropertiesWrapper): CSVRecordParser = {
 		val parserType = properties.getString(
-			"oculus.binning.parsing.type", "", Some("standard")
+			"oculus.binning.index.type", "", Some("standard")
 		)
 
 		parserType match {

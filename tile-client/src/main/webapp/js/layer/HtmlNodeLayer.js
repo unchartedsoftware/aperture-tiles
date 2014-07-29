@@ -74,7 +74,7 @@ define(function (require) {
         }
         // otherwise, create node root based on position
         pos = that.map_.getMapPixelFromCoord( data[that.xAttr_], data[that.yAttr_] );
-        return $('<div style="position:absolute;left:'+pos.x+'px; top:'+ (that.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
+        return $('<div style="position:absolute;left:'+pos.x+'px; top:'+ (that.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px;"></div>');
     };
 
 
