@@ -29,21 +29,26 @@ package com.oculusinfo.tilegen.datasets
 
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
+
 import scala.collection.JavaConversions._
+import scala.collection.convert.Wrappers.SeqWrapper
+import scala.collection.mutable.Buffer
 import scala.reflect.ClassTag
+
 import org.apache.spark.SparkContext
+
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.tilegen.tiling.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.CustomGlobalMetadata
 import com.oculusinfo.tilegen.tiling.IPv4Analytics
 import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
 import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
-import com.oculusinfo.tilegen.util.PropertiesWrapper
 import com.oculusinfo.tilegen.tiling.MinimumDoubleArrayTileAnalytic
 import com.oculusinfo.tilegen.tiling.MaximumDoubleArrayTileAnalytic
-import scala.collection.convert.Wrappers.SeqWrapper
+import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 
@@ -72,20 +77,13 @@ object CSVTileAnalyticExtractor {
 
 		val binType = ClassTag.unapply(valuer.valueTypeTag).get
 
-		val indexAnalytic: AnalysisWithTag[TileData[BT], _] =
-			if (indexer.isInstanceOf[IPv4IndexExtractor]) {
-				new AnalysisWithTag(
-					Some(new CompositeAnalysisDescription(
-						     IPv4Analytics.getCIDRBlockAnalysis[BT](sc),
-						     new CompositeAnalysisDescription(
-							     IPv4Analytics.getMinIPAddressAnalysis[BT](sc),
-							     IPv4Analytics.getMaxIPAddressAnalysis[BT](sc)
-						     )
-					     ))
-				)
-			} else {
-				new AnalysisWithTag[TileData[BT], Int](None)
-			}
+		val analyses = Buffer[AnalysisDescription[TileData[BT], _]]()
+
+		if (indexer.isInstanceOf[IPv4IndexExtractor]) {
+			analyses += IPv4Analytics.getCIDRBlockAnalysis[BT](sc)
+			analyses += IPv4Analytics.getMinIPAddressAnalysis[BT](sc)
+			analyses += IPv4Analytics.getMaxIPAddressAnalysis[BT](sc)
+		}
 		if (binType == classOf[Double]) {
 			val convertFcn: BT => Double = bt => bt.asInstanceOf[Double]
 			val minAnalytic =
@@ -98,36 +96,40 @@ object CSVTileAnalyticExtractor {
 				                                               convertFcn,
 				                                               new MaximumDoubleTileAnalytic,
 				                                               metaDataKeys)
-			val minMaxAnalytic = new CompositeAnalysisDescription(minAnalytic, maxAnalytic)
-			val analytic = 
-				indexAnalytic.analysis
-					.map(new CompositeAnalysisDescription(minMaxAnalytic, _))
-					.getOrElse(minMaxAnalytic)
-			new AnalysisWithTag(Some(analytic))		
-	} else if (valuer.isInstanceOf[SeriesValueExtractor] || valuer.isInstanceOf[MultiFieldValueExtractor]) {
-	  	// TODO: The above ^^^ needs to be handled more gracefully as it won't scale new vector-based extractors
-	  	// are added.
-		  val convertFcn: BT => Seq[Double] = { bt =>
-		    for (b <- bt.asInstanceOf[JavaList[JavaDouble]]) yield b.asInstanceOf[Double]	    	    
-		  }
+
+			analyses += minAnalytic
+			analyses += maxAnalytic
+		} else if (valuer.isInstanceOf[SeriesValueExtractor]
+			           || valuer.isInstanceOf[MultiFieldValueExtractor]) {
+			val convertFcn: BT => Seq[Double] = { bt =>
+				for (b <- bt.asInstanceOf[JavaList[JavaDouble]]) yield b.asInstanceOf[Double]
+			}
 			val minAnalytic =
 				new AnalysisDescriptionTileWrapper[BT, Seq[Double]](sc,
-				                                               convertFcn,
-				                                               new MinimumDoubleArrayTileAnalytic,
-				                                               metaDataKeys)
+				                                                    convertFcn,
+				                                                    new MinimumDoubleArrayTileAnalytic,
+				                                                    metaDataKeys)
 			val maxAnalytic =
 				new AnalysisDescriptionTileWrapper[BT, Seq[Double]](sc,
-				                                               convertFcn,
-				                                               new MaximumDoubleArrayTileAnalytic,
-				                                               metaDataKeys)
-			val minMaxAnalytic = new CompositeAnalysisDescription(minAnalytic, maxAnalytic)
-			val analytic = 
-				indexAnalytic.analysis
-					.map(new CompositeAnalysisDescription(minMaxAnalytic, _))
-					.getOrElse(minMaxAnalytic)
-			new AnalysisWithTag(Some(analytic))
-	} else {
-			indexAnalytic
+				                                                    convertFcn,
+				                                                    new MaximumDoubleArrayTileAnalytic,
+				                                                    metaDataKeys)
+			analyses += minAnalytic
+			analyses += maxAnalytic
+
+			if (valuer.isInstanceOf[SeriesValueExtractor]) {
+				val seriesValuer = valuer.asInstanceOf[SeriesValueExtractor]
+				analyses += new CustomGlobalMetadata(
+					Map("variables" ->
+						    seriesValuer.fields.mkString("[",",","]")))
+			}
+		}
+
+		if (analyses.isEmpty) {
+			new AnalysisWithTag[TileData[BT], Int](None)
+		} else {
+			new AnalysisWithTag(Some(analyses.reduce((a, b) =>
+				                         new CompositeAnalysisDescription(a, b))))
 		}
 	}
 }

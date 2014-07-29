@@ -372,7 +372,10 @@ class MinimumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
 	def aggregateElements (a: Double, b: Double): Double = a min b
 }
 
-class MinimumDoubleArrayTileAnalytic extends MinimumDoubleArrayAnalytic with TileAnalytic[Seq[Double]] {
+class MinimumDoubleArrayTileAnalytic
+		extends MinimumDoubleArrayAnalytic
+		with StandardDoubleArrayTileAnalytic
+{
 	def name = "minimums"
 }
 
@@ -380,7 +383,10 @@ class MaximumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
 	def aggregateElements (a: Double, b: Double): Double = a max b
 }
 
-class MaximumDoubleArrayTileAnalytic extends MaximumDoubleArrayAnalytic with TileAnalytic[Seq[Double]] {
+class MaximumDoubleArrayTileAnalytic
+		extends MaximumDoubleArrayAnalytic
+		with StandardDoubleArrayTileAnalytic
+{
 	def name = "maximums"
 }
 
@@ -563,4 +569,41 @@ class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
 	def aggregate (a: String, b: String): String = a+b
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
+}
+
+
+/**
+ * The Custom Metadata analytic is a dummy tile analytic that does not actually 
+ * write anything to tiles.  It's only purpose is to help 
+ * CustomGlobalMetadata fulfill its interface without having any side-effects.
+ * 
+ */
+class CustomMetadataAnalytic extends TileAnalytic[String]
+{
+	def aggregate (a: String, b: String): String = a
+	def defaultProcessedValue: String = ""
+	def defaultUnprocessedValue: String = ""
+	def name: String = "VariableSeries"
+	override def toMap (value: String): Map[String, String] = Map[String, String]()
+}
+/**
+ * A very simply tile analytic that just writes custom metadata directly to the tile set 
+ * metadata, and no where else.
+ */
+class CustomGlobalMetadata[T] (customData: Map[String, String])
+		extends AnalysisDescription[T, String] with Serializable
+{
+	val analysisTypeTag = implicitly[ClassTag[String]]
+	def convert: T => String = (raw: T) => ""
+	def analytic: TileAnalytic[String] = new CustomMetadataAnalytic
+	def accumulate (tile: TileIndex, data: String): Unit = {}
+	// This is used to apply the analytic to tiles; we don't want anything to happen there
+	def toMap: Map[String, String] = Map[String, String]()
+	// This is used to apply the analytic to metadata; here's where we want stuff used.
+	def applyTo (metaData: PyramidMetaData): Unit =
+		customData.map{case (key, value) =>
+			metaData.setCustomMetaData(value, key)
+		}
+	def resetAccumulators (sc: SparkContext): Unit = {}
+	def copy: AnalysisDescription[T, String] = new CustomGlobalMetadata(customData)
 }
