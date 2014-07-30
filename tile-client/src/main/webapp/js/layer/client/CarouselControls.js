@@ -89,15 +89,29 @@ define(function (require) {
                 case "tileFocus":
 
                     var tilekey = layerState.get('tileFocus'),
-                        topLeft;
+                        topLeft,
+                        parsedValues,
+                        xIndex, yIndex, level, css;
 
                     if ( layerState.get('carouselEnabled') ) {
-                        // if carousel is enabled, update its tile position
-                        topLeft = map.getTopLeftMapPixelForTile( tilekey );
-                        $carousel.css({
-                            left: topLeft.x,
-                            top: map.getMapHeight() - topLeft.y
-                        });
+
+                        parsedValues = tilekey.split(',');
+                        level = parseInt(parsedValues[0], 10);
+                        xIndex = parseInt(parsedValues[1], 10);
+                        yIndex = parseInt(parsedValues[2], 10);
+                        css = {};
+
+                        if ( xIndex < 0 || xIndex > ( 1 << level )-1 ||
+                            yIndex < 0  || yIndex > ( 1 << level )-1 ) {
+                            css.visibility = 'hidden';
+                        } else {
+                            // if carousel is enabled, update its tile position
+                            topLeft = map.getTopLeftMapPixelForTile( tilekey );
+                            css.left = topLeft.x;
+                            css.top = map.getMapHeight() - topLeft.y;
+                            css.visibility = 'visible';
+                        }
+                        $carousel.css(css);
                         updateDotIndices( controlMap, layerState );
                     }
                     break;
