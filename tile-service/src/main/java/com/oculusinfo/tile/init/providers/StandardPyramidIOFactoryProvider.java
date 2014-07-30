@@ -43,11 +43,11 @@ public class StandardPyramidIOFactoryProvider implements FactoryProvider<Pyramid
 	
 	protected static class ChildProvider {
 
-		final FactoryProvider<?> provider;
+		final FactoryProvider<PyramidIO> provider;
 		final List<String> path;
 		final String factoryName;
 		
-		public ChildProvider(FactoryProvider<?> provider, List<String> path, String factoryName) {
+		public ChildProvider(FactoryProvider<PyramidIO> provider, List<String> path, String factoryName) {
 			this.provider = provider;
 			this.path = path;
 			this.factoryName = factoryName;
@@ -89,10 +89,10 @@ public class StandardPyramidIOFactoryProvider implements FactoryProvider<Pyramid
 	 * @param path
 	 * @return
 	 */
-	protected List<ConfigurableFactory<?>> createChildren(List<String> path) {
-		List<ConfigurableFactory<?>> children = Lists.newArrayList();
+	protected List<ConfigurableFactory<PyramidIO>> createChildren(List<String> path) {
+		List<ConfigurableFactory<PyramidIO>> children = Lists.newArrayList();
 		for (ChildProvider childProvider : childFactories) {
-			ConfigurableFactory<?> factory = childProvider.provider.createFactory(childProvider.factoryName, null, getMergedPath(path, childProvider.path));
+			ConfigurableFactory<PyramidIO> factory = childProvider.provider.createFactory(childProvider.factoryName, null, getMergedPath(path, childProvider.path));
 			children.add(factory);
 		}
 		

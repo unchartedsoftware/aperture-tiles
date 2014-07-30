@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+ * 
+ * Released under the MIT License.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package com.oculusinfo.factory;
+
+
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.oculusinfo.factory.properties.StringProperty;
+
+
+
+/**
+ * An UberFactory encapsulates a standard pattern whereby each created object
+ * has its own individual factory, and those individual factories are added to
+ * one central UberFactory which is passed around as needed; the UberFactory's
+ * create call calls the specific sub-factory as needed to create the actual
+ * object.
+ * 
+ * @author nkronenfeld, pulled out from code by cregnier
+ */
+public class UberFactory<T> extends ConfigurableFactory<T> {
+    private static final Logger  LOGGER       = LoggerFactory.getLogger(UberFactory.class);
+
+
+
+    // A public-facing version of the factory type property.
+    public static StringProperty FACTORY_TYPE = new StringProperty("type",
+                                                                   "The sub-type of object to create.  The value of this parameter is used to determine which contained factory to use.",
+                                                                   null);
+
+
+
+    private String                       _defaultType;
+    private List<ConfigurableFactory<T>> _children;
+
+
+
+    public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<T>> children) {
+        this(null, factoryType, parent, path, false, children);
+    }
+
+    public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<T>> children) {
+        this(null, factoryType, parent, path, isSingleton, children);
+    }
+
+    public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<T>> children) {
+        this(name, factoryType, parent, path, false, children);
+    }
+
+    public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<T>> children) {
+        super(name, factoryType, parent, path, isSingleton);
+
+        _children = children;
+        for (ConfigurableFactory<T> child: children) {
+            addChildFactory(child);
+        }
+        addProperty(new FactoryTypeProperty());
+    }
+
+    public void setDefault (String defaultValue) {
+        _defaultType = defaultValue;
+    }
+
+    @Override
+    protected T create () {
+        String subType = getPropertyValue(FACTORY_TYPE);
+        try {
+            return produce(subType, getFactoryType());
+        } catch (ConfigurationException e) {
+            LOGGER.warn("Error creating product {}[{}] for {}", new Object[] {getFactoryType(), getName(), subType});
+            return null;
+        }
+    }
+
+
+
+    private class FactoryTypeProperty extends StringProperty {
+        FactoryTypeProperty () {
+            super(FACTORY_TYPE.getName(), FACTORY_TYPE.getDescription(), null);
+        }
+        @Override
+        public String getDefaultValue () {
+            return _defaultType;
+        }
+        @Override
+        public String[] getPossibleValues () {
+            String[] possibilities = new String[_children.size()];
+            for (int i=0; i<_children.size(); ++i) {
+                possibilities[i] = _children.get(i).getName();
+            }
+            return possibilities;
+        }
+    }
+}
