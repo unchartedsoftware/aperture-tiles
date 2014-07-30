@@ -33,15 +33,19 @@ import java.util.HashMap;
 * 
 * Command line arguments are as follows:
 * 
-* -in -- Path and filename of graphML input file [required.
+* -in -- Path and filename of graphML input file [required].
 * 
 * -out -- Path and filename of tab-delimited output file [required].
 * 
+* -longIDs -- [boolean, optional] If == true, then nodes will be assigned a unique Long number ID,
+* 			regardless of the node ID format in the original graphML file.  Note, this ID convention is
+* 			needed for data processing with Spark's GraphX library.  Default == false.    
+* 
 * -nAttr -- Node attributes to parse (attribute ID tags separated by commas) [optional].
-* 			Default is to parse all node attributes.
+* 			Default is to parse ALL node attributes.
 * 
 * -eAttr -- Edge attributes to parse (attribute ID tags separated by commas) [optional].
-* 			Default is to parse all edge attributes.  
+* 			Default is to parse ALL edge attributes.  
 * 
 * -nCoordAttr -- Node attributes to use for node co-ordinates (separated by commas) [optional].
 * 				Default is NO co-ordinate data will be associated with a given node.
@@ -52,7 +56,7 @@ import java.util.HashMap;
 *
 **/
 
-public class GraphParse {
+public class GraphParseApp {
 
 	public static void main(String[] args) {
 

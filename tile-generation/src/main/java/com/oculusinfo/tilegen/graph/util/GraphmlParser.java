@@ -47,9 +47,13 @@ import org.xml.sax.helpers.DefaultHandler;
 * The class constructor takes in an argument map of key/values that is used to configure
 * how the data is parsed:
 * 
-* in -- Path and filename of graphML input file [required.
+* in -- Path and filename of graphML input file [required].
 * 
 * out -- Path and filename of tab-delimited output file [required].
+* 
+* -longIDs -- [boolean, optional] If == true, then nodes will be assigned a unique Long number ID,
+* 			regardless of the node ID format in the original graphML file.  Note, this ID convention is
+* 			needed for data processing with Spark's GraphX library.  Default == false.  
 * 
 * nAttr -- Node attributes to parse (attribute ID tags separated by commas) [optional].
 * 			Default is to parse all node attributes.
@@ -77,7 +81,9 @@ public class GraphmlParser {
     
     private HashMap<String, double[]> _nodemap = new HashMap<String, double[]>();
     private long _numNodes = 0;
-    private long _numEdges = 0; 
+    private long _numEdges = 0;
+    
+    private boolean _bLongIDs = false;
     
     private BufferedWriter _outBuffWriter;
 	
@@ -113,7 +119,9 @@ public class GraphmlParser {
 	    
 	    _nodeCoordConvert = argMap.get("nCoordConvert");	//"nCoordConvert", co-ordinate conversion
 																// Choices are: zorder2xy, zorder2xyz (Note: z-axis data will be discarded!)
-	    														// Default = no conversion													  														
+	    														// Default = no conversion
+	    
+	    _bLongIDs = argMap.get("longIDs").equals("true");	//"longIDs", assign unique Long IDs for each node
 	}
 	
 	//-----------
@@ -196,31 +204,38 @@ public class GraphmlParser {
 					if (qName.equalsIgnoreCase("node")) {
 						bInNode = false;
 						
-						double[] coords = new double[2];
+						double[] nodeData = new double[3];
 						if (_nodeCoordAttr!=null) {
 							
 							for (int n=0; n<_nodeCoordAttr.size(); n++) {
 								String coordTemp = nodeAttrValues.get(nodeAttrList.indexOf(_nodeCoordAttr.get(n)));
-								coords[n] = Double.parseDouble(coordTemp);
+								nodeData[n] = Double.parseDouble(coordTemp);
 							}
 							
 							if (_nodeCoordConvert!=null) {
 								if (_nodeCoordConvert.equals("zorder2xy")) {
-									Integer[] coordsTmp = mortonXY((long)coords[0]);	//assume z-order value has been parsed into coords[0]
-									coords[0] = (double)coordsTmp[0];
-									coords[1] = (double)coordsTmp[1];
+									Integer[] coordsTmp = mortonXY((long)nodeData[0]);	//assume z-order value has been parsed into coords[0]
+									nodeData[0] = (double)coordsTmp[0];
+									nodeData[1] = (double)coordsTmp[1];
 								}
 								else if (_nodeCoordConvert.equals("zorder2xyz")) {
-									Integer[] coordsTmp = mortonXYZ((long)coords[0]);	//assume z-order value has been parsed into coords[0]
-									coords[0] = (double)coordsTmp[0];
-									coords[1] = (double)coordsTmp[1];
+									Integer[] coordsTmp = mortonXYZ((long)nodeData[0]);	//assume z-order value has been parsed into coords[0]
+									nodeData[0] = (double)coordsTmp[0];
+									nodeData[1] = (double)coordsTmp[1];
 									//discard z-axis coordinates for now ...
 									//coords[2] = (double)coordsTmp[2];
 								}
 							}
 							
-							_nodemap.put(nodeID, coords);
-							
+							if (_bLongIDs) {
+								nodeData[2] = (double)_numNodes;	// also save current _numNodes values as a unique Long ID for this node
+							}
+
+							_nodemap.put(nodeID, nodeData);
+						}
+						else if (_bLongIDs) {
+							nodeData[2] = (double)_numNodes;	// save current _numNodes values as a unique Long ID for this node
+							_nodemap.put(nodeID, nodeData);							
 						}
 						
 						_numNodes++;
@@ -228,7 +243,14 @@ public class GraphmlParser {
 						//write an output line here (tab-delimited)
 						try {
 							if (_nodeCoordAttr!=null) {
-								_outBuffWriter.write("node" + "\t" + nodeID + "\t" + coords[0] + "\t" + coords[1]);
+								if (_bLongIDs) {
+									// write out the unique Long ID for this node as well as the 'original' nodeID
+									_outBuffWriter.write("node" + "\t" + ((long)nodeData[2]) + "\t" + nodeID + "\t" + nodeData[0] + "\t" + nodeData[1]);
+								}
+								else {
+									_outBuffWriter.write("node" + "\t" + nodeID + "\t" + nodeData[0] + "\t" + nodeData[1]);
+								}
+									
 								for (int i=0; i<nodeAttrValues.size(); i++) {
 									if (!_nodeCoordAttr.contains(nodeAttrList.get(i))) {
 										_outBuffWriter.write("\t" + nodeAttrValues.get(i));	// write this attribute if not already written out as coords above
@@ -238,7 +260,14 @@ public class GraphmlParser {
 								_outBuffWriter.write("\n");
 							}
 							else {
-								_outBuffWriter.write("node" + "\t" + nodeID);
+								if (_bLongIDs) {
+									// write out the unique Long ID for this node as well as the 'original' nodeID
+									_outBuffWriter.write("node" + "\t" + ((long)nodeData[2]) + "\t" + nodeID);
+								}
+								else {
+									_outBuffWriter.write("node" + "\t" + nodeID);
+								}
+								
 								for (int i=0; i<nodeAttrValues.size(); i++) {
 									_outBuffWriter.write("\t" + nodeAttrValues.get(i));
 									nodeAttrValues.set(i, "");
@@ -263,17 +292,31 @@ public class GraphmlParser {
 							if (_nodeCoordAttr!=null) {
 								double[] coordSrc = _nodemap.get(edgeSource);
 								double[] coordTar = _nodemap.get(edgeTarget);
-								
-								_outBuffWriter.write("edge" + "\t" + edgeSource + "\t" + coordSrc[0] + "\t" + coordSrc[1] + "\t" + 
-												edgeTarget + "\t" + coordTar[0] + "\t" + coordTar[1]);
+								if (_bLongIDs) {
+									// write out unique Long IDs for edge source and dest for edges instead of 'original' node IDs
+									_outBuffWriter.write("edge" + "\t" + (long)coordSrc[2] + "\t" + coordSrc[0] + "\t" + coordSrc[1] + "\t" + 
+											(long)coordTar[2] + "\t" + coordTar[0] + "\t" + coordTar[1]);
+								}
+								else {
+									_outBuffWriter.write("edge" + "\t" + edgeSource + "\t" + coordSrc[0] + "\t" + coordSrc[1] + "\t" + 
+											edgeTarget + "\t" + coordTar[0] + "\t" + coordTar[1]);									
+								}
 								for (int i=0; i<edgeAttrValues.size(); i++) {
 									_outBuffWriter.write("\t" + edgeAttrValues.get(i));
 									edgeAttrValues.set(i, "");
 								}
 								_outBuffWriter.write("\n");
 							}
-							else {
-								_outBuffWriter.write("edge" + "\t" + edgeSource + "\t" + edgeTarget);
+							else {								
+								if (_bLongIDs) {
+									// write out unique Long IDs for edge source and dest for edges instead of 'original' node IDs
+									double[] dataSrc = _nodemap.get(edgeSource);
+									double[] dataTar = _nodemap.get(edgeTarget);
+									_outBuffWriter.write("edge" + "\t" + (long)dataSrc[2] + "\t" + (long)dataTar[2]);
+								}
+								else {
+									_outBuffWriter.write("edge" + "\t" + edgeSource + "\t" + edgeTarget);
+								}
 								for (int i=0; i<edgeAttrValues.size(); i++) {
 									_outBuffWriter.write("\t" + edgeAttrValues.get(i));
 									edgeAttrValues.set(i, "");
