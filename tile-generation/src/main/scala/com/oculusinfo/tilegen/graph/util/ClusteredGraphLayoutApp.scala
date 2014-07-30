@@ -55,7 +55,8 @@ object ClusteredGraphLayoutApp {
 		val borderOffset = argParser.getInt("border","Percent of boundingBox width and height to leave as whitespace when laying out leaf nodes. Default is 5 percent", Some(5))
 		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))	
 		val numNodesThres = argParser.getInt("nthres", "Community size threshold to use for grouping sub-communities together into one force-directed layout task", Some(1000))
-		val nodeAreaPercent = argParser.getInt("narea", "Used for Hiearchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 20 percent", Some(20))
+		val nodeAreaPercent = argParser.getInt("narea", "Used for Hierarchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 20 percent", Some(20))
+		val bUseEdgeWeights = argParser.getBoolean("eweight", "Use edge weights, if present, to scale force-directed attraction forces.  Default is false", Some(false))
 		
 		val fileStartTime = System.currentTimeMillis()
 		
@@ -69,7 +70,8 @@ object ClusteredGraphLayoutApp {
 													sourceDir, 
 													dataDelimiter,
 													(layoutLength,layoutLength),
-													nodeAreaPercent)
+													nodeAreaPercent,
+													bUseEdgeWeights)
 													
 		// re-format results into tab-delimited strings for saving to text file											
 		val resultsNodes = graphWithCoords.vertices.map(node => {

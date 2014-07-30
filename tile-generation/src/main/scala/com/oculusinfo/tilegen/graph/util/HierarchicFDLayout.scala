@@ -56,9 +56,11 @@ class HierarchicFDLayout extends Serializable {
 						layoutDimensions: (Double, Double) = (256.0, 256.0),
 						//borderOffset: Int = 0,
 						//numNodesThres: Int = 1000
-						nodeAreaPercent: Int = 20
+						nodeAreaPercent: Int = 20,
+						bUseEdgeWeights: Boolean = false
 						): Graph[(Double, Double), Long] = {		
 		
+		//TODO -- this class assumes edge weights are Longs.  If this becomes an issue for some datasets, then change expected edge weights to Doubles? 
 		//TODO -- numNodesThres not currently used for FD hierarchical layout (could add it in later?)
 		val borderOffset = 0	//TODO -- borderOffset not currently used for FD hierarchical layout (could add it in later?)
 		
@@ -155,6 +157,7 @@ class HierarchicFDLayout extends Serializable {
 														   parentRectangle, 
 														   borderOffset, 
 														   maxIterations,
+														   bUseEdgeWeights,
 														   true,
 														   currAreaPercent)
 					// convert x,y coords and community radii to square bounding boxes for next hierarchical level
@@ -174,6 +177,7 @@ class HierarchicFDLayout extends Serializable {
 														   parentRectangle, 
 														   borderOffset, 
 														   maxIterations,
+														   bUseEdgeWeights,
 														   false)
 					coords
 				}).map(data => (data._1, (data._2, data._3)))
