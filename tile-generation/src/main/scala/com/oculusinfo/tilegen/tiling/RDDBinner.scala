@@ -344,7 +344,7 @@ class RDDBinner {
 		(data: RDD[(IT, PT, Option[DT])],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
-			Option[RDD[(TileIndex, Map[String, String])]] =
+			Option[RDD[(TileIndex, Map[String, Object])]] =
 	{
 		dataAnalytics.map(da =>
 			data.mapPartitions(iter =>
@@ -380,7 +380,7 @@ class RDDBinner {
 		(data: RDD[((TileIndex, BinIndex), PT)],
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-		 tileMetaData: Option[RDD[(TileIndex, Map[String, String])]],
+		 tileMetaData: Option[RDD[(TileIndex, Map[String, Object])]],
 		 consolidationPartitions: Option[Int],
 		 isDensityStrip: Boolean): RDD[TileData[BT]] =
 	{
@@ -396,13 +396,13 @@ class RDDBinner {
 		//
 		// First the binning data half
 		val reduced: RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                              Option[Map[String, String]]))] =
+		                              Option[Map[String, Object]]))] =
 			data.reduceByKey(binAnalytic.aggregate(_, _),
 			                 getNumSplits(consolidationPartitions, data))
 				.map(p => (p._1._1, (Some((p._1._2, p._2)), None)))
 		// Now the metadata half (in a way that should take no work if there is no metadata)
 		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                                      Option[Map[String, String]]))]] =
+		                                      Option[Map[String, Object]]))]] =
 			tileMetaData.map(
 				_.map{case (index, metaData) => (index, (None, Some(metaData))) }
 			)
@@ -466,7 +466,7 @@ class RDDBinner {
 						ta.accumulate(tile.getDefinition(), analyticValue)
 						// And store it in the tile's metadata
 						ta.analytic.toMap(analyticValue).map{case (key, value) =>
-							tile.setMetaData(key,value)
+							tile.setMetaData(key, value)
 						}
 					}
 				)

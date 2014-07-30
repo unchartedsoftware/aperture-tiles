@@ -116,7 +116,7 @@ trait TileAnalytic[T] extends Analytic[T] {
 	/**
 	 * Convert a value to a property map, indexed by our name
 	 */
-	def toMap (value: T): Map[String, String] =
+	def toMap (value: T): Map[String, Object] =
 		Map(name -> valueToString(value))
 
 	override def toString = "["+name+"]"
@@ -137,7 +137,7 @@ class ComposedTileAnalytic[T1, T2]
 		(val1.defaultProcessedValue, val2.defaultProcessedValue)
 	def defaultUnprocessedValue: (T1, T2) =
 		(val1.defaultUnprocessedValue, val2.defaultUnprocessedValue)
-	override def toMap (value: (T1, T2)): Map[String, String] =
+	override def toMap (value: (T1, T2)): Map[String, Object] =
 		val1.toMap(value._1) ++ val2.toMap(value._2)
 	override def toString = "["+val1+" + "+val2+"]"
 }
@@ -179,7 +179,7 @@ trait AnalysisDescription[RT, AT] {
 	def accumulate (tile: TileIndex, data: AT): Unit
 	// Get accumulatoed metadata info in a form that can be applied
 	// directly to metadata.
-	def toMap: Map[String, String]
+	def toMap: Map[String, Object]
 	// Apply accumulated metadata info to actual metadata
 	def applyTo (metaData: PyramidMetaData): Unit
 	// Reset metadata accumulators
@@ -227,7 +227,7 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 				info.accumulator += data
 		)
 
-	def toMap: Map[String, String] = accumulatorInfos.map(info =>
+	def toMap: Map[String, Object] = accumulatorInfos.map(info =>
 		analytic.toMap(info.accumulator.value).map{case (k, v) => (info.name+"."+k, v)}
 	).reduceOption(_ ++ _).getOrElse(Map[String, String]())
 
@@ -263,7 +263,7 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis1.accumulate(tile, data._1)
 		analysis2.accumulate(tile, data._2)
 	}
-	def toMap: Map[String, String] = analysis1.toMap ++ analysis2.toMap
+	def toMap: Map[String, Object] = analysis1.toMap ++ analysis2.toMap
 	def applyTo (metaData: PyramidMetaData): Unit = {
 		analysis1.applyTo(metaData)
 		analysis2.applyTo(metaData)
@@ -420,8 +420,7 @@ class StringScoreAnalytic
 
 		aggregationLimit.map(limit =>
 			sorted.take(limit)
-		).getOrElse(sorted)
-			.toMap
+		).getOrElse(sorted).toMap
 	}
 	def defaultProcessedValue: Map[String, Double] = Map[String, Double]()
 	def defaultUnprocessedValue: Map[String, Double] = Map[String, Double]()
@@ -584,13 +583,13 @@ class CustomMetadataAnalytic extends TileAnalytic[String]
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
 	def name: String = "VariableSeries"
-	override def toMap (value: String): Map[String, String] = Map[String, String]()
+	override def toMap (value: String): Map[String, Object] = Map[String, String]()
 }
 /**
  * A very simply tile analytic that just writes custom metadata directly to the tile set 
  * metadata, and no where else.
  */
-class CustomGlobalMetadata[T] (customData: Map[String, String])
+class CustomGlobalMetadata[T] (customData: Map[String, Object])
 		extends AnalysisDescription[T, String] with Serializable
 {
 	val analysisTypeTag = implicitly[ClassTag[String]]
@@ -598,7 +597,7 @@ class CustomGlobalMetadata[T] (customData: Map[String, String])
 	def analytic: TileAnalytic[String] = new CustomMetadataAnalytic
 	def accumulate (tile: TileIndex, data: String): Unit = {}
 	// This is used to apply the analytic to tiles; we don't want anything to happen there
-	def toMap: Map[String, String] = Map[String, String]()
+	def toMap: Map[String, Object] = Map[String, Object]()
 	// This is used to apply the analytic to metadata; here's where we want stuff used.
 	def applyTo (metaData: PyramidMetaData): Unit =
 		customData.map{case (key, value) =>

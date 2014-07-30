@@ -339,7 +339,7 @@ public class PyramidMetaData {
 		return result.toString();
 	}
 
-	public void setCustomMetaData(String value, String... path) throws JSONException {
+	public void setCustomMetaData(Object value, String... path) throws JSONException {
 		if (!_metaData.has("meta"))
 			_metaData.put("meta", new JSONObject());
 		JSONObject metaInfo = _metaData.getJSONObject("meta");

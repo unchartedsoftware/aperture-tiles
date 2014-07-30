@@ -29,8 +29,10 @@ package com.oculusinfo.tilegen.datasets
 
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
+import java.util.ArrayList
 
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.convert.Wrappers.SeqWrapper
 import scala.collection.mutable.Buffer
 import scala.reflect.ClassTag
@@ -120,8 +122,7 @@ object CSVTileAnalyticExtractor {
 			if (valuer.isInstanceOf[SeriesValueExtractor]) {
 				val seriesValuer = valuer.asInstanceOf[SeriesValueExtractor]
 				analyses += new CustomGlobalMetadata(
-					Map("variables" ->
-						    seriesValuer.fields.mkString("[",",","]")))
+					Map("variables" -> seriesValuer.fields.toSeq.asJava))
 			}
 		}
 

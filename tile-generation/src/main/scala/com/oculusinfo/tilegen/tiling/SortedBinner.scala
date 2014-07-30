@@ -219,10 +219,10 @@ class SortedBinner {
 		//
 		// cf stands for 'common form'
 		val cfTiles: RDD[(TileIndex, (Option[TileData[PT]],
-		                              Option[Map[String, String]]))] =
+		                              Option[Map[String, Object]]))] =
 			processTypeTiles.map{case (index, tile) => (index, (Some(tile), None))}
 		val cfMetaData: Option[RDD[(TileIndex, (Option[TileData[PT]],
-		                                        Option[Map[String, String]]))]] =
+		                                        Option[Map[String, Object]]))]] =
 			metaData.map(_.map{case (index, datum) => (index, (None, Some(datum)))})
 
 		val tiles =
@@ -301,7 +301,7 @@ class SortedBinner {
 		(data: RDD[(IT, PT, Option[DT])],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
-			Option[RDD[(TileIndex, Map[String, String])]] =
+			Option[RDD[(TileIndex, Map[String, Object])]] =
 	{
 		dataAnalytics.map(da =>
 			{

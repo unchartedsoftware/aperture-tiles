@@ -182,10 +182,14 @@ public class TileData<T> implements Serializable {
 	 * @param property The property of interest
 	 * @param value The value of said property
 	 */
-	public void setMetaData (String property, String value) {
+	public void setMetaData (String property, Object value) {
 		if (null == _metaData) {
 			_metaData = new HashMap<>();
 		}
-		_metaData.put(property, value);
+		if (null == value) {
+		    _metaData.put(property, null);
+		} else {
+		    _metaData.put(property, value.toString());
+		}
 	}
 }
