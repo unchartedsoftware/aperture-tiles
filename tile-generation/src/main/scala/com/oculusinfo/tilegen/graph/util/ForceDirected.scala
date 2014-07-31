@@ -39,6 +39,7 @@ import scala.util.Random
  *  - boundingBox = bottem-left corner, width, height of bounding region for layout of nodes
  *  - borderOffset = percent of boundingBox width and height to leave as whitespace when laying out nodes
  *  - maxIterations = max number of iterations to use for force-directed algorithm
+ *  - bUseEdgeWeights = uses edge weights to scale the attraction forces between connected nodes
  *  - bUseNodeSizes = uses 'number of internal nodes' attribute to size each node as a circle
  *  - nodeAreaPercent = if bUseNodeSizes = true, then this parameter is used to determine the area of all node
  *  	'circles' within the boundingBox vs whitespace 
@@ -51,6 +52,7 @@ class ForceDirected extends Serializable {
 			boundingBox: (Double, Double, Double, Double), 
 			borderOffset: Int = 0, 
 			maxIterations: Int = 1000,
+			bUseEdgeWeights: Boolean = false,
 			bUseNodeSizes: Boolean = false,
 			nodeAreaPercent: Int = 20): Array[(Long, Double, Double, Double)] = {
 		
@@ -194,13 +196,17 @@ class ForceDirected extends Serializable {
 			if (bUseNodeSizes) {
 				// account for node sizes, by adjusting distance between nodes by node radii
 				for (e1 <- 0 until numEdges) {
-				    val (srcE, dstE) = edgesArray(e1)	//get node indices for edge endpoints
+				    val (srcE, dstE, edgeWeight) = edgesArray(e1)	//get node indices for edge endpoints
 				    
 				    val xDist = nodeCoords(dstE)._2 - nodeCoords(srcE)._2
 				    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
 				    val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(dstE)._4 - nodeCoords(srcE)._4
 				    if (dist > 0) {	// only calc attraction force if node circles don't overlap
-					    val attractForce = dist * k_inv
+					    val attractForce = if (bUseEdgeWeights)
+					    	dist * k_inv * edgeWeight	// TODO -- should edge weights be scaled to an appropriate range? (eg 1 to 100).  Need to investigate further.
+					    else
+					    	dist * k_inv
+					    		
 					    deltaXY(srcE) = (deltaXY(srcE)._1 + xDist*attractForce, deltaXY(srcE)._2 + yDist*attractForce)
 					    deltaXY(dstE) = (deltaXY(dstE)._1 - xDist*attractForce, deltaXY(dstE)._2 - yDist*attractForce)			
 				    }
@@ -208,11 +214,16 @@ class ForceDirected extends Serializable {
 			}
 			else {
 				for (e1 <- 0 until numEdges) {
-				    val (srcE, dstE) = edgesArray(e1)	//get node indices for edge endpoints
+				    val (srcE, dstE, edgeWeight) = edgesArray(e1)	//get node indices for edge endpoints
 				    
 				    val xDist = nodeCoords(dstE)._2 - nodeCoords(srcE)._2
 				    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
-				    val attractForce = Math.sqrt(xDist*xDist + yDist*yDist) * k_inv
+				    val dist = Math.sqrt(xDist*xDist + yDist*yDist)
+				    val attractForce = if (bUseEdgeWeights)
+				    	dist * k_inv * edgeWeight
+				    else
+				    	dist * k_inv
+				    	
 				    deltaXY(srcE) = (deltaXY(srcE)._1 + xDist*attractForce, deltaXY(srcE)._2 + yDist*attractForce)
 				    deltaXY(dstE) = (deltaXY(dstE)._1 - xDist*attractForce, deltaXY(dstE)._2 - yDist*attractForce)			
 				}				
@@ -297,7 +308,7 @@ class ForceDirected extends Serializable {
 		(box._1+offsetW, box._2+offsetH, box._3 - 2.0*offsetW, box._4 - 2.0*offsetH)
 	}
 	
-	private def reformatEdges(edges: Iterable[(Long, Long, Long)], nodeIds: Array[Long]): Array[(Int, Int)] = {
+	private def reformatEdges(edges: Iterable[(Long, Long, Long)], nodeIds: Array[Long]): Array[(Int, Int, Long)] = {
 	
 		edges.flatMap(e => {
 			val srcIndx = nodeIds.indexOf(e._1)
@@ -308,7 +319,7 @@ class ForceDirected extends Serializable {
 			if (srcIndx == -1 || dstIndx == -1)			
 				Iterator.empty 	// not a valid edge
 			else
-				Iterator( (srcIndx, dstIndx) )
+				Iterator( (srcIndx, dstIndx, e._3) )
 				
 		}).toArray
 	}

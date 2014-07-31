@@ -16,6 +16,11 @@ div.olControlZoom {
     z-index: 2999 !important; 
 }
 
+div.olHandlerBoxZoomBox {
+    border: 2px solid rgba(128, 128, 128, 0.75);
+    background-color: rgba(128, 128, 128, 0.5);
+}
+
 .olLayerGoogleV3 {
     visibility:hidden !important;
 }
