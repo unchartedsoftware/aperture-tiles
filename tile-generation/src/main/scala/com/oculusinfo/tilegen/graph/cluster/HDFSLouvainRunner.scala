@@ -43,16 +43,42 @@ class HDFSLouvainRunner(minProgressFactor:Double,progressCounter:Int,outputdir:S
   var qValues = Array[(Int,Double)]()
       
   override def saveLevel(sc:SparkContext,level:Int,q:Double,graph:Graph[VertexState,Long]) = {
-	  graph.vertices.saveAsTextFile(outputdir+"/level_"+level+"_vertices")
-      graph.edges.saveAsTextFile(outputdir+"/level_"+level+"_edges")
-      //graph.vertices.map( {case (id,v) => ""+id+","+v.internalWeight+","+v.community }).saveAsTextFile(outputdir+"/level_"+level+"_vertices")
-      //graph.edges.mapValues({case e=>""+e.srcId+","+e.dstId+","+e.attr}).saveAsTextFile(outputdir+"/level_"+level+"_edges")  
-      qValues = qValues :+ ((level,q))
+	  //graph.vertices.saveAsTextFile(outputdir+"/level_"+level+"_vertices")
+      //graph.edges.saveAsTextFile(outputdir+"/level_"+level+"_edges")
+	  
+	  //TODO -- need to put in an option to also save node attributes from raw data 
+	  //along with the cluster community results...
+
+	  // re-format results into tab-delimited strings for saving to text file											
+
+	  val resultsNodes = graph.vertices.map(node => {
+			val (id, state) = node
+			val parentId = state.community			// ID of parent community
+			val internalNodes = state.internalNodes	// number of raw internal nodes in this community
+			val nodeDegree = state.nodeDegree		// number of inter-community edges (unweighted)
+			//val nodeWeight = state.nodeWeight		// weighted inter-community edges
+			//val internalWeight = state.internalWeight	// weighted self-edges (ie intra-community edges)
+			//val sigmaTot = state.communitySigmaTot	// analogous to modularity for this community
+			
+			("node\t" + id + "\t" + parentId + "\t" + internalNodes + "\t" + nodeDegree)
+	  })
+
+	  val resultsEdges = graph.edges.map(et => {
+			val srcID = et.srcId
+			val dstID = et.dstId
+			//val srcCoords = et.srcAttr
+			//val dstCoords = et.dstAttr
+			//("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr)
+			("edge\t" + srcID + "\t" + dstID + "\t" + "\t" + et.attr)
+	  })
+				
+	  val resultsAll = resultsNodes.union(resultsEdges)	// put both node and edge results into one RDD
+		
+	  resultsAll.saveAsTextFile(outputdir+"/level_"+level)	// save results to a separate sub-dir for each level		  
+	  
+      // save the q values at each level
+	  qValues = qValues :+ ((level,q))
       println(s"qValue: $q")
-        
-      // overwrite the q values at each level
-      //sc.parallelize(qValues, 1).saveAsTextFile(outputdir+"/qvalues")	//TODO -- need to handle overwrite saveAs behaviour properly!
       sc.parallelize(qValues, 1).saveAsTextFile(outputdir+"/level_"+level+"_qvalues")
   }
-  
 }

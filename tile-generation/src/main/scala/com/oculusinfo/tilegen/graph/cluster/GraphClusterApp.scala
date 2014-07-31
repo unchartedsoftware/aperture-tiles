@@ -52,6 +52,7 @@ import com.oculusinfo.tilegen.spark.SparkConnector
  * -source  -- The source location at which to find the data [required].
  * -onlyEdges -- [Boolean, optional] If set to true then source data can simply be a delimited file of edges only. Default = false.
  * -output -- The output location where to save results [required].
+ * 				Note: the format for community results is CommunityID \t Parent community ID \t Number of internal nodes \t Community Degree
  * -parts -- The number of partitions into which to break up each source file.  Default = chosen automatically by Spark.
  * -p -- Sets spark.default.parallelism and minSplits on the edge file. Default = based on input partitions.
  * -progMin -- Percent of nodes that must change communites for the algorithm to consider progress relative to total vertices in a level. Default = 0.15
@@ -126,7 +127,7 @@ object GraphClusterApp {
 		   })
 	}
 	
-	//TODO -- need to add code to parse node data too if (!bOnlyEdges), so we can output node attributes
+	//TODO -- need to put in an option to parse node data too if (!bOnlyEdges), so we can output node attributes
 	//from the raw data along with the cluster community results
 	
 	// if the parallelism option was set map the input to the correct number of partitions,
