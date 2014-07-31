@@ -38,6 +38,9 @@ define(function (require) {
 
         enableTooltip: function( $elem, message, openFunc, closeFunc ) {
 
+            return true;
+
+            /*
             var tooltipOpened = false,
                 pendingCallback;
 
@@ -68,7 +71,7 @@ define(function (require) {
                     tooltipOpened = false;
                 }
             });
-
+            */
         },
 
         disableTooltip: function( $elem ) {
@@ -100,7 +103,6 @@ define(function (require) {
                 domElement.onmouseup = propagateEvent;
                 domElement.onmousemove = propagateEvent;
                 domElement.onwheel = propagateEvent;
-                domElement.onmousewheel = propagateEvent;
                 domElement.onscroll = propagateEvent;
                 domElement.onclick = propagateEvent;
                 domElement.ondblclick = propagateEvent;
@@ -110,7 +112,6 @@ define(function (require) {
                     domElement[events[i]] = propagateEvent;
                 }
             }
-
         },
 
 
@@ -123,7 +124,6 @@ define(function (require) {
                 domElement.onmouseup = null;
                 domElement.onmousemove = null;
                 domElement.onwheel = null;
-                domElement.onmousewheel = null;
                 domElement.onscroll = null;
                 domElement.onclick = null;
                 domElement.ondblclick = null;
@@ -133,6 +133,7 @@ define(function (require) {
                     domElement[events[i]] = null;
                 }
             }
+
         },
 
         // Registers a click handler that only fires if the click didn't

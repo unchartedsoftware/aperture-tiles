@@ -170,7 +170,6 @@ define(function (require) {
 
             $details = this.details.create( detailsPos, value, $.proxy( this.clickOff, this ) );
 
-            Util.enableEventPropagation( $details, ['onmousemove', 'onmouseup'] );
             map.getRootElement().append( $details );
 
             this.centreForDetails( data );
