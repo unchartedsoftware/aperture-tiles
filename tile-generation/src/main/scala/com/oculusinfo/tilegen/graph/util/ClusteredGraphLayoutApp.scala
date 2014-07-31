@@ -46,10 +46,10 @@ object ClusteredGraphLayoutApp {
 			) union SparkConnector.getDefaultLibrariesFromMaven
 		val sc = argParser.getSparkConnector(jars).getSparkContext("Clustered Graph Layout") 
 		val sourceDir = argParser.getString("source", "The source directory where to find clustered graph data")
-		val outputDir = argParser.getString("output", "The output location where to save data")
-		val partitions = argParser.getInt("partitions", "The number of partitions into which to read the raw data", Some(0))
+		val outputDir = argParser.getString("output", "The output location where to save data")		
+		val partitions = argParser.getInt("parts", "The number of partitions into which to read the raw data", Some(0))
 		val consolidationPartitions = argParser.getInt("p", "The number of partitions for data processing. Default=based on input partitions", Some(0))
-		val dataDelimiter = argParser.getString("d", "Delimiter for the source graph data. Default is comma-delimited", Some(","))
+		val dataDelimiter = argParser.getString("d", "Delimiter for the source graph data. Default is tab-delimited", Some("\t"))
 		val maxIterations = argParser.getInt("i", "Max number of iterations for force-directed algorithm", Some(500))
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
 		val borderOffset = argParser.getInt("border","Percent of boundingBox width and height to leave as whitespace when laying out leaf nodes. Default is 5 percent", Some(5))

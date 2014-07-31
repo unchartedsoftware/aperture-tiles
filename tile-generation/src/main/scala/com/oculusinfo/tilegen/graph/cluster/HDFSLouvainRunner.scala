@@ -69,7 +69,7 @@ class HDFSLouvainRunner(minProgressFactor:Double,progressCounter:Int,outputdir:S
 			//val srcCoords = et.srcAttr
 			//val dstCoords = et.dstAttr
 			//("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr)
-			("edge\t" + srcID + "\t" + dstID + "\t" + "\t" + et.attr)
+			("edge\t" + srcID + "\t" + dstID + "\t" + et.attr)
 	  })
 				
 	  val resultsAll = resultsNodes.union(resultsEdges)	// put both node and edge results into one RDD
