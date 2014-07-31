@@ -24,6 +24,7 @@
 package com.oculusinfo.annotation.data;
 
 import com.oculusinfo.binning.util.Pair;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.Serializable;
@@ -34,11 +35,18 @@ import java.util.UUID;
  * This class represents a single annotation
  */
 public abstract class AnnotationData<T> implements Serializable {
-    
+
+    public static final Double RANGE_PLACEHOLDER = null;
+
 	private static final long serialVersionUID = 1L;
-	
-	public abstract Double getX();
-	public abstract Double getY();
+
+    public abstract Double getX();
+    public abstract Double getY();
+    public abstract Double getX0();
+    public abstract Double getY0();
+    public abstract Double getX1();
+    public abstract Double getY1();
+    public abstract boolean isRangeBased();
 	public abstract Integer getLevel();
 	public abstract UUID getUUID();
 	public abstract Long getTimestamp();
@@ -59,8 +67,24 @@ public abstract class AnnotationData<T> implements Serializable {
 			JSONObject json = new JSONObject();
 
             json.put("level", getLevel() );
-			json.put( "x", getX() );
-			json.put( "y", getY() );
+
+            if ( getX1() == RANGE_PLACEHOLDER ) {
+                json.put( "x", getX() );
+            } else {
+                JSONArray x = new JSONArray();
+                x.put( getX0() );
+                x.put( getX1() );
+                json.put( "x", x );
+            }
+
+            if ( getY1() == RANGE_PLACEHOLDER ) {
+                json.put( "y", getY() );
+            } else {
+                JSONArray y = new JSONArray();
+                y.put( getY() );
+                y.put( getY() );
+                json.put( "y", y );
+            }
 
             JSONObject range = new JSONObject();
             range.put("min", getRange().getFirst() );

@@ -173,6 +173,7 @@ public class AnnotationResource extends ApertureServerResource {
 			    for ( AnnotationData<?> annotation : annotations ) {
 			    	annotationArray.put( annotation.toJSON() );
 			    }
+
                 binsJson.put( binIndex.toString(), annotationArray );
 		    }
 		    
