@@ -22,47 +22,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.annotation.filter.impl;
 
-import com.oculusinfo.binning.io.impl.JDBCPyramidIO;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.properties.JSONProperty;
+
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 
-public class JDBCPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(JDBCPyramidIOFactory.class);
+public class NMostRecentByGroupFactory extends ConfigurableFactory<AnnotationFilter> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(NMostRecentByGroupFactory.class);
 
 	
-	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
-			"Unused with type=\"hbase\".  Indicates the root path of the tile pyramid - either a directory (if \"file-system\"), a package name (if \"resource\"), the full path to a .zip file (if \"zip\"), the database path (if \"sqlite\"), or the URL of the database (if \"jdbc\").  There is no default for this property.",
-			null);
-	public static StringProperty JDBC_DRIVER            = new StringProperty("jdbc.driver",
-			"Only used if type=\"jdbc\".  The full class name of the JDBC driver to use.  There is no default for this property.",
-			null);
-	
-	public JDBCPyramidIOFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-		super(factoryName, PyramidIO.class, parent, path);
+	public static JSONProperty COUNTS_BY_GROUP = new JSONProperty("countsByGroup",
+	    "Indicates the number of annotations to read for each bin, by priority",
+	    null);
+
+	public NMostRecentByGroupFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super("n-most-recent-by-group", AnnotationFilter.class, parent, path);
 		
-		addProperty(ROOT_PATH);
-		addProperty(JDBC_DRIVER);
+		addProperty(COUNTS_BY_GROUP);
 	}
 
 	@Override
-	protected PyramidIO create() {
+	protected AnnotationFilter create() {
 		try {
-			String driver = getPropertyValue(JDBC_DRIVER);
-			String rootPath = getPropertyValue(ROOT_PATH);
-			return new JDBCPyramidIO(driver, rootPath);
+			JSONObject countsByGroup = getPropertyValue(COUNTS_BY_GROUP);
+			return new NMostRecentByGroupFilter(countsByGroup);
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create JDBCPyramidIO", e);
+			LOGGER.error("Error trying to create NMostRecentByPriorityFactory", e);
 		}
 		return null;
 	}
-	
-
 }

@@ -27,6 +27,7 @@ package com.oculusinfo.binning.io;
 
 import java.util.List;
 
+import com.oculusinfo.binning.io.impl.FileSystemPyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.JSONProperty;
@@ -39,22 +40,22 @@ import com.oculusinfo.factory.properties.JSONProperty;
  * @author nkronenfeld
  */
 public class PyramidIOFactory extends UberFactory<PyramidIO> {
-    public static JSONProperty  INITIALIZATION_DATA = new JSONProperty("data",
-                                                                       "Data to be passed to the PyramidIO for read initialization",
-                                                                       null);
+	public static JSONProperty  INITIALIZATION_DATA = new JSONProperty("data",
+	    "Data to be passed to the PyramidIO for read initialization",
+	    null);
 
 
 
-    public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path,
-                             List<ConfigurableFactory<PyramidIO>> children) {
-        this(null, parent, path, children);
-    }
+	public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path,
+	                         List<ConfigurableFactory<? extends PyramidIO>> children) {
+		this(null, parent, path, children);
+	}
 
-    public PyramidIOFactory (String name, ConfigurableFactory<?> parent,
-                             List<String> path,
-                             List<ConfigurableFactory<PyramidIO>> children) {
-        super(name, PyramidIO.class, parent, path, true, children);
+	public PyramidIOFactory (String name, ConfigurableFactory<?> parent,
+	                         List<String> path,
+	                         List<ConfigurableFactory<? extends PyramidIO>> children) {
+		super(name, PyramidIO.class, parent, path, true, children, FileSystemPyramidIOFactory.NAME);
 
-        addProperty(INITIALIZATION_DATA);
-    }
+		addProperty(INITIALIZATION_DATA);
+	}
 }

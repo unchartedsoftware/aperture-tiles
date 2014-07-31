@@ -23,6 +23,15 @@
  */
 package com.oculusinfo.annotation;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
@@ -37,17 +46,8 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJSONSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializer;
 import com.oculusinfo.binning.util.Pair;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
 
 public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	
@@ -66,105 +66,102 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	private AnnotationIndexer _indexer;
 
 
-    @Before
-    public void setup () {
-    	try {
+	@Before
+	public void setup () {
+		try {
     		
-    		_dataIO = new FileSystemAnnotationIO(ROOT_PATH, DATA_EXT);   		
-    		_tileIO = new FileSystemPyramidIO(ROOT_PATH, TILE_EXT);
+			_dataIO = new FileSystemAnnotationIO(ROOT_PATH, DATA_EXT);   		
+			_tileIO = new FileSystemPyramidIO(ROOT_PATH, TILE_EXT);
     		
-    	} catch (Exception e) {
+		} catch (Exception e) {
     		
 			System.out.println("Error: " + e.getMessage());
 			
 		} finally {
 		}	
     	
-    	_pyramid = new WebMercatorTilePyramid();
-    	_indexer = new AnnotationIndexerImpl();
-    	_tileSerializer = new StringLongPairArrayMapJSONSerializer();
-    	_dataSerializer = new JSONAnnotationDataSerializer();  	
+		_pyramid = new WebMercatorTilePyramid();
+		_indexer = new AnnotationIndexerImpl();
+		_tileSerializer = new StringLongPairArrayMapJsonSerializer();
+		_dataSerializer = new JSONAnnotationDataSerializer();  	
 	
-    }
+	}
 
-    @After
-    public void teardown () {
-    	_tileIO = null;
-    	_dataIO = null;
-    }
+	@After
+	public void teardown () {
+		_tileIO = null;
+		_dataIO = null;
+	}
 	
 	
-    @Test
-    public void testFileSystemIO() {
+	@Test
+	public void testFileSystemIO() {
     	
     	
-        List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
-        List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( annotations, _indexer, _pyramid );
+		List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
+		List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( annotations, _indexer, _pyramid );
 		
-        List<TileIndex> tileIndices = tilesToIndices( tiles );
-        List<Pair<String, Long>> dataIndices = dataToIndices( annotations );
+		List<TileIndex> tileIndices = tilesToIndices( tiles );
+		List<Pair<String, Long>> dataIndices = dataToIndices( annotations );
         
-    	try {
+		try {
     		
-    		/*
-	    	 *  Write annotations
-	    	 */
-            if (VERBOSE)
-	    	    System.out.println("Writing "+NUM_ENTRIES+" to file system");
-	    	_tileIO.writeTiles(BASE_PATH, _tileSerializer, tiles );
-	    	_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
+			/*
+			 *  Write annotations
+			 */
+			if (VERBOSE)
+				System.out.println("Writing "+NUM_ENTRIES+" to file system");
+			_tileIO.writeTiles(BASE_PATH, _tileSerializer, tiles );
+			_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
 	        
-	    	/*
-	    	 *  Read and check all annotations
-	    	 */
-            if (VERBOSE)
-                System.out.println( "Reading all annotations" );
-	    	List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
-	    	List<AnnotationData<?>> allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
-	    	if (VERBOSE) printTiles( allTiles );
-	    	if (VERBOSE) printData( allData );
+			/*
+			 *  Read and check all annotations
+			 */
+			if (VERBOSE)
+				System.out.println( "Reading all annotations" );
+			List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
+			List<AnnotationData<?>> allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
+			if (VERBOSE) printTiles( allTiles );
+			if (VERBOSE) printData( allData );
 
-            if (VERBOSE)
-                System.out.println( "Comparing annotations" );
-	    	Assert.assertTrue( compareTiles( allTiles, tiles, true ) );
-	    	Assert.assertTrue( compareData( allData, annotations, true ) );
+			if (VERBOSE)
+				System.out.println( "Comparing annotations" );
+			Assert.assertTrue( compareTiles( allTiles, tiles, true ) );
+			Assert.assertTrue( compareData( allData, annotations, true ) );
 
-            if (VERBOSE)
-                System.out.println("Removing "+NUM_ENTRIES+" from file system");
-	    	_tileIO.removeTiles(BASE_PATH, tileIndices );
-	    	_dataIO.removeData(BASE_PATH, dataIndices );
+			if (VERBOSE)
+				System.out.println("Removing "+NUM_ENTRIES+" from file system");
+			_tileIO.removeTiles(BASE_PATH, tileIndices );
+			_dataIO.removeData(BASE_PATH, dataIndices );
 	       
-	    	allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
-	    	allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
+			allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
+			allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
 	    	
-	    	Assert.assertTrue( allTiles.size() == 0 );
-	    	Assert.assertTrue( allData.size() == 0 );
+			Assert.assertTrue( allTiles.size() == 0 );
+			Assert.assertTrue( allData.size() == 0 );
 
-            if (VERBOSE)
-                System.out.println( "Complete" );
+			if (VERBOSE)
+				System.out.println( "Complete" );
 	    	
 	
-    	} catch (Exception e) {
+		} catch (Exception e) {
     		
 			System.out.println("Error: " + e.getMessage());
 			
 		} finally {
 
-            if (VERBOSE)
-                System.out.println("Deleting temporary directories");
+			if (VERBOSE)
+				System.out.println("Deleting temporary directories");
 
-            try {
-                File testDir = new File( ROOT_PATH + BASE_PATH );
-                for ( File f : testDir.listFiles() ) {
-                    f.delete();
-                }
-                testDir.delete();
-            } catch ( Exception e ) {
-                // swallow exception
-            }
-        }
-    }
-
-
-	
+			try {
+				File testDir = new File( ROOT_PATH + BASE_PATH );
+				for ( File f : testDir.listFiles() ) {
+					f.delete();
+				}
+				testDir.delete();
+			} catch ( Exception e ) {
+				// swallow exception
+			}
+		}
+	}
 }

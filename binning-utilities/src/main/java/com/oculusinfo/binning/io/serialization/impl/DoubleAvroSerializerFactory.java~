@@ -22,37 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
-
-import com.oculusinfo.factory.ConfigurableFactory;
+package com.oculusinfo.binning.io.serialization.impl;
 
 import java.util.List;
 
-/**
- * A helper factory to enable getting data from data paths within the configuration phase.<br>
- * For example, if all configuration data is under some root path, then this factory
- * can be added as the root of the configurable hierarchy to give everyone a different path,
- * without having to modify the path values for each factory directly. This factory doesn't create anything.
- * 
- * @author cregnier
- *
- */
-public class EmptyConfigurableFactory extends ConfigurableFactory<Void> {
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
 
-	public EmptyConfigurableFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
-		super(name, Void.class, parent, path);
-	}
+public class DoubleAvroSerializerFactory extends ConfigurableFactory<TileSerializer<Double>> {
+    public static final String NAME = "double-a";
 
-	@Override
-	protected Void create() {
-		return null;
-	}
+    // This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static Class<TileSerializer<Double>> getGenericSerializerClass () {
+        return (Class) TileSerializer.class;
+    }
 
-	/**
-	 * Overridden in order to make this public so others can compose trees
-	 */
-	@Override
-	public void addChildFactory(ConfigurableFactory<?> child) {
-		super.addChildFactory(child);
-	}
+    public DoubleAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
+        super(NAME, getGenericSerializerClass(), parent, path);
+    }
+
+    @Override
+    protected TileSerializer<Double> create () {
+        return new DoubleAvroSerializer(TileSerializerFactory.getCodecFactory(this));
+    }
 }

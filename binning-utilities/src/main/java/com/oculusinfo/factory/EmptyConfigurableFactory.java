@@ -22,25 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.init;
+package com.oculusinfo.factory;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
-import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.init.FactoryProvider;
+import java.util.List;
 
-public class StandardAnnotationIOFactoryModule extends AbstractModule {
+/**
+ * A helper factory to enable getting data from data paths within the configuration phase.<br>
+ * For example, if all configuration data is under some root path, then this factory
+ * can be added as the root of the configurable hierarchy to give everyone a different path,
+ * without having to modify the path values for each factory directly. This factory doesn't create anything.
+ * 
+ * @author cregnier
+ *
+ */
+public class EmptyConfigurableFactory extends ConfigurableFactory<Void> {
+
+	public EmptyConfigurableFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
+		super(name, Void.class, parent, path);
+	}
 
 	@Override
-	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder = 
-			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationIO>>(){});
-		for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
-			factoryProviderBinder.addBinding().toInstance(provider);
-		
-		bind(new TypeLiteral<FactoryProvider<AnnotationIO>>() {}).to(StandardAnnotationIOFactoryProvider.class);
+	protected Void create() {
+		return null;
+	}
+
+	/**
+	 * Overridden in order to make this public so others can compose trees
+	 */
+	@Override
+	public void addChildFactory(ConfigurableFactory<?> child) {
+		super.addChildFactory(child);
 	}
 }

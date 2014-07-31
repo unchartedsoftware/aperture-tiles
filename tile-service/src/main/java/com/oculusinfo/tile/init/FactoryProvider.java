@@ -36,7 +36,6 @@ import java.util.List;
  * xml-configurable manner
  * 
  * @author nkronenfeld
- * 
  */
 public interface FactoryProvider<T> {
 	/**

@@ -22,25 +22,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.init;
+package com.oculusinfo.binning.io.serialization.impl;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
-import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.init.FactoryProvider;
+import java.util.List;
 
-public class StandardAnnotationIOFactoryModule extends AbstractModule {
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
+
+public class StringArrayAvroSerializerFactory extends ConfigurableFactory<TileSerializer<List<String>>> {
+	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static Class<TileSerializer<List<String>>> getGenericSerializerClass () {
+		return (Class) TileSerializer.class;
+	}
+
+	public StringArrayAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
+		super("[string]-a", getGenericSerializerClass(), parent, path);
+	}
 
 	@Override
-	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder = 
-			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationIO>>(){});
-		for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
-			factoryProviderBinder.addBinding().toInstance(provider);
-		
-		bind(new TypeLiteral<FactoryProvider<AnnotationIO>>() {}).to(StandardAnnotationIOFactoryProvider.class);
+	protected TileSerializer<List<String>> create () {
+		return new StringArrayAvroSerializer(TileSerializerFactory.getCodecFactory(this));
 	}
 }

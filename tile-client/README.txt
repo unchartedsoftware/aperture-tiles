@@ -100,7 +100,7 @@ display, and how.  All client configuration files are in src/main/webapp/data.
             that reads tiles of arrays of doubles.
           * doublestatistics - renders statistics about a tile as text
       * pyramidio - specifies from where tile are read
-          * type - hbase, file-system, zip, resource, jdbc, or sqlite.  
+          * type - hbase, file, zip, resource, jdbc, or sqlite.  
             Further properties depend on the type.
       * serializer - specifies how tiles are read.
           * type - defines the type of serializer.  This generally consists of 

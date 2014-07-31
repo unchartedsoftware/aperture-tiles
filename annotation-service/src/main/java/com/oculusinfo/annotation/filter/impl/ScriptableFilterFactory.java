@@ -22,25 +22,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.init;
+package com.oculusinfo.annotation.filter.impl;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
-import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.init.FactoryProvider;
+import java.util.List;
 
-public class StandardAnnotationIOFactoryModule extends AbstractModule {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.StringProperty;
+
+
+public class ScriptableFilterFactory extends ConfigurableFactory<AnnotationFilter> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptableFilterFactory.class);
+
+	
+	public static StringProperty SCRIPT_STRING = new StringProperty("script",
+	    "The javascript script string that evaluates to a boolean based off a single annotation",
+	    null);
+
+	public ScriptableFilterFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super("scriptable", AnnotationFilter.class, parent, path);
+		
+		addProperty(SCRIPT_STRING);
+	}
 
 	@Override
-	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder = 
-			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationIO>>(){});
-		for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
-			factoryProviderBinder.addBinding().toInstance(provider);
-		
-		bind(new TypeLiteral<FactoryProvider<AnnotationIO>>() {}).to(StandardAnnotationIOFactoryProvider.class);
+	protected AnnotationFilter create() {
+		try {
+			String script = getPropertyValue(SCRIPT_STRING);
+			return new ScriptableFilter(script);
+		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create ScriptableFilter", e);
+		}
+		return null;
 	}
 }

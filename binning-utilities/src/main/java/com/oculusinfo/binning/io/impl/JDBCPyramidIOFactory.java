@@ -22,31 +22,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.filter;
+package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.annotation.filter.impl.EmptyFilter;
+import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.StringProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 
-public class EmptyFilterFactory extends ConfigurableFactory<AnnotationFilter> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(EmptyFilterFactory.class);
+public class JDBCPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(JDBCPyramidIOFactory.class);
 
 
-	public EmptyFilterFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-		super(factoryName, AnnotationFilter.class, parent, path);
+	
+	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
+		   "Indicates the root path of the tile pyramid - the URL of the database.  There is no default for this property.",
+		   null);
+	public static StringProperty JDBC_DRIVER            = new StringProperty("jdbc.driver",
+		   "The full class name of the JDBC driver to use.  There is no default for this property.",
+		   null);
+	
+	public JDBCPyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+		super("jdbc", PyramidIO.class, parent, path);
+		
+		addProperty(ROOT_PATH);
+		addProperty(JDBC_DRIVER);
 	}
 
 	@Override
-	protected AnnotationFilter create() {
+	protected PyramidIO create() {
 		try {
-			return new EmptyFilter();
+			String driver = getPropertyValue(JDBC_DRIVER);
+			String rootPath = getPropertyValue(ROOT_PATH);
+			return new JDBCPyramidIO(driver, rootPath);
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create EmptyFilter", e);
+			LOGGER.error("Error trying to create JDBCPyramidIO", e);
 		}
 		return null;
 	}

@@ -22,30 +22,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
+import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 
-public class FileSystemPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemPyramidIOFactory.class);
+public class ResourcePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ResourcePyramidIOFactory.class);
 
-	
+
+
 	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
-			"Unused with type=\"hbase\".  Indicates the root path of the tile pyramid - either a directory (if \"file-system\"), a package name (if \"resource\"), the full path to a .zip file (if \"zip\"), the database path (if \"sqlite\"), or the URL of the database (if \"jdbc\").  There is no default for this property.",
-			null);
+		   "Indicates the root path of the tile pyramid - a package name.  There is no default for this property.",
+		   null);
 	public static StringProperty EXTENSION              = new StringProperty("extension",
-			"Used with type=\"file-system\", \"resource\", or \"zip\".  The file extension which the serializer should expect to find on individual tiles.",
-			"avro");
+		   "The file extension which the serializer should expect to find on individual tiles.",
+		   "avro");
 	
-	public FileSystemPyramidIOFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-		super(factoryName, PyramidIO.class, parent, path);
+	public ResourcePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+		super("resource", PyramidIO.class, parent, path);
 		
 		addProperty(ROOT_PATH);
 		addProperty(EXTENSION);
@@ -56,10 +58,11 @@ public class FileSystemPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		try {
 			String rootPath = getPropertyValue(ROOT_PATH);
 			String extension = getPropertyValue(EXTENSION);
-			return new FileSystemPyramidIO(rootPath, extension);
+			PyramidStreamSource source = new ResourcePyramidStreamSource(rootPath, extension);
+			return new ResourceStreamReadOnlyPyramidIO(source);
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create FileSystemPyramidIO", e);
+			LOGGER.error("Error trying to create ResourcePyramidIO", e);
 		}
 		return null;
 	}

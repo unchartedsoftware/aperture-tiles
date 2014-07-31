@@ -22,25 +22,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.init;
+package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
-import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.tile.init.providers.StandardTileSerializerFactoryProvider;
 
-public class StandardAnnotationIOFactoryModule extends AbstractModule {
+public class StandardTileSerializerFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder = 
-			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationIO>>(){});
-		for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
+		Multibinder<DelegateFactoryProviderTarget<TileSerializer<?>>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<TileSerializer<?>>>(){});
+
+		for (DefaultTileSerializerFactoryProvider provider: DefaultTileSerializerFactoryProvider.values()) {
 			factoryProviderBinder.addBinding().toInstance(provider);
-		
-		bind(new TypeLiteral<FactoryProvider<AnnotationIO>>() {}).to(StandardAnnotationIOFactoryProvider.class);
+		}
+
+		bind(new TypeLiteral<FactoryProvider<TileSerializer<?>>>() {}).to(StandardTileSerializerFactoryProvider.class);
 	}
 }

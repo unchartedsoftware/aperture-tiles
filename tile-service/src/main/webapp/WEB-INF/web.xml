@@ -19,15 +19,14 @@
 			<!-- Renderer factory module - override to add custom server-side 
 			     renderers. -->
 			com.oculusinfo.tile.init.ImageRendererFactoryModule:
-			<!-- Serialization factory module - override to add custom tile 
-			     serializers -->
-			com.oculusinfo.tile.init.TileSerializationFactoryModule:
-			<!-- Pyramid IO factory module - override to add custom PyramidIO 
-			     implementations -->
-			<!-- Standard implementation -->
+			<!-- Standard Serialization factory module.  Custom tile serializers 
+			     get added in other modules, but this one should remain. -->
+			com.oculusinfo.tile.init.StandardTileSerializerFactoryModule:
+			<!-- Standard Pyramid IO factory module.  Custom PyramidIO factories
+			     get added in other modules, but this one should remain. -->
 			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
 			<!-- Tile Transformer factory module - override to add custom tile
-				 Transformer -->
+			     Transformer -->
 			com.oculusinfo.tile.init.TileTransformerFactoryModule:
 			<!-- For tiling requiring a spark connection
 			     com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:

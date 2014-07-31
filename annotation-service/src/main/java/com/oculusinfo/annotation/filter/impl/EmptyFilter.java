@@ -23,13 +23,13 @@
  */
 package com.oculusinfo.annotation.filter.impl;
 
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.util.Pair;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.binning.util.Pair;
 
 
 /**
@@ -37,19 +37,19 @@ import java.util.Map;
  */
 public class EmptyFilter implements AnnotationFilter {
 
-    public EmptyFilter() {}
+	public EmptyFilter() {}
 
 	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin ) {
 
-        List<Pair<String, Long>> filtered = new LinkedList<>();
-        // for each group
-        for (Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.entrySet()) {
-            filtered.addAll(binEntry.getValue());
-        }
-        return filtered;
-    }
+		List<Pair<String, Long>> filtered = new LinkedList<>();
+		// for each group
+		for (Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.entrySet()) {
+			filtered.addAll(binEntry.getValue());
+		}
+		return filtered;
+	}
 
-    public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
-        return annotations;
-    }
+	public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
+		return annotations;
+	}
 }

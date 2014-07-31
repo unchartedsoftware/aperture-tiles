@@ -22,12 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.io.impl.HBasePyramidIO;
+import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.factory.properties.StringProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +49,8 @@ public class HBasePyramidIOFactory extends SharedInstanceFactory<PyramidIO> {
 		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
 		   null);
 	
-	public HBasePyramidIOFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-		super(factoryName, PyramidIO.class, parent, path);
+	public HBasePyramidIOFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super("hbase", PyramidIO.class, parent, path);
 		
 		addProperty(HBASE_ZOOKEEPER_QUORUM);
 		addProperty(HBASE_ZOKEEPER_PORT);

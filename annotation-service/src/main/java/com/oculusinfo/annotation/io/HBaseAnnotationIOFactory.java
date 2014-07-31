@@ -34,38 +34,39 @@ import java.util.List;
 
 
 public class HBaseAnnotationIOFactory extends SharedInstanceFactory<AnnotationIO> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HBaseAnnotationIOFactory.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseAnnotationIOFactory.class);
 
 
-    public static StringProperty HBASE_ZOOKEEPER_QUORUM = new StringProperty("hbase.zookeeper.quorum",
-            "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
-            null);
-    public static StringProperty HBASE_ZOKEEPER_PORT    = new StringProperty("hbase.zookeeper.port",
-            "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.",
-            "2181");
-    public static StringProperty HBASE_MASTER           = new StringProperty("hbase.master",
-            "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
-            null);
 
-    public HBaseAnnotationIOFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-        super(factoryName, AnnotationIO.class, parent, path);
+	public static StringProperty HBASE_ZOOKEEPER_QUORUM = new StringProperty("hbase.zookeeper.quorum",
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
+		   null);
+	public static StringProperty HBASE_ZOKEEPER_PORT    = new StringProperty("hbase.zookeeper.port",
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.",
+		   "2181");
+	public static StringProperty HBASE_MASTER           = new StringProperty("hbase.master",
+		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
+		   null);
 
-        addProperty(HBASE_ZOOKEEPER_QUORUM);
-        addProperty(HBASE_ZOKEEPER_PORT);
-        addProperty(HBASE_MASTER);
-    }
+	public HBaseAnnotationIOFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super("hbase", AnnotationIO.class, parent, path);
 
-    @Override
-    protected AnnotationIO createInstance () {
-        try {
-            String quorum = getPropertyValue(HBASE_ZOOKEEPER_QUORUM);
-            String port = getPropertyValue(HBASE_ZOKEEPER_PORT);
-            String master = getPropertyValue(HBASE_MASTER);
-            return new HBaseAnnotationIO(quorum, port, master);
-        }
-        catch (Exception e) {
-            LOGGER.error("Error trying to create HBasePyramidIO", e);
-        }
-        return null;
-    }
+		addProperty(HBASE_ZOOKEEPER_QUORUM);
+		addProperty(HBASE_ZOKEEPER_PORT);
+		addProperty(HBASE_MASTER);
+	}
+
+	@Override
+	protected AnnotationIO createInstance () {
+		try {
+			String quorum = getPropertyValue(HBASE_ZOOKEEPER_QUORUM);
+			String port = getPropertyValue(HBASE_ZOKEEPER_PORT);
+			String master = getPropertyValue(HBASE_MASTER);
+			return new HBaseAnnotationIO(quorum, port, master);
+		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create HBasePyramidIO", e);
+		}
+		return null;
+	}
 }

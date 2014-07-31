@@ -44,76 +44,76 @@ import com.oculusinfo.factory.properties.StringProperty;
  * @author nkronenfeld, pulled out from code by cregnier
  */
 public class UberFactory<T> extends ConfigurableFactory<T> {
-    private static final Logger  LOGGER       = LoggerFactory.getLogger(UberFactory.class);
+	private static final Logger  LOGGER       = LoggerFactory.getLogger(UberFactory.class);
 
 
 
-    // A public-facing version of the factory type property.
-    public static StringProperty FACTORY_TYPE = new StringProperty("type",
-                                                                   "The sub-type of object to create.  The value of this parameter is used to determine which contained factory to use.",
-                                                                   null);
+	// A public-facing version of the factory type property.
+	public static StringProperty FACTORY_TYPE = new StringProperty("type",
+	                                                               "The sub-type of object to create.  The value of this parameter is used to determine which contained factory to use.",
+	                                                               null);
 
 
 
-    private String                       _defaultType;
-    private List<ConfigurableFactory<T>> _children;
+	private StringProperty                         _factoryType;
+	private String                                 _defaultType;
+	private List<ConfigurableFactory<? extends T>> _children;
 
 
 
-    public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<T>> children) {
-        this(null, factoryType, parent, path, false, children);
-    }
+	public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+		this(null, factoryType, parent, path, false, children, defaultType);
+	}
 
-    public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<T>> children) {
-        this(null, factoryType, parent, path, isSingleton, children);
-    }
+	public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+		this(null, factoryType, parent, path, isSingleton, children, defaultType);
+	}
 
-    public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<T>> children) {
-        this(name, factoryType, parent, path, false, children);
-    }
+	public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+		this(name, factoryType, parent, path, false, children, defaultType);
+	}
 
-    public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<T>> children) {
-        super(name, factoryType, parent, path, isSingleton);
+	public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+		super(name, factoryType, parent, path, isSingleton);
 
-        _children = children;
-        for (ConfigurableFactory<T> child: children) {
-            addChildFactory(child);
-        }
-        addProperty(new FactoryTypeProperty());
-    }
+		_children = children;
+		for (ConfigurableFactory<? extends T> child: children) {
+			addChildFactory(child);
+		}
+		_factoryType = new FactoryTypeProperty();
+		addProperty(_factoryType);
 
-    public void setDefault (String defaultValue) {
-        _defaultType = defaultValue;
-    }
+		_defaultType = defaultType;
+	}
 
-    @Override
-    protected T create () {
-        String subType = getPropertyValue(FACTORY_TYPE);
-        try {
-            return produce(subType, getFactoryType());
-        } catch (ConfigurationException e) {
-            LOGGER.warn("Error creating product {}[{}] for {}", new Object[] {getFactoryType(), getName(), subType});
-            return null;
-        }
-    }
-
+	@Override
+	protected T create () {
+		String subType = getPropertyValue(_factoryType);
+		try {
+			return produce(subType, getFactoryType());
+		} catch (ConfigurationException e) {
+			LOGGER.warn("Error creating product {}[{}] for {}", new Object[] {getFactoryType(), getName(), subType});
+			return null;
+		}
+	}
 
 
-    private class FactoryTypeProperty extends StringProperty {
-        FactoryTypeProperty () {
-            super(FACTORY_TYPE.getName(), FACTORY_TYPE.getDescription(), null);
-        }
-        @Override
-        public String getDefaultValue () {
-            return _defaultType;
-        }
-        @Override
-        public String[] getPossibleValues () {
-            String[] possibilities = new String[_children.size()];
-            for (int i=0; i<_children.size(); ++i) {
-                possibilities[i] = _children.get(i).getName();
-            }
-            return possibilities;
-        }
-    }
+
+	private class FactoryTypeProperty extends StringProperty {
+		FactoryTypeProperty () {
+			super(FACTORY_TYPE.getName(), FACTORY_TYPE.getDescription(), null);
+		}
+		@Override
+		public String getDefaultValue () {
+			return _defaultType;
+		}
+		@Override
+		public String[] getPossibleValues () {
+			String[] possibilities = new String[_children.size()];
+			for (int i=0; i<_children.size(); ++i) {
+				possibilities[i] = _children.get(i).getName();
+			}
+			return possibilities;
+		}
+	}
 }

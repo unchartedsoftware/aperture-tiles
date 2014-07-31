@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>> {
+public class StringIntPairArrayJsonSerializer extends GenericJSONSerializer<List<Pair<String, Integer>>> {
 	private static final long serialVersionUID = -7445619308538292627L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(List.class,
 		   new TypeDescriptor(Pair.class,
@@ -44,7 +44,7 @@ public class StringIntPairArrayJSONSerializer extends GenericJSONSerializer<List
 
 
 
-	public StringIntPairArrayJSONSerializer() {
+	public StringIntPairArrayJsonSerializer() {
 		super();
 	}
 

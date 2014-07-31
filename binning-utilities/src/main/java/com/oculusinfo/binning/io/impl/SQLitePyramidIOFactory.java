@@ -22,11 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io;
+package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.io.impl.SQLitePyramidIO;
+import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,13 +37,14 @@ import java.util.List;
 public class SQLitePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SQLitePyramidIOFactory.class);
 
-	
+
+
 	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
-			"Unused with type=\"hbase\".  Indicates the root path of the tile pyramid - either a directory (if \"file-system\"), a package name (if \"resource\"), the full path to a .zip file (if \"zip\"), the database path (if \"sqlite\"), or the URL of the database (if \"jdbc\").  There is no default for this property.",
-			null);
+		   "Indicates the root path of the tile pyramid - the database path.  There is no default for this property.",
+		   null);
 	
-	public SQLitePyramidIOFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-		super(factoryName, PyramidIO.class, parent, path);
+	public SQLitePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+		super("sqlite", PyramidIO.class, parent, path);
 		
 		addProperty(ROOT_PATH);
 	}
@@ -58,6 +60,4 @@ public class SQLitePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		}
 		return null;
 	}
-	
-
 }

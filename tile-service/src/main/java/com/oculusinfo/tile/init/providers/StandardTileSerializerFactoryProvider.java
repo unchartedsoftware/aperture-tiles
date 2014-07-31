@@ -24,31 +24,40 @@
 package com.oculusinfo.tile.init.providers;
 
 
-import com.oculusinfo.binning.io.serialization.StandardTileSerializerFactory;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.FactoryProvider;
-
 import java.util.List;
+import java.util.Set;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 
 
 
-public class StandardTileSerializationFactoryProvider implements FactoryProvider<TileSerializer<?>> {
+@Singleton
+public class StandardTileSerializerFactoryProvider extends StandardUberFactoryProvider<TileSerializer<?>> {
+	@Inject
+	public StandardTileSerializerFactoryProvider (Set<DelegateFactoryProviderTarget<TileSerializer<?>>> providers) {
+		super(providers);
+	}
+
 	@Override
 	public ConfigurableFactory<TileSerializer<?>> createFactory (List<String> path) {
-		return new StandardTileSerializerFactory(null, path);
+		return new TileSerializerFactory(null, path, createChildren(path));
 	}
 
 	@Override
 	public ConfigurableFactory<TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
 	                                                             List<String> path) {
-		return new StandardTileSerializerFactory(parent, path);
+		return new TileSerializerFactory(parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
 	}
 
 	@Override
 	public ConfigurableFactory<TileSerializer<?>> createFactory (String factoryName,
 	                                                             ConfigurableFactory<?> parent,
 	                                                             List<String> path) {
-		return new StandardTileSerializerFactory(factoryName, parent, path);
+		return new TileSerializerFactory(factoryName, parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
 	}
 }

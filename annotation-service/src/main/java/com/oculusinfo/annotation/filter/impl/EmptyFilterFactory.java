@@ -22,42 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.filter;
+package com.oculusinfo.annotation.filter.impl;
 
-import com.oculusinfo.annotation.filter.impl.NMostRecentByGroupFilter;
-import com.oculusinfo.annotation.filter.impl.ScriptableFilter;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.properties.JSONProperty;
-import com.oculusinfo.factory.properties.StringProperty;
-import org.json.JSONObject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 
-public class ScriptableFilterFactory extends ConfigurableFactory<AnnotationFilter> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptableFilterFactory.class);
+public class EmptyFilterFactory extends ConfigurableFactory<AnnotationFilter> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(EmptyFilterFactory.class);
+	public static final String NAME = "empty";
 
-	
-	public static StringProperty SCRIPT_STRING = new StringProperty("script",
-			"The javascript script string that evaluates to a boolean based off a single annotation",
-			null);
 
-	public ScriptableFilterFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-		super(factoryName, AnnotationFilter.class, parent, path);
-		
-		addProperty(SCRIPT_STRING);
+	public EmptyFilterFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super(NAME, AnnotationFilter.class, parent, path);
 	}
 
 	@Override
 	protected AnnotationFilter create() {
 		try {
-			String script = getPropertyValue(SCRIPT_STRING);
-			return new ScriptableFilter(script);
+			return new EmptyFilter();
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create ScriptableFilter", e);
+			LOGGER.error("Error trying to create EmptyFilter", e);
 		}
 		return null;
 	}

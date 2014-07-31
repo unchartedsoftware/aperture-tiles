@@ -32,7 +32,7 @@ import org.json.JSONObject;
 
 import java.util.*;
 
-public class StringLongPairArrayMapJSONSerializer extends GenericJSONSerializer<Map<String, List<Pair<String, Long>>>>{
+public class StringLongPairArrayMapJsonSerializer extends GenericJSONSerializer<Map<String, List<Pair<String, Long>>>>{
 	private static final long serialVersionUID = -7445619308538292627L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Map.class,
                                                                                 new TypeDescriptor(String.class),
@@ -41,7 +41,7 @@ public class StringLongPairArrayMapJSONSerializer extends GenericJSONSerializer<
                                                                                         new TypeDescriptor(String.class),
                                                                                         new TypeDescriptor(Long.class))));
 
-	public StringLongPairArrayMapJSONSerializer() {
+	public StringLongPairArrayMapJsonSerializer() {
 		super();
 	}
 

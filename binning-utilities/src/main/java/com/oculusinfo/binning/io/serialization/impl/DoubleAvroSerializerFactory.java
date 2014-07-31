@@ -22,18 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.binning.io.serialization.impl;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
+import java.util.List;
+
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider;
+import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
 
-public class TileSerializationFactoryModule extends AbstractModule {
+public class DoubleAvroSerializerFactory extends ConfigurableFactory<TileSerializer<Double>> {
+	public static final String NAME = "double-a";
+
+	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static Class<TileSerializer<Double>> getGenericSerializerClass () {
+		return (Class) TileSerializer.class;
+	}
+
+	public DoubleAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
+		super(NAME, getGenericSerializerClass(), parent, path);
+	}
 
 	@Override
-	protected void configure() {
-		TypeLiteral<FactoryProvider<TileSerializer<?>>> bindType = new TypeLiteral<FactoryProvider<TileSerializer<?>>>() {};
-		bind(bindType).to(StandardTileSerializationFactoryProvider.class);
+	protected TileSerializer<Double> create () {
+		return new DoubleAvroSerializer(TileSerializerFactory.getCodecFactory(this));
 	}
 }

@@ -44,7 +44,7 @@ import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySeriali
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializer;
 import com.oculusinfo.binning.util.Pair;
 
 public class SerializationTests {
@@ -70,7 +70,7 @@ public class SerializationTests {
 
 	@Test
 	public void testStringIntPairArrayTileSerialization() throws IOException {
-		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJSONSerializer();
+		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJsonSerializer();
 
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Integer>>> tile = new TileData<List<Pair<String,Integer>>>(index);
@@ -179,7 +179,7 @@ public class SerializationTests {
     
 	@Test
 	public void testUnicodeStringIntPairTileSerialization() throws IOException {
-		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJSONSerializer();
+		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJsonSerializer();
 
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Integer>>> tile = new TileData<List<Pair<String,Integer>>>(index);
