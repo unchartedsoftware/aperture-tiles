@@ -58,11 +58,8 @@ object GraphClusterApp {
 	val progressCounter = argParser.getInt("y", "Number of times the algorithm can fail to make progress before exiting. default=1", Some(1))
 	val edgedelimiter = argParser.getString("d", "Specify input file edge delimiter. default is tab-delimited", Some("\t"))
 
-	//opt[Boolean]('z',"ipaddress") action {(x,c)=> c.copy(ipaddress=x)} text("Set to true to convert ipaddresses to Long ids. Defaults to false")	    
-
 	var edgeFile = source
 	var outputdir = output
-	//var ipaddress = false
 
     // read the input data 
 	val rawData = if (0 == partitions) {
@@ -72,7 +69,6 @@ object GraphClusterApp {
 	}    
 	  
 	// store data a distributed edge list  
-    //val inputHashFunc = if (ipaddress) (id:String) => IpAddress.toLong(id) else (id:String) => id.toLong
 	val inputHashFunc = (id:String) => id.toLong  
     var edgeRDD = rawData.map(row => {
 	      val tokens = row.split(edgedelimiter).map(_.trim())
