@@ -146,8 +146,8 @@ define(function (require) {
 
                 html: function() {
 
-                    var MAX_FONT_SIZE = 36,
-                        MIN_FONT_SIZE = 24,
+                    var MAX_FONT_SIZE = 22,
+                        MIN_FONT_SIZE = 12,
                         values = this.bin.value,
                         tilekey = this.tilekey,
                         numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),

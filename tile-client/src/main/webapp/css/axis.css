@@ -131,11 +131,6 @@
 }
 
 .axis-marker-label {
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000; 
     font-family: Verdana, Arial, sans-serif;
     font-size:0.8em;
     color : #D3D3D3;
@@ -156,11 +151,6 @@
     padding-bottom: 5px;
     padding-left:50%;
     padding-right:50%;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;

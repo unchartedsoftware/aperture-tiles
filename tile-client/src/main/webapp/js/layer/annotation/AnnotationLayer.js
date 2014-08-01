@@ -135,7 +135,7 @@ define(function (require) {
 
         createDetails: function( clickState ) {
 
-            var $details = this.details.createDisplayDetails( clickState.annotations, clickState.$annotations );
+            var $details = this.details.createDisplayDetails( clickState.annotations, this.map.getRootElement() ); //clickState.$annotations );
             // position details over click
             $details.css({
                 left: clickState.position.x - ( $details.outerWidth() / 2 ),

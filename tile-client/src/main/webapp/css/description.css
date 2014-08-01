@@ -16,11 +16,6 @@
 	line-height: 32px;
 	background-color: #222222;
     color: #D3D3D3;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }
 
 #description-header:hover {   
@@ -33,9 +28,4 @@
 	color: #D3D3D3;
 	width: 612px;
 	font-size: 10pt;
-	text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }

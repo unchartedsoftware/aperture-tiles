@@ -32,8 +32,8 @@ or server-side renderers.
       file embedded in a .jar file, through a JDBC connection, or from sqlite 
       database.  If one needs tile pyramids stored in other locations, one 
       will need to override this module.
-    * com.oculusinfo.tile.init.TileSerializationFactoryModule sets up 
-      com.oculusinfo.tile.init.providers.StandardTileSerializationFactoryProvider.
+    * com.oculusinfo.tile.init.TileSerializerFactoryModule sets up
+      com.oculusinfo.tile.init.providers.StandardTileSerializerFactoryModule.
       This factory provider serves up a factory that will create the standard 
       serialization types defined in the binning-utilities project.  If one 
       has a custom data type as the bin value in ones tiles, one will need to 

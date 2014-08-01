@@ -97,7 +97,7 @@ define(function (require) {
             */
             function getYOffset( numEntries ) {
                 var SPACING =  36;
-                return 90 - ( ( ( numEntries - 1) / 2 ) ) * SPACING;
+                return 108 - ( ( ( numEntries - 1) / 2 ) ) * SPACING;
             }
 
             function findKeyVals( meta, keys, arr ) {
@@ -129,7 +129,7 @@ define(function (require) {
 
                 html: function() {
 
-                    var FONT_SIZE = 20,
+                    var FONT_SIZE = 16,
                         meta = this.meta,
                         tilekey = this.tilekey,
                         keyVals = findKeyVals( meta, spec.keys ),
@@ -147,7 +147,7 @@ define(function (require) {
                         html =     '<div class="meta-entry">';
                         // create entry label
                         html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px;">'+keyVals[i].key+':</div>';
-                        html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px;">'+keyVals[i].value+'</div>';
+                        html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px; margin-bottom: 5px;">'+keyVals[i].value+'</div>';
 
                         html +=    '</div>';
 

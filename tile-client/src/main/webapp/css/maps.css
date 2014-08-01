@@ -18,11 +18,6 @@
     color: #D3D3D3;
     link: #D322D3;
     visited: #D322D3;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }
 
 #maps-header:hover {   
@@ -35,11 +30,6 @@
 	color: #D3D3D3;
 	width: 612px;
 	font-size: 10pt;
-	text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }
 
 .maps-link {
