@@ -12,70 +12,56 @@ if [ "a" == "a""$SCALA_HOME" ]; then
   exit 1
 fi
 
+function getJar {
+	scriptGroupId=$1
+	scriptArtifactId=$2
+	scriptVersion=$3
+	groupDir=`echo ${scriptGroupId} | sed 's|\.|/|g'`
+	repo=${HOME}/.m2/repository
+	jardir=${repo}/${groupDir}/${scriptArtifactId}/${scriptVersion}
+	JAR=${jardir}/${scriptArtifactId}-${scriptVersion}.jar
 
-function addJarToSpark {
-  scriptGroupId=$1
-  scriptArtifactId=$2
-  scriptVersion=$3
-  qualifier=$4
-  echo Group: ${scriptGroupId}
-  echo artifact: ${scriptArtifactId}
-  echo version: ${scriptVersion}
-  echo qualifer: ${qualifier}
+	if [ ${OSTYPE} == "cygwin" ]; then
+		export JAR="$(cygpath -p -w "${JAR}")"
+	fi
+}
 
-  groupDir=`echo ${scriptGroupId} | sed 's|\.|/|g'`
-  repo=${HOME}/.m2/repository
-  jardir=${repo}/${groupDir}/${scriptArtifactId}/${scriptVersion}
-  if [ X${qualifier} = X ]
-  then
-	  echo No qualifer
-	  jar=${jardir}/${scriptArtifactId}-${scriptVersion}.jar
-  else
-	  echo qualifer
-	  jar=${jardir}/${scriptArtifactId}-${scriptVersion}-${qualifier}.jar
-  fi
+function addSparkJar {
+	getJar $1 $2 $3
+	jar=${JAR}
 
+	# Testing for existence of jar
+	if [ ! -e ${jar} ]
+	then
+		echo Error: Looking for ${jar} - not found
+		exit
+	fi
 
-  # Testing for existence of jar
-  if [ ! -e ${jar} ]
-  then
-      echo Error: Looking for ${jar} - not found
-      exit
-  fi
-
-  # Add the jar to the classpath
-  if [ "a" == "a"${ADD_JARS} ]; then
-    export ADD_JARS=${jar}
-  else
-    export ADD_JARS=${ADD_JARS},${jar}
-  fi
+	# Add the jar to the jar list
+	if [ "a" == "a"${SPARK_JARS} ]; then
+		export SPARK_JARS=${jar}
+	else
+		export SPARK_JARS=${SPARK_JARS},${jar}
+	fi
 }
 
 
-
-
-
-
-# Set up the spark classpath
+# Set up the list of extra jars needed
 # our own jars
-addJarToSpark com.oculusinfo math-utilities ${project.version}
-addJarToSpark com.oculusinfo binning-utilities ${project.version}
-addJarToSpark com.oculusinfo tile-generation ${project.version}
-addJarToSpark com.oculusinfo tile-service ${project.version} classes
+addSparkJar com.oculusinfo math-utilities ${project.version}
+addSparkJar com.oculusinfo binning-utilities ${project.version}
+addSparkJar com.oculusinfo tile-generation ${project.version}
 
 # framework-related jars
-addJarToSpark org.apache.hbase hbase ${hbase-version}
-addJarToSpark org.scala-lang scala-library ${scala-version}
-#json version is derived indirectly, can't be coded here.
-addJarToSpark org.json json 20090211
+addSparkJar org.apache.hbase hbase ${hbase-version}
+addSparkJar org.scala-lang scala-library ${scala-version}
+# json version is derived indirectly, can't be coded here.
+addSparkJar org.json json 20090211
 
 
-# export MASTER=local[8]
-# export SPARK_MEM=4g
+
 
 echo Running Spark from $SPARK_HOME
-echo Running Spark on $MASTER
-echo Running Spark with $SPARK_MEM
-echo Running Spark with jars=$ADD_JARS
+echo Running Spark with jars ${SPARK_JARS}
 
-$SPARK_HOME/bin/spark-shell $*
+$SPARK_HOME/bin/spark-shell --jars ${SPARK_JARS} $*
