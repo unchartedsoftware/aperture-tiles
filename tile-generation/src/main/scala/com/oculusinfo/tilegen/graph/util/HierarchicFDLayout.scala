@@ -43,6 +43,7 @@ import org.apache.spark.graphx._
  *	borderOffset = (CURRENTLY NOT IN USE) percent of boundingBox width and height to leave as whitespace when laying out leaf nodes.  Default is 5 percent
  *	numNodesThres = (CURRENTLY NOT IN USE) threshold used to determine when to layout underlying communities within a single force-directed layout task.  Default is 1000 nodes
  *  nodeAreaPercent = Used for hierchical levels > 0 to determine the area of all node 'circles' within the boundingBox vs whitespace. Default is 20 percent
+ *  gravity = strength of gravity force to use to prevent outer nodes from spreading out too far.  Force-directed layout only.  Default = 0.0 (no gravity)
  * **/ 
 class HierarchicFDLayout extends Serializable {
 
@@ -57,7 +58,8 @@ class HierarchicFDLayout extends Serializable {
 						//borderOffset: Int = 0,
 						//numNodesThres: Int = 1000
 						nodeAreaPercent: Int = 20,
-						bUseEdgeWeights: Boolean = false
+						bUseEdgeWeights: Boolean = false,
+						gravity: Double = 0.0
 						): Graph[(Double, Double), Long] = {		
 		
 		//TODO -- this class assumes edge weights are Longs.  If this becomes an issue for some datasets, then change expected edge weights to Doubles? 
@@ -167,7 +169,8 @@ class HierarchicFDLayout extends Serializable {
 														   maxIterations,
 														   bUseEdgeWeights,
 														   true,
-														   currAreaPercent)
+														   currAreaPercent,
+														   gravity)
 					// convert x,y coords and community radii to square bounding boxes for next hierarchical level
 					val rects = convertNodeCirclesToRectangles(coords)	
 					rects
