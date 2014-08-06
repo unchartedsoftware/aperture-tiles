@@ -29,9 +29,9 @@ This project has the following prerequisites:
 
 ##<a name="source-code"></a>Source Code
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the *master* branch of ApertureJS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master). To install both projects:
+The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master). To install both projects:
 
-1. Run the `mvn install` command in the *aperture* folder found in the root ApertureJS directory.
+1. Run the `mvn install` command in the *aperture* folder found in the root Aperture JS directory.
 2. Run the `mvn install` command in the root Aperture Tiles directory.
 
 ###<a name="environment-variables"></a>Environment Variables
@@ -67,9 +67,9 @@ If you plan to run Apache Spark only in standalone mode on single machine, you c
 
 ####<a name="compiling"></a>Compiling the Aperture Tiles Projects
 
-Before you compile the Aperture Tiles source code, you must install the ApertureJS project. Run the `mvn install` command in the *aperture* folder in the aperture subdirectory of the ApertureJS root directory.
+Before you compile the Aperture Tiles source code, you must install the Aperture JS project. Run the `mvn install` command in the *aperture* folder in the aperture subdirectory of the Aperture JS root directory.
 
-Once the ApertureJS installation is complete, run the `mvn install` command again, this time in the root Aperture Tiles directory. This will compile all the project components and install .jar files for each project into your local maven repostitory on your build machine.
+Once the Aperture JS installation is complete, run the `mvn install` command again, this time in the root Aperture Tiles directory. This will compile all the project components and install .jar files for each project into your local maven repostitory on your build machine.
 
 ##<a name="next-steps"></a>Next Steps
 

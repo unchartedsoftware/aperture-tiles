@@ -432,7 +432,7 @@ The previous sections focus largely on the process of implementing an Aperture T
 
 The custom renderers built to support this functionality are based on the following renderers in `/tile-client/src/main/webapp/js/layer/client/renderers/`:
 
-- ApertureRenderer.js, which uses the ApertureJS framework to render tiles
+- ApertureRenderer.js, which uses the Aperture JS framework to render tiles
 - HtmlRenderer.js, which uses an HTML framework to render tiles
 
 A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw the top 5 words occuring in each tile. As multiple renderers are attached to this client-side layer, a carousel interface is activated to allow the user to switch between them. The custom renderers for this application are available in `/src/main/webapp/js/layer/client/renderers/`.
