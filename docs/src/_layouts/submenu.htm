@@ -6,8 +6,12 @@ layout: default
 		{% capture includeContext %}{{ page.section | downcase }}-{{ page.subtitle | replace: ' ', '' }}.html{% endcapture %}
 
 {% include submenu.html %}
-
-{% include {{ includeContext }} %}	
-<div class="content-body">
-	{{ content }}
+<div id="content">
+	<div class="content-context">
+		{% include {{ includeContext }} %}	
+		{% include footer.html %}
+	</div>
+	<div class="content-body">
+		{{ content }}
+	</div>
 </div>

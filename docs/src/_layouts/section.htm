@@ -5,7 +5,12 @@ layout: default
 {% comment %} Get filename containing sidebar content {% endcomment %}
 	{% capture includeContext %}{{ page.section | downcase }}.html{% endcapture %}
 
-{% include {{ includeContext }} %}
-<div class="content-body">
-	{{ content }}
+<div id="content">
+	<div class="content-context">
+		{% include {{ includeContext }} %}
+		{% include footer.html %}
+	</div>
+	<div class="content-body">
+		{{ content }}
+	</div>
 </div>
