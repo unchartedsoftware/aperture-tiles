@@ -26,14 +26,17 @@ package com.oculusinfo.twitter.init;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.twitter.init.TwitterTileSerializationFactory.TwitterTileSerializationFactoryDelegate;
 
 public class TwitterSerializationFactoryModule extends AbstractModule {
+	@Override
+	protected void configure() {
+		Multibinder<DelegateFactoryProviderTarget<TileSerializer<?>>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<TileSerializer<?>>>(){});
 
-    @Override
-    protected void configure() {
-        TypeLiteral<FactoryProvider<TileSerializer<?>>> bindType = new TypeLiteral<FactoryProvider<TileSerializer<?>>>() {};
-        bind(bindType).to(TwitterTileSerializationFactoryProvider.class);
-    }
+		factoryProviderBinder.addBinding().toInstance(new TwitterTileSerializationFactoryDelegate());
+	}
 }

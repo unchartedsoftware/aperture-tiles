@@ -24,13 +24,17 @@
 package com.oculusinfo.factory;
 
 
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.PrintStream;
-import java.util.*;
 
 
 
@@ -59,22 +63,43 @@ abstract public class ConfigurableFactory<T> {
 	private JSONObject                    _configurationNode;
 	private Set<ConfigurationProperty<?>> _properties;
 	private ConfigurableFactory<?>        _parent;
+    private boolean                       _isSingleton;
+    private T                             _singletonProduct;
 
 
 
-	/**
-	 * Create a factory
-	 * 
-	 * @param factoryType The type of object to be constructed by this factory.
-	 *            Can not be null.
-	 * @param parent The parent factory; all configuration nodes of this factory
-	 *            will be under the parent factory's root configuration node.
-	 * @param path The path from the parent factory's root configuration node to
-	 *            this factory's root configuration node.
-	 */
-	protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path) {
-		this(null, factoryType, parent, path);
-	}
+    /**
+     * Create a factory
+     * 
+     * @param factoryType The type of object to be constructed by this factory.
+     *            Can not be null.
+     * @param parent The parent factory; all configuration nodes of this factory
+     *            will be under the parent factory's root configuration node.
+     * @param path The path from the parent factory's root configuration node to
+     *            this factory's root configuration node.
+     */
+    protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path) {
+        this(null, factoryType, parent, path, false);
+    }
+
+    /**
+     * Create a factory
+     * 
+     * @param factoryType The type of object to be constructed by this factory.
+     *            Can not be null.
+     * @param parent The parent factory; all configuration nodes of this factory
+     *            will be under the parent factory's root configuration node.
+     * @param path The path from the parent factory's root configuration node to
+     *            this factory's root configuration node.
+     * @param isSingleton If true, this factory will only ever produce one
+     *            product, which it will return every time it is asked to
+     *            produce. Do note that if the factory is set to produce a
+     *            singleton, production may be a synchronized, blocking
+     *            operation.
+     */
+    protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton) {
+        this(null, factoryType, parent, path, isSingleton);
+    }
     
 	/**
 	 * Create a factory
@@ -90,25 +115,48 @@ abstract public class ConfigurableFactory<T> {
 	 *            this factory's root configuration node.
 	 */
 	protected ConfigurableFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path) {
-		_name = name;
-		_factoryType = factoryType;
-		List<String> rootPath = new ArrayList<>();
-		if (null != parent) {
-			rootPath.addAll(parent.getRootPath());
-		}
-		if (null != path) {
-			rootPath.addAll(path);
-		}
-		_rootPath = Collections.unmodifiableList(rootPath);
-		_children = new ArrayList<>();
-		_configured = false;
-		_properties = new HashSet<>();
-		
-		//NOTE: this should not be set to the parent passed in cause the parent won't necessarily
-		//be created before the children if you're doing a bottom up approach for some reason.
-		_parent = null; 
+	    this(name, factoryType, parent, path, false);
 	}
 
+    /**
+     * Create a factory
+     * 
+     * @param name A name by which this factory can be known, to be used to
+     *            differentiate it from other child factories of this factory's
+     *            parent that return the same type.
+     * @param factoryType The type of object to be constructed by this factory.
+     *            Can not be null.
+     * @param parent The parent factory; all configuration nodes of this factory
+     *            will be under the parent factory's root configuration node.
+     * @param path The path from the parent factory's root configuration node to
+     *            this factory's root configuration node.
+     * @param isSingleton If true, this factory will only ever produce one
+     *            product, which it will return every time it is asked to
+     *            produce. Do note that if the factory is set to produce a
+     *            singleton, production may be a synchronized, blocking
+     *            operation.
+     */
+	protected ConfigurableFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton) {
+        _name = name;
+        _factoryType = factoryType;
+        List<String> rootPath = new ArrayList<>();
+        if (null != parent) {
+            rootPath.addAll(parent.getRootPath());
+        }
+        if (null != path) {
+            rootPath.addAll(path);
+        }
+        _rootPath = Collections.unmodifiableList(rootPath);
+        _children = new ArrayList<>();
+        _configured = false;
+        _properties = new HashSet<>();
+        _isSingleton = isSingleton;
+        _singletonProduct = null;
+        
+        //NOTE: this should not be set to the parent passed in cause the parent won't necessarily
+        //be created before the children if you're doing a bottom up approach for some reason.
+        _parent = null; 
+	}
 	/**
 	 * Get the root node in the tree of configurables.
 	 * @return Returns the root of the configurable factories, or this factory if no parent is set.
@@ -227,7 +275,18 @@ abstract public class ConfigurableFactory<T> {
 		}
 
 		if ((null == name || name.equals(_name)) && goodsType.equals(_factoryType)) {
-			return goodsType.cast(create());
+		    if (_isSingleton) {
+		        if (null == _singletonProduct) {
+		            synchronized (this) {
+		                if (null == _singletonProduct) {
+		                    _singletonProduct = create();
+		                }
+		            }
+		        }
+		        return goodsType.cast(_singletonProduct);
+		    } else {
+		        return goodsType.cast(create());
+		    }
 		} else {
 			for (ConfigurableFactory<?> child: _children) {
 				GT result = child.produce(name, goodsType);

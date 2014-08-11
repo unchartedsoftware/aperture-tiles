@@ -1,0 +1,29 @@
+@charset "UTF-8";
+
+.jspScrollable:focus {
+    outline:none;
+}
+
+.jspVerticalBar {
+    width: 12px;
+}
+
+.jspHorizontalBar {
+    height: 12px;
+}
+
+.jspVerticalBar, 
+.jspHorizontalBar, 
+.jspTrack {
+
+    box-shadow: inset 0 0 6px #000; 
+    border-radius: 10px;
+    background-color: #111111;
+}
+
+.jspDrag {
+    
+    border-radius: 10px;
+    background-color: #222222;
+    border: 1px solid #000;
+}

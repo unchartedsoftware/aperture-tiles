@@ -38,6 +38,9 @@ define(function (require) {
 
         enableTooltip: function( $elem, message, openFunc, closeFunc ) {
 
+            return true;
+
+            /*
             var tooltipOpened = false,
                 pendingCallback;
 
@@ -68,8 +71,27 @@ define(function (require) {
                     tooltipOpened = false;
                 }
             });
-
+            */
         },
+
+
+        enableScrollBars: function( $elem, $parent ) {
+
+            if ( !$.contains( document, $elem[0] ) ) {
+                console.error("DOM element must be attached for jScrollPanels to work correctly");
+            }
+
+            // add scroll panel to element
+            $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0 });
+            // if parent is resizeable, set callback to change scrollbar size
+            if ( $parent && !$parent.resizable("option","disabled") ) {
+                $parent.on("resize", function() {
+                    // update scroll panel on parent resize
+                    $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0 });
+                });
+            }
+        },
+
 
         disableTooltip: function( $elem ) {
             $elem.tooltip('disable');
@@ -100,7 +122,6 @@ define(function (require) {
                 domElement.onmouseup = propagateEvent;
                 domElement.onmousemove = propagateEvent;
                 domElement.onwheel = propagateEvent;
-                domElement.onmousewheel = propagateEvent;
                 domElement.onscroll = propagateEvent;
                 domElement.onclick = propagateEvent;
                 domElement.ondblclick = propagateEvent;
@@ -110,7 +131,6 @@ define(function (require) {
                     domElement[events[i]] = propagateEvent;
                 }
             }
-
         },
 
 
@@ -123,7 +143,6 @@ define(function (require) {
                 domElement.onmouseup = null;
                 domElement.onmousemove = null;
                 domElement.onwheel = null;
-                domElement.onmousewheel = null;
                 domElement.onscroll = null;
                 domElement.onclick = null;
                 domElement.ondblclick = null;
@@ -133,6 +152,7 @@ define(function (require) {
                     domElement[events[i]] = null;
                 }
             }
+
         },
 
         // Registers a click handler that only fires if the click didn't
@@ -155,6 +175,34 @@ define(function (require) {
                     handler.call(this, evt);
                 }
             });
+        },
+
+
+        hexToRgb: function(hex) {
+             var bigint;
+             if (hex[0] === '#') {
+                 hex = hex.substr(1,6);
+             }
+             bigint = parseInt(hex, 16);
+             return {
+                 r: (bigint >> 16) & 255,
+                 g: (bigint >> 8) & 255,
+                 b: bigint & 255
+             };
+        },
+
+
+        rgbToHex: function( rgb ) {
+            var r = rgb.r,
+                g = rgb.g,
+                b = rgb.b;
+            function componentToHex(c) {
+                var hex = c.toString(16);
+                return (hex.length === 1) ? "0" + hex : hex;
+            }
+            return "#" + componentToHex( Math.floor(r)) +
+                         componentToHex( Math.floor(g)) +
+                         componentToHex( Math.floor(b));
         }
 
     };

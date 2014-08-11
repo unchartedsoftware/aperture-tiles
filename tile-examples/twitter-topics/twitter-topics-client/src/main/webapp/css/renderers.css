@@ -19,11 +19,6 @@
 	line-height: 18px;
 	height:18px;
 	color: white;
-	text-shadow:
-	    -2px -2px 2px #000,
-	     2px -2px 2px #000,
-	    -2px  2px 2px #000,
-	     2px  5px 5px #000;
 	-webkit-transition: -webkit-transform 0.1s ease-in-out;
        -moz-transition:    -moz-transform 0.1s ease-in-out;
        	-ms-transition:     -ms-transform 0.1s ease-in-out;

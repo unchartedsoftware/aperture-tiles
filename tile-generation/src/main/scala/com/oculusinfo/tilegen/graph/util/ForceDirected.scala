@@ -42,7 +42,9 @@ import scala.util.Random
  *  - bUseEdgeWeights = uses edge weights to scale the attraction forces between connected nodes
  *  - bUseNodeSizes = uses 'number of internal nodes' attribute to size each node as a circle
  *  - nodeAreaPercent = if bUseNodeSizes = true, then this parameter is used to determine the area of all node
- *  	'circles' within the boundingBox vs whitespace 
+ *  	'circles' within the boundingBox vs whitespace
+ *  - gravity = strength gravity force to use to prevent outer nodes from spreading out too far.  Default = 0.0 (no gravity),
+ *  			whereas gravity = 1.0 gives gravitational force on a similar scale to edge attraction forces  
  *  
  **/ 
 class ForceDirected extends Serializable {
@@ -54,9 +56,9 @@ class ForceDirected extends Serializable {
 			maxIterations: Int = 1000,
 			bUseEdgeWeights: Boolean = false,
 			bUseNodeSizes: Boolean = false,
-			nodeAreaPercent: Int = 20): Array[(Long, Double, Double, Double)] = {
+			nodeAreaPercent: Int = 20,
+			gravity: Double = 0.0): Array[(Long, Double, Double, Double)] = {
 		
-		val nodeOverlapRepulsionFactor = 100.0	// constant used if node 'circles' overlap (adapted from ForceAtlas2 algorithm)
 		val numNodes = nodes.size
 		if (numNodes == 0) throw new IllegalArgumentException("number of nodes must be > 0")
 		
@@ -66,7 +68,7 @@ class ForceDirected extends Serializable {
 		else {
 			0L
 		}
-		
+				
 		var boundingBoxFinal = if ((!bUseNodeSizes) && (borderOffset > 0)) {
 			calcFinalBoundingBox(boundingBox, borderOffset)
 		}
@@ -98,6 +100,21 @@ class ForceDirected extends Serializable {
 			val x1 = boundingBox._1 + boundingBox._3
 			val y1 = boundingBox._2 + boundingBox._4
 			return Array( (nodeList(0)._1, x, y, 0.0), (nodeList(1)._1, x1, y1, 0.0) )
+		}
+		
+		//Init scale factors for edge weighting (squash raw edge weights into an appropriate range for the number of nodes)
+		//(ie range of sqrt(numNodes) to 1)
+		var eWeightSlope = 0.0
+		var eWeightOffset = 1.0
+		if (bUseEdgeWeights) {
+			// find the min and max edge weights
+			val (maxW, minW) = edges.map(e => (e._3, e._3)).reduce((a, b) => (a._1 max b._1, a._2 min b._2))
+			
+			if (maxW > minW) {
+				val maxWeight = Math.max(Math.sqrt(numNodes), 10.0)
+				eWeightSlope = (maxWeight - 1.0) / (maxW - minW)
+				eWeightOffset = 1.0 - eWeightSlope*minW
+			}
 		}
 			
 		//---- Initially assign random co-ordinates for all nodes (random number between 0 and 1) 
@@ -137,6 +154,7 @@ class ForceDirected extends Serializable {
 		val k_inv = 1.0/Math.sqrt(k2)
 		var temperature = 0.5*Math.min(boundingBoxFinal._3, boundingBoxFinal._4)
 		val stepLimit = Math.min(boundingBoxFinal._3, boundingBoxFinal._4)/1000.0
+		val nodeOverlapRepulsionFactor = 100.0/Math.min(boundingBoxFinal._3, boundingBoxFinal._4)	// constant used for extra strong repulsion if node 'circles' overlap
 
 		//----- Re-format edge data to reference node array indices instead of actual node ID labels (for faster array look-ups below)
 		val edgesArray = reformatEdges(edges, nodeCoords.map(n => n._1))
@@ -167,9 +185,8 @@ class ForceDirected extends Serializable {
 								val repulseForce = k2/(dist*dist)	// repulsion force
 								deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
 							}
-							else if (dist < 0.0) {
+							else {
 								val repulseForce = nodeOverlapRepulsionFactor*k2	// extra strong repulsion force if node circles overlap!
-																					// (but no repulsion if dist == 0)
 								deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
 							}
 						} 
@@ -202,8 +219,10 @@ class ForceDirected extends Serializable {
 				    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
 				    val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(dstE)._4 - nodeCoords(srcE)._4
 				    if (dist > 0) {	// only calc attraction force if node circles don't overlap
-					    val attractForce = if (bUseEdgeWeights)
-					    	dist * k_inv * edgeWeight	// TODO -- should edge weights be scaled to an appropriate range? (eg 1 to 100).  Need to investigate further.
+					    val attractForce = if (bUseEdgeWeights) {
+					    	val w = eWeightSlope*edgeWeight + eWeightOffset
+					    	dist * k_inv * w
+					    }
 					    else
 					    	dist * k_inv
 					    		
@@ -219,13 +238,33 @@ class ForceDirected extends Serializable {
 				    val xDist = nodeCoords(dstE)._2 - nodeCoords(srcE)._2
 				    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
 				    val dist = Math.sqrt(xDist*xDist + yDist*yDist)
-				    val attractForce = if (bUseEdgeWeights)
-				    	dist * k_inv * edgeWeight
+				    val attractForce = if (bUseEdgeWeights) {
+				    	val w = eWeightSlope*edgeWeight + eWeightOffset
+				    	dist * k_inv * w
+				    }
 				    else
 				    	dist * k_inv
 				    	
 				    deltaXY(srcE) = (deltaXY(srcE)._1 + xDist*attractForce, deltaXY(srcE)._2 + yDist*attractForce)
 				    deltaXY(dstE) = (deltaXY(dstE)._1 - xDist*attractForce, deltaXY(dstE)._2 - yDist*attractForce)			
+				}				
+			}
+			
+			//---- Calc gravitational force for all nodes
+			if (gravity > 0.0) {
+				
+				val xC = 0.5*boundingBoxFinal._3	// centre of bounding box (use as gravitational centre)
+				val yC = 0.5*boundingBoxFinal._4
+								
+				for (n <- 0 until numNodes) {
+					val xDist = xC - nodeCoords(n)._2	// node distance to centre
+				    val yDist = yC - nodeCoords(n)._3
+					val dist = Math.sqrt(xDist*xDist + yDist*yDist)
+					
+					if (dist > 0) {
+						val gForce = dist * k_inv * gravity	// gravitational force for this node
+						deltaXY(n) = (deltaXY(n)._1 + xDist*gForce, deltaXY(n)._2 + yDist*gForce)		
+					}
 				}				
 			}
 			

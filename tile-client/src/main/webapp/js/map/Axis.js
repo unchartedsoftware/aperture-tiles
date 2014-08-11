@@ -316,14 +316,14 @@ define(function (require) {
             that.setEnabled( !that.isEnabled() );
             that.setContentDimension();
             disableSlide();
-            that.$content.animate({width: 'toggle'}, {complete: function(){ enableSlide();} });
+            that.$content.animate({width: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             that.map.redrawAxes();
         };
         verticalSlide = function() {
             that.setEnabled( !that.isEnabled() );
             that.setContentDimension();
             disableSlide();
-            that.$content.animate({height: 'toggle'}, {complete: function(){ enableSlide();} });
+            that.$content.animate({height: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             that.map.redrawAxes();
         };
 

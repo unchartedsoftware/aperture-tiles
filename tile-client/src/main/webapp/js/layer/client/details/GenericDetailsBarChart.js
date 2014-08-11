@@ -110,7 +110,7 @@ define(function (require) {
 
         for (i=0; i<percentages.length; i++ ) {
             relativePercentage = ( percentages[i] / maxPercentage ) * 100;
-            html += '<div class="details-chart-bar style="width:'+barWidth+'%;">';
+            html += '<div class="details-chart-bar style="width:calc('+barWidth+'% + 1px);">';
             html +=     tooltips[i];
             html +=     '<div class="details-chart-bar-fill" style="height:'+relativePercentage+'%;"></div>';
             html += '</div>';

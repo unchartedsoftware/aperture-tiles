@@ -23,9 +23,13 @@
  */
 package com.oculusinfo.factory;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,9 +43,23 @@ public class ConfigurableFactoryTests {
 		double _double;
 		String _string;
 	}
+	private class OuterTestFactory extends ConfigurableFactory<Integer> {
+	    public OuterTestFactory () {
+	        super(Integer.class, null, Arrays.asList("abc"));
+
+	        addChildFactory(new TestFactory(Arrays.asList("def")));
+	    }
+	    @Override
+	    protected Integer create () {
+	        return 1;
+	    }
+	}
 	private class TestFactory extends ConfigurableFactory<FactoryResult> {
 		public TestFactory () {
-			super(FactoryResult.class, null, null);
+		    this(null);
+		}
+		public TestFactory (List<String> path) {
+			super(FactoryResult.class, null, path);
 			addProperty(INT_PROP);
 			addProperty(DOUBLE_PROP);
 			addProperty(STRING_PROP);
@@ -81,6 +99,17 @@ public class ConfigurableFactoryTests {
 		Assert.assertEquals(4.2, result._double, 1E-12);
 		Assert.assertEquals("abc", result._string);
 	}
+    
+    @Test
+    public void testReadNestedConfiguration () throws Exception {
+        OuterTestFactory factory = new OuterTestFactory();
+        JSONObject configuration = new JSONObject("{'abc':{'def':{'int':2, 'double':2.1, 'string': '2.2'}}, 'def':{'int':3, 'double':3.1, 'string': '3.2'}}");
+        factory.readConfiguration(configuration);
+        FactoryResult result = factory.produce(FactoryResult.class);
+        Assert.assertEquals(3,  result._int);
+        Assert.assertEquals(3.1, result._double, 1E-12);
+        Assert.assertEquals("3.2", result._string);
+    }
 
 	@Test
 	public void testConfigurationNode () throws Exception {

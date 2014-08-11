@@ -24,13 +24,13 @@
  */
 package com.oculusinfo.annotation.init;
 
+import java.util.List;
+
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.FileSystemAnnotationIOFactory;
 import com.oculusinfo.annotation.io.HBaseAnnotationIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-
-import java.util.List;
 
 /**
  * Basic enum of all the default {@link DelegateFactoryProviderTarget} types availables in the system.<br>
@@ -43,66 +43,44 @@ import java.util.List;
  * @author cregnier
  *
  */
-public enum DefaultAnnotationIOFactoryProvider {
-	HBASE ("hbase"),
-	FILE_SYSTEM ("file-system");
-
-	//-------------------------------------
-
-	private final String factoryTypeName;
-
-	private DefaultAnnotationIOFactoryProvider(String factoryTypeName) {
-		this.factoryTypeName = factoryTypeName;
-	}
-	
-	/**
-	 * Creates the {@link DelegateFactoryProviderTarget} for the desired type.
-	 */
-	public DelegateFactoryProviderTarget<AnnotationIO> create() {
-		return new DefaultAnnotationIOFactoryProviderImpl(factoryTypeName);
-	}
-
-	//-------------------------------------
-
-	protected static class DefaultAnnotationIOFactoryProviderImpl implements DelegateFactoryProviderTarget<AnnotationIO> {
-	
-		private final String factoryType;
-		
-		protected DefaultAnnotationIOFactoryProviderImpl(String factoryType) {
-			this.factoryType = factoryType;
-		}
-		
-		@Override
-		public ConfigurableFactory<AnnotationIO> createFactory(List<String> path) {
-			return createFactory(null, null, path);
-		}
-	
-		@Override
-		public ConfigurableFactory<AnnotationIO> createFactory(ConfigurableFactory<?> parent, List<String> path) {
-			return createFactory(null, parent, path);
-		}
-	
-		@Override
-		public ConfigurableFactory<AnnotationIO> createFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-			ConfigurableFactory<AnnotationIO> factory = null;
-			if (factoryType.equals("hbase")) {
-				factory = new HBaseAnnotationIOFactory(factoryName, parent, path);
+public enum DefaultAnnotationIOFactoryProvider implements DelegateFactoryProviderTarget<AnnotationIO> {
+	HBASE(new Constructor() {
+			@Override
+			public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
+				return new HBaseAnnotationIOFactory(parent, path);
 			}
-			else if (factoryType.equals("file-system") || factoryName.equals("file")) {
-				factory = new FileSystemAnnotationIOFactory(factoryName, parent, path);
-			}
-			return factory;
-		}
-	
-		@Override
-		public String getFactoryName() {
-			return factoryType;
-		}
-	
-		@Override
-		public List<String> getPath() {
-			return null;
-		}
-	
+		}),
+		FILE(new Constructor() {
+				@Override
+				public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
+					return new FileSystemAnnotationIOFactory(parent, path);
+				}
+			});
+
+
+	// -------------------------------------
+
+	private final Constructor _constructor;
+
+
+
+	private DefaultAnnotationIOFactoryProvider (Constructor constructor) {
+		this._constructor = constructor;
+	}
+
+	@Override
+	public ConfigurableFactory<AnnotationIO> createFactory (List<String> path) {
+		return createFactory(null, path);
+	}
+
+	@Override
+	public ConfigurableFactory<AnnotationIO> createFactory (ConfigurableFactory<?> parent,
+	                                                        List<String> path) {
+		return _constructor.create(parent, path);
+	}
+
+	private static interface Constructor {
+		ConfigurableFactory<AnnotationIO> create (ConfigurableFactory<?> parent,
+		                                          List<String> path);
 	}
 }

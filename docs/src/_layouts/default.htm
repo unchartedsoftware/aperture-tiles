@@ -27,9 +27,7 @@
 					{% endfor %}
 				</div>
 				<div id="all">
-					<div id="content">
-						{{ content | replace: '<pre><code class="sql">', '<pre class="brush: sql">' | replace: '<pre><code class="scala">', '<pre class="brush: scala">' | replace: '<pre><code class="javascript">', '<pre class="brush: js">' | replace: '<pre><code class="java">', '<pre class="brush: java">' | replace: '<pre><code class="json">', '<pre class="brush: js">' | replace: '<pre><code class="xml">', '<pre class="brush: xml">' | replace: '<pre><code>', '<pre class="code">' | replace: '<pre><code class="bash">', '<pre class="brush: bash">'  }}
-					</div>
+					{{ content | replace: '<pre><code class="sql">', '<pre class="brush: sql">' | replace: '<pre><code class="scala">', '<pre class="brush: scala">' | replace: '<pre><code class="javascript">', '<pre class="brush: js">' | replace: '<pre><code class="java">', '<pre class="brush: java">' | replace: '<pre><code class="json">', '<pre class="brush: js">' | replace: '<pre><code class="xml">', '<pre class="brush: xml">' | replace: '<pre><code>', '<pre class="code">' | replace: '<pre><code class="bash">', '<pre class="brush: bash">'  }}
 				</div>
 			</div>
 		</div>

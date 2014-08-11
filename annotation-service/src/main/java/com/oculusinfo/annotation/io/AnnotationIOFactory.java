@@ -23,14 +23,11 @@
  */
 package com.oculusinfo.annotation.io;
 
-import com.google.common.collect.Lists;
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.properties.JSONProperty;
-import com.oculusinfo.factory.properties.StringProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
+
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.UberFactory;
+import com.oculusinfo.factory.properties.JSONProperty;
 
 
 /**
@@ -38,83 +35,20 @@ import java.util.List;
  *
  * @author nkronenfeld
  */
-public class AnnotationIOFactory extends ConfigurableFactory<AnnotationIO> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationIOFactory.class);
+public class AnnotationIOFactory extends UberFactory<AnnotationIO> {
+	public static JSONProperty INITIALIZATION_DATA    = new JSONProperty("data",
+	    "Data to be passed to the AnnotationIO for read initialization",
+	    null);
 
-    public static StringProperty PYRAMID_IO_TYPE        = new StringProperty("type",
-            "The location to and from which to read tile annotations",
-            null,
-            null);
-    public static JSONProperty INITIALIZATION_DATA    = new JSONProperty("data",
-            "Data to be passed to the AnnotationIO for read initialization",
-            null);
+	public AnnotationIOFactory (ConfigurableFactory<?> parent, List<String> path,
+	                            List<ConfigurableFactory<? extends AnnotationIO>> children) {
+		this(null, parent, path, children);
+	}
 
-    private AnnotationIO _product;
-    public AnnotationIOFactory (ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
-        this(null, parent, path, children);
-    }
+	public AnnotationIOFactory (String name, ConfigurableFactory<?> parent, List<String> path,
+	                            List<ConfigurableFactory<? extends AnnotationIO>> children) {
+		super(name, AnnotationIO.class, parent, path, true, children, FileSystemAnnotationIOFactory.NAME);
 
-    public AnnotationIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
-        super(name, AnnotationIO.class, parent, path);
-
-        _product = null;
-        List<String> annotationTypes = getPyramidTypes(children);
-
-        //use the first factory name for the first child as the default type
-        String defaultType = null;
-        if (annotationTypes.size() > 0) {
-            defaultType = annotationTypes.get(0);
-        }
-
-        //set up the PYRAMID_IO_TYPE property to use all the associated children factory names.
-        PYRAMID_IO_TYPE = new StringProperty("type",
-                "The location to and from which to read tile annotations",
-                defaultType,
-                annotationTypes.toArray(new String[0]));
-
-        addProperty(PYRAMID_IO_TYPE);
-        addProperty(INITIALIZATION_DATA);
-
-        //add any child factories
-        if (children != null) {
-            for (ConfigurableFactory<?> factory : children) {
-                addChildFactory(factory);
-            }
-        }
-
-    }
-
-    private static List<String> getPyramidTypes(List<ConfigurableFactory<?>> childFactories) {
-        List<String> annotationTypes = Lists.newArrayListWithCapacity(childFactories.size());
-
-        //add any child factories
-        if (childFactories != null) {
-            for (ConfigurableFactory<?> factory : childFactories) {
-                String factoryName = factory.getName();
-                if (factoryName != null) {
-                    annotationTypes.add(factoryName);
-                }
-            }
-        }
-
-        return annotationTypes;
-    }
-
-    @Override
-    protected AnnotationIO create () {
-        if (null == _product) {
-            synchronized (this) {
-                if (null == _product) {
-                    String annotationIOType = getPropertyValue(PYRAMID_IO_TYPE);
-
-                    try {
-                        _product = produce(annotationIOType, AnnotationIO.class);
-                    } catch (Exception e) {
-                        LOGGER.error("Error trying to create AnnotationIO", e);
-                    }
-                }
-            }
-        }
-        return _product;
-    }
+		addProperty(INITIALIZATION_DATA);
+	}
 }

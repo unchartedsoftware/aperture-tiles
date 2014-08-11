@@ -37,11 +37,10 @@ public class StandardAnnotationFilterFactoryModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		Multibinder<DelegateFactoryProviderTarget<AnnotationFilter>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationFilter>>(){});
-		factoryProviderBinder.addBinding().toInstance(DefaultAnnotationFilterFactoryProvider.EMPTY.create());
-		factoryProviderBinder.addBinding().toInstance(DefaultAnnotationFilterFactoryProvider.N_MOST_RECENT_BY_GROUP.create());
-        factoryProviderBinder.addBinding().toInstance(DefaultAnnotationFilterFactoryProvider.SCRIPTABLE.create());
 
-        bind(new TypeLiteral<FactoryProvider<AnnotationFilter>>() {}).to(StandardAnnotationFilterFactoryProvider.class);
+		for (DefaultAnnotationFilterFactoryProvider provider: DefaultAnnotationFilterFactoryProvider.values())
+			factoryProviderBinder.addBinding().toInstance(provider);
+
+		bind(new TypeLiteral<FactoryProvider<AnnotationFilter>>() {}).to(StandardAnnotationFilterFactoryProvider.class);
 	}
-	
 }

@@ -17,11 +17,6 @@
     line-height: 32px;
     background-color: #222222;
     color: #D3D3D3;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }
 
 #layer-controls-header:hover {   
@@ -34,11 +29,6 @@
     color: #D3D3D3;
     width: 612px;
     font-size: 12px;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }
 
 .layer-controls-buffer {
@@ -114,6 +104,7 @@
 .layer-content .ui-widget-content {
 
     border: none;
+    border-radius: 0px;
     box-shadow: 0 0 5px #000000;
 }
 
@@ -121,6 +112,7 @@
 
     background: #222222;
     border: 1px solid #333333;
+    border-radius: 0px;
     box-shadow: 2px 2px 5px #000;
 }
 

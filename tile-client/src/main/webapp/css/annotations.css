@@ -1,5 +1,11 @@
 @charset "UTF-8";
 
+
+/********************************************/
+/*             Point Annotation             */
+/********************************************/
+
+
 .point-annotation-aggregate {
     position:absolute;
     width: 0px;
@@ -45,7 +51,6 @@
 }
 
 .point-annotation-aggregate:hover .point-annotation-fill {
-    -webkit-filter: brightness(1.5);
     margin: -4px 2px 2px -4px;
 }
 
@@ -58,12 +63,13 @@
 }
 
 .clicked-annotation {
-    -webkit-filter: brightness(2);
 }
+
 
 /********************************************/
 /*            Annotation Details            */
 /********************************************/
+
 
 .annotation-details {
     position:absolute;
@@ -76,6 +82,7 @@
 
 .annotation-details-content {
     position:relative;
+    width: 100%;
     height: 100%;
 }
 
@@ -93,9 +100,7 @@
 .annotation-details-body {
     position:relative;
     background-color: #111111;
-    margin: 5px 0 5px 0;
-    padding: 0 15px 0 15px;
-    height: calc(100% - 42px);
+    height: calc(100% - 32px);
     width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
@@ -117,28 +122,17 @@
     height:12px;
     background: transparent url(../images/close_icon.png) no-repeat center top;
     opacity: 0.5;
-    -webkit-transform: scale(0.75);
-       -moz-transform: scale(0.75);
-        -ms-transform: scale(0.75);
-            transform: scale(0.75);
-    -webkit-transition: 0.1s ease-in-out;
-       -moz-transition: 0.1s ease-in-out;
-        -ms-transition: 0.1s ease-in-out;
-            transition: 0.1s ease-in-out;
 }
 
 .annotation-details-close-button:hover {
     opacity: 1;
-    -webkit-filter: brightness(1);
-    -webkit-transform: scale(1.0);
-       -moz-transform: scale(1.0);
-        -ms-transform: scale(1.0);
-            transform: scale(1.0);
 }
+
 
 /********************************************/
 /*            Annotation Carousel           */
 /********************************************/
+
 
 .annotation-carousel {
     position:absolute;
@@ -190,9 +184,4 @@
     pointer-events:none;
     font-size:16px;
     color: #ffffff;
-    text-shadow:
-        -1px -1px 2px #000,
-         1px -1px 2px #000,
-        -1px  1px 2px #000,
-         1px  1px 2px #000;
 }

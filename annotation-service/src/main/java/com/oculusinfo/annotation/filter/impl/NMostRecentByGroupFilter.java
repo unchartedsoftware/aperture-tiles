@@ -23,60 +23,64 @@
  */
 package com.oculusinfo.annotation.filter.impl;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONObject;
+
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.AnnotationManipulator;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.util.Pair;
-import org.json.JSONObject;
-
-import java.util.*;
 
 
 public class NMostRecentByGroupFilter implements AnnotationFilter {
 
-    private Map<String, Integer> _countsByGroup;
+	private Map<String, Integer> _countsByGroup;
 
-    public NMostRecentByGroupFilter( JSONObject filterConfig ) {
-        _countsByGroup = getFilterMap( filterConfig );
-    }
+	public NMostRecentByGroupFilter( JSONObject filterConfig ) {
+		_countsByGroup = getFilterMap( filterConfig );
+	}
 
-    private Map<String, Integer> getFilterMap( JSONObject countsByGroupJson ) {
-        Map<String, Integer> filters = new HashMap<>();
-        try {
-            Iterator<?> groups = countsByGroupJson.keys();
-            while( groups.hasNext() ) {
+	private Map<String, Integer> getFilterMap( JSONObject countsByGroupJson ) {
+		Map<String, Integer> filters = new HashMap<>();
+		try {
+			Iterator<?> groups = countsByGroupJson.keys();
+			while( groups.hasNext() ) {
 
-                String priority = (String)groups.next();
-                int count = countsByGroupJson.getInt(priority);
-                filters.put( priority, count );
-            }
+				String priority = (String)groups.next();
+				int count = countsByGroupJson.getInt(priority);
+				filters.put( priority, count );
+			}
 
-        } catch (Exception e) {
-            throw new IllegalArgumentException( e.getMessage() );
-        }
-        return filters;
-    }
+		} catch (Exception e) {
+			throw new IllegalArgumentException( e.getMessage() );
+		}
+		return filters;
+	}
 
 	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin ) {
 
-        List<Pair<String, Long>> filtered = new LinkedList<>();
-        // go through filter list get certificates by group and by count
-        for (Map.Entry<String, Integer> f : _countsByGroup.entrySet()) {
+		List<Pair<String, Long>> filtered = new LinkedList<>();
+		// go through filter list get certificates by group and by count
+		for (Map.Entry<String, Integer> f : _countsByGroup.entrySet()) {
 
-            String group = f.getKey();
-            Integer count = f.getValue();
+			String group = f.getKey();
+			Integer count = f.getValue();
 
-            // get all certificates from the bin
-            List<Pair<String, Long>> certificates = AnnotationManipulator.getCertificatesFromBin(bin, group);
+			// get all certificates from the bin
+			List<Pair<String, Long>> certificates = AnnotationManipulator.getCertificatesFromBin(bin, group);
 
-            // certificates are sorted, so simply cut the tail off to get the n newest
-            filtered.addAll(certificates.subList(0, count < certificates.size() ? count : certificates.size()));
-        }
-        return filtered;
-    }
+			// certificates are sorted, so simply cut the tail off to get the n newest
+			filtered.addAll(certificates.subList(0, count < certificates.size() ? count : certificates.size()));
+		}
+		return filtered;
+	}
 
-    public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
-        return annotations;
-    }
+	public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
+		return annotations;
+	}
 }

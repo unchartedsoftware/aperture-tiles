@@ -46,10 +46,10 @@ object ClusteredGraphLayoutApp {
 			) union SparkConnector.getDefaultLibrariesFromMaven
 		val sc = argParser.getSparkConnector(jars).getSparkContext("Clustered Graph Layout") 
 		val sourceDir = argParser.getString("source", "The source directory where to find clustered graph data")
-		val outputDir = argParser.getString("output", "The output location where to save data")
-		val partitions = argParser.getInt("partitions", "The number of partitions into which to read the raw data", Some(0))
+		val outputDir = argParser.getString("output", "The output location where to save data")		
+		val partitions = argParser.getInt("parts", "The number of partitions into which to read the raw data", Some(0))
 		val consolidationPartitions = argParser.getInt("p", "The number of partitions for data processing. Default=based on input partitions", Some(0))
-		val dataDelimiter = argParser.getString("d", "Delimiter for the source graph data. Default is comma-delimited", Some(","))
+		val dataDelimiter = argParser.getString("d", "Delimiter for the source graph data. Default is tab-delimited", Some("\t"))
 		val maxIterations = argParser.getInt("i", "Max number of iterations for force-directed algorithm", Some(500))
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
 		val borderOffset = argParser.getInt("border","Percent of boundingBox width and height to leave as whitespace when laying out leaf nodes. Default is 5 percent", Some(5))
@@ -57,6 +57,7 @@ object ClusteredGraphLayoutApp {
 		val numNodesThres = argParser.getInt("nthres", "Community size threshold to use for grouping sub-communities together into one force-directed layout task", Some(1000))
 		val nodeAreaPercent = argParser.getInt("narea", "Used for Hierarchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 20 percent", Some(20))
 		val bUseEdgeWeights = argParser.getBoolean("eweight", "Use edge weights, if present, to scale force-directed attraction forces.  Default is false", Some(false))
+		val gravity = argParser.getDouble("g", "Amount of gravitational force to use for Force-Directed layout to prevent outer nodes from spreading out too far. Default = 0 (no gravity)", Some(0.0))
 		
 		val fileStartTime = System.currentTimeMillis()
 		
@@ -71,7 +72,8 @@ object ClusteredGraphLayoutApp {
 													dataDelimiter,
 													(layoutLength,layoutLength),
 													nodeAreaPercent,
-													bUseEdgeWeights)
+													bUseEdgeWeights,
+													gravity)
 													
 		// re-format results into tab-delimited strings for saving to text file											
 		val resultsNodes = graphWithCoords.vertices.map(node => {

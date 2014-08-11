@@ -50,7 +50,7 @@ define(function (require) {
     createLayerRoot = function( that ) {
 
         // create layer root div
-        that.$root_ = $('<div style="position:relative; z-index:'+that.Z_INDEX+';"></div>');
+        that.$root_ = $('<div style="position:relative; z-index:0;"></div>');
         // append to map root
         that.map_.getRootElement().append( that.$root_ );
         if ( that.propagate ) {

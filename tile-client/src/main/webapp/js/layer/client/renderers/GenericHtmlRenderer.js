@@ -169,8 +169,7 @@ define(function (require) {
                 $details;
 
             $details = this.details.create( detailsPos, value, $.proxy( this.clickOff, this ) );
-
-            Util.enableEventPropagation( $details, ['onmousemove', 'onmouseup'] );
+            Util.enableEventPropagation( $details, ['onmouseup'] );
             map.getRootElement().append( $details );
 
             this.centreForDetails( data );

@@ -40,10 +40,7 @@ public class LiveTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	private SparkContextProvider _contextProvider;
 
 	public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
-		this(null, parent, path, contextProvider);
-	}
-	public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
-		super(name, PyramidIO.class, parent, path);
+		super("live", PyramidIO.class, parent, path);
 		_contextProvider = contextProvider;
 	}
 
