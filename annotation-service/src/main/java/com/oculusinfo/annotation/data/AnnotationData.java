@@ -36,8 +36,6 @@ import java.util.UUID;
  */
 public abstract class AnnotationData<T> implements Serializable {
 
-    public static final Double RANGE_PLACEHOLDER = null;
-
 	private static final long serialVersionUID = 1L;
 
     public abstract Double getX();
@@ -68,8 +66,10 @@ public abstract class AnnotationData<T> implements Serializable {
 
             json.put("level", getLevel() );
 
-            if ( getX1() == RANGE_PLACEHOLDER ) {
-                json.put( "x", getX() );
+            if ( getX1() == null ) {
+                if ( getX() != null ) {
+                    json.put("x", getX());
+                }
             } else {
                 JSONArray x = new JSONArray();
                 x.put( getX0() );
@@ -77,12 +77,14 @@ public abstract class AnnotationData<T> implements Serializable {
                 json.put( "x", x );
             }
 
-            if ( getY1() == RANGE_PLACEHOLDER ) {
-                json.put( "y", getY() );
+            if ( getY1() == null ) {
+                if ( getY() != null ) {
+                    json.put( "y", getY() );
+                }
             } else {
                 JSONArray y = new JSONArray();
-                y.put( getY() );
-                y.put( getY() );
+                y.put( getY0() );
+                y.put( getY1() );
                 json.put( "y", y );
             }
 

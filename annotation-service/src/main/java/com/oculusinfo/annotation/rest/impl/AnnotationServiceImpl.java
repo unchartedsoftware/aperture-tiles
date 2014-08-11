@@ -464,11 +464,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 		tilesToRemove.clear();	
 
 		// for each tile, remove data from bins
-		for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {				
+		for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {
 			// get bin index for the annotation in this tile
-			BinIndex binIndex = _indexer.getIndex( data, tile.getDefinition().getLevel(), pyramid ).getBin();		
+			BinIndex binIndex = _indexer.getIndicesByLevel( data, tile.getDefinition().getLevel(), pyramid ).get(0).getBin();
 			// remove data from tile
-			AnnotationManipulator.removeDataFromTile( tile, binIndex, data );				
+			AnnotationManipulator.removeDataFromTile( tile, binIndex, data );
 		}	
 		
 		// determine which tiles need to be re-written and which need to be removed
@@ -527,7 +527,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();
 		for ( AnnotationData<?> annotation : filteredAnnotations ) {
 			// get index 
-			BinIndex binIndex = _indexer.getIndex( annotation, tileIndex.getLevel(), pyramid ).getBin();
+			BinIndex binIndex = _indexer.getIndicesByLevel( annotation, tileIndex.getLevel(), pyramid ).get(0).getBin();
 			if (!dataByBin.containsKey( binIndex)) {
 				// no data under this bin, add list to map
 				dataByBin.put( binIndex, new LinkedList<AnnotationData<?>>() );

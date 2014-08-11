@@ -99,6 +99,7 @@ public class ScriptableFilter extends EmptyFilter {
                     filtered.add( annotation );
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

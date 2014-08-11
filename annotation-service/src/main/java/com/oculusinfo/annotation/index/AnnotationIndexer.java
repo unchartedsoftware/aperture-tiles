@@ -33,7 +33,7 @@ import java.util.List;
 public abstract class AnnotationIndexer {
 
 	public static final int NUM_BINS = 8;
-	public static final BinIndex RANGE_BIN = new BinIndex(-1, -1);
+	public static final BinIndex RANGE_BIN = new BinIndex(0, 0);
 
     public AnnotationIndexer() {}
     

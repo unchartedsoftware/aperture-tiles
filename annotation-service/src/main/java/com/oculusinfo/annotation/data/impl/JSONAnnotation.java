@@ -128,8 +128,8 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
     }
 
     public boolean isRangeBased() {
-        return ( !getX1().equals( AnnotationData.RANGE_PLACEHOLDER ) &&
-                 !getY1().equals( AnnotationData.RANGE_PLACEHOLDER ) );
+        return ( getX1() != null ||
+                 getY1() != null );
     }
 
 	public Integer getLevel() {
@@ -160,7 +160,7 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
         _timestamp = new Timestamp( new Date().getTime() ).getTime();
     }
 
-	static public JSONAnnotation fromJSON( JSONObject json ) throws IllegalArgumentException {		
+	static public JSONAnnotation fromJSON( JSONObject json ) throws IllegalArgumentException {
 
 		try {
             Integer level = json.getInt("level");
@@ -171,8 +171,8 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
                 x0 = xs.getDouble(0);
                 x1 = xs.getDouble(1);
             } else {
-                x0 = json.optDouble("x");
-                x1 = RANGE_PLACEHOLDER;
+                x0 = Double.isNaN( json.optDouble("x") ) ? null : json.getDouble("x");
+                x1 = null;
             }
 
             Double y0, y1;
@@ -181,8 +181,8 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
                 y0 = ys.getDouble(0);
                 y1 = ys.getDouble(1);
             } else {
-                y0 = json.optDouble("x");
-                y1 = RANGE_PLACEHOLDER;
+                y0 = Double.isNaN( json.optDouble("y") ) ? null : json.getDouble("y");
+                y1 = null;
             }
 
             JSONObject rangeJson = json.getJSONObject("range");
@@ -203,10 +203,10 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
                 timestamp = Long.parseLong(certificate.getString("timestamp"));
             } catch ( Exception e ) {
                 // no certificate is provided, generate them
-                return new JSONAnnotation( x0, y0, x1, x1, level, range, group, data );
+                return new JSONAnnotation( x0, x1, y0, y1, level, range, group, data );
             }
             // certificate is provided
-			return new JSONAnnotation( x0, y0, x1, x1, level, range, group, uuid, timestamp, data );
+			return new JSONAnnotation( x0, x1, y0, y1, level, range, group, uuid, timestamp, data );
 			
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e );
