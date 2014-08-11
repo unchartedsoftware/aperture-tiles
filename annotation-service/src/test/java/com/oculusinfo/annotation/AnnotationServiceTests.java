@@ -71,7 +71,8 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = true;
 	static final int NUM_THREADS = 8;
-
+    static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
+    static final String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
 	protected AnnotationService _service;
 	protected UUID _uuid;
 	protected AnnotationInfo _layerSpec;
@@ -187,9 +188,12 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 
 			// set thread name
 			_name = name;
+
+            AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
 			// generate private local annotations
 			for ( int i=0; i<NUM_ENTRIES; i++ ) {
-				_annotations.add( new AnnotationWrapper( generateJSONAnnotation() ) );
+				_annotations.add( new AnnotationWrapper( generator.generateJSONAnnotation() ) );
 			}
 		}
 		
@@ -345,14 +349,17 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 		}
 
 		private AnnotationData<?> editAnnotation( AnnotationData<?> annotation ) {
+
 			JSONObject json = annotation.toJSON();
+            AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
 			try {
 				int type = (int)(Math.random() * 2);
 				switch (type) {
 
 				case 0:
 					// change position
-					double [] xy = randomPosition();
+					double [] xy = generator.randomPosition();
 					json.put("x", xy[0]);
 					json.put("y", xy[1]);
 					break;
@@ -360,7 +367,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 				default:
 					// change data
 					JSONObject data = new JSONObject();
-					data.put("comment", randomComment() );
+					data.put("comment", generator.randomComment() );
 					json.put("data", data);
 					break;
 				}

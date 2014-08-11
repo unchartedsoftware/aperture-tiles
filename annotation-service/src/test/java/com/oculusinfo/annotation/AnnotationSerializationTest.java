@@ -51,7 +51,9 @@ import com.oculusinfo.binning.util.Pair;
 public class AnnotationSerializationTest extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = false;
-	
+    static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
+    static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
+
 	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
 	private AnnotationSerializer _dataSerializer;
 	private TilePyramid _pyramid;
@@ -74,8 +76,10 @@ public class AnnotationSerializationTest extends AnnotationTestsBase {
 
 	@Test
 	public void annotationDataJSONSerializationTest () throws Exception {
-    	
-		List<AnnotationData<?>> before = generateJSONAnnotations( NUM_ENTRIES );
+
+        AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
+		List<AnnotationData<?>> before = generator.generateJSONAnnotations( NUM_ENTRIES );
 		List<AnnotationData<?>> after = new ArrayList<>();
 			
 		if (VERBOSE) {
@@ -112,8 +116,10 @@ public class AnnotationSerializationTest extends AnnotationTestsBase {
 	
 	@Test
 	public void annotationTileJSONSerializationTest () throws Exception {
-    	
-		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
+
+        AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
+		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
 		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
 
 		if (VERBOSE) {

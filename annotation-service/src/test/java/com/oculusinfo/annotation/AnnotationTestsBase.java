@@ -52,21 +52,16 @@ import com.oculusinfo.binning.util.Pair;
 public class AnnotationTestsBase {
 	
 	static final String	  TEST_LAYER_NAME = "annotations-unit-test";
-	static final double   EPSILON = 0.001;
 	static final int      NUM_ENTRIES = 50;
-	static final double[] BOUNDS = {-180.0+EPSILON, -85.05+EPSILON, 180.0-EPSILON, 85.05-EPSILON};
-	        //{1+EPSILON, 0+EPSILON, 6336769-EPSILON, 500000-EPSILON};
 
-    final Random _rand = new Random();
-	/*
-	 * Annotation list printing utility functions
-	 */
+
 	protected void printData( Map<BinIndex, List<AnnotationData<?>>> dataMap ) {
 		
 		for ( List<AnnotationData<?>> annotations : dataMap.values() ) {	
 			printData( annotations );
 		}
 	}
+
 	protected void printData( List<AnnotationData<?>> annotations ) {
 		
 		for ( AnnotationData<?> annotation : annotations ) {				
@@ -122,6 +117,15 @@ public class AnnotationTestsBase {
 		}
 		return true;
 	}
+
+    protected <T> boolean compareAttributes( T a, T b ) {
+
+        if ( a == null || b == null ) {
+            return ( a == b );
+        } else {
+            return a.equals( b );
+        }
+    }
 	
 	
 	protected boolean compareData( AnnotationData<?> a, AnnotationData<?> b, boolean verbose ) {
@@ -130,20 +134,37 @@ public class AnnotationTestsBase {
 			if ( verbose ) System.out.println( "UUID are not equal" );
 			return false;
 		}
-		
-		if ( a.getX() != null && b.getX() != null ) {
-			if ( !a.getX().equals( b.getX() ) ) {
-				if ( verbose ) System.out.println( "X values are not equal" );
-				return false;
-			}
-		}		
-		if ( a.getY() != null && b.getY() != null ) {
-			if ( !a.getY().equals( b.getY() ) ) {
-				if ( verbose ) System.out.println( "Y values are not equal" );
-				return false;
-			}
+
+        if ( !compareAttributes( a.getX(), b.getX() ) ) {
+            if ( verbose ) System.out.println( "X values are not equal" );
+            return false;
 		}
-		
+
+        if ( !compareAttributes( a.getY(), b.getY() ) ) {
+            if ( verbose ) System.out.println( "Y values are not equal" );
+            return false;
+        }
+
+        if ( !compareAttributes( a.getX0(), b.getX0() ) ) {
+            if ( verbose ) System.out.println( "X0 values are not equal" );
+            return false;
+        }
+
+        if ( !compareAttributes( a.getY0(), b.getY0() ) ) {
+            if ( verbose ) System.out.println( "Y0 values are not equal" );
+            return false;
+        }
+
+        if ( !compareAttributes( a.getX1(), b.getX1() ) ) {
+            if ( verbose ) System.out.println( "X1 values are not equal" );
+            return false;
+        }
+
+        if ( !compareAttributes( a.getY1(), b.getY1() ) ) {
+            if ( verbose ) System.out.println( "Y1 values are not equal" );
+            return false;
+        }
+
 		if ( !a.getLevel().equals( b.getLevel() ) ) {
 			if ( verbose ) System.out.println( "Level values are not equal" );
 			return false;
@@ -187,110 +208,8 @@ public class AnnotationTestsBase {
 
 		return true;
 	}
-	
-	
-	/*
-	 * Annotation index generation function
-	 */
-	protected JSONObject generateJSON() {
 
-		double [] xy = randomPosition();
 
-		try {
-            JSONObject anno = new JSONObject();
-            anno.put("x", xy[0]);
-            anno.put("y", xy[1]);
-
-            int level = (int)(_rand.nextDouble() * 10);
-            anno.put("level", level );
-
-            JSONObject range = new JSONObject();
-            range.put("min", 0 );
-            range.put("max", level );
-            anno.put("range", range );
-
-            anno.put("group", randomGroup() );
-
-            JSONObject data = new JSONObject();
-            data.put("comment", randomComment() );
-            anno.put("data", data);
-            return anno;
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
-	
-	/*
-	 * Annotation index generation function
-	 */
-	protected AnnotationData<?> generateJSONAnnotation() {
-
-		return JSONAnnotation.fromJSON(generateJSON());
-				
-	}
-	
-	protected List<TileData< Map<String, List<Pair<String, Long>>>>> generateTiles( List<AnnotationData<?>> annotations, AnnotationIndexer indexer, TilePyramid pyramid ) {
-
-		Map<TileIndex, TileData< Map<String, List<Pair<String, Long>>>>> tiles = new HashMap<>();
-				
-		for ( AnnotationData<?> annotation : annotations ) {
-			List<TileAndBinIndices> indices = indexer.getIndices( annotation, pyramid );
-			
-			for ( TileAndBinIndices index : indices ) {
-				
-				TileIndex tileIndex = index.getTile();
-				BinIndex binIndex = index.getBin();	
-				
-				if ( tiles.containsKey(tileIndex) ) {
-					
-					AnnotationManipulator.addDataToTile( tiles.get( tileIndex ), binIndex, annotation );
-
-				} else {
-										
-					TileData< Map<String, List<Pair<String, Long>>>> tile = new TileData<>( tileIndex );				
-					AnnotationManipulator.addDataToTile( tile, binIndex, annotation );
-					tiles.put( tileIndex, tile );
-				}
-			}
-		
-		}
-		return new ArrayList<>( tiles.values() );
-	}
-	
-	
-	protected double[] randomPosition() {
-
-		double [] xy = new double[2];
-		xy[0] = BOUNDS[0] + (_rand.nextDouble() * (BOUNDS[2] - BOUNDS[0]));
-		xy[1] = BOUNDS[1] + (_rand.nextDouble() * (BOUNDS[3] - BOUNDS[1]));
-		return xy;		
-	}
-	
-	
-	protected String randomGroup() {
-
-		String groups[] = {"Urgent", "High", "Medium", "Low"};
-		int index = (int)(_rand.nextDouble() * 3);
-		return groups[ index ];
-	}
-	
-	
-	protected String randomComment() {
-		int LENGTH = 256;
-		String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-	    char[] text = new char[LENGTH];
-	    for (int i = 0; i < LENGTH; i++)
-	    {
-	        text[i] = CHARACTERS.charAt(_rand.nextInt(CHARACTERS.length()));
-	    }
-	    return new String(text);
-	}
-	
-		
 	protected List<TileIndex> tilesToIndices( List<TileData< Map<String, List<Pair<String, Long>>>>> tiles ) {
 		List<TileIndex> indices = new ArrayList<>();
 		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : tiles ) {
@@ -306,16 +225,7 @@ public class AnnotationTestsBase {
 		}
 		return indices;
 	}
-	
-	protected List<AnnotationData<?>> generateJSONAnnotations( int numEntries ) {
 
-		List<AnnotationData<?>> annotations = new ArrayList<>();		
-		for (int i=0; i<numEntries; i++) {
-				
-			annotations.add( generateJSONAnnotation() );	
-		}
-		return annotations;
-	}
 
     static public JSONObject certificateToJSON( Pair<String, Long> certificate ) {
 
