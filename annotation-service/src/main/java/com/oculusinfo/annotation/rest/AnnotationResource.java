@@ -170,11 +170,20 @@ public class AnnotationResource extends ApertureServerResource {
 				BinIndex binIndex = entry.getKey();
 				List<AnnotationData<?>> annotations = entry.getValue();
 		    	
-				JSONArray annotationArray = new JSONArray();			    
+				JSONArray annotationArray = new JSONArray();
+                JSONArray rangeArray = new JSONArray();
 				for ( AnnotationData<?> annotation : annotations ) {
-					annotationArray.put( annotation.toJSON() );
+                    if ( !annotation.isRangeBased() ) {
+                        annotationArray.put( annotation.toJSON() );
+                    } else {
+                        rangeArray.put( annotation.toJSON() );
+                    }
 				}
 				binsJson.put( binIndex.toString(), annotationArray );
+
+                if ( rangeArray.length() > 0 ) {
+                    binsJson.put( "range", annotationArray );
+                }
 			}
 		    
 			result.put( "annotations", binsJson );

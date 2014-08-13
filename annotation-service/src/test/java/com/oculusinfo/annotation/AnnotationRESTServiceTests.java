@@ -30,7 +30,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.json.JSONArray;
@@ -38,16 +37,20 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 
 public class AnnotationRESTServiceTests extends AnnotationTestsBase {
 
     static final int NUM_THREADS = 8;
     static final int NUM_WRITES = 10000;
+    static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
+    static final String [] GROUPS = { "Central Node" };
+    static final Random _rand = new Random();
 
     static final String URL = "http://localhost:8080/twitter-community-demo/";
     static final String REST_ENDPOINT = "rest/annotation";
-    static final String LAYER_NAME = "twitter.community.centralnodes.annotations.debug";
+    static final String LAYER_NAME = "annotations.test.0";
 
     public class AnnotationTestClient implements Runnable {
 
@@ -57,6 +60,7 @@ public class AnnotationRESTServiceTests extends AnnotationTestsBase {
             _name = name;
             Logger.getLogger("org.apache.http").setLevel(Level.WARN);
         }
+
 
         public void write( JSONObject annotationJSON ) throws IOException {
 
@@ -109,6 +113,7 @@ public class AnnotationRESTServiceTests extends AnnotationTestsBase {
             return arr;
         }
 
+
         protected String getUser( int growthFactor, JSONArray lineage ) {
 
             try {
@@ -126,6 +131,7 @@ public class AnnotationRESTServiceTests extends AnnotationTestsBase {
             return "user_error";
         }
 
+
         protected String getParent( int growthFactor, JSONArray lineage ) {
 
             JSONArray parentLineage = new JSONArray();
@@ -139,53 +145,33 @@ public class AnnotationRESTServiceTests extends AnnotationTestsBase {
             return getUser( growthFactor, parentLineage );
         }
 
-        /*
-	     * Annotation index generation function
-	     */
-        protected JSONObject generateJSON() {
-
-            double [] xy = randomPosition();
-
-            try {
-                JSONObject anno = new JSONObject();
-                anno.put("x", xy[0]);
-                anno.put("y", xy[1]);
-
-                int level = (int)(_rand.nextDouble() * 10);
-                anno.put("level", level );
-
-                JSONObject range = new JSONObject();
-                range.put("min", level );
-                range.put("max", level );
-                anno.put("range", range );
-
-                anno.put("group", "Central Node" );
-
-                JSONObject data = new JSONObject();
-                JSONArray lineage = randomLineage( level, 3 );
-                data.put("user",  getUser(3, lineage) );
-                data.put("parent",  getParent(3, lineage) );
-                data.put("lineage", lineage );
-                anno.put("data", data);
-                return anno;
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
 
         public void run() {
+
+            AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
 
             for (int i=0; i<NUM_WRITES; i++) {
 
                 try {
+                    JSONObject annotation = generator.generateBivariatePointJSON();
 
-                    write(generateJSON());
+                    int level = annotation.getInt("level");
+                    JSONObject data = new JSONObject();
+                    JSONArray lineage = randomLineage( level, 3 );
+                    data.put("user",  getUser(3, lineage) );
+                    data.put("parent",  getParent(3, lineage) );
+                    data.put("lineage", lineage );
+                    annotation.put("data", data);
+
+                    JSONObject range = new JSONObject();
+                    range.put("min", level );
+                    range.put("max", level );
+                    annotation.put("range", range );
+
+                    write( annotation );
                     System.out.println( "Client " + _name + " successfully wrote annotation " + i);
 
-                } catch ( IOException e ) {
+                } catch ( Exception e ) {
                     e.printStackTrace();
                 }
             }
@@ -213,8 +199,6 @@ public class AnnotationRESTServiceTests extends AnnotationTestsBase {
                 e.printStackTrace();
             }
         }
-
-
     }
 
 }

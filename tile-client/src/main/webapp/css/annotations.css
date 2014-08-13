@@ -110,7 +110,7 @@
 }
 
 .annotation-details-aggregate {
-    padding-bottom: 23px;
+    padding-bottom: 28px;
 }
 
 .annotation-details-close-button {
@@ -144,6 +144,7 @@
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+    -webkit-backface-visibility: hidden;
 }
 
 .annotation-carousel-ui-chevron {

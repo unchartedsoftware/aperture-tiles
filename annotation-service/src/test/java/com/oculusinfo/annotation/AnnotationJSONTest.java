@@ -44,7 +44,9 @@ import java.util.Map;
 public class AnnotationJSONTest extends AnnotationTestsBase {
 	
 	static final boolean VERBOSE = false;
-	
+    private static double [] BOUNDS = { 180, 85.05, -180, -85.05};
+    private static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
+
 	private AnnotationIndexer _indexer;
 	private TilePyramid _pyramid;
 	
@@ -63,8 +65,10 @@ public class AnnotationJSONTest extends AnnotationTestsBase {
 
     @Test
     public void jsonAnnotationTest () throws Exception {
-    	
-		List<AnnotationData<?>> before = generateJSONAnnotations( NUM_ENTRIES );
+
+        AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
+		List<AnnotationData<?>> before = generator.generateJSONAnnotations( NUM_ENTRIES );
 		List<AnnotationData<?>> after = new ArrayList<>();
 			
 		if (VERBOSE) {
@@ -90,8 +94,10 @@ public class AnnotationJSONTest extends AnnotationTestsBase {
 	
     @Test
     public void testTileJSONSerialization () throws Exception {
-    	
-		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generateTiles( generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
+
+        AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
+		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
 		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
 
 		if (VERBOSE) {

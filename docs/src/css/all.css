@@ -45,7 +45,6 @@ h3 {
 	color: #8A8984;
 }
 
-
 a {
 	text-decoration: none;
 }
@@ -139,15 +138,21 @@ code .jscontent{
 	margin-left: auto; 
 	margin-right: auto;
 }
+
 .toc {
     background: #ddddd1;
-    margin: 10px 0 10px 0;
-    padding: 5px 5px 5px 30px;
+    margin: 20px 0 10px 0;
+    padding: 5px 30px 5px 30px;
     /*border: 1px solid #ccc;*/
     border: 1px solid #c8c8bd;
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     border-radius: 2px;
+}
+
+#toc-header {
+	text-align: center;
+	font-weight: bold;
 }
 
 #header {

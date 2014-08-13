@@ -418,7 +418,6 @@ The Serializer determines how to read and write to the tile set. The Tile Server
 - [Serializer](#serializer-class)
 - [Serialization Factory](#serialization-factory)
 - [Serialization Factory Module](#serialization-factory-module)
-- [Serialization Factory Provider ](#serialization-factory-provider)
 
 See the following sections for examples of each custom Serializer component.
 
@@ -457,15 +456,10 @@ The definition of the AVRO schema can be based on the template in the following 
 
 ##### <a name="serialization-factory"></a>Serialization Factory
 
-The Serialization Factory gets configuration information (e.g., the AVRO compression codec) and hands back the serializer of choice when needed.
+The Serialization Factory gets configuration information (e.g., the AVRO compression codec) and hands back the serializer of choice when needed. It also produces the factory and can be injected by Guice.
 
 <pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/<wbr>oculusinfo/twitter/init/TwitterTileSerializationFactory.java</pre>
 
-##### <a name="serialization-factory-provider"></a>Serialization Factory Provider
-
-The Factory Provider is an object that produces the factory and can be injected by Guice.
-
-<pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/<wbr>oculusinfo/twitter/init/TwitterTileSerializationFactoryProvider.java</pre>
 
 ##### <a name="serialization-factory-module"></a>Serialization Factory Module
 

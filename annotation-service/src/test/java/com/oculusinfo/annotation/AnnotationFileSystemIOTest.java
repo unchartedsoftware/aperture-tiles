@@ -55,6 +55,8 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	private static final String  BASE_PATH = TEST_LAYER_NAME;
 	private static final String  TILE_EXT = "json";
 	private static final String  DATA_EXT = "json";
+    private static double [] BOUNDS = { 180, 85.05, -180, -85.05};
+    private static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
 	private static final boolean VERBOSE = false;
 
 	private AnnotationIO _dataIO;
@@ -68,6 +70,7 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 
 	@Before
 	public void setup () {
+
 		try {
     		
 			_dataIO = new FileSystemAnnotationIO(ROOT_PATH, DATA_EXT);   		
@@ -77,8 +80,7 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
     		
 			System.out.println("Error: " + e.getMessage());
 			
-		} finally {
-		}	
+		}
     	
 		_pyramid = new WebMercatorTilePyramid();
 		_indexer = new AnnotationIndexerImpl();
@@ -87,19 +89,15 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	
 	}
 
-	@After
-	public void teardown () {
-		_tileIO = null;
-		_dataIO = null;
-	}
-	
 	
 	@Test
 	public void testFileSystemIO() {
-    	
-    	
-		List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );
-		List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( annotations, _indexer, _pyramid );
+
+
+        AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
+		List<AnnotationData<?>> annotations = generator.generateJSONAnnotations( NUM_ENTRIES );
+		List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generator.generateTiles( annotations, _indexer, _pyramid );
 		
 		List<TileIndex> tileIndices = tilesToIndices( tiles );
 		List<Pair<String, Long>> dataIndices = dataToIndices( annotations );

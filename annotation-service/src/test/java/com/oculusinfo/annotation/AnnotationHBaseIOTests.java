@@ -51,6 +51,8 @@ import com.oculusinfo.binning.util.Pair;
 public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
 	private static final String  TABLE_NAME = "annotation.hbase.test";
+    private static double [] BOUNDS = { 180, 85.05, -180, -85.05};
+    private static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
 	private static final boolean VERBOSE = false;
 
 	private AnnotationIO _dataIO;
@@ -76,8 +78,7 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
     		
 			System.out.println("Error: " + e.getMessage());
 			
-		} finally {
-		}	
+		}
     	
 		_pyramid = new WebMercatorTilePyramid();
 		_indexer = new AnnotationIndexerImpl();
@@ -86,19 +87,13 @@ public class AnnotationHBaseIOTests extends AnnotationTestsBase {
 	
 	}
 
-	@After
-	public void teardown () {
-		_tileIO = null;
-		_dataIO = null;
-	}
-	
-	
 	@Test
 	public void testHBaseIO() {
-    	
-    	
-		List<AnnotationData<?>> annotations = generateJSONAnnotations( NUM_ENTRIES );        
-		List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generateTiles( annotations, _indexer, _pyramid );
+
+    	AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+
+		List<AnnotationData<?>> annotations = generator.generateJSONAnnotations( NUM_ENTRIES );
+		List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generator.generateTiles( annotations, _indexer, _pyramid );
 		
 		List<TileIndex> tileIndices = tilesToIndices( tiles );
 		List<Pair<String, Long>> dataIndices = dataToIndices( annotations );

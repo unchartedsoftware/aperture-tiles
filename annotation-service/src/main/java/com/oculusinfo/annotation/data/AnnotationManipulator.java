@@ -146,8 +146,7 @@ public class AnnotationManipulator {
         return allCertificates;
     }  
     
-    
-    
+
     static public List<Pair<String, Long>> getAllCertificatesFromTile( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
 
         List<Pair<String, Long>> allCertificates = new LinkedList<>();
