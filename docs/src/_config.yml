@@ -15,3 +15,5 @@ product: Aperture Tiles
 destination: ../_site/
 
 baseurl: ""
+
+exclude: ["img/resources/SiteComponents.png"]
