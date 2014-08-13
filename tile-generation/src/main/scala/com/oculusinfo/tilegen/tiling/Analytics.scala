@@ -28,6 +28,8 @@ package com.oculusinfo.tilegen.tiling
 
 
 import java.lang.{Double => JavaDouble}
+import java.lang.{Integer => JavaInt}
+import java.lang.{Long => JavaLong}
 import java.util.{List => JavaList}
 
 import scala.collection.JavaConverters._
@@ -341,6 +343,74 @@ class SumLogDoubleAnalytic(base: Double = math.exp(1.0)) extends Analytic[Double
 trait StandardDoubleBinningAnalytic extends BinningAnalytic[Double, JavaDouble] {
 	def finish (value: Double): JavaDouble = new JavaDouble(value)
 }
+
+
+
+class SumIntAnalytic extends Analytic[Int] {
+	def aggregate (a: Int, b: Int): Int = a + b
+	def defaultProcessedValue: Int = 0
+	def defaultUnprocessedValue: Int = 0
+}
+
+class MinimumIntAnalytic extends Analytic[Int] {
+	def aggregate (a: Int, b: Int): Int = a min b
+	def defaultProcessedValue: Int = 0
+	def defaultUnprocessedValue: Int = Int.MaxValue
+}
+
+class MinimumIntTileAnalytic extends MinimumIntAnalytic with TileAnalytic[Int] {
+	def name = "minimum"
+}
+
+class MaximumIntAnalytic extends Analytic[Int] {
+	def aggregate (a: Int, b: Int): Int = a max b
+	def defaultProcessedValue: Int = 0
+	def defaultUnprocessedValue: Int = Int.MinValue
+}
+
+class MaximumIntTileAnalytic extends MinimumIntAnalytic with TileAnalytic[Int] {
+	def name = "maximum"
+}
+
+trait StandardIntBinningAnalytic extends BinningAnalytic[Int, JavaInt] {
+	def finish (value: Int): JavaInt = new JavaInt(value)
+}
+
+
+
+
+class SumLongAnalytic extends Analytic[Long] {
+	def aggregate (a: Long, b: Long): Long = a + b
+	def defaultProcessedValue: Long = 0L
+	def defaultUnprocessedValue: Long = 0L
+}
+
+class MinimumLongAnalytic extends Analytic[Long] {
+	def aggregate (a: Long, b: Long): Long = a min b
+	def defaultProcessedValue: Long = 0L
+	def defaultUnprocessedValue: Long = Long.MaxValue
+}
+
+class MinimumLongTileAnalytic extends MinimumLongAnalytic with TileAnalytic[Long] {
+	def name = "minimum"
+}
+
+class MaximumLongAnalytic extends Analytic[Long] {
+	def aggregate (a: Long, b: Long): Long = a max b
+	def defaultProcessedValue: Long = 0L
+	def defaultUnprocessedValue: Long = Long.MinValue
+}
+
+class MaximumLongTileAnalytic extends MinimumLongAnalytic with TileAnalytic[Long] {
+	def name = "maximum"
+}
+
+trait StandardLongBinningAnalytic extends BinningAnalytic[Long, JavaLong] {
+	def finish (value: Long): JavaLong = new JavaLong(value)
+}
+
+
+
 
 abstract class StandardDoubleArrayAnalytic extends Analytic[Seq[Double]] {
 	def aggregateElements (a: Double, b: Double): Double
