@@ -91,6 +91,8 @@ public class PyramidMetaData {
 		throws JSONException
 	{
 		_metaData = new JSONObject();
+		_metaData.put("version", PyramidMetaDataVersionMutator.CURRENT_VERSION);
+
 		if (null != name)
 			_metaData.put("name", name);
 		if (null != description)

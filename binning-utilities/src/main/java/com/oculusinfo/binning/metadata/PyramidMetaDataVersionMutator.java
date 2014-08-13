@@ -63,20 +63,19 @@ public class PyramidMetaDataVersionMutator {
 	}
 
 	private static String getMetaDataVersion (JSONObject rawMetaData) {
-	    // Real version
-	    // return rawMetaData.optString("version", "0.0");
-	    // Temporary version until we regenerate data with real version number
+		String version = rawMetaData.optString("version", "0.0");
 
-	    try {
-	        JSONObject metaMeta = rawMetaData.getJSONObject("meta");
-    	    if (metaMeta.has("levelMaximums")) {
-    	        return "0.0";
-    	    } else if (metaMeta.has("global")) {
-    	        return "1.0";
-    	    }
-	    } catch (Exception e) {
-	    }
-	    return "0.0";
+		if (null == version) {
+			version = "0.0";
+			try {
+				JSONObject metaMeta = rawMetaData.getJSONObject("meta");
+				if (metaMeta.has("global")) {
+					version = "1.0";
+				}
+			} catch (Exception e) {
+			}
+		}
+		return version;
 	}
 
 	private static List<PyramidMetaDataVersionMutator> getMutators (String startVersion, String endVersion,
