@@ -33,6 +33,7 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializerFac
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.LongAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializerFactory;
@@ -77,6 +78,14 @@ public enum DefaultTileSerializerFactoryProvider
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
 					return new IntegerAvroSerializerFactory(parent, path);
+				}
+        
+			}),
+		LONG_AVRO(new Constructor() {
+				@Override
+				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+				                                                                List<String> path) {
+					return new LongAvroSerializerFactory(parent, path);
 				}
         
 			}),

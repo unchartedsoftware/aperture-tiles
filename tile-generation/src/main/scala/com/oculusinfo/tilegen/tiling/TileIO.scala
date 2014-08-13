@@ -46,6 +46,8 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.LongAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
@@ -293,6 +295,8 @@ object TileSerializerChooser {
 		serializerType match {
 			case "legacy" => new BackwardCompatibilitySerializer()
 			case "avro-double" => new DoubleAvroSerializer(CodecFactory.bzip2Codec())
+			case "avro-int" => new IntegerAvroSerializer(CodecFactory.bzip2Codec())
+			case "avro-long" => new LongAvroSerializer(CodecFactory.bzip2Codec())
 			case "avro-double-array" => new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case "avro-string-array" => new StringArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case "avro-string-int-pair-array" => new StringIntPairArrayAvroSerializer(CodecFactory.bzip2Codec())
