@@ -48,6 +48,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
@@ -295,6 +296,7 @@ object TileSerializerChooser {
 			case "avro-double-array" => new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case "avro-string-array" => new StringArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case "avro-string-int-pair-array" => new StringIntPairArrayAvroSerializer(CodecFactory.bzip2Codec())
+			case "avro-string-double-pair-array" => new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case _ => throw new IllegalArgumentException("Illegal serializer type "+serializerType)
 		}
 }
