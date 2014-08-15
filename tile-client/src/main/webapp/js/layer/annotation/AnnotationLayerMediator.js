@@ -60,14 +60,19 @@ define(function (require) {
 
                 var layerState;
 
+                // create a layer state object. Values are initialized to those provided
+                // by the layer specs, which are defined in the layers.json file, or are
+                // defaulted to appropriate starting values
                 layerState = new SharedObject();
+
+                // set immutable layer state properties
                 layerState.set( 'id', layer.id );
                 layerState.set( 'uuid', Util.generateUuid() );
                 layerState.set( 'name', layer.name );
                 layerState.set( 'domain', 'annotation' );
-                layerState.set( 'enabled', true );
-                layerState.set( 'opacity', 1.0 );
-                layerState.set( 'zIndex', 500+i );
+
+
+
 
                 // register layerstate with renderer and details implementations
                 layer.renderer.registerLayer( layerState );
@@ -114,6 +119,11 @@ define(function (require) {
                     }
 
                 });
+
+                // set client-side layer state properties after binding callbacks
+                layerState.set( 'enabled', true );
+                layerState.set( 'opacity', 1.0 );
+                layerState.set( 'zIndex', 500+i );
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {

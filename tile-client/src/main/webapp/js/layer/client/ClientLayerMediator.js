@@ -67,17 +67,18 @@ define(function (require) {
                     layerState.set( 'tileFocus', tilekey );
                 }
 
-                // Create a layer state object for the base map.
+                // create a layer state object. Values are initialized to those provided
+                // by the layer specs, which are defined in the layers.json file, or are
+                // defaulted to appropriate starting values
                 layerState = new SharedObject();
+
+                // set immutable layer state properties
                 layerState.set( 'id', layer.id );
                 layerState.set( 'uuid', Util.generateUuid() );
                 layerState.set( 'name', layer.name );
                 layerState.set( 'domain', 'client' );
-                layerState.set( 'enabled', true );
-                layerState.set( 'opacity', 1.0 );
-                layerState.set( 'zIndex', 1000+i );
                 layerState.set( 'rendererCount', layer.views.length );
-                layerState.set( 'defaultRendererIndex', 0 );
+
                 // register layer state with each renderer
                 for (j=0; j< layer.views.length; j++) {
                     layer.views[j].renderer.registerLayer( layerState );
@@ -86,7 +87,6 @@ define(function (require) {
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {
                     var tilekey;
-
 
                     switch (fieldName) {
 
@@ -123,6 +123,12 @@ define(function (require) {
                     }
 
                 });
+
+                // set client-side layer state properties after binding callbacks
+                layerState.set( 'enabled', ( layer.getLayerSpec()[0].enabled !== undefined ) ? layer.getLayerSpec()[0].enabled : true );
+                layerState.set( 'opacity', 1.0 );
+                layerState.set( 'zIndex', 1000+i );
+                layerState.set( 'defaultRendererIndex', 0 );
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {

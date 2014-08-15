@@ -100,6 +100,7 @@ define( function (require) {
 
         // override base function so that all client rendering
         // instances in config file are group into a single layer
+        // TODO: have this factory group by layer name, so it will be possible to have multiple client layers
         createLayers: function( layerJSON, map, layerMediator ) {
 
             var rendererDeferreds,

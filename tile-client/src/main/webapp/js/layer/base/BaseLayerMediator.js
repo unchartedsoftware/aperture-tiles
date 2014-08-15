@@ -47,17 +47,19 @@ define(function (require) {
         registerLayers: function( map ) {
 
             var layerState;
-            // Create a layer state object for the base map.
+
+            // create a layer state object. Values are initialized to those provided
+            // by the layer specs, which are defined in the layers.json file, or are
+            // defaulted to appropriate starting values
             layerState = new SharedObject();
+
+            // set immutable layer state properties
             layerState.set( 'id', map.id );
             layerState.set( 'uuid', Util.generateUuid() );
             layerState.set( 'name', "Base Layer" );
             layerState.set( 'domain', 'base' );
+
             layerState.BASE_LAYERS = map.baseLayers;
-            layerState.set( 'enabled', true );
-            layerState.set( 'opacity', 1.0 );
-            layerState.set( 'zIndex', -1 );
-            layerState.set( 'baseLayerIndex', 0 );
 
             // Register a callback to handle layer state change events.
             layerState.addListener( function( fieldName ) {
@@ -86,6 +88,12 @@ define(function (require) {
                 }
 
             });
+
+            // set client-side layer state properties after binding callbacks
+            layerState.set( 'enabled', true );
+            layerState.set( 'opacity', 1.0 );
+            layerState.set( 'zIndex', -1 );
+            layerState.set( 'baseLayerIndex', 0 );
 
             // Add the layer to the layer state array.
             this.layerStates.push( layerState );

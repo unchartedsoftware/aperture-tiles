@@ -115,16 +115,18 @@ define(function (require) {
                 layerSpec.legendrange = layerSpec.legendrange || [0,100];
                 layerSpec.transformer = layerSpec.transformer || {};
 
-                // Create a layer state object.  Values are initialized to those provided
+                // create a layer state object. Values are initialized to those provided
                 // by the layer specs, which are defined in the layers.json file, or are
-                // defaulted to appropriate starting values.
+                // defaulted to appropriate starting values
                 layerState = new SharedObject();
+
+                // set immutable layer state properties
                 layerState.set( 'id', layer.id );
                 layerState.set( 'uuid', Util.generateUuid() );
                 layerState.set( 'name', layer.name );
                 layerState.set( 'domain', 'server' );
-                layerState.set( 'enabled', layerSpec.renderer.enabled );
-                layerState.set( 'opacity', layerSpec.renderer.opacity );
+
+                // set server-side layer state properties before binding callbacks
                 layerState.set( 'rampFunction', layerSpec.transform.name );
                 layerState.set( 'rampType', layerSpec.renderer.ramp );
                 layerState.set( 'rampMinMax', getLevelMinMax( map.getZoom() ) );
@@ -206,8 +208,10 @@ define(function (require) {
                     }
                 });
 
-                // set z index here so callback is executed
+                // set client-side layer state properties after binding callbacks
                 layerState.set( 'zIndex', i+1 );
+                layerState.set( 'enabled', layerSpec.renderer.enabled );
+                layerState.set( 'opacity', layerSpec.renderer.opacity );
 
                 // Request ramp image from server.
                 requestRampImage( layerState, layer.getLayerInfo(), 0 );
