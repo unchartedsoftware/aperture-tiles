@@ -10,6 +10,7 @@ body {
 	padding-top: 15px;
 	color: #4E443C;
 }
+
 ul {
     padding-left:30px;
 }​
@@ -17,6 +18,7 @@ ul {
 li {
 	margin: 0 0 5px 0;
 }
+
 h1 {
 	font-family: Georgia,"Times New Roman",serif;
 	font-weight: normal;
@@ -36,9 +38,31 @@ h2 {
 h3 {
 	font-family: Georgia,"Times New Roman",serif;
 	font-weight: normal;
+	font-size: 22px;
+	color: #840;
+	margin-bottom: 9px;
+}
+h4 {
+	font-family: Georgia,"Times New Roman",serif;
+	font-style: italic;
+	font-weight: normal;
 	font-size: 20px;
 	color: #840;
-	margin-bottom: 8px;
+	margin-bottom: 0px;
+}
+h5 {
+	font-family: Georgia,"Times New Roman",serif;
+	font-weight: normal;
+	font-size: 18px;
+	color: #840;
+	margin-bottom: 0px;
+}
+h6 {
+	font-family: Georgia,"Times New Roman",serif;
+	font-weight: normal;
+	font-size: 16px;
+	color: #840;
+	margin-bottom: 0px;
 }
 .tagline {
 	font-size: 18px;
@@ -139,6 +163,11 @@ code .jscontent{
 	margin-right: auto;
 }
 
+#toc-header {
+	text-align: center;
+	font-weight: bold;
+}
+
 .toc {
     background: #ddddd1;
     margin: 20px 0 10px 0;
@@ -148,11 +177,6 @@ code .jscontent{
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     border-radius: 2px;
-}
-
-#toc-header {
-	text-align: center;
-	font-weight: bold;
 }
 
 #header {
