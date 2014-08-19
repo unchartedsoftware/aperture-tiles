@@ -1,5 +1,5 @@
 - label: Overview
-  path: tour/overview/
+  path: tour/
 
 - label: System Description
   path: tour/components/
