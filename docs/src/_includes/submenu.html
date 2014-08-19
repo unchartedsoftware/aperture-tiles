@@ -4,7 +4,7 @@
 
 <div id="submenu">
 	{% for submenuItem in site.data.submenus.[dataFile] %}
-		<a class="submenu-item" href="{{site.rooturl}}/{{ submenuItem.path }}">
+		<a class="submenu-item" href="{{site.baseurl}}/{{ submenuItem.path }}">
 			<div class="submenu-item-background{%if page.subtitle == submenuItem.label %} selected{% endif %}">
 				<div class="submenu-item-number">{{ forloop.index }}</div>
 			</div>
