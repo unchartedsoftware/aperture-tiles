@@ -26,7 +26,6 @@ package com.oculusinfo.annotation.filter.impl;
 
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.factory.ConfigurableFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -23,18 +23,13 @@
  */
 package com.oculusinfo.annotation.filter.impl;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONObject;
-
+import com.oculusinfo.annotation.data.AnnotationBin;
 import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.AnnotationManipulator;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.binning.util.Pair;
+import org.json.JSONObject;
+
+import java.util.*;
 
 
 public class NMostRecentByGroupFilter implements AnnotationFilter {
@@ -62,7 +57,7 @@ public class NMostRecentByGroupFilter implements AnnotationFilter {
 		return filters;
 	}
 
-	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin ) {
+	public List<Pair<String, Long>> filterBin( AnnotationBin bin ) {
 
 		List<Pair<String, Long>> filtered = new LinkedList<>();
 		// go through filter list get certificates by group and by count
@@ -72,7 +67,7 @@ public class NMostRecentByGroupFilter implements AnnotationFilter {
 			Integer count = f.getValue();
 
 			// get all certificates from the bin
-			List<Pair<String, Long>> certificates = AnnotationManipulator.getCertificatesFromBin(bin, group);
+			List<Pair<String, Long>> certificates = bin.getCertificates( group );
 
 			// certificates are sorted, so simply cut the tail off to get the n newest
 			filtered.addAll(certificates.subList(0, count < certificates.size() ? count : certificates.size()));

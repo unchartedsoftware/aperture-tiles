@@ -24,13 +24,12 @@
 package com.oculusinfo.annotation;
 
 import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.util.Pair;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -39,7 +38,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class AnnotationJSONTest extends AnnotationTestsBase {
 	
@@ -97,8 +95,8 @@ public class AnnotationJSONTest extends AnnotationTestsBase {
 
         AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
 
-		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
-		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
+		List< AnnotationTile > before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
+		List< AnnotationTile > after = new ArrayList<>();
 
 		if (VERBOSE) {
 			System.out.println( "*** Before ***");
@@ -106,7 +104,7 @@ public class AnnotationJSONTest extends AnnotationTestsBase {
 		}
 
 		
-		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : before ) {
+		for ( AnnotationTile tile : before ) {
 			
 			JSONObject json = tileToJSON( tile );
 			after.add( getTileFromJSON( json ) );

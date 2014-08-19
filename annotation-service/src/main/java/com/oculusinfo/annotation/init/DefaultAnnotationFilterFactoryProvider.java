@@ -24,15 +24,14 @@
 package com.oculusinfo.annotation.init;
 
 
-
-import java.util.List;
-
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.filter.impl.EmptyFilterFactory;
 import com.oculusinfo.annotation.filter.impl.NMostRecentByGroupFactory;
 import com.oculusinfo.annotation.filter.impl.ScriptableFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+
+import java.util.List;
 
 
 

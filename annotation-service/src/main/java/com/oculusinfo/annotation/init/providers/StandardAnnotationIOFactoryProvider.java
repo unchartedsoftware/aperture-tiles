@@ -24,9 +24,6 @@
 package com.oculusinfo.annotation.init.providers;
 
 
-import java.util.List;
-import java.util.Set;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.annotation.io.AnnotationIO;
@@ -34,6 +31,9 @@ import com.oculusinfo.annotation.io.AnnotationIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 import com.oculusinfo.tile.init.providers.StandardUberFactoryProvider;
+
+import java.util.List;
+import java.util.Set;
 
 
 @Singleton

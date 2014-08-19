@@ -23,12 +23,12 @@
  */
 package com.oculusinfo.annotation.filter;
 
-import java.util.List;
-
 import com.oculusinfo.annotation.filter.impl.EmptyFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.JSONProperty;
+
+import java.util.List;
 
 
 /**

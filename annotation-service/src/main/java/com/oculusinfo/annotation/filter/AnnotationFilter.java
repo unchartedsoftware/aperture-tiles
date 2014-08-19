@@ -23,11 +23,11 @@
  */
 package com.oculusinfo.annotation.filter;
 
-import java.util.List;
-import java.util.Map;
-
+import com.oculusinfo.annotation.data.AnnotationBin;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.binning.util.Pair;
+
+import java.util.List;
 
 
 /**
@@ -35,6 +35,6 @@ import com.oculusinfo.binning.util.Pair;
  */
 public interface AnnotationFilter {
     
-	public List<Pair<String, Long>> filterBin( Map<String, List<Pair<String, Long>>> bin );
+	public List<Pair<String, Long>> filterBin( AnnotationBin bin );
 	public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations );
 }

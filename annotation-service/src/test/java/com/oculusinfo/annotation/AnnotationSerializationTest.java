@@ -23,29 +23,28 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializer;
 import com.oculusinfo.binning.util.Pair;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 
 public class AnnotationSerializationTest extends AnnotationTestsBase {
@@ -119,19 +118,19 @@ public class AnnotationSerializationTest extends AnnotationTestsBase {
 
         AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
 
-		List<TileData< Map<String, List<Pair<String, Long>>>>> before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
-		List<TileData< Map<String, List<Pair<String, Long>>>>> after = new ArrayList<>();
+		List< AnnotationTile > before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
+		List< AnnotationTile > after = new ArrayList<>();
 
 		if (VERBOSE) {
 			System.out.println( "*** Before ***");
 			printTiles( before );
 		}
 		
-		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : before ) {
+		for ( AnnotationTile tile : before ) {
 			
 			// serialize
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			_tileSerializer.serialize( tile, baos );
+			_tileSerializer.serialize( tile.getRawData(), baos );
 			baos.close();
 			baos.flush();
             
@@ -139,7 +138,7 @@ public class AnnotationSerializationTest extends AnnotationTestsBase {
 			byte[] data = baos.toByteArray();
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(data);
-			TileData< Map<String, List<Pair<String, Long>>>> t = _tileSerializer.deserialize( (TileIndex)null, bais );
+            AnnotationTile t = new AnnotationTile( _tileSerializer.deserialize( (TileIndex)null, bais ) );
 			after.add( t );
 			bais.close();   
 		}

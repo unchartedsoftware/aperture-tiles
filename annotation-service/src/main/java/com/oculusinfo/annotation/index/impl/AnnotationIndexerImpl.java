@@ -29,7 +29,6 @@ import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.util.Pair;
 
 import java.util.LinkedList;
 import java.util.List;

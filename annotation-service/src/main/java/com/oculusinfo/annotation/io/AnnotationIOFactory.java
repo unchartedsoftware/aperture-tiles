@@ -23,11 +23,11 @@
  */
 package com.oculusinfo.annotation.io;
 
-import java.util.List;
-
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.JSONProperty;
+
+import java.util.List;
 
 
 /**

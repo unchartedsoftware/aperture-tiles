@@ -27,7 +27,8 @@ import com.oculusinfo.annotation.data.AnnotationData;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 
 public class ScriptableFilter extends EmptyFilter {

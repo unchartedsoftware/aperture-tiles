@@ -30,9 +30,9 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
-import org.json.JSONArray;
 
 import java.io.IOException;
 import java.util.LinkedList;

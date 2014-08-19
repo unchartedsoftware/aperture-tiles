@@ -23,23 +23,14 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
@@ -48,6 +39,13 @@ import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializer;
 import com.oculusinfo.binning.util.Pair;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 	
@@ -97,7 +95,7 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
         AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
 
 		List<AnnotationData<?>> annotations = generator.generateJSONAnnotations( NUM_ENTRIES );
-		List<TileData< Map<String, List<Pair<String, Long>>>>> tiles = generator.generateTiles( annotations, _indexer, _pyramid );
+		List<AnnotationTile> tiles = generator.generateTiles( annotations, _indexer, _pyramid );
 		
 		List<TileIndex> tileIndices = tilesToIndices( tiles );
 		List<Pair<String, Long>> dataIndices = dataToIndices( annotations );
@@ -109,7 +107,7 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 			 */
 			if (VERBOSE)
 				System.out.println("Writing "+NUM_ENTRIES+" to file system");
-			_tileIO.writeTiles(BASE_PATH, _tileSerializer, tiles );
+			_tileIO.writeTiles(BASE_PATH, _tileSerializer, AnnotationTile.convertToRaw(tiles) );
 			_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
 	        
 			/*
@@ -117,7 +115,7 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 			 */
 			if (VERBOSE)
 				System.out.println( "Reading all annotations" );
-			List<TileData< Map<String, List<Pair<String, Long>>>>> allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
+			List<AnnotationTile> allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(BASE_PATH, _tileSerializer, tileIndices));
 			List<AnnotationData<?>> allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
 			if (VERBOSE) printTiles( allTiles );
 			if (VERBOSE) printData( allData );
@@ -132,7 +130,7 @@ public class AnnotationFileSystemIOTest extends AnnotationTestsBase {
 			_tileIO.removeTiles(BASE_PATH, tileIndices );
 			_dataIO.removeData(BASE_PATH, dataIndices );
 	       
-			allTiles = _tileIO.readTiles( BASE_PATH, _tileSerializer, tileIndices );
+			allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(BASE_PATH, _tileSerializer, tileIndices));
 			allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
 	    	
 			Assert.assertTrue( allTiles.size() == 0 );

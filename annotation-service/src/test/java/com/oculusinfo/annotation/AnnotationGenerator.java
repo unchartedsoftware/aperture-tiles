@@ -23,18 +23,19 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.*;
-
-import com.oculusinfo.annotation.data.AnnotationManipulator;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.AnnotationTile;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.binning.*;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileAndBinIndices;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import java.util.*;
 
 
 public class AnnotationGenerator {
@@ -100,9 +101,9 @@ public class AnnotationGenerator {
     }
 
 
-    protected List<TileData< Map<String, List<Pair<String, Long>>>>> generateTiles( List<AnnotationData<?>> annotations, AnnotationIndexer indexer, TilePyramid pyramid ) {
+    protected List<AnnotationTile> generateTiles( List<AnnotationData<?>> annotations, AnnotationIndexer indexer, TilePyramid pyramid ) {
 
-        Map<TileIndex, TileData< Map<String, List<Pair<String, Long>>>>> tiles = new HashMap<>();
+        Map<TileIndex, AnnotationTile> tiles = new HashMap<>();
 
         for ( AnnotationData<?> annotation : annotations ) {
             List<TileAndBinIndices> indices = indexer.getIndices( annotation, pyramid );
@@ -114,12 +115,12 @@ public class AnnotationGenerator {
 
                 if ( tiles.containsKey( tileIndex ) ) {
 
-                    AnnotationManipulator.addDataToTile(tiles.get(tileIndex), binIndex, annotation);
+                    tiles.get( tileIndex ).addDataToBin(binIndex, annotation);
 
                 } else {
 
-                    TileData< Map<String, List<Pair<String, Long>>>> tile = new TileData<>( tileIndex );
-                    AnnotationManipulator.addDataToTile( tile, binIndex, annotation );
+                    AnnotationTile tile = new AnnotationTile( tileIndex );
+                    tile.addDataToBin(binIndex, annotation);
                     tiles.put( tileIndex, tile );
                 }
             }

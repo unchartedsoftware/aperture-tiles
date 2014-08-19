@@ -24,32 +24,13 @@
 package com.oculusinfo.annotation.rest.impl;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.oculusinfo.annotation.config.AnnotationConfiguration;
+import com.oculusinfo.annotation.data.AnnotationBin;
 import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.AnnotationManipulator;
+import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.AnnotationIO;
@@ -58,7 +39,6 @@ import com.oculusinfo.annotation.rest.AnnotationInfo;
 import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
@@ -69,6 +49,20 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.net.URI;
+import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 @Singleton
@@ -428,23 +422,23 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 * Iterate through all indices, find matching tiles and add data certificate, if tile
 	 * is missing, add it
 	 */
-	private void addDataCertificateToTiles( List< TileData<Map<String, List<Pair<String,Long>>>>> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {		
+	private void addDataCertificateToTiles( List< AnnotationTile > tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {
 		
 		for ( TileAndBinIndices index : indices ) {			
 			// check all existing tiles for matching index
 			boolean found = false;
-			for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {				
+			for ( AnnotationTile tile : tiles ) {
 				if ( tile.getDefinition().equals( index.getTile() ) ) {
 					// tile exists already, add data to bin
-					AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
+					tile.addDataToBin( index.getBin(), data );
 					found = true;
 					break;
 				} 
 			}
 			if ( !found ) {
 				// no tile exists, add tile
-				TileData<Map<String, List<Pair<String,Long>>>> tile = new TileData<>( index.getTile() );				
-				AnnotationManipulator.addDataToTile( tile, index.getBin(), data );
+                AnnotationTile tile = new AnnotationTile( index.getTile() );
+				tile.addDataToBin(index.getBin(), data);
 				tiles.add( tile );    	
 			}
 		}				
@@ -454,9 +448,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 * Iterate through all tiles, removing data certificate from bins, any tiles with no bin entries
 	 * are added to tileToRemove, the rest are added to tilesToWrite
 	 */
-	private void removeDataCertificateFromTiles( List<TileData<Map<String, List<Pair<String,Long>>>>> tilesToWrite, 
-	                                             List<TileIndex> tilesToRemove, 
-	                                             List<TileData<Map<String, List<Pair<String,Long>>>>> tiles, 
+	private void removeDataCertificateFromTiles( List< AnnotationTile > tilesToWrite,
+	                                             List< TileIndex > tilesToRemove,
+	                                             List< AnnotationTile > tiles,
 	                                             AnnotationData<?> data,
 	                                             TilePyramid pyramid ) {
 		// clear supplied lists
@@ -464,16 +458,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 		tilesToRemove.clear();	
 
 		// for each tile, remove data from bins
-		for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {
+		for ( AnnotationTile tile : tiles ) {
 			// get bin index for the annotation in this tile
 			BinIndex binIndex = _indexer.getIndicesByLevel( data, tile.getDefinition().getLevel(), pyramid ).get(0).getBin();
 			// remove data from tile
-			AnnotationManipulator.removeDataFromTile( tile, binIndex, data );
+            tile.removeDataFromBin(binIndex, data);
 		}	
 		
 		// determine which tiles need to be re-written and which need to be removed
-		for ( TileData<Map<String, List<Pair<String,Long>>>> tile : tiles ) {
-			if ( AnnotationManipulator.isTileEmpty( tile ) ) {				
+		for ( AnnotationTile tile : tiles ) {
+			if ( tile.isEmpty() ) {
 				// if no data left, flag tile for removal
 				tilesToRemove.add( tile.getDefinition() );
 			} else {
@@ -504,15 +498,15 @@ public class AnnotationServiceImpl implements AnnotationService {
 		indices.add( tileIndex );
 			
 		// get tiles
-		List<TileData<Map<String,List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, indices );
+		List< AnnotationTile > tiles = readTilesFromIO( layer, indices );
 				
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
-		for ( TileData<Map<String,List<Pair<String,Long>>>> tile : tiles ) {
+		for ( AnnotationTile tile : tiles ) {
 			// for each bin
-			for ( Map<String, List<Pair<String, Long>>> bin : tile.getData() ) {
+			for ( AnnotationBin bin : tile.getBins() ) {
 				// apply filter
-				if (bin != null) {
+				if ( bin != null ) {
 					certificates.addAll( filter.filterBin( bin ) );
 				}
 			}
@@ -542,9 +536,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 	private void addDataToTiles( String layer, AnnotationData<?> data, TilePyramid pyramid ) {
 		
 		// get list of the indices for all levels
-		List<TileAndBinIndices> indices = _indexer.getIndices( data, pyramid );
+		List< TileAndBinIndices > indices = _indexer.getIndices( data, pyramid );
 		// get all affected tiles
-		List<TileData<Map<String, List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, convert( indices ) );
+		List< AnnotationTile > tiles = readTilesFromIO( layer, convert( indices ) );
 		// add new data certificate to tiles
 		addDataCertificateToTiles( tiles, indices, data );
 		// write tiles back to io
@@ -558,16 +552,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 	private void removeDataFromTiles( String layer, Pair<String, Long> certificate, TilePyramid pyramid ) {
 
 		// read the annotation data
-		List<Pair<String, Long>> certificates = new ArrayList<>();
+		List< Pair<String, Long> > certificates = new ArrayList<>();
 		certificates.add( certificate );
 		AnnotationData<?> data = readDataFromIO( layer, certificates ).get(0);
 		// get list of the indices for all levels
-		List<TileAndBinIndices> indices = _indexer.getIndices( data, pyramid );	    	
+		List< TileAndBinIndices > indices = _indexer.getIndices( data, pyramid );
 		// read existing tiles
-		List<TileData<Map<String, List<Pair<String,Long>>>>> tiles = readTilesFromIO( layer, convert( indices ) );					
+		List< AnnotationTile > tiles = readTilesFromIO( layer, convert( indices ) );
 		// maintain lists of what bins to modify and what bins to remove
-		List<TileData<Map<String, List<Pair<String,Long>>>>> tilesToWrite = new LinkedList<>(); 
-		List<TileIndex> tilesToRemove = new LinkedList<>();			
+		List< AnnotationTile > tilesToWrite = new LinkedList<>();
+		List< TileIndex > tilesToRemove = new LinkedList<>();
 		// remove data from tiles and organize into lists to write and remove
 		removeDataCertificateFromTiles( tilesToWrite, tilesToRemove, tiles, data, pyramid );
 		// write modified tiles
@@ -577,7 +571,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 
-	protected void writeTilesToIO( String layer, List<TileData<Map<String, List<Pair<String,Long>>>>> tiles ) {
+	protected void writeTilesToIO( String layer, List< AnnotationTile > tiles ) {
 		
 		if ( tiles.size() == 0 ) return;
 		
@@ -591,7 +585,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 				                                       getRuntimeTypeDescriptor());
 
 			//io.initializeForWrite( layer );
-			io.writeTiles( layer, serializer, tiles );
+			io.writeTiles( layer, serializer, AnnotationTile.convertToRaw( tiles ) );
 					
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
@@ -654,10 +648,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 	
-	protected List<TileData<Map<String, List<Pair<String,Long>>>>> readTilesFromIO( String layer, List<TileIndex> indices ) {
-			
-		List<TileData<Map<String, List<Pair<String,Long>>>>> tiles = new LinkedList<>();
-		
+	protected List< AnnotationTile > readTilesFromIO( String layer, List<TileIndex> indices ) {
+
+        List< AnnotationTile > tiles = new LinkedList<>();
+
 		if ( indices.size() == 0 ) {
 			return tiles;
 		}
@@ -671,7 +665,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 				                                       getRuntimeTypeDescriptor());
 
 			//io.initializeForRead( layer, 0, 0, null );
-			tiles = io.readTiles( layer, serializer, indices );
+            tiles = AnnotationTile.convertFromRaw(io.readTiles(layer, serializer, indices));
 					
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );

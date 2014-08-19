@@ -23,30 +23,18 @@
  */
 package com.oculusinfo.annotation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.oculusinfo.annotation.data.AnnotationBin;
 import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.AnnotationManipulator;
-import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileAndBinIndices;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.util.Pair;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.*;
 
 
 public class AnnotationTestsBase {
@@ -73,11 +61,11 @@ public class AnnotationTestsBase {
 		}
 	}
 
-	protected void printTiles( List<TileData< Map<String, List<Pair<String, Long>>>>> tiles ) {
+	protected void printTiles( List<AnnotationTile> tiles ) {
 		
-		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : tiles ) {
+		for ( AnnotationTile tile : tiles ) {
 			try {
-				System.out.println( tileToJSON(tile).toString( 4 ) );
+				System.out.println( tileToJSON( tile ).toString( 4 ) );
 			} catch ( Exception e ) { e.printStackTrace(); }
 					
 		}
@@ -101,12 +89,12 @@ public class AnnotationTestsBase {
 		return true;
 	}
 	
-	protected boolean compareTiles( List<TileData< Map<String, List<Pair<String, Long>>>>> as, List<TileData< Map<String, List<Pair<String, Long>>>>> bs, boolean verbose ) {
+	protected boolean compareTiles( List<AnnotationTile> as, List< AnnotationTile > bs, boolean verbose ) {
 		
-		for ( TileData< Map<String, List<Pair<String, Long>>>> a : as ) {
+		for ( AnnotationTile a : as ) {
 			int foundCount = 0;
-			for ( TileData< Map<String, List<Pair<String, Long>>>> b : bs ) {				
-				if ( compareTiles(a, b, false) ) {
+			for ( AnnotationTile b : bs ) {
+				if ( compareTiles( a, b, false ) ) {
 					foundCount++;
 				}
 			}	
@@ -178,10 +166,10 @@ public class AnnotationTestsBase {
 	}
 	
 	
-	protected boolean compareTiles( TileData< Map<String, List<Pair<String, Long>>>> a, TileData< Map<String, List<Pair<String, Long>>>> b, boolean verbose ) {
+	protected boolean compareTiles( AnnotationTile a, AnnotationTile b, boolean verbose ) {
 		
-		List<Pair<String, Long>> aReferences = AnnotationManipulator.getAllCertificatesFromTile( a );
-		List<Pair<String, Long>> bReferences = AnnotationManipulator.getAllCertificatesFromTile( b );
+		List<Pair<String, Long>> aReferences = a.getAllCertificates();
+		List<Pair<String, Long>> bReferences = b.getAllCertificates();
 		
 		if ( !a.getDefinition().equals( b.getDefinition() ) ) {
 			if ( verbose ) System.out.println( "Bin indices are not equal");
@@ -210,9 +198,9 @@ public class AnnotationTestsBase {
 	}
 
 
-	protected List<TileIndex> tilesToIndices( List<TileData< Map<String, List<Pair<String, Long>>>>> tiles ) {
+	protected List<TileIndex> tilesToIndices( List< AnnotationTile > tiles ) {
 		List<TileIndex> indices = new ArrayList<>();
-		for ( TileData< Map<String, List<Pair<String, Long>>>> tile : tiles ) {
+		for ( AnnotationTile tile : tiles ) {
 			indices.add( tile.getDefinition() );
 		}
 		return indices;
@@ -256,7 +244,7 @@ public class AnnotationTestsBase {
     }
 
 
-    static public Map<String, List<Pair<String, Long>>> getBinFromJSON( JSONObject json ) throws IllegalArgumentException {
+    static public AnnotationBin getBinFromJSON( JSONObject json ) throws IllegalArgumentException {
 
         try {
 
@@ -281,7 +269,7 @@ public class AnnotationTestsBase {
                 }
 
             }
-            return certificates;
+            return new AnnotationBin( certificates );
 
         } catch ( Exception e ) {
             throw new IllegalArgumentException( e );
@@ -290,13 +278,13 @@ public class AnnotationTestsBase {
     }
 
 
-    static public JSONObject binToJSON( Map<String, List<Pair<String, Long>>> bin ) {
+    static public JSONObject binToJSON( AnnotationBin bin ) {
 
         JSONObject binJSON = new JSONObject();
         try {
 
             // for each group group in a bin
-            for (Map.Entry<String, List<Pair<String, Long>>> certificateEntry : bin.entrySet() ) {
+            for (Map.Entry<String, List<Pair<String, Long>>> certificateEntry : bin.getData().entrySet() ) {
 
                 String group = certificateEntry.getKey();
                 List<Pair<String, Long>> certificates = certificateEntry.getValue();
@@ -318,7 +306,7 @@ public class AnnotationTestsBase {
     }
 
 
-    static public TileData<Map<String, List<Pair<String, Long>>>> getTileFromJSON( JSONObject json ) throws IllegalArgumentException {
+    static public AnnotationTile getTileFromJSON( JSONObject json ) throws IllegalArgumentException {
 
         try {
 
@@ -329,7 +317,7 @@ public class AnnotationTestsBase {
                     AnnotationIndexer.NUM_BINS );
 
             // create tile with empty bins
-            TileData<Map<String, List<Pair<String, Long>>>> tile = new TileData<>( index );
+            TileData<AnnotationBin> tile = new TileData<>( index );
 
             // for all binkeys
             Iterator<?> binKeys = json.keys();
@@ -345,7 +333,7 @@ public class AnnotationTestsBase {
                 }
             }
 
-            return tile;
+            return new AnnotationTile( tile.getDefinition(), tile.getData() );
 
         } catch ( Exception e ) {
             throw new IllegalArgumentException( e );
@@ -354,7 +342,7 @@ public class AnnotationTestsBase {
     }
 
 
-    static public JSONObject tileToJSON( TileData<Map<String, List<Pair<String, Long>>>> tile ) {
+    static public JSONObject tileToJSON( AnnotationTile tile ) {
 
         JSONObject tileJSON = new JSONObject();
 
@@ -367,7 +355,7 @@ public class AnnotationTestsBase {
             for (int i=0; i<tile.getDefinition().getXBins(); i++ ) {
                 for (int j=0; j<tile.getDefinition().getYBins(); j++ ) {
 
-                    Map<String, List<Pair<String, Long>>> bin = tile.getBin( i, j );
+                    AnnotationBin bin = tile.getData().getBin(i, j);
 
                     if ( bin != null) {
                         // add bin object to tile

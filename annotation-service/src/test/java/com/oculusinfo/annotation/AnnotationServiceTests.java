@@ -23,39 +23,29 @@
  */
 package com.oculusinfo.annotation;
 
-import java.io.File;
-import java.util.*;
-
-import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.annotation.init.DefaultAnnotationFilterFactoryProvider;
-import com.oculusinfo.annotation.init.providers.StandardAnnotationFilterFactoryProvider;
-import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
-import com.oculusinfo.annotation.rest.AnnotationInfo;
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
-
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.init.DefaultAnnotationFilterFactoryProvider;
 import com.oculusinfo.annotation.init.DefaultAnnotationIOFactoryProvider;
+import com.oculusinfo.annotation.init.providers.StandardAnnotationFilterFactoryProvider;
 import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
 import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
 import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
+import com.oculusinfo.annotation.rest.AnnotationInfo;
 import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.annotation.rest.impl.AnnotationServiceImpl;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
@@ -65,6 +55,14 @@ import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardTileSerializerFactoryProvider;
+import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.File;
+import java.util.*;
 
 
 public class AnnotationServiceTests extends AnnotationTestsBase {
