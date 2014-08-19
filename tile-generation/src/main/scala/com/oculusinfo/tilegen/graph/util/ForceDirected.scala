@@ -255,17 +255,30 @@ class ForceDirected extends Serializable {
 				
 				val xC = 0.5*boundingBoxFinal._3	// centre of bounding box (use as gravitational centre)
 				val yC = 0.5*boundingBoxFinal._4
-								
-				for (n <- 0 until numNodes) {
-					val xDist = xC - nodeCoords(n)._2	// node distance to centre
-				    val yDist = yC - nodeCoords(n)._3
-					val dist = Math.sqrt(xDist*xDist + yDist*yDist)
-					
-					if (dist > 0) {
-						val gForce = dist * k_inv * gravity	// gravitational force for this node
-						deltaXY(n) = (deltaXY(n)._1 + xDist*gForce, deltaXY(n)._2 + yDist*gForce)		
+				
+				if (bUseNodeSizes) {
+					// account for node sizes using node radii
+					for (n <- 0 until numNodes) {
+						val xDist = xC - nodeCoords(n)._2	// node distance to centre
+					    val yDist = yC - nodeCoords(n)._3
+						val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(n)._4
+						if (dist > 0) {
+							val gForce = dist * k_inv * gravity	// gravitational force for this node
+							deltaXY(n) = (deltaXY(n)._1 + xDist*gForce, deltaXY(n)._2 + yDist*gForce)		
+						}
 					}
-				}				
+				}
+				else {
+					for (n <- 0 until numNodes) {
+						val xDist = xC - nodeCoords(n)._2	// node distance to centre
+					    val yDist = yC - nodeCoords(n)._3
+						val dist = Math.sqrt(xDist*xDist + yDist*yDist)				
+						if (dist > 0) {
+							val gForce = dist * k_inv * gravity	// gravitational force for this node
+							deltaXY(n) = (deltaXY(n)._1 + xDist*gForce, deltaXY(n)._2 + yDist*gForce)		
+						}
+					}					
+				}
 			}
 			
 			//---- Calc final displacements and save results for this iteration
