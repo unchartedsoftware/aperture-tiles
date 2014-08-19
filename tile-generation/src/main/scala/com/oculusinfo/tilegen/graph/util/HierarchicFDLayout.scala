@@ -73,14 +73,15 @@ class HierarchicFDLayout extends Serializable {
 		var finalGraph = initGraph(sc)	
 				
 		// init results for 'parent group' rectangle with group ID 0   (rectangle format is bottem-left corner, width, height of rectangle) 		
-		var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))
-		//var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
+		//var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))
+		var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
 		
 		var level = maxHierarchyLevel
 		while (level >= 0) {
 			println("Starting Force Directed Layout for hierarchy level " + level)
 
-			val lastLevelLayout = sc.parallelize(localLastLevelLayout)
+			//val lastLevelLayout = sc.parallelize(localLastLevelLayout)
+			
 			// For each hierarchical level > 0, get community ID's, community degree (num outgoing edges), 
 			// and num internal nodes, and the parent community ID.
 			// Group by parent community, and do Group-in-Box layout once for each parent community.
@@ -175,7 +176,11 @@ class HierarchicFDLayout extends Serializable {
 					val rects = convertNodeCirclesToRectangles(coords)	
 					rects
 				})
-				localLastLevelLayout = levelLayout.collect
+				//localLastLevelLayout = levelLayout.collect
+				levelLayout.cache
+				levelLayout.count
+				lastLevelLayout.unpersist(blocking=false)
+				lastLevelLayout = levelLayout
 			}
 			else {
 				// last hierarchical level, so store node coords results in 'finalNodeCoords'

@@ -66,14 +66,15 @@ class HierarchicGIBLayout extends Serializable {
 		val boxLayouter = new GroupInBox()	//group-in-a-box layout scheme
 				
 		// init results for 'parent group' rectangle with group ID 0   (rectangle format is bottem-left corner, width, height of rectangle) 
-		var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))  
-		//var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
+		//var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))  
+		var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
 		
 		var level = maxHierarchyLevel
 		while (level > 0) {
 			println("Starting GroupInBox Layout for hierarchy level " + level)
 
-			val lastLevelLayout = sc.parallelize(localLastLevelLayout)
+			//val lastLevelLayout = sc.parallelize(localLastLevelLayout)
+			
 			// For each hierarchical level > 0, get community ID's, community degree (num outgoing edges), 
 			// and num internal nodes, and the parent community ID.
 			// Group by parent community, and do Group-in-Box layout once for each parent community.
@@ -102,9 +103,9 @@ class HierarchicGIBLayout extends Serializable {
 			}
 			
 			val joinedGroups = groupsByParent.join(lastLevelLayout)
-//			joinedGroups.cache
-//			joinedGroups.count
-//			lastLevelLayout.unpersist(blocking=false)
+			joinedGroups.cache
+			joinedGroups.count
+			lastLevelLayout.unpersist(blocking=false)
 			
 			val levelLayout = joinedGroups.flatMap(n => {
 				val data = n._2._1
@@ -114,7 +115,8 @@ class HierarchicGIBLayout extends Serializable {
 				rects
 			})
 			
-			localLastLevelLayout = levelLayout.collect
+			lastLevelLayout = levelLayout
+			//localLastLevelLayout = levelLayout.collect
 			level -= 1
 		}
 				
@@ -129,7 +131,7 @@ class HierarchicGIBLayout extends Serializable {
 		
 		val forceDirectedLayouter = new ForceDirected()	//force-directed layout scheme
 		
-		val lastLevelLayout = sc.parallelize(localLastLevelLayout)
+		//val lastLevelLayout = sc.parallelize(localLastLevelLayout)
 
 		// parse edge data
 		val gparser = new GraphCSVParser
