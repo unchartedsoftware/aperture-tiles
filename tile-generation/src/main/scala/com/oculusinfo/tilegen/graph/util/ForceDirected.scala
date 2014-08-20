@@ -152,8 +152,12 @@ class ForceDirected extends Serializable {
 		//----- Init variables for controlling force-directed step-size
 		val k2 = boundingBoxArea/numNodes
 		val k_inv = 1.0/Math.sqrt(k2)
-		var temperature = 0.5*Math.min(boundingBoxFinal._3, boundingBoxFinal._4)
-		val stepLimit = Math.min(boundingBoxFinal._3, boundingBoxFinal._4)/1000.0
+		val temperature0 = 0.5*Math.min(boundingBoxFinal._3, boundingBoxFinal._4)
+		var temperature = temperature0
+		val alphaCool = 0.95	// temperature cooling factor (<= 1, lower value == faster algorithm cooling)
+		val stepLimitSq = Math.pow(Math.min(boundingBoxFinal._3, boundingBoxFinal._4)/1000.0, 2.0)	// square of stepLimit
+		var energySum = Double.MaxValue		// init high
+		var progressCount = 0
 		val nodeOverlapRepulsionFactor = 100.0/Math.min(boundingBoxFinal._3, boundingBoxFinal._4)	// constant used for extra strong repulsion if node 'circles' overlap
 
 		//----- Re-format edge data to reference node array indices instead of actual node ID labels (for faster array look-ups below)
@@ -282,8 +286,9 @@ class ForceDirected extends Serializable {
 			}
 			
 			//---- Calc final displacements and save results for this iteration
-			var largestStep = Double.MinValue // init low
-			
+			var largestStepSq = Double.MinValue // init low
+			val energySum0 = energySum
+			energySum = 0.0
 			for (n <- 0 until numNodes) {
 
 			    val deltaDist = Math.sqrt(deltaXY(n)._1*deltaXY(n)._1 + deltaXY(n)._2*deltaXY(n)._2);
@@ -291,22 +296,35 @@ class ForceDirected extends Serializable {
 			    	val normalizedTemp = temperature/deltaDist
 			    	deltaXY(n) = (deltaXY(n)._1*normalizedTemp, deltaXY(n)._2*normalizedTemp)
 			    }
-			    largestStep = Math.max(largestStep, deltaDist);	// save largest step for this iteration
+			    val finalStepSq = deltaXY(n)._1*deltaXY(n)._1 + deltaXY(n)._2*deltaXY(n)._2
+			    largestStepSq = Math.max(largestStepSq, finalStepSq);	// save largest step for this iteration
+			    energySum += finalStepSq
 			    
 			    // save new node coord locations
 			    nodeCoords(n) = (nodeCoords(n)._1, nodeCoords(n)._2 + deltaXY(n)._1, nodeCoords(n)._3 + deltaXY(n)._2, nodeCoords(n)._4)
 			}
 			
-			temperature = temperature*(1.0 - iterations.toDouble/maxIterations)	// 'cool' the temperature towards 0 (ie simulated annealing)
-			//TODO -- try different cooling functions?  Eg as in Yifan Hu paper (adaptive cooling scheme; more robust against local minima)
-			// Also, improve decision about when algorithm is 'done' to reduce chance of doing extra, unneeded iterations 
+			//---- Adaptive cooling function (based on Yifan Hu approach)
+			if (energySum < energySum0) {
+				// system energy (movement) is decreasing, so keep temperature constant
+				// or increase slightly to prevent algorithm getting stuck in a local minimum
+				progressCount += 1
+				if (progressCount >= 5) {
+					progressCount = 0
+					temperature = Math.min(temperature / alphaCool, temperature0)
+				}
+			}
+			else {
+				// system energy (movement) is increasing, so cool the temperature
+				progressCount = 0
+				temperature *= alphaCool
+			}
 			
-			
-			
-			if ((iterations >= maxIterations) || (temperature <= 0.0) || (largestStep <= stepLimit)) {
+			//---- Check if system has adequately converged
+			if ((iterations >= maxIterations) || (temperature <= 0.0) || (largestStepSq <= stepLimitSq)) {
 				bDone = true
 				println("Finished layout algorithm in " + iterations + " iterations.")
-			}
+			}			
 
 			iterations += 1
 		}
