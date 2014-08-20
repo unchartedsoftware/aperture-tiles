@@ -154,8 +154,9 @@ class ForceDirected extends Serializable {
 		val k_inv = 1.0/Math.sqrt(k2)
 		val temperature0 = 0.5*Math.min(boundingBoxFinal._3, boundingBoxFinal._4)
 		var temperature = temperature0
-		val alphaCool = 0.95	// temperature cooling factor (<= 1, lower value == faster algorithm cooling)
-		val stepLimitSq = Math.pow(Math.min(boundingBoxFinal._3, boundingBoxFinal._4)/1000.0, 2.0)	// square of stepLimit
+		val stepLimitFactor = 0.001	
+		val alphaCool = Math.max(Math.min(1.0 + Math.log(stepLimitFactor)*4.0/maxIterations, 0.99), 0.8)	// set temperature cooling factor with respect to maxIterations (lower value == faster algorithm cooling)	
+		val stepLimitSq = Math.pow(Math.min(boundingBoxFinal._3, boundingBoxFinal._4)*stepLimitFactor, 2.0)	// square of stepLimit
 		var energySum = Double.MaxValue		// init high
 		var progressCount = 0
 		val nodeOverlapRepulsionFactor = 100.0/Math.min(boundingBoxFinal._3, boundingBoxFinal._4)	// constant used for extra strong repulsion if node 'circles' overlap
