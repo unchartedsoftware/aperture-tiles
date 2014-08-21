@@ -72,6 +72,12 @@ object LouvainCore {
       state.internalNodes = 1L
       state.nodeWeight = weight
       state.nodeDegree = 0
+      state.extraAttributes = if (data.getClass.getName == "java.lang.String") {
+    	  data.toString
+      }
+      else {
+    	  ""
+      }
       state
     }).outerJoinVertices(nodeDegrees)((vid,state,degreeOption)=> { 
       val degree = degreeOption.getOrElse(0)
@@ -300,10 +306,24 @@ object LouvainCore {
      
     // aggregate the internal weights and internal number of nodes for each new community
     val internalNodeStats = graph.vertices.values.map(vdata=> (vdata.community,(vdata.internalWeight, vdata.internalNodes)))
-    	.reduceByKey((a,b) => (a._1 + b._1, a._2 + b._2))	
-     
+    	.reduceByKey((a,b) => (a._1 + b._1, a._2 + b._2))
+
+    // and save 'extraAttributes' for each new community (just save extraAttributes string for parent community node) 
+    val internalExtraAttributes = graph.vertices.flatMap(nodes => {    	
+	   if (nodes._1 == nodes._2.community) {
+		   Iterator( (nodes._2.community, nodes._2.extraAttributes) )
+   		}
+	   else Iterator.empty
+    })
+    	
+    // combine internal stats and extraAttributes results for each community
+	val allInternalStats = internalNodeStats.leftOuterJoin(internalExtraAttributes).map({case (vid,(stats,attribute2Option)) =>
+	   val attr2 = attribute2Option.getOrElse((""))   
+	   (vid, (stats._1, stats._2, attr2))
+	})
+   
     // join internal weights and self edges to find new internal weight of each community
-    val newVerts = internalNodeStats.leftOuterJoin(internalEdgeWeights).map({case (vid,(stats1,weight2Option)) =>
+    val newVerts = allInternalStats.leftOuterJoin(internalEdgeWeights).map({case (vid,(stats1,weight2Option)) =>
       val weight2 = weight2Option.getOrElse((0L))
       val state = new VertexState()
       state.community = vid
@@ -313,8 +333,9 @@ object LouvainCore {
       state.nodeWeight = 0L
       state.internalNodes = stats1._2
       state.nodeDegree = 0
+      state.extraAttributes = stats1._3
       (vid,state)
-    }).cache()
+    }).cache()   
         
     // translate each vertex edge to a community edge
     val edges = graph.triplets.flatMap(et=> {

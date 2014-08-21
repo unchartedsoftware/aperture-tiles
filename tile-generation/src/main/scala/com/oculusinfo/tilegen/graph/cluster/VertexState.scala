@@ -40,6 +40,7 @@ class VertexState extends Serializable{
   var nodeWeight = 0L  		// out degree
   var internalNodes = 1L	// number of internal nodes (unweighted)
   var nodeDegree = 0		// out degree (unweighted)
+  var extraAttributes = ""	// extra node attributes
   var changed = false
    
   override def toString(): String = {
@@ -47,6 +48,7 @@ class VertexState extends Serializable{
     ",internalWeight:"+internalWeight+
     ",internalNodes:"+internalNodes+
     ",nodeWeight:"+nodeWeight+
-    ",nodeDegree:"+nodeDegree
+    ",nodeDegree:"+nodeDegree+
+    ",extraAttributes:"+extraAttributes
   }
 }

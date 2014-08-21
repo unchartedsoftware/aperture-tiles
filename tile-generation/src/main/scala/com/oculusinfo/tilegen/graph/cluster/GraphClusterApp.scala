@@ -59,6 +59,7 @@ import com.oculusinfo.tilegen.spark.SparkConnector
  * -progCount -- Number of times the algorithm can fail to make progress before exiting. Default = 1.
  * -d -- Specify the input dataset delimiter. Default is tab-delimited.
  * -nID -- The column number in the raw data of node ID's.  ID's must be type Long [required if onlyEdges=false].
+ * -nAttr -- Column numbers of additional node attributes to parse and save with cluster results (attribute ID tags separated by commas) [optional].
  * -eSrcID -- The column number of an edge's source ID.  ID's must be type Long [required].
  * -eDstID -- The column number of an edge's destination ID.  ID's must be type Long [required].
  * -eWeight -- The column number of an edge's weight.  Default = -1, meaning no edge weighting is used.
@@ -88,7 +89,10 @@ object GraphClusterApp {
 	val edgeSrcIDindex = argParser.getInt("eSrcID", "The column number of an edge's source ID", Some(0))
 	val edgeDstIDindex = argParser.getInt("eDstID", "The column number of an edge's source ID", Some(1))
 	val edgeWeightIndex = argParser.getInt("eWeight", "The column number of an edge's weight", Some(-1))
-	
+	val nodeAttrIndices = argParser.getString("nAttr", 
+						"Column numbers of additional node attributes to parse and save with cluster results (attribute ID tags separated by commas)", 
+						Some("-1")).split(",").map(_.trim().toInt) 
+								
     // read the input data 
 	val rawData = if (0 == partitions) {
 		sc.textFile(sourceFile)
@@ -111,7 +115,6 @@ object GraphClusterApp {
 		   })
 	}
 	else {
-		
 		//check the first column to see which rows correspond to edges or nodes	
 	    rawData.flatMap(row => {
 		      val tokens = row.split(edgedelimiter).map(_.trim())
@@ -127,23 +130,55 @@ object GraphClusterApp {
 		   })
 	}
 	
-	//TODO -- need to put in an option to parse node data too if (!bOnlyEdges), so we can output node attributes
-	//from the raw data along with the cluster community results
-	
 	// if the parallelism option was set map the input to the correct number of partitions,
 	// otherwise parallelism will be based off number of HDFS blocks
 	if ((parallelism != -1 ) && (edgeRDD.partitions.size != parallelism)) {
 		edgeRDD = edgeRDD.coalesce(parallelism,shuffle=true)
 	}
-  
-    // create the graph
-    val graph = Graph.fromEdges(edgeRDD, None)
-  
-    // use a helper class to execute the louvain
-    // algorithm and save the output.
-    // to change the outputs you can extend LouvainRunner.scala
-    val runner = new HDFSLouvainRunner(minProgress,progressCounter,outputDir)
-    runner.run(sc, graph)
+	
+	if ((bOnlyEdges) || (nodeAttrIndices(0) == -1)) {
+		// create the graph
+	    val graph = Graph.fromEdges(edgeRDD, None)
+	  
+	    // use a helper class to execute the louvain algorithm and save the output.
+	    val runner = new HDFSLouvainRunner(minProgress,progressCounter,outputDir)
+	    runner.run(sc, graph)
+	}
+	else {
+		
+		if (nodeIDindex <= 0)
+			throw new IllegalArgumentException("nID arguement must be > 0")
+
+		//check the first column to see which rows correspond to nodes
+		// TODO -- this flatMap operation should be combined with one above so we aren't iterating through the dataset twice
+	    var nodeRDD = rawData.flatMap(row => {
+		      val tokens = row.split(edgedelimiter).map(_.trim())
+		      if (tokens(0) == "node") {
+		    	  val nodeID = tokens(nodeIDindex).toLong
+		    	  var nodeAttributes = ""
+		    	  nodeAttrIndices.foreach(i => {
+		    	 	  nodeAttributes += tokens(i) + "\t"
+		    	  }) 	  
+		     	  Some((nodeID, nodeAttributes))	 
+		      }
+		      else {
+		    	  None
+		      }
+		   })
+		   
+		// if the parallelism option was set map the input to the correct number of partitions,
+		// otherwise parallelism will be based off number of HDFS blocks
+		if ((parallelism != -1 ) && (nodeRDD.partitions.size != parallelism)) {
+			nodeRDD = nodeRDD.coalesce(parallelism,shuffle=true)
+		}   
+		   
+		// create the graph
+	    val graph = Graph(nodeRDD, edgeRDD)
+	    
+	    // use a helper class to execute the louvain algorithm and save the output.
+	    val runner = new HDFSLouvainRunner(minProgress,progressCounter,outputDir)
+	    runner.run(sc, graph)
+	}
     
     println("DONE!!")
   }

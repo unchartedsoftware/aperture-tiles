@@ -56,11 +56,12 @@ class HDFSLouvainRunner(minProgressFactor:Double,progressCounter:Int,outputdir:S
 			val parentId = state.community			// ID of parent community
 			val internalNodes = state.internalNodes	// number of raw internal nodes in this community
 			val nodeDegree = state.nodeDegree		// number of inter-community edges (unweighted)
+			val extraAttributes = state.extraAttributes	// additional node attributes (labels, etc.)
 			//val nodeWeight = state.nodeWeight		// weighted inter-community edges
 			//val internalWeight = state.internalWeight	// weighted self-edges (ie intra-community edges)
 			//val sigmaTot = state.communitySigmaTot	// analogous to modularity for this community
 			
-			("node\t" + id + "\t" + parentId + "\t" + internalNodes + "\t" + nodeDegree)
+			("node\t" + id + "\t" + parentId + "\t" + internalNodes + "\t" + nodeDegree + "\t" + extraAttributes)
 	  })
 
 	  val resultsEdges = graph.edges.map(et => {
