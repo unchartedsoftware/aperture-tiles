@@ -99,8 +99,8 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 			FactoryProvider<AnnotationIO> annotationIoFactoryProvider = new StandardAnnotationIOFactoryProvider( annotationIoSet );
 
 			Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
-			filterIoSet.add( DefaultAnnotationFilterFactoryProvider.EMPTY );
-			filterIoSet.add( DefaultAnnotationFilterFactoryProvider.N_MOST_RECENT_BY_GROUP );
+            for (DefaultAnnotationFilterFactoryProvider provider: DefaultAnnotationFilterFactoryProvider.values())
+                filterIoSet.add(provider);
 			FactoryProvider<AnnotationFilter> filterFactoryProvider = new StandardAnnotationFilterFactoryProvider( filterIoSet );
 
 			Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();

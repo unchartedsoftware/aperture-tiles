@@ -137,6 +137,12 @@ define(function (require) {
         },
 
 
+        setCoarseness: function( coarseness ) {
+            this.layerSpec.coarseness = coarseness;
+            this.configure( $.proxy( this.update, this ) );
+        },
+
+
         configure: function( callback ) {
 
             var that = this;
