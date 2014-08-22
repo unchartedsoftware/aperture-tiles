@@ -180,7 +180,7 @@ public class AnnotationResource extends ApertureServerResource {
 				binsJson.put( binIndex.toString(), annotationArray );
 
                 if ( rangeArray.length() > 0 ) {
-                    binsJson.put( "range", annotationArray );
+                    binsJson.put( "range", rangeArray );
                 }
 			}
 		    
