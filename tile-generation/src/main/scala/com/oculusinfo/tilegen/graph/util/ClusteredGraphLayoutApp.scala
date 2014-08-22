@@ -54,9 +54,9 @@ object ClusteredGraphLayoutApp {
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
 		val borderOffset = argParser.getInt("border","Percent of boundingBox width and height to leave as whitespace when laying out leaf nodes. Default is 5 percent", Some(5))
 		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))	
-		val numNodesThres = argParser.getInt("nthres", "Community size threshold to use for grouping sub-communities together into one force-directed layout task", Some(1000))
-		val nodeAreaPercent = argParser.getInt("narea", "Used for Hierarchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 20 percent", Some(20))
-		val bUseEdgeWeights = argParser.getBoolean("eweight", "Use edge weights, if present, to scale force-directed attraction forces.  Default is false", Some(false))
+		val numNodesThres = argParser.getInt("nThres", "Community size threshold to use for grouping sub-communities together into one force-directed layout task", Some(1000))
+		val nodeAreaPercent = argParser.getInt("nArea", "Used for Hierarchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 20 percent", Some(20))
+		val bUseEdgeWeights = argParser.getBoolean("eWeight", "Use edge weights, if present, to scale force-directed attraction forces.  Default is false", Some(false))
 		val gravity = argParser.getDouble("g", "Amount of gravitational force to use for Force-Directed layout to prevent outer nodes from spreading out too far. Default = 0 (no gravity)", Some(0.0))
 		
 		val fileStartTime = System.currentTimeMillis()

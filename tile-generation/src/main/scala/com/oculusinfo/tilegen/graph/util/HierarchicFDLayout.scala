@@ -95,23 +95,24 @@ class HierarchicFDLayout extends Serializable {
 			}
 			val edges = gparser.parseEdgeData(sc, rawData, partitions, delimiter, 1, 2, 3)
 		
-			// parse node data ... and re-format as (parent community ID, nodeID, internal number of nodes)
+			// parse node data ... and re-format as (parent community ID, nodeID, internal number of nodes, metadata)
 			val parsedNodeData = gparser.parseNodeData(sc, rawData, partitions, delimiter, 1, 2, 3, 4)
 			val nodes = if (level == maxHierarchyLevel) {
-				parsedNodeData.map(node => (0L, (node._1, node._2._2)))	// force parentGroupID = 0L for top level group		
+				parsedNodeData.map(node => (0L, (node._1, node._2._2, node._2._4)))	// force parentGroupID = 0L for top level group		
 			}
 			else {
-				parsedNodeData.map(node => (node._2._1, (node._1, node._2._2)))	
+				parsedNodeData.map(node => (node._2._1, (node._1, node._2._2, node._2._4)))	
 			}				
 					
-			// join nodes with parent rectangle, and store as (node ID, parent rect, numInternalNodes)
+			// join nodes with parent rectangle, and store as (node ID, parent rect, numInternalNodes, metaData)
 			val nodesWithRectangles = nodes.join(lastLevelLayout)
 										   .map(n => { 
 										  	   val id = n._2._1._1
 										  	   val numInternalNodes = n._2._1._2
 										  	   //val parentId = n._1
 										  	   val parentRect = n._2._2
-										  	   (id, (parentRect, numInternalNodes))
+										  	   val metaData = n._2._1._3
+										  	   (id, (parentRect, numInternalNodes, metaData))
 										   })						   
 										  
 			val graph = Graph(nodesWithRectangles, edges)	// create graph with parent rectangle as Vertex attribute
@@ -137,11 +138,11 @@ class HierarchicFDLayout extends Serializable {
 				edgesByRect.groupByKey(consolidationPartitions)
 			}
 		
-			// now re-map nodes by (parent rect, (node ID, numInternalNodes)) and group by parent rectangle
+			// now re-map nodes by (parent rect, (node ID, numInternalNodes, metaData)) and group by parent rectangle
 			val groupedNodes = if (consolidationPartitions==0) {	
-				nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2))).groupByKey()
+				nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3))).groupByKey()
 			} else {
-				nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2))).groupByKey(consolidationPartitions)
+				nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3))).groupByKey(consolidationPartitions)
 			}
 			
 			//join raw nodes with intra-community edges (key is parent rectangle)
@@ -160,7 +161,7 @@ class HierarchicFDLayout extends Serializable {
 
 			val nodeDataAll = joinedData.flatMap(p => {
 				val parentRectangle = p._1
-				val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
+				val communityNodes = p._2._1		// List of (node IDs, internal number of nodes, node metaData) for a given community
 				val communityEdges = p._2._2 
 				val coords = forceDirectedLayouter.run(communityNodes, 
 													   communityEdges, 
@@ -177,8 +178,8 @@ class HierarchicFDLayout extends Serializable {
 				val parentCircle = (parentRectangle._1 + 0.5*parentRectangle._3, parentRectangle._2 + 0.5*parentRectangle._4, parentRadius)
 				
 				val nodeData = coords.map(i => {	// append parent community info onto end of record for each node (so can save parent community info too)
-					val (id, x, y, radius, numInternalNodes) = i
-					(id, ((x, y, radius, numInternalNodes), parentCircle))
+					val (id, x, y, radius, numInternalNodes, metaData) = i
+					(id, ((x, y, radius, numInternalNodes, metaData), parentCircle))
 				})
 				nodeData
 			})
@@ -224,17 +225,15 @@ class HierarchicFDLayout extends Serializable {
 		(id, squareCoords)
 	}	
 	
-	private def saveLayoutResults(graphWithCoords: Graph[((Double, Double, Double, Long),(Double, Double, Double)), Long],
+	private def saveLayoutResults(graphWithCoords: Graph[((Double, Double, Double, Long, String),(Double, Double, Double)), Long],
 								outputDir: String,
 								level: Int)	 {
 		
-		//TODO need to put in saving node metadata as well!
-		
 		// re-format results into tab-delimited strings for saving to text file											
 		val resultsNodes = graphWithCoords.vertices.map(node => {
-			val (id, ((x, y, radius, numInternalNodes), parentCircle)) = node
+			val (id, ((x, y, radius, numInternalNodes, metaData), parentCircle)) = node
 			
-			("node\t" + id + "\t" + x + "\t" + y + "\t" + radius + "\t" + numInternalNodes + "\t" + parentCircle._1 + "\t" + parentCircle._2 + "\t" + parentCircle._3)
+			("node\t" + id + "\t" + x + "\t" + y + "\t" + radius + "\t" + numInternalNodes + "\t" + parentCircle._1 + "\t" + parentCircle._2 + "\t" + parentCircle._3 + "\t" + metaData)
 		})
 
 		val resultsEdges = graphWithCoords.triplets.map(et => {

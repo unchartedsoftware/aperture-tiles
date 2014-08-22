@@ -59,7 +59,7 @@ import com.oculusinfo.tilegen.spark.SparkConnector
  * -progCount -- Number of times the algorithm can fail to make progress before exiting. Default = 1.
  * -d -- Specify the input dataset delimiter. Default is tab-delimited.
  * -nID -- The column number in the raw data of node ID's.  ID's must be type Long [required if onlyEdges=false].
- * -nAttr -- Column numbers of additional node attributes to parse and save with cluster results (attribute ID tags separated by commas) [optional].
+ * -nAttr -- Column numbers of additional node metadata to parse and save with cluster results (attribute ID tags separated by commas) [optional].
  * -eSrcID -- The column number of an edge's source ID.  ID's must be type Long [required].
  * -eDstID -- The column number of an edge's destination ID.  ID's must be type Long [required].
  * -eWeight -- The column number of an edge's weight.  Default = -1, meaning no edge weighting is used.
@@ -90,7 +90,7 @@ object GraphClusterApp {
 	val edgeDstIDindex = argParser.getInt("eDstID", "The column number of an edge's source ID", Some(1))
 	val edgeWeightIndex = argParser.getInt("eWeight", "The column number of an edge's weight", Some(-1))
 	val nodeAttrIndices = argParser.getString("nAttr", 
-						"Column numbers of additional node attributes to parse and save with cluster results (attribute ID tags separated by commas)", 
+						"Column numbers of additional node metadata to parse and save with cluster results (attribute ID tags separated by commas)", 
 						Some("-1")).split(",").map(_.trim().toInt) 
 								
     // read the input data 
@@ -156,10 +156,13 @@ object GraphClusterApp {
 		      if (tokens(0) == "node") {
 		    	  val nodeID = tokens(nodeIDindex).toLong
 		    	  var nodeAttributes = ""
-		    	  nodeAttrIndices.foreach(i => {
-		    	 	  nodeAttributes += tokens(i) + "\t"
-		    	  }) 	  
-		     	  Some((nodeID, nodeAttributes))	 
+		    	  val len = nodeAttrIndices.size
+		    	  for (i <- 0 until len) {
+		    	 	  nodeAttributes += tokens(nodeAttrIndices(i))
+		    	 	  if (i < len-1)
+		    	 	 	  nodeAttributes += "\t"
+		    	  }	  
+		     	  Some((nodeID, nodeAttributes))
 		      }
 		      else {
 		    	  None

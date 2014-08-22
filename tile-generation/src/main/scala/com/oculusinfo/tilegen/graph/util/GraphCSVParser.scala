@@ -83,29 +83,16 @@ class GraphCSVParser {
 				None
 			}
 		})
-		
-//		val rawEdgeData = if (partitions <= 0) {
-//			sc.textFile(edgeDir)
-//		} else {
-//			sc.textFile(edgeDir, partitions)
-//		}
-//	
-//		val edges = rawEdgeData.map(row => {
-//			val row2 = row.substring(row.find("(")+1, row.find(")"))	// keep only data in between ( ) on each row
-//			val tokens = row2.split(delimiter).map(_.trim())		// parse using delimiter
-//			val len = tokens.length
-//			tokens.length match {
-//				case 2 => { new Edge(tokens(0).toLong, tokens(1).toLong, 1L) }					//unweighted edges
-//				case 3 => { new Edge(tokens(0).toLong, tokens(1).toLong, tokens(2).toLong) }	//weighted edges
-//				case _ => { throw new IllegalArgumentException("invalid input line: " + row) }
-//			}
-//		})
-//		edges
 	}
 	
 	//----------------------
 	// Parse node/community data for a given hierarchical level 
 	//(assumes graph data has been louvain clustered using the spark-based graph clustering utility)
+	//nodeIDindex = column number of nodeID
+	//parentIDindex = column number of parentID
+	//internalNodesX = column number of num internal node in current community
+	//degreeX = column number of community degree
+	//bKeepExtraAttributes = bool to look for, and store extra node attributes (at the end of each record line)
 	def parseNodeData(sc: SparkContext,
 					  rawData: RDD[String], 
 					  partitions: Int, 
@@ -113,8 +100,11 @@ class GraphCSVParser {
 					  nodeIDindex: Int=1,
 					  parentIDindex: Int=2,
 					  internalNodesX: Int=3,
-					  degreeX: Int=4): RDD[(Long, (Long, Long, Int))] = {
-
+					  degreeX: Int=4,
+					  bKeepExtraAttributes: Boolean=true): RDD[(Long, (Long, Long, Int, String))] = {
+		
+		val nAttrX = Math.max(Math.max(Math.max(nodeIDindex, parentIDindex), internalNodesX), degreeX)+1
+		
 		rawData.flatMap(row => {
 			val tokens = row.split(delimiter).map(_.trim())
 			if (tokens(0) == "node") {
@@ -122,30 +112,25 @@ class GraphCSVParser {
 				val parentID = tokens(parentIDindex).toLong
 				val internalNodes = tokens(internalNodesX).toLong
 				val degree = tokens(degreeX).toInt
-				Some((id, (parentID, internalNodes, degree)))	 
+				val metaData = if (bKeepExtraAttributes) {
+					// extract node metaData (assumed to be any extra data appended to the end of each node record)
+					var str = ""
+					val len = tokens.size
+					for (n <- nAttrX until len) {	
+						str += tokens(n)
+						if (n < len-1)
+							str += delimiter
+					}
+					str
+				} else {
+					""
+				}
+				Some((id, (parentID, internalNodes, degree, metaData)))
 			}
 			else {
 				None
 			}
 		})		
-				
-//		val rawNodeData = if (partitions <= 0) {
-//			sc.textFile(nodeDir)
-//		} else {
-//			sc.textFile(nodeDir, partitions)
-//		}
-//	
-//		val nodes = rawNodeData.map(row => {
-//			val row2 = row.substring(row.find("(")+1, row.find(")"))	// keep only data in between ( ) on each row
-//			val tokens = row2.split(delimiter)						// parse using delimiter
-//			if (tokens.length < 7) throw new IllegalArgumentException("invalid input line: " + row)
-//			val id = tokens(0).trim.toLong													// community ID
-//			val parentCommunity = tokens(1).substring(tokens(1).find(":")+1).trim.toLong	// ID of 'parent' community (one hierarchical level up)
-//			val internalNodes = tokens(4).substring(tokens(4).find(":")+1).trim.toLong		// number of internal nodes in this community		
-//			val nodeDegree = tokens(6).substring(tokens(6).find(":")+1).trim.toInt			// edge degree for this community		
-//			(id, (parentCommunity, internalNodes, nodeDegree))
-//		})
-//		nodes
 	}
 	
 }
