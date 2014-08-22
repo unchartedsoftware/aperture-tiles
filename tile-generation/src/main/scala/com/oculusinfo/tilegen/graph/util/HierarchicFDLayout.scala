@@ -59,8 +59,9 @@ class HierarchicFDLayout extends Serializable {
 						//numNodesThres: Int = 1000
 						nodeAreaPercent: Int = 20,
 						bUseEdgeWeights: Boolean = false,
-						gravity: Double = 0.0
-						): Graph[(Double, Double), Long] = {		
+						gravity: Double = 0.0,
+						outputDir: String
+						) = {	
 		
 		//TODO -- this class assumes edge weights are Longs.  If this becomes an issue for some datasets, then change expected edge weights to Doubles? 
 		//TODO -- numNodesThres not currently used for FD hierarchical layout (could add it in later?)
@@ -69,9 +70,7 @@ class HierarchicFDLayout extends Serializable {
 		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0") 
 		
 		val forceDirectedLayouter = new ForceDirected()	//force-directed layout scheme
-		
-		var finalGraph = initGraph(sc)	
-				
+
 		// init results for 'parent group' rectangle with group ID 0   (rectangle format is bottem-left corner, width, height of rectangle) 		
 		//var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))
 		var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
@@ -95,11 +94,9 @@ class HierarchicFDLayout extends Serializable {
 				sc.textFile( sourceDir + "/level_" + level, partitions)
 			}
 			val edges = gparser.parseEdgeData(sc, rawData, partitions, delimiter, 1, 2, 3)
-			//val edges = gparser.parseEdgeData(sc, sourceDir + "/level_" + level + "_edges", partitions, delimiter)
 		
 			// parse node data ... and re-format as (parent community ID, nodeID, internal number of nodes)
 			val parsedNodeData = gparser.parseNodeData(sc, rawData, partitions, delimiter, 1, 2, 3, 4)
-			//val parsedNodeData = gparser.parseNodeData(sc, sourceDir + "/level_" + level + "_vertices",	partitions, delimiter)
 			val nodes = if (level == maxHierarchyLevel) {
 				parsedNodeData.map(node => (0L, (node._1, node._2._2)))	// force parentGroupID = 0L for top level group		
 			}
@@ -156,79 +153,103 @@ class HierarchicFDLayout extends Serializable {
 			})
 		
 			// perform force-directed layout algorithm on all nodes and edges in a given parent rectangle
-			if (level > 0) {
-				val currAreaPercent = Math.min(nodeAreaPercent + (level-1)*5,80)	// use more area for communities at higher hierarchical levels
-																					// TODO -- test this further!
-				val levelLayout = joinedData.flatMap(p => {
-					val parentRectangle = p._1
-					val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
-					val communityEdges = p._2._2 
-					val coords = forceDirectedLayouter.run(communityNodes, 
-														   communityEdges, 
-														   parentRectangle, 
-														   borderOffset, 
-														   maxIterations,
-														   bUseEdgeWeights,
-														   true,
-														   currAreaPercent,
-														   gravity)
-					// convert x,y coords and community radii to square bounding boxes for next hierarchical level
-					val rects = convertNodeCirclesToRectangles(coords)	
-					rects
+			val bUseNodeSizes = (level > 0)
+		    val g = if (level > 0) gravity else 0
+			val currAreaPercent =  if (level > 0) Math.min(nodeAreaPercent + (level-1)*5, 80)	// use more area for communities at higher hierarchical levels	// TODO -- test this further!
+								   else 20
+
+			val nodeDataAll = joinedData.flatMap(p => {
+				val parentRectangle = p._1
+				val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
+				val communityEdges = p._2._2 
+				val coords = forceDirectedLayouter.run(communityNodes, 
+													   communityEdges, 
+													   parentRectangle, 
+													   borderOffset, 
+													   maxIterations,
+													   bUseEdgeWeights,
+													   bUseNodeSizes,
+													   currAreaPercent,
+													   g)
+													  								   				
+				// calc circle coords of parent community for saving results
+				val parentRadius = Math.max(parentRectangle._3, parentRectangle._4)*1.41421	// 1.41421 = sqrt(2)
+				val parentCircle = (parentRectangle._1 + 0.5*parentRectangle._3, parentRectangle._2 + 0.5*parentRectangle._4, parentRadius)
+				
+				val nodeData = coords.map(i => {	// append parent community info onto end of record for each node (so can save parent community info too)
+					val (id, x, y, radius, numInternalNodes) = i
+					(id, ((x, y, radius, numInternalNodes), parentCircle))
 				})
+				nodeData
+			})
+			
+			val graphForThisLevel = Graph(nodeDataAll, edges)	// create a graph of the layout results for this level
+			
+			saveLayoutResults(graphForThisLevel, outputDir, level)	// save layout results for this hierarchical level
+			
+			if (level > 0) {
+				val levelLayout = nodeDataAll.map(data => {
+					// convert x,y coords and community radius of this community to a square bounding box for next hierarchical level
+					val dataCircle = (data._1, data._2._1._1, data._2._1._2, data._2._1._3)
+					val rect = circleToRectangle(dataCircle)	
+					rect
+				})
+				
 				//localLastLevelLayout = levelLayout.collect
 				levelLayout.cache
 				levelLayout.count
 				lastLevelLayout.unpersist(blocking=false)
 				lastLevelLayout = levelLayout
 			}
-			else {
-				// last hierarchical level, so store node coords results in 'finalNodeCoords'
-				val finalNodeCoords = joinedData.flatMap(p => {
-					val parentRectangle = p._1
-					val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
-					val communityEdges = p._2._2 
-					val coords = forceDirectedLayouter.run(communityNodes, 
-														   communityEdges, 
-														   parentRectangle, 
-														   borderOffset, 
-														   maxIterations,
-														   bUseEdgeWeights,
-														   false)
-					coords
-				}).map(data => (data._1, (data._2, data._3)))
-				
-				finalGraph = Graph(finalNodeCoords, edges)	// store final results in 'finalGraph'
-			}
 						
 			level -= 1
-		}
-									
-		finalGraph
+		}								
 	}
 
 	//----------------------
-	// For each node location, take the x,y coords and radius, and convert to a bounding box (square) contained 
-	// within the circle.  To be used as a bounding box for the FD layout of the next hierarchical level communities
-	private def convertNodeCirclesToRectangles(nodeCoords: Array[(Long, Double, Double, Double)]): Iterable[(Long, (Double, Double, Double, Double))] = {
+	// For a node location, take the x,y coords and radius, and convert to a bounding box (square) contained 
+	// within the circle (square diagonal == circle diameter).  To be used as a bounding box for the FD layout of the next hierarchical level communities
+	private def circlesToRectangles(nodeCoords: Array[(Long, Double, Double, Double)]): Iterable[(Long, (Double, Double, Double, Double))] = {
 		val squares = nodeCoords.map(n => {
-			val (id, x, y, r) = n
-			// calc coords of bounding box with same centre as the circle, and width = height = sqrt(2)*r
-			val rSqrt2 = r*0.70711	// 0.70711 = 1/sqrt(2)
-			val squareCoords = (x - rSqrt2, y - rSqrt2, 2.0*rSqrt2, 2.0*rSqrt2)	// (x,y of left-bottem corner, width, height)
-			(id, squareCoords)
+			circleToRectangle(n)
 		})
 		squares
 	}
 	
-	private def initGraph(sc: SparkContext): Graph[(Double, Double), Long] = {
-		val nodes: RDD[(VertexId, (Double, Double))] =
-					sc.parallelize(Array((0L, (0.0, 0.0)), (1L, (0.0, 0.0))))
+	private def circleToRectangle(nodeCoords: (Long, Double, Double, Double)): (Long, (Double, Double, Double, Double)) = {
+		val (id, x, y, r) = nodeCoords
+		// calc coords of bounding box with same centre as the circle, and width = height = sqrt(2)*r
+		val rSqrt2 = r*0.70711	// 0.70711 = 1/sqrt(2)
+		val squareCoords = (x - rSqrt2, y - rSqrt2, 2.0*rSqrt2, 2.0*rSqrt2)	// (x,y of left-bottem corner, width, height)
+		(id, squareCoords)
+	}	
+	
+	private def saveLayoutResults(graphWithCoords: Graph[((Double, Double, Double, Long),(Double, Double, Double)), Long],
+								outputDir: String,
+								level: Int)	 {
 		
-		val edges: RDD[Edge[Long]] =
-			sc.parallelize(Array(Edge(0L, 1L, 0L)))
+		//TODO need to put in saving node metadata as well!
+		
+		// re-format results into tab-delimited strings for saving to text file											
+		val resultsNodes = graphWithCoords.vertices.map(node => {
+			val (id, ((x, y, radius, numInternalNodes), parentCircle)) = node
+			
+			("node\t" + id + "\t" + x + "\t" + y + "\t" + radius + "\t" + numInternalNodes + "\t" + parentCircle._1 + "\t" + parentCircle._2 + "\t" + parentCircle._3)
+		})
 
-		val newGraph = Graph(nodes, edges)
-		newGraph
+		val resultsEdges = graphWithCoords.triplets.map(et => {
+			val srcID = et.srcId
+			val dstID = et.dstId
+			// nodeAttributes are of format ((x, y, radius, numInternalNodes), parentCircle)
+			val srcCoords = (et.srcAttr._1._1, et.srcAttr._1._2)
+			val dstCoords = (et.dstAttr._1._1, et.dstAttr._1._2)
+			
+			("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr)
+		})
+				
+		val resultsAll = resultsNodes.union(resultsEdges)	// put both node and edge results into one RDD
+		
+		resultsAll.saveAsTextFile(outputDir+"/level_"+level)	// save results to outputDir + "level_#"
 	}
+
 }

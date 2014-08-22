@@ -63,51 +63,20 @@ object ClusteredGraphLayoutApp {
 		
 		// Hierarchical Force-Directed layout scheme
 		val layouter = new HierarchicFDLayout()
-		val graphWithCoords = layouter.determineLayout(sc, 
-													maxIterations, 
-													maxHierarchyLevel, 
-													partitions, 
-													consolidationPartitions, 
-													sourceDir, 
-													dataDelimiter,
-													(layoutLength,layoutLength),
-													nodeAreaPercent,
-													bUseEdgeWeights,
-													gravity)
-													
-		// re-format results into tab-delimited strings for saving to text file											
-		val resultsNodes = graphWithCoords.vertices.map(node => {
-			val (id, (x, y)) = node
-			
-			("node\t" + id + "\t" + x + "\t" + y)
-		})
-
-		val resultsEdges = graphWithCoords.triplets.map(et => {
-			val srcID = et.srcId
-			val dstID = et.dstId
-			val srcCoords = et.srcAttr
-			val dstCoords = et.dstAttr
-			
-			("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr)
-		})
-				
-		val resultsAll = resultsNodes.union(resultsEdges)	// put both node and edge results into one RDD
 		
-		resultsAll.saveAsTextFile(outputDir)	// save results to outputDir										
-		
-		// Hierarchical Group-In-Box layout scheme											
-//		val layouter = new HierarchicGIBLayout()
-//		val nodePositions = layouter.determineLayout(sc, 
-//													maxIterations, 
-//													maxHierarchyLevel, 
-//													partitions, 
-//													consolidationPartitions, 
-//													sourceDir, 
-//													dataDelimiter,
-//													(layoutLength,layoutLength),
-//													borderOffset,
-//													numNodesThres)
-													
+		layouter.determineLayout(sc, 
+								maxIterations, 
+								maxHierarchyLevel, 
+								partitions, 
+								consolidationPartitions, 
+								sourceDir, 
+								dataDelimiter,
+								(layoutLength,layoutLength),
+								nodeAreaPercent,
+								bUseEdgeWeights,
+								gravity,
+								outputDir)
+																										
 		val fileEndTime = System.currentTimeMillis()
 		println("Finished hierarchic graph layout job in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
 		

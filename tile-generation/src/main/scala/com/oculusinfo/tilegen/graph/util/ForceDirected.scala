@@ -45,7 +45,8 @@ import scala.util.Random
  *  	'circles' within the boundingBox vs whitespace
  *  - gravity = strength gravity force to use to prevent outer nodes from spreading out too far.  Default = 0.0 (no gravity),
  *  			whereas gravity = 1.0 gives gravitational force on a similar scale to edge attraction forces  
- *  
+ * 
+ *  - Format of output array is (node ID, x, y, radius, and number of internal raw nodes)
  **/ 
 class ForceDirected extends Serializable {
 
@@ -57,7 +58,7 @@ class ForceDirected extends Serializable {
 			bUseEdgeWeights: Boolean = false,
 			bUseNodeSizes: Boolean = false,
 			nodeAreaPercent: Int = 20,
-			gravity: Double = 0.0): Array[(Long, Double, Double, Double)] = {
+			gravity: Double = 0.0): Array[(Long, Double, Double, Double, Long)] = {
 		
 		val numNodes = nodes.size
 		if (numNodes == 0) throw new IllegalArgumentException("number of nodes must be > 0")
@@ -90,7 +91,7 @@ class ForceDirected extends Serializable {
 			else {
 				0.0
 			}
-			return Array( (nodes.last._1, x, y, radius) )
+			return Array( (nodes.last._1, x, y, radius, nodes.last._2) )
 		}
 		if ((numNodes == 2) && !bUseNodeSizes) {
 			//---- Special case: only two nodes to layout, so place bottem-left and top-right corners
@@ -99,7 +100,7 @@ class ForceDirected extends Serializable {
 			val y = boundingBox._2
 			val x1 = boundingBox._1 + boundingBox._3
 			val y1 = boundingBox._2 + boundingBox._4
-			return Array( (nodeList(0)._1, x, y, 0.0), (nodeList(1)._1, x1, y1, 0.0) )
+			return Array( (nodeList(0)._1, x, y, 0.0, nodeList(0)._2), (nodeList(1)._1, x1, y1, 0.0, nodeList(0)._2) )
 		}
 		
 		//Init scale factors for edge weighting (squash raw edge weights into an appropriate range for the number of nodes)
@@ -129,10 +130,10 @@ class ForceDirected extends Serializable {
 				val numInternalNodes = n._2
 				val nodeArea = nodeAreaFactor * boundingBoxArea * numInternalNodes * invTotalInternalNodes
 				val nodeRadius = Math.sqrt(nodeArea * 0.31831)	//0.31831 = 1/pi
-				(n._1, random.nextDouble, random.nextDouble, nodeRadius)
+				(n._1, random.nextDouble, random.nextDouble, nodeRadius, numInternalNodes)
 			}).toArray
 		} else {
-			nodes.map(n => (n._1, random.nextDouble, random.nextDouble, 0.0)).toArray
+			nodes.map(n => (n._1, random.nextDouble, random.nextDouble, 0.0, 1L)).toArray
 		}
 		
 		if (bUseNodeSizes) {
@@ -145,8 +146,8 @@ class ForceDirected extends Serializable {
 		
 		// normalize starting coords so they are within the width and height of the bounding box
 		for (n <- 0 until numNodes) {
-			val (id,x,y, radius) = nodeCoords(n)
-			nodeCoords(n) = (id, x*boundingBoxFinal._3, y*boundingBoxFinal._4, radius)		
+			val (id, x, y, radius, numInternalNodes) = nodeCoords(n)
+			nodeCoords(n) = (id, x*boundingBoxFinal._3, y*boundingBoxFinal._4, radius, numInternalNodes)		
 		}
 				
 		//----- Init variables for controlling force-directed step-size
@@ -302,7 +303,7 @@ class ForceDirected extends Serializable {
 			    energySum += finalStepSq
 			    
 			    // save new node coord locations
-			    nodeCoords(n) = (nodeCoords(n)._1, nodeCoords(n)._2 + deltaXY(n)._1, nodeCoords(n)._3 + deltaXY(n)._2, nodeCoords(n)._4)
+			    nodeCoords(n) = (nodeCoords(n)._1, nodeCoords(n)._2 + deltaXY(n)._1, nodeCoords(n)._3 + deltaXY(n)._2, nodeCoords(n)._4, nodeCoords(n)._5)
 			}
 			
 			//---- Adaptive cooling function (based on Yifan Hu approach)
@@ -360,8 +361,8 @@ class ForceDirected extends Serializable {
 			val sy = boundingBoxFinal._4 / (maxY - minY)
 			
 			for (n <- 0 until numNodes) {
-				val (id,x,y, radius) = nodeCoords(n)
-				nodeCoords(n) = (id, (x-minX)*sx + boundingBoxFinal._1, (y-minY)*sy + boundingBoxFinal._2, radius)		
+				val (id, x, y, radius, numInternalNodes) = nodeCoords(n)
+				nodeCoords(n) = (id, (x-minX)*sx + boundingBoxFinal._1, (y-minY)*sy + boundingBoxFinal._2, radius, numInternalNodes)		
 			}		
 //		}
 						
