@@ -90,12 +90,15 @@ define(function (require) {
                     layerState,
                     layerSpec;
 
-                function getLevelMinMax( level ) {
-                	var meta =  layer.getLayerInfo().meta,
-                    	minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[level])),
-                    	maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[level])),
-                    	min = minArray ? ($.isArray(minArray) ? minArray[level] : minArray.minimum) : 0,
-                    	max = maxArray ? ($.isArray(maxArray) ? maxArray[level] : maxArray.maximum) : 0;
+                function getLevelMinMax() {
+                    var zoomLevel = map.getZoom(),
+                        coarseness = layer.getLayerSpec().coarseness,
+                        adjustedZoom = zoomLevel - (coarseness-1),
+                	    meta =  layer.getLayerInfo().meta,
+                    	minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[adjustedZoom])),
+                    	maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[adjustedZoom])),
+                    	min = minArray ? ($.isArray(minArray) ? minArray[adjustedZoom] : minArray.minimum) : 0,
+                    	max = maxArray ? ($.isArray(maxArray) ? maxArray[adjustedZoom] : maxArray.maximum) : 0;
 	                return [ parseFloat(min), parseFloat(max) ];
                 }
 
@@ -104,7 +107,7 @@ define(function (require) {
                     // set ramp image
                     requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
                     // set ramp level
-                    layerState.set( 'rampMinMax', getLevelMinMax( map.getZoom() ) );
+                    layerState.set( 'rampMinMax', getLevelMinMax() );
                 }
 
                 layerSpec = layer.getLayerSpec();
@@ -114,6 +117,7 @@ define(function (require) {
                 layerSpec.transform.name = layerSpec.transform.name || 'linear';
                 layerSpec.legendrange = layerSpec.legendrange || [0,100];
                 layerSpec.transformer = layerSpec.transformer || {};
+                layerSpec.coarseness = ( layerSpec.coarseness !== undefined ) ?  layerSpec.coarseness : 1;
 
                 // create a layer state object. Values are initialized to those provided
                 // by the layer specs, which are defined in the layers.json file, or are
@@ -172,6 +176,12 @@ define(function (require) {
                             layer.setVisibility( layerState.get('enabled') );
                             break;
 
+                        case "coarseness":
+
+                            layer.setCoarseness( layerState.get('coarseness') );
+                            layerState.set( 'rampMinMax', getLevelMinMax() );
+                            break;
+
                         case "rampType":
 
                             layer.setRampType( layerState.get('rampType'), function() {
@@ -212,8 +222,9 @@ define(function (require) {
                 layerState.set( 'zIndex', i+1 );
                 layerState.set( 'enabled', layerSpec.renderer.enabled );
                 layerState.set( 'opacity', layerSpec.renderer.opacity );
+                layerState.set( 'coarseness', layerSpec.coarseness );
 
-                // Request ramp image from server.
+                // Request ramp image from server
                 requestRampImage( layerState, layer.getLayerInfo(), 0 );
 
                 // Add the layer to the layer state array.
