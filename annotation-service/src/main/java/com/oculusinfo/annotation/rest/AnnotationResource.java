@@ -24,14 +24,12 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import com.google.inject.Inject;
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.impl.JSONAnnotation;
-import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Pair;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import oculus.aperture.common.rest.ApertureServerResource;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,9 +40,13 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.google.inject.Inject;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.Pair;
 
 public class AnnotationResource extends ApertureServerResource {
 
@@ -169,19 +171,10 @@ public class AnnotationResource extends ApertureServerResource {
 				List<AnnotationData<?>> annotations = entry.getValue();
 		    	
 				JSONArray annotationArray = new JSONArray();
-                JSONArray rangeArray = new JSONArray();
-				for ( AnnotationData<?> annotation : annotations ) {
-                    if ( !annotation.isRangeBased() ) {
-                        annotationArray.put( annotation.toJSON() );
-                    } else {
-                        rangeArray.put( annotation.toJSON() );
-                    }
+                for ( AnnotationData<?> annotation : annotations ) {
+					annotationArray.put( annotation.toJSON() );                    
 				}
 				binsJson.put( binIndex.toString(), annotationArray );
-
-                if ( rangeArray.length() > 0 ) {
-                    binsJson.put( "range", rangeArray );
-                }
 			}
 		    
 			result.put( "annotations", binsJson );

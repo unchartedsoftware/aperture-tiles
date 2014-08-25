@@ -69,8 +69,7 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
             TileIndex tile = pyramid.rootToTile( x, y, level, NUM_BINS, NUM_BINS );
             BinIndex bin = pyramid.rootToBin( x, y, tile );
 
-            tileAndBins.add( new TileAndBinIndices( tile, bin ) );
-            return tileAndBins;
+            tileAndBins.add( new TileAndBinIndices( tile, bin ) );            
 
         } else {
 
@@ -82,14 +81,16 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
 
             // bottom left
             TileIndex tileBL = pyramid.rootToTile(x0, y0, level, NUM_BINS, NUM_BINS);
-            // top right
-            TileIndex tileTR = pyramid.rootToTile( x1, y1, level, NUM_BINS, NUM_BINS );
-
-            for (int i=tileBL.getX(); i<=tileTR.getX(); i++) {
-                for (int j=tileBL.getY(); j <= tileTR.getY(); j++) {
-                    tileAndBins.add( new TileAndBinIndices( new TileIndex(level, i, j, NUM_BINS, NUM_BINS ), RANGE_BIN ) );
-                }
-            }
+            BinIndex binBL = pyramid.rootToBin(x0, y0, tileBL);
+            tileAndBins.add( new TileAndBinIndices( tileBL, binBL ) );
+//            // top right
+//            TileIndex tileTR = pyramid.rootToTile( x1, y1, level, NUM_BINS, NUM_BINS );
+//
+//            for (int i=tileBL.getX(); i<=tileTR.getX(); i++) {
+//                for (int j=tileBL.getY(); j <= tileTR.getY(); j++) {
+//                    tileAndBins.add( new TileAndBinIndices( new TileIndex(level, i, j, NUM_BINS, NUM_BINS ), RANGE_BIN ) );
+//                }
+//            }
 
         }
 

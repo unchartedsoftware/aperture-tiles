@@ -32,6 +32,7 @@ import com.oculusinfo.annotation.data.AnnotationBin;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.annotation.filter.impl.FilteredBinResults;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
@@ -49,6 +50,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -502,12 +504,15 @@ public class AnnotationServiceImpl implements AnnotationService {
 				
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
+		List<FilteredBinResults> results = new LinkedList<FilteredBinResults>(); 
 		for ( AnnotationTile tile : tiles ) {
 			// for each bin
 			for ( AnnotationBin bin : tile.getBins() ) {
 				// apply filter
 				if ( bin != null ) {
-					certificates.addAll( filter.filterBin( bin ) );
+					FilteredBinResults r = filter.filterBin(bin);
+					certificates.addAll(r.getFilteredBins());
+					results.add(r);
 				}
 			}
 		}
@@ -515,7 +520,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// read data from io
 		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
 		// apply filter to annotations
-		List<AnnotationData<?>> filteredAnnotations =  filter.filterAnnotations( annotations );
+		List<AnnotationData<?>> filteredAnnotations =  filter.filterAnnotations( annotations, results );
 
 		// assemble data by bin
 		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();

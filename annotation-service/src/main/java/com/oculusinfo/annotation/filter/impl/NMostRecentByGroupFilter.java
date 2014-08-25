@@ -57,7 +57,7 @@ public class NMostRecentByGroupFilter implements AnnotationFilter {
 		return filters;
 	}
 
-	public List<Pair<String, Long>> filterBin( AnnotationBin bin ) {
+	public FilteredBinResults filterBin( AnnotationBin bin ) {
 
 		List<Pair<String, Long>> filtered = new LinkedList<>();
 		// go through filter list get certificates by group and by count
@@ -72,10 +72,10 @@ public class NMostRecentByGroupFilter implements AnnotationFilter {
 			// certificates are sorted, so simply cut the tail off to get the n newest
 			filtered.addAll(certificates.subList(0, count < certificates.size() ? count : certificates.size()));
 		}
-		return filtered;
+		return new FilteredBinResults(filtered, null);
 	}
 
-	public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations ) {
+	public List<AnnotationData<?>> filterAnnotations( List<AnnotationData<?>> annotations, List<FilteredBinResults> binResults ) {
 		return annotations;
 	}
 }
