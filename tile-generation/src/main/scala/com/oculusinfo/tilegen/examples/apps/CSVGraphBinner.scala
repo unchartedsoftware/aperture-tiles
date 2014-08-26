@@ -29,17 +29,14 @@ package com.oculusinfo.tilegen.examples.apps
 
 import java.io.FileInputStream
 import java.util.Properties
-
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.Try
-
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.storage.StorageLevel
-
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.datasets.CartesianIndexExtractor
 import com.oculusinfo.tilegen.datasets.CSVDataset
@@ -80,6 +77,13 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *  oculus.binning.graph.data
  *      The type of graph data to use for tile generation.  Set to "nodes" to generate tiles of a graph's
  *      nodes [default], or set to "edges" to generate tiles of a graph's edges.
+ *      
+ *  oculus.binning.graph.edges.type
+ *      The type of edges to use for tile generation (for hierarchically clustered data only).  Set to "all"
+ *      to generate tiles using all edges in a graph dataset [default].  Set to "inter" to only use inter-community
+ *      edges, or set to "intra" use to intra-community edges.  For the "inter" or "intra" switch, the last column
+ *      of the edge data is assumed to be a boolean (int of 0 or 1), identifying 0=intra-community edge,
+ *      and 1=inter-community edge.
  *      
  *  oculus.binning.line.level.threshold
  *  	Level threshold to determine whether to use 'point' vs 'tile' based line segment binning
