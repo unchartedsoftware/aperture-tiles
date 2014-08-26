@@ -77,7 +77,7 @@ define(function (require) {
 
             // if user has clicked a tag entry, ensure newly created nodes are styled accordingly
             var selectedValue = this.layerState.has('click') ? this.layerState.get('click')[entryKey] : null,
-                $elements = $elem.add( $elem.find('*') );
+                $elements = $elem;
             if ( selectedValue ) {
                 if ( selectedValue !== value[entryKey] ) {
                     $elements.addClass('greyed');

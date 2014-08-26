@@ -32,7 +32,6 @@ define(function (require) {
     var HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
-        //Util = require('../../../util/Util'),
         MAX_WORDS_DISPLAYED = 5,
         GenericTextScoreRenderer;
 
@@ -52,7 +51,7 @@ define(function (require) {
         addClickStateClassesGlobal: function() {
 
             var selectedValue = this.layerState.get('click')[this.spec.entryKey],
-                $elements = $(".text-score-entry-parent").find('*');
+                $elements = $(".text-score-entry");
 
             $elements.filter( function() {
                 return $(this).text() !== selectedValue;
@@ -67,7 +66,7 @@ define(function (require) {
 
         removeClickStateClassesGlobal: function() {
 
-            $(".text-score-entry-parent").find('*').removeClass('greyed clicked');
+            $(".text-score-entry").removeClass('greyed clicked');
         },
 
 
@@ -155,6 +154,7 @@ define(function (require) {
                         $html = $('<div class="aperture-tile aperture-tile-'+tilekey+'"></div>'),
                         value,
                         entryText,
+                        fontSize,
                         subCounts,
                         html,
                         count,
@@ -182,15 +182,17 @@ define(function (require) {
                             }
                         }
 
+                        fontSize = getFontSize( values, value, numEntries, MIN_FONT_SIZE, MAX_FONT_SIZE );
+
                         $parent = $('<div class="text-score-entry-parent" style="top:' + yOffset + 'px;"></div>');
 
                         html =     '<div class="text-score-entry">';
                         // create entry label
-                        html +=         '<div class="text-score-entry-label" style="font-size:' + getFontSize( values, value, numEntries, MIN_FONT_SIZE, MAX_FONT_SIZE ) +'px; ">'+entryText+'</div>';
+                        html +=         '<div class="text-score-entry-label" style="font-size:' + fontSize +'px;">'+entryText+'</div>';
 
                         // create entry count bars
                         if ( spec.subCountKeys ) {
-                            html +=         '<div class="text-score-count-bar" style="width:150px; left:75px;">';
+                            html +=         '<div class="text-score-count-bar" style="left:-60px; top:'+fontSize+'px;">';
                             for (j=0; j<subCounts.length; j++) {
                                 html +=         '<div class="text-score-count-sub-bar" style="width:'+((subCounts[j]/count)*100)+'%;"></div>';
                             }

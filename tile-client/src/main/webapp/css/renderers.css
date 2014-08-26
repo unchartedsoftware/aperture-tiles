@@ -48,35 +48,29 @@
 	position: relative;
     float: right;
     right: 50%;
-    margin-top:-8px;
+    height: 34px;
 }
 
 .text-score-entry {
     cursor: pointer;
 	float: right;
     right: -50%;
-    position: relative;
-    text-align:center;   
+    position: relative;  
     z-index: 1;
 }
 
 .text-score-entry-label {
     position: relative;
     color: #FFFFFF;
-    line-height: 42px;
-	top: -8px;
 	white-space: nowrap;
+	margin-top: -1px;
 	z-index: 1;
-}
-
-.text-score-entry:hover .text-score-entry-label {
-	  color: #F3F315;
 }
 
 .text-score-count-bar {
 	position:absolute;
 	height: 9px;
-	width: 150px;
+	width: 120px;
 	margin-left: 50%;
 	bottom: 0px;
 	border: 1px solid #000000;
@@ -94,9 +88,98 @@
 	top: 10px;
 	right: 10px;
 	text-align: right;
-	color: #ffffff;
+	color: #FFFFFF;
 	font-size: 0.8em;
 }
+
+.text-score-entry:hover .text-score-entry-label {
+	  color: #7FFF00;
+}
+
+.text-score-entry:hover .text-score-count-sub-bar {
+	  background-color: #FFFFFF;
+}
+
+.greyed .text-score-count-sub-bar {
+	background-color: #777;
+}
+
+.greyed .text-score-entry-label {
+	color: #777;
+}
+
+/********************************************/
+/* 		  Text by Frequency Renderer  	  	*/
+/********************************************/
+
+.text-by-frequency-entry {
+	position:absolute;
+	width: 190px;
+	height: 20px;
+	left: 28px;
+	color: #FFFFFF;	
+	z-index: 1;
+}
+
+.text-by-frequency-left {
+	position: relative;
+	float:left;
+	padding-top:2px;
+	padding-bottom:2px;
+	width: 105px;
+	height: 100%;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.text-by-frequency-right {
+	position: relative;
+	float:right;
+	width: 85px;
+	height: 100%;
+}
+
+.text-by-frequency-label {
+	cursor: pointer;	
+	position:relative;
+	text-align: left;
+	vertical-align: middle;
+	bottom: -3px;
+	font-size : 16px;
+	line-height: 16px;
+	color: #FFFFFF;
+}
+
+.text-by-frequency-bar {
+	cursor: pointer;
+	position: relative;
+	float:left;
+	bottom: 0px;
+	border: 1px solid #000;
+	background-color: #ffffff;
+	margin-left: -1px;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.greyed .text-by-frequency-bar {
+	background-color: #777;
+}
+
+.greyed .text-by-frequency-label {
+	color: #777;
+}
+
+.text-by-frequency-entry:hover .text-by-frequency-label {
+	color: #7FFF00;
+}
+
+.text-by-frequency-entry:hover .text-by-frequency-bar {
+	background-color: #7FFF00;
+}
+
 
 
 /********************************************/
@@ -108,17 +191,19 @@
 	cursor: pointer;
 	position:absolute;
 	color: #FFFFFF;
+	padding: 0 5px 0 5px;
 	z-index: 1;
 }
 
 .word-cloud-word-temp {
 	position:relative;
 	display: inline-block;
+	padding: 0 5px 0 5px;
 	color: #FFFFFF;
 }
 
 .word-cloud-word:hover {
-	color: #F3F315;
+	color: #7FFF00;
 }
 
 

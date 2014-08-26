@@ -54,15 +54,8 @@ define(function (require) {
         init: function( map, spec ) {
 
             this._super( map, spec );
-
-            this.nodeLayer = new HtmlNodeLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey'
-            });
-
-            this.createLayer();
+            this.createNodeLayer(); // instantiate the node layer data object
+            this.createLayer();     // instantiate the html visualization layer
         },
 
 
@@ -80,10 +73,30 @@ define(function (require) {
             }).removeClass('greyed').addClass('clicked');
         },
 
+
         removeClickStateClassesGlobal: function() {
 
             $(".word-cloud-word").removeClass('greyed clicked');
         },
+
+
+        createNodeLayer: function() {
+
+            /*
+                 Instantiate the html node layer. This holds the tile data as it comes in from the tile service. Here
+                 we set the x and y coordinate mappings that are used to position the individual nodes on the map. In this
+                 example, the data is geospatial and is under the keys 'latitude' and 'longitude'. The idKey
+                 attribute is used as a unique identification key for internal managing of the data. In this case, it is
+                 the tilekey.
+             */
+            this.nodeLayer = new HtmlNodeLayer({
+                map: this.map,
+                xAttr: 'longitude',
+                yAttr: 'latitude',
+                idKey: 'tilekey'
+            });
+        },
+
 
 
         createWordCloud: function( words, frequencies, minFontSize, maxFontSize, boundingBox ) {
@@ -205,7 +218,7 @@ define(function (require) {
                 fontSize = Math.min( Math.max( fontSize, minFontSize), maxFontSize );
 
                 dim = getWordDimensions( word, fontSize );
-                dim.height -= dim.height * 0.20;
+                //dim.height -= dim.height * 0.20;
                 pos = {
                     radius : 1,
                     radiusInc : 5,

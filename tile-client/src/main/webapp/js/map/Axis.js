@@ -469,6 +469,28 @@ define(function (require) {
             this.map.on('move', function() {
                 that.redraw();
             });
+
+            this.map.on('mousemove', function( event ) {
+
+                if ( !that.enabled ) {
+                    return;
+                }
+
+                var xOrY = that.isXAxis ? 'x' : 'y',
+                    value = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y )[xOrY],
+                    marker = {
+                        label : AxisUtil.getMarkerRollover( that, value ),
+                        pixel : event.xy[xOrY]
+                    };
+
+                that.$content.find('.mouse-marker').remove();
+                that.$content.append( $( createLargeMarkerHTML( that, marker ) ).addClass('mouse-marker') );
+
+                //that.$content.find('.mouse-marker-label').remove();
+                //that.$content.append( $( createMarkerLabelHTML( that, marker ) ).addClass('mouse-marker-label') );
+
+            });
+
             // generate the core html elements
             this.$axis = createAxis( this );
             this.$map.append( this.$axis );
