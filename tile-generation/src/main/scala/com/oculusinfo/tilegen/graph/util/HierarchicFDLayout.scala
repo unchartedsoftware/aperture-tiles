@@ -186,7 +186,7 @@ class HierarchicFDLayout extends Serializable {
 			
 			val graphForThisLevel = Graph(nodeDataAll, edges)	// create a graph of the layout results for this level
 			
-			saveLayoutResults(graphForThisLevel, outputDir, level)	// save layout results for this hierarchical level
+			saveLayoutResults(graphForThisLevel, outputDir, level, level == maxHierarchyLevel)	// save layout results for this hierarchical level
 			
 			if (level > 0) {
 				val levelLayout = nodeDataAll.map(data => {
@@ -227,7 +227,7 @@ class HierarchicFDLayout extends Serializable {
 	
 	private def saveLayoutResults(graphWithCoords: Graph[((Double, Double, Double, Long, String),(Double, Double, Double)), Long],
 								outputDir: String,
-								level: Int)	 {
+								level: Int, bIsMaxLevel: Boolean)	 {
 		
 		// re-format results into tab-delimited strings for saving to text file											
 		val resultsNodes = graphWithCoords.vertices.map(node => {
@@ -242,8 +242,9 @@ class HierarchicFDLayout extends Serializable {
 			// nodeAttributes are of format ((x, y, radius, numInternalNodes), parentCircle)
 			val srcCoords = (et.srcAttr._1._1, et.srcAttr._1._2)
 			val dstCoords = (et.dstAttr._1._1, et.dstAttr._1._2)
+			val interCommunityEdge = if ((et.srcAttr._2 != et.dstAttr._2) || bIsMaxLevel)  1 else 0	// is this an inter-community edge
 			
-			("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr)
+			("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr + "\t" + interCommunityEdge)
 		})
 				
 		val resultsAll = resultsNodes.union(resultsEdges)	// put both node and edge results into one RDD
