@@ -48,28 +48,6 @@ define(function (require) {
         },
 
 
-        addClickStateClassesGlobal: function() {
-
-            var selectedValue = this.layerState.get('click')[this.spec.valueKey],
-                $elements = $(".text-score-entry");
-
-            $elements.filter( function() {
-                return $(this).text() !== selectedValue;
-            }).addClass('greyed').removeClass('clicked');
-
-            $elements.filter( function() {
-                return $(this).text() === selectedValue;
-            }).removeClass('greyed').addClass('clicked');
-
-        },
-
-
-        removeClickStateClassesGlobal: function() {
-
-            $(".text-score-entry").removeClass('greyed clicked');
-        },
-
-
         createNodeLayer: function() {
 
             /*
@@ -100,6 +78,9 @@ define(function (require) {
                 return 108 - ( ( ( numEntries - 1) / 2 ) ) * SPACING;
             }
 
+            /*
+                Depth-first search of meta data for specified keys
+            */
             function findKeyVals( meta, keys, arr ) {
 
                 var key;
