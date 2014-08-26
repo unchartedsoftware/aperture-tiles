@@ -1,7 +1,8 @@
 ---
 section: Docs
-subtitle: Quick Start
-permalink: docs/quickstart/index.html
+subtitle: Development
+chapter: Quick Start
+permalink: docs/development/quickstart/index.html
 layout: submenu
 ---
 
@@ -15,7 +16,7 @@ The following guide provides a short tutorial that walks you through the process
 
 At the end of this guide you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
 
-<img src="../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project"></img>
+<img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project"></img>
 
 ##<a name="prerequisites"></a>Prerequisites
 
@@ -35,7 +36,7 @@ Once you have a machine configured with all of the third-party prerequisites, yo
 We have created a virtual machine that has been preconfigured with the third-party tools needed to walk through this Quick Start example. To use this virtual machine:
 
 1. Download and install [Oracle VM VirtualBox](https://www.virtualbox.org/).
-2. Save the virtual machine on the [Download](../../download/) page to your local system.
+2. Save the virtual machine on the [Download](../../../download/) page to your local system.
 3. Open Oracle VM VirtualBox and select **Import Appliance** from the **File** menu.
 4. Browse to the location of the virtual machine you downloaded and click **Open**.
 5. Click **Next** on the Appliance to import dialog.
@@ -69,7 +70,7 @@ Otherwise, if your data set is sufficiently small (i.e., it can fit in the memor
 
 ###<a name="aperture-tiles-utilities"></a>Aperture Tiles Packaged Distribution
 
-Save the following Aperture Tiles distribution available on the [Download](../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
+Save the following Aperture Tiles distribution available on the [Download](../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
 - [Tile Generator](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3-dist.zip): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
 - [Tile Client Template](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
@@ -79,9 +80,28 @@ The full Aperture Tiles source code, available for download from [GitHub](https:
 ###<a name="environment-variables"></a>Environment Variables
 Set the following environment variables:
 
-- `SPARK_HOME` - the location of the Spark installation
-- `SPARK_MEM` - the amount of memory to allocation to Spark
-- `MASTER` - the node on which the cluster is installed (set to `local` for running Spark on a single machine)
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>SPARK_HOME</b>
+				</dt>
+				<dd>The location of the Spark installation</dd>
+				
+				<dt>
+					<b>SPARK_MEM</b>
+				</dt>
+				<dd>The amount of memory to allocate to Spark</dd>
+				
+				<dt>
+					<b>MASTER</b>
+				</dt>
+				<dd>The node on which the cluster is installed (set to <code>local</code> for running Spark on a single machine).</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ###<a name="julia-set-data-generation"></a>Julia Set Data Generation
 
@@ -117,48 +137,80 @@ Note that for a typical Aperture Tiles project, you will need to edit additional
 
 These properties specify the location of your Spark installation.
 
-```
-spark
-	URI of the Spark master. Set to "local" for standalone Spark installations.
-
-sparkhome
-	File system location of Spark. Defaults to the value of the SPARK_HOME
-	environment variable.
-```
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>spark</b>
+				</dt>
+				<dd>URI of the Spark master. Set to "local" for standalone Spark installations.</dd>
+				
+				<dt>
+					<b>sparkhome</b>
+				</dt>
+				<dd>File system location of Spark. Defaults to the value of the SPARK_HOME
+	environment variable.</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ####<a name="general-output"></a>General Output Properties
 
 These properties specify the location of your Julia set data and where to save the generated tiles.
 
-```
-oculus.tileio.type
-	Specify whether the tiles should be saved locally (file) or to HBase
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>oculus.tileio.type</b>
+				</dt>
+				<dd>Specify whether the tiles should be saved locally (file) or to HBase
 	(hbase). Local tile IO is supported only for standalone Spark installations.
 
-	NOTE: This parameter is not currently in the example .bd file provided for
+	<br><br>NOTE: This parameter is not currently in the example .bd file provided for
 	this demo. When this parameter is absent, the tile generator automatically
 	writes to HBase. To write to the local filesystem, manually add this
-	parameter to the .bd file and set its value to "file".
-
-oculus.binning.source.location
-	Path of the source data files in your local file system
-	(ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).
-```
+	parameter to the .bd file and set its value to "file".</dd>
+				
+				<dt>
+					<b>oculus.binning.source.location</b>
+				</dt>
+				<dd>Path of the source data files in your local file system
+	(ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ####<a name="hbase-connection"></a>HBase Connection Details (Optional)
 
 These properties should only be included if you are using Hadoop/HDFS and HBase. Note that these optional components must be used if you want to run the tile generation job on a multi-computer cluster. 
 
-```
-hbase.zookeeper.quorum
-	Zookeeper quorum location needed to connect to HBase.
-
-hbase.zookeeper.port
-	Port through which to connect to zookeeper. Typically defaults to 2181.
-
-hbase.master
-	Location of the HBase master to which to save the tiles.
-```
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>hbase.zookeeper.quorum</b>
+				</dt>
+				<dd>Zookeeper quorum location needed to connect to HBase.</dd>
+				
+				<dt>
+					<b>hbase.zookeeper.port</b>
+				</dt>
+				<dd>Port through which to connect to zookeeper. Typically defaults to 2181.</dd>
+				
+				<dt>
+					<b>hbase.master</b>
+				</dt>
+				<dd>Location of the HBase master to which to save the tiles.</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ###<a name="tiling-property-file-configuration"></a>Tiling Property File Configuration
 
@@ -244,6 +296,6 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 
 ##<a name="deployment"></a>Deployment
 
-Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory. If you are using the virtual machine provided on the [Download](../../download/) page, copy the entire directory to the `/opt/jetty/webapps` folder on the VM.
+Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory. If you are using the virtual machine provided on the [Download](../../../download/) page, copy the entire directory to the `/opt/jetty/webapps` folder on the VM.
 
 Access the `/tile-client-template` web directory on the server from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com`, the URL would be `http://www.example.com/tile-client-template`. If you are using the VM, browse to `http://localhost:8888/tile-client-template/` on your local machine or `http://{vm-machine-name}:8080/tile-client-template/` on the virtual machine.

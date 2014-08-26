@@ -1,7 +1,8 @@
 ---
 section: Docs
-subtitle: Installation
-permalink: docs/installation/index.html
+subtitle: Development
+chapter: Installation
+permalink: docs/development/installation/index.html
 layout: submenu
 ---
 
@@ -10,8 +11,8 @@ Installation and Compilation
 
 The instructions on this page are intended for developers who want to install the Aperture Tiles source code and build their own custom projects. For quick examples of the capabilities of Aperture Tiles:
 
-- See the [Demos](../../demos/) page to access fully functional demonstrations of Aperture Tiles from your web browser.
-- See the [Download](../../download) page to access a pre-built distribution designed to help you quickly get started using Aperture Tiles and to understand the high-level process of creating an Aperture Tiles application. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
+- See the [Demos](../../../demos/) page to access fully functional demonstrations of Aperture Tiles from your web browser.
+- See the [Download](../../../download) page to access a pre-built distribution designed to help you quickly get started using Aperture Tiles and to understand the high-level process of creating an Aperture Tiles application. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
 
 ##<a name="prerequisites"></a>Prerequisites
 
@@ -27,6 +28,8 @@ This project has the following prerequisites:
 -  **Web Server**: the Tile Server and client are built using the [Restlet](http://restlet.org/) web framework, and require a servlet compatible web server. Choose your preferred implementation ([Apache Tomcat](http://tomcat.apache.org/) or [Jetty](http://www.eclipse.org/jetty/)).
 -   **Build Automation**: All Aperture Tiles projects build with [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work). Ensure Maven is configured properly on the system on which you are building Aperture Tiles.
 
+<img src="../../../img/architecture.png" class="screenshot" />
+
 ##<a name="source-code"></a>Source Code
 
 The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master). To install both projects:
@@ -37,25 +40,95 @@ The Aperture Tiles source code is available on [GitHub](https://github.com/oculu
 ###<a name="environment-variables"></a>Environment Variables
 Set the following environment variables:
 
-- *SPARK_HOME* - the location of the Spark installation
-- *SPARK_MEM* - the amount of memory to allocation to Spark
-- *MASTER* - the node on which the cluster is installed
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>SPARK_HOME</b>
+				</dt>
+				<dd>The location of the Spark installation</dd>
+				
+				<dt>
+					<b>SPARK_MEM</b>
+				</dt>
+				<dd>The amount of memory to allocate to Spark</dd>
+				
+				<dt>
+					<b>MASTER</b>
+				</dt>
+				<dd>The node on which the cluster is installed (set to <code>local</code> for running Spark on a single machine).</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ###<a name="project-structure"></a>Project Structure
 
 Aperture Tiles is made up of ten sub-projects:
 
--   **math-utilities** - Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.
--   **geometric-utilities** - Advanced math utilities for processing geometry and geographic problems.
--   **binning-utilities** - Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.
--   **tile-generation** - Spark-based tools to generate tile pyramids from raw data.
--   **tile-service** - Web service to serve tiles from tile pyramids to web clients.
--   **annotation-service** - Services for adding annotations to Aperture Tiles visualizations
--   **tile-client** - Simple web client to display tiles from tile pyramids.
--   **tile-packaging** - Packaged assembly of the tile generation service for the [Quick Start](../quickstart/) example on this site.
--   **tile-client-template** - Starter template for creating a Tile Client and Server application.
--   **tile-examples** - Example applications.
--   **docs** - Source files for the documentation on this website.
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>math-utilities</b>
+				</dt>
+				<dd>Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.</dd>
+				
+				<dt>
+					<b>geometric-utilities</b>
+				</dt>
+				<dd>Advanced math utilities for processing geometry and geographic problems.</dd>
+				
+				<dt>
+					<b>binning-utilities</b>
+				</dt>
+				<dd>Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</dd>
+				
+				<dt>
+					<b>tile-generation</b>
+				</dt>
+				<dd>Spark-based tools to generate tile pyramids from raw data.</dd>
+				
+				<dt>
+					<b>tile-service</b>
+				</dt>
+				<dd>Web service to serve tiles from tile pyramids to web clients.</dd>
+				
+				<dt>
+					<b>annotation-service</b>
+				</dt>
+				<dd>Services for adding annotations to Aperture Tiles visualizations.</dd>
+				
+				<dt>
+					<b>tile-client</b>
+				</dt>
+				<dd>Simple web client to display tiles from tile pyramids.</dd>
+				
+				<dt>
+					<b>tile-packaging</b>
+				</dt>
+				<dd>Packaged assembly of the tile generation service for the <a href="../quickstart/">Quick Start</a> example on this site.</dd>
+				
+				<dt>
+					<b>tile-client-template</b>
+				</dt>
+				<dd>Starter template for creating a Tile Client and Server application.</dd>
+				
+				<dt>
+					<b>tile-examples</b>
+				</dt>
+				<dd>Example applications.</dd>
+				
+				<dt>
+					<b>docs</b>
+				</dt>
+				<dd>Source files for the documentation on this website.</dd>		
+			</dl>
+		</ul>
+	</div>
+</div>
  
 ###<a name="building-project"></a>Building the Project
 
@@ -74,4 +147,3 @@ Once the Aperture JS installation is complete, run the `mvn install` command aga
 ##<a name="next-steps"></a>Next Steps
 
 See the [Tile Generation](../generation) or [Configuration](../configuration) topics for specifics on generating tile sets from raw data and configuring a tile server and client to create a tile-based visual analytic application.
-

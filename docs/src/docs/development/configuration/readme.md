@@ -1,7 +1,8 @@
 ---
 section: Docs
-subtitle: Configuration
-permalink: docs/configuration/index.html
+subtitle: Development
+chapter: Configuration
+permalink: docs/development/configuration/index.html
 layout: submenu
 ---
 
@@ -14,7 +15,7 @@ Note that Aperture Tiles supports two types of tile rendering:
 - **Server-side rendering**, in which the Server renders the tiles as image files and passes them on to the Client.
 - **Client-side rendering**, in which the Server passes the tiles as JSON data to the Client, which then renders them directly.
 
-The fastest way to create these the Tile Server and Tile Client is with the Tile Client Template, which contains samples of both. You can also look at the source code for the [tile examples](../../demos) to understand the structure and configuration of the Tile Server and Tile Client.
+The fastest way to create these the Tile Server and Tile Client is with the Tile Client Template, which contains samples of both. You can also look at the source code for the [tile examples](../../../demos) to understand the structure and configuration of the Tile Server and Tile Client.
 
 ##<a name="template-setup"></a>Template Setup
 
@@ -99,54 +100,80 @@ Note also that the layer and map pyramid configurations ***must*** match each ot
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
 
-```
-title
-	Axis name.
-
-position
-	Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.
-
-repeat
-	Indicates whether the map will repeat when the user scrolls off one end.
-	Most useful for geographic maps.
-
-intervalSpec
-
-	type
-		How the following increment value is calculated based on the axis range.
-		Accepted values include "percentage", "%", "value" or "#".
-
-	increment
-		Value or percentage of units by which to increment the intervals. How
-		this is applied is dependent on the specified type.
-
-	pivot
-		Value or percentage from which all other values are incremented.
-		Typically 0.
-
-	allowScaleByZoom
-		Indicates whether the axis should be scaled by the zoom factor.
-
-unitSpec
-
-	type
-		Determines the individual axis label strings formats. Options include:
-		"billions": 150.25B
-        "millions": 34.45M
-        "thousands": 323.26K
-        "decimal": 234243.32
-        "integer": 563554
-        "time": MM/DD/YYYY
-        "degrees": 34.56&#176 <--- #### should be a degree symbol ####
-
-	decimals
-		Number of decimals to display for each unit. Applicable to "billions",
-		"millions", "thousands" and "decimal" types.
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>title</b>
+				</dt>
+				<dd>Axis name.</dd>
+				
+				<dt>
+					<b>position</b>
+				</dt>
+				<dd>Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.</dd>
+				
+				<dt>
+					<b>repeat</b>
+				</dt>
+				<dd>Indicates whether the map will repeat when the user scrolls off one end.
+	Most useful for geographic maps.</dd>
 	
-	allowStepDown
-		Indicates whether the units can step down if they are below range.
-		Applicable to "billions", "millions", "thousands" types.
-```
+				<dt>
+					<b>intervalSpec</b>
+				</dt>
+				<dd>
+				
+					<dl>
+						<dt>type</dt>
+						<dd>How the following increment value is calculated based on the axis range.
+		Accepted values include "percentage", "%", "value" or "#".</dd>
+		
+						<dt>increment</dt>
+						<dd>Value or percentage of units by which to increment the intervals. How
+		this is applied is dependent on the specified type.</dd>
+						
+						<dt>pivot</dt>
+						<dd>Value or percentage from which all other values are incremented.
+		Typically 0.</dd>
+		
+						<dt>allowScaleByZoom</dt>
+						<dd>Indicates whether the axis should be scaled by the zoom factor.</dd>
+					</dl>
+				</dd>
+				
+				<dt>
+					<b>unitSpec</b>
+				</dt>
+				<dd>
+				
+					<dl>
+						<dt>type</dt>
+						<dd>Determines the individual axis label strings formats. Options include:
+							<ul>
+								<li>"billions": 150.25B
+								<li>"millions": 34.45M
+								<li>"thousands": 323.26K
+								<li>"decimal": 234243.32
+								<li>"integer": 563554
+								<li>"time": MM/DD/YYYY
+								<li>"degrees": 34.56&#176
+							</ul>
+						</dd>
+						
+						<dt>decimals</dt>
+						<dd>Number of decimals to display for each unit. Applicable to "billions",
+		"millions", "thousands" and "decimal" types.</dd>
+		
+						<dt>allowStepDown</dt>
+						<dd>Indicates whether the units can step down if they are below range.
+		Applicable to "billions", "millions", "thousands" types.</dd>
+		
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ####<a name="geographic-maps"></a>Geographic Maps
 
@@ -175,23 +202,39 @@ The PyramidConfig `type` parameter should always be set to *WebMercator* for geo
 
 The MapConfig parameters determine the allowed zoom level and extent of the geographic map.
 
-```
-numZoomLevels
-	Number of zoom levels available to users.
-
-projection
-	"EPSG:900913" indicates that the geographic map is a web mercator or
-	spherical mercator projection.
- 
-displayProjection
-	"EPSG:4326" indicates the identity projection. 
-
-units
-	Indicates the unit of distance in the map.
-
-maxExtent
-	The coordinates that correspond to the geographic boundaries of the map.
-```
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>numZoomLevels</b>
+				</dt>
+				<dd>Number of zoom levels available to users.</dd>
+				
+				<dt>
+					<b>projection</b>
+				</dt>
+				<dd>"EPSG:900913" indicates that the geographic map is a web mercator or
+	spherical mercator projection.</dd>
+				
+				<dt>
+					<b>displayProjection</b>
+				</dt>
+				<dd>"EPSG:4326" indicates the identity projection.</dd>
+				
+				<dt>
+					<b>units</b>
+				</dt>
+				<dd>Indicates the unit of distance in the map.</dd>
+				
+				<dt>
+					<b>maxExtent</b>
+				</dt>
+				<dd>The coordinates that correspond to the geographic boundaries of the map.</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 #####<a name="geo-baselayer"></a>BaseLayer
 
@@ -251,43 +294,66 @@ The next example shows a TMS layer configuration that uses the Oculus World Grap
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
 
-```
-title
-	Axis name.
-
-position
-	Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.
-
-repeat
-	Indicates whether the map will repeat when the user scrolls off one end.
-
-intervalSpec
-
-	type
-		Type of interval along the axis "percentage", "fixed " or "value".
-
-	increment
-		Value or percentage of units by which to increment the intervals.
-
-	pivot
-		Value or percentage from which all other values are incremented.
-		Typically 0.
-
-	allowScaleByZoom
-		Indicates whether the axis should be scaled by the zoom factor.
-
-unitSpec
-
-	type
-		Unit label along the specified axis. Options include "decimal", "time"
-		and "degrees".
-
-	decimals
-		Number of decimals to display for each unit, if applicable.
-	
-	allowStepDown
-		Indicates whether the units can step down if they are below range.	
-```
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>title</b>
+				</dt>
+				<dd>Axis name.</dd>
+				
+				<dt>
+					<b>position</b>
+				</dt>
+				<dd>Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.</dd>
+				
+				<dt>
+					<b>repeat</b>
+				</dt>
+				<dd>Indicates whether the map will repeat when the user scrolls off one end.</dd>
+				
+				<dt>
+					<b>intervalSpec</b>
+				</dt>
+				<dd>
+				
+					<dl>
+						<dt>type</dt>
+						<dd>Type of interval along the axis "percentage", "fixed " or "value".</dd>
+		
+						<dt>increment</dt>
+						<dd>Value or percentage of units by which to increment the intervals.</dd>
+						
+						<dt>pivot</dt>
+						<dd>Value or percentage from which all other values are incremented.
+		Typically 0.</dd>
+		
+						<dt>allowScaleByZoom</dt>
+						<dd>Indicates whether the axis should be scaled by the zoom factor.</dd>
+					</dl>
+				</dd>
+				
+				<dt>
+					<b>unitSpec</b>
+				</dt>
+				<dd>
+				
+					<dl>
+						<dt>type</dt>
+						<dd>Unit label along the specified axis. Options include "decimal", "time"
+		and "degrees".</dd>
+						
+						<dt>decimals</dt>
+						<dd>Number of decimals to display for each unit, if applicable.</dd>
+		
+						<dt>allowStepDown</dt>
+						<dd>Indicates whether the units can step down if they are below range.</dd>
+				
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ###<a name="layers"></a>Layers
 
@@ -306,18 +372,28 @@ Note that maps with multiple layers can be created by specifying multiple layer 
 
 The Metadata parameters uniquely identify the layer.
 
-```
-id
-	Must match the name of the folder to which the tiles were saved during the
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>id</b>
+				</dt>
+				<dd>Must match the name of the folder to which the tiles were saved during the
 	generation process, which is composed of the following parameters from the
 	Tiing Property File:
 	
-	<oculus.binning.name>.<oculus.binning.xField>.<oculus.binning.yField>.
-	<oculus.binning.valueField>  
-
-description
-	Description of the layer
-``` 
+	<br><br>&lt;oculus.binning.name&gt;.&lt;oculus.binning.xField&gt;.&lt;oculus.binning.yField&gt;.
+	&lt;oculus.binning.valueField&gt;</dd>
+				
+				<dt>
+					<b>description</b>
+				</dt>
+				<dd>Description of the layer</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ####<a name="layer-pyramid"></a>Pyramid
 
@@ -349,80 +425,142 @@ Note also that the layer and map pyramid configurations much match each other.
 
 The data parameters specify the location of the tiles that you created. If you are using HBase, separate parameters are required.
 
-```
-pyramidio
-
-	type
-		Indicates the file format of your tiles:
-		hbase - tiles are stored in HBase
-		file - tiles are stored in an uncompressed directory in a local
-               filesystem
-		zip - tiles are stored in compressed file in a local filesystem
-
-	root.path
-		Root path in which the tiles are stored. Not used for HBase.
-
-	extension
-		Name of the compressed file in which tiles are stored. Only used for ZIP
-		files.
-
-	hbase.zookeeper.quorum
-		Zookeeper quorum location needed to connect to HBase.
-
-	hbase.zookeeper.port
-		 Port through which to connect to zookeeper. Typically defaults to 2181.
-
-	hbase.master
-		Location of the HBase master on which the tiles are saved.
-	
-```
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>pyramidio</dt>
+				<dd>
+					<dl>
+						<dt>
+							<b>type</b>
+						</dt>
+						<dd>Indicates the file format of your tiles:
+							<dl>
+								<dt>hbase</dt>
+								<dd>Tiles are stored in HBase</dd>
+								
+								<dt>file</dt>
+								<dd>Tiles are stored in an uncompressed directory in a local
+								filesystem</dd>
+					   
+								<dt>zip</dt>
+								<dd>Tiles are stored in compressed file in a local filesystem</dd>
+							</dl>
+						</dd>
+						
+						<dt>
+							<b>root.path</b>
+						</dt>
+						<dd>Root path in which the tiles are stored. Not used for HBase.</dd>
+						
+						<dt>
+							<b>extension</b>
+						</dt>
+						<dd>Name of the compressed file in which tiles are stored. Only used for ZIP
+						files.</dd>
+						
+						<dt>
+							<b>hbase.zookeeper.quorum</b>
+						</dt>
+						<dd>Zookeeper quorum location needed to connect to HBase.</dd>
+						
+						<dt>
+							<b>hbase.zookeeper.port</b>
+						</dt>
+						<dd>Port through which to connect to zookeeper. Typically defaults to 2181.</dd>
+						
+						<dt>
+							<b>hbase.master</b>
+						</dt>
+						<dd>Location of the HBase master on which the tiles are saved.</dd>
+						
+					</dl>
+				</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ####<a name="layer-renderers"></a>Renderers
 
 This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of tile data.  The current renderer options are:
 
-```
-domain
-	Indicates whether the tiles should be rendered by the server or the client.
-
-renderer
-	Used for server-side rendering.
-
-	type
-		'heatmap': Renders to a heat-map, based on a standard avro double-
-				   valued tile
-		'doubleseries': Renders to a series of heat-maps, based on a standard
-						avro double-series-valued tile
-		'doublestatistics': Renders tile's total hit and % coverage as text to 
-							the	tile
-		'textscore': Renders to an image showing scored words, with bars based 
-					 on their score
-
-	ramp
-		Determines the color scale applied to the data points based on their
-		concentration. The default color scales are:
-		'br': A blue-green ramp.
-		'inv-br': Inverted blue-green ramp.
-		'ware': A red-yellow-green ramp.
-		'inv-ware': Inverted red-yellow-green ramp.
-		'grey': Full greyscale ramp.
-		'inv-grey': Inverse greyscale ramp.
-
-	opacity
-		Opacity of the rendered tile layer expressed as a decimal ranging from
-		0 (completely transparent) to 1 (completely opaque).
-
-renderers
-	List of custom renderers required to perform client-side rendering. 
-
-transform
-
-	name
-		Type of transformations that can be applied to the data values when
-		determining color: 
-		"linear" does not perform a transformation.
-		"log10" takes logarithms of raw values before applying a color ramp.
-```
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>
+					<b>domain</b>
+				</dt>
+				<dd>Indicates whether the tiles should be rendered by the server or the client.</dd>
+				
+				<dt>
+					<b>renderer</b>
+				</dt>
+				<dd>Used for server-side rendering.
+					
+					<dl>
+						<dt>type</dt>
+						<dd>
+							<dl>
+								<dt>'heatmap'</dt>
+								<dd>Renders to a heat-map, based on a standard avro double-valued tile</dd>
+								
+								<dt>'doubleseries'</dt>
+								<dd>Renders to a series of heat-maps, based on a standard avro double-series-valued tile</dd>
+								
+								<dt>'doublestatistics'</dt>
+								<dd>Renders tile's total hit and % coverage as text to the tile</dd>
+								
+								<dt>'textscore'</dt>
+								<dd>Renders to an image showing scored words, with bars based  on their score</dd>
+							</dl>
+						</dd>
+					
+						<dt>
+							<b>ramp</b>
+						</dt>
+						<dd>Determines the color scale applied to the data points based on their concentration. The default color scales are:
+							<ul>
+								<li>'br': A blue-green ramp.
+								<li>'inv-br': Inverted blue-green ramp.
+								<li>'ware': A red-yellow-green ramp.
+								<li>'inv-ware': Inverted red-yellow-green ramp.
+								<li>'grey': Full greyscale ramp.
+								<li>'inv-grey': Inverse greyscale ramp.
+							</ul>
+						</dd>
+						
+						<dt>
+							<b>opacity</b>
+						</dt>
+						<dd>Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).</dd>
+					</dl>
+				</dd>
+				
+				<dt>
+					<b>renderers</b>
+				</dt>
+				<dd>List of custom renderers required to perform client-side rendering.</dd>
+				
+				<dt>
+					<b>transform</b>
+				</dt>
+				<dd>
+					<dl>
+						<dt>name</dt>
+						<dd>Type of transformations that can be applied to the data values when	determining color:
+							<ul>
+								<li>"linear" does not perform a transformation.
+								<li>"log10" takes logarithms of raw values before applying a color ramp.
+						</dd>
+					</dl>
+				</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 ##<a name="clientconfig"></a>Tile Client Configuration
 
