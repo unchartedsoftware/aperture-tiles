@@ -62,8 +62,10 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 	 * @throws JSONException
 	 */
 	public AggregatingGroupFilter(JSONArray groupArray ) throws JSONException {
-		for (int i = 0; i < groupArray.length(); i++) {
-			groups.add(groupArray.getString(i));
+		if (groupArray != null) {
+			for (int i = 0; i < groupArray.length(); i++) {
+				groups.add(groupArray.getString(i));
+			}			
 		}
 	}
 
@@ -79,7 +81,7 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 		Map<String, Integer> aggregates = new HashMap<>();
 		
 		for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {
-			if (groups.contains(binEntry.getKey())) {
+			if (groups.contains(binEntry.getKey()) || groups.size() == 0) {
 				// Grab the first item in the bin.  If there were more, then we add this to our list
 				// of aggregated bins.
 				List<Pair<String, Long>> binItems = binEntry.getValue();
