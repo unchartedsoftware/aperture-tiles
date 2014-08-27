@@ -157,8 +157,11 @@ object GraphClusterApp {
 		    	  val nodeID = tokens(nodeIDindex).toLong
 		    	  var nodeAttributes = ""
 		    	  val len = nodeAttrIndices.size
+		    	  val lenTokens = tokens.size
 		    	  for (i <- 0 until len) {
-		    	 	  nodeAttributes += tokens(nodeAttrIndices(i))
+		    	 	  if (nodeAttrIndices(i) < lenTokens) {
+		    	 		  nodeAttributes += tokens(nodeAttrIndices(i))
+		    	 	  }
 		    	 	  if (i < len-1)
 		    	 	 	  nodeAttributes += "\t"
 		    	  }	  
