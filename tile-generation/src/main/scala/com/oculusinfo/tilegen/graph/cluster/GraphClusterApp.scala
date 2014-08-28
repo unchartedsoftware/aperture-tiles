@@ -64,6 +64,11 @@ import com.oculusinfo.tilegen.spark.SparkConnector
  * -eDstID -- The column number of an edge's destination ID.  ID's must be type Long [required].
  * -eWeight -- The column number of an edge's weight.  Default = -1, meaning no edge weighting is used.
  * 
+ * Results for each hierarchical level are stored in a "level_#" sub-directory, with the following data format,
+ * For nodes:
+ * 		"node\t" + id + "\t" + parentId + "\t" + internalNodes + "\t" + nodeDegree + "\t" + extraAttributes (tab-delimited)
+ * And for edges:
+ * 		"edge\t" + srcID + "\t" + dstID + "\t" + edge weight
  **/
 
 object GraphClusterApp {
