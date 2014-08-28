@@ -17,7 +17,7 @@ Returns an Annotation Tile for a specified filter configuration UUID, annotation
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Attributes</th>
@@ -146,7 +146,7 @@ Submits a new annotation to be written to the server. Upon success, a certificat
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Attributes</th>
@@ -191,7 +191,7 @@ Submits a new annotation to be written to the server. Upon success, a certificat
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Request Parameter</th>
@@ -295,7 +295,7 @@ Submits a modify request to the server. If the certificate in the annotation sta
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Attributes</th>
@@ -340,7 +340,7 @@ Submits a modify request to the server. If the certificate in the annotation sta
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Request Parameter</th>
@@ -448,7 +448,7 @@ Submits a removal request to the server. If the certificate is valid, the operat
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Attributes</th>
@@ -493,7 +493,7 @@ Submits a removal request to the server. If the certificate is valid, the operat
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Request Parameter</th>
@@ -586,7 +586,7 @@ Submits a new filter configuration. Upon success, returns a JSON object with the
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Attributes</th>
@@ -631,7 +631,7 @@ Submits a new filter configuration. Upon success, returns a JSON object with the
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Request Parameter</th>
@@ -727,7 +727,7 @@ Requests the server to release a filter configuration from its memory.
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Attributes</th>
@@ -772,7 +772,7 @@ Requests the server to release a filter configuration from its memory.
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Request Parameter</th>
@@ -860,7 +860,7 @@ Requests all available annotation layer specifications held by the server.
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Attributes</th>
@@ -905,7 +905,7 @@ Requests all available annotation layer specifications held by the server.
 <div class="props">
 	<h2 class="sectionTitle">Method Summary</h2>
 		<nav>
-			<table class="summaryTable" cellspacing="0">
+			<table class="summaryTable">
 				<thead>
 					<tr>
 						<th scope="col">Request Parameter</th>
