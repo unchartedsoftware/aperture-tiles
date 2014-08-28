@@ -13,11 +13,11 @@ Using a distributed framework built on the Apache Spark engine, Aperture Tiles e
 
 At the highest level in the tile set pyramid (level 0), a single tile summarizes all of your data. On each lower level, there are up to 4<sup>z</sup> tiles, where z is the zoom level (with lower numbers indicating higher levels). At each level, the tiles are laid out row wise across the base map or plot, starting at the lower left. Each tile summarizes the data it comprises.
 
-<img src="../../../img/tile-layout.png" class="screenshot" alt="Tile Layout"></img>
+<img src="../../../img/tile-layout.png" class="screenshot" alt="Tile Layout" />
 
 Each tile is an AVRO record object containing an array of bins (typically 256 x 256). Each bin contains an aggregation of all the data points that fall within it.
 
-<img src="../../../img/tile-grid.png" class="screenshot" alt="Tile Grid"></img>
+<img src="../../../img/tile-grid.png" class="screenshot" alt="Tile Grid" />
 
 The process of creating a set of AVRO tiles from your raw source data is called a tiling job. These tiles created by the job can then be served and browsed in any modern Web browser. You can transform your source data into a set of AVRO tiles using:
 

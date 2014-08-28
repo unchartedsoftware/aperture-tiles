@@ -28,7 +28,7 @@ This project has the following prerequisites:
 -  **Web Server**: the Tile Server and client are built using the [Restlet](http://restlet.org/) web framework, and require a servlet compatible web server. Choose your preferred implementation ([Apache Tomcat](http://tomcat.apache.org/) or [Jetty](http://www.eclipse.org/jetty/)).
 -   **Build Automation**: All Aperture Tiles projects build with [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work). Ensure Maven is configured properly on the system on which you are building Aperture Tiles.
 
-<img src="../../../img/architecture.png" class="screenshot" />
+<img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
 ##<a name="source-code"></a>Source Code
 

@@ -16,7 +16,7 @@ The following guide provides a short tutorial that walks you through the process
 
 At the end of this guide you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
 
-<img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project"></img>
+<img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
 ##<a name="prerequisites"></a>Prerequisites
 
