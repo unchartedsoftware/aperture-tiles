@@ -48,7 +48,8 @@ You can access your virtual machine in two ways:
 - Via ssh with the following command, using the username **vagrant** and password **vagrant**:
 
 ```
-ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@localhost
+ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 
+vagrant@localhost
 ```
 
 Access port 8080 (`http://{vm-machine-name}:8080/`) on your virtual machine (which is forwarded to port 8888 (`http://localhost:8888/` on your local machine) in any web browser for a brief description of the virtual machine's configuration and links to preloaded demonstrations.
@@ -113,7 +114,8 @@ For a typical Aperture Tiles project, you will work with your own custom data se
 	The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.
 
 ```
-./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
+./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real 
+-0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
 ```
 
 Check your output folder for five part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
@@ -223,7 +225,8 @@ Note that for a typical Aperture Tiles project, you will need to edit additional
 When you have configured all of the required properties, execute the Spark script (`/tile-generator/bin/spark-run.sh`) again. This time you will invoke the CSVBinner and use the `-d` switch to pass your edited base and tiling property files.
 
 ```
-tile-generator/bin/spark-run.sh com.oculusinfo.tilegen.examples.apps.CSVBinner -d tile-generator/examples/julia-base.bd tile-generator/examples/julia-tiling.bd
+tile-generator/bin/spark-run.sh com.oculusinfo.tilegen.examples.apps.CSVBinner 
+-d tile-generator/examples/julia-base.bd tile-generator/examples/julia-tiling.bd
 ```
 
 When the tile generation is complete, you should have a folder containing six subfolders (0, being the highest, through 5, being the lowest), each of which corresponds to a zoom level in your project. Across all the folders, you should have a total of 1,365 AVRO tile files.
@@ -231,7 +234,8 @@ When the tile generation is complete, you should have a folder containing six su
 Note that for this example, the tile folder will be named `julia.x.y.v`. The output folder is always named using the the following values in the **julia.bd** file:
 
 ```
-[<oculus.binning.prefix>.]<oculus.binning.name>.<oculus.binning.xField>.<oculus.binning.yField>.<oculus.binning.valueField>
+[<oculus.binning.prefix>.]<oculus.binning.name>.<oculus.binning.xField>.
+<oculus.binning.yField>.<oculus.binning.valueField>
 ``` 
 
 Note that the `oculus.binning.prefix` value is only included if you set it in the property file. This is useful if you want to run a second tile generation without overwriting the already generated version.

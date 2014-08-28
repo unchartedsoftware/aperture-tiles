@@ -34,9 +34,9 @@ Before you run a tiling job, make sure you meet all of the prerequisites listed 
 See the [Installation documentation](../installation) for full details on the required third-party tools.
 
 - **Languages**:
-	<p/>
+	<p>
 	- *Scala* version 2.10.3
-	<p/>
+	<p>
 - **Cluster Computing**:
 	- *Apache Spark* version 0.9.0 or greater (version 1.0.0 recommended).
       
@@ -93,7 +93,7 @@ The Aperture Tiles source code contains a CSVBinner tool designed to process you
 
 To execute the CSVBinner and run a tiling job, use the **spark-run** script and pass in the names of the properties files you want to use. For example:
 
-<pre class="command">spark-run com.oculusinfo.tilegen.examples.apps.CSVBinner -d /data/twitter/<wbr>dataset-base.bd /data/twitter/dataset.lon.lat.bd</pre>
+<pre class="command">spark-run com.oculusinfo.tilegen.examples.apps.CSVBinner -d /data/twitter<wbr>/dataset-base.bd /data/twitter/dataset.lon.lat.bd</pre>
 
 Where the `-d` switch specifies the Base properties file path, and each subsequent file path specifies a Tiling properties file.
 
@@ -258,7 +258,7 @@ The Source Data properties describe the raw data set to be tiled:
 					<dd>Contains dates. Dates are parsed and transformed into milliseconds
 					since the standard Java start date (using SimpleDateFormatter).
 					The default format is yyMMddHHmm, but this can be overridden using
-					the	oculus.binning.parsing.<field>.dateFormat property.</dd>
+					the	oculus.binning.parsing.&lt;field&gt;.dateFormat property.</dd>
 			
 					<dt>propertyMap</dt>
 					<dd>Contains property maps. All of the following properties must be 

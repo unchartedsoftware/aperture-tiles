@@ -1,9 +1,6 @@
 ---
-section: Docs
-subtitle: Development
 chapter: Configuration
 permalink: docs/development/configuration/index.html
-layout: submenu
 ---
 
 #Configuration
@@ -158,7 +155,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 								<li>"decimal": 234243.32
 								<li>"integer": 563554
 								<li>"time": MM/DD/YYYY
-								<li>"degrees": 34.56&#176
+								<li>"degrees": 34.56&#176;
 							</ul>
 						</dd>
 						
@@ -169,7 +166,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 						<dt>allowStepDown</dt>
 						<dd>Indicates whether the units can step down if they are below range.
 		Applicable to "billions", "millions", "thousands" types.</dd>
-		
+					</dl>
 			</dl>
 		</ul>
 	</div>
@@ -554,6 +551,7 @@ This option defines which renderer the server should use to render tiles. The re
 							<ul>
 								<li>"linear" does not perform a transformation.
 								<li>"log10" takes logarithms of raw values before applying a color ramp.
+							</ul>
 						</dd>
 					</dl>
 				</dd>
