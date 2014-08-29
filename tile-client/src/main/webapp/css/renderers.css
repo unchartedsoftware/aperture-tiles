@@ -5,6 +5,7 @@
     -webkit-backface-visibility: hidden;
 	height: 256px;
 	width: 256px;
+	overflow:hidden;
 }
 
 
@@ -14,14 +15,13 @@
 
 
 .meta-entry-parent {
-    cursor: pointer;
 	position: relative;
     float: right;
     right: 50%;
 }
 
 .meta-entry {
-	  float: right;
+	float: right;
     right: -50%;
     position: relative;
     text-align: center;   
@@ -32,10 +32,6 @@
     position: relative;
     color: #FFFFFF;
 	z-index: 1;
-}
-
-.meta-entry:hover {
-	
 }
 
 
@@ -59,11 +55,10 @@
     z-index: 1;
 }
 
-.text-score-entry-label {
+.text-score-label {
     position: relative;
     color: #FFFFFF;
 	white-space: nowrap;
-	margin-top: -1px;
 	z-index: 1;
 }
 
@@ -80,7 +75,6 @@
 .text-score-count-sub-bar {
 	height:100%;
 	float:left;
-	background-color: #FFFFFF;
 }
 
 .count-summary {
@@ -92,32 +86,17 @@
 	font-size: 0.8em;
 }
 
-.text-score-entry:hover .text-score-entry-label {
-	  color: #7FFF00;
-}
-
-.text-score-entry:hover .text-score-count-sub-bar {
-	  background-color: #FFFFFF;
-}
-
-.greyed .text-score-count-sub-bar {
-	background-color: #777;
-}
-
-.greyed .text-score-entry-label {
-	color: #777;
-}
 
 /********************************************/
 /* 		  Text by Frequency Renderer  	  	*/
 /********************************************/
+
 
 .text-by-frequency-entry {
 	position:absolute;
 	width: 190px;
 	height: 20px;
 	left: 28px;
-	color: #FFFFFF;	
 	z-index: 1;
 }
 
@@ -148,7 +127,6 @@
 	bottom: -3px;
 	font-size : 16px;
 	line-height: 16px;
-	color: #FFFFFF;
 }
 
 .text-by-frequency-bar {
@@ -157,29 +135,11 @@
 	float:left;
 	bottom: 0px;
 	border: 1px solid #000;
-	background-color: #ffffff;
 	margin-left: -1px;
 	-webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
-
-.greyed .text-by-frequency-bar {
-	background-color: #777;
-}
-
-.greyed .text-by-frequency-label {
-	color: #777;
-}
-
-.text-by-frequency-entry:hover .text-by-frequency-label {
-	color: #7FFF00;
-}
-
-.text-by-frequency-entry:hover .text-by-frequency-bar {
-	background-color: #7FFF00;
-}
-
 
 
 /********************************************/
@@ -190,7 +150,6 @@
 .word-cloud-word {
 	cursor: pointer;
 	position:absolute;
-	color: #FFFFFF;
 	padding: 0 5px 0 5px;
 	z-index: 1;
 }
@@ -199,24 +158,12 @@
 	position:relative;
 	display: inline-block;
 	padding: 0 5px 0 5px;
-	color: #FFFFFF;
 }
-
-.word-cloud-word:hover {
-	color: #7FFF00;
-}
-
 
 /********************************************/
 /* 		             Other     		    	*/
 /********************************************/
 
-.greyed {
-    color: #777;
-}
-
-.clicked {
-}
 
 .clear {
     clear: both;

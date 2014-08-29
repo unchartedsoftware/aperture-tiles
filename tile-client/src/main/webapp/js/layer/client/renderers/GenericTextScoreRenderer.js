@@ -29,10 +29,11 @@ define(function (require) {
 
 
 
-    var HtmlNodeLayer = require('../../HtmlNodeLayer'),
-        HtmlLayer = require('../../HtmlLayer'),
+    var Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 5,
+        DEFAULT_COLOR = '#FFFFFF',
+        DEFAULT_HOVER_COLOR = '#7FFF00',
         GenericTextScoreRenderer;
 
 
@@ -41,57 +42,112 @@ define(function (require) {
         ClassName: "GenericTextScoreRenderer",
 
         init: function( map, spec ) {
-
             this._super( map, spec );
-            this.createNodeLayer(); // instantiate the node layer data object
-            this.createLayer();     // instantiate the html visualization layer
         },
 
 
-        addClickStateClassesGlobal: function() {
+        parseInputSpec: function( spec ) {
 
-            var selectedValue = this.layerState.get('click')[this.spec.entryKey],
-                $elements = $(".text-score-entry");
+            var i;
 
-            $elements.filter( function() {
-                return $(this).text() !== selectedValue;
-            }).addClass('greyed').removeClass('clicked');
+            spec.text = spec.text || {};
+            spec.text.textKey = spec.text.textKey || "text";
+            spec.text.countKey = spec.text.countKey || "count";
+            spec.text.blend = spec.text.blend || [{}];
+            for ( i=0; i<spec.text.blend.length; i++ ) {
+                spec.text.blend[i].color = spec.text.blend[i].color || DEFAULT_COLOR;
+                spec.text.blend[i].hoverColor = spec.text.blend[i].hoverColor || DEFAULT_HOVER_COLOR;
+                spec.text.blend[i].countKey = spec.text.blend[i].countKey || "count";
+            }
 
-            $elements.filter( function() {
-                return $(this).text() === selectedValue;
-            }).removeClass('greyed').addClass('clicked');
-
+            if ( spec.chart ) {
+                for ( i=0; i<spec.chart.bars.length; i++ ) {
+                    spec.chart.bars[i].countKey = spec.chart.bars[i].countKey || "count";
+                    spec.chart.bars[i].color = spec.chart.bars[i].color || DEFAULT_COLOR;
+                    spec.chart.bars[i].hoverColor = spec.chart.bars[i].hoverColor || DEFAULT_HOVER_COLOR;
+                }
+            }
+            if ( spec.summary ) {
+                if ( !$.isArray( spec.summary ) ) {
+                    spec.summary = [ spec.summary ];
+                }
+                for ( i=0; i<spec.summary.length; i++ ) {
+                    spec.summary[i].countKey = spec.summary[i].countKey || "count";
+                    spec.summary[i].color = spec.summary[i].color || DEFAULT_COLOR;
+                    spec.summary[i].prefix = spec.summary[i].prefix || "";
+                }
+            }
+            return spec;
         },
 
 
-        removeClickStateClassesGlobal: function() {
-
-            $(".text-score-entry").removeClass('greyed clicked');
+        getSelectableElement: function() {
+            return 'text-score-entry';
         },
 
 
-        createNodeLayer: function() {
+        createStyles: function() {
 
-            /*
-                 Instantiate the html node layer. This holds the tile data as it comes in from the tile service. Here
-                 we set the x and y coordinate mappings that are used to position the individual nodes on the map. In this
-                 example, the data is geospatial and is under the keys 'latitude' and 'longitude'. The idKey
-                 attribute is used as a unique identification key for internal managing of the data. In this case, it is
-                 the tilekey.
-             */
-            this.nodeLayer = new HtmlNodeLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey'
-            });
+            var spec = this.spec,
+                subColor,
+                subHoverColor,
+                blend, blends, i,
+                css;
+
+            css = '<style id="generic-text-score-renderer-css" type="text/css">';
+
+            // generate text css
+            blends = this.generateBlendedCss( spec.text.blend );
+            for ( i=0; i<blends.length; i++ ) {
+                blend = blends[i];
+                css += '.text-score-label'+blend.suffix+' {color:'+blend.color+';}' +
+                       '.text-score-entry:hover .text-score-label'+blend.suffix+' {color:'+blend.hoverColor+';}' +
+                       '.greyed .text-score-label'+blend.suffix+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
+                       '.clicked-secondary .text-score-label'+blend.suffix+' {color:'+blend.color+';}' +
+                       '.clicked-primary .text-score-label'+blend.suffix+' {color:'+blend.hoverColor+';}';
+            }
+
+            // generate chart css
+            for (i=0; i<spec.chart.bars.length; i++) {
+                subColor = spec.chart.bars[i].color;
+                subHoverColor = spec.chart.bars[i].hoverColor;
+                css += '.text-score-count-sub-bar-'+i+' {background-color:'+subColor+';}';
+                css += '.text-score-entry:hover .text-score-count-sub-bar-'+i+' {background-color:'+subHoverColor+';}';
+                css += '.greyed .text-score-count-sub-bar-'+i+' {background-color:'+ Util.hexBrightness( subColor, 0.5 ) +';}';
+                css += '.clicked-secondary .text-score-count-sub-bar-'+i+' {background-color:'+ subColor +';}';
+                css += '.clicked-primary .text-score-count-sub-bar-'+i+' {background-color:'+ subHoverColor +';}';
+            }
+
+            css += '</style>';
+
+            $(document.body).prepend( css );
         },
 
 
-        createLayer : function() {
+        createHtml : function( data ) {
 
-            var that = this,
-                spec = this.spec;
+            var spec = this.spec,
+                chart = spec.chart,
+                bars = spec.chart.bars,
+                text = spec.text,
+                values = data.values,
+                tilekey = data.tilekey,
+                numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
+                totalCount,
+                yOffset,
+                $html = $([]),
+                value,
+                textEntry,
+                fontSize,
+                percentages,
+                centreIndex,
+                barOffset,
+                html,
+                count,
+                labelClass,
+                $parent,
+                $entry,
+                i, j;
 
             /*
                 Utility function for positioning the labels
@@ -101,122 +157,100 @@ define(function (require) {
                 return 112 - ( ( ( numEntries - 1) / 2 ) ) * SPACING;
             }
 
-
             /*
-                Returns the total count of all tweets in a node
+                Returns the total sum count for all values in node
             */
             function getTotalCount( values, numEntries ) {
-
                 var i,
                     sum = 0;
                 for (i=0; i<numEntries; i++) {
-                    sum += values[i][spec.countKey];
+                    sum += values[i][spec.text.countKey];
                 }
                 return sum;
             }
 
-
-            /*
-                Returns the percentage of tweets in a node for the respective tag
-            */
-            function getTotalCountPercentage( values, value, numEntries ) {
-                return ( value[spec.countKey] / getTotalCount( values, numEntries ) ) || 0;
-            }
-
-
             /*
                 Returns a font size based on the percentage of tweets relative to the total count
             */
-            function getFontSize( values, value, numEntries, minFontSize, maxFontSize ) {
-                var fontRange = maxFontSize - minFontSize,
-                    sum = getTotalCount( values, numEntries ),
-                    percentage = getTotalCountPercentage( values, value, numEntries ),
-                    scale = Math.log( sum ) * 0.5,
-                    size = ( percentage * fontRange * scale ) + ( minFontSize * percentage );
-                return Math.min( Math.max( size, minFontSize), maxFontSize );
+            function getFontSize( count, totalCount ) {
+                var MAX_FONT_SIZE = 22,
+                    MIN_FONT_SIZE = 12,
+                    FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
+                    percentage = ( count / totalCount ) || 0,
+                    scale = Math.log( totalCount ),
+                    size = ( percentage * FONT_RANGE * scale ) + ( MIN_FONT_SIZE * percentage );
+                return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
             }
 
-
             /*
-                Here we create and attach an individual html layer to the html node layer. For every individual node
-                of data in the node layer, the html function will be executed with the 'this' context that of the node.
-             */
-            this.nodeLayer.addLayer( new HtmlLayer({
+                Maps a bar countKey to its  percentage of total count
+            */
+            function countToPercentage( bar ) {
+                return ( value[ bar.countKey ] / count ) || 0;
+            }
 
-                html: function() {
+            totalCount = getTotalCount( values, numEntries );
+            yOffset = getYOffset( numEntries );
 
-                    var MAX_FONT_SIZE = 22,
-                        MIN_FONT_SIZE = 12,
-                        values = this.bin.value,
-                        tilekey = this.tilekey,
-                        numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
-                        yOffset = getYOffset( numEntries ),
-                        $html = $('<div class="aperture-tile aperture-tile-'+tilekey+'"></div>'),
-                        value,
-                        entryText,
-                        fontSize,
-                        subCounts,
-                        html,
-                        count,
-                        $parent,
-                        $entry,
-                        i, j;
+            if ( !chart ) {
+                yOffset += 10;
+            }
 
-                    if ( !spec.subCountKeys ) {
-                        yOffset += 10;
+            for (i=0; i<numEntries; i++) {
+
+                value = values[i];
+                textEntry = value[text.textKey];
+                count = value[text.countKey];
+                fontSize = getFontSize( count, totalCount );
+                labelClass = this.generateBlendedClass( "text-score-label", value, text );
+
+                if ( chart ) {
+                    // get percentages for each bar
+                    percentages = bars.map( countToPercentage );
+                    // determine bar horizontal offset
+                    centreIndex = Math.floor( bars.length / 2 );
+                    barOffset = ( bars.length % 2 === 0 ) ? percentages[centreIndex] : percentages[centreIndex] / 2;
+                    for (j=centreIndex-1; j>=0; j--) {
+                        barOffset += percentages[j];
                     }
-
-                    $html.append('<div class="count-summary"></div>');
-
-                    for (i=0; i<numEntries; i++) {
-
-                        value = values[i];
-
-                        entryText = value[spec.entryKey];
-                        count = value[spec.countKey];
-
-                        subCounts = [];
-                        if ( spec.subCountKeys ) {
-                            for (j=0; j<spec.subCountKeys.length; j++) {
-                                subCounts.push( value[spec.subCountKeys[j]] );
-                            }
-                        }
-
-                        fontSize = getFontSize( values, value, numEntries, MIN_FONT_SIZE, MAX_FONT_SIZE );
-
-                        $parent = $('<div class="text-score-entry-parent" style="top:' + yOffset + 'px;"></div>');
-
-                        html =     '<div class="text-score-entry">';
-                        // create entry label
-                        html +=         '<div class="text-score-entry-label" style="font-size:' + fontSize +'px;">'+entryText+'</div>';
-
-                        // create entry count bars
-                        if ( spec.subCountKeys ) {
-                            html +=         '<div class="text-score-count-bar" style="left:-60px; top:'+fontSize+'px;">';
-                            for (j=0; j<subCounts.length; j++) {
-                                html +=         '<div class="text-score-count-sub-bar" style="width:'+((subCounts[j]/count)*100)+'%;"></div>';
-                            }
-                            html +=         '</div>';
-                        }
-
-                        html +=     '</div>';
-
-                        $entry = $(html);
-
-                        $parent.append( $entry );
-                        $parent = $parent.add('<div class="clear"></div>');
-
-                        that.setMouseEventCallbacks( $entry, this, value, spec.entryKey, spec.countKey );
-                        that.addClickStateClasses( $entry, value, spec.entryKey );
-
-                        $html.append( $parent );
-                    }
-
-                    // return the jQuery object. You can also return raw html as a string.
-                    return $html;
                 }
-            }));
 
+                // create entry
+                html = '<div class="text-score-entry">';
+                // create label
+                html += '<div class="text-score-label '+labelClass+'" style="'
+                      + 'font-size:'+ fontSize +'px;'
+                      + 'line-height:'+ fontSize +'px;">'+textEntry+'</div>';
+
+                if ( chart ) {
+                    // create chart
+                    html += '<div class="text-score-count-bar" style="'
+                          + 'left:'+ (-120*barOffset) + 'px;'
+                          + 'top:'+fontSize+'px;">';
+                    for (j=0; j<bars.length; j++) {
+                        // create bar
+                        html += '<div class="text-score-count-sub-bar '
+                              + 'text-score-count-sub-bar-'+ j +'" style="'
+                              + 'width:'+(percentages[j]*100)+'%;"></div>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+
+                $entry = $( html );
+
+                $parent = $('<div class="text-score-entry-parent" style="'
+                          + 'top:' + yOffset + 'px;"></div>');
+                $parent.append( $entry );
+                $parent = $parent.add('<div class="clear"></div>');
+
+                this.setMouseEventCallbacks( $entry, data, value );
+                this.addClickStateClassesLocal( $entry, value, tilekey );
+
+                $html = $html.add( $parent );
+            }
+
+            return $html;
         }
 
 
