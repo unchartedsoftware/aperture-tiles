@@ -545,9 +545,10 @@ abstract class KeyValueArgumentSource {
 			}
 		)
 		new GeneralSparkConnector(
-			getString("spark",
-			          "Spark master location (default is \"local\")",
-			          Some("local")),
+		  // Only set a master when it has been passed in.  This lets the default
+			// value specified in spark-conf get picked up when no master is specified.
+			getStringOption("spark",
+			          "Spark master location (defaults to externally set value ie. spark-conf)"),
 			getString("sparkhome",
 			          "Spark home location (defaults to ${SPARK_HOME}",
 			          Some(System.getenv("SPARK_HOME"))),
