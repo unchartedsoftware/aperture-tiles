@@ -174,12 +174,13 @@ class HierarchicFDLayout extends Serializable {
 													   g)
 													  								   				
 				// calc circle coords of parent community for saving results
-				val parentRadius = Math.max(parentRectangle._3, parentRectangle._4)*1.41421	// 1.41421 = sqrt(2)
-				val parentCircle = (parentRectangle._1 + 0.5*parentRectangle._3, parentRectangle._2 + 0.5*parentRectangle._4, parentRadius)
+				val parentCircC = (parentRectangle._1 + 0.5*parentRectangle._3, parentRectangle._2 + 0.5*parentRectangle._4)	// centre of parent circle
+				val parentCircR = Math.sqrt(Math.pow(parentCircC._1 - parentRectangle._1, 2.0) + Math.pow(parentCircC._2 - parentRectangle._2, 2.0))	// radius of parent circle
+				//val parentCircR = Math.max(parentRectangle._3, parentRectangle._4)*0.70711	// 0.70711 = 1/sqrt(2)
 				
 				val nodeData = coords.map(i => {	// append parent community info onto end of record for each node (so can save parent community info too)
 					val (id, x, y, radius, numInternalNodes, metaData) = i
-					(id, ((x, y, radius, numInternalNodes, metaData), parentCircle))
+					(id, ((x, y, radius, numInternalNodes, metaData), (parentCircC._1, parentCircC._2, parentCircR)))
 				})
 				nodeData
 			})
