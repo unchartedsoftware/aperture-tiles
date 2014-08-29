@@ -42,7 +42,7 @@ import org.apache.spark.graphx._
  *  layoutDimensions = Total desired width and height of the node layout region. Default is (256.0, 256.0)
  *	borderOffset = (CURRENTLY NOT IN USE) percent of boundingBox width and height to leave as whitespace when laying out leaf nodes.  Default is 5 percent
  *	numNodesThres = (CURRENTLY NOT IN USE) threshold used to determine when to layout underlying communities within a single force-directed layout task.  Default is 1000 nodes
- *  nodeAreaPercent = Used for hierchical levels > 0 to determine the area of all node 'circles' within the boundingBox vs whitespace. Default is 20 percent
+ *  nodeAreaPercent = Used for hierarchical levels > 0 to determine the area of all community 'circles' within the boundingBox vs whitespace. Default is 20 percent
  *  gravity = strength of gravity force to use to prevent outer nodes from spreading out too far.  Force-directed layout only.  Default = 0.0 (no gravity)
  * **/ 
 class HierarchicFDLayout extends Serializable {
@@ -67,7 +67,8 @@ class HierarchicFDLayout extends Serializable {
 		//TODO -- numNodesThres not currently used for FD hierarchical layout (could add it in later?)
 		val borderOffset = 0	//TODO -- borderOffset not currently used for FD hierarchical layout (could add it in later?)
 		
-		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0") 
+		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0")
+		if (nodeAreaPercent < 10 || nodeAreaPercent > 90) throw new IllegalArgumentException("nodeAreaPercent parameter must be between 10 and 90") 		
 		
 		val forceDirectedLayouter = new ForceDirected()	//force-directed layout scheme
 
@@ -156,8 +157,8 @@ class HierarchicFDLayout extends Serializable {
 			// perform force-directed layout algorithm on all nodes and edges in a given parent rectangle
 			val bUseNodeSizes = (level > 0)
 		    val g = if (level > 0) gravity else 0
-			val currAreaPercent =  if (level > 0) Math.min(nodeAreaPercent + (level-1)*5, 80)	// use more area for communities at higher hierarchical levels	// TODO -- test this further!
-								   else 20
+			val currAreaPercent =  if (level > 0) Math.max(nodeAreaPercent - (maxHierarchyLevel-level)*10, 10)	// use less area for communities at lower hierarchical levels
+								   else nodeAreaPercent	// (note, this parameter isn't used for level=0 anyway)
 
 			val nodeDataAll = joinedData.flatMap(p => {
 				val parentRectangle = p._1
@@ -174,12 +175,13 @@ class HierarchicFDLayout extends Serializable {
 													   g)
 													  								   				
 				// calc circle coords of parent community for saving results
-				val parentRadius = Math.max(parentRectangle._3, parentRectangle._4)*1.41421	// 1.41421 = sqrt(2)
-				val parentCircle = (parentRectangle._1 + 0.5*parentRectangle._3, parentRectangle._2 + 0.5*parentRectangle._4, parentRadius)
+				val parentCircC = (parentRectangle._1 + 0.5*parentRectangle._3, parentRectangle._2 + 0.5*parentRectangle._4)	// centre of parent circle
+				val parentCircR = Math.sqrt(Math.pow(parentCircC._1 - parentRectangle._1, 2.0) + Math.pow(parentCircC._2 - parentRectangle._2, 2.0))	// radius of parent circle
+				//val parentCircR = Math.max(parentRectangle._3, parentRectangle._4)*0.70711	// 0.70711 = 1/sqrt(2)
 				
 				val nodeData = coords.map(i => {	// append parent community info onto end of record for each node (so can save parent community info too)
 					val (id, x, y, radius, numInternalNodes, metaData) = i
-					(id, ((x, y, radius, numInternalNodes, metaData), parentCircle))
+					(id, ((x, y, radius, numInternalNodes, metaData), (parentCircC._1, parentCircC._2, parentCircR)))
 				})
 				nodeData
 			})
