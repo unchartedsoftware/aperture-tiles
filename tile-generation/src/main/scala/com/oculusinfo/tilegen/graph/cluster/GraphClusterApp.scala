@@ -183,8 +183,8 @@ object GraphClusterApp {
 			nodeRDD = nodeRDD.coalesce(parallelism,shuffle=true)
 		}   
 		   
-		// create the graph
-	    val graph = Graph(nodeRDD, edgeRDD)
+		// create the graph (with default vertex attribute = an empty string)
+	    val graph = Graph(nodeRDD, edgeRDD, "")
 	    
 	    // use a helper class to execute the louvain algorithm and save the output.
 	    val runner = new HDFSLouvainRunner(minProgress,progressCounter,outputDir)
