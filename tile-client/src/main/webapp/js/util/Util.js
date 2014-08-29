@@ -203,6 +203,35 @@ define(function (require) {
             return "#" + componentToHex( Math.floor(r)) +
                          componentToHex( Math.floor(g)) +
                          componentToHex( Math.floor(b));
+        },
+
+
+        hexBrightness: function( hex, factor ) {
+            var rgb = this.hexToRgb( hex );
+            return this.rgbToHex( { r: Math.min( Math.max( 0, rgb.r * factor ), 255 ),
+                                    g: Math.min( Math.max( 0, rgb.g * factor ), 255 ),
+                                    b: Math.min( Math.max( 0, rgb.b * factor ), 255 ) } );
+        },
+
+
+        blendHex: function( colors, percentages ) {
+            var rgbs = [], i,
+                rgb = {
+                    r : 0,
+                    g : 0,
+                    b : 0
+                };
+            // convert hex to rgb
+            for ( i=0; i<colors.length; i++ ) {
+                rgbs.push( this.hexToRgb( colors[i] ) );
+            }
+            // apply weights
+            for ( i=0; i<percentages.length; i++ ) {
+                rgb.r += rgbs[i].r * percentages[i];
+                rgb.g += rgbs[i].g * percentages[i];
+                rgb.b += rgbs[i].b * percentages[i];
+            }
+            return this.rgbToHex( rgb );
         }
 
     };

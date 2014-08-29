@@ -36,9 +36,7 @@ define(function (require) {
     ClientRenderer = Class.extend({
         ClassName: "ClientRenderer",
 
-
         init: function( map, spec ) {
-
             this.map = map;
             this.spec = spec;
         },

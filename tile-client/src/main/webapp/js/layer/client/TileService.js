@@ -319,7 +319,7 @@ define(function (require) {
                             tilekey: tilekey,
                             longitude: binRect.minX, // top left of tile
                             latitude: binRect.maxY,
-                            bin: tileData.values[binNum],
+                            values: tileData.values[binNum].value,
                             meta: tileData.meta
                         };
                         results.push( binData );

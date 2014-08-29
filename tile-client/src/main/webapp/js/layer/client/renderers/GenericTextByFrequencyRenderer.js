@@ -29,10 +29,11 @@ define(function (require) {
 
 
 
-    var HtmlNodeLayer = require('../../HtmlNodeLayer'),
-        HtmlLayer = require('../../HtmlLayer'),
+    var Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 8,
+        DEFAULT_COLOR = '#FFFFFF',
+        DEFAULT_HOVER_COLOR = '#7FFF00',
         GenericTextByFrequencyRenderer;
 
 
@@ -41,56 +42,101 @@ define(function (require) {
         ClassName: "GenericTextByFrequencyRenderer",
 
         init: function( map, spec ) {
-
             this._super( map, spec );
-            this.createNodeLayer(); // instantiate the node layer data object
-            this.createLayer();     // instantiate the html visualization layer
         },
 
 
-        addClickStateClassesGlobal: function() {
+        parseInputSpec: function( spec ) {
 
-            var selectedValue = this.layerState.get('click')[this.spec.entryKey],
-                $elements = $(".text-by-frequency-entry");
+            var i;
+            spec.text = spec.text || {};
+            spec.text.textKey = spec.text.textKey || "text";
+            spec.text.countKey = spec.text.countKey || "count";
+            spec.text.blend = spec.text.blend || [{}];
+            for ( i=0; i<spec.text.blend.length; i++ ) {
+                spec.text.blend[i].color = spec.text.blend[i].color || DEFAULT_COLOR;
+                spec.text.blend[i].hoverColor = spec.text.blend[i].hoverColor || DEFAULT_HOVER_COLOR;
+                spec.text.blend[i].countKey = spec.text.blend[i].countKey || "count";
+            }
 
-            $elements.filter( function() {
-                return $(this).text() !== selectedValue;
-            }).addClass('greyed').removeClass('clicked');
+            spec.chart = spec.chart || [{}];
+            for ( i=0; i<spec.chart.blend.length; i++ ) {
+                spec.chart.blend[i].color = spec.chart.blend[i].color || DEFAULT_COLOR;
+                spec.chart.blend[i].hoverColor = spec.chart.blend[i].hoverColor || DEFAULT_HOVER_COLOR;
+                spec.chart.blend[i].countKey = spec.chart.blend[i].countKey || "count";
+            }
 
-            $elements.filter( function() {
-                return $(this).text() === selectedValue;
-            }).removeClass('greyed').addClass('clicked');
+            if ( spec.summary ) {
+                if ( !$.isArray( spec.summary ) ) {
+                    spec.summary = [ spec.summary ];
+                }
+                for ( i=0; i<spec.summary.length; i++ ) {
+                    spec.summary[i].countKey = spec.summary[i].countKey || "count";
+                    spec.summary[i].color = spec.summary[i].color || DEFAULT_COLOR;
+                    spec.summary[i].prefix = spec.summary[i].prefix || "";
+                }
+            }
+
+            return spec;
         },
 
 
-        removeClickStateClassesGlobal: function() {
-
-            $(".text-by-frequency-entry").removeClass('greyed clicked');
+        getSelectableElement: function() {
+            return 'text-by-frequency-entry';
         },
 
 
-        createNodeLayer: function() {
+        createStyles: function() {
 
-            /*
-                 Instantiate the html node layer. This holds the tile data as it comes in from the tile service. Here
-                 we set the x and y coordinate mappings that are used to position the individual nodes on the map. In this
-                 example, the data is geospatial and is under the keys 'latitude' and 'longitude'. The idKey
-                 attribute is used as a unique identification key for internal managing of the data. In this case, it is
-                 the tilekey.
-             */
-            this.nodeLayer = new HtmlNodeLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey'
-            });
+            var spec = this.spec,
+                blend,
+                blends,
+                i,
+                css;
+
+            css = '<style id="generic-text-by-frequency-renderer-css" type="text/css">';
+
+            // generate text css
+            blends = this.generateBlendedCss( spec.text.blend );
+            for ( i=0; i<blends.length; i++ ) {
+                blend = blends[i];
+                css += '.text-by-frequency-label'+blend.suffix+' {color:'+blend.color+';}' +
+                       '.text-by-frequency-entry:hover .text-by-frequency-label'+blend.suffix+' {color:'+blend.hoverColor+';}' +
+                       '.greyed .text-by-frequency-label'+blend.suffix+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
+                       '.clicked-secondary .text-by-frequency-label'+blend.suffix+' {color:'+blend.color+';}' +
+                       '.clicked-primary .text-by-frequency-label'+blend.suffix+' {color:'+blend.hoverColor+';}';
+            }
+
+            // generate bar css
+            blends = this.generateBlendedCss( spec.chart.blend );
+            for ( i=0; i<blends.length; i++ ) {
+                blend = blends[i];
+                css += '.text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.color+';}' +
+                       '.text-by-frequency-entry:hover .text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.hoverColor+';}' +
+                       '.greyed .text-by-frequency-bar'+blend.suffix+' {background-color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
+                       '.clicked-secondary .text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.color+';}' +
+                       '.clicked-primary .text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.hoverColor+';}';
+            }
+
+            css += '</style>';
+
+            $(document.body).prepend( css );
         },
 
 
-        createLayer : function() {
+        createHtml : function( data ) {
 
-            var that = this,
-                spec = this.spec;
+            var spec = this.spec,
+                tilekey = data.tilekey,
+                html = '',
+                $html = $([]),
+                $elem,
+                values = data.values,
+                numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
+                value, entryText,
+                maxPercentage, relativePercent,
+                visibility, countArray, barClass, labelClass,
+                i, j;
 
             function getYOffset( index, numEntries ) {
                 var SPACING = 20;
@@ -98,11 +144,10 @@ define(function (require) {
             }
 
             /*
-                Returns the total count of all tweets in a node
+                Returns the total sum count
             */
-            function getTotalCount( value ) {
-
-                var countArray = value[spec.countKey],
+            function getCountArraySum( value ) {
+                var countArray = value[spec.chart.countKey],
                     sum = 0, i;
                 for (i=0; i<countArray.length; i++) {
                     sum += countArray[i];
@@ -112,19 +157,22 @@ define(function (require) {
 
 
             /*
-                Returns the percentage of tweets in a node for the respective tag
+                Returns the percentage count
             */
             function getPercentage( value, j ) {
-                return ( value[spec.countKey][j] / getTotalCount( value ) ) || 0;
+                return ( value[spec.chart.countKey][j] / getCountArraySum( value ) ) || 0;
             }
 
 
+            /*
+                Returns the maximum percentage count
+            */
             function getMaxPercentage( value, type ) {
                 var i,
                     percent,
-                    countArray = value[spec.countKey],
+                    countArray = value[spec.chart.countKey],
                     maxPercent = 0,
-                    count = getTotalCount( value );
+                    count = getCountArraySum( value );
 
                 if (count === 0) {
                     return 0;
@@ -139,61 +187,43 @@ define(function (require) {
                 return maxPercent;
             }
 
-            this.nodeLayer.addLayer( new HtmlLayer({
+            for (i=0; i<numEntries; i++) {
 
-                html: function() {
+                value = values[i];
+                entryText = value[spec.text.textKey];
+                countArray = value[spec.chart.countKey];
+                maxPercentage = getMaxPercentage( value );
+                labelClass = this.generateBlendedClass( "text-by-frequency-label", value, spec.text );
 
-                    var tilekey = this.tilekey,
-                        html = '',
-                        $html = $('<div id="'+tilekey+'" class="aperture-tile"></div>'),                     
-                        $elem,
-                        values = this.bin.value,
-                        numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
-                        value, entryText,
-                        maxPercentage, relativePercent,
-                        visibility, countArray,
-                        i, j;
+                html = '<div class="text-by-frequency-entry" style="top:' +  getYOffset( i, numEntries ) + 'px;">';
 
-                    for (i=0; i<numEntries; i++) {
-
-                        value = values[i];
-
-                        entryText = value[spec.entryKey];
-                        countArray = value[spec.countKey];
-
-                        maxPercentage = getMaxPercentage( value );
-
-                        html = '<div class="text-by-frequency-entry" style="top:' +  getYOffset( i, numEntries ) + 'px;">';
-
-                        // create count chart
-                        html += '<div class="text-by-frequency-left">';
-                        for (j=0; j<countArray.length; j++) {
-                            relativePercent = ( getPercentage( value, j ) / maxPercentage ) * 100;
-                            visibility = (relativePercent > 0) ? '' : 'hidden';
-                            relativePercent = Math.max( relativePercent, 20 );
-                            html += '<div class="text-by-frequency-bar" style="visibility:'+visibility+';height:'+relativePercent+'%; width:'+ Math.floor( (105+countArray.length)/countArray.length ) +'px; top:'+(100-relativePercent)+'%;"></div>';
-                        }
-                        html += '</div>';
-
-                        // create tag label
-                        html += '<div class="text-by-frequency-right">';
-                        html +=     '<div class="text-by-frequency-label">'+entryText+'</div>';
-                        html += '</div>';
-
-                        html += '</div>';
-
-                        $elem = $(html);
-
-                        that.setMouseEventCallbacks( $elem, this, value, spec.entryKey );
-                        that.addClickStateClasses( $elem, value, spec.entryKey );
-
-                        $html.append( $elem );
-                    }
-
-                    return $html;
+                // create count chart
+                html +=     '<div class="text-by-frequency-left">';
+                for (j=0; j<countArray.length; j++) {
+                    barClass = this.generateBlendedClass( "text-by-frequency-bar", value, spec.chart, j );
+                    relativePercent = ( getPercentage( value, j ) / maxPercentage ) * 100;
+                    visibility = (relativePercent > 0) ? '' : 'hidden';
+                    relativePercent = Math.max( relativePercent, 20 );
+                    html += '<div class="text-by-frequency-bar '+barClass+'" style="visibility:'+visibility+';height:'+relativePercent+'%; width:'+ Math.floor( (105+countArray.length)/countArray.length ) +'px; top:'+(100-relativePercent)+'%;"></div>';
                 }
-            }));
+                html +=     '</div>';
 
+                // create tag label
+                html +=     '<div class="text-by-frequency-right">';
+                html +=         '<div class="text-by-frequency-label '+labelClass+'">'+entryText+'</div>';
+                html +=     '</div>';
+
+                html += '</div>';
+
+                $elem = $(html);
+
+                this.setMouseEventCallbacks( $elem, data, value );
+                this.addClickStateClassesLocal( $elem, value, tilekey );
+
+                $html = $html.add( $elem );
+            }
+
+            return $html;
         }
 
 

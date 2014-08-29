@@ -29,10 +29,7 @@ define(function (require) {
 
 
 
-    var HtmlNodeLayer = require('../../HtmlNodeLayer'),
-        HtmlLayer = require('../../HtmlLayer'),
-        GenericHtmlRenderer = require('./GenericHtmlRenderer'),
-        //Util = require('../../../util/Util'),
+    var GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         GenericMetaDataRenderer;
 
 
@@ -41,34 +38,22 @@ define(function (require) {
         ClassName: "GenericMetaDataRenderer",
 
         init: function( map, spec ) {
-
             this._super( map, spec );
-            this.createNodeLayer(); // instantiate the node layer data object
-            this.createLayer();     // instantiate the html visualization layer
         },
 
-
-        createNodeLayer: function() {
-
-            /*
-                 Instantiate the html node layer. This holds the tile data as it comes in from the tile service. Here
-                 we set the x and y coordinate mappings that are used to position the individual nodes on the map. In this
-                 example, the data is geospatial and is under the keys 'latitude' and 'longitude'. The idKey
-                 attribute is used as a unique identification key for internal managing of the data. In this case, it is
-                 the tilekey.
-             */
-            this.nodeLayer = new HtmlNodeLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey'
-            });
+        getSelectableElement: function() {
+            return 'meta-entry';
         },
 
+        parseInputSpec: function( spec ) {
+            return spec;
+        },
 
-        createLayer : function() {
+        createStyles: function() {
+            return true;
+        },
 
-            var spec = this.spec;
+        createHtml : function( data ) {
 
             /*
                 Utility function for positioning the labels
@@ -102,51 +87,32 @@ define(function (require) {
                 return arr;
             }
 
-            /*
-                Here we create and attach an individual html layer to the html node layer. For every individual node
-                of data in the node layer, the html function will be executed with the 'this' context that of the node.
-             */
-            this.nodeLayer.addLayer( new HtmlLayer({
 
-                html: function() {
+            var spec = this.spec,
+                FONT_SIZE = 16,
+                meta = data.meta,
+                keyVals = findKeyVals( meta, spec.metaKeys ),
+                yOffset = getYOffset( keyVals.length ),
+                $html = $([]),
+                html,
+                $parent,
+                i;
 
-                    var FONT_SIZE = 16,
-                        meta = this.meta,
-                        tilekey = this.tilekey,
-                        keyVals = findKeyVals( meta, spec.keys ),
-                        yOffset = getYOffset( keyVals.length ),
-                        $html = $('<div class="aperture-tile aperture-tile-'+tilekey+'"></div>'),
-                        html,
-                        $parent,
-                        $entry,
-                        i;
+            for (i=0; i<keyVals.length; i++) {
 
-                    for (i=0; i<keyVals.length; i++) {
+                html =     '<div class="meta-entry">';
+                html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px;">'+keyVals[i].key+':</div>';
+                html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px; margin-bottom: 5px;">'+keyVals[i].value+'</div>';
+                html +=    '</div>';
 
-                        $parent = $('<div class="meta-entry-parent" style="top:' + yOffset + 'px;"></div>');
+                $parent = $('<div class="meta-entry-parent" style="top:' + yOffset + 'px;"></div>');
+                $parent.append( html );
+                $parent = $parent.add('<div class="clear"></div>');
 
-                        html =     '<div class="meta-entry">';
-                        // create entry label
-                        html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px;">'+keyVals[i].key+':</div>';
-                        html +=         '<div class="meta-entry-label" style="font-size:' + FONT_SIZE + 'px; margin-bottom: 5px;">'+keyVals[i].value+'</div>';
+                $html = $html.add( $parent );
+            }
 
-                        html +=    '</div>';
-
-                        $entry = $(html);
-
-                        $parent.append( $entry );
-                        $parent = $parent.add('<div class="clear"></div>');
-
-                        //that.setMouseEventCallbacks( $entry, this, value, spec.entryKey, spec.countKey );
-                        //that.addClickStateClasses( $entry, value, spec.entryKey );
-
-                        $html.append( $parent );
-                    }
-
-                    // return the jQuery object. You can also return raw html as a string.
-                    return $html;
-                }
-            }));
+            return $html;
 
         }
 

@@ -29,15 +29,14 @@ define(function (require) {
 
 
 
-    var HtmlNodeLayer = require('../../HtmlNodeLayer'),
-        HtmlLayer = require('../../HtmlLayer'),
-        //Util = require('../../../util/Util'),
+    var Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 10,
         MAX_LETTERS_IN_WORD = 20,
+        DEFAULT_COLOR = '#FFFFFF',
+        DEFAULT_HOVER_COLOR = '#7FFF00',
         trimLabelText,
         GenericWordCloudHtml;
-
 
 
     trimLabelText = function( str ) {
@@ -52,51 +51,68 @@ define(function (require) {
         ClassName: "GenericWordCloudHtml",
 
         init: function( map, spec ) {
-
             this._super( map, spec );
-            this.createNodeLayer(); // instantiate the node layer data object
-            this.createLayer();     // instantiate the html visualization layer
         },
 
 
-        addClickStateClassesGlobal: function() {
+        parseInputSpec: function( spec ) {
 
-            var selectedValue = this.layerState.get('click')[this.spec.entryKey],
-                $elements = $(".word-cloud-word");
+            var i;
 
-            $elements.filter( function() {
-                return $(this).text() !== selectedValue;
-            }).addClass('greyed').removeClass('clicked');
+            spec.text.textKey = spec.text.textKey || "text";
+            spec.text.countKey = spec.text.countKey || "count";
+            spec.text.blend = spec.text.blend || [{}];
+            for ( i=0; i<spec.text.blend.length; i++ ) {
+                spec.text.blend[i].color = spec.text.blend[i].color || DEFAULT_COLOR;
+                spec.text.blend[i].hoverColor = spec.text.blend[i].hoverColor || DEFAULT_HOVER_COLOR;
+                spec.text.blend[i].countKey = spec.text.blend[i].countKey || "count";
+            }
 
-            $elements.filter( function() {
-                return $(this).text() === selectedValue;
-            }).removeClass('greyed').addClass('clicked');
+            if ( spec.summary ) {
+                if ( !$.isArray( spec.summary ) ) {
+                    spec.summary = [ spec.summary ];
+                }
+                for ( i=0; i<spec.summary.length; i++ ) {
+                    spec.summary[i].countKey = spec.summary[i].countKey || "count";
+                    spec.summary[i].color = spec.summary[i].color || DEFAULT_COLOR;
+                    spec.summary[i].prefix = spec.summary[i].prefix || "";
+                }
+            }
+
+            return spec;
         },
 
 
-        removeClickStateClassesGlobal: function() {
-
-            $(".word-cloud-word").removeClass('greyed clicked');
+        getSelectableElement: function() {
+            return 'word-cloud-word';
         },
 
 
-        createNodeLayer: function() {
+        createStyles: function() {
 
-            /*
-                 Instantiate the html node layer. This holds the tile data as it comes in from the tile service. Here
-                 we set the x and y coordinate mappings that are used to position the individual nodes on the map. In this
-                 example, the data is geospatial and is under the keys 'latitude' and 'longitude'. The idKey
-                 attribute is used as a unique identification key for internal managing of the data. In this case, it is
-                 the tilekey.
-             */
-            this.nodeLayer = new HtmlNodeLayer({
-                map: this.map,
-                xAttr: 'longitude',
-                yAttr: 'latitude',
-                idKey: 'tilekey'
-            });
+            var spec = this.spec,
+                blend,
+                blends,
+                i,
+                css;
+
+            css = '<style id="generic-word-cloud-renderer-css" type="text/css">';
+
+            // generate text css
+            blends = this.generateBlendedCss( spec.text.blend );
+            for ( i=0; i<blends.length; i++ ) {
+                blend = blends[i];
+                css += '.word-cloud-word'+blend.suffix+' {color:'+blend.color+';}' +
+                       '.greyed.word-cloud-word'+blend.suffix+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
+                       '.clicked-secondary.word-cloud-word'+blend.suffix+' {color:'+blend.color+';}' +
+                       '.clicked-primary.word-cloud-word'+blend.suffix+' {color:'+blend.hoverColor+';}' +
+                       '.word-cloud-word'+blend.suffix+':hover {color:'+blend.hoverColor+';}';
+            }
+
+            css += '</style>';
+
+            $(document.body).prepend( css );
         },
-
 
 
         createWordCloud: function( words, frequencies, minFontSize, maxFontSize, boundingBox ) {
@@ -108,6 +124,7 @@ define(function (require) {
                 fontSize, pos, scale,
                 fontRange, borderCollisions = 0,
                 intersection;
+
 
             function spiralPosition( pos ) {
 
@@ -176,14 +193,11 @@ define(function (require) {
 
                 var $temp,
                     dimension = {};
-
                 $temp = $('<div class="word-cloud-word-temp" style="visibility:hidden; font-size:'+fontSize+'px;">'+str+'</div>');
                 $('body').append( $temp );
-
                 dimension.width = $temp.outerWidth();
                 dimension.height = $temp.outerHeight();
                 $temp.remove();
-
                 return dimension;
             }
 
@@ -265,76 +279,70 @@ define(function (require) {
             }
 
             return cloud;
-
         },
 
 
-        createLayer : function() {
+        createHtml : function( data ) {
 
-            var that = this,
-                spec = this.spec;
+            var MAX_FONT_SIZE = 30,
+                MIN_FONT_SIZE = 12,
+                HORIZONTAL_OFFSET = 10,
+                VERTICAL_OFFSET = 24,
+                spec = this.spec,
+                tilekey = data.tilekey,
+                values = data.values,
+                $html = $([]),
+                $elem,
+                value,
+                words = [],
+                word,
+                wordClass,
+                frequencies = [],
+                i,
+                cloud,
+                boundingBox = {
+                    width:256 - HORIZONTAL_OFFSET*2,
+                    height:256 - VERTICAL_OFFSET*2,
+                    x:0,
+                    y:0
+                },
+                count = Math.min( values.length, MAX_WORDS_DISPLAYED );
 
-            this.nodeLayer.addLayer( new HtmlLayer({
+            $html = $html.add('<div class="count-summary"></div>');
 
-                html: function() {
+            for (i=0; i<count; i++) {
+                value = values[i];
+                words.push( trimLabelText( value[spec.text.textKey] ) );
+                frequencies.push( value[spec.text.countKey] );
+            }
 
-                    var MAX_FONT_SIZE = 30,
-                        MIN_FONT_SIZE = 12,
-                        HORIZONTAL_OFFSET = 10,
-                        VERTICAL_OFFSET = 24,
-                        tilekey = this.tilekey,
-                        $html = $('<div class="aperture-tile aperture-tile-'+tilekey+'"></div>'),
-                        $elem,
-                        values = this.bin.value,
-                        value,
-                        words = [],
-                        frequencies = [],
-                        i,
-                        cloud, cloudWord,
-                        boundingBox = {
-                            width:256 - HORIZONTAL_OFFSET*2,
-                            height:256 - VERTICAL_OFFSET*2,
-                            x:0,
-                            y:0
-                        },
-                        count = Math.min( values.length, MAX_WORDS_DISPLAYED );
+            cloud = this.createWordCloud( words, frequencies, MIN_FONT_SIZE, MAX_FONT_SIZE, boundingBox );
 
-                    $html.append('<div class="count-summary"></div>');
+            for (i=cloud.length-1; i>=0; i--) {
 
-                    for (i=0; i<count; i++) {
-                        value = values[i];
-                        words.push( trimLabelText( value[spec.entryKey] ) );
-                        frequencies.push( value[spec.countKey] );
-                    }
-
-                    cloud = that.createWordCloud( words, frequencies, MIN_FONT_SIZE, MAX_FONT_SIZE, boundingBox );
-
-                    for (i=cloud.length-1; i>=0; i--) {
-
-                        cloudWord = cloud[i];
-
-                        if (!cloudWord) {
-                            continue;
-                        }
-
-                        value = values[i];
-
-                        $elem = $('<div class="word-cloud-word" style="'
-                                + 'font-size:'+cloudWord.fontSize+'px;'
-                                + 'left:'+(128+cloudWord.x-(cloudWord.width/2))+'px;'
-                                + 'top:'+(128+cloudWord.y-(cloudWord.height/2))+'px;'
-                                + 'width:'+cloudWord.width+'px;'
-                                + 'height:'+cloudWord.height+'px;">'+cloudWord.word+'</div>');
-
-                        that.setMouseEventCallbacks( $elem, this, value, spec.entryKey, spec.countKey );
-                        that.addClickStateClasses( $elem, value, spec.entryKey );
-
-                        $html.append( $elem );
-                    }
-
-                    return $html;
+                if ( !cloud[i] ) {
+                    // words may not fit and will be null
+                    continue;
                 }
-            }));
+
+                word = cloud[i];
+                value = values[i];
+                wordClass = this.generateBlendedClass( "word-cloud-word", value, spec.text );
+
+                $elem = $('<div class="word-cloud-word '+wordClass+'" style="'
+                        + 'font-size:'+word.fontSize+'px;'
+                        + 'left:'+(128+word.x-(word.width/2))+'px;'
+                        + 'top:'+(128+word.y-(word.height/2))+'px;'
+                        + 'width:'+word.width+'px;'
+                        + 'height:'+word.height+'px;">'+word.word+'</div>');
+
+                this.setMouseEventCallbacks( $elem, data, value );
+                this.addClickStateClassesLocal( $elem, value, tilekey );
+
+                $html = $html.add( $elem );
+            }
+
+            return $html;
 
         }
 
