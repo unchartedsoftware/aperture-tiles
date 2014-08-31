@@ -61,9 +61,8 @@
       </exclusions>
     </dependency>
 
-<!-- CDH5 HBASE dependencies -->
-<!--    
-    <dependency>
+	<!-- CDH5 HBASE dependencies -->
+    <!--<dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
       <version>${hbase-version}</version>
@@ -73,8 +72,7 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
       <version>${hbase-version}</version>
-    </dependency>
--->
+    </dependency>-->
 
     <!-- CDH4 HBASE dependencies -->
     <dependency>

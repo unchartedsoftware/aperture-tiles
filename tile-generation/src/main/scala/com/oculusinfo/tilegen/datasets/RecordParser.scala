@@ -187,12 +187,23 @@ class GraphRecordParser (properties: CSVRecordPropertiesWrapper)
 {
 	override def getRecordFilter: Array[String] => Boolean = {
 		// Only parse lines that have the first column equal to the graph field id.
-		val graphDataType =
-			properties.getString("oculus.binning.graph.data", "", Some("nodes"))
+		val graphDataType = properties.getString("oculus.binning.graph.data", "", Some("nodes"))	// to parse nodes or edges
+		val edgeType = properties.getString("oculus.binning.graph.edges.type", "", Some("all"))		// which kind of edges to parse
 		val graphFieldId =
 			if ("nodes" == graphDataType) "node"
 			else "edge"
 
-		fields: Array[String] => graphFieldId == fields(0)
+		if ((graphDataType == "nodes") || (edgeType == "all")) {
+			fields: Array[String] => graphFieldId == fields(0)	// just filter by 1st column
+		}
+		else if  (edgeType == "inter") {	
+			fields: Array[String] => ((graphFieldId == fields(0)) && (fields.last.toInt == 1))	// only parse inter-community edges
+		}
+		else if (edgeType == "intra") {
+			fields: Array[String] => ((graphFieldId == fields(0)) && (fields.last.toInt == 0))	// only parse intra-community edges
+		}
+		else {
+			throw new Exception("Invalid parameter setting. oculus.binning.graph.edges.type=" + edgeType)
+		}
 	}
 }
