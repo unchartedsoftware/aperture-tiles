@@ -214,6 +214,17 @@ define(function (require) {
         },
 
 
+        hexGreyscale: function( hex ) {
+            var rgb = this.hexToRgb( hex ),
+                avg = ( rgb.r * 0.21 + rgb.g * 0.72 + rgb.b * 0.07 ) / 3;
+            return this.rgbToHex({
+                r: avg,
+                g: avg,
+                b: avg
+            });
+        },
+
+
         blendHex: function( colors, percentages ) {
             var rgbs = [], i,
                 rgb = {

@@ -29,7 +29,7 @@ define(function (require) {
 
 
 
-    var Util = require('../../../util/Util'),
+    var //Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 5,
         DEFAULT_COLOR = '#FFFFFF',
@@ -60,13 +60,14 @@ define(function (require) {
                 spec.text.blend[i].countKey = spec.text.blend[i].countKey || "count";
             }
 
-            if ( spec.chart ) {
-                for ( i=0; i<spec.chart.bars.length; i++ ) {
-                    spec.chart.bars[i].countKey = spec.chart.bars[i].countKey || "count";
-                    spec.chart.bars[i].color = spec.chart.bars[i].color || DEFAULT_COLOR;
-                    spec.chart.bars[i].hoverColor = spec.chart.bars[i].hoverColor || DEFAULT_HOVER_COLOR;
-                }
+            spec.chart = spec.chart || {};
+            spec.chart.bars = spec.chart.bars || [];
+            for ( i=0; i<spec.chart.bars.length; i++ ) {
+                spec.chart.bars[i].countKey = spec.chart.bars[i].countKey || "count";
+                spec.chart.bars[i].color = spec.chart.bars[i].color || DEFAULT_COLOR;
+                spec.chart.bars[i].hoverColor = spec.chart.bars[i].hoverColor || DEFAULT_HOVER_COLOR;
             }
+
             if ( spec.summary ) {
                 if ( !$.isArray( spec.summary ) ) {
                     spec.summary = [ spec.summary ];
@@ -89,38 +90,19 @@ define(function (require) {
         createStyles: function() {
 
             var spec = this.spec,
-                subColor,
-                subHoverColor,
-                blend, blends, i,
                 css;
 
-            css = '<style id="generic-text-score-renderer-css" type="text/css">';
+            css = '<style id="generic-text-score-renderer-css-'+this.id+'" type="text/css">';
 
             // generate text css
-            blends = this.generateBlendedCss( spec.text.blend );
-            for ( i=0; i<blends.length; i++ ) {
-                blend = blends[i];
-                css += '.text-score-label'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.text-score-entry:hover .text-score-label'+blend.suffix+' {color:'+blend.hoverColor+';}' +
-                       '.greyed .text-score-label'+blend.suffix+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
-                       '.clicked-secondary .text-score-label'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.clicked-primary .text-score-label'+blend.suffix+' {color:'+blend.hoverColor+';}';
-            }
+            css += this.generateBlendedCss( spec.text.blend, "text-score-label", "color" );
 
             // generate chart css
-            for (i=0; i<spec.chart.bars.length; i++) {
-                subColor = spec.chart.bars[i].color;
-                subHoverColor = spec.chart.bars[i].hoverColor;
-                css += '.text-score-count-sub-bar-'+i+' {background-color:'+subColor+';}';
-                css += '.text-score-entry:hover .text-score-count-sub-bar-'+i+' {background-color:'+subHoverColor+';}';
-                css += '.greyed .text-score-count-sub-bar-'+i+' {background-color:'+ Util.hexBrightness( subColor, 0.5 ) +';}';
-                css += '.clicked-secondary .text-score-count-sub-bar-'+i+' {background-color:'+ subColor +';}';
-                css += '.clicked-primary .text-score-count-sub-bar-'+i+' {background-color:'+ subHoverColor +';}';
-            }
+            css += this.generateCss( spec.chart.bars, "text-score-count-sub-bar-", "background-color" );
 
             css += '</style>';
 
-            $(document.body).prepend( css );
+            $( document.body ).prepend( css );
         },
 
 
@@ -202,7 +184,7 @@ define(function (require) {
                 textEntry = value[text.textKey];
                 count = value[text.countKey];
                 fontSize = getFontSize( count, totalCount );
-                labelClass = this.generateBlendedClass( "text-score-label", value, text );
+                labelClass = this.generateBlendedClass( "text-score-label", value, text ) +"-"+this.id;
 
                 if ( chart ) {
                     // get percentages for each bar
@@ -230,7 +212,7 @@ define(function (require) {
                     for (j=0; j<bars.length; j++) {
                         // create bar
                         html += '<div class="text-score-count-sub-bar '
-                              + 'text-score-count-sub-bar-'+ j +'" style="'
+                              + 'text-score-count-sub-bar-'+ j +'-' + this.id+'" style="'
                               + 'width:'+(percentages[j]*100)+'%;"></div>';
                     }
                     html += '</div>';
