@@ -92,30 +92,33 @@ define(function (require) {
                 subColor,
                 subHoverColor,
                 blend, blends, i,
+                className,
                 css;
 
-            css = '<style id="generic-text-score-renderer-css" type="text/css">';
+            css = '<style id="generic-text-score-renderer-css-'+this.id+'" type="text/css">';
 
             // generate text css
             blends = this.generateBlendedCss( spec.text.blend );
             for ( i=0; i<blends.length; i++ ) {
                 blend = blends[i];
-                css += '.text-score-label'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.text-score-entry:hover .text-score-label'+blend.suffix+' {color:'+blend.hoverColor+';}' +
-                       '.greyed .text-score-label'+blend.suffix+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
-                       '.clicked-secondary .text-score-label'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.clicked-primary .text-score-label'+blend.suffix+' {color:'+blend.hoverColor+';}';
+                className = 'text-score-label'+blend.suffix+'-'+this.id;
+                css += '.'+className+' {color:'+blend.color+';}' +
+                       '.text-score-entry:hover .'+className+' {color:'+blend.hoverColor+';}' +
+                       '.greyed .'+className+' {color:'+Util.hexGreyscale( blend.color )+';}' +
+                       '.clicked-secondary .'+className+' {color:'+blend.color+';}' +
+                       '.clicked-primary .'+className+' {color:'+blend.hoverColor+';}';
             }
 
             // generate chart css
             for (i=0; i<spec.chart.bars.length; i++) {
                 subColor = spec.chart.bars[i].color;
                 subHoverColor = spec.chart.bars[i].hoverColor;
-                css += '.text-score-count-sub-bar-'+i+' {background-color:'+subColor+';}';
-                css += '.text-score-entry:hover .text-score-count-sub-bar-'+i+' {background-color:'+subHoverColor+';}';
-                css += '.greyed .text-score-count-sub-bar-'+i+' {background-color:'+ Util.hexBrightness( subColor, 0.5 ) +';}';
-                css += '.clicked-secondary .text-score-count-sub-bar-'+i+' {background-color:'+ subColor +';}';
-                css += '.clicked-primary .text-score-count-sub-bar-'+i+' {background-color:'+ subHoverColor +';}';
+                className = 'text-score-count-sub-bar-'+i+'-'+this.id;
+                css += '.'+className+' {background-color:'+subColor+';}';
+                css += '.text-score-entry:hover .'+className+' {background-color:'+subHoverColor+';}';
+                css += '.greyed .'+className+' {background-color:'+ Util.hexGreyscale( subColor ) +';}';
+                css += '.clicked-secondary .'+className+' {background-color:'+ subColor +';}';
+                css += '.clicked-primary .'+className+' {background-color:'+ subHoverColor +';}';
             }
 
             css += '</style>';
@@ -202,7 +205,7 @@ define(function (require) {
                 textEntry = value[text.textKey];
                 count = value[text.countKey];
                 fontSize = getFontSize( count, totalCount );
-                labelClass = this.generateBlendedClass( "text-score-label", value, text );
+                labelClass = this.generateBlendedClass( "text-score-label", value, text ) +"-"+this.id;
 
                 if ( chart ) {
                     // get percentages for each bar
@@ -230,7 +233,7 @@ define(function (require) {
                     for (j=0; j<bars.length; j++) {
                         // create bar
                         html += '<div class="text-score-count-sub-bar '
-                              + 'text-score-count-sub-bar-'+ j +'" style="'
+                              + 'text-score-count-sub-bar-'+ j +'-' + this.id+'" style="'
                               + 'width:'+(percentages[j]*100)+'%;"></div>';
                     }
                     html += '</div>';

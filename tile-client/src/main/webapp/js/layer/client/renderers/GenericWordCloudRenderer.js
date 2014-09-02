@@ -94,21 +94,22 @@ define(function (require) {
                 blend,
                 blends,
                 i,
-                css;
+                css,
+                className;
 
-            css = '<style id="generic-word-cloud-renderer-css" type="text/css">';
+            css = '<style id="generic-word-cloud-renderer-css-'+this.id+'" type="text/css">';
 
             // generate text css
             blends = this.generateBlendedCss( spec.text.blend );
             for ( i=0; i<blends.length; i++ ) {
                 blend = blends[i];
-                css += '.word-cloud-word'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.greyed.word-cloud-word'+blend.suffix+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
-                       '.clicked-secondary.word-cloud-word'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.clicked-primary.word-cloud-word'+blend.suffix+' {color:'+blend.hoverColor+';}' +
-                       '.word-cloud-word'+blend.suffix+':hover {color:'+blend.hoverColor+';}';
+                className = 'word-cloud-word'+blend.suffix+'-'+this.id;
+                css += '.'+className+' {color:'+blend.color+';}' +
+                       '.greyed.'+className+'{color:'+Util.hexGreyscale( blend.color )+';}' +
+                       '.clicked-secondary.'+className+' {color:'+blend.color+';}' +
+                       '.clicked-primary.'+className+' {color:'+blend.hoverColor+';}' +
+                       '.'+className+':hover {color:'+blend.hoverColor+';}';
             }
-
             css += '</style>';
 
             $(document.body).prepend( css );
@@ -327,7 +328,7 @@ define(function (require) {
 
                 word = cloud[i];
                 value = values[i];
-                wordClass = this.generateBlendedClass( "word-cloud-word", value, spec.text );
+                wordClass = this.generateBlendedClass( "word-cloud-word", value, spec.text ) + "-" + this.id;
 
                 $elem = $('<div class="word-cloud-word '+wordClass+'" style="'
                         + 'font-size:'+word.fontSize+'px;'

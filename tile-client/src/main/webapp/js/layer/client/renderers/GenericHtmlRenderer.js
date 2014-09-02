@@ -33,6 +33,7 @@ define(function (require) {
         HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
         Util = require('../../../util/Util'),
+        idNumber = 0,
         GenericHtmlRenderer;
 
 
@@ -43,6 +44,7 @@ define(function (require) {
         init: function( map, spec ) {
 
             this._super( map, this.parseInputSpec( spec ) );
+            this.id = idNumber++;
             this.createStyles();    // inject css directly into DOM
             this.createNodeLayer(); // instantiate the node layer data object
             this.createHtmlLayer(); // instantiate the html visualization layer
@@ -53,6 +55,7 @@ define(function (require) {
             console.error( this.ClassName+'::parseInputSpec() has not been overloaded, no configurable css has been set.');
             return false;
         },
+
 
         createStyles: function() {
             console.error( this.ClassName+'::createStyles() has not been overloaded, no configurable css has been set.');
@@ -94,6 +97,7 @@ define(function (require) {
             });
 
         },
+
 
         createNodeLayer: function() {
 

@@ -92,30 +92,33 @@ define(function (require) {
                 blend,
                 blends,
                 i,
+                className,
                 css;
 
-            css = '<style id="generic-text-by-frequency-renderer-css" type="text/css">';
+            css = '<style id="generic-text-by-frequency-renderer-css-'+this.id+'" type="text/css">';
 
             // generate text css
             blends = this.generateBlendedCss( spec.text.blend );
             for ( i=0; i<blends.length; i++ ) {
                 blend = blends[i];
-                css += '.text-by-frequency-label'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.text-by-frequency-entry:hover .text-by-frequency-label'+blend.suffix+' {color:'+blend.hoverColor+';}' +
-                       '.greyed .text-by-frequency-label'+blend.suffix+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
-                       '.clicked-secondary .text-by-frequency-label'+blend.suffix+' {color:'+blend.color+';}' +
-                       '.clicked-primary .text-by-frequency-label'+blend.suffix+' {color:'+blend.hoverColor+';}';
+                className = 'text-by-frequency-label'+blend.suffix+'-'+this.id;
+                css += '.'+className+' {color:'+blend.color+';}' +
+                       '.text-by-frequency-entry:hover .'+className+' {color:'+blend.hoverColor+';}' +
+                       '.greyed .'+className+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
+                       '.clicked-secondary .'+className+' {color:'+blend.color+';}' +
+                       '.clicked-primary .'+className+' {color:'+blend.hoverColor+';}';
             }
 
             // generate bar css
             blends = this.generateBlendedCss( spec.chart.blend );
             for ( i=0; i<blends.length; i++ ) {
                 blend = blends[i];
-                css += '.text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.color+';}' +
-                       '.text-by-frequency-entry:hover .text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.hoverColor+';}' +
-                       '.greyed .text-by-frequency-bar'+blend.suffix+' {background-color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
-                       '.clicked-secondary .text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.color+';}' +
-                       '.clicked-primary .text-by-frequency-bar'+blend.suffix+' {background-color:'+blend.hoverColor+';}';
+                className = 'text-by-frequency-bar'+blend.suffix+'-'+this.id;
+                css += '.'+className+' {background-color:'+blend.color+';}' +
+                       '.text-by-frequency-entry:hover .'+className+' {background-color:'+blend.hoverColor+';}' +
+                       '.greyed .'+className+' {background-color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
+                       '.clicked-secondary .'+className+' {background-color:'+blend.color+';}' +
+                       '.clicked-primary .'+className+' {background-color:'+blend.hoverColor+';}';
             }
 
             css += '</style>';
@@ -138,10 +141,14 @@ define(function (require) {
                 visibility, countArray, barClass, labelClass,
                 i, j;
 
+            /*
+                Utility function for positioning the labels
+            */
             function getYOffset( index, numEntries ) {
                 var SPACING = 20;
                 return 113 - ( (( numEntries - 1) / 2 ) - index ) * SPACING;
             }
+
 
             /*
                 Returns the total sum count
@@ -193,29 +200,34 @@ define(function (require) {
                 entryText = value[spec.text.textKey];
                 countArray = value[spec.chart.countKey];
                 maxPercentage = getMaxPercentage( value );
-                labelClass = this.generateBlendedClass( "text-by-frequency-label", value, spec.text );
+                labelClass = this.generateBlendedClass( "text-by-frequency-label", value, spec.text ) +"-"+this.id;
 
-                html = '<div class="text-by-frequency-entry" style="top:' +  getYOffset( i, numEntries ) + 'px;">';
+                html = '<div class="text-by-frequency-entry" style="'
+                     + 'top:' +  getYOffset( i, numEntries ) + 'px;">';
 
-                // create count chart
-                html +=     '<div class="text-by-frequency-left">';
+                // create chart
+                html += '<div class="text-by-frequency-left">';
                 for (j=0; j<countArray.length; j++) {
-                    barClass = this.generateBlendedClass( "text-by-frequency-bar", value, spec.chart, j );
+                    barClass = this.generateBlendedClass( "text-by-frequency-bar", value, spec.chart, j ) + "-" + this.id;
                     relativePercent = ( getPercentage( value, j ) / maxPercentage ) * 100;
                     visibility = (relativePercent > 0) ? '' : 'hidden';
                     relativePercent = Math.max( relativePercent, 20 );
-                    html += '<div class="text-by-frequency-bar '+barClass+'" style="visibility:'+visibility+';height:'+relativePercent+'%; width:'+ Math.floor( (105+countArray.length)/countArray.length ) +'px; top:'+(100-relativePercent)+'%;"></div>';
+                    // create bar
+                    html += '<div class="text-by-frequency-bar '+barClass+'" style="'
+                          + 'visibility:'+visibility+';'
+                          + 'height:'+relativePercent+'%;'
+                          + 'width:'+ Math.floor( (105+countArray.length)/countArray.length ) +'px;'
+                          + 'top:'+(100-relativePercent)+'%;"></div>';
                 }
-                html +=     '</div>';
-
-                // create tag label
-                html +=     '<div class="text-by-frequency-right">';
-                html +=         '<div class="text-by-frequency-label '+labelClass+'">'+entryText+'</div>';
-                html +=     '</div>';
-
                 html += '</div>';
 
-                $elem = $(html);
+                // create tag label
+                html += '<div class="text-by-frequency-right">';
+                html += '<div class="text-by-frequency-label '+labelClass+'">'+entryText+'</div>';
+                html += '</div>';
+                html += '</div>';
+
+                $elem = $( html );
 
                 this.setMouseEventCallbacks( $elem, data, value );
                 this.addClickStateClassesLocal( $elem, value, tilekey );
