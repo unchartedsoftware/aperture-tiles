@@ -197,10 +197,11 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
                     double transformedValue = t.transform(binCount);
                     int rgb;
                     if (binCount > 0
-
                             && transformedValue >= scaledLevelMinFreq
                             && transformedValue <= scaledLevelMaxFreq) {
-                        rgb = colorRamp.getRGB(transformedValue);
+
+                        double factor = 1.0 / ( scaledLevelMaxFreq - scaledLevelMinFreq ) ;
+                        rgb = colorRamp.getRGB( ( transformedValue - scaledLevelMinFreq ) * factor );
                     } else {
                         rgb = COLOR_BLANK.getRGB();
                     }

@@ -279,19 +279,35 @@ define(function (require) {
         },
 
 
-        generateBlendedClass: function( str, value, subspec, subIndex ) {
+        generateBlendedClass: function( str, value, subSpec, subIndex ) {
         	var i,
-        		blend, num = subspec.blend.length,
+        		count,
         		val, sum = 0, result = str;
 
-        	for ( i=0; i<num; i++ ) {
-        		blend = subspec.blend[i];
+            /*
+                Returns the total count for single value
+            */
+            function getCount() {
+                var i, count = 0;
+                for ( i=0; i<subSpec.length; i++ ) {
+                    if ( subIndex ) {
+                        count += value[subSpec[i].countKey][subIndex];
+                    } else {
+                        count += value[subSpec[i].countKey];
+                    }
+                }
+                return count;
+            }
+
+            count = getCount();
+
+        	for ( i=0; i<subSpec.length; i++ ) {
         		if ( subIndex ) {
-        		    val = ( value[blend.countKey][subIndex] / value[subspec.countKey][subIndex] ) * 100;
+        		    val = ( value[subSpec[i].countKey][subIndex] / count ) * 100;
         		} else {
-        		    val = ( value[blend.countKey] / value[subspec.countKey] ) * 100;
+        		    val = ( value[subSpec[i].countKey] / count ) * 100;
         		}
-                val = ( i === num - 1 ) ? 100 - sum : Math.round( val / 10 ) * 10;
+                val = ( i === subSpec.length - 1 ) ? 100 - sum : Math.round( val / 10 ) * 10;
                 result += "-" + val;
                 sum += val;
             }

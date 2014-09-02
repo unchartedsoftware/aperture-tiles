@@ -51,15 +51,26 @@ define(function (require) {
             var i;
             spec.text = spec.text || {};
             spec.text.textKey = spec.text.textKey || "text";
-            spec.text.countKey = spec.text.countKey || "count";
-            spec.text.blend = spec.text.blend || [{}];
+            if ( !spec.text.blend ) {
+                spec.text.blend = [{
+                    countKey : spec.text.countKey,
+                    color : spec.text.color,
+                    hoverColor : spec.text.hoverColor
+                }];
+            }
             for ( i=0; i<spec.text.blend.length; i++ ) {
                 spec.text.blend[i].color = spec.text.blend[i].color || DEFAULT_COLOR;
                 spec.text.blend[i].hoverColor = spec.text.blend[i].hoverColor || DEFAULT_HOVER_COLOR;
                 spec.text.blend[i].countKey = spec.text.blend[i].countKey || "count";
             }
 
-            spec.chart = spec.chart || [{}];
+            if ( !spec.chart.blend ) {
+                spec.chart.blend = [{
+                    countKey : spec.chart.countKey,
+                    color : spec.chart.color,
+                    hoverColor : spec.chart.hoverColor
+                }];
+            }
             for ( i=0; i<spec.chart.blend.length; i++ ) {
                 spec.chart.blend[i].color = spec.chart.blend[i].color || DEFAULT_COLOR;
                 spec.chart.blend[i].hoverColor = spec.chart.blend[i].hoverColor || DEFAULT_HOVER_COLOR;
@@ -108,6 +119,9 @@ define(function (require) {
         createHtml : function( data ) {
 
             var spec = this.spec,
+                textKey = spec.text.textKey,
+                text = spec.text.blend || [ spec.text ],
+                chart = spec.chart.blend || [ spec.chart ],
                 tilekey = data.tilekey,
                 html = '',
                 $html = $([]),
@@ -116,7 +130,7 @@ define(function (require) {
                 numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
                 value, entryText,
                 maxPercentage, relativePercent,
-                visibility, countArray, barClass, labelClass,
+                visibility, chartSize, barClass, labelClass,
                 i, j;
 
             /*
@@ -128,14 +142,36 @@ define(function (require) {
             }
 
 
+            function getChartSize( value, subSpec ) {
+                var i, chartSize = Number.MAX_VALUE;
+                for ( i=0; i<subSpec.length; i++ ) {
+                    chartSize = Math.min( chartSize, value[ subSpec[i].countKey ].length );
+                }
+                return chartSize;
+            }
+
+            /*
+                Returns the total count for single value
+            */
+            function getCount( value, index, subSpec ) {
+                var i, count = 0;
+                for ( i=0; i<subSpec.length; i++ ) {
+                    count += value[ subSpec[i].countKey ][index];
+                }
+                return count;
+            }
+
             /*
                 Returns the total sum count
             */
-            function getCountArraySum( value ) {
-                var countArray = value[spec.chart.countKey],
-                    sum = 0, i;
-                for (i=0; i<countArray.length; i++) {
-                    sum += countArray[i];
+            function getCountArraySum( value, subSpec ) {
+                var countKey,
+                    sum = 0, i, j;
+                for ( i=0; i<subSpec.length; i++) {
+                    countKey = subSpec[i].countKey;
+                    for ( j=0; j<value[ countKey ].length; j++ ) {
+                        sum += value[ countKey ][j];
+                    }
                 }
                 return sum;
             }
@@ -144,27 +180,28 @@ define(function (require) {
             /*
                 Returns the percentage count
             */
-            function getPercentage( value, j ) {
-                return ( value[spec.chart.countKey][j] / getCountArraySum( value ) ) || 0;
+            function getPercentage( value, index, subSpec ) {
+                return ( getCount( value, index, subSpec ) / getCountArraySum( value, subSpec ) ) || 0;
             }
 
 
             /*
                 Returns the maximum percentage count
             */
-            function getMaxPercentage( value, type ) {
+            function getMaxPercentage( value, subSpec ) {
                 var i,
                     percent,
-                    countArray = value[spec.chart.countKey],
+                    chartSize = getChartSize( value, subSpec ),
                     maxPercent = 0,
-                    count = getCountArraySum( value );
+                    count = getCountArraySum( value, subSpec );
 
                 if (count === 0) {
                     return 0;
                 }
-                for (i=0; i<countArray.length; i++) {
+
+                for (i=0; i<chartSize; i++) {
                     // get maximum percent
-                    percent = countArray[i] / count;
+                    percent = getCount( value, i, subSpec ) / count;
                     if (percent > maxPercent) {
                         maxPercent = percent;
                     }
@@ -175,26 +212,26 @@ define(function (require) {
             for (i=0; i<numEntries; i++) {
 
                 value = values[i];
-                entryText = value[spec.text.textKey];
-                countArray = value[spec.chart.countKey];
-                maxPercentage = getMaxPercentage( value );
-                labelClass = this.generateBlendedClass( "text-by-frequency-label", value, spec.text ) +"-"+this.id;
+                entryText = value[ textKey ];
+                chartSize = getChartSize( value, chart );
+                maxPercentage = getMaxPercentage( value, chart );
+                labelClass = this.generateBlendedClass( "text-by-frequency-label", value, text ) +"-"+this.id;
 
                 html = '<div class="text-by-frequency-entry" style="'
                      + 'top:' +  getYOffset( i, numEntries ) + 'px;">';
 
                 // create chart
                 html += '<div class="text-by-frequency-left">';
-                for (j=0; j<countArray.length; j++) {
-                    barClass = this.generateBlendedClass( "text-by-frequency-bar", value, spec.chart, j ) + "-" + this.id;
-                    relativePercent = ( getPercentage( value, j ) / maxPercentage ) * 100;
+                for (j=0; j<chartSize; j++) {
+                    barClass = this.generateBlendedClass( "text-by-frequency-bar", value, chart, j ) + "-" + this.id;
+                    relativePercent = ( getPercentage( value, j, chart ) / maxPercentage ) * 100;
                     visibility = (relativePercent > 0) ? '' : 'hidden';
                     relativePercent = Math.max( relativePercent, 20 );
                     // create bar
                     html += '<div class="text-by-frequency-bar '+barClass+'" style="'
                           + 'visibility:'+visibility+';'
                           + 'height:'+relativePercent+'%;'
-                          + 'width:'+ Math.floor( (105+countArray.length)/countArray.length ) +'px;'
+                          + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
                           + 'top:'+(100-relativePercent)+'%;"></div>';
                 }
                 html += '</div>';

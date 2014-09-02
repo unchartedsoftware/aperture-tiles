@@ -60,7 +60,6 @@ define(function (require) {
             var i;
 
             spec.text.textKey = spec.text.textKey || "text";
-            spec.text.countKey = spec.text.countKey || "count";
             spec.text.blend = spec.text.blend || [{}];
             for ( i=0; i<spec.text.blend.length; i++ ) {
                 spec.text.blend[i].color = spec.text.blend[i].color || DEFAULT_COLOR;
@@ -278,6 +277,8 @@ define(function (require) {
                 HORIZONTAL_OFFSET = 10,
                 VERTICAL_OFFSET = 24,
                 spec = this.spec,
+                textKey = spec.text.textKey,
+                text = spec.text.blend || [ spec.text ],
                 tilekey = data.tilekey,
                 values = data.values,
                 $html = $([]),
@@ -297,12 +298,23 @@ define(function (require) {
                 },
                 count = Math.min( values.length, MAX_WORDS_DISPLAYED );
 
+            /*
+                Returns the total count for single value
+            */
+            function getCount( value, subSpec ) {
+                var i, count = 0;
+                for ( i=0; i<subSpec.length; i++ ) {
+                    count += value[subSpec[i].countKey];
+                }
+                return count;
+            }
+
             $html = $html.add('<div class="count-summary"></div>');
 
             for (i=0; i<count; i++) {
                 value = values[i];
-                words.push( trimLabelText( value[spec.text.textKey] ) );
-                frequencies.push( value[spec.text.countKey] );
+                words.push( trimLabelText( value[ textKey ] ) );
+                frequencies.push( getCount( value, text ) );
             }
 
             cloud = this.createWordCloud( words, frequencies, MIN_FONT_SIZE, MAX_FONT_SIZE, boundingBox );
@@ -316,7 +328,7 @@ define(function (require) {
 
                 word = cloud[i];
                 value = values[i];
-                wordClass = this.generateBlendedClass( "word-cloud-word", value, spec.text ) + "-" + this.id;
+                wordClass = this.generateBlendedClass( "word-cloud-word", value, text ) + "-" + this.id;
 
                 $elem = $('<div class="word-cloud-entry"><div class="word-cloud-word '+wordClass+'" style="'
                         + 'font-size:'+word.fontSize+'px;'

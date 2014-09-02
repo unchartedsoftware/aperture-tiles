@@ -58,7 +58,7 @@ define(function (require) {
         createVisibilityButton,
         createOpacitySlider,
         createFilterSlider,
-        createFilterAxis,
+        createFilterAxisContent,
         createFilterAxisLabels,
         createBaseLayerButtons,
         addLayerDragCallbacks,
@@ -264,7 +264,8 @@ define(function (require) {
         var filterRange = layerState.get('filterRange'),
             $filterSliderContainer = $('<div class="filter-slider"></div>'),
             $filterLabel = $('<div class="slider-label">Filter</div>'),
-            $filterSlider = $('<div class="filter-slider-img"></div>'),
+            $filterSlider = $('<div style="background:rgba(0,0,0,0);"></div>'),
+            $filterSliderImg,
             $filterAxis;
 
         $filterSliderContainer.append( $filterLabel );
@@ -285,18 +286,23 @@ define(function (require) {
                          tooltipOpenFunc( layerState, 'layer-controls-filter-slider' ),
                          tooltipCloseFunc( layerState, 'layer-controls-filter-slider' ) );
 
+        $filterSliderImg = $filterSlider.find(".ui-slider-range");
+        $filterSliderImg.addClass("filter-slider-img");
+
         // Disable the background for the range slider
-        $( ".ui-slider-range", $filterSlider ).css({"background": "none"});
+        $filterSliderImg.css({"background": "none"});
 
         // Set the ramp image
-        $filterSlider.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': '100%'});
+        $filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
         //create the filter axis
-        $filterAxis = createFilterAxis( layerState.get('rampMinMax') );
+        $filterAxis = $('<div class="filter-axis"></div>');
+        $filterAxis.append( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
 
         $filterSliderContainer.append( $filterSlider );
         $filterSliderContainer.append( $filterAxis );
 
         controlsMapping.filterSlider = $filterSlider;
+        controlsMapping.filterSliderImg = $filterSliderImg;
         controlsMapping.filterAxis = $filterAxis;
 
         return $filterSliderContainer;
@@ -307,13 +313,12 @@ define(function (require) {
      * @param {Array} minMax - The min and max values for the axis.
      * @returns {JQuery} - The created filter axis object.
      */
-    createFilterAxis = function ( minMax ) {
+    createFilterAxisContent = function ( minMax, rampFunc ) {
 
         var axisTicks = '<div class="filter-axis-tick-major filter-axis-tick-first"></div>', //the first tick
             major = false, // next tick is a minor tick
             majorCount = 1,
             numberOfInnerTicks = 7,
-            $filterAxis = $('<div class="filter-axis"></div>'),
             $filterAxisTicksContainer = $('<div class="filter-axis-ticks-container"></div>'),
             $filterAxisLabelContainer = $('<div class="filter-axis-label-container"></div>'),
             i;
@@ -334,23 +339,19 @@ define(function (require) {
         axisTicks += '<div class="filter-axis-tick-major filter-axis-tick-last"></div>';
 
         $filterAxisTicksContainer.append( axisTicks );
-        $filterAxisLabelContainer.append( createFilterAxisLabels( majorCount, minMax ) );
+        $filterAxisLabelContainer.append( createFilterAxisLabels( majorCount, minMax, rampFunc ) );
 
-        $filterAxis.append( $filterAxisTicksContainer );
-        $filterAxis.append( $filterAxisLabelContainer );
-
-        return $filterAxis;
-
+        return $filterAxisTicksContainer.add( $filterAxisLabelContainer );
     };
 
     /** Generates the filter labels and their initial values.
      *
-     * @param {Integer} majorTicks - The number of major tick marks.
+     * @param {Integer} majorCount - The number of major tick marks.
      * @param {Array} minMax - The min and max values for the axis.
      */
-    createFilterAxisLabels = function( majorTicks, minMax ){
+    createFilterAxisLabels = function( majorCount, minMax, rampFunc ){
         var val = minMax[0],
-            increment = ( minMax[1] - minMax[0] ) / majorTicks,
+            increment,
             unitSpec = {
                 'allowStepDown' : true,
                 'decimals' : 1,
@@ -359,17 +360,29 @@ define(function (require) {
             html,
             i;
 
+        function log10(val) {
+          return Math.log(val) / Math.LN10;
+        }
+
         //start with the first label
         html = '<div class="filter-axis-label filter-axis-label-first">' + AxisUtil.formatText(val, unitSpec) + '</div>';
 
         //iterate over the inner labels
-        for(i = 1; i < majorTicks; i++){
-            val += increment;
-            html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+        if ( rampFunc === "log10" ) {
+            for( i = 1; i < majorCount; i++ ){
+                val = Math.pow( 10, log10( minMax[1] ) * (  i / majorCount ) );
+                html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+            }
+        } else {
+            increment = ( minMax[1] - minMax[0] ) / majorCount;
+            for( i = 1; i < majorCount; i++ ){
+                val += increment;
+                html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+            }
         }
 
         //add the last label
-        val += increment;
+        val = minMax[1];
         html += '<div class="filter-axis-label filter-axis-label-last">' + AxisUtil.formatText(val, unitSpec) + '</div>';
 
         return $(html);
@@ -716,19 +729,24 @@ define(function (require) {
                      controlsMapping.opacitySlider.slider("option", "value", layerState.get('opacity') * OPACITY_RESOLUTION);
                      break;
 
+                case "rampFunction":
+
+                    controlsMapping.filterAxis.html( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
+                    break;
+
                 case "filterRange":
 
-                     controlsMapping.filterSlider.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': '100%'});
+                     controlsMapping.filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
                      break;
 
                 case "rampImageUrl":
 
-                    controlsMapping.filterSlider.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': '100%'});
+                    controlsMapping.filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
                     break;
 
                 case "rampMinMax":
 
-                    controlsMapping.filterAxis.html( createFilterAxis( layerState.get('rampMinMax') ).children() );
+                    controlsMapping.filterAxis.html( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
                     break;
 
                 case "baseLayerIndex":
