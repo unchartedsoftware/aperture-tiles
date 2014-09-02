@@ -64,6 +64,11 @@ import com.oculusinfo.tilegen.spark.SparkConnector
  * -eDstID -- The column number of an edge's destination ID.  ID's must be type Long [required].
  * -eWeight -- The column number of an edge's weight.  Default = -1, meaning no edge weighting is used.
  * 
+ * Results for each hierarchical level are stored in a "level_#" sub-directory, with the following data format,
+ * For nodes:
+ * 		"node\t" + id + "\t" + parentId + "\t" + internalNodes + "\t" + nodeDegree + "\t" + extraAttributes (tab-delimited)
+ * And for edges:
+ * 		"edge\t" + srcID + "\t" + dstID + "\t" + edge weight
  **/
 
 object GraphClusterApp {
@@ -157,8 +162,11 @@ object GraphClusterApp {
 		    	  val nodeID = tokens(nodeIDindex).toLong
 		    	  var nodeAttributes = ""
 		    	  val len = nodeAttrIndices.size
+		    	  val lenTokens = tokens.size
 		    	  for (i <- 0 until len) {
-		    	 	  nodeAttributes += tokens(nodeAttrIndices(i))
+		    	 	  if (nodeAttrIndices(i) < lenTokens) {
+		    	 		  nodeAttributes += tokens(nodeAttrIndices(i))
+		    	 	  }
 		    	 	  if (i < len-1)
 		    	 	 	  nodeAttributes += "\t"
 		    	  }	  
@@ -175,8 +183,8 @@ object GraphClusterApp {
 			nodeRDD = nodeRDD.coalesce(parallelism,shuffle=true)
 		}   
 		   
-		// create the graph
-	    val graph = Graph(nodeRDD, edgeRDD)
+		// create the graph (with default vertex attribute = an empty string)
+	    val graph = Graph(nodeRDD, edgeRDD, "")
 	    
 	    // use a helper class to execute the louvain algorithm and save the output.
 	    val runner = new HDFSLouvainRunner(minProgress,progressCounter,outputDir)

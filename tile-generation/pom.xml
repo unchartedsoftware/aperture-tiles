@@ -56,7 +56,7 @@
 		</dependency>
 
 		<!-- CDH4 HBASE dependencies  -->
-		<dependency>
+        <dependency>
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase</artifactId>
 			<version>${hbase-version}</version>
@@ -76,8 +76,9 @@
 			</exclusions>
 		</dependency>
 
+ 
 <!-- CDH5 HBASE dependencies  -->
-<!--     <dependency>
+   <!--<dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
       <version>${hbase-version}</version>
@@ -135,7 +136,7 @@
           <groupId>org.slf4j</groupId>
    </exclusion>
       </exclusions>
-    </dependency> -->
+    </dependency>-->
     		
 		<dependency>
 			<groupId>org.scala-lang</groupId>

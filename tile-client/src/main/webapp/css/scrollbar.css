@@ -27,3 +27,7 @@
     background-color: #222222;
     border: 1px solid #000;
 }
+
+.jspCorner {
+	display:none;
+}

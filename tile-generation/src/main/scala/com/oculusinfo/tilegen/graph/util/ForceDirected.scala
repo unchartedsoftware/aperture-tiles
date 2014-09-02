@@ -348,16 +348,16 @@ class ForceDirected extends Serializable {
 		
 		// TODO -- note:  with this scheme, we *could* end up with circles overlapping after final scaling if sx or sy < 1),
 		// need to investigate further... 
-//		if (bUseNodeSizes) {
-//			// need to use the same scaleFactor for both x and y coords so node 'circles' don't get distorted
-//			val scaleFactor = Math.min(boundingBoxFinal._3 / (maxX - minX),  boundingBoxFinal._4 / (maxY - minY))
-//			
-//			for (n <- 0 until numNodes) {
-//				val (id,x,y, radius) = nodeCoords(n)
-//				nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBoxFinal._1, (y-minY)*scaleFactor + boundingBoxFinal._2, radius)		
-//			}	
-//		}
-//		else {
+		if (bUseNodeSizes) {
+			// need to use the same scaleFactor for both x and y coords so node 'circles' don't get distorted
+			val scaleFactor = Math.min(boundingBoxFinal._3 / (maxX - minX),  boundingBoxFinal._4 / (maxY - minY))
+			
+			for (n <- 0 until numNodes) {
+				val (id, x, y, radius, numInternalNodes, metaData) = nodeCoords(n)
+				nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBoxFinal._1, (y-minY)*scaleFactor + boundingBoxFinal._2, radius, numInternalNodes, metaData)		
+			}	
+		}
+		else {
 			val sx = boundingBoxFinal._3 / (maxX - minX)
 			val sy = boundingBoxFinal._4 / (maxY - minY)
 			
@@ -365,7 +365,7 @@ class ForceDirected extends Serializable {
 				val (id, x, y, radius, numInternalNodes, metaData) = nodeCoords(n)
 				nodeCoords(n) = (id, (x-minX)*sx + boundingBoxFinal._1, (y-minY)*sy + boundingBoxFinal._2, radius, numInternalNodes, metaData)		
 			}		
-//		}
+		}
 						
 		nodeCoords	// return final node coordinates
 	}

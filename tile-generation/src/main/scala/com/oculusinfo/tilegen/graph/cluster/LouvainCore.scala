@@ -72,11 +72,10 @@ object LouvainCore {
       state.internalNodes = 1L
       state.nodeWeight = weight
       state.nodeDegree = 0
-      state.extraAttributes = if (data.getClass.getName == "java.lang.String") {
-    	  data.toString
-      }
-      else {
+      state.extraAttributes = if ((data==null) || (data.getClass.getName != "java.lang.String")) {
     	  ""
+      } else {
+    	  data.toString
       }
       state
     }).outerJoinVertices(nodeDegrees)((vid,state,degreeOption)=> { 
