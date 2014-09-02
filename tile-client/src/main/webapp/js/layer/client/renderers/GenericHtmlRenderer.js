@@ -299,7 +299,7 @@ define(function (require) {
         },
 
 
-        generateBlendedCss: function( blend ) {
+        generateBlendedAttributes: function( blend ) {
 
             var NUM_INCS = 10,
                 NUM_ENTRIES = blend.length,
@@ -368,9 +368,47 @@ define(function (require) {
                 });
             }
             return result;
+        },
+
+        generateBlendedCss: function( blend, elementClass, attribute ) {
+
+            var blends = this.generateBlendedAttributes( blend ),
+                parentClass = this.getSelectableElement(),
+                className,
+                css = "",
+                i;
+            for ( i=0; i<blends.length; i++ ) {
+                blend = blends[i];
+                className = elementClass+blend.suffix+'-'+this.id;
+                css += '.'+className+' {'+attribute+':'+blend.color+';}' +
+                       '.'+parentClass+':hover .'+className+' {'+attribute+':'+blend.hoverColor+';}' +
+                       '.greyed .'+className+'{'+attribute+':'+Util.hexGreyscale( blend.color )+';}' +
+                       '.clicked-secondary .'+className+' {'+attribute+':'+blend.color+';}' +
+                       '.clicked-primary .'+className+' {'+attribute+':'+blend.hoverColor+';}';
+            }
+            return css;
+        },
+
+        generateCss: function( subSpec, elementClass, attribute ) {
+
+            var parentClass = this.getSelectableElement(),
+                className,
+                css = "",
+                color,
+                hoverColor,
+                i;
+            for (i=0; i<subSpec.length; i++) {
+                color = subSpec[i].color;
+                hoverColor = subSpec[i].hoverColor;
+                className = elementClass+i+'-'+this.id;
+                css += '.'+className+' {'+attribute+':'+color+';}';
+                css += '.'+parentClass+':hover .'+className+' {'+attribute+':'+hoverColor+';}';
+                css += '.greyed .'+className+' {'+attribute+':'+ Util.hexGreyscale( color ) +';}';
+                css += '.clicked-secondary .'+className+' {'+attribute+':'+ color +';}';
+                css += '.clicked-primary .'+className+' {'+attribute+':'+ hoverColor +';}';
+            }
+            return css;
         }
-
-
     });
 
     return GenericHtmlRenderer;

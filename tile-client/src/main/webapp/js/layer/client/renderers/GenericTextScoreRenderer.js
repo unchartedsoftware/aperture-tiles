@@ -29,7 +29,7 @@ define(function (require) {
 
 
 
-    var Util = require('../../../util/Util'),
+    var //Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 5,
         DEFAULT_COLOR = '#FFFFFF',
@@ -89,41 +89,19 @@ define(function (require) {
         createStyles: function() {
 
             var spec = this.spec,
-                subColor,
-                subHoverColor,
-                blend, blends, i,
-                className,
                 css;
 
             css = '<style id="generic-text-score-renderer-css-'+this.id+'" type="text/css">';
 
             // generate text css
-            blends = this.generateBlendedCss( spec.text.blend );
-            for ( i=0; i<blends.length; i++ ) {
-                blend = blends[i];
-                className = 'text-score-label'+blend.suffix+'-'+this.id;
-                css += '.'+className+' {color:'+blend.color+';}' +
-                       '.text-score-entry:hover .'+className+' {color:'+blend.hoverColor+';}' +
-                       '.greyed .'+className+' {color:'+Util.hexGreyscale( blend.color )+';}' +
-                       '.clicked-secondary .'+className+' {color:'+blend.color+';}' +
-                       '.clicked-primary .'+className+' {color:'+blend.hoverColor+';}';
-            }
+            css += this.generateBlendedCss( spec.text.blend, "text-score-label", "color" );
 
             // generate chart css
-            for (i=0; i<spec.chart.bars.length; i++) {
-                subColor = spec.chart.bars[i].color;
-                subHoverColor = spec.chart.bars[i].hoverColor;
-                className = 'text-score-count-sub-bar-'+i+'-'+this.id;
-                css += '.'+className+' {background-color:'+subColor+';}';
-                css += '.text-score-entry:hover .'+className+' {background-color:'+subHoverColor+';}';
-                css += '.greyed .'+className+' {background-color:'+ Util.hexGreyscale( subColor ) +';}';
-                css += '.clicked-secondary .'+className+' {background-color:'+ subColor +';}';
-                css += '.clicked-primary .'+className+' {background-color:'+ subHoverColor +';}';
-            }
+            css += this.generateCss( spec.chart.bars, "text-score-count-sub-bar-", "background-color" );
 
             css += '</style>';
 
-            $(document.body).prepend( css );
+            $( document.body ).prepend( css );
         },
 
 

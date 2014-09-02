@@ -29,7 +29,7 @@ define(function (require) {
 
 
 
-    var Util = require('../../../util/Util'),
+    var //Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 10,
         MAX_LETTERS_IN_WORD = 20,
@@ -84,35 +84,23 @@ define(function (require) {
 
 
         getSelectableElement: function() {
-            return 'word-cloud-word';
+            return 'word-cloud-entry';
         },
 
 
         createStyles: function() {
 
             var spec = this.spec,
-                blend,
-                blends,
-                i,
-                css,
-                className;
+                css;
 
             css = '<style id="generic-word-cloud-renderer-css-'+this.id+'" type="text/css">';
 
             // generate text css
-            blends = this.generateBlendedCss( spec.text.blend );
-            for ( i=0; i<blends.length; i++ ) {
-                blend = blends[i];
-                className = 'word-cloud-word'+blend.suffix+'-'+this.id;
-                css += '.'+className+' {color:'+blend.color+';}' +
-                       '.greyed.'+className+'{color:'+Util.hexGreyscale( blend.color )+';}' +
-                       '.clicked-secondary.'+className+' {color:'+blend.color+';}' +
-                       '.clicked-primary.'+className+' {color:'+blend.hoverColor+';}' +
-                       '.'+className+':hover {color:'+blend.hoverColor+';}';
-            }
+            css += this.generateBlendedCss( spec.text.blend, "word-cloud-word", "color" );
+
             css += '</style>';
 
-            $(document.body).prepend( css );
+            $( document.body ).prepend( css );
         },
 
 
@@ -330,12 +318,12 @@ define(function (require) {
                 value = values[i];
                 wordClass = this.generateBlendedClass( "word-cloud-word", value, spec.text ) + "-" + this.id;
 
-                $elem = $('<div class="word-cloud-word '+wordClass+'" style="'
+                $elem = $('<div class="word-cloud-entry"><div class="word-cloud-word '+wordClass+'" style="'
                         + 'font-size:'+word.fontSize+'px;'
                         + 'left:'+(128+word.x-(word.width/2))+'px;'
                         + 'top:'+(128+word.y-(word.height/2))+'px;'
                         + 'width:'+word.width+'px;'
-                        + 'height:'+word.height+'px;">'+word.word+'</div>');
+                        + 'height:'+word.height+'px;">'+word.word+'</div></div>');
 
                 this.setMouseEventCallbacks( $elem, data, value );
                 this.addClickStateClassesLocal( $elem, value, tilekey );

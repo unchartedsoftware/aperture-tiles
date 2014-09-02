@@ -29,7 +29,7 @@ define(function (require) {
 
 
 
-    var Util = require('../../../util/Util'),
+    var //Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 8,
         DEFAULT_COLOR = '#FFFFFF',
@@ -89,41 +89,19 @@ define(function (require) {
         createStyles: function() {
 
             var spec = this.spec,
-                blend,
-                blends,
-                i,
-                className,
                 css;
 
             css = '<style id="generic-text-by-frequency-renderer-css-'+this.id+'" type="text/css">';
 
             // generate text css
-            blends = this.generateBlendedCss( spec.text.blend );
-            for ( i=0; i<blends.length; i++ ) {
-                blend = blends[i];
-                className = 'text-by-frequency-label'+blend.suffix+'-'+this.id;
-                css += '.'+className+' {color:'+blend.color+';}' +
-                       '.text-by-frequency-entry:hover .'+className+' {color:'+blend.hoverColor+';}' +
-                       '.greyed .'+className+' {color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
-                       '.clicked-secondary .'+className+' {color:'+blend.color+';}' +
-                       '.clicked-primary .'+className+' {color:'+blend.hoverColor+';}';
-            }
+            css += this.generateBlendedCss( spec.text.blend, "text-by-frequency-label", "color" );
 
             // generate bar css
-            blends = this.generateBlendedCss( spec.chart.blend );
-            for ( i=0; i<blends.length; i++ ) {
-                blend = blends[i];
-                className = 'text-by-frequency-bar'+blend.suffix+'-'+this.id;
-                css += '.'+className+' {background-color:'+blend.color+';}' +
-                       '.text-by-frequency-entry:hover .'+className+' {background-color:'+blend.hoverColor+';}' +
-                       '.greyed .'+className+' {background-color:'+Util.hexBrightness( blend.color, 0.5 )+';}' +
-                       '.clicked-secondary .'+className+' {background-color:'+blend.color+';}' +
-                       '.clicked-primary .'+className+' {background-color:'+blend.hoverColor+';}';
-            }
+            css += this.generateBlendedCss( spec.chart.blend, "text-by-frequency-bar", "background-color" );
 
             css += '</style>';
 
-            $(document.body).prepend( css );
+            $( document.body ).prepend( css );
         },
 
 

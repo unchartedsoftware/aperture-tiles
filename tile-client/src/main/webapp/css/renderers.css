@@ -146,10 +146,14 @@
 /* 		     Word Cloud Renderer  	     	*/
 /********************************************/
 
-.word-cloud-word {
+.word-cloud-entry {
 	cursor: pointer;
 	position:absolute;
-	/*z-index: 1;*/
+	z-index: 1;
+}
+
+.word-cloud-word {
+	position:absolute;
 }
 
 .word-cloud-word-temp {
