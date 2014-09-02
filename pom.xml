@@ -52,8 +52,8 @@
 		<!-- <cdh-version>cdh5.1.2</cdh-version>
 		<hadoop-common-version>2.3.0-cdh5.1.2</hadoop-common-version>
 		<hadoop-core-version>2.3.0-mr1-cdh5.1.2</hadoop-core-version>
-		<hbase-version>0.98.1-cdh5.1.2</hbase-version>
-		<spark-version>1.0.0-cdh5.1.2</spark-version> -->
+		<hbase-version>0.98.1-cdh5.1.2</hbase-version> -->
+		<!-- <spark-version>1.0.0-cdh5.1.2</spark-version> -->
 		
 		<!-- cloudera version 5.1.0 defs -->
 		<!-- <cdh-version>cdh5.1.0</cdh-version>
@@ -154,9 +154,9 @@
     <module>binning-utilities</module>
     <module>tile-generation</module>
     <module>tile-service</module>
-	<!--<module>tile-client</module>
+		<module>tile-client</module>
     <module>tile-examples</module>
     <module>tile-client-template</module>
-	<module>tile-packaging</module>-->
+		<module>tile-packaging</module>
   </modules>
 </project>
