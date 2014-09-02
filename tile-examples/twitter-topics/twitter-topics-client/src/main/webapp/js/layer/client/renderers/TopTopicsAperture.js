@@ -142,15 +142,15 @@ define(function (require) {
 
             // set the number of labels that will be renderered
             this.tagLabels.map('label-count').from( function() {
-                return Math.min( this.bin.value.length, MAX_TOPICS );
+                return Math.min( this.values.length, MAX_TOPICS );
             });
             // set the text of the individual labels based on the index
             this.tagLabels.map('text').from( function( index ) {
-                return this.bin.value[index].topic;
+                return this.values[index].topic;
             });
             // set the y offset based on the index of the label
             this.tagLabels.map('offset-y').from( function( index ) {
-                return getYOffset( Math.min( this.bin.value.length, MAX_TOPICS ), index );
+                return getYOffset( Math.min( this.values.length, MAX_TOPICS ), index );
             });
 
             // set the mouse event callbacks

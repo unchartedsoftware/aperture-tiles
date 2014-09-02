@@ -60,13 +60,14 @@ define(function (require) {
                 spec.text.blend[i].countKey = spec.text.blend[i].countKey || "count";
             }
 
-            if ( spec.chart ) {
-                for ( i=0; i<spec.chart.bars.length; i++ ) {
-                    spec.chart.bars[i].countKey = spec.chart.bars[i].countKey || "count";
-                    spec.chart.bars[i].color = spec.chart.bars[i].color || DEFAULT_COLOR;
-                    spec.chart.bars[i].hoverColor = spec.chart.bars[i].hoverColor || DEFAULT_HOVER_COLOR;
-                }
+            spec.chart = spec.chart || {};
+            spec.chart.bars = spec.chart.bars || [];
+            for ( i=0; i<spec.chart.bars.length; i++ ) {
+                spec.chart.bars[i].countKey = spec.chart.bars[i].countKey || "count";
+                spec.chart.bars[i].color = spec.chart.bars[i].color || DEFAULT_COLOR;
+                spec.chart.bars[i].hoverColor = spec.chart.bars[i].hoverColor || DEFAULT_HOVER_COLOR;
             }
+
             if ( spec.summary ) {
                 if ( !$.isArray( spec.summary ) ) {
                     spec.summary = [ spec.summary ];

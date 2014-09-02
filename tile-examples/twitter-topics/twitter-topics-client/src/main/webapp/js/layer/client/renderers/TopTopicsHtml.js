@@ -114,7 +114,7 @@ define(function (require) {
                 html: function() {
 
                     var MAX_TOPICS = 5,             // we only want to display a maximum of 5 topics
-                        values = this.bin.value,    // the values associated with the bin (in this example there is only
+                        values = this.values,    // the values associated with the bin (in this example there is only
                                                     // one bin per tile)
                         numTopics = Math.min( values.length, MAX_TOPICS ),
                         $html = $('<div class="tile"></div>'), // this isn't necessary, but wrapping the tile html in a
