@@ -66,34 +66,14 @@ define(function (require) {
         FILTER_RESOLUTION,
         replaceChildren,
         makeLayerStateObserver,
+        createCoarsenessSlider,
+        createCoarsenessAxisLabels,
         replaceLayers,
-        sortLayers,
-        tooltipOpenFunc,
-        tooltipCloseFunc;
+        sortLayers;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
     FILTER_RESOLUTION = 100.0;
-
-
-    tooltipOpenFunc = function( layerState, target ) {
-        return function() {
-            layerState.set('tooltip', {
-                target: target,
-                state: 'open'
-            });
-        };
-    };
-
-
-    tooltipCloseFunc = function( layerState, target ) {
-        return function() {
-            layerState.set('tooltip', {
-                target: target,
-                state: 'close'
-            });
-        };
-    };
 
     /**
      * Replaces node's children and returns the replaced for storage. Fades out old content,
@@ -171,13 +151,11 @@ define(function (require) {
         var $settingsButton = $('<button class="layer-controls-button">settings</button>');
         // set callback
         $settingsButton.click(function () {
-            showLayerSettings( $layerControlsContainer, $layerContent, layerState, settingsCustomization );
+            showLayerSettings( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization );
         });
         // set tooltip
         Util.enableTooltip( $settingsButton,
-                         TOOLTIP_SETTINGS_BUTTON,
-                         tooltipOpenFunc( layerState, 'layer-controls-setting-button' ),
-                         tooltipCloseFunc( layerState, 'layer-controls-setting-button' ) );
+                         TOOLTIP_SETTINGS_BUTTON );
         controlsMapping.settingsLink = $settingsButton;
         return $settingsButton;
     };
@@ -208,9 +186,7 @@ define(function (require) {
         });
         // set tooltip
         Util.enableTooltip( $toggleBox,
-                         TOOLTIP_VISIBILITY_BUTTON,
-                         tooltipOpenFunc( layerState, 'layer-controls-visibility-button' ),
-                         tooltipCloseFunc( layerState, 'layer-controls-visibility-button' ) );
+                         TOOLTIP_VISIBILITY_BUTTON );
 
         controlsMapping.enabledCheckbox = $toggleBox;
         return $toggleDiv;
@@ -242,9 +218,7 @@ define(function (require) {
              });
         // set tooltip
         Util.enableTooltip( $opacitySlider,
-                         TOOLTIP_OPACITY_SLIDER,
-                         tooltipOpenFunc( layerState, 'layer-controls-opacity-slider' ),
-                         tooltipCloseFunc( layerState, 'layer-controls-opacity-slider' ) );
+                         TOOLTIP_OPACITY_SLIDER );
 
         $opacitySliderContainer.append( $opacitySliderLabel );
         $opacitySliderContainer.append( $opacitySlider );
@@ -282,9 +256,7 @@ define(function (require) {
         });
         // set tooltip
         Util.enableTooltip( $filterSlider,
-                         TOOLTIP_FILTER_SLIDER,
-                         tooltipOpenFunc( layerState, 'layer-controls-filter-slider' ),
-                         tooltipCloseFunc( layerState, 'layer-controls-filter-slider' ) );
+                         TOOLTIP_FILTER_SLIDER );
 
         $filterSliderImg = $filterSlider.find(".ui-slider-range");
         $filterSliderImg.addClass("filter-slider-img");
@@ -508,9 +480,7 @@ define(function (require) {
             $radioButton.on( 'click', onClick );
             // set tooltip
             Util.enableTooltip( $radioButton,
-                                TOOLTIP_BASELAYER_BUTTON,
-                                tooltipOpenFunc( layerState, 'layer-controls-baselayer-button' ),
-                                tooltipCloseFunc( layerState, 'layer-controls-baselayer-button' ) );
+                                TOOLTIP_BASELAYER_BUTTON );
 
             // create radio label
             $radioLabel = $('<label for="'+(baseLayer.options.name+i)+'">' + baseLayer.options.name + '</label>');
@@ -585,17 +555,82 @@ define(function (require) {
         }
     };
 
+
+    /**
+     * Creates and returns a jquery element object for the layer coarseness slider bar.
+     *
+     * @param {Object} layerState - The layerstate object for the respective layer.
+     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @returns {JQuery} - The created element wrapped in a jquery object.
+     */
+    createCoarsenessSlider = function( layerState, controlsMapping ) {
+
+        var $coarsenessSliderContainer = $('<div class="coarseness-slider"></div>'),
+            $coarsenessAxis,
+            $coarsenessSlider = $('<div class="coarseness-slider-bar"></div>').slider({
+                 orientation: 'vertical',
+                 range: "min",
+                 min: 1,
+                 max: 4,
+                 value: layerState.get('coarseness'),
+                 change: function () {
+                     layerState.set( 'coarseness', $coarsenessSlider.slider("option", "value") );
+                 },
+                 slide: function () {
+                     layerState.set( 'coarseness', $coarsenessSlider.slider("option", "value") );
+                 }
+             });
+
+        console.log( layerState.get('coarseness') );
+
+        // set tooltip
+        Util.enableTooltip( $coarsenessSlider,
+                            TOOLTIP_OPACITY_SLIDER );
+
+        $coarsenessAxis = $('<div class="coarseness-axis"></div>');
+
+        $coarsenessSliderContainer
+            .append( $coarsenessSlider
+                .append( $coarsenessAxis
+                    .append( createCoarsenessAxisLabels( 4 ) ) ) );
+
+        controlsMapping.coarsenessSlider = $coarsenessSlider;
+        return $coarsenessSliderContainer;
+    };
+
+
+    /** Generates the filter labels and their initial values.
+     *
+     * @param {Integer} majorCount - The number of major tick marks.
+     * @param {Array} minMax - The min and max values for the axis.
+     */
+    createCoarsenessAxisLabels = function( majorCount ){
+        var offset,
+            html = "",
+            i;
+
+        //iterate over the inner labels
+        for( i = 1; i <= majorCount; i++ ){
+            offset = ( majorCount === i ) ? 1 : 0;
+            html += '<div class="coarseness-axis-tick" style="bottom: calc('+((i-1)/(majorCount-1)*100)+'% - '+offset+'px);"></div>';
+            html += '<div class="coarseness-axis-label" style="bottom:'+((i-1)/(majorCount-1)*100)+'%;">' + i + '</div>';
+        }
+
+        return $( html );
+    };
+
     /**
      * Displays a settings panel for a layer.
      *
      * @param {object} $layerControlsContainer - The parent node to attach the layer panel to.
      * @param {object} layerState - The layer state model the panel will read from and update.
      */
-    showLayerSettings = function( $layerControlsContainer, $layerContent, layerState, settingsCustomization ) {
+    showLayerSettings = function( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) {
 
         var $settingsContainer,
             $settingsTitleBar,
             $settingsContent,
+            $coarsenessSettings,
             name,
             span,
             $leftSpan,
@@ -627,9 +662,7 @@ define(function (require) {
         $backButton = $('<button class="layer-controls-button">back</button>');
         // set tooltip
         Util.enableTooltip( $backButton,
-                            TOOLTIP_SETTINGS_BACK_BUTTON,
-                            tooltipOpenFunc( layerState, 'layer-controls-setting-back-button' ),
-                            tooltipCloseFunc( layerState, 'layer-controls-setting-back-button' ) );
+                            TOOLTIP_SETTINGS_BACK_BUTTON );
         $backButton.click(function () {
             replaceChildren( $layerControlsContainer, oldChildren );
         });
@@ -639,7 +672,7 @@ define(function (require) {
         // add the ramp types radio buttons
         $rampTypes = $('<div class="settings-ramp-types"/>');
         // add title to ramp types div
-        $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
+        $rampTypes.append($('<div class="settings-sub-title">Color Ramp</div>'));
 
         $settingsContent.append($rampTypes);
         // create left and right columns
@@ -659,9 +692,7 @@ define(function (require) {
                                     .add($('<label for="' + id + '">' + name + '</label>') ) );
             // set tooltip
             Util.enableTooltip( $settingValue,
-                                TOOLTIP_RAMP_TYPE_BUTTON,
-                                tooltipOpenFunc( layerState, 'layer-controls-ramp-type-'+id ),
-                                tooltipCloseFunc( layerState, 'layer-controls-ramp-type-'+id ) );
+                                TOOLTIP_RAMP_TYPE_BUTTON );
 
             span.append( $settingValue );
         }
@@ -675,7 +706,7 @@ define(function (require) {
 
         // Add the ramp function radio buttons
         $rampFunctions = $('<div class="settings-ramp-functions"/>');
-        $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
+        $rampFunctions.append($('<div class="settings-sub-title">Color Scale</div>'));
 
         $settingsContent.append($rampFunctions);
 
@@ -687,9 +718,7 @@ define(function (require) {
                                     .add($('<label for="' + id + '">' + name + '</label>') ) );
             // set tooltip
             Util.enableTooltip( $settingValue,
-                                TOOLTIP_RAMP_FUNCTION_BUTTON,
-                                tooltipOpenFunc( layerState, 'layer-controls-ramp-function-'+id ),
-                                tooltipCloseFunc( layerState, 'layer-controls-ramp-function-'+id ) );
+                                TOOLTIP_RAMP_FUNCTION_BUTTON );
 
             $rampFunctions.append( $settingValue );
         }
@@ -699,6 +728,13 @@ define(function (require) {
         });
 
         $rampFunctions.find('input[name="ramp-functions"][value="' + layerState.get('rampFunction') + '"]').prop('checked', true);
+
+        $coarsenessSettings = $('<div class="settings-coarseness"/>');
+        $coarsenessSettings.append($('<div class="settings-sub-title">Coarseness</div>'));
+
+        $coarsenessSettings.append( createCoarsenessSlider( layerState, controlsMapping) );
+
+        $settingsContent.append( $coarsenessSettings );
 
         // if settings customization is provided, add it
         if ( settingsCustomization ) {

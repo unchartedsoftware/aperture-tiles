@@ -91,24 +91,29 @@
             box-sizing: border-box;
 }
 
-.layer-content .ui-widget-content {
+#layer-controls .ui-slider-horizontal {
     background: linear-gradient(to right, #181818, #999999);
     border: none;
 }
 
-.layer-content .ui-slider-range-min {
+#layer-controls .ui-slider-vertical {
+    background: linear-gradient(to bottom, #181818, #999999);
+    border: none;
+}
+
+#layer-controls .ui-slider-range-min {
 
     background: rgba(0,0,0,0);
 }
 
-.layer-content .ui-widget-content {
+#layer-controls .ui-widget-content {
 
     border: none;
     border-radius: 0px;
     box-shadow: 0 0 5px #000000;
 }
 
-.layer-content .ui-slider-handle {
+#layer-controls .ui-slider-handle {
 
     background: #222222;
     border: 1px solid #333333;
@@ -116,11 +121,11 @@
     box-shadow: 2px 2px 5px #000;
 }
 
-.layer-content .ui-slider-handle:focus {
+#layer-controls .ui-slider-handle:focus {
     outline:none;
 }
 
-.layer-content .ui-slider-handle:hover {
+#layer-controls .ui-slider-handle:hover {
     cursor:pointer;
 }
 
@@ -195,7 +200,7 @@
     padding-bottom:12px;
 }
 
-.settings-ramp-title {
+.settings-sub-title {
     font-size: 12px;
     font-weight: bold;
     margin-top:10px;
@@ -203,12 +208,21 @@
 }
 
 .settings-ramp-types {
-    width:66%;
+    position:relative;
+    width:48%;
     display: inline-block;
 }
 
 .settings-ramp-functions {
-    width:33%;
+    position:relative;
+    width:26%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.settings-coarseness {
+    position:relative;
+    width:26%;
     display: inline-block;
     vertical-align: top;
 }
@@ -229,7 +243,7 @@
     margin: 2px 2px 2px 2px;
 }
 
-.filter-axis{
+.filter-axis {
     position: relative;
 	top: -4px;
     width: 100%;
@@ -282,4 +296,38 @@
 .filter-axis-tick-last, .filter-axis-label-last {
 	margin-right: 0px;
 	float: right;
+}
+
+.coarseness-slider {
+    position: relative;
+    padding-top: 10px;
+}
+
+.coarseness-slider-bar {
+    position: relative;
+    z-index:1;
+}
+
+.coarseness-axis {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+}
+
+.coarseness-axis-label {
+    position:absolute;
+    margin-bottom: -7px;
+    left: 24px;
+    color: #d3d3d3;
+}
+
+.coarseness-axis-tick {
+    position:absolute;
+    background-color: #d3d3d3;
+    box-shadow: 0 0 5px #000;
+    width: 5px;
+    height: 1px;
+    left: 13px;
+    z-index:0;
 }

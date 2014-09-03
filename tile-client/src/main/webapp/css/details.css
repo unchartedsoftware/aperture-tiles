@@ -208,3 +208,19 @@
 	padding: 5px 5px 0px 5px;
 	font-size: 0.65em;
 }
+
+
+.details-close-button {
+	cursor: pointer;
+	position:absolute;
+	right:3px;
+	top:3px;
+	width:12px;
+	height:12px;
+	background: transparent url(../images/close_icon.png) no-repeat center top;
+	opacity: 0.5;
+}
+
+.details-close-button:hover {
+	opacity: 1;
+}

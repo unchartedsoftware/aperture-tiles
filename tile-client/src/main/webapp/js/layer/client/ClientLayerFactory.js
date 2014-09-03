@@ -53,8 +53,8 @@ define( function (require) {
 
         var renderer,
             renderers,
-            //det,
-            //details,
+            det,
+            details,
             deferreds = [],
             i, j;
 
@@ -70,7 +70,6 @@ define( function (require) {
                 }
             }
 
-            /*
             details = layerJSON[i].details;
             if ( details ) {
                 for (j=0; j<details.length; j++) {
@@ -82,7 +81,6 @@ define( function (require) {
                     }
                 }
             }
-            */
         }
         return deferreds;
     };
@@ -92,6 +90,7 @@ define( function (require) {
 
         var layerId,
             renderers,
+            //details,
             renderer,
             views = [],
             i, j;
@@ -100,10 +99,12 @@ define( function (require) {
 
             layerId = layerJSON[i].layer;
             renderers = layerJSON[i].renderers;
+            //details = layerJSON[i].details;
 
             for (j=0; j<renderers.length; j++) {
 
                 renderer = renderers[j];
+                //renderer.spec.details = new loadedModules[ details[0].type ]();
                 views.push({
                     id: layerId,
                     renderer: new loadedModules[ renderer.type ]( map, renderer.spec )
