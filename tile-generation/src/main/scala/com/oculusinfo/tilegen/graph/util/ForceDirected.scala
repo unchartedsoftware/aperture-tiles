@@ -57,7 +57,7 @@ class ForceDirected extends Serializable {
 			maxIterations: Int = 1000,
 			bUseEdgeWeights: Boolean = false,
 			bUseNodeSizes: Boolean = false,
-			nodeAreaPercent: Int = 20,
+			nodeAreaPercent: Int = 30,
 			gravity: Double = 0.0): Array[(Long, Double, Double, Double, Long, String)] = {
 		
 		val numNodes = nodes.size
@@ -158,10 +158,11 @@ class ForceDirected extends Serializable {
 		var temperature = temperature0
 		val stepLimitFactor = 0.001	
 		val alphaCool = Math.max(Math.min(1.0 + Math.log(stepLimitFactor)*4.0/maxIterations, 0.99), 0.8)	// set temperature cooling factor with respect to maxIterations (lower value == faster algorithm cooling)	
+		val alphaCoolSlow = Math.max(Math.min(1.0 + Math.log(stepLimitFactor)*2.0/maxIterations, 0.99), 0.8)	// for cooling half as fast
 		val stepLimitSq = Math.pow(Math.min(boundingBoxFinal._3, boundingBoxFinal._4)*stepLimitFactor, 2.0)	// square of stepLimit
 		var energySum = Double.MaxValue		// init high
 		var progressCount = 0
-		val nodeOverlapRepulsionFactor = 100.0/Math.min(boundingBoxFinal._3, boundingBoxFinal._4)	// constant used for extra strong repulsion if node 'circles' overlap
+		val nodeOverlapRepulsionFactor = Math.pow(1000.0/Math.min(boundingBoxFinal._3, boundingBoxFinal._4), 2.0)	// constant used for extra strong repulsion if node 'circles' overlap
 
 		//----- Re-format edge data to reference node array indices instead of actual node ID labels (for faster array look-ups below)
 		val edgesArray = reformatEdges(edges, nodeCoords.map(n => n._1))
@@ -175,6 +176,8 @@ class ForceDirected extends Serializable {
 		
 		while (!bDone) {
 			
+			var bNodesOverlapping = false	// boolean for whether community circles overlap or not 
+			
 			// init array of node displacements for this iteration
 			var deltaXY = Array.fill[(Double, Double)](numNodes)((0.0,0.0))	
 			
@@ -187,12 +190,13 @@ class ForceDirected extends Serializable {
 							val xDist = nodeCoords(n1)._2 - nodeCoords(n2)._2
 							val yDist = nodeCoords(n1)._3 - nodeCoords(n2)._3
 							// calc distance between two nodes (corrected for node radii)
-							val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(n1)._4 - nodeCoords(n2)._4	
+							val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(n1)._4 - nodeCoords(n2)._4	// distance minus node radii	
 							if (dist > 0.0) {
 								val repulseForce = k2/(dist*dist)	// repulsion force
 								deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
 							}
 							else {
+								bNodesOverlapping = true
 								val repulseForce = nodeOverlapRepulsionFactor*k2	// extra strong repulsion force if node circles overlap!
 								deltaXY(n1) = (deltaXY(n1)._1 + xDist*repulseForce, deltaXY(n1)._2 + yDist*repulseForce)
 							}
@@ -224,7 +228,7 @@ class ForceDirected extends Serializable {
 				    
 				    val xDist = nodeCoords(dstE)._2 - nodeCoords(srcE)._2
 				    val yDist = nodeCoords(dstE)._3 - nodeCoords(srcE)._3
-				    val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(dstE)._4 - nodeCoords(srcE)._4
+				    val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(dstE)._4 - nodeCoords(srcE)._4	// distance minus node radii
 				    if (dist > 0) {	// only calc attraction force if node circles don't overlap
 					    val attractForce = if (bUseEdgeWeights) {
 					    	val w = eWeightSlope*edgeWeight + eWeightOffset
@@ -268,7 +272,7 @@ class ForceDirected extends Serializable {
 					for (n <- 0 until numNodes) {
 						val xDist = xC - nodeCoords(n)._2	// node distance to centre
 					    val yDist = yC - nodeCoords(n)._3
-						val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(n)._4
+						val dist = Math.sqrt(xDist*xDist + yDist*yDist) - nodeCoords(n)._4	// distance minus node radius
 						if (dist > 0) {
 							val gForce = dist * k_inv * gravity	// gravitational force for this node
 							deltaXY(n) = (deltaXY(n)._1 + xDist*gForce, deltaXY(n)._2 + yDist*gForce)		
@@ -307,7 +311,7 @@ class ForceDirected extends Serializable {
 			    nodeCoords(n) = (nodeCoords(n)._1, nodeCoords(n)._2 + deltaXY(n)._1, nodeCoords(n)._3 + deltaXY(n)._2, nodeCoords(n)._4, nodeCoords(n)._5, nodeCoords(n)._6)
 			}
 			
-			//---- Adaptive cooling function (based on Yifan Hu approach)
+			//---- Adaptive cooling function (based on Yifan Hu "Efficient, High-Quality Force-Directed Graph Drawing", 2006)
 			if (energySum < energySum0) {
 				// system energy (movement) is decreasing, so keep temperature constant
 				// or increase slightly to prevent algorithm getting stuck in a local minimum
@@ -320,11 +324,16 @@ class ForceDirected extends Serializable {
 			else {
 				// system energy (movement) is increasing, so cool the temperature
 				progressCount = 0
-				temperature *= alphaCool
+				if (bNodesOverlapping)
+					temperature *= alphaCoolSlow	// cool slowly if nodes are overlapping
+				else
+					temperature *= alphaCool		// cool at the regular rate
 			}
 			
 			//---- Check if system has adequately converged
-			if ((iterations >= maxIterations) || (temperature <= 0.0) || (largestStepSq <= stepLimitSq)) {
+			if ( ((iterations >= 2*maxIterations) || (!bNodesOverlapping && (iterations >= maxIterations))) || 
+					(temperature <= 0.0) || 
+					(largestStepSq <= stepLimitSq) ) {
 				bDone = true
 				println("Finished layout algorithm in " + iterations + " iterations.")
 			}			
