@@ -42,9 +42,10 @@ import org.apache.spark.graphx._
  *  layoutDimensions = Total desired width and height of the node layout region. Default is (256.0, 256.0)
  *	borderOffset = (CURRENTLY NOT IN USE) percent of boundingBox width and height to leave as whitespace when laying out leaf nodes.  Default is 5 percent
  *	numNodesThres = (CURRENTLY NOT IN USE) threshold used to determine when to layout underlying communities within a single force-directed layout task.  Default is 1000 nodes
+ *	bUseEdgeWeights = Use edge weights (if available) as part of attraction force calculation. Default = false.
  *  nodeAreaPercent = Used for hierarchical levels > 0 to determine the area of all community 'circles' within the boundingBox vs whitespace. Default is 20 percent
  *  gravity = strength of gravity force to use to prevent outer nodes from spreading out too far.  Force-directed layout only.  Default = 0.0 (no gravity)
- * **/ 
+ **/ 
 class HierarchicFDLayout extends Serializable {
 
 	def determineLayout(sc: SparkContext, 
@@ -57,7 +58,7 @@ class HierarchicFDLayout extends Serializable {
 						layoutDimensions: (Double, Double) = (256.0, 256.0),
 						//borderOffset: Int = 0,
 						//numNodesThres: Int = 1000
-						nodeAreaPercent: Int = 20,
+						nodeAreaPercent: Int = 30,
 						bUseEdgeWeights: Boolean = false,
 						gravity: Double = 0.0,
 						outputDir: String
@@ -157,7 +158,7 @@ class HierarchicFDLayout extends Serializable {
 			// perform force-directed layout algorithm on all nodes and edges in a given parent rectangle
 			val bUseNodeSizes = (level > 0)
 		    val g = if (level > 0) gravity else 0
-			val currAreaPercent =  if (level > 0) Math.max(nodeAreaPercent - (maxHierarchyLevel-level)*10, 10)	// use less area for communities at lower hierarchical levels
+			val currAreaPercent =  if (level > 0) Math.max(nodeAreaPercent - (maxHierarchyLevel-level)*5, 10)	// use less area for communities at lower hierarchical levels
 								   else nodeAreaPercent	// (note, this parameter isn't used for level=0 anyway)
 
 			val nodeDataAll = joinedData.flatMap(p => {
