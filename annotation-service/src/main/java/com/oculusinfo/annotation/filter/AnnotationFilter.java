@@ -35,7 +35,7 @@ import com.oculusinfo.annotation.filter.impl.FilteredBinResults;
  */
 public interface AnnotationFilter {
     
-	public FilteredBinResults filterBin( AnnotationBin bin );
+	public FilteredBinResults filterBins( List<AnnotationBin> bin );
 	public List<AnnotationData<?>> filterAnnotations(
 			List<AnnotationData<?>> annotations, List<FilteredBinResults> filterResults);
 }

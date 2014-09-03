@@ -40,13 +40,16 @@ public class EmptyFilter implements AnnotationFilter {
 
 	public EmptyFilter() {}
 
-	public FilteredBinResults filterBin( AnnotationBin bin ) {
+	public FilteredBinResults filterBins( List<AnnotationBin> bins ) {
 
 		List<Pair<String, Long>> filtered = new LinkedList<>();
 		// for each group
-
-		for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {
-			filtered.addAll( binEntry.getValue() );
+		for (AnnotationBin bin : bins) {	
+			if (bin != null) {				
+				for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {
+					filtered.addAll( binEntry.getValue() );
+				}
+			}
 		}
 		return new FilteredBinResults(filtered, null);
 	}

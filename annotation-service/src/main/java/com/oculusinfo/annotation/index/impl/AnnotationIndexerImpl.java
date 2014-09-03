@@ -72,7 +72,6 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
             tileAndBins.add( new TileAndBinIndices( tile, bin ) );            
 
         } else {
-
             // range annotations
             Double x0 = ( data.getX0() == null ) ? 0 : data.getX0();
             Double y0 = ( data.getY0() == null ) ? 0 : data.getY0();
@@ -83,9 +82,12 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
             TileIndex tileBL = pyramid.rootToTile(x0, y0, level, NUM_BINS, NUM_BINS);
             BinIndex binBL = pyramid.rootToBin(x0, y0, tileBL);
             tileAndBins.add( new TileAndBinIndices( tileBL, binBL ) );
-//            // top right
-//            TileIndex tileTR = pyramid.rootToTile( x1, y1, level, NUM_BINS, NUM_BINS );
-//
+            
+            // top right
+            TileIndex tileTR = pyramid.rootToTile( x1, y1, level, NUM_BINS, NUM_BINS );
+            BinIndex binTR = pyramid.rootToBin(x1, y1, tileTR);
+            tileAndBins.add( new TileAndBinIndices( tileBL, binTR ) );
+            
 //            for (int i=tileBL.getX(); i<=tileTR.getX(); i++) {
 //                for (int j=tileBL.getY(); j <= tileTR.getY(); j++) {
 //                    tileAndBins.add( new TileAndBinIndices( new TileIndex(level, i, j, NUM_BINS, NUM_BINS ), RANGE_BIN ) );

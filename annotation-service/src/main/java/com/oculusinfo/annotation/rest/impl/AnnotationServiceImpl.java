@@ -24,11 +24,30 @@
 package com.oculusinfo.annotation.rest.impl;
 
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.oculusinfo.annotation.config.AnnotationConfiguration;
-import com.oculusinfo.annotation.data.AnnotationBin;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
@@ -50,21 +69,6 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 @Singleton
@@ -507,14 +511,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		List<FilteredBinResults> results = new LinkedList<FilteredBinResults>(); 
 		for ( AnnotationTile tile : tiles ) {
 			// for each bin
-			for ( AnnotationBin bin : tile.getBins() ) {
-				// apply filter
-				if ( bin != null ) {
-					FilteredBinResults r = filter.filterBin(bin);
-					certificates.addAll(r.getFilteredBins());
-					results.add(r);
-				}
-			}
+			FilteredBinResults r = filter.filterBins(tile.getBins());
+			certificates.addAll(r.getFilteredBins());
+			results.add(r);			
 		}
 		
 		// read data from io

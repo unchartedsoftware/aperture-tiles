@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.annotation.filter.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -74,23 +75,104 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 	 * for processing by the subsequent {{@link #filterAnnotations(List, List)} call.
 	 * Data for any group that is not part of the currently configured group list will
 	 * be filtered as well.
+	 * 
+	 * This is not scalable past a few thousand annotations.
 	 */
 	@Override
-	public FilteredBinResults filterBin(AnnotationBin bin) {	
+	public FilteredBinResults filterBins(List<AnnotationBin> bins) {
+		
+		long start = System.nanoTime();
+		
 		List<Pair<String, Long>> filtered = new LinkedList<>();
 		Map<String, Integer> aggregates = new HashMap<>();
 		
-		for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {
-			if (groups.contains(binEntry.getKey()) || groups.size() == 0) {
-				// Grab the first item in the bin.  If there were more, then we add this to our list
-				// of aggregated bins.
-				List<Pair<String, Long>> binItems = binEntry.getValue();
-				if (binItems.size() > 1) {					
-					aggregates.put(binItems.get(0).getFirst(), binItems.size());
+		// First pass - create a new list of annotation bins that only contain only annotations
+		// that are in our variable list.
+		List<AnnotationBin> filteredAnnotationBins = new ArrayList<>();
+		for (AnnotationBin bin : bins) {			
+			if (bin != null) {
+				Map<String, List<Pair<String, Long>>> groupAnnotations = new HashMap<>();
+				for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {
+					if (groups.contains(binEntry.getKey()) || groups.size() == 0) {
+						groupAnnotations.put(binEntry.getKey(), binEntry.getValue());
+					}
 				}
-				filtered.add( binItems.get(0) );								
-			}			
+				filteredAnnotationBins.add(new AnnotationBin(groupAnnotations));
+			}
 		}
+		
+		// Second pass - track uuid counts within bins.  Any uuid that appears more than once
+		// in a bin is a range annotation that is constrained to a single bin.  Those can be
+		// aggregated.
+		Set<String> singleBinRangeUuids = new HashSet<>();		
+		for (AnnotationBin bin : filteredAnnotationBins) {			
+			Map<String, Integer> binAnnotationCounts = new HashMap<>();				
+			for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {										
+				for (Pair<String, Long> annotation : binEntry.getValue()) {
+					String annotationUuid = annotation.getFirst();
+					if (binAnnotationCounts.get(annotationUuid) == null) {
+						binAnnotationCounts.put(annotationUuid, 0);								
+					}
+					binAnnotationCounts.put(annotationUuid, binAnnotationCounts.get(annotationUuid) + 1);							
+					if (binAnnotationCounts.get(annotationUuid) >= 2) {
+						singleBinRangeUuids.add(annotationUuid);
+					}
+				}											
+			}
+		}			
+			
+		// Third pass - figure out which annotations are range based (UUID appears more than once in the tile) 
+		// and span more than one bin.
+		Set<String> multiBinRangeUuids = new HashSet<>();
+		Map<String, Integer> tileAnnotationCounts = new HashMap<>();
+		for (AnnotationBin bin : filteredAnnotationBins) {			
+			for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {										
+				for (Pair<String, Long> annotation : binEntry.getValue()) {
+					String annotationUuid = annotation.getFirst();
+					if (tileAnnotationCounts.get(annotationUuid) == null && !singleBinRangeUuids.contains(annotationUuid)) {
+						tileAnnotationCounts.put(annotationUuid, 0);								
+					}
+					tileAnnotationCounts.put(annotationUuid, tileAnnotationCounts.get(annotationUuid) + 1);
+					if (tileAnnotationCounts.get(annotationUuid) >= 2) {
+						multiBinRangeUuids.add(annotationUuid);
+					}
+				}				
+			}
+		}
+		
+		// Now do the actual aggregate determination.  We allow point based and single bin range annotations to have
+		// aggregation applied.  Mult-bin range annotations are exempt.
+		for (AnnotationBin bin : filteredAnnotationBins) {			
+			for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {										
+				if (binEntry.getValue().size() > 1) {
+					int aggregateCount = 0;
+					Pair<String, Long> aggregate = null;						
+					for (Pair<String, Long> annotation : binEntry.getValue()) {
+						if (multiBinRangeUuids.contains(annotation.getFirst())) {
+							filtered.add(annotation);						
+						} else {
+							// Save the first annotation we come across that is not part of
+							// a multi range annotation.
+							if (aggregate == null) {							
+								aggregate = annotation;
+							}
+							aggregateCount++;						
+						}
+						
+					}
+					if (aggregateCount > 1) {
+						aggregates.put(aggregate.getFirst(), aggregateCount);
+						filtered.add(aggregate);
+					}
+				} else {
+					filtered.addAll(binEntry.getValue());
+				}
+			}
+		}
+		
+		long diff = System.nanoTime() - start;
+		System.out.println("ANNOTATION PROCESSING TIME: " + diff / 1000000.0);
+		
 		return new FilteredBinResults(filtered, aggregates);
 	}
 
@@ -109,6 +191,8 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 		for (AnnotationData<?> annotation : annotations) {
 			annotationMap.put(annotation.getUUID().toString(), annotation);
 		}
+		
+		// Compute aggregates.
 		
 		// Mark annotations detected as aggregates in the previous step and assign the aggregation count
 		// to them.
