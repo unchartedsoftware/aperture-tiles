@@ -24,15 +24,14 @@
 package com.oculusinfo.annotation.init;
 
 
+import java.util.List;
+
 import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.annotation.filter.impl.AggregatingGroupFilterFactory;
 import com.oculusinfo.annotation.filter.impl.EmptyFilterFactory;
 import com.oculusinfo.annotation.filter.impl.NMostRecentByGroupFactory;
 import com.oculusinfo.annotation.filter.impl.ScriptableFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-
-import java.util.List;
 
 
 
@@ -72,12 +71,6 @@ DelegateFactoryProviderTarget<AnnotationFilter> {
 				List<String> path) {
 			return new ScriptableFilterFactory(parent, path);
 		}
-	}), GROUP_AGGREGATE(new Constructor() {
-		@Override
-		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-				List<String> path) {
-			return new AggregatingGroupFilterFactory(parent, path);
-		}	
 	});
 
 	// -------------------------------------
