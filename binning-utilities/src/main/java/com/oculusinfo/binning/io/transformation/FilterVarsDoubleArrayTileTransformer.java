@@ -100,11 +100,13 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 					
 				// just loop through variable indexes in _variables			
 				for (int varIndex = 0; varIndex < _variables.size(); varIndex++) {
-					JSONObject value = valuesInBin.getJSONObject(_variables.get(varIndex));
-					JSONObject resultValue = new JSONObject();
-						
-					resultValue.put("value", value.getDouble("value"));
-					resultValuesInSingleBin.put(resultValue);
+					int arrayIndex = _variables.get(varIndex);					
+					if (arrayIndex < valuesInBin.length()) {
+						JSONObject value = valuesInBin.getJSONObject(arrayIndex);						
+						JSONObject resultValue = new JSONObject();
+						resultValue.put("value", value.getDouble("value"));
+						resultValuesInSingleBin.put(resultValue);
+					}					
 				}
 				resultSingleBin.put("value", resultValuesInSingleBin);
 				resultBins.put(resultSingleBin);
