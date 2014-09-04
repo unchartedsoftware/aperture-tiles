@@ -42,11 +42,11 @@ define(function (require) {
         },
 
 
-        create: function( closeCallback ) {
+        create: function( position, closeCallback ) {
 
             var html = '';
 
-            html += '<div class="details-on-demand">';
+            html += '<div class="details-on-demand" style="left:'+position.x+'px; top:'+position.y+'px;">';
 
             // top half
             html += '<div class="details-on-demand-half">';
@@ -68,6 +68,7 @@ define(function (require) {
                 minHeight: 513,
                 minWidth: 257
             });
+
             this.$container.find('.details-close-button').click( closeCallback );
 
             return this.$container;
@@ -75,7 +76,10 @@ define(function (require) {
 
 
         destroy : function() {
-            this.$container.remove();
+            if ( this.$container ) {
+                this.$container.remove();
+                this.$container = null;
+            }
         }
 
     });

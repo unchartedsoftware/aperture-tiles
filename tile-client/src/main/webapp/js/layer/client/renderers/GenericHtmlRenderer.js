@@ -45,6 +45,7 @@ define(function (require) {
 
             this._super( map, this.parseInputSpec( spec ) );
             this.id = idNumber++;
+            //this.details = spec.details;
             this.createStyles();    // inject css directly into DOM
             this.createNodeLayer(); // instantiate the node layer data object
             this.createHtmlLayer(); // instantiate the html visualization layer
@@ -90,7 +91,9 @@ define(function (require) {
                         } else {
                             // remove click state classes
                             that.removeClickStateClassesGlobal();
-                            //that.details.destroy();
+                            if ( that.details ) {
+                                that.details.destroy();
+                            }
                         }
                         break;
                 }
@@ -242,7 +245,7 @@ define(function (require) {
                 // process click
                 that.clickOn( value );
                 // create details here so that only 1 is created
-                //that.createDetailsOnDemand( data );
+                that.createDetailsOnDemand( data );
                 // prevent event from going further
                 event.stopPropagation();
             });
@@ -261,9 +264,9 @@ define(function (require) {
 
         createDetailsOnDemand: function( data ) {
 
-            var clickState = this.layerState.get('click'),
+            var //clickState = this.layerState.get('click'),
                 map = this.map,
-                value = clickState.value,
+                //value = clickState.value,
                 tilePos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
                 detailsPos = {
                     x: tilePos.x + 256,
@@ -271,27 +274,44 @@ define(function (require) {
                 },
                 $details;
 
-            $details = this.details.create( detailsPos, value, $.proxy( this.clickOff, this ) );
-            Util.enableEventPropagation( $details, ['onmouseup'] );
-            map.getRootElement().append( $details );
-
-            this.centreForDetails( data );
+            if ( this.details ) {
+                $details = this.details.create( detailsPos, $.proxy( this.clickOff, this ) );
+                Util.enableEventPropagation( $details, ['onmouseup'] );
+                map.getRootElement().append( $details );
+                this.centreForDetails( data );
+            }
         },
 
 
-        generateBlendedClass: function( str, value, subspec, subIndex ) {
+        generateBlendedClass: function( str, value, subSpec, subIndex ) {
         	var i,
-        		blend, num = subspec.blend.length,
+        		count,
         		val, sum = 0, result = str;
 
-        	for ( i=0; i<num; i++ ) {
-        		blend = subspec.blend[i];
+            /*
+                Returns the total count for single value
+            */
+            function getCount() {
+                var i, count = 0;
+                for ( i=0; i<subSpec.length; i++ ) {
+                    if ( subIndex ) {
+                        count += value[subSpec[i].countKey][subIndex];
+                    } else {
+                        count += value[subSpec[i].countKey];
+                    }
+                }
+                return count;
+            }
+
+            count = getCount();
+
+        	for ( i=0; i<subSpec.length; i++ ) {
         		if ( subIndex ) {
-        		    val = ( value[blend.countKey][subIndex] / value[subspec.countKey][subIndex] ) * 100;
+        		    val = ( value[subSpec[i].countKey][subIndex] / count ) * 100;
         		} else {
-        		    val = ( value[blend.countKey] / value[subspec.countKey] ) * 100;
+        		    val = ( value[subSpec[i].countKey] / count ) * 100;
         		}
-                val = ( i === num - 1 ) ? 100 - sum : Math.round( val / 10 ) * 10;
+                val = ( i === subSpec.length - 1 ) ? 100 - sum : Math.round( val / 10 ) * 10;
                 result += "-" + val;
                 sum += val;
             }

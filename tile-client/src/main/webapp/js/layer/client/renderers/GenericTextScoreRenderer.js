@@ -52,8 +52,13 @@ define(function (require) {
 
             spec.text = spec.text || {};
             spec.text.textKey = spec.text.textKey || "text";
-            spec.text.countKey = spec.text.countKey || "count";
-            spec.text.blend = spec.text.blend || [{}];
+            if ( !spec.text.blend ) {
+                spec.text.blend = [{
+                    countKey : spec.text.countKey,
+                    color : spec.text.color,
+                    hoverColor : spec.text.hoverColor
+                }];
+            }
             for ( i=0; i<spec.text.blend.length; i++ ) {
                 spec.text.blend[i].color = spec.text.blend[i].color || DEFAULT_COLOR;
                 spec.text.blend[i].hoverColor = spec.text.blend[i].hoverColor || DEFAULT_HOVER_COLOR;
@@ -125,7 +130,8 @@ define(function (require) {
                 centreIndex,
                 barOffset,
                 html,
-                count,
+                textCount,
+                chartCount,
                 labelClass,
                 $parent,
                 $entry,
@@ -140,13 +146,24 @@ define(function (require) {
             }
 
             /*
+                Returns the total count for single value
+            */
+            function getCount( value, subSpec ) {
+                var i, count = 0;
+                for ( i=0; i<subSpec.length; i++ ) {
+                    count += value[subSpec[i].countKey];
+                }
+                return count;
+            }
+
+            /*
                 Returns the total sum count for all values in node
             */
-            function getTotalCount( values, numEntries ) {
+            function getTotalCount( values, numEntries, subSpec ) {
                 var i,
                     sum = 0;
                 for (i=0; i<numEntries; i++) {
-                    sum += values[i][spec.text.countKey];
+                    sum += getCount( values[i], subSpec );
                 }
                 return sum;
             }
@@ -168,10 +185,10 @@ define(function (require) {
                 Maps a bar countKey to its  percentage of total count
             */
             function countToPercentage( bar ) {
-                return ( value[ bar.countKey ] / count ) || 0;
+                return ( value[ bar.countKey ] / chartCount ) || 0;
             }
 
-            totalCount = getTotalCount( values, numEntries );
+            totalCount = getTotalCount( values, numEntries, text.blend );
             yOffset = getYOffset( numEntries );
 
             if ( !chart ) {
@@ -182,15 +199,16 @@ define(function (require) {
 
                 value = values[i];
                 textEntry = value[text.textKey];
-                count = value[text.countKey];
-                fontSize = getFontSize( count, totalCount );
-                labelClass = this.generateBlendedClass( "text-score-label", value, text ) +"-"+this.id;
+                textCount = getCount( value, text.blend );
+                chartCount = getCount( value, chart.bars );
+                fontSize = getFontSize( textCount, totalCount );
+                labelClass = this.generateBlendedClass( "text-score-label", value, text.blend ) +"-"+this.id;
 
                 if ( chart ) {
                     // get percentages for each bar
                     percentages = bars.map( countToPercentage );
                     // determine bar horizontal offset
-                    centreIndex = Math.floor( bars.length / 2 );
+                    centreIndex = Math.floor( (bars.length-1) / 2 );
                     barOffset = ( bars.length % 2 === 0 ) ? percentages[centreIndex] : percentages[centreIndex] / 2;
                     for (j=centreIndex-1; j>=0; j--) {
                         barOffset += percentages[j];
