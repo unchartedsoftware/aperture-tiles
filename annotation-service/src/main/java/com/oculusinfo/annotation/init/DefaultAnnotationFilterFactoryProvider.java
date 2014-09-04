@@ -24,14 +24,14 @@
 package com.oculusinfo.annotation.init;
 
 
+import java.util.List;
+
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.filter.impl.EmptyFilterFactory;
 import com.oculusinfo.annotation.filter.impl.NMostRecentByGroupFactory;
 import com.oculusinfo.annotation.filter.impl.ScriptableFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-
-import java.util.List;
 
 
 
@@ -51,27 +51,27 @@ import java.util.List;
  * 
  */
 public enum DefaultAnnotationFilterFactoryProvider
-	implements
-		DelegateFactoryProviderTarget<AnnotationFilter> {
+implements
+DelegateFactoryProviderTarget<AnnotationFilter> {
 	EMPTY(new Constructor() {
-			@Override
-			public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-			                                                     List<String> path) {
-				return new EmptyFilterFactory(parent, path);
-			}
-		}), N_MOST_RECENT_BY_GROUP(new Constructor() {
-				@Override
-				public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-				                                                     List<String> path) {
-					return new NMostRecentByGroupFactory(parent, path);
-				}
-			}), SCRIPTABLE(new Constructor() {
-					@Override
-					public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-					                                                     List<String> path) {
-						return new ScriptableFilterFactory(parent, path);
-					}
-				});
+		@Override
+		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
+				List<String> path) {
+			return new EmptyFilterFactory(parent, path);
+		}
+	}), N_MOST_RECENT_BY_GROUP(new Constructor() {
+		@Override
+		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
+				List<String> path) {
+			return new NMostRecentByGroupFactory(parent, path);
+		}
+	}), SCRIPTABLE(new Constructor() {
+		@Override
+		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
+				List<String> path) {
+			return new ScriptableFilterFactory(parent, path);
+		}
+	});
 
 	// -------------------------------------
 
