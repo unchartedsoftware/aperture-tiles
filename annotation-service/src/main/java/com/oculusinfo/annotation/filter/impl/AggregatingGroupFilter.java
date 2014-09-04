@@ -100,27 +100,7 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 				filteredAnnotationBins.add(new AnnotationBin(groupAnnotations));
 			}
 		}
-		
-		// Second pass - track uuid counts within bins.  Any uuid that appears more than once
-		// in a bin is a range annotation that is constrained to a single bin.  Those can be
-		// aggregated.
-		Set<String> singleBinRangeUuids = new HashSet<>();		
-		for (AnnotationBin bin : filteredAnnotationBins) {			
-			Map<String, Integer> binAnnotationCounts = new HashMap<>();				
-			for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {										
-				for (Pair<String, Long> annotation : binEntry.getValue()) {
-					String annotationUuid = annotation.getFirst();
-					if (binAnnotationCounts.get(annotationUuid) == null) {
-						binAnnotationCounts.put(annotationUuid, 0);								
-					}
-					binAnnotationCounts.put(annotationUuid, binAnnotationCounts.get(annotationUuid) + 1);							
-					if (binAnnotationCounts.get(annotationUuid) >= 2) {
-						singleBinRangeUuids.add(annotationUuid);
-					}
-				}											
-			}
-		}			
-			
+						
 		// Third pass - figure out which annotations are range based (UUID appears more than once in the tile) 
 		// and span more than one bin.
 		Set<String> multiBinRangeUuids = new HashSet<>();
@@ -129,7 +109,7 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 			for ( Map.Entry<String, List<Pair<String, Long>>> binEntry : bin.getData().entrySet() ) {										
 				for (Pair<String, Long> annotation : binEntry.getValue()) {
 					String annotationUuid = annotation.getFirst();
-					if (tileAnnotationCounts.get(annotationUuid) == null && !singleBinRangeUuids.contains(annotationUuid)) {
+					if (tileAnnotationCounts.get(annotationUuid) == null) {
 						tileAnnotationCounts.put(annotationUuid, 0);								
 					}
 					tileAnnotationCounts.put(annotationUuid, tileAnnotationCounts.get(annotationUuid) + 1);
@@ -149,7 +129,7 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 					Pair<String, Long> aggregate = null;						
 					for (Pair<String, Long> annotation : binEntry.getValue()) {
 						if (multiBinRangeUuids.contains(annotation.getFirst())) {
-							filtered.add(annotation);						
+							filtered.add(annotation);
 						} else {
 							// Save the first annotation we come across that is not part of
 							// a multi range annotation.
@@ -161,9 +141,9 @@ public class AggregatingGroupFilter implements AnnotationFilter {
 						
 					}
 					if (aggregateCount > 1) {
-						aggregates.put(aggregate.getFirst(), aggregateCount);
-						filtered.add(aggregate);
+						aggregates.put(aggregate.getFirst(), aggregateCount);						
 					}
+					filtered.add(aggregate);
 				} else {
 					filtered.addAll(binEntry.getValue());
 				}

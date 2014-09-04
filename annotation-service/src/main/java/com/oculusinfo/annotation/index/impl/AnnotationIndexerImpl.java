@@ -86,7 +86,9 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
             // top right
             TileIndex tileTR = pyramid.rootToTile( x1, y1, level, NUM_BINS, NUM_BINS );
             BinIndex binTR = pyramid.rootToBin(x1, y1, tileTR);
-            tileAndBins.add( new TileAndBinIndices( tileBL, binTR ) );
+            if (!tileTR.equals(tileBL) || !binTR.equals(binBL)) {            	
+            	tileAndBins.add( new TileAndBinIndices( tileTR, binTR ) );
+            }
             
 //            for (int i=tileBL.getX(); i<=tileTR.getX(); i++) {
 //                for (int j=tileBL.getY(); j <= tileTR.getY(); j++) {
