@@ -146,19 +146,20 @@ class HierarchicGIBLayout extends Serializable {
 		// parse node data ... format is (node ID, parent community ID, internal number of nodes)
 		//val nodes = gparser.parseNodeData(sc, sourceDir + "/level_" + level + "_vertices", partitions, delimiter)
 		val nodes = gparser.parseNodeData(sc, rawData, partitions, delimiter, 1, 2, 3, 4)
-					.map(node => (node._1, node._2._1, node._2._2, node._2._4))
+					.map(node => (node._1, node._2._1, node._2._2, node._2._3, node._2._4))
 					
 		// swap so parent ID is the key, join with parent rectangle, and store
 		// as (node ID, parent rect)
-		val nodesWithRectangles = nodes.map(n => (n._2, (n._1, n._3, n._4)))
+		val nodesWithRectangles = nodes.map(n => (n._2, (n._1, n._3, n._4, n._5)))
 									   .join(lastLevelLayout)
 									   .map(n => { 
 									  	   val id = n._2._1._1
 									  	   val numInternalNodes = n._2._1._2
-									  	   val metaData = n._2._1._3
+									  	   val degree = n._2._1._3
+									  	   val metaData = n._2._1._4
 									  	   //val parentId = n._1
 									  	   val parentRect = n._2._2
-									  	   (id, (parentRect, numInternalNodes, metaData))
+									  	   (id, (parentRect, numInternalNodes, degree, metaData))
 									   })
 									   
 		val graph = Graph(nodesWithRectangles, edges)	// create graph with parent rectangle as Vertex attribute
@@ -186,9 +187,9 @@ class HierarchicGIBLayout extends Serializable {
 		
 		// now re-map nodes by (parent rect, (node ID, numInternalNodes)) and group by parent rectangle
 		val groupedNodes = if (consolidationPartitions==0) {	
-			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3))).groupByKey()
+			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3, n._2._4))).groupByKey()
 		} else {
-			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3))).groupByKey(consolidationPartitions)
+			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3, n._2._4))).groupByKey(consolidationPartitions)
 		}
 			
 		//join raw nodes with intra-community edges (key is parent rectangle)
