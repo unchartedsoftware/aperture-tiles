@@ -375,7 +375,9 @@ class ForceDirected extends Serializable {
 			
 			for (n <- 0 until numNodes) {
 				val (id, x, y, radius, numInternalNodes, metaData) = nodeCoords(n)
-				nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBoxFinal._1, (y-minY)*scaleFactor + boundingBoxFinal._2, radius*scaleFactor, numInternalNodes, metaData)		
+				// scale community radii too if scaleFactor < 1, so scaling doesn't cause communities to overlap
+				val scaledRadius = if (scaleFactor < 1.0) radius*scaleFactor else radius	
+				nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBoxFinal._1, (y-minY)*scaleFactor + boundingBoxFinal._2, scaledRadius, numInternalNodes, metaData)		
 			}	
 		}
 		else {

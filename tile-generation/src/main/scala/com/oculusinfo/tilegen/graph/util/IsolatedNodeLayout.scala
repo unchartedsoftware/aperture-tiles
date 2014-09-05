@@ -138,16 +138,15 @@ class IsolatedNodeLayout {
 			minY = Math.min(minY, y)			
 		}
 		
-		// TODO -- if scaleFactor < 1 then could reduce the nodeAreaNorm value a bit and repeat? (similar to Group-In-Box approach)
-
 		// need to use the same scaleFactor for both x and y coords so node 'circles' don't get distorted
 		val scaleFactor = Math.min(boundingBox._3 / (maxX - minX),  boundingBox._4 / (maxY - minY))
 		
 		for (n <- 0 until numNodes) {
 			val (id, x, y, radius, numInternalNodes, metaData) = nodeCoords(n)
-			nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBox._1, (y-minY)*scaleFactor + boundingBox._2, radius*scaleFactor, numInternalNodes, metaData)		
+			// scale community radii too if scaleFactor < 1, so scaling doesn't cause communities to overlap
+			val scaledRadius = if (scaleFactor < 1.0) radius*scaleFactor else radius	
+			nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBox._1, (y-minY)*scaleFactor + boundingBox._2, scaledRadius, numInternalNodes, metaData)		
 		}
-		
 		val scaledCentralArea = centralCommunityArea*scaleFactor*scaleFactor	// also scale centralCommunityArea accordingly (ie x square of scaleFactor)
 	
 		(nodeCoords, scaledCentralArea)	 
