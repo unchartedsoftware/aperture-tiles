@@ -45,7 +45,7 @@ define(function (require) {
 
             this._super( map, this.parseInputSpec( spec ) );
             this.id = idNumber++;
-            //this.details = spec.details;
+            this.details = spec.details;
             this.createStyles();    // inject css directly into DOM
             this.createNodeLayer(); // instantiate the node layer data object
             this.createHtmlLayer(); // instantiate the html visualization layer
@@ -245,7 +245,7 @@ define(function (require) {
                 // process click
                 that.clickOn( value );
                 // create details here so that only 1 is created
-                that.createDetailsOnDemand( data );
+                that.createDetailsOnDemand( data, value );
                 // prevent event from going further
                 event.stopPropagation();
             });
@@ -262,24 +262,28 @@ define(function (require) {
         },
 
 
-        createDetailsOnDemand: function( data ) {
+        createDetailsOnDemand: function( data, value ) {
 
             var //clickState = this.layerState.get('click'),
                 map = this.map,
                 //value = clickState.value,
                 tilePos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
-                detailsPos = {
+                position = {
                     x: tilePos.x + 256,
                     y: map.getMapHeight() - tilePos.y
                 },
                 $details;
 
             if ( this.details ) {
-                $details = this.details.create( detailsPos, $.proxy( this.clickOff, this ) );
-                Util.enableEventPropagation( $details, ['onmouseup'] );
+                this.details.destroy();
+                $details = this.details.create( value, $.proxy( this.clickOff, this ) );
+                $details.css( { left:position.x, top:position.y } );
                 map.getRootElement().append( $details );
+                Util.enableEventPropagation( $details, ['onmouseup'] );
+                Util.enableScrollBars( $details.find('.details-text-box'), $details );
                 this.centreForDetails( data );
             }
+
         },
 
 
@@ -307,9 +311,9 @@ define(function (require) {
 
         	for ( i=0; i<subSpec.length; i++ ) {
         		if ( subIndex ) {
-        		    val = ( value[subSpec[i].countKey][subIndex] / count ) * 100;
+        		    val = ( value[subSpec[i].countKey][subIndex] / count ) * 100 || 0;
         		} else {
-        		    val = ( value[subSpec[i].countKey] / count ) * 100;
+        		    val = ( value[subSpec[i].countKey] / count ) * 100 || 0;
         		}
                 val = ( i === subSpec.length - 1 ) ? 100 - sum : Math.round( val / 10 ) * 10;
                 result += "-" + val;

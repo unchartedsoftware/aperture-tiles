@@ -19,10 +19,9 @@
             box-sizing: border-box;
 }
 
-.details-on-demand-half {
+.details-partition {
 	position:relative;
 	width: 100%;
-	height: 50%;
 	-webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -53,6 +52,21 @@
 	height: calc(100% - 40px);
 }
 
+.details-close-button {
+	cursor: pointer;
+	position:absolute;
+	right:3px;
+	top:3px;
+	width:12px;
+	height:12px;
+	background: transparent url(../images/close_icon.png) no-repeat center top;
+	opacity: 0.5;
+}
+
+.details-close-button:hover {
+	opacity: 1;
+}
+
 
 /********************************************/
 /* 		     Generic Details Chart  	    */
@@ -71,13 +85,14 @@
 	font-size: 12px;
 	height: 15px;
 	left: 5px;
+	padding: 5px 0 5px 0;
 }
 
 .details-chart-content {
 	position: relative;
 	padding: 0 5px 0 5px;
 	background-color: #111111;
-	height: calc(100% - 24px);
+	height: calc(100% - 37px);
 }
 
 .details-chart-bars {
@@ -159,6 +174,25 @@
 	color: #FFFFFF;
 }
 
+.details-bar-hover {
+
+	position:absolute;
+	padding: 5px 10px 5px 10px;
+	background-color: #222222;
+	border: 1px solid #333333;
+	box-shadow: 0px 5px 15px #000;
+	margin-top: -24px;
+	z-index: 1;
+	pointer-events:none;
+}
+
+.details-bar-hover-label {
+
+	color: #d3d3d3;
+	white-space: pre;
+	font-size: 12px;
+}
+
 
 /********************************************/
 /* 		     Generic Details Textbox  	    */
@@ -168,7 +202,8 @@
 .details-text-box {
 	position:relative;
 	color : #FFFFFF;
-	height: calc(100% - 36px);
+	width: 100%;
+	height: 100%;
 	overflow: auto;
 	background-color:#111111;
 	-webkit-box-sizing: border-box;
@@ -183,17 +218,6 @@
 	margin: 5px;
 }
 
-.details-on-demand-tweet-time {
-	position:relative;
-	color: #DDDDDD;
-	text-align: right;
-	font-size: 0.6em;
-	padding: 5px;
-}
-
-.details-on-demand-tweet {
-	position:relative;
-}
 
 .text-entry-dark {
 	background-color: #111111;
@@ -203,24 +227,8 @@
 	background-color: #181818;
 }
 
-.details-on-demand-tweet-text {
+.details-text-box-text {
 	position:relative;
 	padding: 5px 5px 0px 5px;
 	font-size: 0.65em;
-}
-
-
-.details-close-button {
-	cursor: pointer;
-	position:absolute;
-	right:3px;
-	top:3px;
-	width:12px;
-	height:12px;
-	background: transparent url(../images/close_icon.png) no-repeat center top;
-	opacity: 0.5;
-}
-
-.details-close-button:hover {
-	opacity: 1;
 }

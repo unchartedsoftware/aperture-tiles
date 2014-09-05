@@ -29,51 +29,52 @@ define(function (require) {
 
 
 
-    var Class = require('../../../class'),
+    var GenericDetailsElement = require('./GenericDetailsElement'),
         GenericDetailsContainer;
 
 
 
-    GenericDetailsContainer = Class.extend({
+    GenericDetailsContainer = GenericDetailsElement.extend({
         ClassName: "GenericDetailsContainer",
 
-        init: function() {
+        init: function( spec ) {
+            this._super( spec );
             this.$container = null;
         },
 
-
-        create: function( position, closeCallback ) {
-
-            var html = '';
-
-            html += '<div class="details-on-demand" style="left:'+position.x+'px; top:'+position.y+'px;">';
-
-            // top half
-            html += '<div class="details-on-demand-half">';
-            html +=     '<div class="details-on-demand-title></div>';
-            html +=     '<div class="details-on-demand-content"></div>';
-            html += '</div>';
-
-            // bottom half
-            html += '<div class="details-on-demand-half">';
-            html +=     '<div class="details-on-demand-title></div>';
-            html +=     '<div class="details-on-demand-content"></div>';
-            html += '</div>';
-
-            // close button
-            html += '<div class="details-close-button"></div>';
-            html += '</div>';
-
-            this.$container = $(html).draggable().resizable({
-                minHeight: 513,
-                minWidth: 257
-            });
-
-            this.$container.find('.details-close-button').click( closeCallback );
-
-            return this.$container;
+        parseInputSpec: function( spec ) {
+            spec.width = spec.width || "257px";
+            spec.height = spec.height || "513px";
+            return spec;
         },
 
+        createStyles: function() {
+            return true;
+        },
+
+        create: function( value, closeCallback ) {
+
+            var html = '', i;
+
+            html += '<div class="details-on-demand" style="'
+                  + 'height:'+this.spec.height+';'
+                  + 'width:'+this.spec.width+';'
+                  + '"></div>';
+
+            this.$container = $( html ).draggable().resizable({
+                minHeight: this.spec.height,
+                minWidth: this.spec.width
+            });
+
+            this.$closeButton = $('<div class="details-close-button"></div>');
+            this.$closeButton.click( closeCallback );
+
+            for ( i=0; i<this.content.length; i++ ) {
+                this.$container.append( this.content[i].create( value ) );
+            }
+
+            return this.$container.append( this.$closeButton );
+        },
 
         destroy : function() {
             if ( this.$container ) {

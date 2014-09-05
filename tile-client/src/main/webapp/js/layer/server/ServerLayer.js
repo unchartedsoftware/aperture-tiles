@@ -46,6 +46,7 @@ define(function (require) {
             this._super( spec, map );
         },
 
+
         /**
          * Set the opacity
          */
@@ -64,6 +65,7 @@ define(function (require) {
                 this.layer.olLayer_.setVisibility( visibility );
             }
         },
+
 
         /**
          * Updates the ramp type associated with the layer.  Results in a POST
@@ -95,7 +97,6 @@ define(function (require) {
          * @param {string} rampFunction - The new new ramp function.
          */
         setRampFunction: function ( rampFunction ) {
-
             if ( !this.layerSpec.transform ) {
                 this.layerSpec.transform = {name: rampFunction};
             } else {

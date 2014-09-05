@@ -53,29 +53,7 @@ define(function (require) {
         createIndexDots,
         createCarousel,
         updateDotIndices,
-        CarouselControls,
-        tooltipOpenFunc,
-        tooltipCloseFunc;
-
-    tooltipOpenFunc = function( layerState, target ) {
-        return function() {
-            layerState.set('tooltip', {
-                target: target,
-                state: 'open'
-            });
-        };
-    };
-
-
-    tooltipCloseFunc = function( layerState, target ) {
-        return function() {
-            layerState.set('tooltip', {
-                target: target,
-                state: 'close'
-            });
-        };
-    };
-
+        CarouselControls;
 
     /**
      * Creates an observer to handle layer state changes, and update the controls based on them.
@@ -170,9 +148,7 @@ define(function (require) {
         $leftChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_LEFT+"'></div>");
         // set tooltip
         Util.enableTooltip( $leftChevron,
-                         TOOLTIP_CHEVRON_LEFT,
-                         tooltipOpenFunc( layerState, 'carousel-left-chevron' ),
-                         tooltipCloseFunc( layerState, 'carousel-left-chevron' ) );
+                         TOOLTIP_CHEVRON_LEFT );
 
         generateCallbacks( $leftChevron, -1 );
         $carousel.append( $leftChevron );
@@ -180,9 +156,7 @@ define(function (require) {
         $rightChevron = $("<div class='"+CHEVRON_CLASS+" "+CHEVRON_CLASS_RIGHT+"'></div>");
         // set tooltip
         Util.enableTooltip( $rightChevron,
-                         TOOLTIP_CHEVRON_RIGHT,
-                         tooltipOpenFunc( layerState, 'carousel-right-chevron' ),
-                         tooltipCloseFunc( layerState, 'carousel-right-chevron' ) );
+                         TOOLTIP_CHEVRON_RIGHT );
 
         generateCallbacks( $rightChevron, 1 );
         $carousel.append( $rightChevron );
@@ -223,9 +197,7 @@ define(function (require) {
             $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
             // set tooltip
             Util.enableTooltip( $dots[i],
-                             TOOLTIP_INDEX_DOT,
-                             tooltipOpenFunc( layerState, 'carousel-index-'+i ),
-                             tooltipCloseFunc( layerState, 'carousel-index-'+i ) );
+                             TOOLTIP_INDEX_DOT );
 
             generateCallbacks( $dots[i], i );
             $indexContainer.append( $dots[i] );

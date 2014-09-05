@@ -29,61 +29,41 @@ define(function (require) {
 
 
 
-    var GenericDetailsElement = require('./GenericDetailsElement'),
-        GenericDetailsTextBox;
+    var ClientLayerDetails = require('./ClientLayerDetails'),
+        idNumber = 0,
+        GenericDetailsElement;
 
 
 
-    GenericDetailsTextBox = GenericDetailsElement.extend({
-        ClassName: "GenericDetailsTextBox",
+    GenericDetailsElement = ClientLayerDetails.extend({
+        ClassName: "GenericDetailsElement",
 
         init: function( spec ) {
-            this._super( spec );
-            this.$textBox = null;
+            this._super( this.parseInputSpec( spec ) );
+            this.id = idNumber++;
+            this.createStyles();    // inject css directly into DOM
         },
 
-        parseInputSpec: function( spec ) {
-            spec.textKey = spec.textKey || "text";
-            return spec;
+        parseInputSpec: function() {
+            console.error( this.ClassName+'::parseInputSpec() has not been overloaded, no configurable css has been set.');
+            return false;
         },
 
         createStyles: function() {
+            console.error( this.ClassName+'::createStyles() has not been overloaded, no configurable css has been set.');
+            return false;
+        },
+
+        create: function() {
             return true;
         },
 
-        create: function( value ) {
-
-            var html = '',
-                lightOrDark,
-                entry,
-                i;
-
-            html += '<div class="details-text-box">';
-
-            for ( i=0; i<value[this.spec.textKey].length; i++ ) {
-
-                entry = value[i];
-                lightOrDark = 'light';
-                html += '<div class="text-entry-'+lightOrDark+'">'+entry+'</div>';
-                lightOrDark = (lightOrDark === 'light') ? 'dark' : 'light';
-            }
-            html += '</div>';
-
-            this.$textBox = $( html );
-
-            return this.$textBox;
-        },
-
-
         destroy : function() {
-            if ( this.$textbox ) {
-                this.$textBox.remove();
-                this.$textbox = null;
-            }
+            return true;
         }
 
     });
 
-    return GenericDetailsTextBox;
+    return GenericDetailsElement;
 
 });

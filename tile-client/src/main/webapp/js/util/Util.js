@@ -77,6 +77,10 @@ define(function (require) {
 
         enableScrollBars: function( $elem, $parent ) {
 
+            if ( $elem.length === 0 ) {
+                return;
+            }
+
             if ( !$.contains( document, $elem[0] ) ) {
                 console.error("DOM element must be attached for jScrollPanels to work correctly");
             }
@@ -155,10 +159,12 @@ define(function (require) {
 
         },
 
-        // Registers a click handler that only fires if the click didn't
-        // involve a map drag. Since the map is moving under the mouse cursor
-        // the browser will still register a click despite mouse movement. This
-        // guards against that.
+        /**
+         * Registers a click handler that only fires if the click didn't
+         * involve a map drag. Since the map is moving under the mouse cursor
+         * the browser will still register a click despite mouse movement. This
+         * guards against that.
+         */
         dragSensitiveClick : function( node, handler, threshold ) {
             var dragStart = {x: null, y: null};
 
