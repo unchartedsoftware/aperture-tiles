@@ -60,7 +60,13 @@ define(function (require) {
             var i;
 
             spec.text.textKey = spec.text.textKey || "text";
-            spec.text.blend = spec.text.blend || [{}];
+            if ( !spec.text.blend ) {
+                spec.text.blend = [{
+                    countKey : spec.text.countKey,
+                    color : spec.text.color,
+                    hoverColor : spec.text.hoverColor
+                }];
+            }
             for ( i=0; i<spec.text.blend.length; i++ ) {
                 spec.text.blend[i].color = spec.text.blend[i].color || DEFAULT_COLOR;
                 spec.text.blend[i].hoverColor = spec.text.blend[i].hoverColor || DEFAULT_HOVER_COLOR;

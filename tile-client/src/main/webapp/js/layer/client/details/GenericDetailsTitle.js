@@ -30,19 +30,23 @@ define(function (require) {
 
 
     var GenericDetailsElement = require('./GenericDetailsElement'),
-        GenericDetailsTextBox;
+        GenericDetailsTitle;
 
 
 
-    GenericDetailsTextBox = GenericDetailsElement.extend({
-        ClassName: "GenericDetailsTextBox",
+    GenericDetailsTitle = GenericDetailsElement.extend({
+        ClassName: "GenericDetailsTitle",
 
         init: function( spec ) {
             this._super( spec );
-            this.$textBox = null;
+            this.$element = null;
         },
 
         parseInputSpec: function( spec ) {
+            spec.fontSize = spec.fontSize || "20px";
+            spec.height = spec.height || spec.fontSize;
+            spec.lineHeight = spec.lineHeight || spec.fontSize;
+            spec.text = spec.text || null;
             spec.textKey = spec.textKey || "text";
             return spec;
         },
@@ -54,36 +58,32 @@ define(function (require) {
         create: function( value ) {
 
             var html = '',
-                lightOrDark,
-                entry,
-                i;
+                text;
 
-            html += '<div class="details-text-box">';
+            text = this.spec.text || value[ this.spec.textKey ];
 
-            for ( i=0; i<value[this.spec.textKey].length; i++ ) {
+            html += '<div class="details-on-demand-title" style="'
+                  + 'font-size:'+this.spec.fontSize+';'
+                  + 'line-height:'+this.spec.lineHeight+';'
+                  + 'height:'+this.spec.height+';">'
+                  + text
+                  + '</div>';
 
-                entry = value[i];
-                lightOrDark = 'light';
-                html += '<div class="text-entry-'+lightOrDark+'">'+entry+'</div>';
-                lightOrDark = (lightOrDark === 'light') ? 'dark' : 'light';
-            }
-            html += '</div>';
+            this.$element = $( html );
 
-            this.$textBox = $( html );
-
-            return this.$textBox;
+            return this.$element ;
         },
 
 
         destroy : function() {
-            if ( this.$textbox ) {
-                this.$textBox.remove();
-                this.$textbox = null;
+            if ( this.$element ) {
+                this.$element.remove();
+                this.$element = null;
             }
         }
 
     });
 
-    return GenericDetailsTextBox;
+    return GenericDetailsTitle;
 
 });

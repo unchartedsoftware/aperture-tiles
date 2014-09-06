@@ -1,5 +1,9 @@
 @charset "UTF-8";
 
+.jspPane {
+    position:relative;
+}
+
 .jspScrollable:focus {
     outline:none;
 }

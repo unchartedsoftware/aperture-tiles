@@ -38,7 +38,7 @@ define( function (require) {
 	    ClientLayerFactory;
 
 
-    loadModule = function( path, module, spec ) {
+    loadModule = function( path, module ) {
 
         var deferred = $.Deferred();
         require( [path+module], function( Module ) {
@@ -53,12 +53,27 @@ define( function (require) {
 
         var renderer,
             renderers,
-            det,
-            details,
             deferreds = [],
             i, j;
 
+        function loadDetails( details ) {
+            var k;
+            if ( details ) {
+                // only load each module once
+                if ( !loadedModules[ details.type ] ) {
+                    loadedModules[ details.type ] = "pending";
+                    deferreds.push( loadModule( "./details/", details.type ) );
+                }
+                if ( details.content ) {
+                    for (k=0; k<details.content.length; k++) {
+                        loadDetails( details.content[k] );
+                    }
+                }
+            }
+        }
+
         for (i=0; i<layerJSON.length; i++) {
+
             renderers = layerJSON[i].renderers;
             for (j=0; j<renderers.length; j++) {
 
@@ -66,21 +81,11 @@ define( function (require) {
                 if ( !loadedModules[ renderer.type ] ) {
                     // only load each module once
                     loadedModules[ renderer.type ] = "pending";
-                    deferreds.push( loadModule( "./renderers/", renderer.type, renderer.spec ) );
+                    deferreds.push( loadModule( "./renderers/", renderer.type ) );
                 }
             }
 
-            details = layerJSON[i].details;
-            if ( details ) {
-                for (j=0; j<details.length; j++) {
-                    det = details[j];
-                    if ( !loadedModules[ det.type ] ) {
-                        // only load each module once
-                        loadedModules[ det.type ] = "pending";
-                        deferreds.push( loadModule( "./details/", det.type, det.spec ) );
-                    }
-                }
-            }
+            loadDetails( layerJSON[i].details );
         }
         return deferreds;
     };
@@ -90,21 +95,36 @@ define( function (require) {
 
         var layerId,
             renderers,
-            //details,
+            details,
             renderer,
             views = [],
             i, j;
+
+        function assembleDetails( details ) {
+            var result = null, k;
+            if ( details ) {
+                result = new loadedModules[ details.type ]( details.spec );
+                result.content = [];
+                if ( details.content ) {
+                    for (k=0; k<details.content.length; k++) {
+                        result.content.push( assembleDetails( details.content[k] ) );
+                    }
+                }
+            }
+
+            return result;
+        }
 
         for (i=0; i<layerJSON.length; i++) {
 
             layerId = layerJSON[i].layer;
             renderers = layerJSON[i].renderers;
-            //details = layerJSON[i].details;
+            details = assembleDetails( layerJSON[i].details );
 
             for (j=0; j<renderers.length; j++) {
 
                 renderer = renderers[j];
-                //renderer.spec.details = new loadedModules[ details[0].type ]();
+                renderer.spec.details = details;
                 views.push({
                     id: layerId,
                     renderer: new loadedModules[ renderer.type ]( map, renderer.spec )

@@ -48,7 +48,6 @@ define(function (require) {
 
 
         init: function ( spec, views, map ) {
-
             this.id = spec[0].layer;
             this.name = spec[0].name || spec[0].layer;
             this.map = map;
@@ -61,7 +60,6 @@ define(function (require) {
 
 
         setOpacity: function( opacity ) {
-
             var i;
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setOpacity( opacity );
@@ -97,7 +95,6 @@ define(function (require) {
 
 
         getTileRenderer: function( tilekey ) {
-
             var index = this.renderersByTile[tilekey];
             return (index !== undefined) ? index : this.defaultRendererIndex;
         },
@@ -120,14 +117,12 @@ define(function (require) {
                     var layerId = layerInfo.layer;
 
                     if (statusInfo.success) {
-
                         if ( layerInfos[layerId] ) {
                             // if a previous configuration exists, release it
                             LayerService.unconfigureLayer( layerInfos[layerId], function() {
                                 return true;
                             });
                         }
-
                         // set layer info
                         layerInfos[ layerId ] = layerInfo;
                         // resolve deferred
@@ -142,14 +137,11 @@ define(function (require) {
             }
 
             $.when.apply( $, deferreds ).done( function() {
-
                 var i, view;
-
                 for (i=0; i<that.views.length; i++) {
                     view = that.views[i];
                     view.service = new TileService( layerInfos[ view.id ], that.map.getPyramid() );
                 }
-
                 // attach callback now
                 that.map.on('move', $.proxy(that.update, that));
                 that.update();

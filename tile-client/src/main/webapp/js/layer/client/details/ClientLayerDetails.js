@@ -29,61 +29,28 @@ define(function (require) {
 
 
 
-    var GenericDetailsElement = require('./GenericDetailsElement'),
-        GenericDetailsTextBox;
+    var Class = require('../../../class'),
+        ClientLayerDetails;
 
 
 
-    GenericDetailsTextBox = GenericDetailsElement.extend({
-        ClassName: "GenericDetailsTextBox",
+    ClientLayerDetails = Class.extend({
+        ClassName: "ClientLayerDetails",
 
         init: function( spec ) {
-            this._super( spec );
-            this.$textBox = null;
+            this.spec = spec;
         },
 
-        parseInputSpec: function( spec ) {
-            spec.textKey = spec.textKey || "text";
-            return spec;
-        },
-
-        createStyles: function() {
+        create: function() {
             return true;
         },
 
-        create: function( value ) {
-
-            var html = '',
-                lightOrDark,
-                entry,
-                i;
-
-            html += '<div class="details-text-box">';
-
-            for ( i=0; i<value[this.spec.textKey].length; i++ ) {
-
-                entry = value[i];
-                lightOrDark = 'light';
-                html += '<div class="text-entry-'+lightOrDark+'">'+entry+'</div>';
-                lightOrDark = (lightOrDark === 'light') ? 'dark' : 'light';
-            }
-            html += '</div>';
-
-            this.$textBox = $( html );
-
-            return this.$textBox;
-        },
-
-
         destroy : function() {
-            if ( this.$textbox ) {
-                this.$textBox.remove();
-                this.$textbox = null;
-            }
+            return true;
         }
 
     });
 
-    return GenericDetailsTextBox;
+    return ClientLayerDetails;
 
 });

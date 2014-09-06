@@ -30,20 +30,22 @@ define(function (require) {
 
 
     var GenericDetailsElement = require('./GenericDetailsElement'),
-        GenericDetailsTextBox;
+        GenericDetailsPartition;
 
 
 
-    GenericDetailsTextBox = GenericDetailsElement.extend({
-        ClassName: "GenericDetailsTextBox",
+    GenericDetailsPartition = GenericDetailsElement.extend({
+        ClassName: "GenericDetailsPartition",
 
         init: function( spec ) {
             this._super( spec );
-            this.$textBox = null;
+
+            this.$element = null;
         },
 
         parseInputSpec: function( spec ) {
-            spec.textKey = spec.textKey || "text";
+            spec.width = spec.width || "255";
+            spec.height = spec.height || "300";
             return spec;
         },
 
@@ -54,36 +56,34 @@ define(function (require) {
         create: function( value ) {
 
             var html = '',
-                lightOrDark,
-                entry,
                 i;
 
-            html += '<div class="details-text-box">';
-
-            for ( i=0; i<value[this.spec.textKey].length; i++ ) {
-
-                entry = value[i];
-                lightOrDark = 'light';
-                html += '<div class="text-entry-'+lightOrDark+'">'+entry+'</div>';
-                lightOrDark = (lightOrDark === 'light') ? 'dark' : 'light';
+            for (i=0; i<value.length; i++) {
+                html += '<iframe style="'
+                      + 'display:inline;"'
+                      + 'src="'
+                      + value[i].key + 'embed/'
+                      + '" width="'+this.spec.width+'"'
+                      + 'height="'+this.spec.height+'"'
+                      + 'frameborder="0"'
+                      + 'scrolling="no"'
+                      + 'allowtransparency="true"></iframe>';
             }
-            html += '</div>';
 
-            this.$textBox = $( html );
-
-            return this.$textBox;
+            this.$element = $( html );
+            return this.$element;
         },
 
 
         destroy : function() {
-            if ( this.$textbox ) {
-                this.$textBox.remove();
-                this.$textbox = null;
+            if ( this.$element ) {
+                this.$element.remove();
+                this.$element = null;
             }
         }
 
     });
 
-    return GenericDetailsTextBox;
+    return GenericDetailsPartition;
 
 });

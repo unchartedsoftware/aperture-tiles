@@ -29,7 +29,7 @@ define(function (require) {
 
 
 
-    var Class = require('../../../class'),
+    var GenericDetailsElement = require('./GenericDetailsElement'),
         createAxisHtml,
         createBarsHtml,
         setBarHoverCallbacks,
@@ -88,7 +88,7 @@ define(function (require) {
     };
 
 
-    createBarsHtml =  function( percentages, tooltips ) {
+    createBarsHtml =  function( that, percentages, tooltips ) {
 
         var html = "",
             maxPercentage,
@@ -100,7 +100,7 @@ define(function (require) {
             var max = 0,
                 i;
             for (i=0; i<percentages.length; i++) {
-                max = Math.max( percentages, max );
+                max = Math.max( percentages[i], max );
             }
             return max;
         }
@@ -110,9 +110,9 @@ define(function (require) {
 
         for (i=0; i<percentages.length; i++ ) {
             relativePercentage = ( percentages[i] / maxPercentage ) * 100;
-            html += '<div class="details-chart-bar style="width:calc('+barWidth+'% + 1px);">';
+            html += '<div class="details-chart-bar" style="width:calc('+barWidth+'% + 1px);">';
             html +=     tooltips[i];
-            html +=     '<div class="details-chart-bar-fill" style="height:'+relativePercentage+'%;"></div>';
+            html +=     '<div class="details-chart-bar-fill details-chart-bar-fill-'+that.id+'" style="height:'+relativePercentage+'%;"></div>';
             html += '</div>';
         }
         return html;
@@ -149,36 +149,73 @@ define(function (require) {
     };
 
 
-    GenericDetailsBarChart = Class.extend({
+    GenericDetailsBarChart = GenericDetailsElement.extend({
         ClassName: "GenericDetailsBarChart",
 
-        init: function() {
+        init: function( spec ) {
+            this._super( spec );
             this.$chart = null;
+
         },
 
+        parseInputSpec: function( spec ) {
+            spec.width = spec.width || "100%";
+            spec.height = spec.height || "50%";
+            return spec;
+        },
 
-        create: function( title, labels, percentages, tooltips ) {
+        createStyles: function() {
 
-            var html = '';
-            html += '<div class="details-chart">';
-            html +=     '<div class="details-chart-title">'+title+'</div>';
+            var css = '<style id="generic-details-barchart-'+this.id+'" type="text/css">';
+
+            // generate text css
+            css += '.details-chart-bar-fill-'+this.id+' {background-color:'+this.spec.color+";}";
+            css += '.details-chart-bar:hover .details-chart-bar-fill-'+this.id+' {background-color:'+this.spec.hoverColor+";}";
+
+            css += '</style>';
+
+            $( document.body ).prepend( css );
+        },
+
+        create: function( value ) {
+
+            function getSum( vals ) {
+                var i, sum = 0;
+                for ( i=0; i<vals.length; i++ ) {
+                    sum += vals[i];
+                }
+                return sum;
+            }
+
+            var html = '', i,
+                vals = value[ this.spec.countKey ],
+                sum = getSum( vals ),
+                tooltips = [],
+                percentages = [];
+
+            for ( i=0; i<vals.length; i++ ) {
+                percentages.push( vals[i] / sum );
+                tooltips.push( vals[i] );
+            }
+
+            html += '<div class="details-chart" style="height:'+this.spec.height+';">';
+            html +=     '<div class="details-chart-title">'+this.spec.title+'</div>';
             html +=     '<div class="details-chart-content">';
             // create bars
             html +=         '<div class="details-chart-bars">';
-            html +=             createBarsHtml( percentages, tooltips );
+            html +=             createBarsHtml( this, percentages, tooltips );
             html +=         '</div>';
             // create axis
             html +=         '<div class="details-chart-axis">';
-            html +=             createAxisHtml( labels );
+            html +=             createAxisHtml( this.spec.labels );
             html +=         '</div>';
             html +=     '</div>';
             html += '</div>';
 
-            this.$chart = $(html);
+            this.$chart = $( html );
             setBarHoverCallbacks( this.$chart );
             return this.$chart;
         },
-
 
         destroy : function() {
             this.$chart.remove();

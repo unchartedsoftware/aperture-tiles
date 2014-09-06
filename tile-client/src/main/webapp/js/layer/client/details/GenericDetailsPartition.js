@@ -30,20 +30,22 @@ define(function (require) {
 
 
     var GenericDetailsElement = require('./GenericDetailsElement'),
-        GenericDetailsTextBox;
+        GenericDetailsPartition;
 
 
 
-    GenericDetailsTextBox = GenericDetailsElement.extend({
-        ClassName: "GenericDetailsTextBox",
+    GenericDetailsPartition = GenericDetailsElement.extend({
+        ClassName: "GenericDetailsPartition",
 
         init: function( spec ) {
             this._super( spec );
-            this.$textBox = null;
+
+            this.$element = null;
         },
 
         parseInputSpec: function( spec ) {
-            spec.textKey = spec.textKey || "text";
+            spec.width = spec.width || "100%";
+            spec.height = spec.height || "50%";
             return spec;
         },
 
@@ -53,37 +55,31 @@ define(function (require) {
 
         create: function( value ) {
 
-            var html = '',
-                lightOrDark,
-                entry,
-                i;
+            var html = '', i;
 
-            html += '<div class="details-text-box">';
+            html += '<div class="details-partition" style="'
+                  + 'width:'+this.spec.width+';'
+                  + 'height:'+this.spec.height+'";></div>';
 
-            for ( i=0; i<value[this.spec.textKey].length; i++ ) {
+            this.$element = $( html );
 
-                entry = value[i];
-                lightOrDark = 'light';
-                html += '<div class="text-entry-'+lightOrDark+'">'+entry+'</div>';
-                lightOrDark = (lightOrDark === 'light') ? 'dark' : 'light';
+            for ( i=0; i<this.content.length; i++ ) {
+                this.$element.append( this.content[i].create( value ) );
             }
-            html += '</div>';
 
-            this.$textBox = $( html );
-
-            return this.$textBox;
+            return this.$element ;
         },
 
 
         destroy : function() {
-            if ( this.$textbox ) {
-                this.$textBox.remove();
-                this.$textbox = null;
+            if ( this.$element ) {
+                this.$element.remove();
+                this.$element = null;
             }
         }
 
     });
 
-    return GenericDetailsTextBox;
+    return GenericDetailsPartition;
 
 });

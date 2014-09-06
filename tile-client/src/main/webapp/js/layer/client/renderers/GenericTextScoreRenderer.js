@@ -65,12 +65,14 @@ define(function (require) {
                 spec.text.blend[i].countKey = spec.text.blend[i].countKey || "count";
             }
 
-            spec.chart = spec.chart || {};
-            spec.chart.bars = spec.chart.bars || [];
-            for ( i=0; i<spec.chart.bars.length; i++ ) {
-                spec.chart.bars[i].countKey = spec.chart.bars[i].countKey || "count";
-                spec.chart.bars[i].color = spec.chart.bars[i].color || DEFAULT_COLOR;
-                spec.chart.bars[i].hoverColor = spec.chart.bars[i].hoverColor || DEFAULT_HOVER_COLOR;
+            if ( spec.chart ) {
+                spec.chart = spec.chart || {};
+                spec.chart.bars = spec.chart.bars || [];
+                for ( i=0; i<spec.chart.bars.length; i++ ) {
+                    spec.chart.bars[i].countKey = spec.chart.bars[i].countKey || "count";
+                    spec.chart.bars[i].color = spec.chart.bars[i].color || DEFAULT_COLOR;
+                    spec.chart.bars[i].hoverColor = spec.chart.bars[i].hoverColor || DEFAULT_HOVER_COLOR;
+                }
             }
 
             if ( spec.summary ) {
@@ -103,7 +105,9 @@ define(function (require) {
             css += this.generateBlendedCss( spec.text.blend, "text-score-label", "color" );
 
             // generate chart css
-            css += this.generateCss( spec.chart.bars, "text-score-count-sub-bar-", "background-color" );
+            if ( spec.chart ) {
+                css += this.generateCss( spec.chart.bars, "text-score-count-sub-bar-", "background-color" );
+            }
 
             css += '</style>';
 
@@ -115,7 +119,6 @@ define(function (require) {
 
             var spec = this.spec,
                 chart = spec.chart,
-                bars = spec.chart.bars,
                 text = spec.text,
                 values = data.values,
                 tilekey = data.tilekey,
@@ -200,16 +203,17 @@ define(function (require) {
                 value = values[i];
                 textEntry = value[text.textKey];
                 textCount = getCount( value, text.blend );
-                chartCount = getCount( value, chart.bars );
                 fontSize = getFontSize( textCount, totalCount );
                 labelClass = this.generateBlendedClass( "text-score-label", value, text.blend ) +"-"+this.id;
 
                 if ( chart ) {
+
+                    chartCount = getCount( value, chart.bars );
                     // get percentages for each bar
-                    percentages = bars.map( countToPercentage );
+                    percentages = chart.bars.map( countToPercentage );
                     // determine bar horizontal offset
-                    centreIndex = Math.floor( (bars.length-1) / 2 );
-                    barOffset = ( bars.length % 2 === 0 ) ? percentages[centreIndex] : percentages[centreIndex] / 2;
+                    centreIndex = Math.floor( (chart.bars.length-1) / 2 );
+                    barOffset = ( chart.bars.length % 2 === 0 ) ? percentages[centreIndex] : percentages[centreIndex] / 2;
                     for (j=centreIndex-1; j>=0; j--) {
                         barOffset += percentages[j];
                     }
@@ -227,7 +231,7 @@ define(function (require) {
                     html += '<div class="text-score-count-bar" style="'
                           + 'left:'+ (-120*barOffset) + 'px;'
                           + 'top:'+fontSize+'px;">';
-                    for (j=0; j<bars.length; j++) {
+                    for (j=0; j<chart.bars.length; j++) {
                         // create bar
                         html += '<div class="text-score-count-sub-bar '
                               + 'text-score-count-sub-bar-'+ j +'-' + this.id+'" style="'
