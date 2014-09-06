@@ -170,6 +170,10 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
                 JSONArray xs = json.getJSONArray("x");
                 x0 = xs.getDouble(0);
                 x1 = xs.getDouble(1);
+                // if range but values are the same, collapse to a point
+                if (x0.equals(x1)) {
+                	x1 = null;
+                }
             } else {
                 x0 = Double.isNaN( json.optDouble("x") ) ? null : json.getDouble("x");
                 x1 = null;
@@ -180,6 +184,10 @@ public class JSONAnnotation extends AnnotationData<JSONObject> {
                 JSONArray ys = json.getJSONArray("y");
                 y0 = ys.getDouble(0);
                 y1 = ys.getDouble(1);
+                // if range but values are the same, collapse to a point
+                if (y0.equals(y1)) {
+                	y1 = null;
+                }
             } else {
                 y0 = Double.isNaN( json.optDouble("y") ) ? null : json.getDouble("y");
                 y1 = null;
