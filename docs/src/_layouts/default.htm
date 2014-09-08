@@ -20,8 +20,8 @@
 				<div id="header-logo">
 				</div>
 				<div id="header-menu">
-					{% for mainMenuItem in site.data.mainMenuItems %}
-						<a href="{{site.baseurl}}/{{ mainMenuItem.path }}"{% if page.section == mainMenuItem.label %} class="selected"{% endif %}>{{ mainMenuItem.label }}</a>
+					{% for menuItem in site.data.menuItems.main %}
+						<a href="{{site.baseurl}}/{{ menuItem.path }}"{% if page.section == menuItem.label %} class="selected"{% endif %}>{{ menuItem.label }}</a>
 					{% endfor %}
 				</div>
 				<div id="all">
