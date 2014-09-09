@@ -37,7 +37,7 @@ import scala.util.Random
  *  	for hierarchical force-directed applications (ie if each 'node' represents a community). In this
  *   	case it is recommended to set bUseNodeSizes = true
  *  - boundingBox = bottem-left corner, width, height of bounding region for layout of nodes
- *  - borderOffset = percent of boundingBox width and height to leave as whitespace when laying out nodes
+ *  - borderPercent = Percent of parent bounding box to leave as whitespace between neighbouring communities during initial layout.  Default = 2 %
  *  - maxIterations = max number of iterations to use for force-directed algorithm
  *  - bUseEdgeWeights = uses edge weights to scale the attraction forces between connected nodes
  *  - bUseNodeSizes = uses 'number of internal nodes' attribute to size each node as a circle
@@ -53,7 +53,7 @@ class ForceDirected extends Serializable {
 	def run(nodes: Iterable[(Long, Long, Int, String)], 
 			edges: Iterable[(Long, Long, Long)],
 			boundingBox: (Double, Double, Double, Double), 
-			borderOffset: Int = 0, 
+			borderPercent: Int = 2, 
 			maxIterations: Int = 1000,
 			bUseEdgeWeights: Boolean = false,
 			bUseNodeSizes: Boolean = false,
@@ -88,7 +88,7 @@ class ForceDirected extends Serializable {
 			
 			// layout isolated communities in a spiral shape
 			val isolatedNodeLayouter = new IsolatedNodeLayout()
-			val (spiralCoords, connectedAreaOut) = isolatedNodeLayouter.calcSpiralCoords(isolatedNodeData, boundingBoxFinal, nodeAreaFactor*invTotalInternalNodes, connectedArea)
+			val (spiralCoords, connectedAreaOut) = isolatedNodeLayouter.calcSpiralCoords(isolatedNodeData, boundingBoxFinal, nodeAreaFactor*invTotalInternalNodes, connectedArea, borderPercent)
 
 			// re-calc coords of bounding box to correspond to only the central connected communities (width = height = sqrt(2)*r)
 			val rSqrt2 = Math.sqrt(connectedAreaOut * 0.31831)*0.70711		//0.31831 = 1/pi; 0.70711 = 1/sqrt(2)

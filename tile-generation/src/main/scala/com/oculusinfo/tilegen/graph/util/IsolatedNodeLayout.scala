@@ -41,17 +41,21 @@ class IsolatedNodeLayout {
  *  - boundingBox = bottem-left corner, width, height of bounding region for layout of nodes
  *  - nodeAreaNorm = normalization factor used to determine areas of communities within bounding box
  *  - centralCommunityArea = area of large central 'connected' community (ie area to leave empty in centre of spiral)
+ *  - borderPercent = Percent of parent bounding box to leave as whitespace between neighbouring communities.  Default = 2 %
  *  
  *  - Format of output array is (node ID, x, y, radius, numInternalNodes, metaData)
  **/	
 	def calcSpiralCoords(nodes: Iterable[(Long, Long, Int, String)], 			
 			boundingBox: (Double, Double, Double, Double), 
 			nodeAreaNorm: Double,
-			centralCommunityArea: Double): (Array[(Long, Double, Double, Double, Long, String)], Double) = {
+			centralCommunityArea: Double,
+			borderPercent: Int = 2): (Array[(Long, Double, Double, Double, Long, String)], Double) = {
 	
 		val (xc, yc) = (boundingBox._1 + boundingBox._3/2, boundingBox._2 + boundingBox._4/2)	// centre of bounding box
 		val boundingBoxArea = boundingBox._3 * boundingBox._4
-		val border = 0.01*Math.min(boundingBox._3, boundingBox._4)
+		
+		if (borderPercent < 0 || borderPercent > 10) throw new IllegalArgumentException("borderPercent must be between 0 and 10")
+		val border = borderPercent*0.01*Math.min(boundingBox._3, boundingBox._4)
 	
 		// Store community results in array with initial coords as xc,yc for now.
 		// Array is sorted by community radius. (smallest to largest)
@@ -93,8 +97,8 @@ class IsolatedNodeLayout {
 			val y = rQ * Math.sin(Q);
 			nodeCoords(n) = (nodeCoords(n)._1, x + xc, y + yc, r_curr, nodeCoords(n)._5, nodeCoords(n)._6)
 			
-			r_prev = r_curr			//save current community radius for next iteration
-			r_delta = 2*r_curr	//rate of r change per 2*pi radians (determines how tight or wide the spiral is)
+			r_prev = r_curr				//save current community radius for next iteration
+			r_delta = 2*r_curr + border	//rate of r change per 2*pi radians (determines how tight or wide the spiral is)
 			n -= 1
 		}
 		
@@ -106,10 +110,10 @@ class IsolatedNodeLayout {
 			Q += Q_curr
 			Q_now_sum += Q_curr
 					
-			rQ += r_delta*Q_curr/(2.0*Math.PI)	// increase r_delta over 2*pi rads
-		    //if (Q_now_sum >= Math.PI) {
-		    //    rQ += r_delta*Q_curr/Math.PI		// increase r_delta over pi rads (produces a slightly tighter spiral)
-		    //}
+			//rQ += r_delta*Q_curr/(2.0*Math.PI)	// increase r_delta over 2*pi rads
+		    if (Q_now_sum >= Math.PI) {
+		        rQ += r_delta*Q_curr/Math.PI		// increase r_delta over pi rads (produces a slightly tighter spiral)
+		    }
 			
 			val x = rQ * Math.cos(Q);	// get centre coords of current community and save results
 			val y = rQ * Math.sin(Q);
@@ -117,7 +121,7 @@ class IsolatedNodeLayout {
 			
 		    if (Q_now_sum > 2.0*Math.PI) {   // reset r_delta every 2*pi radians (for next level of spiral)
 		        Q_now_sum = 0.0
-		        r_delta = 2.0*r_curr	//rate of r change per 2*pi radians
+		        r_delta = 2.0*r_curr + border	//rate of r change per 2*pi radians
 		    }
 			
 			r_prev = r_curr			//save current community radius for next iteration

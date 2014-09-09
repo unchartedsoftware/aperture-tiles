@@ -40,7 +40,7 @@ import org.apache.spark.graphx._
  *	sourceDir = The source directory where to find clustered graph data
  * 	delimiter = Delimiter for the source graph data. Default is comma-delimited
  *  layoutDimensions = Total desired width and height of the node layout region. Default is (256.0, 256.0)
- *	borderOffset = (CURRENTLY NOT IN USE) percent of boundingBox width and height to leave as whitespace when laying out leaf nodes.  Default is 5 percent
+ *  borderPercent = Percent of parent bounding box to leave as whitespace between neighbouring communities during initial layout.  Default = 2 %
  *	numNodesThres = (CURRENTLY NOT IN USE) threshold used to determine when to layout underlying communities within a single force-directed layout task.  Default is 1000 nodes
  *	bUseEdgeWeights = Use edge weights (if available) as part of attraction force calculation. Default = false.
  *  nodeAreaPercent = Used for hierarchical levels > 0 to determine the area of all community 'circles' within the boundingBox vs whitespace. Default is 20 percent
@@ -56,7 +56,7 @@ class HierarchicFDLayout extends Serializable {
 						sourceDir: String,
 						delimiter: String = ",",
 						layoutDimensions: (Double, Double) = (256.0, 256.0),
-						//borderOffset: Int = 0,
+						borderPercent: Int = 2,
 						//numNodesThres: Int = 1000
 						nodeAreaPercent: Int = 30,
 						bUseEdgeWeights: Boolean = false,
@@ -66,7 +66,6 @@ class HierarchicFDLayout extends Serializable {
 		
 		//TODO -- this class assumes edge weights are Longs.  If this becomes an issue for some datasets, then change expected edge weights to Doubles? 
 		//TODO -- numNodesThres not currently used for FD hierarchical layout (could add it in later?)
-		val borderOffset = 0	//TODO -- borderOffset not currently used for FD hierarchical layout (could add it in later?)
 		
 		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0")
 		if (nodeAreaPercent < 10 || nodeAreaPercent > 90) throw new IllegalArgumentException("nodeAreaPercent parameter must be between 10 and 90") 		
@@ -166,7 +165,7 @@ class HierarchicFDLayout extends Serializable {
 				val coords = forceDirectedLayouter.run(communityNodes, 
 													   communityEdges,
 													   parentRectangle, 
-													   borderOffset, 
+													   borderPercent, 
 													   maxIterations,
 													   bUseEdgeWeights,
 													   bUseNodeSizes,
