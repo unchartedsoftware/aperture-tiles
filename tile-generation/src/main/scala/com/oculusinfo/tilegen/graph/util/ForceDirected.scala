@@ -174,6 +174,7 @@ class ForceDirected extends Serializable {
 		//----- Main Force-directed algorithm...
 		var bDone = false
 		var iterations = 1
+		var runCount = 1
 		println("Starting Force Directed layout on " + numNodes + " nodes and " + numEdges + " edges...")
 		
 		while (!bDone) {
@@ -350,6 +351,15 @@ class ForceDirected extends Serializable {
 					(largestStepSq <= stepLimitSq) ) {
 				println("Finished layout algorithm in " + iterations + " iterations.")
 				bDone = true
+				if (bNodesOverlapping && (runCount < 2)) {
+					println("...but communities still overlapping so re-trying layout.")
+					runCount += 1	// communities still overlapping, so reset temperature and re-try layout					
+					temperature = temperature0
+					energySum = Double.MaxValue
+					progressCount = 0
+					bDone = false
+					iterations = 0
+				}
 			}			
 
 			iterations += 1

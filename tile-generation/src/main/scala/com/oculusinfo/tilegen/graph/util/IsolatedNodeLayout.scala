@@ -106,10 +106,10 @@ class IsolatedNodeLayout {
 			Q += Q_curr
 			Q_now_sum += Q_curr
 					
-			//rQ += r_delta*Q_curr/(2.0*Math.PI)	// increase r_delta over 2*pi rads
-		    if (Q_now_sum >= Math.PI) {
-		        rQ += r_delta*Q_curr/Math.PI		// increase r_delta over pi rads (produces a slightly tighter spiral)
-		    }
+			rQ += r_delta*Q_curr/(2.0*Math.PI)	// increase r_delta over 2*pi rads
+		    //if (Q_now_sum >= Math.PI) {
+		    //    rQ += r_delta*Q_curr/Math.PI		// increase r_delta over pi rads (produces a slightly tighter spiral)
+		    //}
 			
 			val x = rQ * Math.cos(Q);	// get centre coords of current community and save results
 			val y = rQ * Math.sin(Q);
