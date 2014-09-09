@@ -630,7 +630,12 @@ class RDDLineBinner(minBins: Int = 2,
 		 linesAsArcs: Boolean = false): RDD[TileData[BT]] =
 	{
 		
-		val uniBinToTileBin = (TileIndex.universalBinIndexToTileBinIndex)_
+		val uniBinToTileBin = {
+			if (linesAsArcs)
+				(TileIndex.universalBinIndexToTileBinIndexClipped)_	// need to clip arc pts that go outside valid tile/bin bounds
+			else
+				(TileIndex.universalBinIndexToTileBinIndex)_	
+		}
 		val calcLinePixels = {
 			if (linesAsArcs)
 				RDDLineBinner.endpointsToArcBins
@@ -766,7 +771,12 @@ class RDDLineBinner(minBins: Int = 2,
 		 linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] = {
 		
-		val uniBinToTileBin = (TileIndex.universalBinIndexToTileBinIndex)_
+		val uniBinToTileBin = {
+			if (linesAsArcs)
+				(TileIndex.universalBinIndexToTileBinIndexClipped)_	// need to clip arc pts that go outside valid tile/bin bounds
+			else
+				(TileIndex.universalBinIndexToTileBinIndex)_	
+		}
 		val calcLinePixels = {
 			if (linesAsArcs)
 				RDDLineBinner.endpointsToArcBins
