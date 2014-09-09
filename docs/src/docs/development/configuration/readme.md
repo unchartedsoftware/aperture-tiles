@@ -1,6 +1,9 @@
 ---
+section: Docs
+subtitle: Development
 chapter: Configuration
 permalink: docs/development/configuration/index.html
+layout: submenu
 ---
 
 #Configuration
