@@ -14,18 +14,19 @@
 	</head>
 	<body>
 		<div id="header"></div>
-			<div id="content-strip">
-				<div id="header-logo">
-					<a href="{{ site.baseurl }}/"><img src="{{site.baseurl}}/img/resources/{{ site.product | replace: ' ', '' | downcase }}.png" alt="{{site.product}} logo"/></a>
-				</div>
-				<div id="header-menu">
-					{% for menuItem in site.data.menuItems.main %}
-						<a href="{{site.baseurl}}/{{ menuItem.path }}"{% if page.section == menuItem.label %} class="selected"{% endif %}>{{ menuItem.label }}</a>
-					{% endfor %}
-				</div>
-				<div id="all">
-					{{ content | replace: '<li><p>', '<li>'  }}
-				</div>
+		<div id="content-strip">
+			<div id="header-logo">
+				<a href="{{ site.baseurl }}/">
+					<img src="{{site.baseurl}}/img/resources/{{ site.product | replace: ' ', '' | downcase }}.png" alt="{{site.product}} logo"/>
+				</a>
+			</div>
+			<div id="header-menu">
+				{% for menuItem in site.data.menuItems.main %}
+					<a href="{{site.baseurl}}/{{ menuItem.path }}"{% if page.section == menuItem.label %} class="selected"{% endif %}>{{ menuItem.label }}</a>
+				{% endfor %}
+			</div>
+			<div id="all">
+				{{ content | replace: '<li><p>', '<li>'  }}
 			</div>
 		</div>
 	</body>
