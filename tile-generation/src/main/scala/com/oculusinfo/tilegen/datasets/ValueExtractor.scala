@@ -93,7 +93,7 @@ trait ValueExtractorFactory {
 		properties.getString("oculus.binning.parsing."+field+".fieldType",
 		                     "The type of the "+field+" field",
 		                     Some(if ("constant" == field || "zero" == field) "constant"
-		                          else "")).toLowerCase
+		                          else "double")).toLowerCase
 
 	def getPropertyType (field: String, properties: PropertiesWrapper): String =
 		properties.getString("oculus.binning.parsing."+field+".propertyType",
