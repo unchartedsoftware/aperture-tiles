@@ -95,7 +95,12 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *   
  *  oculus.binning.line.max.bins
  *  	Max line segment length (in bins) for a given level. Longer line segments will be discarded.
- *   	Default = 1024.                      
+ *   	Default = 1024.
+ *  
+ *  oculus.binning.line.drawends
+ *  	Boolean = false by default. If = true, then any line segments longer than max.bins will have 
+ *   	only pixels within max.bins/2 of an endpoint drawn instead of the whole line segment 
+ *    	being discarded.
  *      
  *  oculus.binning.hierarchical.clusters
  *  	To configure tile generation of hierarchical clustered data.  Set to false [default] for 'regular'
@@ -155,6 +160,7 @@ object CSVGraphBinner {
 			// based line segment binning.  Levels above this thres use tile-based binning.
 	private var _lineMinBins = 2		// [bins] min line segment length for a given level.
 	private var _lineMaxBins = 1024		// [bins] max line segment length for a given level.
+	private var _bDrawLineEnds = false	// [Boolean] switch to draw just the ends of very long line segments
 	private var _bLinesAsArcs = false	// [Boolean] switch to draw line segments as straight lines (default) or as clock-wise arcs.
 		
 	def getTileIO(properties: PropertiesWrapper): TileIO = {
@@ -240,7 +246,7 @@ object CSVGraphBinner {
 	                        tileIO: TileIO): Unit = {
 
 		if (_graphDataType == "edges") {
-			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins)
+			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins, _bDrawLineEnds)
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
@@ -376,6 +382,9 @@ object CSVGraphBinner {
 			// line segments will be discarded
 			_lineMaxBins = Try(props.getProperty("oculus.binning.line.max.bins").toInt).getOrElse(1024)
 
+			// Boolean to draw just the ends of very long line segments (instead of just discarding the whole line)
+			_bDrawLineEnds = Try(props.getProperty("oculus.binning.line.drawends").toBoolean).getOrElse(false)
+			
 			// Draw line segments as straight lines (default) or as clock-wise arcs.
 			_bLinesAsArcs = Try(props.getProperty("oculus.binning.line.style.arcs").toBoolean).getOrElse(false)
 
