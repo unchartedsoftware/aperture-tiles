@@ -3,7 +3,7 @@ layout: default
 ---
 
 {% comment %} Get filename containing sidebar content {% endcomment %}
-	{% capture includeContext %}{{ page.section | downcase }}.html{% endcapture %}
+	{% capture includeContext %}{{ page.section | slugify }}.html{% endcapture %}
 
 <div id="content">
 	<div class="content-context">

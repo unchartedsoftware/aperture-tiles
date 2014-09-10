@@ -1,5 +1,5 @@
 {% comment %} Get filename containing submenu items {% endcomment %}
-	{% capture submenuSection %}{{ page.section | downcase }}{% endcapture %}
+	{% capture submenuSection %}{{ page.section | slugify }}{% endcapture %}
 
 <div id="submenu">
 	{% for menuItem in site.data.menuItems.[submenuSection] %}

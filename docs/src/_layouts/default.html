@@ -17,7 +17,7 @@
 		<div id="content-strip">
 			<div id="header-logo">
 				<a href="{{ site.baseurl }}/">
-					<img src="{{site.baseurl}}/img/resources/{{ site.product | replace: ' ', '' | downcase }}.png" alt="{{site.product}} logo"/>
+					<img src="{{site.baseurl}}/img/resources/{{ site.product | slugify }}.png" alt="{{site.product}} logo"/>
 				</a>
 			</div>
 			<div id="header-menu">
@@ -26,7 +26,7 @@
 				{% endfor %}
 			</div>
 			<div id="all">
-				{{ content | replace: '<li><p>', '<li>'  }}
+				{{ content | replace: '<li><p>', '<li>' }}
 			</div>
 		</div>
 	</body>
