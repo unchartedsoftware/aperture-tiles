@@ -24,7 +24,7 @@
 	float: right;
     right: -50%;
     position: relative;
-    text-align: center;   
+    text-align: center;
     z-index: 1;
 }
 
@@ -51,7 +51,7 @@
     cursor: pointer;
 	float: right;
     right: -50%;
-    position: relative;  
+    position: relative;
     z-index: 1;
 }
 
@@ -120,7 +120,7 @@
 }
 
 .text-by-frequency-label {
-	cursor: pointer;	
+	cursor: pointer;
 	position:relative;
 	text-align: left;
 	vertical-align: middle;
@@ -149,6 +149,7 @@
 .word-cloud-entry {
 	cursor: pointer;
 	position:absolute;
+	top: 0;
 	z-index: 1;
 }
 

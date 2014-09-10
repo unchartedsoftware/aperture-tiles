@@ -124,7 +124,7 @@ define(function (require) {
                 chart = spec.chart.blend || [ spec.chart ],
                 tilekey = data.tilekey,
                 html = '',
-                $html = $([]),
+                $html,
                 $elem,
                 values = data.values,
                 numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
@@ -208,6 +208,11 @@ define(function (require) {
                 }
                 return maxPercent;
             }
+
+            if (spec.title) {
+                html += '<div class="text-by-frequency-title">'+spec.title+'</div>';
+            }
+            $html = $(html);
 
             for (i=0; i<numEntries; i++) {
 

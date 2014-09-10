@@ -315,6 +315,10 @@ define(function (require) {
                 return count;
             }
 
+            if (spec.title) {
+                $html = $html.add('<div class="word-cloud-title">'+spec.title+'</div>');
+            }
+
             $html = $html.add('<div class="count-summary"></div>');
 
             for (i=0; i<count; i++) {
