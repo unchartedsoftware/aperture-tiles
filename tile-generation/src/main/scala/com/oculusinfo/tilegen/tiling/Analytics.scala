@@ -78,11 +78,6 @@ trait Analytic[T] extends Serializable
 	 * both may be a primary or aggregate value.
 	 */
 	def aggregate (a: T, b: T): T
-	
-	/**
-	 * To scale a value
-	 */
-	def scaleValue (a: T, scale: Double): T
 
 	/**
 	 * The default processing value to use for an analytic group known
@@ -140,8 +135,6 @@ class ComposedTileAnalytic[T1, T2]
 	def name: String = val1.name+","+val2.name
 	def aggregate (a: (T1, T2), b: (T1, T2)): (T1, T2) =
 		(val1.aggregate(a._1, b._1), val2.aggregate(a._2, b._2))
-	def scaleValue (a: (T1, T2), scale: Double): (T1, T2) =
-		(val1.scaleValue(a._1, scale), val2.scaleValue(a._2, scale))		
 	def defaultProcessedValue: (T1, T2) =
 		(val1.defaultProcessedValue, val2.defaultProcessedValue)
 	def defaultUnprocessedValue: (T1, T2) =
@@ -318,14 +311,12 @@ class AnalysisDescriptionTileWrapper[RT, AT: ClassTag]
 //
 class SumDoubleAnalytic extends Analytic[Double] {
 	def aggregate (a: Double, b: Double): Double = a + b
-	def scaleValue (a: Double, scale: Double): Double = scale*a
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = 0.0
 }
 
 class MinimumDoubleAnalytic extends Analytic[Double] {
 	def aggregate (a: Double, b: Double): Double = a min b
-	def scaleValue (a: Double, scale: Double): Double = scale*a
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = Double.MaxValue
 }
@@ -335,7 +326,6 @@ class MinimumDoubleTileAnalytic extends MinimumDoubleAnalytic with TileAnalytic[
 
 class MaximumDoubleAnalytic extends Analytic[Double] {
 	def aggregate (a: Double, b: Double): Double = a max b
-	def scaleValue (a: Double, scale: Double): Double = scale*a
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = Double.MinValue
 }
@@ -346,7 +336,6 @@ class MaximumDoubleTileAnalytic extends MaximumDoubleAnalytic with TileAnalytic[
 class SumLogDoubleAnalytic(base: Double = math.exp(1.0)) extends Analytic[Double] {
 	def aggregate (a: Double, b: Double): Double =
 		math.log(math.pow(base, a) + math.pow(base, b))/math.log(base)
-	def scaleValue (a: Double, scale: Double): Double = scale*a	
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = Double.NegativeInfinity
 }
@@ -359,14 +348,12 @@ trait StandardDoubleBinningAnalytic extends BinningAnalytic[Double, JavaDouble] 
 
 class SumIntAnalytic extends Analytic[Int] {
 	def aggregate (a: Int, b: Int): Int = a + b
-	def scaleValue (a: Int, scale: Double): Int = (scale*a).toInt
 	def defaultProcessedValue: Int = 0
 	def defaultUnprocessedValue: Int = 0
 }
 
 class MinimumIntAnalytic extends Analytic[Int] {
 	def aggregate (a: Int, b: Int): Int = a min b
-	def scaleValue (a: Int, scale: Double): Int = (scale*a).toInt
 	def defaultProcessedValue: Int = 0
 	def defaultUnprocessedValue: Int = Int.MaxValue
 }
@@ -377,7 +364,6 @@ class MinimumIntTileAnalytic extends MinimumIntAnalytic with TileAnalytic[Int] {
 
 class MaximumIntAnalytic extends Analytic[Int] {
 	def aggregate (a: Int, b: Int): Int = a max b
-	def scaleValue (a: Int, scale: Double): Int = (scale*a).toInt
 	def defaultProcessedValue: Int = 0
 	def defaultUnprocessedValue: Int = Int.MinValue
 }
@@ -395,14 +381,12 @@ trait StandardIntBinningAnalytic extends BinningAnalytic[Int, JavaInt] {
 
 class SumLongAnalytic extends Analytic[Long] {
 	def aggregate (a: Long, b: Long): Long = a + b
-	def scaleValue (a: Long, scale: Double): Long = (scale*a).toLong
 	def defaultProcessedValue: Long = 0L
 	def defaultUnprocessedValue: Long = 0L
 }
 
 class MinimumLongAnalytic extends Analytic[Long] {
 	def aggregate (a: Long, b: Long): Long = a min b
-	def scaleValue (a: Long, scale: Double): Long = (scale*a).toLong
 	def defaultProcessedValue: Long = 0L
 	def defaultUnprocessedValue: Long = Long.MaxValue
 }
@@ -413,7 +397,6 @@ class MinimumLongTileAnalytic extends MinimumLongAnalytic with TileAnalytic[Long
 
 class MaximumLongAnalytic extends Analytic[Long] {
 	def aggregate (a: Long, b: Long): Long = a max b
-	def scaleValue (a: Long, scale: Double): Long = (scale*a).toLong
 	def defaultProcessedValue: Long = 0L
 	def defaultUnprocessedValue: Long = Long.MinValue
 }
@@ -444,7 +427,6 @@ abstract class StandardDoubleArrayAnalytic extends Analytic[Seq[Double]] {
 			}
 		)
 	}
-	def scaleValue (a: Seq[Double], scale: Double): Seq[Double] = throw new UnsupportedOperationException("Not Supported") //TODO -- add support for this? 
 	def defaultProcessedValue: Seq[Double] = Seq[Double]()
 	def defaultUnprocessedValue: Seq[Double] = Seq[Double]()
 }
@@ -510,7 +492,6 @@ class StringScoreAnalytic
 			sorted.take(limit)
 		).getOrElse(sorted).toMap
 	}
-	def scaleValue (a: Map[String, Double], scale: Double): Map[String, Double] = throw new UnsupportedOperationException("Not Supported") //TODO -- add support for this? 
 	def defaultProcessedValue: Map[String, Double] = Map[String, Double]()
 	def defaultUnprocessedValue: Map[String, Double] = Map[String, Double]()
 }
@@ -551,7 +532,6 @@ class CategoryValueAnalytic(categoryNames: Seq[String])
 				getOrElse(a, i, 0.0) + getOrElse(b, i, 0.0)
 			}
 		)
-	def scaleValue (a: Seq[Double], scale: Double): Seq[Double] = throw new UnsupportedOperationException("Not Supported") //TODO -- add support for this? 	
 	def defaultProcessedValue: Seq[Double] = Seq[Double]()
 	def defaultUnprocessedValue: Seq[Double] = Seq[Double]()
 }
@@ -627,7 +607,6 @@ object IPv4Analytics extends Serializable {
 			new TileAnalytic[Long] {
 				def name = "Minimum IP Address"
 				def aggregate (a: Long, b: Long): Long = a min b
-				def scaleValue (a: Long, scale: Double): Long = (scale*a).toLong
 				def defaultProcessedValue: Long = 0L
 				def defaultUnprocessedValue: Long = 0xffffffffL
 				override def valueToString (value: Long): String =
@@ -645,7 +624,6 @@ object IPv4Analytics extends Serializable {
 			new TileAnalytic[Long] {
 				def name = "Maximum IP Address"
 				def aggregate (a: Long, b: Long): Long = a max b
-				def scaleValue (a: Long, scale: Double): Long = (scale*a).toLong
 				def defaultProcessedValue: Long = 0xffffffffL
 				def defaultUnprocessedValue: Long = 0L
 				override def valueToString (value: Long): String =
@@ -658,7 +636,6 @@ object IPv4Analytics extends Serializable {
 class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
 	def name = analyticName
 	def aggregate (a: String, b: String): String = a+b
-	def scaleValue (a: String, scale: Double): String = throw new UnsupportedOperationException("Not Supported")
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
 }
@@ -673,7 +650,6 @@ class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
 class CustomMetadataAnalytic extends TileAnalytic[String]
 {
 	def aggregate (a: String, b: String): String = a
-	def scaleValue (a: String, scale: Double): String = throw new UnsupportedOperationException("Not Supported")
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
 	def name: String = "VariableSeries"

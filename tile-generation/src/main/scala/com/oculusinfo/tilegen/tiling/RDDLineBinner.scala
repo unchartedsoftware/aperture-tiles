@@ -330,8 +330,7 @@ object RDDLineBinner {
 
 class RDDLineBinner(minBins: Int = 2,
                     maxBins: Int = 1024,		// 1<<10 = 1024  256*4 = 4 tile widths
-                    bDrawLineEnds: Boolean = false,
-                    bValueScaling: Boolean = false) {	
+                    bDrawLineEnds: Boolean = false) {	
 	var debug: Boolean = true
 
 	def transformData[RT: ClassTag, IT: ClassTag, PT: ClassTag, DT: ClassTag]
@@ -614,11 +613,11 @@ class RDDLineBinner(minBins: Int = 2,
 		if (usePointBinner) {
 			consolidateByPoints(partitionBins, binAnalytic, tileAnalytics,
 			                    metaData, consolidationPartitions, isDensityStrip, 
-			                    xBins, yBins, linesAsArcs, maxBins, bDrawLineEnds, bValueScaling)
+			                    xBins, yBins, linesAsArcs, maxBins, bDrawLineEnds)
 		} else {
 			consolidateByTiles(partitionBins, binAnalytic, tileAnalytics,
 			                   metaData, consolidationPartitions, isDensityStrip, 
-			                   xBins, yBins, linesAsArcs, maxBins, bDrawLineEnds, bValueScaling)
+			                   xBins, yBins, linesAsArcs, maxBins, bDrawLineEnds)
 		}
 	}
 
@@ -690,8 +689,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 yBins: Int = 256,
 		 linesAsArcs: Boolean = false,
 		 maxBins: Int = 1024,
-		 bDrawLineEnds: Boolean,
-		 bValueScaling: Boolean): RDD[TileData[BT]] =
+		 bDrawLineEnds: Boolean): RDD[TileData[BT]] =
 	{
 		
 		val uniBinToTileBin = {
@@ -707,8 +705,6 @@ class RDDLineBinner(minBins: Int = 2,
 				RDDLineBinner.endpointsToLineBins
 		}
 		val lenThres = if (bDrawLineEnds) maxBins else Int.MaxValue		//set len thres = maxBins if bDrawLineEnds=true
-		val scalingMin = 0.05
-		val scalingSlope = (scalingMin - 1.0)/maxBins	// slope for length-dependent scaling of line weight (ie value scaled --> 5% as length --> maxBins)
 		
 		val densityStripLocal = isDensityStrip
 		
@@ -734,15 +730,10 @@ class RDDLineBinner(minBins: Int = 2,
 			{
 				val ((lineStart, lineEnd, tile), procType) = p
 				val len = RDDLineBinner.calcLen(lineStart, lineEnd)
-				val value = if (bValueScaling) {
-								val scale = scalingSlope*Math.min(len, maxBins) + 1.0
-								binAnalytic.scaleValue(procType, scale)
-							}
-							else procType				
 				calcLinePixels(lineStart, lineEnd, len, lenThres).map(bin =>
 					{
 						val tb = uniBinToTileBin(tile, bin)
-						((tb.getTile(), tb.getBin()), value)
+						((tb.getTile(), tb.getBin()), procType)
 					}
 				)
 			}
@@ -844,8 +835,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 yBins: Int = 256,
 		 linesAsArcs: Boolean = false,
 		 maxBins: Int = 1024,
-		 bDrawLineEnds: Boolean,
-		 bValueScaling: Boolean):
+		 bDrawLineEnds: Boolean):
 			RDD[TileData[BT]] = {
 		
 		val uniBinToTileBin = {
@@ -861,8 +851,6 @@ class RDDLineBinner(minBins: Int = 2,
 				RDDLineBinner.endpointsToLineBins
 		}
 		val lenThres = if (bDrawLineEnds) maxBins else Int.MaxValue		//set len thres = maxBins if bDrawLineEnds=true
-		val scalingMin = 0.05
-		val scalingSlope = (scalingMin - 1.0)/maxBins	// slope for length-dependent scaling of line weight (ie value scaled --> 5% as length --> maxBins)
 		
 		val densityStripLocal = isDensityStrip
 		
@@ -892,16 +880,11 @@ class RDDLineBinner(minBins: Int = 2,
 			data.flatMap(p =>
 				{
 					val ((lineStart, lineEnd, tile), procType) = p
-					val len = RDDLineBinner.calcLen(lineStart, lineEnd)				
-					val value = if (bValueScaling) {
-									val scale = scalingSlope*Math.min(len, maxBins) + 1.0
-									binAnalytic.scaleValue(procType, scale)
-								}
-								else procType
+					val len = RDDLineBinner.calcLen(lineStart, lineEnd)
 					RDDLineBinner.universalBinsToTiles(tile,
 					                                   calcLinePixels(lineStart, lineEnd, len, lenThres),
 					                                   uniBinToTileBin).map(tile =>
-						(tile, (Some((lineStart, lineEnd, value)), None))
+						(tile, (Some((lineStart, lineEnd, procType)), None))
 					)
 				}
 			)
