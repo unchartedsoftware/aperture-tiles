@@ -30,9 +30,11 @@ import java.io.FileReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -655,6 +657,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	protected List< AnnotationTile > readTilesFromIO( String layer, List<TileIndex> indices ) {
 
         List< AnnotationTile > tiles = new LinkedList<>();
+        Set<TileIndex> readTiles = new HashSet<>();
 
 		if ( indices.size() == 0 ) {
 			return tiles;
@@ -668,13 +671,17 @@ public class AnnotationServiceImpl implements AnnotationService {
 				                                       getRuntimeBinClass(),
 				                                       getRuntimeTypeDescriptor());
 
-			//io.initializeForRead( layer, 0, 0, null );
-            tiles = AnnotationTile.convertFromRaw(io.readTiles(layer, serializer, indices));
+			//io.initializeForRead( layer, 0, 0, null );			
+			for (AnnotationTile tile : AnnotationTile.convertFromRaw(io.readTiles(layer, serializer, indices))) {
+				if (!readTiles.contains(tile.getDefinition())) {
+					readTiles.add(tile.getDefinition());
+					tiles.add(tile);
+				}
+			}
 					
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
-
 		return tiles;		
 	}
 	
