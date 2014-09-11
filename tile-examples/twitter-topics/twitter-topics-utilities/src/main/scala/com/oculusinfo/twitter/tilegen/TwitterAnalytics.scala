@@ -50,7 +50,8 @@ class TwitterMaxRecordAnalytic extends TileAnalytic[List[TwitterDemoTopicRecord]
 	def aggregate (a: List[TwitterDemoTopicRecord],
 	               b: List[TwitterDemoTopicRecord]): List[TwitterDemoTopicRecord] =
 		List(TwitterDemoTopicRecord.maxOfRecords((a ++ b).toArray :_*))
-
+		
+	def scaleValue (a: List[TwitterDemoTopicRecord], scale: Double): List[TwitterDemoTopicRecord] = throw new UnsupportedOperationException("Not Supported")
 	def defaultProcessedValue: List[TwitterDemoTopicRecord] = List[TwitterDemoTopicRecord]()
 	def defaultUnprocessedValue: List[TwitterDemoTopicRecord] = List[TwitterDemoTopicRecord]()
 }
@@ -64,7 +65,8 @@ class TwitterMinRecordAnalytic extends TileAnalytic[List[TwitterDemoTopicRecord]
 	def aggregate (a: List[TwitterDemoTopicRecord],
 	               b: List[TwitterDemoTopicRecord]): List[TwitterDemoTopicRecord] =
 		List(TwitterDemoTopicRecord.minOfRecords((a ++ b).toArray :_*))
-
+		
+	def scaleValue (a: List[TwitterDemoTopicRecord], scale: Double): List[TwitterDemoTopicRecord] = throw new UnsupportedOperationException("Not Supported")
 	def defaultProcessedValue: List[TwitterDemoTopicRecord] = List[TwitterDemoTopicRecord]()
 	def defaultUnprocessedValue: List[TwitterDemoTopicRecord] = List[TwitterDemoTopicRecord]()
 }

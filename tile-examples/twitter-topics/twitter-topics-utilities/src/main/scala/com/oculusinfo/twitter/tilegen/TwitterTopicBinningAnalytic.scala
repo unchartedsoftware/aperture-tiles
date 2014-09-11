@@ -46,6 +46,7 @@ class TwitterTopicBinningAnalytic
 			k -> a.get(k).map(TwitterDemoTopicRecord.addRecords(_, v)).getOrElse(v)
 		}
 	}
+	def scaleValue (a: Map[String, TwitterDemoTopicRecord], scale: Double): Map[String, TwitterDemoTopicRecord] = throw new UnsupportedOperationException("Not Supported")
 
 	/**
 	 * The default processing value to use for an analytic group known
