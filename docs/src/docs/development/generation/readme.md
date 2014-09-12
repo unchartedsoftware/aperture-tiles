@@ -93,7 +93,10 @@ The Aperture Tiles source code contains a CSVBinner tool designed to process you
 
 To execute the CSVBinner and run a tiling job, use the **spark-run** script and pass in the names of the properties files you want to use. For example:
 
-<pre class="command">spark-run com.oculusinfo.tilegen.examples.apps.CSVBinner -d /data/twitter<wbr>/dataset-base.bd /data/twitter/dataset.lon.lat.bd</pre>
+```bash
+spark-run com.oculusinfo.tilegen.examples.apps.CSVBinner -d /data/twitter/
+dataset-base.bd /data/twitter/dataset.lon.lat.bd
+```
 
 Where the `-d` switch specifies the Base properties file path, and each subsequent file path specifies a Tiling properties file.
 
@@ -436,9 +439,7 @@ The Binning Analytic is used throughout the tiling process. It should define:
 - The data formats used during the tiling job, of which there are two [types](#data-types): a processing type and a binning type.
 - How individual data records in a bin are [aggregated](#data-aggregation)
  
-See the following file for an example of a custom Bin Analytic.
-
-<pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/<wbr>oculusinfo/twitter/tilegen/TwitterTopicBinningAnalytic.scala</pre>
+See the following file for an example of a custom Bin Analytic: <em>/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/<wbr><strong>TwitterTopicBinningAnalytic.scala</strong></em>
 
 ##### <a name="data-types"></a>Data Types
 
@@ -518,11 +519,7 @@ val maxAnalysis:
 	)
 ```
 
-Standard Bin Analytics are available in:
-
-```
-tile-generation\src\main\scala\com\oculusinfo\tilegen\tiling\Analytics.scala
-```
+Standard Bin Analytics are available in: <em>tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>Analytics.scala</strong></em>
 
 #### <a name="serializer"></a>Serializer
 
@@ -541,9 +538,7 @@ The Serializer implements the <strong>com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<
 - <strong>com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<wbr>serialization.<wbr>GenericAvroSerializer</strong> if your bin type is a single record 
 - <strong>com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<wbr>serialization.<wbr>GenericAvroArraySerializer</strong> if your bin type is an array of records record. 
 
-An example of a serializer of tiles whose bins are an array of records is available in:
-
-<pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/<wbr>oculusinfo/twitter/binning/TwitterTopicAvroSerializer.java</pre>
+An example of a serializer of tiles whose bins are an array of records is available in:<em>/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/<wbr>twitter/binning/TwitterTopicAvroSerializer.java</em>
 
 This class inherits from the **GenericAVROArraySerializer.java** (<code>/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/</code>) and defines:
 
@@ -553,7 +548,7 @@ This class inherits from the **GenericAVROArraySerializer.java** (<code>/binning
 
 The definition of the AVRO schema is located in the following folder, where the **name** is set to *entryType*.
 
-<pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/resources/<wbr>twitterTopicEntry.avsc</pre>
+<p><em>/tile-examples/twitter-topics/twitter-topics-utilities/src/main/resources/<wbr><strong>twitterTopicEntry.avsc</strong></em></p>
 
 For records that aren't list types, inherit from the **GenericAvroSerializer.java** (<code>/binning-utilities/src/main/java/com/oculusinfo/binning/io/<wbr>serialization/</code>) and define:
 
@@ -563,22 +558,20 @@ For records that aren't list types, inherit from the **GenericAvroSerializer.jav
 
 The definition of the AVRO schema can be based on the template in the following folder, where the **name** is set to *recordType*.
 
-```
-/binning-utilities/src/main/resources/doubleData.avsc
-```
+<p><em>/binning-utilities/<wbr>src/<wbr>main/<wbr>resources/<wbr><strong>doubleData.avsc</strong></em></p>
 
 ##### <a name="serialization-factory"></a>Serialization Factory
 
 The Serialization Factory gets configuration information (e.g., the AVRO compression codec) and hands back the serializer of choice when needed. It also produces the factory and can be injected by Guice.
 
-<pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/<wbr>oculusinfo/twitter/init/TwitterTileSerializationFactory.java</pre>
+<p><em>/tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>init/<strong>TwitterTileSerializationFactory.java</strong></em></p>
 
 
 ##### <a name="serialization-factory-module"></a>Serialization Factory Module
 
 The Factory Module tells Guice which factory providers to use to create serialization factories.
 
-<pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/<wbr>oculusinfo/twitter/init/TwitterSerializationFactoryModule.java</pre>
+<p><em>/tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>init/<wbr><strong>TwitterSerializationFactoryModule.java</strong></em></p>
 
 ### <a name="binning-your-data"></a>Binning Your Data
 
@@ -588,9 +581,7 @@ There are three steps in binning your data:
 2. Running the Binner to transform the data into tiles
 3. Writing the tiles
 
-See the following file for an example of a custom Binner.
-
-<pre class="path">/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/<wbr>oculusinfo/twitter/tilegen/TwitterTopicBinner.scala</pre>
+See the following file for an example of a custom Binner: <em>/tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>tilegen/<wbr><strong>TwitterTopicBinner.scala</strong></em>
 
 #### <a name="parsing-data"></a>Parsing your Data
 
@@ -599,11 +590,7 @@ The Binner expects your data as pairs of **(index, record)**, where:
 - **index** is an object indicating where in space the record lies
 - **record** is a data record of the processing type your Binning Analytic defines
 
-There are two predefined index types defined by **com.<wbr>oculusinfo.<wbr>tilegen.<wbr>tiling.<wbr>CartesianIndexScheme** and **com.<wbr>oculusinfo.<wbr>tilegen.<wbr>tiling.<wbr>IPv4ZCurveIndexScheme** found in:
-
-```
-/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
-```
+There are two predefined index types defined by **com.<wbr>oculusinfo.<wbr>tilegen.<wbr>tiling.<wbr>CartesianIndexScheme** and **com.<wbr>oculusinfo.<wbr>tilegen.<wbr>tiling.<wbr>IPv4ZCurveIndexScheme** found in: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>RDDBinner.scala</strong></em>
 
 Unless you are tiling against computer addresses, the Cartesian type is preferable.
 
@@ -655,11 +642,7 @@ val tiles = binner.processDataByLevel(data,
 				                      yBins=1)
 ```
 
-**Binner.processDataByLevel** is defined in the following file on line 237.
-
-```
-/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
-```
+**Binner.processDataByLevel** is defined in the following file on line 237: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>RDDBinner.scala</strong></em>
 
 It accepts the following properties:
 
@@ -704,10 +687,9 @@ It accepts the following properties:
 				<dd>The projection to use to transform from the raw data index into tiles and
 	bins. Two types are predefined:
 					<ul>
-						<li>/binning-utilities/src/main/java/com/oculusinof/binning/impl/
-	  AOITilePyramid, which is a linear transformation into an arbitrarily sized space
-						<li>/binning-utilities/src/main/java/com/oculusinof/binning/impl/
-	  WebMercatorTilePyramid, which is a standard geographical projection
+						<li><em>/binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid</em>, which is a linear transformation into an arbitrarily sized space
+						<li><em>/binning-utilities/src/main/java/com/oculusinof/binning/impl/
+	  WebMercatorTilePyramid</em>, which is a standard geographical projection
 					</ul>
 				</dd>
 
@@ -762,11 +744,7 @@ tileIO.writeTileSet(tilePyramid,
 				    pyramidDescription)
 ```
 
-**tileIO.writeTileSet** is defined in the following file on line 180.
-
-```
-/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala
-```
+**tileIO.writeTileSet** is defined in the following file on line 180: <em>/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/<strong>RDDBinner.scala</strong></em>
 
 It accepts the following properties:
 
