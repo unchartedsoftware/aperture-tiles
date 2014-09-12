@@ -140,11 +140,11 @@ pre.path {
 	font-size: 14px;
 	font-family: Consolas, "Courier New", Courier, monospace;
 	/*background: #FCFCFA;*/
-    background: #FCFCFA;
+    background: #eee;
 	margin: 10px 0 10px 0;
 	padding: 10px;
 	/*border: 1px solid #ccc;*/
-    border: solid 1px #E2E0D8;
+    border: solid 1px #ccc;
 	-moz-border-radius: 2px;
 	-webkit-border-radius: 2px;
 	border-radius: 2px;
@@ -159,7 +159,7 @@ pre.path {
 	word-wrap: break-word;      /* IE 5+ */
 }
 pre code {
-	background: #FCFCFA;
+	background: #eeeeee;
 }
 /*start del here*/
 code .jscomment {
@@ -185,6 +185,7 @@ code .jscontent{
 #toc-header {
 	text-align: center;
 	font-weight: bold;
+	margin-bottom: 14px;
 }
 
 .toc {
@@ -376,8 +377,10 @@ div.index-thumbnail-mask:hover {
 .content-context {
 	padding-left: 20px;
 	position: absolute;
-	width: 280px;
+	width: 273px;
 	font-size: 14px;
+	margin-top: -20px;
+	line-height: 1.4em;
 }
 .oculus-footer
 {
@@ -422,8 +425,13 @@ a:hover.context-info-title {
 .content-body {
 	text-align:	justify;
 	padding-left: 30px;
-	margin-left: 300px;
-	font-size: 18px;
+	padding-right: 30px;
+	margin-top: 20px;
+	margin-left: 310px;
+	font-size: 16px;
+	background: #FCFCFA;
+	border:	1px solid #ccc;
+	line-height: 1.4em;
 }
 .key-features {
 	margin: 20px 0px 20px 0px;
@@ -470,8 +478,8 @@ sub {
 }
 
 .props {
-	background: #FCFCFA;
-	border: solid 1px #E2E0D8;
+	background: #eee;
+	border: solid 1px #ccc;
 	border-radius: 5px;
 	
 	margin: 0 0 35px 0;
@@ -480,7 +488,7 @@ sub {
 	position: relative;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
-	width: 638px;
+	width: 608px;
 }
 
 .innerProps {
@@ -488,7 +496,7 @@ sub {
 	line-height: 19.6px;
 	margin: 0;
 	padding: 0;
-	width: 633px;
+	width: 608px;
 }
 
 dl.detailList {

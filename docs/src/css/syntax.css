@@ -3,11 +3,11 @@
     font-size: 16px;
     font-family: Consolas, "Courier New", Courier, monospace;
     /*background: #FCFCFA;*/
-    background: #FCFCFA;
+    background: #eeeeee;
     margin: 10px 0 10px 0;
     padding: 0 10px 0 10px;
     /*border: 1px solid #ccc;*/
-    border: solid 1px #E2E0D8;
+    border: solid 1px #cccccc;
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     border-radius: 2px;
