@@ -204,8 +204,9 @@ class HierarchicGIBLayout extends Serializable {
 		val finalNodeCoords = joinedData.flatMap(p => {
 			val parentRectangle = p._1
 			val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
-			val communityEdges = p._2._2 
-			val coords = forceDirectedLayouter.run(communityNodes, communityEdges, parentRectangle, borderOffset, maxIterations)
+			val communityEdges = p._2._2
+			//TODO -- could add in proper parentID to this forceDirect run call (if want primary node to be located in the bounding area's centre)
+			val coords = forceDirectedLayouter.run(communityNodes, communityEdges, -1L, parentRectangle, borderOffset, maxIterations)
 			coords
 		})				
 					

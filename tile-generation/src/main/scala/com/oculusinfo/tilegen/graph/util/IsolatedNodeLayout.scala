@@ -43,15 +43,15 @@ class IsolatedNodeLayout {
  *  - centralCommunityArea = area of large central 'connected' community (ie area to leave empty in centre of spiral)
  *  - borderPercent = Percent of parent bounding box to leave as whitespace between neighbouring communities.  Default = 2 %
  *  
- *  - Format of output array is (node ID, x, y, radius, numInternalNodes, metaData)
+ *  - Format of output array is (node ID, x, y, radius, numInternalNodes, degree, metaData)
  **/	
 	def calcSpiralCoords(nodes: Iterable[(Long, Long, Int, String)], 			
 			boundingBox: (Double, Double, Double, Double), 
 			nodeAreaNorm: Double,
 			centralCommunityArea: Double,
-			borderPercent: Int = 2): (Array[(Long, Double, Double, Double, Long, String)], Double) = {
+			borderPercent: Int = 2): (Array[(Long, Double, Double, Double, Long, Int, String)], Double) = {
 	
-		val (xc, yc) = (boundingBox._1 + boundingBox._3/2, boundingBox._2 + boundingBox._4/2)	// centre of bounding box
+		val (xC, yC) = (0.0, 0.0) //(boundingBox._1 + boundingBox._3/2, boundingBox._2 + boundingBox._4/2)	// centre of bounding box
 		val boundingBoxArea = boundingBox._3 * boundingBox._4
 		
 		if (borderPercent < 0 || borderPercent > 10) throw new IllegalArgumentException("borderPercent must be between 0 and 10")
@@ -60,11 +60,10 @@ class IsolatedNodeLayout {
 		// Store community results in array with initial coords as xc,yc for now.
 		// Array is sorted by community radius. (smallest to largest)
 		var nodeCoords = nodes.map(n => {
-				val numInternalNodes = n._2
-				val metaData = n._4
+				val (id, numInternalNodes, degree, metaData) = n
 				val nodeArea = nodeAreaNorm * boundingBoxArea * numInternalNodes
 				val nodeRadius = Math.sqrt(nodeArea * 0.31831)	//0.31831 = 1/pi
-				(n._1, xc, yc, nodeRadius, numInternalNodes, metaData)	
+				(id, xC, yC, nodeRadius, numInternalNodes, degree, metaData)	
 			}).toList.sortBy(row => (row._4)).toArray		
 
 		val numNodes = nodeCoords.size
@@ -95,7 +94,7 @@ class IsolatedNodeLayout {
 			rQ = rQ + r_curr + border 	// update spiral radius
 			val x = rQ * Math.cos(Q);	// get centre coords of current community and save results
 			val y = rQ * Math.sin(Q);
-			nodeCoords(n) = (nodeCoords(n)._1, x + xc, y + yc, r_curr, nodeCoords(n)._5, nodeCoords(n)._6)
+			nodeCoords(n) = (nodeCoords(n)._1, x + xC, y + yC, r_curr, nodeCoords(n)._5, nodeCoords(n)._6, nodeCoords(n)._7)
 			
 			r_prev = r_curr				//save current community radius for next iteration
 			r_delta = 2*r_curr + border	//rate of r change per 2*pi radians (determines how tight or wide the spiral is)
@@ -117,7 +116,7 @@ class IsolatedNodeLayout {
 			
 			val x = rQ * Math.cos(Q);	// get centre coords of current community and save results
 			val y = rQ * Math.sin(Q);
-			nodeCoords(n) = (nodeCoords(n)._1, x + xc, y + yc, r_curr, nodeCoords(n)._5, nodeCoords(n)._6)		
+			nodeCoords(n) = (nodeCoords(n)._1, x + xC, y + yC, r_curr, nodeCoords(n)._5, nodeCoords(n)._6, nodeCoords(n)._7)		
 			
 		    if (Q_now_sum > 2.0*Math.PI) {   // reset r_delta every 2*pi radians (for next level of spiral)
 		        Q_now_sum = 0.0
@@ -128,29 +127,25 @@ class IsolatedNodeLayout {
 			n -= 1
 		}
 		
-				//---- Do final scaling of XY co-ordinates to fit within bounding box
-		var maxX = Double.MinValue
-		var minX = Double.MaxValue
-		var maxY = Double.MinValue
-		var minY = Double.MaxValue
-		
+		//---- Do final scaling of XY co-ordinates to fit within bounding area
+		var maxDist = Double.MinValue		
 		for (n <- 0 until numNodes) {
-			val (x,y) = (nodeCoords(n)._2, nodeCoords(n)._3)
-			maxX = Math.max(maxX, x)
-			minX = Math.min(minX, x)
-			maxY = Math.max(maxY, y)
-			minY = Math.min(minY, y)			
+			val xDist = xC - nodeCoords(n)._2	// node distance to centre
+		    val yDist = yC - nodeCoords(n)._3
+		    // calc distance plus node radius (to ensure all of a given node's circle fits into the bounding area)
+			val dist = Math.sqrt(xDist*xDist + yDist*yDist) + nodeCoords(n)._4
+			maxDist = Math.max(maxDist, dist)
 		}
 		
-		// need to use the same scaleFactor for both x and y coords so node 'circles' don't get distorted
-		val scaleFactor = Math.min(boundingBox._3 / (maxX - minX),  boundingBox._4 / (maxY - minY))
+		val scaleFactor = 0.5*Math.min(boundingBox._3, boundingBox._4) / maxDist
 		
 		for (n <- 0 until numNodes) {
-			val (id, x, y, radius, numInternalNodes, metaData) = nodeCoords(n)
+			val (id, x, y, radius, numInternalNodes, degree, metaData) = nodeCoords(n)
 			// scale community radii too if scaleFactor < 1, so scaling doesn't cause communities to overlap
-			val scaledRadius = if (scaleFactor < 1.0) radius*scaleFactor else radius	
-			nodeCoords(n) = (id, (x-minX)*scaleFactor + boundingBox._1, (y-minY)*scaleFactor + boundingBox._2, scaledRadius, numInternalNodes, metaData)		
+			val scaledRadius = if (scaleFactor < 1.0) radius*scaleFactor else radius
+			nodeCoords(n) = (id, x*scaleFactor + boundingBox._1 + 0.5*boundingBox._3, y*scaleFactor + boundingBox._2 + 0.5*boundingBox._4, scaledRadius, numInternalNodes, degree, metaData)		
 		}
+				
 		val scaledCentralArea = centralCommunityArea*scaleFactor*scaleFactor	// also scale centralCommunityArea accordingly (ie x square of scaleFactor)
 	
 		(nodeCoords, scaledCentralArea)	 
