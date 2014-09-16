@@ -803,3 +803,7 @@ It accepts the following properties:
 		</ul>
 	</div>
 </div>
+
+## Next Steps
+
+For details on configuring a tile server and client to create a tile-based visual analytic application, see the [Configuration](../configuration) topic.

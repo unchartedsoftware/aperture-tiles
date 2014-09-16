@@ -303,3 +303,7 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory. If you are using the virtual machine provided on the [Download](../../../download/) page, copy the entire directory to the `/opt/jetty/webapps` folder on the VM.
 
 Access the `/tile-client-template` web directory on the server from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com`, the URL would be `http://www.example.com/tile-client-template`. If you are using the VM, browse to `http://localhost:8888/tile-client-template/` on your local machine or `http://{vm-machine-name}:8080/tile-client-template/` on the virtual machine.
+
+## Next Steps
+
+For a detailed description of the prerequisites and installation procedures for Aperture Tiles, see the [Installation](../installation/) topic.

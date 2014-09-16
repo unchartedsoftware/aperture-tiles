@@ -144,6 +144,6 @@ Before you compile the Aperture Tiles source code, you must install the Aperture
 
 Once the Aperture JS installation is complete, run the `mvn install` command again, this time in the root Aperture Tiles directory. This will compile all the project components and install .jar files for each project into your local maven repostitory on your build machine.
 
-##<a name="next-steps"></a>Next Steps
+## <a name="next-steps"></a>Next Steps
 
-See the [Tile Generation](../generation) or [Configuration](../configuration) topics for specifics on generating tile sets from raw data and configuring a tile server and client to create a tile-based visual analytic application.
+For details on generating tile sets from raw data, see the [Tile Generation](../generation) topic.

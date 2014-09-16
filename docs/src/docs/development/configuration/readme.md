@@ -721,3 +721,7 @@ The layer file should then be updated to specify that client-side rendering shou
 Once you have finished configuring the map and layer properties, copy the `/new-project/` folder to your Apache Tomcat or Jetty server.
 
 Access the `/new-project/` directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
+
+## Next Steps
+
+For details on using your Aperture Tiles visual analytic, see the [User Guide](../../userguide/) topic.
