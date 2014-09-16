@@ -105,13 +105,13 @@ Returns an Annotation Tile for a specified filter configuration UUID, annotation
 
 Example request:
 
-```
+```http
 localhost:8080/annotation/test-layer/f47ac10b-58cc-4372-a567-0e02b2c3d479/7/8/14.json
 ```
 
 Example output:
 
-```rest
+```json
 {
     “tile” : {
         “level”: 7,
@@ -257,7 +257,7 @@ Submits a new annotation to be written to the server. Upon success, a certificat
 
 Example request:
 
-```rest
+```json
 {
     “type”: “write”
     “layer”: , “annotation-test-layer-id”,
@@ -281,7 +281,7 @@ Example request:
 
 Example output:
 
-```
+```json
 {
     “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
     “timestamp”: “1401830862“
@@ -406,7 +406,7 @@ Submits a modify request to the server. If the certificate in the annotation sta
 
 Example request:
 
-```rest
+```json
 {
     “type”: “write”
     “layer”: , “annotation-test-layer-id”,
@@ -434,7 +434,7 @@ Example request:
 
 Example output:
 
-```rest
+```json
 {
     “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
     “timestamp”: “1401830862“
@@ -559,7 +559,7 @@ Submits a removal request to the server. If the certificate is valid, the operat
 
 Example request:
 
-```rest
+```json
 {
     “type”: “write”
     “layer”: , “annotation-test-layer-id”,
@@ -572,7 +572,7 @@ Example request:
 
 Example output:
 
-```rest
+```json
 {
 }
 ```
@@ -697,7 +697,7 @@ Submits a new filter configuration. Upon success, returns a JSON object with the
 
 Example request:
 
-```rest
+```json
 {
     “type”: “configure”
     “layer”: “annotation-test-layer-id”,
@@ -714,7 +714,7 @@ Example request:
 
 Example output:
 
-```rest
+```json
 {
     “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
 }
@@ -838,7 +838,7 @@ Requests the server to release a filter configuration from its memory.
 
 Example request:
 
-```rest
+```json
 {
     “type”: “unconfigure”
     “layer”: “annotation-test-layer-id”,
@@ -848,7 +848,7 @@ Example request:
 
 Example output:
 
-```rest
+```json
 {
 }
 ```
@@ -947,7 +947,7 @@ Example request:
 
 Example output:
 
-```rest
+```json
 [ 
     { 
         "id" : "bitcoin.source.amount.annotations",

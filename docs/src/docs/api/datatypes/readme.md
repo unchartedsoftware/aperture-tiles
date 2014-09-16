@@ -63,7 +63,7 @@ A single annotation received from a GET request or submitted in a write, modify 
 
 Example:
 
-```rest
+```json
 {
     “level”: 6,
     “x”: 73.35,
@@ -112,7 +112,7 @@ A collection of annotations from a single GET request. Contains all annotations 
 
 Example:
 
-```rest
+```json
 {
 	“tile” : {
 		“level”: 3,
@@ -157,7 +157,7 @@ An Annotation Certificate is comprised of the UUID and timestamp from a successf
 
 Example:
 
-```rest
+```json
 {
     “tile” : {
         “level”: 7,
