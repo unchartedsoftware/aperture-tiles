@@ -148,7 +148,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
 
     	List<byte[]> rowIds = new ArrayList<>();
         for (Pair<String,Long> certificate: certificates) {
-            rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );
+        	if (certificate != null) {
+        		rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );	
+        	}            
         }
 
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);
