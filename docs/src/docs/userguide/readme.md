@@ -17,7 +17,7 @@ Please note that fully functional example Aperture Tiles applications are availa
 
 The example application described in this User Guide illustrates a heatmap of Twitter messages originating in South American from February to April, 2014. Each tile in the project contains a carousel that summarizes and overlays the top words used in the Tweets covered by that tile. 
 
-<img src="../../img/twitter-sa.png" class="screenshot" alt="Twitter South America"></img>
+<img src="../../img/twitter-sa.png" class="screenshot" alt="Twitter South America" />
 
 ##<a name="interface"></a>Interface
 
@@ -39,7 +39,7 @@ The base map for the Twitter South American data is a Google Maps layer that dis
 
 The main layer in the Twitter South American project is a heatmap showing the concentration of tweets across South America. The color of the data points on this layer indicate the concentration of tweets in a geographic region, where red is the lowest density of tweets and yellow is the highest.
 
-<img src="../../img/heatmap.png" class="screenshot" alt="Heatmap Layer"></img>
+<img src="../../img/heatmap.png" class="screenshot" alt="Heatmap Layer" />
 
 While the tiles in this project aggregate the individual tweets in a region by summation, other Aperture Tiles projects can be incorporate layers that show only the minimum or maximum value on tile.  
 
@@ -50,14 +50,14 @@ Each tile can contain a carousel with multiple views that summarize the aggregat
 In the Twitter South America application, each tile contains a carousel that lets you cycle through:
 
 - A word cloud that shows the top 10 topics mentioned in Tweets covered by the tile. The larger the word, the more times it was used.
-	<br/><img src="../../img/carousel-cloud.png" class="screenshot" alt="Tile Carousel Word Cloud"></img>
+	<br/><img src="../../img/carousel-cloud.png" class="screenshot" alt="Tile Carousel Word Cloud" />
 - A list of the top 10 topics and a pair of histograms that show their usage over the last month and the last week.
-	<br/><img src="../../img/carousel-list.png" class="screenshot" alt="Tile Carousel Topic List"></img>
+	<br/><img src="../../img/carousel-list.png" class="screenshot" alt="Tile Carousel Topic List" />
 - A blank page that lets you turn off the carousel display for a single tile.
 
 Each carousel page also include a Translate button that translates topics to English.
 
-<img src="../../img/carousel-translate.png" class="screenshot" alt="Translate Tile Carousel"></img>
+<img src="../../img/carousel-translate.png" class="screenshot" alt="Translate Tile Carousel" />
 
 Clicking on a particular topic on any of the carousel pages refreshes the map to:
 
@@ -66,13 +66,13 @@ Clicking on a particular topic on any of the carousel pages refreshes the map to
 	- A total count and expanded histograms of its usage in the past month, week and 24 hours.
 	- The four most recent tweets in which it appeared.
 
-<img src="../../img/carousel-detail.png" class="screenshot" alt="Tile Carousel Topic Detail"></img>
+<img src="../../img/carousel-detail.png" class="screenshot" alt="Tile Carousel Topic Detail" />
 
 ###<a name="int-axes"></a>Axes
 
 The X and Y axes are labelled to describe the units in your base map. Click either axis to show or hide its units.
 
-<img src="../../img/axis.png" class="screenshot" alt="Axis"></img>
+<img src="../../img/axis.png" class="screenshot" alt="Axis" />
 
 ###<a name="int-desc"></a>Description
 
@@ -80,7 +80,7 @@ The Description section is an expandable dialog that provides a summary descript
 
 It can also be customized to contain basic controls. In the Twitter Topics application for example, the Description contains a drop-down list that lets you quickly jump to any of South America's major cities.
 
-<img src="../../img/description-expanded.png" class="screenshot" alt="Description"></img>
+<img src="../../img/description-expanded.png" class="screenshot" alt="Description" />
 
 ###<a name="int-controls"></a>Controls
 
@@ -90,11 +90,11 @@ The Controls section is an expandable dialog that contains configurable settings
 - Alter the opacity of the layers or base map
 - Filter a layer to show only certain concentrations of aggregate data
 
-<img src="../../img/controls.png" class="screenshot" alt="Controls"></img>
+<img src="../../img/controls.png" class="screenshot" alt="Controls" />
 
 You can also use the Controls to change the color scheme (ramp) of your heatmap layers by clicking the **Settings** button.
 
-<img src="../../img/controls-settings.png" class="screenshot" alt="Layer Settings"></img>
+<img src="../../img/controls-settings.png" class="screenshot" alt="Layer Settings" />
 
 ##<a name="navigation"></a>Navigation
 
@@ -114,11 +114,11 @@ To quickly zoom to a major city in South America:
 
 1. Click the **Description** control in the upper right corner of the map.
 
-	<img src="../../img/description.png" class="screenshot" alt="Description"></img>
+	<img src="../../img/description.png" class="screenshot" alt="Description" />
 
 2. Select the appropriate city from the **Zoom to City** drop-down list in the project description.
 
-	<img src="../../img/zoom-to-city.png" class="screenshot" alt="Zoom to City"></img>
+	<img src="../../img/zoom-to-city.png" class="screenshot" alt="Zoom to City" />
 
 The map is redrawn to show the selected city with a zoom factor of five.
 

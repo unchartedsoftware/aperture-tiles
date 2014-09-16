@@ -1,0 +1,18 @@
+$family-code: Consolas, "Courier New", Courier, monospace;
+
+$block-bg-color: #eee;
+$txt-block-border: #ccc;
+
+code-block {
+	background: $block-bg-color;
+	border: 1px solid $txt-block-border;
+    border-radius: 2px;
+	-moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    font-family: $family-code;
+    font-size: 15px;
+	line-height: 1.2em !important;
+    margin: 10px 0 16px 0;
+    overflow: auto;
+    padding: 0 10px 0 10px;
+}

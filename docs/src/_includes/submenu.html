@@ -1,14 +1,13 @@
 {% comment %} Get filename containing submenu items {% endcomment %}
-	{% capture submenuItem %}{{ page.section | downcase }}MenuItem{% endcapture %}
-	{% capture dataFile %}{{ submenuItem }}s{% endcapture %}
+	{% capture submenuSection %}{{ page.section | slugify }}{% endcapture %}
 
 <div id="submenu">
-	{% for submenuItem in site.data.submenus.[dataFile] %}
-		<a class="submenu-item" href="{{site.baseurl}}/{{ submenuItem.path }}">
-			<div class="submenu-item-background{%if page.subtitle == submenuItem.label %} selected{% endif %}">
+	{% for menuItem in site.data.menuItems.[submenuSection] %}
+		<a class="submenu-item" href="{{site.baseurl}}/{{ menuItem.path }}">
+			<div class="submenu-item-background{% if page.subtitle == menuItem.label %} selected{% endif %}">
 				<div class="submenu-item-number">{{ forloop.index }}</div>
 			</div>
-			<div class="submenu-item-label">{{ submenuItem.label }}</div>
+			<div class="submenu-item-label">{{ menuItem.label }}</div>
 		</a>
 	{% endfor %}
 </div>

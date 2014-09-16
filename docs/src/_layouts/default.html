@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		
+		<title>{{ page.section }} | {{ site.product }}</title>
+		
+		<link rel="stylesheet" type="text/css" href="{{site.baseurl}}/css/all.css" >
+		<link rel="stylesheet" type="text/css" href="{{site.baseurl}}/css/syntax.css" >
+
+		<link rel="SHORTCUT ICON" href="{{site.baseurl}}/img/resources/aperture-16x16.ico"/>
+		
+		<script src="{{site.baseurl}}/lib/jquery.js"></script>
+		<script src="{{site.baseurl}}/lib/ga.js"></script>
+	</head>
+	<body>
+		<div id="header"></div>
+		<div id="content-strip">
+			<div id="header-logo">
+				<a href="{{ site.baseurl }}/">
+					<img src="{{site.baseurl}}/img/resources/{{ site.product | slugify }}.png" alt="{{site.product}} logo"/>
+				</a>
+			</div>
+			<div id="header-menu">
+				{% for menuItem in site.data.menuItems.main %}
+					<a href="{{site.baseurl}}/{{ menuItem.path }}"{% if page.section == menuItem.label %} class="selected"{% endif %}>{{ menuItem.label }}</a>
+				{% endfor %}
+			</div>
+			<div id="all">
+				{{ content | replace: '<li><p>', '<li>' }}
+			</div>
+		</div>
+	</body>
+</html>
