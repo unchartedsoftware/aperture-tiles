@@ -14,7 +14,7 @@ The instructions on this page are intended for developers who want to install th
 - See the [Demos](../../../demos/) page to access fully functional demonstrations of Aperture Tiles from your web browser.
 - See the [Download](../../../download) page to access a pre-built distribution designed to help you quickly get started using Aperture Tiles and to understand the high-level process of creating an Aperture Tiles application. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
 
-##<a name="prerequisites"></a>Prerequisites
+## <a name="prerequisites"></a>Prerequisites
 
 This project has the following prerequisites:
 
@@ -30,14 +30,14 @@ This project has the following prerequisites:
 
 <img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
-##<a name="source-code"></a>Source Code
+## <a name="source-code"></a>Source Code
 
 The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master). To install both projects:
 
 1. Run the `mvn install` command in the *aperture* folder found in the root Aperture JS directory.
 2. Run the `mvn install` command in the root Aperture Tiles directory.
 
-###<a name="environment-variables"></a>Environment Variables
+### <a name="environment-variables"></a>Environment Variables
 Set the following environment variables:
 
 <div class="details props">
@@ -63,7 +63,7 @@ Set the following environment variables:
 	</div>
 </div>
 
-###<a name="project-structure"></a>Project Structure
+### <a name="project-structure"></a>Project Structure
 
 Aperture Tiles is made up of ten sub-projects:
 
@@ -130,15 +130,15 @@ Aperture Tiles is made up of ten sub-projects:
 	</div>
 </div>
  
-###<a name="building-project"></a>Building the Project
+### <a name="building-project"></a>Building the Project
 
-####<a name="hbase-version"></a>Specifying Your Hadoop/HBase Version
+#### <a name="hbase-version"></a>Specifying Your Hadoop/HBase Version
 
 Prior to building the project, you need to specify the version of Hadoop and/or HBase installed (if applicable). Edit the `<properties>` section of the *aperture-tiles/pom.xml* build file to select the valid settings for your version. See the comments in the file for more details.
  
 If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
 
-####<a name="compiling"></a>Compiling the Aperture Tiles Projects
+#### <a name="compiling"></a>Compiling the Aperture Tiles Projects
 
 Before you compile the Aperture Tiles source code, you must install the Aperture JS project. Run the `mvn install` command in the *aperture* folder in the aperture subdirectory of the Aperture JS root directory.
 

@@ -36,4 +36,3 @@ The Aperture Tile client is a full-featured, interactive web application for dis
 - Ongoing situation awareness and operational dashboards
  
 This is handled by displaying high-level patterns and summary statistics while preserving fine detail at the appropriate zoom level.
-

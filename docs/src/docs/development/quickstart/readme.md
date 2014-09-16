@@ -18,7 +18,7 @@ At the end of this guide you will have successfully created an example Aperture 
 
 <img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
-##<a name="prerequisites"></a>Prerequisites
+## <a name="prerequisites"></a>Prerequisites
 
 There are two ways you can begin this Quick Start example:
 
@@ -31,7 +31,7 @@ Once you have a machine configured with all of the third-party prerequisites, yo
 2. Set the [Spark environment variables](#environment-variables).
 3. Generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
 
-###<a name="virtual-machine"></a>Virtual Machine
+### <a name="virtual-machine"></a>Virtual Machine
 
 We have created a virtual machine that has been preconfigured with the third-party tools needed to walk through this Quick Start example. To use this virtual machine:
 
@@ -56,7 +56,7 @@ Access port 8080 (`http://{vm-machine-name}:8080/`) on your virtual machine (whi
 
 When you are ready to proceed, skip to the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities) section.
 
-###<a name="local-system"></a>Local System
+### <a name="local-system"></a>Local System
 
 The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. 
 
@@ -69,7 +69,7 @@ If you later intend to create Aperture Tiles projects using particularly large d
 
 Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
 
-###<a name="aperture-tiles-utilities"></a>Aperture Tiles Packaged Distribution
+### <a name="aperture-tiles-utilities"></a>Aperture Tiles Packaged Distribution
 
 Save the following Aperture Tiles distribution available on the [Download](../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
@@ -78,7 +78,7 @@ Save the following Aperture Tiles distribution available on the [Download](../..
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
-###<a name="environment-variables"></a>Environment Variables
+### <a name="environment-variables"></a>Environment Variables
 Set the following environment variables:
 
 <div class="details props">
@@ -104,7 +104,7 @@ Set the following environment variables:
 	</div>
 </div>
 
-###<a name="julia-set-data-generation"></a>Julia Set Data Generation
+### <a name="julia-set-data-generation"></a>Julia Set Data Generation
 
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
@@ -120,7 +120,7 @@ For a typical Aperture Tiles project, you will work with your own custom data se
 
 Check your output folder for five part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
 
-##<a name="tile-generation"></a>Tile Generation
+## <a name="tile-generation"></a>Tile Generation
 
 The first step in building any Aperture Tiles project is creating a set of AVRO tiles that aggregate your source data across the plot/map and its various zoom levels.
 
@@ -129,13 +129,13 @@ For delimited numeric data sources like the Julia set, the included CSVBinner to
 - The **base properties** file, which describes the general characteristics of your data
 - The **tiling properties** files, each of which describes a specific attribute you want to plot and the number of zoom levels
 
-###<a name="base-property-file-configuration"></a>Base Property File Configuration
+### <a name="base-property-file-configuration"></a>Base Property File Configuration
 
 Access the **julia-base.bd** file in your `tile-generator/examples` folder and edit the properties in the following sections.
 
 Note that for a typical Aperture Tiles project, you will need to edit additional properties to define the types of fields in your source data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website. 
 
-####<a name="spark-connnection"></a>Spark Connection Details
+#### <a name="spark-connnection"></a>Spark Connection Details
 
 These properties specify the location of your Spark installation.
 
@@ -158,7 +158,7 @@ These properties specify the location of your Spark installation.
 	</div>
 </div>
 
-####<a name="general-output"></a>General Output Properties
+#### <a name="general-output"></a>General Output Properties
 
 These properties specify the location of your Julia set data and where to save the generated tiles.
 
@@ -187,7 +187,7 @@ These properties specify the location of your Julia set data and where to save t
 	</div>
 </div>
 
-####<a name="hbase-connection"></a>HBase Connection Details (Optional)
+#### <a name="hbase-connection"></a>HBase Connection Details (Optional)
 
 These properties should only be included if you are using Hadoop/HDFS and HBase. Note that these optional components must be used if you want to run the tile generation job on a multi-computer cluster. 
 
@@ -214,13 +214,13 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
 	</div>
 </div>
 
-###<a name="tiling-property-file-configuration"></a>Tiling Property File Configuration
+### <a name="tiling-property-file-configuration"></a>Tiling Property File Configuration
 
 Access the **julia-tiling.bd** file in your `tile-generator/examples` folder and edit the `oculus.binning.name` to specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use `julia` for this example.
 
 Note that for a typical Aperture Tiles project, you will need to edit additional properties to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
 
-###<a name="execution"></a>Execution
+### <a name="execution"></a>Execution
 
 When you have configured all of the required properties, execute the Spark script (`/tile-generator/bin/spark-run.sh`) again. This time you will invoke the CSVBinner and use the `-d` switch to pass your edited base and tiling property files.
 
@@ -240,13 +240,13 @@ Note that for this example, the tile folder will be named `julia.x.y.v`. The out
 
 Note that the `oculus.binning.prefix` value is only included if you set it in the property file. This is useful if you want to run a second tile generation without overwriting the already generated version.
 
-##<a name="tile-server-configuration"></a>Tile Server Configuration
+## <a name="tile-server-configuration"></a>Tile Server Configuration
 
 For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution.
 
 For typical Aperture Tiles projects, you will need to edit the **web.xml** and **tile.properties** files in this directory. For more information on editing these files, see the [Tile Generation](../generation/) topic on this website.
 
-##<a name="tile-client-configuration"></a>Tile Client Configuration
+## <a name="tile-client-configuration"></a>Tile Client Configuration
 
 To configure the Tile Client application to display the AVRO files containing your source data, you must edit two types of configuration files:
 
@@ -255,7 +255,7 @@ To configure the Tile Client application to display the AVRO files containing yo
 
 Both files are available in the [tile-client-template.zip](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip) distribution. Extract the contents of the file to access them.
 
-###<a name="map-properties"></a>Map Properties
+### <a name="map-properties"></a>Map Properties
 
 To edit the map properties for your project:
 
@@ -272,7 +272,7 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 - Unit specifications
 - Marker styles
 
-###<a name="layer-properties"></a>Layer Properties
+### <a name="layer-properties"></a>Layer Properties
 
 To edit the layer properties for your project:
 
@@ -298,7 +298,7 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 - Layer opacity
 - Tile renderer
 
-##<a name="deployment"></a>Deployment
+## <a name="deployment"></a>Deployment
 
 Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory. If you are using the virtual machine provided on the [Download](../../../download/) page, copy the entire directory to the `/opt/jetty/webapps` folder on the VM.
 
