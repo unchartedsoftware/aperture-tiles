@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rendering;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
@@ -56,9 +57,12 @@ import java.util.*;
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
-	public static final List<String>          RENDERER_PATH   = Collections.singletonList("renderer");
-	public static final List<String>          PYRAMID_IO_PATH = Collections.singletonList("pyramidio");
-	public static final List<String>          SERIALIZER_PATH = Collections.singletonList("serializer");
+	public static final List<String>          RENDERER_PATH   		= Collections.singletonList("renderer");
+	public static final List<String>          PYRAMID_IO_PATH 		= Collections.singletonList("pyramidio");
+	public static final List<String>          SERIALIZER_PATH 		= Collections.singletonList("serializer");
+	public static final List<String>          TILE_TRANSFORMER_PATH = Collections.singletonList("transformer");
+																								
+ 
 
 	public static final StringProperty        LAYER_NAME      = new StringProperty("layer",
 		         "The ID of the layer; exact format depends on how the layer is stored.",
@@ -73,9 +77,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final ListProperty<Integer> LEGEND_RANGE    = new ListProperty<>(new IntegerProperty("", "", -1),
 		         "legendrange",
 		         "The value bounds to use for coloration");
-	public static final IntegerProperty       CURRENT_IMAGE   = new IntegerProperty("currentImage",
-		          "used to determine which of a series of potential images should be displayed.  Ordinarily, this parameter is for programatic use only.",
-		          -1);
 	public static final IntegerProperty       COARSENESS      = new IntegerProperty("coarseness",
 		          "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
 		          1);
@@ -107,6 +108,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		         "For server use only, on a tile-by-tile basis",
 		         null);
 
+
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
 		Collections.unmodifiableSet(new HashSet<>(Arrays.asList((ConfigurationProperty<?>) RANGE_MIN,
 		                                                        (ConfigurationProperty<?>) RANGE_MAX,
@@ -126,16 +128,18 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
 	                           ConfigurableFactory<?> parent,
 	                           List<String> path) {
 		this(pyramidIOFactoryProvider, serializationFactoryProvider,
-		     rendererFactoryProvider, null, parent, path);
+		     rendererFactoryProvider, tileTransformerFactoryProvider, null, parent, path);
 	}
 
 
 	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
 	                           String name, ConfigurableFactory<?> parent,
 	                           List<String> path) {
 		super(name, LayerConfiguration.class, parent, path);
@@ -144,7 +148,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(SHORT_NAME);
 		addProperty(TRANSFORM);
 		addProperty(LEGEND_RANGE);
-		addProperty(CURRENT_IMAGE);
 		addProperty(OUTPUT_WIDTH);
 		addProperty(OUTPUT_HEIGHT);
 		addProperty(LINE_NUMBER);
@@ -161,6 +164,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addChildFactory(rendererFactoryProvider.createFactory(this, RENDERER_PATH));
 		addChildFactory(pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH));
 		addChildFactory(serializationFactoryProvider.createFactory(this, SERIALIZER_PATH));
+		addChildFactory(tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORMER_PATH));
 	}
 
 	@Override

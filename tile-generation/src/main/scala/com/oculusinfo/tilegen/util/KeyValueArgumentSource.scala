@@ -94,23 +94,33 @@ abstract class KeyValueArgumentSource {
 	                            description: String,
 	                            argType: String,
 	                            conversion: String => T,
-	                            default: Option[T]): Option[T] = {
+	                            default: Option[T]): Option[T] =
+		getInternal(Array(key), description, argType, conversion, default)
+
+	private def getInternal[T] (keys: Array[String],
+	                            description: String,
+	                            argType: String,
+	                            conversion: String => T,
+	                            default: Option[T]): Option[T] =
+	{
 		var result: Option[T] = default
 		var defaulted = true
 		try {
-			val valOpt = properties.get(key.toLowerCase())
-			if (!valOpt.isEmpty) {
-				result = Some(conversion(valOpt.get))
+			val firstKey = keys.map(_.toLowerCase()).filter(properties.get(_).isDefined).take(1)
+			if (1 == firstKey.size) {
+				result = Some(conversion(properties.get(firstKey(0)).get))
 				defaulted = false
 			}
 
 			if (!distributed && null != argDescriptionsMap)
-				argDescriptionsMap(key) = (argType, description, result, defaulted, false)
+				argDescriptionsMap(keys.mkString(" or ")) =
+					(argType, description, result, defaulted, false)
 			result
 		} catch {
 			case e: Exception => {
 				if (!distributed && null != argDescriptionsMap)
-					argDescriptionsMap(key) = (argType, description, None, false, true)
+					argDescriptionsMap(keys.mkString(" or ")) =
+						(argType, description, None, false, true)
 				throw e
 			}
 		}
@@ -122,10 +132,14 @@ abstract class KeyValueArgumentSource {
 	                                        argType: String,
 	                                        conversion: String => T,
 	                                        separator: String = ",",
-	                                        default: Option[Seq[T]] = Some(Seq[T]())): Option[Seq[T]] = {
+	                                        default: Option[Seq[T]] = Some(Seq[T]())):
+			Option[Seq[T]] =
+	{
+		val convertFcn: String => Seq[T] = _.split(separator).map(conversion)
+
 		getInternal[Seq[T]](key, description, "Seq["+argType+"]",
-		                    _.split(separator).map(conversion).toSeq,
-		                    default)
+		                    convertFcn, default)
+		None
 	}
 
 	/* Get a sequence of keys */
@@ -190,9 +204,19 @@ abstract class KeyValueArgumentSource {
 	 */
 	def getString (key: String,
 	               description: String,
-	               default: Option[String] = None): String =
+	               default: Option[String] = None): String = {
+		val convertFcn: String => String = s => s
 		getInternal[String](key, description, "string",
-		                    _.toString, default).get
+		                    convertFcn, default).get
+	}
+
+	def getString (keys: Array[String],
+	               description: String,
+	               default: Option[String]): String = {
+		val convertFcn: String => String = s => s
+		getInternal[String](keys, description, "string",
+		                    convertFcn, default).get
+	}
 
 	/**
 	 * Simple function to get an optional string property.
@@ -202,9 +226,11 @@ abstract class KeyValueArgumentSource {
 	 */
 	def getStringOption (key: String,
 	                     description: String,
-	                     default: Option[String] = None): Option[String] =
+	                     default: Option[String] = None): Option[String] = {
+		val convertFcn: String => String = s => s
 		getInternal[String](key, description, "string",
-		                    _.toString, default)
+		                    convertFcn, default)
+	}
 
 	/**
 	 * Simple function to get a list of strings out of a single property,  The 
@@ -219,9 +245,11 @@ abstract class KeyValueArgumentSource {
 	def getStringSeq (key: String,
 	                  description: String,
 	                  separator: String = ",",
-	                  default: Option[Seq[String]] = Some(Seq[String]())): Seq[String] =
-		getSequencePropInternal[String](key, description, "string", _.toString,
-		                                separator, default).get
+	                  default: Option[Seq[String]] = Some(Seq[String]())): Seq[String] = {
+		val convertFcn: String => String = s => s
+		getSequencePropInternal[String](key, description, "string",
+		                                convertFcn, separator, default).get
+	}
 
 	/**
 	 * Simple function to get a sequence of related properties.  This sequence 
@@ -239,7 +267,10 @@ abstract class KeyValueArgumentSource {
 	def getStringPropSeq (key: String,
 	                      description: String,
 	                      default: Option[Seq[String]] = Some(Seq[String]())): Seq[String] =
-		getPropSequenceInternal(key, description, "string", _.toString, default).get
+	{
+		val convertFcn: String => String = s => s
+		getPropSequenceInternal(key, description, "string", convertFcn, default).get
+	}
 
 
 
@@ -248,16 +279,20 @@ abstract class KeyValueArgumentSource {
 	 */
 	def getInt (key: String,
 	            description: String,
-	            default: Option[Int] = None): Int =
-		getInternal[Int](key, description, "int", _.toInt, default).get
+	            default: Option[Int] = None): Int = {
+		val convertFcn: String => Int = s => s.toInt
+		getInternal[Int](key, description, "int", convertFcn, default).get
+	}
 
 	/**
 	 * Just like {@link #getStringOption}, except it returns an Int
 	 */
 	def getIntOption (key: String,
 	                  description: String,
-	                  default: Option[Int] = None): Option[Int] =
-		getInternal[Int](key, description, "int", _.toInt, default)
+	                  default: Option[Int] = None): Option[Int] = {
+		val convertFcn: String => Int = s => s.toInt
+		getInternal[Int](key, description, "int", convertFcn, default)
+	}
 
 	/**
 	 * Just like {@link #getStringSeq}, except it returns a sequence of Ints
@@ -265,17 +300,21 @@ abstract class KeyValueArgumentSource {
 	def getIntSeq (key: String,
 	               description: String,
 	               separator: String = ",",
-	               default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] =
-		getSequencePropInternal[Int](key, description, "int", _.toInt,
-		                             separator, default).get
+	               default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] = {
+		val convertFcn: String => Int = s => s.toInt
+		getSequencePropInternal[Int](key, description, "int",
+		                             convertFcn, separator, default).get
+	}
 
 	/**
 	 * Just like {@link #getStringPropSeq}, except it returns a sequence of Ints
 	 */
 	def getIntPropSeq (key: String,
 	                   description: String,
-	                   default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] =
-		getPropSequenceInternal(key, description, "int", _.toInt, default).get
+	                   default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] = {
+		val convertFcn: String => Int = s => s.toInt
+		getPropSequenceInternal(key, description, "int", convertFcn, default).get
+	}
 
 
 
@@ -284,16 +323,20 @@ abstract class KeyValueArgumentSource {
 	 */
 	def getLong (key: String,
 	             description: String,
-	             default: Option[Long] = None): Long =
-		getInternal[Long](key, description, "long", _.toLong, default).get
+	             default: Option[Long] = None): Long = {
+		val convertFcn: String => Long = s => s.toLong
+		getInternal[Long](key, description, "long", convertFcn, default).get
+	}
 
 	/**
 	 * Just like {@link #getStringOption}, except it returns a Long
 	 */
 	def getLongOption (key: String,
 	                   description: String,
-	                   default: Option[Long] = None): Option[Long] =
-		getInternal[Long](key, description, "long", _.toLong, default)
+	                   default: Option[Long] = None): Option[Long] = {
+		val convertFcn: String => Long = s => s.toLong
+		getInternal[Long](key, description, "long", convertFcn, default)
+	}
 
 	/**
 	 * Just like {@link #getStringSeq}, except it returns a sequence of Longs
@@ -301,17 +344,21 @@ abstract class KeyValueArgumentSource {
 	def getLongSeq (key: String,
 	                description: String,
 	                separator: String = ",",
-	                default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] =
-		getSequencePropInternal[Long](key, description, "long", _.toLong,
-		                              separator, default).get
+	                default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] = {
+		val convertFcn: String => Long = s => s.toLong
+		getSequencePropInternal[Long](key, description, "long",
+		                              convertFcn, separator, default).get
+	}
 
 	/**
 	 * Just like {@link #getStringPropSeq}, except it returns a sequence of Longs
 	 */
 	def getLongPropSeq (key: String,
 	                    description: String,
-	                    default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] =
-		getPropSequenceInternal(key, description, "long", _.toLong, default).get
+	                    default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] = {
+		val convertFcn: String => Long = s => s.toLong
+		getPropSequenceInternal(key, description, "long", convertFcn, default).get
+	}
 
 
 
@@ -320,16 +367,20 @@ abstract class KeyValueArgumentSource {
 	 */
 	def getDouble (key: String,
 	               description: String,
-	               default: Option[Double] = None): Double =
-		getInternal[Double](key, description, "double", _.toDouble, default).get
+	               default: Option[Double] = None): Double = {
+		val convertFcn: String => Double = s => s.toDouble
+		getInternal[Double](key, description, "double", convertFcn, default).get
+	}
 
 	/**
 	 * Just like {@link #getStringOption}, except it returns a Double
 	 */
 	def getDoubleOption (key: String,
 	                     description: String,
-	                     default: Option[Double] = None): Option[Double] =
-		getInternal[Double](key, description, "double", _.toDouble, default)
+	                     default: Option[Double] = None): Option[Double] = {
+		val convertFcn: String => Double = s => s.toDouble
+		getInternal[Double](key, description, "double", convertFcn, default)
+	}
 
 	/**
 	 * Just like {@link #getStringSeq}, except it returns a sequence of Doubles
@@ -337,17 +388,21 @@ abstract class KeyValueArgumentSource {
 	def getDoubleSeq (key: String,
 	                  description: String,
 	                  separator: String = ",",
-	                  default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] =
-		getSequencePropInternal[Double](key, description, "double", _.toDouble,
-		                                separator, default).get
+	                  default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] = {
+		val convertFcn: String => Double = s => s.toDouble
+		getSequencePropInternal[Double](key, description, "double",
+		                                convertFcn, separator, default).get
+	}
 
 	/**
 	 * Just like {@link #getStringPropSeq}, except it returns a sequence of Doubles
 	 */
 	def getDoublePropSeq (key: String,
 	                      description: String,
-	                      default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] =
-		getPropSequenceInternal(key, description, "double", _.toDouble, default).get
+	                      default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] = {
+		val convertFcn: String => Double = s => s.toDouble
+		getPropSequenceInternal(key, description, "double", convertFcn, default).get
+	}
 
 
 
@@ -483,16 +538,17 @@ abstract class KeyValueArgumentSource {
 	// Complex argument functions
 	// These functions standardize some arguments across applications
 	//
-	def getSparkConnector (jars: Seq[Object] = SparkConnector.getLibrariesFromClasspath): SparkConnector = {
+	def getSparkConnector (jars: Seq[Object] = SparkConnector.getDefaultLibraries): SparkConnector = {
 		val sparkArgs = properties.filter(kv =>
 			{
 				kv._1.startsWith("spark") && "spark" != kv._1 && "sparkhome" != kv._1
 			}
 		)
 		new GeneralSparkConnector(
-			getString("spark",
-			          "Spark master location (default is \"local\")",
-			          Some("local")),
+		  // Only set a master when it has been passed in.  This lets the default
+			// value specified in spark-conf get picked up when no master is specified.
+			getStringOption("spark",
+			          "Spark master location (defaults to externally set value ie. spark-conf)"),
 			getString("sparkhome",
 			          "Spark home location (defaults to ${SPARK_HOME}",
 			          Some(System.getenv("SPARK_HOME"))),

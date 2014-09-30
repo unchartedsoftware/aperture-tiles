@@ -88,6 +88,9 @@ public class FileSystemPyramidIO implements PyramidIO {
 
 	@Override
 	public void initializeForWrite (String basePath) throws IOException {
+		File metaDataFile = getMetaDataFile(basePath);
+		File parent = metaDataFile.getParentFile();
+		if (!parent.exists()) parent.mkdirs();
 	}
 
 	@Override

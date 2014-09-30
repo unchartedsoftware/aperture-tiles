@@ -1,0 +1,479 @@
+---
+---
+
+//Font Families
+$family-standard: Arial,Helvetica,sans-serif;
+
+// Font Colors
+$color-main-nav: #fff;
+$color-main-nav-hover: #C40;
+$color-submenu-nav-num: #5E544A;
+
+$color-api-sidebar-link: #C40;
+$color-api-sidebar-link-hover: #F60;
+
+$color-body: #4E443C;
+$color-body-link: #07A;
+$color-body-link-hover: #3AF;
+$color-disclaimer: #9E876F;
+
+$color-h1: #C40;
+$color-tagline: #8A8984;
+$color-sub-h1: #840;
+
+$color-api-section-title: #5e544a;
+
+// Background
+$header-bg-color: #000;
+$site-bg-color: #F0EFE7;
+$site-bg-img: url("../img/resources/body.jpg");
+$content-body-bg-color: #FCFCFA;
+$submenu-bg-color: #ddddd1;
+$submenu-bg-selected: #C40;
+$pre-code-bg: #eee;
+$map-bg: #c9cfcf;
+$context-info-bg: #FCFCFA;
+
+//Borders
+$img-border: #cba;
+$img-hover-border: #000;
+$map-border: #987;
+
+@import "code-block";
+
+body {
+	font-family: $family-standard;
+	font-size: 100%;
+	line-height: 1.4em;
+	background: $site-bg-color;
+	background-image: $site-bg-img;
+	margin:0;
+	padding: 15px 0 0;
+	color: $color-body;
+}
+
+ul {
+    padding-left:30px;
+}​
+
+li {
+	margin: 0 0 5px 0;
+}
+
+.methodDetail {
+	margin: 0;
+	padding-left: 0;
+}
+
+#MethodDetail {
+	margin: 0;
+	padding-left: 0;
+}
+
+@mixin heading($font-size, $margin-bottom, $color) {
+	color: $color;
+	font-family: $family-standard;
+	font-size: $font-size;
+	font-weight: normal;
+	margin-bottom: $margin-bottom;
+}
+
+h1 {
+	@include heading(32px,25px,$color-h1);
+	padding-top: 30px;
+	
+	.tagline {
+		font-size: 18px;
+		color: $color-tagline;
+	}
+}
+h2 {
+	@include heading(24px,10px,$color-sub-h1);
+	margin-top: 30px;
+	&.sectionTitle {
+		font-size: 22px;
+		color: $color-api-section-title;
+		margin-top: 10px;
+		padding: 0 10px 10px 0;
+	}
+}
+
+h3 {
+	@include heading(22px,9px,$color-sub-h1);
+	&.context-info-title {
+		color: $color-api-sidebar-link;
+		&:hover {
+			color: $color-api-sidebar-link-hover;
+		}
+	}
+}
+h4 {
+	@include heading(20px,0px,$color-sub-h1);
+	font-style: italic;
+}
+h5 {
+	@include heading(18px,0px,$color-sub-h1);
+}
+h6 {
+	@include heading(16px,0px,$color-sub-h1);
+}
+
+a {
+	text-decoration: none;
+
+	&:link,&:active,&:visited {
+		color: $color-body-link;
+	}
+
+	&:hover,&:focus {
+		color: $color-body-link-hover;
+	}
+	
+	&.download-link {
+		background-image: url("../img/resources/download.png"); 
+		background-position: left; 
+		background-repeat: no-repeat; 
+		padding: 6px 0px 6px 30px;
+	}
+	
+	&.context-info-title {
+		color: $color-api-sidebar-link;
+		&:hover {
+			color: $color-api-sidebar-link-hover;
+		}
+	}
+	&:hover.context-info-title {
+		color: $color-api-sidebar-link-hover;
+	}
+}
+img {
+	border-style: none;
+
+	&.home-image {
+		margin: 20px 0 4px;
+		border: 1px solid $img-border;
+	}
+	
+	&.screenshot {
+		margin: 20px auto 4px;
+		display: block;
+	}
+
+	&.vid-thumbnail {
+		@extend .screenshot;
+		border: 1px solid $img-border;
+	}
+	&.thumbs {
+        position: relative;
+        width: 120px;
+        height: 100px;
+        border: 1px solid $img-border;
+        border-radius: 2px;
+        cursor: pointer;
+		&:hover{
+			border: 1px solid $img-hover-border;
+        }			
+    }
+}
+
+code{
+	font-family: $family-code;
+	font-size: 0.9em;
+	
+	&.example {
+		@extend code-block;
+		display: block;
+	}
+}
+
+pre {
+	margin: 10px 0 10px 0;
+	
+	&.code {
+		@extend code-block;
+	}
+}
+
+#content-strip {
+	position: relative;
+	max-width: 1000px; 
+	margin: 0 auto;
+}
+
+#toc-header {
+	font-size: 16px;
+	font-weight: bold;
+	margin-left: 30px;
+	text-align: center;
+}
+
+.toc {
+    margin: 20px 0 10px 0;
+	padding: 5px 30px 5px 0px;
+	position: static;
+}
+
+#header {
+	position: absolute;
+	background: $header-bg-color;
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	height: 60px;
+	z-index: -1;
+}
+#header-logo {
+	position: absolute;
+}
+#header-menu {
+	position: absolute;
+	right: 0px;
+	font-family: $family-standard;
+	font-size: 18px;
+	margin: 5px 0 20px;
+	a {
+		color: $color-main-nav;
+		line-height: 25px;
+		padding: 5px 6px 15px 6px;
+		text-decoration: none;
+		text-transform: uppercase;
+		&.selected {
+			border-bottom: 3px solid $color-main-nav;
+		}
+		
+		&:hover {
+			color: $color-main-nav-hover;
+		}
+	}
+}
+
+#submenu {
+	height: 60px;
+	margin-bottom: 40px;
+	.selected {
+		background-color: $submenu-bg-selected;
+		color: white;
+	}
+}
+.submenu-item {
+	cursor: pointer;
+	float: left;
+	&:link, &:active, &:visited {
+		color: $color-body;
+	}
+	&:hover {
+		color: $color-main-nav-hover;
+	}
+}
+.submenu-item-background {
+	background: $submenu-bg-color;
+	border-radius: 50%;
+	webkit-border-radius: 50%;
+	color: $color-submenu-nav-num;
+	float: left;
+	margin-right: 15px;
+	padding: 16px;
+}
+.submenu-item-label {
+	float: left;
+	font-size: 17px;
+	font-weight: bold;
+	margin: 15px 15px 0 0;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+.submenu-item-number {
+	font-family: $family-standard;
+	font-size: 15px;
+	font-weight: bold;
+	height: 20px;
+	width: 20px;
+	text-align: center;
+}
+
+#map {
+	background-color: $map-bg;
+	border: 1px solid $map-border;
+}
+#all {
+	position: absolute;
+	width: 1000px;
+	top: 70px;
+	bottom: 0px;
+	padding-top: 10px;
+}
+
+#content {
+	position: relative;
+	font-size: 18px;
+	line-height: 1.4em;
+	padding-bottom: 10px;
+	.case! {}
+}
+
+.content-context {
+	padding-left: 20px;
+	position: absolute;
+	width: 280px;
+	font-size: 14px;
+	margin-top: -20px;
+	line-height: 1.4em;
+}
+.oculus-footer
+{
+	background-image: url("../img/resources/footer-symbols.png");
+	background-position: left bottom;
+	background-repeat: no-repeat;
+	padding-bottom: 60px;
+}
+.footer-padding {
+	padding-bottom: 20px;
+}
+
+#toc-body {
+    line-height: 23px;
+	margin: 0 0 5px;
+}​
+
+.context-info {
+	background: $context-info-bg;
+	border: solid 1px $txt-block-border;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	left: -10px;
+	margin-bottom: 10px;
+	overflow: hidden;
+	padding: 10px 15px 25px 15px;
+	position: relative;
+}
+
+#map {
+	background-color: $map-bg;
+	border: 1px solid $map-border;
+}
+.content-body {
+	text-align:	justify;
+	padding: 0 30px;
+	margin: 41px 0 0 310px;
+	font-size: 16px;
+	background: $content-body-bg-color;
+	border:	1px solid $txt-block-border;
+	line-height: 1.4em;
+}
+
+.git {
+	display: none;
+}
+
+.content-example {
+	font-size: 18px;
+	margin-left: 200px;
+	padding-left: 30px;
+	text-align: justify;
+}
+#infoTxt {
+	font-size: 16px;
+	line-height: 1.2em;
+}
+.disclaimer {
+	color: $color-disclaimer;
+}
+
+sup,
+sub {
+	height: 0;
+	line-height: 1;
+	position: relative;
+	vertical-align: baseline;
+	_vertical-align: bottom;
+	
+}
+
+sup {
+	bottom: 1ex;
+}
+
+sub {
+	top: .5ex;
+}
+
+.props {
+	@extend code-block;
+	font-family: $family-standard
+}
+
+.innerProps {
+}
+
+dl {
+	&.detailList {
+		margin: 7px 0 0 0;
+	}
+
+	&.detailList dt {
+		font-weight: bold;
+		font-family: $family-code;
+		color: #420;
+	}
+
+	&.detailList dt.heading {
+		font-family: $family-standard;
+		font-size: 14px;
+		color: #6A1;
+		margin: 6px 0;
+	}
+
+	&.inheritsList dd + dt {
+		margin-top: 10px;
+	}
+
+	&.inheritsList dd {
+		display: inline;
+	}
+}
+
+dt {
+	font-size: 14px;
+	margin: 14px 0 0;
+}
+
+dd {
+	font-size: 14px;
+	padding: 0 0 0 28px;
+	margin: 0 0 14px;
+}
+
+.light {
+	color: #666;
+}
+
+.fixedFont {
+	font-family: $family-code;
+}
+
+th {
+	color: rgb(102, 170, 17);
+	font-size: 14px;
+	font-weight: normal;
+	line-height: 19.6px;
+	padding: 0 10px 10px 10px;
+	margin: 0;
+}
+table.summaryTable {
+	left:-10px;
+	position:relative;
+	border-spacing: 0;
+}
+
+td.attributes {
+	padding:0 10px 10px 10px;
+	font-size:14px;
+	line-height:19.6px
+}
+
+div.description {
+	padding:0 10px 10px 10px;
+	font-size:14px;
+	line-height:19.6px
+}

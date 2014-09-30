@@ -27,45 +27,151 @@
 define( function (require) {
     "use strict";
 
+
+
 	var LayerFactory = require('../LayerFactory'),
 	    ClientLayer = require('./ClientLayer'),
+	    loadModule,
+	    loadAllModules,
+	    assembleViews,
+	    loadedModules = {},
 	    ClientLayerFactory;
 
+
+    loadModule = function( path, module ) {
+
+        var deferred = $.Deferred();
+        require( [path+module], function( Module ) {
+            loadedModules[ module ] = Module;
+            deferred.resolve();
+        });
+        return deferred;
+    };
+
+
+    loadAllModules = function( layerJSON ) {
+
+        var renderer,
+            renderers,
+            deferreds = [],
+            deferred,
+            i, j;
+
+        function loadDetails( details ) {
+            var k;
+            if ( details ) {
+                if ( !loadedModules[ details.type ] ) {
+                    // only load each module once
+                    deferred = loadModule( "./details/", details.type );
+                    // temporarily store deferred here, so later if duplicate is found, we can grab it
+                    loadedModules[ details.type ] = deferred;
+                    deferreds.push( deferred );
+                } else {
+                    // add deferred or module here, if it is a deferred we will wait on it
+                    // if it isn't, $.when will ignore it
+                    deferreds.push( loadedModules[ details.type ] );
+                }
+                // recursively load nested detail modules
+                if ( details.content ) {
+                    for (k=0; k<details.content.length; k++) {
+                        loadDetails( details.content[k] );
+                    }
+                }
+            }
+        }
+
+        for (i=0; i<layerJSON.length; i++) {
+
+            renderers = layerJSON[i].renderers;
+            for (j=0; j<renderers.length; j++) {
+
+                renderer = renderers[j];
+                if ( !loadedModules[ renderer.type ] ) {
+                    // only load each module once
+                    deferred = loadModule( "./renderers/", renderer.type );
+                    // temporarily store deferred here, so later if duplicate is found, we can grab it
+                    loadedModules[ renderer.type ] = deferred;
+                    deferreds.push( deferred );
+                } else {
+                    // add deferred or module here, if it is a deferred we will wait on it
+                    // if it isn't, $.when will ignore it
+                    deferreds.push( loadedModules[ renderer.type ] );
+                }
+            }
+
+            loadDetails( layerJSON[i].details );
+        }
+        return deferreds;
+    };
+
+
+    assembleViews = function( layerJSON, map ) {
+
+        var layerId,
+            renderers,
+            details,
+            renderer,
+            views = [],
+            i, j;
+
+        function assembleDetails( details ) {
+            var result = null, k;
+            if ( details ) {
+                result = new loadedModules[ details.type ]( details.spec );
+                result.content = [];
+                if ( details.content ) {
+                    for (k=0; k<details.content.length; k++) {
+                        result.content.push( assembleDetails( details.content[k] ) );
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        for (i=0; i<layerJSON.length; i++) {
+
+            layerId = layerJSON[i].layer;
+            renderers = layerJSON[i].renderers;
+            details = assembleDetails( layerJSON[i].details );
+
+            for (j=0; j<renderers.length; j++) {
+
+                renderer = renderers[j];
+                renderer.spec.details = details;
+                views.push({
+                    id: layerId,
+                    renderer: new loadedModules[ renderer.type ]( map, renderer.spec )
+                });
+            }
+        }
+        return views;
+    };
 
 
     ClientLayerFactory = LayerFactory.extend({
         ClassName: "ClientLayerFactory",
 
 
+        createLayer: function( layerJSON, map ) {
 
-        createLayer: function(layerJSON, map) {
+            var clientLayerDeferred = $.Deferred(),
+                moduleDeferreds;
 
-            var renderers = layerJSON.renderers,
-                rendererDeferreds = [],
-                clientLayer,
-                clientLayerDeferred = $.Deferred(),
-                i;
+            // load all renderer modules and grab deferreds
+            moduleDeferreds = loadAllModules( layerJSON );
 
-            function loadModule( arg ) {
-                var requireDeferred = $.Deferred();
-                require( [arg], function( RendererModule ) {
-                    requireDeferred.resolve( new RendererModule( map ) );
-                });
-                return requireDeferred;
-            }
+            // once all modules are loaded
+            $.when.apply( $, moduleDeferreds ).done( function() {
 
-            for (i=0; i<renderers.length; i++) {
-                rendererDeferreds.push( loadModule( "./renderers/" + renderers[i] ) );
-            }
-
-            $.when.apply( $, rendererDeferreds ).done( function() {
-
-                // once everything has loaded
-                var renderers = Array.prototype.slice.call( arguments, 0 );
+                var clientLayer,
+                    views = [];
+                // assemble views from renderer objects
+                views = assembleViews( layerJSON, map );
                 // create the layer
-                clientLayer = new ClientLayer( layerJSON, renderers, map );
+                clientLayer = new ClientLayer( layerJSON, views, map );
                 // send configuration request
-                clientLayer.configure( function( layerInfo ) {
+                clientLayer.configure( function() {
                     // resolve deferred
                     clientLayerDeferred.resolve( clientLayer );
                 });
@@ -74,8 +180,8 @@ define( function (require) {
             return clientLayerDeferred;
         }
 
-
     });
+
 
     return ClientLayerFactory;
 

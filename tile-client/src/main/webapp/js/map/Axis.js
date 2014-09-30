@@ -29,6 +29,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        Util = require('../util/Util'),
         AxisUtil = require('./AxisUtil'),
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
@@ -249,7 +250,7 @@ define(function (require) {
             marginRight = 0,
             marginTop = 0,
             marginBottom = 0;
-        // add margins in case other axis exist, this prevents ugly shadow overlaps
+        // add margins in case other axis exist, this prevents border overlap
         if (that.isXAxis) {
             marginLeft = that.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
             marginRight = that.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
@@ -258,10 +259,20 @@ define(function (require) {
             marginBottom = that.$map.find('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
         }
         // return jquery element
-        return $('<div class="'+ AXIS_HEADER_CLASS
-               + " " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
-               + 'style="z-index:'+(that.Z_INDEX+1)+';'
-               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px; '+marginLeft+'px;">');
+        return $('<div class="'+ AXIS_HEADER_CLASS + " " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
+               + 'style="z-index:'+(that.Z_INDEX+2)+';'
+               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px; '+marginLeft+'px;"></div>');
+    }
+
+
+    /**
+     * Creates and returns the axis header jquery object
+     */
+    function createHeaderBack( that ) {
+
+        // return jquery element
+        return $('<div class="'+ AXIS_HEADER_CLASS + " " + AXIS_HEADER_CLASS + "-back " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
+               + 'style="z-index:'+(that.Z_INDEX+1)+';"></div>' );
     }
 
 
@@ -272,7 +283,7 @@ define(function (require) {
 
         return $('<div class="'+ AXIS_CONTENT_CLASS
                + " " + that.position + AXIS_CONTENT_CLASS_SUFFIX
-               + '"  style="z-index:'+that.Z_INDEX+';">');
+               + '"  style="z-index:'+that.Z_INDEX+';"></div>');
     }
 
 
@@ -281,21 +292,40 @@ define(function (require) {
      */
     function createAxis( that ) {
 
-        var $axis;
+        var $axis,
+            enableSlide,
+            disableSlide,
+            horizontalSlide,
+            verticalSlide;
 
-        // enable / disable functions
-        function horizontalSlide() {
+        enableSlide = function() {
+            // set enable / disable callbacks
+            if (that.isXAxis) {
+                that.$header.click(verticalSlide);
+                that.$content.click(verticalSlide);
+            } else {
+                that.$header.click(horizontalSlide);
+                that.$content.click(horizontalSlide);
+            }
+        };
+        disableSlide = function() {
+            that.$header.off('click');
+            that.$content.off('click');
+        };
+        horizontalSlide = function() {
             that.setEnabled( !that.isEnabled() );
             that.setContentDimension();
-            that.$content.animate({width: 'toggle'});
+            disableSlide();
+            that.$content.animate({width: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             that.map.redrawAxes();
-        }
-        function verticalSlide()  {
+        };
+        verticalSlide = function() {
             that.setEnabled( !that.isEnabled() );
             that.setContentDimension();
-            that.$content.animate({height: 'toggle'});
+            disableSlide();
+            that.$content.animate({height: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             that.map.redrawAxes();
-        }
+        };
 
         // create axis title, header, and container and append them to root
         that.$title = createTitle( that );
@@ -303,16 +333,11 @@ define(function (require) {
         that.$content = createContent( that );
         $axis = $('<div class="'+ that.position + AXIS_DIV_CLASS_SUFFIX + '"></div>')
                     .append( that.$content )
-                        .append( that.$header );
+                        .append( that.$header )
+                            .append( createHeaderBack( that ) );
 
-        // set enable / disable callbacks
-        if (that.isXAxis) {
-            that.$header.click(verticalSlide);
-            that.$content.click(verticalSlide);
-        } else {
-            that.$header.click(horizontalSlide);
-            that.$content.click(horizontalSlide);
-        }
+        // enable callbacks
+        enableSlide();
 
         // return root
         return $axis;
@@ -344,9 +369,7 @@ define(function (require) {
      */
     function updateAxisContent( that ) {
 
-        var marker,
-            markers,
-            markerSize,
+        var markers,
             markersHTML = "",
             markersBySize,
             i;
@@ -354,31 +377,21 @@ define(function (require) {
         // generate array of marker labels and pixel locations
         markersBySize = AxisUtil.getMarkers( that );
 
-        // iterate through markers, by marker type
-        for ( markerSize in markersBySize ) {
-            if (markersBySize.hasOwnProperty(markerSize)) {
-
-                markers = markersBySize[markerSize];
-
-                for (i = 0; i < markers.length; i++) {
-
-                    marker = markers[i];
-
-                    switch (markerSize) {
-                        case 'large':
-                            markersHTML += createLargeMarkerHTML( that, marker );
-                            markersHTML += createMarkerLabelHTML( that, marker );
-                            break;
-                        case 'medium':
-                            markersHTML += createMediumMarkerHTML( that, marker );
-                            break;
-                        case "small":
-                            markersHTML += createSmallMarkerHTML( that, marker );
-                            break;
-                    }
-
-                }
-            }
+        // large markers
+        markers = markersBySize.large;
+        for (i = 0; i < markers.length; i++) {
+            markersHTML += createLargeMarkerHTML( that, markers[i] );
+            markersHTML += createMarkerLabelHTML( that, markers[i] );
+        }
+        // medium markers
+        markers = markersBySize.medium;
+        for (i = 0; i < markers.length; i++) {
+            markersHTML += createMediumMarkerHTML( that, markers[i] );
+        }
+        // small markers
+        markers = markersBySize.small;
+        for (i = 0; i < markers.length; i++) {
+            markersHTML += createSmallMarkerHTML( that, markers[i] );
         }
 
         // append all markers and labels at once
@@ -456,6 +469,28 @@ define(function (require) {
             this.map.on('move', function() {
                 that.redraw();
             });
+
+            this.map.on('mousemove', function( event ) {
+
+                if ( !that.enabled ) {
+                    return;
+                }
+
+                var xOrY = that.isXAxis ? 'x' : 'y',
+                    value = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y )[xOrY],
+                    marker = {
+                        label : AxisUtil.getMarkerRollover( that, value ),
+                        pixel : event.xy[xOrY]
+                    };
+
+                that.$content.find('.mouse-marker').remove();
+                that.$content.append( $( createLargeMarkerHTML( that, marker ) ).addClass('mouse-marker') );
+
+                //that.$content.find('.mouse-marker-label').remove();
+                //that.$content.append( $( createMarkerLabelHTML( that, marker ) ).addClass('mouse-marker-label') );
+
+            });
+
             // generate the core html elements
             this.$axis = createAxis( this );
             this.$map.append( this.$axis );
@@ -470,9 +505,10 @@ define(function (require) {
                 this.$content.finish();
             }
             // allow events to propagate below to map except 'click'
-            this.map.enableEventToMapPropagation( this.$axis );
-            this.map.disableEventToMapPropagation( this.$axis, ['onclick', 'ondblclick'] );
+            Util.enableEventPropagation( this.$axis );
+            Util.disableEventPropagation( this.$axis, ['onclick', 'ondblclick'] );
         },
+
 
         /**
          *  Returns true if the axis is currently enabled, false if not

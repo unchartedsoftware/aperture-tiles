@@ -36,7 +36,8 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        ClientLayerState = require('./ClientLayerState'),
+        SharedObject = require('../../util/SharedObject'),
+        Util = require('../../util/Util'),
         ClientLayerMediator;
 
 
@@ -56,72 +57,84 @@ define(function (require) {
             function register( layer ) {
 
                 var layerState,
+                    layerSpec = layer.getLayerSpec()[0],
                     previousMouse = {},
                     j;
 
                 function updateTileFocus( x, y ) {
 
                     var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
-                    layerState.setTileFocus( tilekey );
+                    layerState.set( 'previousTileFocus', layerState.get('tileFocus') );
+                    layerState.set( 'tileFocus', tilekey );
                 }
 
-                // Create a layer state object for the base map.
-                layerState = new ClientLayerState( layer.id );
-                layerState.setName( layer.getLayerSpec().name || layer.id );
-                layerState.setEnabled( true );
-                layerState.setOpacity( 1.0 );
-                layerState.setZIndex( 1000+i );
-                layerState.setRendererCount( layer.renderers.length );
-                layerState.setDefaultRendererIndex( 0 );
+                // create a layer state object. Values are initialized to those provided
+                // by the layer specs, which are defined in the layers.json file, or are
+                // defaulted to appropriate starting values
+                layerState = new SharedObject();
+
+                // set immutable layer state properties
+                layerState.set( 'id', layer.id );
+                layerState.set( 'uuid', Util.generateUuid() );
+                layerState.set( 'name', layer.name );
+                layerState.set( 'domain', 'client' );
+                layerState.set( 'rendererCount', layer.views.length );
+
                 // register layer state with each renderer
-                for (j=0; j< layer.renderers.length; j++) {
-                    layer.renderers[j].registerLayer( layerState );
+                for (j=0; j< layer.views.length; j++) {
+                    layer.views[j].renderer.registerLayer( layerState );
+                    layer.views[j].renderer.meta = layer.getLayerInfo()[ layer.views[j].id ].meta;
                 }
 
                 // Register a callback to handle layer state change events.
                 layerState.addListener( function( fieldName ) {
                     var tilekey;
 
-
                     switch (fieldName) {
 
                         case "opacity":
 
-                            layer.setOpacity( layerState.getOpacity() );
+                            layer.setOpacity( layerState.get( 'opacity' ) );
                             break;
 
                         case "enabled":
 
-                            layer.setVisibility( layerState.isEnabled() );
+                            layer.setVisibility( layerState.get( 'enabled' ) );
                             break;
 
-                        case "z-index":
+                        case "zIndex":
 
-                            layer.setZIndex( layerState.getZIndex() );
+                            layer.setZIndex( layerState.get( 'zIndex' ) );
                             break;
 
                         case "tileFocus":
 
-                            layer.setTileFocus( layerState.getTileFocus() );
+                            layer.setTileFocus( layerState.get( 'tileFocus' ) );
                             break;
 
                         case "defaultRendererIndex":
 
-                            layer.setDefaultRendererIndex( layerState.getDefaultRendererIndex() );
+                            layer.setDefaultRendererIndex( layerState.get( 'defaultRendererIndex' ) );
                             break;
 
-                        case "tileRendererIndex":
+                        case "rendererByTile":
 
-                            tilekey = layerState.getTileFocus();
-                            layer.setTileRenderer( tilekey, layerState.getRendererByTile( tilekey ) );
+                            tilekey = layerState.get( 'tileFocus' );
+                            layer.setTileRenderer( tilekey, layerState.get( 'rendererByTile', tilekey ) );
                             break;
                     }
 
                 });
 
+                // set client-side layer state properties after binding callbacks
+                layerState.set( 'enabled', ( layerSpec.enabled !== undefined ) ? layerSpec.enabled : true );
+                layerState.set( 'opacity', ( layerSpec.opacity !== undefined ) ? layerSpec.opacity : 1.0 );
+                layerState.set( 'zIndex', 1000+i );
+                layerState.set( 'defaultRendererIndex', 0 );
+
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {
-                    layerState.setClickState( {} );
+                    layerState.set( 'click', null );
                 });
 
                 // set tile focus callbacks

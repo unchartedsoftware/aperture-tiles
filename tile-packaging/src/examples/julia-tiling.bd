@@ -1,5 +1,6 @@
 # Define which fields we want to output, and the projection to use on them
 oculus.binning.projection=EPSG:4326
+oculus.binning.projection.autobounds=false
 oculus.binning.projection.minx=-2.0
 oculus.binning.projection.maxx=2.0
 oculus.binning.projection.miny=-2.0

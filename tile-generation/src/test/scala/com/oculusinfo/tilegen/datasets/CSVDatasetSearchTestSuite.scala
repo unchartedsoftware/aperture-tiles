@@ -26,6 +26,7 @@ package com.oculusinfo.tilegen.datasets
 
 
 
+import java.lang.{Double => JavaDouble}
 import java.io.File
 import java.io.PrintWriter
 import java.util.Properties
@@ -38,10 +39,13 @@ import org.scalatest.FunSuite
 
 import org.apache.spark.SharedSparkContext
 
+import com.oculusinfo.binning.TileData
+
+import com.oculusinfo.tilegen.tiling.AnalysisDescription
 
 
 class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
-	var dataset: CSVDataset[(Double, Double)] = null;
+	var dataset: CSVDataset[(Double, Double), Double, Int, Int, JavaDouble] = null;
 
 
 	def unwrapTry[T] (attempt: Try[T]): T = {
@@ -87,9 +91,16 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 			readProps.setProperty("oculus.binning.parsing.e.index", "4")
 			val csvProps = new CSVRecordPropertiesWrapper(readProps);
 			val csvIndexer = new CartesianIndexExtractor("x", "y")
+			val csvValuer = new CountValueExtractor
+			val dataAnalytics:
+					Option[AnalysisDescription[((Double, Double), Double), Int]] = None
+			val tileAnalytics:
+					Option[AnalysisDescription[TileData[JavaDouble], Int]] = None
+			val levels = Seq(Seq(0))
 
 			// Put our dataset together
-			dataset = new CSVDataset(csvIndexer, csvProps, 1, 1);
+			dataset = new CSVDataset(csvIndexer, csvValuer, dataAnalytics, tileAnalytics,
+			                         1, 1, levels, csvProps)
 			dataset.initialize(sc, false, true, false)
 
 			test()
@@ -102,7 +113,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test simple filtering") {
-		val filter = dataset.getFieldFilterFunction("b", 3, 7)
+		val filter = dataset.getFieldDoubleValueFilterFunction("b", 3, 7)
 		val results = dataset.getRawFilteredData(filter).collect().toSet
 
 		assert(5 === results.size)
@@ -114,9 +125,9 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test and filters") {
-		val bFilter = dataset.getFieldFilterFunction("b", 3, 7)
-		val cFilter = dataset.getFieldFilterFunction("c", 2, 7)
-		val dFilter = dataset.getFieldFilterFunction("d", 1, 8)
+		val bFilter = dataset.getFieldDoubleValueFilterFunction("b", 3, 7)
+		val cFilter = dataset.getFieldDoubleValueFilterFunction("c", 2, 7)
+		val dFilter = dataset.getFieldDoubleValueFilterFunction("d", 1, 8)
 		val filter = FilterFunctions.and(bFilter, cFilter, dFilter)
 		val results = dataset.getRawFilteredData(filter).collect().toSet
 
@@ -126,8 +137,8 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test or filters") {
-		val bFilter = dataset.getFieldFilterFunction("b", 8, 9)
-		val cFilter = dataset.getFieldFilterFunction("c", 6, 7)
+		val bFilter = dataset.getFieldDoubleValueFilterFunction("b", 8, 9)
+		val cFilter = dataset.getFieldDoubleValueFilterFunction("c", 6, 7)
 		val filter = FilterFunctions.or(bFilter, cFilter)
 		val results = dataset.getRawFilteredData(filter).collect().toSet
 

@@ -29,6 +29,7 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
@@ -83,8 +84,10 @@ public class TileServiceImpl implements TileService {
 
 			bi = tileRenderer.render(config);
 		} catch (ConfigurationException e) {
-			_logger.info("No renderer specified for tile request.");
-		}
+			_logger.warn("No renderer specified for tile request.");
+		} catch (IllegalArgumentException e) {
+            _logger.warn("Renderer configuration not recognized.");
+        }
 
 		if (bi == null){
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -111,14 +114,17 @@ public class TileServiceImpl implements TileService {
 
 			InputStream tile = pyramidIO.getTileStream(layer, serializer, index);
 			if (null == tile) return null;
-			return AvroJSONConverter.convert(tile);
-		} catch (IOException e) {
+			
+			TileTransformer transformer = config.produce(TileTransformer.class);
+			
+			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
+            return transformer.Transform(deserializedJSON);
+			
+		} catch (IOException | JSONException | ConfigurationException e) {
 			_logger.warn("Exception getting tile for {}", index, e);
-		} catch (JSONException e) {
-			_logger.warn("Exception getting tile for {}", index, e);
-		} catch (ConfigurationException e) {
-			_logger.warn("Exception getting tile for {}", index, e);
-		}
+		}  catch (IllegalArgumentException e) {
+            _logger.warn("Renderer configuration not recognized.");
+        }
 		return null;
 	}
 }

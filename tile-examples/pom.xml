@@ -1,23 +1,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>tile-examples</artifactId>
-  <packaging>pom</packaging>
-  <name>Aperture-Tiles Examples Website</name>
-  <url>http://github.com/oculusinfo/aperture-tiles</url>
-  <description>
-    Project documentation website and example tile applications.
-  </description>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>tile-examples</artifactId>
+	<packaging>pom</packaging>
+	<name>Aperture-Tiles Examples Website</name>
+	<url>http://github.com/oculusinfo/aperture-tiles</url>
+	<description>
+		Project documentation website and example tile applications.
+	</description>
 
-  <parent>
-    <artifactId>aperture-tiles</artifactId>
-    <groupId>com.oculusinfo</groupId>
-    <version>0.3.1</version>
-  </parent>
+	<parent>
+		<artifactId>aperture-tiles</artifactId>
+		<groupId>com.oculusinfo</groupId>
+		<version>0.4-SNAPSHOT</version>
+	</parent>
 	
-  <modules>
-	<module>julia-demo</module>
-	<module>twitter-topics</module>
-  </modules>
+	<modules>
+		<module>julia-demo</module>
+		<module>julia-demo-live</module>
+		<module>twitter-topics</module>
+	</modules>
 
 </project>

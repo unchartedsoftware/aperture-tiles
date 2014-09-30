@@ -32,7 +32,7 @@ define(function (require) {
 	"use strict";
 
 
-	
+
 	var Class = require('../class'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
@@ -45,7 +45,7 @@ define(function (require) {
 
 	Map = Class.extend({
 		ClassName: "Map",
-		
+
 		init: function (id, spec) {
 
             var that = this;
@@ -62,6 +62,11 @@ define(function (require) {
                     "options" : {
                         "name" : "black",
                         "color" : "rgb(0,0,0)"
+                    },
+                    "tile-border" : {
+                        "color" : "rgba(255, 255, 255, .5)",
+                        "weight" : "1px",
+                        "style" : "solid"
                     }
                 };
             }
@@ -76,7 +81,7 @@ define(function (require) {
 
 
 			// Initialize the map
-			this.map = new aperture.geo.Map({ 
+			this.map = new aperture.geo.Map({
 				id: this.id,
                 options: {
                     controls: [
@@ -114,6 +119,7 @@ define(function (require) {
                                  spec.MapConfig.zoomTo[1],
                                  spec.MapConfig.zoomTo[2] );
             }
+
 		},
 
 
@@ -124,8 +130,15 @@ define(function (require) {
             this.$map.append( this.$root );
 
             this.on('move', function() {
-                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() );
-                that.$root.css({ "-webkit-transform":"translate("+ pos.x +"px, " + pos.y + "px)"});
+                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() ),
+                    translate = "translate("+ pos.x +"px, " + pos.y + "px)";
+                that.$root.css({
+                    "-webkit-transform": translate,
+                    "-moz-transform": translate,
+                    "-ms-transform": translate,
+                    "-o-transform": translate,
+                    "transform": translate
+                });
             });
 
             this.trigger('move'); // fire initial move event
@@ -150,41 +163,44 @@ define(function (require) {
 
                 // destroy previous baselayer
                 olMap_.baseLayer.destroy();
-                //reset the background color to black
-                $map.css( 'background-color', 'rgb(0,0,0)' );
-                // create new layer instsance
+                //reset the background color
+                $map.css( 'background-color', '' );
+                // create new layer instance
                 newBaseLayerType = (newBaseLayerConfig.type === 'Google') ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
                 newBaseLayer = this.map.addLayer( newBaseLayerType, {}, newBaseLayerConfig );
                 // attach, and refresh it by toggling visibility
                 olMap_.baseLayer = newBaseLayer.olLayer_;
                 olMap_.setBaseLayer( newBaseLayer.olLayer_ );
-
-                //if ( newBaseLayerConfig.type !== 'Google' ) {
-                    this.setLayerIndex( newBaseLayer.olLayer_, -1 );
-                //}
-
+                // ensure baselayer remains bottom layer
+                this.setLayerIndex( newBaseLayer.olLayer_, -1 );
+                // toggle visibility to force redraw
                 olMap_.baseLayer.setVisibility(false);
                 olMap_.baseLayer.setVisibility(true);
             }
+
+            if ( newBaseLayerConfig.theme && newBaseLayerConfig.theme.toLowerCase() === "light" ) {
+                $("body").removeClass('dark-theme').addClass('light-theme');
+            } else {
+                $("body").removeClass('light-theme').addClass('dark-theme');
+            }
+
+            // update tile border
+            this.setTileBorderStyle( newBaseLayerConfig["tile-border"] );
         },
 
 
-        /**
-         *
-         * @param mapConfig
-         * @param plotDiv optional div container id of the plot - useful when multiple maps are present
-         */
-        setTileBorderStyle: function ( mapConfig ) {
+        setTileBorderStyle: function ( tileBorder ) {
 
-            var olTileImageConfig = mapConfig.TileBorderConfig;
+            // remove any previous style
+            $(document.body).find("#tiles-border-style").remove();
 
             //if it is not defined, don't set border style
-            if( !olTileImageConfig ){
+            if( !tileBorder ){
                 return;
             }
 
-            if( olTileImageConfig === 'default' ){
-                olTileImageConfig = {
+            if( tileBorder === 'default' ){
+                tileBorder = {
                     "color" : "rgba(255, 255, 255, .5)",
                     "style" : "solid",
                     "weight" : "1px"
@@ -192,14 +208,14 @@ define(function (require) {
             }
 
             //set individual defaults if they are omitted.
-            olTileImageConfig.color = olTileImageConfig.color || "rgba(255, 255, 255, .5)";
-            olTileImageConfig.style = olTileImageConfig.style || "solid";
-            olTileImageConfig.weight = olTileImageConfig.weight || "1px";
+            tileBorder.color = tileBorder.color || "rgba(255, 255, 255, .5)";
+            tileBorder.style = tileBorder.style || "solid";
+            tileBorder.weight = tileBorder.weight || "1px";
 
             $(document.body).prepend(
-                $('<style type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
-                    'border-left : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +
-                    '; border-top : ' + olTileImageConfig.weight + ' ' + olTileImageConfig.style + ' ' + olTileImageConfig.color +';}' +
+                $('<style id="tiles-border-style" type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
+                    'border-left : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +
+                    '; border-top : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +';}' +
                   '</style>')
             );
         },
@@ -227,72 +243,6 @@ define(function (require) {
             return this.$root;
         },
 
-
-        getEventHandlingDOMElement: function() {
-            return $('.olMapViewport')[0];
-        },
-
-
-        /**
-         * Allows the given DOMElement or jQuery object events to propagate through
-         * and interact with the underlying Map
-         */
-        enableEventToMapPropagation: function( elem, events ) {
-
-            var //that = this,
-                domElement = (elem instanceof jQuery) ? elem[0] : elem,
-                i;
-
-            function propagateEvent( event ) {
-                var newEvent = new event.constructor(event.type, event),
-                    below;
-                $(elem).css('pointer-events', 'none');
-                below = document.elementFromPoint(event.clientX, event.clientY); //that.getEventHandlingDOMElement();
-                if (below) {
-                    below.dispatchEvent(newEvent);
-                }
-                $(elem).css('pointer-events', 'all');
-            }
-
-            if (!events) {
-                domElement.onmousedown = propagateEvent;
-                domElement.onmouseup = propagateEvent;
-                domElement.onmousemove = propagateEvent;
-                domElement.onwheel = propagateEvent;
-                domElement.onmousewheel = propagateEvent;
-                domElement.onscroll = propagateEvent;
-                domElement.onclick = propagateEvent;
-                domElement.ondblclick = propagateEvent;
-            } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = propagateEvent;
-                }
-            }
-
-        },
-
-
-        disableEventToMapPropagation: function( elem, events ) {
-
-            var domElement = (elem instanceof jQuery) ? elem[0] : elem,
-                i;
-            if (!events) {
-                domElement.onmousedown = null;
-                domElement.onmouseup = null;
-                domElement.onmousemove = null;
-                domElement.onwheel = null;
-                domElement.onmousewheel = null;
-                domElement.onscroll = null;
-                domElement.onclick = null;
-                domElement.ondblclick = null;
-            } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = null;
-                }
-            }
-        },
 
 		setAxisSpecs: function (axes) {
 
@@ -325,7 +275,6 @@ define(function (require) {
 
 
 		getPyramid: function() {
-
 			return this.pyramid;
 		},
 
@@ -378,25 +327,21 @@ define(function (require) {
             return this.getTileSize() * Math.pow( 2, this.getZoom() );
         },
 
+
         getMapHeight: function() {
             return this.getTileSize() * Math.pow( 2, this.getZoom() );
         },
+
 
 		getViewportWidth: function() {
 			return this.map.olMap_.viewPortDiv.clientWidth;
 		},
 
+
 		getViewportHeight: function() {
 			return this.map.olMap_.viewPortDiv.clientHeight;
         },
 
-        getMapkey : function() {
-            var minMax = this.getMapMinAndMaxInViewportPixels();
-            return minMax.min.x + ":"
-                 + minMax.max.x + ","
-                 + minMax.min.y + ":"
-                 + minMax.max.y;
-        },
 
 		/**
 		 * Returns the maps min and max pixels in viewport pixels
@@ -556,6 +501,15 @@ define(function (require) {
         },
 
 
+        /**
+         * Returns the data coordinate value corresponding to the top left pixel of the tile
+         */
+        getTopLeftCoordForTile: function( tilekey ) {
+            var mapPixel = this.getTopLeftMapPixelForTile( tilekey );
+            return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
+        },
+
+
 		/**
 		 * Returns the tile and bin index corresponding to the given viewport pixel coordinate
 		 */
@@ -585,7 +539,7 @@ define(function (require) {
 			return tileAndBin.bin.x + "," + tileAndBin.bin.y;
 		},
 
-
+        /*
 		getCoordFromMap: function (x, y) {
 			var
 			// Total map bounds, in meters
@@ -597,6 +551,7 @@ define(function (require) {
 			coords = this.pyramid.fractionalTileToRoot(tile);
 			return {x: coords.xIndex, y: coords.yIndex};
 		},
+		*/
 
 		transformOLGeometryToLonLat: function (geometry) {
 			return geometry.transform(new OpenLayers.projection("EPSG:900913"),
@@ -621,10 +576,6 @@ define(function (require) {
 
 		addOLControl: function(control) {
 			return this.map.olMap_.addControl(control);
-		},
-
-		getUid: function() {
-			return this.map.uid;
 		},
 
 		setLayerIndex: function(layer, zIndex) {
@@ -667,7 +618,10 @@ define(function (require) {
 
 
         panToCoord: function( x, y ) {
-            this.map.panTo( y, x );
+            var viewportPixel = this.getViewportPixelFromCoord( x, y ),
+                lonlat = this.map.olMap_.getLonLatFromViewPortPx( viewportPixel );
+
+            this.map.olMap_.panTo( lonlat );
         },
 
 
@@ -680,6 +634,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 				this.map.olMap_.events.register(eventType, this.map.olMap_, callback );
@@ -718,6 +673,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 
@@ -747,6 +703,7 @@ define(function (require) {
 			case 'click':
 			case 'zoomend':
 			case 'mousemove':
+			case 'movestart':
 			case 'moveend':
             case 'move':
 

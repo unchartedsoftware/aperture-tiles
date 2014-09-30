@@ -18,10 +18,21 @@
 
 .axis-header {
     position:absolute;
-    background: #222222; 
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+}
+
+.light-theme .axis-header {
+    background: #ccc;
+}
+
+.dark-theme .axis-header {
+    background: #222;
+}
+
+.axis-header-back {
+    box-shadow: 0 0 5px #000;
 }
 
 .top-axis-header {  
@@ -29,8 +40,14 @@
     height:32px;
     top:0px;
     left:0px;
-    border-bottom: 1px solid #333333;
-    box-shadow:  0px 8px 10px -6px #000;
+}
+
+.light-theme .top-axis-header { 
+    border-bottom: 1px solid #fff;
+}
+
+.dark-theme .top-axis-header { 
+    border-bottom: 1px solid #333;
 }
 
 .bottom-axis-header {
@@ -38,18 +55,30 @@
     height:32px;
     bottom:0px;
     left:0px;
-    border-top: 1px solid #333333;
-    box-shadow: 0px -8px 10px -6px #000;
-}   
+}
+
+.light-theme .bottom-axis-header { 
+    border-top: 1px solid #fff;
+}
+
+.dark-theme .bottom-axis-header { 
+    border-top: 1px solid #333;
+}
 
 .left-axis-header {
     height:auto;
     width:32px;
     left:0px;
     top:0px;
-    bottom:0px;
-    border-right: 1px solid #333333;
-    box-shadow: 8px 0px 10px -6px #000;                
+    bottom:0px;              
+}
+
+.light-theme .left-axis-header { 
+    border-right: 1px solid #fff;
+}
+
+.dark-theme .left-axis-header { 
+    border-right: 1px solid #333;
 }
 
 .right-axis-header {
@@ -57,49 +86,91 @@
     width:32px;
     right:0px;
     top:0px;
-    border-left: 1px solid #333333;
-    box-shadow: -8px 0px 10px -6px #000;
+}
+
+.light-theme .right-axis-header { 
+    border-left: 1px solid #fff;
+}
+
+.dark-theme .right-axis-header { 
+    border-left: 1px solid #333;
 }
 
 .axis-content {
     position:absolute;
-    background: #111111;
     overflow:hidden;
+    box-shadow: 0 0 5px #000;
+}
+
+.light-theme .axis-content {
+    background: #ddd;
+}
+
+.dark-theme .axis-content {
+    background: #111;
 }
 
 .top-axis-content {    
     width:100%;
     top:0px;
-    left:0px;
-    border-bottom: 1px solid #222222;
-    box-shadow: 0px 5px 15px  #000;
+    left:0px;  
+}
+
+.light-theme .top-axis-content { 
+    border-left: 1px solid #fff;
+}
+
+.dark-theme .top-axis-content { 
+    border-left: 1px solid #333;
 }
 
 .bottom-axis-content {
     width:100%;
     bottom:0px;
     left:0px;
-    border-top: 1px solid #222222;
-    box-shadow: 0px -5px 15px #000;
+}
+
+.light-theme .bottom-axis-content { 
+    border-top: 1px solid #fff;
+}
+
+.dark-theme .bottom-axis-content { 
+    border-top: 1px solid #333;
 }
 
 .left-axis-content {
     height:100%;
     left:0px;
     top:0px;
-    border-right: 1px solid #222222;
-    box-shadow: 5px 0px 15px #000;
+}
+
+.light-theme .left-axis-content { 
+    border-right: 1px solid #fff;
+}
+
+.dark-theme .left-axis-content { 
+    border-right: 1px solid #333;
 }
 
 .right-axis-content {
     height:100%;
     right:0px;
     top:0px;
-    border-left: 1px solid #222222;
-    box-shadow: -5px 0px 15px #000;
 }
 
-.axis-marker {
+.light-theme .right-axis-content { 
+    border-left: 1px solid #fff;
+}
+
+.dark-theme .right-axis-content { 
+    border-left: 1px solid #333;
+}
+
+.light-theme .axis-marker {
+    background-color: #000; 
+}
+
+.dark-theme .axis-marker {
     background-color: #D3D3D3; 
 }
 
@@ -134,12 +205,14 @@
 }
 
 .axis-marker-label {
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000; 
-    font-family: Verdana, Arial, sans-serif;
+    font-size:0.8em;
+}
+
+.light-theme .axis-marker-label {
+    color : #000;
+}
+
+.dark-theme .axis-marker-label {
     font-size:0.8em;
     color : #D3D3D3;
 }
@@ -151,25 +224,31 @@
 }
 
 .axis-title-label {
-    font-family: Verdana, Arial, sans-serif;
-    font-size:0.95em;
+    cursor: pointer;
+    font-size:0.8em;
     white-space: nowrap;
-    color : #D3D3D3;
     padding-top: 5px;
     padding-bottom: 5px;
     padding-left:50%;
     padding-right:50%;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
 
-.axis-title-label:hover {
-    color : #FFFFFF;
-    cursor: pointer;
+.light-theme .axis-title-label {
+    color : #000;
+}
+
+.dark-theme .axis-title-label {    
+    color : #D3D3D3;
+}
+
+.light-theme .axis-title-label:hover {
+    color : #222;
+}
+
+.dark-theme .axis-title-label:hover {
+    font-size:0.8em;
+    color : #fff;
 }

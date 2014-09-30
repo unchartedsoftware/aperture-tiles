@@ -42,8 +42,6 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
-
 
 
 class LiveTileTestSuite extends FunSuite with SharedSparkContext {
@@ -74,6 +72,7 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext {
 			readProps.setProperty("oculus.binning.parsing.separator", ",")
 			readProps.setProperty("oculus.binning.parsing.x.index", "0")
 			readProps.setProperty("oculus.binning.parsing.y.index", "1")
+			readProps.setProperty("oculus.binning.index.type", "cartesian")
 			readProps.setProperty("oculus.binning.xField", "x")
 			readProps.setProperty("oculus.binning.yField", "y")
 			readProps.setProperty("oculus.binning.levels.0", "1")
@@ -90,7 +89,7 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext {
 				pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
 			assert(tile01.getDefinition.getXBins() === 4)
 			assert(tile01.getDefinition.getYBins() === 4)
-			assert(tile01.getData.asScala.map(_.toString.toDouble) ==
+			assert(tile01.getData.asScala.map(_.toString.toDouble) ===
 				       List[Double](1.0, 0.0, 0.0, 0.0,
 				                    0.0, 1.0, 0.0, 0.0,
 				                    0.0, 0.0, 1.0, 0.0,
@@ -99,7 +98,7 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext {
 				pyramidIo.readTiles(pyramidId, null, List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
 			assert(tile10.getDefinition.getXBins() === 4)
 			assert(tile10.getDefinition.getYBins() === 4)
-			assert(tile10.getData.asScala.map(_.toString.toDouble) ==
+			assert(tile10.getData.asScala.map(_.toString.toDouble) ===
 				       List[Double](1.0, 0.0, 0.0, 0.0,
 				                    0.0, 1.0, 0.0, 0.0,
 				                    0.0, 0.0, 1.0, 0.0,

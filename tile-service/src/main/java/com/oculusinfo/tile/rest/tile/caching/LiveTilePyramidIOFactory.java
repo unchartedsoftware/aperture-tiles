@@ -23,15 +23,18 @@
  */
 package com.oculusinfo.tile.rest.tile.caching;
 
-import com.google.inject.Inject;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.spark.SparkContextProvider;
-import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
+import java.util.List;
+
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.inject.Inject;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.PyramidIOFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.tile.spark.SparkContextProvider;
+import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
 
 public class LiveTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LiveTilePyramidIOFactory.class);
@@ -40,17 +43,15 @@ public class LiveTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	private SparkContextProvider _contextProvider;
 
 	public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
-		this(null, parent, path, contextProvider);
-	}
-	public LiveTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
-		super(name, PyramidIO.class, parent, path);
+		super("live", PyramidIO.class, parent, path);
 		_contextProvider = contextProvider;
 	}
 
 	@Override
 	protected PyramidIO create () {
 		try {
-			return new LiveStaticTilePyramidIO(_contextProvider.getSparkContext());
+			JSONObject config = getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+			return new LiveStaticTilePyramidIO(_contextProvider.getSparkContext(config));
 		}
 		catch (Exception e) {
 			LOGGER.error("Error trying to create FileSystemPyramidIO", e);

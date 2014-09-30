@@ -36,10 +36,10 @@ define(function (require) {
     ApertureRenderer = ClientRenderer.extend({
         ClassName: "ApertureRenderer",
 
-        init: function( map ) {
+        init: function( map, spec ) {
 
             var that = this;
-            this._super( map );
+            this._super( map, spec );
             this.opacity = 1.0;
             this.visibility = true;
             this.nodeLayer = {};
@@ -61,7 +61,9 @@ define(function (require) {
         },
 
         setZIndex: function( zIndex ) {
-            this.map.setLayerIndex( this.nodeLayer.olLayer_, zIndex );
+            // TODO: find out why this no longer works and fix it
+            //this.map.setLayerIndex( this.nodeLayer.olLayer_, zIndex );
+            return true;
         },
 
         redraw: function( data ) {

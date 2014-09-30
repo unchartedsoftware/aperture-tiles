@@ -30,8 +30,142 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        Util = require('../util/Util'),
+        createLayerRoot,
+        createNodeRoot,
+        createNode,
+        destroyNode,
+        doesNodeExist,
+        getNodeByData,
+        removeNodeById,
+        removeNode,
         HtmlNodeLayer;
 
+
+    /**
+     * Creates the root element for the entire html node layer and attaches it to the
+     * root element of the map. If event propagation is enabled, listeners are attached to
+     * process, and then propagate events through to underlying DOM elements.
+     */
+    createLayerRoot = function( that ) {
+
+        // create layer root div
+        that.$root_ = $('<div style="position:relative; z-index:0;"></div>');
+        // append to map root
+        that.map_.getRootElement().append( that.$root_ );
+        if ( that.propagate ) {
+            // allow mouse events to propagate through to map
+            Util.enableEventPropagation( that.$root_ );
+        }
+    };
+
+
+    /**
+     * Creates the root element for a data node. This node is positioned using the xAttr and yAttr
+     * attributes specified upon creation of the layer. If no attributes are specified, the root of
+     * each individual node is set to the root for the entire layer.
+     */
+    createNodeRoot = function( that, data ) {
+
+        var pos;
+        // if no node position specified, set node root as layer root
+        if ( !that.xAttr_ || !that.yAttr_ ) {
+            return that.$root_;
+        }
+        // otherwise, create node root based on position
+        pos = that.map_.getMapPixelFromCoord( data[that.xAttr_], data[that.yAttr_] );
+        return $('<div style="position:absolute;left:'+pos.x+'px; top:'+ (that.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px;"></div>');
+    };
+
+
+    /**
+     * Creates a node object that stores both the data of the node, and the root element, and the elements
+     * of the node.
+     */
+    createNode = function( that, data ) {
+
+        // create and append tile root to layer root
+        var $nodeRoot = createNodeRoot( that, data );
+        that.$root_.append( $nodeRoot );
+        return {
+             data : data,
+             $root : $nodeRoot,
+             $elements : null
+        };
+    };
+
+
+    /**
+     * Destroys a node ensuring that all respective DOM elements are removed correctly.
+     */
+    destroyNode = function( that, node ) {
+
+        // no node position specified
+        if ( !that.xAttr_ || !that.yAttr_ ) {
+            // destroy elements
+            if (node.$elements) {
+                node.$elements.remove();
+            }
+            return;
+        }
+        if (node.$root) {
+            // destroy node root (along with all elements)
+            node.$root.remove();
+        }
+    };
+
+
+    /**
+     * When given a data object, checks if that data is represented currently by the layer.
+     */
+    doesNodeExist = function( that, data) {
+        return getNodeByData( that, data ) !== null;
+    };
+
+
+    /**
+     * Returns a node by object reference
+     */
+    getNodeByData = function( that, data ) {
+        var nodes = that.nodes_,
+            i;
+        for (i=0; i<nodes.length; i++) {
+            if ( nodes[i].data === data ) {
+                return nodes[i];
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Removes a node by idKey, ensuring layer variables are adjusted accordingly.
+     */
+    removeNodeById = function( that, key ) {
+
+        var nodes = that.nodes_,
+            nodesById = that.nodesById_,
+            node = nodesById[ key ],
+            index = nodes.indexOf( node );
+
+        if (node) {
+            destroyNode( that, node );
+            nodes.splice(index, 1);
+            delete nodesById[ key ];
+        }
+    };
+
+    /**
+     * Removes a node, ensuring layer variables are adjusted accordingly.
+     */
+    removeNode = function( that, node ) {
+        var nodes = that.nodes_,
+            index = nodes.indexOf( node );
+
+        if (index !== -1) {
+            destroyNode( that, nodes[index] );
+            nodes.splice( index, 1 );
+        }
+    };
 
 
     HtmlNodeLayer = Class.extend({
@@ -45,133 +179,51 @@ define(function (require) {
             this.xAttr_ = spec.xAttr || null;
             this.yAttr_ = spec.yAttr || null;
             this.idKey_=  spec.idKey || null;
-            this.propagate = spec.propagate === undefined ? true : spec.propagate;
-
-            this.createLayerRoot();
+            this.propagate = spec.propagate !== undefined ? spec.propagate : true;
             this.nodes_ = [];
             this.nodesById_ = {};
-
             this.layers_ = [];
             this.subset_ = [];
-
-            //this.map_.on( 'zoomend', $.proxy(this.clear, this) );
+            createLayerRoot( this );
         },
 
 
+        /**
+         * Returns the root DOM element for the layer.
+         */
         getRootElement: function() {
 
             return this.$root_;
         },
 
 
+        /**
+         * Adds an HtmlLayer object to the list of node layer representations.
+         */
+        addLayer : function( layer ) {
+
+            this.layers_.push( layer );
+        },
+
+
+        /**
+         * Removes an HtmlLayer object to the list of node layer representations.
+         */
         removeLayer : function( layer ) {
 
             var layers = this.layers_,
                 index = layers.indexOf( layer );
             if ( index !== -1 ) {
-                layers.nodeLayer_ = null;
                 layers.splice( layer );
             }
         },
 
 
-        addLayer : function( layer ) {
-
-            layer.nodeLayer_ = this;
-            this.layers_.push( layer );
-        },
-
-
-        createLayerRoot : function() {
-            // create layer root div
-            this.$root_ = $('<div style="position:relative; z-index:'+this.Z_INDEX+';"></div>');
-            // append to map root
-            this.map_.getRootElement().append( this.$root_ );
-            if ( this.propagate ) {
-                // allow mouse events to propagate through to map
-                this.map_.enableEventToMapPropagation( this.$root_ );
-            }
-        },
-
-
-        createNodeRoot : function(data) {
-            var pos = this.map_.getMapPixelFromCoord( data[this.xAttr_], data[this.yAttr_] );
-            return $('<div style="position:absolute;left:'+pos.x+'px; top:'+ (this.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px; -webkit-backface-visibility: hidden; backface-visibility: hidden;"></div>');
-        },
-
-
-        destroyNode: function( node ) {
-            if (node.$root) {
-                node.$root.remove(); // this will destroy all child elements
-            }
-        },
-
-
-        createNode: function( data ) {
-
-            // create and append tile root to layer root
-            var $nodeRoot = this.createNodeRoot( data );
-            this.$root_.append( $nodeRoot );
-            return {
-                 data : data,
-                 $root : $nodeRoot
-            };
-        },
-
-
-        getNodeById: function( id ) {
-            return this.nodesById_[ id ];
-        },
-
-
-        getNodeByData: function(data) {
-            var nodes = this.nodes_,
-                i;
-            for (i=0; i<nodes.length; i++) {
-                if ( nodes[i].data === data ) {
-                    return nodes[i];
-                }
-            }
-            return null;
-        },
-
-
-        removeNodeById: function( key ) {
-            var nodes = this.nodes_,
-                nodesById = this.nodesById_,
-                node = nodesById[ key ],
-                index = nodes.indexOf( node );
-
-            if (node) {
-                this.destroyNode( node );
-                nodes.splice(index, 1);
-                delete nodesById[ key ];
-            }
-        },
-
-
-        removeNode: function( node ) {
-            var nodes = this.nodes_,
-                index = nodes.indexOf( node );
-
-            if (index !== -1) {
-                this.destroyNode( nodes[index] );
-                nodes.splice( index, 1 );
-            }
-        },
-
-
-        onMapUpdate: function() {
-            var map = this.map_,
-                pos;
-            pos = map.getViewportPixelFromMapPixel( 0, map.getMapHeight() );
-            this.$root_.css({
-                top: pos.y + "px",
-                left: pos.x + "px"
-            });
-        },
-
-
+        /**
+         * Re-allocates the data for all nodes of the entire layer. All nodes for data that are not
+         * currently represented are created, all defunct nodes for now missing data are removed. Produces
+         * a subset for all new nodes.
+         */
         all: function( data ) {
 
             var that = this,
@@ -182,6 +234,11 @@ define(function (require) {
                 newData = [],
                 newNodes = [];
 
+            if ( data === undefined ) {
+                this.subset_ = this.nodes_;
+                return this;
+            }
+
             function allByKey() {
 
                 var key,
@@ -189,8 +246,12 @@ define(function (require) {
                     defunctNodesById = {};
 
                 // keep list of current nodes, to track which ones are not in the new set
-                for (i=0; i<nodes.length; ++i) {
-                    defunctNodesById[ nodes[i].data[idKey] ] = true;
+                // use existing id's, not the ids INSIDE the nodes, as these may be intentionally
+                // changed to force a redraw
+                for (key in nodesById) {
+                    if (nodesById.hasOwnProperty( key )) {
+                        defunctNodesById[ key ] = true;
+                    }
                 }
 
                 // only root will execute the following code
@@ -211,13 +272,13 @@ define(function (require) {
                 for (key in defunctNodesById) {
                     if (defunctNodesById.hasOwnProperty( key )) {
 
-                        that.removeNodeById( key );
+                        removeNodeById( that, key );
                     }
                 }
 
                 // create nodes for new data
                 for (i=0; i<newData.length; i++) {
-                    node = that.createNode( newData[i] );
+                    node = createNode( that, newData[i] );
                     nodes.push( node );
                     newNodes.push( node );
                     key = newData[i][idKey];
@@ -232,15 +293,15 @@ define(function (require) {
 
                 // keep list of current nodes, to track which ones are not in the new set
                 for (i=0; i<nodes.length; ++i) {
-                    defunctNodesArray.push( that.getNodeByData( nodes[i].data ) );
+                    defunctNodesArray.push( getNodeByData( that, nodes[i].data ) );
                 }
 
                 // only root will execute the following code
                 for (i=0; i<data.length; i++) {
 
-                    if ( that.doesNodeExist( data[i] ) ) {
+                    if ( doesNodeExist( that, [i] ) ) {
                         // remove from tracking list
-                        index = defunctNodesArray.indexOf(  that.getNodeByData( data[i] ) );
+                        index = defunctNodesArray.indexOf(  getNodeByData( that, data[i] ) );
                         defunctNodesArray.splice(index, 1);
                     } else {
                         // new data
@@ -251,12 +312,12 @@ define(function (require) {
                 // destroy and remove all remaining nodes
                 for (i=0; i<defunctNodesArray.length; i++) {
                     // remove from array
-                    that.removeNode( defunctNodesArray[i] );
+                    removeNode( that, defunctNodesArray[i] );
                 }
 
                 // create nodes for new data
                 for (i=0; i<newData.length; i++) {
-                    node = that.createNode( newData[i] );
+                    node = createNode( that, newData[i] );
                     nodes.push( node );
                     newNodes.push( node );
                 }
@@ -273,6 +334,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Adds new data to the layer. Produces a subset for all new nodes.
+         */
         join : function( data ) {
 
              var that = this,
@@ -291,7 +355,7 @@ define(function (require) {
                     key = data[i][idKey];
 
                     if ( nodesById[key] === undefined ) {
-                        node = that.createNode( data[i] );
+                        node = createNode( that, data[i] );
                         nodes.push( node );
                         newNodes.push( node );
                         nodesById[ key ] = node;
@@ -303,8 +367,8 @@ define(function (require) {
 
                 for (i=0; i<data.length; i++) {
 
-                    if ( that.doesNodeExist( data[i] ) ) {
-                        node = that.createNode( data[i] );
+                    if ( doesNodeExist( that, data[i] ) ) {
+                        node = createNode( that, data[i] );
                         nodes.push( node );
                         newNodes.push( node );
                     }
@@ -322,6 +386,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Removes data from the layer. Produces a subset for all remaining nodes.
+         */
         remove : function( data ) {
 
             var that = this,
@@ -332,7 +399,7 @@ define(function (require) {
             // remove by data
             function removeByData() {
                 for (i=0; i<data.length; i++) {
-                    that.removeNode( that.getNodeByData( data[i] ) );
+                    removeNode( that, getNodeByData( that, data[i] ) );
                 }
             }
 
@@ -341,7 +408,7 @@ define(function (require) {
 
                 for (i=0; i<data.length; i++) {
                     key = data[i][ idKey ];
-                    that.removeNodeById( key );
+                    removeNodeById( that, key );
                 }
 
             }
@@ -351,7 +418,7 @@ define(function (require) {
 
                 for (i=0; i<data.length; i++) {
                     key = data[i];
-                    that.removeNodeById( key );
+                    removeNodeById( that, key );
                 }
 
             }
@@ -374,10 +441,14 @@ define(function (require) {
                     break;
             }
 
+            this.subset_ = this.nodes_;
             return this;
         },
 
 
+        /**
+         * Removes all data from the layer.
+         */
         clear: function() {
 
             var nodes = this.nodes_,
@@ -394,6 +465,10 @@ define(function (require) {
         },
 
 
+        /**
+         * Produces a subset depending on the evaluation criteria provided. This may be
+         * node id's, node data objects, or functions evaluating on nodes.
+         */
         where: function( idEval ) {
 
             var that = this,
@@ -422,7 +497,7 @@ define(function (require) {
 
             function whereByData() {
                 for (i=0; i<idEval.length; i++) {
-                    node = that.getNodeByData( idEval[i] );
+                    node = getNodeByData( that, idEval[i] );
                     if (node) {
                         subset.push( node );
                     }
@@ -451,20 +526,24 @@ define(function (require) {
         },
 
 
-        doesNodeExist: function(data) {
-            return this.getNodeByData( data ) !== null;
-        },
-
-
+        /**
+         * Renders all nodes in the current subset. Removes and recreates any nodes that currently
+         * exist in DOM.
+         */
         redraw: function() {
             var subset = this.subset_,
                 layers = this.layers_,
                 i;
 
+            // remove any prior elements, do this here rather than
+            // inside HtmlLayer in case multiple layers are attached
             for (i=0; i<subset.length; i++) {
-                subset[i].$root.empty();
+                if ( subset[i].$elements ) {
+                    subset[i].$elements.remove();
+                }
             }
 
+            // redraw layers
             for (i=0; i<layers.length; i++) {
                 layers[i].redraw( subset );
             }

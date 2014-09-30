@@ -23,15 +23,17 @@
  */
 package com.oculusinfo.binning.metadata;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class JsonMutationTests {
 	private static final double EPSILON = 1E-12;
@@ -171,12 +173,44 @@ public class JsonMutationTests {
 		Assert.assertEquals("leaf", base.getJSONObject("o2").getJSONObject("branche").get("twig"));
 
 		// Move branch
-		new PropertyRelocationMutator(new String[] {"o2", "branche"},
-		                              new String[] {"o3", "branch"}).mutateJson(base);
+		new PropertyRelocationMutator("spelling correction",
+		                              new String[] {"o2", "branche"},
+		                              new String[] {"o3", "branch"}, true).mutateJson(base);
 		Assert.assertFalse(base.has("o2"));
 		Assert.assertEquals(1, base.getJSONObject("o3").length());
 		Assert.assertEquals(1, base.getJSONObject("o3").getJSONObject("branch").length());
 		Assert.assertEquals("leaf", base.getJSONObject("o3").getJSONObject("branch").get("twig"));
         
+	}
+
+	@Test
+	public void testKeyToArray () throws JSONException {
+	    JSONObject base = getBaseTestObject();
+
+	    new PropertyIndexToArrayMutator<String>(new String[] {"o1", "(\\p{Alpha})\\d"},
+	                                            new String[] {"a2"},
+	                                            "\\1.1") {
+	        @Override
+	        protected String mutateValue (String value) {
+	            return value;
+	        }
+
+	        @Override
+	        protected void sort (List<String> values) {
+	            Collections.sort(values);
+	        }
+	    }.mutateJson(base);
+
+	    Assert.assertEquals(6, base.getJSONArray("a2").length());
+        Set<String> values = new HashSet<>();
+        for (int i=0; i<6; ++i) {
+            values.add(base.getJSONArray("a2").optString(i));
+        }
+        Assert.assertTrue(values.contains("s"));
+        Assert.assertTrue(values.contains("i"));
+        Assert.assertTrue(values.contains("d"));
+        Assert.assertTrue(values.contains("b"));
+        Assert.assertTrue(values.contains("a"));
+        Assert.assertTrue(values.contains("o"));
 	}
 }

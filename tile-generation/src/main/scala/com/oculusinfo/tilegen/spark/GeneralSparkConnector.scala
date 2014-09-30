@@ -25,10 +25,10 @@
 
 package com.oculusinfo.tilegen.spark
 
-import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
 
-class GeneralSparkConnector (master: String,
+class GeneralSparkConnector (master: Option[String],
                              sparkHome: String,
                              user: Option[String],
                              jars: Seq[Object] = SparkConnector.getLibrariesFromClasspath,
@@ -44,18 +44,20 @@ class GeneralSparkConnector (master: String,
 
 		println()
 		println()
-		println("Setting master to "+master)
+		println("Setting master to " + master.getOrElse("default"))
 		println("Setting app name to "+appName)
 		println("Setting spark home to "+sparkHome)
 		println("Setting spark jars to ")
 		jarList.foreach(jar => println("\t"+jar))
 
 		val conf = new SparkConf(true)
-			.setMaster(master)
-			.setAppName(appName)
-			.setSparkHome(sparkHome)
-			.setJars(jarList)
-
+				.setAppName(appName)
+				.setSparkHome(sparkHome)
+				.setJars(jarList)				
+		// Only set a master when it has been passed in.  This lets the default
+		// value specified in spark-conf get picked up when no master is specified.
+		master.foreach(conf.setMaster(_))
+		
 		sparkArgs.foreach(kv => conf.set(kv._1, kv._2))
 		// If we have a kryo registrator, automatically use kryo serialization
 		if (sparkArgs.contains("spark.kryo.registrator"))

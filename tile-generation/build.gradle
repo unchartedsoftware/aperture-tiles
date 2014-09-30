@@ -1,0 +1,70 @@
+description = "A Spark-based library to aid in easy tile and tile pyramid generation"
+
+apply plugin: "scala"
+
+// appends scala test functionality to the baseline test task
+test << {
+	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
+	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
+			reporter(type: 'stdout')
+	}
+}
+
+// Task to create a JAR from all source
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+// Task to create a scaladoc JAR
+task scaladocJar(type: Jar, dependsOn: scaladoc) {
+	classifier = "scaladoc"
+	from scaladoc.destinationDir
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+
+// Task to create a jar of test classes
+task testJar(type: Jar) {
+	classifier = "tests"
+	from sourceSets.test.output
+}
+ 
+// produce artifacts using the tasks above
+artifacts {
+	archives sourcesJar
+	archives scaladocJar
+	archives javadocJar
+	archives testJar
+}
+
+// By default the Gradle scala plugin builds java code before scala code.  This leads to problems
+// in our setup because the scala code in this project is used by the java code (causing 
+// compile errors).  We force the plugin to use an empty source set for java, and then set the
+// scala source to both scala and java.  The scala compiler generates class files for both without
+// issue.  
+sourceSets {
+    main {
+        scala {
+            srcDirs = ["src/main/scala", "src/main/java"]
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+
+dependencies {
+	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
+	compile "org.scala-lang:scala-library:$scalaVersion"
+	compile project(":binning-utilities")
+	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:1.9.1"	
+}
+addHBaseDependencies(project)

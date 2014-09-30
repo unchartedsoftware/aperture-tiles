@@ -96,6 +96,9 @@ public class FileSystemAnnotationIO implements AnnotationIO {
 	                                        Iterable<Pair<String, Long>> certificates) throws IOException {
 		List<AnnotationData<?>> results = new LinkedList<>();
 		for (Pair<String, Long> certificate: certificates) {
+			if (certificate == null) {
+				continue;
+			}
 			File annotationFile = getAnnotationFile(basePath, certificate);
 
 			if (annotationFile.exists() && annotationFile.isFile()) {

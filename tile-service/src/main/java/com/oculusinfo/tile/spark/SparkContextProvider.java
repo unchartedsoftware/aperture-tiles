@@ -26,6 +26,7 @@ package com.oculusinfo.tile.spark;
 
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.json.JSONObject;
 
 /**
  * Very simple interface to provide a consistent spark context to anyone who needs it.
@@ -36,12 +37,12 @@ public interface SparkContextProvider {
 	/**
 	 * Get a usable spark context
 	 */
-	public SparkContext getSparkContext ();
+	public SparkContext getSparkContext (JSONObject configuration);
 
 	/**
 	 * Get a usable spark context, in Java API form
 	 */
-	public JavaSparkContext getJavaSparkContext ();
+	public JavaSparkContext getJavaSparkContext (JSONObject configuration);
 
 	/**
 	 * Shut down the web server's spark context.

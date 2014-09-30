@@ -49,41 +49,51 @@ public class AnnotationIndexerImpl extends AnnotationIndexer {
         int maxLevel = Math.max( data.getLevel(), data.getRange().getSecond() );
 
 		for (int i=minLevel; i<=maxLevel; i++) {
-			indices.add( getIndex( data, i, pyramid ) );
+			indices.addAll( getIndicesByLevel( data, i, pyramid ) );
 		}
 		return indices;
     }
 
     @Override
-    public TileAndBinIndices getIndex( AnnotationData<?> data, int level, TilePyramid pyramid ) {
-    	
-    	// fill in defaults if dimensions are missing
-    	boolean xExists = data.getX() != -1;
-    	boolean yExists = data.getY() != -1;
-    	double x = ( xExists ) ? data.getX() : 0;
-    	double y = ( yExists ) ? data.getY() : 0;
-    	
-    	// map from raw x and y to tile and bin
-    	TileIndex tile = pyramid.rootToTile( x, y, level, NUM_BINS );
-		BinIndex bin = pyramid.rootToBin( x, y, tile );
+    public List<TileAndBinIndices> getIndicesByLevel( AnnotationData<?> data, int level, TilePyramid pyramid ) {
 
-		// insert -1's for uni-variate annotations
-		if ( !xExists ) {			
-			tile = new TileIndex( tile.getLevel(), -1, tile.getY(), NUM_BINS, NUM_BINS );
-			bin = new BinIndex( -1, bin.getY() );	  
-		} else if ( !yExists ) {
-			tile = new TileIndex( tile.getLevel(), tile.getX(), -1, NUM_BINS, NUM_BINS );
-			bin = new BinIndex( bin.getX(), -1 );
-		}
-		
-		/*
-		// if indexing level of insertion, do not bin, set as [-1, -1]
-		if ( data.getLevel() == level ) {
-			bin = new BinIndex( -1, -1 );
-		}
-		*/
-		
-		return new TileAndBinIndices( tile, bin );
+        List<TileAndBinIndices> tileAndBins = new LinkedList<>();
+
+        if ( !data.isRangeBased() ) {
+            // point annotation
+
+            Double x = ( data.getX() == null ) ? 0 : data.getX();
+            Double y = ( data.getY() == null ) ? 0 : data.getY();
+
+            // map from x and y to tile and bin
+            TileIndex tile = pyramid.rootToTile( x, y, level, NUM_BINS, NUM_BINS );
+            BinIndex bin = pyramid.rootToBin( x, y, tile );
+
+            tileAndBins.add( new TileAndBinIndices( tile, bin ) );
+            return tileAndBins;
+
+        } else {
+
+            // range annotations
+            Double x0 = ( data.getX0() == null ) ? 0 : data.getX0();
+            Double y0 = ( data.getY0() == null ) ? 0 : data.getY0();
+            Double x1 = ( data.getX1() == null ) ? 0 : data.getX1();
+            Double y1 = ( data.getY1() == null ) ? 0 : data.getY1();
+
+            // bottom left
+            TileIndex tileBL = pyramid.rootToTile(x0, y0, level, NUM_BINS, NUM_BINS);
+            // top right
+            TileIndex tileTR = pyramid.rootToTile( x1, y1, level, NUM_BINS, NUM_BINS );
+
+            for (int i=tileBL.getX(); i<=tileTR.getX(); i++) {
+                for (int j=tileBL.getY(); j <= tileTR.getY(); j++) {
+                    tileAndBins.add( new TileAndBinIndices( new TileIndex(level, i, j, NUM_BINS, NUM_BINS ), RANGE_BIN ) );
+                }
+            }
+
+        }
+
+		return tileAndBins;
     }
 
     

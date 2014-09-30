@@ -37,7 +37,7 @@ define(function (require) {
 	
 	
 	
-    var HtmlRenderer = require('../HtmlRenderer'),
+    var HtmlRenderer = require('./HtmlRenderer'),
         HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
         DebugRenderer;
@@ -47,9 +47,9 @@ define(function (require) {
     DebugRenderer = HtmlRenderer.extend({
         ClassName: "DebugLayer",
 		
-        init: function ( map ) {
+        init: function ( map, spec ) {
 
-            this._super( map );
+            this._super( map, spec );
             this.createNodeLayer(); // instantiate the node layer data object
             this.createLayer();     // instantiate the html visualization layer
         },
@@ -77,13 +77,12 @@ define(function (require) {
                 css: {
                     position: 'relative',
                     color: 'white',
-                    width: '100%',
-                    height: '100%',
+                    width: '256px',
+                    height: '256px',
                     'font-size': '40px',
                     'line-height': '256px',
                     'text-align': 'center',
-                    'vertical-align': 'middle',
-                    'text-shadow': '-2px -2px 2px #000, 2px -2px 2px #000, -2px  2px 2px #000, 2px  5px 5px #000'
+                    'vertical-align': 'middle'
                 }
             }));
         }

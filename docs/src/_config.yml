@@ -1,0 +1,23 @@
+# Conversion
+markdown: redcarpet
+
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "tables", "autolink"]
+
+highlighter: rouge
+
+# Uncomment if using alternative renderer
+# rdiscount:
+#  extensions:
+#    - autolink
+
+# kramdown:
+#  input: GFM
+
+# Serving
+destination: ../_site/
+baseurl: ""
+exclude: ["img/resources/SiteComponents.png"]
+
+# Variables
+product: Aperture Tiles

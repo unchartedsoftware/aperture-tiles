@@ -24,31 +24,49 @@
  */
 package com.oculusinfo.tile.init;
 
-
-
 import java.util.List;
 
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.tile.init.providers.StandardUberFactoryProvider;
+
+
+
+
 /**
- * Extends the {@link FactoryProvider} interface with an attached factory name, and
- * the config lookup path for the factory. This allows a {@link DelegateFactoryProvider}
- * to use guice and inject a set of these targets, so the associated factories can be
- * registered appropriately together in a general way. 
+ * Provides construction of delegate factories of a particular type of object in
+ * an xml-configurable manner. Delegate factories should always have names set
+ * by default, and therefore don't need the named createFactory call from
+ * {@link FactoryProvider}. Used in tandem with a
+ * {@link StandardUberFactoryProvider}, this allows a {@link FactoryProvider} to
+ * use guice and inject a set of these targets, so the associated factories can
+ * be registered appropriately together in a general way.
  * 
  * @author cregnier
- *
  */
-public interface DelegateFactoryProviderTarget<T> extends FactoryProvider<T> {
-	
+public interface DelegateFactoryProviderTarget<T> {
 	/**
-	 * Returns the factory name to be associated with the factory provider.
-	 * @return Returns the associated {@link String} name, or null if not set. 
+	 * Create a new factory of the required type.
+	 * 
+	 * @param path The path to the factory's parameters from the root
+	 *            configuration node.
+	 * @return A new factory ready to initialize its parameters from the root
+	 *         configuration node.
 	 */
-	public String getFactoryName();
-	
+	public ConfigurableFactory<? extends T> createFactory (List<String> path);
+
 	/**
-	 * Returns a relative path that can be used when creating a factory.
-	 * @return Returns the associated {@link List}, or null if not set.
+	 * Create a new factory of the required type.
+	 * 
+	 * Passing in a null parent is the equivalent of calling
+	 * {@link #createFactory(String[])}
+	 * 
+	 * @param parent The parent factory to which this factory will provide its
+	 *            goods
+	 * @param path The path from the parent factory's configuration node to this
+	 *            one.
+	 * @return A new factory ready to initialize its parameters from the parent
+	 *         factory's configuration node.
 	 */
-	public List<String> getPath();
-	
+	public ConfigurableFactory<? extends T> createFactory (ConfigurableFactory<?> parent,
+	                                                       List<String> path);
 }

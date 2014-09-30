@@ -23,14 +23,14 @@
  */
 package com.oculusinfo.binning.io;
 
-import com.google.common.collect.Lists;
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.properties.JSONProperty;
-import com.oculusinfo.factory.properties.StringProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.util.List;
+
+import com.oculusinfo.binning.io.impl.FileSystemPyramidIOFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.UberFactory;
+import com.oculusinfo.factory.properties.JSONProperty;
 
 
 
@@ -39,85 +39,23 @@ import java.util.List;
  * 
  * @author nkronenfeld
  */
-public class PyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(PyramidIOFactory.class);
+public class PyramidIOFactory extends UberFactory<PyramidIO> {
+	public static JSONProperty  INITIALIZATION_DATA = new JSONProperty("data",
+	    "Data to be passed to the PyramidIO for read initialization",
+	    null);
 
 
 
-	public static StringProperty PYRAMID_IO_TYPE        = new StringProperty("type",
-		   "The location to and from which to read tile pyramids",
-		   null,
-		   null);
-	public static JSONProperty   INITIALIZATION_DATA    = new JSONProperty("data",
-		 "Data to be passed to the PyramidIO for read initialization",
-		 null);
-
-	private PyramidIO _product;
-	public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
+	public PyramidIOFactory (ConfigurableFactory<?> parent, List<String> path,
+	                         List<ConfigurableFactory<? extends PyramidIO>> children) {
 		this(null, parent, path, children);
 	}
 
-	public PyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<?>> children) {
-		super(name, PyramidIO.class, parent, path);
+	public PyramidIOFactory (String name, ConfigurableFactory<?> parent,
+	                         List<String> path,
+	                         List<ConfigurableFactory<? extends PyramidIO>> children) {
+		super(name, PyramidIO.class, parent, path, true, children, FileSystemPyramidIOFactory.NAME);
 
-		_product = null;
-		List<String> pyramidTypes = getPyramidTypes(children);
-		
-		//use the first factory name for the first child as the default type
-		String defaultType = null;
-		if (pyramidTypes.size() > 0) {
-			defaultType = pyramidTypes.get(0);
-		}
-		
-		//set up the PYRAMID_IO_TYPE property to use all the associated children factory names.
-		PYRAMID_IO_TYPE = new StringProperty("type",
-				   "The location to and from which to read tile pyramids",
-				   defaultType,
-				   pyramidTypes.toArray(new String[0]));
-		
-		addProperty(PYRAMID_IO_TYPE);
 		addProperty(INITIALIZATION_DATA);
-		
-		//add any child factories
-		if (children != null) {
-			for (ConfigurableFactory<?> factory : children) {
-				addChildFactory(factory);
-			}
-		}
-		
-	}
-
-	private static List<String> getPyramidTypes(List<ConfigurableFactory<?>> childFactories) {
-		List<String> pyramidTypes = Lists.newArrayListWithCapacity(childFactories.size());
-		
-		//add any child factories
-		if (childFactories != null) {
-			for (ConfigurableFactory<?> factory : childFactories) {
-				String factoryName = factory.getName();
-				if (factoryName != null) {
-					pyramidTypes.add(factoryName);
-				}
-			}
-		}
-		
-		return pyramidTypes;
-	}
-	
-	@Override
-	protected PyramidIO create () {
-	    if (null == _product) {
-	        synchronized (this) {
-	            if (null == _product) {
-	                String pyramidIOType = getPropertyValue(PYRAMID_IO_TYPE);
-
-	                try {
-	                    _product = produce(pyramidIOType, PyramidIO.class);
-	                } catch (Exception e) {
-	                    LOGGER.error("Error trying to create PyramidIO", e);
-	                }
-	            }
-	        }
-	    }
-	    return _product;
 	}
 }

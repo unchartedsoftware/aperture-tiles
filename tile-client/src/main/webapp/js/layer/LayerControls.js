@@ -41,15 +41,25 @@ define(function (require) {
     "use strict";
 
     var Class = require('../class'),
+        Util = require('../util/Util'),
         AxisUtil = require('../map/AxisUtil'),
+        TOOLTIP_SETTINGS_BUTTON = "Open filter settings menu",
+        TOOLTIP_SETTINGS_BACK_BUTTON = "Return to layer controls menu",
+        TOOLTIP_VISIBILITY_BUTTON = "Toggle layer visibility",
+        TOOLTIP_OPACITY_SLIDER = "Adjust layer opacity",
+        TOOLTIP_FILTER_SLIDER = "Filter layer values",
+        TOOLTIP_BASELAYER_BUTTON = "Change base layer",
+        TOOLTIP_RAMP_TYPE_BUTTON = "Change ramp color scale",
+        TOOLTIP_RAMP_FUNCTION_BUTTON = "Change ramp function",
         LayerControls,
         addLayer,
         showLayerSettings,
         createSettingsButton,
         createVisibilityButton,
+        createSliderHoverLabel,
         createOpacitySlider,
         createFilterSlider,
-        createFilterAxis,
+        createFilterAxisContent,
         createFilterAxisLabels,
         createBaseLayerButtons,
         addLayerDragCallbacks,
@@ -101,7 +111,7 @@ define(function (require) {
         function animateToNewSize( container, previousHeight, callback ) {
             var newHeight = container.outerHeight();
             container.css( "height", previousHeight );
-            container.animate( {"height": newHeight} )
+            container.animate( {"height": newHeight}, 200 )
                 .promise()
                     .done( callback );
         }
@@ -135,12 +145,16 @@ define(function (require) {
      * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping ) {
+    createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) {
 
-        var $settingsButton = $('<button class="settings-link">settings</button>');
+        var $settingsButton = $('<button class="layer-controls-button">settings</button>');
+        // set callback
         $settingsButton.click(function () {
-            showLayerSettings( $layerControlsContainer, $layerContent, layerState );
+            showLayerSettings( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization );
         });
+        // set tooltip
+        Util.enableTooltip( $settingsButton,
+                         TOOLTIP_SETTINGS_BUTTON );
         controlsMapping.settingsLink = $settingsButton;
         return $settingsButton;
     };
@@ -155,21 +169,49 @@ define(function (require) {
     createVisibilityButton = function( layerState, controlsMapping ) {
 
         var $toggleDiv = $('<div class="layer-toggle"></div>'),
-            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.getId() + '">')
-                             .add($('<label for="layer-toggle-box-' + layerState.getId() + '"></label>'));
+            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.get( 'uuid' ) + '">')
+                             .add($('<label for="layer-toggle-box-' + layerState.get( 'uuid' ) + '"></label>'));
 
         $toggleDiv.append( $toggleBox );
         // Initialize the button from the model and register event handler.
-        $toggleBox.prop("checked", layerState.isEnabled());
+        $toggleBox.prop("checked", layerState.get('enabled'));
+        // set click callback
         $toggleBox.click(function () {
             var value = $toggleBox.prop("checked");
-            layerState.setEnabled( value );
-            if (layerState.domain === "client") {
-                layerState.setCarouselEnabled( value );
+            layerState.set( 'enabled', value );
+            if (layerState.get( 'domain' ) === "client") {
+                layerState.set( 'carouselEnabled', value );
             }
         });
+        // set tooltip
+        Util.enableTooltip( $toggleBox,
+                         TOOLTIP_VISIBILITY_BUTTON );
+
         controlsMapping.enabledCheckbox = $toggleBox;
         return $toggleDiv;
+    };
+
+    /**
+     * Creates and appends a label to the supplied element.
+     *
+     * @param {JQuery} $this - The element to which the label is appended onto
+     * @param {Real} value - The value to be written on the label
+     */
+    createSliderHoverLabel = function( $this, value ) {
+        var unitSpec = {
+                'allowStepDown' : true,
+                'decimals' : 2,
+                'type': 'b'
+            },
+            $label = $('<div class="slider-value-hover" style="left:'+ $this.width()/2 +'px; top:0px;">'
+                     +    '<div class="slider-value-hover-label">'+ AxisUtil.formatText( value, unitSpec ) +'</div>'
+                     + '</div>');
+        // remove previous label if it exists
+        $this.find('.slider-value-hover').stop().remove();
+        // add new label
+        $this.append( $label );
+        // reposition to be centred above cursor
+        $label.css( {"margin-top": -$label.outerHeight()*1.2, "margin-left": -$label.outerWidth()/2 } );
     };
 
     /**
@@ -181,21 +223,43 @@ define(function (require) {
      */
     createOpacitySlider = function( layerState, controlsMapping ) {
 
-        var sliderClass = ( layerState.domain === 'server' ) ? "opacity-slider" : "base-opacity-slider",
+        var sliderClass = ( layerState.get( 'domain' ) === 'server' ) ? "opacity-slider" : "base-opacity-slider",
             $opacitySliderContainer = $('<div class="' + sliderClass + '"></div>'),
             $opacitySliderLabel = $('<div class="slider-label">Opacity</div>'),
             $opacitySlider = $('<div class="opacity-slider-bar"></div>').slider({
-                 range: "min",
-                 min: 0,
-                 max: OPACITY_RESOLUTION,
-                 value: layerState.getOpacity() * OPACITY_RESOLUTION,
-                 change: function () {
-                     layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
-                 },
-                 slide: function () {
-                     layerState.setOpacity($opacitySlider.slider("option", "value") / OPACITY_RESOLUTION);
-                 }
+                range: "min",
+                min: 0,
+                max: OPACITY_RESOLUTION,
+                value: layerState.get('opacity') * OPACITY_RESOLUTION,
+                change: function( event, ui ) {
+                    var value = ui.value / OPACITY_RESOLUTION;
+                    layerState.set( 'opacity', value );
+                },
+                slide: function( event, ui ) {
+                    var value = ui.value / OPACITY_RESOLUTION;
+                    layerState.set( 'opacity', value );
+                    createSliderHoverLabel( $opacitySlider.find(".ui-slider-handle"), value );
+                },
+                start: function( event, ui ) {
+                    createSliderHoverLabel( $opacitySlider.find(".ui-slider-handle"), ui.value / OPACITY_RESOLUTION );
+                },
+                stop: function( event, ui ) {
+                    $('.slider-value-hover').animate({
+                            opacity: 0
+                        },
+                        {
+                            complete: function() {
+                                $('.slider-value-hover').remove();
+                            },
+                            duration: 800
+                        }
+                    );
+                }
              });
+
+        // set tooltip
+        Util.enableTooltip( $opacitySlider,
+                            TOOLTIP_OPACITY_SLIDER );
 
         $opacitySliderContainer.append( $opacitySliderLabel );
         $opacitySliderContainer.append( $opacitySlider );
@@ -212,11 +276,38 @@ define(function (require) {
      */
     createFilterSlider = function( layerState, controlsMapping ) {
 
-        var filterRange = layerState.getFilterRange(),
+        var filterRange = layerState.get('filterRange'),
             $filterSliderContainer = $('<div class="filter-slider"></div>'),
             $filterLabel = $('<div class="slider-label">Filter</div>'),
-            $filterSlider = $('<div class="filter-slider-img"></div>'),
+            $filterSlider = $('<div style="background:rgba(0,0,0,0);"></div>'),
+            $filterSliderImg,
             $filterAxis;
+
+        // converts filter value from [0, 1] to actual ramp value based on ramp function
+        function convertValueToRange( normalizedValue ) {
+
+            var rampFunc = layerState.get('rampFunction'),
+                minMax = layerState.get( 'rampMinMax' ),
+                range = minMax[1] - minMax[0],
+                val;
+
+            function log10(val) {
+                return Math.log(val) / Math.LN10;
+            }
+
+            function checkLogInput( value ) {
+                return ( value === 0 ) ? 1 : Math.pow( 10, log10( value ) * normalizedValue );
+            }
+
+            //iterate over the inner labels
+            if ( rampFunc === "log10" ) {
+                val = checkLogInput( minMax[1] );
+            } else {
+                val = normalizedValue * range + minMax[0];
+            }
+
+            return val;
+        }
 
         $filterSliderContainer.append( $filterLabel );
 
@@ -224,25 +315,58 @@ define(function (require) {
             range: true,
             min: 0,
             max: FILTER_RESOLUTION,
-            values: [filterRange[0] * FILTER_RESOLUTION, filterRange[1] * FILTER_RESOLUTION],
-            change: function () {
-                var result = $filterSlider.slider("option", "values");
-                layerState.setFilterRange([result[0] / FILTER_RESOLUTION, result[1] / FILTER_RESOLUTION]);
+            values: filterRange,
+            change: function( event, ui ) {
+                var values = ui.values;
+                layerState.set( 'filterRange', [values[0] , values[1]]);
+            },
+            slide: function( event, ui ) {
+                var handleIndex = $(ui.handle).index() - 1,
+                    values = ui.values,
+                    value = convertValueToRange( values[ handleIndex ] / FILTER_RESOLUTION );
+                createSliderHoverLabel( $( $filterSlider[0].children[ 1 + handleIndex ] ), value );
+            },
+            start: function( event, ui ) {
+                var handleIndex = $(ui.handle).index() - 1,
+                    values = ui.values,
+                    value = convertValueToRange( values[ handleIndex ] / FILTER_RESOLUTION );
+                createSliderHoverLabel( $( $filterSlider[0].children[ 1 + handleIndex ] ), value );
+            },
+            stop: function( event, ui ) {
+                $('.slider-value-hover').animate({
+                        opacity: 0
+                    },
+                    {
+                        complete: function() {
+                            $('.slider-value-hover').remove();
+                        },
+                        duration: 800
+                    }
+                );
             }
         });
 
+        // set tooltip
+        Util.enableTooltip( $filterSlider,
+                         TOOLTIP_FILTER_SLIDER );
+
+        $filterSliderImg = $filterSlider.find(".ui-slider-range");
+        $filterSliderImg.addClass("filter-slider-img");
+
         // Disable the background for the range slider
-        $( ".ui-slider-range", $filterSlider ).css({"background": "none"});
+        $filterSliderImg.css({"background": "none"});
 
         // Set the ramp image
-        $filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+        $filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
         //create the filter axis
-        $filterAxis = createFilterAxis( layerState.getRampMinMax() );
+        $filterAxis = $('<div class="filter-axis"></div>');
+        $filterAxis.append( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
 
         $filterSliderContainer.append( $filterSlider );
         $filterSliderContainer.append( $filterAxis );
 
         controlsMapping.filterSlider = $filterSlider;
+        controlsMapping.filterSliderImg = $filterSliderImg;
         controlsMapping.filterAxis = $filterAxis;
 
         return $filterSliderContainer;
@@ -253,13 +377,12 @@ define(function (require) {
      * @param {Array} minMax - The min and max values for the axis.
      * @returns {JQuery} - The created filter axis object.
      */
-    createFilterAxis = function ( minMax ) {
+    createFilterAxisContent = function ( minMax, rampFunc ) {
 
         var axisTicks = '<div class="filter-axis-tick-major filter-axis-tick-first"></div>', //the first tick
             major = false, // next tick is a minor tick
             majorCount = 1,
             numberOfInnerTicks = 7,
-            $filterAxis = $('<div class="filter-axis"></div>'),
             $filterAxisTicksContainer = $('<div class="filter-axis-ticks-container"></div>'),
             $filterAxisLabelContainer = $('<div class="filter-axis-label-container"></div>'),
             i;
@@ -280,23 +403,25 @@ define(function (require) {
         axisTicks += '<div class="filter-axis-tick-major filter-axis-tick-last"></div>';
 
         $filterAxisTicksContainer.append( axisTicks );
-        $filterAxisLabelContainer.append( createFilterAxisLabels( majorCount, minMax ) );
+        $filterAxisLabelContainer.append( createFilterAxisLabels( majorCount, minMax, rampFunc ) );
 
-        $filterAxis.append( $filterAxisTicksContainer );
-        $filterAxis.append( $filterAxisLabelContainer );
-
-        return $filterAxis;
-
+        return $filterAxisTicksContainer.add( $filterAxisLabelContainer );
     };
 
     /** Generates the filter labels and their initial values.
      *
-     * @param {Integer} majorTicks - The number of major tick marks.
+     * @param {Integer} majorCount - The number of major tick marks.
      * @param {Array} minMax - The min and max values for the axis.
      */
-    createFilterAxisLabels = function( majorTicks, minMax ){
-        var val = minMax[0],
-            increment = ( minMax[1] - minMax[0] ) / majorTicks,
+    createFilterAxisLabels = function( majorCount, minMax, rampFunc ){
+        var log10 = function(val) {
+                return Math.log(val) / Math.LN10;
+            },
+            checkLogInput = function( value ) {
+                return ( value === 0 ) ? 1 : Math.pow( 10, log10( value ) );
+            },
+            val = ( rampFunc === "log10" ) ? checkLogInput( minMax[0] ) : minMax[0],
+            increment,
             unitSpec = {
                 'allowStepDown' : true,
                 'decimals' : 1,
@@ -309,13 +434,21 @@ define(function (require) {
         html = '<div class="filter-axis-label filter-axis-label-first">' + AxisUtil.formatText(val, unitSpec) + '</div>';
 
         //iterate over the inner labels
-        for(i = 1; i < majorTicks; i++){
-            val += increment;
-            html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+        if ( rampFunc === "log10" ) {
+            for( i = 1; i < majorCount; i++ ){
+                val = ( minMax[1] === 0 ) ? 1 : Math.pow( 10, log10( minMax[1] ) * (  i / majorCount ) );
+                html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+            }
+        } else {
+            increment = ( minMax[1] - minMax[0] ) / majorCount;
+            for( i = 1; i < majorCount; i++ ){
+                val += increment;
+                html += '<div class="filter-axis-label">' + AxisUtil.formatText(val, unitSpec) + '</div>';
+            }
         }
 
         //add the last label
-        val += increment;
+        val = ( rampFunc === "log10" ) ? checkLogInput( minMax[1] ) : minMax[1];
         html += '<div class="filter-axis-label filter-axis-label-last">' + AxisUtil.formatText(val, unitSpec) + '</div>';
 
         return $(html);
@@ -334,11 +467,10 @@ define(function (require) {
      */
     addLayerDragCallbacks = function( sortedLayers, $layerControlsContainer, $layerControlRoot, layerState, layerStateMap, controlsMap ) {
 
-        var controlsMapping = controlsMap[ layerState.getId() ];
+        var controlsMapping = controlsMap[ layerState.get( 'uuid' ) ];
 
         $layerControlRoot.draggable({
             "revert": function(valid) {
-
                 var $that = $(this);
                 if( !valid ) {
                     // dropped in an invalid location
@@ -352,12 +484,12 @@ define(function (require) {
                 controlsMapping.startPosition = $layerControlRoot.position();
             },
             "drag": function() {
-               $(this).css({'box-shadow':"0 5px 15px #000", "z-index": 1000});
+                $(this).css({'box-shadow':"0 5px 15px #000", "z-index": 1000});
             }
         });
 
         $layerControlRoot.droppable({
-            "accept": ".layer-controls-"+layerState.domain,
+            "accept": ".layer-controls-"+layerState.get( 'domain' ),
             "hoverClass": "layer-drag-hover",
             "drop": function(event, ui) {
 
@@ -396,9 +528,9 @@ define(function (require) {
                     replaceLayers( sortedLayers, $layerControlsContainer, controlsMap, layerStateMap );
                 });
                 // swap z-indexes
-                otherZ = dropLayerState.getZIndex();
-                dropLayerState.setZIndex( dragLayerState.getZIndex() );
-                dragLayerState.setZIndex(otherZ);
+                otherZ = dropLayerState.get('zIndex');
+                dropLayerState.set( 'zIndex', dragLayerState.get('zIndex') );
+                dragLayerState.set( 'zIndex', otherZ );
             }
         });
     };
@@ -422,23 +554,28 @@ define(function (require) {
 
         function onClick() {
             var index = parseInt( $(this).val(), 10 );
-            layerState.setBaseLayerIndex( index );
+            layerState.set( 'previousBaseLayerIndex', layerState.get('baseLayerIndex') );
+            layerState.set( 'baseLayerIndex', index );
         }
 
         for (i=0; i<layerState.BASE_LAYERS.length; i++) {
 
             baseLayer = layerState.BASE_LAYERS[i];
-            isActiveBaseLayer = ( i === layerState.getBaseLayerIndex() );
+            isActiveBaseLayer = ( i === layerState.get('baseLayerIndex') );
 
             // if active baselayer is blank, hide content
             if ( baseLayer.type === "BlankBase" && isActiveBaseLayer ) {
-                $layerContent.css({height: '0px', "padding-bottom": "0px"});
+                $layerContent.css({height: '0px', "padding-bottom": "0px", "display" : "none"});
             }
 
             // create radio button
             $radioButton = $( '<input type="radio" class="baselayer-radio-button" name="baselayer-radio-button" id="'+(baseLayer.options.name+i)+'"'
                             + 'value="' + i + '"' + ( isActiveBaseLayer ? 'checked>' : '>' ) );
             $radioButton.on( 'click', onClick );
+            // set tooltip
+            Util.enableTooltip( $radioButton,
+                                TOOLTIP_BASELAYER_BUTTON );
+
             // create radio label
             $radioLabel = $('<label for="'+(baseLayer.options.name+i)+'">' + baseLayer.options.name + '</label>');
             $baseLayerButtonSet.append( $radioButton ).append( $radioLabel );
@@ -458,22 +595,22 @@ define(function (require) {
      * @param {JQuery } $layerControlsContainer - The parent element in the document tree to add the controls to.
      * @param {Object} controlsMap - Maps layers to the sets of controls associated with them.
      */
-    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layerStateMap ) {
+    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization ) {
         var layerState = sortedLayers[index],
-            name = layerState.getName() || layerState.getId(),
+            uuid = layerState.get( 'uuid' ),
+            name = layerState.get( 'name' ) || layerState.get( 'id' ),
+            domain = layerState.get( 'domain' ),
             $layerControlRoot,
             $layerControlTitleBar,
             $layerContent,
-            layerStateId,
             controlsMapping;
 
-        layerStateId = layerState.getId();
-        controlsMap[layerStateId] = {};
-        layerStateMap[layerStateId] = layerState;
-        controlsMapping = controlsMap[layerStateId];
+        controlsMap[uuid] = {};
+        layerStateMap[uuid] = layerState;
+        controlsMapping = controlsMap[uuid];
 
         // create layer root
-        $layerControlRoot = $('<div id="layer-controls-' + layerStateId + '" class="layer-controls-layer layer-controls-'+layerState.domain+'"></div>');
+        $layerControlRoot = $('<div id="layer-controls-' + uuid + '" class="layer-controls-layer layer-controls-'+domain+'"></div>');
         $layerControlsContainer.append( $layerControlRoot );
         controlsMapping.layerRoot = $layerControlRoot;
         // add layer dragging / dropping callbacks to swap layer z-index
@@ -489,8 +626,8 @@ define(function (require) {
         controlsMapping.layerContent = $layerContent;
 
         // create settings button, only for server layers
-        if ( layerState.domain === 'server' ) {
-            $layerContent.append( createSettingsButton( $layerControlsContainer, $layerContent, layerState, controlsMapping ) );
+        if ( domain === 'server' ) {
+            $layerContent.append( createSettingsButton( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) );
         }
 
         // add visibility toggle box
@@ -499,18 +636,22 @@ define(function (require) {
         // add opacity slider
         $layerContent.append( createOpacitySlider( layerState, controlsMapping ) );
 
-        if ( layerState.domain === 'server' ) {
+        if ( domain === 'server' ) {
             // add filter slider
             $layerContent.append( createFilterSlider( layerState, controlsMapping ) );
-            // add layer promotion button
-            //$layerContent.append( createPromotionButton( layerState, sortedLayers[index - 1] || null, controlsMapping, sortedLayers, $layerControlsContainer, controlsMap ) );
         }
 
+        // clear floats
+        $layerContent.append( '<div style="clear:both"></div>' );
+
         //add base layer radio buttons when this layer is the base layer
-        if( layerState.domain === "base" && layerState.BASE_LAYERS.length > 1 ) {
+        if( domain === "base" && layerState.BASE_LAYERS.length > 1 ) {
             $layerControlTitleBar.append( createBaseLayerButtons( $layerContent, layerState, controlsMapping) );
+            // clear floats
+            $layerControlTitleBar.append( '<div style="clear:both"></div>' );
         }
     };
+
 
     /**
      * Displays a settings panel for a layer.
@@ -518,17 +659,20 @@ define(function (require) {
      * @param {object} $layerControlsContainer - The parent node to attach the layer panel to.
      * @param {object} layerState - The layer state model the panel will read from and update.
      */
-    showLayerSettings = function( $layerControlsContainer, $layerContent, layerState ) {
+    showLayerSettings = function( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) {
 
         var $settingsContainer,
             $settingsTitleBar,
             $settingsContent,
+            $coarsenessSettings,
             name,
             span,
+            val,
             $leftSpan,
             $rightSpan,
             $rampTypes,
             $rampFunctions,
+            $settingValue,
             id,
             oldChildren,
             $backButton,
@@ -542,24 +686,29 @@ define(function (require) {
         // create title div
         $settingsTitleBar = $('<div class="settings-title"></div>');
         // add title span to div
-        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.getName() + '</span>'));
+        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.get( 'name' ) + '</span>'));
         $settingsContainer.append($settingsTitleBar);
 
         // create content div
-        $settingsContent = $('<div class="settings-content"></div>');
+        $settingsContent = $('<div class="settings-content"></div>') ;
         $settingsContainer.append($settingsContent);
 
         // create back button
-        $backButton = $('<button class="settings-link">back</button>');
+        $backButton = $('<button class="layer-controls-button">back</button>');
+        // set tooltip
+        Util.enableTooltip( $backButton,
+                            TOOLTIP_SETTINGS_BACK_BUTTON );
         $backButton.click(function () {
             replaceChildren( $layerControlsContainer, oldChildren );
         });
+
         $settingsTitleBar.append($backButton);
 
         // add the ramp types radio buttons
         $rampTypes = $('<div class="settings-ramp-types"/>');
         // add title to ramp types div
-        $rampTypes.append($('<div class="settings-ramp-title">Color Ramp</div>'));
+        $rampTypes.append($('<div class="settings-sub-title">Color Ramp</div>'));
+
         $settingsContent.append($rampTypes);
         // create left and right columns
         $leftSpan = $('<span class="settings-ramp-span-left"></span>');
@@ -573,40 +722,77 @@ define(function (require) {
             id = layerState.RAMP_TYPES[i].id;
             // add half types to left, and half to right
             span = (i < layerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
-            span.append($('<div class="settings-values"></div>')
-                    .append($('<input type="radio" name="ramp-types" value="' + id + '" id="'+id+'">')
-                        .add($('<label for="' + id + '">' + name + '</label>')
-                )
-            ));
+            $settingValue = $('<div class="settings-values"></div>')
+                                .append($('<input type="radio" name="ramp-types" value="' + id + '" id="'+id+'">')
+                                    .add($('<label for="' + id + '">' + name + '</label>') ) );
+            // set tooltip
+            Util.enableTooltip( $settingValue,
+                                TOOLTIP_RAMP_TYPE_BUTTON );
+
+            span.append( $settingValue );
         }
 
         // Update model on button changes
         $rampTypes.change( function () {
-            layerState.setRampType( $(this).find('input[name="ramp-types"]:checked').val() );
+            layerState.set( 'rampType', $(this).find('input[name="ramp-types"]:checked').val() );
         });
 
-        $rampTypes.find('input[name="ramp-types"][value="' + layerState.getRampType() + '"]').prop('checked', true);
+        $rampTypes.find('input[name="ramp-types"][value="' + layerState.get('rampType') + '"]').prop('checked', true);
 
         // Add the ramp function radio buttons
         $rampFunctions = $('<div class="settings-ramp-functions"/>');
-        $rampFunctions.append($('<div class="settings-ramp-title">Color Scale</div>'));
+        $rampFunctions.append($('<div class="settings-sub-title">Color Scale</div>'));
+
         $settingsContent.append($rampFunctions);
 
         for (i=0; i<layerState.RAMP_FUNCTIONS.length; i++) {
             name = layerState.RAMP_FUNCTIONS[i].name;
             id = layerState.RAMP_FUNCTIONS[i].id;
-            $rampFunctions.append($('<div class="settings-values"></div>')
-                            .append($('<input type="radio" name="ramp-functions" value="' + id + '" id="'+id+'">')
-                                .add($('<label for="' + id + '">' + name + '</label>')
-                )
-            ));
+            $settingValue = $('<div class="settings-values"></div>')
+                                .append($('<input type="radio" name="ramp-functions" value="' + id + '" id="'+id+'">')
+                                    .add($('<label for="' + id + '">' + name + '</label>') ) );
+            // set tooltip
+            Util.enableTooltip( $settingValue,
+                                TOOLTIP_RAMP_FUNCTION_BUTTON );
+
+            $rampFunctions.append( $settingValue );
         }
 
         $rampFunctions.change( function () {
-            layerState.setRampFunction($(this).find('input[name="ramp-functions"]:checked').val());
+            layerState.set( 'rampFunction', $(this).find('input[name="ramp-functions"]:checked').val());
         });
 
-        $rampFunctions.find('input[name="ramp-functions"][value="' + layerState.getRampFunction() + '"]').prop('checked', true);
+        $rampFunctions.find('input[name="ramp-functions"][value="' + layerState.get('rampFunction') + '"]').prop('checked', true);
+
+
+        $coarsenessSettings = $('<div class="settings-coarseness"/>');
+        $coarsenessSettings.append($('<div class="settings-sub-title">Coarseness</div>'));
+        $settingsContent.append( $coarsenessSettings );
+
+        for (i=0; i<4; i++) {
+            val = Math.pow( 2, i );
+            name =  val +"x"+ val+ " pixels";
+            id = i + 1;
+            $settingValue = $('<div class="settings-values"></div>')
+                                .append($('<input type="radio" name="coarseness-values" value="' + id + '" id="'+id+'">')
+                                    .add($('<label for="' + id + '">' + name + '</label>') ) );
+            // set tooltip
+            Util.enableTooltip( $settingValue,
+                                TOOLTIP_RAMP_FUNCTION_BUTTON );
+
+            $coarsenessSettings.append( $settingValue );
+        }
+
+        $coarsenessSettings.change( function () {
+            layerState.set( 'coarseness', $(this).find('input[name="coarseness-values"]:checked').val());
+        });
+
+        $coarsenessSettings.find('input[name="coarseness-values"][value="' + layerState.get('coarseness') + '"]').prop('checked', true);
+
+        // if settings customization is provided, add it
+        if ( settingsCustomization ) {
+            $settingsContent.append( settingsCustomization( layerState ) );
+        }
 
         replaceChildren($layerControlsContainer, $settingsContainer);
     };
@@ -617,48 +803,66 @@ define(function (require) {
     makeLayerStateObserver = function (layerState, controlsMap, layerStates, $layersControlListRoot) {
         return function (fieldName) {
 
-            var controlsMapping = controlsMap[ layerState.getId() ],
-                baseLayer, previousBaseLayer;
+            var controlsMapping = controlsMap[ layerState.get( 'uuid' ) ],
+                baseLayer, previousBaseLayer, i;
 
             switch (fieldName) {
 
                 case "enabled":
 
-                    controlsMapping.enabledCheckbox.prop("checked", layerState.isEnabled());
+                    controlsMapping.enabledCheckbox.prop("checked", layerState.get('enabled'));
                     break;
 
                 case "opacity":
 
-                     controlsMapping.opacitySlider.slider("option", "value", layerState.getOpacity() * OPACITY_RESOLUTION);
+                     controlsMapping.opacitySlider.slider("option", "value", layerState.get('opacity') * OPACITY_RESOLUTION);
                      break;
+
+                case "rampFunction":
+
+                    controlsMapping.filterAxis.html( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
+                    break;
 
                 case "filterRange":
 
-                     controlsMapping.filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+                     controlsMapping.filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
                      break;
 
                 case "rampImageUrl":
 
-                    controlsMapping.filterSlider.css({'background': 'url(' + layerState.getRampImageUrl() + ')', 'background-size': '100%'});
+                    controlsMapping.filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
                     break;
 
                 case "rampMinMax":
 
-                    controlsMapping.filterAxis.html( createFilterAxis( layerState.getRampMinMax() ).children() );
+                    controlsMapping.filterAxis.html( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
                     break;
 
                 case "baseLayerIndex":
 
-                    baseLayer = layerState.BASE_LAYERS[ layerState.getBaseLayerIndex() ];
-                    previousBaseLayer = layerState.BASE_LAYERS[ layerState.getPreviousBaseLayerIndex() ];
+                    baseLayer = layerState.BASE_LAYERS[ layerState.get('baseLayerIndex') ];
+                    previousBaseLayer = layerState.BASE_LAYERS[ layerState.get('previousBaseLayerIndex') ];
 
+                    // if the switching from blank baselayer to TMS / Google, animate the
+                    // hiding / showing of the opacity bar
                     if ( baseLayer.type !== previousBaseLayer.type ) {
                         if ( baseLayer.type === "BlankBase" ) {
-                            controlsMapping.layerContent.animate({height: "0px", "padding-bottom": "0px"});
+                            controlsMapping.layerContent.animate({height: "0px", "padding-bottom": "0px"}, {
+                                complete: function() {
+                                    controlsMapping.layerContent.css('display', 'none');
+                                }
+                            });
                         } else if ( previousBaseLayer.type === "BlankBase" ) {
+                            controlsMapping.layerContent.css('display', 'block');
                             controlsMapping.layerContent.animate({height: "44px", "padding-bottom": "10px"});
                         }
                     }
+
+                    // change theme for all layers
+                    for (i=0; i<layerStates.length; i++) {
+                        layerStates[i].set( "theme", baseLayer.theme );
+                    }
+
                     break;
             }
         };
@@ -672,7 +876,7 @@ define(function (require) {
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function ( layerStates, $layerControlsContainer, controlsMap, layerStateMap ) {
+    replaceLayers = function ( layerStates, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization ) {
         var sortedLayerStates = sortLayers( layerStates ),
             i, key;
 
@@ -690,7 +894,7 @@ define(function (require) {
 
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayerStates.length; i += 1) {
-            addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap, layerStateMap );
+            addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization );
         }
 
         // append a spacer element at the bottom, padding causes jitter in overlay animation
@@ -727,7 +931,7 @@ define(function (require) {
          * @param controlsId - The DOM element id used as the container for the controls panel elements.
          * @param layerStates - The list of layers the layer controls reflect and modify.
          */
-        init: function ( controlsId, layerStates ) {
+        init: function ( controlsId, layerStates, settingsCustomization ) {
 
             var i;
 
@@ -739,7 +943,7 @@ define(function (require) {
             this.$layerControlsRoot = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers( layerStates, this.$layerControlsRoot, this.controlsMap, this.layerStateMap );
+            replaceLayers( layerStates, this.$layerControlsRoot, this.controlsMap, this.layerStateMap, settingsCustomization );
 
             for (i=0; i<layerStates.length; i++) {
 

@@ -31,6 +31,7 @@ define(function (require) {
 
     var Class = require('../class'),
         evaluateCss,
+        evaluateHtml,
         HtmlLayer;
 
 
@@ -52,29 +53,42 @@ define(function (require) {
     };
 
 
+    evaluateHtml = function( node, html, css ) {
+
+        var $html;
+
+        // create and style html elements
+        $html = $.isFunction( html ) ? $.proxy( html, node.data )() : html;
+        $html = ( $html instanceof jQuery ) ? $html : $($html);
+        $html.css( evaluateCss( node.data, css ) );
+
+        return $html;
+    };
+
+
     HtmlLayer = Class.extend({
         ClassName: "HtmlLayer",
 
         /**
-         * Constructs a client render layer object
-         * @param id the id string for the render layer
+         * Constructs an html layer object that is attached to an html node layer
+         * @param spec the specification object
          */
         init: function( spec ) {
 
             this.html_ = spec.html || null;
             this.css_ = spec.css || {};
-            this.nodeLayer_ = null;
         },
 
 
         html : function( html ) {
+
             // set or update the internal html of this layer
             this.html_ = html;
-            this.update();
         },
 
 
         css : function( attribute, value ) {
+
             // add css object or attribute to css for layer
             if ( $.isPlainObject(attribute) ) {
                 $.extend( this.css_, attribute );
@@ -84,27 +98,19 @@ define(function (require) {
         },
 
 
-        redrawNode: function( node ) {
-
-            var html,
-                $elem;
-
-            // create and style html elements
-            html = $.isFunction( this.html_ ) ? $.proxy( this.html_, node.data )() : this.html_;
-            $elem = ( html instanceof jQuery ) ? html : $(html);
-            $elem.css( evaluateCss( node.data, this.css_ ) );
-
-            // append to tile root
-            $elem.each( function() {
-                node.$root.append( $(this) );
-            });
-        },
-
-
         redraw :  function( nodes ) {
-            var i;
+
+            var i,
+                node;
+
             for (i=0; i<nodes.length; i++) {
-                this.redrawNode( nodes[i] );
+
+                node = nodes[i];
+
+                // create elements
+                node.$elements = evaluateHtml( node, this.html_, this.css_ );
+                // append elements to tile root
+                node.$root.append( node.$elements );
             }
         }
 

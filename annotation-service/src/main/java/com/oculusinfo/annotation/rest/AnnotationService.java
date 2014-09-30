@@ -70,8 +70,8 @@ public interface AnnotationService {
 	 * Configuration interface 
 	 */
 	public abstract AnnotationConfiguration getConfiguration( String layer );
-	public abstract UUID configureFilter (String layerId, JSONObject filters );
-    public abstract void unconfigureFilter (String layerId, UUID uuid );
+	public abstract UUID configureLayer (String layerId, JSONObject configuration );
+    public abstract void unconfigureLayer (String layerId, UUID uuid );
 
     /*
      * List Layers interface

@@ -5,12 +5,12 @@
 	<packaging>war</packaging>
 	<name>Julia Set Demo</name>
 	<url>http://github.com/oculusinfo/aperture-tiles</url>
-	<description>A demo project to display live tiling of the Julia set data.</description>
+	<description>A demo project to display user-generated Julia set data.</description>
 
 	<parent>
 		<artifactId>tile-examples</artifactId>
 		<groupId>com.oculusinfo</groupId>
-		<version>0.3.1</version>
+		<version>0.4-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -24,39 +24,39 @@
 
 	<build>
 		<finalName>${project.artifactId}</finalName>
-    	<resources>
-      		<resource>
-        		<directory>src/main/resources</directory>
-        		<targetPath>../jettyFilteredResources</targetPath>
-        		<filtering>true</filtering>
-        		<includes>
-          			<include>aperture-config.json</include>
-        		</includes>
-      		</resource>
-      		<resource>
-        		<directory>src/main/resources</directory>
-        		<filtering>false</filtering>
-        		<excludes>
-        			<exclude>aperture-config.json</exclude>
-        		</excludes>
-      		</resource>
-    	</resources>		
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<targetPath>../jettyFilteredResources</targetPath>
+				<filtering>true</filtering>
+				<includes>
+					<include>aperture-config.json</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>aperture-config.json</exclude>
+				</excludes>
+			</resource>
+		</resources>		
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.1.1</version>
 				<configuration>
-          			<webResources>
-            			<resources>
-              				<directory>src/main/resources</directory>
-              				<targetPath>data</targetPath>
-              				<filtering>true</filtering>
-              				<includes>
-		  						<include>aperture-config.json</include>
-			  				</includes>
-            			</resources>
-          			</webResources>
+					<webResources>
+						<resources>
+							<directory>src/main/resources</directory>
+							<targetPath>data</targetPath>
+							<filtering>true</filtering>
+							<includes>
+								<include>aperture-config.json</include>
+							</includes>
+						</resources>
+					</webResources>
 					
 					<overlays>
 						<overlay>
@@ -70,7 +70,7 @@
 				<!-- Jetty For Dev Builds Only -->
 				<groupId>org.mortbay.jetty</groupId>
 				<artifactId>jetty-maven-plugin</artifactId>
-				<version>7.2.0.v20101020</version>
+				<version>${jetty-version}</version>
 				<configuration>
 					<webAppConfig>
 						<contextPath>/${project.artifactId}</contextPath>
@@ -85,7 +85,7 @@
 					<dependency>
 						<groupId>org.eclipse.jetty</groupId>
 						<artifactId>jetty-server</artifactId>
-						<version>7.2.0.v20101020</version>
+						<version>${jetty-version}</version>
 					</dependency>
 				</dependencies>
 			</plugin>

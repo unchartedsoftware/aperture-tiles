@@ -98,10 +98,10 @@ public class DataServiceImpl implements DataService {
 
 
 
-	private SparkContext getContext () {
+	private SparkContext getContext (JSONObject configuration) {
 		if (null == _context) {
 			if (null != _contextProvider) {
-				_context = _contextProvider.getSparkContext();
+				_context = _contextProvider.getSparkContext(configuration);
 			}
 		}
 		return _context;
@@ -112,7 +112,7 @@ public class DataServiceImpl implements DataService {
 	public JSONObject getData (JSONObject datasetDescription,
 	                           JSONObject query, boolean getCount,
 	                           boolean getData, int requestCount) {
-		SparkContext sc = getContext();
+		SparkContext sc = getContext(datasetDescription);
 		if (null == sc)
 			return null;
 
@@ -122,7 +122,7 @@ public class DataServiceImpl implements DataService {
 
 		// Create our dataset
 		DatasetFactory factory = new DatasetFactory(sc, null, null);
-		CSVDataset<?> dataset;
+		CSVDataset<?, ?, ?, ?, ?> dataset;
 		try {
 			factory.readConfiguration(datasetDescription);
 			dataset = factory.produce(CSVDataset.class);

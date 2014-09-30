@@ -33,35 +33,37 @@ import java.util.List;
 
 
 public class FileSystemAnnotationIOFactory extends ConfigurableFactory<AnnotationIO> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemAnnotationIOFactory.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemAnnotationIOFactory.class);
+	public static final String NAME = "file";
 
 
-    public static StringProperty ROOT_PATH              = new StringProperty("root.path",
-            "Unused with type=\"hbase\".  Indicates the root path of the tile annotation - either a directory (if \"file-system\"), a package name (if \"resource\"), the full path to a .zip file (if \"zip\"), the database path (if \"sqlite\"), or the URL of the database (if \"jdbc\").  There is no default for this property.",
-            null);
-    public static StringProperty EXTENSION              = new StringProperty("extension",
-            "Used with type=\"file-system\", \"resource\", or \"zip\".  The file extension which the serializer should expect to find on individual tiles.",
-            "avro");
 
-    public FileSystemAnnotationIOFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-        super(factoryName, AnnotationIO.class, parent, path);
+	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
+		   "Indicates the root path of the tile annotation - a directory.  There is no default for this property.",
+		   null);
+	public static StringProperty EXTENSION              = new StringProperty("extension",
+		   "The file extension which the serializer should expect to find on individual tiles.",
+		   "avro");
 
-        addProperty(ROOT_PATH);
-        addProperty(EXTENSION);
-    }
+	public FileSystemAnnotationIOFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super(NAME, AnnotationIO.class, parent, path);
 
-    @Override
-    protected AnnotationIO create() {
-        try {
-            String rootPath = getPropertyValue(ROOT_PATH);
-            String extension = getPropertyValue(EXTENSION);
-            return new FileSystemAnnotationIO(rootPath, extension);
-        }
-        catch (Exception e) {
-            LOGGER.error("Error trying to create FileSystemPyramidIO", e);
-        }
-        return null;
-    }
+		addProperty(ROOT_PATH);
+		addProperty(EXTENSION);
+	}
+
+	@Override
+	protected AnnotationIO create() {
+		try {
+			String rootPath = getPropertyValue(ROOT_PATH);
+			String extension = getPropertyValue(EXTENSION);
+			return new FileSystemAnnotationIO(rootPath, extension);
+		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create FileSystemPyramidIO", e);
+		}
+		return null;
+	}
 
 
 }

@@ -26,8 +26,6 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global OpenLayers */
 
-
-
 define(function (require) {
     "use strict";
 
@@ -44,9 +42,9 @@ define(function (require) {
 
 
         init: function ( spec, map ) {
-
             this._super( spec, map );
         },
+
 
         /**
          * Set the opacity
@@ -66,6 +64,7 @@ define(function (require) {
                 this.layer.olLayer_.setVisibility( visibility );
             }
         },
+
 
         /**
          * Updates the ramp type associated with the layer.  Results in a POST
@@ -97,7 +96,6 @@ define(function (require) {
          * @param {string} rampFunction - The new new ramp function.
          */
         setRampFunction: function ( rampFunction ) {
-
             if ( !this.layerSpec.transform ) {
                 this.layerSpec.transform = {name: rampFunction};
             } else {
@@ -114,7 +112,7 @@ define(function (require) {
          * where the first element is the min range, and the second is the max range.
          */
         setFilterRange: function ( filterRange ) {
-            this.layerSpec.legendrange = [filterRange[0] * 100, filterRange[1] * 100];
+            this.layerSpec.legendrange = filterRange;
             this.configure( $.proxy( this.update, this ) );
         },
 
@@ -124,6 +122,24 @@ define(function (require) {
          */
         setZIndex: function ( zIndex ) {
             this.map.setLayerIndex( this.layer.olLayer_, zIndex );
+        },
+
+
+        setTransformerType: function ( transformerType ) {
+            this.layerSpec.transformer.type = transformerType;
+            this.configure( $.proxy( this.update, this ) );
+        },
+
+
+        setTransformerData: function ( transformerData ) {
+            this.layerSpec.transformer.data = transformerData;
+            this.configure( $.proxy( this.update, this ) );
+        },
+
+
+        setCoarseness: function( coarseness ) {
+            this.layerSpec.coarseness = coarseness;
+            this.configure( $.proxy( this.update, this ) );
         },
 
 
@@ -155,8 +171,7 @@ define(function (require) {
 
             var that = this,
                 olBounds,
-                yFunction,
-                previousZIndex = null;
+                yFunction;
 
             // y transformation function for non-density strips
             function passY( yInput ) {
@@ -214,34 +229,34 @@ define(function (require) {
             // Adjust y function if we're displaying a density strip
             yFunction = ( this.layerSpec.isDensityStrip ) ? clampY : passY;
 
-            // Remove any old version of this layer
-            if ( this.layer ) {
-                previousZIndex = this.map.getLayerIndex( this.layer.olLayer_ );
-                this.layer.remove();
-                this.layer = null;
-            }
+            if ( !this.layer ) {
 
-            // Add the new layer
-            this.layer = this.map.addApertureLayer(
-                aperture.geo.MapTileLayer.TMS, {},
-                {
-                    'name': 'Aperture Tile Layers',
-                    'url': this.layerInfo.tms,
-                    'options': {
-                        'layername': this.layerInfo.layer,
-                        'type': 'png',
-                        'version': '1.0.0',
-                        'maxExtent': olBounds,
-                        transparent: true,
-                        getURL: createUrl
+                // add the new layer
+                this.layer = this.map.addApertureLayer(
+                    aperture.geo.MapTileLayer.TMS, {},
+                    {
+                        'name': 'Aperture Tile Layers',
+                        'url': this.layerInfo.tms,
+                        'options': {
+                            'layername': this.layerInfo.layer,
+                            'type': 'png',
+                            'version': '1.0.0',
+                            'maxExtent': olBounds,
+                            transparent: true,
+                            getURL: createUrl
+                        }
                     }
-                }
-            );
+                );
 
-            if ( previousZIndex ) {
-                // restore previous index
-                this.map.setLayerIndex( this.layer.olLayer_, previousZIndex );
+            } else {
+
+                // layer already exists, simply update service endpoint
+                this.layer.olLayer_.getURL = createUrl;
+                this.layer.olLayer_.url[0] = this.layerInfo.tms;
             }
+
+            // redraw this layer
+            this.layer.olLayer_.redraw();
         }
     });
 

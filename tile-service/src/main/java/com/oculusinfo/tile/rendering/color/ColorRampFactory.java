@@ -75,7 +75,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	protected ColorRamp create () {
 		String rampType = getPropertyValue(RAMP_TYPE);
 		boolean inverted = getPropertyValue(INVERTED);
-		double opacity = getPropertyValue(OPACITY);
+		double opacity = 1.0; //getPropertyValue(OPACITY);
         
 		ColorRamp ramp;
 		if (rampType.equalsIgnoreCase("br")){

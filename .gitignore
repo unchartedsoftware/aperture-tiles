@@ -8,3 +8,8 @@ update.sh
 phantomjs.exe
 *.iml
 docs/_site
+*.*~
+build
+test-output
+.gradle
+bin

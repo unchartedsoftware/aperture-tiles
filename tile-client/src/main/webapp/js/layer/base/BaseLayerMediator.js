@@ -23,20 +23,15 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global define, console, $, aperture*/
 
-/**
- * Populates the LayerState model based on the contents of a the layer, and makes the appropriate
- * modifications to it as the LayerState model changes.
- */
 define(function (require) {
     "use strict";
 
 
 
     var LayerMediator = require('../LayerMediator'),
-        BaseLayerState = require('./BaseLayerState'),
+        SharedObject = require('../../util/SharedObject'),
+        Util = require('../../util/Util'),
         BaseLayerMediator;
 
 
@@ -52,15 +47,19 @@ define(function (require) {
         registerLayers: function( map ) {
 
             var layerState;
-            // Create a layer state object for the base map.
-            layerState = new BaseLayerState( map.id );
+
+            // create a layer state object. Values are initialized to those provided
+            // by the layer specs, which are defined in the layers.json file, or are
+            // defaulted to appropriate starting values
+            layerState = new SharedObject();
+
+            // set immutable layer state properties
+            layerState.set( 'id', map.id );
+            layerState.set( 'uuid', Util.generateUuid() );
+            layerState.set( 'name', "Base Layer" );
+            layerState.set( 'domain', 'base' );
 
             layerState.BASE_LAYERS = map.baseLayers;
-            layerState.setName("Base Layer");
-            layerState.setEnabled( true );
-            layerState.setOpacity( 1.0 );
-            layerState.setZIndex( -1 );
-            layerState.setBaseLayerIndex( 0 );
 
             // Register a callback to handle layer state change events.
             layerState.addListener( function( fieldName ) {
@@ -69,25 +68,32 @@ define(function (require) {
 
                     case "opacity":
 
-                        map.setOpacity( layerState.getOpacity() );
+                        map.setOpacity( layerState.get('opacity') );
                         break;
 
                     case "enabled":
 
-                        map.setVisibility( layerState.isEnabled() );
+                        map.setVisibility( layerState.get('enabled') );
                         break;
 
                     case "baseLayerIndex":
 
-                        map.setBaseLayerIndex( layerState.getBaseLayerIndex() );
-                        if ( layerState.BASE_LAYERS[ layerState.getBaseLayerIndex() ].type !== "BlankBase" ) {
-                            map.setOpacity( layerState.getOpacity() );
-                            map.setVisibility( layerState.isEnabled() );
+                        map.setBaseLayerIndex( layerState.get('baseLayerIndex') );
+                        if ( layerState.BASE_LAYERS[ layerState.get('baseLayerIndex') ].type !== "BlankBase" ) {
+                            // if switching to a non-blank baselayer, ensure opacity and visibility is restored
+                            map.setOpacity( layerState.get('opacity') );
+                            map.setVisibility( layerState.get('enabled') );
                         }
                         break;
                 }
 
             });
+
+            // set client-side layer state properties after binding callbacks
+            layerState.set( 'enabled', true );
+            layerState.set( 'opacity', 1.0 );
+            layerState.set( 'zIndex', -1 );
+            layerState.set( 'baseLayerIndex', 0 );
 
             // Add the layer to the layer state array.
             this.layerStates.push( layerState );

@@ -1,0 +1,31 @@
+{
+    "name":      "entryType",
+    "namespace": "ar.avro",
+    "type":      "record",
+    "fields": [
+        {"name": "numCommunities",      "type": "int", "doc": "Total number of communities"},               
+        {"name": "communities",
+         "type": {"type": "array", "items":
+                  {"name": "recentEntry",
+                   "type": "record",
+                   "fields": [
+                       {"name": "hierLevel", "type": "int"},
+                       {"name": "id", "type": "long"},
+                       {"name": "x", "type": "double"},
+                       {"name": "y", "type": "double"},
+                       {"name": "r", "type": "double"},
+                       {"name": "degree", "type": "int"},
+                       {"name": "numNodes", "type": "long"},
+                       {"name": "metadata", "type": "string"},
+                       {"name": "isPrimaryNode", "type": "boolean"},
+                       {"name": "parentID", "type": "long"},
+                       {"name": "parentX", "type": "double"},
+                       {"name": "parentY", "type": "double"},
+                       {"name": "parentR", "type": "double"}
+                   ]
+                  }
+                 },
+         "doc": "The largest communities in a given tile"
+        }
+    ]
+}

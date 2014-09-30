@@ -1,0 +1,304 @@
+@charset "UTF-8";
+
+
+/********************************************/
+/* 		     Generic Details Container  	*/
+/********************************************/
+
+
+.details-on-demand {
+	position:absolute;
+	width: 257px;
+	height: 513px;
+	z-index: 2001;
+	box-shadow: 0px 5px 15px #000;
+}
+
+.light-theme .details-on-demand {
+	background-color: #ccc;
+	border: 1px solid #fff;
+}
+
+.dark-theme .details-on-demand {
+	background-color: #222222;
+	border: 1px solid #333333;
+}
+
+.details-partition {
+	position:relative;
+	width: 100%;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-on-demand-title {
+	position:relative;
+	padding: 5px 10px 5px 10px;
+	vertical-align: middle;
+}
+
+.light-theme .details-on-demand-title {
+	color : #000;
+}
+
+.dark-theme .details-on-demand-title {	
+	color : #FFF;
+}
+
+.details-large-title {
+	height: 20px;
+	line-height: 20px;
+	font-size: 20px;
+}
+
+.details-small-title {
+	height: 16px;
+	line-height: 16px;
+	font-size: 16px;
+}
+
+.details-on-demand-content {
+	position: relative;
+	height: calc(100% - 40px);
+}
+
+.light-theme .details-on-demand-content {
+	background-color: #ddd;
+}
+
+.dark-theme .details-on-demand-content {	
+	background-color: #111;
+}
+
+.details-close-button {
+	cursor: pointer;
+	position:absolute;
+	right:3px;
+	top:3px;
+	width:12px;
+	height:12px;
+	background: transparent url(../images/close_icon.png) no-repeat center top;
+	opacity: 0.5;
+}
+
+.details-close-button:hover {
+	opacity: 1;
+}
+
+
+/********************************************/
+/* 		     Generic Details Chart  	    */
+/********************************************/
+
+
+.details-chart {
+	position: relative;
+	height: 100%;
+}
+
+.light-theme .details-chart {
+	background-color: #ddd;
+}
+
+.dark-theme .details-chart {	
+	background-color: #111;
+}
+
+.details-chart-title {
+	position: relative;
+	font-size: 12px;
+	height: 15px;
+	left: 5px;
+	padding: 5px 0 5px 0;
+}
+
+.light-theme .details-chart-title {
+	color: #000;
+}
+
+.dark-theme .details-chart-title {	
+	color: #fff;
+}
+
+.details-chart-content {
+	position: relative;
+	padding: 0 5px 0 5px;
+	height: calc(100% - 37px);
+}
+
+.details-chart-bars {
+	position: relative;
+	padding-top:5px;
+	height: 75%;
+}
+
+.details-chart-axis {
+	position: relative;
+	height: 15%;
+}
+
+.details-chart-bar {
+	position: relative;
+	float:left;
+	height: 100%;
+	margin-left: -1px;
+	font-size: 0;
+	white-space: pre;
+}
+
+.details-chart-bar:hover {
+}
+
+.details-chart-bar-fill {
+	position: absolute;
+	background-color: #09CFFF;
+	width: 100%;
+	bottom: 0px;
+	border-top: 1px solid #000;
+	border-left: 1px solid #000;
+	border-right: 1px solid #000;
+	margin-left: -1px;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-chart-bar:hover .details-chart-bar-fill {
+	background-color: #03E8D7;
+}
+
+.details-axis-markers {
+	position: relative;
+	height: 33.333%;
+	overflow:hidden;
+	border-top: 1px solid #000;
+}
+
+.details-axis-labels {
+	position: relative;
+	height: 66.667%;
+}
+
+.details-axis-marker {
+	position: relative;
+	float: left;
+}
+
+.light-theme .details-axis-marker {
+	border-left: 1px solid #000;
+}
+
+.dark-theme .details-axis-marker {	
+	border-left: 1px solid #aaa;
+}
+
+.details-major-marker {
+	height: 100%;
+}
+
+.details-last-marker {
+	width: 0px;
+	margin-left: -1px;
+}
+
+.details-minor-marker {
+	height: 50%;
+}
+
+.details-axis-label {
+	position: relative;
+	white-space: nowrap;
+	float: left;
+	overflow: hidden;
+	font-size: 8px;
+	
+}
+
+.light-theme .details-axis-label {
+	color: #000;
+}
+
+.dark-theme .details-axis-label {	
+	color: #fff;
+}
+
+.details-bar-hover {
+	position:absolute;
+	padding: 5px 10px 5px 10px;	
+	box-shadow: 0px 5px 15px #000;
+	margin-top: -24px;
+	z-index: 1;
+	pointer-events:none;
+}
+
+.light-theme .details-bar-hover {
+	background-color: #ddd;
+	border: 1px solid #fff;
+}
+
+.dark-theme .details-bar-hover {	
+	background-color: #222222;
+	border: 1px solid #333333;
+}
+
+.details-bar-hover-label {
+	white-space: pre;
+	font-size: 12px;
+	text-shadow:
+      -1px -1px 0 #000,
+       1px -1px 0 #000,
+      -1px  1px 0 #000,
+       1px  1px 0 #000,
+       1px  0   0 #000,
+      -1px  0   0 #000,
+       0    1px 0 #000,
+       0   -1px 0 #000;
+}
+
+.light-theme .details-bar-hover-label {
+	color: #fff;
+}
+
+.dark-theme .details-bar-hover-label {	
+	color: #d3d3d3;
+}
+
+/********************************************/
+/* 		     Generic Details Textbox  	    */
+/********************************************/
+
+
+.details-text-box {
+	position:relative;
+	color : #FFFFFF;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color:#111111;
+	-webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.details-text-box-title {
+	position:relative;
+	font-size:12px;
+	color: #09CFFF;
+	margin: 5px;
+}
+
+
+.text-entry-dark {
+	background-color: #111111;
+}
+
+.text-entry-light {
+	background-color: #181818;
+}
+
+.details-text-box-text {
+	position:relative;
+	padding: 5px 5px 0px 5px;
+	font-size: 0.65em;
+}

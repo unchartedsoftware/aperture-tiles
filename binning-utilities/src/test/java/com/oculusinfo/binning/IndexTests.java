@@ -24,12 +24,12 @@
  */
 package com.oculusinfo.binning;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Tests of the Tile and Bin classes
@@ -101,12 +101,12 @@ public class IndexTests {
 
 		Collections.sort(tiles);
 		Assert.assertEquals(new TileIndex(3, 0, 0), tiles.get(0));
-		Assert.assertEquals(new TileIndex(3, 0, 1), tiles.get(1));
-		Assert.assertEquals(new TileIndex(3, 1, 0), tiles.get(2));
+		Assert.assertEquals(new TileIndex(3, 1, 0), tiles.get(1));
+		Assert.assertEquals(new TileIndex(3, 0, 1), tiles.get(2));
 		Assert.assertEquals(new TileIndex(3, 1, 1), tiles.get(3));
 		Assert.assertEquals(new TileIndex(4, 0, 0), tiles.get(4));
-		Assert.assertEquals(new TileIndex(4, 0, 1), tiles.get(5));
-		Assert.assertEquals(new TileIndex(4, 1, 0), tiles.get(6));
+		Assert.assertEquals(new TileIndex(4, 1, 0), tiles.get(5));
+		Assert.assertEquals(new TileIndex(4, 0, 1), tiles.get(6));
 		Assert.assertEquals(new TileIndex(4, 1, 1), tiles.get(7));
 	}
 
@@ -140,13 +140,13 @@ public class IndexTests {
 
 		Collections.sort(bins);
 		Assert.assertEquals(new BinIndex(0, 0), bins.get(0));
-		Assert.assertEquals(new BinIndex(0, 1), bins.get(1));
-		Assert.assertEquals(new BinIndex(0, 2), bins.get(2));
-		Assert.assertEquals(new BinIndex(1, 0), bins.get(3));
+		Assert.assertEquals(new BinIndex(1, 0), bins.get(1));
+		Assert.assertEquals(new BinIndex(2, 0), bins.get(2));
+		Assert.assertEquals(new BinIndex(0, 1), bins.get(3));
 		Assert.assertEquals(new BinIndex(1, 1), bins.get(4));
-		Assert.assertEquals(new BinIndex(1, 2), bins.get(5));
-		Assert.assertEquals(new BinIndex(2, 0), bins.get(6));
-		Assert.assertEquals(new BinIndex(2, 1), bins.get(7));
+		Assert.assertEquals(new BinIndex(2, 1), bins.get(5));
+		Assert.assertEquals(new BinIndex(0, 2), bins.get(6));
+		Assert.assertEquals(new BinIndex(1, 2), bins.get(7));
 		Assert.assertEquals(new BinIndex(2, 2), bins.get(8));
 	}
 

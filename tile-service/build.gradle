@@ -1,0 +1,80 @@
+description = "Useful utilites to help pyramid-based binning schemes (and others, as necessary)"
+
+// Pulls in the Java plugin
+apply plugin: "java"
+apply plugin: "war"
+apply plugin: "jetty"
+
+// Task to create a JAR from the all source set
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+
+// Add the produced jars to the extra artifacts list
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+
+// Add a configuration to provide access to the phantom js exe depedency 
+configurations {
+	phantomJs
+}
+
+dependencies {
+	phantomJs "oculus.aperture.service:aperture-capture-phantom:1.0.7@exe"
+}
+
+// Task to copy the phantom js exe to the bin dir.  Bind it in to run
+// prior to the war task.
+task phantomCopy(type: Copy) {
+	from configurations.phantomJs
+	into "bin/windows/phantomjs.exe"
+}
+war.dependsOn(phantomCopy)
+
+// Configure the jetty run task
+jettyRun {
+	httpPort = 9090	
+	contextPath = project.name
+	
+}
+
+// Restlet isn't in maven central?
+repositories {
+	maven {
+		url = "http://maven.restlet.org"
+	}
+}
+
+dependencies {
+	compile "org.restlet.jee:org.restlet:2.1.2"
+	compile "org.restlet.jee:org.restlet.ext.servlet:2.1.2"
+	compile "org.restlet.jee:org.restlet.ext.json:2.1.2"
+	compile "com.google.inject:guice:3.0"
+	compile "com.google.inject.extensions:guice-servlet:3.0"
+	compile "com.google.inject.extensions:guice-multibindings:3.0"
+	compile "net.sf.ehcache:ehcache:2.8.4"
+	compile "net.sf.ehcache:ehcache-web:2.0.4"
+	compile "oculus.aperture:aperture-server-core:1.0.7"
+	compile "oculus.aperture.service:aperture-cms:1.0.7"
+	compile "oculus.aperture.service:aperture-capture-phantom:1.0.7"
+	compile "org.slf4j:slf4j-api:1.7.7"
+	compile "org.slf4j:slf4j-log4j12:1.7.7"
+	compile "org.slf4j:jul-to-slf4j:1.7.7"
+	compile "log4j:log4j:1.2.17"
+	
+	compile project(":tile-generation")
+	compile project(":math-utilities")
+	compile project(":binning-utilities")
+	
+	testCompile "junit:junit:4.8.1"
+	testCompile "org.mockito:mockito-all:1.9.5"
+}

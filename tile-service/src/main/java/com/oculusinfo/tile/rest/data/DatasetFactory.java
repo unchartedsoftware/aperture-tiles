@@ -34,6 +34,8 @@ import org.apache.spark.SparkContext;
 import java.util.List;
 import java.util.Properties;
 
+import scala.Int;
+import scala.Some;
 
 
 /**
@@ -43,14 +45,15 @@ import java.util.Properties;
  *  
  *  @author nkronenfeld
  */
-public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?>> {
+public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?,?,?,?,?>> {
 	private SparkContext _context;
 	protected DatasetFactory (SparkContext context, ConfigurableFactory<?> parent, List<String> path) {
 		this(context, null, parent, path);
 	}
 
-	// This supresses the warnings on the cast to CSVDataset.class, because it can't be properly
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	// No way to pass a parameterized class back, such a thing doesn't exist in Java.
+	// The "(Class) CSVDataset.class" is the best we can do.
+	@SuppressWarnings({ "unchecked", "rawtypes" })
     protected DatasetFactory (SparkContext context, String name, 
 	                          ConfigurableFactory<?> parent, List<String> path) {
 		super(name, (Class) CSVDataset.class, parent, path);
@@ -58,12 +61,16 @@ public class DatasetFactory extends SharedInstanceFactory<CSVDataset<?>> {
 	}
 
 	@Override
-	protected CSVDataset<?> createInstance () {
+	protected CSVDataset<?,?,?,?,?> createInstance () {
 		Properties datasetProps = JsonUtilities.jsonObjToProperties(getConfigurationNode());
 		// Width and height are irrelevant for record queries, so we just set them to 1.
-		CSVDataset<?> dataset =
-			(CSVDataset<?>) com.oculusinfo.tilegen.datasets.DatasetFactory.createDataset(
-				       _context, datasetProps, false, true, false, 1, 1);
+		Some<Object> dimension = new Some<Object>(Int.unbox(new Integer(1)));
+		// If it's not set or unset explicitly, set filterable caching to true
+		if (!datasetProps.stringPropertyNames().contains("oculus.binning.caching.filterable"))
+			datasetProps.setProperty("oculus.binning.caching.filterable", "true");
+		CSVDataset<?,?,?,?,?> dataset =
+			(CSVDataset<?,?,?,?,?>) com.oculusinfo.tilegen.datasets.DatasetFactory.createDataset(
+				               _context, datasetProps, dimension, dimension);
 
 		return dataset;
 	}

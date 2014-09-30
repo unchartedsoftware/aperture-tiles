@@ -1,0 +1,55 @@
+@charset "UTF-8";
+
+.jspPane {
+    position:relative;
+}
+
+.jspScrollable:focus {
+    outline:none;
+}
+
+.jspVerticalBar {
+    width: 12px;
+}
+
+.jspHorizontalBar {
+    height: 12px;
+}
+
+.jspVerticalBar, 
+.jspHorizontalBar, 
+.jspTrack {
+    border-radius: 10px;
+}
+
+.light-theme .jspVerticalBar, 
+.light-theme .jspHorizontalBar, 
+.light-theme .jspTrack {
+    box-shadow: inset 0 0 6px #666; 
+    background-color: #ddd;
+}
+
+.dark-theme .jspVerticalBar, 
+.dark-theme .jspHorizontalBar, 
+.dark-theme .jspTrack {
+    box-shadow: inset 0 0 6px #000; 
+    background-color: #111111;
+}
+
+.jspDrag {  
+    border-radius: 10px;
+}
+
+.light-theme .jspDrag {
+    background-color: #ddd;
+    border: 1px solid #aaa;
+}
+
+.dark-theme .jspDrag {   
+    background-color: #222222;
+    border: 1px solid #000;
+}
+
+.jspCorner {
+	display:none;
+}

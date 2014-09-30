@@ -68,6 +68,7 @@ require(['./ApertureConfig',
 	            getLayers,
 	            getAnnotationLayers,
 	            getURLParameter,
+	            groupClientLayers,
 	            mapsDeferred, layersDeferred, annotationsDeferred;
 
 
@@ -108,6 +109,21 @@ require(['./ApertureConfig',
 		        return result;
 	        };
 
+	        groupClientLayers = function( clientLayers ) {
+
+                var layer, layerName, i, layersByName = {}, layersByOrder = [];
+                for ( i=0; i<clientLayers.length; i++ ) {
+                    layer = clientLayers[i];
+                    layerName = layer.name;
+                    if ( layersByName[ layerName ] === undefined ) {
+                        layersByName[ layerName ] = [];
+                        layersByOrder.push( layersByName[ layerName ] );
+                    }
+                    layersByName[ layerName ].push( layer );
+                }
+                return layersByOrder;
+            };
+
 	        // Get the layers from a layer tree that match a given filter and 
 	        // pertain to a given domain.
 	        getLayers = function (domain, rootNode, filterFcn) {
@@ -140,6 +156,9 @@ require(['./ApertureConfig',
 			        layer.renderers.forEach(function (renderer, index, renderers) {
 				        if (domain === renderer.domain) {
 					        config = cloneObject(renderer);
+					        if (layer.data.transformer) {
+					            config.transformer = cloneObject(layer.data.transformer);
+					        }
 					        config.layer = layer.id;
 					        config.name = layer.name;
 					        return;
@@ -246,7 +265,6 @@ require(['./ApertureConfig',
 
 				        worldMap = new Map("map", mapConfig);   // create map
 				        worldMap.setAxisSpecs( MapService.getAxisConfig(mapConfig) ); // set axes
-                        worldMap.setTileBorderStyle( mapConfig );
 
 				        // ... perform any project-specific map customizations ...
 				        if (UICustomization.customizeMap) {
@@ -263,7 +281,7 @@ require(['./ApertureConfig',
 					        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
 				        };
 
-				        clientLayers = getLayers( "client", layers, filter );
+				        clientLayers = groupClientLayers( getLayers( "client", layers, filter ) );
 				        serverLayers = getLayers( "server", layers, filter );
                         annotationLayers = getAnnotationLayers( annotationLayers, filter );
 
@@ -291,16 +309,20 @@ require(['./ApertureConfig',
 
                             var sharedStates = [];
 
+                            // customize layers
+                            if (UICustomization.customizeLayers) {
+                                UICustomization.customizeLayers( clientLayers, serverLayers, annotationLayers );
+                            }
+
                             $.merge( sharedStates, baseLayerMediator.getLayerStates() );
                             $.merge( sharedStates, clientLayerMediator.getLayerStates() );
                             $.merge( sharedStates, serverLayerMediator.getLayerStates() );
                             $.merge( sharedStates, annotationLayerMediator.getLayerStates() );
 
                             // create layer controls
-                            new LayerControls( 'layer-controls-content', sharedStates ).noop();
+                            new LayerControls( 'layer-controls-content', sharedStates, UICustomization.customizeSettings ).noop();
                             // create the carousel controls
                             new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
-
                         });
 
 			        }

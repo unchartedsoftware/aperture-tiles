@@ -34,11 +34,16 @@ import scala.util.{Try, Success, Failure}
 
 import org.scalatest.FunSuite
 
+import org.apache.avro.file.CodecFactory
+
 import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
+
+import com.oculusinfo.tilegen.datasets.CountValueExtractor
 
 
 
@@ -55,18 +60,23 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 
 		val coordFcn: (((Double, Double), Double)) => Try[(Double, Double)] = record => Try(record._1)
 		val valueFcn: (((Double, Double), Double)) => Try[Double] = record => Try(record._2)
+		val tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Double]] = None
+		val dataAnalytics: Option[AnalysisDescription[((Double, Double), Double), Double]] = None
 		
 		binner.binAndWriteData(data,
 		                       coordFcn,
 		                       valueFcn,
 		                       new CartesianIndexScheme,
-		                       new StandardDoubleBinDescriptor,
+		                       new SumDoubleAnalytic with StandardDoubleBinningAnalytic,
+		                       tileAnalytics,
+		                       dataAnalytics,
+		                       new CountValueExtractor(),
 		                       pyramid,
 		                       None,
 		                       pyramidId,
 		                       tileIO,
 		                       List(List(1)),
-		                       bins=4)
+		                       xBins=4, yBins=4)
 
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 4))
 		assert(tile00.isEmpty)

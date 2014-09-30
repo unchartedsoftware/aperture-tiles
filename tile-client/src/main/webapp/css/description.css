@@ -2,9 +2,16 @@
 
 #description {
 	position: fixed;
-	border: 1px solid #333333;
 	right: 10px;
 	top: 10px;
+}
+
+.light-theme #description {
+	border: 1px solid #fff;
+}
+
+.dark-theme #description {
+	border: 1px solid #333;
 }
 
 #description-header {
@@ -14,28 +21,43 @@
 	vertical-align: middle;
     text-align:center;
 	line-height: 32px;
-	background-color: #222222;
-    color: #D3D3D3;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
 }
 
-#description-header:hover {   
+.light-theme #description-header {
+	background-color: #ccc;
+    color: #000;
+}
+
+.dark-theme #description-header {
+	background-color: #222;
+    color: #D3D3D3;
+}
+
+.light-theme #description-header:hover {
+    color: #222;
+}
+
+.dark-theme #description-header:hover {
  	color: #FFFFFF;
 }
 
 #description-content {
-	position: relative;
-	background-color: #111;
-	color: #D3D3D3;
+	position: relative;	
 	width: 612px;
 	font-size: 10pt;
-	text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000;
+	-webkit-user-select: initial;
+	-khtml-user-select: initial;
+	-moz-user-select: initial;
+	-ms-user-select: initial;
+	user-select: initial;
+}
+
+.light-theme #description-content {
+	background-color: #ddd;
+    color: #000;
+}
+
+.dark-theme #description-content {
+	background-color: #111;
+	color: #D3D3D3;
 }

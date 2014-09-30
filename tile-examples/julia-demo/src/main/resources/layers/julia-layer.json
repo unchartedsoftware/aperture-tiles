@@ -18,7 +18,7 @@
 	"layers": [
 		{
 			"id": "julia.x.y.v",
-			"name": "julia set live tiling demonstration",
+			"name": "julia set",
 			"pyramid": {
 				"type": "AreaOfInterest",
 				"minX": -2,

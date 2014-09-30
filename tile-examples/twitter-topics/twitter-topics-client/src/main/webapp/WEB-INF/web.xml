@@ -3,70 +3,74 @@
 "http://java.sun.com/dtd/web-app_2_3.dtd" >
 
 <web-app>
-  <display-name>Twitter Demo</display-name>
+	<display-name>Twitter Demo</display-name>
 
-  <!-- Module Configuration -->
-  <!-- If you have your own Guice module(s), put them here as a colon-separated
-       list. -->
-  <context-param>
-    <param-name>guice-modules</param-name>
-    <param-value>
-      <!-- A :-separated list of modules, so there must be a : after all but 
-     the last module listed. -->
+	<!-- Module Configuration -->
+	<!-- If you have your own Guice module(s), put them here as a colon-separated
+	     list. -->
+	<context-param>
+		<param-name>guice-modules</param-name>
+		<param-value>
+			<!-- A :-separated list of modules, so there must be a : after all but 
+			     the last module listed. -->
 
-      <!-- Pyramid factory module - override to add custom TilePyramids -->
-      com.oculusinfo.tile.init.TilePyramidFactoryModule:
-      <!-- Renderer factory module - override to add custom server-side 
-           renderers. -->
-      com.oculusinfo.tile.init.ImageRendererFactoryModule:
-      <!-- Serialization factory module - override to add custom tile 
-           serializers -->
-      com.oculusinfo.twitter.init.TwitterSerializationFactoryModule:
-      <!-- Pyramid IO factory module - override to add custom PyramidIO 
-           implementations -->
-      com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
-      <!-- LayerConfiguration factory module - override to add custom layer configuration 
-           parameters -->
-      com.oculusinfo.tile.init.StandardLayerConfigurationModule:
+			<!-- Pyramid factory module - override to add custom TilePyramids -->
+			com.oculusinfo.tile.init.TilePyramidFactoryModule:
+			<!-- Renderer factory module - override to add custom server-side 
+			     renderers. -->
+			com.oculusinfo.tile.init.ImageRendererFactoryModule:
+			<!-- Standard Serialization factory module.  Custom tile serializers 
+			     get added in other modules, but this one should remain. -->
+			com.oculusinfo.tile.init.StandardTileSerializerFactoryModule:
+			com.oculusinfo.twitter.init.TwitterSerializationFactoryModule:
+			<!-- Standard Pyramid IO factory module.  Custom PyramidIO factories
+			     get added in other modules, but this one should remain. -->
+			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+			<!-- Tile Transformer factory module - override to add custom tile
+			     Transformer -->
+			com.oculusinfo.tile.init.TileTransformerFactoryModule:
+			<!-- LayerConfiguration factory module - override to add custom layer configuration 
+			     parameters -->
+			com.oculusinfo.tile.init.StandardLayerConfigurationModule:
 
-      <!-- Sets up the REST interface by which clients can retrieve tiles -->
-      com.oculusinfo.tile.rest.RestConfigModule:
-      <!-- Sets up the tile-rendering service -->
-      com.oculusinfo.tile.rest.TileModule:
-      
-      <!-- Annotation IO factory module - override to add custom AnnotationIO 
-           implementations -->
-      com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
-      <!-- Sets up the REST interface by which clients can retrieve annotations -->
-      com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
-      <!-- Sets up the annotation service -->
-      com.oculusinfo.annotation.rest.AnnotationServiceModule
-    </param-value>
-  </context-param>
+			<!-- Sets up the REST interface by which clients can retrieve tiles -->
+			com.oculusinfo.tile.rest.RestConfigModule:
+			<!-- Sets up the tile-rendering service -->
+			com.oculusinfo.tile.rest.TileModule:
+			
+			<!-- Annotation IO factory module - override to add custom AnnotationIO 
+			     implementations -->
+			com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
+			com.oculusinfo.annotation.init.StandardAnnotationFilterFactoryModule:
+			<!-- Sets up the REST interface by which clients can retrieve annotations -->
+			com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+			<!-- Sets up the annotation service -->
+			com.oculusinfo.annotation.rest.AnnotationServiceModule
+		</param-value>
+	</context-param>
 
-  <!-- Config File Location -->
-  <!-- Provide the path to the config defaults override properties file here to
-       override the default values -->
-  <context-param>
-    <param-name>apertureConfig</param-name>
-    <param-value>res:///tile.properties</param-value>
-  </context-param>
+	<!-- Config File Location -->
+	<!-- Provide the path to the config defaults override properties file here to
+	     override the default values -->
+	<context-param>
+		<param-name>apertureConfig</param-name>
+		<param-value>res:///tile.properties</param-value>
+	</context-param>
 
-  <!-- Run all requests through the Guice servlet filter -->
-  <filter>
-    <filter-name>guiceFilter</filter-name>
-    <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
-  </filter>
+	<!-- Run all requests through the Guice servlet filter -->
+	<filter>
+		<filter-name>guiceFilter</filter-name>
+		<filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+	</filter>
 
-  <filter-mapping>
-    <filter-name>guiceFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
+	<filter-mapping>
+		<filter-name>guiceFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
 
-  <!-- Servlet config must run on app deployment -->
-  <listener>
-    <!-- Required with a spark connection, harmless in all other cases -->
-    <listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
-  </listener>
-
+	<!-- Servlet config must run on app deployment -->
+	<listener>
+		<!-- Required with a spark connection, harmless in all other cases -->
+		<listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
+	</listener>
 </web-app>

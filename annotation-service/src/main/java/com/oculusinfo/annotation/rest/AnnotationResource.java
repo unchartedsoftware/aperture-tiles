@@ -24,14 +24,12 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import com.google.inject.Inject;
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.data.impl.JSONAnnotation;
-import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Pair;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import oculus.aperture.common.rest.ApertureServerResource;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,9 +40,13 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.google.inject.Inject;
+import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.data.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.Pair;
 
 public class AnnotationResource extends ApertureServerResource {
 
@@ -71,48 +73,48 @@ public class AnnotationResource extends ApertureServerResource {
 				
 				String layer = json.getString("layer");
 				JSONAnnotation annotation = JSONAnnotation.fromJSON( json.getJSONObject("annotation") );
-                Pair<String, Long> certificate = _service.write( layer, annotation );
+				Pair<String, Long> certificate = _service.write( layer, annotation );
 				jsonResult.put("uuid", certificate.getFirst() );
-                jsonResult.put("timestamp", certificate.getSecond().toString() );
+				jsonResult.put("timestamp", certificate.getSecond().toString() );
 				
 			} else if ( requestType.equals("remove") ) {
 
 				String layer = json.getString("layer");
-                JSONObject certificate =  json.getJSONObject("certificate");
-                String uuid = certificate.getString("uuid");
-                Long timestamp = certificate.getLong("timestamp");
+				JSONObject certificate =  json.getJSONObject("certificate");
+				String uuid = certificate.getString("uuid");
+				Long timestamp = certificate.getLong("timestamp");
 				_service.remove(layer, new Pair<>( uuid, timestamp ) );
 				
 			} else if ( requestType.equals("modify") ) {
 				
 				String layer = json.getString("layer");
 				JSONAnnotation annotation = JSONAnnotation.fromJSON( json.getJSONObject("annotation") );
-                Pair<String, Long> certificate = _service.modify(layer, annotation);
-                jsonResult.put("uuid", certificate.getFirst() );
-                jsonResult.put("timestamp", certificate.getSecond().toString() );
+				Pair<String, Long> certificate = _service.modify(layer, annotation);
+				jsonResult.put("uuid", certificate.getFirst() );
+				jsonResult.put("timestamp", certificate.getSecond().toString() );
 
-			} else if ( requestType.equals("filter-config") ) {
+			} else if ( requestType.equals("configure") ) {
 				
 				String layer = json.getString("layer");
-				JSONObject data = json.getJSONObject("data");
-				JSONObject jsonFilters = data.getJSONObject("filter");
-				UUID uuid = _service.configureFilter(layer, jsonFilters);
-                jsonResult.put("uuid", uuid);
+				JSONObject jsonFilters = json.getJSONObject("configuration");
+				UUID uuid = _service.configureLayer(layer, jsonFilters);
+				jsonResult.put("layer", layer);
+				jsonResult.put("uuid", uuid);
 
-			} else if ( requestType.equals("filter-unconfig") ) {
+			} else if ( requestType.equals("unconfigure") ) {
 
-                String layer = json.getString("layer");
-                UUID uuid = UUID.fromString(json.getString("uuid"));
-                _service.unconfigureFilter( layer, uuid );
+				String layer = json.getString("layer");
+				UUID uuid = UUID.fromString(json.getString("uuid"));
+				_service.unconfigureLayer( layer, uuid );
 
-            } else if ( requestType.equals("list") ) {
+			} else if ( requestType.equals("list") ) {
 				
-                List<AnnotationInfo> layers = _service.list();
-                JSONArray jsonLayers = new JSONArray();
-                for (int i=0; i<layers.size(); ++i) {
-                    jsonLayers.put( i, layers.get(i).getRawData() );
-                }
-                return new JsonRepresentation(jsonLayers);
+				List<AnnotationInfo> layers = _service.list();
+				JSONArray jsonLayers = new JSONArray();
+				for (int i=0; i<layers.size(); ++i) {
+					jsonLayers.put( i, layers.get(i).getRawData() );
+				}
+				return new JsonRepresentation(jsonLayers);
 			
 			}
 			
@@ -122,10 +124,10 @@ public class AnnotationResource extends ApertureServerResource {
 			
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-					"Unable to create JSON object from supplied options string", e);
+			                            "Unable to create JSON object from supplied options string", e);
 		} catch (IllegalArgumentException e) {
 			throw new ResourceException(Status.SERVER_ERROR_INTERNAL,
-					e.getMessage(), e);
+			                            e.getMessage(), e);
 		}
 	}
 	
@@ -136,7 +138,7 @@ public class AnnotationResource extends ApertureServerResource {
 		try {
 
 			String layer = (String) getRequest().getAttributes().get("layer");
-            String id = (String) getRequest().getAttributes().get("uuid");
+			String id = (String) getRequest().getAttributes().get("uuid");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			String xAttr = (String) getRequest().getAttributes().get("x");
 			String yAttr = (String) getRequest().getAttributes().get("y");
@@ -150,39 +152,39 @@ public class AnnotationResource extends ApertureServerResource {
 				uuid = UUID.fromString(id);
 			}
 
-		    JSONObject tileJson = new JSONObject();
-            tileJson.put("level", zoomLevel);
-            tileJson.put("xIndex", x);
-            tileJson.put("yIndex", y);
+			JSONObject tileJson = new JSONObject();
+			tileJson.put("level", zoomLevel);
+			tileJson.put("xIndex", x);
+			tileJson.put("yIndex", y);
 
-            JSONObject result = new JSONObject();
-		    result.put("tile", tileJson );
-		    TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
+			JSONObject result = new JSONObject();
+			result.put("tile", tileJson );
+			TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
 		    
-		    Map<BinIndex, List<AnnotationData<?>>> data = _service.read(uuid, layer, index);
+			Map<BinIndex, List<AnnotationData<?>>> data = _service.read(uuid, layer, index);
 
-            // annotations by bin
-		    JSONObject binsJson = new JSONObject();
-		    for (Map.Entry<BinIndex, List<AnnotationData<?>>> entry : data.entrySet() ) {
+			// annotations by bin
+			JSONObject binsJson = new JSONObject();
+			for (Map.Entry<BinIndex, List<AnnotationData<?>>> entry : data.entrySet() ) {
 				
-		    	BinIndex binIndex = entry.getKey();
-		    	List<AnnotationData<?>> annotations = entry.getValue();
+				BinIndex binIndex = entry.getKey();
+				List<AnnotationData<?>> annotations = entry.getValue();
 		    	
-		    	JSONArray annotationArray = new JSONArray();			    
-			    for ( AnnotationData<?> annotation : annotations ) {
-			    	annotationArray.put( annotation.toJSON() );
-			    }
-                binsJson.put( binIndex.toString(), annotationArray );
-		    }
+				JSONArray annotationArray = new JSONArray();
+                for ( AnnotationData<?> annotation : annotations ) {
+					annotationArray.put( annotation.toJSON() );                    
+				}
+				binsJson.put( binIndex.toString(), annotationArray );
+			}
 		    
-		    result.put( "annotations", binsJson );
+			result.put( "annotations", binsJson );
 
-		    setStatus(Status.SUCCESS_CREATED);
-		    return new JsonRepresentation( result );
+			setStatus(Status.SUCCESS_CREATED);
+			return new JsonRepresentation( result );
 
 		} catch (Exception e){
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-					"Unable to interpret requested tile from supplied URL.", e);
+			                            "Unable to interpret requested tile from supplied URL.", e);
 		}
 	}
 }

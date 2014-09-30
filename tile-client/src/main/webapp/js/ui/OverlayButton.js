@@ -29,6 +29,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        DURATION = 300,
         OverlayButton;
 
 
@@ -87,9 +88,11 @@ define(function (require) {
                                 complete: function() {
                                     // re-enable click, but switch to close callback
                                     that.$header.click( closeOverlay );
-                                }
+                                },
+                                duration: DURATION
                             });
-                        }
+                        },
+                        duration: DURATION
                     });
             };
 
@@ -110,9 +113,11 @@ define(function (require) {
                                 complete: function() {
                                     // re-enable click, but switch to open callback
                                     that.$header.click( openOverlay );
-                                }
+                                },
+                                duration: DURATION
                             });
-                        }
+                        },
+                        duration: DURATION
                     });
             };
 

@@ -1,0 +1,32 @@
+main:
+  - label: Tour
+    path: tour/
+
+  - label: Docs
+    path: docs/development/quickstart/
+
+  - label: Demos
+    path: demos/
+
+  - label: Download
+    path: download/
+
+docs:
+  - label: Development
+    path: docs/development/quickstart/
+
+  - label: API
+    path: docs/api/
+
+  - label: User Guide
+    path: docs/userguide/
+
+tour:
+  - label: Overview
+    path: tour/
+
+  - label: System Description
+    path: tour/components/
+
+  - label: Process
+    path: tour/process/

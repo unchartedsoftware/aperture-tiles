@@ -29,13 +29,18 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.oculusinfo.tile.ServletLifecycleListener;
 import com.oculusinfo.tile.TileServiceConfiguration;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,6 +73,8 @@ import java.util.List;
  */
 @Singleton
 public class SparkContextProviderImpl implements SparkContextProvider {
+	private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SparkContextProviderImpl.class);
+
 	private String   _master;
 	private String   _jobName;
 	private String   _sparkHome;
@@ -122,12 +129,12 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	}
 
 	@Override
-	public SparkContext getSparkContext () {
-		return JavaSparkContext.toSparkContext(getJavaSparkContext());
+	public SparkContext getSparkContext (JSONObject configuration) {
+		return JavaSparkContext.toSparkContext(getJavaSparkContext(configuration));
 	}
 
 	@Override
-	synchronized public JavaSparkContext getJavaSparkContext () {
+	synchronized public JavaSparkContext getJavaSparkContext (JSONObject configuration) {
 		if (null == _context) {
 			// Thin out the log of spark spam
 			Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
@@ -142,6 +149,20 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 			config.setSparkHome(_sparkHome);
 			config.setJars(_jars);
 			config.set("spark.logConf", "true");
+
+			// Copy in configuration properties that begin with "akka." and "spark."
+			if (null != configuration) {
+				for (String key: JSONObject.getNames(configuration)) {
+					if (key.toLowerCase().startsWith("akka.") || key.toLowerCase().startsWith("spark.")) {
+						try {
+							String value = configuration.getString(key);
+							config.set(key, value);
+						} catch (JSONException e) {
+							LOGGER.warn("Error getting value for key {}", key, e);
+						}
+					}
+				}
+			}
 			_context = new JavaSparkContext(config);
 		}
 		return _context;

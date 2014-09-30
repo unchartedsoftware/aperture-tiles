@@ -1,0 +1,32 @@
+description = "Useful utilites to help pyramid-based binning schemes (and others, as necessary)"
+
+// Pulls in the Java plugin
+apply plugin: "java"
+
+// Task to create a JAR from the all source set
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+ 
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+
+dependencies {
+	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"
+	compile "org.apache.hadoop:hadoop-core:$hadoopCoreVersion"	
+	compile "org.apache.avro:avro:1.7.4"
+	compile "org.json:json:20090211"
+	compile "org.xerial:sqlite-jdbc:3.7.2"
+	compile "com.esotericsoftware.kryo:kryo:2.21"
+	testCompile "junit:junit:4.8.1"
+}
+addHBaseDependencies(project)

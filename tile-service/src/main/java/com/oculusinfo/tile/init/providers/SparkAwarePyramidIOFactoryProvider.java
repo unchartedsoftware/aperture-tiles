@@ -49,21 +49,4 @@ public class SparkAwarePyramidIOFactoryProvider implements DelegateFactoryProvid
 	                                                     List<String> path) {
 		return new LiveTilePyramidIOFactory(parent, path, _contextProvider);
 	}
-
-	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
-	                                                     ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return new LiveTilePyramidIOFactory(factoryName, parent, path, _contextProvider);
-	}
-	
-	@Override
-	public String getFactoryName() {
-		return "live";
-	}
-	
-	@Override
-	public List<String> getPath() {
-		return null;
-	}
 }

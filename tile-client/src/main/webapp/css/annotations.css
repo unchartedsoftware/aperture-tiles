@@ -1,23 +1,27 @@
 @charset "UTF-8";
 
 
-.annotation-bin {
-    pointer-events:none;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-    border: 1px solid #FF0000;
-}
+/********************************************/
+/*             Point Annotation             */
+/********************************************/
+
 
 .point-annotation-aggregate {
     position:absolute;
+    width: 0px;
+    height: 0px;
+    z-index: 0;
+}
+
+.point-annotation-aggregate:hover {
+    z-index: 1;
 }
 
 .point-annotation {
     position:absolute;
-    -webkit-border-radius: 30px;
-       -moz-border-radius: 30px;
-            border-radius: 30px; 
+    -webkit-border-radius: 8px;
+       -moz-border-radius: 8px;
+            border-radius: 8px;
     width: 8px;
     height: 8px;
     -webkit-transition: 0.1s ease-in-out;
@@ -26,136 +30,146 @@
             transition: 0.1s ease-in-out;
 }
 
-.point-annotation-front {
-
+.point-annotation-fill {
     background-color: #09CFFF;
     margin: -2px 2px 2px -2px;
+    z-index: 2;
+}
+
+.point-annotation-border {
+    pointer-events:none;
+    background-color: #000;
+    border: 2px solid #000;
+    margin: -4px 0 0 -4px;
     z-index: 1;
 }
 
-.point-annotation-back {
-    
-    pointer-events:none;
-    background-color: #fff;
-    border: 2px solid #000;
-    margin: -4px 0 0 -4px;
-    z-index: 0;
-}
-
 .point-annotation-aggregate:hover .point-annotation {
-
     cursor: pointer;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
 }
 
-.point-annotation-aggregate:hover .point-annotation-front {
-
-    margin: -6px 2px 2px -6px;
+.point-annotation-aggregate:hover .point-annotation-fill {
+    margin: -4px 2px 2px -4px;
 }
 
-.point-annotation-aggregate:hover .point-annotation-back {
-
-    margin: -8px 0 0 -8px;
+.point-annotation-aggregate:hover .point-annotation-border {
+    margin: -6px 0 0 -6px;
 }
+
+.clicked-aggregate {
+    z-index: 2;
+}
+
+.clicked-annotation {
+}
+
+
+/********************************************/
+/*            Annotation Details            */
+/********************************************/
+
 
 .annotation-details {
-
     position:absolute;
-    background-color:#111111;
-    width: 384px;
-    z-index: 2001;
-    border: 1px solid #333333;
+    z-index: 3;
     box-shadow: 0px 5px 15px #000;
+    height: 196px;
 }
 
+.light-theme .annotation-details {
+    background-color:#ccc;   
+    border: 1px solid #fff;
+}
+
+.dark-theme .annotation-details {
+    background-color:#111111;   
+    border: 1px solid #333333;
+}
 
 .annotation-details-content {
-
     position:relative;
-    height:100%;
+    width: 100%;
+    height: 100%;
 }
 
+.light-theme .annotation-details-content {
+    background-color: #ddd;
+}
+
+.dark-theme .annotation-details-content {
+    background-color: #111;
+}
 
 .annotation-details-head {
-
-    position:relative;
-    padding: 0 10px 0 10px;
-    background-color: #222222;
-    font-size: 18px;
-    color: #D3D3D3;
-    width:100%;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-}
-
-
-.annotation-details-body {
-
-    position:relative;   
-    font-size: 14px;
-    background-color:#111111;
-    padding: 5px 15px 5px 15px;
-    overflow: auto;
-    height: calc(100% - 32px);
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-
-}
-
-
-.annotation-details-aggregate {
-
-    padding-bottom: 28px;
-}
-
-.annotation-details-label {
-
     position:relative;
     padding-top: 5px;
     padding-bottom: 5px;
-    color: #D3D3D3;
-    text-shadow:
-        -1px -1px 1px #000,
-         1px -1px 1px #000,
-        -1px  1px 1px #000,
-         1px  1px 1px #000; 
+    padding-left: 10px;
+    padding-right: 20px;
+    font-size: 18px;  
+    white-space: nowrap;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
+.light-theme .annotation-details-head {
+    background-color: #ccc;
+    color: #000;
+}
+
+.dark-theme .annotation-details-head {
+    background-color: #222222;
+    color: #D3D3D3;
+}
+
+.annotation-details-body {
+    position:relative;
+    height: calc(100% - 42px);
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.light-theme .annotation-details-body {
+    background-color: #ddd;
+}
+
+.dark-theme .annotation-details-body {   
+    background-color: #111111;
+}
+
+.annotation-details-aggregate {
+    padding-bottom: 28px;
+}
 
 .annotation-details-close-button {
+    cursor: pointer;
     position:absolute;
     right:3px;
     top:3px;
     width:12px;
     height:12px;
     background: transparent url(../images/close_icon.png) no-repeat center top;
-    -webkit-filter: brightness(0.5);
-    
-    -webkit-transform: scale(0.75);
-       -moz-transform: scale(0.75);
-        -ms-transform: scale(0.75);
-            transform: scale(0.75);
-            
-    -webkit-transition: 0.1s ease-in-out;
-       -moz-transition: 0.1s ease-in-out;
-        -ms-transition: 0.1s ease-in-out;
-            transition: 0.1s ease-in-out;
+    opacity: 0.5;
 }
 
 .annotation-details-close-button:hover {
-    cursor: pointer;
-    -webkit-filter: brightness(1);
-    -webkit-transform: scale(1.0);
-       -moz-transform: scale(1.0);
-        -ms-transform: scale(1.0);
-            transform: scale(1.0);
+    opacity: 1;
 }
 
-.annotation-carousel {
 
+/********************************************/
+/*            Annotation Carousel           */
+/********************************************/
+
+
+.annotation-carousel {
     position:absolute;
     pointer-events:none;
     width:100%;
@@ -165,15 +179,19 @@
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
+    -webkit-backface-visibility: hidden;
 }
 
 .annotation-carousel-ui-chevron {
     position: absolute;
     pointer-events: all;
-    bottom: -10px;
-    height:50px;
-    width:20px;
-    -webkit-transform: scale(0.5); 
+    bottom: -11px;
+    height: 50px;
+    width: 20px;
+    -webkit-transform: scale(0.5);
+       -moz-transform: scale(0.5);
+        -ms-transform: scale(0.5);
+            transform: scale(0.5);
     -webkit-transition: -webkit-transform .1s ease-in-out;
        -moz-transition:    -moz-transform .1s ease-in-out;
             transition:         transform .1s ease-in-out;
@@ -191,7 +209,7 @@
 
 .annotation-carousel-ui-chevron:hover {
     cursor: pointer;
-    -webkit-transform: scale(0.7);  
+    -webkit-transform: scale(0.7);
 }
 
 .annotation-carousel-ui-text-index {
@@ -201,10 +219,12 @@
     text-align:center;
     pointer-events:none;
     font-size:16px;
-    color: #ffffff;
-    text-shadow:
-        -1px -1px 2px #000,
-         1px -1px 2px #000,
-        -1px  1px 2px #000,
-         1px  1px 2px #000; 
+}
+
+.light-theme .annotation-carousel-ui-text-index {
+    color: #000;
+}
+
+.dark-theme .annotation-carousel-ui-text-index {   
+    color: #fff;
 }
