@@ -39,7 +39,7 @@ define(function (require) {
 
     makeRedrawFunc = function( renderer, tileService, conditional ) {
         return function() {
-            // if conditional function is provided, it must return true to redraw
+            // if conditional function is provided, it must return true to execute layer redraw
             if ( conditional === undefined ||
                 ( conditional && typeof conditional === 'function' && conditional() ) ) {
                 renderer.redraw( tileService.getDataArray() );
@@ -180,9 +180,8 @@ define(function (require) {
             } else {
                 // otherwise request new data
                 newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService, function() {
-                    // on redraw if the renderer index is still the same, there may be a case where
-                    // the server takes so long to respond, they switch renderers in the mean time leading
-                    // two overlap
+                    // on redraw check if the renderer index is still the same, it may be the case that
+                    // the server took so long to respond that the this view is no longer active
                     return that.renderersByTile[tilekey] === newIndex;
                 }));
             }
