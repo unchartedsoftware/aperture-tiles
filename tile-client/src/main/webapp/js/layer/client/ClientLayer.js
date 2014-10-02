@@ -37,11 +37,16 @@ define(function (require) {
 
 
 
-    makeRedrawFunc = function( renderer, tileService ) {
+    makeRedrawFunc = function( renderer, tileService, conditional ) {
         return function() {
-            renderer.redraw( tileService.getDataArray() );
+            // if conditional function is provided, it must return true to execute layer redraw
+            if ( conditional === undefined ||
+                ( conditional && typeof conditional === 'function' && conditional() ) ) {
+                renderer.redraw( tileService.getDataArray() );
+            }
         };
     };
+
 
 
     ClientLayer = Layer.extend({
@@ -153,7 +158,8 @@ define(function (require) {
 
         setTileRenderer: function( tilekey, newIndex ) {
 
-            var oldIndex = this.getTileRenderer( tilekey ),
+            var that = this,
+                oldIndex = this.getTileRenderer( tilekey ),
                 oldRenderer = this.views[oldIndex].renderer,
                 newRenderer = this.views[newIndex].renderer,
                 oldService = this.views[oldIndex].service,
@@ -173,7 +179,11 @@ define(function (require) {
                 makeRedrawFunc( newRenderer, newService )();
             } else {
                 // otherwise request new data
-                newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService ));
+                newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService, function() {
+                    // on redraw check if the renderer index is still the same, it may be the case that
+                    // the server took so long to respond that the this view is no longer active
+                    return that.renderersByTile[tilekey] === newIndex;
+                }));
             }
 
             // release and redraw to remove old data
