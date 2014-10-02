@@ -46,6 +46,7 @@ import com.oculusinfo.tilegen.tiling.CategoryValueAnalytic
 import com.oculusinfo.tilegen.tiling.CategoryValueBinningAnalytic
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinningAnalytic
 import com.oculusinfo.tilegen.tiling.SumLogDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.MeanDoubleBinningAnalytic
 import com.oculusinfo.tilegen.tiling.MinimumDoubleAnalytic
 import com.oculusinfo.tilegen.tiling.MaximumDoubleAnalytic
 import com.oculusinfo.tilegen.tiling.SumDoubleAnalytic
@@ -64,6 +65,7 @@ trait ValueDescription[BT] {
 object CSVValueExtractor {
 	val standardFactories = Array[ValueExtractorFactory](
 		new FieldValueExtractorFactory,
+		new MeanFieldValueExtractorFactory,
 		new StringValueExtractorFactory,
 		new SubstringValueExtractorFactory,
 		new IndirectSeriesValueExtractorFactory,
@@ -167,7 +169,7 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 					}
 				matches(getFieldType(fieldName, properties))
 			}
-		  case _ => false
+			case _ => false
 		}
 
 	def constructValueExtractor (field: String, properties: PropertiesWrapper) = {
@@ -204,12 +206,49 @@ class FieldValueExtractor (fieldName: String,
 	def description: String = "The aggregate value of field "+fieldName
 	def fields: Array[String] = Array(fieldName)
 	def calculateValue (fieldValues: Map[String, Any]): Double =
-		Try(fieldValues.get(fieldName).get.asInstanceOf[Double]).getOrElse(binningAnalytic.defaultUnprocessedValue)
+		Try(fieldValues.get(fieldName).get.asInstanceOf[Double])
+			.getOrElse(binningAnalytic.defaultUnprocessedValue)
 	def getSerializer: TileSerializer[JavaDouble] =
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] = binningAnalytic
 }
 
+
+
+class MeanFieldValueExtractorFactory extends ValueExtractorFactory {
+	def handles (field: Option[String], fields: Option[String],
+	                      properties: PropertiesWrapper): Boolean =
+		field match {
+			case Some(fieldName) => {
+				def matches (fieldType: String): Boolean =
+					fieldType match {
+						case "mean" => true
+						case "average" => true
+						case _ => false
+					}
+				matches(getFieldType(fieldName, properties))
+			}
+			case _ => false
+		}
+
+	def constructValueExtractor (field: String, properties: PropertiesWrapper) =
+		new MeanValueExtractor(field)
+}
+
+class MeanValueExtractor (fieldName: String)
+		extends CSVValueExtractor[(Double, Int), JavaDouble]
+{
+	private val binningAnalytic = new MeanDoubleBinningAnalytic
+	def name: String = fieldName
+	def description: String = "The mean value of field "+fieldName
+	def fields: Array[String] = Array(fieldName)
+	def calculateValue (fieldValues: Map[String, Any]): (Double, Int) =
+		Try((fieldValues.get(fieldName).get.asInstanceOf[Double], 1))
+			.getOrElse(binningAnalytic.defaultUnprocessedValue)
+	def getSerializer: TileSerializer[JavaDouble] =
+		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
+	def getBinningAnalytic: BinningAnalytic[(Double, Int), JavaDouble] = binningAnalytic
+}
 
 
 class StringValueExtractorFactory extends ValueExtractorFactory {

@@ -346,6 +346,26 @@ trait StandardDoubleBinningAnalytic extends BinningAnalytic[Double, JavaDouble] 
 
 
 
+class MeanDoubleBinningAnalytic
+		extends Analytic[(Double, Int)]
+		with BinningAnalytic[(Double, Int), JavaDouble]
+{
+	def aggregate (a: (Double, Int), b: (Double, Int)): (Double, Int) =
+		(a._1 + b._1, a._2 + b._2)
+	def defaultProcessedValue: (Double, Int) = (0.0, 0)
+	def defaultUnprocessedValue: (Double, Int) = (0.0, 0)
+	def finish (value: (Double, Int)): JavaDouble = {
+		val (total, count) = value
+		if (0 == count) {
+			JavaDouble.NaN
+		} else {
+			new JavaDouble(total/count)
+		}
+	}
+}
+
+
+
 class SumIntAnalytic extends Analytic[Int] {
 	def aggregate (a: Int, b: Int): Int = a + b
 	def defaultProcessedValue: Int = 0
