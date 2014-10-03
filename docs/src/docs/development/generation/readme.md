@@ -333,6 +333,52 @@ The Tiling properties files define the tiling job parameters for each layer in y
 					</dl>
 				</dd>
    
+   				<dt>
+   					<b>oculus.binning.projection.autobounds</b>
+   				</dt>
+	
+				<dd>
+					Indicates whether the tiling job should set the minimum and maximum
+					bounds automatically (true) or whether you will specify them manually
+					(false). Default is true.
+				</dd>
+	
+				<dt>
+					<b>oculus.binning.projection.minx</b>
+				</dt>
+				
+				<dd>
+					If the oculus.binning.projection.autobounds value is set to false, this
+					field indicates the lowest value that will be displayed on the x-axis.
+				</dd>
+	
+				<dt>
+					<b>oculus.binning.projection.maxx</b>
+				</dt>
+				
+				<dd>
+					If the oculus.binning.projection.autobounds value is set to false, this
+					field indicates the highest value that will be displayed on the x-axis.
+				</dd>
+	
+				<dt>
+					<b>oculus.binning.projection.miny</b>
+				</dt>
+				
+				<dd>
+					If the oculus.binning.projection.autobounds value is set to false, this
+					field indicates the lowest value that will be displayed on the y-axis.
+				</dd>
+	
+				<dt>
+					<b>oculus.binning.projection.maxy</b>
+				</dt>
+				
+				<dd>
+					If the oculus.binning.projection.autobounds value is set to false, this
+					field indicates the highest value that will be displayed on the y-axis.
+				</dd>
+   				
 				<dt>
 					<b>oculus.binning.xField</b>
 				</dt>
@@ -351,13 +397,25 @@ The Tiling properties files define the tiling job parameters for each layer in y
 				<dt>
 					<b>oculus.binning.levels.&lt;order&gt;</b>
 				</dt>
-				<dd>Array property. For example, if you want to bin levels in three groups,	you should include:
+				<dd>Array property. For example, if you want to generate tile zoom levels in three groups, you should include:
 					<ul>
 						<li>oculus.binning.levels.0
 						<li>oculus.binning.levels.1
 						<li>oculus.binning.levels.2
 					</ul>
-				Each is a description of the levels to bin in that group - a comma-separated list of individual integers, or ranges of integers (described as start-end). So "0-3,5" would mean levels 0, 1, 2, 3, and 5. If there are multiple level sets, the parsing of the raw data is only done once, and is cached for use with each level set. This property is mandatory, and has no default.
+				Each is a description of the zoom levels to bin simultaneously in that group - a comma-separated list of individual integers, or ranges of integers (described as start-end). So "0-3,5" would mean levels 0, 1, 2, 3, and 5. If there are multiple level sets, the parsing of the raw data is only done once, and is cached for use with each level set. This property is mandatory, and has no default.
+				
+				Which levels you should bin together depends largely on the size of your cluster and on the size of your data. 
+   
+   				Each binning job has an overhead cost and a tiling cost. Generally, the
+   				overhead cost is the dominant factor below level 8 and irrelevant above that.
+   				Tiling all levels below this point will save the overhead cost reducing tile generation time. Above this
+   				level, you risk job failure due to out of memory errors if you try to simultaneously bin multiple levels due to the large number of tiles generated at lower levels.
+   				Our typical use case has:
+				- binning.level.0=0-8
+				- binning.level.1=9
+				- binning.level.2=10
+				- etc.
 				</dd>
 				
 				<dt>
