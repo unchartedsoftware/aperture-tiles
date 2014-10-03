@@ -60,11 +60,20 @@ class AnalyticsTestSuite extends FunSuite {
 		assert(0.0 === analytic.defaultUnprocessedValue)
 		assert(3.0 === analytic.aggregate(1.0, 2.0))
 	}
-	
+
 	test("Standard Double Binning Analytic") {
 		val analytic = new SumDoubleAnalytic with StandardDoubleBinningAnalytic
 
 		assert(4.0 === analytic.finish(4.0).doubleValue)
+	}
+
+	test("Standard Mean Double Binning Analytic") {
+		val analytic = new MeanDoubleBinningAnalytic
+		assert((0.0, 0) === analytic.defaultProcessedValue)
+		assert((0.0, 0) === analytic.defaultUnprocessedValue)
+		assert((3.0, 5) === analytic.aggregate((1.9, 2), (1.1, 3)))
+		assert(0.6 === analytic.finish((3.0, 5)))
+		assert(JavaDouble.isNaN(analytic.finish((0.0, 0)))) 
 	}
 
 	test("Standard Double Tile Analytic") {

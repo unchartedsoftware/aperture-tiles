@@ -346,6 +346,34 @@ trait StandardDoubleBinningAnalytic extends BinningAnalytic[Double, JavaDouble] 
 
 
 
+/**
+ * A standard analytic to calculate the mean of a value.
+ * 
+ * This doesn't currently exist in simple Analytic form since the finish function 
+ * is an integral part of the process.  If/When someone implements a TileAnalytic
+ * using mean, it is suggested they derive directly from this BinningAnalytic, and
+ * map the output of finish into metadata rather than the raw (Double,Int) value.
+ */
+class MeanDoubleBinningAnalytic
+		extends Analytic[(Double, Int)]
+		with BinningAnalytic[(Double, Int), JavaDouble]
+{
+	def aggregate (a: (Double, Int), b: (Double, Int)): (Double, Int) =
+		(a._1 + b._1, a._2 + b._2)
+	def defaultProcessedValue: (Double, Int) = (0.0, 0)
+	def defaultUnprocessedValue: (Double, Int) = (0.0, 0)
+	def finish (value: (Double, Int)): JavaDouble = {
+		val (total, count) = value
+		if (0 == count) {
+			JavaDouble.NaN
+		} else {
+			new JavaDouble(total/count)
+		}
+	}
+}
+
+
+
 class SumIntAnalytic extends Analytic[Int] {
 	def aggregate (a: Int, b: Int): Int = a + b
 	def defaultProcessedValue: Int = 0
