@@ -121,29 +121,60 @@ define(function (require) {
         },
 
 
-        setOpacity: function( opacity ) {
+        setClick: function( value ) {
+            this.click = value;
+        },
 
+
+        getClick: function() {
+            return this.click;
+        },
+
+
+        isClicked: function() {
+            return this.click !== null && this.click !== undefined;
+        },
+
+
+        setOpacity: function( opacity ) {
+            this.opacity = opacity;
             this.renderer.setOpacity( opacity );
         },
 
 
-        setVisibility: function( visible ) {
+        getOpacity: function() {
+            return this.opacity;
+        },
 
+
+        setVisibility: function( visible ) {
+            this.visibility = visible;
             this.renderer.setVisibility( visible );
         },
 
 
-        setZIndex: function( zIndex ) {
+        getVisibility: function() {
+            return this.visibility;
+        },
 
+
+        setZIndex: function( zIndex ) {
+            this.zIndex = zIndex;
             this.renderer.setZIndex( zIndex );
         },
+
+
+        getZIndex: function() {
+            return this.zIndex;
+        },
+
 
         createDetails: function( clickState ) {
 
             var $details = this.details.createDisplayDetails( clickState.annotations, this.map.getRootElement() ); //clickState.$annotations );
             // position details over click
             $details.css({
-                left: clickState.position.x - ( $details.outerWidth() / 2 ),
+                left: clickState.position.x, // - ( $details.outerWidth() / 2 ),
                 top: clickState.position.y - ( $details.outerHeight() + DETAILS_VERTICAL_OFFSET )
             });
         },
@@ -433,6 +464,13 @@ define(function (require) {
                     }
                     // set layer info
                     that.layerInfo = layerInfo;
+                    // pass parent layer (this) along with meta data to the renderer / details
+                    that.renderer.parent = that;
+                    that.renderer.meta = layerInfo.meta;
+                    that.details.parent = that;
+                    that.details.meta = layerInfo.meta;
+                    // subscribe renderer to pubsub AFTER it has its parent reference
+                    that.renderer.subscribeRenderer();
                 }
                 callback( layerInfo, statusInfo );
             });

@@ -33,6 +33,7 @@ define(function (require) {
         HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
         Util = require('../../../util/Util'),
+        PubSub = require('../../../util/PubSub'),
         idNumber = 0,
         GenericHtmlRenderer;
 
@@ -66,8 +67,6 @@ define(function (require) {
             if ( !$.isArray( subSpec.hoverColor ) ) {
                 subSpec.hoverColor = [ subSpec.hoverColor ];
             }
-
-            //subSpec.outline = subSpec.outline || "#000000";
 
             for ( i=0; i< subSpec.color.length; i++ ) {
                 subSpec.hoverColor[i] = subSpec.hoverColor[i] || Util.hexBlend( subSpec.color[i], "#ffffff" );
@@ -139,18 +138,21 @@ define(function (require) {
         },
 
 
-        registerLayer: function( layerState ) {
+        subscribeRenderer: function() {
 
             var that = this;
-            this._super( layerState );
-            this.layerState.addListener( function( fieldName ) {
 
-                switch (fieldName) {
+            PubSub.subscribe( this.parent.getChannel(), function( message, path ) {
+
+                var field = message.field,
+                    value = message.value;
+
+                switch ( field ) {
 
                     case "click":
-                        if ( layerState.has('click') ) {
+                        if ( value !== null ) {
                             // add click state classes
-                            that.addClickStateClassesGlobal();
+                            that.addClickStateClassesGlobal( value );
                         } else {
                             // remove click state classes
                             that.removeClickStateClassesGlobal();
@@ -251,12 +253,12 @@ define(function (require) {
 
         addClickStateClassesLocal: function( $elem, value, tilekey ) {
 
-            if ( !this.layerState.has('click') ) {
+            if ( !this.parent.isClicked() ) {
                 return;
             }
 
             var idKey = this.spec.idKey,
-                click = this.layerState.get('click'),
+                click = this.parent.getClick(),
                 selectedValue = click[idKey],
                 entryValue = value[idKey],
                 clickedTilekey = click.tilekey;
@@ -287,10 +289,9 @@ define(function (require) {
         },
 
 
-        addClickStateClassesGlobal: function() {
+        addClickStateClassesGlobal: function( click ) {
 
             var SELECTABLE_ELEMENT_CLASS = this.getSelectableElement(),
-                click = this.layerState.get('click'),
                 selectedValue = click[this.spec.idKey],
                 parsedValues = click.tilekey.split(','),
                 level = parseInt( parsedValues[0], 10 ),
@@ -325,15 +326,15 @@ define(function (require) {
             var idKey = this.spec.idKey,
                 click = {
                     value : value,
-                    tilekey : this.layerState.get('tileFocus')
+                    tilekey : this.parent.getTileFocus()
                 };
             click[idKey] = value[idKey];
-            this.layerState.set('click', click );
+            PubSub.publish( this.parent.getChannel(), { field: 'click', value: click } );
         },
 
 
         clickOff: function() {
-            this.layerState.set('click', null);
+            PubSub.publish( this.parent.getChannel(), { field: 'click', value: null } );
         },
 
 
@@ -392,9 +393,7 @@ define(function (require) {
 
         createDetailsOnDemand: function( data, value ) {
 
-            var //clickState = this.layerState.get('click'),
-                map = this.map,
-                //value = clickState.value,
+            var map = this.map,
                 tilePos = map.getMapPixelFromCoord( data.longitude, data.latitude ),
                 position = {
                     x: tilePos.x + 256,

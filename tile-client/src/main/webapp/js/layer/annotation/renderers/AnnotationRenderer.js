@@ -42,8 +42,8 @@ define(function (require) {
             this.map = map;
         },
 
-        registerLayer: function( layerState ) {
-            this.layerState = layerState;
+        subscribeRenderer: function() {
+            return true;
         },
 
         setOpacity: function( opacity ) {

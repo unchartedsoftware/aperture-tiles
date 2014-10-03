@@ -307,22 +307,22 @@ require(['./ApertureConfig',
 
                         $.when( clientLayerDeferreds, serverLayerDeferreds, annotationLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
 
-                            var sharedStates = [];
+                            var layers = [];
 
                             // customize layers
                             if (UICustomization.customizeLayers) {
                                 UICustomization.customizeLayers( clientLayers, serverLayers, annotationLayers );
                             }
 
-                            $.merge( sharedStates, baseLayerMediator.getLayerStates() );
-                            $.merge( sharedStates, clientLayerMediator.getLayerStates() );
-                            $.merge( sharedStates, serverLayerMediator.getLayerStates() );
-                            $.merge( sharedStates, annotationLayerMediator.getLayerStates() );
+                            $.merge( layers, [ worldMap ] );
+                            $.merge( layers, clientLayers );
+                            $.merge( layers, serverLayers );
+                            $.merge( layers, annotationLayers );
 
                             // create layer controls
-                            new LayerControls( 'layer-controls-content', sharedStates, UICustomization.customizeSettings ).noop();
+                            new LayerControls( 'layer-controls-content', layers, UICustomization.customizeSettings ).noop();
                             // create the carousel controls
-                            new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
+                            new CarouselControls( clientLayers, worldMap ).noop();
                         });
 
 			        }

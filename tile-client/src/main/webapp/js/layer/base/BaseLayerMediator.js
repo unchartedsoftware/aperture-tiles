@@ -30,8 +30,7 @@ define(function (require) {
 
 
     var LayerMediator = require('../LayerMediator'),
-        SharedObject = require('../../util/SharedObject'),
-        Util = require('../../util/Util'),
+        PubSub = require('../../util/PubSub'),
         BaseLayerMediator;
 
 
@@ -46,43 +45,38 @@ define(function (require) {
 
         registerLayers: function( map ) {
 
-            var layerState;
-
-            // create a layer state object. Values are initialized to those provided
-            // by the layer specs, which are defined in the layers.json file, or are
-            // defaulted to appropriate starting values
-            layerState = new SharedObject();
-
-            // set immutable layer state properties
-            layerState.set( 'id', map.id );
-            layerState.set( 'uuid', Util.generateUuid() );
-            layerState.set( 'name', "Base Layer" );
-            layerState.set( 'domain', 'base' );
-
-            layerState.BASE_LAYERS = map.baseLayers;
+            var channel = map.getChannel();
 
             // Register a callback to handle layer state change events.
-            layerState.addListener( function( fieldName ) {
+            PubSub.subscribe( channel, function( message, path ) {
 
-                switch (fieldName) {
+                var field = message.field,
+                    value = message.value;
+
+                switch ( field ) {
 
                     case "opacity":
 
-                        map.setOpacity( layerState.get('opacity') );
+                        map.setOpacity( value );
                         break;
 
                     case "enabled":
 
-                        map.setVisibility( layerState.get('enabled') );
+                        map.setVisibility( value );
+                        break;
+
+                    case "zIndex":
+
+                        map.setZIndex( value );
                         break;
 
                     case "baseLayerIndex":
 
-                        map.setBaseLayerIndex( layerState.get('baseLayerIndex') );
-                        if ( layerState.BASE_LAYERS[ layerState.get('baseLayerIndex') ].type !== "BlankBase" ) {
+                        map.setBaseLayerIndex( value );
+                        if ( map.BASE_LAYERS[ map.getBaseLayerIndex() ].type !== "BlankBase" ) {
                             // if switching to a non-blank baselayer, ensure opacity and visibility is restored
-                            map.setOpacity( layerState.get('opacity') );
-                            map.setVisibility( layerState.get('enabled') );
+                            map.setOpacity( map.getOpacity() );
+                            map.setVisibility( map.getVisibility() );
                         }
                         break;
                 }
@@ -90,13 +84,10 @@ define(function (require) {
             });
 
             // set client-side layer state properties after binding callbacks
-            layerState.set( 'enabled', true );
-            layerState.set( 'opacity', 1.0 );
-            layerState.set( 'zIndex', -1 );
-            layerState.set( 'baseLayerIndex', 0 );
-
-            // Add the layer to the layer state array.
-            this.layerStates.push( layerState );
+            PubSub.publish( channel, { field: 'zIndex', value: -1 });
+            PubSub.publish( channel, { field: 'enabled', value: true });
+            PubSub.publish( channel, { field: 'opacity', value: 1.0 });
+            PubSub.publish( channel, { field: 'baseLayerIndex', value: 0 });
         }
 
     });

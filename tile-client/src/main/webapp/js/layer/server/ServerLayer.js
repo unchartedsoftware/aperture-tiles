@@ -56,6 +56,11 @@ define(function (require) {
         },
 
 
+        getOpacity: function() {
+            return this.layer.olLayer_.opacity;
+        },
+
+
         /**
          * Set the visibility
          */
@@ -63,6 +68,11 @@ define(function (require) {
             if (this.layer) {
                 this.layer.olLayer_.setVisibility( visibility );
             }
+        },
+
+
+        getVisibility: function() {
+            return this.layer.olLayer_.getVisibility();
         },
 
 
@@ -89,6 +99,31 @@ define(function (require) {
         },
 
 
+        getRampType: function() {
+            return this.layerSpec.renderer.ramp;
+        },
+
+
+        setRampMinMax: function( minMax ) {
+            this.rampMinMax = minMax;
+        },
+
+
+        getRampMinMax: function() {
+            return this.rampMinMax;
+        },
+
+
+        setRampImageUrl: function ( url ) {
+            this.rampImageUrl = url;
+        },
+
+
+        getRampImageUrl: function() {
+            return this.rampImageUrl;
+        },
+
+
         /**
          * Updates the ramp function associated with the layer.  Results in a POST
          * to the server.
@@ -105,6 +140,11 @@ define(function (require) {
         },
 
 
+        getRampFunction: function() {
+            return this.layerSpec.transform.name;
+        },
+
+
         /**
          * Updates the filter range for the layer.  Results in a POST to the server.
          *
@@ -117,11 +157,21 @@ define(function (require) {
         },
 
 
+        getFilterRange: function() {
+            return this.layerSpec.legendrange;
+        },
+
+
         /**
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
         setZIndex: function ( zIndex ) {
             this.map.setLayerIndex( this.layer.olLayer_, zIndex );
+        },
+
+
+        getZIndex: function () {
+            return this.map.getLayerIndex( this.layer.olLayer_ );
         },
 
 
@@ -140,6 +190,11 @@ define(function (require) {
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
             this.configure( $.proxy( this.update, this ) );
+        },
+
+
+        getCoarseness: function() {
+            return this.layerSpec.coarseness;
         },
 
 

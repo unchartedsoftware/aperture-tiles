@@ -24,10 +24,6 @@
  */
 
 
-/**
- * Populates the LayerState model based on the contents of a the layer, and makes the appropriate
- * modifications to it as the LayerState model changes.
- */
 define(function (require) {
     "use strict";
 
@@ -42,17 +38,12 @@ define(function (require) {
         ClassName: "LayerMediator",
 
         init: function() {
-            this.layerStates = [];
+            this.layerUuids = [];
         },
 
 
         registerLayers: function( layers ) {
             return true;
-        },
-
-
-        getLayerStates: function() {
-            return this.layerStates;
         }
 
     });

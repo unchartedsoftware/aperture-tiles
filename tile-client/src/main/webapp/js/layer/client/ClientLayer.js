@@ -30,6 +30,7 @@ define(function (require) {
 
 
     var Layer = require('../Layer'),
+        Util = require('../../util/Util'),
         LayerService = require('../LayerService'),
         TileService = require('./TileService'),
         makeRedrawFunc,
@@ -49,6 +50,8 @@ define(function (require) {
 
         init: function ( spec, views, map ) {
             this.id = spec[0].layer;
+            this.uuid = Util.generateUuid();
+            this.domain = spec.domain;
             this.name = spec[0].name || spec[0].layer;
             this.map = map;
             this.layerSpec = spec;
@@ -59,32 +62,85 @@ define(function (require) {
         },
 
 
+        setClick: function( value ) {
+            this.click = value;
+        },
+
+
+        getClick: function() {
+            return this.click;
+        },
+
+
+        isClicked: function() {
+            return this.click !== null && this.click !== undefined;
+        },
+
+
+        setCarouselEnabled: function( isEnabled ) {
+            this.carouselEnabled = isEnabled;
+        },
+
+
+        isCarouselEnabled: function() {
+            return this.carouselEnabled;
+        },
+
+
+        getRendererCount: function() {
+            return this.views.length;
+        },
+
+
         setOpacity: function( opacity ) {
             var i;
+            this.opacity = opacity;
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setOpacity( opacity );
             }
         },
 
 
+        getOpacity: function() {
+            return this.opacity;
+        },
+
+
         setVisibility: function( visible ) {
             var i;
+            this.visibility = visible;
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setVisibility( visible );
             }
         },
 
 
+        getVisibility: function() {
+            return this.visibility;
+        },
+
+
         setZIndex: function( zIndex ) {
             var i;
+            this.zIndex = zIndex;
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setZIndex( zIndex );
             }
         },
 
 
+        getZIndex: function() {
+            return this.zIndex;
+        },
+
+
         setTileFocus: function( tilekey ) {
-            return true;
+            this.tileFocus = tilekey;
+        },
+
+
+        getTileFocus: function() {
+            return this.tileFocus;
         },
 
 
@@ -94,9 +150,45 @@ define(function (require) {
         },
 
 
+        getDefaultRendererIndex: function() {
+            return this.defaultRendererIndex;
+        },
+
+
+        setTileRenderer: function( tilekey, newIndex ) {
+
+            var oldIndex = this.getTileRenderer( tilekey ),
+                oldRenderer = this.views[oldIndex].renderer,
+                newRenderer = this.views[newIndex].renderer,
+                oldService = this.views[oldIndex].service,
+                newService = this.views[newIndex].service;
+
+            // update internal state
+            if ( newIndex === this.defaultRendererIndex ) {
+                delete this.renderersByTile[tilekey];
+            } else {
+                this.renderersByTile[tilekey] = newIndex;
+            }
+
+            if ( newService.layerInfo.layer === oldService.layerInfo.layer ) {
+                // both renderers share the same data source, swap tile data
+                // give tile to new view
+                newService.data[tilekey] = oldService.data[tilekey];
+                makeRedrawFunc( newRenderer, newService )();
+            } else {
+                // otherwise request new data
+                newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService ));
+            }
+
+            // release and redraw to remove old data
+            oldService.releaseData( tilekey );
+            makeRedrawFunc( oldRenderer, oldService )();
+        },
+
+
         getTileRenderer: function( tilekey ) {
             var index = this.renderersByTile[tilekey];
-            return (index !== undefined) ? index : this.defaultRendererIndex;
+            return ( index !== undefined ) ? index : this.defaultRendererIndex;
         },
 
 
@@ -141,6 +233,11 @@ define(function (require) {
                 for (i=0; i<that.views.length; i++) {
                     view = that.views[i];
                     view.service = new TileService( layerInfos[ view.id ], that.map.getPyramid() );
+                    // pass parent layer (this) along with meta data to the renderer
+                    view.renderer.parent = that;
+                    view.renderer.meta = layerInfos[ view.id ].meta;
+                    // subscribe renderer to pubsub AFTER it has its parent reference
+                    view.renderer.subscribeRenderer();
                 }
                 // attach callback now
                 that.map.on('move', $.proxy(that.update, that));
@@ -148,37 +245,6 @@ define(function (require) {
                 callback( layerInfos );
             });
 
-        },
-
-
-        setTileRenderer: function( tilekey, newIndex ) {
-
-            var oldIndex = this.getTileRenderer( tilekey ),
-                oldRenderer = this.views[oldIndex].renderer,
-                newRenderer = this.views[newIndex].renderer,
-                oldService = this.views[oldIndex].service,
-                newService = this.views[newIndex].service;
-
-            // update internal state
-            if ( newIndex === this.defaultRendererIndex ) {
-                delete this.renderersByTile[tilekey];
-            } else {
-                this.renderersByTile[tilekey] = newIndex;
-            }
-
-            if ( newService.layerInfo.layer === oldService.layerInfo.layer ) {
-                // both renderers share the same data source, swap tile data
-                // give tile to new view
-                newService.data[tilekey] = oldService.data[tilekey];
-                makeRedrawFunc( newRenderer, newService )();
-            } else {
-                // otherwise request new data
-                newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService ));
-            }
-
-            // release and redraw to remove old data
-            oldService.releaseData( tilekey );
-            makeRedrawFunc( oldRenderer, oldService )();
         },
 
 

@@ -26,18 +26,15 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global define, console, $, aperture*/
 
-/**
- * Populates the LayerState model based on the contents of a the layer, and makes the appropriate
- * modifications to it as the LayerState model changes.
- */
+
+
 define(function (require) {
     "use strict";
 
 
 
     var LayerMediator = require('../LayerMediator'),
-        SharedObject = require('../../util/SharedObject'),
-        Util = require('../../util/Util'),
+        PubSub = require('../../util/PubSub'),
         ClientLayerMediator;
 
 
@@ -51,90 +48,77 @@ define(function (require) {
 
         registerLayers: function( layers ) {
 
-            var that = this,
-                i;
+            var i;
 
             function register( layer ) {
 
-                var layerState,
+                var channel = layer.getChannel(),
                     layerSpec = layer.getLayerSpec()[0],
-                    previousMouse = {},
-                    j;
+                    previousMouse = {};
 
                 function updateTileFocus( x, y ) {
-
                     var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
-                    layerState.set( 'previousTileFocus', layerState.get('tileFocus') );
-                    layerState.set( 'tileFocus', tilekey );
+                    PubSub.publish( channel, { field: 'previousTileFocus', value: layer.getTileFocus() } );
+                    PubSub.publish( channel, { field: 'tileFocus', value: tilekey } );
                 }
 
-                // create a layer state object. Values are initialized to those provided
-                // by the layer specs, which are defined in the layers.json file, or are
-                // defaulted to appropriate starting values
-                layerState = new SharedObject();
+                layerSpec.enabled = ( layerSpec.enabled !== undefined ) ? layerSpec.enabled : true;
+                layerSpec.opacity = ( layerSpec.opacity !== undefined ) ? layerSpec.opacity : 1.0;
 
-                // set immutable layer state properties
-                layerState.set( 'id', layer.id );
-                layerState.set( 'uuid', Util.generateUuid() );
-                layerState.set( 'name', layer.name );
-                layerState.set( 'domain', 'client' );
-                layerState.set( 'rendererCount', layer.views.length );
+                PubSub.subscribe( channel, function( message, path ) {
 
-                // register layer state with each renderer
-                for (j=0; j< layer.views.length; j++) {
-                    layer.views[j].renderer.registerLayer( layerState );
-                    layer.views[j].renderer.meta = layer.getLayerInfo()[ layer.views[j].id ].meta;
-                }
+                    var field = message.field,
+                        value = message.value;
 
-                // Register a callback to handle layer state change events.
-                layerState.addListener( function( fieldName ) {
-                    var tilekey;
-
-                    switch (fieldName) {
+                    switch ( field ) {
 
                         case "opacity":
 
-                            layer.setOpacity( layerState.get( 'opacity' ) );
+                            layer.setOpacity( value );
                             break;
 
                         case "enabled":
 
-                            layer.setVisibility( layerState.get( 'enabled' ) );
+                            layer.setVisibility( value );
                             break;
 
                         case "zIndex":
 
-                            layer.setZIndex( layerState.get( 'zIndex' ) );
+                            layer.setZIndex( value );
                             break;
 
                         case "tileFocus":
 
-                            layer.setTileFocus( layerState.get( 'tileFocus' ) );
+                            layer.setTileFocus( value );
                             break;
 
                         case "defaultRendererIndex":
 
-                            layer.setDefaultRendererIndex( layerState.get( 'defaultRendererIndex' ) );
+                            layer.setDefaultRendererIndex( value );
                             break;
 
                         case "rendererByTile":
 
-                            tilekey = layerState.get( 'tileFocus' );
-                            layer.setTileRenderer( tilekey, layerState.get( 'rendererByTile', tilekey ) );
+                            layer.setTileRenderer( layer.getTileFocus(), value );
+                            break;
+
+                        case "click":
+
+                            layer.setClick( value );
                             break;
                     }
 
                 });
 
                 // set client-side layer state properties after binding callbacks
-                layerState.set( 'enabled', ( layerSpec.enabled !== undefined ) ? layerSpec.enabled : true );
-                layerState.set( 'opacity', ( layerSpec.opacity !== undefined ) ? layerSpec.opacity : 1.0 );
-                layerState.set( 'zIndex', 1000+i );
-                layerState.set( 'defaultRendererIndex', 0 );
+                PubSub.publish( channel, { field: 'zIndex', value: i+1000 } );
+                PubSub.publish( channel, { field: 'enabled', value: layerSpec.enabled } );
+                PubSub.publish( channel, { field: 'opacity', value: layerSpec.opacity } );
+                PubSub.publish( channel, { field: 'defaultRendererIndex', value: 0 } );
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {
-                    layerState.set( 'click', null );
+                    PubSub.publish( channel, { field: 'click', value: null } );
                 });
 
                 // set tile focus callbacks
@@ -146,9 +130,6 @@ define(function (require) {
                 layer.map.on('zoomend', function(event) {
                     updateTileFocus( previousMouse.x, previousMouse.y );
                 });
-
-                // Add the layer to the layer state array.
-                that.layerStates.push( layerState );
             }
 
             // ensure it is an array

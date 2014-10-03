@@ -33,6 +33,7 @@ define(function (require) {
 
 
     var Class = require('../class'),
+        Util = require('../util/Util'),
         Layer;
 
 
@@ -44,7 +45,9 @@ define(function (require) {
         init: function ( spec, map ) {
 
             this.id = spec.layer;
+            this.uuid = Util.generateUuid();
             this.name = spec.name || spec.layer;
+            this.domain = spec.domain;
             this.map = map;
             this.layerSpec = spec;
             this.layerInfo = null;
@@ -62,6 +65,43 @@ define(function (require) {
          */
         getLayerInfo: function () {
             return this.layerInfo;
+        },
+
+        /**
+         *  Returns the layers channel path
+         */
+        getChannel: function () {
+            return 'layer.' + this.domain + '.' + this.uuid;
+        },
+
+
+        setOpacity: function( opacity ) {
+            return true;
+        },
+
+
+        getOpacity: function() {
+            return true;
+        },
+
+
+        setVisibility: function( visible ) {
+            return true;
+        },
+
+
+        getVisibility: function() {
+            return true;
+        },
+
+
+        setZIndex: function( zIndex ) {
+            return true;
+        },
+
+
+        getZIndex: function() {
+            return true;
         }
 
     });

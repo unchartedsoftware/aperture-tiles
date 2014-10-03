@@ -32,6 +32,7 @@ define(function (require) {
     var HtmlAnnotationRenderer = require('./HtmlAnnotationRenderer'),
         HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
+        PubSub = require('../../../util/PubSub'),
         ANNOTATION_POINT_CLASS = "point-annotation",
         ANNOTATION_AGGREGATE_POINT_CLASS = "point-annotation-aggregate",
         ANNOTATION_POINT_FILL_CLASS = "point-annotation-fill",
@@ -51,15 +52,14 @@ define(function (require) {
         },
 
 
-        registerLayer: function( layerState ) {
+        subscribeRenderer: function() {
 
-            var that = this;
-            this._super( layerState );
-            this.layerState.addListener( function(fieldName) {
+            PubSub.subscribe( this.parent.getChannel(), function( message, path ) {
 
-                var value = that.layerState.get( fieldName );
+                var field = message.field,
+                    value = message.value;
 
-                if ( fieldName === "click" ) {
+                if ( field === "click" ) {
 
                     // remove any previous click classes
                     $( '.'+ANNOTATION_AGGREGATE_POINT_CLASS ).removeClass( CLICKED_AGGREGATE_CLASS );
@@ -120,13 +120,13 @@ define(function (require) {
                     position = {
                         x: event.pageX - offset.left,
                         y: event.pageY - offset.top
+                    }, click = {
+                        annotations : annotations,
+                        $annotations : $annotations,
+                        position : position
                     };
 
-                that.layerState.set('click', {
-                    annotations : annotations,
-                    $annotations : $annotations,
-                    position : position
-                });
+                PubSub.publish( that.getChannel(), { field: 'click', value: click } );
                 event.stopPropagation();
             });
 
@@ -146,7 +146,7 @@ define(function (require) {
                         annotation.x = pos.x;
                         annotation.y = pos.y;
 
-                        that.layerState.set('modify', annotation );
+                        PubSub.publish( that.getChannel(), { field: 'click', value: annotation } );
 
                         // prevent click from firing
                         $( event.toElement ).one('click', function(e) {

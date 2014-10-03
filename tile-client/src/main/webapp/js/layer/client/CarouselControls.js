@@ -35,6 +35,7 @@ define(function (require) {
 
     var Class = require('../../class'),
         Util = require('../../util/Util'),
+        PubSub = require('../../util/PubSub'),
         CAROUSEL_CLASS = 'carousel-ui-pane',
         DOT_CONTAINER_CLASS = "carousel-ui-dot-container",
         DOT_CLASS = 'carousel-ui-dot',
@@ -48,60 +49,67 @@ define(function (require) {
         TOOLTIP_CHEVRON_LEFT = "Previous rendering",
         TOOLTIP_INDEX_DOT = "Rendering by index",
         Z_INDEX = 2000,
-        makeLayerStateObserver,
+        makeLayerSubscriber,
+        repositionCarousel,
         createChevrons,
         createIndexDots,
         createCarousel,
         updateDotIndices,
         CarouselControls;
 
+    repositionCarousel = function( map, $carousel, tilekey ) {
+
+        var parsedValues = tilekey.split(','),
+            level = parseInt( parsedValues[0], 10 ),
+            xIndex = parseInt( parsedValues[1], 10 ),
+            yIndex = parseInt( parsedValues[2], 10 ),
+            topLeft,
+            css = {};
+
+        if ( xIndex < 0 || xIndex > ( 1 << level )-1 ||
+            yIndex < 0  || yIndex > ( 1 << level )-1 ) {
+            // prevent carousel from rendering outside of map bounds
+            css.visibility = 'hidden';
+        } else {
+            // if carousel is enabled, update its tile position
+            topLeft = map.getTopLeftMapPixelForTile( tilekey );
+            css.left = topLeft.x;
+            css.top = map.getMapHeight() - topLeft.y;
+            css.visibility = 'visible';
+        }
+        $carousel.css( css );
+    };
+
+
     /**
-     * Creates an observer to handle layer state changes, and update the controls based on them.
+     * Creates a subscriber to handle published carousel related layer state changes, and update the controls based on them.
      */
-    makeLayerStateObserver = function ( map, $carousel, controlMap, layerState ) {
+    makeLayerSubscriber = function ( map, $carousel, controlMap, layer ) {
 
-        return function (fieldName) {
+        return function ( message, path ) {
 
-            switch (fieldName) {
+            var field = message.field,
+                value = message.value;
+
+            switch ( field ) {
 
                 case "tileFocus":
 
-                    var tilekey = layerState.get('tileFocus'),
-                        topLeft,
-                        parsedValues,
-                        xIndex, yIndex, level, css;
-
-                    if ( layerState.get('carouselEnabled') ) {
-
-                        parsedValues = tilekey.split(',');
-                        level = parseInt(parsedValues[0], 10);
-                        xIndex = parseInt(parsedValues[1], 10);
-                        yIndex = parseInt(parsedValues[2], 10);
-                        css = {};
-
-                        if ( xIndex < 0 || xIndex > ( 1 << level )-1 ||
-                            yIndex < 0  || yIndex > ( 1 << level )-1 ) {
-                            css.visibility = 'hidden';
-                        } else {
-                            // if carousel is enabled, update its tile position
-                            topLeft = map.getTopLeftMapPixelForTile( tilekey );
-                            css.left = topLeft.x;
-                            css.top = map.getMapHeight() - topLeft.y;
-                            css.visibility = 'visible';
-                        }
-                        $carousel.css(css);
-                        updateDotIndices( controlMap, layerState );
+                    if ( layer.isCarouselEnabled() ) {
+                        repositionCarousel( map, $carousel, value );
+                        updateDotIndices( controlMap, layer );
                     }
                     break;
 
                 case "carouselEnabled":
 
                     // empty carousel
+                    layer.setCarouselEnabled( value );
                     $carousel.empty().css('visibility', 'hidden');
-                    if ( layerState.get('carouselEnabled') ) {
+                    if ( value === true ) {
                         // create carousel UI
                         $carousel.css('visibility', 'visible');
-                        createCarousel( $carousel, map, controlMap, layerState );
+                        createCarousel( $carousel, map, controlMap, layer );
                     }
                     break;
             }
@@ -109,11 +117,11 @@ define(function (require) {
     };
 
 
-    updateDotIndices = function( controlMap, layerState ) {
+    updateDotIndices = function( controlMap, layer ) {
 
-        var tilekey = layerState.get('tileFocus'),
+        var tilekey = layer.getTileFocus(),
             count = controlMap.dots.length,
-            index = layerState.get('rendererByTile', tilekey) || 0,
+            index = layer.getTileRenderer( tilekey ) || 0,
             i;
 
         for (i=0; i<count; i++) {
@@ -124,7 +132,7 @@ define(function (require) {
     };
 
 
-    createChevrons = function( $carousel, map, controlMap, layerState ) {
+    createChevrons = function( $carousel, map, controlMap, layer ) {
 
         var $leftChevron,
             $rightChevron;
@@ -133,15 +141,15 @@ define(function (require) {
 
             Util.dragSensitiveClick(chevron, function() {
 
-                var tilekey = layerState.get('tileFocus'),
-                    prevIndex = layerState.get( 'rendererByTile', tilekey ) || 0,
+                var tilekey = layer.getTileFocus(),
+                    prevIndex = layer.getTileRenderer( tilekey ) || 0,
                     mod = function (m, n) {
                         return ((m % n) + n) % n;
                     },
-                    newIndex = mod( prevIndex + inc, layerState.get('rendererCount') );
+                    newIndex = mod( prevIndex + inc, layer.getRendererCount() );
 
-                layerState.set( 'rendererByTile', tilekey, newIndex );
-                updateDotIndices( controlMap, layerState );
+                layer.setTileRenderer( tilekey, newIndex );
+                updateDotIndices( controlMap, layer );
             });
         }
 
@@ -173,18 +181,18 @@ define(function (require) {
     };
 
 
-    createIndexDots = function( $carousel, map, controlMap, layerState ) {
+    createIndexDots = function( $carousel, map, controlMap, layer ) {
 
         var indexClass,
             $indexContainer,
             $dots = [],
-            rendererCount = layerState.get('rendererCount'),
+            rendererCount = layer.getRendererCount(),
             i;
 
         function generateCallbacks( dot, index ) {
             Util.dragSensitiveClick(dot, function() {
-                layerState.set( 'rendererByTile', layerState.get('tileFocus'), index );
-                updateDotIndices( controlMap, layerState );
+                layer.setTileRenderer( layer.getTileFocus(), index );
+                updateDotIndices( controlMap, layer );
             });
         }
 
@@ -210,12 +218,12 @@ define(function (require) {
     };
 
 
-    createCarousel = function( $carousel, map, controlMap, layerState ) {
+    createCarousel = function( $carousel, map, controlMap, layer ) {
 
-        if ( layerState.get('rendererCount') > 1 ) {
+        if ( layer.getRendererCount() > 1 ) {
             // only create chevrons and indices if there is more than 1 layer
-            createChevrons( $carousel, map, controlMap, layerState );
-            createIndexDots( $carousel, map, controlMap, layerState );
+            createChevrons( $carousel, map, controlMap, layer );
+            createIndexDots( $carousel, map, controlMap, layer );
         }
         map.getRootElement().append( $carousel );
         return $carousel;
@@ -226,23 +234,24 @@ define(function (require) {
         ClassName: "CarouselControls",
 
         /**
-         * Initializes the carousel controls and registers callbacks against the LayerState objects
+         * Initializes the carousel controls and registers callbacks against the layer objects
          *
-         * @param layerStates - The list of layers the layer controls reflect and modify.
+         * @param layers - The list of layers the layer controls reflect and modify.
          * @param map - The map for which the layers are bound to.
          */
-        init: function ( layerStates, map ) {
+        init: function ( layers, map ) {
 
-            if (layerStates.length < 1) {
+            if ( layers.length < 1 ) {
                 return;
             }
 
             this.controlMap = {};
             this.$carousel = $('<div class="' + CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
 
-            if ( layerStates[0].get('rendererCount') > 1 ) {
-                layerStates[0].addListener( makeLayerStateObserver( map, this.$carousel, this.controlMap, layerStates[0] ) );
-                layerStates[0].set( 'carouselEnabled', true );
+            // TODO: implement a system for only enabling carousel for top most client layer
+            if ( layers[0].getRendererCount() > 1 ) {
+                PubSub.subscribe( layers[0].getChannel(), makeLayerSubscriber( map, this.$carousel, this.controlMap, layers[0] ) );
+                PubSub.publish( layers[0].getChannel(), { field: 'carouselEnabled', value: true } );
             }
         },
 

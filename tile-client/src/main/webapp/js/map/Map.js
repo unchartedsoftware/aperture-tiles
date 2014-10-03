@@ -34,6 +34,7 @@ define(function (require) {
 
 
 	var Class = require('../class'),
+	    Util = require('../util/Util'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
 	    TileIterator = require('../binning/TileIterator'),
@@ -51,10 +52,14 @@ define(function (require) {
             var that = this;
 
             this.id = id;
+            this.uuid = Util.generateUuid();
+            this.name = 'Base Layer';
+            this.domain = 'base';
             this.$map = $( "#" + this.id );
             this.axes = [];
             this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
             this.baseLayers = ( $.isArray( spec.MapConfig.baseLayer ) ) ? spec.MapConfig.baseLayer : [spec.MapConfig.baseLayer];
+            this.BASE_LAYERS = this.baseLayers;
 
             if ( this.baseLayers.length === 0 ) {
                 this.baseLayers[0] = {
@@ -145,6 +150,43 @@ define(function (require) {
         },
 
 
+        setZIndex: function( zIndex ) {
+            this.zIndex = zIndex;
+        },
+
+
+        getZIndex: function() {
+            return this.zIndex;
+        },
+
+
+        setOpacity: function( opacity ) {
+            this.opacity = opacity;
+            this.map.olMap_.baseLayer.setOpacity ( opacity );
+        },
+
+
+        getOpacity: function() {
+            return this.opacity;
+        },
+
+
+        setVisibility: function( visibility ) {
+            this.visibility = visibility;
+            this.map.olMap_.baseLayer.setVisibility( visibility );
+        },
+
+
+        getVisibility: function() {
+            return this.visibility;
+        },
+
+
+        getChannel: function() {
+            return 'layer.base.' + this.uuid;
+        },
+
+
         setBaseLayerIndex: function(index) {
 
             var $map = this.getElement(),
@@ -152,6 +194,9 @@ define(function (require) {
                 newBaseLayerConfig = this.baseLayers[index],
                 newBaseLayerType,
                 newBaseLayer;
+
+            this.previousBaseLayerIndex = this.baseLayerIndex;
+            this.baseLayerIndex = index;
 
             if( newBaseLayerConfig.type === 'BlankBase' ) {
 
@@ -189,6 +234,16 @@ define(function (require) {
         },
 
 
+        getBaseLayerIndex: function() {
+            return this.baseLayerIndex;
+        },
+
+
+        getPreviousBaseLayerIndex: function() {
+            return this.previousBaseLayerIndex;
+        },
+
+
         setTileBorderStyle: function ( tileBorder ) {
 
             // remove any previous style
@@ -218,19 +273,6 @@ define(function (require) {
                     '; border-top : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +';}' +
                   '</style>')
             );
-        },
-
-
-        getZIndex: function() {
-            var indices = OpenLayers.Map.prototype.Z_INDEX_BASE,
-                maxZ = 0,
-                key;
-            for (key in indices) {
-                if (indices.hasOwnProperty(key)) {
-                    maxZ = Math.max( maxZ, indices[key] );
-                }
-            }
-            return maxZ;
         },
 
 
@@ -584,14 +626,6 @@ define(function (require) {
 
 		getLayerIndex: function(layer) {
 			return this.map.olMap_.getLayerIndex(layer);
-		},
-
-		setOpacity: function( opacity ) {
-		    this.map.olMap_.baseLayer.setOpacity ( opacity );
-		},
-
-		setVisibility: function( visibility ) {
-            this.map.olMap_.baseLayer.setVisibility( visibility );
 		},
 
 		getExtent: function () {

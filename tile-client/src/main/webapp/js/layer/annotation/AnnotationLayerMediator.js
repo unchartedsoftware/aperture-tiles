@@ -26,18 +26,13 @@
 /* JSLint global declarations: these objects don't need to be declared. */
 /*global define, console, $, aperture*/
 
-/**
- * Populates the LayerState model based on the contents of a the layer, and makes the appropriate
- * modifications to it as the LayerState model changes.
- */
 define(function (require) {
     "use strict";
 
 
 
     var LayerMediator = require('../LayerMediator'),
-        SharedObject = require('../../util/SharedObject'),
-        Util = require('../../util/Util'),
+        PubSub = require('../../util/PubSub'),
         AnnotationLayerMediator;
 
 
@@ -52,68 +47,57 @@ define(function (require) {
 
         registerLayers :  function( layers ) {
 
-            var that = this,
-
-                i;
+            var i;
 
             function register( layer ) {
 
-                var layerState;
+                var channel = layer.getChannel(),
+                    layerSpec = layer.getLayerSpec();
 
-                // create a layer state object. Values are initialized to those provided
-                // by the layer specs, which are defined in the layers.json file, or are
-                // defaulted to appropriate starting values
-                layerState = new SharedObject();
+                layerSpec.enabled = ( layerSpec.enabled !== undefined ) ? layerSpec.enabled : true;
+                layerSpec.opacity = ( layerSpec.opacity !== undefined ) ? layerSpec.opacity : 1.0;
 
-                // set immutable layer state properties
-                layerState.set( 'id', layer.id );
-                layerState.set( 'uuid', Util.generateUuid() );
-                layerState.set( 'name', layer.name );
-                layerState.set( 'domain', 'annotation' );
+                PubSub.subscribe( channel, function( message, path ) {
 
-                // register layerstate with renderer and details implementations
-                layer.renderer.registerLayer( layerState );
-                layer.details.registerLayer( layerState );
+                    var field = message.field,
+                        value = message.value;
 
-                // Register a callback to handle layer state change events.
-                layerState.addListener( function( fieldName ) {
-
-                    switch (fieldName) {
+                    switch ( field ) {
 
                         case "opacity":
 
-                            layer.setOpacity( layerState.get('opacity') );
+                            layer.setOpacity( value );
                             break;
 
                         case "enabled":
 
-                            layer.setVisibility( layerState.get('enabled') );
+                            layer.setVisibility( value );
                             break;
 
                         case "create":
 
-                            layer.createAnnotation( layerState.get('create') );
+                            layer.createAnnotation( value );
                             break;
 
                         case "modify":
 
-                            layer.modifyAnnotation( layerState.get('modify') );
+                            layer.modifyAnnotation( value );
                             break;
 
                         case "zIndex":
 
-                            layer.setZIndex( layerState.get( 'zIndex' ) );
+                            layer.setZIndex( value );
                             break;
 
                         case "remove":
 
-                            layer.removeAnnotation( layerState.get('remove') );
+                            layer.removeAnnotation( value );
                             break;
 
                         case "click":
 
-                            if ( layerState.has('click') ) {
-                                layer.createDetails( layerState.get('click') );
+                            if ( value !== null ) {
+                                layer.createDetails( value );
                             } else {
                                 layer.destroyDetails();
                             }
@@ -123,21 +107,20 @@ define(function (require) {
                 });
 
                 // set client-side layer state properties after binding callbacks
-                layerState.set( 'enabled', true );
-                layerState.set( 'opacity', 1.0 );
-                layerState.set( 'zIndex', 500+i );
+                PubSub.publish( channel, { field: 'zIndex', value: i+500 } );
+                PubSub.publish( channel, { field: 'enabled', value: layerSpec.enabled } );
+                PubSub.publish( channel, { field: 'opacity', value: layerSpec.opacity } );
 
                 // clear click state if map is clicked
                 layer.map.on( 'click', function() {
-                    if ( layerState.has('click') ) {
-                        layerState.set( 'click', null );
+                    if ( layer.isClicked() ) {
+                        // un-select
+                        PubSub.publish( channel, { field: 'click', value: null } );
                     } else {
-                        layerState.set( 'create', event.xy );
+                        // add new annotation
+                        PubSub.publish( channel, { field: 'create', value: event.xy } );
                     }
                 });
-
-                // Add the layer to the layer state array.
-                that.layerStates.push( layerState );
             }
 
             // ensure it is an array
