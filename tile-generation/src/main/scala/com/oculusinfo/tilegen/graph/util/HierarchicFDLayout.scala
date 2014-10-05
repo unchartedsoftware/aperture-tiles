@@ -56,7 +56,7 @@ class HierarchicFDLayout extends Serializable {
 						sourceDir: String,
 						delimiter: String = ",",
 						layoutDimensions: (Double, Double) = (256.0, 256.0),
-						borderPercent: Int = 2,
+						borderPercent: Double = 2.0,
 						//numNodesThres: Int = 1000
 						nodeAreaPercent: Int = 30,
 						bUseEdgeWeights: Boolean = false,
@@ -159,10 +159,9 @@ class HierarchicFDLayout extends Serializable {
 				(parentID, (nodeData, edgeResults))
 			}).join(lastLevelLayout)
 		
-			val bUseNodeSizes = (level > 0)
+			val bUseNodeSizes = true //(level > 0)
 		    val g = if (level > 0) gravity else 0
-			val currAreaPercent =  if (level > 0) Math.max(nodeAreaPercent - (maxHierarchyLevel-level)*5, 10)	// use less area for communities at lower hierarchical levels
-								   else nodeAreaPercent	// (note, this parameter isn't used for level=0 anyway)
+			//val currAreaPercent = Math.max(nodeAreaPercent - (maxHierarchyLevel-level)*5, 10)	// use less area for communities at lower hierarchical levels
 
 			// perform force-directed layout algorithm on all nodes and edges in a given parent community
 			// note: format for nodeDataAll is (id, (x, y, radius, parentID, parentX, parentY, parentR, numInternalNodes, degree, metaData))
@@ -176,11 +175,11 @@ class HierarchicFDLayout extends Serializable {
 													   communityEdges,
 													   parentID,
 													   parentRectangle, 
-													   borderPercent, 
+													   borderPercent,
 													   maxIterations,
 													   bUseEdgeWeights,
 													   bUseNodeSizes,
-													   currAreaPercent,
+													   nodeAreaPercent,
 													   g)
 													  								   				
 				// calc circle coords of parent community for saving results
@@ -331,7 +330,7 @@ class HierarchicFDLayout extends Serializable {
 			// nodeAttributes are of format ((x, y, radius, numInternalNodes), parentCircle)
 			val srcCoords = (et.srcAttr._1, et.srcAttr._2)
 			val dstCoords = (et.dstAttr._1, et.dstAttr._2)
-			val interCommunityEdge = if ((et.srcAttr._4 != et.dstAttr._4) || bIsMaxLevel)  1 else 0	// is this an inter-community edge (same parentID for src and dst)
+			val interCommunityEdge = if ((et.srcAttr._4 == et.dstAttr._4) || bIsMaxLevel)  0 else 1	// is this an inter-community edge (same parentID for src and dst)
 			
 			("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr + "\t" + interCommunityEdge)
 		})
@@ -358,7 +357,7 @@ class HierarchicFDLayout extends Serializable {
 					+ ", min parent radius: " + minParentR
 					+ ", max parent radius: " + maxParentR)
 					
-			level -= 0
+			level -= 1
 		}
 		
 		sc.parallelize(statsStrings, 1).saveAsTextFile(outputDir+"/stats")

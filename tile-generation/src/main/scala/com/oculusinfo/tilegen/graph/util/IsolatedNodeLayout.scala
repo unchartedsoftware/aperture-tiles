@@ -49,12 +49,12 @@ class IsolatedNodeLayout {
 			boundingBox: (Double, Double, Double, Double), 
 			nodeAreaNorm: Double,
 			centralCommunityArea: Double,
-			borderPercent: Int = 2): (Array[(Long, Double, Double, Double, Long, Int, String)], Double) = {
+			borderPercent: Double = 2.0): (Array[(Long, Double, Double, Double, Long, Int, String)], Double) = {
 	
 		val (xC, yC) = (0.0, 0.0) //(boundingBox._1 + boundingBox._3/2, boundingBox._2 + boundingBox._4/2)	// centre of bounding box
 		val boundingBoxArea = boundingBox._3 * boundingBox._4
 		
-		if (borderPercent < 0 || borderPercent > 10) throw new IllegalArgumentException("borderPercent must be between 0 and 10")
+		if (borderPercent < 0.0 || borderPercent > 10.0) throw new IllegalArgumentException("borderPercent must be between 0 and 10")
 		val border = borderPercent*0.01*Math.min(boundingBox._3, boundingBox._4)
 	
 		// Store community results in array with initial coords as xc,yc for now.
