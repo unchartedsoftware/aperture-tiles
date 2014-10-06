@@ -34,6 +34,7 @@ define(function (require) {
 
 
 	var Class = require('../class'),
+        PubSub = require('../util/PubSub'),
 	    Util = require('../util/Util'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
@@ -96,7 +97,10 @@ define(function (require) {
                 }
 			});
 
-            // set proper base layer
+            // set basic map properties
+            this.setZIndex( -1 );
+            this.setVisibility( true );
+            this.setOpacity( 1.0 );
 			this.setBaseLayerIndex( 0 );
 
             // create div root layer
@@ -124,7 +128,6 @@ define(function (require) {
                                  spec.MapConfig.zoomTo[1],
                                  spec.MapConfig.zoomTo[2] );
             }
-
 		},
 
 
@@ -152,6 +155,7 @@ define(function (require) {
 
         setZIndex: function( zIndex ) {
             this.zIndex = zIndex;
+            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
 
@@ -163,6 +167,7 @@ define(function (require) {
         setOpacity: function( opacity ) {
             this.opacity = opacity;
             this.map.olMap_.baseLayer.setOpacity ( opacity );
+            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
         },
 
 
@@ -174,6 +179,7 @@ define(function (require) {
         setVisibility: function( visibility ) {
             this.visibility = visibility;
             this.map.olMap_.baseLayer.setVisibility( visibility );
+            PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility });
         },
 
 
@@ -231,6 +237,14 @@ define(function (require) {
 
             // update tile border
             this.setTileBorderStyle( newBaseLayerConfig["tile-border"] );
+
+            if ( newBaseLayerConfig.type !== "BlankBase" ) {
+                // if switching to a non-blank baselayer, ensure opacity and visibility is restored
+                this.setOpacity( this.getOpacity() );
+                this.setVisibility( this.getVisibility() );
+            }
+
+            PubSub.publish( this.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
 

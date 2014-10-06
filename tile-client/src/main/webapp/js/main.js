@@ -32,15 +32,11 @@ require(['./ApertureConfig',
          './map/Map',
          './layer/LayerService',
          './layer/LayerControls',
-         './layer/base/BaseLayerMediator',
          './layer/server/ServerLayerFactory',
-         './layer/server/ServerLayerMediator',
          './layer/client/ClientLayerFactory',
-         './layer/client/ClientLayerMediator',
          './layer/client/CarouselControls',
          './layer/annotation/AnnotationService',
-         './layer/annotation/AnnotationLayerFactory',
-         './layer/annotation/AnnotationLayerMediator'
+         './layer/annotation/AnnotationLayerFactory'
         ],
 
         function (configureAperture,
@@ -51,15 +47,11 @@ require(['./ApertureConfig',
                   Map,
                   LayerService,
                   LayerControls,
-                  BaseLayerMediator,
                   ServerLayerFactory,
-                  ServerLayerMediator,
                   ClientLayerFactory,
-                  ClientLayerMediator,
                   CarouselControls,
                   AnnotationService,
-                  AnnotationLayerFactory,
-                  AnnotationLayerMediator) {
+                  AnnotationLayerFactory) {
 
 	        "use strict";
 
@@ -161,6 +153,7 @@ require(['./ApertureConfig',
 					        }
 					        config.layer = layer.id;
 					        config.name = layer.name;
+					        config.zIndex = ( domain === 'server' ) ? index+1 : index+500;
 					        return;
 				        }
 			        });
@@ -174,6 +167,7 @@ require(['./ApertureConfig',
 		        for (i=0; i<allLayers.length; i++) {
 
 			        if ( filter( allLayers[i] ) ) {
+			            allLayers[i].zIndex = i+500;
 				        validLayers.push( allLayers[i] );
 			        }
 		        }
@@ -223,10 +217,6 @@ require(['./ApertureConfig',
 				            clientLayerFactory,
 				            serverLayerFactory,
 				            annotationLayerFactory,
-				            baseLayerMediator,
-				            clientLayerMediator,
-				            serverLayerMediator,
-				            annotationLayerMediator,
                             clientLayerDeferreds,
                             serverLayerDeferreds,
                             annotationLayerDeferreds;
@@ -289,21 +279,14 @@ require(['./ApertureConfig',
 					        UICustomization.customizeLayers(layers);
 				        }
 
-                        baseLayerMediator = new BaseLayerMediator();
-                        baseLayerMediator.registerLayers( worldMap );
-
-                        clientLayerMediator = new ClientLayerMediator();
-                        serverLayerMediator = new ServerLayerMediator();
-                        annotationLayerMediator = new AnnotationLayerMediator();
-
                         clientLayerFactory = new ClientLayerFactory();
                         serverLayerFactory = new ServerLayerFactory();
                         annotationLayerFactory = new AnnotationLayerFactory();
 
 				        // Create client, server and annotation layers
-				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
-				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap, serverLayerMediator );
-                        annotationLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap, annotationLayerMediator );
+				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap );
+				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap );
+                        annotationLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap );
 
                         $.when( clientLayerDeferreds, serverLayerDeferreds, annotationLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
 

@@ -48,7 +48,6 @@ define(function (require) {
         TOOLTIP_CHEVRON_RIGHT = "Next rendering",
         TOOLTIP_CHEVRON_LEFT = "Previous rendering",
         TOOLTIP_INDEX_DOT = "Rendering by index",
-        Z_INDEX = 2000,
         makeLayerSubscriber,
         repositionCarousel,
         createChevrons,
@@ -104,7 +103,6 @@ define(function (require) {
                 case "carouselEnabled":
 
                     // empty carousel
-                    layer.setCarouselEnabled( value );
                     $carousel.empty().css('visibility', 'hidden');
                     if ( value === true ) {
                         // create carousel UI
@@ -246,12 +244,12 @@ define(function (require) {
             }
 
             this.controlMap = {};
-            this.$carousel = $('<div class="' + CAROUSEL_CLASS +'" style="z-index:'+Z_INDEX+';"></div>');
+            this.$carousel = $('<div class="' + CAROUSEL_CLASS +'"></div>');
 
             // TODO: implement a system for only enabling carousel for top most client layer
             if ( layers[0].getRendererCount() > 1 ) {
                 PubSub.subscribe( layers[0].getChannel(), makeLayerSubscriber( map, this.$carousel, this.controlMap, layers[0] ) );
-                PubSub.publish( layers[0].getChannel(), { field: 'carouselEnabled', value: true } );
+                layers[0].setCarouselEnabled( true );
             }
         },
 

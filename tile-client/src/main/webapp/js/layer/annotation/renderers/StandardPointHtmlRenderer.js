@@ -126,7 +126,7 @@ define(function (require) {
                         position : position
                     };
 
-                PubSub.publish( that.getChannel(), { field: 'click', value: click } );
+                that.parent().setClick( click );
                 event.stopPropagation();
             });
 

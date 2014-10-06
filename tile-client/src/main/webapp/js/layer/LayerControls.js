@@ -173,9 +173,9 @@ define(function (require) {
         // set click callback
         $toggleBox.click(function () {
             var value = $toggleBox.prop("checked");
-            PubSub.publish( layer.getChannel(), { field: 'enabled', value: value } );
+            layer.setVisibility( value );
             if (layer.domain === "client") {
-                PubSub.publish( layer.getChannel(), { field: 'carouselEnabled', value: value } );
+                layer.setCarouselEnabled( value );
             }
         });
         // set tooltip
@@ -228,7 +228,7 @@ define(function (require) {
                 value: layer.getOpacity() * OPACITY_RESOLUTION,
                 slide: function( event, ui ) {
                     var value = ui.value / OPACITY_RESOLUTION;
-                    PubSub.publish( layer.getChannel(), { field: 'opacity', value: value } );
+                    layer.setOpacity( value );
                     createSliderHoverLabel( $opacitySlider.find(".ui-slider-handle"), value );
                 },
                 start: function( event, ui ) {
@@ -311,7 +311,7 @@ define(function (require) {
                 var values = ui.values,
                     previousValues = $filterSlider.slider( 'value' );
                 if ( values[0] !== previousValues[0] || values[1] !== previousValues[1] ) {
-                    PubSub.publish( layer.getChannel(), { field: 'filterRange', value: [values[0] , values[1]] } );
+                    layer.setFilterRange( [values[0] , values[1]] );
                 }
             },
             slide: function( event, ui ) {
@@ -523,8 +523,8 @@ define(function (require) {
                 });
                 // swap z-indexes
                 otherZ = dropLayer.getZIndex();
-                PubSub.publish( dropLayer.getChannel(), { field: 'zIndex', value: dragLayer.getZIndex() } );
-                PubSub.publish( dragLayer.getChannel(), { field: 'zIndex', value: otherZ } );
+                dropLayer.setZIndex( dragLayer.getZIndex() );
+                dragLayer.setZIndex( otherZ );
             }
         });
     };
@@ -548,7 +548,7 @@ define(function (require) {
 
         function onClick() {
             var index = parseInt( $(this).val(), 10 );
-            PubSub.publish( layer.getChannel(), { field: 'baseLayerIndex', value: index } );
+            layer.setBaseLayerIndex( index );
         }
 
         for (i=0; i<layer.BASE_LAYERS.length; i++) {
@@ -729,7 +729,7 @@ define(function (require) {
         // Update model on button changes
         $rampTypes.change( function () {
             var value = $(this).find('input[name="ramp-types"]:checked').val();
-            PubSub.publish( layer.getChannel(), { field: 'rampType', value: value } );
+            layer.setRampType( value );
         });
 
         $rampTypes.find('input[name="ramp-types"][value="' + layer.getRampType() + '"]').prop('checked', true);
@@ -755,7 +755,7 @@ define(function (require) {
 
         $rampFunctions.change( function () {
             var value = $(this).find('input[name="ramp-functions"]:checked').val();
-            PubSub.publish( layer.getChannel(), { field: 'rampFunction', value: value } );
+            layer.setRampFunction( value );
         });
 
         $rampFunctions.find('input[name="ramp-functions"][value="' + layer.getRampFunction() + '"]').prop('checked', true);
@@ -781,7 +781,7 @@ define(function (require) {
 
         $coarsenessSettings.change( function () {
             var value = $(this).find('input[name="coarseness-values"]:checked').val();
-            PubSub.publish( layer.getChannel(), { field: 'coarseness', value: value } );
+            layer.setCoarseness( value );
         });
 
         $coarsenessSettings.find('input[name="coarseness-values"][value="' + layer.getCoarseness() + '"]').prop('checked', true);
@@ -803,7 +803,7 @@ define(function (require) {
             var field = message.field,
                 value = message.value,
                 controlsMapping = controlsMap[ layer.uuid ],
-                baseLayer, previousBaseLayer;
+                baseLayer, previousBaseLayer, i;
 
             switch ( field ) {
 
@@ -858,7 +858,11 @@ define(function (require) {
                     }
 
                     // change theme for all layers
-                    PubSub.publish( 'layer', { field: 'theme', value: baseLayer.theme } );
+                    for ( i=0; i<layers.length; i++ ) {
+                        if ( layers[i].domain === "server" ) {
+                            layers[i].invertRampType();
+                        }
+                    }
                     break;
             }
         };

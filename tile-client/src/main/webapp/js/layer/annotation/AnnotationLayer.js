@@ -30,6 +30,7 @@ define(function (require) {
 
 
     var Layer = require('../Layer'),
+        PubSub = require('../../util/PubSub'),
         Util = require('../../util/Util'),
         AnnotationService = require('./AnnotationService'),
         DETAILS_VERTICAL_OFFSET = 26,
@@ -96,6 +97,12 @@ define(function (require) {
 
         init: function( spec, renderer, details, map ) {
 
+            // set reasonable defaults
+            spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
+            spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
+
+            var that = this;
+
             this._super( spec, map );
             this.renderer = renderer;
             this.details = details;
@@ -118,11 +125,32 @@ define(function (require) {
             this.dataMap = {};
 
             this.map.on('moveend', $.proxy( this.update, this ) );
+
+            // clear click state if map is clicked
+            this.map.on( 'click', function() {
+                if ( that.isClicked() ) {
+                    // un-select
+                     that.setClick( null );
+                } else {
+                    // add new annotation
+                    that.createAnnotation( event.xy );
+                }
+            });
+
+            this.setZIndex( spec.zIndex );
+            this.setOpacity( spec.opacity );
+            this.setVisibility( spec.enabled );
         },
 
 
         setClick: function( value ) {
             this.click = value;
+            if ( value !== null ) {
+                this.createDetails( value );
+            } else {
+                this.destroyDetails();
+            }
+            PubSub.publish( this.getChannel(), { field: 'click', value: value });
         },
 
 
@@ -139,6 +167,7 @@ define(function (require) {
         setOpacity: function( opacity ) {
             this.opacity = opacity;
             this.renderer.setOpacity( opacity );
+            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
         },
 
 
@@ -150,6 +179,7 @@ define(function (require) {
         setVisibility: function( visible ) {
             this.visibility = visible;
             this.renderer.setVisibility( visible );
+            PubSub.publish( this.getChannel(), { field: 'enabled', value: visible });
         },
 
 
@@ -161,6 +191,7 @@ define(function (require) {
         setZIndex: function( zIndex ) {
             this.zIndex = zIndex;
             this.renderer.setZIndex( zIndex );
+            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
 

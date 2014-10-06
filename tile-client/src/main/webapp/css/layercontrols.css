@@ -218,6 +218,7 @@
 }
 
 #layer-controls input {
+    cursor:pointer;
     position:relative;
     width: 18px;
     height: 18px;
@@ -230,10 +231,6 @@
 .dark-theme #layer-controls input { 
     -webkit-filter: invert(100%);
     -moz-filter: invert(100%);
-}
-
-#layer-controls input:hover {
-    cursor:pointer;
 }
 
 #layer-controls label {

@@ -329,12 +329,12 @@ define(function (require) {
                     tilekey : this.parent.getTileFocus()
                 };
             click[idKey] = value[idKey];
-            PubSub.publish( this.parent.getChannel(), { field: 'click', value: click } );
+            this.parent.setClick( click );
         },
 
 
         clickOff: function() {
-            PubSub.publish( this.parent.getChannel(), { field: 'click', value: null } );
+            this.parent.setClick( null );
         },
 
 
@@ -547,20 +547,23 @@ define(function (require) {
                 outlineCss = this.generateOutlineCss( subSpec, attribute ),
                 greyColor,
                 className,
+                greyBlend = "#000000",
                 themeClass = "",
                 css = "",
                 i;
 
             if ( themeName ) {
                 themeClass = "."+themeName;
+                if ( themeName === 'light-theme' ) {
+                    greyBlend = "#ffffff";
+                }
             }
 
             for ( i=0; i<blends.length; i++ ) {
 
                 blend = blends[i];
                 className = elementClass+blend.suffix+'-'+this.id;
-                greyColor = Util.hexGreyscale( blend.color );
-
+                greyColor = Util.hexBlend( Util.hexGreyscale( blend.color ), greyBlend );
                 css += themeClass + ' .'+className+' {'+attribute+':'+blend.color+';'+outlineCss+';}';
                 css += themeClass + ' .'+parentClass+':hover .'+className+' {'+attribute+':'+blend.hoverColor+';'+outlineCss+';}';
                 css += themeClass + ' .greyed .'+className+'{'+attribute+':'+greyColor+';'+outlineCss+';}';

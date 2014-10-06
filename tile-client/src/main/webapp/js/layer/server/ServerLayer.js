@@ -33,7 +33,65 @@ define(function (require) {
 
     var Layer = require('../Layer'),
         LayerService = require('../LayerService'),
+        PubSub = require('../../util/PubSub'),
+        requestRampImage,
+        getLevelMinMax,
+        mapZoomCallback,
         ServerLayer;
+
+
+
+    /**
+     * Request colour ramp image.
+     *
+     * @param {Object} layer - The layer object
+     */
+    requestRampImage = function ( layer, layerInfo, level ) {
+
+        var legendData = {
+                layer: layer.id,  // layer id
+                id: layerInfo.id, // config uuid
+                level: level,
+                width: 128,
+                height: 1,
+                orientation: "horizontal"
+            };
+
+        aperture.io.rest('/legend',
+                         'POST',
+                         function (legendString, status) {
+                            layer.setRampImageUrl( legendString );
+                         },
+                         {
+                             postData: legendData,
+                             contentType: 'application/json'
+                         });
+
+    };
+
+
+    getLevelMinMax = function( layer, map ) {
+        var zoomLevel = map.getZoom(),
+            coarseness = layer.getLayerSpec().coarseness,
+            adjustedZoom = zoomLevel - (coarseness-1),
+            meta =  layer.getLayerInfo().meta,
+            minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[adjustedZoom])),
+            maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[adjustedZoom])),
+            min = minArray ? ($.isArray(minArray) ? minArray[adjustedZoom] : minArray.minimum) : 0,
+            max = maxArray ? ($.isArray(maxArray) ? maxArray[adjustedZoom] : maxArray.maximum) : 0;
+        return [ parseFloat(min), parseFloat(max) ];
+    };
+
+
+    // Make a callback to regen the ramp image on map zoom changes
+    mapZoomCallback = function( layer, map ) {
+        if ( layer ) {
+            // set ramp image
+            requestRampImage( layer, layer.getLayerInfo(), map.getZoom() );
+            // set ramp level
+            layer.setRampMinMax( getLevelMinMax( layer, map ) );
+        }
+    };
 
 
 
@@ -41,8 +99,53 @@ define(function (require) {
         ClassName: "ServerLayer",
 
 
+        /**
+         * Valid ramp type strings.
+         */
+        RAMP_TYPES: [
+            {id: "ware", name: "Luminance"},
+            {id: "inv-ware", name: "Inverse Luminance"},
+            {id: "br", name: "Blue/Red"},
+            {id: "inv-br", name: "Inverse Blue/Red"},
+            {id: "grey", name: "Grey"},
+            {id: "inv-grey", name: "Inverse Grey"},
+            {id: "flat", name: "Flat"},
+            {id: "single-gradient", name: "Single Gradient"}
+        ],
+
+
+        /**
+         * Valid ramp function strings.
+         */
+        RAMP_FUNCTIONS: [
+            {id: "linear", name: "Linear"},
+            {id: "log10", name: "Log 10"}
+        ],
+
+
         init: function ( spec, map ) {
+
+            var that = this;
+
+            // set reasonable defaults
+            spec.renderer.opacity  = spec.renderer.opacity || 1.0;
+            spec.renderer.enabled = ( spec.renderer.enabled !== undefined ) ? spec.renderer.enabled : true;
+            spec.renderer.ramp = spec.renderer.ramp || "ware";
+            spec.transform.name = spec.transform.name || 'linear';
+            spec.legendrange = spec.legendrange || [0,100];
+            spec.transformer = spec.transformer || {};
+            spec.transformer.type = spec.transformer.type || "generic";
+            spec.transformer.data = spec.transformer.data || {};
+            spec.coarseness = ( spec.coarseness !== undefined ) ?  spec.coarseness : 1;
+
+            // cal base constructor
             this._super( spec, map );
+
+            this.map.on("zoomend", function() {
+                mapZoomCallback( that, that.map );
+            });
+
+            this.hasBeenConfigured = false;
         },
 
 
@@ -52,6 +155,7 @@ define(function (require) {
         setOpacity: function ( opacity ) {
             if (this.layer) {
                 this.layer.olLayer_.setOpacity( opacity );
+                PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
             }
         },
 
@@ -67,6 +171,7 @@ define(function (require) {
         setVisibility: function ( visibility ) {
             if (this.layer) {
                 this.layer.olLayer_.setVisibility( visibility );
+                PubSub.publish( this.getChannel(), { field: 'visibility', value: visibility });
             }
         },
 
@@ -84,7 +189,7 @@ define(function (require) {
          * @param {function} callback - The callback function when the configure request returns, used to request new
          *                              ramp image
          */
-        setRampType: function ( rampType, callback ) {
+        setRampType: function ( rampType ) {
 
             var that = this;
             if ( !this.layerSpec.renderer ) {
@@ -93,7 +198,8 @@ define(function (require) {
                 this.layerSpec.renderer.ramp = rampType;
             }
             this.configure( function() {
-                callback();
+                // once configuration is received that the server has been re-configured, request new image
+                requestRampImage( that, that.getLayerInfo(), that.map.getZoom() );
                 that.update();
             });
         },
@@ -104,8 +210,19 @@ define(function (require) {
         },
 
 
+        invertRampType: function() {
+            // default to inv-ware
+            if ( $("body").hasClass("light-theme") ) {
+                this.setRampType('inv-ware');
+            } else {
+                this.setRampType('ware');
+            }
+        },
+
+
         setRampMinMax: function( minMax ) {
             this.rampMinMax = minMax;
+            PubSub.publish( this.getChannel(), { field: 'rampMinMax', value: minMax });
         },
 
 
@@ -116,6 +233,7 @@ define(function (require) {
 
         setRampImageUrl: function ( url ) {
             this.rampImageUrl = url;
+            PubSub.publish( this.getChannel(), { field: 'rampImageUrl', value: url });
         },
 
 
@@ -137,6 +255,7 @@ define(function (require) {
                 this.layerSpec.transform.name = rampFunction;
             }
             this.configure( $.proxy( this.update, this ) );
+            PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
         },
 
 
@@ -154,6 +273,7 @@ define(function (require) {
         setFilterRange: function ( filterRange ) {
             this.layerSpec.legendrange = filterRange;
             this.configure( $.proxy( this.update, this ) );
+            PubSub.publish( this.getChannel(), { field: 'filterRange', value: filterRange });
         },
 
 
@@ -167,6 +287,7 @@ define(function (require) {
          */
         setZIndex: function ( zIndex ) {
             this.map.setLayerIndex( this.layer.olLayer_, zIndex );
+            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
 
@@ -178,12 +299,19 @@ define(function (require) {
         setTransformerType: function ( transformerType ) {
             this.layerSpec.transformer.type = transformerType;
             this.configure( $.proxy( this.update, this ) );
+            PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
+        },
+
+
+        getTransformerType: function () {
+            return this.layerSpec.transformer.type;
         },
 
 
         setTransformerData: function ( transformerData ) {
             this.layerSpec.transformer.data = transformerData;
             this.configure( $.proxy( this.update, this ) );
+            PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
         },
 
 
@@ -195,6 +323,8 @@ define(function (require) {
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
             this.configure( $.proxy( this.update, this ) );
+            this.setRampMinMax( getLevelMinMax( this, this.map ) );
+            PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
 
 
@@ -218,8 +348,14 @@ define(function (require) {
                     // set layer info
                     that.layerInfo = layerInfo;
                 }
-
                 callback( layerInfo, statusInfo );
+                if ( that.hasBeenConfigured === false ) {
+                    requestRampImage( that, that.getLayerInfo(), 0 );
+                    that.setZIndex( that.layerSpec.zIndex );
+                    that.setVisibility( that.layerSpec.renderer.enabled );
+                    that.setCoarseness( that.layerSpec.coarseness );
+                    that.hasBeenConfigured = true;
+                }
             });
         },
 

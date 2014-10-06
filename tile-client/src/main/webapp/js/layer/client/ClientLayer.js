@@ -28,12 +28,13 @@ define(function (require) {
     "use strict";
 
 
-
     var Layer = require('../Layer'),
+        PubSub = require('../../util/PubSub'),
         Util = require('../../util/Util'),
         LayerService = require('../LayerService'),
         TileService = require('./TileService'),
         makeRedrawFunc,
+        updateTileFocus,
         ClientLayer;
 
 
@@ -49,11 +50,28 @@ define(function (require) {
     };
 
 
+    updateTileFocus = function ( layer, x, y ) {
+        var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
+        if ( tilekey !== layer.getTileFocus() ) {
+            // only update tilefocus if it actually changes
+            layer.setTileFocus( tilekey );
+        }
+    };
+
+
 
     ClientLayer = Layer.extend({
 
 
         init: function ( spec, views, map ) {
+
+            var that = this,
+                previousMouse = {};
+
+            // set reasonable defaults
+            spec[0].enabled = ( spec[0].enabled !== undefined ) ? spec[0].enabled : true;
+            spec[0].opacity = ( spec[0].opacity !== undefined ) ? spec[0].opacity : 1.0;
+
             this.id = spec[0].layer;
             this.uuid = Util.generateUuid();
             this.domain = 'client';
@@ -66,11 +84,31 @@ define(function (require) {
             this.defaultRendererIndex = 0;
             this.click = null;
             this.hover = null;
+
+            // clear click state if map is clicked
+            this.map.on( 'click', function() {
+                that.setClick( null );
+            });
+
+            // set tile focus callbacks
+            this.map.on('mousemove', function(event) {
+                updateTileFocus( that, event.xy.x, event.xy.y );
+                previousMouse.x = event.xy.x;
+                previousMouse.y = event.xy.y;
+            });
+            this.map.on('zoomend', function(event) {
+                updateTileFocus( that, previousMouse.x, previousMouse.y );
+            });
+
+            this.setZIndex( spec[0].zIndex );
+            this.setVisibility( spec[0].enabled );
+            this.setOpacity( spec[0].opacity );
         },
 
 
         setClick: function( value ) {
             this.click = value;
+            PubSub.publish( this.getChannel(), { field: 'click', value: value });
         },
 
 
@@ -79,8 +117,14 @@ define(function (require) {
         },
 
 
+        isClicked: function() {
+            return this.click !== null && this.click !== undefined;
+        },
+
+
         setHover: function( value ) {
             this.hover = value;
+            PubSub.publish( this.getChannel(), { field: 'hover', value: value });
         },
 
 
@@ -89,13 +133,9 @@ define(function (require) {
         },
 
 
-        isClicked: function() {
-            return this.click !== null && this.click !== undefined;
-        },
-
-
         setCarouselEnabled: function( isEnabled ) {
             this.carouselEnabled = isEnabled;
+            PubSub.publish( this.getChannel(), { field: 'carouselEnabled', value: isEnabled });
         },
 
 
@@ -115,6 +155,7 @@ define(function (require) {
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setOpacity( opacity );
             }
+            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
         },
 
 
@@ -129,6 +170,7 @@ define(function (require) {
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setVisibility( visible );
             }
+            PubSub.publish( this.getChannel(), { field: 'enabled', value: visible });
         },
 
 
@@ -143,6 +185,7 @@ define(function (require) {
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setZIndex( zIndex );
             }
+            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
 
@@ -152,17 +195,14 @@ define(function (require) {
 
 
         setTileFocus: function( tilekey ) {
+            this.previousTileFocus = this.tileFocus;
             this.tileFocus = tilekey;
+            PubSub.publish( this.getChannel(), { field: 'tileFocus', value: tilekey });
         },
 
 
         getTileFocus: function() {
             return this.tileFocus;
-        },
-
-
-        setPreviousTileFocus: function( tilekey ) {
-            this.previousTileFocus = tilekey;
         },
 
 
@@ -174,6 +214,7 @@ define(function (require) {
         setDefaultRendererIndex: function( index ) {
             this.defaultRendererIndex = index;
             this.update();
+            PubSub.publish( this.getChannel(), { field: 'defaultRendererIndex', value: index });
         },
 
 
@@ -190,6 +231,10 @@ define(function (require) {
                 newRenderer = this.views[newIndex].renderer,
                 oldService = this.views[oldIndex].service,
                 newService = this.views[newIndex].service;
+
+            if ( newIndex === oldIndex ) {
+                return;
+            }
 
             // update internal state
             if ( newIndex === this.defaultRendererIndex ) {
@@ -208,13 +253,14 @@ define(function (require) {
                 newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService, function() {
                     // on redraw check if the renderer index is still the same, it may be the case that
                     // the server took so long to respond that the this view is no longer active
-                    return that.renderersByTile[tilekey] === newIndex;
+                    return that.getTileRenderer(tilekey) === newIndex;
                 }));
             }
 
             // release and redraw to remove old data
             oldService.releaseData( tilekey );
             makeRedrawFunc( oldRenderer, oldService )();
+            PubSub.publish( this.getChannel(), { field: 'rendererByTile', value: newIndex });
         },
 
 
