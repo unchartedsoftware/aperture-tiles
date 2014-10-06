@@ -149,7 +149,7 @@ define(function (require) {
                     {id: "inv-br", name: "Inverse Blue/Red"},
                     {id: "grey", name: "Grey"},
                     {id: "inv-grey", name: "Inverse Grey"},
-                    {id: "flat", name: "Flat"},
+                    {id: "color-gradient", name: "Color Gradient"},
                     {id: "single-gradient", name: "Single Gradient"}
                 ];
 
