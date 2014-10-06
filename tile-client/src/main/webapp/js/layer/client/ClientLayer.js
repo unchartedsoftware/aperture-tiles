@@ -51,7 +51,7 @@ define(function (require) {
         init: function ( spec, views, map ) {
             this.id = spec[0].layer;
             this.uuid = Util.generateUuid();
-            this.domain = spec.domain;
+            this.domain = 'client';
             this.name = spec[0].name || spec[0].layer;
             this.map = map;
             this.layerSpec = spec;
@@ -59,6 +59,8 @@ define(function (require) {
             this.views = views;
             this.renderersByTile = {};
             this.defaultRendererIndex = 0;
+            this.click = null;
+            this.hover = null;
         },
 
 
@@ -69,6 +71,16 @@ define(function (require) {
 
         getClick: function() {
             return this.click;
+        },
+
+
+        setHover: function( value ) {
+            this.hover = value;
+        },
+
+
+        getHover: function() {
+            return this.hover;
         },
 
 
@@ -141,6 +153,16 @@ define(function (require) {
 
         getTileFocus: function() {
             return this.tileFocus;
+        },
+
+
+        setPreviousTileFocus: function( tilekey ) {
+            this.previousTileFocus = tilekey;
+        },
+
+
+        getPreviousTileFocus: function() {
+            return this.previousTileFocus;
         },
 
 

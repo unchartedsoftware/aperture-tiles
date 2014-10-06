@@ -30,6 +30,7 @@ define(function (require) {
 
 
     var ApertureRenderer = require('./ApertureRenderer'),
+        PubSub = require('../../../util/PubSub'),
         TopTopicsAperture;
 
 
@@ -44,30 +45,36 @@ define(function (require) {
             this.createLayer();     // instantiate the html visualization layer
         },
 
-        registerLayer: function( layerState ) {
+        subscribeRenderer: function() {
 
             var that = this; // preserve 'this' context
 
-            this._super( layerState ); // call parent class method
+            PubSub.subscribe( this.parent.getChannel(), function( message, path ) {
 
-            /*
-                Lets attach the layer state listener. This will be called whenever
-                the layer state changes.
-            */
-            this.layerState.addListener( function(fieldName) {
+                var field = message.field,
+                    value = message.value;
 
-                var layerState = that.layerState;
-
-                switch (fieldName) {
+                switch ( field ) {
 
                     case "click":
+
                         // if a click occurs, lets redraw all nodes to ensure that any click change is refreshed
-                        that.nodeLayer.all().redraw( new aperture.Transition( 100 ) );
+                        // use setTimeout with 0 to ensure clientlayer setClick event is processed before redraw
+                        setTimeout( function() {
+                            that.nodeLayer.all().redraw( new aperture.Transition( 100 ) );
+
+                        }, 0);
                         break;
 
                     case "hover":
-                        // if a hover occurs, only redraw the relevant tile
-                        that.nodeLayer.all().where('tilekey', layerState.get('hover').tilekey ).redraw( new aperture.Transition( 100 ) );
+
+                        if ( value ) {
+                            // if a hover occurs, only redraw the relevant tile
+                            // use setTimeout with 0 to ensure clientlayer setHover event is processed before redraw
+                            setTimeout( function() {
+                                that.nodeLayer.all().where('tilekey', value.tilekey ).redraw( new aperture.Transition( 100 ) );
+                            }, 0);
+                        }
                         break;
                 }
             });
@@ -113,7 +120,7 @@ define(function (require) {
             this.tagLabels.map('font-outline-width').asValue( 3 );      // outline width
             this.tagLabels.map('fill').from( function( index ) {
                 // change the fill colour dynamically based on the click state
-                var click = that.layerState.get('click');
+                var click = that.parent.getClick();
                 if ( click && !$.isEmptyObject( click ) ) {
                     if ( this.tilekey === click.tilekey && index === click.index ) {
                         return "blue";
@@ -123,7 +130,7 @@ define(function (require) {
             });
             this.tagLabels.map('font-size').from( function( index ) {
                 // change the fill colour dynamically based on the hover state
-                var hover = that.layerState.get('hover');
+                var hover = that.parent.getHover();
                 if ( hover && !$.isEmptyObject( hover ) ) {
                     if ( this.tilekey === hover.tilekey && index === hover.index ) {
                         return 28;
@@ -155,38 +162,29 @@ define(function (require) {
 
             // set the mouse event callbacks
             this.tagLabels.on('click', function(event) {
-                /*
-                    Modifying the layerState will broadcast any change to
-                    all listeners.
-                */
-                that.layerState.set('click', {
+                var click = {
                     tilekey: event.data.tilekey,
                     index: event.index[0],
                     type: "aperture"
-                });
+                };
+                PubSub.publish( that.parent.getChannel(), { field: 'click', value: click } );
                 return true; // swallow event
             });
             this.tagLabels.on('mouseover', function(event) {
-                /*
-                    Modifying the layerState will broadcast any change to
-                    all listeners.
-                */
-                that.layerState.set('hover',{
+                var hover = {
                     tilekey: event.data.tilekey,
                     index: event.index[0],
                     type: "aperture",
                     state: "on"
-                });
+                };
+                PubSub.publish( that.parent.getChannel(), { field: 'hover', value: hover } );
             });
             this.tagLabels.on('mouseout', function(event) {
-                /*
-                    Modifying the layerState will broadcast any change to
-                    all listeners.
-                */
-                that.layerState.set('hover', {
+                var hover = {
                     tilekey: event.data.tilekey,
                     state:"off"
-                });
+                };
+                PubSub.publish( that.parent.getChannel(), { field: 'hover', value: hover } );
             });
         }
 

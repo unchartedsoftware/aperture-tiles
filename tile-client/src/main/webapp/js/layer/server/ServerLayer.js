@@ -187,6 +187,11 @@ define(function (require) {
         },
 
 
+        getTransformerData: function () {
+            return this.layerSpec.transformer.data;
+        },
+
+
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
             this.configure( $.proxy( this.update, this ) );

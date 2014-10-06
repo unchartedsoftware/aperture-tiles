@@ -92,6 +92,11 @@ define(function (require) {
                             layer.setTileFocus( value );
                             break;
 
+                        case "previousTileFocus":
+
+                            layer.setTileFocus( value );
+                            break;
+
                         case "defaultRendererIndex":
 
                             layer.setDefaultRendererIndex( value );
@@ -105,6 +110,11 @@ define(function (require) {
                         case "click":
 
                             layer.setClick( value );
+                            break;
+
+                        case "hover":
+
+                            layer.setHover( value );
                             break;
                     }
 
