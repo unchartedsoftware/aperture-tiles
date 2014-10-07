@@ -58,11 +58,12 @@ require(['./ApertureConfig',
 	        var apertureConfigFile = "data/aperture-config.json",
 	            cloneObject,
 	            getLayers,
+	            getServerLayers,
+	            getClientLayers,
+	            groupClientLayers,
 	            getAnnotationLayers,
 	            getURLParameter,
-	            groupClientLayers,
 	            mapsDeferred, layersDeferred, annotationsDeferred;
-
 
 	        getURLParameter = function (key) {
 		        var url = window.location.search.substring(1),
@@ -81,13 +82,11 @@ require(['./ApertureConfig',
 
 	        cloneObject = function (base) {
 		        var result, key;
-
 		        if ($.isArray(base)) {
 			        result = [];
 		        } else {
 			        result = {};
 		        }
-
 		        for (key in base) {
 			        if (base.hasOwnProperty(key)) {
 				        if ("object" === typeof(base[key])) {
@@ -102,8 +101,8 @@ require(['./ApertureConfig',
 	        };
 
 	        groupClientLayers = function( clientLayers ) {
-
                 var layer, layerName, i, layersByName = {}, layersByOrder = [];
+                // group client layers by name while maintaining order in config file
                 for ( i=0; i<clientLayers.length; i++ ) {
                     layer = clientLayers[i];
                     layerName = layer.name;
@@ -116,58 +115,55 @@ require(['./ApertureConfig',
                 return layersByOrder;
             };
 
-	        // Get the layers from a layer tree that match a given filter and 
-	        // pertain to a given domain.
-	        getLayers = function (domain, rootNode, filterFcn) {
-		        // Filter function to filter out all layers not in the desired 
-		        // domain (server or client)
-		        var domainFilterFcn = function (domain) {
-			        return function (layer) {
-				        var accepted = false;
-				        if (filterFcn(layer)) {
-					        layer.renderers.forEach(function (renderer, index, renderers) {
-						        if (domain === renderer.domain) {
-							        accepted = true;
-							        return;
-						        }
-					        });
-				        }
-				        return accepted;
-			        };
-		        };
-
-		        // Run our filter, and on the returned nodes, return a renderer 
-		        // configuration appropriate to that domain.
-		        return LayerService.filterLeafLayers(
-			        rootNode,
-			        domainFilterFcn(domain)
-		        ).map(function (layer, index, layersList) {
-			        // For now, just use the first appropriate configuration we find.
-			        var config;
-
-			        layer.renderers.forEach(function (renderer, index, renderers) {
-				        if (domain === renderer.domain) {
-					        config = cloneObject(renderer);
-					        if (layer.data.transformer) {
-					            config.transformer = cloneObject(layer.data.transformer);
-					        }
-					        config.layer = layer.id;
-					        config.name = layer.name;
-					        config.zIndex = ( domain === 'server' ) ? index+1 : index+500;
-					        return;
-				        }
-			        });
-
-			        return config;
-		        });
+	        getLayers = function( rootNode, filter, domain ) {
+	            var layers = LayerService.filterLeafLayers( rootNode ),
+                    layer, configurations = [], config, renderer,
+                    i, j;
+                for (i=0; i<layers.length; i++) {
+                    layer = layers[i];
+                    if ( filter( layer ) ) {
+                        for ( j=0; j<layer.renderers.length; j++ ) {
+                            renderer = layer.renderers[j];
+                            if ( renderer.domain === domain ) {
+                                config = cloneObject( renderer );
+                                if (layer.data.transformer) {
+                                    config.transformer = cloneObject( layer.data.transformer );
+                                }
+                                config.layer = layer.id;
+                                config.name = layer.name;
+                                configurations.push( config );
+                                console.log( config.zIndex );
+                            }
+                        }
+                    }
+                }
+                return configurations;
 	        };
 
-	        getAnnotationLayers = function( allLayers, filter ) {
-		        var i, validLayers =[];
-		        for (i=0; i<allLayers.length; i++) {
+	        getServerLayers = function( rootNode, filter ) {
+	            var layers = getLayers( rootNode, filter, 'server' ),
+	                zIndex = 1, i;
+	            for ( i=0; i<layers.length; i++ ) {
+	                layers[i].zIndex = zIndex++;
+	            }
+	            return layers;
+            };
 
+            getClientLayers = function( rootNode, filter ) {
+                var layers = getLayers( rootNode, filter, 'client' ),
+                    zIndex = 1000, i;
+                for ( i=0; i<layers.length; i++ ) {
+                    layers[i].zIndex = zIndex++;
+                }
+                return groupClientLayers( layers );
+            };
+
+	        getAnnotationLayers = function( allLayers, filter ) {
+		        var i, validLayers =[],
+		            zIndex = 500;
+		        for (i=0; i<allLayers.length; i++) {
 			        if ( filter( allLayers[i] ) ) {
-			            allLayers[i].zIndex = i+500;
+			            allLayers[i].zIndex = zIndex++;
 				        validLayers.push( allLayers[i] );
 			        }
 		        }
@@ -201,8 +197,8 @@ require(['./ApertureConfig',
 		        layersDeferred = LayerService.requestLayers();
 		        annotationsDeferred = AnnotationService.requestLayers();
 
-		        $.when(mapsDeferred, layersDeferred, annotationsDeferred).done(
-			        function (maps, layers, annotationLayers) {
+		        $.when (mapsDeferred, layersDeferred, annotationsDeferred ).done(
+			        function ( maps, layers, annotationLayers ) {
 				        // For now, just use the first map
 				        var currentMap,
 				            mapConfig,
@@ -268,11 +264,11 @@ require(['./ApertureConfig',
 				        // of the layer tree that match that pyramid.
 				        // Eventually, we should let the user choose among them.
 				        filter = function (layer) {
-					        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
+					        return PyramidFactory.pyramidsEqual( mapPyramid, layer.pyramid );
 				        };
 
-				        clientLayers = groupClientLayers( getLayers( "client", layers, filter ) );
-				        serverLayers = getLayers( "server", layers, filter );
+				        clientLayers = getClientLayers( layers, filter );
+				        serverLayers = getServerLayers( layers, filter );
                         annotationLayers = getAnnotationLayers( annotationLayers, filter );
 
 				        if (UICustomization.customizeLayers) {
@@ -293,10 +289,11 @@ require(['./ApertureConfig',
                             var layers = [];
 
                             // customize layers
-                            if (UICustomization.customizeLayers) {
+                            if ( UICustomization.customizeLayers ) {
                                 UICustomization.customizeLayers( clientLayers, serverLayers, annotationLayers );
                             }
 
+                            // merge all layers into single array
                             $.merge( layers, [ worldMap ] );
                             $.merge( layers, clientLayers );
                             $.merge( layers, serverLayers );
