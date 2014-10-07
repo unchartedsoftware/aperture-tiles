@@ -41,8 +41,8 @@ define(function (require) {
             this.spec = spec;
         },
 
-        registerLayer: function( layerState ) {
-            this.layerState = layerState;
+        subscribeRenderer: function() {
+           return true;
         },
 
         setOpacity: function( opacity ) {

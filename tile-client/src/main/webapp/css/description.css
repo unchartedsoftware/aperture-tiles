@@ -61,3 +61,19 @@
 	background-color: #111;
 	color: #D3D3D3;
 }
+
+#description input {
+    cursor:pointer;
+    position:relative;
+    width: 18px;
+    height: 18px;
+    bottom: -4px;   
+}
+
+.light-theme #description input {
+}
+
+.dark-theme #description input { 
+    -webkit-filter: invert(100%);
+    -moz-filter: invert(100%);
+}

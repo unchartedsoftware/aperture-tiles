@@ -28,11 +28,13 @@ define(function (require) {
     "use strict";
 
 
-
     var Layer = require('../Layer'),
+        PubSub = require('../../util/PubSub'),
+        Util = require('../../util/Util'),
         LayerService = require('../LayerService'),
         TileService = require('./TileService'),
         makeRedrawFunc,
+        updateTileFocus,
         ClientLayer;
 
 
@@ -40,11 +42,19 @@ define(function (require) {
     makeRedrawFunc = function( renderer, tileService, conditional ) {
         return function() {
             // if conditional function is provided, it must return true to execute layer redraw
-            if ( conditional === undefined ||
-                ( conditional && typeof conditional === 'function' && conditional() ) ) {
+            if ( !conditional || conditional() ) {
                 renderer.redraw( tileService.getDataArray() );
             }
         };
+    };
+
+
+    updateTileFocus = function ( layer, x, y ) {
+        var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
+        if ( tilekey !== layer.getTileFocus() ) {
+            // only update tilefocus if it actually changes
+            layer.setTileFocus( tilekey );
+        }
     };
 
 
@@ -53,71 +63,296 @@ define(function (require) {
 
 
         init: function ( spec, views, map ) {
-            this.id = spec[0].layer;
-            this.name = spec[0].name || spec[0].layer;
+
+            var that = this,
+                previousMouse = {};
+
+            // set reasonable defaults
+            spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
+            spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
+
+            this.id = spec.layer;
+            this.uuid = Util.generateUuid();
+            this.domain = 'client';
+            this.name = spec.name || spec.views[0].id;
             this.map = map;
             this.layerSpec = spec;
             this.layerInfo = {};
             this.views = views;
             this.renderersByTile = {};
-            this.defaultRendererIndex = 0;
+            this.defaultViewIndex = 0;
+            this.click = null;
+            this.hover = null;
+
+            // clear click state if map is clicked
+            this.map.on( 'click', function() {
+                that.setClick( null );
+            });
+
+            // set tile focus callbacks
+            this.map.on('mousemove', function(event) {
+                updateTileFocus( that, event.xy.x, event.xy.y );
+                previousMouse.x = event.xy.x;
+                previousMouse.y = event.xy.y;
+            });
+            this.map.on('zoomend', function(event) {
+                updateTileFocus( that, previousMouse.x, previousMouse.y );
+            });
+
+            this.setZIndex( spec.zIndex );
+            this.setVisibility( spec.enabled );
+            this.setOpacity( spec.opacity );
         },
 
 
+        /**
+         * Store click event object.
+         */
+        setClick: function( value ) {
+            this.click = value;
+            PubSub.publish( this.getChannel(), { field: 'click', value: value });
+        },
+
+
+        /**
+         * Get click event object.
+         */
+        getClick: function() {
+            return this.click;
+        },
+
+
+        /**
+         * Check if click event object exists.
+         */
+        isClicked: function() {
+            return this.click !== null && this.click !== undefined;
+        },
+
+
+        /**
+         * Store hover event object.
+         */
+        setHover: function( value ) {
+            this.hover = value;
+            PubSub.publish( this.getChannel(), { field: 'hover', value: value });
+        },
+
+
+        /**
+         * Get hover event object.
+         */
+        getHover: function() {
+            return this.hover;
+        },
+
+
+        /**
+         * Set whether the carousel conttrols is enabled or not.
+         */
+        setCarouselEnabled: function( isEnabled ) {
+            this.carouselEnabled = isEnabled;
+            PubSub.publish( this.getChannel(), { field: 'carouselEnabled', value: isEnabled });
+        },
+
+
+        /**
+         * Check if the carousel controls is enabled.
+         */
+        isCarouselEnabled: function() {
+            return this.carouselEnabled;
+        },
+
+
+        /**
+         * Returns the number of views in the layer.
+         */
+        getNumViews: function() {
+            return this.views.length;
+        },
+
+
+        /**
+         * Set the layers opacity.
+         */
         setOpacity: function( opacity ) {
             var i;
+            this.opacity = opacity;
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setOpacity( opacity );
             }
+            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
         },
 
 
+        /**
+         * Get the layers opacity.
+         */
+        getOpacity: function() {
+            return this.opacity;
+        },
+
+
+        /**
+         * Set the layers visibility.
+         */
         setVisibility: function( visible ) {
             var i;
+            this.visibility = visible;
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setVisibility( visible );
             }
+            PubSub.publish( this.getChannel(), { field: 'enabled', value: visible });
         },
 
 
+        /**
+         * Get the layers visibility.
+         */
+        getVisibility: function() {
+            return this.visibility;
+        },
+
+
+        /**
+         * Set the layers z index.
+         */
         setZIndex: function( zIndex ) {
             var i;
+            this.zIndex = zIndex;
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setZIndex( zIndex );
             }
+            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
 
+        /**
+         * Get the layers z index.
+         */
+        getZIndex: function() {
+            return this.zIndex;
+        },
+
+
+        /**
+         * Set the layers tile focus, identifying which tile the user is currently
+         * hovering over.
+         */
         setTileFocus: function( tilekey ) {
-            return true;
+            this.previousTileFocus = this.tileFocus;
+            this.tileFocus = tilekey;
+            PubSub.publish( this.getChannel(), { field: 'tileFocus', value: tilekey });
         },
 
 
-        setDefaultRendererIndex: function( index ) {
-            this.defaultRendererIndex = index;
+        /**
+         * Get the layers tile focus.
+         */
+        getTileFocus: function() {
+            return this.tileFocus;
+        },
+
+
+        /**
+         * Get the layers previous tile focus.
+         */
+        getPreviousTileFocus: function() {
+            return this.previousTileFocus;
+        },
+
+
+        /**
+         * Set the default view index
+         */
+        setDefaultViewIndex: function( index ) {
+            this.defaultViewIndex = index;
             this.update();
+            PubSub.publish( this.getChannel(), { field: 'defaultViewIndex', value: index });
         },
 
 
-        getTileRenderer: function( tilekey ) {
+        /**
+         * Get the default view index
+         */
+        getDefaultViewIndex: function() {
+            return this.defaultViewIndex;
+        },
+
+
+        /**
+         * Set the carousel view index for a particular tile
+         */
+        setTileViewIndex: function( tilekey, newIndex ) {
+
+            var that = this,
+                oldIndex = this.getTileViewIndex( tilekey ),
+                oldRenderer = this.views[oldIndex].renderer,
+                newRenderer = this.views[newIndex].renderer,
+                oldService = this.views[oldIndex].service,
+                newService = this.views[newIndex].service;
+
+            if ( newIndex === oldIndex ) {
+                return;
+            }
+
+            // update internal state
+            if ( newIndex === this.defaultViewIndex ) {
+                delete this.renderersByTile[tilekey];
+            } else {
+                this.renderersByTile[tilekey] = newIndex;
+            }
+
+            if ( newService.layerInfo.layer === oldService.layerInfo.layer ) {
+                // both renderers share the same data source, swap tile data
+                // give tile to new view
+                newService.data[tilekey] = oldService.data[tilekey];
+                makeRedrawFunc( newRenderer, newService )();
+            } else {
+                // otherwise request new data
+                newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService, function() {
+                    // on redraw check if the renderer index is still the same, it may be the case that
+                    // the server took so long to respond that the this view is no longer active
+                    return that.getTileViewIndex(tilekey) === newIndex;
+                }));
+            }
+
+            // release and redraw to remove old data
+            oldService.releaseData( tilekey );
+            makeRedrawFunc( oldRenderer, oldService )();
+            PubSub.publish( this.getChannel(), { field: 'tileViewIndex', value: { tilekey: tilekey, index: newIndex } } );
+        },
+
+
+        /**
+         * Get the carousel view index for a particular tile
+         */
+        getTileViewIndex: function( tilekey ) {
             var index = this.renderersByTile[tilekey];
-            return (index !== undefined) ? index : this.defaultRendererIndex;
+            return ( index !== undefined ) ? index : this.defaultViewIndex;
         },
 
 
+        /**
+         * Configure the layer, this involves sending the layer specification
+         * object for each view to the server in a POST request. The server will respond
+         * with a meta data object containing the views layer configuration uuid. If a previous
+         * uuid exists, the server will automatically send an unconfigure request to
+         * free the previous configuration.
+         */
         configure: function( callback ) {
 
             var that = this,
-                layerSpecs = this.layerSpec,
+                viewSpecs = this.layerSpec.views,
                 layerInfos = this.layerInfo,
                 deferreds = [],
                 i;
 
-            function configureView( layerSpec ) {
+            function configureView( viewSpecs ) {
 
                 var layerDeferred = $.Deferred();
 
-                LayerService.configureLayer( layerSpec, function( layerInfo, statusInfo ) {
+                LayerService.configureLayer( viewSpecs, function( layerInfo, statusInfo ) {
 
                     var layerId = layerInfo.layer;
 
@@ -137,8 +372,8 @@ define(function (require) {
                 return layerDeferred;
             }
 
-            for ( i=0; i<layerSpecs.length; i++ ) {
-                deferreds.push( configureView( layerSpecs[i] ) );
+            for ( i=0; i<viewSpecs.length; i++ ) {
+                deferreds.push( configureView( viewSpecs[i] ) );
             }
 
             $.when.apply( $, deferreds ).done( function() {
@@ -146,6 +381,11 @@ define(function (require) {
                 for (i=0; i<that.views.length; i++) {
                     view = that.views[i];
                     view.service = new TileService( layerInfos[ view.id ], that.map.getPyramid() );
+                    // pass parent layer (this) along with meta data to the renderer
+                    view.renderer.parent = that;
+                    view.renderer.meta = layerInfos[ view.id ].meta;
+                    // subscribe renderer to pubsub AFTER it has its parent reference
+                    view.renderer.subscribeRenderer();
                 }
                 // attach callback now
                 that.map.on('move', $.proxy(that.update, that));
@@ -153,42 +393,6 @@ define(function (require) {
                 callback( layerInfos );
             });
 
-        },
-
-
-        setTileRenderer: function( tilekey, newIndex ) {
-
-            var that = this,
-                oldIndex = this.getTileRenderer( tilekey ),
-                oldRenderer = this.views[oldIndex].renderer,
-                newRenderer = this.views[newIndex].renderer,
-                oldService = this.views[oldIndex].service,
-                newService = this.views[newIndex].service;
-
-            // update internal state
-            if ( newIndex === this.defaultRendererIndex ) {
-                delete this.renderersByTile[tilekey];
-            } else {
-                this.renderersByTile[tilekey] = newIndex;
-            }
-
-            if ( newService.layerInfo.layer === oldService.layerInfo.layer ) {
-                // both renderers share the same data source, swap tile data
-                // give tile to new view
-                newService.data[tilekey] = oldService.data[tilekey];
-                makeRedrawFunc( newRenderer, newService )();
-            } else {
-                // otherwise request new data
-                newService.getRequest( tilekey, {}, makeRedrawFunc( newRenderer, newService, function() {
-                    // on redraw check if the renderer index is still the same, it may be the case that
-                    // the server took so long to respond that the this view is no longer active
-                    return that.renderersByTile[tilekey] === newIndex;
-                }));
-            }
-
-            // release and redraw to remove old data
-            oldService.releaseData( tilekey );
-            makeRedrawFunc( oldRenderer, oldService )();
         },
 
 
@@ -215,7 +419,7 @@ define(function (require) {
             // group tiles by view index
             for (i=0; i<tiles.length; ++i) {
                 tilekey = tiles[i].level+','+tiles[i].xIndex+','+tiles[i].yIndex;
-                rendererIndex = this.getTileRenderer( tilekey );
+                rendererIndex = this.getTileViewIndex( tilekey );
                 tilesByRenderer[rendererIndex].push( tiles[i] );
             }
 

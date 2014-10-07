@@ -32,6 +32,7 @@ define(function (require) {
     var HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
         HtmlRenderer = require('./HtmlRenderer'),
+        PubSub = require('../../../util/PubSub'),
         TopTagsHtml;
 
 
@@ -47,27 +48,22 @@ define(function (require) {
         },
 
 
-        registerLayer: function( layerState ) {
+        subscribeRenderer: function() {
 
             var that = this; // preserve 'this' context
 
-            this._super( layerState ); // call parent class method
+            PubSub.subscribe( this.parent.getChannel(), function( message, path ) {
 
-            /*
-                Lets attach the layer state listener. This will be called whenever
-                the layer state changes.
-            */
-            this.layerState.addListener( function(fieldName) {
+                var field = message.field,
+                    value = message.value;
 
-                var layerState = that.layerState;
-
-                if ( fieldName === "click" ) {
+                if ( field === "click" ) {
                     // if a click occurs, lets remove styling from any previous label
                     $(".topic-label, .clicked").removeClass('clicked');
                     // in this demo we only want to style this layer if the click comes from this layer
-                    if ( layerState.get('click').type === "html" ) {
+                    if ( value && value.type === "html" ) {
                         // add class to the object to adjust the styling
-                        layerState.get('click').$elem.addClass('clicked');
+                        value.$elem.addClass('clicked');
                     }
                 }
             });
@@ -136,17 +132,12 @@ define(function (require) {
                             Attach a mouse click event listener
                         */
                         $topic.click( function() {
-
-                            /*
-                                We could simply do the styling in this function here, but to coordinate with the other
-                                renderers lets use the layerState object. The layerState will broadcast any change to
-                                all listeners.
-                            */
-                            that.layerState.set( 'click', {
+                            var click = {
                                 topic: topic,
                                 $elem: $(this),
                                 type: "html"
-                            });
+                            };
+                            that.parent.setClick( click );
                             event.stopPropagation(); // stop the click from propagating deeper
                         });
 
