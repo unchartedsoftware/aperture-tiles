@@ -108,29 +108,46 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		final String rampType = getPropertyValue(RAMP_TYPE);
 		final double opacity = 1.0; //getPropertyValue(OPACITY);
 		final String theme = getPropertyValue(THEME);
-		final boolean inverted = theme.equalsIgnoreCase("light");
+		final boolean onlight = theme.equalsIgnoreCase("light");
 		
 		ColorRamp ramp;
 
 		// ANY CUSTOM GRADIENT
 		if (!gradients.isEmpty()) {
 			for (ThemedGradientFactory factory : gradients) {
-				if (factory.getTheme().equalsIgnoreCase(theme)) {
-					return SteppedGradientColorRamp.from(factory.create().getColors());
+				final String scope[] = factory.getTheme().split(":");
+				switch (scope.length) {
+				case 2:
+					if (!scope[0].equalsIgnoreCase(rampType)) continue;
+				case 1:
+					if (!scope[scope.length-1].equalsIgnoreCase(theme)) continue;
+				case 0:
+					break;
+					
+				default:
+					continue;
 				}
+				
+				return SteppedGradientColorRamp.from(factory.create().getColors());
 			}
-			ramp = SteppedGradientColorRamp.from(ThemedGradientFactory.createDefault(theme));
-
+		}
+		
+		// CONSTRAINED HUE DEFAULTS
+		if (rampType.equalsIgnoreCase("hot")){
+			ramp = SteppedGradientColorRamp.hot(onlight);
+		} else if (rampType.equalsIgnoreCase("cool")){
+			ramp = SteppedGradientColorRamp.cool(onlight);
+			
 		// LEGACY BLUE / RED
 		} else if (rampType.equalsIgnoreCase("br")){
-			ramp = new BRColorRamp(inverted, opacity);
+			ramp = new BRColorRamp(onlight, opacity);
 		} else if(rampType.equalsIgnoreCase("inv-br")){
 			// We're forcing the inverse.
 			ramp = new BRColorRamp(true, opacity);
 
 		// NEUTRAL GRAY
 		} else if (rampType.equalsIgnoreCase("neutral") || rampType.equalsIgnoreCase("grey")) {
-			ramp = new GreyColorRamp(inverted, opacity);
+			ramp = new GreyColorRamp(onlight, opacity);
 		} else if (rampType.equalsIgnoreCase("inv-grey")) { // legacy
 			// We're forcing the inverse.
 			ramp = new GreyColorRamp(true, opacity);
@@ -158,7 +175,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		} else {
 
 			// default
-			ramp = new WareColorRamp(inverted, opacity);
+			ramp = new WareColorRamp(onlight, opacity);
 		}
 		
 		return ramp;

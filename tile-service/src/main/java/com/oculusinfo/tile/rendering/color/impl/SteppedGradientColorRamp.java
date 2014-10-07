@@ -26,8 +26,10 @@ package com.oculusinfo.tile.rendering.color.impl;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.color.FixedPoint;
 
 /**
@@ -40,6 +42,19 @@ import com.oculusinfo.tile.rendering.color.FixedPoint;
  */
 public class SteppedGradientColorRamp extends AbstractColorRamp {
 
+	private static final ColorRamp HOT_ONLIGHT = from(Arrays.asList(new Color[] {
+			new Color(0xff,0xee,0xdd), new Color(0xff,0xaa,0x33), new Color(0xff,0x11,0x00)}));
+
+	private static final ColorRamp HOT_ONDARK = from(Arrays.asList(new Color[] {
+			new Color(0x44,0x11,0x00), new Color(0xff,0x44,0x00), new Color(0xff,0xff,0xff)}));
+	
+
+	private static final ColorRamp COOL_ONLIGHT = from(Arrays.asList(new Color[] {
+			new Color(0xdd,0xee,0xff), new Color(0x33,0xaa,0xff), new Color(0x00,0x11,0xff)}));
+
+	private static final ColorRamp COOL_ONDARK = from(Arrays.asList(new Color[] {
+			new Color(0x00,0x11,0x44), new Color(0x00,0x66,0xff), new Color(0xff,0xff,0xff)}));
+	
 	/**
 	 * Constructs a stepped gradient in the ramp-standard part exploded form.
 	 * 
@@ -87,6 +102,14 @@ public class SteppedGradientColorRamp extends AbstractColorRamp {
 		}
 		
 		return new SteppedGradientColorRamp(red, grn, blu, alp);
+	}
+	
+	public static ColorRamp hot(boolean onlight) {
+		return onlight? HOT_ONLIGHT : HOT_ONDARK;
+	}
+
+	public static ColorRamp cool(boolean onlight) {
+		return onlight? COOL_ONLIGHT : COOL_ONDARK;
 	}
 	
 }
