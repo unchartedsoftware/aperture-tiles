@@ -137,7 +137,7 @@ define(function (require) {
                                 $elem: $(this),
                                 type: "html"
                             };
-                            PubSub.publish( that.parent.getChannel(), { field: 'click', value: click } );
+                            that.parent.setClick( click );
                             event.stopPropagation(); // stop the click from propagating deeper
                         });
 

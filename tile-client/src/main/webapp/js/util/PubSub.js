@@ -26,25 +26,12 @@
 
 /*
     A hierarchical publish and subscribe object. Channels consist of strings, sub-channels
-    are separated with a period ('.'). Publishing to a channel will propagate the message
-    to all sub-channels.
-
-    Ex.
-
-        PubSub.subscribe('animals', ... );
-        PubSub.subscribe('animals.mammals', ... );
-        PubSub.subscribe('animals.mammals.dogs', ... );
-        PubSub.subscribe('animals.amphibians', ... );
-        PubSub.subscribe('animals.amphibians.frogs', ... );
-
-        PubSub.publish('animals', ... )                     // publish to all subscribers with parent 'animals'
-        PubSub.publish('animals.mammals', ... )             // publish to all subscribers with parent 'animals.mammals'
-        PubSub.publish('animals.amphibians.frogs', ... );   // publish to only animals.amphibians.frogs
+    are separated with a period ('.'). Publishing to a parent channel will propagate the message
+    to all existing sub-channels.
 */
 define(function (require) {
+
     "use strict";
-
-
 
     return {
 

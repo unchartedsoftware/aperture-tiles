@@ -69,13 +69,13 @@ define(function (require) {
                 previousMouse = {};
 
             // set reasonable defaults
-            spec[0].enabled = ( spec[0].enabled !== undefined ) ? spec[0].enabled : true;
-            spec[0].opacity = ( spec[0].opacity !== undefined ) ? spec[0].opacity : 1.0;
+            spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
+            spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
 
-            this.id = spec[0].layer;
+            this.id = spec.layer;
             this.uuid = Util.generateUuid();
             this.domain = 'client';
-            this.name = spec[0].name || spec[0].layer;
+            this.name = spec.name || spec.views[0].id;
             this.map = map;
             this.layerSpec = spec;
             this.layerInfo = {};
@@ -100,9 +100,9 @@ define(function (require) {
                 updateTileFocus( that, previousMouse.x, previousMouse.y );
             });
 
-            this.setZIndex( spec[0].zIndex );
-            this.setVisibility( spec[0].enabled );
-            this.setOpacity( spec[0].opacity );
+            this.setZIndex( spec.zIndex );
+            this.setVisibility( spec.enabled );
+            this.setOpacity( spec.opacity );
         },
 
 
@@ -273,16 +273,16 @@ define(function (require) {
         configure: function( callback ) {
 
             var that = this,
-                layerSpecs = this.layerSpec,
+                viewSpecs = this.layerSpec.views,
                 layerInfos = this.layerInfo,
                 deferreds = [],
                 i;
 
-            function configureView( layerSpec ) {
+            function configureView( viewSpecs ) {
 
                 var layerDeferred = $.Deferred();
 
-                LayerService.configureLayer( layerSpec, function( layerInfo, statusInfo ) {
+                LayerService.configureLayer( viewSpecs, function( layerInfo, statusInfo ) {
 
                     var layerId = layerInfo.layer;
 
@@ -302,8 +302,8 @@ define(function (require) {
                 return layerDeferred;
             }
 
-            for ( i=0; i<layerSpecs.length; i++ ) {
-                deferreds.push( configureView( layerSpecs[i] ) );
+            for ( i=0; i<viewSpecs.length; i++ ) {
+                deferreds.push( configureView( viewSpecs[i] ) );
             }
 
             $.when.apply( $, deferreds ).done( function() {

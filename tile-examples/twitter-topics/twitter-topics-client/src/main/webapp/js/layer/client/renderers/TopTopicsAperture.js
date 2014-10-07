@@ -167,7 +167,7 @@ define(function (require) {
                     index: event.index[0],
                     type: "aperture"
                 };
-                PubSub.publish( that.parent.getChannel(), { field: 'click', value: click } );
+                that.parent.setClick( click );
                 return true; // swallow event
             });
             this.tagLabels.on('mouseover', function(event) {
@@ -177,14 +177,14 @@ define(function (require) {
                     type: "aperture",
                     state: "on"
                 };
-                PubSub.publish( that.parent.getChannel(), { field: 'hover', value: hover } );
+                that.parent.setHover( hover );
             });
             this.tagLabels.on('mouseout', function(event) {
                 var hover = {
                     tilekey: event.data.tilekey,
                     state:"off"
                 };
-                PubSub.publish( that.parent.getChannel(), { field: 'hover', value: hover } );
+                that.parent.setHover( hover );
             });
         }
 

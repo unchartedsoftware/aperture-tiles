@@ -44,8 +44,7 @@ define( function (require) {
             serverLayer = new ServerLayer( layerJSON, map );
             // send configuration request
             serverLayer.configure( function( layerInfo ) {
-                // update layer and resolve deferred
-                serverLayer.update( layerInfo );
+                // resolve deferred
                 serverLayerDeferred.resolve( serverLayer );
             });
 

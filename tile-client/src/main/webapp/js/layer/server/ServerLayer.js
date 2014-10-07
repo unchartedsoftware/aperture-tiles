@@ -190,7 +190,6 @@ define(function (require) {
          *                              ramp image
          */
         setRampType: function ( rampType ) {
-
             var that = this;
             if ( !this.layerSpec.renderer ) {
                 this.layerSpec.renderer = {ramp: rampType};
@@ -200,7 +199,6 @@ define(function (require) {
             this.configure( function() {
                 // once configuration is received that the server has been re-configured, request new image
                 requestRampImage( that, that.getLayerInfo(), that.map.getZoom() );
-                that.update();
             });
         },
 
@@ -254,7 +252,7 @@ define(function (require) {
             } else {
                 this.layerSpec.transform.name = rampFunction;
             }
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
             PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
         },
 
@@ -272,7 +270,7 @@ define(function (require) {
          */
         setFilterRange: function ( filterRange ) {
             this.layerSpec.legendrange = filterRange;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
             PubSub.publish( this.getChannel(), { field: 'filterRange', value: filterRange });
         },
 
@@ -298,7 +296,7 @@ define(function (require) {
 
         setTransformerType: function ( transformerType ) {
             this.layerSpec.transformer.type = transformerType;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
             PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
         },
 
@@ -310,7 +308,7 @@ define(function (require) {
 
         setTransformerData: function ( transformerData ) {
             this.layerSpec.transformer.data = transformerData;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
             PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
         },
 
@@ -322,7 +320,7 @@ define(function (require) {
 
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
             this.setRampMinMax( getLevelMinMax( this, this.map ) );
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
@@ -347,14 +345,18 @@ define(function (require) {
                     }
                     // set layer info
                     that.layerInfo = layerInfo;
+                    that.update();
+                    // on first configure, set client-side layer properties
+                    if ( that.hasBeenConfigured === false ) {
+                        requestRampImage( that, that.getLayerInfo(), 0 );
+                        that.setZIndex( that.layerSpec.zIndex );
+                        that.setVisibility( that.layerSpec.renderer.enabled );
+                        that.setCoarseness( that.layerSpec.coarseness );
+                        that.hasBeenConfigured = true;
+                    }
                 }
-                callback( layerInfo, statusInfo );
-                if ( that.hasBeenConfigured === false ) {
-                    requestRampImage( that, that.getLayerInfo(), 0 );
-                    that.setZIndex( that.layerSpec.zIndex );
-                    that.setVisibility( that.layerSpec.renderer.enabled );
-                    that.setCoarseness( that.layerSpec.coarseness );
-                    that.hasBeenConfigured = true;
+                if ( callback ) {
+                    callback( layerInfo, statusInfo );
                 }
             });
         },

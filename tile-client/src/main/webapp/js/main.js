@@ -61,6 +61,7 @@ require(['./ApertureConfig',
 	            getServerLayers,
 	            getClientLayers,
 	            groupClientLayers,
+	            groupClientLayerViews,
 	            getAnnotationLayers,
 	            getURLParameter,
 	            mapsDeferred, layersDeferred, annotationsDeferred;
@@ -100,8 +101,33 @@ require(['./ApertureConfig',
 		        return result;
 	        };
 
+	        groupClientLayerViews = function( subLayers ) {
+	            var spec = {},
+	                subLayer, i, j;
+	            // set base spec from first declared client layer
+                spec.domain = subLayers[0].domain;
+                spec.name = subLayers[0].name;
+                spec.opacity = subLayers[0].opacity;
+                spec.enabled = subLayers[0].enabled;
+                spec.views = [];
+	            for ( i=0; i<subLayers.length; i++ ) {
+	                subLayer = subLayers[i];
+	                for ( j=0; j<subLayer.renderers.length; j++ ) {
+                        spec.views.push({
+                            layer : subLayer.layer,
+                            renderer : subLayer.renderers[j],
+                            details : subLayer.details
+                        });
+	                }
+	            }
+                return spec;
+            };
+
 	        groupClientLayers = function( clientLayers ) {
-                var layer, layerName, i, layersByName = {}, layersByOrder = [];
+                var layer, layerName,
+                    layersByName = {}, layersByOrder = [],
+                    layerSpecs = [],
+                    i;
                 // group client layers by name while maintaining order in config file
                 for ( i=0; i<clientLayers.length; i++ ) {
                     layer = clientLayers[i];
@@ -112,7 +138,11 @@ require(['./ApertureConfig',
                     }
                     layersByName[ layerName ].push( layer );
                 }
-                return layersByOrder;
+                // iterate over individual client layers and assemble view specs
+                for ( i=0; i<layersByOrder.length; i++ ) {
+                    layerSpecs.push( groupClientLayerViews( layersByOrder[i] ) );
+                }
+                return layerSpecs;
             };
 
 	        getLayers = function( rootNode, filter, domain ) {
@@ -121,10 +151,13 @@ require(['./ApertureConfig',
                     i, j;
                 for (i=0; i<layers.length; i++) {
                     layer = layers[i];
+                    // filter layer based on function
                     if ( filter( layer ) ) {
                         for ( j=0; j<layer.renderers.length; j++ ) {
                             renderer = layer.renderers[j];
+                            // if renderer matches domain
                             if ( renderer.domain === domain ) {
+                                // we only needed certain parts of the spec objects
                                 config = cloneObject( renderer );
                                 if (layer.data.transformer) {
                                     config.transformer = cloneObject( layer.data.transformer );
@@ -132,7 +165,6 @@ require(['./ApertureConfig',
                                 config.layer = layer.id;
                                 config.name = layer.name;
                                 configurations.push( config );
-                                console.log( config.zIndex );
                             }
                         }
                     }
@@ -152,10 +184,12 @@ require(['./ApertureConfig',
             getClientLayers = function( rootNode, filter ) {
                 var layers = getLayers( rootNode, filter, 'client' ),
                     zIndex = 1000, i;
+                // group client layers based on common name
+                layers = groupClientLayers( layers );
                 for ( i=0; i<layers.length; i++ ) {
                     layers[i].zIndex = zIndex++;
                 }
-                return groupClientLayers( layers );
+                return layers;
             };
 
 	        getAnnotationLayers = function( allLayers, filter ) {
@@ -298,7 +332,6 @@ require(['./ApertureConfig',
                             $.merge( layers, clientLayers );
                             $.merge( layers, serverLayers );
                             $.merge( layers, annotationLayers );
-
                             // create layer controls
                             new LayerControls( 'layer-controls-content', layers, UICustomization.customizeSettings ).noop();
                             // create the carousel controls
