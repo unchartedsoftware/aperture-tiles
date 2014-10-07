@@ -40,14 +40,29 @@ import com.oculusinfo.tile.rendering.color.FixedPoint;
  */
 public class SteppedGradientColorRamp extends AbstractColorRamp {
 
+	/**
+	 * Constructs a stepped gradient in the ramp-standard part exploded form.
+	 * 
+	 * @param reds
+	 * 		List of reds.
+	 * @param greens
+	 * 		List of greens.
+	 * @param blues
+	 * 		List of blues.
+	 * @param alphas
+	 * 		List of alphas, which may be null indicating fully opaque.
+	 */
 	public SteppedGradientColorRamp (List<FixedPoint> reds, List<FixedPoint> greens, List<FixedPoint> blues, List<FixedPoint> alphas) {
 		super(false, reds, greens, blues, alphas, 255);
 	}
 	
 	/**
-	 * Create stepped gradient from a list of colors.
+	 * Creates a stepped gradient from a list of colors.
+	 * 
 	 * @param colors
+	 * 		The list of colors to step through at even intervals.
 	 * @return
+	 * 		The new ramp.
 	 */
 	public static SteppedGradientColorRamp from(List<Color> colors) {
 		List<FixedPoint> red = new ArrayList<>();
@@ -73,4 +88,5 @@ public class SteppedGradientColorRamp extends AbstractColorRamp {
 		
 		return new SteppedGradientColorRamp(red, grn, blu, alp);
 	}
+	
 }

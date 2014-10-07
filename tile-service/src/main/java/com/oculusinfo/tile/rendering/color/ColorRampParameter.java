@@ -24,97 +24,90 @@
  */
 package com.oculusinfo.tile.rendering.color;
 
-import com.oculusinfo.binning.util.JsonUtilities;
-import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.awt.Color;
+import java.lang.reflect.Field;
 
 /**
+ * Moved these functions from ColorRampFactory.
  * 
- * @author cregnier
- *
+ * @author djonker
  */
 public class ColorRampParameter {
-	private static String DEFAULT_RAMP_NAME = "ware";
-	private Map<String, Object> data;
 
-	public ColorRampParameter(Object rampObject) {
-		if (rampObject instanceof String) {
-			data = new HashMap<String, Object>();
-			data.put("name", (String)rampObject);
+	/**
+	 * Parse a color from a string and return it. In the case of an error
+	 * this function will return the default color.
+	 * 
+	 * @param color
+	 * 		The color definition in string form.
+	 * @return
+	 * 		The interpreted color or the default.
+	 */
+	public static Color getColor(String color, Color defaultColor) {
+		Color c = null;
+		try {
+			color = color.trim().toLowerCase();
+			Field field = Color.class.getField(color);
+			c = (Color)field.get(null);
+		} catch (Exception e) {
+			c = null;
 		}
-		else if (rampObject instanceof JSONObject) {
-			data = JsonUtilities.jsonObjToMap((JSONObject)rampObject);
-			
-			// Ensure that a name exists
-			if (data.get("name") == null) {
-				data.put("name", DEFAULT_RAMP_NAME);
+        
+		if (c == null) {
+			try {
+				c = Color.decode(color);
+			}
+			catch (NumberFormatException e) {
+				c = defaultColor;
 			}
 		}
-		else {
-			throw new IllegalArgumentException("Unsupported type for rampObject parameter.");
-		}
+		return c;
 	}
 	
-	public String getName() {
-		return getString("name");
+	/**
+	 * Parse a color from a string and return it. In the case of an error
+	 * this function will return the color white.
+	 * 
+	 * @param color
+	 * 		The color definition in string form.
+	 * @return
+	 * 		The interpreted color or a default of white.
+	 */
+	public static Color getColor(String color) {
+		return getColor(color, Color.WHITE);
+	}
+
+	/**
+	 * Parse a color from a string, combine it with separately defined alpha and return
+	 * it. In the case of an error this function will return the color white.
+	 * 
+	 * @param color
+	 * 		The color definition in string form.
+	 * @param alpha
+	 * 		The alpha value (0-255) in int form.
+	 * 
+	 * @return
+	 * 		The interpreted color or a default of white.
+	 */
+	public static Color getColorWithAlpha (String color, int alpha) {
+		return getColorWithAlpha(color, alpha, Color.WHITE);
 	}
 	
-	public Map<String, Object> getRawData() {
-		return data;
+	/**
+	 * Parse a color from a string, combine it with separately defined alpha and return
+	 * it. In the case of an error this function will return the color white.
+	 * 
+	 * @param color
+	 * 		The color definition in string form.
+	 * @param alpha
+	 * 		The alpha value (0-255) in int form.
+	 * 
+	 * @return
+	 * 		The interpreted color or a default of white.
+	 */
+	public static Color getColorWithAlpha (String color, int alpha, Color defaultColor) {
+		Color base = getColor(color, defaultColor);
+		alpha = Math.min(Math.max(alpha, 0), 255);
+		return new Color(base.getRed(), base.getGreen(), base.getBlue(), alpha);
 	}
-	
-	//-------------------------------------------------------
-	// Helpers
-	//-------------------------------------------------------
-	
-	public String getString(String key) {
-		return typedGet(key, String.class);
-	}
-	
-	public void setString(String key, String value) {
-		data.put(key, value);
-	}
-	
-	public Integer getInt(String key) {
-		return typedGet(key, Integer.class);
-	}
-	
-	public void setInt(String key, Integer value) {
-		data.put(key, value);
-	}
-	
-	public <T> T typedGet(String key, Class<T> clazz) {
-		return clazz.cast(data.get(key));
-	}
-	
-	public Object get(String key) {
-		return data.get(key);
-	}
-	
-	public void set(String key, Object o) {
-		data.put(key, o);
-	}
-	
-	public boolean contains(String key) {
-		return data.containsKey(key);
-	}
-	
-	public List<?> getList(String key) {
-		List<?> list = null;
-		
-		Object o = data.get(key);
-		if (o instanceof List) {
-			list = (List<?>)o;
-		}
-		
-		return list;
-	}
-	
-	public void setList(String key, List<?> list) {
-		data.put(key, list);
-	}
-	
 }
