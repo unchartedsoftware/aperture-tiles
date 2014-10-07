@@ -58,10 +58,23 @@ object CSVDataAnalyticExtractor {
 	def consolidate[IT, PT] (properties: PropertiesWrapper,
 	                         dataAnalytics: Seq[AnalysisDescription[(IT, PT), _]]):
 			AnalysisWithTag[(IT, PT), _] = {
-		if (dataAnalytics.isEmpty) {
+		// Load up any data analytics specified in the properties file, and add them to
+		// the passed-in list of standard data analytics to run.
+		val classLoader = classOf[AnalysisDescription[_, _]].getClassLoader
+		val customAnalyses = properties.getStringPropSeq("oculus.binning.analytics.data",
+		                                                 "A list of custom data analysis descriptions to "+
+			                                                 "run on the data")
+		val allAnalytics: Seq[AnalysisDescription[(IT, PT), _]] =
+			customAnalyses.map(className =>
+				classLoader.loadClass(className).newInstance
+					.asInstanceOf[AnalysisDescription[(IT, PT), _]]
+			) ++ dataAnalytics
+
+		// Combine all data analytics into one, for the binner
+		if (allAnalytics.isEmpty) {
 			new AnalysisWithTag[(IT, PT), Int](None)
 		} else {
-			new AnalysisWithTag(Some(dataAnalytics.reduce((a, b) =>
+			new AnalysisWithTag(Some(allAnalytics.reduce((a, b) =>
 				                         new CompositeAnalysisDescription(a, b))))
 		}
 	}
@@ -72,10 +85,23 @@ object CSVTileAnalyticExtractor {
 	                             tileAnalytics: Seq[AnalysisDescription[TileData[BT], _]]):
 			AnalysisWithTag[TileData[BT], _] =
 	{
-		if (tileAnalytics.isEmpty) {
+		// Load up any tile analytics specified in the properties file, and add them to
+		// the passed-in list of standard tile analytics to run.
+		val classLoader = classOf[AnalysisDescription[_, _]].getClassLoader
+		val customAnalyses = properties.getStringPropSeq("oculus.binning.analytics.tile",
+		                                                 "A list of custom tile analytic descriptions "+
+			                                                 "to run on the tiles produced")
+		val allAnalytics: Seq[AnalysisDescription[TileData[BT], _]] =
+			customAnalyses.map(className =>
+				classLoader.loadClass(className).newInstance
+					.asInstanceOf[AnalysisDescription[TileData[BT], _]]
+			) ++ tileAnalytics
+
+		// Combine all tile analytics into one, for the binner
+		if (allAnalytics.isEmpty) {
 			new AnalysisWithTag[TileData[BT], Int](None)
 		} else {
-			new AnalysisWithTag(Some(tileAnalytics.reduce((a, b) =>
+			new AnalysisWithTag(Some(allAnalytics.reduce((a, b) =>
 				                         new CompositeAnalysisDescription(a, b))))
 		}
 	}

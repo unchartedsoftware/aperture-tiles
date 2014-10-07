@@ -26,6 +26,7 @@ package com.oculusinfo.tilegen.datasets
 
 
 
+import java.lang.{Double => JavaDouble}
 import java.io.File
 import java.io.FileWriter
 import java.util.Properties
@@ -42,6 +43,11 @@ import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO
+import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.MonolithicAnalysisDescription
+
 
 
 class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
@@ -89,6 +95,10 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		props.setProperty("oculus.binning.yField", "y")
 		props.setProperty("oculus.binning.valueField", "v")
 		props.setProperty("oculus.binning.levels.0", "0,1,2,3,4,5,6")
+		props.setProperty("oculus.binning.analytics.tile.0",
+		                  "com.oculusinfo.tilegen.datasets.TestTileAnalytic")
+		props.setProperty("oculus.binning.analytics.data.0",
+		                  "com.oculusinfo.tilegen.datasets.TestDataAnalytic")
 
 		pyramidIo = new LiveStaticTilePyramidIO(sc)
 		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
@@ -132,8 +142,8 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		assert(tile400.getData.asScala.map(_.toString.toDouble) ===
 			       List[Double](15.0, 19.0, 23.0, 27.0,
 			                    11.0, 15.0, 19.0, 23.0,
-			                     7.0, 11.0, 15.0, 19.0,
-			                     3.0,  7.0, 11.0, 15.0))
+			                    7.0, 11.0, 15.0, 19.0,
+			                    3.0,  7.0, 11.0, 15.0))
 
 	}
 
@@ -148,4 +158,37 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		assert(3.0 === tile400.getMetaData("minimum").toDouble)
 		assert(27.0 === tile400.getMetaData("maximum").toDouble)
 	}
+
+	test("Custom analytics") {
+		// Note that visually, the tiles should look exactly as we enter them here
+
+		val analytics = pyramidIo.getDataset(pyramidId).getDataAnalytics
+		assert(analytics.isDefined)
+
+		val i400 = new TileIndex(4, 0, 0, 4, 4)
+		val tile400: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i400).asJava).get(0)
+		assert(729.0 === tile400.getMetaData("tile test").toDouble)
+		assert(1.0 == tile400.getMetaData("data test").toDouble)
+	}
 }
+
+class NamedMaximumDoubleTileAnalytic (analyticName: String) extends MaximumDoubleTileAnalytic {
+	override def name: String = analyticName
+}
+class TestTileAnalytic
+		extends AnalysisDescriptionTileWrapper[JavaDouble, Double] (
+	v => v*v,
+	new NamedMaximumDoubleTileAnalytic("tile test"))
+{}
+
+class NamedMinimumDoubleTileAnalytic (analyticName: String) extends MinimumDoubleTileAnalytic {
+	override def name: String = analyticName
+}
+class TestDataAnalytic
+		extends MonolithicAnalysisDescription[((Double, Double), (Double, Int)), Double] (
+	v => {
+		val result = ((v._2._1+1)*(v._2._1+1))
+		result
+	},
+	new NamedMinimumDoubleTileAnalytic("data test"))
+{}
