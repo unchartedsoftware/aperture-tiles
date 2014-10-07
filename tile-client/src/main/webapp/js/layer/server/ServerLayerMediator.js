@@ -143,14 +143,11 @@ define(function (require) {
                  * Valid ramp type strings.
                  */
                 layerState.RAMP_TYPES = [
-                    {id: "ware", name: "Luminance"},
-                    {id: "inv-ware", name: "Inverse Luminance"},
-                    {id: "br", name: "Blue/Red"},
-                    {id: "inv-br", name: "Inverse Blue/Red"},
-                    {id: "grey", name: "Grey"},
-                    {id: "inv-grey", name: "Inverse Grey"},
-                    {id: "color-gradient", name: "Color Gradient"},
-                    {id: "single-gradient", name: "Single Gradient"}
+                    {id: "spectral", name: "Spectral"},
+                    {id: "hot", name: "Hot"},
+                    {id: "neutral", name: "Neutral"},
+                    {id: "cool", name: "Cool"},
+                    {id: "flat", name: "Flat"}
                 ];
 
                 /**
@@ -216,12 +213,11 @@ define(function (require) {
                             break;
 
                         case "theme":
-
-                            if ( layerState.get( "theme" ) === "light" ) {
-                                layerState.set( "rampType", "inv-ware" );
-                            } else {
-                                layerState.set( "rampType", "ware" );
-                            }
+                            layer.setTheme( layerState.get('theme'), function() {
+                                // once configuration is received that the server has been re-configured, request new image
+                                requestRampImage( layerState, layer.getLayerInfo(), map.getZoom() );
+                            });
+                            
                             break;
                     }
                 });

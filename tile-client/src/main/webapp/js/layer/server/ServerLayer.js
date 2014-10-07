@@ -88,6 +88,27 @@ define(function (require) {
             });
         },
 
+        /**
+         * Updates the theme associated with the layer.  Results in a POST
+         * to the server.
+         *
+         * @param {string} theme - The new theme for the layer.
+         * @param {function} callback - The callback function when the configure request returns, used to request new
+         *                              ramp image
+         */
+        setTheme: function ( theme, callback ) {
+
+            var that = this;
+            if ( !this.layerSpec.renderer ) {
+                this.layerSpec.renderer = {theme: theme};
+            } else {
+                this.layerSpec.renderer.theme = theme;
+            }
+            this.configure( function() {
+                callback();
+                that.update();
+            });
+        },
 
         /**
          * Updates the ramp function associated with the layer.  Results in a POST
