@@ -242,22 +242,12 @@ object GraphAnalyticsBinner {
 		val minAnalysis:
 				AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]],
 				                    List[GraphAnalyticsRecord]] =
-			new GraphListAnalysis(
-				sc, new GraphMinRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".min" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.min" -> ((index: TileIndex) => true))
-			)
+			new GraphListAnalysis(new GraphMinRecordAnalytic)
 
 		val maxAnalysis:
 				AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]],
 				                    List[GraphAnalyticsRecord]] =
-			new GraphListAnalysis(
-				sc, new GraphMaxRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".max" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.max" -> ((index: TileIndex) => true))
-			)
+			new GraphListAnalysis(new GraphMaxRecordAnalytic)
 
 		val tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]],
 		                                              (List[GraphAnalyticsRecord],

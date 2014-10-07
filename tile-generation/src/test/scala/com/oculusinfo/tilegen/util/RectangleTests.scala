@@ -58,11 +58,11 @@ class RectangleTestSuite extends FunSuite {
 		val r = new Rectangle[Int](0, 10, 0, 10)
 
 		assert(r.contains(0, 0))
-		assert(r.contains(10, 10))
+		assert(r.contains(9, 9))
 		assert(!r.contains(0, -1))
 		assert(!r.contains(-1, 0))
-		assert(!r.contains(10, 11))
-		assert(!r.contains(11, 10))
+		assert(!r.contains(9, 10))
+		assert(!r.contains(10, 9))
 	}
 
 

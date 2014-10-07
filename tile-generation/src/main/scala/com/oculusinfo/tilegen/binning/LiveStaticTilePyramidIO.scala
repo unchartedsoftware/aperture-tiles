@@ -77,7 +77,8 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 		consolidationPartitions = Some(partitions)
 	def getConsolidationPartitions = consolidationPartitions
 
-
+	def getDataset (pyramidId: String) = datasets(pyramidId)
+	
 	def initializeForWrite (pyramidId: String): Unit = {
 	}
 

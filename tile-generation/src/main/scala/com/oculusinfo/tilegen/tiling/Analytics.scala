@@ -33,6 +33,7 @@ import java.lang.{Long => JavaLong}
 import java.util.{List => JavaList}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.MutableList
 import scala.reflect.ClassTag
 
 import org.apache.spark.SparkContext
@@ -184,40 +185,30 @@ trait AnalysisDescription[RT, AT] {
 	def toMap: Map[String, Object]
 	// Apply accumulated metadata info to actual metadata
 	def applyTo (metaData: PyramidMetaData): Unit
-	// Reset metadata accumulators
-	def resetAccumulators (sc: SparkContext): Unit
-	def copy: AnalysisDescription[RT, AT]
+
+	// Deal with accumulators
+	protected val accumulatorInfos = MutableList[MetaDataAccumulatorInfo[AT]]()
+	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
+		accumulatorInfos +=	new MetaDataAccumulatorInfo(name, test,
+			                            sc.accumulator(analytic.defaultUnprocessedValue)(new AnalyticAccumulatorParam(analytic)))
+	// Standard accumulators
+	def addLevelAccumulator (sc: SparkContext, level: Int): Unit =
+		addAccumulator(sc, ""+level, (test: TileIndex) => (level == test.getLevel))
+	def addGlobalAccumulator (sc: SparkContext): Unit =
+		addAccumulator(sc, "global", (test: TileIndex) => true)
 }
 
-class MetaDataAccumulatorInfo[AT] (@transient sc: SparkContext,
-                                   val name: String,
-                                   val test: TileIndex => Boolean,
-                                   newAccum: SparkContext => Accumulator[AT])
-		extends Serializable
-{
-	private var privateAccumulator: Accumulator[AT] = newAccum(sc)
-	def reset (sc: SparkContext): Unit =
-		privateAccumulator = newAccum(sc)
-	def accumulator = privateAccumulator
-}
+case class MetaDataAccumulatorInfo[AT] (name: String,
+                                         test: TileIndex => Boolean,
+                                         accumulator: Accumulator[AT]) {}
 
 class MonolithicAnalysisDescription[RT, AT: ClassTag]
-	(@transient sc: SparkContext,
-	 convertParam: RT => AT,
-	 analyticParam: TileAnalytic[AT],
-	 globalMetaData: Map[String, TileIndex => Boolean])
+	(convertParam: RT => AT,
+	 analyticParam: TileAnalytic[AT])
 		extends AnalysisDescription[RT, AT]
 		with Serializable
 {
 	val analysisTypeTag = implicitly[ClassTag[AT]]
-
-	private val accumulatorInfos = globalMetaData.map{case (name, test) =>
-		new MetaDataAccumulatorInfo(sc, name, test,
-		                            (lsc: SparkContext) => lsc.accumulator(
-			                            analytic.defaultUnprocessedValue
-		                            )(new AnalyticAccumulatorParam(analytic)))
-	}
-
 
 	def convert = convertParam
 
@@ -241,11 +232,17 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 		}
 	}
 
-	def resetAccumulators (sc: SparkContext): Unit = accumulatorInfos.map(_.reset(sc))
-
-	def copy = new MonolithicAnalysisDescription(sc, convert, analytic, globalMetaData)
-
 	override def toString = analyticParam.toString
+}
+
+class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
+	(convertParam: RT => AT,
+	 analyticParam: TileAnalytic[AT])
+		extends MonolithicAnalysisDescription[RT, AT](convertParam, analyticParam)
+{
+	// Ignores requests to add standard accumulators
+	override def addLevelAccumulator (sc: SparkContext, level: Int): Unit = {}
+	override def addGlobalAccumulator (sc: SparkContext): Unit = {}
 }
 
 class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
@@ -270,11 +267,6 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis1.applyTo(metaData)
 		analysis2.applyTo(metaData)
 	}
-	def resetAccumulators (sc: SparkContext): Unit = {
-		analysis1.resetAccumulators(sc)
-		analysis2.resetAccumulators(sc)
-	}
-	def copy = new CompositeAnalysisDescription(analysis1, analysis2)
 	override def toString = "["+analysis1+","+analysis2+"]"
 }
 
@@ -292,15 +284,11 @@ object AnalysisDescriptionTileWrapper {
 	}
 }
 class AnalysisDescriptionTileWrapper[RT, AT: ClassTag]
-	(sc: SparkContext,
-	 convert: RT => AT,
-	 analytic: TileAnalytic[AT],
-	 globalMetaData: Map[String, TileIndex => Boolean])
+	(convert: RT => AT,
+	 analytic: TileAnalytic[AT])
 		extends MonolithicAnalysisDescription[TileData[RT], AT](
-	sc,
 	AnalysisDescriptionTileWrapper.acrossTile(convert, analytic),
-	analytic,
-	globalMetaData)
+	analytic)
 {
 }
 
@@ -575,6 +563,8 @@ class CategoryValueBinningAnalytic(categoryNames: Seq[String])
 	}
 }
 
+
+
 /**
  * This analytic stores the CIDR block represented by a given tile.
  */
@@ -615,22 +605,16 @@ object IPv4Analytics extends Serializable {
 	 * Get an analysis description for an analysis that stores the CIDR block 
 	 * of an IPv4-indexed tile, with an arbitrary tile pyramid.
 	 */
-	def getCIDRBlockAnalysis[BT] (sc: SparkContext,
-	                              pyramid: TilePyramid = getDefaultIPPyramid):
+	def getCIDRBlockAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
 			AnalysisDescription[TileData[BT], String] =
-		new MonolithicAnalysisDescription[TileData[BT], String](
-			sc,
+		new TileOnlyMonolithicAnalysisDescription[TileData[BT], String](
 			getCIDRBlock(pyramid),
-			new StringAnalytic("CIDR Block"),
-			// No accumulators are appropriate for CIDR block metadata
-			Map[String, TileIndex => Boolean]())
+			new StringAnalytic("CIDR Block"))
 
 
-	def getMinIPAddressAnalysis[BT] (sc: SparkContext,
-	                                 pyramid: TilePyramid = getDefaultIPPyramid):
+	def getMinIPAddressAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
 			AnalysisDescription[TileData[BT], Long] =
 		new MonolithicAnalysisDescription[TileData[BT], Long](
-			sc,
 			getIPAddress(pyramid, false),
 			new TileAnalytic[Long] {
 				def name = "Minimum IP Address"
@@ -639,15 +623,11 @@ object IPv4Analytics extends Serializable {
 				def defaultUnprocessedValue: Long = 0xffffffffL
 				override def valueToString (value: Long): String =
 					ipArrayToString(longToIPArray(value))
-			},
-			// No accumulators are appropriate for IP address ranges
-			Map[String, TileIndex => Boolean]())
+			})
 
-	def getMaxIPAddressAnalysis[BT] (sc: SparkContext,
-	                                 pyramid: TilePyramid = getDefaultIPPyramid):
+	def getMaxIPAddressAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
 			AnalysisDescription[TileData[BT], Long] =
 		new MonolithicAnalysisDescription[TileData[BT], Long](
-			sc,
 			getIPAddress(pyramid, true),
 			new TileAnalytic[Long] {
 				def name = "Maximum IP Address"
@@ -656,9 +636,7 @@ object IPv4Analytics extends Serializable {
 				def defaultUnprocessedValue: Long = 0L
 				override def valueToString (value: Long): String =
 					ipArrayToString(longToIPArray(value))
-			},
-			// No accumulators are appropriate for IP address ranges
-			Map[String, TileIndex => Boolean]())
+			})
 }
 
 class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
@@ -701,6 +679,4 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 		customData.map{case (key, value) =>
 			metaData.setCustomMetaData(value, key)
 		}
-	def resetAccumulators (sc: SparkContext): Unit = {}
-	def copy: AnalysisDescription[T, String] = new CustomGlobalMetadata(customData)
 }

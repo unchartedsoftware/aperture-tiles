@@ -71,15 +71,8 @@ object GraphListAnalysis {
 	val convertFcn: JavaList[GraphAnalyticsRecord] => List[GraphAnalyticsRecord] =
 		a => a.asScala.toList
 }
-class GraphListAnalysis
-	(sc: SparkContext,
-	 analytic: TileAnalytic[List[GraphAnalyticsRecord]],
-	 globalMetaData: Map[String, TileIndex => Boolean])
-		extends AnalysisDescriptionTileWrapper
-	[JavaList[GraphAnalyticsRecord],
-	 List[GraphAnalyticsRecord]] (sc,
-	                            GraphListAnalysis.convertFcn,
-	                            analytic,
-	                            globalMetaData)
+class GraphListAnalysis(analytic: TileAnalytic[List[GraphAnalyticsRecord]])
+		extends AnalysisDescriptionTileWrapper[JavaList[GraphAnalyticsRecord],
+		                                       List[GraphAnalyticsRecord]](GraphListAnalysis.convertFcn, analytic)
 {
 }

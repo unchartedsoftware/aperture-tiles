@@ -1,0 +1,132 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
+ * http://www.oculusinfo.com/
+ *
+ * Released under the MIT License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package com.oculusinfo.tilegen.datasets
+
+
+
+import java.io.File
+import java.io.FileWriter
+import java.util.Properties
+
+import scala.collection.JavaConverters._
+
+import org.scalatest.FunSuite
+
+import org.apache.spark.SparkContext
+import org.apache.spark.SharedSparkContext
+
+import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.io.PyramidIO
+
+import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO
+
+
+class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext {
+	def createDataset (sc: SparkContext): (String, LiveStaticTilePyramidIO) = {
+		// Create some data
+		val dataFile = File.createTempFile("analytic-test", ".csv")
+		println("Writing data to data file "+dataFile.getAbsolutePath())
+		val writer = new FileWriter(dataFile)
+		for (x <- 0 until 256) {
+			for (y <- 0 until 256) {
+				writer.write("%d,%d,%d\n".format(x, y, x+y))
+			}
+		}
+		writer.flush()
+		writer.close()
+
+		val props = new Properties()
+		props.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
+		props.setProperty("oculus.binning.projection.autobounds", "false")
+		props.setProperty("oculus.binning.projection.minx", "0.0")
+		props.setProperty("oculus.binning.projection.maxX", "256.0")
+		props.setProperty("oculus.binning.projection.miny", "0.0")
+		props.setProperty("oculus.binning.projection.maxy", "256.0")
+		props.setProperty("oculus.binning.parsing.separator", ",")
+		props.setProperty("oculus.binning.parsing.x.index", "0")
+		props.setProperty("oculus.binning.parsing.y.index", "1")
+		props.setProperty("oculus.binning.parsing.v.index", "2")
+		props.setProperty("oculus.binning.parsing.v.fieldType", "average")
+		props.setProperty("oculus.binning.index.type", "cartesian")
+		props.setProperty("oculus.binning.xField", "x")
+		props.setProperty("oculus.binning.yField", "y")
+		props.setProperty("oculus.binning.valueField", "v")
+		props.setProperty("oculus.binning.levels.0", "0,1,2,3,4,5,6")
+
+		val pyramidId = "test"
+		val pyramidIo = new LiveStaticTilePyramidIO(sc)
+		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
+		(pyramidId, pyramidIo)
+	}
+
+	test("Test averaging") {
+		// Note that visually, the tiles should look exactly as we enter them here
+		val (pyramidId, pyramidIo) = createDataset(sc)
+		
+		// First test a simple low-level tile to make sure the values come accross correctly
+		val i600=new TileIndex(6, 0, 0, 4, 4)
+		val tile600: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i600).asJava).get(0)
+		assert(tile600.getDefinition === i600)
+		assert(tile600.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](3.0, 4.0, 5.0, 6.0,
+			                    2.0, 3.0, 4.0, 5.0,
+			                    1.0, 2.0, 3.0, 4.0,
+			                    0.0, 1.0, 2.0, 3.0))
+
+		// Now test one and two levels up to make sure that averaging works properly
+		val i500 = new TileIndex(5, 0, 0, 4, 4)
+		val tile500: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i500).asJava).get(0)
+		assert(tile500.getDefinition === i500)
+		assert(tile500.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double]( 7.0,  9.0, 11.0, 13.0,
+			                     5.0,  7.0,  9.0, 11.0,
+			                     3.0,  5.0,  7.0,  9.0,
+			                     1.0,  3.0,  5.0,  7.0))
+
+		val i400 = new TileIndex(4, 0, 0, 4, 4)
+		val tile400: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i400).asJava).get(0)
+		assert(tile400.getDefinition === i400)
+		assert(tile400.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](15.0, 19.0, 23.0, 27.0,
+			                    11.0, 15.0, 19.0, 23.0,
+			                     7.0, 11.0, 15.0, 19.0,
+			                     3.0,  7.0, 11.0, 15.0))
+
+	}
+
+	test("Test min/max values") {
+		// Note that visually, the tiles should look exactly as we enter them here
+		val (pyramidId, pyramidIo) = createDataset(sc)
+
+		val analytics = pyramidIo.getDataset(pyramidId).getTileAnalytics
+		assert(analytics.isDefined)
+
+		val i400 = new TileIndex(4, 0, 0, 4, 4)
+		val tile400: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i400).asJava).get(0)
+		assert(3.0 === tile400.getMetaData("minimum").toDouble)
+		assert(27.0 === tile400.getMetaData("maximum").toDouble)
+	}
+}
