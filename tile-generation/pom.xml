@@ -48,6 +48,18 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.oculusinfo</groupId>
+			<artifactId>geometric-utilities</artifactId>
+			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>asm</artifactId>
+					<groupId>asm</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>		
 
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>

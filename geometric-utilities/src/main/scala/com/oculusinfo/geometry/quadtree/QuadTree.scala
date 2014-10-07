@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.tilegen.graph.util
+package com.oculusinfo.geometry.quadtree
 
 
 /**

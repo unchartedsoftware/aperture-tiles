@@ -26,6 +26,8 @@
 package com.oculusinfo.tilegen.graph.util
 
 import scala.util.Random
+import com.oculusinfo.geometry.quadtree.QuadTree
+import com.oculusinfo.geometry.quadtree.QuadNode
 
 /**
  *  A Force-Directed graph layout algorithm (ie Fruchterman-Reingold)
