@@ -33,6 +33,7 @@ import java.util.Properties
 import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
+import org.scalatest.BeforeAndAfterAll
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SharedSparkContext
@@ -40,15 +41,28 @@ import org.apache.spark.SharedSparkContext
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.PyramidIO
-
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO
 
 
-class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext {
-	def createDataset (sc: SparkContext): (String, LiveStaticTilePyramidIO) = {
+class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
+	val pyramidId: String = "test"
+	var dataFile: File = null
+	var pyramidIo: LiveStaticTilePyramidIO = null
+
+	override def beforeAll (configMap: Map[String, Any]) = {
+		super.beforeAll(configMap)
+		createDataset(sc)
+	}
+
+	override def afterAll (configMap: Map[String, Any]) = {
+		cleanupDataset
+		super.afterAll(configMap)
+	}
+
+	def createDataset (sc: SparkContext): Unit = {
 		// Create some data
-		val dataFile = File.createTempFile("analytic-test", ".csv")
-		println("Writing data to data file "+dataFile.getAbsolutePath())
+		dataFile = File.createTempFile("analytic-test", ".csv")
+		println("Creating temporary data file "+dataFile.getAbsolutePath())
 		val writer = new FileWriter(dataFile)
 		for (x <- 0 until 256) {
 			for (y <- 0 until 256) {
@@ -76,15 +90,21 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext {
 		props.setProperty("oculus.binning.valueField", "v")
 		props.setProperty("oculus.binning.levels.0", "0,1,2,3,4,5,6")
 
-		val pyramidId = "test"
-		val pyramidIo = new LiveStaticTilePyramidIO(sc)
+		pyramidIo = new LiveStaticTilePyramidIO(sc)
 		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
-		(pyramidId, pyramidIo)
 	}
+
+	def cleanupDataset (): Unit = {
+		if (dataFile.exists) {
+			println("Deleting temporary data file "+dataFile)
+			dataFile.delete
+		}
+	}
+
+
 
 	test("Test averaging") {
 		// Note that visually, the tiles should look exactly as we enter them here
-		val (pyramidId, pyramidIo) = createDataset(sc)
 		
 		// First test a simple low-level tile to make sure the values come accross correctly
 		val i600=new TileIndex(6, 0, 0, 4, 4)
@@ -119,7 +139,6 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext {
 
 	test("Test min/max values") {
 		// Note that visually, the tiles should look exactly as we enter them here
-		val (pyramidId, pyramidIo) = createDataset(sc)
 
 		val analytics = pyramidIo.getDataset(pyramidId).getTileAnalytics
 		assert(analytics.isDefined)
