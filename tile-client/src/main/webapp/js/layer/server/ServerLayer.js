@@ -36,15 +36,16 @@ define(function (require) {
         PubSub = require('../../util/PubSub'),
         requestRampImage,
         getLevelMinMax,
-        mapZoomCallback,
         ServerLayer;
 
 
 
     /**
-     * Request colour ramp image.
+     * Request colour ramp image from server.
      *
-     * @param {Object} layer - The layer object
+     * @param {Object} layer - The layer object.
+     * @param {Object} layerInfo - The layer meta data object.
+     * @param {Object} level - The current map zoom level.
      */
     requestRampImage = function ( layer, layerInfo, level ) {
 
@@ -69,9 +70,14 @@ define(function (require) {
 
     };
 
-
-    getLevelMinMax = function( layer, map ) {
-        var zoomLevel = map.getZoom(),
+    /**
+     * Returns the layers min and max values for the given zoom level.
+     *
+     * @param {Object} layer - The layer object.
+     * @return {Array} a two component array of the min and max values for the level.
+     */
+    getLevelMinMax = function( layer ) {
+        var zoomLevel = layer.map.getZoom(),
             coarseness = layer.getLayerSpec().coarseness,
             adjustedZoom = zoomLevel - (coarseness-1),
             meta =  layer.getLayerInfo().meta,
@@ -80,17 +86,6 @@ define(function (require) {
             min = minArray ? ($.isArray(minArray) ? minArray[adjustedZoom] : minArray.minimum) : 0,
             max = maxArray ? ($.isArray(maxArray) ? maxArray[adjustedZoom] : maxArray.maximum) : 0;
         return [ parseFloat(min), parseFloat(max) ];
-    };
-
-
-    // Make a callback to regen the ramp image on map zoom changes
-    mapZoomCallback = function( layer, map ) {
-        if ( layer ) {
-            // set ramp image
-            requestRampImage( layer, layer.getLayerInfo(), map.getZoom() );
-            // set ramp level
-            layer.setRampMinMax( getLevelMinMax( layer, map ) );
-        }
     };
 
 
@@ -141,8 +136,11 @@ define(function (require) {
             // cal base constructor
             this._super( spec, map );
 
+            // update ramp min/max on zoom
             this.map.on("zoomend", function() {
-                mapZoomCallback( that, that.map );
+                if ( that.layer ) {
+                    that.setRampMinMax( getLevelMinMax( that ) );
+                }
             });
 
             this.hasBeenConfigured = false;
@@ -160,6 +158,9 @@ define(function (require) {
         },
 
 
+        /**
+         *  Get layer opacity
+         */
         getOpacity: function() {
             return this.layer.olLayer_.opacity;
         },
@@ -176,6 +177,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Get layer visibility
+         */
         getVisibility: function() {
             return this.layer.olLayer_.getVisibility();
         },
@@ -202,14 +206,19 @@ define(function (require) {
             });
         },
 
-
+        /**
+         *  Get ramp type for layer
+         */
         getRampType: function() {
             return this.layerSpec.renderer.ramp;
         },
 
-
+        /**
+         * invert the ramp type, this is to be used when themes switch
+         */
         invertRampType: function() {
             // default to inv-ware
+            // TODO: switch to complimentary ramp, else, maintain current ramp
             if ( $("body").hasClass("light-theme") ) {
                 this.setRampType('inv-ware');
             } else {
@@ -217,24 +226,35 @@ define(function (require) {
             }
         },
 
-
+        /**
+         * Sets the ramps current min and max
+         */
         setRampMinMax: function( minMax ) {
             this.rampMinMax = minMax;
             PubSub.publish( this.getChannel(), { field: 'rampMinMax', value: minMax });
         },
 
 
+        /**
+         * Get the ramps current min and max for the zoom level
+         */
         getRampMinMax: function() {
             return this.rampMinMax;
         },
 
 
+        /**
+         * Update the ramps URL string
+         */
         setRampImageUrl: function ( url ) {
             this.rampImageUrl = url;
             PubSub.publish( this.getChannel(), { field: 'rampImageUrl', value: url });
         },
 
 
+        /**
+         * Get the current ramps URL string
+         */
         getRampImageUrl: function() {
             return this.rampImageUrl;
         },
@@ -257,6 +277,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the current ramps function
+         */
         getRampFunction: function() {
             return this.layerSpec.transform.name;
         },
@@ -275,6 +298,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the current ramp filter range from 0 to 100
+         */
         getFilterRange: function() {
             return this.layerSpec.legendrange;
         },
@@ -289,11 +315,17 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the layers zIndex
+         */
         getZIndex: function () {
             return this.map.getLayerIndex( this.layer.olLayer_ );
         },
 
 
+        /**
+         * Set the layers transformer type
+         */
         setTransformerType: function ( transformerType ) {
             this.layerSpec.transformer.type = transformerType;
             this.configure();
@@ -301,11 +333,17 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the layers transformer type
+         */
         getTransformerType: function () {
             return this.layerSpec.transformer.type;
         },
 
 
+        /**
+         * Set the transformer data arguments
+         */
         setTransformerData: function ( transformerData ) {
             this.layerSpec.transformer.data = transformerData;
             this.configure();
@@ -313,24 +351,41 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the transformer data arguments
+         */
         getTransformerData: function () {
             return this.layerSpec.transformer.data;
         },
 
 
+        /**
+         * Set the layer coarseness
+         */
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
             this.configure();
-            this.setRampMinMax( getLevelMinMax( this, this.map ) );
+            this.setRampMinMax( getLevelMinMax( this ) );
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
 
 
+        /**
+         * Get the layer coarseness
+         */
         getCoarseness: function() {
             return this.layerSpec.coarseness;
         },
 
 
+        /**
+         * Configure the layer, this involves sending the layer specification
+         * object to the server in a POST request. The server will respond with
+         * a meta data object containing the layers configuration uuid. If a previous
+         * uuid exists, the server will automatically send an unconfigure request to
+         * free the previous configuration. On the first request response, set default
+         * layer properties such as opacity, zIndex, coarseness, and visiblity.
+         */
         configure: function( callback ) {
 
             var that = this;

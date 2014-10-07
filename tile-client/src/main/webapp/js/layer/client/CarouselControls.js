@@ -81,7 +81,8 @@ define(function (require) {
 
 
     /**
-     * Creates a subscriber to handle published carousel related layer state changes, and update the controls based on them.
+     * Creates a subscriber to handle published carousel related layer state changes,
+     * and update the controls based on them.
      */
     makeLayerSubscriber = function ( map, $carousel, controlMap, layer ) {
 
@@ -119,7 +120,7 @@ define(function (require) {
 
         var tilekey = layer.getTileFocus(),
             count = controlMap.dots.length,
-            index = layer.getTileRenderer( tilekey ) || 0,
+            index = layer.getTileViewIndex( tilekey ) || 0,
             i;
 
         for (i=0; i<count; i++) {
@@ -140,13 +141,13 @@ define(function (require) {
             Util.dragSensitiveClick(chevron, function() {
 
                 var tilekey = layer.getTileFocus(),
-                    prevIndex = layer.getTileRenderer( tilekey ) || 0,
+                    prevIndex = layer.getTileViewIndex( tilekey ) || 0,
                     mod = function (m, n) {
                         return ((m % n) + n) % n;
                     },
-                    newIndex = mod( prevIndex + inc, layer.getRendererCount() );
+                    newIndex = mod( prevIndex + inc, layer.getNumViews() );
 
-                layer.setTileRenderer( tilekey, newIndex );
+                layer.setTileViewIndex( tilekey, newIndex );
                 updateDotIndices( controlMap, layer );
             });
         }
@@ -184,12 +185,12 @@ define(function (require) {
         var indexClass,
             $indexContainer,
             $dots = [],
-            rendererCount = layer.getRendererCount(),
+            rendererCount = layer.getNumViews(),
             i;
 
         function generateCallbacks( dot, index ) {
             Util.dragSensitiveClick(dot, function() {
-                layer.setTileRenderer( layer.getTileFocus(), index );
+                layer.setTileViewIndex( layer.getTileFocus(), index );
                 updateDotIndices( controlMap, layer );
             });
         }
@@ -218,7 +219,7 @@ define(function (require) {
 
     createCarousel = function( $carousel, map, controlMap, layer ) {
 
-        if ( layer.getRendererCount() > 1 ) {
+        if ( layer.getNumViews() > 1 ) {
             // only create chevrons and indices if there is more than 1 layer
             createChevrons( $carousel, map, controlMap, layer );
             createIndexDots( $carousel, map, controlMap, layer );
@@ -247,7 +248,7 @@ define(function (require) {
             this.$carousel = $('<div class="' + CAROUSEL_CLASS +'"></div>');
 
             // TODO: implement a system for only enabling carousel for top most client layer
-            if ( layers[0].getRendererCount() > 1 ) {
+            if ( layers[0].getNumViews() > 1 ) {
                 PubSub.subscribe( layers[0].getChannel(), makeLayerSubscriber( map, this.$carousel, this.controlMap, layers[0] ) );
                 layers[0].setCarouselEnabled( true );
             }

@@ -37,7 +37,9 @@ define( function (require) {
 	    loadedModules = {},
 	    ClientLayerFactory;
 
-
+    /**
+     * Load a single module via RequireJS and return a jQuery deferred.
+     */
     loadModule = function( path, module ) {
         var deferred = $.Deferred();
         require( [path+module], function( Module ) {
@@ -47,7 +49,10 @@ define( function (require) {
         return deferred;
     };
 
-
+    /**
+     * Load all modules required for the client layer, storing the deferreds
+     * in the loadedModules object.
+     */
     loadAllModules = function( layerJSON ) {
 
         var renderer,
@@ -56,6 +61,7 @@ define( function (require) {
             deferred,
             i;
 
+        // recursively parse the details spec and load all content components
         function loadDetails( details ) {
             var k;
             if ( details ) {
@@ -102,7 +108,10 @@ define( function (require) {
         return deferreds;
     };
 
-
+    /**
+     * Instantiate and returnthe details and renderers for each view from
+     * the layer specification object.
+     */
     assembleViews = function( layerJSON, map ) {
 
         var rendererSpec,

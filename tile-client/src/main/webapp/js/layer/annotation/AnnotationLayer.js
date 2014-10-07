@@ -142,7 +142,9 @@ define(function (require) {
             this.setVisibility( spec.enabled );
         },
 
-
+        /**
+         * Store click event object.
+         */
         setClick: function( value ) {
             this.click = value;
             if ( value !== null ) {
@@ -154,16 +156,25 @@ define(function (require) {
         },
 
 
+        /**
+         * Get click event object.
+         */
         getClick: function() {
             return this.click;
         },
 
 
+        /**
+         * Check if click event object exists.
+         */
         isClicked: function() {
             return this.click !== null && this.click !== undefined;
         },
 
 
+        /**
+         * Set the layers opacity.
+         */
         setOpacity: function( opacity ) {
             this.opacity = opacity;
             this.renderer.setOpacity( opacity );
@@ -171,11 +182,17 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the layers opacity.
+         */
         getOpacity: function() {
             return this.opacity;
         },
 
 
+        /**
+         * Set the layers visibility.
+         */
         setVisibility: function( visible ) {
             this.visibility = visible;
             this.renderer.setVisibility( visible );
@@ -183,11 +200,17 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the layers visibility.
+         */
         getVisibility: function() {
             return this.visibility;
         },
 
 
+        /**
+         * Set the layers z index.
+         */
         setZIndex: function( zIndex ) {
             this.zIndex = zIndex;
             this.renderer.setZIndex( zIndex );
@@ -195,28 +218,41 @@ define(function (require) {
         },
 
 
+        /**
+         * Get the layers z index.
+         */
         getZIndex: function() {
             return this.zIndex;
         },
 
 
+        /**
+         * Create the layers details panel.
+         */
         createDetails: function( clickState ) {
 
             var $details = this.details.createDisplayDetails( clickState.annotations, this.map.getRootElement() ); //clickState.$annotations );
             // position details over click
             $details.css({
-                left: clickState.position.x, // - ( $details.outerWidth() / 2 ),
+                left: clickState.position.x,
                 top: clickState.position.y - ( $details.outerHeight() + DETAILS_VERTICAL_OFFSET )
             });
         },
 
 
+        /**
+         * Destroy the layers details panel.
+         */
         destroyDetails: function( clickState ) {
-
             this.details.destroyDetails();
         },
 
 
+        /**
+         * Create the a new annotation.
+         * TODO: this currently just inserts a debug annotation, this needs to be
+         *       hooked up with the proper createWriteDetails() method.
+         */
         createAnnotation: function( position ) {
 
             var that = this,
@@ -234,9 +270,7 @@ define(function (require) {
                         max: that.map.getZoom()
                     },
                     level: that.map.getZoom(),
-                    data: {
-                        user: "debug"
-                    }
+                    data: {}
                 };
             }
 
@@ -254,6 +288,11 @@ define(function (require) {
         },
 
 
+        /**
+         * Modify an existing annotation.
+         * TODO: this currently just inserts a debug annotation, this needs to be
+         *       hooked up with the proper createEditDetails() method.
+         */
         modifyAnnotation: function( annotation ) {
 
             AnnotationService.modifyAnnotation( this.layerInfo, annotation, function() {
@@ -264,6 +303,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Remove an existing annotation.
+         */
         removeAnnotation: function( annotation ) {
             var  pixel = this.map.getViewportPixelFromCoord( annotation.x, annotation.y ),
                  tilekey = this.map.getTileKeyFromViewportPixel( pixel.x, pixel.y );
@@ -271,11 +313,31 @@ define(function (require) {
         },
 
 
-        createTileKey : function ( tile ) {
-            return tile.level + "," + tile.xIndex + "," + tile.yIndex;
+        /**
+         * When any annotation is created, modified, or removed, since the server may prevent
+         * the operation from completing, this callback is used to re-request the tile rather
+         * than trying to manually sync client / server information.
+         */
+        updateCallback : function( tilekey ) {
+
+            var that = this;
+
+            return function( data ) {
+                if ( !that.layerInfo ) {
+                    return;
+                }
+                // set as pending
+                that.pendingTiles[tilekey] = true;
+                // set force update flag to ensure this tile overrides any other pending requests
+                AnnotationService.getAnnotations( this.layerInfo, [tilekey], that.getCallback( true ) );
+            };
         },
 
 
+        /**
+         * Determine all tiles in view. Remove annotaiton data for any defunct tiles,
+         * while requesting data for any needed tiles.
+         */
         update: function() {
 
             var visibleTiles = this.map.getTilesInView(),  // determine all tiles in view
@@ -305,7 +367,7 @@ define(function (require) {
             // Go through, seeing what we need.
             for (i=0; i<visibleTiles.length; ++i) {
                 tile = visibleTiles[i];
-                tilekey = this.createTileKey(tile);
+                tilekey = tile.level + "," + tile.xIndex + "," + tile.yIndex;
 
                 if ( defunctTiles[tilekey] ) {
 
@@ -341,25 +403,14 @@ define(function (require) {
         },
 
 
-        updateCallback : function( tilekey ) {
-
-            var that = this;
-
-            return function( data ) {
-
-                if ( !that.layerInfo ) {
-                    return;
-                }
-                // set as pending
-                that.pendingTiles[tilekey] = true;
-                // set force update flag to ensure this tile overrides any other pending requests
-                AnnotationService.getAnnotations( this.layerInfo, [tilekey], that.getCallback( true ) );
-            };
-        },
-
 
         /**
-         * @param annotationData annotation data received from server of the form:
+         * Returns the callback function for when a tile is received from the server.
+         *      @param {Boolean> - whether to force an update over previous pending tiles.
+         *                         This can occur if there is an existing request, which upon receiving
+         *                         clears the pending flag, causing the newer response to be ignored.
+         *
+         *  Tile data received from server of the form:
          *  {
          *      tile: {
          *                  level:
@@ -372,7 +423,6 @@ define(function (require) {
          *            }
          *  }
          */
-
         getCallback: function( forceUpdate ) {
 
             var that = this;
@@ -442,7 +492,8 @@ define(function (require) {
 
             return function( data ) {
 
-                var tilekey = that.createTileKey( data.tile ),
+                var tile = data.tile,
+                    tilekey = tile.level + "," + tile.xIndex + "," + tile.yIndex,
                     pendingTiles = that.pendingTiles,
                     currentTiles = that.tiles,
                     currentData = that.dataMap,
@@ -481,6 +532,13 @@ define(function (require) {
         },
 
 
+        /**
+         * Configure the layer, this involves sending the layer specification
+         * object to the server in a POST request. The server will respond
+         * with a meta data object containing the layer configuration uuid. If a previous
+         * uuid exists, the server will automatically send an unconfigure request to
+         * free the previous configuration.
+         */
         configure: function( callback ) {
 
             var that = this;
@@ -508,6 +566,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Redraw the layer, removing stale data, and drawing new data.
+         */
         redraw: function( data ) {
             this.renderer.redraw( data );
         }

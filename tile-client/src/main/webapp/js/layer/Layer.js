@@ -74,32 +74,44 @@ define(function (require) {
             return 'layer.' + this.domain + '.' + this.uuid;
         },
 
-
+        /**
+         *  Sets the layers opacity
+         */
         setOpacity: function( opacity ) {
             return true;
         },
 
-
+        /**
+         *  Returns the layers opacity
+         */
         getOpacity: function() {
             return true;
         },
 
-
+        /**
+         *  Sets the layers visibility
+         */
         setVisibility: function( visible ) {
             return true;
         },
 
-
+        /**
+         *  Returns the layers visibility
+         */
         getVisibility: function() {
             return true;
         },
 
-
+        /**
+         *  Sets the layers z index
+         */
         setZIndex: function( zIndex ) {
             return true;
         },
 
-
+        /**
+         *  Returns the layers z index
+         */
         getZIndex: function() {
             return true;
         }

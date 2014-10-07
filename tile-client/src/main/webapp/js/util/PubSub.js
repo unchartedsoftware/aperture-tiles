@@ -35,6 +35,9 @@ define(function (require) {
 
     return {
 
+        /**
+         * Subscribe a listener function to the specific channel path.
+         */
         subscribe: function( channelPath, subscriber ) {
 
             var paths = channelPath.split('.'),
@@ -63,6 +66,10 @@ define(function (require) {
         },
 
 
+        /**
+         * Publish a message to a channel path. All sub-channels will also
+         * received message.
+         */
         publish: function( channelPath, message ) {
 
             var paths = channelPath.split('.'),

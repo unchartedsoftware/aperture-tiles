@@ -63,6 +63,9 @@ define(function (require) {
         },
 
 
+        /**
+         * Convert local data map into an array and return it.
+         */
         getDataArray: function () {
             var data = this.data,
                 tilekey, tile,
