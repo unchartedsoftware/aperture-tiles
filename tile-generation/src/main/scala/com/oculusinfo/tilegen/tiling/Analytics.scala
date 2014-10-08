@@ -50,25 +50,13 @@ import com.oculusinfo.binning.util.Pair
 
 
 /**
- * This class describes any the intermediate and final results of any
- * analysis over tiles, bins, or the raw data from which they are
- * derived.
+ * An Analytic is basically an aggregation function, to describe how to 
+ * aggregate the results of some analysis across bins, tiles, or anything 
+ * else.
  * 
- * This type is broken out into two sub-types - a processing and a
- * results type.  There are two driving cases behind this.  [1] Tnhe
- * first case is where the result type is complex, and can be
- * represented more succinctly and efficiently durring processing
- * (such as, for instance, using an array instead of a list, or an
- * native integer instead of a JavaInt).  [2] The second case is
- * analytics like mean, or standard deviation, where different values
- * are needed at processing than are written out (total number and
- * running sum vs. actual mean, for instance).
+ * It also encapsulates some simple knowledge of default values.
  * 
- * @param PROCESSING_TYPE An intermediate type used to store data
- *                        needed to produce the result type when the
- *                        analytic is complete.
- * @param RESULT_TYPE The final type of value to be written out as the
- *                    results of this analytic.
+ * @param T The type of value this analytic processes or aggregates.
  */
 trait Analytic[T] extends Serializable
 {
@@ -95,6 +83,28 @@ trait Analytic[T] extends Serializable
 	def defaultUnprocessedValue: T
 }
 
+/**
+ * BinningAnalytic extends Analytic specifically for binning in tiles; it 
+ * allows a two-stage processing of values, with a processing type that is 
+ * aggregated, and converted to a result type just before writing out a final 
+ * value.
+ * 
+ * There are two driving cases behind breaking the calculation into processing 
+ * and final components.  [1] The first case is where the result type is 
+ * complex, and can be represented more succinctly and efficiently durring 
+ * processing (such as, for instance, using an array instead of a list, or an
+ * native integer instead of a JavaInt).  [2] The second case is analytics 
+ * (like mean or standard deviation) where different values are needed at 
+ * processing than are written out (for example, when calculating a mean, one 
+ * needs to record total number and running sum, but only writes a single 
+ * number)
+ * 
+ * @param PROCESSING_TYPE An intermediate type used to store data
+ *                        needed to produce the result type when the
+ *                        analytic is complete.
+ * @param RESULT_TYPE The final type of value to be written out as the
+ *                    results of this analytic.
+ */
 trait BinningAnalytic[PROCESSING_TYPE, RESULT_TYPE] extends Analytic[PROCESSING_TYPE] {
 	/**
 	 * Finish off a processing value, converting it to a result value
@@ -102,6 +112,15 @@ trait BinningAnalytic[PROCESSING_TYPE, RESULT_TYPE] extends Analytic[PROCESSING_
 	def finish (value: PROCESSING_TYPE): RESULT_TYPE
 }
 
+/**
+ * A TileAnalytic extends Analytic with a few simple pices that allow values to 
+ * be written to metadata, both on each individual tile, and globally.
+ * 
+ * Note that, while binning analytics have a final form to which values must be
+ * converted, tile analytics all convert their values to strings for writing to 
+ * metadata, and therefore don't need an explicit final form type; this 
+ * conversion is inherent in the valueToString method.
+ */
 trait TileAnalytic[T] extends Analytic[T] {
 	/**
 	 * This is ignored if the analytic is the main value used for
@@ -118,7 +137,14 @@ trait TileAnalytic[T] extends Analytic[T] {
 	def valueToString (value: T): String = value.toString
 
 	/**
-	 * Convert a value to a property map, indexed by our name
+	 * Convert a value to a property map to be inserted into metadata.
+     * 
+     * The default behavior is simply to map the analytic name to the value.
+     * 
+     * Overriding this will the other functions in this trait to be made 
+     * irrelevant; we should probably break it up into a TileAnalytic with 
+     * only this function (unimplemented), and a StandardTileAnalytic with 
+     * the rest
 	 */
 	def toMap (value: T): Map[String, Object] =
 		Map(name -> valueToString(value))
@@ -128,7 +154,11 @@ trait TileAnalytic[T] extends Analytic[T] {
 
 
 
-/** Analytic value combining two other analytic values */
+/**
+ * An analytic that combines two other analytics into one.
+ * 
+ * @see CompositeAnalysisDescription
+ */
 class ComposedTileAnalytic[T1, T2]
 	(val1: TileAnalytic[T1],
 	 val2: TileAnalytic[T2])
@@ -145,6 +175,8 @@ class ComposedTileAnalytic[T1, T2]
 		val1.toMap(value._1) ++ val2.toMap(value._2)
 	override def toString = "["+val1+" + "+val2+"]"
 }
+
+
 
 /**
  * An accumulator that accumulates a TileAnalytic across multiple tiles
@@ -175,6 +207,23 @@ object AnalysisDescription {
 
 
 
+/**
+ * An AnalysisDescription describes an analysis that needs to be executed 
+ * during the tiling process.  Both tile and data analytics use this class
+ * as their basic description.
+ * 
+ * There are three main parts to an analysis description:
+ * <ol>
+ * <li>The conversion function, convert, which extracts the needed values for 
+ * analysis from the raw data</li>
+ * <li>The analytic, which describes how analytic values are treated</li>
+ * <li>Accumulator-related methods, which describe how analyses are aggregated
+ * across the data set.</li>
+ * </ol>
+ * 
+ * @param RT The raw type of data on which this analysis takes place
+ * @parma AT The type of data 
+ */
 trait AnalysisDescription[RT, AT] {
 	val analysisTypeTag: ClassTag[AT]
 	def convert: RT => AT
@@ -200,6 +249,10 @@ case class MetaDataAccumulatorInfo[AT] (name: String,
                                          test: TileIndex => Boolean,
                                          accumulator: Accumulator[AT]) {}
 
+/**
+ * A standard analysis description parent class for descriptions of a single, 
+ * monolithic analysis.
+ */
 class MonolithicAnalysisDescription[RT, AT: ClassTag]
 	(convertParam: RT => AT,
 	 analyticParam: TileAnalytic[AT])
@@ -246,6 +299,10 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 	override def toString = analyticParam.toString
 }
 
+/**
+ * A description of a single analysis which is not aggregated into the global 
+ * metadata, but only exists on tiles
+ */
 class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
 	(convertParam: RT => AT,
 	 analyticParam: TileAnalytic[AT])
@@ -256,6 +313,16 @@ class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
 	override def addGlobalAccumulator (sc: SparkContext): Unit = {}
 }
 
+/**
+ * A class to combine two analyses into a single analysis.
+ * 
+ * This is needed because, for reasons of type generification, we can
+ * only pass in a single tile analytic, and a single data analytic,
+ * into the binning process.
+ * 
+ * If we actually need more than one analytic, we combine them into
+ * one using this class.
+ */
 class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 	(analysis1: AnalysisDescription[RT, AT1],
 	 analysis2: AnalysisDescription[RT, AT2])
@@ -287,6 +354,10 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 	override def toString = "["+analysis1+","+analysis2+"]"
 }
 
+/**
+ * A class (and companion object) to take an analysis of bin values and convert 
+ * it into an analysis of tiles.
+ */
 object AnalysisDescriptionTileWrapper {
 	def acrossTile[BT, AT] (convertFcn: BT => AT,
 	                        analytic: TileAnalytic[AT]): TileData[BT] => AT =
