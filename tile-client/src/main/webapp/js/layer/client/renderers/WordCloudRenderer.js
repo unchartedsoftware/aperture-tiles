@@ -29,19 +29,131 @@ define(function (require) {
 
 
 
-    var //Util = require('../../../util/Util'),
-        GenericHtmlRenderer = require('./GenericHtmlRenderer'),
+    var GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 10,
         MAX_LETTERS_IN_WORD = 20,
+        MAX_FONT_SIZE = 30,
+        MIN_FONT_SIZE = 12,
+        FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
+        HORIZONTAL_OFFSET = 10,
+        VERTICAL_OFFSET = 24,
         trimLabelText,
+        getFontSize,
+        spiralPosition,
+        boxTest,
+        overlapTest,
+        intersectWord,
+        getWordDimensions,
         WordCloudRenderer;
 
 
     trimLabelText = function( str ) {
-        if (str.length > MAX_LETTERS_IN_WORD) {
+        if ( str.length > MAX_LETTERS_IN_WORD ) {
             str = str.substr( 0, MAX_LETTERS_IN_WORD ) + "...";
         }
         return str;
+    };
+
+
+    /**
+     * Scale font size based on percentage of total count
+     */
+    getFontSize = function( count, totalCount ) {
+        var percentage = ( count / totalCount ) || 0,
+            size = ( percentage * FONT_RANGE  ) +  MIN_FONT_SIZE;
+        return Math.min( Math.max( size, MIN_FONT_SIZE ), MAX_FONT_SIZE );
+    };
+
+
+    /**
+     * Given an initial position, return a new position, incrementally spiralled
+     * outwards.
+     */
+    spiralPosition = function( pos ) {
+
+        var pi2 = 2 * Math.PI,
+            circ = pi2 * pos.radius,
+            inc = ( pos.arcLength > circ/10) ? circ/10 : pos.arcLength,
+            da = inc / pos.radius,
+            nt = (pos.t+da);
+
+        if (nt > pi2) {
+            nt = nt % pi2;
+            pos.radius = pos.radius + pos.radiusInc;
+        }
+
+        pos.t = nt;
+        pos.x = pos.radius * Math.cos(nt);
+        pos.y = pos.radius * Math.sin(nt);
+        return pos;
+    };
+
+
+    /**
+     *  Returns true if bounding box a intersects bounding box b
+     */
+    boxTest = function( a, b ) {
+        return (Math.abs(a.x - b.x) * 2 < (a.width + b.width)) &&
+               (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
+    };
+
+
+    /**
+     *  Returns true if bounding box a is not fully contained inside bounding box b
+     */
+    overlapTest = function( a, b ) {
+        return ( a.x + a.width/2 > b.x+b.width/2 ||
+                 a.x - a.width/2 < b.x-b.width/2 ||
+                 a.y + a.height/2 > b.y+b.height/2 ||
+                 a.y - a.height/2 < b.y-b.height/2 );
+    };
+
+
+    /**
+     * Check if a word intersects another word, or is not fully contained in the
+     * tile bounding box
+     */
+    intersectWord = function( position, dimensions, cloud, bb ) {
+        var i,
+            box = {
+                x: position.x,
+                y: position.y,
+                height: dimensions.height,
+                width: dimensions.width
+            };
+
+        for (i=0; i<cloud.length; i++) {
+            if ( cloud[i] !== null && boxTest( box, cloud[i] ) ) {
+                return {
+                    result : true,
+                    type: 'word'
+                };
+            }
+        }
+
+        // make sure it doesn't intersect the border;
+        if ( overlapTest( box, bb ) ) {
+            return {
+                result : true,
+                type: 'border'
+            };
+        }
+
+        return { result : false };
+    };
+
+    /**
+     * Returns the pixel dimensions of the label
+     */
+    getWordDimensions = function( str, fontSize ) {
+        var $temp,
+            dimension = {};
+        $temp = $('<div class="word-cloud-word-temp" style="visibility:hidden; font-size:'+fontSize+'px;">'+str+'</div>');
+        $('body').append( $temp );
+        dimension.width = $temp.outerWidth();
+        dimension.height = $temp.outerHeight();
+        $temp.remove();
+        return dimension;
     };
 
 
@@ -52,8 +164,8 @@ define(function (require) {
             this._super( map, spec );
         },
 
-        parseInputSpec: function( spec ) {
 
+        parseInputSpec: function( spec ) {
             spec.text.textKey = spec.text.textKey || "text";
             spec.text = this.parseCountSpec( spec.text );
             spec.text = this.parseStyleSpec( spec.text );
@@ -85,124 +197,30 @@ define(function (require) {
         },
 
 
-        createWordCloud: function( words, frequencies, minFontSize, maxFontSize, boundingBox ) {
+        createWordCloud: function( wordCounts, maxFrequency, boundingBox ) {
 
-            var wordCounts = [],
-                cloud = [],
-                sum = 0, i,
-                word, count, dim,
-                fontSize, pos, scale,
-                fontRange, borderCollisions = 0,
+            var cloud = [],
+                borderCollisions = 0,
+                i, word, count, dim,
+                fontSize, pos,
                 intersection;
 
-
-            function spiralPosition( pos ) {
-
-                var pi2 = 2 * Math.PI,
-                    circ = pi2 * pos.radius,
-                    inc = ( pos.arcLength > circ/10) ? circ/10 : pos.arcLength,
-                    da = inc / pos.radius,
-                    nt = (pos.t+da);
-
-                if (nt > pi2) {
-                    nt = nt % pi2;
-                    pos.radius = pos.radius + pos.radiusInc;
-                }
-
-                pos.t = nt;
-                pos.x = pos.radius * Math.cos(nt);
-                pos.y = pos.radius * Math.sin(nt);
-                return pos;
-            }
-
-
-            function intersectsWord( position, dimensions, cloud, bb ) {
-                var i,
-                    box = {
-                        x: position.x,
-                        y: position.y,
-                        height: dimensions.height,
-                        width: dimensions.width
-                    };
-
-                function boxTest( a, b ) {
-                    return (Math.abs(a.x - b.x) * 2 < (a.width + b.width)) &&
-                           (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
-                }
-
-                function overlapTest( a, b ) {
-                    return ( a.x + a.width/2 > b.x+b.width/2 ||
-                             a.x - a.width/2 < b.x-b.width/2 ||
-                             a.y + a.height/2 > b.y+b.height/2 ||
-                             a.y - a.height/2 < b.y-b.height/2 );
-                }
-
-                for (i=0; i<cloud.length; i++) {
-                    if ( cloud[i] !== null && boxTest( box, cloud[i] ) ) {
-                        return {
-                            result : true,
-                            type: 'word'
-                        };
-                    }
-                }
-
-                // make sure it doesn't intersect the border;
-                if ( overlapTest( box, bb ) ) {
-                    return {
-                        result : true,
-                        type: 'border'
-                    };
-                }
-
-                return {
-                    result : false
-                };
-            }
-
-            function getWordDimensions( str, fontSize ) {
-
-                var $temp,
-                    dimension = {};
-                $temp = $('<div class="word-cloud-word-temp" style="visibility:hidden; font-size:'+fontSize+'px;">'+str+'</div>');
-                $('body').append( $temp );
-                dimension.width = $temp.outerWidth();
-                dimension.height = $temp.outerHeight();
-                $temp.remove();
-                return dimension;
-            }
-
-
-            for (i=0; i<words.length; i++) {
-                wordCounts.push({
-                    word: words[i],
-                    count: frequencies[i]
-                });
-            }
-
-            // Get mean
-            for (i=0; i<wordCounts.length; i++) {
-                sum += frequencies[i];
-            }
-
-            wordCounts.sort(function(a, b) {
-                return b.count-a.count;
+            wordCounts.sort( function( a, b ) {
+                return b.count - a.count;
             });
 
             // Assemble word cloud
-            scale = Math.log(sum);
-            fontRange = (maxFontSize - minFontSize);
-
-            // assemble words in cloud
-            for (i=0; i<wordCounts.length; i++) {
+            for ( i=0; i<wordCounts.length; i++ ) {
 
                 word = wordCounts[i].word;
                 count = wordCounts[i].count;
 
-                fontSize = ( (count/sum) * fontRange * scale) + (minFontSize * (count / sum));
-                fontSize = Math.min( Math.max( fontSize, minFontSize), maxFontSize );
+                // get font size based on font size function
+                fontSize = getFontSize( count, maxFrequency );
 
                 dim = getWordDimensions( word, fontSize );
-                //dim.height -= dim.height * 0.20;
+
+                // starting spiral position
                 pos = {
                     radius : 1,
                     radiusInc : 5,
@@ -212,12 +230,11 @@ define(function (require) {
                     t : 0
                 };
 
-
                 while( true ) {
                     // increment spiral
                     pos = spiralPosition(pos);
                     // test for intersection
-                    intersection = intersectsWord( pos, dim, cloud, boundingBox );
+                    intersection = intersectWord( pos, dim, cloud, boundingBox );
 
                     if ( intersection.result === false ) {
 
@@ -237,7 +254,7 @@ define(function (require) {
                             // if we hit border, extend arc length
                             pos.arcLength = pos.radius;
                             borderCollisions++;
-                            if ( borderCollisions > 20 ) {
+                            if ( borderCollisions > 10 ) {
                                 // bail
                                 cloud[i] = null;
                                 break;
@@ -255,22 +272,19 @@ define(function (require) {
         createHtml : function( data ) {
 
             var that = this,
-                MAX_FONT_SIZE = 30,
-                MIN_FONT_SIZE = 12,
-                HORIZONTAL_OFFSET = 10,
-                VERTICAL_OFFSET = 24,
+                meta = this.meta[ this.map.getZoom() ],
                 spec = this.spec,
                 textKey = spec.text.textKey,
                 text = spec.text,
                 tilekey = data.tilekey,
                 values = data.values,
                 $html = $([]),
+                wordCounts = [],
+                maxCount,
                 $elem,
                 value,
-                words = [],
                 word,
                 wordClass,
-                frequencies = [],
                 i,
                 cloud,
                 boundingBox = {
@@ -296,15 +310,18 @@ define(function (require) {
                 $html = $html.add('<div class="aperture-tile-title">'+spec.title+'</div>');
             }
 
-            //$html = $html.add('<div class="count-summary"></div>');
-
             for (i=0; i<count; i++) {
                 value = values[i];
-                words.push( trimLabelText( this.getAttributeValue( value, textKey ) ) );
-                frequencies.push( getCount( value, text ) );
+                wordCounts.push({
+                    word: trimLabelText( this.getAttributeValue( value, textKey ) ),
+                    count: getCount( value, text )
+                });
             }
 
-            cloud = this.createWordCloud( words, frequencies, MIN_FONT_SIZE, MAX_FONT_SIZE, boundingBox );
+            // get maximum count for layer if it exists in meta data
+            maxCount = meta.minMax.max[ text.countKey ];
+
+            cloud = this.createWordCloud( wordCounts, maxCount, boundingBox );
 
             for (i=cloud.length-1; i>=0; i--) {
 

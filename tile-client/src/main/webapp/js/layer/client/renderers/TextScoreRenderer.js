@@ -29,9 +29,11 @@ define(function (require) {
 
 
 
-    var //Util = require('../../../util/Util'),
-        GenericHtmlRenderer = require('./GenericHtmlRenderer'),
+    var GenericHtmlRenderer = require('./GenericHtmlRenderer'),
         MAX_WORDS_DISPLAYED = 5,
+        MAX_FONT_SIZE = 22,
+        MIN_FONT_SIZE = 12,
+        FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
         TextScoreRenderer;
 
 
@@ -126,6 +128,7 @@ define(function (require) {
 
             var that = this,
                 spec = this.spec,
+                meta = this.meta[ this.map.getZoom() ],
                 chart = spec.chart,
                 text = spec.text,
                 values = data.values,
@@ -180,25 +183,10 @@ define(function (require) {
             }
 
             /*
-                Returns the total sum count for all values in node
-            */
-            function getTotalCount( values, numEntries, subSpec ) {
-                var i,
-                    sum = 0;
-                for (i=0; i<numEntries; i++) {
-                    sum += getCount( values[i], subSpec );
-                }
-                return sum;
-            }
-
-            /*
                 Returns a font size based on the percentage of tweets relative to the total count
             */
             function getFontSize( count, totalCount ) {
-                var MAX_FONT_SIZE = 22,
-                    MIN_FONT_SIZE = 12,
-                    FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
-                    percentage = ( count / totalCount ) || 0,
+                var percentage = ( count / totalCount ) || 0,
                     scale = Math.log( totalCount ),
                     size = ( percentage * FONT_RANGE * scale ) + ( MIN_FONT_SIZE * percentage );
                 return Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
@@ -215,7 +203,10 @@ define(function (require) {
                 $html = $html.add('<div class="aperture-tile-title">'+spec.title+'</div>');
             }
 
-            totalCount = getTotalCount( values, numEntries, text );
+            // get maximum count for layer if it exists in meta data
+            totalCount = meta.minMax.max[ text.countKey ]; // || null;
+
+            //totalCount = getTotalCount( values, numEntries, text );
             yOffset = getYOffset( numEntries );
 
             if ( !chart ) {
