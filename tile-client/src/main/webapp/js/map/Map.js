@@ -147,6 +147,8 @@ define(function (require) {
                     "-o-transform": translate,
                     "transform": translate
                 });
+                // update tiles in view
+                that.updateTilesInView();
             });
 
             this.trigger('move'); // fire initial move event
@@ -351,7 +353,7 @@ define(function (require) {
 		},
 
 
-		getTilesInView: function() {
+        updateTilesInView: function() {
             var tiles = this.getTileIterator().getRest(),
                 culledTiles = [],
                 maxTileIndex = Math.pow(2, this.getZoom() ),
@@ -364,7 +366,12 @@ define(function (require) {
                      culledTiles.push( tile );
                 }
             }
-			return culledTiles;
+            this.tilesInView = culledTiles;
+		},
+
+
+		getTilesInView: function() {
+            return this.tilesInView.slice( 0 ); // return copy
 		},
 
 

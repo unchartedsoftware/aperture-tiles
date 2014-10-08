@@ -33,6 +33,7 @@ define(function (require) {
         HtmlNodeLayer = require('../../HtmlNodeLayer'),
         HtmlLayer = require('../../HtmlLayer'),
         PubSub = require('../../../util/PubSub'),
+        Util = require('../../../util/Util'),
         ANNOTATION_POINT_CLASS = "point-annotation",
         ANNOTATION_AGGREGATE_POINT_CLASS = "point-annotation-aggregate",
         ANNOTATION_POINT_FILL_CLASS = "point-annotation-fill",
@@ -114,7 +115,7 @@ define(function (require) {
             $annotations = $(html);
 
             // add details click event
-            $annotations.click( function( event ) {
+            Util.dragSensitiveClick( $annotations, function( event ) {
 
                 var offset = $annotations.offset(),
                     position = {
@@ -167,8 +168,7 @@ define(function (require) {
 
             this.nodeLayer = new HtmlNodeLayer({
                 map: this.map,
-                idKey: 'uuid',
-                propagate: false
+                idKey: 'uuid'
             });
 
             this.nodeLayer.addLayer( new HtmlLayer({
