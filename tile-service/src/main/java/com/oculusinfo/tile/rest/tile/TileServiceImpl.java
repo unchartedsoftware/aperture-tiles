@@ -84,9 +84,9 @@ public class TileServiceImpl implements TileService {
 
 			bi = tileRenderer.render(config);
 		} catch (ConfigurationException e) {
-			_logger.warn("No renderer specified for tile request.");
+			_logger.warn("No renderer specified for tile request. "+ e.getMessage());
 		} catch (IllegalArgumentException e) {
-            _logger.warn("Renderer configuration not recognized.");
+            _logger.warn("Renderer configuration not recognized. "+ e.getMessage());
         }
 
 		if (bi == null){
