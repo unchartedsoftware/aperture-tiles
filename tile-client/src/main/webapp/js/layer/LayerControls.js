@@ -860,7 +860,7 @@ define(function (require) {
                     // change theme for all layers
                     for ( i=0; i<layers.length; i++ ) {
                         if ( layers[i].domain === "server" ) {
-                            layers[i].setTheme( $("body").hasClass("light-theme")? 'light' : 'dark' );
+                            layers[i].updateTheme();
                         }
                     }
                     break;
