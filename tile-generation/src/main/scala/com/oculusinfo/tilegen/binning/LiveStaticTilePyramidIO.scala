@@ -99,8 +99,13 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 				if (!datasets.contains(pyramidId)) {
 					if (!dataDescription.stringPropertyNames.contains("oculus.binning.caching.processed"))
 						dataDescription.setProperty("oculus.binning.caching.processed", "true")
-					datasets(pyramidId) =
-						DatasetFactory.createDataset(sc, dataDescription, Some(width), Some(height))
+
+					val newDataset = 
+						DatasetFactory.createDataset(sc, dataDescription,
+						                             Some(width), Some(height))
+					newDataset.getTileAnalytics.map(_.addGlobalAccumulator(sc))
+					newDataset.getDataAnalytics.map(_.addGlobalAccumulator(sc))
+					datasets(pyramidId) = newDataset
 				}
 			}
 		}
@@ -169,6 +174,15 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 				val xBins = tiles.head.getXBins()
 				val yBins = tiles.head.getXBins()
 				val bounds = tilesToBounds(pyramid, tiles)
+				val levels = tiles.map(_.getLevel).toSet
+
+				// Make sure to gather appropriate metadata
+				dataset.getTileAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataset.getDataAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
 
 				val boundsTest = bounds.getSerializableContainmentTest(pyramid, xBins, yBins)
 				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, xBins, yBins)

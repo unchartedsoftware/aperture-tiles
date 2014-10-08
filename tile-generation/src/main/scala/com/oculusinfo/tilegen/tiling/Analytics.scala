@@ -34,6 +34,7 @@ import java.util.{List => JavaList}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
+import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
 
 import org.apache.spark.SparkContext
@@ -187,10 +188,7 @@ trait AnalysisDescription[RT, AT] {
 	def applyTo (metaData: PyramidMetaData): Unit
 
 	// Deal with accumulators
-	protected val accumulatorInfos = MutableList[MetaDataAccumulatorInfo[AT]]()
-	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
-		accumulatorInfos +=	new MetaDataAccumulatorInfo(name, test,
-			                            sc.accumulator(analytic.defaultUnprocessedValue)(new AnalyticAccumulatorParam(analytic)))
+	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit
 	// Standard accumulators
 	def addLevelAccumulator (sc: SparkContext, level: Int): Unit =
 		addAccumulator(sc, ""+level, (test: TileIndex) => (level == test.getLevel))
@@ -216,12 +214,12 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 
 	def accumulate (tile: TileIndex, data: AT): Unit =
 		accumulatorInfos.foreach(info =>
-			if (info.test(tile))
-				info.accumulator += data
+			if (info._2.test(tile))
+				info._2.accumulator += data
 		)
 
 	def toMap: Map[String, Object] = accumulatorInfos.map(info =>
-		analytic.toMap(info.accumulator.value).map{case (k, v) => (info.name+"."+k, v)}
+		analytic.toMap(info._2.accumulator.value).map{case (k, v) => (info._2.name+"."+k, v)}
 	).reduceOption(_ ++ _).getOrElse(Map[String, String]())
 
 	def applyTo (metaData: PyramidMetaData): Unit = {
@@ -231,6 +229,19 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 			}
 		}
 	}
+
+	// Deal with accumulators
+	protected val accumulatorInfos = MutableMap[String, MetaDataAccumulatorInfo[AT]]()
+	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
+		// Don't add anything twice
+		if (!accumulatorInfos.contains(name)) {
+			val defaultValue = analytic.defaultUnprocessedValue
+			val accumulator = sc.accumulator(defaultValue)(new AnalyticAccumulatorParam(analytic))
+			accumulatorInfos(name) =
+				new MetaDataAccumulatorInfo(name, test, accumulator)
+		}
+
+
 
 	override def toString = analyticParam.toString
 }
@@ -267,6 +278,12 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis1.applyTo(metaData)
 		analysis2.applyTo(metaData)
 	}
+
+	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {
+		analysis1.addAccumulator(sc, name, test)
+		analysis2.addAccumulator(sc, name, test)
+	}
+
 	override def toString = "["+analysis1+","+analysis2+"]"
 }
 
@@ -679,4 +696,6 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 		customData.map{case (key, value) =>
 			metaData.setCustomMetaData(value, key)
 		}
+	// Global metadata needs no accumulators - it doesn't actually have any data.
+	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {}
 }
