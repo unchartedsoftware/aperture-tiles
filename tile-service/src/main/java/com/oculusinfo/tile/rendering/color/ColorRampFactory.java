@@ -108,7 +108,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		final String rampType = getPropertyValue(RAMP_TYPE);
 		final double opacity = 1.0; //getPropertyValue(OPACITY);
 		final String theme = getPropertyValue(THEME);
-		final boolean onlight = theme.equalsIgnoreCase("light");
+		final boolean islight = theme.equalsIgnoreCase("light");
 		
 		ColorRamp ramp;
 
@@ -134,20 +134,20 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		
 		// CONSTRAINED HUE DEFAULTS
 		if (rampType.equalsIgnoreCase("hot")){
-			ramp = SteppedGradientColorRamp.hot(onlight);
+			ramp = SteppedGradientColorRamp.hot(islight);
 		} else if (rampType.equalsIgnoreCase("cool")){
-			ramp = SteppedGradientColorRamp.cool(onlight);
+			ramp = SteppedGradientColorRamp.cool(islight);
 			
 		// LEGACY BLUE / RED
 		} else if (rampType.equalsIgnoreCase("br")){
-			ramp = new BRColorRamp(onlight, opacity);
+			ramp = new BRColorRamp(islight, opacity);
 		} else if(rampType.equalsIgnoreCase("inv-br")){
 			// We're forcing the inverse.
 			ramp = new BRColorRamp(true, opacity);
 
 		// NEUTRAL GRAY
 		} else if (rampType.equalsIgnoreCase("neutral") || rampType.equalsIgnoreCase("grey")) {
-			ramp = new GreyColorRamp(onlight, opacity);
+			ramp = new GreyColorRamp(islight, opacity);
 		} else if (rampType.equalsIgnoreCase("inv-grey")) { // legacy
 			// We're forcing the inverse.
 			ramp = new GreyColorRamp(true, opacity);
@@ -175,7 +175,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		} else {
 
 			// default
-			ramp = new WareColorRamp(onlight, opacity);
+			ramp = new WareColorRamp(islight, opacity);
 		}
 		
 		return ramp;
