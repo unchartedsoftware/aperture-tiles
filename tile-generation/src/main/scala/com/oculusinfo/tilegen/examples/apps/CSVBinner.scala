@@ -119,9 +119,11 @@ object CSVBinner {
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
 		dataAnalytics.map(_.addGlobalAccumulator(sc))
+
 		dataset.getLevels.map(levels =>
 			{
 				println("\tProcessing levels "+levels)
+
 				// Add level accumulators for all analytics for these levels (for now at least)
 				tileAnalytics.map(analytic =>
 					levels.map(level => analytic.addLevelAccumulator(sc, level))

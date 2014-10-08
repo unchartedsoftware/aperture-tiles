@@ -180,13 +180,29 @@ object CSVTimeRangeBinner {
 	                   PT: ClassTag,
 	                   DT: ClassTag,
 	                   AT: ClassTag,
-	                   BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	                   BT] (sc: SparkContext,
+	                        dataset: Dataset[IT, PT, DT, AT, BT],
 	                        tileIO: TileIO,
 	                        properties: CSVRecordPropertiesWrapper): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
+
+		val tileAnalytics = dataset.getTileAnalytics
+		val dataAnalytics = dataset.getDataAnalytics
+
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
+
 		dataset.getLevels.map(levels =>
 			{
+				// Add level accumulators for all analytics for these levels (for now at least)
+				tileAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+
 				val localIndexer: TimeRangeCSVIndexExtractor[IT] =
 					dataset
 						.asInstanceOf[CSVDataset[IT, PT, DT, AT, BT]]
@@ -227,8 +243,8 @@ object CSVTimeRangeBinner {
 							val tiles = binner.processDataByLevel(timeRangeRdd,
 							                                      dataset.getIndexScheme,
 							                                      dataset.getBinningAnalytic,
-							                                      dataset.getTileAnalytics,
-							                                      dataset.getDataAnalytics,
+							                                      tileAnalytics,
+							                                      dataAnalytics,
 							                                      dataset.getTilePyramid,
 							                                      levels,
 							                                      dataset.getNumXBins,
@@ -246,8 +262,8 @@ object CSVTimeRangeBinner {
 					                  dataset.getTilePyramid,
 					                  dataset.getName,
 					                  levelRange,
-					                  dataset.getTileAnalytics,
-					                  dataset.getDataAnalytics,
+					                  tileAnalytics,
+					                  dataAnalytics,
 					                  dataset.getNumXBins,
 					                  dataset.getNumYBins,
 					                  dataset.getName,
@@ -262,14 +278,15 @@ object CSVTimeRangeBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, DT, AT, BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
+	                                               dataset: Dataset[IT, PT, DT, AT, BT],
 	                                               tileIO: TileIO,
 	                                               properties: CSVRecordPropertiesWrapper):
 			Unit =
-		processDataset(dataset, tileIO, properties)(dataset.indexTypeTag,
-		                                            dataset.binTypeTag,
-		                                            dataset.dataAnalysisTypeTag,
-		                                            dataset.tileAnalysisTypeTag)
+		processDataset(sc, dataset, tileIO, properties)(dataset.indexTypeTag,
+		                                                dataset.binTypeTag,
+		                                                dataset.dataAnalysisTypeTag,
+		                                                dataset.tileAnalysisTypeTag)
 
 	def main (args: Array[String]): Unit = {
 		if (args.size<1) {
@@ -314,7 +331,7 @@ object CSVTimeRangeBinner {
 			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
 				props.setProperty("oculus.binning.caching.processed", "true")
 
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props),
+			processDatasetGeneric(sc, DatasetFactory.createDataset(sc, props),
 			                      tileIO, new CSVRecordPropertiesWrapper(props))
 			argIdx += 1
 		}
