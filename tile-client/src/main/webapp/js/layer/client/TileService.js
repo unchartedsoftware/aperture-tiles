@@ -38,7 +38,42 @@ define(function (require) {
 
 
     var Class = require('../../class'),
+        serviceRegistry = {},
+        tileQueryParser,
         TileService;
+
+
+
+    tileQueryParser = function( obj, path ) {
+        var i, parse, results = [];
+        // base case, no more parsing, return value
+        if ( path.length === 0 ) {
+            return [ obj ];
+        }
+        // pop next sub path and parse it
+        parse = path.shift().split(/[\[\]]/);
+        // determine type of path
+        switch ( parse.length ) {
+            case 1:
+
+                // search object
+                results = tileQueryParser( obj[ parse[0] ], path.slice(0) );
+                break;
+            case 3:
+                if ( parse[1] === '' ) {
+                    // search entire array
+                    obj = obj[ parse[0] ];
+                    for ( i=0; i<obj.length; i++ ) {
+                        $.merge( results, tileQueryParser( obj[i], path.slice(0) ) );
+                    }
+                } else {
+                    // search specific index
+                    results = tileQueryParser( obj[ parse[0] ][ parse[1] ], path.slice(0) );
+                }
+                break;
+        }
+        return results;
+    };
 
 
 
@@ -49,7 +84,6 @@ define(function (require) {
          * Construct a TileService
          */
         init: function ( layerInfo, tilepyramid ) {
-
             // current tile data
             this.data = {};
             // tiles flagged as actively requested and waiting on
@@ -60,20 +94,23 @@ define(function (require) {
             this.layerInfo = layerInfo;
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
+
+            if ( !serviceRegistry[ layerInfo.layer ] ) {
+                serviceRegistry[ layerInfo.layer ] = [];
+            }
+            serviceRegistry[ layerInfo.layer ].push( this );
         },
 
 
         /**
          * Convert local data map into an array and return it.
          */
-        getDataArray: function () {
+        getDataArray: function( tiles ) {
             var data = this.data,
                 tilekey, tile,
                 allData = [];
-
             for ( tilekey in data ) {
                 if ( data.hasOwnProperty(tilekey) ) {
-
                     tile = data[tilekey];
                     // check format of data
                     if ( $.isArray( tile ) ) {
@@ -210,7 +247,7 @@ define(function (require) {
          *   }
          * }
          */
-        getRequest: function(tilekey, tileSetBounds, callback) {
+        getRequest: function( tilekey, tileSetBounds, callback ) {
 
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
@@ -231,7 +268,7 @@ define(function (require) {
                      level+'/'+
                      xIndex+'/'+
                      yIndex+'.json'),
-                     'GET',
+                    'GET',
                     $.proxy(this.getCallback, this),
                     // Add in the list of all needed tiles
                     {'params': tileSetBounds }
@@ -334,6 +371,119 @@ define(function (require) {
         }
 
     });
+
+
+    /**
+     * Query all services instances for a given layer id by a property path. Returns an
+     * array containing all values, including duplicates.
+     * Valid search queries includes:
+     *      'singleAttributes',
+     *      'sub.attributes',
+     *      'entireArrays[]',
+     *      'specificArrayIndices[2]'
+     *      'combinations.of[].the[0].above'
+     */
+    TileService.queryTiles = function( layerId, query, options ) {
+        var services = serviceRegistry[ layerId ],
+            tiles = [], results = [], nonDups = [],
+            i;
+        if ( !services || !query ) {
+            return [];
+        }
+        options = options || {};
+        // get all tile data in a single array
+        for ( i=0; i<services.length; i++ ) {
+            $.merge( tiles, services[i].getDataArray() );
+        }
+        // search tile data for query
+        for ( i=0; i<tiles.length; i++ ) {
+            $.merge( results, tileQueryParser( tiles[i], query.split('.') ) );
+        }
+        // remove duplicates if specified
+        if ( options.removeDuplicates ) {
+            $.each( results, function( i, element ) {
+                if ( $.inArray( element, nonDups ) === -1) {
+                    nonDups.push( element );
+                }
+            });
+            results = nonDups;
+        }
+        return results;
+    };
+
+
+    /**
+     * Checks all service instances for a given layer id and returns all data
+     * held in memory, keyed by tilekey;
+     */
+    TileService.getTilesInMemory = function( layerId ) {
+        var services = serviceRegistry[ layerId ],
+            tiles = {},
+            i, key;
+        if ( !services ) {
+            return [];
+        }
+        // get all tile data in a single array
+        for ( i=0; i<services.length; i++ ) {
+            for ( key in services[i].data ) {
+                if ( services[i].data.hasOwnProperty( key ) ) {
+                    tiles[key] = services[i].data;
+                }
+            }
+        }
+        return tiles;
+    };
+
+
+    /**
+     * Checks all service instances for the given layer id, merges all tiles that are
+     * in memory and returns them. Any missing tiles are requested and passed
+     * to the given callback function.
+     */
+    TileService.requestTilesGlobal = function( layerId, tiles, callback ) {
+
+        var tilesInMemory = this.getTilesInMemory( layerId ),
+            services = serviceRegistry[ layerId ],
+            service,
+            i;
+
+        if ( !services ) {
+            return [];
+        }
+
+        // doesn't matter which service instance we use
+        service = services[0];
+
+        function requestTile( tile ) {
+            // request data from server
+            aperture.io.rest(
+                (service.layerInfo.apertureservice+'1.0.0/'+
+                 service.layerInfo.layer+'/'+
+                 tile.level+'/'+
+                 tile.xIndex+'/'+
+                 tile.yIndex+'.json'),
+                'GET',
+                function( tileData ) {
+                    var tile = tileData.index,
+                        tilekey = tile.level + "," + tile.xIndex + "," + tile.yIndex;
+                    if (tileData.tile !== undefined) {
+                        callback( service.transformTileToBins( tileData.tile, tilekey ) );
+                    }
+                },
+                // Add in the list of all needed tiles
+                {'params': [] }
+            );
+        }
+
+        for ( i=0; i<tiles.length; i++ ) {
+            if ( !tilesInMemory[ tiles[i] ] ) {
+                // request all given tiles not in memory
+                requestTile( tiles[i] );
+            }
+        }
+
+        return tilesInMemory;
+    };
 
     return TileService;
 });
