@@ -803,7 +803,7 @@ define(function (require) {
             var field = message.field,
                 value = message.value,
                 controlsMapping = controlsMap[ layer.uuid ],
-                baseLayer, previousBaseLayer, i, theme;
+                baseLayer, previousBaseLayer, i;
 
             switch ( field ) {
 
