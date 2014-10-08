@@ -154,8 +154,11 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 			
 		// FLAT
 		} else if (rampType.equalsIgnoreCase("flat")) {
-			Color color = ColorRampParameter.getColor(getPropertyValue(COLOR1));
-			ramp = new FlatColorRamp(color.getRGB(), opacity);
+			Color color = hasPropertyValue(COLOR1)?
+					ColorRampParameter.getColor(getPropertyValue(COLOR1)) : 
+						islight? new Color(55,55,55) : Color.WHITE;
+						
+			ramp = new FlatColorRamp(color, opacity);
 			
 		// LEGACY GRADIENT
 		} else if (rampType.equalsIgnoreCase("single-gradient")) {

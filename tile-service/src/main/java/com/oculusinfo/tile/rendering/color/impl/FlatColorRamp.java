@@ -24,6 +24,8 @@
  */
 package com.oculusinfo.tile.rendering.color.impl;
 
+import java.awt.Color;
+
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 
@@ -47,9 +49,9 @@ public class FlatColorRamp implements ColorRamp {
 	 * @param rgbCol
 	 * 	The rgb colour.
 	 */
-	public FlatColorRamp (int color, double opacity) {
+	public FlatColorRamp (Color color, double opacity) {
 	    int alpha = (int) Math.floor(255*opacity) & 0xff;
-		this.col = (alpha << 24) | (color & 0xffffff);	//merge the opacity and rgb together into argb
+		this.col = (alpha << 24) | (color.getRGB() & 0xffffff);	//merge the opacity and rgb together into argb
 	}
 
 	@Override
